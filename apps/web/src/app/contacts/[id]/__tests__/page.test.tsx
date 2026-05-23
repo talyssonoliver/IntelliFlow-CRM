@@ -286,7 +286,7 @@ describe('Contact360Page - Empty State CTA', () => {
     expect(screen.getByText('No recent activity')).toBeInTheDocument();
   });
 
-  // Note: AC-005 (click CTA → switch to Activity tab) was deleted when the
+  // Note: AC-005 (click CTA ÔåÆ switch to Activity tab) was deleted when the
   // CTA button was removed with the EmptyState migration. If the CTA returns,
   // add a fresh test targeting the new control.
 
@@ -398,7 +398,7 @@ describe('Contact360Page - Open Rate NaN fix (IFC-253 F-01)', () => {
   });
 
   it('renders em dash for Open Rate when emailsSent is 0 (AC-001)', () => {
-    // activities: [] → emailsSent = 0, emailsOpened = 0 → should show —
+    // activities: [] ÔåÆ emailsSent = 0, emailsOpened = 0 ÔåÆ should show ÔÇö
     mockContactQueryState.data = {
       ...mockContactQueryState.data,
       activities: [],
@@ -410,11 +410,11 @@ describe('Contact360Page - Open Rate NaN fix (IFC-253 F-01)', () => {
     expect(body).not.toContain('NaN');
 
     // Should render em dash for Open Rate
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.getByText('ÔÇö')).toBeInTheDocument();
   });
 
   it('renders correct percentage when emailsSent > 0 (AC-002)', () => {
-    // 5 EMAIL activities → emailsSent = 5, emailsOpened is hardcoded to 0 → 0%
+    // 5 EMAIL activities ÔåÆ emailsSent = 5, emailsOpened is hardcoded to 0 ÔåÆ 0%
     mockContactQueryState.data = {
       ...mockContactQueryState.data,
       activities: [
@@ -472,11 +472,88 @@ describe('Contact360Page - Open Rate NaN fix (IFC-253 F-01)', () => {
     };
     render(<Contact360Page />);
 
-    // emailsOpened is hardcoded to 0, emailsSent = 5 → 0%
+    // emailsOpened is hardcoded to 0, emailsSent = 5 ÔåÆ 0%
     expect(screen.getByText('0%')).toBeInTheDocument();
 
     // Should NOT render NaN anywhere
     const body = document.body.textContent || '';
     expect(body).not.toContain('NaN');
+  });
+});
+
+describe('Contact360Page - Company-to-Account Link (IFC-227)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockContactQueryState.error = null;
+    mockContactQueryState.isLoading = false;
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    mockUseActivityFeed.mockReturnValue({ items: [], isLoading: false });
+    mockContactQueryState.data.account = {
+      id: 'account-1',
+      name: 'Acme Corp',
+      industry: 'SaaS',
+      website: 'https://acme.example.com',
+    };
+  });
+
+  afterEach(() => {
+    mockContactQueryState.data.account = {
+      id: 'account-1',
+      name: 'Acme Corp',
+      industry: 'SaaS',
+      website: 'https://acme.example.com',
+    };
+  });
+
+  it('AC-004: contact with linked account renders profile card company as Link to /accounts/account-1', () => {
+    render(<Contact360Page />);
+    const accountLinks = screen
+      .getAllByRole('link')
+      .filter((l) => l.getAttribute('href') === '/accounts/account-1');
+    expect(accountLinks.length).toBeGreaterThanOrEqual(1);
+    expect(accountLinks[0]).toHaveTextContent(/Acme Corp/i);
+  });
+
+  it('AC-005: contact with no account renders plain company text with no /accounts/ href', () => {
+    mockContactQueryState.data = {
+      ...mockContactQueryState.data,
+      account: null as any,
+    };
+    render(<Contact360Page />);
+    const brokenLinks = screen
+      .queryAllByRole('link')
+      .filter((l) => (l.getAttribute('href') ?? '').includes('/accounts/'));
+    expect(brokenLinks).toHaveLength(0);
+  });
+
+  it('AC-006: contact profile card company icon uses material-symbols-outlined, not inline SVG', () => {
+    render(<Contact360Page />);
+    // The profile card company link should contain a material symbol span, not an SVG
+    const accountLink = screen
+      .getAllByRole('link')
+      .find((l) => l.getAttribute('href') === '/accounts/account-1');
+    expect(accountLink).toBeDefined();
+    const svgInsideLink = accountLink!.querySelector('svg');
+    expect(svgInsideLink).toBeNull();
+    const materialSymbol = accountLink!.querySelector('.material-symbols-outlined');
+    expect(materialSymbol).toBeDefined();
+  });
+
+  it('NF-003: contact with linked account but empty company string shows account name in link', () => {
+    mockContactQueryState.data = {
+      ...mockContactQueryState.data,
+      account: {
+        id: 'account-1',
+        name: 'Acme Corp',
+        industry: 'SaaS',
+        website: null as unknown as string,
+      },
+    };
+    render(<Contact360Page />);
+    const accountLinks = screen
+      .getAllByRole('link')
+      .filter((l) => l.getAttribute('href') === '/accounts/account-1');
+    expect(accountLinks.length).toBeGreaterThanOrEqual(1);
+    expect(accountLinks[0].textContent).not.toBe('');
   });
 });

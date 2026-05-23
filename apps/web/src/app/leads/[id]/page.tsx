@@ -314,17 +314,19 @@ interface LeadWithRelations {
     recommendations: unknown;
     icpMatch: string | null;
   } | null;
+  accountId?: string | null;
+  account?: { id: string; name: string } | null;
 }
 
 // Activity type filter options
 const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: string }[] = [
-  { value: 'all', label: 'All', icon: '📋' },
-  { value: 'email', label: 'Emails', icon: '📧' },
-  { value: 'call', label: 'Calls', icon: '📞' },
-  { value: 'note', label: 'Notes', icon: '📝' },
-  { value: 'meeting', label: 'Meetings', icon: '📅' },
-  { value: 'web_form', label: 'Web Forms', icon: '🌐' },
-  { value: 'score_update', label: 'Scores', icon: '📊' },
+  { value: 'all', label: 'All', icon: '­ƒôï' },
+  { value: 'email', label: 'Emails', icon: '­ƒôº' },
+  { value: 'call', label: 'Calls', icon: '­ƒô×' },
+  { value: 'note', label: 'Notes', icon: '­ƒôØ' },
+  { value: 'meeting', label: 'Meetings', icon: '­ƒôà' },
+  { value: 'web_form', label: 'Web Forms', icon: '­ƒîÉ' },
+  { value: 'score_update', label: 'Scores', icon: '­ƒôè' },
 ];
 
 // Lead Status Badge Component
@@ -446,10 +448,11 @@ function filterActivity(
 }
 
 function getCallOutcomeBadge(outcome: string | undefined): { cls: string; label: string } {
-  if (outcome === 'connected') return { cls: 'bg-green-100 text-green-700', label: '✓ Connected' };
+  if (outcome === 'connected')
+    return { cls: 'bg-green-100 text-green-700', label: 'Ô£ô Connected' };
   if (outcome === 'voicemail')
-    return { cls: 'bg-yellow-100 text-yellow-700', label: '📞 Voicemail' };
-  return { cls: 'bg-red-100 text-red-700', label: '✗ No Answer' };
+    return { cls: 'bg-yellow-100 text-yellow-700', label: '­ƒô× Voicemail' };
+  return { cls: 'bg-red-100 text-red-700', label: 'Ô£ù No Answer' };
 }
 
 function formatRelativeTime(dateString: string, timezone: string = 'Europe/London'): string {
@@ -559,7 +562,7 @@ function getSentimentTrendStyle(trend?: string): string {
   }
 }
 
-// ─── Sub-components extracted to reduce cognitive complexity ─────────────────
+// ÔöÇÔöÇÔöÇ Sub-components extracted to reduce cognitive complexity ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 function LeadLoadingSkeleton() {
   return (
@@ -678,7 +681,7 @@ function LeadErrorView({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 type LeadDialogsLead = { id: string; firstName: string; lastName: string; company: string };
 
@@ -1003,9 +1006,9 @@ function LeadDialogs({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
-// ─── Sub-components for Lead360Page tab panels and layout sections ────────────
+// ÔöÇÔöÇÔöÇ Sub-components for Lead360Page tab panels and layout sections ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface LeadProfileData {
   id: string;
@@ -1027,6 +1030,8 @@ interface LeadProfileData {
   estimatedValue: number;
   tags: string[];
   owner: { name: string; title: string; avatarUrl: string };
+  accountId?: string | null;
+  account?: { id: string; name: string } | null;
 }
 
 interface LeadMetrics {
@@ -1063,7 +1068,13 @@ function LeadProfileCard({
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
           <div className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1">
             <span className="material-symbols-outlined !text-sm">domain</span>
-            <span>{lead.company}</span>
+            {lead.accountId && lead.account ? (
+              <Link href={`/accounts/${lead.accountId}`} className="hover:underline">
+                {lead.company}
+              </Link>
+            ) : (
+              <span>{lead.company}</span>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mb-6">
@@ -1221,7 +1232,7 @@ function LeadLeftSidebar({
   );
 }
 
-// ─── Tab panel sub-components ─────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇ Tab panel sub-components ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface LeadOverviewTabProps {
   lead: LeadProfileData;
@@ -1269,7 +1280,7 @@ function LeadOverviewTab({
                     {activity.description}
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
+                    {activity.user} ÔÇó {formatRelativeTime(activity.timestamp, timezone)}
                   </p>
                 </div>
               </div>
@@ -1331,7 +1342,16 @@ function LeadOverviewTab({
           <div>
             <dt className="text-sm text-slate-500 dark:text-slate-400">Company</dt>
             <dd className="text-sm font-medium">
-              <span className="text-[#137fec]">{lead.company}</span>
+              {lead.accountId && lead.account ? (
+                <Link
+                  href={`/accounts/${lead.accountId}`}
+                  className="text-[#137fec] hover:underline"
+                >
+                  {lead.company}
+                </Link>
+              ) : (
+                <span className="text-[#137fec]">{lead.company}</span>
+              )}
             </dd>
           </div>
           <div>
@@ -1351,7 +1371,7 @@ function LeadOverviewTab({
   );
 }
 
-// ─── Activity rich preview (module-level to avoid inline function) ────────────
+// ÔöÇÔöÇÔöÇ Activity rich preview (module-level to avoid inline function) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 function ActivityRichPreview({ activity }: { activity: Activity }) {
   if (!activity.metadata) return null;
@@ -1434,7 +1454,7 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
             <span className="material-symbols-outlined !text-[16px]">location_on</span>{' '}
             {meta.location}
-            {meta.duration && <span className="text-slate-400">• {meta.duration}</span>}
+            {meta.duration && <span className="text-slate-400">ÔÇó {meta.duration}</span>}
           </div>
         )}
         {meta.attendees && meta.attendees.length > 0 && (
@@ -1449,7 +1469,7 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
   return null;
 }
 
-// ─── Activity timeline item ───────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇ Activity timeline item ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface ActivityTimelineItemProps {
   activity: Activity;
@@ -1495,7 +1515,7 @@ function ActivityTimelineItem({
               {activity.description}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
+              {activity.user} ÔÇó {formatRelativeTime(activity.timestamp, timezone)}
             </p>
           </div>
           <button
@@ -1536,7 +1556,7 @@ function ActivityTimelineItem({
                   >
                     <p className="text-sm text-slate-600 dark:text-slate-400">{comment.text}</p>
                     <p className="text-xs text-slate-500 mt-1">
-                      {comment.user} • {formatRelativeTime(comment.timestamp, timezone)}
+                      {comment.user} ÔÇó {formatRelativeTime(comment.timestamp, timezone)}
                     </p>
                   </div>
                 ))}
@@ -1550,7 +1570,7 @@ function ActivityTimelineItem({
   );
 }
 
-// ─── Activity tab filter bar ──────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇ Activity tab filter bar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface ActivityFilterBarProps {
   searchQuery: string;
@@ -1650,7 +1670,7 @@ function ActivityFilterBar({
   );
 }
 
-// ─── Activity tab ─────────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇ Activity tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface LeadActivityTabProps {
   leadId: string;
@@ -1791,7 +1811,7 @@ function LeadActivityTab({
   );
 }
 
-// ─── Notes tab ────────────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇ Notes tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface LeadNotesTabProps {
   notes: { id: string; content: string; author: string; createdAt: string }[];
@@ -1856,7 +1876,7 @@ function LeadNotesTab({
               <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
               <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                 <span>{note.author}</span>
-                <span>•</span>
+                <span>ÔÇó</span>
                 <span>{formatRelativeTime(note.createdAt, timezone)}</span>
               </div>
             </div>
@@ -1869,7 +1889,7 @@ function LeadNotesTab({
   );
 }
 
-// ─── Emails tab ───────────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇ Emails tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface LeadEmailsTabProps {
   emails: { id: string; subject: string; status: string; sentAt: string; openCount: number }[];
@@ -1923,7 +1943,7 @@ function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
   );
 }
 
-// ─── Files tab ────────────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇ Files tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface LeadFilesTabProps {
   files: { id: string; name: string; size: string; uploadedAt: string }[];
@@ -1954,7 +1974,7 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
               <div className="flex-1">
                 <p className="font-medium text-slate-900 dark:text-white">{file.name}</p>
                 <p className="text-sm text-slate-500">
-                  {file.size} • {formatRelativeTime(file.uploadedAt, timezone)}
+                  {file.size} ÔÇó {formatRelativeTime(file.uploadedAt, timezone)}
                 </p>
               </div>
               <button className="p-2 text-slate-500 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
@@ -1970,7 +1990,7 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
   );
 }
 
-// ─── AI Insights tab ─────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇ AI Insights tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface AiInsightsData {
   qualificationScore: number;
@@ -2151,7 +2171,7 @@ function LeadAIInsightsTab({
   );
 }
 
-// ─── Right sidebar ────────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇ Right sidebar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface LeadRightSidebarProps {
   hasAiInsight: boolean;
@@ -2323,7 +2343,7 @@ function LeadRightSidebar({
                 </p>
                 <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                   <span>{note.author}</span>
-                  <span>•</span>
+                  <span>ÔÇó</span>
                   <span>{formatRelativeTime(note.createdAt, timezone)}</span>
                 </div>
               </div>
@@ -2352,7 +2372,7 @@ function LeadRightSidebar({
   );
 }
 
-// ─── Tab bar ──────────────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇ Tab bar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface LeadTabBarProps {
   tabs: Tab[];
@@ -2410,7 +2430,7 @@ function LeadTabBar({
   );
 }
 
-// ─── Page header ──────────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇ Page header ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface LeadPageHeaderProps {
   lead: LeadProfileData;
@@ -2477,7 +2497,7 @@ function LeadPageHeader({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 const LEAD_VALID_TABS: TabId[] = [
   'overview',
@@ -2548,6 +2568,8 @@ function transformLeadForUI(apiLead: LeadWithRelations) {
           title: '',
           avatarUrl: normalizedOwnerAvatar,
         },
+    accountId: apiLead.accountId ?? null,
+    account: apiLead.account ? { id: apiLead.account.id, name: apiLead.account.name } : null,
   };
 }
 
@@ -2959,7 +2981,7 @@ export default function Lead360Page() {
     [activities.length, tasks, notes.length, emails.length, files.length]
   );
 
-  // Activity reactions/comments — hooks must be before any early returns
+  // Activity reactions/comments ÔÇö hooks must be before any early returns
   const filteredActivitiesAll = useMemo(
     () =>
       activities.filter((activity) =>
@@ -3081,7 +3103,7 @@ export default function Lead360Page() {
     });
   };
 
-  // renderActivityActions closure — depends on hook results from Lead360Page scope
+  // renderActivityActions closure ÔÇö depends on hook results from Lead360Page scope
   const renderActivityActions = (activity: Activity) => (
     <ActivityFeedItemActions
       activityId={activity.id}
