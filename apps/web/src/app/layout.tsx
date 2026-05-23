@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import dynamic from 'next/dynamic';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import { GoogleTagManager } from '@next/third-parties/google';
@@ -7,7 +8,16 @@ import { Providers } from './providers';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Navigation } from '@/components/navigation';
 import { RouteAccessGate } from '@/components/auth/RouteAccessGate';
-import { CookieConsentBanner, Toaster } from '@intelliflow/ui';
+import { Toaster } from '@intelliflow/ui';
+
+// Lazy-load CookieConsentBanner — it ships with every page via the root
+// layout but is only interacted with once per visitor. Defer to keep it out
+// of the initial bundle (addresses Lighthouse #84 script-bundle audit).
+// ssr: true is the default; we just want it chunked for the client.
+const CookieConsentBanner = dynamic(
+  () => import('@intelliflow/ui').then((mod) => ({ default: mod.CookieConsentBanner })),
+  { ssr: true }
+);
 
 // Explicit viewport — fixes Lighthouse `meta-viewport` audit (was failing
 // because the implicit Next.js default was being interpreted as restrictive).
