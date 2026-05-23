@@ -88,6 +88,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Pre-build internal packages so the @intelliflow/web build can
+      # resolve @intelliflow/* via their dist/ entries. Mirrors the
+      # `test` job in ci.yml.
+      - name: Build internal packages
+        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
+
       - name: Determine version
         id: version
         run: |
@@ -103,6 +109,18 @@ jobs:
         run: pnpm run build
         env:
           NODE_ENV: production
+          # All module-load guards must be satisfied or `next build` fails
+          # at page-data collection. Mirror the env block from ci.yml > Build
+          # so the signing build has the same stubs available.
+          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
+          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
+          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
 
       - name: Package release archive
         id: package
