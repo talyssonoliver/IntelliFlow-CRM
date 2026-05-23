@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import { GoogleTagManager } from '@next/third-parties/google';
@@ -8,6 +8,17 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Navigation } from '@/components/navigation';
 import { RouteAccessGate } from '@/components/auth/RouteAccessGate';
 import { CookieConsentBanner, Toaster } from '@intelliflow/ui';
+
+// Explicit viewport — fixes Lighthouse `meta-viewport` audit (was failing
+// because the implicit Next.js default was being interpreted as restrictive).
+// userScalable: true and maximumScale ≥ 5 satisfy WCAG 1.4.4 (Resize Text).
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#0f172a',
+};
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
