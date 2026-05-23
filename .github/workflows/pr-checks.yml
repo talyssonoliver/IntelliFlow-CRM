@@ -46,6 +46,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check branch name
+        # Dependabot uses its own `dependabot/<ecosystem>/<dep>-<version>` naming
+        # convention that we don't control. Exempt Dependabot PRs from the
+        # human-author branch-name regex; the dependabot-bot author check is
+        # enough auth signal.
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           branch="${{ github.head_ref }}"
           if [[ ! "$branch" =~ ^(feat|fix|docs|refactor|test|chore|agent)/.+ ]]; then
@@ -210,7 +215,11 @@ jobs:
     # the gate is auditable) while the actual token stays a secret. To enable,
     # set the VERCEL_PROJECT_ID repo variable AND the VERCEL_TOKEN / VERCEL_ORG_ID
     # / VERCEL_PROJECT_ID secrets.
-    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && vars.VERCEL_PROJECT_ID != ''
+    #
+    # Skip for Dependabot — GitHub scopes Dependabot PRs to Dependabot-specific
+    # secrets (Settings > Secrets > Dependabot), not the regular Actions secrets,
+    # so VERCEL_TOKEN is unavailable here and Deploy Preview would always fail.
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && vars.VERCEL_PROJECT_ID != '' && github.event.pull_request.user.login != 'dependabot[bot]'
     permissions:
       pull-requests: write
       issues: write

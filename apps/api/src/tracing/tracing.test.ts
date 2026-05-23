@@ -101,7 +101,12 @@ describe('Correlation ID Utilities', () => {
         await new Promise((resolve) => setTimeout(resolve, 50));
         const duration = getRequestDuration();
 
-        expect(duration).toBeGreaterThanOrEqual(50);
+        // setTimeout(50) is "at least 50ms" by spec but can fire 1-5ms early
+        // due to timer coalescing on busy CI runners. 45ms still proves
+        // duration tracking works (>0, in the right order of magnitude)
+        // without producing flake-driven false-fails. Saw `expected 49 >= 50`
+        // intermittently on Linux CI.
+        expect(duration).toBeGreaterThanOrEqual(45);
         expect(duration).toBeLessThan(200); // Allow for system load variation
       });
     });
