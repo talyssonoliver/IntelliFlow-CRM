@@ -203,6 +203,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Pre-build internal packages so vitest can resolve @intelliflow/*
+      # via their dist/ entry. Mirrors the `test` job in ci.yml.
+      - name: Build internal packages
+        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
+
       - name: Run tests
         run: pnpm run test
 
