@@ -280,63 +280,54 @@ jobs:
           ARCHIVE_NAME="${{ needs.build-artifacts.outputs.archive_name }}"
           ARCHIVE_SHA256="${{ needs.build-artifacts.outputs.archive_sha256 }}"
 
-          # Generate SLSA provenance JSON (v0.2 schema — matches the
-          # buildType/builder/invocation/metadata/materials shape below
-          # and the `--type slsaprovenance` flag passed to cosign in the
-          # next step. The v1 schema uses buildDefinition/runDetails
-          # instead and is incompatible with the document we emit).
+          # The --predicate file passed to `cosign attest-blob` must
+          # contain ONLY the predicate body (everything that lives inside
+          # the "predicate" key of an in-toto Statement). Cosign wraps it
+          # in the Statement envelope itself based on --type and the blob
+          # subject. Emitting the full statement here causes cosign to
+          # treat it as the predicate, and the schema validator then
+          # reports "required field builder missing" because builder is
+          # one level deeper than expected.
           cat > "release-artifacts/provenance.json" << EOF
           {
-            "_type": "https://in-toto.io/Statement/v0.1",
-            "predicateType": "https://slsa.dev/provenance/v0.2",
-            "subject": [
-              {
-                "name": "${ARCHIVE_NAME}",
+            "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
+            "builder": {
+              "id": "https://github.com/${{ github.repository }}/.github/workflows/signing.yml@${{ github.ref }}"
+            },
+            "invocation": {
+              "configSource": {
+                "uri": "git+https://github.com/${{ github.repository }}@${{ github.ref }}",
                 "digest": {
-                  "sha256": "${ARCHIVE_SHA256}"
+                  "sha1": "${{ github.sha }}"
+                },
+                "entryPoint": ".github/workflows/signing.yml"
+              },
+              "parameters": {},
+              "environment": {
+                "github_actor": "${{ github.actor }}",
+                "github_event_name": "${{ github.event_name }}",
+                "github_run_id": "${{ github.run_id }}",
+                "github_run_number": "${{ github.run_number }}"
+              }
+            },
+            "metadata": {
+              "buildInvocationId": "${{ github.run_id }}-${{ github.run_attempt }}",
+              "buildStartedOn": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+              "completeness": {
+                "parameters": true,
+                "environment": true,
+                "materials": true
+              },
+              "reproducible": false
+            },
+            "materials": [
+              {
+                "uri": "git+https://github.com/${{ github.repository }}",
+                "digest": {
+                  "sha1": "${{ github.sha }}"
                 }
               }
-            ],
-            "predicate": {
-              "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
-              "builder": {
-                "id": "https://github.com/${{ github.repository }}/.github/workflows/signing.yml@${{ github.ref }}"
-              },
-              "invocation": {
-                "configSource": {
-                  "uri": "git+https://github.com/${{ github.repository }}@${{ github.ref }}",
-                  "digest": {
-                    "sha1": "${{ github.sha }}"
-                  },
-                  "entryPoint": ".github/workflows/signing.yml"
-                },
-                "parameters": {},
-                "environment": {
-                  "github_actor": "${{ github.actor }}",
-                  "github_event_name": "${{ github.event_name }}",
-                  "github_run_id": "${{ github.run_id }}",
-                  "github_run_number": "${{ github.run_number }}"
-                }
-              },
-              "metadata": {
-                "buildInvocationId": "${{ github.run_id }}-${{ github.run_attempt }}",
-                "buildStartedOn": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-                "completeness": {
-                  "parameters": true,
-                  "environment": true,
-                  "materials": true
-                },
-                "reproducible": false
-              },
-              "materials": [
-                {
-                  "uri": "git+https://github.com/${{ github.repository }}",
-                  "digest": {
-                    "sha1": "${{ github.sha }}"
-                  }
-                }
-              ]
-            }
+            ]
           }
           EOF
 
