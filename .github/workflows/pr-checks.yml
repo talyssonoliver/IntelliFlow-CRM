@@ -53,8 +53,8 @@ jobs:
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           branch="${{ github.head_ref }}"
-          if [[ ! "$branch" =~ ^(feat|fix|docs|refactor|test|chore|agent)/.+ ]]; then
-            echo "Branch name must follow pattern: feat/*, fix/*, docs/*, refactor/*, test/*, chore/*, agent/*"
+          if [[ ! "$branch" =~ ^(feat|fix|docs|refactor|test|chore|agent|ci|build|perf|style|revert)/.+ ]]; then
+            echo "Branch name must follow pattern: feat/*, fix/*, docs/*, refactor/*, test/*, chore/*, agent/*, ci/*, build/*, perf/*, style/*, revert/*"
             exit 1
           fi
 
