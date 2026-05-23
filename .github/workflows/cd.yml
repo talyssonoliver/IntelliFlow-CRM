@@ -88,8 +88,12 @@ jobs:
       # is the explicit hook for STAGING environment so we get a known URL.
       # Replaces dead amondnet/vercel-action@v25 with the modern CLI (same
       # pattern as pr-checks.yml > Deploy Preview).
+      # continue-on-error: Hobby tier caps at 100 deploys/day; we don't
+      # fail the workflow when the rate limit hits — the Vercel Git
+      # integration deploys main automatically anyway.
       - name: Deploy to Vercel (Staging)
         if: ${{ env.HAS_VERCEL_TOKEN == 'true' }}
+        continue-on-error: true
         env:
           HAS_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -151,8 +155,10 @@ jobs:
 
       # Replaces dead amondnet/vercel-action@v25 with the modern CLI
       # (same pattern as pr-checks.yml > Deploy Preview), --prod flag.
+      # continue-on-error: see Staging note above.
       - name: Deploy to Vercel (Production)
         if: ${{ env.HAS_VERCEL_TOKEN == 'true' }}
+        continue-on-error: true
         env:
           HAS_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
