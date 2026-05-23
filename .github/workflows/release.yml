@@ -343,7 +343,7 @@ jobs:
     if: needs.check-release.outputs.should_release == 'true' && success()
     steps:
       - name: Send Slack notification
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v3
         with:
           payload: |
             {

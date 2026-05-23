@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout (full history for rev-list)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: false
@@ -24,7 +24,7 @@ jobs:
         run: git fetch origin '+refs/heads/agent/*:refs/remotes/origin/agent/*' 2>/dev/null || true
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -56,7 +56,7 @@ jobs:
           steps.time.outputs.hour != '' &&
           fromJSON(steps.time.outputs.hour) >= 8 &&
           fromJSON(steps.time.outputs.hour) < 19
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v3
         with:
           payload: |
             {
