@@ -48,12 +48,21 @@ jobs:
       - name: Check if release needed
         id: check
         run: |
-          # Get the latest tag
+          # Get the latest tag; fall back to v0.0.0 sentinel if none exists
           latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           echo "Latest tag: $latest_tag"
 
+          # Resolve the commit range: if the tag doesn't exist as a ref
+          # (first-release bootstrap), count from the repo's first commit.
+          if git rev-parse -q --verify "${latest_tag}^{commit}" >/dev/null 2>&1; then
+            range="${latest_tag}..HEAD"
+          else
+            echo "Tag ${latest_tag} does not exist as a ref — counting from first commit."
+            range="HEAD"
+          fi
+
           # Check if there are commits since last tag
-          commits_since_tag=$(git rev-list ${latest_tag}..HEAD --count)
+          commits_since_tag=$(git rev-list ${range} --count)
           echo "Commits since tag: $commits_since_tag"
 
           if [ "$commits_since_tag" -gt 0 ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
@@ -67,9 +76,9 @@ jobs:
             release_type="${{ github.event.inputs.release-type }}"
             if [ -z "$release_type" ]; then
               # Auto-detect from commit messages
-              if git log ${latest_tag}..HEAD --format=%s | grep -qE '^feat!:|^fix!:|BREAKING CHANGE:'; then
+              if git log ${range} --format=%s | grep -qE '^feat!:|^fix!:|BREAKING CHANGE:'; then
                 release_type="major"
-              elif git log ${latest_tag}..HEAD --format=%s | grep -qE '^feat:'; then
+              elif git log ${range} --format=%s | grep -qE '^feat:'; then
                 release_type="minor"
               else
                 release_type="patch"
