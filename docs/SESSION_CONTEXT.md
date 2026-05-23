@@ -28,7 +28,8 @@ required status checks.
 
 - `squash_merge_commit_message: BLANK` (no more long-body waivers needed for
   PR squash merges).
-- `commit_msg_lint.py` now exempts bot authors (`*[bot]@users.noreply.github.com`).
+- `commit_msg_lint.py` now exempts bot authors
+  (`*[bot]@users.noreply.github.com`).
 - Multi-scope commit-header regex accepts `chore(ci)(deps):` style (Dependabot).
 - Branch-name regex accepts
   `feat|fix|docs|refactor|test|chore|agent|ci|build|perf|style|revert`.
