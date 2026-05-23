@@ -2,7 +2,19 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import dynamic from 'next/dynamic';
+
+// Lazy-load the recharts-based RevenueTrendChart so its ~100KB minified
+// dependency stays out of this page's main bundle chunk. Loads after first
+// paint (the chart is below-the-fold in most viewports). Addresses
+// Lighthouse #84 script-bundle audit.
+const RevenueTrendChart = dynamic(
+  () => import('./RevenueTrendChart').then((m) => ({ default: m.RevenueTrendChart })),
+  {
+    ssr: false,
+    loading: () => <div className="h-64 animate-pulse rounded-lg bg-muted" />,
+  }
+);
 import { Card, EmptyState } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -548,42 +560,7 @@ function RevenueTrendContent({
 }: Readonly<{ loading: boolean; timeSeries: TimeSeriesEntry[] | undefined | null }>) {
   if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
   if (timeSeries && timeSeries.length > 0)
-    return (
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={timeSeries} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-            <XAxis
-              dataKey="periodLabel"
-              tick={{ fontSize: 12 }}
-              className="fill-muted-foreground"
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 12 }}
-              className="fill-muted-foreground"
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-            />
-            <Tooltip
-              formatter={(value) => {
-                const numValue = typeof value === 'number' ? value : 0;
-                return formatCurrency(numValue);
-              }}
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '0.5rem',
-                color: 'hsl(var(--foreground))',
-              }}
-            />
-            <Bar dataKey="value" radius={[4, 4, 0, 0]} className="fill-primary" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    );
+    return <RevenueTrendChart timeSeries={timeSeries} formatCurrency={formatCurrency} />;
   return (
     <EmptyState entity="activity" phase="passive" description="No revenue data for this period" />
   );
