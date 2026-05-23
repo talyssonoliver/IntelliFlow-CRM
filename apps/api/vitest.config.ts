@@ -14,6 +14,13 @@ export default defineConfig({
       '.turbo',
       // Integration tests require seeded database - run with pnpm test:integration
       '**/*.integration.test.ts',
+      // Cross-process tests require a real Redis instance — they use
+      // `describe.skipIf(!REDIS_URL)` but the skip wasn't reliably triggering
+      // in CI Unit Tests (which has no Redis service); they get run by the
+      // Integration Tests job where REDIS_URL points at a real Redis service.
+      // (PR #59 / IFC-214: 3 test files added 2026-05-23 broke main's CI Pipeline
+      // for ~30 min before this exclusion landed.)
+      '**/*.crossprocess.test.ts',
     ],
 
     // Memory optimization
