@@ -204,7 +204,11 @@ describe('ChainMonitor', () => {
         latencyThresholdMs: 2000,
       });
 
-      expect(result.metrics.latencyMs).toBeGreaterThanOrEqual(50);
+      // setTimeout(50) is "at least 50ms" by spec but can fire 1-5ms early due
+      // to timer coalescing on busy CI runners. 45ms still proves latency
+      // tracking works without timer-flake false-fails. Same pattern as the
+      // apps/api tracing.test.ts fix in PR #69.
+      expect(result.metrics.latencyMs).toBeGreaterThanOrEqual(45);
     });
 
     it('should generate unique operation IDs', async () => {
