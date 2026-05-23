@@ -280,11 +280,15 @@ jobs:
           ARCHIVE_NAME="${{ needs.build-artifacts.outputs.archive_name }}"
           ARCHIVE_SHA256="${{ needs.build-artifacts.outputs.archive_sha256 }}"
 
-          # Generate SLSA provenance JSON
+          # Generate SLSA provenance JSON (v0.2 schema — matches the
+          # buildType/builder/invocation/metadata/materials shape below
+          # and the `--type slsaprovenance` flag passed to cosign in the
+          # next step. The v1 schema uses buildDefinition/runDetails
+          # instead and is incompatible with the document we emit).
           cat > "release-artifacts/provenance.json" << EOF
           {
             "_type": "https://in-toto.io/Statement/v0.1",
-            "predicateType": "https://slsa.dev/provenance/v1",
+            "predicateType": "https://slsa.dev/provenance/v0.2",
             "subject": [
               {
                 "name": "${ARCHIVE_NAME}",
