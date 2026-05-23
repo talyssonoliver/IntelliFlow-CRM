@@ -39,9 +39,19 @@ RUN pnpm install --frozen-lockfile --offline --ignore-scripts
 # Generate Prisma client
 RUN pnpm --filter db db:generate
 
-# Build domain and shared packages
+# Build workspace packages in dependency order before the worker compile.
+# ai-worker imports @intelliflow/db, observability, worker-shared and adapters
+# (all expose dist/ entrypoints), so they must be built first. Mirrors the
+# proven build chain in Dockerfile.api.
 RUN pnpm --filter domain build
 RUN pnpm --filter validators build
+RUN pnpm --filter webhooks build
+RUN pnpm --filter platform build
+RUN pnpm --filter db build
+RUN pnpm --filter observability build
+RUN pnpm --filter worker-shared build
+RUN pnpm --filter application build
+RUN pnpm --filter adapters build
 
 # Build the AI worker
 RUN pnpm --filter ai-worker build
