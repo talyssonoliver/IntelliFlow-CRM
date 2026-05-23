@@ -28,10 +28,7 @@ export function RevenueTrendChart({ timeSeries, formatCurrency }: RevenueTrendCh
   return (
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={[...timeSeries]}
-          margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
-        >
+        <BarChart data={[...timeSeries]} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
           <XAxis
             dataKey="periodLabel"
