@@ -106,5 +106,10 @@ EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://localhost:4000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Start the API server
-CMD ["node", "apps/api/dist/main.js"]
+# Start the API server via tsx — required because Prisma 7 with
+# engineType="client" emits .ts files in packages/db/generated/prisma/
+# and fix-prisma-esm.mjs writes .js shims that `export * from './client.ts'`.
+# Plain `node` can't load .ts; tsx registers a TS-aware loader.
+# tsx is bundled in apps/api/node_modules (was a devDependency, kept now
+# that pnpm prune --prod is gone).
+CMD ["./node_modules/.bin/tsx", "apps/api/dist/main.js"]
