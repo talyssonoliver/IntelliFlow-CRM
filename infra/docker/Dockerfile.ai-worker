@@ -27,13 +27,20 @@ RUN apk add --no-cache python3 py3-pip build-base
 
 WORKDIR /app
 
-# Copy full virtual store from deps (all tarballs cached, no re-download)
+# Copy full virtual store + per-app/per-pkg symlink layer from deps stage.
+# pnpm isolated linker creates both /app/node_modules AND
+# /app/{apps,packages}/<name>/node_modules; missing the latter strands the
+# per-app deps (dotenv, sdk-node, etc.) because pnpm install --frozen-lockfile
+# below won't regenerate them when the lockfile already matches.
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps ./apps
+COPY --from=deps /app/packages ./packages
 
-# Copy full source tree (.dockerignore excludes node_modules, .next, dist, etc.)
+# Copy full source tree (.dockerignore excludes node_modules; existing
+# node_modules symlinks underneath are preserved).
 COPY . .
 
-# Re-link workspace symlinks against the copied virtual store
+# Re-link workspace symlinks against the copied virtual store.
 RUN pnpm install --frozen-lockfile --offline --ignore-scripts
 
 # Generate Prisma client

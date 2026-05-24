@@ -24,13 +24,24 @@ RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
 WORKDIR /app
 
-# Copy full virtual store from deps (all tarballs cached, no re-download)
+# Copy full virtual store + per-app/per-pkg symlink layer from deps stage.
+# pnpm isolated linker creates both /app/node_modules (virtual store + hoisted)
+# AND /app/{apps,packages}/<name>/node_modules (symlinks to virtual store).
+# Skipping the per-app dirs forces the COPY in the runner stage to copy empty
+# directories, and pnpm install --frozen-lockfile below will NOT regenerate
+# them because the lockfile already matches the virtual store.
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps ./apps
+COPY --from=deps /app/packages ./packages
 
-# Copy full source tree (.dockerignore excludes node_modules, .next, dist, etc.)
+# Copy full source tree (.dockerignore excludes node_modules, .next, dist, etc.).
+# Overlays source files onto the apps/packages tree we already have; the
+# existing node_modules symlinks underneath are preserved because COPY only
+# adds/overwrites files, it doesn't prune.
 COPY . .
 
-# Re-link workspace symlinks against the copied virtual store
+# Re-link workspace symlinks against the copied virtual store (no-op if
+# everything is in sync; safety net if a transient layer was missed).
 RUN pnpm install --frozen-lockfile --offline --ignore-scripts
 
 # Generate Prisma client
