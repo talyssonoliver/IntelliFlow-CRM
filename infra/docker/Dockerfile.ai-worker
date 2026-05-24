@@ -76,9 +76,12 @@ RUN adduser --system --uid 1001 aiworker
 WORKDIR /app
 
 # Copy necessary files from builder
+# IMPORTANT: see Dockerfile.api — apps/ai-worker/node_modules is required for
+# pnpm-symlinked dep resolution at runtime (OpenTelemetry, LangChain, etc.).
 COPY --from=builder --chown=aiworker:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=aiworker:nodejs /app/packages ./packages
 COPY --from=builder --chown=aiworker:nodejs /app/apps/ai-worker/dist ./apps/ai-worker/dist
+COPY --from=builder --chown=aiworker:nodejs /app/apps/ai-worker/node_modules ./apps/ai-worker/node_modules
 COPY --from=builder --chown=aiworker:nodejs /app/apps/ai-worker/package.json ./apps/ai-worker/
 COPY --from=builder --chown=aiworker:nodejs /app/package.json ./
 
