@@ -54,3 +54,11 @@ e648b333cf09 chore(ci): PR #69 squashed body line 130 chars ("Admin-merged:..." 
 # pattern as 214d0abd7fab (proper noun "Linux"). Pushed to main; cannot rewrite.
 1d90766e687e feat(IFC-212): PR #59 squashed subject — proper noun "Redis" upper-case
 8a74610c472f fix: PR #97 squashed subject 103 chars — too-long PR title used verbatim via squash_merge_commit_title=PR_TITLE
+
+# PR #112 + #113 squash-merges 2026-05-23 — author wrote PR titles starting
+# with the proper noun "SLSA" which the squash commit inherits as subject.
+# Already on origin/main; cannot rewrite without force-push. Going forward,
+# PR titles for SLSA-related work must start with the lower-case scope verb
+# (e.g. "fix(ci): slsa ..."  rather than "fix(ci): SLSA ...").
+be5aba42b1fb fix(ci): PR #112 squashed subject — proper noun "SLSA" upper-case
+6f8e3a267bcd fix(ci): PR #113 squashed subject — proper noun "SLSA" upper-case
