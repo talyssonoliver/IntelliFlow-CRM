@@ -357,6 +357,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: [performance-benchmarks, technical-debt, test-metrics, security-tracking]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    # Tolerate failure of this job: branch-protection forbids the direct
+    # push, AND the repo-level setting "Allow GitHub Actions to create
+    # and approve pull requests" (Settings → Actions → General) must be
+    # enabled before the PR-flow fallback can succeed. Enable that
+    # toggle and remove continue-on-error below to make this job
+    # blocking again. The regenerated metrics are already uploaded as
+    # workflow artifacts by the upstream jobs — committing them back is
+    # bonus, not load-bearing.
+    continue-on-error: true
     # Default GITHUB_TOKEN is read-only — explicit grants are required to
     # push the chore/governance-metrics-<ts> branch and open the PR.
     permissions:
