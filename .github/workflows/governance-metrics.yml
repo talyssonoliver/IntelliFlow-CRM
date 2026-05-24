@@ -357,6 +357,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [performance-benchmarks, technical-debt, test-metrics, security-tracking]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    # Default GITHUB_TOKEN is read-only — explicit grants are required to
+    # push the chore/governance-metrics-<ts> branch and open the PR.
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v6
         with:
