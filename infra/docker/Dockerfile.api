@@ -62,8 +62,13 @@ RUN pnpm --filter ai-worker build
 # Build the API
 RUN pnpm --filter api build
 
-# Prune dev dependencies (--config.confirmModulesPurge=false required in pnpm v10 non-TTY)
-RUN pnpm prune --prod --config.confirmModulesPurge=false --ignore-scripts
+# NOTE: `pnpm prune --prod` was removed intentionally.
+# In pnpm v10 with isolated linker, prune --prod removes ALL per-app
+# node_modules symlinks (apps/api/node_modules ends up empty) even though
+# packages are still listed as runtime deps. The result is a runner image
+# that crashes with MODULE_NOT_FOUND for legitimate prod deps.
+# Image is ~150MB larger without pruning; acceptable for now. Re-introduce
+# only via `pnpm deploy --filter api --prod /deploy/api` if size matters.
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner

@@ -63,8 +63,9 @@ RUN pnpm --filter adapters build
 # Build the AI worker
 RUN pnpm --filter ai-worker build
 
-# Prune dev dependencies (--config.confirmModulesPurge=false required in pnpm v10 non-TTY)
-RUN pnpm prune --prod --config.confirmModulesPurge=false --ignore-scripts
+# NOTE: `pnpm prune --prod` was removed intentionally — see Dockerfile.api.
+# It strips per-app node_modules symlinks under pnpm isolated linker and
+# crashes the runner with MODULE_NOT_FOUND for prod deps like dotenv.
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
