@@ -365,6 +365,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     const connection = {
       host: process.env.REDIS_HOST || 'localhost',
       port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+      ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+      ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
     };
 
     // Create the passive DLQ — no worker, only used for storage and inspection.
@@ -634,6 +636,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     const connection = {
       host: process.env.REDIS_HOST || 'localhost',
       port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+      ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+      ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
     };
     const externalQueueNames = [
       'intelliflow-document-reindex',

@@ -115,6 +115,8 @@ async function enqueueAccountAIEnrichment(entityId: string, tenantId: string): P
       connection: {
         host: process.env.REDIS_HOST ?? 'localhost',
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+        ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
       },
     });
     const otelCarrier: Record<string, string> = {};
@@ -1134,6 +1136,8 @@ export const accountRouter = createTRPCRouter({
         const connection = {
           host: process.env.REDIS_HOST ?? 'localhost',
           port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+          ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
         };
         const queue = new Queue(QUEUE_NAMES.AI_TAG_SUGGESTION, { connection });
         const events = new QueueEvents(QUEUE_NAMES.AI_TAG_SUGGESTION, { connection });

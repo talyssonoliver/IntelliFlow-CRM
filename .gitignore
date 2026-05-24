@@ -353,3 +353,4 @@ build-output.txt
 # TypeScript incremental build info (generated output, not source)
 tsconfig.tsbuildinfo
 **/tsconfig.tsbuildinfo
+scripts/railway-provision-dev.ps1
