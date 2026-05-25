@@ -24,6 +24,7 @@
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { z } from 'zod';
+import prettier from 'prettier';
 import { vulnerabilityBaselineSchema } from './lib/schemas/vulnerability-baseline.schema';
 import { attestationSchema } from './lib/schemas/attestation.schema';
 import { taskStatusObjectSchema } from './lib/schemas/task-status.schema';
@@ -166,7 +167,7 @@ const SCHEMAS: SchemaDefinition[] = [
   },
 ];
 
-function generateSchema(def: SchemaDefinition): void {
+async function generateSchema(def: SchemaDefinition): Promise<void> {
   // Use Zod v4's native toJSONSchema method
   const jsonSchema = z.toJSONSchema(def.schema);
 
@@ -202,19 +203,31 @@ function generateSchema(def: SchemaDefinition): void {
   // Without this guard, every `pnpm run generate:schemas` invocation
   // produced a noisy 14-file diff even when only one schema actually
   // changed.
-  const nextContent = JSON.stringify(enhancedSchema, null, 2) + '\n';
-  if (existsSync(outputPath)) {
-    const currentContent = readFileSync(outputPath, 'utf8');
-    if (currentContent === nextContent) {
-      console.log(`= Unchanged ${def.filename}`);
-      return;
-    }
+  // Pass through Prettier so the committed JSON matches what
+  // `pnpm run format:check` (and CI's Lint & Format job) expects. Without
+  // this, every generator run produces JSON.stringify output that
+  // immediately fails format:check — exactly the bug PR #157 hit.
+  const rawContent = JSON.stringify(enhancedSchema, null, 2) + '\n';
+  const nextContent = await prettier.format(rawContent, { parser: 'json', filepath: outputPath });
+  // Try to read the existing file directly. ENOENT means it doesn't
+  // exist yet (first run) — fall through to writeFileSync. existsSync()
+  // followed by readFileSync() would race with a concurrent writer
+  // (CodeQL js/file-system-race). Reading first eliminates that window.
+  let currentContent: string | null = null;
+  try {
+    currentContent = readFileSync(outputPath, 'utf8');
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e;
+  }
+  if (currentContent === nextContent) {
+    console.log(`= Unchanged ${def.filename}`);
+    return;
   }
   writeFileSync(outputPath, nextContent);
   console.log(`✓ Generated ${def.filename}`);
 }
 
-function main(): void {
+async function main(): Promise<void> {
   console.log('Generating JSON schemas from Zod definitions...\n');
 
   let successCount = 0;
@@ -222,7 +235,7 @@ function main(): void {
 
   for (const def of SCHEMAS) {
     try {
-      generateSchema(def);
+      await generateSchema(def);
       successCount++;
     } catch (error) {
       console.error(`✗ Failed to generate ${def.filename}: ${error}`);
@@ -239,4 +252,7 @@ function main(): void {
   }
 }
 
-main();
+main().catch((err) => {
+  console.error('Fatal:', err);
+  process.exit(1);
+});

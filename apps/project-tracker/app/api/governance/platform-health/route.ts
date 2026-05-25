@@ -487,20 +487,56 @@ function computeProvenanceChecks(metrics: Record<string, any>): {
  *   null  — sidecar absent (bootstrap, not regression — caller does
  *           nothing)
  */
+interface CiCostProvenance {
+  is_stale: boolean;
+  stale_reason: string | null;
+  source_csv_max_date: string | null;
+  confidence: string;
+  collection_method: string;
+  latest_observed_workflow_run_at?: string | null;
+}
+
+/**
+ * Validates the runtime shape of the parsed sidecar. Without this, a
+ * malformed sidecar where `is_stale` is missing would make `!ciProv.is_stale`
+ * evaluate to `true` and silently mark the check as passing — the exact
+ * "fake green" failure mode the failure registry already tracks. This
+ * lives inline instead of importing the Zod schema because route.ts is
+ * Edge-compatible and we keep its runtime deps minimal.
+ */
+function isValidCiCostProvenance(v: unknown): v is CiCostProvenance {
+  if (!v || typeof v !== 'object') return false;
+  const o = v as Record<string, unknown>;
+  return (
+    typeof o.is_stale === 'boolean' &&
+    (o.stale_reason === null || typeof o.stale_reason === 'string') &&
+    (o.source_csv_max_date === null || typeof o.source_csv_max_date === 'string') &&
+    typeof o.confidence === 'string' &&
+    typeof o.collection_method === 'string'
+  );
+}
+
 function computeCiCostProvenanceChecks(provenanceChecks: HealthCheck[]): boolean | null {
   const ciCostProvPath = resolve(getRoot(), 'artifacts/reports/ci-cost/latest.provenance.json');
-  if (!existsSync(ciCostProvPath)) return null;
-
-  let ciProv: {
-    is_stale: boolean;
-    stale_reason: string | null;
-    source_csv_max_date: string | null;
-    confidence: string;
-    collection_method: string;
-    latest_observed_workflow_run_at?: string | null;
-  };
+  // Read first, treat ENOENT as bootstrap. existsSync-then-read would
+  // race with a concurrent writer (parser / refresh script). The read
+  // window is constant-time on the underlying fs, no TOCTOU window.
+  let raw: string;
   try {
-    ciProv = JSON.parse(readFileSync(ciCostProvPath, 'utf8'));
+    raw = readFileSync(ciCostProvPath, 'utf8');
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    provenanceChecks.push({
+      name: 'metrics_staleness:ci_cost',
+      passed: false,
+      detail: `ci-cost latest.provenance.json read failed: ${(e as Error).message}`,
+    });
+    return false;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
   } catch {
     provenanceChecks.push({
       name: 'metrics_staleness:ci_cost',
@@ -509,6 +545,16 @@ function computeCiCostProvenanceChecks(provenanceChecks: HealthCheck[]): boolean
     });
     return false;
   }
+
+  if (!isValidCiCostProvenance(parsed)) {
+    provenanceChecks.push({
+      name: 'metrics_staleness:ci_cost',
+      passed: false,
+      detail: 'ci-cost latest.provenance.json parsed but is missing required fields',
+    });
+    return false;
+  }
+  const ciProv = parsed;
 
   // The sidecar precomputes is_stale (three checks: no dated rows,
   // age-vs-threshold, runs-since-CSV-export). We trust that rather than

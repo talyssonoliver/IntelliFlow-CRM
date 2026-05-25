@@ -23,7 +23,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'csv-parse/sync';
 
@@ -32,7 +32,11 @@ import { parse } from 'csv-parse/sync';
 // canonical lowercase_underscore keys we read below. csv-parse calls this
 // function once per header cell.
 export const normaliseHeader = (h) =>
-  String(h).toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  String(h)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_|_$/g, '');
 
 // Accepts common GitHub-export header variants. If your CSV uses a header
 // not in this table, add it here rather than silently falling back to zero.
@@ -183,7 +187,9 @@ export function formatReport(agg) {
   const sortedUser = Object.entries(byUser).sort((a, b) => b[1].minutes - a[1].minutes);
   for (const [u, stats] of sortedUser) {
     const share = pct(stats.minutes, totals.minutes).padStart(6);
-    out.push(`${share}  ${String(stats.minutes).padStart(6)}m  $${stats.cost.toFixed(2).padStart(7)}  ${u}`);
+    out.push(
+      `${share}  ${String(stats.minutes).padStart(6)}m  $${stats.cost.toFixed(2).padStart(7)}  ${u}`
+    );
   }
 
   out.push('');
@@ -238,10 +244,18 @@ export function buildArtifact({
   stalenessThresholdDays = 30,
   latestWorkflowRunAt = null,
 }) {
-  const dates = rows
-    .map((r) => r[resolveColumns(rows).date])
-    .filter((d) => d && d !== '(unknown)')
-    .sort();
+  // Resolve the canonical → actual column-name map ONCE per call, not per
+  // row. The previous shape called resolveColumns(rows) inside .map() and
+  // re-scanned the alias table N times (and re-threw on malformed input
+  // N times). Empty rows is handled by aggregate() / the calling guard,
+  // so resolveColumns has at least one row here.
+  const dateCol = rows.length ? resolveColumns(rows).date : null;
+  const dates = dateCol
+    ? rows
+        .map((r) => r[dateCol])
+        .filter((d) => d && d !== '(unknown)')
+        .sort()
+    : [];
   const minDate = dates[0] || null;
   const maxDate = dates[dates.length - 1] || null;
 
@@ -354,11 +368,14 @@ export function writeArtifact(outDir, { artifact, provenance }) {
 }
 
 function safeGitHead() {
-  try {
-    return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
-  } catch {
-    return 'unknown';
-  }
+  // spawnSync (not execSync) so no shell is involved. Command and args are
+  // both fixed string literals, no interpolation.
+  const r = spawnSync('git', ['rev-parse', 'HEAD'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: false,
+  });
+  return r.status === 0 ? r.stdout.trim() : 'unknown';
 }
 
 // CLI entry — only runs when invoked directly. Tests import the module and
@@ -366,29 +383,54 @@ function safeGitHead() {
 const isMain = (() => {
   if (!process.argv[1]) return false;
   try {
-    return import.meta.url === new URL(`file://${fileURLToPath(import.meta.url)}`).href
-      && fileURLToPath(import.meta.url) === fs.realpathSync(process.argv[1]);
+    return (
+      import.meta.url === new URL(`file://${fileURLToPath(import.meta.url)}`).href &&
+      fileURLToPath(import.meta.url) === fs.realpathSync(process.argv[1])
+    );
   } catch {
     return false;
   }
 })();
 
+// GitHub owner/repo segment regex. Per
+// https://docs.github.com/en/rest/repos/repos: names are 1–100 chars of
+// `[A-Za-z0-9._-]`; owners (users/orgs) follow the same pattern. We accept
+// exactly `<owner>/<repo>` with no leading/trailing whitespace and no
+// extra slashes. This is the only allowlist between user input and the
+// `gh` subprocess.
+const GH_REPO_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}\/[A-Za-z0-9._-]{1,100}$/;
+
 /**
  * Asks gh for the ISO timestamp of the most recent workflow run. Returns
  * null when `gh` is missing, unauthenticated, or rate-limited — the
  * caller treats null as "freshness check skipped" rather than failing.
+ *
+ * `repo` is validated against GH_REPO_RE before any subprocess call.
+ * spawnSync (not execSync) is used so the value is passed as an argv
+ * element rather than interpolated into a shell string — defence in
+ * depth against shell metacharacter abuse.
  */
 function fetchLatestWorkflowRunAt(repo) {
+  if (!GH_REPO_RE.test(repo)) {
+    process.stderr.write(`warn: --gh-freshness rejected '${repo}' (not <owner>/<repo>)\n`);
+    return null;
+  }
+  const r = spawnSync(
+    'gh',
+    ['api', '-H', 'Accept: application/vnd.github+json', `/repos/${repo}/actions/runs?per_page=1`],
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 10_000, shell: false }
+  );
+  if (r.status !== 0) {
+    const reason = (r.stderr || r.error?.message || `exit ${r.status}`).toString().slice(0, 120);
+    process.stderr.write(`warn: gh freshness check skipped (${reason})\n`);
+    return null;
+  }
   try {
-    const out = execSync(
-      `gh api -H "Accept: application/vnd.github+json" "/repos/${repo}/actions/runs?per_page=1"`,
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 10_000 }
-    );
-    const json = JSON.parse(out);
+    const json = JSON.parse(r.stdout);
     const run = json.workflow_runs && json.workflow_runs[0];
     return run ? run.run_started_at || run.created_at || null : null;
   } catch (e) {
-    process.stderr.write(`warn: gh freshness check skipped (${e.message.slice(0, 120)})\n`);
+    process.stderr.write(`warn: gh freshness response unparseable (${e.message.slice(0, 80)})\n`);
     return null;
   }
 }
@@ -397,10 +439,12 @@ if (isMain) {
   const args = process.argv.slice(2);
   const positional = args.filter((a) => !a.startsWith('--'));
   const flags = Object.fromEntries(
-    args.filter((a) => a.startsWith('--')).map((a) => {
-      const [k, v] = a.split('=');
-      return [k.replace(/^--/, ''), v ?? true];
-    })
+    args
+      .filter((a) => a.startsWith('--'))
+      .map((a) => {
+        const [k, v] = a.split('=');
+        return [k.replace(/^--/, ''), v ?? true];
+      })
   );
   const csvPath = positional[0];
   if (!csvPath) {

@@ -11,6 +11,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { z } from 'zod';
+import prettier from 'prettier';
 import { parseCsv, aggregate, buildArtifact, writeArtifact } from '../parse-actions-usage.mjs';
 import {
   ciCostMetricsSchema,
@@ -176,8 +177,8 @@ describe('JSON-Schema mirror drift', () => {
   ];
 
   for (const { jsonFile, zodSchema, title, description } of cases) {
-    it(`${jsonFile} matches its Zod source (regenerate with pnpm run generate:schemas)`, () => {
-      const committed = JSON.parse(fs.readFileSync(path.join(JSON_SCHEMA_DIR, jsonFile), 'utf8'));
+    it(`${jsonFile} matches its Zod source (regenerate with pnpm run generate:schemas)`, async () => {
+      const committedRaw = fs.readFileSync(path.join(JSON_SCHEMA_DIR, jsonFile), 'utf8');
       const regen = {
         $schema: 'http://json-schema.org/draft-07/schema#',
         $id: jsonFile,
@@ -187,7 +188,20 @@ describe('JSON-Schema mirror drift', () => {
       };
       // The generator overrides $schema after spreading — mirror that here.
       regen['$schema'] = 'http://json-schema.org/draft-07/schema#';
-      expect(committed).toEqual(regen);
+      // Run BOTH sides through Prettier so this test passes regardless of
+      // whether the committed file used the bare JSON.stringify generator
+      // output or the Prettier-formatted output. The generator now
+      // Prettier-formats its writes, so the committed file is already
+      // Prettier-clean; normalising here means any reordering of fields
+      // / addition of a Zod .describe() shows up as a structural diff
+      // rather than getting masked by whitespace noise.
+      const regenRaw = JSON.stringify(regen, null, 2) + '\n';
+      const opts = { parser: 'json' as const };
+      const [committedPretty, regenPretty] = await Promise.all([
+        prettier.format(committedRaw, opts),
+        prettier.format(regenRaw, opts),
+      ]);
+      expect(committedPretty).toEqual(regenPretty);
     });
   }
 });

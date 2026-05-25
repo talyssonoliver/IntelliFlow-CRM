@@ -426,7 +426,8 @@ jobs:
   commit-artifacts:
     name: Commit Updated Artifacts
     runs-on: ubuntu-latest
-    needs: [performance-benchmarks, technical-debt, test-metrics, security-tracking, ci-cost-metrics]
+    needs:
+      [performance-benchmarks, technical-debt, test-metrics, security-tracking, ci-cost-metrics]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     # Tolerate failure of this job: branch-protection forbids the direct
     # push, AND the repo-level setting "Allow GitHub Actions to create
@@ -543,7 +544,8 @@ jobs:
   summary:
     name: Generate Summary
     runs-on: ubuntu-latest
-    needs: [performance-benchmarks, technical-debt, test-metrics, security-tracking, ci-cost-metrics]
+    needs:
+      [performance-benchmarks, technical-debt, test-metrics, security-tracking, ci-cost-metrics]
     if: always()
     steps:
       - name: Generate workflow summary

@@ -3,7 +3,7 @@
   "schema_version": "1.0.0",
   "generated_at": "2026-05-25T20:00:00.000Z",
   "owner": "platform-eng",
-  "description": "Structured registry of CI failure patterns. Each entry has a verification command so a future occurrence can be detected automatically. Update lastSeen+occurrences when a pattern recurs; toggle guardAdded once a recurrence guard is committed.",
+  "description": "Structured registry of CI failure patterns. Each entry has a verification_command so a future occurrence can be detected automatically. Update last_seen + occurrences when a pattern recurs; toggle guard_added once a recurrence guard is committed (field names match the Zod schema).",
   "patterns": [
     {
       "id": "missing-v0-bootstrap-tag",

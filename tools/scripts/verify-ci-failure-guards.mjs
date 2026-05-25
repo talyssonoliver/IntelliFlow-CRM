@@ -33,30 +33,48 @@ const flags = {
   json: false,
 };
 for (let i = 0; i < args.length; i++) {
-  if (args[i] === '--id') flags.id = args[++i];
-  else if (args[i] === '--json') flags.json = true;
-  else {
+  if (args[i] === '--id') {
+    // Reject `--id` with no value, or `--id --json` (where the next token
+    // is another flag). Previously a missing value silently set
+    // flags.id = undefined and produced a confusing 'no patterns matched
+    // id=undefined' error.
+    const next = args[i + 1];
+    if (!next || next.startsWith('--')) {
+      console.error(`--id requires a pattern id (got: ${next ?? '(end of args)'})`);
+      process.exit(2);
+    }
+    flags.id = next;
+    i += 1;
+  } else if (args[i] === '--json') {
+    flags.json = true;
+  } else {
     console.error(`unknown arg: ${args[i]}`);
     process.exit(2);
   }
 }
 
-if (!fs.existsSync(REGISTRY_PATH)) {
-  console.error(`registry not found at ${REGISTRY_PATH}`);
+// Read first, ENOENT → exit 2 with explicit message. existsSync probe
+// would race with a parallel writer (CodeQL js/file-system-race).
+let registryText;
+try {
+  registryText = fs.readFileSync(REGISTRY_PATH, 'utf8');
+} catch (e) {
+  if (e.code === 'ENOENT') {
+    console.error(`registry not found at ${REGISTRY_PATH}`);
+  } else {
+    console.error(`could not read registry: ${e.message}`);
+  }
   process.exit(2);
 }
-
 let registry;
 try {
-  registry = JSON.parse(fs.readFileSync(REGISTRY_PATH, 'utf8'));
+  registry = JSON.parse(registryText);
 } catch (e) {
   console.error(`registry is not valid JSON: ${e.message}`);
   process.exit(2);
 }
 
-const patterns = flags.id
-  ? registry.patterns.filter((p) => p.id === flags.id)
-  : registry.patterns;
+const patterns = flags.id ? registry.patterns.filter((p) => p.id === flags.id) : registry.patterns;
 
 if (patterns.length === 0) {
   console.error(`no patterns matched id=${flags.id}`);
