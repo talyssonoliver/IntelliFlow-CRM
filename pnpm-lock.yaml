@@ -870,8 +870,8 @@ importers:
         specifier: ^10.3.1
         version: 10.3.1
       twilio:
-        specifier: ^5.12.2
-        version: 5.12.2
+        specifier: ^6.0.2
+        version: 6.0.2
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -983,8 +983,8 @@ importers:
         specifier: ^3.12.0
         version: 3.12.0
       twilio:
-        specifier: ^5.12.2
-        version: 5.12.2
+        specifier: ^6.0.2
+        version: 6.0.2
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -7386,8 +7386,8 @@ packages:
   dateformat@4.6.3:
     resolution: {integrity: sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==}
 
-  dayjs@1.11.19:
-    resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
+  dayjs@1.11.20:
+    resolution: {integrity: sha512-YbwwqR/uYpeoP4pu043q+LTDLFBLApUP6VxRihdfNTqu4ubqMlGDLd6ErXhEgsyvY0K6nCs7nggYumAN+9uEuQ==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -10484,6 +10484,10 @@ packages:
     resolution: {integrity: sha512-mAZTtNCeetKMH+pSjrb76NAM8V9a05I9aBZOHztWy/UqcJdQYNsf59vrRKWnojAT9Y+GbIvoTBC++CPHqpDBhQ==}
     engines: {node: '>=0.6'}
 
+  qs@6.15.2:
+    resolution: {integrity: sha512-Rzq0KEyX/w/tEybncDgdkZrJgVUsUMk3xjh3t5bv3S1HTAtg+uOYt72+ZfwiQwKdysThkTBdL/rTi6HDmX9Ddw==}
+    engines: {node: '>=0.6'}
+
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
@@ -11624,9 +11628,9 @@ packages:
   tweetnacl@0.14.5:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
 
-  twilio@5.12.2:
-    resolution: {integrity: sha512-yjTH04Ig0Z3PAxIXhwrto0IJC4Gv7lBDQQ9f4/P9zJhnxVdd+3tENqBMJOtdmmRags3X0jl2IGKEQefCEpJE9g==}
-    engines: {node: '>=14.0'}
+  twilio@6.0.2:
+    resolution: {integrity: sha512-RN3TZxUtxLz2HBZVt62+LdZxQbrMVgYKtuzLgwmO7nqKvR+gQS5mCackD9hf4Y7MmoK/bX7tCm7kaJC8kC8zFA==}
+    engines: {node: '>=20.0.0'}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -18003,7 +18007,7 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.7.2
       on-finished: 2.4.1
-      qs: 6.15.0
+      qs: 6.15.2
       raw-body: 3.0.2
       type-is: 2.0.1
     transitivePeerDependencies:
@@ -18640,7 +18644,7 @@ snapshots:
 
   dateformat@4.6.3: {}
 
-  dayjs@1.11.19: {}
+  dayjs@1.11.20: {}
 
   debug@2.6.9:
     dependencies:
@@ -22470,6 +22474,10 @@ snapshots:
     dependencies:
       side-channel: 1.1.0
 
+  qs@6.15.2:
+    dependencies:
+      side-channel: 1.1.0
+
   queue-microtask@1.2.3: {}
 
   quick-format-unescaped@4.0.4: {}
@@ -23882,13 +23890,13 @@ snapshots:
 
   tweetnacl@0.14.5: {}
 
-  twilio@5.12.2:
+  twilio@6.0.2:
     dependencies:
       axios: 1.16.1
-      dayjs: 1.11.19
+      dayjs: 1.11.20
       https-proxy-agent: 5.0.1
       jsonwebtoken: 9.0.3
-      qs: 6.15.0
+      qs: 6.15.2
       scmp: 2.1.0
       xmlbuilder: 13.0.2
     transitivePeerDependencies:
