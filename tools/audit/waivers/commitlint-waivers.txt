@@ -69,3 +69,8 @@ be5aba42b1fb fix(ci): PR #112 squashed subject — proper noun "SLSA" upper-case
 # But this branch-tip commit is what system-audit lints during PR check,
 # so it needs a waiver until the squash lands. Waiver removable post-merge.
 430ce6c3aab8 feat(infra): branch commit subject — proper noun "Railway" upper-case (waived during PR; squash subject is conventional)
+
+# PR #118 squash-merge — author's PR title was "feat(infra): Railway
+# bootstrap ..." which got inherited verbatim. Same proper-noun pattern
+# as Linux/SLSA/Redis above. Already on origin/main; cannot rewrite.
+989cc1c549d6 feat(infra): PR #118 squashed subject — proper noun "Railway" upper-case
