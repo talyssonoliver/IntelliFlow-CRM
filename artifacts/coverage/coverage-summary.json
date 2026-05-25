@@ -1,22 +1,22 @@
 {
   "total": {
     "lines": {
-      "total": 17022,
-      "covered": 15159,
+      "total": 17029,
+      "covered": 15166,
       "skipped": 0,
       "pct": 89.05
     },
     "statements": {
-      "total": 18275,
-      "covered": 16065,
+      "total": 18282,
+      "covered": 16072,
       "skipped": 0,
-      "pct": 87.9
+      "pct": 87.91
     },
     "functions": {
-      "total": 4846,
-      "covered": 4164,
+      "total": 4848,
+      "covered": 4166,
       "skipped": 0,
-      "pct": 85.92
+      "pct": 85.93
     },
     "branches": {
       "total": 10846,
@@ -891,22 +891,22 @@
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/proxy.ts": {
     "lines": {
-      "total": 44,
-      "covered": 44,
+      "total": 51,
+      "covered": 51,
       "skipped": 0,
       "pct": 100
     },
     "functions": {
-      "total": 3,
-      "covered": 3,
+      "total": 5,
+      "covered": 5,
       "skipped": 0,
       "pct": 100
     },
     "statements": {
-      "total": 47,
-      "covered": 46,
+      "total": 54,
+      "covered": 53,
       "skipped": 0,
-      "pct": 97.87
+      "pct": 98.14
     },
     "branches": {
       "total": 47,
@@ -11030,8 +11030,8 @@
     }
   },
   "meta": {
-    "lastRunAt": "2026-05-25T07:33:22.867Z",
-    "duration": 385,
+    "lastRunAt": "2026-05-25T10:26:47.356Z",
+    "duration": 387,
     "source": "ci",
     "workflow": "governance-metrics",
     "status": "passed",
