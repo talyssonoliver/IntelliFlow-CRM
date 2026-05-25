@@ -91,11 +91,11 @@ output "railway_worker_url" {
 output "connection_strings" {
   description = "All connection strings in one object"
   value = {
-    database_url         = module.supabase.connection_string
-    supabase_url         = module.supabase.api_url
-    frontend_url         = module.vercel.url
-    api_url              = module.railway.api_url
-    worker_url           = module.railway.worker_url
+    database_url = module.supabase.connection_string
+    supabase_url = module.supabase.api_url
+    frontend_url = module.vercel.url
+    api_url      = module.railway.api_url
+    worker_url   = module.railway.worker_url
   }
   sensitive = true
 }
@@ -115,10 +115,10 @@ output "api_keys" {
 output "infrastructure_urls" {
   description = "Public URLs for all infrastructure components"
   value = {
-    frontend    = module.vercel.url
-    api         = module.railway.api_url
-    database    = module.supabase.api_url
-    studio      = "${module.supabase.api_url}/studio"
+    frontend = module.vercel.url
+    api      = module.railway.api_url
+    database = module.supabase.api_url
+    studio   = "${module.supabase.api_url}/studio"
   }
   sensitive = false
 }
@@ -127,10 +127,10 @@ output "infrastructure_urls" {
 output "health_check_endpoints" {
   description = "Health check URLs for monitoring"
   value = {
-    api         = "${module.railway.api_url}/health"
-    worker      = "${module.railway.worker_url}/health"
-    frontend    = "${module.vercel.url}/api/health"
-    database    = "${module.supabase.api_url}/rest/v1/"
+    api      = "${module.railway.api_url}/health"
+    worker   = "${module.railway.worker_url}/health"
+    frontend = "${module.vercel.url}/api/health"
+    database = "${module.supabase.api_url}/rest/v1/"
   }
   sensitive = false
 }
@@ -139,12 +139,12 @@ output "health_check_endpoints" {
 output "resource_summary" {
   description = "Summary of provisioned resources"
   value = {
-    environment     = var.environment
-    project_name    = local.full_project_name
-    region          = var.region
-    supabase_plan   = var.supabase_plan
-    vercel_domains  = var.vercel_domains
+    environment      = var.environment
+    project_name     = local.full_project_name
+    region           = var.region
+    supabase_plan    = var.supabase_plan
+    vercel_domains   = var.vercel_domains
     railway_services = keys(var.railway_services)
-    created_at      = timestamp()
+    created_at       = timestamp()
   }
 }

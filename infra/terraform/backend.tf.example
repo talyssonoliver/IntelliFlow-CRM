@@ -1,0 +1,26 @@
+# =============================================================================
+# Terraform remote state — EXAMPLE
+# =============================================================================
+# Copy to backend.tf in this directory (gitignored: backend.tf).
+# The .github/workflows/terraform.yml workflow runs
+#   terraform init -backend-config="key=crm/${env}/terraform.tfstate"
+# so the per-env `key` is supplied at init time — only bucket+region are pinned
+# here.
+#
+# Required GitHub repo secrets:
+#   AWS_ACCESS_KEY_ID
+#   AWS_SECRET_ACCESS_KEY
+#
+# For local apply: aws configure (or AWS_PROFILE) before `terraform init`.
+# =============================================================================
+
+terraform {
+  backend "s3" {
+    bucket  = "intelliflow-terraform-state"
+    region  = "us-east-1"
+    encrypt = true
+
+    # Optional but recommended — DynamoDB table for state locking
+    # dynamodb_table = "intelliflow-terraform-locks"
+  }
+}

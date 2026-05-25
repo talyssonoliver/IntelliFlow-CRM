@@ -1,0 +1,159 @@
+name: Railway Deploy
+
+# Deploys API + ai-worker services to Railway via the Railway CLI.
+#
+# Two deploy paths exist for this repo, and both rely on RAILWAY_TOKEN:
+#   1. Terraform (.github/workflows/terraform.yml) provisions the project,
+#      services, env vars, and points each service at a GHCR image.
+#      Re-running build-images.yml pushes a new image -> Railway auto-pulls.
+#   2. THIS workflow (railway-deploy.yml) does a direct `railway up` for
+#      hot-fixes and matrixed dev/staging deploys without going through GHCR.
+#
+# Trigger paths:
+#   - workflow_dispatch (manual; choose env + service)
+#   - workflow_run after build-images.yml succeeds on main (auto-redeploy)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Railway environment to deploy
+        required: true
+        type: choice
+        options: [dev, staging, production]
+        default: dev
+      service:
+        description: Service to deploy (or 'all')
+        required: true
+        type: choice
+        options: [all, api, ai-worker]
+        default: all
+  workflow_run:
+    workflows: [Build & Push Images]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: railway-deploy-${{ github.event.inputs.environment || 'dev' }}
+  cancel-in-progress: false
+
+env:
+  # Skip the workflow_run path if the upstream build failed
+  UPSTREAM_OK: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+
+  # NOTE: RAILWAY_TOKEN / RAILWAY_API_TOKEN are intentionally NOT at
+  # workflow scope. They're resolved per-job inside the `environment:`
+  # block so GitHub Environment-scoped secrets pick up env-specific
+  # values (e.g., RAILWAY_TOKEN_PROD for production, matching the
+  # convention already used by terraform.yml). At workflow scope only
+  # repo-level secrets would resolve, defeating the env-scoped model.
+
+jobs:
+  preflight:
+    name: Preflight — token + env
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      environment: ${{ steps.resolve.outputs.environment }}
+      services: ${{ steps.resolve.outputs.services }}
+    # Repo-level token check only — environment-scoped tokens are
+    # validated inside the deploy job where the env: binding applies.
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN || secrets.RAILWAY_TOKEN }}
+    steps:
+      - name: Validate Railway token secret is present
+        run: |
+          if [ -z "${RAILWAY_TOKEN}" ] && [ -z "${RAILWAY_API_TOKEN}" ]; then
+            echo "::error::Neither RAILWAY_TOKEN nor RAILWAY_API_TOKEN secret is configured."
+            echo "::error::Set at least one in Settings -> Secrets and variables -> Actions (or per-environment under Settings -> Environments)."
+            exit 1
+          fi
+          echo "Railway auth present (RAILWAY_TOKEN: ${#RAILWAY_TOKEN}, RAILWAY_API_TOKEN: ${#RAILWAY_API_TOKEN})"
+
+      - name: Resolve target environment and services
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENV_NAME="${{ inputs.environment }}"
+            SVC="${{ inputs.service }}"
+          else
+            # Auto-deploy on successful main build defaults to dev for safety
+            ENV_NAME="dev"
+            SVC="all"
+          fi
+          echo "environment=${ENV_NAME}" >> "$GITHUB_OUTPUT"
+
+          if [ "$SVC" = "all" ]; then
+            echo 'services=["api","ai-worker"]' >> "$GITHUB_OUTPUT"
+          else
+            echo "services=[\"${SVC}\"]" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    name: Deploy ${{ matrix.service }} -> ${{ needs.preflight.outputs.environment }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment: ${{ needs.preflight.outputs.environment }}
+    # Job-scoped env so GitHub Environment-scoped secrets resolve. Set
+    # RAILWAY_TOKEN per Environment (dev / staging / production) in
+    # Settings -> Environments -> <name> -> Secrets. Falls back to
+    # repo-level RAILWAY_TOKEN if no env-scoped value is set.
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN || secrets.RAILWAY_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.preflight.outputs.services) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> "$GITHUB_PATH"
+
+      - name: Show Railway CLI version
+        run: railway --version
+
+      - name: Link to Railway project
+        env:
+          RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_PROJECT_ID }}
+        run: |
+          if [ -z "$RAILWAY_PROJECT_ID" ]; then
+            echo "::error::Missing repo/env variable RAILWAY_PROJECT_ID. Set it under Settings -> Environments -> ${{ needs.preflight.outputs.environment }} (Variables tab)."
+            exit 1
+          fi
+          railway link --project "$RAILWAY_PROJECT_ID" --environment "${{ needs.preflight.outputs.environment }}"
+
+      - name: Deploy ${{ matrix.service }}
+        # `cd apps/<svc>` so Railway picks up the per-service railway.json
+        # via the CLI's working-directory lookup (otherwise it falls back
+        # to repo-root defaults, which would deploy with the wrong
+        # builder/config).
+        run: |
+          case "${{ matrix.service }}" in
+            api)
+              cd apps/api
+              railway up --service api --detach --ci
+              ;;
+            ai-worker)
+              cd apps/ai-worker
+              railway up --service ai-worker --detach --ci
+              ;;
+            *)
+              echo "::error::Unknown service: ${{ matrix.service }}"
+              exit 1
+              ;;
+          esac
+
+      - name: Capture deployment status
+        if: always()
+        run: |
+          echo "## Railway deploy — ${{ matrix.service }} (${{ needs.preflight.outputs.environment }})" >> "$GITHUB_STEP_SUMMARY"
+          railway status --json | jq '.' >> "$GITHUB_STEP_SUMMARY" || true
