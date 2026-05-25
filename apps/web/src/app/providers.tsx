@@ -88,12 +88,20 @@ function getBaseUrl() {
 
 function getWsUrl() {
   if (typeof globalThis.window === 'undefined') return null;
+
+  // Production: rely on NEXT_PUBLIC_WS_URL pointing at the deployed WS server
+  // (Railway runs apps/api/src/ws-server.ts as its own service). When the env
+  // var is absent we return null so getWsClient() short-circuits and the
+  // tRPC providers fall back to HTTP-only links — no Connection-closed
+  // exception breaks React hydration on environments without a WS endpoint.
+  if (process.env.NODE_ENV === 'production') {
+    const configured = process.env.NEXT_PUBLIC_WS_URL?.trim();
+    return configured && configured.length > 0 ? configured : null;
+  }
+
+  // Dev fallback: tsx-watched ws-server.ts on localhost.
   const protocol = globalThis.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsPort = process.env.NEXT_PUBLIC_WS_PORT ?? '3001';
-  // In production, use same host; in dev, use localhost with WS_PORT
-  if (process.env.NODE_ENV === 'production') {
-    return `${protocol}//${globalThis.location.host}/ws`;
-  }
   return `${protocol}//localhost:${wsPort}`;
 }
 
