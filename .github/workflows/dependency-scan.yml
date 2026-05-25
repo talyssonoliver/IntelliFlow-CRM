@@ -26,6 +26,13 @@ permissions:
   contents: read
   security-events: write
   pull-requests: write
+  # issues: write — needed by the Aggregate & Report job to file a
+  # tracking issue when critical CVEs are detected (see job step that
+  # calls github.rest.issues.create). Without this, the step fails
+  # with: "RequestError [HttpError]: Resource not accessible by
+  # integration" and the whole job reports failure even when scans
+  # themselves succeeded.
+  issues: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true

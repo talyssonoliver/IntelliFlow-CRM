@@ -65,3 +65,9 @@ updates:
         update-types:
           - 'minor'
           - 'patch'
+    ignore:
+      # amondnet/vercel-action is unmaintained and was replaced repo-wide
+      # by the modern `vercel` CLI (see pr-checks.yml, cd.yml). Dependabot
+      # kept proposing upgrades (PR #121 was the latest). Ignore so this
+      # never reopens.
+      - dependency-name: 'amondnet/vercel-action'
