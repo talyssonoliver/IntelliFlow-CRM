@@ -197,3 +197,21 @@ export {
   type PerformanceBudget,
   type BenchmarkStatus,
 } from './benchmark.schema';
+
+// CI Cost Metrics — artifact + provenance sidecar emitted by
+// tools/scripts/parse-actions-usage.mjs (--emit-json). See
+// docs/operations/runbooks/ci-cost-monitoring.md.
+export {
+  ciCostMetricsSchema,
+  ciCostMetricsProvenanceSchema,
+  type CiCostMetrics,
+  type CiCostMetricsProvenance,
+} from './ci-cost-metrics.schema';
+
+// CI Failure Pattern Registry — artifacts/reports/ci-failures/registry.json.
+export {
+  ciFailureRegistrySchema,
+  ciFailurePatternSchema,
+  type CiFailureRegistry,
+  type CiFailurePattern,
+} from './ci-failure-registry.schema';

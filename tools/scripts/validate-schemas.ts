@@ -26,6 +26,11 @@ import { dependencyGraphSchema } from './lib/schemas/dependency-graph.schema.js'
 import { kpiDefinitionsSchema } from './lib/schemas/kpi-definitions.schema.js';
 import { traceabilitySchema } from './lib/schemas/traceability.schema.js';
 import { benchmarkSchema } from './lib/schemas/benchmark.schema.js';
+import {
+  ciCostMetricsSchema,
+  ciCostMetricsProvenanceSchema,
+} from './lib/schemas/ci-cost-metrics.schema.js';
+import { ciFailureRegistrySchema } from './lib/schemas/ci-failure-registry.schema.js';
 // NOTE: extractedTextSchema and analyticsEventSchema not imported - no data files exist yet
 
 // Get repo root
@@ -123,6 +128,23 @@ const VALIDATION_RULES: ValidationRule[] = [
       'artifacts/benchmarks/accuracy-benchmarks.json',
     ],
   },
+  // CI Cost Metrics — artifact emitted by parse-actions-usage.mjs --emit-json.
+  // Includes the history/ snapshots so old artifacts can't silently drift.
+  {
+    name: 'CI Cost Metrics',
+    schema: ciCostMetricsSchema,
+    patterns: ['artifacts/reports/ci-cost/latest.json', 'artifacts/reports/ci-cost/history/*.json'],
+  },
+  {
+    name: 'CI Cost Metrics Provenance',
+    schema: ciCostMetricsProvenanceSchema,
+    patterns: ['artifacts/reports/ci-cost/latest.provenance.json'],
+  },
+  {
+    name: 'CI Failure Registry',
+    schema: ciFailureRegistrySchema,
+    patterns: ['artifacts/reports/ci-failures/registry.json'],
+  },
   // NOTE: Extracted Text and Analytics Event rules removed - no data files exist yet
 ];
 
@@ -165,37 +187,44 @@ async function validateFile(
   }
 }
 
+async function expandPattern(pattern: string, ignore: string[]): Promise<string[]> {
+  // Use forward slashes for glob patterns (required on Windows).
+  const fullPattern = REPO_ROOT_POSIX + '/' + pattern;
+  return glob(fullPattern, {
+    nodir: true,
+    dot: true, // Match dotfiles and directories like .specify/
+    ignore: ignore.map((p) => REPO_ROOT_POSIX + '/' + p),
+  });
+}
+
+function reportFile(result: ValidationResult): void {
+  if (result.valid) {
+    console.log(`  ✓ ${result.file.replaceAll(REPO_ROOT, '.')}`);
+  } else {
+    console.log(`  ✗ ${result.file.replaceAll(REPO_ROOT, '.')}`);
+    result.errors?.forEach((e) => console.log(e));
+  }
+}
+
+async function runRule(rule: ValidationRule, results: ValidationResult[]): Promise<void> {
+  console.log(`Checking: ${rule.name}`);
+  for (const pattern of rule.patterns) {
+    const files = await expandPattern(pattern, rule.ignore ?? []);
+    for (const file of files) {
+      if (!existsSync(file)) continue;
+      const result = await validateFile(file, rule.schema, rule.name);
+      results.push(result);
+      reportFile(result);
+    }
+  }
+}
+
 async function main(): Promise<void> {
   console.log('Validating data files against Zod schemas...\n');
 
   const results: ValidationResult[] = [];
-
   for (const rule of VALIDATION_RULES) {
-    console.log(`Checking: ${rule.name}`);
-
-    for (const pattern of rule.patterns) {
-      // Use forward slashes for glob patterns (required on Windows)
-      const fullPattern = REPO_ROOT_POSIX + '/' + pattern;
-      const files = await glob(fullPattern, {
-        nodir: true,
-        dot: true, // Match dotfiles and directories like .specify/
-        ignore: rule.ignore?.map((p) => REPO_ROOT_POSIX + '/' + p) || [],
-      });
-
-      for (const file of files) {
-        if (!existsSync(file)) continue;
-
-        const result = await validateFile(file, rule.schema, rule.name);
-        results.push(result);
-
-        if (result.valid) {
-          console.log(`  ✓ ${file.replaceAll(REPO_ROOT, '.')}`);
-        } else {
-          console.log(`  ✗ ${file.replaceAll(REPO_ROOT, '.')}`);
-          result.errors?.forEach((e) => console.log(e));
-        }
-      }
-    }
+    await runRule(rule, results);
   }
 
   // Summary

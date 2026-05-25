@@ -1,0 +1,532 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-05-25T19:43:59.273Z",
+  "source": {
+    "path": "../usageReport_1_343f08b0632c43f6aecaf6613a27ffc0.csv",
+    "sha256": "6d2f3a42d08019e292d90712e84865c7b97b00313816d6fb265cb58133cca924",
+    "min_date": "2026-05-01",
+    "max_date": "2026-05-24",
+    "rows": 406
+  },
+  "totals": {
+    "compute_minutes": 29661,
+    "compute_cost_usd": 177.966,
+    "storage_cost_usd": 0.546,
+    "grand_total_usd": 178.512,
+    "days_covered": 24
+  },
+  "by_workflow": {
+    ".github/workflows/pr-checks.yml": {
+      "minutes": 5692,
+      "cost": 34.152000000000044,
+      "runs": 16
+    },
+    ".github/workflows/secret-rotation.yml": {
+      "minutes": 49,
+      "cost": 0.2940000000000001,
+      "runs": 24
+    },
+    ".github/workflows/image-scan.yml": {
+      "minutes": 194,
+      "cost": 1.1640000000000001,
+      "runs": 24
+    },
+    ".github/workflows/validate-sprint-data.yml": {
+      "minutes": 50,
+      "cost": 0.3,
+      "runs": 7
+    },
+    ".github/workflows/terraform-drift.yml": {
+      "minutes": 26,
+      "cost": 0.156,
+      "runs": 13
+    },
+    ".github/workflows/performance-gate.yml": {
+      "minutes": 41,
+      "cost": 0.246,
+      "runs": 3
+    },
+    ".github/workflows/ci.yml": {
+      "minutes": 6578,
+      "cost": 39.46800000000009,
+      "runs": 19
+    },
+    ".github/workflows/system-audit.yml": {
+      "minutes": 1944,
+      "cost": 11.663999999999998,
+      "runs": 16
+    },
+    ".github/workflows/system-audit-nightly.yml": {
+      "minutes": 353,
+      "cost": 2.1180000000000008,
+      "runs": 24
+    },
+    ".github/workflows/codebase-inventory-drift.yml": {
+      "minutes": 77,
+      "cost": 0.46200000000000013,
+      "runs": 27
+    },
+    "dynamic/copilot-pull-request-reviewer/copilot-pull-request-reviewer": {
+      "minutes": 122,
+      "cost": 0.7320000000000002,
+      "runs": 4
+    },
+    ".github/workflows/security.yml": {
+      "minutes": 7247,
+      "cost": 43.48200000000006,
+      "runs": 28
+    },
+    ".github/workflows/api-inventory-drift.yml": {
+      "minutes": 70,
+      "cost": 0.4200000000000001,
+      "runs": 24
+    },
+    ".github/workflows/sonar.yml": {
+      "minutes": 1473,
+      "cost": 8.837999999999987,
+      "runs": 16
+    },
+    ".github/workflows/runtime-path-lint.yml": {
+      "minutes": 575,
+      "cost": 3.450000000000002,
+      "runs": 14
+    },
+    ".github/workflows/artifact-lint.yml": {
+      "minutes": 737,
+      "cost": 4.421999999999988,
+      "runs": 14
+    },
+    ".github/workflows/security-sbom.yml": {
+      "minutes": 1151,
+      "cost": 6.905999999999934,
+      "runs": 16
+    },
+    ".github/workflows/validate-sprint.yml": {
+      "minutes": 744,
+      "cost": 4.464000000000003,
+      "runs": 7
+    },
+    ".github/workflows/system-audit-integrity.yml": {
+      "minutes": 56,
+      "cost": 0.33599999999999997,
+      "runs": 4
+    },
+    ".github/workflows/governance-metrics.yml": {
+      "minutes": 183,
+      "cost": 1.098,
+      "runs": 8
+    },
+    "dynamic/dependabot/dependabot-updates": {
+      "minutes": 363,
+      "cost": 2.1780000000000004,
+      "runs": 5
+    },
+    ".github/workflows/dependency-scan.yml": {
+      "minutes": 407,
+      "cost": 2.4420000000000015,
+      "runs": 10
+    },
+    "dynamic/github-code-scanning/codeql": {
+      "minutes": 10,
+      "cost": 0.06,
+      "runs": 2
+    },
+    ".github/workflows/content-audit.yml": {
+      "minutes": 10,
+      "cost": 0.05999999999999999,
+      "runs": 2
+    },
+    ".github/workflows/cd.yml": {
+      "minutes": 284,
+      "cost": 1.7040000000000004,
+      "runs": 6
+    },
+    ".github/workflows/signing.yml": {
+      "minutes": 359,
+      "cost": 2.1540000000000012,
+      "runs": 6
+    },
+    ".github/workflows/release.yml": {
+      "minutes": 225,
+      "cost": 1.3500000000000003,
+      "runs": 6
+    },
+    ".github/workflows/migration.yml": {
+      "minutes": 8,
+      "cost": 0.048,
+      "runs": 2
+    },
+    ".github/workflows/orphan-audit.yml": {
+      "minutes": 275,
+      "cost": 1.6500000000000006,
+      "runs": 4
+    },
+    "dynamic/agents/copilot-pull-request-reviewer": {
+      "minutes": 59,
+      "cost": 0.354,
+      "runs": 6
+    },
+    ".github/workflows/build-images.yml": {
+      "minutes": 292,
+      "cost": 1.7520000000000007,
+      "runs": 3
+    },
+    "dynamic/copilot-swe-agent/copilot": {
+      "minutes": 5,
+      "cost": 0.03,
+      "runs": 1
+    },
+    "dynamic/agents/github-advanced-security": {
+      "minutes": 2,
+      "cost": 0.012,
+      "runs": 1
+    }
+  },
+  "by_user": {
+    "talyssonoliver": {
+      "minutes": 25413,
+      "cost": 152.47800000000032
+    },
+    "copilot-pull-request-reviewer[bot]": {
+      "minutes": 181,
+      "cost": 1.0860000000000003
+    },
+    "dependabot[bot]": {
+      "minutes": 4050,
+      "cost": 24.30000000000001
+    },
+    "github-advanced-security[bot]": {
+      "minutes": 12,
+      "cost": 0.072
+    },
+    "copilot-swe-agent[bot]": {
+      "minutes": 5,
+      "cost": 0.03
+    }
+  },
+  "by_day": {
+    "2026-05-01": {
+      "minutes": 772,
+      "cost": 4.6320000000000014
+    },
+    "2026-05-02": {
+      "minutes": 1315,
+      "cost": 7.890000000000002
+    },
+    "2026-05-03": {
+      "minutes": 742,
+      "cost": 4.452000000000001
+    },
+    "2026-05-04": {
+      "minutes": 1483,
+      "cost": 8.898
+    },
+    "2026-05-05": {
+      "minutes": 61,
+      "cost": 0.36600000000000005
+    },
+    "2026-05-06": {
+      "minutes": 62,
+      "cost": 0.37200000000000005
+    },
+    "2026-05-07": {
+      "minutes": 69,
+      "cost": 0.41400000000000003
+    },
+    "2026-05-08": {
+      "minutes": 62,
+      "cost": 0.37200000000000005
+    },
+    "2026-05-09": {
+      "minutes": 2993,
+      "cost": 17.958
+    },
+    "2026-05-10": {
+      "minutes": 691,
+      "cost": 4.146
+    },
+    "2026-05-11": {
+      "minutes": 922,
+      "cost": 5.532000000000003
+    },
+    "2026-05-12": {
+      "minutes": 136,
+      "cost": 0.8160000000000002
+    },
+    "2026-05-13": {
+      "minutes": 394,
+      "cost": 2.3640000000000008
+    },
+    "2026-05-14": {
+      "minutes": 1321,
+      "cost": 7.926000000000001
+    },
+    "2026-05-15": {
+      "minutes": 65,
+      "cost": 0.39
+    },
+    "2026-05-16": {
+      "minutes": 62,
+      "cost": 0.37200000000000005
+    },
+    "2026-05-17": {
+      "minutes": 76,
+      "cost": 0.45600000000000007
+    },
+    "2026-05-18": {
+      "minutes": 1285,
+      "cost": 7.710000000000002
+    },
+    "2026-05-19": {
+      "minutes": 65,
+      "cost": 0.39
+    },
+    "2026-05-20": {
+      "minutes": 330,
+      "cost": 1.9800000000000009
+    },
+    "2026-05-21": {
+      "minutes": 188,
+      "cost": 1.1280000000000001
+    },
+    "2026-05-22": {
+      "minutes": 65,
+      "cost": 0.39
+    },
+    "2026-05-23": {
+      "minutes": 15433,
+      "cost": 92.59800000000013
+    },
+    "2026-05-24": {
+      "minutes": 1069,
+      "cost": 6.4140000000000015
+    }
+  },
+  "by_user_workflow": {
+    "talyssonoliver||.github/workflows/pr-checks.yml": {
+      "minutes": 4900,
+      "cost": 29.40000000000005,
+      "runs": 12
+    },
+    "talyssonoliver||.github/workflows/secret-rotation.yml": {
+      "minutes": 49,
+      "cost": 0.2940000000000001,
+      "runs": 24
+    },
+    "talyssonoliver||.github/workflows/image-scan.yml": {
+      "minutes": 194,
+      "cost": 1.1640000000000001,
+      "runs": 24
+    },
+    "talyssonoliver||.github/workflows/validate-sprint-data.yml": {
+      "minutes": 50,
+      "cost": 0.3,
+      "runs": 7
+    },
+    "talyssonoliver||.github/workflows/terraform-drift.yml": {
+      "minutes": 26,
+      "cost": 0.156,
+      "runs": 13
+    },
+    "talyssonoliver||.github/workflows/performance-gate.yml": {
+      "minutes": 27,
+      "cost": 0.162,
+      "runs": 2
+    },
+    "talyssonoliver||.github/workflows/ci.yml": {
+      "minutes": 5671,
+      "cost": 34.02600000000009,
+      "runs": 15
+    },
+    "talyssonoliver||.github/workflows/system-audit.yml": {
+      "minutes": 1543,
+      "cost": 9.257999999999996,
+      "runs": 12
+    },
+    "talyssonoliver||.github/workflows/system-audit-nightly.yml": {
+      "minutes": 353,
+      "cost": 2.1180000000000008,
+      "runs": 24
+    },
+    "talyssonoliver||.github/workflows/codebase-inventory-drift.yml": {
+      "minutes": 72,
+      "cost": 0.4320000000000001,
+      "runs": 24
+    },
+    "copilot-pull-request-reviewer[bot]||dynamic/copilot-pull-request-reviewer/copilot-pull-request-reviewer": {
+      "minutes": 122,
+      "cost": 0.7320000000000002,
+      "runs": 4
+    },
+    "talyssonoliver||.github/workflows/security.yml": {
+      "minutes": 6410,
+      "cost": 38.46000000000006,
+      "runs": 24
+    },
+    "talyssonoliver||.github/workflows/api-inventory-drift.yml": {
+      "minutes": 70,
+      "cost": 0.4200000000000001,
+      "runs": 24
+    },
+    "talyssonoliver||.github/workflows/sonar.yml": {
+      "minutes": 1254,
+      "cost": 7.5239999999999885,
+      "runs": 12
+    },
+    "talyssonoliver||.github/workflows/runtime-path-lint.yml": {
+      "minutes": 482,
+      "cost": 2.8920000000000012,
+      "runs": 10
+    },
+    "talyssonoliver||.github/workflows/artifact-lint.yml": {
+      "minutes": 622,
+      "cost": 3.7319999999999878,
+      "runs": 10
+    },
+    "talyssonoliver||.github/workflows/security-sbom.yml": {
+      "minutes": 978,
+      "cost": 5.867999999999934,
+      "runs": 12
+    },
+    "talyssonoliver||.github/workflows/validate-sprint.yml": {
+      "minutes": 744,
+      "cost": 4.464000000000003,
+      "runs": 7
+    },
+    "talyssonoliver||.github/workflows/system-audit-integrity.yml": {
+      "minutes": 56,
+      "cost": 0.33599999999999997,
+      "runs": 4
+    },
+    "dependabot[bot]||.github/workflows/pr-checks.yml": {
+      "minutes": 792,
+      "cost": 4.7520000000000024,
+      "runs": 4
+    },
+    "talyssonoliver||.github/workflows/governance-metrics.yml": {
+      "minutes": 183,
+      "cost": 1.098,
+      "runs": 8
+    },
+    "dependabot[bot]||.github/workflows/ci.yml": {
+      "minutes": 907,
+      "cost": 5.442000000000003,
+      "runs": 4
+    },
+    "dependabot[bot]||.github/workflows/security.yml": {
+      "minutes": 837,
+      "cost": 5.022000000000001,
+      "runs": 4
+    },
+    "dependabot[bot]||.github/workflows/security-sbom.yml": {
+      "minutes": 173,
+      "cost": 1.0380000000000005,
+      "runs": 4
+    },
+    "dependabot[bot]||dynamic/dependabot/dependabot-updates": {
+      "minutes": 363,
+      "cost": 2.1780000000000004,
+      "runs": 5
+    },
+    "talyssonoliver||.github/workflows/dependency-scan.yml": {
+      "minutes": 277,
+      "cost": 1.662000000000001,
+      "runs": 6
+    },
+    "dependabot[bot]||.github/workflows/codebase-inventory-drift.yml": {
+      "minutes": 5,
+      "cost": 0.030000000000000002,
+      "runs": 3
+    },
+    "dependabot[bot]||.github/workflows/sonar.yml": {
+      "minutes": 219,
+      "cost": 1.314,
+      "runs": 4
+    },
+    "dependabot[bot]||.github/workflows/dependency-scan.yml": {
+      "minutes": 130,
+      "cost": 0.7800000000000004,
+      "runs": 4
+    },
+    "dependabot[bot]||.github/workflows/runtime-path-lint.yml": {
+      "minutes": 93,
+      "cost": 0.5580000000000003,
+      "runs": 4
+    },
+    "dependabot[bot]||.github/workflows/performance-gate.yml": {
+      "minutes": 14,
+      "cost": 0.08399999999999999,
+      "runs": 1
+    },
+    "dependabot[bot]||.github/workflows/artifact-lint.yml": {
+      "minutes": 115,
+      "cost": 0.6900000000000003,
+      "runs": 4
+    },
+    "dependabot[bot]||.github/workflows/system-audit.yml": {
+      "minutes": 401,
+      "cost": 2.4059999999999997,
+      "runs": 4
+    },
+    "github-advanced-security[bot]||dynamic/github-code-scanning/codeql": {
+      "minutes": 10,
+      "cost": 0.06,
+      "runs": 2
+    },
+    "dependabot[bot]||.github/workflows/content-audit.yml": {
+      "minutes": 1,
+      "cost": 0.006,
+      "runs": 1
+    },
+    "talyssonoliver||.github/workflows/cd.yml": {
+      "minutes": 284,
+      "cost": 1.7040000000000004,
+      "runs": 6
+    },
+    "talyssonoliver||.github/workflows/signing.yml": {
+      "minutes": 359,
+      "cost": 2.1540000000000012,
+      "runs": 6
+    },
+    "talyssonoliver||.github/workflows/release.yml": {
+      "minutes": 225,
+      "cost": 1.3500000000000003,
+      "runs": 6
+    },
+    "talyssonoliver||.github/workflows/migration.yml": {
+      "minutes": 8,
+      "cost": 0.048,
+      "runs": 2
+    },
+    "talyssonoliver||.github/workflows/orphan-audit.yml": {
+      "minutes": 275,
+      "cost": 1.6500000000000006,
+      "runs": 4
+    },
+    "copilot-pull-request-reviewer[bot]||dynamic/agents/copilot-pull-request-reviewer": {
+      "minutes": 59,
+      "cost": 0.354,
+      "runs": 6
+    },
+    "talyssonoliver||.github/workflows/build-images.yml": {
+      "minutes": 292,
+      "cost": 1.7520000000000007,
+      "runs": 3
+    },
+    "copilot-swe-agent[bot]||dynamic/copilot-swe-agent/copilot": {
+      "minutes": 5,
+      "cost": 0.03,
+      "runs": 1
+    },
+    "github-advanced-security[bot]||dynamic/agents/github-advanced-security": {
+      "minutes": 2,
+      "cost": 0.012,
+      "runs": 1
+    },
+    "talyssonoliver||.github/workflows/content-audit.yml": {
+      "minutes": 9,
+      "cost": 0.05399999999999999,
+      "runs": 1
+    }
+  }
+}

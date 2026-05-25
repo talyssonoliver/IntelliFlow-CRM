@@ -459,7 +459,85 @@ function computeProvenanceChecks(metrics: Record<string, any>): {
     detail: `Collected by: ${prov.collected_by}`,
   });
 
+  // CI cost metrics live in a separate artifact tree
+  // (artifacts/reports/ci-cost/) emitted by
+  // tools/scripts/parse-actions-usage.mjs --emit-json. Extracted into its
+  // own helper so this function's cognitive complexity stays under the
+  // sonar-guard threshold. See docs/operations/runbooks/ci-cost-monitoring.md.
+  const ciCostFresh = computeCiCostProvenanceChecks(provenanceChecks);
+  if (ciCostFresh === false) {
+    provenanceFresh = false;
+  }
+
   return { provenanceChecks, daysSinceCollection, provenanceFresh, nextDue };
+}
+
+/**
+ * Reads artifacts/reports/ci-cost/latest.provenance.json (emitted by
+ * tools/scripts/parse-actions-usage.mjs --emit-json or refreshed by
+ * tools/scripts/refresh-ci-cost-freshness.mjs) and pushes two health
+ * checks onto the provided list:
+ *   - metrics_staleness:ci_cost
+ *   - source_confidence:ci_cost
+ *
+ * Returns:
+ *   true  — sidecar present and not stale (no rollup change needed)
+ *   false — sidecar present and stale OR malformed (caller should flip
+ *           provenanceFresh to false)
+ *   null  — sidecar absent (bootstrap, not regression — caller does
+ *           nothing)
+ */
+function computeCiCostProvenanceChecks(provenanceChecks: HealthCheck[]): boolean | null {
+  const ciCostProvPath = resolve(getRoot(), 'artifacts/reports/ci-cost/latest.provenance.json');
+  if (!existsSync(ciCostProvPath)) return null;
+
+  let ciProv: {
+    is_stale: boolean;
+    stale_reason: string | null;
+    source_csv_max_date: string | null;
+    confidence: string;
+    collection_method: string;
+    latest_observed_workflow_run_at?: string | null;
+  };
+  try {
+    ciProv = JSON.parse(readFileSync(ciCostProvPath, 'utf8'));
+  } catch {
+    provenanceChecks.push({
+      name: 'metrics_staleness:ci_cost',
+      passed: false,
+      detail: 'ci-cost latest.provenance.json exists but failed to parse',
+    });
+    return false;
+  }
+
+  // The sidecar precomputes is_stale (three checks: no dated rows,
+  // age-vs-threshold, runs-since-CSV-export). We trust that rather than
+  // re-running the logic — tests cover the emitter logic directly.
+  provenanceChecks.push({
+    name: 'metrics_staleness:ci_cost',
+    passed: !ciProv.is_stale,
+    detail: ciProv.is_stale ? staleDetail(ciProv) : freshDetail(ciProv),
+  });
+  provenanceChecks.push({
+    name: 'source_confidence:ci_cost',
+    passed: ciProv.confidence !== 'low',
+    detail: `ci_cost: confidence=${ciProv.confidence}, method=${ciProv.collection_method}`,
+  });
+  return !ciProv.is_stale;
+}
+
+function staleDetail(p: { stale_reason: string | null }): string {
+  return p.stale_reason ?? 'ci-cost artifact marked stale by emitter';
+}
+
+function freshDetail(p: {
+  source_csv_max_date: string | null;
+  latest_observed_workflow_run_at?: string | null;
+}): string {
+  const ghRun = p.latest_observed_workflow_run_at
+    ? `, gh API last run ${p.latest_observed_workflow_run_at}`
+    : '';
+  return `Fresh: CSV covers up to ${p.source_csv_max_date ?? 'unknown'}${ghRun}`;
 }
 
 function computeConsistencyChecks(metrics: Record<string, any>): HealthCheck[] {

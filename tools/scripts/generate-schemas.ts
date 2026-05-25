@@ -21,7 +21,7 @@
  * Note: Requires Zod v4+ for native JSON Schema support.
  */
 
-import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { z } from 'zod';
 import { vulnerabilityBaselineSchema } from './lib/schemas/vulnerability-baseline.schema';
@@ -35,6 +35,11 @@ import { kpiDefinitionsSchema } from './lib/schemas/kpi-definitions.schema';
 import { traceabilitySchema } from './lib/schemas/traceability.schema';
 import { extractedTextSchema } from './lib/schemas/extracted-text.schema';
 import { analyticsEventSchema } from './lib/schemas/analytics-event.schema';
+import {
+  ciCostMetricsSchema,
+  ciCostMetricsProvenanceSchema,
+} from './lib/schemas/ci-cost-metrics.schema';
+import { ciFailureRegistrySchema } from './lib/schemas/ci-failure-registry.schema';
 
 // Get repo root
 const fileUrl = new URL(import.meta.url);
@@ -135,6 +140,30 @@ const SCHEMAS: SchemaDefinition[] = [
     title: 'Analytics Event Schema',
     description: 'Schema for IntelliFlow analytics events',
   },
+  {
+    name: 'ci-cost-metrics',
+    filename: 'ci-cost-metrics.schema.json',
+    schema: ciCostMetricsSchema,
+    title: 'CI Cost Metrics Artifact',
+    description:
+      'Structured aggregation of a GitHub Actions usage CSV. Written by tools/scripts/parse-actions-usage.mjs (--emit-json). See docs/operations/runbooks/ci-cost-monitoring.md.',
+  },
+  {
+    name: 'ci-cost-metrics-provenance',
+    filename: 'ci-cost-metrics-provenance.schema.json',
+    schema: ciCostMetricsProvenanceSchema,
+    title: 'CI Cost Metrics Provenance Sidecar',
+    description:
+      'Provenance + freshness sidecar for ci-cost-metrics artifact. Consumed by platform-health staleness checks.',
+  },
+  {
+    name: 'ci-failure-registry',
+    filename: 'ci-failure-registry.schema.json',
+    schema: ciFailureRegistrySchema,
+    title: 'CI Failure Pattern Registry',
+    description:
+      'Structured registry of recurring CI failure patterns at artifacts/reports/ci-failures/registry.json.',
+  },
 ];
 
 function generateSchema(def: SchemaDefinition): void {
@@ -166,7 +195,22 @@ function generateSchema(def: SchemaDefinition): void {
     mkdirSync(OUTPUT_DIR, { recursive: true });
   }
 
-  writeFileSync(outputPath, JSON.stringify(enhancedSchema, null, 2) + '\n');
+  // Skip-if-unchanged: serialize the would-be content first, then compare
+  // against the existing file. This keeps the generator idempotent — adding
+  // a new schema to the SCHEMAS array doesn't rewrite the 11 unrelated
+  // mirrors (which can have unrelated drift from older generator versions).
+  // Without this guard, every `pnpm run generate:schemas` invocation
+  // produced a noisy 14-file diff even when only one schema actually
+  // changed.
+  const nextContent = JSON.stringify(enhancedSchema, null, 2) + '\n';
+  if (existsSync(outputPath)) {
+    const currentContent = readFileSync(outputPath, 'utf8');
+    if (currentContent === nextContent) {
+      console.log(`= Unchanged ${def.filename}`);
+      return;
+    }
+  }
+  writeFileSync(outputPath, nextContent);
   console.log(`✓ Generated ${def.filename}`);
 }
 
