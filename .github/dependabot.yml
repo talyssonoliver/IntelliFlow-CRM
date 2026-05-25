@@ -19,6 +19,22 @@ updates:
       prefix-development: 'chore(deps-dev)'
       include: 'scope'
     groups:
+      # Storybook MUST move as a unit — every @storybook/* and the meta
+      # 'storybook' package need to be pinned to the same major or the
+      # ecosystem breaks at runtime (component renderers ↔ core ↔ addon
+      # API mismatch). Group all of them, including majors, into one PR.
+      # Without this group, dependabot splits storybook into 6+ separate
+      # PRs (see PR #132 / #133 / parts of #130) which can never all
+      # land safely. Named groups with 'patterns' override the
+      # type-based groups below.
+      storybook:
+        patterns:
+          - '@storybook/*'
+          - 'storybook'
+        update-types:
+          - 'major'
+          - 'minor'
+          - 'patch'
       # Group non-major updates to reduce PR noise; majors still land individually
       production-minor-and-patch:
         dependency-type: 'production'
