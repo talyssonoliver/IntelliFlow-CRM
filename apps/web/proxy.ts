@@ -20,6 +20,38 @@ import { isTokenUsable } from '@/lib/auth/jwt';
 import { PROTECTED_ROUTE_PREFIXES, matchesRoutePrefix } from './src/lib/auth/route-protection';
 
 /**
+ * Build the per-request CSP. `'strict-dynamic'` lets the nonce-trusted
+ * Next.js runtime chunks load further scripts; `'nonce-…'` allows the
+ * inline RSC flight payload (`self.__next_f.push(…)`), the streaming
+ * runtime helpers (`$RC`, `$RT`, `$RB`, `$RV`), and the Suspense boundary
+ * swap scripts that React emits during streaming SSR — none of which can
+ * execute under a strict `script-src 'self'`.
+ *
+ * `connect-src` includes the Railway public domain so client-side tRPC
+ * HTTP fetches and the WebSocket subscription channel can reach the
+ * deployed API. Tighten to specific hostnames if you want to pin.
+ */
+function buildCsp(nonce: string): string {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.stripe.com`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://*.up.railway.app wss://*.up.railway.app",
+    "frame-src 'self' https://js.stripe.com",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+  ].join('; ');
+}
+
+function applyCsp(response: NextResponse, csp: string): NextResponse {
+  response.headers.set('Content-Security-Policy', csp);
+  return response;
+}
+
+/**
  * Protected routes requiring authentication
  */
 /**
@@ -69,7 +101,8 @@ function clearStaleAuthCookies(
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  // Skip static assets and API routes
+  // Skip static assets and API routes (matcher also excludes these; kept as
+  // a defensive guard). No CSP needed — those responses don't render HTML.
   if (
     path.startsWith('/_next') ||
     path.startsWith('/api') ||
@@ -77,6 +110,13 @@ export async function proxy(request: NextRequest) {
   ) {
     return NextResponse.next();
   }
+
+  // Per-request CSP nonce. `crypto.randomUUID()` is a Node-runtime global
+  // (proxy.ts runs in Node, not Edge). Next.js reads the nonce from the
+  // `x-nonce` request header and stamps it onto every inline <script> it
+  // emits during streaming SSR.
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  const csp = buildCsp(nonce);
 
   // Check if route is public
   const isPublicRoute = PUBLIC_ROUTES.includes(path);
@@ -109,10 +149,9 @@ export async function proxy(request: NextRequest) {
     console.log(`[Proxy] Protected route without auth, redirecting to login: ${path}`);
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', path);
-    return clearStaleAuthCookies(
-      NextResponse.redirect(loginUrl),
-      hasStaleAccessToken,
-      hasStaleSession
+    return applyCsp(
+      clearStaleAuthCookies(NextResponse.redirect(loginUrl), hasStaleAccessToken, hasStaleSession),
+      csp
     );
   }
 
@@ -121,7 +160,7 @@ export async function proxy(request: NextRequest) {
     const requiredRoles = PROTECTED_ROUTES[path];
     if (requiredRoles && !hasRole(session, requiredRoles)) {
       // User doesn't have required role -> redirect to home
-      return NextResponse.redirect(new URL('/', request.url));
+      return applyCsp(NextResponse.redirect(new URL('/', request.url)), csp);
     }
   }
 
@@ -135,11 +174,20 @@ export async function proxy(request: NextRequest) {
       hasStaleSession,
       request
     );
-    if (authPageResult) return authPageResult;
+    if (authPageResult) return applyCsp(authPageResult, csp);
   }
 
+  // Forward the nonce to the downstream render so Next.js can stamp it
+  // onto every inline <script> it emits during streaming SSR.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-nonce', nonce);
+
   // Add user info to headers for server components (if session available)
-  const response = clearStaleAuthCookies(NextResponse.next(), hasStaleAccessToken, hasStaleSession);
+  const response = clearStaleAuthCookies(
+    NextResponse.next({ request: { headers: requestHeaders } }),
+    hasStaleAccessToken,
+    hasStaleSession
+  );
 
   if (session) {
     response.headers.set('x-user-id', session.userId);
@@ -147,7 +195,7 @@ export async function proxy(request: NextRequest) {
     response.headers.set('x-user-role', session.role);
   }
 
-  return response;
+  return applyCsp(response, csp);
 }
 
 /**

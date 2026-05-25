@@ -126,41 +126,12 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          {
-            key: 'Content-Security-Policy',
-            // Note: Next.js (Turbopack/webpack) injects inline scripts for HMR in development,
-            // requiring 'unsafe-inline' for script-src in dev mode. React 19 + Turbopack also
-            // require 'unsafe-eval' in development for dev-mode debugging features like
-            // callstack reconstruction across environments; production builds never use eval().
-            value:
-              process.env.NODE_ENV === 'production'
-                ? [
-                    "default-src 'self'",
-                    "script-src 'self' https://js.stripe.com",
-                    "style-src 'self' 'unsafe-inline'",
-                    "img-src 'self' data: blob: https:",
-                    "font-src 'self' data:",
-                    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com",
-                    "frame-src 'self' https://js.stripe.com",
-                    "base-uri 'self'",
-                    "form-action 'self'",
-                    "object-src 'none'",
-                  ].join('; ')
-                : [
-                    "default-src 'self'",
-                    // 'unsafe-inline' needed for HMR injected scripts; 'unsafe-eval' needed
-                    // for React 19 + Turbopack dev-mode debugging (not used in production).
-                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
-                    "style-src 'self' 'unsafe-inline'",
-                    "img-src 'self' data: blob: https:",
-                    "font-src 'self' data:",
-                    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com ws://localhost:*",
-                    "frame-src 'self' https://js.stripe.com",
-                    "base-uri 'self'",
-                    "form-action 'self'",
-                    "object-src 'none'",
-                  ].join('; '),
-          },
+          // Content-Security-Policy is set per-request in apps/web/proxy.ts so
+          // it can include a unique nonce that Next.js stamps onto every inline
+          // <script> emitted by streaming SSR. A static CSP defined here would
+          // need either 'unsafe-inline' (defeats CSP) or it would block React's
+          // RSC flight payload chunks, runtime helpers, and Suspense boundary
+          // swap scripts — leaving streamed pages stuck on their fallback HTML.
         ],
       },
     ];
@@ -183,8 +154,7 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source:
-          '/calendar/:id((?!new$|availability$|calendar-settings$|event-types$)[^/]+)',
+        source: '/calendar/:id((?!new$|availability$|calendar-settings$|event-types$)[^/]+)',
         destination: '/appointments/:id',
         permanent: true,
       },
