@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-05-09T22:37:02.859Z",
+  "timestamp": "2026-05-25T17:00:37.590Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 61,
-    "total_endpoints": 541,
-    "total_queries": 249,
-    "total_mutations": 292,
+    "total_endpoints": 525,
+    "total_queries": 239,
+    "total_mutations": 286,
     "routers": [
       {
         "name": "contact",
@@ -1061,12 +1061,6 @@
         "endpoints": 18,
         "queries": 4,
         "mutations": 14
-      },
-      {
-        "name": "inbound",
-        "endpoints": 17,
-        "queries": 10,
-        "mutations": 7
       },
       {
         "name": "opportunity",
@@ -1364,6 +1358,12 @@
       },
       {
         "name": "emailInbound",
+        "endpoints": 1,
+        "queries": 0,
+        "mutations": 1
+      },
+      {
+        "name": "inbound",
         "endpoints": 1,
         "queries": 0,
         "mutations": 1
@@ -4380,89 +4380,9 @@
     ],
     "inbound": [
       {
-        "name": "inbound.webhook",
+        "name": "inbound.createLead",
         "method": "POST",
-        "description": "Webhook"
-      },
-      {
-        "name": "inbound.getEmail",
-        "method": "GET",
-        "description": "Get email"
-      },
-      {
-        "name": "inbound.listEmails",
-        "method": "GET",
-        "description": "List emails"
-      },
-      {
-        "name": "inbound.processEmail",
-        "method": "POST",
-        "description": "Process email"
-      },
-      {
-        "name": "inbound.getThread",
-        "method": "GET",
-        "description": "Get thread"
-      },
-      {
-        "name": "inbound.getAttachment",
-        "method": "GET",
-        "description": "Get attachment"
-      },
-      {
-        "name": "inbound.sendEmail",
-        "method": "POST",
-        "description": "Send email"
-      },
-      {
-        "name": "inbound.saveDraft",
-        "method": "POST",
-        "description": "Save draft"
-      },
-      {
-        "name": "inbound.listTemplates",
-        "method": "GET",
-        "description": "List templates"
-      },
-      {
-        "name": "inbound.markAsRead",
-        "method": "POST",
-        "description": "Mark as read"
-      },
-      {
-        "name": "inbound.markAsUnread",
-        "method": "POST",
-        "description": "Mark as unread"
-      },
-      {
-        "name": "inbound.setLabels",
-        "method": "POST",
-        "description": "Set labels"
-      },
-      {
-        "name": "inbound.getUnreadCounts",
-        "method": "GET",
-        "description": "Get unread counts"
-      },
-      {
-        "name": "inbound.lookupByEmail",
-        "method": "GET",
-        "description": "Lookup by email"
-      },
-      {
-        "name": "inbound.getStorageUsage",
-        "method": "GET",
-        "description": "Get storage usage"
-      },
-      {
-        "name": "inbound.getRelatedMessages",
-        "method": "GET",
-        "description": "Get related messages"
-      },
-      {
-        "name": "inbound.searchContacts",
-        "method": "GET",
-        "description": "Search contacts"
+        "description": "Create lead"
       }
     ],
     "experiment": [
