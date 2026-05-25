@@ -26,13 +26,9 @@ permissions:
   contents: read
   security-events: write
   pull-requests: write
-  # issues: write — needed by the Aggregate & Report job to file a
-  # tracking issue when critical CVEs are detected (see job step that
-  # calls github.rest.issues.create). Without this, the step fails
-  # with: "RequestError [HttpError]: Resource not accessible by
-  # integration" and the whole job reports failure even when scans
-  # themselves succeeded.
-  issues: write
+  # NOTE: issues: write is granted only on the aggregate-results job
+  # (not workflow-wide) because only that one job's issue-create step
+  # needs it (least privilege).
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -153,6 +149,11 @@ jobs:
     name: Aggregate & Report
     needs: [npm-audit, snyk-scan, trivy-scan, osv-scan]
     runs-on: ubuntu-latest
+    # Scoped privilege: only this job's Create-issue step needs to write
+    # issues. Workflow-level permissions remain read/security-events/PR.
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v6
 
@@ -215,7 +216,11 @@ jobs:
           fi
 
       - name: Create issue for critical vulnerabilities
-        if: steps.check-critical.outputs.critical_count > 0
+        # Skip on pull_request events because GITHUB_TOKEN is read-only
+        # for PRs from forks (workflow-level permissions don't help) and
+        # we don't want PR scans creating duplicate tracking issues.
+        # Issues fire on push, schedule, and workflow_dispatch only.
+        if: steps.check-critical.outputs.critical_count > 0 && github.event_name != 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
