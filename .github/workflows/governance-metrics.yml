@@ -352,10 +352,82 @@ jobs:
             artifacts/reports/security/mitigation-summary.json
           retention-days: 90
 
+  ci-cost-metrics:
+    name: CI Cost Metrics
+    runs-on: ubuntu-latest
+    # Runs the parser against a manually-exported usage CSV at
+    # artifacts/inputs/actions-usage.csv. If the CSV is missing, the
+    # parser is skipped — the platform-health staleness check on the
+    # existing latest.provenance.json (if any) is what alerts the owner
+    # that a re-export is overdue. See
+    # docs/operations/runbooks/ci-cost-monitoring.md for the export
+    # procedure and the planned gh-API auto-fetch upgrade.
+    permissions:
+      # gh CLI needs actions:read for the runs freshness check (the
+      # --gh-freshness flag below). contents:read is the default.
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Emit CI cost artifact (only if usage CSV is committed)
+        # When artifacts/inputs/actions-usage.csv exists, regenerate the
+        # full artifact from it. When missing, this step is a no-op — the
+        # Refresh freshness step below runs unconditionally and keeps
+        # is_stale current using the gh API alone.
+        run: |
+          if [ ! -f artifacts/inputs/actions-usage.csv ]; then
+            echo "::notice::No actions-usage.csv at artifacts/inputs/. Skipping full re-aggregation; freshness will still refresh."
+            exit 0
+          fi
+          node tools/scripts/parse-actions-usage.mjs \
+            artifacts/inputs/actions-usage.csv \
+            --emit-json=artifacts/reports/ci-cost \
+            --staleness-days=30 \
+            --gh-freshness=${{ github.repository }}
+
+      - name: Refresh CI cost freshness (always)
+        # Runs on every scheduled tick — even when no new CSV has been
+        # exported. Reads the existing latest.provenance.json, calls the
+        # gh API for the latest workflow run, recomputes is_stale +
+        # stale_reason. If runs have happened since the source CSV's max
+        # date, the sidecar is updated to is_stale=true and the dashboard
+        # check `metrics_staleness:ci_cost` flips to failed on the next
+        # platform-health refresh. No-op if the sidecar doesn't exist yet.
+        run: node tools/scripts/refresh-ci-cost-freshness.mjs ${{ github.repository }}
+
+      - name: Verify failure-pattern guards
+        # Fails the job ONLY on real regressions. TODO/PROMOTE entries
+        # are logged but exit 0 — see tools/scripts/verify-ci-failure-guards.mjs.
+        run: node tools/scripts/verify-ci-failure-guards.mjs
+
+      - name: Upload CI cost artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-cost-metrics
+          path: |
+            artifacts/reports/ci-cost/latest.json
+            artifacts/reports/ci-cost/latest.provenance.json
+          retention-days: 90
+
   commit-artifacts:
     name: Commit Updated Artifacts
     runs-on: ubuntu-latest
-    needs: [performance-benchmarks, technical-debt, test-metrics, security-tracking]
+    needs:
+      [performance-benchmarks, technical-debt, test-metrics, security-tracking, ci-cost-metrics]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     # Tolerate failure of this job: branch-protection forbids the direct
     # push, AND the repo-level setting "Allow GitHub Actions to create
@@ -409,6 +481,12 @@ jobs:
           if [ -d "downloaded-artifacts/security-tracking" ]; then
             mkdir -p artifacts/reports/security
             cp -r downloaded-artifacts/security-tracking/* artifacts/reports/security/ 2>/dev/null || true
+          fi
+
+          # CI cost metrics
+          if [ -d "downloaded-artifacts/ci-cost-metrics" ]; then
+            mkdir -p artifacts/reports/ci-cost
+            cp -r downloaded-artifacts/ci-cost-metrics/* artifacts/reports/ci-cost/ 2>/dev/null || true
           fi
 
       # Branch protection on main forbids direct pushes from
@@ -466,7 +544,8 @@ jobs:
   summary:
     name: Generate Summary
     runs-on: ubuntu-latest
-    needs: [performance-benchmarks, technical-debt, test-metrics, security-tracking]
+    needs:
+      [performance-benchmarks, technical-debt, test-metrics, security-tracking, ci-cost-metrics]
     if: always()
     steps:
       - name: Generate workflow summary
@@ -479,5 +558,6 @@ jobs:
           echo "| Technical Debt | ${{ needs.technical-debt.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Test Metrics | ${{ needs.test-metrics.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Security Tracking | ${{ needs.security-tracking.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CI Cost Metrics | ${{ needs.ci-cost-metrics.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Artifacts are available for download and will be committed to main." >> $GITHUB_STEP_SUMMARY

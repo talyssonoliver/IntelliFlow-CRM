@@ -320,9 +320,23 @@ jobs:
     name: Lighthouse Performance
     runs-on: ubuntu-latest
     needs: [deploy-preview]
-    # Gate matches deploy-preview so this job doesn't try to run if the
-    # preview URL was never produced (Vercel infra not wired).
-    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && needs.deploy-preview.outputs.preview-url != ''
+    # Three gates:
+    #   1. PR not draft + head from same repo + deploy-preview produced a URL.
+    #   2. `vars.VERCEL_BYPASS_CONFIGURED` is "true". The Vercel preview
+    #      deployments are protected by Vercel Deployment Protection (SSO);
+    #      Lighthouse hits vercel.com/login instead of the app unless we send
+    #      the protection-bypass token. The token lives in the secret
+    #      VERCEL_AUTOMATION_BYPASS_SECRET; we gate on the matching VAR
+    #      (variables are visible in logs so the gate is auditable while the
+    #      secret stays hidden). If the bypass isn't configured we SKIP the
+    #      job rather than continue-on-error or fail-with-vercel-login —
+    #      both are dishonest signals. See docs/operations/runbooks/
+    #      ci-cost-monitoring.md for setup instructions.
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.deploy-preview.outputs.preview-url != '' &&
+      vars.VERCEL_BYPASS_CONFIGURED == 'true'
     permissions:
       # Comment Lighthouse scores step uses github.rest.issues.createComment;
       # default GITHUB_TOKEN doesn't grant PR write on default jobs, so the
@@ -333,19 +347,36 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Compose bypass-enabled Lighthouse URLs
+        id: urls
+        env:
+          PREVIEW_URL: ${{ needs.deploy-preview.outputs.preview-url }}
+          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          # Vercel Deployment Protection bypass per
+          # https://vercel.com/docs/security/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation
+          # The query-param form sets a cookie (x-vercel-set-bypass-cookie=samesitenone)
+          # so subresources Lighthouse loads after the initial document also bypass
+          # the SSO wall without each URL needing the token appended.
+          if [ -z "$BYPASS" ]; then
+            echo "::error::VERCEL_BYPASS_CONFIGURED=true but VERCEL_AUTOMATION_BYPASS_SECRET is empty. Set both in repo settings."
+            exit 1
+          fi
+          Q="x-vercel-protection-bypass=${BYPASS}&x-vercel-set-bypass-cookie=samesitenone"
+          {
+            echo "urls<<URLS_EOF"
+            echo "${PREVIEW_URL}?${Q}"
+            echo "${PREVIEW_URL}/login?${Q}"
+            echo "${PREVIEW_URL}/signup?${Q}"
+            echo "${PREVIEW_URL}/pricing?${Q}"
+            echo "URLS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v11
         with:
           configPath: './lighthouserc.js'
-          # Use the dynamic Vercel preview URL produced by deploy-preview.
-          # Modern Vercel preview URLs follow the
-          # `<project>-<hash>-<scope>.vercel.app` shape and aren't
-          # predictable from the PR number alone.
-          urls: |
-            ${{ needs.deploy-preview.outputs.preview-url }}
-            ${{ needs.deploy-preview.outputs.preview-url }}/login
-            ${{ needs.deploy-preview.outputs.preview-url }}/signup
-            ${{ needs.deploy-preview.outputs.preview-url }}/pricing
+          urls: ${{ steps.urls.outputs.urls }}
           uploadArtifacts: true
           temporaryPublicStorage: true
           runs: 3

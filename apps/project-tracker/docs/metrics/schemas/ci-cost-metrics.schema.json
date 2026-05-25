@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ci-cost-metrics.schema.json",
+  "title": "CI Cost Metrics Artifact",
+  "description": "Structured aggregation of a GitHub Actions usage CSV. Written by tools/scripts/parse-actions-usage.mjs (--emit-json). See docs/operations/runbooks/ci-cost-monitoring.md.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "min_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": ["path", "sha256", "min_date", "max_date", "rows"],
+      "additionalProperties": false
+    },
+    "totals": {
+      "type": "object",
+      "properties": {
+        "compute_minutes": {
+          "type": "number",
+          "minimum": 0
+        },
+        "compute_cost_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Linux runner compute spend only"
+        },
+        "storage_cost_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Actions cache + artifact storage spend"
+        },
+        "grand_total_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "compute_cost_usd + storage_cost_usd"
+        },
+        "days_covered": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "compute_minutes",
+        "compute_cost_usd",
+        "storage_cost_usd",
+        "grand_total_usd",
+        "days_covered"
+      ],
+      "additionalProperties": false
+    },
+    "by_workflow": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "minutes": {
+            "type": "number",
+            "minimum": 0
+          },
+          "cost": {
+            "type": "number",
+            "minimum": 0
+          },
+          "runs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["minutes", "cost", "runs"],
+        "additionalProperties": false
+      }
+    },
+    "by_user": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "minutes": {
+            "type": "number",
+            "minimum": 0
+          },
+          "cost": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": ["minutes", "cost"],
+        "additionalProperties": false
+      }
+    },
+    "by_day": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "minutes": {
+            "type": "number",
+            "minimum": 0
+          },
+          "cost": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": ["minutes", "cost"],
+        "additionalProperties": false
+      }
+    },
+    "by_user_workflow": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "minutes": {
+            "type": "number",
+            "minimum": 0
+          },
+          "cost": {
+            "type": "number",
+            "minimum": 0
+          },
+          "runs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["minutes", "cost", "runs"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "generated_at",
+    "source",
+    "totals",
+    "by_workflow",
+    "by_user",
+    "by_day",
+    "by_user_workflow"
+  ],
+  "additionalProperties": false
+}
