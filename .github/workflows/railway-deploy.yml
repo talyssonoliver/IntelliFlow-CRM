@@ -41,14 +41,15 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Project-scoped token used by `railway up --ci` and `railway link`.
-  # If you only have an account token, set RAILWAY_TOKEN to the same value
-  # as RAILWAY_API_TOKEN in repo secrets — both names are supplied here so
-  # any CLI subcommand resolves auth.
-  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-  RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN || secrets.RAILWAY_TOKEN }}
   # Skip the workflow_run path if the upstream build failed
   UPSTREAM_OK: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+
+  # NOTE: RAILWAY_TOKEN / RAILWAY_API_TOKEN are intentionally NOT at
+  # workflow scope. They're resolved per-job inside the `environment:`
+  # block so GitHub Environment-scoped secrets pick up env-specific
+  # values (e.g., RAILWAY_TOKEN_PROD for production, matching the
+  # convention already used by terraform.yml). At workflow scope only
+  # repo-level secrets would resolve, defeating the env-scoped model.
 
 jobs:
   preflight:
@@ -58,12 +59,17 @@ jobs:
     outputs:
       environment: ${{ steps.resolve.outputs.environment }}
       services: ${{ steps.resolve.outputs.services }}
+    # Repo-level token check only — environment-scoped tokens are
+    # validated inside the deploy job where the env: binding applies.
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN || secrets.RAILWAY_TOKEN }}
     steps:
       - name: Validate Railway token secret is present
         run: |
           if [ -z "${RAILWAY_TOKEN}" ] && [ -z "${RAILWAY_API_TOKEN}" ]; then
             echo "::error::Neither RAILWAY_TOKEN nor RAILWAY_API_TOKEN secret is configured."
-            echo "::error::Set at least one in Settings -> Secrets and variables -> Actions."
+            echo "::error::Set at least one in Settings -> Secrets and variables -> Actions (or per-environment under Settings -> Environments)."
             exit 1
           fi
           echo "Railway auth present (RAILWAY_TOKEN: ${#RAILWAY_TOKEN}, RAILWAY_API_TOKEN: ${#RAILWAY_API_TOKEN})"
@@ -92,6 +98,13 @@ jobs:
     needs: preflight
     runs-on: ubuntu-latest
     environment: ${{ needs.preflight.outputs.environment }}
+    # Job-scoped env so GitHub Environment-scoped secrets resolve. Set
+    # RAILWAY_TOKEN per Environment (dev / staging / production) in
+    # Settings -> Environments -> <name> -> Secrets. Falls back to
+    # repo-level RAILWAY_TOKEN if no env-scoped value is set.
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN || secrets.RAILWAY_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -119,12 +132,18 @@ jobs:
           railway link --project "$RAILWAY_PROJECT_ID" --environment "${{ needs.preflight.outputs.environment }}"
 
       - name: Deploy ${{ matrix.service }}
+        # `cd apps/<svc>` so Railway picks up the per-service railway.json
+        # via the CLI's working-directory lookup (otherwise it falls back
+        # to repo-root defaults, which would deploy with the wrong
+        # builder/config).
         run: |
           case "${{ matrix.service }}" in
             api)
+              cd apps/api
               railway up --service api --detach --ci
               ;;
             ai-worker)
+              cd apps/ai-worker
               railway up --service ai-worker --detach --ci
               ;;
             *)

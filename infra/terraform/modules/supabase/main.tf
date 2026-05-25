@@ -51,7 +51,7 @@ resource "null_resource" "database_setup" {
 
   # Enable pgvector extension
   provisioner "local-exec" {
-    when = create
+    when    = create
     command = var.enable_pgvector ? "echo 'Run: CREATE EXTENSION IF NOT EXISTS vector;' | psql ${var.db_connection_string}" : "echo 'pgvector not enabled'"
   }
 }
@@ -69,7 +69,7 @@ resource "null_resource" "storage_buckets" {
 
   # Create storage bucket via Supabase CLI
   provisioner "local-exec" {
-    when = create
+    when    = create
     command = <<-EOT
       supabase storage create ${each.key} \
         --public=${each.value.public} \
@@ -84,13 +84,13 @@ resource "null_resource" "auth_config" {
   depends_on = [null_resource.supabase_project]
 
   triggers = {
-    site_url    = var.auth_site_url
-    jwt_expiry  = var.auth_jwt_expiry
+    site_url   = var.auth_site_url
+    jwt_expiry = var.auth_jwt_expiry
   }
 
   # Update auth settings via Management API
   provisioner "local-exec" {
-    when = create
+    when    = create
     command = <<-EOT
       curl -X PATCH "https://api.supabase.com/v1/projects/${var.project_ref}/config/auth" \
         -H "Authorization: Bearer ${var.access_token}" \

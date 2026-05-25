@@ -62,3 +62,10 @@ e648b333cf09 chore(ci): PR #69 squashed body line 130 chars ("Admin-merged:..." 
 # (e.g. "fix(ci): slsa ..."  rather than "fix(ci): SLSA ...").
 be5aba42b1fb fix(ci): PR #112 squashed subject — proper noun "SLSA" upper-case
 6f8e3a267bcd fix(ci): PR #113 squashed subject — proper noun "SLSA" upper-case
+
+# PR #118 feat/railway-infra-bootstrap — subject starts with proper noun
+# "Railway" (uppercase). The commit predates the eventual PR squash; once
+# merged the squash subject takes the PR title which we keep lower-case.
+# But this branch-tip commit is what system-audit lints during PR check,
+# so it needs a waiver until the squash lands. Waiver removable post-merge.
+430ce6c3aab8 feat(infra): branch commit subject — proper noun "Railway" upper-case (waived during PR; squash subject is conventional)

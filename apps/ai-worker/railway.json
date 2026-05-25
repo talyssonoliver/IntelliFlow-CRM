@@ -5,7 +5,7 @@
     "dockerfilePath": "infra/docker/Dockerfile.ai-worker"
   },
   "deploy": {
-    "startCommand": "node apps/ai-worker/dist/index.js",
+    "startCommand": "./node_modules/.bin/tsx apps/ai-worker/dist/index.js",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 60,
     "restartPolicyType": "ON_FAILURE",

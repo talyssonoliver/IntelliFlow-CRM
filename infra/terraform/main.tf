@@ -18,19 +18,19 @@ locals {
 module "supabase" {
   source = "./modules/supabase"
 
-  project_name   = var.supabase_project_name
-  environment    = var.environment
-  region         = var.supabase_region
-  access_token   = var.supabase_access_token
-  db_password    = var.supabase_db_password
-  plan           = var.supabase_plan
+  project_name = var.supabase_project_name
+  environment  = var.environment
+  region       = var.supabase_region
+  access_token = var.supabase_access_token
+  db_password  = var.supabase_db_password
+  plan         = var.supabase_plan
 
   # Extensions
   enable_pgvector = var.enable_pgvector
   enable_realtime = var.enable_realtime
 
   # Authentication
-  auth_site_url  = var.auth_site_url
+  auth_site_url   = var.auth_site_url
   auth_jwt_expiry = var.auth_jwt_expiry
 
   # Storage
@@ -65,7 +65,7 @@ module "vercel" {
     DATABASE_URL = module.supabase.connection_string
 
     # Build configuration
-    NODE_ENV = var.environment == "production" ? "production" : "development"
+    NODE_ENV                = var.environment == "production" ? "production" : "development"
     NEXT_TELEMETRY_DISABLED = "1"
   }
 
@@ -106,8 +106,8 @@ module "railway" {
 resource "random_password" "db_master_password" {
   count = var.supabase_db_password == "" ? 1 : 0
 
-  length  = 32
-  special = true
+  length           = 32
+  special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
@@ -115,13 +115,13 @@ resource "random_password" "db_master_password" {
 resource "local_file" "env_template" {
   filename = "${path.root}/../../.env.example"
   content = templatefile("${path.module}/templates/env.tpl", {
-    supabase_url           = module.supabase.api_url
-    supabase_anon_key      = module.supabase.anon_key
-    supabase_service_role  = module.supabase.service_role_key
-    database_url           = module.supabase.connection_string
-    vercel_url             = module.vercel.url
-    railway_api_url        = module.railway.api_url
-    environment            = var.environment
+    supabase_url          = module.supabase.api_url
+    supabase_anon_key     = module.supabase.anon_key
+    supabase_service_role = module.supabase.service_role_key
+    database_url          = module.supabase.connection_string
+    vercel_url            = module.vercel.url
+    railway_api_url       = module.railway.api_url
+    environment           = var.environment
   })
 
   file_permission = "0644"

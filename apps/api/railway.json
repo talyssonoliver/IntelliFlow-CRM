@@ -5,7 +5,7 @@
     "dockerfilePath": "infra/docker/Dockerfile.api"
   },
   "deploy": {
-    "startCommand": "node apps/api/dist/main.js",
+    "startCommand": "./node_modules/.bin/tsx apps/api/dist/main.js",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE",

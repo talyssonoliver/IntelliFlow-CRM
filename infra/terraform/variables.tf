@@ -26,9 +26,9 @@ variable "tags" {
   description = "Common tags for all resources"
   type        = map(string)
   default = {
-    Project     = "IntelliFlow-CRM"
-    ManagedBy   = "Terraform"
-    Repository  = "intelliflow/intelliflow-crm"
+    Project    = "IntelliFlow-CRM"
+    ManagedBy  = "Terraform"
+    Repository = "intelliflow/intelliflow-crm"
   }
 }
 
@@ -175,19 +175,19 @@ variable "auth_jwt_expiry" {
 variable "storage_buckets" {
   description = "Storage buckets configuration"
   type = map(object({
-    public          = bool
-    file_size_limit = string
+    public             = bool
+    file_size_limit    = string
     allowed_mime_types = list(string)
   }))
   default = {
     documents = {
-      public          = false
-      file_size_limit = "50MiB"
+      public             = false
+      file_size_limit    = "50MiB"
       allowed_mime_types = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
     }
     images = {
-      public          = true
-      file_size_limit = "10MiB"
+      public             = true
+      file_size_limit    = "10MiB"
       allowed_mime_types = ["image/png", "image/jpeg", "image/webp"]
     }
   }
