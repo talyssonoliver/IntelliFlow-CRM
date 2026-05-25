@@ -160,6 +160,58 @@ Add a new entry. The minimum useful set: `id`, `title`, `summary`, `first_seen`,
 - **`is_stale: true` for >7 days**: Owner is on the hook to re-export the usage
   CSV (or, post-automation, debug why the gh-api fetch job is failing).
 
+## Adjacent fixes that landed in PR #157
+
+Two failures showed up on every PR's CI matrix (not just #157) and were making
+the matrix permanently red:
+
+### Lighthouse Vercel SSO bypass
+
+`pr-checks.yml`'s `Lighthouse Performance` job audited every PR preview
+deployment, but the team's Vercel project has Deployment Protection (SSO)
+enabled, so Lighthouse hit `vercel.com/login` instead of the real `/pricing` /
+`/login` / `/` routes. Every audit failed every assertion (color-contrast,
+csp-xss, total-byte-weight, etc.) because it was scoring the SSO login page.
+
+Fix: the job now appends Vercel's
+[protection-bypass-automation](https://vercel.com/docs/security/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation)
+query string to every URL
+(`?x-vercel-protection-bypass=<secret>&x-vercel-set-bypass-cookie=samesitenone`).
+The cookie variant means Lighthouse's sub-resource loads (CSS/JS/images fetched
+after the initial document) also bypass without each URL needing the token
+appended.
+
+**Setup the maintainer must do once:**
+
+1. In Vercel dashboard for `intelli-flow-crm-web` → Settings → Deployment
+   Protection → enable **Protection Bypass for Automation** and copy the
+   generated token.
+2. In GitHub repo → Settings → Secrets and variables → Actions → New repository
+   **secret** named `VERCEL_AUTOMATION_BYPASS_SECRET`, paste the token.
+3. In the same place → **Variables** tab → New repository variable named
+   `VERCEL_BYPASS_CONFIGURED` with value `true`. The variable gates whether the
+   Lighthouse job runs; without it the job cleanly SKIPS rather than producing
+   red noise from the SSO wall.
+
+Until step 3 is done, `Lighthouse Performance` shows as SKIPPED
+(green-equivalent for branch protection) instead of FAILURE. There is no
+`continue-on-error` — the job either runs honestly or doesn't run at all.
+
+### Commitlint waivers for pre-existing commits
+
+`system-audit`'s commitlint check (`tools/audit/run_audit.py`) walks the last 20
+commits and fails any that don't match Conventional Commits. Two historical
+commits on `main` didn't:
+
+- `ef677fdf9f9d` — `merge:` is not in the allowed type set
+- `989cc1c549d6` — subject starts with uppercase `'Railway'` (PR #118
+  squash-merged through the GitHub UI which doesn't run the local commit-msg
+  hook)
+
+Both are now in `tools/audit/waivers/commitlint-waivers.txt` (alongside the
+other historical waivers that were already there). Format is `SHA reason` — same
+pattern as every other entry in that file.
+
 ## See also
 
 - [`../ci-cost-audit-2026-05-25.md`](../ci-cost-audit-2026-05-25.md) — the
