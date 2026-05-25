@@ -66,6 +66,7 @@ import { dsarRouter } from './modules/privacy/dsar.router';
 import { helpArticleRouter } from './modules/help-article/help-article.router';
 import { customNodeTypeRouter } from './modules/custom-node-type/custom-node-type.router';
 import { customActionHandlerRouter } from './modules/custom-action-handler/custom-action-handler.router';
+import { inboundRouter } from './modules/inbound/inbound.router';
 
 /**
  * Main application router
@@ -231,6 +232,10 @@ export const appRouter = createTRPCRouter({
   // Workflow Custom Extensions (IFC-031 FU-011 / FU-012)
   customNodeType: customNodeTypeRouter,
   customActionHandler: customActionHandlerRouter,
+
+  // Cross-repo intake from leangency-portal /discover form.
+  // Bearer-authenticated, env-bound tenant. See module README.
+  inbound: inboundRouter,
 });
 
 /**
