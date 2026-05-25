@@ -1,16 +1,16 @@
 {
   "total": {
     "lines": {
-      "total": 17029,
+      "total": 17030,
       "covered": 15166,
       "skipped": 0,
       "pct": 89.05
     },
     "statements": {
-      "total": 18282,
+      "total": 18283,
       "covered": 16072,
       "skipped": 0,
-      "pct": 87.91
+      "pct": 87.9
     },
     "functions": {
       "total": 4848,
@@ -19,10 +19,10 @@
       "pct": 85.93
     },
     "branches": {
-      "total": 10846,
+      "total": 10850,
       "covered": 8472,
       "skipped": 0,
-      "pct": 78.11
+      "pct": 78.08
     },
     "branchesTrue": {
       "total": 0,
@@ -1021,10 +1021,10 @@
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/app/providers.tsx": {
     "lines": {
-      "total": 105,
+      "total": 106,
       "covered": 40,
       "skipped": 0,
-      "pct": 38.09
+      "pct": 37.73
     },
     "functions": {
       "total": 28,
@@ -1033,16 +1033,16 @@
       "pct": 39.28
     },
     "statements": {
-      "total": 123,
+      "total": 124,
       "covered": 42,
       "skipped": 0,
-      "pct": 34.14
+      "pct": 33.87
     },
     "branches": {
-      "total": 77,
+      "total": 81,
       "covered": 15,
       "skipped": 0,
-      "pct": 19.48
+      "pct": 18.51
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/app/robots.ts": {
@@ -11030,8 +11030,8 @@
     }
   },
   "meta": {
-    "lastRunAt": "2026-05-25T10:26:47.356Z",
-    "duration": 387,
+    "lastRunAt": "2026-05-25T13:43:46.614Z",
+    "duration": 366,
     "source": "ci",
     "workflow": "governance-metrics",
     "status": "passed",
