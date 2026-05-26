@@ -37,8 +37,16 @@ jobs:
   sonarcloud:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
-    # Only run if not a fork PR (forks don't have access to secrets)
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Skip rules:
+    #   1. Fork PRs — no access to SONAR_TOKEN.
+    #   2. Dependabot PRs — sonar.yml is NOT a required check; ci.yml covers the
+    #      typecheck/test/build signal. Running Sonar on every dep bump just burns
+    #      CI minutes for noise that won't gate auto-merge.
+    if: >-
+      github.event_name != 'pull_request' || (
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.user.login != 'dependabot[bot]'
+      )
 
     steps:
       - uses: actions/checkout@v6

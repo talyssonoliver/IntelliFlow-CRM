@@ -21,6 +21,11 @@ jobs:
   system-audit:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Skip entirely for Dependabot PRs. system-audit is NOT a required status check
+    # (verified with `gh api repos/.../branches/main/protection`), so skipping it
+    # for bot PRs does not block merges. ci.yml already runs typecheck/lint/test/build
+    # against the bumped lockfile, which is the only signal Dependabot needs.
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v6
         with:
