@@ -1,17 +1,68 @@
 #!/usr/bin/env sh
+# Source Husky's initializer — same shape as .husky/pre-commit and
+# .husky/commit-msg. Without this, HUSKY=0 wouldn't disable this hook
+# and Husky's standard error/debug reporting wouldn't apply.
+. "$(dirname -- "$0")/_/husky.sh"
+
 # Pre-push protocol: stdin is one line per ref being pushed:
 #   <local_ref> <local_sha> <remote_ref> <remote_sha>
-# Block any push targeting refs/heads/main. Push to agent/<TASK_ID> + PR.
+#
+# Two gates:
+#   (1) Block any push targeting refs/heads/main (branch protection
+#       would catch it too, but failing here saves a server round-trip
+#       and surfaces a clearer message).
+#   (2) Run the pre-ship gate (scripts/pre-ship.mjs) which mirrors CI's
+#       required-check graph locally. Default on — set SKIP_PRESHIP=1
+#       to bypass when you genuinely need to push something the gate
+#       would reject (record the reason in the commit/PR body).
 
-while read -r local_ref local_sha remote_ref remote_sha; do
+# --- (1) refs/heads/main block ---
+# Drain stdin into a buffer so we can re-iterate. `git push` only sends
+# refs once via stdin; iterating twice in a sh while-read would lose the
+# data.
+refs=$(cat)
+
+echo "$refs" | while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -z "$remote_ref" ] && continue
   case "$remote_ref" in
     refs/heads/main)
       echo "BLOCK [pre-push]: Direct push to main is blocked." >&2
-      echo "Push to agent/<TASK_ID> and open a PR." >&2
+      echo "Push to <type>/<branch-name> and open a PR." >&2
       echo "See docs/runbooks/gate-4b-recovery.md." >&2
       exit 1
       ;;
   esac
 done
+# Propagate the subshell's exit code so the main-branch block actually fails.
+if [ $? -ne 0 ]; then exit 1; fi
+
+# --- (2) pre-ship gate ---
+# Skip unless on a feature branch (no point gating a push that's just
+# updating a tag or notes). Also skip if SKIP_PRESHIP=1.
+if [ "${SKIP_PRESHIP:-0}" = "1" ]; then
+  echo "pre-push: SKIP_PRESHIP=1 — pre-ship gate bypassed." >&2
+  exit 0
+fi
+
+# Skip the gate when the only push is to a non-branch ref (tags, notes).
+# Each stdin line is `<local_ref> <local_sha> <remote_ref> <remote_sha>`.
+# We must inspect the 3rd field (remote_ref) — NOT the whole line — because
+# `git push origin HEAD:refs/heads/foo` makes local_ref=HEAD, which would
+# fail a `^refs/heads/` whole-line grep and incorrectly skip the gate.
+has_branch_push=$(echo "$refs" | awk '$3 ~ /^refs\/heads\// { found=1 } END { print found+0 }')
+if [ "$has_branch_push" = "0" ]; then
+  exit 0
+fi
+
+echo "pre-push: running pre-ship gate (set SKIP_PRESHIP=1 to bypass) ..." >&2
+if ! pnpm run pre-ship; then
+  echo "" >&2
+  echo "BLOCK [pre-push]: pre-ship gate failed." >&2
+  echo "  See artifacts/preship/last-run.json for the per-step verdict." >&2
+  echo "  See artifacts/preship/logs/<step-id>.log for the failing step's output." >&2
+  echo "  Re-run targeted: pnpm exec node scripts/pre-ship.mjs --only=<step-id>" >&2
+  echo "  Override (rare, justify in commit body): SKIP_PRESHIP=1 git push ..." >&2
+  exit 1
+fi
 
 exit 0
