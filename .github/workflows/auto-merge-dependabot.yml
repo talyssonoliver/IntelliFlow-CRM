@@ -152,13 +152,57 @@ jobs:
     needs: decide
     if: needs.decide.outputs.should_merge == 'true'
     steps:
+      # In-workflow gate that does NOT trust branch protection alone.
+      # Without this step there is a window where the admin has not yet
+      # PATCHed dependency-scan into the required-checks set — and a
+      # vulnerable patch bump could squeak through the old gate. We re-verify
+      # dependency-scan.yml's conclusion on this exact SHA before enabling
+      # auto-merge.
+      - name: Wait for Dependency Security Scan on this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          DEADLINE=$(( $(date +%s) + 600 ))    # 10-minute budget
+          RUN_ID=""
+
+          # Phase 1: wait for the run to appear (dep-scan only triggers on
+          # pnpm-lock.yaml / package.json changes — for Dependabot PRs this
+          # is always true; for safety we still wait up to the deadline).
+          while [ -z "$RUN_ID" ] && [ "$(date +%s)" -lt "$DEADLINE" ]; do
+            RUN_ID=$(gh api -X GET \
+              "repos/$OWNER/$REPO/actions/workflows/dependency-scan.yml/runs" \
+              -f head_sha="$SHA" \
+              --jq '.workflow_runs[0].id' 2>/dev/null || echo "")
+            if [ -z "$RUN_ID" ]; then
+              echo "Waiting for Dependency Security Scan to start on $SHA…"
+              sleep 15
+            fi
+          done
+
+          if [ -z "$RUN_ID" ]; then
+            echo "::error::Dependency Security Scan did not start on $SHA within 10 minutes. Refusing auto-merge."
+            exit 1
+          fi
+
+          echo "Found run $RUN_ID. Watching for completion…"
+          # gh run watch blocks until completion; --exit-status mirrors the
+          # run conclusion (0 = success, non-zero = failure).
+          gh run watch "$RUN_ID" --exit-status --interval 20
+          echo "Dependency scan succeeded on $SHA — safe to enable auto-merge."
+
       - name: Enable auto-merge (squash)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          # --auto: enables auto-merge; GitHub will perform the merge once all
-          # required status checks pass. Branch protection still gates: ci.yml,
-          # pr-checks.yml, dependency-scan.yml (promoted to required in this PR).
+          # --auto: GitHub completes the merge once branch protection passes.
           # --squash: keeps history linear; Dependabot PRs become one commit.
+          # The Wait step above ensures dependency-scan green BEFORE we
+          # enable auto-merge — so a vulnerable patch bump cannot ride the
+          # timing window between this PR landing and the admin PATCH that
+          # promotes dependency-scan to a required context.
           gh pr merge "$PR" --auto --squash
