@@ -88,18 +88,22 @@ fi
 # is misbehaving (then run the full lint manually).
 echo "📋 Auto-fixing + linting staged .ts/.tsx files..."
 STAGED_TS=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)$' || true)
+# `-r` is a GNU-xargs extension that breaks on macOS/BSD ("illegal option").
+# We don't need it here because the `[ -n "$STAGED_TS" ]` guard below
+# already ensures non-empty input; POSIX xargs without `-r` would also
+# run eslint with zero args, which is what we're guarding against.
 if [ -n "$STAGED_TS" ] && [ "${ESCAPE_LINT_FIX:-0}" != "1" ]; then
   # eslint --fix mutates files in place. Use --max-warnings=0 so any
   # remaining violation (one we can't auto-fix) still blocks the commit.
   # `2>/dev/null || true` on `git add` because some staged files may be
   # in directories ESLint ignored (e.g., dist/) — re-staging only matters
   # for files we actually fixed.
-  echo "$STAGED_TS" | xargs -r pnpm exec eslint --fix --max-warnings=0 || {
+  echo "$STAGED_TS" | xargs pnpm exec eslint --fix --max-warnings=0 || {
     echo "❌ Lint failed on staged files after autofix. Fix the remaining errors before committing."
     echo "   (Override only if necessary: ESCAPE_LINT_FIX=1 git commit ... — record reason in commit body.)"
     exit 1
   }
-  echo "$STAGED_TS" | xargs -r git add -f 2>/dev/null || true
+  echo "$STAGED_TS" | xargs git add -f 2>/dev/null || true
   echo "✅ Staged files lint-fixed and re-staged"
 else
   echo "⚠️  No staged TS/JS files (or ESCAPE_LINT_FIX=1). Falling back to monorepo lint."
