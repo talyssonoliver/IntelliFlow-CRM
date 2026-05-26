@@ -55,22 +55,11 @@ jobs:
       sbom_artifact_name: ${{ steps.sbom-name.outputs.name }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
-          fetch-depth: 0
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
+          fetch-depth: '0'
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Verify lock file integrity
         id: lockfile-check
@@ -185,20 +174,10 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Run pnpm audit
         id: audit
@@ -266,20 +245,10 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Run license check
         run: |

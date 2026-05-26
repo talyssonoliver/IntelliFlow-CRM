@@ -1,0 +1,120 @@
+# Shared setup composite — replaces the
+#   actions/checkout + pnpm/action-setup + actions/setup-node + pnpm install
+# 4-step sequence that was duplicated 49+ times across .github/workflows/.
+#
+# Why this exists:
+#   The audit doc §10-D (docs/operations/ci-cost-audit-2026-05-25.md) traced
+#   ~25% of pr-checks + ci wall-clock to the per-job re-installation of pnpm
+#   deps. The cache IS shared (actions/setup-node + cache:'pnpm' restores from
+#   GitHub's cache service across jobs) but the install STEP still runs in every
+#   job — for a monorepo this size that's 30-60s per job × ~9 jobs per PR.
+#
+# What this composite adds beyond hand-rolling:
+#   1. Single canonical install invocation — consistent --frozen-lockfile,
+#      no drift between workflows.
+#   2. Optional library-build step in one place. Library pre-build is required
+#      before typecheck/test/integration jobs can resolve workspace types
+#      (the chronic failure shape #2 from 2026-05-23, captured in
+#      artifacts/reports/ci-failures/registry.json#unbuilt-internal-packages).
+#      Putting it here means we can't accidentally forget the build in a new
+#      workflow.
+#   3. Single canonical env-stub block for the Prisma/Supabase/AI module-load
+#      guards — chronic failure shape #3 (registry#missing-module-load-env-stubs).
+#      A new workflow that adopts this composite automatically gets the stubs
+#      without copy-pasting them.
+#
+# Usage from a calling workflow:
+#   - uses: ./.github/actions/setup-monorepo
+#     with:
+#       node-version: '22'         # optional, default 22
+#       pnpm-version: '10.33.0'    # optional, default 10.33.0
+#       fetch-depth: '1'           # optional, default 1; pass 0 for full history
+#       install-deps: 'true'       # optional, default true; set false to skip pnpm install
+#       build-libs: 'false'        # optional, default false; set true to pre-build library packages
+#
+# Inputs are strings (composite action constraint). Boolean-ish inputs are
+# compared against the literal string 'true'.
+
+name: 'Setup monorepo'
+description: 'Checkout + pnpm + Node + install + optional library pre-build for IntelliFlow CRM workflows'
+
+inputs:
+  node-version:
+    description: 'Node.js version (default: 22, matches NODE_VERSION env across workflows)'
+    required: false
+    default: '22'
+  pnpm-version:
+    description: 'pnpm version (default: 10.33.0, matches PNPM_VERSION env across workflows)'
+    required: false
+    default: '10.33.0'
+  fetch-depth:
+    description: 'actions/checkout fetch-depth (default 1; pass "0" for SonarCloud / blame analysis)'
+    required: false
+    default: '1'
+  install-deps:
+    description: 'Run pnpm install --frozen-lockfile (default true). Set "false" for jobs that only need the runtime (e.g. npm audit jobs without install).'
+    required: false
+    default: 'true'
+  build-libs:
+    description: 'Pre-build library packages so workspace consumers can resolve dist/. Default false. Required true for typecheck/test/integration/build/audit jobs. Set false for lint-only / metadata-only jobs that do not import workspace packages.'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v6
+      with:
+        version: ${{ inputs.pnpm-version }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version }}
+        # cache: 'pnpm' restores the pnpm store from GitHub's shared cache
+        # service across runs/jobs when the lockfile hash hits. The store
+        # restore avoids re-downloading tarballs but does NOT skip the install
+        # step itself — see comment block at top of this file.
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      if: inputs.install-deps == 'true'
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Pre-build library packages
+      # Mirrors the per-workflow `pnpm exec turbo run build --filter=!...` step
+      # that lived in ci.yml typecheck/test/integration, pr-checks quality,
+      # system-audit, etc. Filters exclude the leaf apps (web, api, project-
+      # tracker, workers) which CONSUME the libraries — we only need the
+      # libraries' dist/ to exist so workspace type resolution works.
+      #
+      # Env stubs are required even for the LIBRARY build because the apps
+      # transitively import packages whose module-load throws without them
+      # (Prisma field-encryption, AI audit signing, Supabase config). The
+      # `||` fallback shapes are RFC-compliant stubs for forked PRs that
+      # don't have secret access — NEVER use them at runtime.
+      if: inputs.build-libs == 'true'
+      shell: bash
+      env:
+        PRISMA_FIELD_ENCRYPTION_KEY: ${{ env.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+        AI_AUDIT_SIGNING_KEY: ${{ env.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
+        DATABASE_URL: ${{ env.DATABASE_URL || 'postgresql://stub:stub@localhost:5432/stub' }}
+        DIRECT_URL: ${{ env.DIRECT_URL || 'postgresql://stub:stub@localhost:5432/stub' }}
+        SUPABASE_URL: ${{ env.SUPABASE_URL || 'https://stub.supabase.co' }}
+        SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}
+        NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
+      run: |
+        pnpm exec turbo run build \
+          --filter=!@intelliflow/web \
+          --filter=!@intelliflow/api \
+          --filter=!@intelliflow/project-tracker \
+          --filter=!@intelliflow/workers

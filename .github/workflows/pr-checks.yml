@@ -70,22 +70,12 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
-      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
-        with:
+          fetch-depth: '0'
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          build-libs: 'true'
 
       - name: Lint
         run: pnpm run lint
@@ -115,19 +105,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
-      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
-        with:
+          fetch-depth: '0'
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Run tests with coverage
         run: pnpm run test:coverage
@@ -153,17 +135,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Build all packages
         run: pnpm run build
@@ -232,14 +207,13 @@ jobs:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          # Deploy uses pre-built artifact via `vercel pull` + `vercel build`,
+          # not the local install. Skip install to save a minute.
+          install-deps: 'false'
 
       - name: Install Vercel CLI
         # amondnet/vercel-action@v25 is unmaintained and ships Vercel CLI 25.1.0,
@@ -290,19 +264,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
-      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
-        with:
+          fetch-depth: '0'
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Audit dependencies
         run: pnpm audit --audit-level=high

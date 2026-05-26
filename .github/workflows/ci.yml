@@ -23,19 +23,11 @@ jobs:
     name: Lint & Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
-        with:
+          fetch-depth: '0'
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Lint
         run: pnpm run lint
@@ -47,20 +39,11 @@ jobs:
     name: Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          build-libs: 'true'
 
       - name: Type check
         run: pnpm run typecheck
@@ -69,20 +52,11 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          build-libs: 'true'
 
       - name: Run tests
         run: pnpm run test -- --coverage
@@ -101,17 +75,10 @@ jobs:
     name: Architecture Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Install architecture test dependencies
         run: cd tests/architecture && pnpm install --frozen-lockfile
@@ -180,20 +147,11 @@ jobs:
       REDIS_URL: redis://localhost:6379
       NODE_ENV: test
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          build-libs: 'true'
 
       - name: Bootstrap Supabase schemas + roles
         run: |
@@ -242,17 +200,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, typecheck, test, architecture, integration]
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       # PG-195: enforce glyph-audit coverage before the production build so
       # a new unlisted icon cannot ship as tofu (also enforced on PRs via
@@ -290,17 +241,10 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Audit dependencies
         run: pnpm audit --audit-level=high
@@ -363,17 +307,10 @@ jobs:
     # turning the whole CI Pipeline workflow red. Tracked at GH issue #95.
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Install Playwright
         run: pnpm exec playwright install --with-deps chromium
