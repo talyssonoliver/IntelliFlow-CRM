@@ -1262,10 +1262,14 @@ describe('ROITracker', () => {
 
     it('should filter costs by period', () => {
       const oldTracker = new ROITracker(config);
-      const now = new Date();
-      const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-      // Recent cost
+      // Record cost FIRST so its internal `timestamp: new Date()` is fixed
+      // before we capture `now`. The previous order (now → recordCost →
+      // query) introduced a microsecond race: the recorded timestamp would
+      // be slightly AFTER `now`, the filter `c.timestamp <= end (=now)`
+      // excluded it, and `totalCost` was 0 instead of 1.0. See the
+      // `feedback_ci_chronic_workflow_patterns` memory for the broader
+      // Date.now() boundary jitter pattern in this codebase.
       oldTracker.recordCost({
         id: 'period-cost-1',
         model: 'gpt-4',
@@ -1275,6 +1279,8 @@ describe('ROITracker', () => {
         cost: 1.0,
       });
 
+      const now = new Date();
+      const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
       const recentROI = oldTracker.calculateROI(hourAgo, now);
 
       expect(recentROI.totalCost).toBe(1.0);
