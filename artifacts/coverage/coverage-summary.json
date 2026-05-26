@@ -2,15 +2,15 @@
   "total": {
     "lines": {
       "total": 17030,
-      "covered": 15166,
+      "covered": 15168,
       "skipped": 0,
-      "pct": 89.05
+      "pct": 89.06
     },
     "statements": {
       "total": 18283,
-      "covered": 16072,
+      "covered": 16075,
       "skipped": 0,
-      "pct": 87.9
+      "pct": 87.92
     },
     "functions": {
       "total": 4848,
@@ -20,9 +20,9 @@
     },
     "branches": {
       "total": 10850,
-      "covered": 8472,
+      "covered": 8474,
       "skipped": 0,
-      "pct": 78.08
+      "pct": 78.1
     },
     "branchesTrue": {
       "total": 0,
@@ -320,9 +320,9 @@
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/ai-worker/src/monitoring/drift-detector.ts": {
     "lines": {
       "total": 167,
-      "covered": 160,
+      "covered": 162,
       "skipped": 0,
-      "pct": 95.8
+      "pct": 97
     },
     "functions": {
       "total": 29,
@@ -332,15 +332,15 @@
     },
     "statements": {
       "total": 180,
-      "covered": 170,
+      "covered": 173,
       "skipped": 0,
-      "pct": 94.44
+      "pct": 96.11
     },
     "branches": {
       "total": 66,
-      "covered": 55,
+      "covered": 57,
       "skipped": 0,
-      "pct": 83.33
+      "pct": 86.36
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/ai-worker/src/monitoring/hallucination-checker.ts": {
@@ -11030,8 +11030,8 @@
     }
   },
   "meta": {
-    "lastRunAt": "2026-05-25T13:43:46.614Z",
-    "duration": 366,
+    "lastRunAt": "2026-05-25T23:37:57.080Z",
+    "duration": 400,
     "source": "ci",
     "workflow": "governance-metrics",
     "status": "passed",
