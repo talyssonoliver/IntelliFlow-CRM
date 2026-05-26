@@ -243,32 +243,76 @@ jobs:
             echo "::error::Found $CRITICAL_COUNT critical vulnerabilities!"
           fi
 
-      - name: Create issue for critical vulnerabilities
+      - name: Create or update issue for critical vulnerabilities
         # Skip on pull_request events because GITHUB_TOKEN is read-only
         # for PRs from forks (workflow-level permissions don't help) and
         # we don't want PR scans creating duplicate tracking issues.
         # Issues fire on push, schedule, and workflow_dispatch only.
+        #
+        # De-dup behavior (closes the spam loop that produced 11 open
+        # duplicates auto-closed on 2026-05-26): instead of always creating
+        # a fresh issue, find the most-recent OPEN security/critical issue
+        # and append a comment with the new run's link. Only create a new
+        # tracker issue when no open one exists.
         if: steps.check-critical.outputs.critical_count > 0 && github.event_name != 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `[SECURITY] Critical vulnerabilities found - ${new Date().toISOString().split('T')[0]}`,
-              body: `## Critical Vulnerabilities Detected
+            const { owner, repo } = context.repo;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const count = ${{ steps.check-critical.outputs.critical_count }};
+            const today = new Date().toISOString().split('T')[0];
 
-              **Scan Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-              **Count**: ${{ steps.check-critical.outputs.critical_count }} critical vulnerabilities
-
-              ### Required Actions
-              1. Review scan results in workflow artifacts
-              2. Prioritize and remediate within 24-hour SLA
-              3. Update vulnerability baseline once resolved
-
-              /cc @security-team`,
-              labels: ['security', 'critical', 'vulnerability']
+            // 1. Find open security/critical/vulnerability issues.
+            const { data: openIssues } = await github.rest.issues.listForRepo({
+              owner, repo,
+              state: 'open',
+              labels: 'security,critical,vulnerability',
+              per_page: 5,
             });
+
+            const noteBody = [
+              `### New scan: ${count} critical vulnerabilities (run on ${today})`,
+              '',
+              `**Scan Run**: ${runUrl}`,
+              '',
+              'Same tracker — see the `aggregate-results` artifact for the per-scanner breakdown.',
+            ].join('\n');
+
+            if (openIssues.length > 0) {
+              const issue = openIssues[0];
+              await github.rest.issues.createComment({
+                owner, repo,
+                issue_number: issue.number,
+                body: noteBody,
+              });
+              core.notice(`Appended to existing tracker issue #${issue.number}`);
+              return;
+            }
+
+            // 2. Otherwise open a fresh tracker issue.
+            const created = await github.rest.issues.create({
+              owner, repo,
+              title: `[SECURITY] Critical vulnerabilities found - ${today}`,
+              body: [
+                '## Critical Vulnerabilities Tracker',
+                '',
+                'This issue aggregates all subsequent dependency-scan runs that detect critical vulnerabilities. New runs append a comment here instead of opening a new issue (see PR #174 follow-up).',
+                '',
+                `**First scan**: ${runUrl}`,
+                `**Count**: ${count} critical vulnerabilities`,
+                '',
+                '### Required Actions',
+                '1. Review scan results in workflow artifacts.',
+                '2. Prioritize and remediate within 24-hour SLA.',
+                '3. Update vulnerability baseline once resolved.',
+                '4. Close this issue when the count returns to 0 (a new tracker will open if vulns reappear).',
+                '',
+                '/cc @security-team',
+              ].join('\n'),
+              labels: ['security', 'critical', 'vulnerability'],
+            });
+            core.notice(`Opened tracker issue #${created.data.number}`);
 
   auto-update:
     name: Auto-Update Dependencies
