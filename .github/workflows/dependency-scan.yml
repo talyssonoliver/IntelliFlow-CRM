@@ -96,7 +96,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
+        # Pinned to a specific commit SHA (verified GPG-signed merge from
+        # snyk/actions main, 2026-05-05). `@master` is a moving target —
+        # not acceptable for a strict H0 gate where a malicious or breaking
+        # action update would be auto-trusted on the next CI run. Update
+        # the SHA intentionally when needed (Dependabot can manage this if
+        # added to .github/dependabot.yml). Per Copilot review on PR #174.
+        uses: snyk/actions/node@9cf6ca713d71123d2d229cc3d7f145b96ea3c518
         # H0 gate — see NPM Audit job for rationale. If SNYK_TOKEN is missing,
         # the action exits non-zero and the workflow correctly reports an
         # unconfigured-gate failure (rather than silently passing).
@@ -164,6 +170,13 @@ jobs:
     name: Aggregate & Report
     needs: [npm-audit, snyk-scan, trivy-scan, osv-scan]
     runs-on: ubuntu-latest
+    # MUST run on failure: the strict H0 gates from PR #174 cause npm-audit /
+    # snyk / osv to fail on real vulns. Without `if: always()`, GH Actions
+    # skips this dependent job when any `needs:` fails — meaning the
+    # consolidated report wouldn't be generated and the security team
+    # wouldn't get the issue/PR notification at the moment they most need it.
+    # Per Copilot review on PR #174.
+    if: always()
     # Scoped privilege: only this job's Create-issue step needs to write
     # issues. Workflow-level permissions remain read/security-events/PR.
     permissions:
