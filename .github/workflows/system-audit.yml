@@ -3,6 +3,14 @@ name: System Audit (Tier 1 + Tier 2)
 on:
   pull_request:
     branches: [main, develop]
+    # System audit runs the Tier 1+2 audit + library re-build. None of
+    # the audit modules read .md files or sprint CSV splits, and this
+    # workflow's `system-audit` context is NOT in branch protection's
+    # required list — safe to skip on doc-only churn. See audit §10-B.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'apps/project-tracker/docs/metrics/_global/Sprint_plan_*.csv'
   workflow_dispatch: {}
 
 concurrency:

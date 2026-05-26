@@ -35,15 +35,24 @@ updates:
           - 'major'
           - 'minor'
           - 'patch'
-      # Group non-major updates to reduce PR noise; majors still land individually
+      # Group non-major updates to reduce PR noise.
       production-minor-and-patch:
         dependency-type: 'production'
         update-types:
           - 'minor'
           - 'patch'
-      development-minor-and-patch:
+      # devDependencies are grouped INCLUDING majors per audit doc §10-F.
+      # Rationale: dev-deps (eslint, tsx, vitest, @types/*, prettier,
+      # typescript-eslint) almost never break runtime — their majors
+      # mostly tighten lint rules or add new diagnostics that are
+      # surface-able and fixable in the same PR. Without this group,
+      # every dev-dep major spawned its own PR (PR #130 alone bundled
+      # 33 dev-dep bumps; before grouping each would have been a separate
+      # 9-workflow run = ~450 wasted CI-min per Monday).
+      development-all:
         dependency-type: 'development'
         update-types:
+          - 'major'
           - 'minor'
           - 'patch'
     ignore:
@@ -77,8 +86,13 @@ updates:
       prefix: 'chore(ci)'
       include: 'scope'
     groups:
-      actions-minor-and-patch:
+      # GitHub Actions bumps (incl. majors) are grouped — they're build-
+      # graph changes, no runtime impact. Majors are typically just Node
+      # runtime version bumps for the action itself (Node 16 → 20 → 24).
+      # Per audit §10-F.
+      actions-all:
         update-types:
+          - 'major'
           - 'minor'
           - 'patch'
     ignore:
