@@ -25,6 +25,10 @@ artifacts/coverage/.tmp/
 artifacts/test-results/playwright-results.json
 artifacts/test-results/playwright-junit.xml
 
+# pre-ship gate state — per-run snapshot of which steps passed/failed,
+# regenerated on every push. No value committing it.
+artifacts/preship/
+
 # Playwright output (consolidated under artifacts/misc/)
 # - playwright-output/: screenshots, videos, traces (ephemeral)
 # - playwright-report/data/: report assets (ephemeral)
