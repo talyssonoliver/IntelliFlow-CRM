@@ -37,6 +37,15 @@ jobs:
       - name: Format check
         run: pnpm run format:check
 
+      # Folded in from the removed `PR Checks / Quality Checks` job
+      # (Recommendation E of ci-cost-audit-2026-05-25.md) so a11y route
+      # reconciliation is still enforced after deduplication. lint:artifacts
+      # was continue-on-error so its removal is intentional and accepted.
+      - name: A11y route reconciliation
+        run: pnpm run validate:a11y-routes
+        env:
+          VALIDATION_STRICT: '1'
+
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
@@ -244,26 +253,15 @@ jobs:
             apps/*/.next
           retention-days: 7
 
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-monorepo
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-
-      - name: Audit dependencies
-        run: pnpm audit --audit-level=high
-        continue-on-error: true
-
-      - name: Scan for secrets
-        uses: trufflesecurity/trufflehog@main
-        with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          extra_args: --only-verified
+  # `security-scan` was removed as part of Recommendation E
+  # (docs/operations/ci-cost-audit-2026-05-25.md). It duplicated coverage already
+  # provided by .github/workflows/security.yml:
+  #   - `pnpm audit --audit-level=high` (continue-on-error) → security.yml `npm-audit`
+  #     (`pnpm audit --audit-level=critical`, the policy set by the security team)
+  #   - `trufflesecurity/trufflehog` → security.yml `secret-scanning` (gitleaks)
+  #     plus the CodeQL + Trivy + OWASP Dependency-Check coverage in the same workflow.
+  # Branch protection updated in the same PR to remove the now-orphan required
+  # context `CI Pipeline / Security Scan`.
 
   plan-lint:
     name: Sprint Plan Validation

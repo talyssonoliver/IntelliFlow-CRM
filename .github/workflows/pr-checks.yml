@@ -65,61 +65,16 @@ jobs:
             echo "::warning::PR is large ($changes lines changed). Consider breaking it into smaller PRs."
           fi
 
-  quality-checks:
-    name: Quality Checks
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    steps:
-      # Skip-shim pattern for Dependabot PRs (Recommendation G of CI cost audit
-      # 2026-05-25). All heavy steps below — including the checkout itself —
-      # are gated on `pull_request.user.login != 'dependabot[bot]'`. For bot PRs
-      # every gated step is skipped and the final shim step emits `success`, so
-      # the required status context still reports green and branch protection
-      # does not deadlock. ci.yml covers the actual lint/typecheck/test signal
-      # for the bumped lockfile.
-      - uses: actions/checkout@v6
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup-monorepo
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-          build-libs: 'true'
-
-      - name: Lint
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: pnpm run lint
-
-      - name: Type check
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: pnpm run typecheck
-
-      - name: Check formatting
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: pnpm run format:check
-
-      - name: A11y route reconciliation
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: pnpm run validate:a11y-routes
-        env:
-          VALIDATION_STRICT: '1'
-
-      - name: Artifact path linting
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: pnpm run lint:artifacts
-        continue-on-error: true
-
-      # PG-195: block PRs that introduce a new material-symbols icon literal
-      # without regenerating the committed glyph audit.
-      - name: Audit Material Symbols glyph coverage
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: pnpm --filter @intelliflow/web audit:material-symbols
-
-      - name: Skip-shim for Dependabot PRs
-        if: github.event.pull_request.user.login == 'dependabot[bot]'
-        run: echo "::notice::Quality Checks skipped for Dependabot PR — ci.yml runs lint/typecheck against the bumped lockfile"
+  # `quality-checks` was removed as part of Recommendation E
+  # (docs/operations/ci-cost-audit-2026-05-25.md). It duplicated coverage already
+  # provided by ci.yml:
+  #   - lint, format:check, validate:a11y-routes → ci.yml `lint` job (a11y folded
+  #     in by this same PR)
+  #   - typecheck → ci.yml `typecheck` job
+  #   - audit:material-symbols → ci.yml `build` job (already runs there pre-build)
+  # `lint:artifacts` was continue-on-error so its removal is intentional.
+  # Branch protection updated in the same PR to remove the now-orphan required
+  # context `PR Checks / Quality Checks`.
 
   test-coverage:
     name: Test Coverage
@@ -339,30 +294,15 @@ jobs:
           echo "  VERCEL_PROJECT_ID set: ${{ vars.VERCEL_PROJECT_ID != '' }}"
           echo "  Not dependabot: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}"
 
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup-monorepo
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-
-      - name: Audit dependencies
-        run: pnpm audit --audit-level=high
-        continue-on-error: true
-
-      - name: Scan for secrets
-        uses: trufflesecurity/trufflehog@main
-        with:
-          path: ./
-          base: ${{ github.event.pull_request.base.sha }}
-          head: ${{ github.event.pull_request.head.sha }}
-          extra_args: --only-verified
+  # `security-scan` was removed as part of Recommendation E
+  # (docs/operations/ci-cost-audit-2026-05-25.md). It duplicated coverage already
+  # provided by .github/workflows/security.yml on every pull_request:
+  #   - `pnpm audit --audit-level=high` (continue-on-error) → security.yml `npm-audit`
+  #     (`pnpm audit --audit-level=critical`, the policy set by the security team)
+  #   - `trufflesecurity/trufflehog` → security.yml `secret-scanning` (gitleaks)
+  #     plus CodeQL + Trivy + OWASP Dependency-Check in the same workflow.
+  # Branch protection updated in the same PR to remove the now-orphan required
+  # context `PR Checks / Security Scan`.
 
   lighthouse:
     name: Lighthouse Performance
@@ -455,7 +395,10 @@ jobs:
   pr-summary:
     name: PR Summary
     runs-on: ubuntu-latest
-    needs: [pr-validation, quality-checks, test-coverage, build-preview, lighthouse]
+    # quality-checks removed from needs as part of Recommendation E dedup —
+    # ci.yml's lint + typecheck jobs are the canonical source for those signals
+    # and the PR Summary surfaces only pr-checks.yml results.
+    needs: [pr-validation, test-coverage, build-preview, lighthouse]
     if: always() && github.event.pull_request.draft == false
     permissions:
       # Default GITHUB_TOKEN doesn't grant PR-write on fork PRs, so the
@@ -472,7 +415,6 @@ jobs:
         with:
           script: |
             const validationStatus = '${{ needs.pr-validation.result }}';
-            const qualityStatus = '${{ needs.quality-checks.result }}';
             const coverageStatus = '${{ needs.test-coverage.result }}';
             const buildStatus = '${{ needs.build-preview.result }}';
 
@@ -487,11 +429,10 @@ jobs:
             | Check | Status |
             |-------|--------|
             | PR Validation | ${statusIcon(validationStatus)} ${validationStatus} |
-            | Quality Checks | ${statusIcon(qualityStatus)} ${qualityStatus} |
             | Test Coverage | ${statusIcon(coverageStatus)} ${coverageStatus} |
             | Build Preview | ${statusIcon(buildStatus)} ${buildStatus} |
 
-            ${validationStatus === 'success' && qualityStatus === 'success' && coverageStatus === 'success' && buildStatus === 'success' ? '✅ All checks passed! Ready for review.' : '⚠️ Some checks failed. Please review the logs.'}`;
+            ${validationStatus === 'success' && coverageStatus === 'success' && buildStatus === 'success' ? '✅ All checks passed! Ready for review. (lint/typecheck signal: see CI Pipeline workflow.)' : '⚠️ Some checks failed. Please review the logs.'}`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
