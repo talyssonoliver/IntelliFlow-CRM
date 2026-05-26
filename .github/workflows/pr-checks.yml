@@ -65,16 +65,21 @@ jobs:
             echo "::warning::PR is large ($changes lines changed). Consider breaking it into smaller PRs."
           fi
 
-  # `quality-checks` was removed as part of Recommendation E
-  # (docs/operations/ci-cost-audit-2026-05-25.md). It duplicated coverage already
-  # provided by ci.yml:
-  #   - lint, format:check, validate:a11y-routes → ci.yml `lint` job (a11y folded
-  #     in by this same PR)
+  # `quality-checks` was removed as part of Recommendation E of
+  # docs/operations/ci-cost-audit-2026-05-25.md. It duplicated coverage
+  # already provided by ci.yml:
+  #   - lint, format:check, validate:a11y-routes → ci.yml `lint` job (a11y
+  #     folded in by the PR that introduced this comment)
   #   - typecheck → ci.yml `typecheck` job
-  #   - audit:material-symbols → ci.yml `build` job (already runs there pre-build)
+  #   - audit:material-symbols → ci.yml `build` job (already runs there
+  #     pre-build)
   # `lint:artifacts` was continue-on-error so its removal is intentional.
-  # Branch protection updated in the same PR to remove the now-orphan required
-  # context `PR Checks / Quality Checks`.
+  #
+  # EXTERNAL PRE-MERGE REQUIREMENT: branch protection lives outside this
+  # repo and is not updated by merging this file. Before this PR can land,
+  # a repo admin must PATCH the required_status_checks set to remove the
+  # now-orphan context `PR Checks / Quality Checks` — see the PR
+  # description for the exact `gh api` command.
 
   test-coverage:
     name: Test Coverage
@@ -294,15 +299,21 @@ jobs:
           echo "  VERCEL_PROJECT_ID set: ${{ vars.VERCEL_PROJECT_ID != '' }}"
           echo "  Not dependabot: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}"
 
-  # `security-scan` was removed as part of Recommendation E
-  # (docs/operations/ci-cost-audit-2026-05-25.md). It duplicated coverage already
-  # provided by .github/workflows/security.yml on every pull_request:
-  #   - `pnpm audit --audit-level=high` (continue-on-error) → security.yml `npm-audit`
-  #     (`pnpm audit --audit-level=critical`, the policy set by the security team)
-  #   - `trufflesecurity/trufflehog` → security.yml `secret-scanning` (gitleaks)
-  #     plus CodeQL + Trivy + OWASP Dependency-Check in the same workflow.
-  # Branch protection updated in the same PR to remove the now-orphan required
-  # context `PR Checks / Security Scan`.
+  # `security-scan` was removed as part of Recommendation E of
+  # docs/operations/ci-cost-audit-2026-05-25.md. It duplicated coverage
+  # already provided by .github/workflows/security.yml on every pull_request:
+  #   - `pnpm audit --audit-level=high` (continue-on-error) → security.yml
+  #     `npm-audit` (`pnpm audit --audit-level=critical`, the policy set by
+  #     the security team)
+  #   - `trufflesecurity/trufflehog` → security.yml `secret-scanning`
+  #     (gitleaks) plus CodeQL + Trivy + OWASP Dependency-Check in the same
+  #     workflow.
+  #
+  # EXTERNAL PRE-MERGE REQUIREMENT: branch protection lives outside this
+  # repo and is not updated by merging this file. Before this PR can land,
+  # a repo admin must PATCH the required_status_checks set to remove the
+  # now-orphan context `PR Checks / Security Scan` — see the PR
+  # description for the exact `gh api` command.
 
   lighthouse:
     name: Lighthouse Performance
