@@ -1,0 +1,164 @@
+# Auto-merge Dependabot patch/minor bumps.
+#
+# Recommendation H of docs/operations/ci-cost-audit-2026-05-25.md.
+#
+# Decision matrix:
+#   semver-major    → NEVER auto-merge (manual review)
+#   semver-minor:
+#     devDependency → auto-merge (test/build/lint tools — low blast radius)
+#     production    → auto-merge ONLY if in MINOR_SAFE allowlist; else manual
+#   semver-patch    → auto-merge (any dep, any ecosystem)
+#   github-actions  → auto-merge non-major (Dependabot groups these)
+#   docker          → manual review (security-sensitive base images)
+#
+# Trigger: pull_request_target. This grants the Dependabot-secret-scoped
+# GITHUB_TOKEN that can satisfy branch-protection writes. We never execute
+# any PR code; only dependabot/fetch-metadata + gh pr commands run.
+#
+# Auto-merge does NOT bypass required checks — `gh pr merge --auto` waits
+# for branch protection. PR7 of the dedup train made dependency-scan.yml
+# a real gate (removed continue-on-error); this PR also promotes it to
+# REQUIRED in branch protection so a vuln-introducing bump is blocked.
+
+name: Auto-merge Dependabot
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  decide:
+    name: Decide auto-merge
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.event.pull_request.draft == false
+    outputs:
+      should_merge: ${{ steps.policy.outputs.should_merge }}
+      reason: ${{ steps.policy.outputs.reason }}
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply auto-merge policy
+        id: policy
+        env:
+          UPDATE_TYPE: ${{ steps.meta.outputs.update-type }}
+          DEP_TYPE: ${{ steps.meta.outputs.dependency-type }}
+          DEP_NAMES: ${{ steps.meta.outputs.dependency-names }}
+          ECOSYSTEM: ${{ steps.meta.outputs.package-ecosystem }}
+        run: |
+          set -euo pipefail
+
+          # MINOR_SAFE allowlist: production deps where a minor bump is
+          # historically low-risk. Keep this list short and curated; expand
+          # only after a clean cycle of manual minors landing without rollback.
+          MINOR_SAFE=(
+            "@types/"
+            "zod"
+            "axios"
+            "date-fns"
+            "lodash"
+            "pino"
+            "winston"
+          )
+
+          should_merge="false"
+          reason=""
+
+          case "$UPDATE_TYPE" in
+            "version-update:semver-major")
+              reason="major bump — always requires manual review"
+              ;;
+            "version-update:semver-patch")
+              should_merge="true"
+              reason="patch bump — auto-merge"
+              ;;
+            "version-update:semver-minor")
+              if [ "$ECOSYSTEM" = "github-actions" ]; then
+                should_merge="true"
+                reason="github-actions minor — auto-merge (grouped, low blast)"
+              elif [ "$ECOSYSTEM" = "docker" ]; then
+                reason="docker minor — manual review (security-sensitive base image)"
+              elif [ "$DEP_TYPE" = "direct:development" ] || [ "$DEP_TYPE" = "indirect" ]; then
+                should_merge="true"
+                reason="dev/transitive minor — auto-merge"
+              else
+                # Production direct dep — check allowlist
+                allowed="false"
+                # DEP_NAMES is a comma-separated list (grouped PRs).
+                IFS=',' read -ra NAMES <<< "$DEP_NAMES"
+                for name in "${NAMES[@]}"; do
+                  trimmed="$(echo "$name" | xargs)"
+                  matched="false"
+                  for pattern in "${MINOR_SAFE[@]}"; do
+                    case "$trimmed" in
+                      "$pattern"*) matched="true"; break;;
+                    esac
+                  done
+                  if [ "$matched" = "true" ]; then
+                    allowed="true"
+                  else
+                    allowed="false"
+                    break
+                  fi
+                done
+                if [ "$allowed" = "true" ]; then
+                  should_merge="true"
+                  reason="production minor — all bumped packages on MINOR_SAFE allowlist"
+                else
+                  reason="production minor — package(s) not on MINOR_SAFE allowlist; manual review"
+                fi
+              fi
+              ;;
+            *)
+              reason="unknown update type: $UPDATE_TYPE — manual review"
+              ;;
+          esac
+
+          echo "should_merge=$should_merge" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+          echo "Decision: should_merge=$should_merge"
+          echo "Reason: $reason"
+          echo "Metadata: type=$UPDATE_TYPE dep-type=$DEP_TYPE ecosystem=$ECOSYSTEM names=$DEP_NAMES"
+
+      - name: Comment decision on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          SHOULD_MERGE: ${{ steps.policy.outputs.should_merge }}
+          REASON: ${{ steps.policy.outputs.reason }}
+        run: |
+          if [ "$SHOULD_MERGE" = "true" ]; then
+            body="🤖 **Auto-merge enabled** — $REASON. Will merge when all required checks pass."
+          else
+            body="🔍 **Manual review required** — $REASON."
+          fi
+          gh pr comment "$PR" --body "$body"
+
+  enable-auto-merge:
+    name: Enable auto-merge
+    runs-on: ubuntu-latest
+    needs: decide
+    if: needs.decide.outputs.should_merge == 'true'
+    steps:
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # --auto: enables auto-merge; GitHub will perform the merge once all
+          # required status checks pass. Branch protection still gates: ci.yml,
+          # pr-checks.yml, dependency-scan.yml (promoted to required in this PR).
+          # --squash: keeps history linear; Dependabot PRs become one commit.
+          gh pr merge "$PR" --auto --squash
