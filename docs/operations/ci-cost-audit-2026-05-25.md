@@ -608,9 +608,11 @@ or local-mirror execution (closest are `code-review`, `fix-failing-tests`,
    signature, posts a triage digest. Extends the pattern from
    `fix-failing-tests`.
 
-Owner: repo maintainer. Run cadence:
+Owner: repo maintainer. Run cadence (target):
 
-- `pre-ship` — every push (wired into pre-push hook).
+- `pre-ship` — every push, intended to be wired into the pre-push hook
+  (recommendation A in §10). **Not yet wired** — pre-push currently only blocks
+  pushes to `main`. Tracking PR is on the audit follow-up backlog.
 - `workflow-audit` — monthly.
 - `triage-failures` — on-demand when CI is chronically red.
 
