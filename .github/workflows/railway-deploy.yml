@@ -38,7 +38,15 @@ permissions:
 
 concurrency:
   group: railway-deploy-${{ github.event.inputs.environment || 'dev' }}
-  cancel-in-progress: false
+  # cancel-in-progress: true — per audit doc §10-J. When Build & Push
+  # Images on main triggers Railway Deploy via workflow_run AND a newer
+  # build completes before the older deploy finishes, the older deploy
+  # is now superseded — let it cancel instead of stacking 9 retries in
+  # the queue (the pattern that produced 9 chronic Railway Deploy
+  # failures back-to-back, documented in the audit's run-failure
+  # cluster). The `group` already scopes to environment, so we don't
+  # accidentally cancel a dev deploy when staging starts.
+  cancel-in-progress: true
 
 env:
   # Skip the workflow_run path if the upstream build failed

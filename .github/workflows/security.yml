@@ -143,13 +143,13 @@ jobs:
           # "Path(s) specified in the action for caching do not exist".
 
       - name: Run pnpm audit
-        # Temporarily gated at `critical` while the 7 known high-severity vulns
-        # (fast-uri path-traversal + host-confusion, etc.) ride out via the
-        # Dependabot PR queue. Tighten back to `high` once the Dependabot bumps
-        # in #62-#67 land and the audit baseline clears.
+        # Audit gates fail the job on `high` or above. Previously gated at
+        # `critical` while #62-#67 Dependabot bumps were in flight; those
+        # have all landed (axios/fast-uri/@babel — see PR #141, #143, #144,
+        # #148, #152, #153). Tightening back to `high` per audit doc §10-K.
         run: |
           pnpm audit --json > artifacts/reports/pnpm-audit-${{ github.run_number }}.json || true
-          pnpm audit --audit-level=critical
+          pnpm audit --audit-level=high
 
       - name: Upload audit results
         uses: actions/upload-artifact@v7

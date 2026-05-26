@@ -89,11 +89,11 @@
       "occurrences": 2,
       "affected_workflows": [],
       "owner": "exec-skill",
-      "guard_added": false,
+      "guard_added": true,
       "guard_prs": [],
       "guard_pattern": "Re-grep every 'Files to Modify' entry for its expected string immediately before calling generate-final-report.mjs; if an Edit gets reverted, use Write instead.",
       "verification_command": "test -f docs/operations/exec-attestation-policy.md && grep -qiE 're-?grep|verify.*persist|reverted by' docs/operations/exec-attestation-policy.md",
-      "evidence": ["PG-126 (commits 36d9d276d, a0917310d)", "PG-180 audit", "Cannot land guard in .claude/skills/exec/SKILL.md (gitignored — per-developer Claude tooling, not repo-shared). Follow-up PR should land the rule in docs/operations/exec-attestation-policy.md (committed) and have the exec skill reference that policy file."]
+      "evidence": ["PG-126 (commits 36d9d276d, a0917310d)", "PG-180 audit", "Guard text lives at docs/operations/exec-attestation-policy.md (committed) — landed in the PR1 truth-fixes follow-up after the 2026-05-25 audit."]
     }
   ]
 }
