@@ -1,4 +1,9 @@
 #!/usr/bin/env sh
+# Source Husky's initializer — same shape as .husky/pre-commit and
+# .husky/commit-msg. Without this, HUSKY=0 wouldn't disable this hook
+# and Husky's standard error/debug reporting wouldn't apply.
+. "$(dirname -- "$0")/_/husky.sh"
+
 # Pre-push protocol: stdin is one line per ref being pushed:
 #   <local_ref> <local_sha> <remote_ref> <remote_sha>
 #
@@ -40,7 +45,11 @@ if [ "${SKIP_PRESHIP:-0}" = "1" ]; then
 fi
 
 # Skip the gate when the only push is to a non-branch ref (tags, notes).
-has_branch_push=$(echo "$refs" | grep -c '^refs/heads/' || echo 0)
+# Each stdin line is `<local_ref> <local_sha> <remote_ref> <remote_sha>`.
+# We must inspect the 3rd field (remote_ref) — NOT the whole line — because
+# `git push origin HEAD:refs/heads/foo` makes local_ref=HEAD, which would
+# fail a `^refs/heads/` whole-line grep and incorrectly skip the gate.
+has_branch_push=$(echo "$refs" | awk '$3 ~ /^refs\/heads\// { found=1 } END { print found+0 }')
 if [ "$has_branch_push" = "0" ]; then
   exit 0
 fi

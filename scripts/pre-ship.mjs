@@ -48,7 +48,26 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-const REPO_ROOT = process.cwd();
+// Resolve REPO_ROOT from git rather than cwd so the script behaves
+// identically whether invoked from the repo root, from a subdirectory,
+// or by a Husky hook that has cd'd somewhere unexpected. Falls back to
+// cwd only if `git rev-parse` fails (e.g. run outside a git tree — in
+// which case the gate is meaningless anyway and we exit downstream).
+function detectRepoRoot() {
+  const r = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: process.platform === 'win32',
+  });
+  if (r.status === 0 && r.stdout) {
+    return r.stdout.trim().replace(/\\/g, '/');
+  }
+  return process.cwd();
+}
+const REPO_ROOT = detectRepoRoot();
+// Chdir so every spawned step inherits the repo-root cwd unless it
+// explicitly overrides via `cwd:` (e.g. the architecture step).
+process.chdir(REPO_ROOT);
 const OUT_DIR = path.join(REPO_ROOT, 'artifacts/preship');
 const LOG_DIR = path.join(OUT_DIR, 'logs');
 const STATE_PATH = path.join(OUT_DIR, 'last-run.json');
@@ -143,18 +162,20 @@ const STEPS = [
       'vitest run --project integration (FAILS the gate if Docker postgres/redis not up — override with PRESHIP_ALLOW_MISSING=1)',
     cmd: ['pnpm', 'run', 'test:integration'],
     skip_if: () => {
-      // Probe Docker for postgres + redis on the conventional ports.
-      const r = spawnSync(
-        'docker',
-        ['ps', '--filter', 'name=postgres', '--filter', 'name=redis', '-q'],
-        {
-          encoding: 'utf8',
-          stdio: ['ignore', 'pipe', 'pipe'],
-          shell: process.platform === 'win32',
-        }
-      );
-      if (r.error || r.status !== 0) return true;
-      return !r.stdout.trim();
+      // Probe Docker for postgres AND redis. `docker ps --filter name=X
+      // --filter name=Y` combines filters with AND, so no single container
+      // can match both — that probe is permanently empty. List ALL running
+      // container names once and require both substrings to appear.
+      const r = spawnSync('docker', ['ps', '--format', '{{.Names}}'], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        shell: process.platform === 'win32',
+      });
+      if (r.error || r.status !== 0) return true; // docker missing / daemon down → skip
+      const names = (r.stdout || '').toLowerCase();
+      const hasPostgres = names.includes('postgres');
+      const hasRedis = names.includes('redis');
+      return !(hasPostgres && hasRedis);
     },
     skip_remediation:
       'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.',
@@ -197,9 +218,16 @@ const STEPS = [
   },
   {
     id: 'audit',
-    description: 'pnpm audit --audit-level=high (matches security.yml after PR1)',
+    description:
+      'pnpm audit --audit-level=high (advisory — CI security-scan runs with continue-on-error, so we match that)',
     cmd: ['pnpm', 'audit', '--audit-level=high'],
-    required: true,
+    // CI's ci.yml > security-scan step has `continue-on-error: true` on
+    // the equivalent `pnpm audit --audit-level=high` invocation, which
+    // means CI does NOT fail on a high-severity vuln from this gate.
+    // Mirroring the required-check graph honestly: this step must be
+    // non-required locally too, otherwise developers cannot push until
+    // every existing high vuln rides through the Dependabot queue.
+    required: false,
   },
   {
     id: 'gitleaks',
@@ -217,10 +245,15 @@ const STEPS = [
   },
   {
     id: 'architecture',
-    description: 'tests/architecture (hexagonal boundary checks)',
+    description: 'tests/architecture (hexagonal boundary checks — required to mirror CI)',
     cmd: ['pnpm', 'test'],
     cwd: path.join(REPO_ROOT, 'tests/architecture'),
-    required: false,
+    // CI's ci.yml > Architecture Tests job runs `pnpm test` in this
+    // directory and FAILS the job on test failure. Only the upstream
+    // `pnpm install` step has continue-on-error, not the test step. To
+    // mirror CI's required-check graph honestly, this step must be
+    // required locally too.
+    required: true,
   },
   {
     id: 'validate-sprint-data',
@@ -231,13 +264,26 @@ const STEPS = [
 ];
 
 const args = process.argv.slice(2);
+const KNOWN_FLAGS = new Set(['--clean', '--list']);
+const KNOWN_PREFIXES = ['--only='];
 const flags = {
   clean: args.includes('--clean'),
   list: args.includes('--list'),
   only: null,
 };
 for (const a of args) {
-  if (a.startsWith('--only=')) flags.only = a.slice('--only='.length).split(',');
+  if (a.startsWith('--only=')) {
+    flags.only = a.slice('--only='.length).split(',');
+    continue;
+  }
+  if (KNOWN_FLAGS.has(a)) continue;
+  if (KNOWN_PREFIXES.some((p) => a.startsWith(p))) continue;
+  // Unknown flag — fail with documented exit code 2 instead of silently
+  // ignoring (which previously made typos like `--cleen` look like a
+  // successful full run).
+  process.stderr.write(`pre-ship: unknown argument '${a}'.\n`);
+  process.stderr.write(`Known flags: --clean, --list, --only=<id,id,...>\n`);
+  process.exit(2);
 }
 
 if (flags.list) {
@@ -294,7 +340,15 @@ function runStep(step, prev) {
 
   const cached = prev?.steps?.find((s) => s.id === step.id);
   if (cached && cached.verdict === 'PASS') {
-    return { ...cached, verdict: 'CACHED_PASS' };
+    // Display 0ms for cached results so the printed timing isn't
+    // mistaken for a fresh run that took the old duration. Keep the
+    // original duration in a separate field for audit if needed.
+    return {
+      ...cached,
+      verdict: 'CACHED_PASS',
+      duration_ms: 0,
+      cached_original_duration_ms: cached.duration_ms,
+    };
   }
 
   const start = Date.now();
