@@ -250,12 +250,19 @@ jobs:
     outputs:
       preview-url: ${{ steps.deploy.outputs.preview-url }}
     env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      # Project/Org IDs are not secrets — read from `vars.*` so the same value
+      # drives both the eligibility gate AND the Vercel CLI invocation. The
+      # previous setup gated on `vars.VERCEL_PROJECT_ID` but exported
+      # `secrets.VERCEL_PROJECT_ID` to the CLI; if the repo only sets one or
+      # the other, the job would either be ineligible-but-with-token or
+      # eligible-but-empty (and vercel pull/build/deploy would fail).
+      # `secrets.VERCEL_TOKEN` stays a secret — only the IDs are public.
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
       # Deploy eligibility flag — referenced by every heavy step's `if:`. Three
       # gates folded into one expression:
       #   1. Same-repo PR (forks can't access secrets)
-      #   2. Vercel project configured (auditable VAR + hidden TOKEN)
+      #   2. Vercel project configured (single source of truth: vars.VERCEL_PROJECT_ID)
       #   3. Not a Dependabot PR (scoped to Dependabot secrets, not Actions secrets)
       DEPLOY_ELIGIBLE: ${{ github.event.pull_request.head.repo.full_name == github.repository && vars.VERCEL_PROJECT_ID != '' && github.event.pull_request.user.login != 'dependabot[bot]' }}
     steps:
