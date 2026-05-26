@@ -6,19 +6,27 @@
 #   semver-major    → NEVER auto-merge (manual review)
 #   semver-minor:
 #     devDependency → auto-merge (test/build/lint tools — low blast radius)
-#     production    → auto-merge ONLY if in MINOR_SAFE allowlist; else manual
+#     production    → auto-merge ONLY if every bumped package matches the
+#                     MINOR_SAFE allowlist (exact match, with @types/ as
+#                     the only prefix-allowed entry); else manual review
 #   semver-patch    → auto-merge (any dep, any ecosystem)
 #   github-actions  → auto-merge non-major (Dependabot groups these)
 #   docker          → manual review (security-sensitive base images)
 #
-# Trigger: pull_request_target. This grants the Dependabot-secret-scoped
-# GITHUB_TOKEN that can satisfy branch-protection writes. We never execute
-# any PR code; only dependabot/fetch-metadata + gh pr commands run.
+# Trigger: pull_request_target. This runs in the BASE-REPO context (not
+# the fork) with the repository's regular GITHUB_TOKEN — which is what
+# grants the write permissions needed for `gh pr merge --auto`. We never
+# execute any PR-fork code; only dependabot/fetch-metadata + gh pr commands
+# run, and both operate on metadata, not source.
 #
 # Auto-merge does NOT bypass required checks — `gh pr merge --auto` waits
-# for branch protection. PR7 of the dedup train made dependency-scan.yml
-# a real gate (removed continue-on-error); this PR also promotes it to
-# REQUIRED in branch protection so a vuln-introducing bump is blocked.
+# for branch protection. PR #174 made dependency-scan.yml strict (removed
+# continue-on-error). This workflow ALSO blocks on dependency-scan in-line
+# via the `Wait for Dependency Security Scan` step in enable-auto-merge,
+# so the safety property does NOT depend on dependency-scan being in the
+# required-checks set. Adding it to required is recommended belt-and-
+# suspenders (PR description has the admin PATCH command), but the
+# in-workflow gate is the load-bearing check.
 
 name: Auto-merge Dependabot
 
@@ -61,17 +69,32 @@ jobs:
           set -euo pipefail
 
           # MINOR_SAFE allowlist: production deps where a minor bump is
-          # historically low-risk. Keep this list short and curated; expand
-          # only after a clean cycle of manual minors landing without rollback.
-          MINOR_SAFE=(
-            "@types/"
-            "zod"
-            "axios"
-            "date-fns"
-            "lodash"
-            "pino"
-            "winston"
-          )
+          # historically low-risk. Two match modes:
+          #   - entries ending with `/` are PREFIX patterns (matches
+          #     `@types/anything`); intentionally limited to scopes whose
+          #     entire namespace is policy-allowlisted.
+          #   - everything else is EXACT match. `axios` matches `axios` only,
+          #     NOT `axios-http`, `axios-mock-adapter`, etc. (Earlier prefix
+          #     matching admitted unintended packages — flagged in Copilot
+          #     review on PR #175.)
+          # Keep this list short and curated; expand only after a clean
+          # cycle of manual minors landing without rollback.
+          MINOR_SAFE_PREFIX=("@types/")
+          MINOR_SAFE_EXACT=("zod" "axios" "date-fns" "lodash" "pino" "winston")
+
+          # Returns 0 if the package name is in the allowlist.
+          is_minor_safe() {
+            local pkg="$1"
+            for prefix in "${MINOR_SAFE_PREFIX[@]}"; do
+              case "$pkg" in
+                "$prefix"*) return 0;;
+              esac
+            done
+            for exact in "${MINOR_SAFE_EXACT[@]}"; do
+              if [ "$pkg" = "$exact" ]; then return 0; fi
+            done
+            return 1
+          }
 
           should_merge="false"
           reason=""
@@ -94,22 +117,17 @@ jobs:
                 should_merge="true"
                 reason="dev/transitive minor — auto-merge"
               else
-                # Production direct dep — check allowlist
-                allowed="false"
+                # Production direct dep — every bumped package must satisfy
+                # the allowlist (exact match + the one @types/ prefix exception).
+                allowed="true"
+                offending=""
                 # DEP_NAMES is a comma-separated list (grouped PRs).
                 IFS=',' read -ra NAMES <<< "$DEP_NAMES"
                 for name in "${NAMES[@]}"; do
                   trimmed="$(echo "$name" | xargs)"
-                  matched="false"
-                  for pattern in "${MINOR_SAFE[@]}"; do
-                    case "$trimmed" in
-                      "$pattern"*) matched="true"; break;;
-                    esac
-                  done
-                  if [ "$matched" = "true" ]; then
-                    allowed="true"
-                  else
+                  if ! is_minor_safe "$trimmed"; then
                     allowed="false"
+                    offending="$trimmed"
                     break
                   fi
                 done
@@ -117,7 +135,7 @@ jobs:
                   should_merge="true"
                   reason="production minor — all bumped packages on MINOR_SAFE allowlist"
                 else
-                  reason="production minor — package(s) not on MINOR_SAFE allowlist; manual review"
+                  reason="production minor — '$offending' not on MINOR_SAFE allowlist; manual review"
                 fi
               fi
               ;;
@@ -203,6 +221,8 @@ jobs:
           # --squash: keeps history linear; Dependabot PRs become one commit.
           # The Wait step above ensures dependency-scan green BEFORE we
           # enable auto-merge — so a vulnerable patch bump cannot ride the
-          # timing window between this PR landing and the admin PATCH that
-          # promotes dependency-scan to a required context.
+          # timing window between this PR landing and any external admin
+          # action to add dependency-scan to the required-checks set
+          # (branch protection lives outside the repo; this workflow cannot
+          # change it).
           gh pr merge "$PR" --auto --squash
