@@ -117,6 +117,12 @@
     "1117015": {
       "findings": [
         {
+          "version": "8.5.9",
+          "paths": [
+            ".>vite>postcss"
+          ]
+        },
+        {
           "version": "8.5.6",
           "paths": [
             "apps__project-tracker>@tailwindcss/postcss>postcss"
@@ -126,12 +132,6 @@
           "version": "8.4.31",
           "paths": [
             "apps__project-tracker>next>postcss"
-          ]
-        },
-        {
-          "version": "8.5.9",
-          "paths": [
-            ".>vite>postcss"
           ]
         }
       ],
@@ -560,15 +560,15 @@
     "1119502": {
       "findings": [
         {
-          "version": "6.15.0",
-          "paths": [
-            "apps__ai-worker>express>qs"
-          ]
-        },
-        {
           "version": "6.14.2",
           "paths": [
             ".>@lhci/cli>express>qs"
+          ]
+        },
+        {
+          "version": "6.15.0",
+          "paths": [
+            "apps__ai-worker>express>qs"
           ]
         }
       ],
@@ -612,9 +612,9 @@
       "high": 1,
       "critical": 0
     },
-    "dependencies": 2409,
+    "dependencies": 2408,
     "devDependencies": 0,
     "optionalDependencies": 0,
-    "totalDependencies": 2409
+    "totalDependencies": 2408
   }
 }
