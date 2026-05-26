@@ -55,9 +55,11 @@ jobs:
       sbom_artifact_name: ${{ steps.sbom-name.outputs.name }}
 
     steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup-monorepo
         with:
-          fetch-depth: '0'
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
@@ -174,6 +176,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -245,6 +248,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}

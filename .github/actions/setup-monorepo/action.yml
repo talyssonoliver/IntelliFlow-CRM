@@ -1,6 +1,20 @@
 # Shared setup composite — replaces the
-#   actions/checkout + pnpm/action-setup + actions/setup-node + pnpm install
-# 4-step sequence that was duplicated 49+ times across .github/workflows/.
+#   pnpm/action-setup + actions/setup-node + pnpm install
+# 3-step sequence that was duplicated across 20+ jobs in .github/workflows/.
+#
+# IMPORTANT — CALLER REQUIREMENT:
+#   Local actions (uses: ./...) cannot be loaded before the repository is
+#   checked out. Every caller MUST place `actions/checkout@v6` as the FIRST
+#   step of the job, BEFORE the `uses: ./.github/actions/setup-monorepo`
+#   call. The composite cannot do checkout itself — by the time it runs, the
+#   file you are reading is already loaded from a checked-out tree.
+#
+#   Caller pattern:
+#     steps:
+#       - uses: actions/checkout@v6
+#         with: { fetch-depth: 0 }    # or 1 for shallow
+#       - uses: ./.github/actions/setup-monorepo
+#         with: { build-libs: 'true' }
 #
 # Why this exists:
 #   The audit doc §10-D (docs/operations/ci-cost-audit-2026-05-25.md) traced
@@ -23,20 +37,11 @@
 #      A new workflow that adopts this composite automatically gets the stubs
 #      without copy-pasting them.
 #
-# Usage from a calling workflow:
-#   - uses: ./.github/actions/setup-monorepo
-#     with:
-#       node-version: '22'         # optional, default 22
-#       pnpm-version: '10.33.0'    # optional, default 10.33.0
-#       fetch-depth: '1'           # optional, default 1; pass 0 for full history
-#       install-deps: 'true'       # optional, default true; set false to skip pnpm install
-#       build-libs: 'false'        # optional, default false; set true to pre-build library packages
-#
 # Inputs are strings (composite action constraint). Boolean-ish inputs are
 # compared against the literal string 'true'.
 
 name: 'Setup monorepo'
-description: 'Checkout + pnpm + Node + install + optional library pre-build for IntelliFlow CRM workflows'
+description: 'pnpm + Node + install + optional library pre-build for IntelliFlow CRM workflows. Caller MUST checkout first.'
 
 inputs:
   node-version:
@@ -47,10 +52,6 @@ inputs:
     description: 'pnpm version (default: 10.33.0, matches PNPM_VERSION env across workflows)'
     required: false
     default: '10.33.0'
-  fetch-depth:
-    description: 'actions/checkout fetch-depth (default 1; pass "0" for SonarCloud / blame analysis)'
-    required: false
-    default: '1'
   install-deps:
     description: 'Run pnpm install --frozen-lockfile (default true). Set "false" for jobs that only need the runtime (e.g. npm audit jobs without install).'
     required: false
@@ -63,11 +64,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: ${{ inputs.fetch-depth }}
-
     - name: Setup pnpm
       uses: pnpm/action-setup@v6
       with:

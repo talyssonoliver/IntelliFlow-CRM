@@ -23,9 +23,11 @@ jobs:
     name: Lint & Format
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup-monorepo
         with:
-          fetch-depth: '0'
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
@@ -39,6 +41,7 @@ jobs:
     name: Type Check
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -52,6 +55,7 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -75,6 +79,7 @@ jobs:
     name: Architecture Tests
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -147,6 +152,7 @@ jobs:
       REDIS_URL: redis://localhost:6379
       NODE_ENV: test
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -200,6 +206,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, typecheck, test, architecture, integration]
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -241,6 +248,7 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -307,6 +315,7 @@ jobs:
     # turning the whole CI Pipeline workflow red. Tracked at GH issue #95.
     continue-on-error: true
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
         with:
           node-version: ${{ env.NODE_VERSION }}

@@ -76,6 +76,7 @@ jobs:
     timeout-minutes: 20
 
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
 
       - name: Run OWASP Dependency-Check
@@ -115,6 +116,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
         with:
           # pnpm audit doesn't run pnpm install — skip the install step.
