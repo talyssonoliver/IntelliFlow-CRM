@@ -18,10 +18,21 @@ on:
     branches:
       - main
       - develop
+    # SBOM generation walks the dependency graph from pnpm-lock.yaml —
+    # no SBOM-relevant change comes from doc files. Context NOT in
+    # branch protection. See audit §10-B.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'apps/project-tracker/docs/metrics/_global/Sprint_plan_*.csv'
   pull_request:
     branches:
       - main
       - develop
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'apps/project-tracker/docs/metrics/_global/Sprint_plan_*.csv'
   release:
     types: [created]
   workflow_dispatch:

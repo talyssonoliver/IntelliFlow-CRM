@@ -6,11 +6,33 @@ on:
       - main
       - master
       - develop
+    # Skip the heavy scanners on doc-only changes. Coverage rationale:
+    #   - Secret detection (GitLeaks) DOES need to scan Markdown/docs (a
+    #     .env example or a leaked token in a runbook is a real secret).
+    #     It now lives in .github/workflows/secret-scan.yml, which has NO
+    #     paths-ignore — so doc-only PRs still get scanned. Do NOT move
+    #     GitLeaks back into this workflow.
+    #   - The remaining scanners here (Trivy filesystem, OWASP Dependency-
+    #     Check, npm-audit, CodeQL) don't meaningfully analyze Markdown,
+    #     prose docs, or the sprint-plan CSV split files. Skipping doc-only
+    #     pushes saves ~24% of the 24,000m/month security.yml share without
+    #     reducing security coverage.
+    # See docs/operations/ci-cost-audit-2026-05-25.md §10-B.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'apps/project-tracker/docs/metrics/_global/Sprint_plan_*.csv'
   pull_request:
     branches:
       - main
       - master
       - develop
+    # Same paths-ignore rationale as the push trigger above. Secret
+    # detection on doc-only PRs is handled by secret-scan.yml (always on).
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'apps/project-tracker/docs/metrics/_global/Sprint_plan_*.csv'
   schedule:
     # Run daily at 2 AM UTC
     - cron: '0 2 * * *'
@@ -191,30 +213,12 @@ jobs:
         with:
           category: '/language:${{ matrix.language }}'
 
-  secret-scanning:
-    name: Secret Scanning with GitLeaks
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_SUMMARY: true
-
-      - name: Upload Gitleaks results
-        uses: actions/upload-artifact@v7
-        if: failure()
-        with:
-          name: gitleaks-report
-          path: gitleaks-report.json
-          retention-days: 30
+  # secret-scanning was moved to .github/workflows/secret-scan.yml so it
+  # runs on EVERY change, ignoring this workflow's paths-ignore filter.
+  # See Copilot review on PR #169: secrets can live in Markdown/docs and
+  # the project's .gitleaks.toml explicitly allowlists `docs/setup/*.md`,
+  # which means doc-paths ARE scanned by design. Keeping a paths-ignored
+  # copy here would silently disable detection on doc-only PRs.
 
   security-baseline-validation:
     name: Validate Security Baseline
@@ -325,7 +329,10 @@ jobs:
   security-summary:
     name: Security Scan Summary
     runs-on: ubuntu-latest
-    needs: [trivy-scan, dependency-check, npm-audit, secret-scanning, security-baseline-validation]
+    # secret-scanning dropped from this `needs:` because it now lives in
+    # secret-scan.yml (no paths-ignore — always runs). Its result is
+    # surfaced in its own workflow's summary tab.
+    needs: [trivy-scan, dependency-check, npm-audit, security-baseline-validation]
     if: always()
     timeout-minutes: 5
 
@@ -344,7 +351,7 @@ jobs:
           echo "| Trivy Scan | ${{ needs.trivy-scan.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Dependency Check | ${{ needs.dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| npm/pnpm Audit | ${{ needs.npm-audit.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Secret Scanning | ${{ needs.secret-scanning.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Scanning | _(in Secret Scanning workflow — always runs)_ |" >> $GITHUB_STEP_SUMMARY
           echo "| Baseline Validation | ${{ needs.security-baseline-validation.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
@@ -354,9 +361,10 @@ jobs:
           echo "- Address any HIGH or CRITICAL vulnerabilities immediately" >> $GITHUB_STEP_SUMMARY
 
       - name: Fail on critical issues
+        # secret-scanning fail check moved to secret-scan.yml (its own
+        # workflow now fails directly on detection — no aggregator needed).
         if: |
           needs.trivy-scan.result == 'failure' ||
-          needs.secret-scanning.result == 'failure' ||
           needs.security-baseline-validation.result == 'failure'
         run: |
           echo "Critical security issues detected!"

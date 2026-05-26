@@ -72,12 +72,46 @@ if [ -n "$STAGED_FILES" ]; then
   echo "✅ Formatting applied and re-staged"
 fi
 
-# Run linting (excluding project-tracker which has known isolated TS issues)
-echo "📋 Linting code..."
-pnpm run lint "--filter=!@intelliflow/project-tracker" || {
-  echo "❌ Linting failed. Fix errors before committing."
-  exit 1
-}
+# Auto-fix lint on STAGED .ts/.tsx files only, then re-stage. Per audit
+# §10-C: `pnpm run lint` (turbo run lint) fails the whole monorepo lint
+# on any pre-existing violation in a package the developer isn't even
+# touching. `pnpm run lint:fix` (turbo run lint:fix) fixes everything
+# everywhere — drive-by edits to unrelated packages.
+#
+# This pattern: scope to staged files, run eslint --fix on JUST them,
+# re-stage, then verify zero remaining problems. Eliminates the "lint
+# failed in CI" class of waste while NOT touching files the developer
+# didn't modify. Falls through to the original full lint if nothing was
+# staged (covers commits that only touch non-TS files).
+#
+# Override: ESCAPE_LINT_FIX=1 git commit ... if the staged-files pass
+# is misbehaving (then run the full lint manually).
+echo "📋 Auto-fixing + linting staged .ts/.tsx files..."
+STAGED_TS=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)$' || true)
+# `-r` is a GNU-xargs extension that breaks on macOS/BSD ("illegal option").
+# We don't need it here because the `[ -n "$STAGED_TS" ]` guard below
+# already ensures non-empty input; POSIX xargs without `-r` would also
+# run eslint with zero args, which is what we're guarding against.
+if [ -n "$STAGED_TS" ] && [ "${ESCAPE_LINT_FIX:-0}" != "1" ]; then
+  # eslint --fix mutates files in place. Use --max-warnings=0 so any
+  # remaining violation (one we can't auto-fix) still blocks the commit.
+  # `2>/dev/null || true` on `git add` because some staged files may be
+  # in directories ESLint ignored (e.g., dist/) — re-staging only matters
+  # for files we actually fixed.
+  echo "$STAGED_TS" | xargs pnpm exec eslint --fix --max-warnings=0 || {
+    echo "❌ Lint failed on staged files after autofix. Fix the remaining errors before committing."
+    echo "   (Override only if necessary: ESCAPE_LINT_FIX=1 git commit ... — record reason in commit body.)"
+    exit 1
+  }
+  echo "$STAGED_TS" | xargs git add -f 2>/dev/null || true
+  echo "✅ Staged files lint-fixed and re-staged"
+else
+  echo "⚠️  No staged TS/JS files (or ESCAPE_LINT_FIX=1). Falling back to monorepo lint."
+  pnpm run lint "--filter=!@intelliflow/project-tracker" || {
+    echo "❌ Linting failed. Fix errors before committing."
+    exit 1
+  }
+fi
 
 # Run type checking
 echo "🔧 Type checking..."
