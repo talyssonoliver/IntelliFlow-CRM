@@ -31,9 +31,9 @@
       "owner": "platform-eng",
       "guard_added": true,
       "guard_prs": [],
-      "guard_pattern": "pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers",
-      "verification_command": "test \"$(grep -lE 'turbo run build --filter=!@intelliflow' .github/workflows/ci.yml .github/workflows/pr-checks.yml .github/workflows/system-audit.yml 2>/dev/null | wc -l | tr -d ' \\t\\r\\n')\" = \"3\"",
-      "evidence": ["ci.yml:62-63, 84-85, 195-196", "pr-checks.yml:87-88", "system-audit.yml:80"]
+      "guard_pattern": "Library pre-build before typecheck/test/build/audit. After the composite-action consolidation (PR3 of the dedup train), the literal `pnpm turbo run build --filter=!@intelliflow/...` lives in `.github/actions/setup-monorepo/action.yml`, and consumers opt in via `build-libs: 'true'` in their `uses: ./.github/actions/setup-monorepo` block.",
+      "verification_command": "grep -qE 'turbo run build' .github/actions/setup-monorepo/action.yml && grep -qE 'filter=!@intelliflow/web' .github/actions/setup-monorepo/action.yml && test \"$(grep -lE \"build-libs:[[:space:]]*'true'\" .github/workflows/ci.yml .github/workflows/pr-checks.yml 2>/dev/null | wc -l | tr -d ' \\t\\r\\n')\" -ge \"2\"",
+      "evidence": [".github/actions/setup-monorepo/action.yml — the library-build step lives in the composite, opt-in via build-libs input", "ci.yml typecheck/test/integration/build jobs call the composite with build-libs: 'true'", "pr-checks.yml quality-checks job calls the composite with build-libs: 'true'"]
     },
     {
       "id": "missing-module-load-env-stubs",
