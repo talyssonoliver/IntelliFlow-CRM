@@ -6,11 +6,18 @@ on:
       - main
       - master
       - develop
-    # Skip security scans on doc-only changes — none of these contexts
-    # are required by branch protection, and none of trivy/dependency-check
-    # /npm-audit/codeql/gitleaks read .md files, sprint metric JSON, or
-    # markdown-table sources. Saves ~24% of the 24,000m/month security.yml
-    # share on doc churn. See docs/operations/ci-cost-audit-2026-05-25.md §10-B.
+    # Skip the heavy scanners on doc-only changes. Coverage rationale:
+    #   - Secret detection (GitLeaks) DOES need to scan Markdown/docs (a
+    #     .env example or a leaked token in a runbook is a real secret).
+    #     It now lives in .github/workflows/secret-scan.yml, which has NO
+    #     paths-ignore — so doc-only PRs still get scanned. Do NOT move
+    #     GitLeaks back into this workflow.
+    #   - The remaining scanners here (Trivy filesystem, OWASP Dependency-
+    #     Check, npm-audit, CodeQL) don't meaningfully analyze Markdown,
+    #     prose docs, or the sprint-plan CSV split files. Skipping doc-only
+    #     pushes saves ~24% of the 24,000m/month security.yml share without
+    #     reducing security coverage.
+    # See docs/operations/ci-cost-audit-2026-05-25.md §10-B.
     paths-ignore:
       - '**/*.md'
       - 'docs/**'
@@ -20,6 +27,8 @@ on:
       - main
       - master
       - develop
+    # Same paths-ignore rationale as the push trigger above. Secret
+    # detection on doc-only PRs is handled by secret-scan.yml (always on).
     paths-ignore:
       - '**/*.md'
       - 'docs/**'
