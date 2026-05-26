@@ -69,15 +69,26 @@ runs:
       with:
         version: ${{ inputs.pnpm-version }}
 
-    - name: Setup Node.js
+    # Split the setup-node call by install-deps so the pnpm cache plugin
+    # is only enabled when we're actually going to run `pnpm install`.
+    # Background: setup-node's `cache: 'pnpm'` registers a post-action that
+    # writes the pnpm store. If no install runs in the job, the store path
+    # doesn't exist and the post-action fails with "Path(s) specified in the
+    # action for caching do not exist." Splitting avoids that and removes
+    # the need to pass an empty string to `cache:` (which the action accepts
+    # but whose stability we'd rather not depend on).
+    - name: Setup Node.js (with pnpm cache)
+      if: inputs.install-deps == 'true'
       uses: actions/setup-node@v6
       with:
         node-version: ${{ inputs.node-version }}
-        # cache: 'pnpm' restores the pnpm store from GitHub's shared cache
-        # service across runs/jobs when the lockfile hash hits. The store
-        # restore avoids re-downloading tarballs but does NOT skip the install
-        # step itself — see comment block at top of this file.
         cache: 'pnpm'
+
+    - name: Setup Node.js (no cache, install-deps=false)
+      if: inputs.install-deps != 'true'
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version }}
 
     - name: Install dependencies
       if: inputs.install-deps == 'true'
