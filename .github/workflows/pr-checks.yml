@@ -70,55 +70,81 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
+      # Skip-shim pattern for Dependabot PRs (Recommendation G of CI cost audit
+      # 2026-05-25). All heavy steps below — including the checkout itself —
+      # are gated on `pull_request.user.login != 'dependabot[bot]'`. For bot PRs
+      # every gated step is skipped and the final shim step emits `success`, so
+      # the required status context still reports green and branch protection
+      # does not deadlock. ci.yml covers the actual lint/typecheck/test signal
+      # for the bumped lockfile.
       - uses: actions/checkout@v6
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup-monorepo
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
           build-libs: 'true'
 
       - name: Lint
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: pnpm run lint
 
       - name: Type check
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: pnpm run typecheck
 
       - name: Check formatting
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: pnpm run format:check
 
       - name: A11y route reconciliation
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: pnpm run validate:a11y-routes
         env:
           VALIDATION_STRICT: '1'
 
       - name: Artifact path linting
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: pnpm run lint:artifacts
         continue-on-error: true
 
       # PG-195: block PRs that introduce a new material-symbols icon literal
       # without regenerating the committed glyph audit.
       - name: Audit Material Symbols glyph coverage
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: pnpm --filter @intelliflow/web audit:material-symbols
+
+      - name: Skip-shim for Dependabot PRs
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        run: echo "::notice::Quality Checks skipped for Dependabot PR — ci.yml runs lint/typecheck against the bumped lockfile"
 
   test-coverage:
     name: Test Coverage
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
+      # Skip-shim for Dependabot PRs — see Quality Checks job for the pattern
+      # rationale. ci.yml runs the unit/integration test suite against the
+      # bumped lockfile; the codecov comment is convenience for human authors.
       - uses: actions/checkout@v6
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup-monorepo
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Run tests with coverage
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: pnpm run test:coverage
 
       - name: Generate coverage report
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -127,6 +153,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Comment coverage on PR
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         uses: romeovs/lcov-reporter-action@v0.4.0
         with:
           lcov-file: ./artifacts/coverage/lcov.info
@@ -134,18 +161,29 @@ jobs:
           delete-old-comments: true
         continue-on-error: true
 
+      - name: Skip-shim for Dependabot PRs
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        run: echo "::notice::Test Coverage skipped for Dependabot PR — ci.yml runs unit + integration tests against the bumped lockfile"
+
   build-preview:
     name: Build Preview
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
+      # Skip-shim for Dependabot PRs — see Quality Checks job for the pattern
+      # rationale. ci.yml's Build job runs the same `pnpm run build` against
+      # the bumped lockfile, so a green ci.yml is sufficient signal that the
+      # dep bump did not break the build. This saves ~5 minutes per Dependabot PR.
       - uses: actions/checkout@v6
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
       - uses: ./.github/actions/setup-monorepo
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Build all packages
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: pnpm run build
         env:
           NODE_ENV: production
@@ -179,6 +217,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
 
       - name: Upload build artifacts
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         uses: actions/upload-artifact@v7
         with:
           name: pr-build-${{ github.event.pull_request.number }}
@@ -187,19 +226,21 @@ jobs:
             apps/*/.next
           retention-days: 3
 
+      - name: Skip-shim for Dependabot PRs
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        run: echo "::notice::Build Preview skipped for Dependabot PR — ci.yml runs the same build against the bumped lockfile"
+
   deploy-preview:
     name: Deploy Preview
     runs-on: ubuntu-latest
     needs: [build-preview]
-    # Gate on the VERCEL_PROJECT_ID variable: variables are visible in logs (so
-    # the gate is auditable) while the actual token stays a secret. To enable,
-    # set the VERCEL_PROJECT_ID repo variable AND the VERCEL_TOKEN / VERCEL_ORG_ID
-    # / VERCEL_PROJECT_ID secrets.
-    #
-    # Skip for Dependabot — GitHub scopes Dependabot PRs to Dependabot-specific
-    # secrets (Settings > Secrets > Dependabot), not the regular Actions secrets,
-    # so VERCEL_TOKEN is unavailable here and Deploy Preview would always fail.
-    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && vars.VERCEL_PROJECT_ID != '' && github.event.pull_request.user.login != 'dependabot[bot]'
+    # Always run for non-draft PRs so the required status context reports a
+    # conclusion (not `skipped`). Branch protection treats `skipped` required
+    # checks as never-reported, which BLOCKS merge. The actual deploy is
+    # per-step gated below (DEPLOY_ELIGIBLE) so only same-repo PRs with Vercel
+    # configured AND non-bot authors execute the deploy. Other cases hit the
+    # success-shim step and the job still emits `success`.
+    if: github.event.pull_request.draft == false
     permissions:
       pull-requests: write
       issues: write
@@ -211,9 +252,16 @@ jobs:
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      # Deploy eligibility flag — referenced by every heavy step's `if:`. Three
+      # gates folded into one expression:
+      #   1. Same-repo PR (forks can't access secrets)
+      #   2. Vercel project configured (auditable VAR + hidden TOKEN)
+      #   3. Not a Dependabot PR (scoped to Dependabot secrets, not Actions secrets)
+      DEPLOY_ELIGIBLE: ${{ github.event.pull_request.head.repo.full_name == github.repository && vars.VERCEL_PROJECT_ID != '' && github.event.pull_request.user.login != 'dependabot[bot]' }}
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
+        if: env.DEPLOY_ELIGIBLE == 'true'
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
@@ -222,21 +270,25 @@ jobs:
           install-deps: 'false'
 
       - name: Install Vercel CLI
+        if: env.DEPLOY_ELIGIBLE == 'true'
         # amondnet/vercel-action@v25 is unmaintained and ships Vercel CLI 25.1.0,
         # which the deploy endpoint rejects ("requires version 47.2.2 or later").
         # Use the modern CLI directly: pull → build → deploy --prebuilt.
         run: pnpm add -g vercel@latest
 
       - name: Pull Vercel environment (preview)
+        if: env.DEPLOY_ELIGIBLE == 'true'
         # Downloads project config + env vars to .vercel/. VERCEL_ORG_ID +
         # VERCEL_PROJECT_ID env vars take the place of `.vercel/project.json`.
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build with Vercel
+        if: env.DEPLOY_ELIGIBLE == 'true'
         # Uses the env vars pulled above; output goes to .vercel/output/.
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel Preview
+        if: env.DEPLOY_ELIGIBLE == 'true'
         id: deploy
         # --archive=tgz uploads the build as a single tarball instead of
         # streaming thousands of individual files. The Hobby plan caps file
@@ -249,6 +301,7 @@ jobs:
           echo "Preview URL: $DEPLOY_URL"
 
       - name: Comment preview URL
+        if: env.DEPLOY_ELIGIBLE == 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -264,6 +317,20 @@ jobs:
               repo: context.repo.repo,
               body,
             });
+
+      - name: Skip-shim (Deploy ineligible)
+        if: env.DEPLOY_ELIGIBLE != 'true'
+        # Emits success so the required status context reports green. Without
+        # this step, an ineligible job has 0 successful steps → conclusion
+        # `skipped` → branch protection blocks the PR. The shim resolves the
+        # deadlock for: fork PRs, Dependabot PRs, and repos without Vercel
+        # variables configured.
+        run: |
+          echo "::notice::Deploy Preview skipped — ineligible (fork PR, Dependabot, or VERCEL_PROJECT_ID unset)."
+          echo "Reason matrix:"
+          echo "  head.repo == origin: ${{ github.event.pull_request.head.repo.full_name == github.repository }}"
+          echo "  VERCEL_PROJECT_ID set: ${{ vars.VERCEL_PROJECT_ID != '' }}"
+          echo "  Not dependabot: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}"
 
   security-scan:
     name: Security Scan
