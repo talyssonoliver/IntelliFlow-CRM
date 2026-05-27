@@ -52,6 +52,12 @@ jobs:
       should_merge: ${{ steps.policy.outputs.should_merge }}
       reason: ${{ steps.policy.outputs.reason }}
     steps:
+      # `dependabot/fetch-metadata` shells out to `git` to inspect commits,
+      # which requires a checked-out repository. Without this, the action
+      # fails with `fatal: not a git repository`. Verified against PR #189
+      # before this fix landed. Same root-cause class as the F1 composite-
+      # action checkout issue from PR #170.
+      - uses: actions/checkout@v6
       - name: Fetch Dependabot metadata
         id: meta
         uses: dependabot/fetch-metadata@v2
