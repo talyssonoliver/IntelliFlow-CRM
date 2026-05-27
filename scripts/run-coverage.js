@@ -63,6 +63,13 @@ const MERGE_ONLY = process.argv.includes('--merge-only');
 function runVitest(project) {
   return new Promise((resolve) => {
     const outDir = path.join(PARTS_DIR, project);
+    // Capture per-project test results as JSON so we can distinguish
+    // real test failures from coverage-threshold breaches. Both surface
+    // as vitest exit code 1, but their semantics differ:
+    //   - real test failures → job MUST fail (CI red, not fake-green)
+    //   - threshold breach with all tests passing → warn, but the
+    //     suite is honest. Threshold debt is tracked separately.
+    const resultJsonPath = path.join(outDir, 'vitest-result.json');
     const args = [
       '--max-old-space-size=8192',
       '--expose-gc',
@@ -71,9 +78,15 @@ function runVitest(project) {
       '--coverage',
       `--coverage.reportsDirectory=${outDir}`,
       `--project=${project}`,
+      '--reporter=default',
+      '--reporter=json',
+      `--outputFile.json=${resultJsonPath}`,
     ];
 
     console.log(`\n▶ Running coverage for project: ${project}`);
+
+    // Ensure outDir exists for the JSON report.
+    fs.mkdirSync(outDir, { recursive: true });
 
     const child = spawn('node', args, {
       cwd: ROOT,
@@ -90,20 +103,44 @@ function runVitest(project) {
 
     child.on('close', (code) => {
       clearTimeout(timer);
+
+      // Inspect the JSON report to classify the exit.
+      let result = { project, code: code ?? 1, testFailures: 0, thresholdBreach: false };
+      if (fs.existsSync(resultJsonPath)) {
+        try {
+          const r = JSON.parse(fs.readFileSync(resultJsonPath, 'utf8'));
+          result.testFailures = (r.numFailedTests || 0) + (r.numFailedTestSuites || 0);
+          // If exit was non-zero but no test failures, it's threshold breach.
+          if (code !== 0 && result.testFailures === 0) {
+            result.thresholdBreach = true;
+          }
+        } catch (err) {
+          console.warn(`  ⚠ ${project} could not parse vitest JSON report: ${err.message}`);
+        }
+      } else if (code !== 0) {
+        // No JSON report and non-zero exit — could be early crash. Treat
+        // as test failure to be safe (NOT fake-green).
+        result.testFailures = -1; // unknown but non-zero
+      }
+
       if (code === 0) {
-        console.log(`  ✓ ${project} done`);
+        console.log(`  ✓ ${project} done (all tests pass, thresholds met)`);
+      } else if (result.thresholdBreach) {
+        console.warn(
+          `  ⚠ ${project} tests pass but coverage thresholds breached (debt — not a test failure)`
+        );
       } else {
         console.warn(
-          `  ⚠ ${project} exited with code ${code} (coverage still collected if available)`
+          `  ✗ ${project} exit ${code} — ${result.testFailures === -1 ? 'no JSON report (early crash?)' : result.testFailures + ' test failure(s)'}`
         );
       }
-      resolve(); // always continue — failures are OK for coverage purposes
+      resolve(result);
     });
 
     child.on('error', (err) => {
       clearTimeout(timer);
       console.error(`  ✗ ${project} spawn error: ${err.message}`);
-      resolve();
+      resolve({ project, code: 1, testFailures: -1, thresholdBreach: false });
     });
   });
 }
@@ -246,6 +283,8 @@ async function mergeCoverage() {
 // ---------------------------------------------------------------------------
 
 async function main() {
+  const projectResults = [];
+
   if (!MERGE_ONLY) {
     // Clean out stale per-project coverage parts
     if (fs.existsSync(PARTS_DIR)) {
@@ -259,13 +298,53 @@ async function main() {
     for (let i = 0; i < PROJECTS.length; i++) {
       const project = PROJECTS[i];
       console.log(`\n━━━ [${i + 1}/${PROJECTS.length}] ${project} ━━━`);
-      await runVitest(project);
+      const result = await runVitest(project);
+      projectResults.push(result);
       // Force GC between projects to free memory
       if (globalThis.gc) globalThis.gc();
     }
   }
 
   await mergeCoverage();
+
+  // Classify per-project results — only real TEST FAILURES fail the script.
+  // Threshold breaches with all tests passing are real debt but tracked
+  // separately so we don't fake-green AND don't fake-red on debt.
+  const testFailedProjects = projectResults.filter((r) => r.testFailures !== 0);
+  const thresholdOnlyProjects = projectResults.filter((r) => r.thresholdBreach);
+
+  if (thresholdOnlyProjects.length > 0) {
+    console.warn(
+      `\n⚠ ${thresholdOnlyProjects.length} project(s) breached coverage thresholds (all tests passed — this is debt, not a regression):`
+    );
+    for (const p of thresholdOnlyProjects) {
+      console.warn(`   - ${p.project}`);
+    }
+  }
+
+  if (testFailedProjects.length > 0) {
+    console.error(`\n❌ ${testFailedProjects.length} project(s) had ACTUAL TEST FAILURES:`);
+    for (const f of testFailedProjects) {
+      const detail =
+        f.testFailures === -1
+          ? `exit ${f.code} (no JSON report — early crash?)`
+          : `${f.testFailures} test failure(s), exit ${f.code}`;
+      console.error(`   - ${f.project}: ${detail}`);
+    }
+    if (process.env.COVERAGE_ALLOW_TEST_FAILURES === '1') {
+      console.warn(
+        '\n   COVERAGE_ALLOW_TEST_FAILURES=1 set — exiting 0 despite failures.\n' +
+          '   Use only for local debugging. CI must NEVER set this.'
+      );
+      return;
+    }
+    process.exit(1);
+  }
+
+  console.log(`\n✅ All ${projectResults.length} projects: tests passed`);
+  if (thresholdOnlyProjects.length > 0) {
+    console.log(`   (${thresholdOnlyProjects.length} have threshold debt — see warnings above)`);
+  }
 }
 
 try {
