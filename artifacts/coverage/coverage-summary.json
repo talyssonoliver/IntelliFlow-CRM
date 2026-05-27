@@ -11030,8 +11030,8 @@
     }
   },
   "meta": {
-    "lastRunAt": "2026-05-25T23:37:57.080Z",
-    "duration": 400,
+    "lastRunAt": "2026-05-27T23:15:29.295Z",
+    "duration": 373,
     "source": "ci",
     "workflow": "governance-metrics",
     "status": "passed",
