@@ -1,0 +1,228 @@
+# Auto-merge Dependabot patch/minor bumps.
+#
+# Recommendation H of docs/operations/ci-cost-audit-2026-05-25.md.
+#
+# Decision matrix:
+#   semver-major    → NEVER auto-merge (manual review)
+#   semver-minor:
+#     devDependency → auto-merge (test/build/lint tools — low blast radius)
+#     production    → auto-merge ONLY if every bumped package matches the
+#                     MINOR_SAFE allowlist (exact match, with @types/ as
+#                     the only prefix-allowed entry); else manual review
+#   semver-patch    → auto-merge (any dep, any ecosystem)
+#   github-actions  → auto-merge non-major (Dependabot groups these)
+#   docker          → manual review (security-sensitive base images)
+#
+# Trigger: pull_request_target. This runs in the BASE-REPO context (not
+# the fork) with the repository's regular GITHUB_TOKEN — which is what
+# grants the write permissions needed for `gh pr merge --auto`. We never
+# execute any PR-fork code; only dependabot/fetch-metadata + gh pr commands
+# run, and both operate on metadata, not source.
+#
+# Auto-merge does NOT bypass required checks — `gh pr merge --auto` waits
+# for branch protection. PR #174 made dependency-scan.yml strict (removed
+# continue-on-error). This workflow ALSO blocks on dependency-scan in-line
+# via the `Wait for Dependency Security Scan` step in enable-auto-merge,
+# so the safety property does NOT depend on dependency-scan being in the
+# required-checks set. Adding it to required is recommended belt-and-
+# suspenders (PR description has the admin PATCH command), but the
+# in-workflow gate is the load-bearing check.
+
+name: Auto-merge Dependabot
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  decide:
+    name: Decide auto-merge
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.event.pull_request.draft == false
+    outputs:
+      should_merge: ${{ steps.policy.outputs.should_merge }}
+      reason: ${{ steps.policy.outputs.reason }}
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply auto-merge policy
+        id: policy
+        env:
+          UPDATE_TYPE: ${{ steps.meta.outputs.update-type }}
+          DEP_TYPE: ${{ steps.meta.outputs.dependency-type }}
+          DEP_NAMES: ${{ steps.meta.outputs.dependency-names }}
+          ECOSYSTEM: ${{ steps.meta.outputs.package-ecosystem }}
+        run: |
+          set -euo pipefail
+
+          # MINOR_SAFE allowlist: production deps where a minor bump is
+          # historically low-risk. Two match modes:
+          #   - entries ending with `/` are PREFIX patterns (matches
+          #     `@types/anything`); intentionally limited to scopes whose
+          #     entire namespace is policy-allowlisted.
+          #   - everything else is EXACT match. `axios` matches `axios` only,
+          #     NOT `axios-http`, `axios-mock-adapter`, etc. (Earlier prefix
+          #     matching admitted unintended packages — flagged in Copilot
+          #     review on PR #175.)
+          # Keep this list short and curated; expand only after a clean
+          # cycle of manual minors landing without rollback.
+          MINOR_SAFE_PREFIX=("@types/")
+          MINOR_SAFE_EXACT=("zod" "axios" "date-fns" "lodash" "pino" "winston")
+
+          # Returns 0 if the package name is in the allowlist.
+          is_minor_safe() {
+            local pkg="$1"
+            for prefix in "${MINOR_SAFE_PREFIX[@]}"; do
+              case "$pkg" in
+                "$prefix"*) return 0;;
+              esac
+            done
+            for exact in "${MINOR_SAFE_EXACT[@]}"; do
+              if [ "$pkg" = "$exact" ]; then return 0; fi
+            done
+            return 1
+          }
+
+          should_merge="false"
+          reason=""
+
+          case "$UPDATE_TYPE" in
+            "version-update:semver-major")
+              reason="major bump — always requires manual review"
+              ;;
+            "version-update:semver-patch")
+              should_merge="true"
+              reason="patch bump — auto-merge"
+              ;;
+            "version-update:semver-minor")
+              if [ "$ECOSYSTEM" = "github-actions" ]; then
+                should_merge="true"
+                reason="github-actions minor — auto-merge (grouped, low blast)"
+              elif [ "$ECOSYSTEM" = "docker" ]; then
+                reason="docker minor — manual review (security-sensitive base image)"
+              elif [ "$DEP_TYPE" = "direct:development" ] || [ "$DEP_TYPE" = "indirect" ]; then
+                should_merge="true"
+                reason="dev/transitive minor — auto-merge"
+              else
+                # Production direct dep — every bumped package must satisfy
+                # the allowlist (exact match + the one @types/ prefix exception).
+                allowed="true"
+                offending=""
+                # DEP_NAMES is a comma-separated list (grouped PRs).
+                IFS=',' read -ra NAMES <<< "$DEP_NAMES"
+                for name in "${NAMES[@]}"; do
+                  trimmed="$(echo "$name" | xargs)"
+                  if ! is_minor_safe "$trimmed"; then
+                    allowed="false"
+                    offending="$trimmed"
+                    break
+                  fi
+                done
+                if [ "$allowed" = "true" ]; then
+                  should_merge="true"
+                  reason="production minor — all bumped packages on MINOR_SAFE allowlist"
+                else
+                  reason="production minor — '$offending' not on MINOR_SAFE allowlist; manual review"
+                fi
+              fi
+              ;;
+            *)
+              reason="unknown update type: $UPDATE_TYPE — manual review"
+              ;;
+          esac
+
+          echo "should_merge=$should_merge" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+          echo "Decision: should_merge=$should_merge"
+          echo "Reason: $reason"
+          echo "Metadata: type=$UPDATE_TYPE dep-type=$DEP_TYPE ecosystem=$ECOSYSTEM names=$DEP_NAMES"
+
+      - name: Comment decision on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          SHOULD_MERGE: ${{ steps.policy.outputs.should_merge }}
+          REASON: ${{ steps.policy.outputs.reason }}
+        run: |
+          if [ "$SHOULD_MERGE" = "true" ]; then
+            body="🤖 **Auto-merge enabled** — $REASON. Will merge when all required checks pass."
+          else
+            body="🔍 **Manual review required** — $REASON."
+          fi
+          gh pr comment "$PR" --body "$body"
+
+  enable-auto-merge:
+    name: Enable auto-merge
+    runs-on: ubuntu-latest
+    needs: decide
+    if: needs.decide.outputs.should_merge == 'true'
+    steps:
+      # In-workflow gate that does NOT trust branch protection alone.
+      # Without this step there is a window where the admin has not yet
+      # PATCHed dependency-scan into the required-checks set — and a
+      # vulnerable patch bump could squeak through the old gate. We re-verify
+      # dependency-scan.yml's conclusion on this exact SHA before enabling
+      # auto-merge.
+      - name: Wait for Dependency Security Scan on this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          DEADLINE=$(( $(date +%s) + 600 ))    # 10-minute budget
+          RUN_ID=""
+
+          # Phase 1: wait for the run to appear (dep-scan only triggers on
+          # pnpm-lock.yaml / package.json changes — for Dependabot PRs this
+          # is always true; for safety we still wait up to the deadline).
+          while [ -z "$RUN_ID" ] && [ "$(date +%s)" -lt "$DEADLINE" ]; do
+            RUN_ID=$(gh api -X GET \
+              "repos/$OWNER/$REPO/actions/workflows/dependency-scan.yml/runs" \
+              -f head_sha="$SHA" \
+              --jq '.workflow_runs[0].id' 2>/dev/null || echo "")
+            if [ -z "$RUN_ID" ]; then
+              echo "Waiting for Dependency Security Scan to start on $SHA…"
+              sleep 15
+            fi
+          done
+
+          if [ -z "$RUN_ID" ]; then
+            echo "::error::Dependency Security Scan did not start on $SHA within 10 minutes. Refusing auto-merge."
+            exit 1
+          fi
+
+          echo "Found run $RUN_ID. Watching for completion…"
+          # gh run watch blocks until completion; --exit-status mirrors the
+          # run conclusion (0 = success, non-zero = failure).
+          gh run watch "$RUN_ID" --exit-status --interval 20
+          echo "Dependency scan succeeded on $SHA — safe to enable auto-merge."
+
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # --auto: GitHub completes the merge once branch protection passes.
+          # --squash: keeps history linear; Dependabot PRs become one commit.
+          # The Wait step above ensures dependency-scan green BEFORE we
+          # enable auto-merge — so a vulnerable patch bump cannot ride the
+          # timing window between this PR landing and any external admin
+          # action to add dependency-scan to the required-checks set
+          # (branch protection lives outside the repo; this workflow cannot
+          # change it).
+          gh pr merge "$PR" --auto --squash
