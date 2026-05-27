@@ -5,6 +5,7 @@ queries:
   - uses: security-and-quality
 
 paths-ignore:
+  # Project-relative paths.
   - artifacts/**
   - '**/dist/**'
   - '**/.next/**'
@@ -13,3 +14,20 @@ paths-ignore:
   - '**/coverage/**'
   - '**/playwright-report/**'
   - '**/.specify/sprints/**/execution/**'
+  # Container/scanner-internal paths. The Trivy + Docker-scan jobs run
+  # CodeQL against built images, so alerts can surface with prefixes like
+  # `/app/...`, `/usr/...`, or `file:///github/workspace/...`. Those are
+  # never source code under our control — exclude them so CodeQL alerts
+  # stay focused on the actual repo tree.
+  - '/app/**'
+  - 'app/**'
+  - '/usr/**'
+  - 'usr/**'
+  - 'file:**'
+  # Test fixtures that intentionally contain JWT-shaped strings (k6
+  # benchmark outputs, OAuth flow fixtures, etc). These are non-functional
+  # data files committed for reproducibility; the secret-scanning workflow
+  # (secret-scan.yml + .gitleaks.toml allowlist) is the authoritative
+  # check for real secrets.
+  - 'artifacts/benchmarks/**'
+  - 'tests/**/fixtures/**'
