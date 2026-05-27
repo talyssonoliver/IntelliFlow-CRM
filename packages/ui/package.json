@@ -67,7 +67,7 @@
     "@vitest/coverage-v8": "^4.0.16",
     "axe-core": "^4.8.4",
     "jsdom": "^28.1.0",
-    "storybook": "^10.2.13",
+    "storybook": "^10.4.1",
     "typescript": "^5.3.3",
     "vitest": "^4.0.16",
     "vitest-axe": "^0.1.0"
