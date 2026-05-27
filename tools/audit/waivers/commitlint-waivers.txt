@@ -81,3 +81,4 @@ be5aba42b1fb fix(ci): PR #112 squashed subject — proper noun "SLSA" upper-case
 # But this branch-tip commit is what system-audit lints during PR check,
 # so it needs a waiver until the squash lands. Waiver removable post-merge.
 430ce6c3aab8 feat(infra): branch commit subject — proper noun "Railway" upper-case (waived during PR; squash subject is conventional)
+75f93bb20d3e ci: PR #187 squash inherited uppercase "H0" from PR title (audit doc recommendation code). Squash subject cannot be rewritten. Pre-ship gate has no commitlint check on prospective squash subjects — see memory feedback_pre_ship_gate_gaps.

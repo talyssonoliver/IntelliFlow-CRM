@@ -19,11 +19,16 @@ paths-ignore:
   # `/app/...`, `/usr/...`, or `file:///github/workspace/...`. Those are
   # never source code under our control — exclude them so CodeQL alerts
   # stay focused on the actual repo tree.
+  #
+  # NOTE: CodeQL's glob rejects `**` that doesn't follow a path segment.
+  # `'file:**'` is INVALID and was rejected by CodeQL with "pathsIgnore
+  # 'file:**' contains an invalid '**' wildcard". The `file:///...`
+  # URL-prefixed alerts are handled via UI batch-dismissal (performed
+  # 2026-05-26) instead.
   - '/app/**'
   - 'app/**'
   - '/usr/**'
   - 'usr/**'
-  - 'file:**'
   # Test fixtures that intentionally contain JWT-shaped strings (k6
   # benchmark outputs, OAuth flow fixtures, etc). These are non-functional
   # data files committed for reproducibility; the secret-scanning workflow
