@@ -87,8 +87,14 @@ jobs:
       - name: Validate Railway token secret is present
         run: |
           if [ "${HAS_RAILWAY_TOKEN}" != "yes" ] && [ "${HAS_RAILWAY_API_TOKEN}" != "yes" ]; then
-            echo "::error::Neither RAILWAY_TOKEN nor RAILWAY_API_TOKEN secret is configured."
-            echo "::error::Set at least one in Settings -> Secrets and variables -> Actions (or per-environment under Settings -> Environments)."
+            # NOTE: this preflight job intentionally has no `environment:`
+            # binding so it can validate the repo-level token before the
+            # deploy job's environment context is resolved. Environment-
+            # scoped secrets are NOT visible here — they're consumed by
+            # the deploy job below. Set a repo-level secret to satisfy
+            # this check; per-environment overrides apply at deploy time.
+            echo "::error::Neither RAILWAY_TOKEN nor RAILWAY_API_TOKEN repo-level secret is configured."
+            echo "::error::Set at least one repo-level value in Settings -> Secrets and variables -> Actions. Per-environment secrets are valid for deploy, but this preflight runs without an environment context and only sees repo-level secrets."
             exit 1
           fi
           echo "Railway auth present (RAILWAY_TOKEN=${HAS_RAILWAY_TOKEN}, RAILWAY_API_TOKEN=${HAS_RAILWAY_API_TOKEN})"
