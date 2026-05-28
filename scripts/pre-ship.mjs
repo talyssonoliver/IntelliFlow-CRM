@@ -363,6 +363,12 @@ function runStep(step, prev) {
     env,
     cwd: step.cwd || REPO_ROOT,
     shell: process.platform === 'win32',
+    // Default 1MB maxBuffer is blown by noisy steps (unit-tests emits
+    // ~14k lines / >5MB of AUDIT + RBAC log lines). When exceeded,
+    // spawnSync kills the child with SIGTERM and returns status=null,
+    // giving the false impression that the test failed when it was
+    // really truncated. 256MB is comfortably above any current step.
+    maxBuffer: 256 * 1024 * 1024,
   });
   const duration_ms = Date.now() - start;
 
