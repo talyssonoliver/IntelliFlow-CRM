@@ -481,11 +481,15 @@ describe('Home Router Coverage Tests (PG-163)', () => {
 
       await uuidCaller.getAIInsights();
 
-      // enqueueInsightGeneration is fire-and-forget (void), wait for microtask queue
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
-      expect(mockQueueAdd).toHaveBeenCalled();
-      expect(mockQueueClose).toHaveBeenCalled();
+      // enqueueInsightGeneration is fire-and-forget. Poll instead of fixed
+      // setTimeout so CI slowness doesn't race the BullMQ mock callbacks.
+      await vi.waitFor(
+        () => {
+          expect(mockQueueAdd).toHaveBeenCalled();
+          expect(mockQueueClose).toHaveBeenCalled();
+        },
+        { timeout: 5000, interval: 50 }
+      );
     });
 
     it('BullMQ failure is silently caught', async () => {
