@@ -132,10 +132,16 @@ describe.skip('prisma-field-encryption — library import (DEFERRED: Prisma 7 in
 
 // ---------------------------------------------------------------------------
 // 4. Integration tests — roundtrip + raw DB query
-//    Skipped unless DATABASE_URL and PRISMA_FIELD_ENCRYPTION_KEY are both set.
+//    Skipped unless RUN_DB_INTEGRATION=1 is explicitly set, plus DATABASE_URL
+//    and PRISMA_FIELD_ENCRYPTION_KEY. Env vars often LEAK from .env.test /
+//    .env.local during local pre-ship runs (Windows dev usually has these set
+//    but no reachable postgres on :5433), so string-presence alone caused the
+//    suite to attempt a DB call and fail. Opt-in via the explicit flag.
 // ---------------------------------------------------------------------------
 
-const HAS_DB = Boolean(process.env['DATABASE_URL'] && process.env['PRISMA_FIELD_ENCRYPTION_KEY']);
+const HAS_DB =
+  process.env['RUN_DB_INTEGRATION'] === '1' &&
+  Boolean(process.env['DATABASE_URL'] && process.env['PRISMA_FIELD_ENCRYPTION_KEY']);
 
 describe.skipIf(!HAS_DB)('[integration] field-encryption roundtrip', () => {
   // Dynamic imports so the module is only loaded when env vars are present,
