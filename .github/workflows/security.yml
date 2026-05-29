@@ -116,6 +116,7 @@ jobs:
             --enableRetired
             --disableYarnAudit
             --propertyfile infra/security/dependency-check.yaml
+            --suppression infra/security/dependency-check-suppressions.xml
 
       - name: Upload Dependency-Check results
         uses: actions/upload-artifact@v7

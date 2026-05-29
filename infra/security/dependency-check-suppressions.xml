@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  <!--
+    OWASP Dependency-Check suppressions for IntelliFlow CRM.
+
+    Scope discipline: every <suppress> below is pinned to BOTH a specific
+    <cve> AND a narrow <filePath> regex. The filePath is restricted to
+    Next.js's vendored, pre-compiled bundles under `next/dist/compiled/**`.
+    That means if the application ever takes a *direct* dependency on
+    babel-packages or jsonwebtoken carrying the same CVE, dependency-check
+    will still flag it — only the vendored-inside-Next copies are silenced.
+
+    Re-review trigger: when a Next.js release ships that re-bundles patched
+    copies, bump `next` and delete the matching <suppress> block. Next
+    16.2.6 (latest at time of writing) does not yet re-bundle these.
+  -->
+
+  <!--
+    CVE-2026-4800 (critical) + CVE-2026-2950 (medium) reported against
+    next/dist/compiled/jsonwebtoken/index.js.
+
+    Next.js vendors a compiled copy of jsonwebtoken for internal build-time
+    / framework use. The application's own token handling uses `jose`, not
+    jsonwebtoken, and does not call into Next's vendored copy with
+    attacker-controlled input. No upstream Next release re-bundles a patched
+    copy yet.
+  -->
+  <suppress>
+    <notes><![CDATA[
+      Next.js vendored jsonwebtoken (next/dist/compiled/jsonwebtoken).
+      Not an app runtime dependency; app uses jose. No reachable
+      attacker-controlled path. Latest Next (16.2.6) has no re-bundle.
+    ]]></notes>
+    <filePath regex="true">.*[/\\]next[/\\]dist[/\\]compiled[/\\]jsonwebtoken[/\\].*</filePath>
+    <cve>CVE-2026-4800</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+      Next.js vendored jsonwebtoken (next/dist/compiled/jsonwebtoken).
+      Not an app runtime dependency; app uses jose. No reachable
+      attacker-controlled path. Latest Next (16.2.6) has no re-bundle.
+    ]]></notes>
+    <filePath regex="true">.*[/\\]next[/\\]dist[/\\]compiled[/\\]jsonwebtoken[/\\].*</filePath>
+    <cve>CVE-2026-2950</cve>
+  </suppress>
+
+  <!--
+    CVE-2026-4800 (critical) + CVE-2026-2950 (medium) reported against
+    next/dist/compiled/babel-packages/packages-bundle.js.
+
+    Next.js vendors a compiled babel bundle for its own compiler pipeline.
+    This is build-time tooling, not a runtime dependency exposed to user
+    input. No upstream Next release re-bundles a patched copy yet.
+  -->
+  <suppress>
+    <notes><![CDATA[
+      Next.js vendored babel bundle (next/dist/compiled/babel-packages).
+      Build-time compiler internal, not runtime-reachable. Latest Next
+      (16.2.6) has no re-bundle.
+    ]]></notes>
+    <filePath regex="true">.*[/\\]next[/\\]dist[/\\]compiled[/\\]babel-packages[/\\].*</filePath>
+    <cve>CVE-2026-4800</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+      Next.js vendored babel bundle (next/dist/compiled/babel-packages).
+      Build-time compiler internal, not runtime-reachable. Latest Next
+      (16.2.6) has no re-bundle.
+    ]]></notes>
+    <filePath regex="true">.*[/\\]next[/\\]dist[/\\]compiled[/\\]babel-packages[/\\].*</filePath>
+    <cve>CVE-2026-2950</cve>
+  </suppress>
+</suppressions>
