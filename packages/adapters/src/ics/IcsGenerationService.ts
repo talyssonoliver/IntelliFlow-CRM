@@ -223,11 +223,19 @@ export class IcsGenerationService implements IcsGenerationServicePort {
       const startTime = this.parseIcsDate(dtstartStr);
       const endTime = this.parseIcsDate(dtendStr);
 
-      // Extract attendees
+      // Extract attendees. Bound icsContent because the attendee regex's
+      // `ATTENDEE[^:]*:` segment can backtrack polynomially on hostile
+      // input that lacks `:mailto:`. 256 KB is well above any legitimate
+      // RFC 5545 calendar attachment we ingest.
+      const ICS_MAX_PARSE_LENGTH = 256 * 1024;
+      const bounded =
+        icsContent.length > ICS_MAX_PARSE_LENGTH
+          ? icsContent.slice(0, ICS_MAX_PARSE_LENGTH)
+          : icsContent;
       const attendeeRegex = /ATTENDEE[^:]*:mailto:([^\r\n]+)/g;
       const attendees: string[] = [];
       let match;
-      while ((match = attendeeRegex.exec(icsContent)) !== null) {
+      while ((match = attendeeRegex.exec(bounded)) !== null) {
         attendees.push(match[1].trim());
       }
 

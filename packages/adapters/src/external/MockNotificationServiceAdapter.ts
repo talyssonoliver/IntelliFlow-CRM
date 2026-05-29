@@ -130,6 +130,10 @@ export class MockNotificationServiceAdapter implements NotificationServicePort {
   }
 
   validateEmail(email: string): boolean {
+    // RFC 5321 local-part max 64 + @ + domain max 255 = 320. Bounding
+    // before the three-`[^\s@]+` regex defuses polynomial-redos on
+    // input missing `@`; bounded input is then linear.
+    if (email.length > 320) return false;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 

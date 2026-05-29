@@ -13,8 +13,14 @@ import { z } from 'zod';
  * Normalize a human-readable industry label into a snake_case machine key.
  * Example: "Software & SaaS" → "software_saas"
  */
+// Hard upper bound to prevent polynomial-redos backtracking on
+// adversarial input. Industry labels never legitimately approach this
+// size; the cap is a defensive guard, not a UX limit.
+const MAX_LABEL_INPUT_LENGTH = 512;
+
 export function generateIndustryKey(label: string): string {
   return label
+    .slice(0, MAX_LABEL_INPUT_LENGTH)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');

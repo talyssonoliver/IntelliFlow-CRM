@@ -300,8 +300,16 @@ export const DEFAULT_DEAL_LOSS_REASONS: ReadonlyArray<{
 
 // ─── Utility: slugify label → key ───────────────────────────────────────────
 
+// Hard upper bound to prevent polynomial-redos backtracking on
+// adversarial input (the `^_+|_+$` alternation can interact with the
+// preceding `[^a-z0-9]+` pass on pathological strings). Slugified deal
+// reason keys never legitimately approach this size; the cap is a
+// defensive guard, not a UX limit.
+const MAX_LABEL_INPUT_LENGTH = 512;
+
 export function generateDealReasonKey(label: string): string {
   return label
+    .slice(0, MAX_LABEL_INPUT_LENGTH)
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
