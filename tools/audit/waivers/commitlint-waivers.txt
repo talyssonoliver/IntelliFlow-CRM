@@ -82,3 +82,4 @@ be5aba42b1fb fix(ci): PR #112 squashed subject — proper noun "SLSA" upper-case
 # so it needs a waiver until the squash lands. Waiver removable post-merge.
 430ce6c3aab8 feat(infra): branch commit subject — proper noun "Railway" upper-case (waived during PR; squash subject is conventional)
 75f93bb20d3e ci: PR #187 squash inherited uppercase "H0" from PR title (audit doc recommendation code). Squash subject cannot be rewritten. Pre-ship gate has no commitlint check on prospective squash subjects — see memory feedback_pre_ship_gate_gaps.
+d752919b684a fix(ci): PR #201 squash subject — uppercase "E2E" + 105 chars (header limit 100). Squash subject is the PR title; cannot be rewritten without rewriting main. Same root cause as 75f93bb20d3e — admin-merge did not dry-run commitlint on the PR title.
