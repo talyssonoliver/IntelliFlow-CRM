@@ -329,9 +329,33 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Download build artifacts
+        # actions/download-artifact@v4+ changed the default: a named single
+        # artifact now extracts to ./<artifact-name>/, NOT the repo root.
+        # The build job uploaded with path: "apps/*/dist\napps/*/.next", so
+        # without `path:` here, apps/web/.next ends up at
+        # build-output/apps/web/.next/ and `next start` (run from apps/web/)
+        # cannot find it — producing
+        #   Error: Could not find a production build in the '.next' directory.
+        # Setting path: "." extracts at the repo root, restoring the v3
+        # behaviour and putting apps/web/.next where webServer expects it.
         uses: actions/download-artifact@v8
         with:
           name: build-output
+          path: .
+
+      - name: Verify .next was downloaded
+        # Belt-and-suspenders: surface the underlying failure mode if the
+        # artifact ever drifts again. `next start` would otherwise crash
+        # ~250ms in with a generic "Could not find a production build" error
+        # that doesn't point at this step.
+        run: |
+          if [ ! -d "apps/web/.next" ]; then
+            echo "::error::apps/web/.next missing after download-artifact step."
+            echo "::error::Check that the upstream build job's upload-artifact path glob still resolves and that download-artifact path: '.' is set here."
+            ls -la apps/web/ || true
+            exit 1
+          fi
+          echo "apps/web/.next present ($(du -sh apps/web/.next | cut -f1))"
 
       - name: Run E2E tests
         run: pnpm run test:e2e
