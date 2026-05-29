@@ -348,10 +348,20 @@ export class BasicContentExtractor implements ContentExtractor {
     const text = content.toString('utf-8');
 
     if (mimeType === 'text/html') {
-      // Strip HTML tags for plain text extraction
-      return text
-        .replaceAll(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replaceAll(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      // Strip HTML tags for plain text extraction. Single-pass replacement
+      // is incomplete: e.g. `<<script>script>...` becomes `<script>...`
+      // after one pass. Iterate the script/style strip until stable, then
+      // drop remaining tag-shaped substrings.
+      let stripped = text;
+
+      for (;;) {
+        const next = stripped
+          .replaceAll(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+          .replaceAll(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+        if (next === stripped) break;
+        stripped = next;
+      }
+      return stripped
         .replaceAll(/<[^>]{0,2000}>/g, ' ')
         .replaceAll(/\s+/g, ' ')
         .trim();

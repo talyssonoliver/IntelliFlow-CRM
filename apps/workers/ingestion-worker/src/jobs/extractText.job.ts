@@ -125,12 +125,21 @@ class HTMLExtractor implements TextExtractor {
     // const $ = cheerio.load(buffer.toString('utf-8'));
     // return { text: $('body').text() };
 
-    // Simple implementation
+    // Simple implementation. The single-pass `replaceAll` chain is vulnerable
+    // to incomplete-multi-character-sanitization: e.g. `<<script>script>...`
+    // becomes `<script>...` after one pass. Iterate the script/style strip
+    // until stable, then drop remaining tag-shaped substrings.
     const html = buffer.toString('utf-8');
-    // Remove script and style tags, then strip HTML
-    const text = html
-      .replaceAll(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replaceAll(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    let stripped = html;
+
+    for (;;) {
+      const next = stripped
+        .replaceAll(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replaceAll(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+      if (next === stripped) break;
+      stripped = next;
+    }
+    const text = stripped
       .replaceAll(/<[^>]+>/g, ' ')
       .replaceAll(/\s+/g, ' ')
       .trim();
