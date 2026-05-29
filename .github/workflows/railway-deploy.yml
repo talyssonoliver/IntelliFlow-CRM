@@ -66,7 +66,6 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     outputs:
       environment: ${{ steps.resolve.outputs.environment }}
-      services: ${{ steps.resolve.outputs.services }}
     # Repo-level token presence check only — environment-scoped tokens are
     # validated inside the deploy job where the env: binding applies.
     #
@@ -99,24 +98,27 @@ jobs:
           fi
           echo "Railway auth present (RAILWAY_TOKEN=${HAS_RAILWAY_TOKEN}, RAILWAY_API_TOKEN=${HAS_RAILWAY_API_TOKEN})"
 
-      - name: Resolve target environment and services
+      - name: Resolve target environment
         id: resolve
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             ENV_NAME="${{ inputs.environment }}"
-            SVC="${{ inputs.service }}"
           else
             # Auto-deploy on successful main build defaults to dev for safety
             ENV_NAME="dev"
-            SVC="all"
           fi
           echo "environment=${ENV_NAME}" >> "$GITHUB_OUTPUT"
-
-          if [ "$SVC" = "all" ]; then
-            echo 'services=["api","ai-worker"]' >> "$GITHUB_OUTPUT"
-          else
-            echo "services=[\"${SVC}\"]" >> "$GITHUB_OUTPUT"
-          fi
+          # NOTE: the service list is intentionally NOT emitted as a job
+          # output. GitHub masks any registered secret value run-wide; here
+          # the literal `ai-worker` collides with a masked value, so an
+          # `services=["api","ai-worker"]` step output gets `ai***worker`'d
+          # and GitHub then refuses to pass it across the job boundary
+          # ("Skip output 'services' since it may contain secret"). The
+          # downstream `fromJSON(needs.preflight.outputs.services)` matrix
+          # then resolved to empty and the deploy job never spawned — the
+          # chronic Railway Deploy failure. The deploy job below now uses a
+          # literal matrix (no cross-job output) and gates each service with
+          # a step-level `if`, which is immune to output masking.
 
   deploy:
     name: Deploy ${{ matrix.service }} -> ${{ needs.preflight.outputs.environment }}
@@ -132,21 +134,46 @@ jobs:
       RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN || secrets.RAILWAY_TOKEN }}
     strategy:
       fail-fast: false
+      # Literal matrix — NOT derived from a job output. See the preflight
+      # "Resolve target environment" step for why a `services` output can't
+      # be passed across the job boundary (run-wide secret masking corrupts
+      # it). Every step that actually touches Railway is gated by SHOULD_RUN
+      # so a workflow_dispatch targeting a single service skips the other.
       matrix:
-        service: ${{ fromJSON(needs.preflight.outputs.services) }}
+        service: [api, ai-worker]
     steps:
+      - name: Decide whether this matrix service should deploy
+        id: gate
+        # workflow_run (auto on main) always deploys both. workflow_dispatch
+        # honours the chosen `inputs.service` ('all' or a single service).
+        # `inputs` is evaluated, not logged, so masking of `ai-worker` does
+        # not affect this comparison.
+        run: |
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ] \
+             || [ "${{ inputs.service }}" = "all" ] \
+             || [ "${{ inputs.service }}" = "${{ matrix.service }}" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping ${{ matrix.service }} (workflow_dispatch targeted '${{ inputs.service }}')."
+          fi
+
       - name: Checkout
+        if: steps.gate.outputs.should_run == 'true'
         uses: actions/checkout@v6
 
       - name: Install Railway CLI
+        if: steps.gate.outputs.should_run == 'true'
         run: |
           curl -fsSL https://railway.app/install.sh | sh
           echo "$HOME/.railway/bin" >> "$GITHUB_PATH"
 
       - name: Show Railway CLI version
+        if: steps.gate.outputs.should_run == 'true'
         run: railway --version
 
       - name: Link to Railway project
+        if: steps.gate.outputs.should_run == 'true'
         env:
           RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_PROJECT_ID }}
         run: |
@@ -157,6 +184,7 @@ jobs:
           railway link --project "$RAILWAY_PROJECT_ID" --environment "${{ needs.preflight.outputs.environment }}"
 
       - name: Deploy ${{ matrix.service }}
+        if: steps.gate.outputs.should_run == 'true'
         # `cd apps/<svc>` so Railway picks up the per-service railway.json
         # via the CLI's working-directory lookup (otherwise it falls back
         # to repo-root defaults, which would deploy with the wrong
@@ -178,7 +206,7 @@ jobs:
           esac
 
       - name: Capture deployment status
-        if: always()
+        if: always() && steps.gate.outputs.should_run == 'true'
         run: |
           echo "## Railway deploy — ${{ matrix.service }} (${{ needs.preflight.outputs.environment }})" >> "$GITHUB_STEP_SUMMARY"
           railway status --json | jq '.' >> "$GITHUB_STEP_SUMMARY" || true
