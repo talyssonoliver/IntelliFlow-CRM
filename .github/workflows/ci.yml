@@ -340,19 +340,26 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Download build artifacts
-        # actions/download-artifact@v4+ changed the default: a named single
-        # artifact now extracts to ./<artifact-name>/, NOT the repo root.
-        # The build job uploaded with path: "apps/*/dist\napps/*/.next", so
-        # without `path:` here, apps/web/.next ends up at
-        # build-output/apps/web/.next/ and `next start` (run from apps/web/)
-        # cannot find it — producing
-        #   Error: Could not find a production build in the '.next' directory.
-        # Setting path: "." extracts at the repo root, restoring the v3
-        # behaviour and putting apps/web/.next where webServer expects it.
+        # actions/upload-artifact@v7 strips the common ancestor of all
+        # matched paths from the artifact archive. For us, the upload
+        # patterns were `apps/*/dist` and `apps/*/.next`, common ancestor
+        # `apps/`, so internal artifact layout is e.g. `web/.next/...`
+        # (not `apps/web/.next/...`). Verified by `gh run download` of the
+        # build-output artifact from run 26616704326 (PR #203 merge).
+        #
+        # Two earlier attempts at this step:
+        #   - PR #197: no `path:` -> v4 default puts everything under
+        #     `build-output/web/.next/...`. Wrong.
+        #   - PR #201: `path: .` -> contents land at `./web/.next/...`.
+        #     Still wrong: webServer runs from apps/web/ which is the
+        #     git-checkout copy without a .next.
+        # This: `path: apps` extracts artifact contents under `apps/`,
+        # so internal `web/.next` becomes `apps/web/.next` -- exactly
+        # what webServer expects.
         uses: actions/download-artifact@v8
         with:
           name: build-output
-          path: .
+          path: apps
 
       - name: Verify .next was downloaded
         # Belt-and-suspenders: surface the underlying failure mode if the
