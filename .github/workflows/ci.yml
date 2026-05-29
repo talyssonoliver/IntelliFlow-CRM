@@ -245,12 +245,23 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
 
       - name: Upload build artifacts
+        # actions/upload-artifact@v4+ changed defaults: include-hidden-files
+        # is now false, which filters out anything under a dot-prefixed dir.
+        # `apps/*/.next` matches the directory NAME via the glob, but the
+        # hidden-file filter then drops every file inside it because the
+        # path component starts with '.' — so apps/web/.next never reaches
+        # the artifact. Net effect on main 13990287d: artifact contained
+        # apps/api/dist + apps/ai-worker/dist (250 files, 1.7MB) but ZERO
+        # web content; E2E's Verify-.next step then fired.
+        # Setting include-hidden-files: true restores the v3 behaviour and
+        # captures .next as intended.
         uses: actions/upload-artifact@v7
         with:
           name: build-output
           path: |
             apps/*/dist
             apps/*/.next
+          include-hidden-files: true
           retention-days: 7
 
   # `security-scan` was removed as part of Recommendation E of
