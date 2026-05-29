@@ -56,7 +56,12 @@
       "brace-expansion@<2.0.3": ">=2.0.3 <3",
       "uuid@<14.0.0": ">=14.0.0",
       "fast-uri@<3.1.2": ">=3.1.2",
-      "@babel/plugin-transform-modules-systemjs@<7.29.4": ">=7.29.4"
+      "@babel/plugin-transform-modules-systemjs@<7.29.4": ">=7.29.4",
+      "qs@<6.15.2": ">=6.15.2",
+      "ws@<8.21.0": ">=8.21.0",
+      "webpack-dev-server@<5.2.4": ">=5.2.4",
+      "mermaid@<11.15.0": ">=11.15.0",
+      "postcss@<8.5.15": ">=8.5.15"
     }
   }
 }
