@@ -132,10 +132,13 @@ class HTMLExtractor implements TextExtractor {
     const html = buffer.toString('utf-8');
     let stripped = html;
 
+    // Note `<\/script\s*>` (not `<\/script>`): HTML lets `</script >` and
+    // `</style >` carry trailing whitespace before the `>`. A no-whitespace
+    // regex misses those end tags, leaving payload through.
     for (;;) {
       const next = stripped
-        .replaceAll(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replaceAll(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+        .replaceAll(/<script[^>]*>[\s\S]*?<\/script\s*>/gi, '')
+        .replaceAll(/<style[^>]*>[\s\S]*?<\/style\s*>/gi, '');
       if (next === stripped) break;
       stripped = next;
     }
