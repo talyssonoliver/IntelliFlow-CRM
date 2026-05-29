@@ -136,16 +136,23 @@ export default defineConfig({
   ],
 
   // Web Server configuration
-  // Automatically start the dev server before running tests.
-  // CI uses `pnpm run build && pnpm run start` which on a cold turbo cache
-  // exceeds the previous 120s timeout (monorepo build is heavy). 300s is the
-  // GH Actions default function timeout — well within the runner's wall clock
-  // and matches Vercel's function default per the platform knowledge update.
+  // CI: the upstream `build` job has already produced `apps/web/.next` and
+  // uploaded it as the `build-output` artifact; the E2E job downloads it
+  // into the workspace before this command runs. Re-running `pnpm run build`
+  // inside webServer kept the turbo task graph busy for >5min (it never
+  // even reached `apps/web` before the previous 300s timeout fired —
+  // verified in run 26548719622 logs). Just `next start` against the
+  // pre-built `.next` directory.
+  //
+  // Dev: keep `pnpm run dev` for the local watch experience.
   webServer: {
-    command: process.env.CI ? 'pnpm run build && pnpm run start' : 'pnpm run dev',
+    command: process.env.CI ? 'pnpm --filter @intelliflow/web start' : 'pnpm run dev',
     url: process.env.E2E_BASE_URL || 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 300 * 1000,
+    // 180s is comfortable for `next start` cold boot on a GH Actions
+    // ubuntu-latest runner; the previous 300s was sized for the
+    // (broken) `build && start` path and is no longer needed.
+    timeout: 180 * 1000,
     stdout: 'pipe',
     stderr: 'pipe',
     env: {
