@@ -369,8 +369,12 @@ jobs:
         run: |
           if [ ! -d "apps/web/.next" ]; then
             echo "::error::apps/web/.next missing after download-artifact step."
-            echo "::error::Check that the upstream build job's upload-artifact path glob still resolves and that download-artifact path: '.' is set here."
+            echo "::error::Expected upload from build job (path: apps/*/dist + apps/*/.next, include-hidden-files: true)."
+            echo "::error::Expected download in this job (path: apps so the upload's ancestor-stripped layout lands under apps/)."
+            echo "::error::Working dir listing (apps/web):"
             ls -la apps/web/ || true
+            echo "::error::Workspace top-level for stray artifact-name drops:"
+            ls -la . | head -30 || true
             exit 1
           fi
           echo "apps/web/.next present ($(du -sh apps/web/.next | cut -f1))"
