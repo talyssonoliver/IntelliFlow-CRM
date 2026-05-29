@@ -395,7 +395,19 @@ jobs:
           echo "apps/web/.next present ($(du -sh apps/web/.next | cut -f1))"
 
       - name: Run E2E tests
-        run: pnpm run test:e2e
+        # Scope to the chromium project to match the chromium-only install
+        # above. playwright.config.ts defines 6 projects (chromium, firefox,
+        # webkit, mobile-chrome, mobile-safari, tablet); firefox/webkit/
+        # mobile-safari/tablet need browser engines we do NOT install here,
+        # so `pnpm run test:e2e` (all projects) failed 635 specs at
+        # `browserType.launch: Executable doesn't exist at .../webkit-*`.
+        # The chromium project carries no testMatch restriction, so it runs
+        # the full spec set (including the VRT baseline) on the designated
+        # baseline engine — full coverage on one installed browser. Cross-
+        # engine E2E is tracked separately at issue #95; to re-enable it,
+        # install all browsers (`playwright install --with-deps`) and drop
+        # this --project filter.
+        run: pnpm exec playwright test --project=chromium
 
       - name: Upload E2E results
         uses: actions/upload-artifact@v7

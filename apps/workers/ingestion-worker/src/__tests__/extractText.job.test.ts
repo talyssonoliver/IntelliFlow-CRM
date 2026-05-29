@@ -154,6 +154,43 @@ describe('TextExtractionProcessor', () => {
         expect(result.text).not.toContain('color');
         expect(result.text).not.toContain('style');
       });
+
+      // Regression tests for the iterative script/style strip (PR #208).
+      // A single-pass strip is vulnerable to multi-character bypasses; the
+      // fixed-point loop + whitespace/junk-tolerant end tags must defeat them.
+      it('should strip nested-obfuscated script tags (multi-character bypass)', async () => {
+        // After one naive pass `<<script>script>` collapses to `<script>`,
+        // re-forming a live tag. The fixed-point loop must iterate to clear it.
+        const htmlContent =
+          '<html><body><p>Safe</p><<script>script>alert("xss")<</script>/script></body></html>';
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          arrayBuffer: () => Promise.resolve(Buffer.from(htmlContent)),
+        });
+
+        const job = createMockJob(createValidInput({ format: 'html' }));
+        const result = await processor.process(job);
+
+        expect(result.text).toContain('Safe');
+        expect(result.text).not.toContain('alert');
+        expect(result.text.toLowerCase()).not.toContain('script');
+      });
+
+      it('should strip script end tags carrying whitespace/junk before >', async () => {
+        // HTML5 lets `</script foo bar>` / `</script\t\n x>` close the tag.
+        const htmlContent =
+          '<html><body><p>Keep</p><script>steal()</script\t\n evil ></body></html>';
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          arrayBuffer: () => Promise.resolve(Buffer.from(htmlContent)),
+        });
+
+        const job = createMockJob(createValidInput({ format: 'html' }));
+        const result = await processor.process(job);
+
+        expect(result.text).toContain('Keep');
+        expect(result.text).not.toContain('steal');
+      });
     });
 
     describe('chunking', () => {

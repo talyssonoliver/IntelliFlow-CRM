@@ -202,6 +202,24 @@ describe('BasicContentExtractor', () => {
     expect(result).not.toContain('.x{}');
   });
 
+  // Regression tests for the iterative script/style strip (PR #208): a
+  // single-pass strip is bypassable; the fixed-point loop + junk-tolerant
+  // end tags must defeat both known vectors.
+  it('should strip nested-obfuscated script tags (multi-character bypass)', async () => {
+    const html = '<body><p>Safe</p><<script>script>alert(1)<</script>/script></body>';
+    const result = await extractor.extract(Buffer.from(html), 'text/html');
+    expect(result).toContain('Safe');
+    expect(result).not.toContain('alert');
+    expect((result ?? '').toLowerCase()).not.toContain('script');
+  });
+
+  it('should strip script end tags carrying whitespace/junk before >', async () => {
+    const html = '<body><p>Keep</p><script>steal()</script\t\n evil ></body>';
+    const result = await extractor.extract(Buffer.from(html), 'text/html');
+    expect(result).toContain('Keep');
+    expect(result).not.toContain('steal');
+  });
+
   it('should extract from JSON', async () => {
     const result = await extractor.extract(Buffer.from('{"key": "value"}'), 'application/json');
     expect(result).toContain('key');

@@ -79,6 +79,27 @@ export default defineConfig({
       ) {
         return false; // Don't fail the test run for these errors
       }
+      // Filter vitest worker-teardown RPC races. When a test logs as its
+      // worker is closing, vitest emits
+      //   EnvironmentTeardownError: [vitest-worker]: Closing rpc while
+      //   "onUserConsoleLog" was pending
+      // as an UNHANDLED rejection AFTER every test has already reported
+      // pass/fail. With ~30.5k tests across forked workers this race fires
+      // intermittently and turns an all-green run non-zero (observed on
+      // ai-worker.supplementary2 + happy-dom fetch teardown). It is worker
+      // lifecycle noise, never test-logic failure, so swallow it. Narrowly
+      // matched so a genuine teardown error with a different message still
+      // fails the run.
+      // Require BOTH the EnvironmentTeardownError name AND a specific rpc-race
+      // message fragment, so a genuine teardown failure carrying a different
+      // message still fails the run (per PR #210 review).
+      if (
+        error.name === 'EnvironmentTeardownError' &&
+        (error.message?.includes('Closing rpc while') ||
+          error.message?.includes('onUserConsoleLog'))
+      ) {
+        return false;
+      }
     },
 
     // Define multiple test projects in the monorepo
