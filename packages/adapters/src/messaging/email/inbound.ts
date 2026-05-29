@@ -352,10 +352,20 @@ export class SpamAnalyzer {
     return score;
   }
 
+  // Cap the content we hand to the heuristic regex pass to defuse
+  // polynomial-redos: the suspiciousPatterns set uses chained `.*` which
+  // can backtrack on hostile input. 100 KB is well beyond a legitimate
+  // email-body body the heuristic needs to see for keyword matches.
+  private static readonly MAX_HEURISTIC_CONTENT_LENGTH = 100 * 1024;
+
   private checkSuspiciousContent(content: string, reasons: string[]): number {
+    const bounded =
+      content.length > SpamAnalyzer.MAX_HEURISTIC_CONTENT_LENGTH
+        ? content.slice(0, SpamAnalyzer.MAX_HEURISTIC_CONTENT_LENGTH)
+        : content;
     let score = 0;
     for (const pattern of this.suspiciousPatterns) {
-      if (pattern.test(content)) {
+      if (pattern.test(bounded)) {
         score += 10;
         reasons.push(`Suspicious pattern: ${pattern.source}`);
       }
