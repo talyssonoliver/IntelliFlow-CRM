@@ -354,13 +354,15 @@ export class BasicContentExtractor implements ContentExtractor {
       // drop remaining tag-shaped substrings.
       let stripped = text;
 
-      // Note `<\/script\s*>` (not `<\/script>`): HTML lets `</script >` and
-      // `</style >` carry trailing whitespace before the `>`. A no-whitespace
-      // regex misses those end tags, leaving payload through.
+      // End tags accept arbitrary trailing whitespace and attribute-like
+      // junk before the closing `>` per HTML5 parser rules — e.g.
+      // `</script foo bar>` or `</script\t\n bar>`. Tolerate `[^>]*` after
+      // the tag name so the fixed-point strip can't leave a stray opening
+      // `<script>` matched to nothing.
       for (;;) {
         const next = stripped
-          .replaceAll(/<script[^>]*>[\s\S]*?<\/script\s*>/gi, '')
-          .replaceAll(/<style[^>]*>[\s\S]*?<\/style\s*>/gi, '');
+          .replaceAll(/<script[^>]*>[\s\S]*?<\/script[^>]*>/gi, '')
+          .replaceAll(/<style[^>]*>[\s\S]*?<\/style[^>]*>/gi, '');
         if (next === stripped) break;
         stripped = next;
       }
