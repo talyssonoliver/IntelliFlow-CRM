@@ -90,10 +90,13 @@ export default defineConfig({
       // lifecycle noise, never test-logic failure, so swallow it. Narrowly
       // matched so a genuine teardown error with a different message still
       // fails the run.
+      // Require BOTH the EnvironmentTeardownError name AND a specific rpc-race
+      // message fragment, so a genuine teardown failure carrying a different
+      // message still fails the run (per PR #210 review).
       if (
-        error.name === 'EnvironmentTeardownError' ||
-        error.message?.includes('Closing rpc while') ||
-        error.message?.includes('onUserConsoleLog')
+        error.name === 'EnvironmentTeardownError' &&
+        (error.message?.includes('Closing rpc while') ||
+          error.message?.includes('onUserConsoleLog'))
       ) {
         return false;
       }
