@@ -56,6 +56,7 @@ import {
   performAccountReassign,
   emitAccountReassignSideEffects,
   logAccountReassignPermissionDenied,
+  REASSIGN_ADMIN_ROLES,
 } from './account-reassign';
 
 /**
@@ -339,6 +340,126 @@ async function handleAccountUpdate(ctx: Context, input: UpdateAccountInput) {
   }
 
   return mapAccountToResponse(result.value);
+}
+
+/**
+ * Per-account verdict for the NP-013 batched bulkReassign path. Extracted to
+ * module scope so the mutation body stays within the sonar cognitive-complexity
+ * budget; behaviour is identical to the previous inline loops.
+ */
+type BulkReassignVerdict =
+  | { kind: 'OK'; previousOwnerId: string; accountName: string }
+  | { kind: 'SKIPPED'; currentOwnerId: string }
+  | { kind: 'NOT_FOUND' }
+  | { kind: 'FORBIDDEN' };
+
+/**
+ * Compute the in-memory verdict for every deduped id and collect the ids that
+ * are eligible for the single batched updateMany.
+ */
+function computeBulkReassignVerdicts(
+  dedupedIds: string[],
+  rowMap: Map<string, { id: string; ownerId: string; name: string }>,
+  opts: { callerId: string; isAdmin: boolean; targetOwnerId: string }
+): { verdictMap: Map<string, BulkReassignVerdict>; eligibleIds: string[] } {
+  const verdictMap = new Map<string, BulkReassignVerdict>();
+  const eligibleIds: string[] = [];
+
+  for (const id of dedupedIds) {
+    const row = rowMap.get(id);
+    if (!row) {
+      verdictMap.set(id, { kind: 'NOT_FOUND' });
+      continue;
+    }
+    const isCurrentOwner = row.ownerId === opts.callerId;
+    if (!opts.isAdmin && !isCurrentOwner) {
+      verdictMap.set(id, { kind: 'FORBIDDEN' });
+      continue;
+    }
+    if (row.ownerId === opts.targetOwnerId) {
+      verdictMap.set(id, { kind: 'SKIPPED', currentOwnerId: row.ownerId });
+      continue;
+    }
+    verdictMap.set(id, { kind: 'OK', previousOwnerId: row.ownerId, accountName: row.name });
+    eligibleIds.push(id);
+  }
+
+  return { verdictMap, eligibleIds };
+}
+
+type BulkReassignSuccess = {
+  id: string;
+  previousOwnerId: string;
+  newOwnerId: string;
+  notified: boolean;
+  skipped?: true;
+};
+
+/**
+ * Build the order-preserving response from the precomputed verdicts. Iterates
+ * the original input ids so duplicates and per-row failures keep their place;
+ * the first OK occurrence of a duplicate id is the written one, later ones are
+ * reported as SKIPPED.
+ */
+function buildBulkReassignResponse(
+  inputIds: string[],
+  verdictMap: Map<string, BulkReassignVerdict>,
+  notifiedMap: Map<string, boolean>,
+  targetOwnerId: string
+): {
+  successful: BulkReassignSuccess[];
+  failed: Array<{ id: string; error: string; errorCode: 'NOT_FOUND' | 'FORBIDDEN' }>;
+} {
+  const writtenIds = new Set<string>();
+  const successful: BulkReassignSuccess[] = [];
+  const failed: Array<{ id: string; error: string; errorCode: 'NOT_FOUND' | 'FORBIDDEN' }> = [];
+
+  for (const id of inputIds) {
+    const verdict = verdictMap.get(id);
+
+    if (!verdict || verdict.kind === 'NOT_FOUND') {
+      failed.push({ id, error: 'Account not found', errorCode: 'NOT_FOUND' });
+      continue;
+    }
+    if (verdict.kind === 'FORBIDDEN') {
+      failed.push({
+        id,
+        error: 'Caller does not have permission to reassign this account.',
+        errorCode: 'FORBIDDEN',
+      });
+      continue;
+    }
+    if (verdict.kind === 'SKIPPED') {
+      successful.push({
+        id,
+        previousOwnerId: verdict.currentOwnerId,
+        newOwnerId: verdict.currentOwnerId,
+        notified: false,
+        skipped: true,
+      });
+      continue;
+    }
+    // verdict.kind === 'OK'
+    if (writtenIds.has(id)) {
+      successful.push({
+        id,
+        previousOwnerId: verdict.previousOwnerId,
+        newOwnerId: targetOwnerId,
+        notified: false,
+        skipped: true,
+      });
+      continue;
+    }
+    writtenIds.add(id);
+    successful.push({
+      id,
+      previousOwnerId: verdict.previousOwnerId,
+      newOwnerId: targetOwnerId,
+      notified: notifiedMap.get(id) ?? false,
+    });
+  }
+
+  return { successful, failed };
 }
 
 export const accountRouter = createTRPCRouter({
@@ -1028,7 +1149,10 @@ export const accountRouter = createTRPCRouter({
 
   /**
    * IFC-311: Reassign multiple accounts to a single new owner.
-   * Pre-validates the target user once (fail-fast), then iterates per row.
+   * NP-013 batched path: ONE findMany for all ids (deduped), IN-MEMORY verdict
+   * computation, ONE updateMany for eligible rows, Promise.allSettled for
+   * side-effects. O(1) DB round-trips regardless of batch size.
+   *
    * Per-row failures (NOT_FOUND, FORBIDDEN) are collected without
    * short-circuiting the batch, so callers cannot use the response to probe
    * authorisation row-by-row. Notification + audit log run per-row, post-tx.
@@ -1040,10 +1164,7 @@ export const accountRouter = createTRPCRouter({
       const tenantId = typedCtx.tenant.tenantId;
 
       // Pre-validate target user once (one query, not N). A lookup miss is a
-      // NOT_FOUND, not an authz denial — Finding 3 (post-completion review):
-      // logPermissionDenied previously wrote resource='account', id=<user
-      // uuid> which was semantically wrong. Dropped; the TRPCError thrown is
-      // sufficient surface.
+      // NOT_FOUND, not an authz denial.
       const targetUser = await typedCtx.prismaWithTenant.user.findFirst({
         where: { id: input.ownerId, tenantId },
         select: { id: true },
@@ -1054,58 +1175,71 @@ export const accountRouter = createTRPCRouter({
 
       const flags = await loadAccountAutomation(typedCtx);
 
-      const successful: Array<{
-        id: string;
-        previousOwnerId: string;
-        newOwnerId: string;
-        notified: boolean;
-        skipped?: true;
-      }> = [];
-      const failed: Array<{ id: string; error: string; errorCode: 'NOT_FOUND' | 'FORBIDDEN' }> = [];
+      // ── Batched read ──────────────────────────────────────────────────────
+      // Dedupe ids before the IN query to keep it compact.
+      const dedupedIds = [...new Set(input.ids)];
 
-      for (const id of input.ids) {
-        const verdict = await performAccountReassign(ctx, { id, ownerId: input.ownerId });
+      const existingRows = await typedCtx.prismaWithTenant.account.findMany({
+        where: { id: { in: dedupedIds }, tenantId },
+        select: { id: true, ownerId: true, name: true },
+      });
+      // Build a Map keyed by id for O(1) lookup per original id.
+      const rowMap = new Map(existingRows.map((r) => [r.id, r]));
 
-        if (verdict.kind === 'NOT_FOUND' || verdict.kind === 'TARGET_USER_NOT_FOUND') {
-          // TARGET_USER_NOT_FOUND should not occur here (pre-validated above),
-          // but if a TOCTOU race deletes the target mid-batch, surface it as
-          // a row-level NOT_FOUND.
-          failed.push({ id, error: 'Account not found', errorCode: 'NOT_FOUND' });
-          continue;
-        }
-        if (verdict.kind === 'FORBIDDEN') {
-          failed.push({
-            id,
-            error: 'Caller does not have permission to reassign this account.',
-            errorCode: 'FORBIDDEN',
-          });
-          continue;
-        }
-        if (verdict.kind === 'SKIPPED') {
-          successful.push({
-            id,
-            previousOwnerId: verdict.currentOwnerId,
-            newOwnerId: verdict.currentOwnerId,
-            notified: false,
-            skipped: true,
-          });
-          continue;
-        }
+      // ── In-memory verdict per deduped id ─────────────────────────────────
+      const callerRole = ctx.user?.role ?? '';
+      const isAdmin = REASSIGN_ADMIN_ROLES.has(callerRole);
+      const callerId = typedCtx.tenant.userId;
 
-        const sideEffects = await emitAccountReassignSideEffects(ctx, {
-          id,
-          accountName: verdict.accountName,
-          previousOwnerId: verdict.previousOwnerId,
-          newOwnerId: verdict.newOwnerId,
-          flags,
-        });
-        successful.push({
-          id,
-          previousOwnerId: verdict.previousOwnerId,
-          newOwnerId: verdict.newOwnerId,
-          notified: sideEffects.notified,
+      const { verdictMap, eligibleIds } = computeBulkReassignVerdicts(dedupedIds, rowMap, {
+        callerId,
+        isAdmin,
+        targetOwnerId: input.ownerId,
+      });
+
+      // ── Batched write (single updateMany for all eligible rows) ───────────
+      if (eligibleIds.length > 0) {
+        await typedCtx.prismaWithTenant.account.updateMany({
+          where: { id: { in: eligibleIds }, tenantId },
+          data: { ownerId: input.ownerId },
         });
       }
+
+      // ── Emit side-effects in parallel for OK rows (best-effort) ──────────
+      const okRows = eligibleIds.map((id) => {
+        const v = verdictMap.get(id) as {
+          kind: 'OK';
+          previousOwnerId: string;
+          accountName: string;
+        };
+        return { id, previousOwnerId: v.previousOwnerId, accountName: v.accountName };
+      });
+
+      const sideEffectResults = await Promise.allSettled(
+        okRows.map(({ id, previousOwnerId, accountName }) =>
+          emitAccountReassignSideEffects(ctx, {
+            id,
+            accountName,
+            previousOwnerId,
+            newOwnerId: input.ownerId,
+            flags,
+          })
+        )
+      );
+      // Map eligible id → notified result (default false on rejection)
+      const notifiedMap = new Map<string, boolean>();
+      for (let i = 0; i < okRows.length; i++) {
+        const r = sideEffectResults[i];
+        notifiedMap.set(okRows[i].id, r.status === 'fulfilled' ? r.value.notified : false);
+      }
+
+      // ── Build order-preserving response from the precomputed verdicts ────
+      const { successful, failed } = buildBulkReassignResponse(
+        input.ids,
+        verdictMap,
+        notifiedMap,
+        input.ownerId
+      );
 
       return { successful, failed, totalProcessed: input.ids.length };
     }),

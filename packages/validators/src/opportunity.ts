@@ -254,3 +254,16 @@ export const bulkReassignDealsSchema = z.object({
   ownerId: idSchema,
 });
 export type BulkReassignDealsInput = z.infer<typeof bulkReassignDealsSchema>;
+
+// NP-024: Bulk stage update — replaces N per-deal updateMutation.mutateAsync calls
+export const bulkUpdateStageSchema = z.object({
+  ids: z.array(idSchema).min(1).max(100),
+  stage: opportunityStageSchema,
+});
+export type BulkUpdateStageInput = z.infer<typeof bulkUpdateStageSchema>;
+
+// NP-025: Bulk delete — replaces N per-deal deleteMutation.mutateAsync calls
+export const bulkDeleteDealsSchema = z.object({
+  ids: z.array(idSchema).min(1).max(100),
+});
+export type BulkDeleteDealsInput = z.infer<typeof bulkDeleteDealsSchema>;

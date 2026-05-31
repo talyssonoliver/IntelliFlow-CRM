@@ -818,7 +818,7 @@ describe('findByRollbackToken()', () => {
     expect(result).toBeUndefined();
   });
 
-  it('I5: queries only APPROVED actions for the tenant', async () => {
+  it('I5: queries only APPROVED actions for the tenant, ordered by createdAt desc, bounded to 500', async () => {
     (prismaMock.agentAction.findMany as any).mockResolvedValue([]);
 
     await store.findByRollbackToken('any-token');
@@ -826,6 +826,14 @@ describe('findByRollbackToken()', () => {
     const args = (prismaMock.agentAction.findMany as any).mock.calls[0][0];
     expect(args.where.status).toBe('APPROVED');
     expect(args.where.tenantId).toBe(TENANT_ID);
+    // Regression guard: findMany must be bounded (take: 500) and ordered by
+    // createdAt desc so the most-recent rollback tokens are scanned first.
+    // This is a CONSTANT upper bound regardless of table size — not an N+1 but
+    // the same unbounded-scan class of issue.
+    expect(args.take).toBe(500);
+    expect(args.orderBy).toEqual({ createdAt: 'desc' });
+    // findMany is called exactly once per findByRollbackToken invocation
+    expect(prismaMock.agentAction.findMany).toHaveBeenCalledOnce();
   });
 });
 

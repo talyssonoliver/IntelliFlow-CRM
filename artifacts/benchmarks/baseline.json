@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-05-25T17:00:37.590Z",
+  "timestamp": "2026-05-31T17:06:16.620Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 61,
-    "total_endpoints": 525,
+    "total_endpoints": 527,
     "total_queries": 239,
-    "total_mutations": 286,
+    "total_mutations": 288,
     "routers": [
       {
         "name": "contact",
@@ -1045,6 +1045,12 @@
         "mutations": 12
       },
       {
+        "name": "opportunity",
+        "endpoints": 19,
+        "queries": 9,
+        "mutations": 10
+      },
+      {
         "name": "auth",
         "endpoints": 18,
         "queries": 3,
@@ -1061,12 +1067,6 @@
         "endpoints": 18,
         "queries": 4,
         "mutations": 14
-      },
-      {
-        "name": "opportunity",
-        "endpoints": 17,
-        "queries": 9,
-        "mutations": 8
       },
       {
         "name": "ticket",
@@ -2963,7 +2963,7 @@
   },
   "validators_inventory": {
     "total_validators": 47,
-    "total_schemas": 571,
+    "total_schemas": 573,
     "by_complexity": {
       "complex": 31,
       "moderate": 12,
@@ -3079,6 +3079,12 @@
         "complexity": "complex"
       },
       {
+        "name": "opportunity",
+        "file": "opportunity.ts",
+        "schemas": 14,
+        "complexity": "complex"
+      },
+      {
         "name": "task",
         "file": "task.ts",
         "schemas": 14,
@@ -3093,12 +3099,6 @@
       {
         "name": "case-settings",
         "file": "case-settings.ts",
-        "schemas": 12,
-        "complexity": "complex"
-      },
-      {
-        "name": "opportunity",
-        "file": "opportunity.ts",
         "schemas": 12,
         "complexity": "complex"
       },
@@ -5552,6 +5552,16 @@
         "name": "opportunity.reassign",
         "method": "POST",
         "description": "Reassign"
+      },
+      {
+        "name": "opportunity.bulkUpdateStage",
+        "method": "POST",
+        "description": "Bulk update stage"
+      },
+      {
+        "name": "opportunity.bulkDelete",
+        "method": "POST",
+        "description": "Bulk delete"
       },
       {
         "name": "opportunity.bulkReassign",

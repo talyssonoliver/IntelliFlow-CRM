@@ -41,6 +41,25 @@ export interface EntityInsightJobResult {
   fannedOut?: { contacts: number; accounts: number; tenants: number };
 }
 
+/**
+ * Group entity-id rows by tenant, capping each tenant's list at `cap`. Rows are
+ * assumed pre-ordered (most-recent first) so the per-tenant cap keeps the newest.
+ */
+function groupCappedIdsByTenant(
+  rows: Array<{ id: string; tenantId: string }>,
+  cap: number
+): Map<string, string[]> {
+  const byTenant = new Map<string, string[]>();
+  for (const row of rows) {
+    const ids = byTenant.get(row.tenantId) ?? [];
+    if (ids.length < cap) {
+      ids.push(row.id);
+      byTenant.set(row.tenantId, ids);
+    }
+  }
+  return byTenant;
+}
+
 async function dispatchScheduledEntityInsights(
   job: Job<EntityInsightJobData>
 ): Promise<EntityInsightJobResult> {
@@ -66,46 +85,62 @@ async function dispatchScheduledEntityInsights(
   let accountEnqueued = 0;
   const queue = (job as unknown as { queue: Queue }).queue;
 
+  // NP-018 fix: batch both settings lookups before the loop (was 2N findUnique calls).
+  const [contactSettingRows, accountSettingRows] = await Promise.all([
+    prisma.contactAutomationSetting.findMany({
+      where: { tenantId: { in: tenantIds }, aiInsightGeneration: true },
+      select: { tenantId: true },
+    }),
+    prisma.accountAutomationSetting.findMany({
+      where: { tenantId: { in: tenantIds }, aiInsightGeneration: true },
+      select: { tenantId: true },
+    }),
+  ]);
+  const contactInsightTenants = new Set(
+    contactSettingRows.map((r: { tenantId: string }) => r.tenantId)
+  );
+  const accountInsightTenants = new Set(
+    accountSettingRows.map((r: { tenantId: string }) => r.tenantId)
+  );
+
+  // Batch the per-tenant entity scans into ONE query per entity type across all
+  // enabled tenants, then group + cap PER_TENANT_CAP in memory (was one findMany
+  // per tenant per entity — DB query count scaled with tenant count). Global take
+  // bounds the query; tenants truncated by skew are picked up on the next tick.
+  const contactTenantIds = tenantIds.filter((t) => contactInsightTenants.has(t));
+  const accountTenantIds = tenantIds.filter((t) => accountInsightTenants.has(t));
+
+  const contactsByTenant = groupCappedIdsByTenant(
+    contactTenantIds.length === 0
+      ? []
+      : await prisma.contact.findMany({
+          where: { tenantId: { in: contactTenantIds }, updatedAt: { gte: since } },
+          select: { id: true, tenantId: true },
+          orderBy: { updatedAt: 'desc' },
+          take: PER_TENANT_CAP * contactTenantIds.length,
+        }),
+    PER_TENANT_CAP
+  );
+  const accountsByTenant = groupCappedIdsByTenant(
+    accountTenantIds.length === 0
+      ? []
+      : await prisma.account.findMany({
+          where: { tenantId: { in: accountTenantIds }, updatedAt: { gte: since } },
+          select: { id: true, tenantId: true },
+          orderBy: { updatedAt: 'desc' },
+          take: PER_TENANT_CAP * accountTenantIds.length,
+        }),
+    PER_TENANT_CAP
+  );
+
   for (const tenantId of tenantIds) {
-    const [contactSetting, accountSetting] = await Promise.all([
-      prisma.contactAutomationSetting.findUnique({ where: { tenantId } }),
-      prisma.accountAutomationSetting.findUnique({ where: { tenantId } }),
-    ]);
-
-    if (contactSetting?.aiInsightGeneration) {
-      const contacts = await prisma.contact.findMany({
-        where: { tenantId, updatedAt: { gte: since } },
-        select: { id: true },
-        orderBy: { updatedAt: 'desc' },
-        take: PER_TENANT_CAP,
-      });
-      for (const c of contacts) {
-        await queue.add('insight', {
-          entityType: 'contact',
-          entityId: c.id,
-          tenantId,
-          _otelCarrier: {},
-        });
-        contactEnqueued += 1;
-      }
+    for (const entityId of contactsByTenant.get(tenantId) ?? []) {
+      await queue.add('insight', { entityType: 'contact', entityId, tenantId, _otelCarrier: {} });
+      contactEnqueued += 1;
     }
-
-    if (accountSetting?.aiInsightGeneration) {
-      const accounts = await prisma.account.findMany({
-        where: { tenantId, updatedAt: { gte: since } },
-        select: { id: true },
-        orderBy: { updatedAt: 'desc' },
-        take: PER_TENANT_CAP,
-      });
-      for (const a of accounts) {
-        await queue.add('insight', {
-          entityType: 'account',
-          entityId: a.id,
-          tenantId,
-          _otelCarrier: {},
-        });
-        accountEnqueued += 1;
-      }
+    for (const entityId of accountsByTenant.get(tenantId) ?? []) {
+      await queue.add('insight', { entityType: 'account', entityId, tenantId, _otelCarrier: {} });
+      accountEnqueued += 1;
     }
   }
 

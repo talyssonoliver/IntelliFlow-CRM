@@ -792,22 +792,7 @@ export const autoResponseRouter = createTRPCRouter({
         });
       }
 
-      const statuses = [
-        'DRAFT',
-        'PENDING_APPROVAL',
-        'APPROVED',
-        'REJECTED',
-        'ESCALATED',
-        'SENT',
-        'FAILED',
-        'INVALIDATED',
-      ] as const;
-
-      const stats: Record<string, number> = {};
-      for (const status of statuses) {
-        stats[status] = await repository.countByStatus(tenantId, status);
-      }
-
-      return stats;
+      // NP-043 fix: single groupBy query instead of 8 sequential count() calls
+      return repository.countByStatusAll(tenantId);
     }),
 });

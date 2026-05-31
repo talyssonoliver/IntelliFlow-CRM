@@ -51,6 +51,8 @@ export class PrismaExperimentRepository implements ExperimentRepositoryPort {
         this.updateAssignmentConversion(experimentId, leadId, conversionValue),
       countByVariant: (experimentId, variant) =>
         this.countAssignmentsByVariant(experimentId, variant),
+      countVariantsForExperiments: (experimentIds) =>
+        this.countAssignmentVariantsForExperiments(experimentIds),
       getScoresByVariant: (experimentId, variant) =>
         this.getAssignmentScoresByVariant(experimentId, variant),
       getConversionsByVariant: (experimentId, variant) =>
@@ -64,6 +66,7 @@ export class PrismaExperimentRepository implements ExperimentRepositoryPort {
     this._results ??= {
       create: (data) => this.createResult(data),
       findByExperimentId: (experimentId) => this.findResultByExperimentId(experimentId),
+      findByExperimentIds: (experimentIds) => this.findResultsByExperimentIds(experimentIds),
       update: (experimentId, data) => this.updateResult(experimentId, data),
     };
     return this._results;
@@ -231,6 +234,26 @@ export class PrismaExperimentRepository implements ExperimentRepositoryPort {
     });
   }
 
+  /**
+   * NP-001 batched variant counts: ONE groupBy across all supplied experiments
+   * instead of 2 count() calls per experiment.
+   */
+  private async countAssignmentVariantsForExperiments(
+    experimentIds: string[]
+  ): Promise<Array<{ experimentId: string; variant: string; count: number }>> {
+    if (experimentIds.length === 0) return [];
+    const rows = await this.prisma.experimentAssignment.groupBy({
+      by: ['experimentId', 'variant'],
+      where: { experimentId: { in: experimentIds } },
+      _count: true,
+    });
+    return rows.map((r) => ({
+      experimentId: r.experimentId,
+      variant: r.variant,
+      count: r._count,
+    }));
+  }
+
   private async getAssignmentScoresByVariant(
     experimentId: string,
     variant: string
@@ -294,6 +317,20 @@ export class PrismaExperimentRepository implements ExperimentRepositoryPort {
       where: { experimentId },
     });
     return row ? this.toResultRecord(row) : null;
+  }
+
+  /**
+   * NP-001 batched result fetch: ONE findMany across all supplied experiments
+   * instead of one findUnique per experiment.
+   */
+  private async findResultsByExperimentIds(
+    experimentIds: string[]
+  ): Promise<ExperimentResultRecord[]> {
+    if (experimentIds.length === 0) return [];
+    const rows = await this.prisma.experimentResult.findMany({
+      where: { experimentId: { in: experimentIds } },
+    });
+    return rows.map((r) => this.toResultRecord(r));
   }
 
   private buildResultUpdateData(data: Partial<ExperimentResultRecord>): Record<string, unknown> {

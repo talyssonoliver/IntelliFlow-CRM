@@ -286,22 +286,26 @@ export function createContactDuplicateDetectionService(
       );
 
       const seen = new Set(deterministicMatches.map((m) => m.candidate.id));
-      const fullCandidates = await Promise.all(
-        similar
-          .filter((s) => !seen.has(s.id) && s.id !== payload.id)
-          .map(async (s) => {
-            const row = await (
-              ctx.prismaWithTenant as unknown as {
-                contact: {
-                  findFirst: (args: { where: Record<string, unknown> }) => Promise<Contact | null>;
-                };
-              }
-            ).contact.findFirst({
-              where: { id: s.id, tenantId: ctx.tenant.tenantId },
-            });
-            return row ? { row, similarity: s.similarity } : null;
-          })
-      );
+      const newCandidates = similar.filter((s) => !seen.has(s.id) && s.id !== payload.id);
+
+      if (newCandidates.length === 0) return deterministicMatches;
+
+      // Batch lookup: one findMany instead of N findFirst calls
+      const rows = await (
+        ctx.prismaWithTenant as unknown as {
+          contact: {
+            findMany: (args: { where: Record<string, unknown> }) => Promise<Contact[]>;
+          };
+        }
+      ).contact.findMany({
+        where: { id: { in: newCandidates.map((s) => s.id) }, tenantId: ctx.tenant.tenantId },
+      });
+      const rowById = new Map<string, Contact>(rows.map((r) => [r.id, r]));
+
+      const fullCandidates = newCandidates.map((s) => {
+        const row = rowById.get(s.id);
+        return row ? { row, similarity: s.similarity } : null;
+      });
 
       const aiMatches: DuplicateMatch<Contact>[] = fullCandidates
         .filter((c): c is { row: Contact; similarity: number } => Boolean(c))

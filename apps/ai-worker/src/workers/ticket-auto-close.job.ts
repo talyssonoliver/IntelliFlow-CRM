@@ -132,12 +132,56 @@ export class TicketAutoCloseWorker {
     let ticketsClosed = 0;
     let notificationsWritten = 0;
 
-    for (const s of settings) {
-      const counts = await this.processTenantSetting(s, prisma, data.dryRun, now);
-      if (counts === null) continue;
-      ticketsScanned += counts.scanned;
-      ticketsClosed += counts.closed;
-      notificationsWritten += counts.notified;
+    // Filter out settings with no eligible statuses early so we don't query for them.
+    const eligibleSettings = settings.filter((s) => buildEligibleStatuses(s).length > 0);
+
+    if (eligibleSettings.length > 0) {
+      // Batch: one ticket query across all eligible tenants.
+      // We use the earliest (most permissive) cutoff across all tenants so every
+      // potentially-eligible ticket is returned. Per-tenant filtering happens in
+      // memory when each group is processed.
+      const perTenantCap = 500;
+      const allEligibleStatuses = [
+        ...new Set(eligibleSettings.flatMap((s) => buildEligibleStatuses(s))),
+      ];
+      const earliestCutoff = new Date(
+        Math.min(
+          ...eligibleSettings.map((s) => now.getTime() - s.autoCloseIdleDays * 24 * 60 * 60 * 1000)
+        )
+      );
+      const tenantIds = eligibleSettings.map((s) => s.tenantId);
+
+      const allTickets = await prisma.ticket.findMany({
+        where: {
+          tenantId: { in: tenantIds },
+          status: { in: allEligibleStatuses },
+          OR: [
+            { lastActivityAt: { lte: earliestCutoff } },
+            { AND: [{ lastActivityAt: null }, { updatedAt: { lte: earliestCutoff } }] },
+          ],
+        },
+        take: perTenantCap * tenantIds.length,
+      });
+
+      // Group by tenantId and cap each group to 500 to preserve per-tenant semantics.
+      const ticketsByTenant = new Map<string, typeof allTickets>();
+      for (const t of allTickets) {
+        const group = ticketsByTenant.get(t.tenantId);
+        if (!group) {
+          ticketsByTenant.set(t.tenantId, [t]);
+        } else if (group.length < perTenantCap) {
+          group.push(t);
+        }
+      }
+
+      for (const s of eligibleSettings) {
+        const prefetched = ticketsByTenant.get(s.tenantId) ?? [];
+        const counts = await this.processTenantSetting(s, prisma, data.dryRun, now, prefetched);
+        if (counts === null) continue;
+        ticketsScanned += counts.scanned;
+        ticketsClosed += counts.closed;
+        notificationsWritten += counts.notified;
+      }
     }
 
     return {
@@ -179,23 +223,65 @@ export class TicketAutoCloseWorker {
       };
     },
     dryRun: boolean,
-    now: Date
+    now: Date,
+    /**
+     * Pre-fetched ticket rows for this tenant (already capped to 500 by the
+     * caller). When provided the method skips the DB fetch and instead filters
+     * in-memory using the tenant-specific cutoff and eligible statuses.
+     */
+    prefetchedTickets?: Array<{
+      id: string;
+      tenantId: string;
+      ticketNumber: string;
+      subject: string;
+      status: string;
+      reporterId: string | null;
+      reporterUserId: string | null;
+      contactEmail: string | null;
+      updatedAt: Date;
+      lastActivityAt: Date | null;
+    }>
   ): Promise<{ scanned: number; closed: number; notified: number } | null> {
     const eligibleStatuses = buildEligibleStatuses(s);
     if (eligibleStatuses.length === 0) return null;
 
     const cutoff = new Date(now.getTime() - s.autoCloseIdleDays * 24 * 60 * 60 * 1000);
-    const tickets = await prisma.ticket.findMany({
-      where: {
-        tenantId: s.tenantId,
-        status: { in: eligibleStatuses },
-        OR: [
-          { lastActivityAt: { lte: cutoff } },
-          { AND: [{ lastActivityAt: null }, { updatedAt: { lte: cutoff } }] },
-        ],
-      },
-      take: 500,
-    });
+
+    let tickets: Array<{
+      id: string;
+      tenantId: string;
+      ticketNumber: string;
+      subject: string;
+      status: string;
+      reporterId: string | null;
+      reporterUserId: string | null;
+      contactEmail: string | null;
+      updatedAt: Date;
+      lastActivityAt: Date | null;
+    }>;
+
+    if (prefetchedTickets !== undefined) {
+      // Filter the pre-fetched batch using the tenant-specific cutoff and statuses.
+      // This replicates the DB-side WHERE exactly so behaviour is identical.
+      const eligibleSet = new Set(eligibleStatuses);
+      tickets = prefetchedTickets.filter((t) => {
+        if (!eligibleSet.has(t.status)) return false;
+        const idleAt = t.lastActivityAt ?? t.updatedAt;
+        return idleAt <= cutoff;
+      });
+    } else {
+      tickets = await prisma.ticket.findMany({
+        where: {
+          tenantId: s.tenantId,
+          status: { in: eligibleStatuses },
+          OR: [
+            { lastActivityAt: { lte: cutoff } },
+            { AND: [{ lastActivityAt: null }, { updatedAt: { lte: cutoff } }] },
+          ],
+        },
+        take: 500,
+      });
+    }
 
     if (tickets.length === 0) return { scanned: 0, closed: 0, notified: 0 };
 

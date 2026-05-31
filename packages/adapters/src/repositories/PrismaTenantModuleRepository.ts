@@ -66,24 +66,19 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
   }
 
   async getTenantPlan(tenantId: string): Promise<PlanTier> {
-    // Look up workspace associated with this tenant
-    // The Workspace model has a `plan` field (PlanTier enum)
-    const workspace = await this.prisma.workspace.findFirst({
-      where: {
-        members: {
-          some: {
-            userId: {
-              in: await this.prisma.user
-                .findMany({ where: { tenantId }, select: { id: true } })
-                .then((users) => users.map((u) => u.id)),
-            },
-          },
-        },
-      },
-      select: { plan: true },
-    });
+    // Look up workspace associated with this tenant in ONE query.
+    // WorkspaceMember has no Prisma relation to User, so we use $queryRaw
+    // to join workspaces -> workspace_members -> users in a single round-trip.
+    const rows = await this.prisma.$queryRaw<Array<{ plan: string }>>`
+      SELECT w.plan
+      FROM workspaces w
+      INNER JOIN workspace_members wm ON wm."workspaceId" = w.id
+      INNER JOIN users u ON u.id = wm."userId"
+      WHERE u."tenantId" = ${tenantId}
+      LIMIT 1
+    `;
 
-    return (workspace?.plan as PlanTier) ?? 'STARTER';
+    return (rows[0]?.plan as PlanTier) ?? 'STARTER';
   }
 
   async enableModule(tenantId: string, moduleId: ModuleId): Promise<TenantModuleRecord> {

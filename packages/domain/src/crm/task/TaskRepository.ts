@@ -23,6 +23,14 @@ export interface TaskRepository {
   findById(id: TaskId): Promise<Task | null>;
 
   /**
+   * Find multiple tasks by IDs in a single batched query.
+   * Deduplication of ids is performed by the implementation.
+   * The returned array preserves the order of the input ids list
+   * (tasks not found are omitted).
+   */
+  findByIds(ids: string[]): Promise<Task[]>;
+
+  /**
    * Find all tasks for an owner
    */
   findByOwnerId(ownerId: string): Promise<Task[]>;

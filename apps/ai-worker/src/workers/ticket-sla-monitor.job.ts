@@ -59,6 +59,45 @@ export interface SlaMonitorDeps {
   }): Promise<void>;
 }
 
+type SlaTicketRow = {
+  id: string;
+  tenantId: string;
+  ticketNumber: string;
+  subject: string;
+  status: string;
+  slaDeadline: Date | null;
+  slaBreachedAt: Date | null;
+  assigneeId: string | null;
+  createdAt: Date;
+};
+
+type SlaSettingRow = {
+  tenantId: string;
+  notifyOnSlaBreach: boolean;
+  notifyOnSlaWarning: boolean;
+};
+
+/**
+ * Group rows by tenantId, capping each tenant's group to `perTenantCap` so the
+ * single batched query preserves the per-tenant semantics of the old N-query
+ * path. Extracted to keep process() within the sonar cognitive-complexity budget.
+ */
+function groupByTenantCapped<T extends { tenantId: string }>(
+  rows: T[],
+  perTenantCap: number
+): Map<string, T[]> {
+  const byTenant = new Map<string, T[]>();
+  for (const r of rows) {
+    const group = byTenant.get(r.tenantId);
+    if (!group) {
+      byTenant.set(r.tenantId, [r]);
+    } else if (group.length < perTenantCap) {
+      group.push(r);
+    }
+  }
+  return byTenant;
+}
+
 export class TicketSlaMonitorWorker {
   private worker: Worker<TicketSlaMonitorJobData, TicketSlaMonitorJobResult> | null = null;
   private queue: Queue<TicketSlaMonitorJobData, TicketSlaMonitorJobResult> | null = null;
@@ -133,56 +172,45 @@ export class TicketSlaMonitorWorker {
     let breachCount = 0;
     let warningCount = 0;
 
-    for (const s of settings) {
-      const tickets = await prisma.ticket.findMany({
-        where: {
-          tenantId: s.tenantId,
-          status: { in: ['OPEN', 'IN_PROGRESS', 'WAITING_ON_CUSTOMER'] },
-          slaDeadline: { not: null },
-        },
-        take: 500,
-      });
+    if (settings.length === 0) {
+      return {
+        tenantsScanned: 0,
+        ticketsScanned: 0,
+        breachNotificationsWritten: 0,
+        warningNotificationsWritten: 0,
+        elapsedMs: Date.now() - start,
+        completedAt: new Date().toISOString(),
+      };
+    }
+
+    // Batch: one query across all tenants instead of N per-tenant queries.
+    // For a single tenant (sweepAll=false or only one setting), this is identical
+    // to the old single-query path. For multiple tenants it avoids N round-trips.
+    const tenantIds = settings.map((s) => s.tenantId);
+    const perTenantCap = 500;
+    const allTickets = await prisma.ticket.findMany({
+      where: {
+        tenantId: { in: tenantIds },
+        status: { in: ['OPEN', 'IN_PROGRESS', 'WAITING_ON_CUSTOMER'] },
+        slaDeadline: { not: null },
+      },
+      take: perTenantCap * tenantIds.length,
+    });
+
+    // Group by tenantId and cap each group to preserve per-tenant semantics.
+    const ticketsByTenant = groupByTenantCapped(allTickets, perTenantCap);
+
+    // Build a settings map for O(1) lookup during per-ticket processing.
+    const settingsMap = new Map(settings.map((s) => [s.tenantId, s]));
+
+    const now = Date.now();
+    for (const [tenantId, tickets] of ticketsByTenant) {
+      const s = settingsMap.get(tenantId);
+      if (!s) continue;
       ticketsScanned += tickets.length;
-
-      const now = Date.now();
-      for (const t of tickets) {
-        if (!t.slaDeadline) continue;
-        const deadlineMs = t.slaDeadline.getTime();
-        const elapsedPct = (now - t.createdAt.getTime()) / (deadlineMs - t.createdAt.getTime());
-
-        const breached = now >= deadlineMs && t.slaBreachedAt == null;
-        const warning = !breached && elapsedPct >= 0.8;
-
-        if (breached && this.deps.shouldWriteBreach(s) && t.assigneeId) {
-          await this.deps.createNotification({
-            tenantId: t.tenantId,
-            userId: t.assigneeId,
-            type: 'ticket_escalated',
-            title: `SLA breached: ${t.ticketNumber}`,
-            body: `Ticket "${t.subject}" missed its SLA deadline.`,
-            priority: 'high',
-            entityType: 'ticket',
-            entityId: t.id,
-            actionUrl: `/tickets/${t.id}`,
-            metadata: { reason: 'sla_breach', deadline: t.slaDeadline.toISOString() },
-          });
-          breachCount++;
-        } else if (warning && this.deps.shouldWriteWarning(s) && t.assigneeId) {
-          await this.deps.createNotification({
-            tenantId: t.tenantId,
-            userId: t.assigneeId,
-            type: 'ticket_escalated',
-            title: `SLA warning: ${t.ticketNumber}`,
-            body: `Ticket "${t.subject}" is approaching its SLA deadline.`,
-            priority: 'normal',
-            entityType: 'ticket',
-            entityId: t.id,
-            actionUrl: `/tickets/${t.id}`,
-            metadata: { reason: 'sla_warning', elapsedPct },
-          });
-          warningCount++;
-        }
-      }
+      const { breaches, warnings } = await this.evaluateTenantTickets(tickets, s, now);
+      breachCount += breaches;
+      warningCount += warnings;
     }
 
     return {
@@ -193,6 +221,61 @@ export class TicketSlaMonitorWorker {
       elapsedMs: Date.now() - start,
       completedAt: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Evaluate one tenant's tickets and write breach/warning notifications.
+   * Behaviour identical to the previous inline loop; extracted to keep process()
+   * within the sonar cognitive-complexity budget.
+   */
+  private async evaluateTenantTickets(
+    tickets: SlaTicketRow[],
+    s: SlaSettingRow,
+    now: number
+  ): Promise<{ breaches: number; warnings: number }> {
+    let breaches = 0;
+    let warnings = 0;
+
+    for (const t of tickets) {
+      if (!t.slaDeadline) continue;
+      const deadlineMs = t.slaDeadline.getTime();
+      const elapsedPct = (now - t.createdAt.getTime()) / (deadlineMs - t.createdAt.getTime());
+
+      const breached = now >= deadlineMs && t.slaBreachedAt == null;
+      const warning = !breached && elapsedPct >= 0.8;
+
+      if (breached && this.deps.shouldWriteBreach(s) && t.assigneeId) {
+        await this.deps.createNotification({
+          tenantId: t.tenantId,
+          userId: t.assigneeId,
+          type: 'ticket_escalated',
+          title: `SLA breached: ${t.ticketNumber}`,
+          body: `Ticket "${t.subject}" missed its SLA deadline.`,
+          priority: 'high',
+          entityType: 'ticket',
+          entityId: t.id,
+          actionUrl: `/tickets/${t.id}`,
+          metadata: { reason: 'sla_breach', deadline: t.slaDeadline.toISOString() },
+        });
+        breaches++;
+      } else if (warning && this.deps.shouldWriteWarning(s) && t.assigneeId) {
+        await this.deps.createNotification({
+          tenantId: t.tenantId,
+          userId: t.assigneeId,
+          type: 'ticket_escalated',
+          title: `SLA warning: ${t.ticketNumber}`,
+          body: `Ticket "${t.subject}" is approaching its SLA deadline.`,
+          priority: 'normal',
+          entityType: 'ticket',
+          entityId: t.id,
+          actionUrl: `/tickets/${t.id}`,
+          metadata: { reason: 'sla_warning', elapsedPct },
+        });
+        warnings++;
+      }
+    }
+
+    return { breaches, warnings };
   }
 }
 

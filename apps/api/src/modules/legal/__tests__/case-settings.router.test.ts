@@ -335,9 +335,10 @@ describe('caseSettings router', () => {
   });
 
   describe('requiredFields.update', () => {
-    it('upserts each field by (tenantId, fieldKey)', async () => {
+    it('replaces the full required-field set in 2 batched statements (NP-027, no N upserts)', async () => {
       (prismaMock.$transaction as any).mockImplementation(async (fn: any) => fn(prismaMock));
-      (prismaMock.caseRequiredField.upsert as any).mockResolvedValue({});
+      (prismaMock.caseRequiredField.deleteMany as any).mockResolvedValue({ count: 2 });
+      (prismaMock.caseRequiredField.createMany as any).mockResolvedValue({ count: 2 });
       (prismaMock.caseRequiredField.findMany as any).mockResolvedValue([
         { id: 'a', tenantId, fieldKey: 'title', isRequired: true },
       ]);
@@ -347,7 +348,10 @@ describe('caseSettings router', () => {
           { fieldKey: 'deadline', isRequired: false },
         ],
       });
-      expect(prismaMock.caseRequiredField.upsert as any).toHaveBeenCalledTimes(2);
+      // Constant 2 writes regardless of field count — not N upserts.
+      expect(prismaMock.caseRequiredField.deleteMany as any).toHaveBeenCalledTimes(1);
+      expect(prismaMock.caseRequiredField.createMany as any).toHaveBeenCalledTimes(1);
+      expect(prismaMock.caseRequiredField.upsert as any).not.toHaveBeenCalled();
     });
   });
 

@@ -57,6 +57,7 @@ const createMockDocument = (overrides = {}) => {
 const mockDocumentRepo = {
   save: vi.fn(),
   findById: vi.fn(),
+  findByIds: vi.fn(),
   findByCaseId: vi.fn(),
   findAccessibleByUser: vi.fn(),
 };
@@ -113,6 +114,7 @@ describe('Documents Router Comprehensive Tests', () => {
     vi.clearAllMocks();
     mockDocumentRepo.save.mockResolvedValue(undefined);
     mockDocumentRepo.findById.mockResolvedValue(null);
+    mockDocumentRepo.findByIds.mockResolvedValue([]);
     mockDocumentRepo.findByCaseId.mockResolvedValue([]);
     mockDocumentRepo.findAccessibleByUser.mockResolvedValue([]);
   });

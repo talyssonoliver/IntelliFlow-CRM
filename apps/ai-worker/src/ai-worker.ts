@@ -763,10 +763,24 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     const correlationId =
       (job.data as { correlationId?: string }).correlationId ?? job.id ?? undefined;
 
+    // ADR-053: seed the query-budget context as 'background' so the Prisma
+    // extension counts this job's queries and reports over-budget N+1s
+    // (warn-only — background context NEVER throws). Lazy import mirrors the
+    // deferred @intelliflow/db init used elsewhere in this file.
+    const { runWithQueryBudget, resolveBackgroundBudget } = await import('@intelliflow/db');
+
     return otelContext.with(parentContext, async () =>
       tenantContextStore.run({ tenantId: tenantIdForStore }, async () =>
         runWithLogContext({ correlationId, tenantId: tenantIdForStore, userId: undefined }, () =>
-          this._processJobImpl(job)
+          runWithQueryBudget(
+            {
+              context: 'background',
+              route: job.queueName ?? job.name ?? 'background-job',
+              requestId: correlationId,
+              budget: resolveBackgroundBudget(),
+            },
+            () => this._processJobImpl(job)
+          )
         )
       )
     );

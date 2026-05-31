@@ -252,3 +252,75 @@ describe('processMemoryRetentionJob — error isolation', () => {
     expect(okTenant.errors).toBe(0);
   });
 });
+
+describe('processMemoryRetentionJob — concurrent fan-out', () => {
+  it('processes N tenants with a constant number of policy fetches regardless of N', async () => {
+    // 6 active tenants (> one concurrency chunk of 4) — ensures multi-chunk path is exercised.
+    const tenantIds = ['t1', 't2', 't3', 't4', 't5', 't6'];
+    mockPrisma.tenantMemoryPolicy.findMany.mockResolvedValue(
+      tenantIds.map((tenantId) => ({
+        tenantId,
+        conversationRetentionDays: 30,
+        chainVersionRetentionDays: null,
+        monitoringEventRetentionDays: null,
+        scrubRatherThanDelete: false,
+      }))
+    );
+    mockPrisma.messageRecord.deleteMany.mockResolvedValue({ count: 1 });
+    mockPrisma.conversationRecord.deleteMany.mockResolvedValue({ count: 1 });
+
+    const result = await processMemoryRetentionJob(makeJob());
+
+    // All 6 tenants are processed.
+    expect(result.tenantsProcessed).toBe(6);
+    expect(result.perTenant).toHaveLength(6);
+
+    // Policy rows were fetched exactly once — a CONSTANT regardless of N.
+    expect(mockPrisma.tenantMemoryPolicy.findMany).toHaveBeenCalledTimes(1);
+
+    // Result order matches policy order (originalIndex preserved).
+    expect(result.perTenant.map((s) => s.tenantId)).toEqual(tenantIds);
+  });
+
+  it('skips null-only tenants and processes active ones in parallel, preserving order', async () => {
+    mockPrisma.tenantMemoryPolicy.findMany.mockResolvedValue([
+      {
+        tenantId: 'skip-1',
+        conversationRetentionDays: null,
+        chainVersionRetentionDays: null,
+        monitoringEventRetentionDays: null,
+        scrubRatherThanDelete: false,
+      },
+      {
+        tenantId: 'active-a',
+        conversationRetentionDays: 7,
+        chainVersionRetentionDays: null,
+        monitoringEventRetentionDays: null,
+        scrubRatherThanDelete: false,
+      },
+      {
+        tenantId: 'skip-2',
+        conversationRetentionDays: null,
+        chainVersionRetentionDays: null,
+        monitoringEventRetentionDays: null,
+        scrubRatherThanDelete: false,
+      },
+      {
+        tenantId: 'active-b',
+        conversationRetentionDays: 14,
+        chainVersionRetentionDays: null,
+        monitoringEventRetentionDays: null,
+        scrubRatherThanDelete: false,
+      },
+    ]);
+    mockPrisma.messageRecord.deleteMany.mockResolvedValue({ count: 2 });
+    mockPrisma.conversationRecord.deleteMany.mockResolvedValue({ count: 1 });
+
+    const result = await processMemoryRetentionJob(makeJob());
+
+    expect(result.tenantsSkipped).toBe(2);
+    expect(result.tenantsProcessed).toBe(2);
+    // Active tenants appear in their original relative order.
+    expect(result.perTenant.map((s) => s.tenantId)).toEqual(['active-a', 'active-b']);
+  });
+});

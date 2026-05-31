@@ -1,4 +1,4 @@
-import { PrismaClient } from '@intelliflow/db';
+import { PrismaClient, Prisma } from '@intelliflow/db';
 import {
   CaseDocument,
   CaseDocumentRepository,
@@ -100,6 +100,20 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
     return this.toDomain(record);
   }
 
+  async findByIds(ids: string[]): Promise<CaseDocument[]> {
+    if (ids.length === 0) return [];
+
+    // Deduplicate ids to avoid redundant rows in the IN clause
+    const uniqueIds = [...new Set(ids)];
+
+    const records = await this.prisma.caseDocument.findMany({
+      where: { id: { in: uniqueIds }, deletedAt: null },
+      include: { acl: true },
+    });
+
+    return records.map((r) => this.toDomain(r));
+  }
+
   async findLatestVersion(documentId: string): Promise<CaseDocument | null> {
     // Find the document marked as latest version in the version chain
     const record = await this.prisma.caseDocument.findFirst({
@@ -118,27 +132,57 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
   }
 
   async findAllVersions(documentId: string): Promise<CaseDocument[]> {
-    // First, find the root document (one with no parent)
-    let rootId = documentId;
-    let current = await this.prisma.caseDocument.findUnique({
-      where: { id: documentId },
+    // Use a single recursive CTE to find the root of the version chain
+    // (walking UP via parent_version_id), then collect every node in the
+    // entire tree that is reachable from that root (walking DOWN).
+    //
+    // The CTE has two phases joined by UNION ALL:
+    //   1. ancestors — traverse from documentId upward to the root
+    //   2. descendants — starting from the discovered root, traverse downward
+    //
+    // We then load the full records in one findMany call.
+    //
+    // @no-enum-union: both UNION ALL legs project only (id, parent_version_id),
+    // which are text/uuid columns — no Postgres enum types are unioned here, so
+    // no ::text cast is required. (pattern-conformance Team 4 opt-out)
+    type IdRow = { id: string };
+
+    const ancestorRows = await this.prisma.$queryRaw<IdRow[]>(Prisma.sql`
+      WITH RECURSIVE ancestors AS (
+        SELECT id, "parent_version_id" AS "parentVersionId"
+        FROM case_documents
+        WHERE id = ${documentId}
+        UNION ALL
+        SELECT d.id, d."parent_version_id"
+        FROM case_documents d
+        JOIN ancestors a ON d.id = a."parentVersionId"
+      )
+      SELECT id FROM ancestors
+    `);
+
+    if (ancestorRows.length === 0) return [];
+
+    // The root is the ancestor with no parent — pick the last row produced
+    // by the upward traversal, which is the one without a parent_version_id
+    // pointer in the traversal.  We materialise all ancestor IDs first, then
+    // re-query for the root (the one whose parentVersionId is not in the set).
+    const ancestorIdSet = new Set(ancestorRows.map((r) => r.id));
+
+    // Find root: fetch the ancestor records (light query, no ACL needed) and
+    // pick the one whose parent is absent from the ancestor set.
+    const ancestorDocs = await this.prisma.caseDocument.findMany({
+      where: { id: { in: [...ancestorIdSet] } },
+      select: { id: true, parentVersionId: true },
     });
 
-    if (!current) return [];
+    const rootDoc = ancestorDocs.find(
+      (d) => !d.parentVersionId || !ancestorIdSet.has(d.parentVersionId)
+    );
 
-    // Walk up the parent chain to find root
-    while (current?.parentVersionId) {
-      rootId = current.parentVersionId;
-      const nextDoc = await this.prisma.caseDocument.findUnique({
-        where: { id: rootId },
-      });
-      if (!nextDoc) break;
-      current = nextDoc;
-    }
+    const rootId = rootDoc?.id ?? documentId;
 
-    // Now get all versions in the chain
+    // Now collect all descendants from the root in one CTE
     const versions = await this.findVersionChain(rootId);
-
     return versions;
   }
 
@@ -198,37 +242,42 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
   }
 
   /**
-   * Recursively find all versions in a document chain
+   * Find all versions in the document tree rooted at rootId using a single
+   * recursive CTE query (replaces the per-hop while-loop, NP-021 fix).
+   *
+   * The CTE walks DOWNWARD through the tree by joining on parent_version_id,
+   * collecting all descendant IDs.  A single subsequent findMany loads the
+   * full records (with ACL includes) in one round-trip.
    */
   private async findVersionChain(rootId: string): Promise<CaseDocument[]> {
-    const versions: CaseDocument[] = [];
-    const toProcess = [rootId];
-    const visited = new Set<string>();
+    type IdRow = { id: string };
 
-    while (toProcess.length > 0) {
-      const currentId = toProcess.shift()!;
-      if (visited.has(currentId)) continue;
-      visited.add(currentId);
+    // Collect all node IDs in the subtree rooted at rootId
+    const chainRows = await this.prisma.$queryRaw<IdRow[]>(Prisma.sql`
+      WITH RECURSIVE chain AS (
+        SELECT id, "parent_version_id" AS "parentVersionId"
+        FROM case_documents
+        WHERE id = ${rootId}
+        UNION ALL
+        SELECT d.id, d."parent_version_id"
+        FROM case_documents d
+        JOIN chain c ON d."parent_version_id" = c.id
+      )
+      SELECT id FROM chain
+    `);
 
-      const doc = await this.prisma.caseDocument.findUnique({
-        where: { id: currentId },
-        include: { acl: true },
-      });
+    if (chainRows.length === 0) return [];
 
-      if (!doc) continue;
+    const chainIds = chainRows.map((r) => r.id);
 
-      versions.push(this.toDomain(doc));
+    const records = await this.prisma.caseDocument.findMany({
+      where: { id: { in: chainIds } },
+      include: { acl: true },
+    });
 
-      // Find children (documents with this as parent)
-      const children = await this.prisma.caseDocument.findMany({
-        where: { parentVersionId: currentId },
-        select: { id: true },
-      });
+    const versions = records.map((r) => this.toDomain(r));
 
-      toProcess.push(...children.map((c) => c.id));
-    }
-
-    // Sort by version
+    // Sort by version (ascending)
     versions.sort((a, b) => {
       const aVer = a.version;
       const bVer = b.version;

@@ -1362,13 +1362,19 @@ export const contactRouter = createTRPCRouter({
     const successful: string[] = [];
     const failed: Array<{ id: string; error: string }> = [];
 
+    // NP-012 fix: ONE batched fetch of all requested contacts (with opportunity
+    // counts) instead of a findUnique per id. Tenant scoping is preserved via
+    // prismaWithTenant (RLS). The per-id deleteContact stays — it runs through
+    // the domain service (validation/events), not raw read amplification.
+    const foundContacts = await typedCtx.prismaWithTenant.contact.findMany({
+      where: { id: { in: ids } },
+      include: { _count: { select: { opportunities: true } } },
+    });
+    const contactsById = new Map(foundContacts.map((c) => [c.id, c]));
+
     for (const contactId of ids) {
       try {
-        // Check for opportunities first
-        const contact = await typedCtx.prismaWithTenant.contact.findUnique({
-          where: { id: contactId },
-          include: { _count: { select: { opportunities: true } } },
-        });
+        const contact = contactsById.get(contactId);
 
         if (!contact) {
           failed.push({ id: contactId, error: 'Contact not found' });

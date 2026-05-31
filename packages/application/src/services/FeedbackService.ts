@@ -73,14 +73,21 @@ export interface FeedbackRepositoryPort {
 /**
  * Lead repository port for training data export
  */
+export interface LeadDataRecord {
+  email: string;
+  company: string | null;
+  title: string | null;
+  source: string;
+  [key: string]: unknown;
+}
+
 export interface LeadDataPort {
-  getLeadData(leadId: string): Promise<{
-    email: string;
-    company: string | null;
-    title: string | null;
-    source: string;
-    [key: string]: unknown;
-  } | null>;
+  getLeadData(leadId: string): Promise<LeadDataRecord | null>;
+  /**
+   * NP-003 batched fetch: resolve many leads in a SINGLE query. Returns a Map
+   * keyed by leadId; leads with no data are simply absent from the map.
+   */
+  getLeadDataBatch(leadIds: string[]): Promise<Map<string, LeadDataRecord>>;
 }
 
 /**
@@ -319,19 +326,20 @@ export class FeedbackService {
       (f) => f.feedbackType === 'SCORE_CORRECTION' && f.correctedScore !== null
     );
 
-    const trainingData: TrainingDataExport['corrections'] = [];
+    // NP-003 fix: one batched lead-data fetch instead of one query per
+    // correction (deduped ids so repeated leads don't refetch).
+    const leadIds = [...new Set(trainingCorrections.map((c) => c.leadId))];
+    const leadDataById = await this.leadDataPort.getLeadDataBatch(leadIds);
 
-    for (const correction of trainingCorrections) {
-      const leadData = await this.leadDataPort.getLeadData(correction.leadId);
-
-      trainingData.push({
+    const trainingData: TrainingDataExport['corrections'] = trainingCorrections.map(
+      (correction) => ({
         leadId: correction.leadId,
         originalScore: correction.originalScore,
         correctedScore: correction.correctedScore!,
         category: correction.correctionCategory ?? 'UNKNOWN',
-        leadData: leadData ?? {},
-      });
-    }
+        leadData: leadDataById.get(correction.leadId) ?? {},
+      })
+    );
 
     // Publish export event
     await this.eventBus.publish(

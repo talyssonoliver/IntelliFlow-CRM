@@ -45,15 +45,10 @@ describe('Home Router Coverage Tests (PG-163)', () => {
     mockQueueAdd.mockClear();
     mockQueueClose.mockClear();
 
-    // Default mocks for createProactiveNotifications (fire-and-forget dedup checks).
+    // Default mocks for createProactiveNotifications batch queries (NP-015/016/041 fix).
     // Individual tests can override with mockResolvedValueOnce as needed.
-    prismaMock.notification.findFirst.mockResolvedValue(null);
-    prismaMock.notification.create.mockResolvedValue({} as any);
-
-    // Transaction mock: pass prismaMock as tx so inner tx.notification.* hits existing mocks
-    (prismaMock as any).$transaction = vi
-      .fn()
-      .mockImplementation(async (fn: any) => fn(prismaMock));
+    (prismaMock.notification as any).findMany.mockResolvedValue([]);
+    (prismaMock.notification as any).createMany.mockResolvedValue({ count: 0 });
 
     // Default mocks for buildSmartSummaries Prisma calls.
     // All return "no data" so the achievement fallback triggers unless overridden.
@@ -443,12 +438,12 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       ] as any);
 
       // Stale contact is routed to a notification (fire-and-forget).
-      // A notification dedup check should occur via $transaction.
+      // The batch dedup check issues ONE findMany (NP-041 fix).
       const result = await caller.getAIInsights();
 
       // With staleContacts non-empty, the achievement fallback should NOT appear —
       // there ARE items needing attention (just routed to notifications).
-      expect((prismaMock as any).$transaction).toHaveBeenCalled();
+      expect((prismaMock.notification as any).findMany).toHaveBeenCalled();
       const allGoodInsight = result.insights.find((i) => i.id === 'all-good');
       expect(allGoodInsight).toBeUndefined();
     });

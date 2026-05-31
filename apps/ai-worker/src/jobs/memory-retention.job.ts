@@ -334,21 +334,42 @@ export async function processMemoryRetentionJob(
   let tenantsProcessed = 0;
   let tenantsSkipped = 0;
 
-  for (const policy of policies) {
-    // Skip tenants with every retention field null (nothing to do).
+  // Separate active policies from null-only (skipped) ones in a single pass.
+  const activePolicies: Array<{ policy: RetentionPolicy; originalIndex: number }> = [];
+  for (let i = 0; i < policies.length; i++) {
+    const policy = policies[i]!;
     if (
       policy.conversationRetentionDays == null &&
       policy.chainVersionRetentionDays == null &&
       policy.monitoringEventRetentionDays == null
     ) {
       tenantsSkipped++;
-      continue;
+    } else {
+      activePolicies.push({ policy, originalIndex: i });
     }
+  }
 
-    const stats = await processOneTenant(prisma, policy, dryRun);
+  // Process active policies with a concurrency limit of 4 (avoids exhausting
+  // the Postgres connection pool while still parallelising tenant sweeps).
+  const CONCURRENCY = 4;
+  // Pre-allocate result slots to preserve original ordering.
+  const orderedStats: PerTenantStats[] = new Array(activePolicies.length);
+
+  for (let chunkStart = 0; chunkStart < activePolicies.length; chunkStart += CONCURRENCY) {
+    const chunk = activePolicies.slice(chunkStart, chunkStart + CONCURRENCY);
+    await Promise.all(
+      chunk.map(async ({ policy }, chunkOffset) => {
+        const slotIndex = chunkStart + chunkOffset;
+        const stats = await processOneTenant(prisma, policy, dryRun);
+        logger.info({ dryRun, ...stats }, 'Memory retention: tenant processed');
+        orderedStats[slotIndex] = stats;
+      })
+    );
+  }
+
+  for (const stats of orderedStats) {
     perTenant.push(stats);
     tenantsProcessed++;
-    logger.info({ dryRun, ...stats }, 'Memory retention: tenant processed');
   }
 
   const result: MemoryRetentionJobResult = {

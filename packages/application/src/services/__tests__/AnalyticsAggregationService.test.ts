@@ -418,6 +418,49 @@ describe('AnalyticsAggregationService', () => {
       expect(result.length).toBeGreaterThan(0);
       expect(result.every((r) => r.value === 0)).toBe(true);
     });
+
+    it('NP-023: fans out all metric×month pairs in a single parallel batch (no sequential per-metric awaiting)', async () => {
+      mockRepo.countLeadsInRange.mockResolvedValue(10);
+      mockRepo.countContactsInRange.mockResolvedValue(5);
+      mockRepo.countOpportunitiesInRange.mockResolvedValue(3);
+
+      // 3 metrics × 2 months in dateRange (Jan + Feb 2026)
+      const result = await service.exportMetrics(TENANT_ID, dateRange, [
+        'leads',
+        'contacts',
+        'deals',
+      ]);
+
+      // 3 metrics × 2 months = 6 rows total
+      expect(result).toHaveLength(6);
+
+      // All lead rows come before contact rows (metric-outer × month-inner order preserved)
+      const leadRows = result.filter((r) => r.metric === 'leads');
+      const contactRows = result.filter((r) => r.metric === 'contacts');
+      const dealRows = result.filter((r) => r.metric === 'deals');
+      expect(leadRows).toHaveLength(2);
+      expect(contactRows).toHaveLength(2);
+      expect(dealRows).toHaveLength(2);
+
+      // The repository methods must be called exactly N-months times each (not N-metrics × N-months sequentially)
+      // For 2 months: countLeadsInRange called 2 times, countContactsInRange 2 times, countOpportunitiesInRange 2 times
+      expect(mockRepo.countLeadsInRange).toHaveBeenCalledTimes(2);
+      expect(mockRepo.countContactsInRange).toHaveBeenCalledTimes(2);
+      expect(mockRepo.countOpportunitiesInRange).toHaveBeenCalledTimes(2);
+    });
+
+    it('NP-023: result order is metric-outer × month-inner regardless of collection size', async () => {
+      mockRepo.getMonthlyRevenue.mockResolvedValue(100);
+      mockRepo.countLeadsInRange.mockResolvedValue(20);
+
+      // 2 metrics × 2 months
+      const result = await service.exportMetrics(TENANT_ID, dateRange, ['revenue', 'leads']);
+
+      expect(result[0].metric).toBe('revenue');
+      expect(result[1].metric).toBe('revenue');
+      expect(result[2].metric).toBe('leads');
+      expect(result[3].metric).toBe('leads');
+    });
   });
 
   // ============================================

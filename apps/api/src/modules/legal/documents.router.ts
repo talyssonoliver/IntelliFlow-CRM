@@ -705,13 +705,18 @@ export const documentsRouter = createTRPCRouter({
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
       const { ids } = input;
 
+      // Deduplicate ids before the batch fetch; preserve original iteration order
+      const uniqueIds = [...new Set(ids)];
+      const fetched = await documentRepo.findByIds(uniqueIds);
+      const docMap = new Map(fetched.map((d) => [d.id, d]));
+
       const successful: string[] = [];
       const failed: Array<{ id: string; error: string }> = [];
       const storageKeys: Array<{ id: string; title: string; storageKey: string }> = [];
 
       for (const docId of ids) {
         try {
-          const document = await documentRepo.findById(docId);
+          const document = docMap.get(docId);
           if (!document) {
             failed.push({ id: docId, error: 'Document not found' });
             continue;
@@ -754,12 +759,17 @@ export const documentsRouter = createTRPCRouter({
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
       const { ids } = input;
 
+      // Batch-fetch all documents in a single query (NP-037 fix)
+      const uniqueIds = [...new Set(ids)];
+      const fetched = await documentRepo.findByIds(uniqueIds);
+      const docMap = new Map(fetched.map((d) => [d.id, d]));
+
       const successful: string[] = [];
       const failed: Array<{ id: string; error: string }> = [];
 
       for (const docId of ids) {
         try {
-          const document = await documentRepo.findById(docId);
+          const document = docMap.get(docId);
           if (!document) {
             failed.push({ id: docId, error: 'Document not found' });
             continue;
@@ -800,12 +810,17 @@ export const documentsRouter = createTRPCRouter({
     const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
     const { ids } = input;
 
+    // Batch-fetch all documents in a single query (NP-038 fix)
+    const uniqueIds = [...new Set(ids)];
+    const fetched = await documentRepo.findByIds(uniqueIds);
+    const docMap = new Map(fetched.map((d) => [d.id, d]));
+
     const successful: string[] = [];
     const failed: Array<{ id: string; error: string }> = [];
 
     for (const docId of ids) {
       try {
-        const document = await documentRepo.findById(docId);
+        const document = docMap.get(docId);
         if (!document) {
           failed.push({ id: docId, error: 'Document not found' });
           continue;

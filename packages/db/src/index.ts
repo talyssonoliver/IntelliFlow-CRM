@@ -3,6 +3,11 @@
 
 export * from './client';
 
+// ADR-053: request-scoped N+1 query-budget detector (infrastructure layer).
+// Seeded by the API tRPC tracing middleware and ai-worker job entry; a no-op
+// elsewhere. Domain/application layers MUST NOT import this.
+export * from './query-budget';
+
 // Prisma 7 generated client splits exports across files.
 // client.ts uses .js extensions in imports that webpack can't resolve,
 // so we import enums from the self-contained enums.ts instead.

@@ -39,14 +39,9 @@ describe('Home Router', () => {
     (prismaMock.opportunity as any).aggregate.mockResolvedValue({ _sum: { value: null } });
     (prismaMock.lead as any).count.mockResolvedValue(0);
 
-    // Default mocks for createProactiveNotifications dedup queries
-    (prismaMock.notification as any).findFirst.mockResolvedValue(null);
-    (prismaMock.notification as any).create.mockResolvedValue({ id: 'notif-mock' });
-
-    // Transaction mock: pass prismaMock as tx so inner tx.notification.* hits existing mocks
-    (prismaMock as any).$transaction = vi
-      .fn()
-      .mockImplementation(async (fn: any) => fn(prismaMock));
+    // Default mocks for createProactiveNotifications batch queries (NP-015/016/041 fix)
+    (prismaMock.notification as any).findMany.mockResolvedValue([]);
+    (prismaMock.notification as any).createMany.mockResolvedValue({ count: 0 });
   });
 
   // =============================================================================
@@ -256,14 +251,16 @@ describe('Home Router', () => {
 
       const result = await caller.getAIInsights();
 
-      // Threshold alert routed to notifications
-      expect(prismaMock.notification.create).toHaveBeenCalledWith(
+      // Threshold alert routed to notifications (batched via createMany — NP-015 fix)
+      expect(prismaMock.notification.createMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            sourceType: 'deal_at_risk',
-            sourceId: TEST_UUIDS.opportunity1,
-            category: 'ALERTS',
-          }),
+          data: expect.arrayContaining([
+            expect.objectContaining({
+              sourceType: 'deal_at_risk',
+              sourceId: TEST_UUIDS.opportunity1,
+              category: 'ALERTS',
+            }),
+          ]),
         })
       );
       // Smart summaries returned as insights (pipeline overview)
@@ -288,13 +285,15 @@ describe('Home Router', () => {
 
       await caller.getAIInsights();
 
-      // Hot lead routed to notifications
-      expect(prismaMock.notification.create).toHaveBeenCalledWith(
+      // Hot lead routed to notifications (batched via createMany — NP-016 fix)
+      expect(prismaMock.notification.createMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            sourceType: 'lead_scored',
-            subject: 'Hot Lead: Hot Lead',
-          }),
+          data: expect.arrayContaining([
+            expect.objectContaining({
+              sourceType: 'lead_scored',
+              subject: 'Hot Lead: Hot Lead',
+            }),
+          ]),
         })
       );
     });
@@ -307,14 +306,16 @@ describe('Home Router', () => {
 
       await caller.getAIInsights();
 
-      // Overdue tasks routed to notifications
-      expect(prismaMock.notification.create).toHaveBeenCalledWith(
+      // Overdue tasks routed to notifications (batched via createMany — NP-041 fix)
+      expect(prismaMock.notification.createMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            sourceType: 'task_overdue',
-            subject: '5 Overdue Tasks',
-            priority: 'HIGH',
-          }),
+          data: expect.arrayContaining([
+            expect.objectContaining({
+              sourceType: 'task_overdue',
+              subject: '5 Overdue Tasks',
+              priority: 'HIGH',
+            }),
+          ]),
         })
       );
     });
@@ -1282,13 +1283,15 @@ describe('Home Router', () => {
 
         await caller.getAIInsights();
 
-        // Proactive notification created with company name
-        expect(prismaMock.notification.create).toHaveBeenCalledWith(
+        // Proactive notification created with company name (batched createMany)
+        expect(prismaMock.notification.createMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            data: expect.objectContaining({
-              subject: 'Hot Lead: ACME Corp',
-              sourceType: 'lead_scored',
-            }),
+            data: expect.arrayContaining([
+              expect.objectContaining({
+                subject: 'Hot Lead: ACME Corp',
+                sourceType: 'lead_scored',
+              }),
+            ]),
           })
         );
       });
@@ -1309,13 +1312,15 @@ describe('Home Router', () => {
 
         await caller.getAIInsights();
 
-        // Proactive notification created with fallback name
-        expect(prismaMock.notification.create).toHaveBeenCalledWith(
+        // Proactive notification created with fallback name (batched createMany)
+        expect(prismaMock.notification.createMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            data: expect.objectContaining({
-              subject: 'Hot Lead: Lead',
-              sourceType: 'lead_scored',
-            }),
+            data: expect.arrayContaining([
+              expect.objectContaining({
+                subject: 'Hot Lead: Lead',
+                sourceType: 'lead_scored',
+              }),
+            ]),
           })
         );
       });
@@ -1328,13 +1333,15 @@ describe('Home Router', () => {
 
         await caller.getAIInsights();
 
-        // Proactive notification created with singular form
-        expect(prismaMock.notification.create).toHaveBeenCalledWith(
+        // Proactive notification created with singular form (batched createMany)
+        expect(prismaMock.notification.createMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            data: expect.objectContaining({
-              subject: '1 Overdue Task',
-              sourceType: 'task_overdue',
-            }),
+            data: expect.arrayContaining([
+              expect.objectContaining({
+                subject: '1 Overdue Task',
+                sourceType: 'task_overdue',
+              }),
+            ]),
           })
         );
       });
@@ -1360,15 +1367,17 @@ describe('Home Router', () => {
 
         await caller.getAIInsights();
 
-        // Stale contact routed to notifications, not insights
-        expect(prismaMock.notification.create).toHaveBeenCalledWith(
+        // Stale contact routed to notifications, not insights (batched createMany)
+        expect(prismaMock.notification.createMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            data: expect.objectContaining({
-              subject: expect.stringContaining('Stale Contact: Jane Smith'),
-              sourceType: 'contact_stale',
-              sourceId: TEST_UUIDS.contact1,
-              category: 'ALERTS',
-            }),
+            data: expect.arrayContaining([
+              expect.objectContaining({
+                subject: expect.stringContaining('Stale Contact: Jane Smith'),
+                sourceType: 'contact_stale',
+                sourceId: TEST_UUIDS.contact1,
+                category: 'ALERTS',
+              }),
+            ]),
           })
         );
       });
@@ -1388,12 +1397,14 @@ describe('Home Router', () => {
 
         await caller.getAIInsights();
 
-        expect(prismaMock.notification.create).toHaveBeenCalledWith(
+        expect(prismaMock.notification.createMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            data: expect.objectContaining({
-              body: expect.stringContaining('Never contacted'),
-              sourceType: 'contact_stale',
-            }),
+            data: expect.arrayContaining([
+              expect.objectContaining({
+                body: expect.stringContaining('Never contacted'),
+                sourceType: 'contact_stale',
+              }),
+            ]),
           })
         );
       });
@@ -1419,13 +1430,15 @@ describe('Home Router', () => {
           { id: 'c1', firstName: 'Stale', lastName: 'Contact1', lastContactedAt: null },
         ] as any);
 
-        // Simulate existing notification today
-        (prismaMock.notification as any).findFirst.mockResolvedValue({ id: 'existing' });
+        // Simulate existing notification — the batch findMany returns it (NP-041 fix)
+        (prismaMock.notification as any).findMany.mockResolvedValue([
+          { sourceType: 'contact_stale', sourceId: 'c1' },
+        ]);
 
         await caller.getAIInsights();
 
-        // Should NOT create a new notification (dedup)
-        expect(prismaMock.notification.create).not.toHaveBeenCalled();
+        // Should NOT create a new notification (dedup — createMany not called)
+        expect(prismaMock.notification.createMany).not.toHaveBeenCalled();
       });
 
       it('should return smart summaries capped at 5', async () => {
@@ -1455,6 +1468,46 @@ describe('Home Router', () => {
 
         // Smart summaries capped at 5
         expect(result.insights.length).toBeLessThanOrEqual(5);
+      });
+
+      // NP-015/016/041 regression: createProactiveNotifications must issue
+      // exactly ONE findMany and ONE createMany regardless of collection size.
+      it('NP-015/016/041: createProactiveNotifications issues exactly one findMany and one createMany regardless of collection size', async () => {
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setUTCDate(twoWeeksAgo.getUTCDate() - 20);
+
+        // 3 deals + 3 leads + 1 overdue task + 3 stale contacts = 10 notifications to create
+        prismaMock.opportunity.findMany.mockResolvedValue([
+          { id: 'd1', name: 'Deal 1', updatedAt: twoWeeksAgo },
+          { id: 'd2', name: 'Deal 2', updatedAt: twoWeeksAgo },
+          { id: 'd3', name: 'Deal 3', updatedAt: twoWeeksAgo },
+        ] as any);
+        prismaMock.lead.findMany.mockResolvedValue([
+          { id: 'l1', firstName: 'Lead', lastName: '1', company: null, score: 85 },
+          { id: 'l2', firstName: 'Lead', lastName: '2', company: null, score: 90 },
+          { id: 'l3', firstName: 'Lead', lastName: '3', company: null, score: 95 },
+        ] as any);
+        prismaMock.task.count.mockResolvedValue(2);
+        prismaMock.contact.findMany.mockResolvedValue([
+          { id: 'c1', firstName: 'Contact', lastName: '1', lastContactedAt: null },
+          { id: 'c2', firstName: 'Contact', lastName: '2', lastContactedAt: null },
+          { id: 'c3', firstName: 'Contact', lastName: '3', lastContactedAt: null },
+        ] as any);
+
+        (prismaMock.notification as any).findMany.mockResolvedValue([]);
+        (prismaMock.notification as any).createMany.mockResolvedValue({ count: 10 });
+
+        await caller.getAIInsights();
+
+        // Wait a tick for the fire-and-forget promise to settle
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        // CRITICAL: regardless of 10 items across 3 loops, exactly ONE findMany
+        // and ONE createMany must be issued — not 10 transactions.
+        expect((prismaMock.notification as any).findMany).toHaveBeenCalledTimes(1);
+        expect((prismaMock.notification as any).createMany).toHaveBeenCalledTimes(1);
+        // The per-element methods must NOT be called
+        expect((prismaMock as any).$transaction).not.toHaveBeenCalled();
       });
     });
   });
@@ -1699,8 +1752,8 @@ describe('Home Router', () => {
       expect(result.insights[0].priority).toBe('low');
       // Heuristic queries WERE executed
       expect(prismaMock.opportunity.findMany).toHaveBeenCalled();
-      // Proactive notification created for deal at risk
-      expect(prismaMock.notification.create).toHaveBeenCalled();
+      // Proactive notification created for deal at risk (batched createMany — NP-015 fix)
+      expect(prismaMock.notification.createMany).toHaveBeenCalled();
     });
 
     it('should return smart summaries even when enqueue fails silently', async () => {

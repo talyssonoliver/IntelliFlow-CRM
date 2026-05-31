@@ -23,6 +23,7 @@ const mockPrisma = {
     updateMany: vi.fn(),
     delete: vi.fn(),
     count: vi.fn(),
+    groupBy: vi.fn(),
   },
 } as PrismaClient;
 
@@ -436,6 +437,98 @@ describe('PrismaAutoResponseDraftRepository', () => {
           status: 'PENDING_APPROVAL',
         },
       });
+    });
+  });
+
+  describe('expireDraftsBeforeDate', () => {
+    it('should update non-terminal drafts before the cutoff date', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.updateMany).mockResolvedValue({ count: 3 } as never);
+
+      const before = new Date('2025-01-02T00:00:00Z');
+      const terminalStatuses = ['SENT', 'FAILED', 'INVALIDATED'] as const;
+
+      const result = await repository.expireDraftsBeforeDate('tenant-1', before, [
+        ...terminalStatuses,
+      ]);
+
+      expect(result).toBe(3);
+      expect(mockPrisma.autoResponseDraft.updateMany).toHaveBeenCalledWith({
+        where: {
+          tenantId: 'tenant-1',
+          expiresAt: { lt: before },
+          status: { notIn: terminalStatuses },
+        },
+        data: { status: 'INVALIDATED' },
+      });
+    });
+
+    it('should return 0 when no drafts match', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.updateMany).mockResolvedValue({ count: 0 } as never);
+
+      const result = await repository.expireDraftsBeforeDate('tenant-1', new Date(), [
+        'SENT',
+        'FAILED',
+        'INVALIDATED',
+      ]);
+
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('countByStatusAll', () => {
+    it('should return counts for all statuses from a single groupBy call', async () => {
+      vi.mocked((mockPrisma.autoResponseDraft as any).groupBy).mockResolvedValue([
+        { status: 'DRAFT', _count: 5 },
+        { status: 'PENDING_APPROVAL', _count: 3 },
+        { status: 'APPROVED', _count: 10 },
+      ] as never);
+
+      const result = await repository.countByStatusAll('tenant-1');
+
+      expect(result.DRAFT).toBe(5);
+      expect(result.PENDING_APPROVAL).toBe(3);
+      expect(result.APPROVED).toBe(10);
+      // Statuses not in groupBy result should default to 0
+      expect(result.REJECTED).toBe(0);
+      expect(result.ESCALATED).toBe(0);
+      expect(result.SENT).toBe(0);
+      expect(result.FAILED).toBe(0);
+      expect(result.INVALIDATED).toBe(0);
+    });
+
+    it('should issue exactly one groupBy query', async () => {
+      vi.mocked((mockPrisma.autoResponseDraft as any).groupBy).mockResolvedValue([] as never);
+
+      await repository.countByStatusAll('tenant-1');
+
+      expect((mockPrisma.autoResponseDraft as any).groupBy).toHaveBeenCalledTimes(1);
+      expect((mockPrisma.autoResponseDraft as any).groupBy).toHaveBeenCalledWith({
+        by: ['status'],
+        where: { tenantId: 'tenant-1' },
+        _count: true,
+      });
+      // Must NOT call count() — that would be the N+1 pattern
+      expect(mockPrisma.autoResponseDraft.count).not.toHaveBeenCalled();
+    });
+
+    it('should return all 8 statuses defaulting to 0 when no data', async () => {
+      vi.mocked((mockPrisma.autoResponseDraft as any).groupBy).mockResolvedValue([] as never);
+
+      const result = await repository.countByStatusAll('tenant-1');
+
+      const expected = [
+        'DRAFT',
+        'PENDING_APPROVAL',
+        'APPROVED',
+        'REJECTED',
+        'INVALIDATED',
+        'SENT',
+        'FAILED',
+        'ESCALATED',
+      ];
+      for (const status of expected) {
+        expect(result[status as keyof typeof result]).toBe(0);
+      }
     });
   });
 });

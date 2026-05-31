@@ -182,12 +182,20 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
 
+  // ADR-053: ensure a request-correlation id exists and is propagated downstream
+  // as boundary metadata. The query counter itself lives in the API/Prisma layer
+  // (packages/db query-budget) — proxy.ts only carries the id, it never counts
+  // queries. `crypto.randomUUID()` is a Node-runtime global (proxy runs in Node).
+  const requestId = request.headers?.get?.('x-request-id') ?? crypto.randomUUID();
+  requestHeaders.set('x-request-id', requestId);
+
   // Add user info to headers for server components (if session available)
   const response = clearStaleAuthCookies(
     NextResponse.next({ request: { headers: requestHeaders } }),
     hasStaleAccessToken,
     hasStaleSession
   );
+  response.headers.set('x-request-id', requestId);
 
   if (session) {
     response.headers.set('x-user-id', session.userId);

@@ -1,6 +1,7 @@
 import { PrismaClient, Prisma } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { fieldEncryptionExtension, deriveKey } from './field-encryption.js';
+import { instrumentOperation } from './query-budget/extension.js';
 
 // ---------------------------------------------------------------------------
 // M4 prompt encryption — ACTIVE via bespoke $extends (AES-256-GCM)
@@ -134,13 +135,28 @@ const createPrismaClient = () => {
   // Encrypts ChainVersion.prompt, ChainVersion.systemPrompt, WebhookEndpoint.secret
   // transparently on write; decrypts on read.
   const encKey = process.env['PRISMA_FIELD_ENCRYPTION_KEY'];
-  if (encKey) {
-    const key = deriveKey(encKey);
-    return client.$extends(fieldEncryptionExtension({ key }));
-  }
-  // In non-production environments without a key, return the base client so
-  // development / test runs continue to function without encryption configured.
-  return client;
+  const encrypted = encKey
+    ? client.$extends(fieldEncryptionExtension({ key: deriveKey(encKey) }))
+    : // In non-production environments without a key, skip encryption so
+      // development / test runs continue to function.
+      client;
+
+  // ADR-053: N+1 query-budget detector. Composed LAST (outermost) so it counts
+  // every logical operation — including those on encrypted models. No-op unless
+  // a request/job seeds a budget context (see query-budget/context). Built here
+  // (client.ts imports the generated client at the correct `../generated` depth
+  // for bundling); the per-op logic lives in query-budget/extension.ts.
+  return encrypted.$extends(
+    Prisma.defineExtension({
+      name: 'query-budget',
+      // `as any` on the query value mirrors fieldEncryptionExtension — it keeps
+      // the object-literal shape so defineExtension infers a clean extension and
+      // the model API on `prisma` is preserved (no degradation to `unknown`).
+      query: {
+        $allOperations: (params: unknown) => instrumentOperation(params as never),
+      } as any,
+    })
+  );
 };
 
 // Type alias capturing the extended client shape.

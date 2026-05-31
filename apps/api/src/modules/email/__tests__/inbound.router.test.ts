@@ -308,12 +308,46 @@ Hello World`;
 
   describe('getAttachment', () => {
     it('should return null for non-existent attachment', async () => {
+      (prismaMock.emailAttachment.findFirst as any).mockResolvedValue(null);
+
       const result = await protectedCaller.getAttachment({
         emailId: 'test-email-123',
         attachmentId: 'test-attachment-123',
       });
 
       expect(result).toBeNull();
+    });
+
+    it('should issue only ONE query (emailAttachment.findFirst with tenantId) — NP-046', async () => {
+      (prismaMock.emailAttachment.findFirst as any).mockResolvedValue({
+        id: 'att-1',
+        emailId: 'test-email-123',
+        fileName: 'file.pdf',
+        fileType: 'application/pdf',
+        fileSize: 1024,
+        fileUrl: 'https://storage.example.com/file.pdf',
+      });
+
+      const result = await protectedCaller.getAttachment({
+        emailId: 'test-email-123',
+        attachmentId: 'att-1',
+      });
+
+      // Verify a single attachment query (not two sequential queries)
+      expect(prismaMock.emailAttachment.findFirst).toHaveBeenCalledTimes(1);
+      expect(prismaMock.emailAttachment.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: 'att-1',
+            emailId: 'test-email-123',
+          }),
+        })
+      );
+      // emailRecord.findFirst should NOT be called separately
+      expect(prismaMock.emailRecord.findFirst).not.toHaveBeenCalled();
+
+      expect(result).not.toBeNull();
+      expect(result?.filename).toBe('file.pdf');
     });
   });
 });

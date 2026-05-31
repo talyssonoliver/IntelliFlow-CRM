@@ -27,6 +27,8 @@ import {
   DEFAULT_STAGE_PROBABILITIES,
   reassignDealSchema,
   bulkReassignDealsSchema,
+  bulkUpdateStageSchema,
+  bulkDeleteDealsSchema,
 } from '@intelliflow/validators/opportunity';
 import {
   performDealReassign,
@@ -1522,6 +1524,61 @@ export const opportunityRouter = createTRPCRouter({
     });
 
     return { id: input.id, skipped: false, newOwnerId: verdict.newOwnerId };
+  }),
+
+  /**
+   * NP-024: Bulk stage update — single updateMany replaces N per-deal mutations.
+   * Scoped to tenant via tenantId in WHERE clause. Non-existent IDs are silently
+   * skipped (updateMany returns a count, not per-row errors).
+   */
+  bulkUpdateStage: tenantProcedure.input(bulkUpdateStageSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const tenantId = typedCtx.tenant.tenantId;
+    // Dedupe IDs before the in: query
+    const uniqueIds = [...new Set(input.ids)];
+
+    const result = await ctx.prismaWithTenant.opportunity.updateMany({
+      where: { id: { in: uniqueIds }, tenantId, deletedAt: null },
+      data: { stage: input.stage },
+    });
+
+    // IFC-281: Fire-and-forget audit logging
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger
+      .logBulkOperation('BULK_UPDATE', 'opportunity', uniqueIds, tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { stage: input.stage },
+      })
+      .catch((err) => console.error('[opportunity.router] Bulk audit log failed:', err));
+
+    return { updated: result.count, ids: uniqueIds };
+  }),
+
+  /**
+   * NP-025: Bulk soft-delete — single updateMany replaces N per-deal mutations.
+   * Mirrors the single delete's soft-delete pattern (sets deletedAt, not destroys).
+   * Scoped to tenant via tenantId in WHERE clause.
+   */
+  bulkDelete: tenantProcedure.input(bulkDeleteDealsSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const tenantId = typedCtx.tenant.tenantId;
+    // Dedupe IDs before the in: query
+    const uniqueIds = [...new Set(input.ids)];
+
+    const result = await ctx.prismaWithTenant.opportunity.updateMany({
+      where: { id: { in: uniqueIds }, tenantId, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+
+    // IFC-281: Fire-and-forget audit logging
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger
+      .logBulkOperation('BULK_DELETE', 'opportunity', uniqueIds, tenantId, {
+        actorId: typedCtx.tenant.userId,
+      })
+      .catch((err) => console.error('[opportunity.router] Bulk audit log failed:', err));
+
+    return { deleted: result.count, ids: uniqueIds };
   }),
 
   /**

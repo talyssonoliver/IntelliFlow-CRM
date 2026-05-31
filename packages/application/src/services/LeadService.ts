@@ -407,12 +407,23 @@ export class LeadService {
     const successful: string[] = [];
     const failed: Array<{ id: string; error: string }> = [];
 
-    for (const leadId of leadIds) {
-      const result = await this.scoreLead(leadId);
-      if (result.isSuccess) {
-        successful.push(leadId);
-      } else {
-        failed.push({ id: leadId, error: result.error.message });
+    // NP-002: parallelise per-lead scoring (each scoreLead does an indexed
+    // findById + an AI call + a save) with a BOUNDED concurrency so a large
+    // batch no longer runs as a serial waterfall. The tRPC input is hard-capped
+    // (.max) to bound total work. Result ordering + shape are preserved: chunks
+    // run in input order and within-chunk order is retained.
+    const CONCURRENCY = 8;
+    for (let i = 0; i < leadIds.length; i += CONCURRENCY) {
+      const chunk = leadIds.slice(i, i + CONCURRENCY);
+      const settled = await Promise.all(
+        chunk.map(async (leadId) => ({ leadId, result: await this.scoreLead(leadId) }))
+      );
+      for (const { leadId, result } of settled) {
+        if (result.isSuccess) {
+          successful.push(leadId);
+        } else {
+          failed.push({ id: leadId, error: result.error.message });
+        }
       }
     }
 

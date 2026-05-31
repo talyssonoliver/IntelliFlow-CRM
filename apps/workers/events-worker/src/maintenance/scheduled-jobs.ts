@@ -147,40 +147,44 @@ export class MaintenanceScheduler {
 
     this.logger.info({ count: breachedTickets.length }, 'SLA breaches detected');
 
-    for (const ticket of breachedTickets) {
-      // `slaResolutionDue: { lte: now }` in the where clause excludes NULL rows
-      // in SQL, but the Prisma-generated type is still `Date | null`.
-      if (!ticket.slaResolutionDue) continue;
+    // Narrow to rows that actually have a non-null slaResolutionDue
+    // (`slaResolutionDue: { lte: now }` excludes NULLs in SQL, but Prisma
+    // types the field as `Date | null`, so we narrow here for safe access below)
+    const validBreached = breachedTickets.filter(
+      (t): t is typeof t & { slaResolutionDue: Date } => t.slaResolutionDue != null
+    );
 
-      // Mark ticket as breached
-      await this.prisma.ticket.update({
-        where: { id: ticket.id },
-        data: { slaStatus: 'BREACHED', slaBreachedAt: now },
-      });
+    // Batch-update all breached tickets in one query (NP-008 fix)
+    const breachedIds = validBreached.map((t) => t.id);
+    await this.prisma.ticket.updateMany({
+      where: { id: { in: breachedIds } },
+      data: { slaStatus: 'BREACHED', slaBreachedAt: now },
+    });
 
-      // Create notification for the assignee (or tenant admins if unassigned)
-      if (ticket.assigneeId) {
-        await this.prisma.notification.create({
-          data: {
-            tenantId: ticket.tenantId,
-            recipientId: ticket.assigneeId,
-            channel: 'IN_APP',
-            subject: `SLA Breached: ${ticket.subject}`,
-            body: `Ticket "${ticket.subject}" has breached its SLA deadline (${ticket.slaResolutionDue.toISOString()}). Immediate action required.`,
-            priority: 'HIGH',
-            status: 'PENDING',
-            category: 'ALERTS',
-            sourceType: 'sla_breach',
-            sourceId: ticket.id,
-            metadata: {
-              notificationType: 'sla_breach',
-              ticketId: ticket.id,
-              ticketPriority: ticket.priority,
-              actionUrl: `/tickets/${ticket.id}`,
-            },
-          },
-        });
-      }
+    // Build notification payloads for assigned tickets, then insert in one shot
+    const breachNotifications = validBreached
+      .filter((t) => t.assigneeId != null)
+      .map((ticket) => ({
+        tenantId: ticket.tenantId,
+        recipientId: ticket.assigneeId as string,
+        channel: 'IN_APP' as const,
+        subject: `SLA Breached: ${ticket.subject}`,
+        body: `Ticket "${ticket.subject}" has breached its SLA deadline (${ticket.slaResolutionDue.toISOString()}). Immediate action required.`,
+        priority: 'HIGH' as const,
+        status: 'PENDING' as const,
+        category: 'ALERTS' as const,
+        sourceType: 'sla_breach',
+        sourceId: ticket.id,
+        metadata: {
+          notificationType: 'sla_breach',
+          ticketId: ticket.id,
+          ticketPriority: ticket.priority,
+          actionUrl: `/tickets/${ticket.id}`,
+        },
+      }));
+
+    if (breachNotifications.length > 0) {
+      await this.prisma.notification.createMany({ data: breachNotifications });
     }
 
     // Also check for SLA warnings (tickets approaching deadline within 30 min)
@@ -201,39 +205,47 @@ export class MaintenanceScheduler {
       take: 50,
     });
 
-    for (const ticket of warningTickets) {
-      if (!ticket.slaResolutionDue) continue;
+    if (warningTickets.length === 0) return;
 
-      await this.prisma.ticket.update({
-        where: { id: ticket.id },
-        data: { slaStatus: 'AT_RISK' },
-      });
+    const validWarning = warningTickets.filter(
+      (t): t is typeof t & { slaResolutionDue: Date } => t.slaResolutionDue != null
+    );
 
-      if (ticket.assigneeId) {
+    // Batch-update all at-risk tickets in one query (NP-009 fix)
+    const warningIds = validWarning.map((t) => t.id);
+    await this.prisma.ticket.updateMany({
+      where: { id: { in: warningIds } },
+      data: { slaStatus: 'AT_RISK' },
+    });
+
+    const warningNotifications = validWarning
+      .filter((t) => t.assigneeId != null)
+      .map((ticket) => {
         const minutesLeft = Math.round(
           (ticket.slaResolutionDue.getTime() - now.getTime()) / 60_000
         );
-        await this.prisma.notification.create({
-          data: {
-            tenantId: ticket.tenantId,
-            recipientId: ticket.assigneeId,
-            channel: 'IN_APP',
-            subject: `SLA Warning: ${ticket.subject}`,
-            body: `Ticket "${ticket.subject}" will breach SLA in ${minutesLeft} minutes.`,
-            priority: 'HIGH',
-            status: 'PENDING',
-            category: 'ALERTS',
-            sourceType: 'sla_warning',
-            sourceId: ticket.id,
-            metadata: {
-              notificationType: 'sla_warning',
-              ticketId: ticket.id,
-              minutesUntilBreach: minutesLeft,
-              actionUrl: `/tickets/${ticket.id}`,
-            },
+        return {
+          tenantId: ticket.tenantId,
+          recipientId: ticket.assigneeId as string,
+          channel: 'IN_APP' as const,
+          subject: `SLA Warning: ${ticket.subject}`,
+          body: `Ticket "${ticket.subject}" will breach SLA in ${minutesLeft} minutes.`,
+          priority: 'HIGH' as const,
+          status: 'PENDING' as const,
+          category: 'ALERTS' as const,
+          sourceType: 'sla_warning',
+          sourceId: ticket.id,
+          metadata: {
+            notificationType: 'sla_warning',
+            ticketId: ticket.id,
+            minutesUntilBreach: minutesLeft,
+            actionUrl: `/tickets/${ticket.id}`,
           },
-        });
-      }
+        };
+      });
+
+    if (warningNotifications.length > 0) {
+      await this.prisma.notification.createMany({ data: warningNotifications });
     }
   }
 
@@ -263,43 +275,50 @@ export class MaintenanceScheduler {
       take: 30,
     });
 
-    for (const lead of staleLeads) {
-      if (!lead.ownerId) continue;
+    const ownerLeads = staleLeads.filter((l) => l.ownerId != null);
 
-      const daysSinceUpdate = Math.round(
-        (now.getTime() - lead.updatedAt.getTime()) / (24 * 60 * 60_000)
-      );
-
-      // Deduplicate: check if we already sent a stale reminder recently (within 24h)
-      const recentReminder = await this.prisma.notification.findFirst({
+    if (ownerLeads.length > 0) {
+      // Pre-load all recent stale-lead reminders for these ids in ONE query (NP-029 fix)
+      const leadIds = ownerLeads.map((l) => l.id);
+      const recentLeadReminders = await this.prisma.notification.findMany({
         where: {
-          sourceId: lead.id,
+          sourceId: { in: leadIds },
           sourceType: 'stale_lead_reminder',
           createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60_000) },
         },
+        select: { sourceId: true },
       });
-      if (recentReminder) continue;
+      const alreadyRemindedLeads = new Set(recentLeadReminders.map((r) => r.sourceId));
 
-      const leadName = [lead.firstName, lead.lastName].filter(Boolean).join(' ') || lead.email;
-      await this.prisma.notification.create({
-        data: {
-          tenantId: lead.tenantId,
-          recipientId: lead.ownerId,
-          channel: 'IN_APP',
-          subject: `Stale lead: ${leadName}`,
-          body: `Lead "${leadName}" has had no activity for ${daysSinceUpdate} days. Consider reaching out or updating their status.`,
-          priority: 'NORMAL',
-          status: 'PENDING',
-          category: 'REMINDERS',
-          sourceType: 'stale_lead_reminder',
-          sourceId: lead.id,
-          metadata: {
-            notificationType: 'follow_up_reminder',
-            daysSinceUpdate,
-            actionUrl: `/leads/${lead.id}`,
-          },
-        },
-      });
+      const leadNotifications = ownerLeads
+        .filter((lead) => !alreadyRemindedLeads.has(lead.id))
+        .map((lead) => {
+          const daysSinceUpdate = Math.round(
+            (now.getTime() - lead.updatedAt.getTime()) / (24 * 60 * 60_000)
+          );
+          const leadName = [lead.firstName, lead.lastName].filter(Boolean).join(' ') || lead.email;
+          return {
+            tenantId: lead.tenantId,
+            recipientId: lead.ownerId as string,
+            channel: 'IN_APP' as const,
+            subject: `Stale lead: ${leadName}`,
+            body: `Lead "${leadName}" has had no activity for ${daysSinceUpdate} days. Consider reaching out or updating their status.`,
+            priority: 'NORMAL' as const,
+            status: 'PENDING' as const,
+            category: 'REMINDERS' as const,
+            sourceType: 'stale_lead_reminder',
+            sourceId: lead.id,
+            metadata: {
+              notificationType: 'follow_up_reminder',
+              daysSinceUpdate,
+              actionUrl: `/leads/${lead.id}`,
+            },
+          };
+        });
+
+      if (leadNotifications.length > 0) {
+        await this.prisma.notification.createMany({ data: leadNotifications });
+      }
     }
 
     if (staleLeads.length > 0) {
@@ -323,43 +342,54 @@ export class MaintenanceScheduler {
       take: 30,
     });
 
-    for (const task of overdueTasks) {
-      // `dueDate: { lt: now }` filter excludes NULL in SQL, but Prisma types
-      // it as `Date | null` — narrow explicitly for the math below.
-      if (!task.dueDate) continue;
+    // `dueDate: { lt: now }` excludes NULLs in SQL, but Prisma types it Date | null
+    const validTasks = overdueTasks.filter(
+      (t): t is typeof t & { dueDate: Date } => t.dueDate != null
+    );
 
-      // Prefer the user currently working the task; fall back to the owner.
-      const recipientId = task.assigneeId ?? task.ownerId;
-
-      const recentReminder = await this.prisma.notification.findFirst({
+    if (validTasks.length > 0) {
+      // Pre-load all recent overdue-task reminders for these ids in ONE query (NP-030 fix)
+      const taskIds = validTasks.map((t) => t.id);
+      const recentTaskReminders = await this.prisma.notification.findMany({
         where: {
-          sourceId: task.id,
+          sourceId: { in: taskIds },
           sourceType: 'overdue_task_reminder',
           createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60_000) },
         },
+        select: { sourceId: true },
       });
-      if (recentReminder) continue;
+      const alreadyRemindedTasks = new Set(recentTaskReminders.map((r) => r.sourceId));
 
-      const daysOverdue = Math.round((now.getTime() - task.dueDate.getTime()) / (24 * 60 * 60_000));
-      await this.prisma.notification.create({
-        data: {
-          tenantId: task.tenantId,
-          recipientId,
-          channel: 'IN_APP',
-          subject: `Overdue task: ${task.title}`,
-          body: `Task "${task.title}" is ${daysOverdue} day(s) overdue. Please complete or reschedule it.`,
-          priority: daysOverdue >= 3 ? 'HIGH' : 'NORMAL',
-          status: 'PENDING',
-          category: 'REMINDERS',
-          sourceType: 'overdue_task_reminder',
-          sourceId: task.id,
-          metadata: {
-            notificationType: 'overdue_task',
-            daysOverdue,
-            actionUrl: `/tasks/${task.id}`,
-          },
-        },
-      });
+      const taskNotifications = validTasks
+        .filter((task) => !alreadyRemindedTasks.has(task.id))
+        .map((task) => {
+          // Prefer the user currently working the task; fall back to the owner.
+          const recipientId = task.assigneeId ?? task.ownerId;
+          const daysOverdue = Math.round(
+            (now.getTime() - task.dueDate.getTime()) / (24 * 60 * 60_000)
+          );
+          return {
+            tenantId: task.tenantId,
+            recipientId,
+            channel: 'IN_APP' as const,
+            subject: `Overdue task: ${task.title}`,
+            body: `Task "${task.title}" is ${daysOverdue} day(s) overdue. Please complete or reschedule it.`,
+            priority: (daysOverdue >= 3 ? 'HIGH' : 'NORMAL') as 'HIGH' | 'NORMAL',
+            status: 'PENDING' as const,
+            category: 'REMINDERS' as const,
+            sourceType: 'overdue_task_reminder',
+            sourceId: task.id,
+            metadata: {
+              notificationType: 'overdue_task',
+              daysOverdue,
+              actionUrl: `/tasks/${task.id}`,
+            },
+          };
+        });
+
+      if (taskNotifications.length > 0) {
+        await this.prisma.notification.createMany({ data: taskNotifications });
+      }
     }
 
     if (overdueTasks.length > 0) {
@@ -392,43 +422,51 @@ export class MaintenanceScheduler {
       take: 30,
     });
 
-    for (const deal of staleDeals) {
-      if (!deal.ownerId) continue;
+    const ownerDeals = staleDeals.filter((d) => d.ownerId != null);
 
-      // Deduplicate within 48h for deals (less frequent alerts)
-      const recentReminder = await this.prisma.notification.findFirst({
+    if (ownerDeals.length > 0) {
+      // Pre-load all recent stale-deal reminders for these ids in ONE query (NP-031 fix)
+      const dealIds = ownerDeals.map((d) => d.id);
+      const recentDealReminders = await this.prisma.notification.findMany({
         where: {
-          sourceId: deal.id,
+          sourceId: { in: dealIds },
           sourceType: 'stale_deal_alert',
           createdAt: { gte: new Date(now.getTime() - 48 * 60 * 60_000) },
         },
+        select: { sourceId: true },
       });
-      if (recentReminder) continue;
+      const alreadyAlertedDeals = new Set(recentDealReminders.map((r) => r.sourceId));
 
-      const daysSinceUpdate = Math.round(
-        (now.getTime() - deal.updatedAt.getTime()) / (24 * 60 * 60_000)
-      );
-      await this.prisma.notification.create({
-        data: {
-          tenantId: deal.tenantId,
-          recipientId: deal.ownerId,
-          channel: 'IN_APP',
-          subject: `Stale deal: ${deal.name}`,
-          body: `Deal "${deal.name}" (${deal.stage}) has had no activity for ${daysSinceUpdate} days. Value: ${deal.value ?? 'N/A'}. Review or update its status.`,
-          priority: 'HIGH',
-          status: 'PENDING',
-          category: 'ALERTS',
-          sourceType: 'stale_deal_alert',
-          sourceId: deal.id,
-          metadata: {
-            notificationType: 'stale_deal',
-            daysSinceUpdate,
-            dealStage: deal.stage,
-            dealValue: deal.value,
-            actionUrl: `/deals/${deal.id}`,
-          },
-        },
-      });
+      const dealNotifications = ownerDeals
+        .filter((deal) => !alreadyAlertedDeals.has(deal.id))
+        .map((deal) => {
+          const daysSinceUpdate = Math.round(
+            (now.getTime() - deal.updatedAt.getTime()) / (24 * 60 * 60_000)
+          );
+          return {
+            tenantId: deal.tenantId,
+            recipientId: deal.ownerId as string,
+            channel: 'IN_APP' as const,
+            subject: `Stale deal: ${deal.name}`,
+            body: `Deal "${deal.name}" (${deal.stage}) has had no activity for ${daysSinceUpdate} days. Value: ${deal.value ?? 'N/A'}. Review or update its status.`,
+            priority: 'HIGH' as const,
+            status: 'PENDING' as const,
+            category: 'ALERTS' as const,
+            sourceType: 'stale_deal_alert',
+            sourceId: deal.id,
+            metadata: {
+              notificationType: 'stale_deal',
+              daysSinceUpdate,
+              dealStage: deal.stage,
+              dealValue: deal.value,
+              actionUrl: `/deals/${deal.id}`,
+            },
+          };
+        });
+
+      if (dealNotifications.length > 0) {
+        await this.prisma.notification.createMany({ data: dealNotifications });
+      }
     }
 
     if (staleDeals.length > 0) {
@@ -485,34 +523,37 @@ export class MaintenanceScheduler {
       take: 50,
     });
 
-    let sentCount = 0;
-    for (const appt of upcomingAppointments) {
-      if (!appt.organizerId) continue;
+    const organizerAppts = upcomingAppointments.filter((a) => a.organizerId != null);
 
-      // Deduplicate: skip if reminder already sent for this appointment
-      const alreadySent = await this.prisma.notification.findFirst({
-        where: {
-          sourceId: appt.id,
-          sourceType: 'appointment_reminder',
-          createdAt: { gte: new Date(now.getTime() - 60 * 60_000) },
-        },
-      });
-      if (alreadySent) continue;
+    if (organizerAppts.length === 0) return;
 
-      const minutesUntilStart = Math.round((appt.startTime.getTime() - now.getTime()) / 60_000);
+    // Pre-load all recent appointment reminders for these ids in ONE query (NP-032 fix)
+    const apptIds = organizerAppts.map((a) => a.id);
+    const recentApptReminders = await this.prisma.notification.findMany({
+      where: {
+        sourceId: { in: apptIds },
+        sourceType: 'appointment_reminder',
+        createdAt: { gte: new Date(now.getTime() - 60 * 60_000) },
+      },
+      select: { sourceId: true },
+    });
+    const alreadySentAppts = new Set(recentApptReminders.map((r) => r.sourceId));
 
-      await this.prisma.notification.create({
-        data: {
+    const apptNotifications = organizerAppts
+      .filter((appt) => !alreadySentAppts.has(appt.id))
+      .map((appt) => {
+        const minutesUntilStart = Math.round((appt.startTime.getTime() - now.getTime()) / 60_000);
+        return {
           tenantId: appt.tenantId,
-          recipientId: appt.organizerId,
-          channel: 'IN_APP',
+          recipientId: appt.organizerId as string,
+          channel: 'IN_APP' as const,
           subject: `Upcoming: ${appt.title}`,
           body:
             `Your appointment "${appt.title}" starts in ${minutesUntilStart} minutes.` +
             (appt.location ? ` Location: ${appt.location}` : ''),
-          priority: 'HIGH',
-          status: 'PENDING',
-          category: 'REMINDERS',
+          priority: 'HIGH' as const,
+          status: 'PENDING' as const,
+          category: 'REMINDERS' as const,
           sourceType: 'appointment_reminder',
           sourceId: appt.id,
           metadata: {
@@ -520,13 +561,12 @@ export class MaintenanceScheduler {
             minutesUntilStart,
             actionUrl: `/appointments/${appt.id}`,
           },
-        },
+        };
       });
-      sentCount++;
-    }
 
-    if (sentCount > 0) {
-      this.logger.info({ count: sentCount }, 'Appointment reminders sent');
+    if (apptNotifications.length > 0) {
+      await this.prisma.notification.createMany({ data: apptNotifications });
+      this.logger.info({ count: apptNotifications.length }, 'Appointment reminders sent');
     }
   }
 

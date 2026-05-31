@@ -379,7 +379,7 @@ describe('ContactDuplicateDetectionService — candidate fetch branches', () => 
 });
 
 describe('ContactDuplicateDetectionService — AI branch unions', () => {
-  it('unions AI matches with deterministic, deduping by id', async () => {
+  it('unions AI matches with deterministic, deduping by id — NP-045 batched', async () => {
     const service = createContactDuplicateDetectionService({
       findSimilarContacts: async () => [
         { id: 'c-1', similarity: 0.9 },
@@ -393,12 +393,21 @@ describe('ContactDuplicateDetectionService — AI branch unions', () => {
       ],
       contacts: [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }],
     });
-    // prismaWithTenant.contact.findFirst returns rows for AI candidates
-    (ctx.prismaWithTenant as any).contact.findFirst = async ({ where }: any) => ({
-      id: where.id,
-      email: 'similar@b.com',
-      tenantId: TENANT_A,
-    });
+    // AI branch now uses findMany (batched) — mock returns rows for AI candidates (c-2 only,
+    // since c-1 is already in the seen set from deterministic matches)
+    const aiRows = [{ id: 'c-2', email: 'similar@b.com', tenantId: TENANT_A }];
+    let findManyCallCount = 0;
+    (ctx.prismaWithTenant as any).contact.findMany = async (args: any) => {
+      findManyCallCount++;
+      // First call: deterministic fetchCandidates (uses OR clause)
+      // Second call (AI): uses { id: { in: [...] } } filter
+      if (args?.where?.id?.in) {
+        // AI batch lookup
+        return aiRows.filter((r) => args.where.id.in.includes(r.id));
+      }
+      // Deterministic path
+      return [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }];
+    };
 
     const result = await service.checkForCreate(
       ctx,
@@ -414,9 +423,12 @@ describe('ContactDuplicateDetectionService — AI branch unions', () => {
       // no duplicates (c-1 present once)
       expect(ids.filter((id) => id === 'c-1')).toHaveLength(1);
     }
+    // Assert that the AI branch used findMany (batched) — exactly 2 findMany calls total
+    // (1 for deterministic candidates, 1 for AI batch lookup)
+    expect(findManyCallCount).toBe(2);
   });
 
-  it('AI branch tolerates missing candidate rows (findFirst returns null)', async () => {
+  it('AI branch tolerates missing candidate rows (findMany returns empty) — NP-045', async () => {
     const service = createContactDuplicateDetectionService({
       findSimilarContacts: async () => [{ id: 'c-missing', similarity: 0.9 }],
       generateEmbedding: async () => [0.1],
@@ -427,7 +439,13 @@ describe('ContactDuplicateDetectionService — AI branch unions', () => {
       ],
       contacts: [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }],
     });
-    (ctx.prismaWithTenant as any).contact.findFirst = async () => null;
+    // AI batch lookup returns empty (c-missing not found)
+    (ctx.prismaWithTenant as any).contact.findMany = async (args: any) => {
+      if (args?.where?.id?.in) {
+        return []; // c-missing not found
+      }
+      return [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }];
+    };
 
     const result = await service.checkForCreate(
       ctx,

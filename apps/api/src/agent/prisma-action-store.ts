@@ -190,12 +190,18 @@ export class PrismaAgentActionStore {
   }
 
   async findByRollbackToken(token: string): Promise<ExecutedAction | undefined> {
-    // Rollback token is stored inside proposedState JSON
+    // Rollback token is stored inside proposedState JSON (no generated column yet).
+    // Bounded scan: fetch the 500 most-recent APPROVED actions so the in-memory
+    // token match cannot consume unbounded memory as the table grows.
+    // Long-term fix: add a generated/virtual column or partial index on
+    // proposedState->>"rollbackToken" so this can be a direct WHERE clause.
     const rows = await this.prisma.agentAction.findMany({
       where: {
         status: 'APPROVED' as any,
         tenantId: this.tenantId,
       },
+      orderBy: { createdAt: 'desc' },
+      take: 500,
     });
 
     for (const row of rows) {

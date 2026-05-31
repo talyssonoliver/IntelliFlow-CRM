@@ -95,6 +95,24 @@ vi.mock('../lib/llm-factory.js', () => ({
   })),
 }));
 
+// Prevent the base agent's lazy `await import('@intelliflow/db')` persistence
+// (aIOutputReview.create / aIMonitoringEvent.create) from attempting a REAL
+// Postgres connection in this unit test. With no test DB the connect hangs under
+// full-suite load (SASL retry), occasionally tripping the 60s timeout. All other
+// @intelliflow/db exports are preserved; only `prisma` is replaced with no-ops.
+vi.mock('@intelliflow/db', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+  const modelProxy = new Proxy({}, { get: () => vi.fn().mockResolvedValue({}) });
+  const prismaProxy = new Proxy(
+    {},
+    {
+      get: (_t, key) =>
+        typeof key === 'string' && key.startsWith('$') ? vi.fn().mockResolvedValue([]) : modelProxy,
+    }
+  );
+  return { ...actual, prisma: prismaProxy };
+});
+
 describe('NextBestActionAgent', () => {
   let agent: NextBestActionAgent;
 

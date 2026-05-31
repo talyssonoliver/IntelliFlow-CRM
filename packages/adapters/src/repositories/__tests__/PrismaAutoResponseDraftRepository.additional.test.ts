@@ -28,6 +28,7 @@ const mockPrisma = {
     updateMany: vi.fn(),
     delete: vi.fn(),
     count: vi.fn(),
+    groupBy: vi.fn(),
   },
 };
 

@@ -554,18 +554,64 @@ export class TaskService {
 
   /**
    * Bulk complete tasks
+   *
+   * N+1 fix (NP-022): reads all tasks in one batched query via findByIds,
+   * then applies the complete() domain mutation in memory per task and
+   * persists each one individually to preserve domain events.
    */
   async bulkComplete(taskIds: string[], completedBy: string): Promise<BulkTaskResult> {
     const successful: string[] = [];
     const failed: Array<{ id: string; error: string }> = [];
 
+    if (taskIds.length === 0) {
+      return { successful, failed, totalProcessed: 0 };
+    }
+
+    // Validate all IDs upfront; accumulate failures for bad formats
+    const validIds: string[] = [];
+    const seenIds = new Set<string>();
     for (const taskId of taskIds) {
-      const result = await this.completeTask(taskId, completedBy);
-      if (result.isSuccess) {
-        successful.push(taskId);
-      } else {
-        failed.push({ id: taskId, error: result.error.message });
+      const taskIdResult = TaskId.create(taskId);
+      if (taskIdResult.isFailure) {
+        failed.push({ id: taskId, error: taskIdResult.error.message });
+      } else if (!seenIds.has(taskId)) {
+        seenIds.add(taskId);
+        validIds.push(taskId);
       }
+    }
+
+    // Guard: nothing to fetch if all ids were invalid or empty
+    if (validIds.length === 0) {
+      return { successful, failed, totalProcessed: taskIds.length };
+    }
+
+    // One batched read for all valid deduplicated IDs
+    const tasks = await this.taskRepository.findByIds(validIds);
+    const taskMap = new Map(tasks.map((t) => [t.id.value, t]));
+
+    // Process each requested id in original order
+    for (const taskId of validIds) {
+      const task = taskMap.get(taskId);
+      if (!task) {
+        failed.push({ id: taskId, error: `Task not found: ${taskId}` });
+        continue;
+      }
+
+      const completeResult = task.complete(completedBy);
+      if (completeResult.isFailure) {
+        failed.push({ id: taskId, error: completeResult.error.message });
+        continue;
+      }
+
+      try {
+        await this.taskRepository.save(task);
+      } catch {
+        failed.push({ id: taskId, error: 'Failed to save task' });
+        continue;
+      }
+
+      await this.publishEvents(task);
+      successful.push(taskId);
     }
 
     return {

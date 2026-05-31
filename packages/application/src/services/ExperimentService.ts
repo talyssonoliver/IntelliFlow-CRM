@@ -134,6 +134,14 @@ export interface AssignmentRepositoryPort {
     conversionValue?: number
   ): Promise<AssignmentRecord>;
   countByVariant(experimentId: string, variant: string): Promise<number>;
+  /**
+   * Batched variant counts for many experiments in a SINGLE query (groupBy).
+   * Used by listExperiments to avoid an N+1 (NP-001). Returns one row per
+   * (experimentId, variant) pair that has at least one assignment.
+   */
+  countVariantsForExperiments(
+    experimentIds: string[]
+  ): Promise<Array<{ experimentId: string; variant: string; count: number }>>;
   getScoresByVariant(experimentId: string, variant: string): Promise<number[]>;
   getConversionsByVariant(
     experimentId: string,
@@ -147,6 +155,11 @@ export interface AssignmentRepositoryPort {
 export interface ResultRepositoryPort {
   create(data: Omit<ExperimentResultRecord, 'id' | 'analyzedAt'>): Promise<ExperimentResultRecord>;
   findByExperimentId(experimentId: string): Promise<ExperimentResultRecord | null>;
+  /**
+   * Batched result fetch for many experiments in a SINGLE query
+   * (findMany where experimentId in [...]). Used by listExperiments (NP-001).
+   */
+  findByExperimentIds(experimentIds: string[]): Promise<ExperimentResultRecord[]>;
   update(
     experimentId: string,
     data: Partial<ExperimentResultRecord>
@@ -661,18 +674,39 @@ export class ExperimentService {
    */
   async listExperiments(tenantId: string): Promise<ExperimentSummary[]> {
     const experiments = await this.experimentRepo.findByTenantId(tenantId);
-    const summaries: ExperimentSummary[] = [];
+    if (experiments.length === 0) return [];
 
-    for (const exp of experiments) {
-      const controlCount = await this.assignmentRepo.countByVariant(exp.id, 'control');
-      const treatmentCount = await this.assignmentRepo.countByVariant(exp.id, 'treatment');
+    // NP-001 fix: collapse the previous 3N+1 (two countByVariant + one
+    // findByExperimentId per experiment) into a constant 3 queries —
+    // findByTenantId + one batched groupBy + one batched findMany.
+    const experimentIds = experiments.map((e) => e.id);
+    const [variantCounts, results] = await Promise.all([
+      this.assignmentRepo.countVariantsForExperiments(experimentIds),
+      this.resultRepo.findByExperimentIds(experimentIds),
+    ]);
+
+    // Build in-memory lookup maps (default missing pairs to 0 — preserves the
+    // semantics of count() returning 0 when no assignments exist).
+    const countsById = new Map<string, { control: number; treatment: number }>();
+    for (const id of experimentIds) countsById.set(id, { control: 0, treatment: 0 });
+    for (const vc of variantCounts) {
+      const entry = countsById.get(vc.experimentId);
+      if (!entry) continue;
+      if (vc.variant === 'control') entry.control = vc.count;
+      else if (vc.variant === 'treatment') entry.treatment = vc.count;
+    }
+    const resultById = new Map(results.map((r) => [r.experimentId, r]));
+
+    return experiments.map((exp) => {
+      const counts = countsById.get(exp.id) ?? { control: 0, treatment: 0 };
+      const controlCount = counts.control;
+      const treatmentCount = counts.treatment;
       const totalAssignments = controlCount + treatmentCount;
       const targetTotal = exp.minSampleSize * 2;
       const progressPercent = Math.min(100, (totalAssignments / targetTotal) * 100);
+      const result = resultById.get(exp.id) ?? null;
 
-      const result = await this.resultRepo.findByExperimentId(exp.id);
-
-      summaries.push({
+      return {
         id: exp.id,
         name: exp.name,
         description: exp.description,
@@ -695,10 +729,8 @@ export class ExperimentService {
         winner: result?.winner ?? null,
         createdAt: exp.createdAt,
         updatedAt: exp.updatedAt,
-      });
-    }
-
-    return summaries;
+      };
+    });
   }
 
   /**

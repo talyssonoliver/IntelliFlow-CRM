@@ -78,41 +78,42 @@ function throwCreateTaskError(errorCode: string, message: string): never {
 
 /**
  * Validate that entity references (lead/contact/opportunity) exist in the tenant scope.
- * Throws NOT_FOUND TRPCError if any referenced entity is missing.
+ * All three lookups are issued concurrently via Promise.all to eliminate serial round-trips.
+ * Throws NOT_FOUND TRPCError if any referenced entity is missing (checked in lead → contact →
+ * opportunity order to preserve stable error-message precedence).
  */
 async function validateEntityReferences(
   typedCtx: TenantAwareContext,
   refs: { leadId?: string | null; contactId?: string | null; opportunityId?: string | null }
 ): Promise<void> {
-  if (refs.leadId !== undefined && refs.leadId !== null) {
-    const lead = await typedCtx.prismaWithTenant.lead.findUnique({ where: { id: refs.leadId } });
-    if (!lead) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: `Lead with ID ${refs.leadId} not found` });
-    }
+  const [lead, contact, opportunity] = await Promise.all([
+    refs.leadId != null
+      ? typedCtx.prismaWithTenant.lead.findUnique({ where: { id: refs.leadId } })
+      : Promise.resolve(null),
+    refs.contactId != null
+      ? typedCtx.prismaWithTenant.contact.findUnique({ where: { id: refs.contactId } })
+      : Promise.resolve(null),
+    refs.opportunityId != null
+      ? typedCtx.prismaWithTenant.opportunity.findUnique({ where: { id: refs.opportunityId } })
+      : Promise.resolve(null),
+  ]);
+
+  if (refs.leadId != null && !lead) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: `Lead with ID ${refs.leadId} not found` });
   }
 
-  if (refs.contactId !== undefined && refs.contactId !== null) {
-    const contact = await typedCtx.prismaWithTenant.contact.findUnique({
-      where: { id: refs.contactId },
+  if (refs.contactId != null && !contact) {
+    throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: `Contact with ID ${refs.contactId} not found`,
     });
-    if (!contact) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: `Contact with ID ${refs.contactId} not found`,
-      });
-    }
   }
 
-  if (refs.opportunityId !== undefined && refs.opportunityId !== null) {
-    const opportunity = await typedCtx.prismaWithTenant.opportunity.findUnique({
-      where: { id: refs.opportunityId },
+  if (refs.opportunityId != null && !opportunity) {
+    throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: `Opportunity with ID ${refs.opportunityId} not found`,
     });
-    if (!opportunity) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: `Opportunity with ID ${refs.opportunityId} not found`,
-      });
-    }
   }
 }
 

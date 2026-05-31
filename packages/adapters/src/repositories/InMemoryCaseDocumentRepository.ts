@@ -17,6 +17,16 @@ export class InMemoryCaseDocumentRepository implements CaseDocumentRepository {
     return this.documents.get(id) || null;
   }
 
+  async findByIds(ids: string[]): Promise<CaseDocument[]> {
+    // Mirror the Prisma adapter: dedupe ids, exclude soft-deleted rows.
+    const result: CaseDocument[] = [];
+    for (const id of new Set(ids)) {
+      const doc = this.documents.get(id);
+      if (doc && !doc.toJSON().deletedAt) result.push(doc);
+    }
+    return result;
+  }
+
   async findLatestVersion(documentId: string): Promise<CaseDocument | null> {
     // Find all documents with the same base ID or parent chain
     const allVersions = Array.from(this.documents.values()).filter((doc) => {

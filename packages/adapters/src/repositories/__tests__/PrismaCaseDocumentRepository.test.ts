@@ -29,6 +29,7 @@ const createMockPrisma = () => ({
     deleteMany: vi.fn(),
     createMany: vi.fn(),
   },
+  $queryRaw: vi.fn(),
 });
 
 type MockPrisma = ReturnType<typeof createMockPrisma>;
@@ -381,6 +382,85 @@ describe('PrismaCaseDocumentRepository', () => {
   });
 
   // ============================================
+  // findByIds
+  // ============================================
+  describe('findByIds()', () => {
+    it('should return empty array when given empty ids', async () => {
+      const result = await repo.findByIds([]);
+
+      expect(result).toEqual([]);
+      expect(mockPrisma.caseDocument.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should issue a single findMany with IN clause for multiple ids', async () => {
+      const records = [
+        createMockDbRecord({ id: DOC_ID }),
+        createMockDbRecord({ id: DOC_CHILD_ID }),
+      ];
+      mockPrisma.caseDocument.findMany.mockResolvedValue(records);
+
+      const result = await repo.findByIds([DOC_ID, DOC_CHILD_ID]);
+
+      expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledWith({
+        where: { id: { in: [DOC_ID, DOC_CHILD_ID] }, deletedAt: null },
+        include: { acl: true },
+      });
+      expect(result).toHaveLength(2);
+    });
+
+    it('should deduplicate ids before querying', async () => {
+      const records = [createMockDbRecord({ id: DOC_ID })];
+      mockPrisma.caseDocument.findMany.mockResolvedValue(records);
+
+      const result = await repo.findByIds([DOC_ID, DOC_ID, DOC_ID]);
+
+      expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledTimes(1);
+      const callArg = mockPrisma.caseDocument.findMany.mock.calls[0][0];
+      // Only one unique id in the IN clause
+      expect(callArg.where.id.in).toEqual([DOC_ID]);
+      expect(result).toHaveLength(1);
+    });
+
+    it('should return empty array when no records found', async () => {
+      mockPrisma.caseDocument.findMany.mockResolvedValue([]);
+
+      const result = await repo.findByIds([DOC_ID, DOC_CHILD_ID]);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should only fetch non-deleted documents (deletedAt: null)', async () => {
+      mockPrisma.caseDocument.findMany.mockResolvedValue([]);
+
+      await repo.findByIds([DOC_ID]);
+
+      const callArg = mockPrisma.caseDocument.findMany.mock.calls[0][0];
+      expect(callArg.where.deletedAt).toBeNull();
+    });
+
+    it('should include ACL in query', async () => {
+      mockPrisma.caseDocument.findMany.mockResolvedValue([]);
+
+      await repo.findByIds([DOC_ID]);
+
+      const callArg = mockPrisma.caseDocument.findMany.mock.calls[0][0];
+      expect(callArg.include).toEqual({ acl: true });
+    });
+
+    it('should map returned records to domain CaseDocument instances', async () => {
+      const record = createMockDbRecord({ id: DOC_ID });
+      mockPrisma.caseDocument.findMany.mockResolvedValue([record]);
+
+      const result = await repo.findByIds([DOC_ID]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(DOC_ID);
+      expect(result[0].tenantId).toBe(TENANT_ID);
+    });
+  });
+
+  // ============================================
   // findLatestVersion
   // ============================================
   describe('findLatestVersion()', () => {
@@ -417,68 +497,58 @@ describe('PrismaCaseDocumentRepository', () => {
   // findAllVersions
   // ============================================
   describe('findAllVersions()', () => {
-    it('should return empty array when document not found', async () => {
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(null);
+    it('should return empty array when ancestor CTE returns no rows', async () => {
+      // $queryRaw (ancestors CTE) returns empty — document does not exist
+      mockPrisma.$queryRaw.mockResolvedValueOnce([]);
 
       const result = await repo.findAllVersions('non-existent');
 
       expect(result).toEqual([]);
+      // Single $queryRaw call for ancestor CTE
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
     });
 
-    it('should walk up parent chain to find root document', async () => {
-      // Child document that has a parent
-      const childRecord = {
-        id: DOC_CHILD_ID,
-        parentVersionId: DOC_ID,
-      };
-      // Root document (no parent)
-      const rootRecord = createMockDbRecord({ id: DOC_ID, parentVersionId: null });
+    it('should use $queryRaw for ancestor CTE (constant query count)', async () => {
+      // Ancestor CTE returns root and child
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce([{ id: DOC_ID }, { id: DOC_CHILD_ID }]) // ancestors CTE
+        .mockResolvedValueOnce([{ id: DOC_ID }, { id: DOC_CHILD_ID }]); // chain CTE
 
-      // First call: get the child document
-      mockPrisma.caseDocument.findUnique
-        .mockResolvedValueOnce(childRecord) // findAllVersions initial lookup
-        .mockResolvedValueOnce(rootRecord) // walking up to parent
-        .mockResolvedValueOnce(rootRecord) // findVersionChain: root doc
-        .mockResolvedValueOnce(null); // findVersionChain: child (no children of root found)
-
-      // findVersionChain: find children of root
+      // findMany for ancestor select (parentVersionId)
       mockPrisma.caseDocument.findMany
-        .mockResolvedValueOnce([{ id: DOC_CHILD_ID }]) // children of root
-        .mockResolvedValueOnce([]); // children of child (none)
-
-      // Second findUnique for child in the version chain
-      mockPrisma.caseDocument.findUnique.mockResolvedValueOnce(
-        createMockDbRecord({
-          id: DOC_CHILD_ID,
-          parentVersionId: DOC_ID,
-          versionMajor: 2,
-          versionMinor: 0,
-          versionPatch: 0,
-        })
-      );
+        .mockResolvedValueOnce([
+          { id: DOC_ID, parentVersionId: null },
+          { id: DOC_CHILD_ID, parentVersionId: DOC_ID },
+        ])
+        // findMany for full records from chain CTE
+        .mockResolvedValueOnce([
+          createMockDbRecord({ id: DOC_ID, versionMajor: 1, acl: [] }),
+          createMockDbRecord({
+            id: DOC_CHILD_ID,
+            versionMajor: 2,
+            parentVersionId: DOC_ID,
+            acl: [],
+          }),
+        ]);
 
       const result = await repo.findAllVersions(DOC_CHILD_ID);
 
-      // Should have called findUnique multiple times walking up the chain
-      expect(mockPrisma.caseDocument.findUnique).toHaveBeenCalled();
-      // Results should be returned (may vary based on mock behavior)
+      // Always exactly 2 $queryRaw calls (ancestor CTE + chain CTE)
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(2);
       expect(Array.isArray(result)).toBe(true);
     });
 
     it('should handle root document with no parent', async () => {
-      const rootRecord = createMockDbRecord({
-        id: DOC_ID,
-        parentVersionId: null,
-        acl: [],
-      });
+      // Ancestor CTE: only the root itself
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce([{ id: DOC_ID }]) // ancestors CTE
+        .mockResolvedValueOnce([{ id: DOC_ID }]); // chain CTE
 
-      // Initial lookup
-      mockPrisma.caseDocument.findUnique
-        .mockResolvedValueOnce(rootRecord) // findAllVersions: initial
-        .mockResolvedValueOnce(rootRecord); // findVersionChain: get root
-
-      // findVersionChain: no children
-      mockPrisma.caseDocument.findMany.mockResolvedValueOnce([]);
+      // findMany for parentVersionId lookup
+      mockPrisma.caseDocument.findMany
+        .mockResolvedValueOnce([{ id: DOC_ID, parentVersionId: null }])
+        // findMany for full records
+        .mockResolvedValueOnce([createMockDbRecord({ id: DOC_ID, acl: [] })]);
 
       const result = await repo.findAllVersions(DOC_ID);
 
@@ -487,40 +557,28 @@ describe('PrismaCaseDocumentRepository', () => {
     });
 
     it('should sort versions by major > minor > patch', async () => {
-      const v1 = createMockDbRecord({
-        id: DOC_ID,
-        versionMajor: 1,
-        versionMinor: 0,
-        versionPatch: 0,
-        parentVersionId: null,
-        acl: [],
-      });
-      const v2 = createMockDbRecord({
-        id: DOC_CHILD_ID,
-        versionMajor: 2,
-        versionMinor: 0,
-        versionPatch: 0,
-        parentVersionId: DOC_ID,
-        acl: [],
-      });
-
-      // Initial lookup (starting from root)
-      mockPrisma.caseDocument.findUnique
-        .mockResolvedValueOnce(v1) // findAllVersions initial
-        .mockResolvedValueOnce(v1) // findVersionChain: root
-        .mockResolvedValueOnce(v2); // findVersionChain: child
+      // Ancestor CTE
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce([{ id: DOC_ID }]) // ancestors
+        .mockResolvedValueOnce([{ id: DOC_ID }, { id: DOC_CHILD_ID }]); // chain
 
       mockPrisma.caseDocument.findMany
-        .mockResolvedValueOnce([{ id: DOC_CHILD_ID }]) // children of root
-        .mockResolvedValueOnce([]); // children of child
+        .mockResolvedValueOnce([{ id: DOC_ID, parentVersionId: null }])
+        .mockResolvedValueOnce([
+          createMockDbRecord({
+            id: DOC_CHILD_ID,
+            versionMajor: 2,
+            parentVersionId: DOC_ID,
+            acl: [],
+          }),
+          createMockDbRecord({ id: DOC_ID, versionMajor: 1, parentVersionId: null, acl: [] }),
+        ]);
 
       const result = await repo.findAllVersions(DOC_ID);
 
       expect(result).toHaveLength(2);
       // Should be sorted ascending by version
-      const v1Result = result[0].version;
-      const v2Result = result[1].version;
-      expect(v1Result.major).toBeLessThanOrEqual(v2Result.major);
+      expect(result[0].version.major).toBeLessThanOrEqual(result[1].version.major);
     });
   });
 
@@ -744,94 +802,68 @@ describe('PrismaCaseDocumentRepository', () => {
   // ============================================
   // findVersionChain (tested through findAllVersions)
   // ============================================
-  describe('findVersionChain (via findAllVersions)', () => {
-    it('should handle circular references gracefully via visited set', async () => {
-      // The visited set prevents infinite loops
-      const record = createMockDbRecord({
-        id: DOC_ID,
-        parentVersionId: null,
-        acl: [],
-      });
+  describe('findVersionChain (via findAllVersions — CTE-based)', () => {
+    it('should use a constant number of queries regardless of chain depth', async () => {
+      // root -> child -> grandchild: 3-level chain
+      // CTE collapses it to 2 $queryRaw + 2 findMany (constant)
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce([{ id: DOC_ID }]) // ancestors CTE (start from root)
+        .mockResolvedValueOnce([{ id: DOC_ID }, { id: DOC_CHILD_ID }, { id: DOC_GRANDCHILD_ID }]); // chain CTE
 
-      mockPrisma.caseDocument.findUnique
-        .mockResolvedValueOnce(record) // initial lookup
-        .mockResolvedValueOnce(record); // findVersionChain root
-
-      // Children that point back to root (cycle scenario)
       mockPrisma.caseDocument.findMany
-        .mockResolvedValueOnce([{ id: DOC_ID }]) // child is same as root (cycle)
-        .mockResolvedValue([]); // prevent further recursion
-
-      const result = await repo.findAllVersions(DOC_ID);
-
-      // Should not loop infinitely due to visited set
-      expect(result).toHaveLength(1);
-    });
-
-    it('should handle deep version chains', async () => {
-      // root -> child -> grandchild
-      const root = createMockDbRecord({
-        id: DOC_ID,
-        versionMajor: 1,
-        parentVersionId: null,
-        acl: [],
-      });
-
-      // Initial lookup returns root
-      mockPrisma.caseDocument.findUnique
-        .mockResolvedValueOnce(root) // initial
-        .mockResolvedValueOnce(root) // findVersionChain: root
-        .mockResolvedValueOnce(
+        .mockResolvedValueOnce([{ id: DOC_ID, parentVersionId: null }])
+        .mockResolvedValueOnce([
+          createMockDbRecord({ id: DOC_ID, versionMajor: 1, acl: [] }),
           createMockDbRecord({
             id: DOC_CHILD_ID,
             versionMajor: 2,
             parentVersionId: DOC_ID,
             acl: [],
-          })
-        )
-        .mockResolvedValueOnce(
+          }),
           createMockDbRecord({
             id: DOC_GRANDCHILD_ID,
             versionMajor: 3,
             parentVersionId: DOC_CHILD_ID,
             acl: [],
-          })
-        );
-
-      mockPrisma.caseDocument.findMany
-        .mockResolvedValueOnce([{ id: DOC_CHILD_ID }]) // children of root
-        .mockResolvedValueOnce([{ id: DOC_GRANDCHILD_ID }]) // children of child
-        .mockResolvedValueOnce([]); // children of grandchild
+          }),
+        ]);
 
       const result = await repo.findAllVersions(DOC_ID);
 
+      // Exactly 2 $queryRaw calls total — constant regardless of chain depth
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(2);
+      // Exactly 2 findMany calls — also constant
+      expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledTimes(2);
+
       expect(result).toHaveLength(3);
-      // Should be sorted by version
       expect(result[0].version.major).toBe(1);
       expect(result[1].version.major).toBe(2);
       expect(result[2].version.major).toBe(3);
     });
 
-    it('should skip null documents in version chain', async () => {
-      const root = createMockDbRecord({
-        id: DOC_ID,
-        parentVersionId: null,
-        acl: [],
-      });
+    it('should handle chain CTE returning no rows (chain not found)', async () => {
+      // Ancestor CTE returns root, but chain CTE returns nothing (orphaned chain)
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce([{ id: DOC_ID }]) // ancestors
+        .mockResolvedValueOnce([]); // chain CTE empty
 
-      mockPrisma.caseDocument.findUnique
-        .mockResolvedValueOnce(root) // initial
-        .mockResolvedValueOnce(root) // findVersionChain: root
-        .mockResolvedValueOnce(null); // child not found
-
-      mockPrisma.caseDocument.findMany
-        .mockResolvedValueOnce([{ id: DOC_CHILD_ID }]) // children of root (child exists in reference)
-        .mockResolvedValue([]); // but child not found by findUnique
+      mockPrisma.caseDocument.findMany.mockResolvedValueOnce([
+        { id: DOC_ID, parentVersionId: null },
+      ]);
 
       const result = await repo.findAllVersions(DOC_ID);
 
-      // Only root should be returned since child is null
-      expect(result).toHaveLength(1);
+      expect(result).toEqual([]);
+    });
+
+    it('should return empty array when ancestor CTE returns no rows', async () => {
+      mockPrisma.$queryRaw.mockResolvedValueOnce([]);
+
+      const result = await repo.findAllVersions('non-existent');
+
+      expect(result).toEqual([]);
+      // Only the first $queryRaw (ancestors) was called, chain CTE is skipped
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
     });
   });
 });

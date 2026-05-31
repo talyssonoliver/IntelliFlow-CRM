@@ -549,12 +549,105 @@ describe('NotificationService - additional coverage', () => {
       const result = await service.processRetries();
       expect(result).toEqual({ retried: 0, movedToDLQ: 0 });
     });
+
+    it('should deliver multiple retryable notifications in parallel batches', async () => {
+      // Build 3 failed notifications that each canRetry
+      const makeFailedNotif = (id: string) => ({
+        id: { value: id },
+        channel: 'in_app',
+        status: 'pending',
+        retryCount: 0,
+        canRetry: vi.fn().mockReturnValue(true),
+        resetForRetry: vi.fn(),
+        markAsSent: vi.fn(),
+        markAsFailed: vi.fn(),
+        getDomainEvents: vi.fn().mockReturnValue([]),
+        clearDomainEvents: vi.fn(),
+        recipientId: 'user_1',
+        subject: 'S',
+        body: 'B',
+        metadata: {},
+      });
+      const n1 = makeFailedNotif('n_r1');
+      const n2 = makeFailedNotif('n_r2');
+      const n3 = makeFailedNotif('n_r3');
+
+      notifRepo.findFailedForRetry.mockResolvedValue([n1, n2, n3] as any);
+
+      const result = await service.processRetries();
+
+      // All three should have had their state reset and been saved
+      expect(n1.resetForRetry).toHaveBeenCalled();
+      expect(n2.resetForRetry).toHaveBeenCalled();
+      expect(n3.resetForRetry).toHaveBeenCalled();
+      // save called for each reset (per-item) plus per delivery outcome
+      expect(notifRepo.save).toHaveBeenCalled();
+      // retried count reflects sent deliveries
+      expect(result.retried).toBe(3);
+      expect(result.movedToDLQ).toBe(0);
+    });
+
+    it('should move notifications to DLQ when canRetry returns false', async () => {
+      const makeExhaustedNotif = (id: string) => ({
+        id: { value: id },
+        channel: 'in_app',
+        status: 'failed',
+        retryCount: 3,
+        error: 'max retries',
+        canRetry: vi.fn().mockReturnValue(false),
+        resetForRetry: vi.fn(),
+        getDomainEvents: vi.fn().mockReturnValue([]),
+        clearDomainEvents: vi.fn(),
+      });
+      const n1 = makeExhaustedNotif('n_dlq1');
+      const n2 = makeExhaustedNotif('n_dlq2');
+
+      notifRepo.findFailedForRetry.mockResolvedValue([n1, n2] as any);
+
+      const result = await service.processRetries();
+
+      expect(result.retried).toBe(0);
+      expect(result.movedToDLQ).toBe(2);
+      expect(auditLogger.logNotificationMovedToDLQ).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('processScheduled', () => {
     it('should return 0 when none scheduled', async () => {
       const result = await service.processScheduled();
       expect(result).toBe(0);
+    });
+
+    it('should deliver multiple scheduled notifications in parallel batches and return count', async () => {
+      const makeScheduledNotif = (id: string) => ({
+        id: { value: id },
+        channel: 'in_app',
+        status: 'pending',
+        retryCount: 0,
+        markAsSent: vi.fn(),
+        markAsFailed: vi.fn(),
+        getDomainEvents: vi.fn().mockReturnValue([]),
+        clearDomainEvents: vi.fn(),
+        recipientId: 'user_1',
+        subject: 'S',
+        body: 'B',
+        metadata: {},
+      });
+      const notifications = [
+        makeScheduledNotif('s_1'),
+        makeScheduledNotif('s_2'),
+        makeScheduledNotif('s_3'),
+      ];
+
+      notifRepo.findScheduledReadyToSend.mockResolvedValue(notifications as any);
+
+      const count = await service.processScheduled();
+
+      expect(count).toBe(3);
+      // save called for each delivery outcome (once per notification)
+      expect(notifRepo.save).toHaveBeenCalledTimes(3);
+      // findScheduledReadyToSend called exactly once — no per-item re-query
+      expect(notifRepo.findScheduledReadyToSend).toHaveBeenCalledTimes(1);
     });
   });
 
