@@ -49,7 +49,7 @@ src/
 
 1. **Depends on**: `packages/domain/` only — derives Zod schemas from domain
    constants
-2. **Architecture test**: `__tests__/enum-consistency.test.ts` enforces that
+2. **Architecture test**: `__tests__/enum-consistency.spec.ts` enforces that
    validator enums match domain constants
 3. **After modifying**: Run `pnpm --filter @intelliflow/validators build` —
    other packages import from dist

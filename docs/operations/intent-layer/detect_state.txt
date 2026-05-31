@@ -1,0 +1,11 @@
+=== Intent Layer State ===
+root_file: CLAUDE.md
+has_intent_section: false
+child_nodes: 0
+
+## Warnings
+  ! Both CLAUDE.md and AGENTS.md exist at root (not symlinked). Consider symlinking one to the other.
+  ! Found CLAUDE.md in subdirectories (should be AGENTS.md for cross-tool compatibility): /c/Users/talys/projects/intelliFlow-CRM/apps/ai-worker/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/apps/api/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/apps/project-tracker/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/apps/web/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/docs/audit/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/docs/compliance-and-governance/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/docs/operations/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/packages/adapters/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/packages/application/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/packages/db/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/packages/domain/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/packages/test-fixtures/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/packages/ui/CLAUDE.md /c/Users/talys/projects/intelliFlow-CRM/packages/validators/CLAUDE.md
+
+state: partial
+action: Add Intent Layer section to CLAUDE.md

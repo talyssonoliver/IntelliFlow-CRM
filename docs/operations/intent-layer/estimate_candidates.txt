@@ -1,0 +1,72 @@
+=== Intent Layer Token Analysis ===
+Target: /c/Users/talys/projects/intelliFlow-CRM
+
+## Token Estimates
+
+Directory                                    Tokens  Threshold  Recommendation                
+---------------------------------------- ---------- ----------  ------------------------------
+(root)                                    39224411M       >64k  Consider child nodes          
+packages                                   6159122M       >64k  Consider child nodes          
+apps/ai-worker                              572258k       >64k  Consider child nodes          
+apps/api                                   1534533M       >64k  Consider child nodes          
+apps/project-tracker                       1502063M       >64k  Consider child nodes          
+apps/web                                   3171399M       >64k  Consider child nodes          
+apps/workers                                 79748k       >64k  Consider child nodes          
+docs                                       2419319M       >64k  Consider child nodes          
+packages/adapters                           738254k       >64k  Consider child nodes          
+packages/ai                                  10258k       <20k  No node needed                
+packages/api-client                           4010k       <20k  No node needed                
+packages/application                        458775k       >64k  Consider child nodes          
+packages/db                                3579983M       >64k  Consider child nodes          
+packages/domain                             677190k       >64k  Consider child nodes          
+packages/observability                       54017k     20-64k  Good candidate for AGENTS.md  
+packages/platform                            82837k       >64k  Consider child nodes          
+packages/sdk                                  8315k       <20k  No node needed                
+packages/search                               4416k       <20k  No node needed                
+packages/test-fixtures                       14476k       <20k  No node needed                
+packages/typescript-config                      535       <20k  No node needed                
+packages/ui                                 235669k       >64k  Consider child nodes          
+packages/validators                         264737k       >64k  Consider child nodes          
+packages/webhooks                            25643k     20-64k  Good candidate for AGENTS.md  
+tests/architecture                           11451k       <20k  No node needed                
+tools/plan                                   32168k     20-64k  Good candidate for AGENTS.md  
+tools/plan-linter                             9217k       <20k  No node needed                
+.claude/ralph-loops                           9537k       <20k  No node needed                
+artifacts/reports                          1801750M       >64k  Consider child nodes          
+docs/planning                               177454k       >64k  Consider child nodes          
+infra/monitoring                             91859k       >64k  Consider child nodes          
+tools/scripts                               527813k       >64k  Consider child nodes          
+
+## Summary
+
+Candidates for AGENTS.md: 3
+Candidates for splitting: 19
+
+## Suggested Actions
+
+- Root: Large codebase - consider child nodes for major subsystems
+- packages: Consider splitting into child AGENTS.md files
+- apps/ai-worker: Consider splitting into child AGENTS.md files
+- apps/api: Consider splitting into child AGENTS.md files
+- apps/project-tracker: Consider splitting into child AGENTS.md files
+- apps/web: Consider splitting into child AGENTS.md files
+- apps/workers: Consider splitting into child AGENTS.md files
+- docs: Consider splitting into child AGENTS.md files
+- packages/adapters: Consider splitting into child AGENTS.md files
+- packages/application: Consider splitting into child AGENTS.md files
+- packages/db: Consider splitting into child AGENTS.md files
+- packages/domain: Consider splitting into child AGENTS.md files
+- packages/observability/AGENTS.md: Create with 2-3k token summary
+- packages/platform: Consider splitting into child AGENTS.md files
+- packages/ui: Consider splitting into child AGENTS.md files
+- packages/validators: Consider splitting into child AGENTS.md files
+- packages/webhooks/AGENTS.md: Create with 2-3k token summary
+- tools/plan/AGENTS.md: Create with 2-3k token summary
+- artifacts/reports: Consider splitting into child AGENTS.md files
+- docs/planning: Consider splitting into child AGENTS.md files
+- infra/monitoring: Consider splitting into child AGENTS.md files
+- tools/scripts: Consider splitting into child AGENTS.md files
+
+## Exclusions Applied
+Skipped: node_modules, .git, dist, build, public, resources/_gen, .turbo,
+         coverage, target, vendor, .venv, venv, .cache, out, .next

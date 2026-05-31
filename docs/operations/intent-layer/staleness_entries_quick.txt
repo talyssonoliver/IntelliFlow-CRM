@@ -1,0 +1,7 @@
+Entry Staleness Report
+======================
+
+Scanned: /c/Users/talys/projects/intelliFlow-CRM
+Mode: quick (file paths only)
+
+/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable

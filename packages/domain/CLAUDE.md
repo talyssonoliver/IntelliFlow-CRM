@@ -17,7 +17,7 @@ export type LeadStatus = (typeof LEAD_STATUSES)[number];
 ```
 
 Validators derive Zod schemas: `z.enum(LEAD_STATUSES)` Consistency enforced by
-`packages/validators/__tests__/enum-consistency.test.ts`.
+`packages/validators/__tests__/enum-consistency.spec.ts`.
 
 ### Entities with DRY Enums
 
