@@ -254,17 +254,55 @@ export function sendgridEventTransformer(raw: unknown): WebhookEvent {
 // ============================================================================
 
 class IdempotencyStore {
-  private entries = new Map<string, { processedAt: Date; result: unknown }>();
+  private entries = new Map<
+    string,
+    { status: 'processing' | 'done'; processedAt: Date; result?: unknown }
+  >();
   private ttlMs: number;
 
   constructor(ttlMs = 24 * 60 * 60 * 1000) {
     this.ttlMs = ttlMs;
   }
 
+  private isExpired(processedAt: Date): boolean {
+    return Date.now() - processedAt.getTime() > this.ttlMs;
+  }
+
+  /**
+   * Atomically claim a key for processing. Returns true iff the caller won the
+   * claim (no live entry existed). This is SYNCHRONOUS — no `await` between the
+   * read and the write — so two concurrent callers on the same event loop cannot
+   * both win. This is the idempotency race guard: callers MUST claim before
+   * doing any awaited work, then `complete()` on success or `release()` on
+   * failure. (Fixes RACE-WEBHO: previously a check-then-set with an await in
+   * between let duplicate deliveries double-process.)
+   */
+  claim(key: string): boolean {
+    const entry = this.entries.get(key);
+    if (entry && !this.isExpired(entry.processedAt)) {
+      return false; // already processing or already done
+    }
+    this.entries.set(key, { status: 'processing', processedAt: new Date() });
+    return true;
+  }
+
+  /** Commit a claimed key with its result (marks it done / processed). */
+  complete(key: string, result: unknown): void {
+    this.entries.set(key, { status: 'done', processedAt: new Date(), result });
+  }
+
+  /** Release a claim that did not complete (processing failed), allowing reprocessing. */
+  release(key: string): void {
+    const entry = this.entries.get(key);
+    if (entry && entry.status === 'processing') {
+      this.entries.delete(key);
+    }
+  }
+
   has(key: string): boolean {
     const entry = this.entries.get(key);
     if (!entry) return false;
-    if (Date.now() - entry.processedAt.getTime() > this.ttlMs) {
+    if (this.isExpired(entry.processedAt)) {
       this.entries.delete(key);
       return false;
     }
@@ -272,12 +310,9 @@ class IdempotencyStore {
   }
 
   get(key: string): unknown | undefined {
-    if (!this.has(key)) return undefined;
-    return this.entries.get(key)?.result;
-  }
-
-  set(key: string, result: unknown): void {
-    this.entries.set(key, { processedAt: new Date(), result });
+    const entry = this.entries.get(key);
+    if (!entry || entry.status !== 'done' || this.isExpired(entry.processedAt)) return undefined;
+    return entry.result;
   }
 
   cleanup(): number {
@@ -522,6 +557,7 @@ export class WebhookFramework {
   /**
    * Handle incoming webhook request
    */
+
   async handle(
     sourceName: string,
     rawBody: string,
@@ -555,40 +591,15 @@ export class WebhookFramework {
         return { success: false, message: 'Payload too large', statusCode: 413 };
       }
 
-      // Normalize headers
-      const normalizedHeaders: Record<string, string> = {};
-      for (const [key, value] of Object.entries(headers)) {
-        normalizedHeaders[key.toLowerCase()] = value;
-      }
+      const normalizedHeaders = this.normalizeHeaders(headers);
 
-      // Verify signature
-      const signature = normalizedHeaders[source.signatureHeader.toLowerCase()];
-      let verified = false;
+      const sig = this.verifySignature(source, normalizedHeaders, rawBody);
+      if ('error' in sig) return sig.error;
+      const verified = sig.verified;
 
-      if (signature) {
-        verified = source.signatureVerifier(rawBody, signature, source.secret);
-        if (!verified) {
-          return { success: false, message: 'Invalid signature', statusCode: 401 };
-        }
-      } else if (source.secret) {
-        return { success: false, message: 'Missing signature', statusCode: 401 };
-      }
-
-      // Parse and transform event
-      let event: WebhookEvent;
-      try {
-        const parsed = JSON.parse(rawBody);
-        const transformer = source.eventTransformer || defaultEventTransformer;
-        event = transformer(parsed);
-        event.source = sourceName;
-        event.raw = rawBody;
-      } catch (error) {
-        return {
-          success: false,
-          message: `Parse error: ${error instanceof Error ? error.message : 'Unknown'}`,
-          statusCode: 400,
-        };
-      }
+      const parsedEvent = this.parseEvent(source, rawBody, sourceName);
+      if ('error' in parsedEvent) return parsedEvent.error;
+      const event = parsedEvent.event;
 
       // Update metrics
       if (this.config.metricsEnabled) {
@@ -607,9 +618,11 @@ export class WebhookFramework {
         };
       }
 
-      // Check idempotency
+      // Idempotency: atomically CLAIM the key BEFORE any await so two concurrent
+      // duplicate deliveries (same event id) cannot both pass the gate. A single
+      // synchronous check-and-set is atomic on the JS event loop. (RACE-WEBHO)
       const idempotencyKey = `${sourceName}:${event.id}`;
-      if (this.idempotency.has(idempotencyKey)) {
+      if (!this.idempotency.claim(idempotencyKey)) {
         return {
           success: true,
           eventId: event.id,
@@ -629,71 +642,139 @@ export class WebhookFramework {
         ip,
       };
 
-      // Get handlers
-      const handlers = [
-        ...this.globalHandlers,
-        ...(this.handlers.get(event.type) || []),
-        ...(this.handlers.get('*') || []),
-      ];
-
-      if (handlers.length === 0) {
-        if (this.config.loggingEnabled) {
-          console.warn(`No handlers for event type: ${event.type}`);
-        }
-        return {
-          success: true,
-          eventId: event.id,
-          message: 'No handlers registered',
-          statusCode: 200,
-          processingTimeMs: Date.now() - startTime,
-        };
-      }
-
-      // Execute middleware and handlers
-      try {
-        await this.executeWithMiddleware(event, context, async () => {
-          await Promise.all(handlers.map((h) => h(event, context)));
-        });
-
-        // Mark as processed
-        this.idempotency.set(idempotencyKey, { success: true });
-
-        if (this.config.metricsEnabled) {
-          this.metrics.eventsProcessed++;
-          this.updateProcessingTime(Date.now() - startTime);
-        }
-
-        return {
-          success: true,
-          eventId: event.id,
-          message: 'Processed successfully',
-          statusCode: 200,
-          processingTimeMs: Date.now() - startTime,
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-        if (this.config.retryEnabled) {
-          this.retryQueue.add(event, context, errorMessage);
-          this.metrics.eventsRetried++;
-        }
-
-        if (this.config.metricsEnabled) {
-          this.metrics.eventsFailed++;
-        }
-
-        return {
-          success: false,
-          eventId: event.id,
-          message: errorMessage,
-          statusCode: 500,
-          processingTimeMs: Date.now() - startTime,
-        };
-      }
+      return await this.dispatchEvent(event, context, idempotencyKey, startTime);
     } catch (error) {
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error',
+        statusCode: 500,
+        processingTimeMs: Date.now() - startTime,
+      };
+    }
+  }
+
+  /** Lower-case all header keys. */
+  private normalizeHeaders(headers: Record<string, string>): Record<string, string> {
+    const normalized: Record<string, string> = {};
+    for (const [key, value] of Object.entries(headers)) {
+      normalized[key.toLowerCase()] = value;
+    }
+    return normalized;
+  }
+
+  /** Verify the request signature; returns the verified flag or a short-circuit error result. */
+  private verifySignature(
+    source: WebhookSourceConfig,
+    normalizedHeaders: Record<string, string>,
+    rawBody: string
+  ): { verified: boolean } | { error: HandleResult } {
+    const signature = normalizedHeaders[source.signatureHeader.toLowerCase()];
+    if (signature) {
+      const verified = source.signatureVerifier(rawBody, signature, source.secret);
+      if (!verified) {
+        return { error: { success: false, message: 'Invalid signature', statusCode: 401 } };
+      }
+      return { verified };
+    }
+    if (source.secret) {
+      return { error: { success: false, message: 'Missing signature', statusCode: 401 } };
+    }
+    return { verified: false };
+  }
+
+  /** Parse + transform the raw body into a WebhookEvent, or a short-circuit error result. */
+  private parseEvent(
+    source: WebhookSourceConfig,
+    rawBody: string,
+    sourceName: string
+  ): { event: WebhookEvent } | { error: HandleResult } {
+    try {
+      const parsed = JSON.parse(rawBody);
+      const transformer = source.eventTransformer || defaultEventTransformer;
+      const event = transformer(parsed);
+      event.source = sourceName;
+      event.raw = rawBody;
+      return { event };
+    } catch (error) {
+      return {
+        error: {
+          success: false,
+          message: `Parse error: ${error instanceof Error ? error.message : 'Unknown'}`,
+          statusCode: 400,
+        },
+      };
+    }
+  }
+
+  /**
+   * Run handlers under the middleware chain; manages the idempotency commit/release,
+   * metrics, and retry queue. The claimed key is committed on success and released on
+   * failure so a failed event can be retried/redelivered. (RACE-WEBHO)
+   */
+  private async dispatchEvent(
+    event: WebhookEvent,
+    context: WebhookContext,
+    idempotencyKey: string,
+    startTime: number
+  ): Promise<HandleResult> {
+    const handlers = [
+      ...this.globalHandlers,
+      ...(this.handlers.get(event.type) || []),
+      ...(this.handlers.get('*') || []),
+    ];
+
+    if (handlers.length === 0) {
+      if (this.config.loggingEnabled) {
+        console.warn(`No handlers for event type: ${event.type}`);
+      }
+      return {
+        success: true,
+        eventId: event.id,
+        message: 'No handlers registered',
+        statusCode: 200,
+        processingTimeMs: Date.now() - startTime,
+      };
+    }
+
+    try {
+      await this.executeWithMiddleware(event, context, async () => {
+        await Promise.all(handlers.map((h) => h(event, context)));
+      });
+
+      // Commit the idempotency claim now that processing succeeded.
+      this.idempotency.complete(idempotencyKey, { success: true });
+
+      if (this.config.metricsEnabled) {
+        this.metrics.eventsProcessed++;
+        this.updateProcessingTime(Date.now() - startTime);
+      }
+
+      return {
+        success: true,
+        eventId: event.id,
+        message: 'Processed successfully',
+        statusCode: 200,
+        processingTimeMs: Date.now() - startTime,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // Processing failed — release the idempotency claim so the event can be retried.
+      this.idempotency.release(idempotencyKey);
+
+      if (this.config.retryEnabled) {
+        this.retryQueue.add(event, context, errorMessage);
+        this.metrics.eventsRetried++;
+      }
+
+      if (this.config.metricsEnabled) {
+        this.metrics.eventsFailed++;
+      }
+
+      return {
+        success: false,
+        eventId: event.id,
+        message: errorMessage,
         statusCode: 500,
         processingTimeMs: Date.now() - startTime,
       };
@@ -755,7 +836,7 @@ export class WebhookFramework {
           await Promise.all(handlers.map((h) => h(entry.event, entry.context)));
         });
         succeeded++;
-        this.idempotency.set(`${entry.context.source}:${entry.event.id}`, { success: true });
+        this.idempotency.complete(`${entry.context.source}:${entry.event.id}`, { success: true });
       } catch (error) {
         failed++;
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';

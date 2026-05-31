@@ -1,0 +1,24 @@
+{
+  "extends": "../../packages/typescript-config/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@intelliflow/domain": ["../../packages/domain/src"],
+      "@intelliflow/domain/*": ["../../packages/domain/src/*"],
+      "@intelliflow/webhooks": ["../../packages/webhooks/src"],
+      "@intelliflow/webhooks/*": ["../../packages/webhooks/src/*"],
+      "@intelliflow/db": ["../../packages/db/dist/index.d.ts"],
+      "@intelliflow/db/query-budget/*": [
+        "../../packages/db/src/query-budget/*"
+      ],
+      "@intelliflow/adapters": ["../../packages/adapters/src"],
+      "@intelliflow/adapters/*": ["../../packages/adapters/src/*"],
+      "@intelliflow/application": ["../../packages/application/dist/index.d.ts"]
+    }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

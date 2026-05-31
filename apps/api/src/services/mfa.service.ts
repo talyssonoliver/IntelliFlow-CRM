@@ -511,7 +511,14 @@ export class MfaService {
     challenge.attempts++;
 
     const normalizedCode = code.replaceAll(/\s/g, '').toUpperCase();
-    const isValid = this.validateChallengeCode(challenge, normalizedCode, userMfaSettings);
+    // Backup codes are consumed ATOMICALLY + durably in the database when a DB and
+    // userId are available — preventing reuse after cache eviction and the concurrent
+    // double-spend race (RACE-RBAC-M1). Other methods (totp/sms/email) and DB-less
+    // callers fall back to the in-memory validator (unchanged behaviour).
+    const isValid =
+      challenge.method === 'backup' && this.prisma && userMfaSettings?.userId
+        ? await this.consumeBackupCode(userMfaSettings.userId, normalizedCode)
+        : this.validateChallengeCode(challenge, normalizedCode, userMfaSettings);
 
     if (isValid) {
       challengeStore.delete(challengeId);
@@ -610,6 +617,43 @@ export class MfaService {
     updatedCodes.splice(index, 1);
 
     return { valid: true, updatedCodes };
+  }
+
+  /**
+   * Atomically consume a backup code in the database (RACE-RBAC-M1).
+   *
+   * Removes the code's hash from `user_mfa_settings.backupCodes` ONLY if present,
+   * in a single guarded UPDATE. Under READ COMMITTED two concurrent attempts with
+   * the same code can never both succeed: the second UPDATE waits on the row lock
+   * held by the first, then re-evaluates its `= ANY(...)` guard against the
+   * already-updated row (code gone) and affects 0 rows. Durable — survives cache
+   * eviction / process restart, unlike the previous in-memory splice.
+   *
+   * Parameterised raw SQL is used deliberately: atomic array-element removal
+   * guarded by a presence check is not expressible through Prisma's typed array
+   * API. The `${...}` interpolations are bound parameters, not string concat.
+   *
+   * @returns true iff THIS call consumed the code.
+   */
+  async consumeBackupCode(userId: string, code: string): Promise<boolean> {
+    if (!this.prisma) return false;
+    const codeHash = this.hashCode(code.replaceAll(/\s/g, '').toUpperCase());
+    try {
+      const affected = await this.prisma.$executeRaw`
+        UPDATE "user_mfa_settings"
+        SET "backupCodes" = array_remove("backupCodes", ${codeHash})
+        WHERE "userId" = ${userId} AND ${codeHash} = ANY("backupCodes")
+      `;
+      if (affected > 0) {
+        // Drop any cached settings that still list the now-consumed code.
+        mfaSettingsCache.delete(userId);
+        return true;
+      }
+      return false;
+    } catch {
+      // Table missing / DB unavailable: behave as "not consumed" (never crash auth).
+      return false;
+    }
   }
 
   // ==========================================

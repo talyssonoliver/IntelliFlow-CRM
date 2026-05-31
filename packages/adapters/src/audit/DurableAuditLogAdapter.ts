@@ -64,6 +64,12 @@ export interface AuditPrismaClient {
  */
 export class DurableAuditLogAdapter implements AuditLogPort {
   private previousHash: string = 'GENESIS';
+  // Serializes hash-chain appends so the previousHash read->persist->advance
+  // sequence is atomic. Without this, concurrent appends fork the chain
+  // (RACE-AUDIT-01). NOTE: this guards a single adapter instance; multi-process
+  // chain integrity requires a DB-derived chain head and is tracked separately
+  // (see ADR-056).
+  private chainTail: Promise<unknown> = Promise.resolve();
   private readonly config: Required<Omit<DurableAuditConfig, 'piiEncryptionKey'>> & {
     piiEncryptionKey?: Buffer;
   };
@@ -84,6 +90,30 @@ export class DurableAuditLogAdapter implements AuditLogPort {
    * Log a single security event with guaranteed durability.
    */
   async logSecurityEvent(
+    event: AISecurityEventInput,
+    tenantContext: TenantContext
+  ): Promise<AuditLogResult> {
+    // Serialize chain appends: previousHash is shared mutable state read before
+    // the persistence await and advanced after it, so two concurrent calls would
+    // both read the same predecessor and FORK the hash chain (RACE-AUDIT-01).
+    return this.enqueueChainAppend(() => this.appendSecurityEvent(event, tenantContext));
+  }
+
+  /**
+   * Run a chain-mutating operation under the chain mutex so reads and advances of
+   * `previousHash` are atomic relative to other appends. The tail is kept alive on
+   * both success and failure so one rejected append never wedges the queue.
+   */
+  private enqueueChainAppend<T>(operation: () => Promise<T>): Promise<T> {
+    const run = this.chainTail.then(operation, operation);
+    this.chainTail = run.then(
+      () => undefined,
+      () => undefined
+    );
+    return run;
+  }
+
+  private async appendSecurityEvent(
     event: AISecurityEventInput,
     tenantContext: TenantContext
   ): Promise<AuditLogResult> {
@@ -159,6 +189,15 @@ export class DurableAuditLogAdapter implements AuditLogPort {
    * Log multiple events in a single transaction.
    */
   async logBatchEvents(
+    events: AISecurityEventInput[],
+    tenantContext: TenantContext
+  ): Promise<BatchAuditResult> {
+    // Same chain mutex as logSecurityEvent so a batch and a concurrent single
+    // append never interleave their previousHash read/advance (RACE-AUDIT-01).
+    return this.enqueueChainAppend(() => this.appendBatchEvents(events, tenantContext));
+  }
+
+  private async appendBatchEvents(
     events: AISecurityEventInput[],
     tenantContext: TenantContext
   ): Promise<BatchAuditResult> {

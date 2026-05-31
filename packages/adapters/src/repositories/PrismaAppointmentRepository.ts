@@ -13,7 +13,27 @@ import {
   CaseId,
   AppointmentStatus,
   AppointmentType,
+  ConflictDetectionError,
 } from '@intelliflow/domain';
+
+/**
+ * Detects the Postgres exclusion-constraint violation (SQLSTATE 23P01) raised by
+ * `appointments_no_overlap_per_organizer` (see migration
+ * 20260530000000_appointment_no_overlap_exclusion). Prisma surfaces driver-adapter
+ * errors with the underlying code/constraint in varying shapes, so match
+ * defensively across the wrappings. (RACE-BOOKI-01/02)
+ */
+function isAppointmentOverlapViolation(error: unknown): boolean {
+  const e = error as {
+    code?: string;
+    message?: string;
+    meta?: { code?: string; constraint?: string; cause?: string };
+  };
+  const haystack = [e?.code, e?.meta?.code, e?.meta?.constraint, e?.meta?.cause, e?.message]
+    .filter(Boolean)
+    .join(' ');
+  return haystack.includes('appointments_no_overlap_per_organizer') || haystack.includes('23P01');
+}
 
 /**
  * Helper to create AppointmentId from string
@@ -491,44 +511,56 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
       cancellationReason: appointment.cancellationReason ?? null,
     };
 
-    await withTransaction(async (tx: TransactionClient) => {
-      // Upsert appointment
-      await tx.appointment.upsert({
-        where: { id: data.id },
-        create: data as Prisma.AppointmentUncheckedCreateInput,
-        update: data as Prisma.AppointmentUncheckedUpdateInput,
-      });
-
-      // Sync attendees
-      await tx.appointmentAttendee.deleteMany({
-        where: { appointmentId: data.id },
-      });
-
-      if (appointment.attendeeIds.length > 0) {
-        await tx.appointmentAttendee.createMany({
-          data: appointment.attendeeIds.map((userId) => ({
-            appointmentId: data.id,
-            userId,
-            tenantId: data.tenantId,
-          })),
+    try {
+      await withTransaction(async (tx: TransactionClient) => {
+        // Upsert appointment
+        await tx.appointment.upsert({
+          where: { id: data.id },
+          create: data as Prisma.AppointmentUncheckedCreateInput,
+          update: data as Prisma.AppointmentUncheckedUpdateInput,
         });
-      }
 
-      // Sync linked cases
-      await tx.appointmentCase.deleteMany({
-        where: { appointmentId: data.id },
-      });
-
-      if (appointment.linkedCaseIds.length > 0) {
-        await tx.appointmentCase.createMany({
-          data: appointment.linkedCaseIds.map((caseId) => ({
-            appointmentId: data.id,
-            caseId: caseId.value,
-            tenantId: data.tenantId,
-          })),
+        // Sync attendees
+        await tx.appointmentAttendee.deleteMany({
+          where: { appointmentId: data.id },
         });
+
+        if (appointment.attendeeIds.length > 0) {
+          await tx.appointmentAttendee.createMany({
+            data: appointment.attendeeIds.map((userId) => ({
+              appointmentId: data.id,
+              userId,
+              tenantId: data.tenantId,
+            })),
+          });
+        }
+
+        // Sync linked cases
+        await tx.appointmentCase.deleteMany({
+          where: { appointmentId: data.id },
+        });
+
+        if (appointment.linkedCaseIds.length > 0) {
+          await tx.appointmentCase.createMany({
+            data: appointment.linkedCaseIds.map((caseId) => ({
+              appointmentId: data.id,
+              caseId: caseId.value,
+              tenantId: data.tenantId,
+            })),
+          });
+        }
+      });
+    } catch (error) {
+      // Surface the DB-level double-booking guard as a domain conflict instead of
+      // leaking a raw Postgres exclusion-violation error. (RACE-BOOKI-01/02)
+      if (isAppointmentOverlapViolation(error)) {
+        throw new ConflictDetectionError(
+          'Appointment overlaps an existing booking for this organizer; ' +
+            'double-booking is prevented by the database.'
+        );
       }
-    });
+      throw error;
+    }
   }
 
   async saveAll(appointments: Appointment[]): Promise<void> {
