@@ -1,0 +1,100 @@
+name: E2E Full Suite
+
+# Full Playwright E2E suite (all specs, chromium) — moved off the per-push
+# CI Pipeline because it currently has 129 failing data/auth specs that need
+# a live backend (postgres + redis + api + auth) which the CI job does not
+# provision. Running it here (scheduled + manual) keeps the visible main
+# check surface honest while the suite is repaired. The fast smoke subset
+# still runs on every push to main via ci.yml's e2e job.
+#
+# Re-fold specs into ci.yml's smoke job as they are fixed / made
+# backend-independent, and retire this workflow once the full suite is green.
+# Tracked at GH issue #95.
+
+on:
+  schedule:
+    # Nightly, 03:00 UTC — surfaces real E2E regressions without blocking merges.
+    - cron: '0 3 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: e2e-full-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.0'
+
+jobs:
+  e2e-full:
+    name: E2E Full Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Same module-load env guards as ci.yml's build/e2e jobs — `next start`
+    # against the production .next needs them satisfied at boot.
+    env:
+      PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+      AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+      REDIS_URL: redis://localhost:6379
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
+    # A real backend so data/auth specs can actually pass — the missing piece
+    # that made these specs fail in the per-push job.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-monorepo
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          build-libs: 'true'
+
+      - name: Set up database schema
+        run: pnpm --filter @intelliflow/db db:push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+
+      - name: Build web app
+        run: pnpm --filter @intelliflow/web build
+
+      - name: Install Playwright (chromium)
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run full E2E suite (chromium)
+        run: pnpm exec playwright test --project=chromium
+
+      - name: Upload E2E results
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: e2e-full-report
+          path: artifacts/misc/playwright-report/
+          retention-days: 14

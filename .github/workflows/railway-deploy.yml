@@ -164,9 +164,14 @@ jobs:
 
       - name: Install Railway CLI
         if: steps.gate.outputs.should_run == 'true'
-        run: |
-          curl -fsSL https://railway.app/install.sh | sh
-          echo "$HOME/.railway/bin" >> "$GITHUB_PATH"
+        # Deterministic, pinned install via npm — NOT `curl … | sh`. The
+        # upstream install.sh requires bash; piped to GitHub's default `sh`
+        # (dash) it dies with `Bad substitution` and never lands the binary,
+        # so the next step hit `railway: command not found`. The npm package
+        # is the officially-published CLI; pinned to an EXACT version for
+        # deterministic CI (bump deliberately, not via a floating range), and
+        # npm's global bin is already on PATH (no manual GITHUB_PATH wiring).
+        run: npm install -g @railway/cli@4.66.0
 
       - name: Show Railway CLI version
         if: steps.gate.outputs.should_run == 'true'
