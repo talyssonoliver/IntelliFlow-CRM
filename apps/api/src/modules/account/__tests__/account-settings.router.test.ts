@@ -489,10 +489,11 @@ describe('Account Settings Router', () => {
   });
 
   describe('requiredFields.updateAll', () => {
-    it('upserts each field (name stays required)', async () => {
+    it('replaces the full required-field set in 2 batched statements (NP-028, no N upserts)', async () => {
       const txMock = {
         accountRequiredField: {
-          upsert: vi.fn().mockResolvedValue({}),
+          deleteMany: vi.fn().mockResolvedValue({ count: 6 }),
+          createMany: vi.fn().mockResolvedValue({ count: 6 }),
           findMany: vi.fn().mockResolvedValue([]),
         },
       };
@@ -508,7 +509,14 @@ describe('Account Settings Router', () => {
           { fieldKey: 'revenue', isRequired: false },
         ],
       });
-      expect(txMock.accountRequiredField.upsert).toHaveBeenCalledTimes(6);
+      // Constant 2 writes regardless of field count — not N upserts.
+      expect(txMock.accountRequiredField.deleteMany).toHaveBeenCalledTimes(1);
+      expect(txMock.accountRequiredField.createMany).toHaveBeenCalledTimes(1);
+      expect(txMock.accountRequiredField.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          { tenantId: expect.any(String), fieldKey: 'name', isRequired: true },
+        ]),
+      });
     });
 
     it('rejects when name is not required', async () => {

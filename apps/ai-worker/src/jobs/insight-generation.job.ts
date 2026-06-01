@@ -527,16 +527,36 @@ async function dispatchScheduledInsights(
       },
     });
 
+    // NP-005/006 fix: batch-fetch admin users for all tenants in two queries
+    // instead of two findFirst calls per tenant.
+    const tenantIds = activeTenants.map((t: { tenantId: string }) => t.tenantId);
+
+    const adminUsers = await prisma.user.findMany({
+      where: { tenantId: { in: tenantIds }, role: 'ADMIN' },
+      select: { id: true, tenantId: true },
+      distinct: ['tenantId'],
+    });
+    const adminByTenant = new Map<string, string>(
+      adminUsers.map((u: { id: string; tenantId: string }) => [u.tenantId, u.id])
+    );
+
+    // For tenants that have no ADMIN, fall back to any user — one batch query.
+    const tenantsNeedingFallback = tenantIds.filter((id: string) => !adminByTenant.has(id));
+    const fallbackByTenant = new Map<string, string>();
+    if (tenantsNeedingFallback.length > 0) {
+      const fallbackUsers = await prisma.user.findMany({
+        where: { tenantId: { in: tenantsNeedingFallback } },
+        select: { id: true, tenantId: true },
+        distinct: ['tenantId'],
+      });
+      for (const u of fallbackUsers as Array<{ id: string; tenantId: string }>) {
+        fallbackByTenant.set(u.tenantId, u.id);
+      }
+    }
+
     for (const tenant of activeTenants) {
-      const adminUser =
-        (await prisma.user.findFirst({
-          where: { tenantId: tenant.tenantId, role: 'ADMIN' },
-          select: { id: true },
-        })) ??
-        (await prisma.user.findFirst({
-          where: { tenantId: tenant.tenantId },
-          select: { id: true },
-        }));
+      const resolvedUserId =
+        adminByTenant.get(tenant.tenantId) ?? fallbackByTenant.get(tenant.tenantId);
 
       const [dealsAtRisk, hotLeads, overdueCount, staleContacts] = await gatherTenantHeuristicData(
         prisma,
@@ -544,7 +564,7 @@ async function dispatchScheduledInsights(
       );
       const payload = buildTenantJobPayload(
         tenant.tenantId,
-        adminUser?.id ?? 'system',
+        resolvedUserId ?? 'system',
         dealsAtRisk,
         hotLeads,
         overdueCount,

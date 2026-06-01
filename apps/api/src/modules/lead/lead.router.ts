@@ -1230,7 +1230,9 @@ export const leadRouter = createTRPCRouter({
    * Bulk score leads using LeadService
    */
   bulkScore: tenantProcedure
-    .input(z.object({ leadIds: z.array(idSchema) }))
+    // NP-002: hard-cap the batch — was unbounded (DoS vector: query + AI-call
+    // count scaled with an attacker-supplied array length).
+    .input(z.object({ leadIds: z.array(idSchema).min(1).max(200) }))
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const leadService = getLeadService(ctx);

@@ -69,4 +69,22 @@ export interface AutoResponseDraftRepository {
    * Count drafts by status
    */
   countByStatus(tenantId: string, status: AutoResponseStatus): Promise<number>;
+
+  /**
+   * Bulk-expire all non-terminal drafts whose expiresAt is before `before`.
+   * Returns the number of rows updated.
+   * Used by processExpiredDrafts to replace N per-row saves with a single UPDATE.
+   */
+  expireDraftsBeforeDate(
+    tenantId: string,
+    before: Date,
+    terminalStatuses: AutoResponseStatus[]
+  ): Promise<number>;
+
+  /**
+   * Count drafts for every status in a single query.
+   * Returns a record keyed by AutoResponseStatus; missing statuses default to 0.
+   * Used by getStatsByStatus to replace 8 sequential count() calls with one groupBy.
+   */
+  countByStatusAll(tenantId: string): Promise<Record<AutoResponseStatus, number>>;
 }

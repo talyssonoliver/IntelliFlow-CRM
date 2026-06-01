@@ -754,6 +754,116 @@ describe('TaskService - Additional Coverage', () => {
     });
   });
 
+  describe('bulkComplete() — NP-022 regression: batched read', () => {
+    it('should call findByIds exactly once regardless of N tasks', async () => {
+      const task1 = Task.create({ title: 'Bulk N1', ownerId: 'owner-1' }).value;
+      const task2 = Task.create({ title: 'Bulk N2', ownerId: 'owner-1' }).value;
+      const task3 = Task.create({ title: 'Bulk N3', ownerId: 'owner-1' }).value;
+      await taskRepository.save(task1);
+      await taskRepository.save(task2);
+      await taskRepository.save(task3);
+
+      const findByIdsSpy = vi.spyOn(taskRepository, 'findByIds');
+      const findByIdSpy = vi.spyOn(taskRepository, 'findById');
+
+      const result = await service.bulkComplete(
+        [task1.id.value, task2.id.value, task3.id.value],
+        'user'
+      );
+
+      expect(result.successful).toHaveLength(3);
+      expect(result.failed).toHaveLength(0);
+      // ONE batched read — not N individual findById calls
+      expect(findByIdsSpy).toHaveBeenCalledTimes(1);
+      expect(findByIdSpy).not.toHaveBeenCalled();
+
+      findByIdsSpy.mockRestore();
+      findByIdSpy.mockRestore();
+    });
+
+    it('should handle partial failures with one batched read', async () => {
+      const task = Task.create({ title: 'Partial Bulk', ownerId: 'owner-1' }).value;
+      await taskRepository.save(task);
+      const nonExistentId = '00000000-0000-4000-8000-000000000099';
+
+      const findByIdsSpy = vi.spyOn(taskRepository, 'findByIds');
+
+      const result = await service.bulkComplete([task.id.value, nonExistentId], 'user');
+
+      expect(result.successful).toHaveLength(1);
+      expect(result.failed).toHaveLength(1);
+      expect(result.failed[0].id).toBe(nonExistentId);
+      expect(result.totalProcessed).toBe(2);
+      // Still only ONE batched read
+      expect(findByIdsSpy).toHaveBeenCalledTimes(1);
+
+      findByIdsSpy.mockRestore();
+    });
+
+    it('should return immediately with zero results for empty input', async () => {
+      const findByIdsSpy = vi.spyOn(taskRepository, 'findByIds');
+
+      const result = await service.bulkComplete([], 'user');
+
+      expect(result.totalProcessed).toBe(0);
+      expect(result.successful).toHaveLength(0);
+      expect(result.failed).toHaveLength(0);
+      expect(findByIdsSpy).not.toHaveBeenCalled();
+
+      findByIdsSpy.mockRestore();
+    });
+
+    it('should deduplicate ids before the batched read', async () => {
+      const task = Task.create({ title: 'Dedup Task', ownerId: 'owner-1' }).value;
+      await taskRepository.save(task);
+
+      const findByIdsSpy = vi.spyOn(taskRepository, 'findByIds');
+
+      // Same id twice
+      const result = await service.bulkComplete([task.id.value, task.id.value], 'user');
+
+      // The task is only completed once (second attempt fails "already completed")
+      expect(result.totalProcessed).toBe(2);
+      expect(findByIdsSpy).toHaveBeenCalledTimes(1);
+      // findByIds receives deduplicated ids
+      expect(findByIdsSpy).toHaveBeenCalledWith([task.id.value]);
+
+      findByIdsSpy.mockRestore();
+    });
+
+    it('should record failure for invalid task ID format without issuing a DB read', async () => {
+      const findByIdsSpy = vi.spyOn(taskRepository, 'findByIds');
+
+      const result = await service.bulkComplete(['bad-uuid'], 'user');
+
+      expect(result.failed).toHaveLength(1);
+      expect(result.successful).toHaveLength(0);
+      // No DB read needed — all ids were invalid
+      expect(findByIdsSpy).not.toHaveBeenCalled();
+
+      findByIdsSpy.mockRestore();
+    });
+
+    it('should handle save error per task and continue', async () => {
+      const task1 = Task.create({ title: 'Save Fail 1', ownerId: 'owner-1' }).value;
+      const task2 = Task.create({ title: 'Save Fail 2', ownerId: 'owner-1' }).value;
+      await taskRepository.save(task1);
+      await taskRepository.save(task2);
+
+      // Fail the first save only
+      const saveSpy = vi.spyOn(taskRepository, 'save').mockRejectedValueOnce(new Error('DB error'));
+
+      const result = await service.bulkComplete([task1.id.value, task2.id.value], 'user');
+
+      expect(result.failed).toHaveLength(1);
+      expect(result.failed[0].id).toBe(task1.id.value);
+      expect(result.successful).toHaveLength(1);
+      expect(result.successful[0]).toBe(task2.id.value);
+
+      saveSpy.mockRestore();
+    });
+  });
+
   describe('validateAssignment - invalid ID format', () => {
     it('should fail with invalid lead ID format', async () => {
       const result = await service.createTask({

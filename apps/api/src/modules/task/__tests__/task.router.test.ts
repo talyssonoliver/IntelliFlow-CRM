@@ -460,8 +460,10 @@ describe('Task Router', () => {
       );
     });
 
-    it('should validate leadId on update', async () => {
-      // For complex updates, service checks existence then Prisma validates
+    it('should validate leadId on update — single batched findUnique call', async () => {
+      // validateEntityReferences issues all 3 lookups concurrently via Promise.all.
+      // When only leadId is present, lead.findUnique is called exactly once and the
+      // other two slots resolve to null immediately (no DB round-trip).
       ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
@@ -479,9 +481,15 @@ describe('Task Router', () => {
           code: 'NOT_FOUND',
         })
       );
+
+      // Regression guard: lead.findUnique called exactly once (batched, not per-item)
+      expect(prismaMock.lead.findUnique).toHaveBeenCalledTimes(1);
+      // The other two lookups are not called when their ids are absent
+      expect(prismaMock.contact.findUnique).not.toHaveBeenCalled();
+      expect(prismaMock.opportunity.findUnique).not.toHaveBeenCalled();
     });
 
-    it('should validate contactId on update', async () => {
+    it('should validate contactId on update — single batched findUnique call', async () => {
       ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
@@ -499,9 +507,14 @@ describe('Task Router', () => {
           code: 'NOT_FOUND',
         })
       );
+
+      // Regression guard: contact.findUnique called exactly once (batched, not per-item)
+      expect(prismaMock.contact.findUnique).toHaveBeenCalledTimes(1);
+      expect(prismaMock.lead.findUnique).not.toHaveBeenCalled();
+      expect(prismaMock.opportunity.findUnique).not.toHaveBeenCalled();
     });
 
-    it('should validate opportunityId on update', async () => {
+    it('should validate opportunityId on update — single batched findUnique call', async () => {
       ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
@@ -519,6 +532,11 @@ describe('Task Router', () => {
           code: 'NOT_FOUND',
         })
       );
+
+      // Regression guard: opportunity.findUnique called exactly once (batched, not per-item)
+      expect(prismaMock.opportunity.findUnique).toHaveBeenCalledTimes(1);
+      expect(prismaMock.lead.findUnique).not.toHaveBeenCalled();
+      expect(prismaMock.contact.findUnique).not.toHaveBeenCalled();
     });
 
     it('should allow setting leadId to valid lead', async () => {
@@ -536,6 +554,40 @@ describe('Task Router', () => {
       });
 
       expect(result.leadId).toBe(TEST_UUIDS.lead1);
+      // Exactly one findUnique per referenced entity type — constant regardless of collection size
+      expect(prismaMock.lead.findUnique).toHaveBeenCalledTimes(1);
+    });
+
+    it('should issue all 3 entity lookups concurrently when all refs are present', async () => {
+      // N+1 regression: Promise.all means the 3 findUnique calls happen in a single
+      // concurrent batch, never serially. Assert call counts are each exactly 1
+      // regardless of how many refs are passed — not N calls for N entities.
+      ctx.services!.task!.getTaskById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainTask(),
+      });
+      prismaMock.lead.findUnique.mockResolvedValue(mockLead);
+      prismaMock.contact.findUnique.mockResolvedValue(mockContact);
+      prismaMock.opportunity.findUnique.mockResolvedValue(mockOpportunity);
+      prismaMock.task.update.mockResolvedValue({
+        ...mockTask,
+        leadId: TEST_UUIDS.lead1,
+        contactId: TEST_UUIDS.contact1,
+        opportunityId: TEST_UUIDS.opportunity1,
+      });
+
+      await caller.update({
+        id: TEST_UUIDS.task1,
+        leadId: TEST_UUIDS.lead1,
+        contactId: TEST_UUIDS.contact1,
+        opportunityId: TEST_UUIDS.opportunity1,
+      });
+
+      // Each entity type is looked up exactly once — the total is 3, not 3×N
+      expect(prismaMock.lead.findUnique).toHaveBeenCalledTimes(1);
+      expect(prismaMock.contact.findUnique).toHaveBeenCalledTimes(1);
+      expect(prismaMock.opportunity.findUnique).toHaveBeenCalledTimes(1);
     });
   });
 

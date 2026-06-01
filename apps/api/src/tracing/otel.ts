@@ -23,6 +23,7 @@
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { installQueryBudgetOtelEmitter } from './query-budget-otel';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
@@ -162,6 +163,11 @@ export function startTracing(): void {
   if (sdkInstance) {
     sdkInstance.start();
   }
+
+  // ADR-053: forward query-budget over-budget events to OTel metrics so N+1 /
+  // over-budget requests surface on dashboards, not just in span attributes and
+  // the warn log. Idempotent and safe even when metric export is disabled.
+  installQueryBudgetOtelEmitter();
 
   // Register shutdown handlers
   process.on('SIGTERM', async () => {

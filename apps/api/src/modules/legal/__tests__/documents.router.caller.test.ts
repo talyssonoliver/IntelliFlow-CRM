@@ -59,6 +59,7 @@ const { mockRepo, mockDocumentInstance, mockDocumentJson } = vi.hoisted(() => {
   const mockRepo = {
     save: vi.fn().mockResolvedValue(undefined),
     findById: vi.fn().mockResolvedValue(mockDocumentInstance),
+    findByIds: vi.fn().mockResolvedValue([mockDocumentInstance]),
     findByCaseId: vi.fn().mockResolvedValue([mockDocumentInstance]),
     findAccessibleByUser: vi.fn().mockResolvedValue([mockDocumentInstance]),
   };
@@ -123,6 +124,7 @@ describe('Documents Router - Caller Tests', () => {
     mockDocumentInstance.status = 'DRAFT';
     mockRepo.save.mockResolvedValue(undefined);
     mockRepo.findById.mockResolvedValue(mockDocumentInstance);
+    mockRepo.findByIds.mockResolvedValue([mockDocumentInstance]);
     mockRepo.findByCaseId.mockResolvedValue([mockDocumentInstance]);
     mockRepo.findAccessibleByUser.mockResolvedValue([mockDocumentInstance]);
   });
@@ -769,6 +771,167 @@ describe('Documents Router - Caller Tests', () => {
       const result = await caller.getAuditTrail({ documentId: TEST_UUIDS.task1 });
 
       expect(result).toEqual([]);
+    });
+  });
+
+  // ============================================================
+  // Bulk operations — assert batched reads (NP-014/037/038 fix)
+  // ============================================================
+
+  // Helper: create a mock document that has the given id (so docMap.get(id) works)
+  const makeBulkDoc = (id: string, overrides: Record<string, unknown> = {}) => ({
+    ...mockDocumentInstance,
+    id,
+    toJSON: vi.fn(() => ({
+      ...mockDocumentJson,
+      id,
+      storageKey: 'docs/test.pdf',
+      metadata: { title: 'Test Doc', classification: 'INTERNAL' },
+      createdBy: mockDocumentJson.createdBy,
+      ...overrides,
+    })),
+    hasAccess: vi.fn(() => true),
+    archive: vi.fn(),
+    delete: vi.fn(),
+  });
+
+  describe('bulkDownload', () => {
+    it('should call findByIds once (not findById per doc) and return storage keys', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      const docA = makeBulkDoc(TEST_UUIDS.task1);
+      const docB = makeBulkDoc(TEST_UUIDS.user2);
+      mockRepo.findByIds.mockResolvedValue([docA, docB]);
+
+      const result = await caller.bulkDownload({ ids: [TEST_UUIDS.task1, TEST_UUIDS.user2] });
+
+      // One batch call — never the per-id findById
+      expect(mockRepo.findByIds).toHaveBeenCalledTimes(1);
+      expect(mockRepo.findById).not.toHaveBeenCalled();
+      expect(result.totalProcessed).toBe(2);
+    });
+
+    it('should mark missing documents as failed', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      // findByIds returns only one of the two requested docs (task1 found, user2 missing)
+      const docA = makeBulkDoc(TEST_UUIDS.task1);
+      mockRepo.findByIds.mockResolvedValue([docA]);
+
+      const result = await caller.bulkDownload({
+        ids: [TEST_UUIDS.task1, TEST_UUIDS.user2],
+      });
+
+      expect(mockRepo.findByIds).toHaveBeenCalledTimes(1);
+      expect(result.failed.some((f) => f.error === 'Document not found')).toBe(true);
+    });
+
+    it('should mark access-denied documents as failed', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      const doc = makeBulkDoc(TEST_UUIDS.task1);
+      // Override hasAccess to deny
+      (doc.hasAccess as ReturnType<typeof vi.fn>).mockReturnValue(false);
+      mockRepo.findByIds.mockResolvedValue([doc]);
+
+      const result = await caller.bulkDownload({ ids: [TEST_UUIDS.task1] });
+
+      expect(result.failed).toHaveLength(1);
+      expect(result.failed[0].error).toBe('Access denied');
+    });
+  });
+
+  describe('bulkArchive', () => {
+    it('should call findByIds once (not findById per doc) and archive eligible docs', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      const doc = makeBulkDoc(TEST_UUIDS.task1);
+      mockRepo.findByIds.mockResolvedValue([doc]);
+
+      const result = await caller.bulkArchive({ ids: [TEST_UUIDS.task1] });
+
+      expect(mockRepo.findByIds).toHaveBeenCalledTimes(1);
+      expect(mockRepo.findById).not.toHaveBeenCalled();
+      expect(doc.archive).toHaveBeenCalledWith(expect.any(String));
+      expect(mockRepo.save).toHaveBeenCalledTimes(1);
+      expect(result.successful).toContain(TEST_UUIDS.task1);
+    });
+
+    it('should mark missing documents as failed', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      mockRepo.findByIds.mockResolvedValue([]);
+
+      const result = await caller.bulkArchive({ ids: [TEST_UUIDS.task1] });
+
+      expect(result.failed).toHaveLength(1);
+      expect(result.failed[0].error).toBe('Document not found');
+      expect(mockRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should mark docs without permission as failed', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      const doc = makeBulkDoc(TEST_UUIDS.task1, { createdBy: 'other-user' });
+      (doc.hasAccess as ReturnType<typeof vi.fn>).mockReturnValue(false);
+      mockRepo.findByIds.mockResolvedValue([doc]);
+
+      const result = await caller.bulkArchive({ ids: [TEST_UUIDS.task1] });
+
+      expect(result.failed).toHaveLength(1);
+      expect(result.failed[0].error).toBe('Insufficient permissions to archive');
+    });
+  });
+
+  describe('bulkDelete', () => {
+    it('should call findByIds once (not findById per doc) and soft-delete eligible docs', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      const doc = makeBulkDoc(TEST_UUIDS.task1);
+      mockRepo.findByIds.mockResolvedValue([doc]);
+
+      const result = await caller.bulkDelete({ ids: [TEST_UUIDS.task1] });
+
+      expect(mockRepo.findByIds).toHaveBeenCalledTimes(1);
+      expect(mockRepo.findById).not.toHaveBeenCalled();
+      expect(doc.delete).toHaveBeenCalledWith(expect.any(String));
+      expect(mockRepo.save).toHaveBeenCalledTimes(1);
+      expect(result.successful).toContain(TEST_UUIDS.task1);
+    });
+
+    it('should mark missing documents as failed', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      mockRepo.findByIds.mockResolvedValue([]);
+
+      const result = await caller.bulkDelete({ ids: [TEST_UUIDS.task1] });
+
+      expect(result.failed).toHaveLength(1);
+      expect(result.failed[0].error).toBe('Document not found');
+    });
+
+    it('should propagate domain errors as failed entries', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      const doc = makeBulkDoc(TEST_UUIDS.task1);
+      doc.delete.mockImplementation(() => {
+        throw new Error('Cannot delete document under legal hold');
+      });
+      mockRepo.findByIds.mockResolvedValue([doc]);
+
+      const result = await caller.bulkDelete({ ids: [TEST_UUIDS.task1] });
+
+      expect(result.failed).toHaveLength(1);
+      expect(result.failed[0].error).toBe('Cannot delete document under legal hold');
     });
   });
 });

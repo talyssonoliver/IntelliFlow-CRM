@@ -817,6 +817,124 @@ describe('Opportunity Router', () => {
   });
 
   // ============================================
+  // NP-024/025: Bulk endpoints
+  // ============================================
+
+  describe('bulkUpdateStage', () => {
+    it('should call updateMany once with id:{in:ids} and the target stage', async () => {
+      const ids = [TEST_UUIDS.opportunity1, TEST_UUIDS.opportunity2];
+      (prismaMock.opportunity.updateMany as ReturnType<typeof vi.fn>).mockResolvedValue({
+        count: 2,
+      });
+
+      const result = await caller.bulkUpdateStage({ ids, stage: 'NEGOTIATION' });
+
+      expect(result.updated).toBe(2);
+      expect(result.ids).toEqual(ids);
+      expect(prismaMock.opportunity.updateMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.opportunity.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: { in: ids },
+            deletedAt: null,
+          }),
+          data: { stage: 'NEGOTIATION' },
+        })
+      );
+    });
+
+    it('should deduplicate ids before the updateMany call', async () => {
+      const id = TEST_UUIDS.opportunity1;
+      const idsWithDups = [id, id, id];
+      (prismaMock.opportunity.updateMany as ReturnType<typeof vi.fn>).mockResolvedValue({
+        count: 1,
+      });
+
+      const result = await caller.bulkUpdateStage({ ids: idsWithDups, stage: 'PROPOSAL' });
+
+      expect(prismaMock.opportunity.updateMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.opportunity.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ id: { in: [id] } }),
+        })
+      );
+      expect(result.ids).toEqual([id]);
+    });
+
+    it('should reject an empty ids array', async () => {
+      await expect(caller.bulkUpdateStage({ ids: [], stage: 'PROPOSAL' })).rejects.toThrow();
+    });
+
+    it('should reject ids array exceeding 100', async () => {
+      const tooMany = Array.from({ length: 101 }, () => TEST_UUIDS.opportunity1);
+      await expect(caller.bulkUpdateStage({ ids: tooMany, stage: 'PROPOSAL' })).rejects.toThrow();
+    });
+  });
+
+  describe('bulkDelete', () => {
+    it('should call updateMany once with id:{in:ids} setting deletedAt', async () => {
+      const ids = [TEST_UUIDS.opportunity1, TEST_UUIDS.opportunity2];
+      (prismaMock.opportunity.updateMany as ReturnType<typeof vi.fn>).mockResolvedValue({
+        count: 2,
+      });
+
+      const result = await caller.bulkDelete({ ids });
+
+      expect(result.deleted).toBe(2);
+      expect(result.ids).toEqual(ids);
+      expect(prismaMock.opportunity.updateMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.opportunity.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: { in: ids },
+            deletedAt: null,
+          }),
+          data: expect.objectContaining({ deletedAt: expect.any(Date) }),
+        })
+      );
+    });
+
+    it('should deduplicate ids before the updateMany call', async () => {
+      const id = TEST_UUIDS.opportunity1;
+      const idsWithDups = [id, id];
+      (prismaMock.opportunity.updateMany as ReturnType<typeof vi.fn>).mockResolvedValue({
+        count: 1,
+      });
+
+      const result = await caller.bulkDelete({ ids: idsWithDups });
+
+      expect(prismaMock.opportunity.updateMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.opportunity.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ id: { in: [id] } }),
+        })
+      );
+      expect(result.ids).toEqual([id]);
+    });
+
+    it('should reject an empty ids array', async () => {
+      await expect(caller.bulkDelete({ ids: [] })).rejects.toThrow();
+    });
+
+    it('should reject ids array exceeding 100', async () => {
+      const tooMany = Array.from({ length: 101 }, () => TEST_UUIDS.opportunity1);
+      await expect(caller.bulkDelete({ ids: tooMany })).rejects.toThrow();
+    });
+
+    it('should NOT call the per-deal deleteOpportunity service', async () => {
+      const ids = [TEST_UUIDS.opportunity1];
+      (prismaMock.opportunity.updateMany as ReturnType<typeof vi.fn>).mockResolvedValue({
+        count: 1,
+      });
+      ctx.services!.opportunity!.deleteOpportunity = vi.fn();
+
+      await caller.bulkDelete({ ids });
+
+      expect(ctx.services!.opportunity!.deleteOpportunity).not.toHaveBeenCalled();
+    });
+  });
+
+  // ============================================
   // IFC-186: New endpoints
   // ============================================
 

@@ -69,6 +69,52 @@ export class PrismaTaskRepository implements TaskRepository {
     });
   }
 
+  async findByIds(ids: string[]): Promise<Task[]> {
+    if (ids.length === 0) return [];
+
+    // Deduplicate while preserving original order
+    const seen = new Set<string>();
+    const uniqueIds: string[] = [];
+    for (const id of ids) {
+      if (!seen.has(id)) {
+        seen.add(id);
+        uniqueIds.push(id);
+      }
+    }
+
+    const records = await this.prisma.task.findMany({
+      where: { id: { in: uniqueIds } },
+    });
+
+    // Build a map for O(1) lookup
+    const recordMap = new Map(records.map((r) => [r.id, r]));
+
+    // Return in the original deduplicated order, skipping ids not found
+    return uniqueIds.reduce<Task[]>((acc, id) => {
+      const record = recordMap.get(id);
+      if (record) {
+        acc.push(
+          Task.reconstitute(createTaskId(record.id), {
+            title: record.title,
+            description: record.description ?? undefined,
+            dueDate: record.dueDate ?? undefined,
+            priority: record.priority as TaskPriority,
+            status: record.status as TaskStatus,
+            leadId: record.leadId ?? undefined,
+            contactId: record.contactId ?? undefined,
+            opportunityId: record.opportunityId ?? undefined,
+            ownerId: record.ownerId,
+            tenantId: record.tenantId,
+            createdAt: record.createdAt,
+            updatedAt: record.updatedAt,
+            completedAt: record.completedAt ?? undefined,
+          })
+        );
+      }
+      return acc;
+    }, []);
+  }
+
   async findByOwnerId(ownerId: string): Promise<Task[]> {
     const records = await this.prisma.task.findMany({
       where: { ownerId },

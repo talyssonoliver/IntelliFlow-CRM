@@ -818,7 +818,7 @@ describe('findByRollbackToken()', () => {
     expect(result).toBeUndefined();
   });
 
-  it('I5: queries only APPROVED actions for the tenant', async () => {
+  it('I5: queries only APPROVED actions for the tenant, filtered by the token JSON path, ordered by createdAt desc, bounded to 500', async () => {
     (prismaMock.agentAction.findMany as any).mockResolvedValue([]);
 
     await store.findByRollbackToken('any-token');
@@ -826,6 +826,18 @@ describe('findByRollbackToken()', () => {
     const args = (prismaMock.agentAction.findMany as any).mock.calls[0][0];
     expect(args.where.status).toBe('APPROVED');
     expect(args.where.tenantId).toBe(TENANT_ID);
+    // Correctness guard: the token must be matched in the DB via the JSON path
+    // (proposedState->>"rollbackToken"), NOT only scanned in memory. Without this
+    // filter, the take:500 bound below would silently miss a valid token on an
+    // action older than the 500 most-recent rows for a busy tenant.
+    expect(args.where.proposedState).toEqual({ path: ['rollbackToken'], equals: 'any-token' });
+    // Defensive guard: findMany stays bounded (take: 500) and ordered by createdAt
+    // desc. With the token filter above the result set is normally ≤1; the bound is
+    // a backstop, not the primary correctness mechanism.
+    expect(args.take).toBe(500);
+    expect(args.orderBy).toEqual({ createdAt: 'desc' });
+    // findMany is called exactly once per findByRollbackToken invocation
+    expect(prismaMock.agentAction.findMany).toHaveBeenCalledOnce();
   });
 });
 

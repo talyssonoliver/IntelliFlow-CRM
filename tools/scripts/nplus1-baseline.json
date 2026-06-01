@@ -1,0 +1,29 @@
+{
+  "description": "Accepted N+1 scanner residuals after IFC-314 remediation (ADR-053). Owner: Backend Dev (STOA-Domain). CI fails on any NEW signature (pnpm nplus1:scan). Every read-amplification N+1 (per-id findById, per-tenant findUnique/findMany fan-out — incl. the account-scoring/entity-insight scheduled jobs, now batched with tenantId IN + in-memory grouping) was ELIMINATED. These residuals are justified per the brief's 'fixed OR documented' criterion and fall into three categories: (1) bounded-Low settings upserts over small fixed enums with soft-deactivate/update-by-id semantics where a safe single-query batch needs ON-CONFLICT raw SQL (lead/account/deal/ticket/pipeline/document settings, tenant-module); (2) intentional per-item DOMAIN WRITES where the READ is now batched but the save/create stays per-aggregate to preserve domain events (documents.router, TaskService, AutoResponseService, NotificationService state-resets, OutboxEventBusAdapter, DurableAuditLogAdapter); (3) intentional pagination / domain-depth-capped recursion / early-exit lookups (document-indexer, PrismaAccountRepository ancestors depth<=5, email resolveTenant + folder counts). See docs/operations/nplus1-audit/NPLUS1_REMEDIATION_REPORT.md.",
+  "total": 26,
+  "signatures": {
+    "apps/ai-worker/src/services/document-indexer.ts::await-in-for::this.prisma.caseDocument.findMany": 1,
+    "apps/ai-worker/src/services/document-indexer.ts::await-in-for::this.prisma.contactNote.findMany": 1,
+    "apps/api/src/modules/account/account-settings.router.ts::await-in-for::tx.accountIndustryOption.upsert": 1,
+    "apps/api/src/modules/email/inbound.router.ts::await-in-for-of::prisma.user.findFirst": 1,
+    "apps/api/src/modules/email/inbound.router.ts::prisma-in-map::prisma.emailRecord.count": 1,
+    "apps/api/src/modules/email/inbound.router.ts::prisma-in-map::prisma.emailRecord.findMany": 1,
+    "apps/api/src/modules/lead/lead-settings.router.ts::await-in-for-of::tx.leadScoringRule.upsert": 1,
+    "apps/api/src/modules/lead/lead-settings.router.ts::await-in-for-of::tx.leadStageConfig.upsert": 1,
+    "apps/api/src/modules/legal/document-settings.router.ts::prisma-in-map::tx.documentRequiredField.upsert": 2,
+    "apps/api/src/modules/legal/documents.router.ts::await-in-for-of::documentRepo.save": 2,
+    "apps/api/src/modules/opportunity/deal-settings.router.ts::prisma-in-map::ctx.prismaWithTenant.dealRequiredField.upsert": 1,
+    "apps/api/src/modules/opportunity/pipeline-config.router.ts::prisma-in-map::typedCtx.prismaWithTenant.pipelineStageConfig.upsert": 1,
+    "apps/api/src/modules/routing/routing.router.ts::prisma-in-map::ctx.prismaWithTenant.routingRule.update": 1,
+    "apps/api/src/modules/ticket/ticket-config.router.ts::prisma-in-map::ctx.prismaWithTenant.ticketCategory.update": 1,
+    "apps/api/src/modules/ticket/ticket-settings.router.ts::prisma-in-map::ctx.prismaWithTenant.ticketRequiredField.upsert": 1,
+    "packages/adapters/src/audit/DurableAuditLogAdapter.ts::await-in-for-of::tx.auditLogEntry.create": 1,
+    "packages/adapters/src/audit/DurableAuditLogAdapter.ts::await-in-for-of::tx.securityEvent.create": 1,
+    "packages/adapters/src/events/OutboxEventBusAdapter.ts::await-in-for-of::tx.domainEvent.create": 1,
+    "packages/adapters/src/repositories/PrismaAccountRepository.ts::await-in-while::this.prisma.account.findFirst": 2,
+    "packages/adapters/src/repositories/PrismaTenantModuleRepository.ts::prisma-in-map::this.prisma.tenantModule.upsert": 1,
+    "packages/application/src/services/AutoResponseService.ts::await-in-for-of::this.draftRepository.save": 1,
+    "packages/application/src/services/NotificationService.ts::await-in-for-of::this.notificationRepo.save": 1,
+    "packages/application/src/services/TaskService.ts::await-in-for-of::this.taskRepository.save": 1
+  }
+}

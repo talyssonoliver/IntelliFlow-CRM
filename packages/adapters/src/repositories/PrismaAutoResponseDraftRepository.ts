@@ -160,6 +160,47 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
     });
   }
 
+  async expireDraftsBeforeDate(
+    tenantId: string,
+    before: Date,
+    terminalStatuses: AutoResponseStatus[]
+  ): Promise<number> {
+    const result = await this.prisma.autoResponseDraft.updateMany({
+      where: {
+        tenantId,
+        expiresAt: { lt: before },
+        status: { notIn: terminalStatuses as PrismaAutoResponseStatus[] },
+      },
+      data: { status: 'INVALIDATED' as PrismaAutoResponseStatus },
+    });
+    return result.count;
+  }
+
+  async countByStatusAll(tenantId: string): Promise<Record<AutoResponseStatus, number>> {
+    const rows = await this.prisma.autoResponseDraft.groupBy({
+      by: ['status'],
+      where: { tenantId },
+      _count: true,
+    });
+
+    const defaultCounts: Record<AutoResponseStatus, number> = {
+      DRAFT: 0,
+      PENDING_APPROVAL: 0,
+      APPROVED: 0,
+      REJECTED: 0,
+      INVALIDATED: 0,
+      SENT: 0,
+      FAILED: 0,
+      ESCALATED: 0,
+    };
+
+    for (const row of rows) {
+      defaultCounts[row.status as AutoResponseStatus] = row._count;
+    }
+
+    return defaultCounts;
+  }
+
   private toPersistence(draft: AutoResponseDraft): PersistedDraft {
     const content = draft.content.toValue();
 

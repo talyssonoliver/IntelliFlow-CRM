@@ -561,14 +561,10 @@ export const inboundEmailRouter = createTRPCRouter({
       } | null> => {
         const tenantId = (ctx as any).tenant.tenantId;
 
-        // Verify the email belongs to the tenant
-        const email = await (ctx as any).prisma.emailRecord.findFirst({
-          where: { id: input.emailId, tenantId },
-        });
-        if (!email) return null;
-
+        // Single query: verify tenant ownership via tenantId on the attachment row
+        // (EmailAttachment.tenantId is set at write time to match EmailRecord.tenantId)
         const attachment = await (ctx as any).prisma.emailAttachment.findFirst({
-          where: { id: input.attachmentId, emailId: input.emailId },
+          where: { id: input.attachmentId, emailId: input.emailId, tenantId },
         });
         if (!attachment) return null;
 

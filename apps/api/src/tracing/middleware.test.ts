@@ -120,6 +120,9 @@ describe('tRPC tracing middleware (middleware.ts)', () => {
     expect(tracer.startActiveSpan).toHaveBeenCalled();
     expect(span.setStatus).toHaveBeenCalledWith({ code: 1 });
     expect(span.end).toHaveBeenCalled();
+    // ADR-053: the query-budget snapshot is surfaced onto the span.
+    expect(span.setAttribute).toHaveBeenCalledWith('db.query.count', expect.any(Number));
+    expect(span.setAttribute).toHaveBeenCalledWith('db.query.over_budget', expect.any(Boolean));
     expect(setUser).toHaveBeenCalled();
     expect(setTag).toHaveBeenCalled();
     expect(console.log).toHaveBeenCalled();

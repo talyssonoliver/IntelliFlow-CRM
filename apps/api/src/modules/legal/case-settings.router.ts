@@ -149,13 +149,12 @@ const requiredFieldsRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
     return ctx.prismaWithTenant.$transaction(async (tx) => {
-      for (const f of input.fields) {
-        await tx.caseRequiredField.upsert({
-          where: { tenantId_fieldKey: { tenantId, fieldKey: f.fieldKey } },
-          create: { tenantId, ...f },
-          update: { isRequired: f.isRequired },
-        });
-      }
+      // NP-027 fix: full-set replacement in 2 statements instead of N serial
+      // upserts (mirrors resetToDefaults).
+      await tx.caseRequiredField.deleteMany({ where: { tenantId } });
+      await tx.caseRequiredField.createMany({
+        data: input.fields.map((f) => ({ tenantId, ...f })),
+      });
       return tx.caseRequiredField.findMany({ where: { tenantId } });
     });
   }),

@@ -50,26 +50,41 @@ async function dispatchScheduledAccountScoring(
   const tenantIds: string[] = accountTenants.map((row: any) => row.tenantId as string);
   const queue = (job as unknown as { queue: Queue }).queue;
 
-  let accountEnqueued = 0;
-  let activeTenants = 0;
+  // Batch-load all enabled settings in ONE query instead of N per-tenant findUnique calls.
+  const enabledSettings = await prisma.accountAutomationSetting.findMany({
+    where: { tenantId: { in: tenantIds }, aiAccountScoring: true },
+    select: { tenantId: true },
+  });
+  const enabledTenants = new Set(enabledSettings.map((s) => s.tenantId));
 
-  for (const tenantId of tenantIds) {
-    const setting = await prisma.accountAutomationSetting.findUnique({ where: { tenantId } });
-    if (!setting?.aiAccountScoring) continue;
-    activeTenants += 1;
+  const enabledTenantIds = tenantIds.filter((t) => enabledTenants.has(t));
+  const activeTenants = enabledTenantIds.length;
 
-    const accounts = await prisma.account.findMany({
-      where: { tenantId, updatedAt: { gte: since } },
-      select: { id: true },
+  // Batch the per-tenant account scan into ONE query across all enabled tenants,
+  // then group + cap PER_TENANT_CAP in memory (was one findMany per tenant — DB
+  // query count scaled with tenant count). The global take bounds the query for
+  // skewed tenant sets; any tenant truncated by skew is picked up next tick.
+  const accountsByTenant = new Map<string, string[]>();
+  if (enabledTenantIds.length > 0) {
+    const rows = await prisma.account.findMany({
+      where: { tenantId: { in: enabledTenantIds }, updatedAt: { gte: since } },
+      select: { id: true, tenantId: true },
       orderBy: { updatedAt: 'desc' },
-      take: PER_TENANT_CAP,
+      take: PER_TENANT_CAP * enabledTenantIds.length,
     });
-    for (const a of accounts) {
-      await queue.add('score', {
-        accountId: a.id,
-        tenantId,
-        _otelCarrier: {},
-      });
+    for (const row of rows) {
+      const ids = accountsByTenant.get(row.tenantId) ?? [];
+      if (ids.length < PER_TENANT_CAP) {
+        ids.push(row.id);
+        accountsByTenant.set(row.tenantId, ids);
+      }
+    }
+  }
+
+  let accountEnqueued = 0;
+  for (const tenantId of enabledTenantIds) {
+    for (const accountId of accountsByTenant.get(tenantId) ?? []) {
+      await queue.add('score', { accountId, tenantId, _otelCarrier: {} });
       accountEnqueued += 1;
     }
   }

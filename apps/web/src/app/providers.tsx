@@ -86,6 +86,21 @@ function getBaseUrl() {
   return `http://localhost:${process.env.PORT ?? 3000}`;
 }
 
+/**
+ * ADR-053: a per-request correlation id forwarded as `x-request-id`. The API
+ * tracing middleware adopts it (and the query-budget events correlate on it).
+ * Falls back to a random token if `crypto.randomUUID` is unavailable.
+ */
+function generateRequestId(): string {
+  try {
+    const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+    if (c?.randomUUID) return c.randomUUID();
+  } catch {
+    /* fall through */
+  }
+  return `req-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+}
+
 function getWsUrl() {
   if (typeof globalThis.window === 'undefined') return null;
 
@@ -267,6 +282,9 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
             headers() {
               const headers: Record<string, string> = {
                 'x-trpc-source': 'react',
+                // ADR-053: forward a request-correlation id so the API tracing
+                // middleware + query-budget events correlate on a boundary id.
+                'x-request-id': generateRequestId(),
               };
 
               // Only include Authorization header if token is valid (not expired)
@@ -288,6 +306,8 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
           headers() {
             const headers: Record<string, string> = {
               'x-trpc-source': 'react',
+              // ADR-053: forward a request-correlation id (see above).
+              'x-request-id': generateRequestId(),
             };
 
             // Only include Authorization header if token is valid (not expired)

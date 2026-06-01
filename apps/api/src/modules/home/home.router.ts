@@ -759,69 +759,32 @@ type HeuristicData = {
   }>;
 };
 
+type NotificationCandidate = {
+  sourceType: string;
+  sourceId: string | null;
+  subject: string;
+  body: string;
+  priority: 'HIGH' | 'NORMAL';
+  actionUrl: string;
+};
+
 /**
- * Create proactive notifications from threshold alert data.
- * Deduplicates by sourceType + sourceId — only creates a new alert if no
- * active (non-archived) notification exists for the same entity.
- * Fire-and-forget — callers should .catch(() => {}).
+ * Build the proactive-notification candidate payloads from the heuristic
+ * collections. Extracted from createProactiveNotifications to keep that
+ * function's cognitive complexity within the sonar budget (NP-015/016/041).
  */
-async function createProactiveNotifications(
-  prisma: Context['prisma'],
-  tenantId: string,
-  userId: string,
+function buildProactiveNotificationCandidates(
   dealsAtRisk: HeuristicData['dealsAtRisk'],
   hotLeads: HeuristicData['hotLeads'],
   overdueTasksCount: HeuristicData['overdueTasksCount'],
   staleContacts: HeuristicData['staleContacts'],
-  now: Date,
-  timezone: string = 'Europe/London'
-): Promise<void> {
-  async function createIfNew(params: {
-    sourceType: string;
-    sourceId: string | null;
-    subject: string;
-    body: string;
-    priority: 'HIGH' | 'NORMAL';
-    actionUrl: string;
-  }) {
-    await prisma.$transaction(async (tx) => {
-      // Dedup by sourceType+sourceId regardless of date — prevents
-      // the same proactive alert from piling up across multiple days/loads.
-      const existing = await tx.notification.findFirst({
-        where: {
-          tenantId,
-          recipientId: userId,
-          sourceType: params.sourceType,
-          ...(params.sourceId ? { sourceId: params.sourceId } : {}),
-          status: { in: ['PENDING', 'SENT', 'DELIVERED', 'READ'] },
-        },
-      });
-      if (existing) return;
-
-      await tx.notification.create({
-        data: {
-          tenantId,
-          recipientId: userId,
-          channel: 'IN_APP',
-          subject: params.subject,
-          body: params.body,
-          priority: params.priority,
-          status: 'PENDING',
-          category: 'ALERTS',
-          sourceType: params.sourceType,
-          sourceId: params.sourceId ?? undefined,
-          metadata: {
-            notificationType: params.sourceType,
-            actionUrl: params.actionUrl,
-          },
-        },
-      });
-    });
-  }
+  now: Date
+): NotificationCandidate[] {
+  const candidates: NotificationCandidate[] = [];
 
   for (const deal of dealsAtRisk) {
     const daysSinceUpdate = Math.floor((now.getTime() - deal.updatedAt.getTime()) / 86400000);
-    await createIfNew({
+    candidates.push({
       sourceType: 'deal_at_risk',
       sourceId: deal.id,
       subject: `Deal at Risk: ${deal.name}`,
@@ -833,7 +796,7 @@ async function createProactiveNotifications(
 
   for (const lead of hotLeads) {
     const name = `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || lead.company || 'Lead';
-    await createIfNew({
+    candidates.push({
       sourceType: 'lead_scored',
       sourceId: lead.id,
       subject: `Hot Lead: ${name}`,
@@ -844,7 +807,7 @@ async function createProactiveNotifications(
   }
 
   if (overdueTasksCount > 0) {
-    await createIfNew({
+    candidates.push({
       sourceType: 'task_overdue',
       sourceId: null,
       subject: `${overdueTasksCount} Overdue Task${overdueTasksCount > 1 ? 's' : ''}`,
@@ -859,7 +822,7 @@ async function createProactiveNotifications(
     const days = contact.lastContactedAt
       ? Math.floor((now.getTime() - contact.lastContactedAt.getTime()) / 86400000)
       : null;
-    await createIfNew({
+    candidates.push({
       sourceType: 'contact_stale',
       sourceId: contact.id,
       subject: `Stale Contact: ${name}`,
@@ -870,6 +833,118 @@ async function createProactiveNotifications(
       actionUrl: `/contacts/${contact.id}`,
     });
   }
+
+  return candidates;
+}
+
+/**
+ * Create proactive notifications from threshold alert data.
+ * Deduplicates by sourceType + sourceId — only creates a new alert if no
+ * active (non-archived) notification exists for the same entity.
+ * Fire-and-forget — callers should .catch(() => {}).
+ *
+ * Batched implementation (NP-015/016/041):
+ * 1. Build all candidate notification payloads across the three collections.
+ * 2. Issue ONE findMany to find existing active notifications for this user/tenant
+ *    that match any of the candidate (sourceType, sourceId) pairs.
+ * 3. Filter out already-existing ones (Set-based dedup).
+ * 4. Insert remaining new notifications with ONE createMany call.
+ */
+async function createProactiveNotifications(
+  prisma: Context['prisma'],
+  tenantId: string,
+  userId: string,
+  dealsAtRisk: HeuristicData['dealsAtRisk'],
+  hotLeads: HeuristicData['hotLeads'],
+  overdueTasksCount: HeuristicData['overdueTasksCount'],
+  staleContacts: HeuristicData['staleContacts'],
+  now: Date,
+  timezone: string = 'Europe/London'
+): Promise<void> {
+  // -------------------------------------------------------------------------
+  // Step 1: Build all candidate notification payloads
+  // -------------------------------------------------------------------------
+  const candidates = buildProactiveNotificationCandidates(
+    dealsAtRisk,
+    hotLeads,
+    overdueTasksCount,
+    staleContacts,
+    now
+  );
+
+  if (candidates.length === 0) return;
+
+  // -------------------------------------------------------------------------
+  // Step 2: ONE findMany to check which (sourceType, sourceId) pairs already
+  // have an active notification for this user.
+  //
+  // Split into two groups: ones with a real sourceId (most), and the single
+  // null-sourceId case (task_overdue). Use an OR of exact-match conditions so
+  // the query is still a single round-trip regardless of collection size.
+  // -------------------------------------------------------------------------
+  const withSourceId = candidates.filter(
+    (c): c is NotificationCandidate & { sourceId: string } => c.sourceId !== null
+  );
+  const withNullSourceId = candidates.filter((c) => c.sourceId === null);
+
+  // Build OR conditions for the batch existence check: one entry per
+  // (sourceType, sourceId) pair. Prisma handles this efficiently because the
+  // candidate set is bounded by upstream take limits (≤150 rows).
+  const orConditions: Array<{ sourceType: string; sourceId?: string | null }> = [];
+  for (const c of withSourceId) {
+    orConditions.push({ sourceType: c.sourceType, sourceId: c.sourceId });
+  }
+  for (const c of withNullSourceId) {
+    orConditions.push({ sourceType: c.sourceType, sourceId: null });
+  }
+
+  const existingRows = await prisma.notification.findMany({
+    where: {
+      tenantId,
+      recipientId: userId,
+      status: { in: ['PENDING', 'SENT', 'DELIVERED', 'READ'] },
+      OR: orConditions as any,
+    },
+    select: { sourceType: true, sourceId: true },
+  });
+
+  // Build a Set of "sourceType|sourceId" keys for O(1) lookup.
+  // null sourceId is normalised to the empty string so it forms a valid key.
+  const existingKeys = new Set<string>(
+    existingRows.map((r) => `${r.sourceType}|${r.sourceId ?? ''}`)
+  );
+
+  // -------------------------------------------------------------------------
+  // Step 3: Filter to only the notifications that do not yet exist.
+  // -------------------------------------------------------------------------
+  const newCandidates = candidates.filter(
+    (c) => !existingKeys.has(`${c.sourceType}|${c.sourceId ?? ''}`)
+  );
+
+  if (newCandidates.length === 0) return;
+
+  // -------------------------------------------------------------------------
+  // Step 4: ONE createMany for all new notifications.
+  // -------------------------------------------------------------------------
+  await prisma.notification.createMany({
+    data: newCandidates.map((c) => ({
+      tenantId,
+      recipientId: userId,
+      channel: 'IN_APP',
+      subject: c.subject,
+      body: c.body,
+      priority: c.priority,
+      status: 'PENDING',
+      category: 'ALERTS',
+      sourceType: c.sourceType,
+      ...(c.sourceId !== null ? { sourceId: c.sourceId } : {}),
+      metadata: {
+        notificationType: c.sourceType,
+        actionUrl: c.actionUrl,
+      },
+    })),
+    skipDuplicates: true,
+  });
 }
 
 /**

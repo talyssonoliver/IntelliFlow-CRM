@@ -75,13 +75,9 @@ describe('home.getAllInsights', () => {
     prismaMock.opportunity.count.mockResolvedValue(0);
     prismaMock.opportunity.aggregate.mockResolvedValue({ _sum: { value: null } } as any);
     prismaMock.lead.count.mockResolvedValue(0);
-    // createProactiveNotifications (fire-and-forget) calls findFirst + create; default to null/empty
-    (prismaMock.notification as any).findFirst.mockResolvedValue(null);
-    (prismaMock.notification as any).create.mockResolvedValue({} as any);
-    // Transaction mock: pass prismaMock as tx so inner tx.notification.* hits existing mocks
-    (prismaMock as any).$transaction = vi
-      .fn()
-      .mockImplementation(async (fn: any) => fn(prismaMock));
+    // createProactiveNotifications (fire-and-forget) uses batch findMany + createMany (NP-015/016/041)
+    (prismaMock.notification as any).findMany.mockResolvedValue([]);
+    (prismaMock.notification as any).createMany.mockResolvedValue({ count: 0 });
   });
 
   // =========================================================================

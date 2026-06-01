@@ -18,6 +18,7 @@ vi.mock('@intelliflow/db', () => ({
     const mockTx = {
       domainEvent: {
         findFirst: vi.fn().mockResolvedValue(null),
+        findMany: vi.fn().mockResolvedValue([]),
         create: vi.fn().mockResolvedValue({ id: 'created-id' }),
       },
     };
@@ -110,6 +111,7 @@ function createMockPrisma() {
   const mockTx = {
     domainEvent: {
       findFirst: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
       create: vi.fn().mockResolvedValue({ id: 'created-id' }),
     },
   };
@@ -117,6 +119,7 @@ function createMockPrisma() {
   return {
     domainEvent: {
       findFirst: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
       create: vi.fn().mockResolvedValue({ id: 'created-id' }),
     },
     $transaction: vi.fn(async (callback: (tx: any) => Promise<any>) => {
@@ -309,15 +312,16 @@ describe('OutboxEventBusAdapter (Implementation)', () => {
       expect(withTransaction).not.toHaveBeenCalled();
     });
 
-    it('should publish all events within a transaction', async () => {
+    it('should publish all events within a transaction — NP-054 batched', async () => {
       const { withTransaction } = await import('@intelliflow/db');
       const mockCreate = vi.fn().mockResolvedValue({ id: 'created-id' });
-      const mockFindFirst = vi.fn().mockResolvedValue(null);
+      // Batched check: findMany returns [] (no existing duplicates)
+      const mockFindMany = vi.fn().mockResolvedValue([]);
 
       vi.mocked(withTransaction).mockImplementation(async (callback: any) => {
         const mockTx = {
           domainEvent: {
-            findFirst: mockFindFirst,
+            findMany: mockFindMany,
             create: mockCreate,
           },
         };
@@ -332,21 +336,32 @@ describe('OutboxEventBusAdapter (Implementation)', () => {
       await adapter.publishAll(events);
 
       expect(withTransaction).toHaveBeenCalledTimes(1);
+      // ONE batched findMany query instead of N findFirst calls
+      expect(mockFindMany).toHaveBeenCalledTimes(1);
+      expect(mockFindMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ OR: expect.any(Array) }),
+        })
+      );
       expect(mockCreate).toHaveBeenCalledTimes(2);
     });
 
-    it('should skip duplicates within the batch', async () => {
+    it('should skip duplicates when findMany returns existing keys — NP-054', async () => {
       const { withTransaction } = await import('@intelliflow/db');
       const mockCreate = vi.fn().mockResolvedValue({ id: 'created-id' });
-      const mockFindFirst = vi
-        .fn()
-        .mockResolvedValueOnce(null) // first event is new
-        .mockResolvedValueOnce({ id: 'existing-id' }); // second is duplicate
 
+      // Simulate that the first event's key is already in the DB
       vi.mocked(withTransaction).mockImplementation(async (callback: any) => {
+        let capturedKeys: string[] = [];
+        const mockFindMany = vi.fn().mockImplementation(async (args: any) => {
+          // Capture the keys being checked
+          capturedKeys = (args.where?.OR ?? []).map((cond: any) => cond.metadata?.equals);
+          // Return a record matching the first key (first event is a duplicate)
+          return [{ metadata: { idempotencyKey: capturedKeys[0] } }];
+        });
         const mockTx = {
           domainEvent: {
-            findFirst: mockFindFirst,
+            findMany: mockFindMany,
             create: mockCreate,
           },
         };
@@ -360,18 +375,19 @@ describe('OutboxEventBusAdapter (Implementation)', () => {
 
       await adapter.publishAll(events);
 
+      // Only the second event should be created (first is duplicate)
       expect(mockCreate).toHaveBeenCalledTimes(1);
     });
 
     it('should use correct aggregate types for different events', async () => {
       const { withTransaction } = await import('@intelliflow/db');
       const mockCreate = vi.fn().mockResolvedValue({ id: 'created-id' });
-      const mockFindFirst = vi.fn().mockResolvedValue(null);
+      const mockFindMany = vi.fn().mockResolvedValue([]);
 
       vi.mocked(withTransaction).mockImplementation(async (callback: any) => {
         const mockTx = {
           domainEvent: {
-            findFirst: mockFindFirst,
+            findMany: mockFindMany,
             create: mockCreate,
           },
         };
@@ -393,12 +409,12 @@ describe('OutboxEventBusAdapter (Implementation)', () => {
     it('should handle a single event in the batch', async () => {
       const { withTransaction } = await import('@intelliflow/db');
       const mockCreate = vi.fn().mockResolvedValue({ id: 'created-id' });
-      const mockFindFirst = vi.fn().mockResolvedValue(null);
+      const mockFindMany = vi.fn().mockResolvedValue([]);
 
       vi.mocked(withTransaction).mockImplementation(async (callback: any) => {
         const mockTx = {
           domainEvent: {
-            findFirst: mockFindFirst,
+            findMany: mockFindMany,
             create: mockCreate,
           },
         };
@@ -410,6 +426,34 @@ describe('OutboxEventBusAdapter (Implementation)', () => {
       await adapter.publishAll(events);
 
       expect(withTransaction).toHaveBeenCalledTimes(1);
+      expect(mockFindMany).toHaveBeenCalledTimes(1);
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+    });
+
+    it('should skip duplicate events within the same batch (in-batch dedup) — NP-054', async () => {
+      const { withTransaction } = await import('@intelliflow/db');
+      const mockCreate = vi.fn().mockResolvedValue({ id: 'created-id' });
+      const mockFindMany = vi.fn().mockResolvedValue([]);
+
+      vi.mocked(withTransaction).mockImplementation(async (callback: any) => {
+        const mockTx = {
+          domainEvent: {
+            findMany: mockFindMany,
+            create: mockCreate,
+          },
+        };
+        return callback(mockTx);
+      });
+
+      // Create two events with the same eventId (same idempotency key)
+      const event1 = new TestLeadCreatedEvent('lead-dup', 'a@example.com');
+      // Manually create a second event with same data but different eventId
+      // (in practice same event object submitted twice)
+      const events = [event1, event1]; // exact same object = same key
+
+      await adapter.publishAll(events);
+
+      // Only ONE create because in-batch dedup fires
       expect(mockCreate).toHaveBeenCalledTimes(1);
     });
   });

@@ -317,30 +317,19 @@ describe('account.bulkReassign (IFC-311)', () => {
     const idNotFound = '55555555-0000-4000-8000-555555555555';
     const idAlreadyOwned = '66666666-0000-4000-8000-666666666666';
 
-    // Per-call findFirst returns:
-    //  id1 → owner=user1, OK
-    //  id2 → owner=user1, OK
-    //  id3 → owner=user1, OK
-    //  idSelfSkip → owner=newOwnerUuid (already owned by target → SKIPPED via SAME-OWNER)
-    //  idForbidden — admin caller bypasses authz, but row not present → NOT_FOUND
-    //    To produce a real FORBIDDEN we would need a non-admin caller; for this
-    //    batch we use a non-admin callsite instead (see test below).
-    //  idNotFound → null
-    //  idAlreadyOwned → owner=newOwnerUuid (same as input)
-
-    const findFirstMock = vi.fn().mockImplementation(({ where }: any) => {
-      if (where.id === id1 || where.id === id2 || where.id === id3) {
-        return { ...mockAccount, id: where.id, ownerId: TEST_UUIDS.user1 };
-      }
-      if (where.id === idSelfSkip || where.id === idAlreadyOwned) {
-        return { ...mockAccount, id: where.id, ownerId: newOwnerUuid };
-      }
-      if (where.id === idForbidden || where.id === idNotFound) {
-        return null;
-      }
-      return null;
-    });
-    prismaMock.account.findFirst.mockImplementation(findFirstMock as any);
+    // Batched findMany returns all rows that exist (idForbidden + idNotFound absent):
+    //  id1, id2, id3 → owner=user1, OK (admin caller bypasses authz)
+    //  idSelfSkip → owner=newOwnerUuid (already owned by target → SKIPPED)
+    //  idAlreadyOwned → owner=newOwnerUuid (same as input → SKIPPED)
+    //  idForbidden → absent from result → NOT_FOUND (under admin caller)
+    //  idNotFound → absent from result → NOT_FOUND
+    (prismaMock.account.findMany as any).mockResolvedValue([
+      { ...mockAccount, id: id1, ownerId: TEST_UUIDS.user1 },
+      { ...mockAccount, id: id2, ownerId: TEST_UUIDS.user1 },
+      { ...mockAccount, id: id3, ownerId: TEST_UUIDS.user1 },
+      { ...mockAccount, id: idSelfSkip, ownerId: newOwnerUuid },
+      { ...mockAccount, id: idAlreadyOwned, ownerId: newOwnerUuid },
+    ]);
 
     const result = await adminCaller.bulkReassign({
       ids: [id1, id2, id3, idSelfSkip, idForbidden, idNotFound, idAlreadyOwned],
@@ -350,12 +339,16 @@ describe('account.bulkReassign (IFC-311)', () => {
     expect(result.totalProcessed).toBe(7);
     // 3 OK + 2 skipped (idSelfSkip, idAlreadyOwned) = 5 successful
     expect(result.successful).toHaveLength(5);
-    // 2 not-found (idForbidden + idNotFound — both null lookups under admin)
+    // 2 not-found (idForbidden + idNotFound — both absent from findMany under admin)
     expect(result.failed).toHaveLength(2);
     expect(result.failed.every((f) => f.errorCode === 'NOT_FOUND')).toBe(true);
 
     const skippedCount = result.successful.filter((s) => s.skipped).length;
     expect(skippedCount).toBe(2);
+
+    // Batched: ONE findMany call, not 7 findFirst calls
+    expect(prismaMock.account.findMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.account.findFirst).not.toHaveBeenCalled();
   });
 
   // ─── AC-AB2: cross-tenant target user → whole batch fails NOT_FOUND ──────
@@ -369,8 +362,9 @@ describe('account.bulkReassign (IFC-311)', () => {
       })
     ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
 
-    // Per-row work never started
+    // Per-row work never started (batched path: findMany not called)
     expect(prismaMock.account.findFirst).not.toHaveBeenCalled();
+    expect(prismaMock.account.findMany).not.toHaveBeenCalled();
     expect(prismaMock.account.updateMany).not.toHaveBeenCalled();
   });
 
@@ -391,14 +385,13 @@ describe('account.bulkReassign (IFC-311)', () => {
   // ─── AC-AB5: duplicate ids in batch — re-submit yields skipped ───────────
   it('AC-AB5: duplicate ids — first succeeds, repeats become SKIPPED', async () => {
     const id = TEST_UUIDS.account1;
-    let lookupCount = 0;
-    prismaMock.account.findFirst.mockImplementation((async ({ where }: any) => {
-      lookupCount += 1;
-      // First call: owner=user1 (will succeed)
-      // Subsequent calls: owner=newOwnerUuid (already changed → SKIPPED)
-      const ownerId = lookupCount === 1 ? TEST_UUIDS.user1 : newOwnerUuid;
-      return { ...mockAccount, id: where.id, ownerId };
-    }) as any);
+    // Batched path: findMany called ONCE with the deduplicated id.
+    // Returns owner=user1, so the first occurrence is OK and written;
+    // the 2nd and 3rd occurrences of the same id are SKIPPED in-memory
+    // (already in writtenIds after the first pass).
+    (prismaMock.account.findMany as any).mockResolvedValue([
+      { ...mockAccount, id, ownerId: TEST_UUIDS.user1 },
+    ]);
 
     const result = await adminCaller.bulkReassign({
       ids: [id, id, id],
@@ -409,6 +402,10 @@ describe('account.bulkReassign (IFC-311)', () => {
     expect(result.successful).toHaveLength(3);
     const skipped = result.successful.filter((s) => s.skipped);
     expect(skipped).toHaveLength(2);
+
+    // ONE findMany call (deduped), ONE updateMany (eligible = 1 unique id)
+    expect(prismaMock.account.findMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.account.updateMany).toHaveBeenCalledTimes(1);
   });
 
   // ─── AC-CB6: 100-row batch under 2s ──────────────────────────────────────
@@ -417,11 +414,10 @@ describe('account.bulkReassign (IFC-311)', () => {
       { length: 100 },
       (_, i) => `${i.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`
     );
-    prismaMock.account.findFirst.mockImplementation((async ({ where }: any) => ({
-      ...mockAccount,
-      id: where.id,
-      ownerId: TEST_UUIDS.user1,
-    })) as any);
+    // Batched findMany returns all 100 rows in one call
+    (prismaMock.account.findMany as any).mockResolvedValue(
+      ids.map((id) => ({ ...mockAccount, id, ownerId: TEST_UUIDS.user1 }))
+    );
 
     const t0 = performance.now();
     const result = await adminCaller.bulkReassign({ ids, ownerId: newOwnerUuid });
@@ -430,6 +426,10 @@ describe('account.bulkReassign (IFC-311)', () => {
     expect(result.totalProcessed).toBe(100);
     expect(result.successful.length + result.failed.length).toBe(100);
     expect(elapsed).toBeLessThan(2000);
+
+    // Constant number of DB calls regardless of batch size
+    expect(prismaMock.account.findMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.account.updateMany).toHaveBeenCalledTimes(1);
   });
 
   // ─── AC-AB-FORBIDDEN: per-row FORBIDDEN under non-admin caller ───────────
@@ -453,11 +453,11 @@ describe('account.bulkReassign (IFC-311)', () => {
     const caller = accountRouter.createCaller(ctx);
 
     // Both rows owned by user1 → SALES_REP-other has neither admin role nor ownership
-    prismaMock.account.findFirst.mockImplementation((async ({ where }: any) => ({
-      ...mockAccount,
-      id: where.id,
-      ownerId: TEST_UUIDS.user1,
-    })) as any);
+    // Batched findMany returns both rows (they exist, but caller is FORBIDDEN for each)
+    (prismaMock.account.findMany as any).mockResolvedValue([
+      { ...mockAccount, id: TEST_UUIDS.account1, ownerId: TEST_UUIDS.user1 },
+      { ...mockAccount, id: TEST_UUIDS.account2, ownerId: TEST_UUIDS.user1 },
+    ]);
 
     const result = await caller.bulkReassign({
       ids: [TEST_UUIDS.account1, TEST_UUIDS.account2],
@@ -467,6 +467,9 @@ describe('account.bulkReassign (IFC-311)', () => {
     expect(result.successful).toHaveLength(0);
     expect(result.failed).toHaveLength(2);
     expect(result.failed.every((f) => f.errorCode === 'FORBIDDEN')).toBe(true);
+
+    // No write attempted — all rows FORBIDDEN
+    expect(prismaMock.account.updateMany).not.toHaveBeenCalled();
   });
 });
 

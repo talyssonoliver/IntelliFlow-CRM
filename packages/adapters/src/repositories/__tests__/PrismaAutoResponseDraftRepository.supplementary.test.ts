@@ -55,6 +55,7 @@ const mockPrisma = {
     updateMany: vi.fn(),
     delete: vi.fn(),
     count: vi.fn(),
+    groupBy: vi.fn(),
   },
 };
 
@@ -70,6 +71,7 @@ describe('PrismaAutoResponseDraftRepository - supplementary', () => {
     mockPrisma.autoResponseDraft.updateMany.mockClear();
     mockPrisma.autoResponseDraft.delete.mockClear();
     mockPrisma.autoResponseDraft.count.mockClear();
+    (mockPrisma.autoResponseDraft as any).groupBy?.mockClear?.();
     repo = new PrismaAutoResponseDraftRepository(mockPrisma as any);
   });
 

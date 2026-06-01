@@ -334,6 +334,31 @@ describe('AIWorker', () => {
       expect(result).toEqual({ score: 85 });
     });
 
+    it('seeds a background query-budget context around the job (ADR-053, real wiring)', async () => {
+      // Uses the REAL @intelliflow/db query-budget ALS (not mocked here) to
+      // prove processJob wraps the handler in runWithQueryBudget({background}).
+      const { getQueryBudgetStore } = await import('@intelliflow/db');
+      let capturedContext: string | undefined;
+      let capturedRoute: string | undefined;
+      mocks.mockProcessScoringJob.mockImplementationOnce(async () => {
+        const store = getQueryBudgetStore();
+        capturedContext = store?.context;
+        capturedRoute = store?.route;
+        return { score: 85 };
+      });
+
+      const worker = new AIWorker();
+      const job = { queueName: 'ai-scoring', name: 'score', data: { leadId: '123' } } as any;
+      await (worker as any).processJob(job);
+
+      // The Prisma query-budget extension is a no-op without an active store;
+      // this asserts the store IS active (context=background) during the job.
+      expect(capturedContext).toBe('background');
+      expect(capturedRoute).toBe('ai-scoring');
+      // And there is NO active store once the job returns (context torn down).
+      expect(getQueryBudgetStore()).toBeUndefined();
+    });
+
     it('routes prediction queue to processPredictionJob', async () => {
       const worker = new AIWorker();
       const job = { queueName: 'ai-prediction', data: { type: 'churn' } } as any;

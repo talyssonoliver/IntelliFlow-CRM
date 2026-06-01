@@ -83,6 +83,26 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
 };
 
 /**
+ * Run an async task for each item in `items` with at most `concurrency`
+ * in-flight at once. Results are returned in the same order as `items`.
+ */
+async function runConcurrent<T, R>(
+  items: T[],
+  task: (item: T) => Promise<R>,
+  concurrency: number
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  for (let i = 0; i < items.length; i += concurrency) {
+    const chunk = items.slice(i, i + concurrency);
+    const chunkResults = await Promise.all(chunk.map(task));
+    for (let j = 0; j < chunkResults.length; j++) {
+      results[i + j] = chunkResults[j];
+    }
+  }
+  return results;
+}
+
+/**
  * Audit logger interface for decoupling
  */
 export interface NotificationAuditLogger {
@@ -343,24 +363,35 @@ export class NotificationService {
       100
     );
 
-    let retried = 0;
-    let movedToDLQ = 0;
+    const retryable: Notification[] = [];
+    const dlqBound: Notification[] = [];
 
     for (const notification of failedNotifications) {
       if (notification.canRetry(this.retryConfig.maxRetries)) {
         notification.resetForRetry();
-        await this.notificationRepo.save(notification);
-
-        const result = await this.deliverNotification(notification);
-        if (result.status === 'sent') {
-          retried++;
-        }
+        retryable.push(notification);
       } else {
-        // Move to DLQ
-        await this.moveToDLQ(notification);
-        movedToDLQ++;
+        dlqBound.push(notification);
       }
     }
+
+    // Persist retryable state resets (per-item, domain-driven)
+    for (const notification of retryable) {
+      await this.notificationRepo.save(notification);
+    }
+
+    // Parallel delivery with concurrency cap of 10
+    const deliveryResults = await runConcurrent(
+      retryable,
+      (notification) => this.deliverNotification(notification),
+      10
+    );
+
+    // Move exhausted notifications to DLQ concurrently (cap 10)
+    await runConcurrent(dlqBound, (notification) => this.moveToDLQ(notification), 10);
+
+    const retried = deliveryResults.filter((r) => r.status === 'sent').length;
+    const movedToDLQ = dlqBound.length;
 
     return { retried, movedToDLQ };
   }
@@ -374,13 +405,14 @@ export class NotificationService {
       100
     );
 
-    let processed = 0;
-    for (const notification of scheduledNotifications) {
-      await this.deliverNotification(notification);
-      processed++;
-    }
+    // Parallel delivery with concurrency cap of 10
+    await runConcurrent(
+      scheduledNotifications,
+      (notification) => this.deliverNotification(notification),
+      10
+    );
 
-    return processed;
+    return scheduledNotifications.length;
   }
 
   // Private methods

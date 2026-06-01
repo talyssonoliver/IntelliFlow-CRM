@@ -193,16 +193,15 @@ const requiredFieldsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
       return ctx.prismaWithTenant.$transaction(async (tx) => {
-        const results = await Promise.all(
-          input.fields.map((field) =>
-            tx.documentRequiredField.upsert({
-              where: { tenantId_fieldKey: { tenantId, fieldKey: field.fieldKey } },
-              create: { tenantId, ...field },
-              update: { isRequired: field.isRequired },
-            })
-          )
-        );
-        return results;
+        // NP-026 fix: full-set replacement in 2 statements instead of N upserts.
+        await tx.documentRequiredField.deleteMany({ where: { tenantId } });
+        await tx.documentRequiredField.createMany({
+          data: input.fields.map((field) => ({ tenantId, ...field })),
+        });
+        return tx.documentRequiredField.findMany({
+          where: { tenantId },
+          orderBy: { fieldKey: 'asc' },
+        });
       });
     }),
 

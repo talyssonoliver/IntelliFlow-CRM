@@ -18,6 +18,17 @@ const mockRepository: Partial<AutoResponseDraftRepository> = {
   findActiveByLeadAndTrigger: vi.fn(),
   findPendingForApprover: vi.fn(),
   countByStatus: vi.fn(),
+  expireDraftsBeforeDate: vi.fn().mockResolvedValue(0),
+  countByStatusAll: vi.fn().mockResolvedValue({
+    DRAFT: 0,
+    PENDING_APPROVAL: 0,
+    APPROVED: 0,
+    REJECTED: 0,
+    ESCALATED: 0,
+    SENT: 0,
+    FAILED: 0,
+    INVALIDATED: 0,
+  }),
 };
 
 // Mock the dynamic import of adapters
@@ -277,19 +288,22 @@ describe('autoResponseRouter', () => {
   });
 
   describe('getStatsByStatus', () => {
-    it('should return count for each status', async () => {
-      (mockRepository.countByStatus as ReturnType<typeof vi.fn>)
-        .mockResolvedValueOnce(5) // DRAFT
-        .mockResolvedValueOnce(3) // PENDING_APPROVAL
-        .mockResolvedValueOnce(10) // APPROVED
-        .mockResolvedValueOnce(2) // REJECTED
-        .mockResolvedValueOnce(1) // ESCALATED
-        .mockResolvedValueOnce(8) // SENT
-        .mockResolvedValueOnce(1) // FAILED
-        .mockResolvedValueOnce(0); // INVALIDATED
+    it('should return count for each status via countByStatusAll', async () => {
+      // NP-043 fix: router uses countByStatusAll (single groupBy) not per-status countByStatus
+      (mockRepository.countByStatusAll as ReturnType<typeof vi.fn>).mockResolvedValue({
+        DRAFT: 5,
+        PENDING_APPROVAL: 3,
+        APPROVED: 10,
+        REJECTED: 2,
+        ESCALATED: 1,
+        SENT: 8,
+        FAILED: 1,
+        INVALIDATED: 0,
+      });
 
-      const draftCount = await mockRepository.countByStatus?.(TEST_TENANT_ID, 'DRAFT');
-      expect(draftCount).toBe(5);
+      const allCounts = await mockRepository.countByStatusAll?.(TEST_TENANT_ID);
+      expect(allCounts?.DRAFT).toBe(5);
+      expect(allCounts?.PENDING_APPROVAL).toBe(3);
     });
   });
 

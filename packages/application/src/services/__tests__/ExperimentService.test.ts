@@ -43,6 +43,7 @@ function createMockAssignmentRepo(): Record<string, any> {
     updateScore: vi.fn(),
     updateConversion: vi.fn(),
     countByVariant: vi.fn(),
+    countVariantsForExperiments: vi.fn(),
     getScoresByVariant: vi.fn(),
     getConversionsByVariant: vi.fn(),
   };
@@ -52,6 +53,7 @@ function createMockResultRepo(): Record<string, any> {
   return {
     create: vi.fn(),
     findByExperimentId: vi.fn(),
+    findByExperimentIds: vi.fn(),
     update: vi.fn(),
   };
 }
@@ -154,6 +156,96 @@ describe('ExperimentService', () => {
       resultRepo as ResultRepositoryPort,
       eventBus as any
     );
+  });
+
+  // =========================================================================
+  // listExperiments — NP-001 N+1 regression (was 3N+1, now a constant 3 queries)
+  // =========================================================================
+  describe('listExperiments (NP-001 N+1 fix)', () => {
+    function wireRepos(experiments: ExperimentRecord[]): void {
+      experimentRepo.findByTenantId.mockResolvedValue(experiments);
+      assignmentRepo.countVariantsForExperiments.mockResolvedValue(
+        experiments.flatMap((e) => [
+          { experimentId: e.id, variant: 'control', count: 1 },
+          { experimentId: e.id, variant: 'treatment', count: 2 },
+        ])
+      );
+      resultRepo.findByExperimentIds.mockResolvedValue([]);
+    }
+
+    it('returns correct per-experiment summaries from batched lookups', async () => {
+      const experiments = [
+        makeExperiment({ id: 'exp-1', minSampleSize: 10 }),
+        makeExperiment({ id: 'exp-2', minSampleSize: 10 }),
+      ];
+      experimentRepo.findByTenantId.mockResolvedValue(experiments);
+      assignmentRepo.countVariantsForExperiments.mockResolvedValue([
+        { experimentId: 'exp-1', variant: 'control', count: 4 },
+        { experimentId: 'exp-1', variant: 'treatment', count: 6 },
+        // exp-2 has only treatment assignments — control must default to 0.
+        { experimentId: 'exp-2', variant: 'treatment', count: 3 },
+      ]);
+      resultRepo.findByExperimentIds.mockResolvedValue([
+        makeResultRecord({ experimentId: 'exp-1', isSignificant: true, winner: 'treatment' }),
+      ]);
+
+      const summaries = await service.listExperiments('tenant-1');
+
+      expect(summaries).toHaveLength(2);
+      expect(summaries[0]).toMatchObject({
+        id: 'exp-1',
+        controlSampleSize: 4,
+        treatmentSampleSize: 6,
+        totalAssignments: 10,
+        progressPercent: 50, // 10 / (10*2) * 100
+        hasResult: true,
+        isSignificant: true,
+        winner: 'treatment',
+      });
+      expect(summaries[1]).toMatchObject({
+        id: 'exp-2',
+        controlSampleSize: 0,
+        treatmentSampleSize: 3,
+        totalAssignments: 3,
+        hasResult: false,
+        isSignificant: null,
+        winner: null,
+      });
+    });
+
+    it('issues a CONSTANT number of repo calls regardless of experiment count (no N+1)', async () => {
+      wireRepos([makeExperiment({ id: 'a' }), makeExperiment({ id: 'b' })]);
+      await service.listExperiments('tenant-1');
+      const callsForTwo =
+        experimentRepo.findByTenantId.mock.calls.length +
+        assignmentRepo.countVariantsForExperiments.mock.calls.length +
+        resultRepo.findByExperimentIds.mock.calls.length;
+
+      vi.clearAllMocks();
+
+      wireRepos(Array.from({ length: 10 }, (_, i) => makeExperiment({ id: `e${i}` })));
+      await service.listExperiments('tenant-1');
+      const callsForTen =
+        experimentRepo.findByTenantId.mock.calls.length +
+        assignmentRepo.countVariantsForExperiments.mock.calls.length +
+        resultRepo.findByExperimentIds.mock.calls.length;
+
+      // 3 queries total at BOTH sizes — query count does not grow with N.
+      expect(callsForTwo).toBe(3);
+      expect(callsForTen).toBe(3);
+
+      // The old per-experiment N+1 methods must NOT be used by listExperiments.
+      expect(assignmentRepo.countByVariant).not.toHaveBeenCalled();
+      expect(resultRepo.findByExperimentId).not.toHaveBeenCalled();
+    });
+
+    it('short-circuits (no assignment/result queries) when there are no experiments', async () => {
+      experimentRepo.findByTenantId.mockResolvedValue([]);
+      const summaries = await service.listExperiments('tenant-1');
+      expect(summaries).toEqual([]);
+      expect(assignmentRepo.countVariantsForExperiments).not.toHaveBeenCalled();
+      expect(resultRepo.findByExperimentIds).not.toHaveBeenCalled();
+    });
   });
 
   // =========================================================================
@@ -840,11 +932,18 @@ describe('ExperimentService', () => {
   // =========================================================================
 
   describe('listExperiments', () => {
+    // Batched groupBy mock helper: `n` control AND `n` treatment per experiment.
+    const variantRows = (exps: ExperimentRecord[], n: number) =>
+      exps.flatMap((e) => [
+        { experimentId: e.id, variant: 'control', count: n },
+        { experimentId: e.id, variant: 'treatment', count: n },
+      ]);
+
     it('should return experiment summaries with assignment counts', async () => {
       const experiments = [makeExperiment({ id: 'exp-1' }), makeExperiment({ id: 'exp-2' })];
       experimentRepo.findByTenantId.mockResolvedValue(experiments);
-      assignmentRepo.countByVariant.mockResolvedValue(25);
-      resultRepo.findByExperimentId.mockResolvedValue(null);
+      assignmentRepo.countVariantsForExperiments.mockResolvedValue(variantRows(experiments, 25));
+      resultRepo.findByExperimentIds.mockResolvedValue([]);
 
       const summaries = await service.listExperiments('tenant-1');
 
@@ -858,8 +957,9 @@ describe('ExperimentService', () => {
     it('should compute progress percent', async () => {
       const experiments = [makeExperiment({ minSampleSize: 100 })];
       experimentRepo.findByTenantId.mockResolvedValue(experiments);
-      assignmentRepo.countByVariant.mockResolvedValue(50); // 50 per variant -> 100 total out of 200
-      resultRepo.findByExperimentId.mockResolvedValue(null);
+      // 50 per variant -> 100 total out of target 200.
+      assignmentRepo.countVariantsForExperiments.mockResolvedValue(variantRows(experiments, 50));
+      resultRepo.findByExperimentIds.mockResolvedValue([]);
 
       const summaries = await service.listExperiments('tenant-1');
 
@@ -869,8 +969,8 @@ describe('ExperimentService', () => {
     it('should cap progress percent at 100', async () => {
       const experiments = [makeExperiment({ minSampleSize: 10 })];
       experimentRepo.findByTenantId.mockResolvedValue(experiments);
-      assignmentRepo.countByVariant.mockResolvedValue(100); // way over target
-      resultRepo.findByExperimentId.mockResolvedValue(null);
+      assignmentRepo.countVariantsForExperiments.mockResolvedValue(variantRows(experiments, 100)); // over target
+      resultRepo.findByExperimentIds.mockResolvedValue([]);
 
       const summaries = await service.listExperiments('tenant-1');
 
@@ -878,11 +978,16 @@ describe('ExperimentService', () => {
     });
 
     it('should include result data if available', async () => {
-      experimentRepo.findByTenantId.mockResolvedValue([makeExperiment()]);
-      assignmentRepo.countByVariant.mockResolvedValue(50);
-      resultRepo.findByExperimentId.mockResolvedValue(
-        makeResultRecord({ isSignificant: true, winner: 'treatment' })
-      );
+      const experiments = [makeExperiment()];
+      experimentRepo.findByTenantId.mockResolvedValue(experiments);
+      assignmentRepo.countVariantsForExperiments.mockResolvedValue(variantRows(experiments, 50));
+      resultRepo.findByExperimentIds.mockResolvedValue([
+        makeResultRecord({
+          experimentId: experiments[0].id,
+          isSignificant: true,
+          winner: 'treatment',
+        }),
+      ]);
 
       const summaries = await service.listExperiments('tenant-1');
 

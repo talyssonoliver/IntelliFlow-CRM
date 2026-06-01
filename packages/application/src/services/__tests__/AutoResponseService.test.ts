@@ -79,6 +79,17 @@ function createMockDraftRepository(): Record<string, any> {
     findExpired: vi.fn(),
     delete: vi.fn(),
     countByStatus: vi.fn(),
+    expireDraftsBeforeDate: vi.fn().mockResolvedValue(0),
+    countByStatusAll: vi.fn().mockResolvedValue({
+      DRAFT: 0,
+      PENDING_APPROVAL: 0,
+      APPROVED: 0,
+      REJECTED: 0,
+      ESCALATED: 0,
+      SENT: 0,
+      FAILED: 0,
+      INVALIDATED: 0,
+    }),
   };
 }
 
@@ -731,17 +742,40 @@ describe('AutoResponseService', () => {
   // =========================================================================
 
   describe('processExpiredDrafts', () => {
-    it('should process expired drafts', async () => {
+    it('should process expired drafts using a single bulk update', async () => {
       const draft1 = createMockDraft({ id: 'draft-1' });
       draft1.checkExpiry.mockReturnValue(true);
       const draft2 = createMockDraft({ id: 'draft-2' });
       draft2.checkExpiry.mockReturnValue(true);
       draftRepo.findExpired.mockResolvedValue([draft1, draft2]);
+      draftRepo.expireDraftsBeforeDate.mockResolvedValue(2);
 
       const count = await service.processExpiredDrafts('tenant-1');
 
       expect(count).toBe(2);
-      expect(draftRepo.save).toHaveBeenCalledTimes(2);
+      // Must NOT call per-row save() for expiry — use the bulk method instead
+      expect(draftRepo.save).not.toHaveBeenCalled();
+      // Exactly ONE bulk call regardless of how many drafts were found
+      expect(draftRepo.expireDraftsBeforeDate).toHaveBeenCalledTimes(1);
+      expect(draftRepo.expireDraftsBeforeDate).toHaveBeenCalledWith(
+        'tenant-1',
+        expect.any(Date),
+        expect.arrayContaining(['SENT', 'FAILED', 'INVALIDATED'])
+      );
+    });
+
+    it('should emit per-draft domain events for expired drafts', async () => {
+      const draft1 = createMockDraft({ id: 'draft-1' });
+      draft1.checkExpiry.mockReturnValue(true);
+      const mockEvent = { eventType: 'auto_response.expired' };
+      draft1.getDomainEvents.mockReturnValue([mockEvent]);
+      draftRepo.findExpired.mockResolvedValue([draft1]);
+      draftRepo.expireDraftsBeforeDate.mockResolvedValue(1);
+
+      await service.processExpiredDrafts('tenant-1');
+
+      expect(eventBus.publishAll).toHaveBeenCalledWith([mockEvent]);
+      expect(draft1.clearDomainEvents).toHaveBeenCalled();
     });
 
     it('should skip drafts that are not actually expired', async () => {
@@ -753,19 +787,8 @@ describe('AutoResponseService', () => {
 
       expect(count).toBe(0);
       expect(draftRepo.save).not.toHaveBeenCalled();
-    });
-
-    it('should continue processing if one draft fails', async () => {
-      const draft1 = createMockDraft({ id: 'draft-1' });
-      draft1.checkExpiry.mockReturnValue(true);
-      const draft2 = createMockDraft({ id: 'draft-2' });
-      draft2.checkExpiry.mockReturnValue(true);
-      draftRepo.findExpired.mockResolvedValue([draft1, draft2]);
-      draftRepo.save.mockRejectedValueOnce(new Error('DB error')).mockResolvedValueOnce(undefined);
-
-      const count = await service.processExpiredDrafts('tenant-1');
-
-      expect(count).toBe(1);
+      // No bulk call when no drafts were actually expired
+      expect(draftRepo.expireDraftsBeforeDate).not.toHaveBeenCalled();
     });
 
     it('should return 0 when no expired drafts exist', async () => {
@@ -774,6 +797,7 @@ describe('AutoResponseService', () => {
       const count = await service.processExpiredDrafts('tenant-1');
 
       expect(count).toBe(0);
+      expect(draftRepo.expireDraftsBeforeDate).not.toHaveBeenCalled();
     });
   });
 
@@ -782,8 +806,17 @@ describe('AutoResponseService', () => {
   // =========================================================================
 
   describe('getStatsByStatus', () => {
-    it('should return counts for all statuses', async () => {
-      draftRepo.countByStatus.mockResolvedValue(5);
+    it('should return counts for all statuses via a single countByStatusAll call', async () => {
+      draftRepo.countByStatusAll.mockResolvedValue({
+        DRAFT: 5,
+        PENDING_APPROVAL: 5,
+        APPROVED: 5,
+        REJECTED: 5,
+        ESCALATED: 5,
+        SENT: 5,
+        FAILED: 5,
+        INVALIDATED: 5,
+      });
 
       const stats = await service.getStatsByStatus('tenant-1');
 
@@ -796,28 +829,27 @@ describe('AutoResponseService', () => {
       expect(stats.FAILED).toBe(5);
       expect(stats.INVALIDATED).toBe(5);
 
-      // Should call countByStatus for each status
-      expect(draftRepo.countByStatus).toHaveBeenCalledTimes(8);
+      // Must use single countByStatusAll, NOT 8 sequential countByStatus calls
+      expect(draftRepo.countByStatusAll).toHaveBeenCalledTimes(1);
+      expect(draftRepo.countByStatusAll).toHaveBeenCalledWith('tenant-1');
+      expect(draftRepo.countByStatus).not.toHaveBeenCalled();
     });
 
-    it('should pass tenantId and each status to repository', async () => {
-      draftRepo.countByStatus.mockResolvedValue(0);
+    it('should pass tenantId to countByStatusAll', async () => {
+      draftRepo.countByStatusAll.mockResolvedValue({
+        DRAFT: 0,
+        PENDING_APPROVAL: 0,
+        APPROVED: 0,
+        REJECTED: 0,
+        ESCALATED: 0,
+        SENT: 0,
+        FAILED: 0,
+        INVALIDATED: 0,
+      });
 
       await service.getStatsByStatus('tenant-1');
 
-      const calls = draftRepo.countByStatus.mock.calls;
-      const statuses = calls.map((c: any[]) => c[1]);
-      expect(statuses).toContain('DRAFT');
-      expect(statuses).toContain('PENDING_APPROVAL');
-      expect(statuses).toContain('APPROVED');
-      expect(statuses).toContain('REJECTED');
-      expect(statuses).toContain('ESCALATED');
-      expect(statuses).toContain('SENT');
-      expect(statuses).toContain('FAILED');
-      expect(statuses).toContain('INVALIDATED');
-
-      // All calls should use tenant-1
-      calls.forEach((c: any[]) => expect(c[0]).toBe('tenant-1'));
+      expect(draftRepo.countByStatusAll).toHaveBeenCalledWith('tenant-1');
     });
   });
 

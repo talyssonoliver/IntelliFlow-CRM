@@ -22,6 +22,17 @@ const mockRepository = {
   findActiveByLeadAndTrigger: vi.fn(),
   findPendingForApprover: vi.fn(),
   countByStatus: vi.fn(),
+  expireDraftsBeforeDate: vi.fn().mockResolvedValue(0),
+  countByStatusAll: vi.fn().mockResolvedValue({
+    DRAFT: 0,
+    PENDING_APPROVAL: 0,
+    APPROVED: 0,
+    REJECTED: 0,
+    ESCALATED: 0,
+    SENT: 0,
+    FAILED: 0,
+    INVALIDATED: 0,
+  }),
 };
 
 vi.mock('@intelliflow/adapters', () => {
@@ -104,6 +115,16 @@ describe('autoResponseRouter (caller tests)', () => {
     mockRepository.findActiveByLeadAndTrigger.mockResolvedValue(null);
     mockRepository.findPendingForApprover.mockResolvedValue([]);
     mockRepository.countByStatus.mockResolvedValue(0);
+    mockRepository.countByStatusAll.mockResolvedValue({
+      DRAFT: 0,
+      PENDING_APPROVAL: 0,
+      APPROVED: 0,
+      REJECTED: 0,
+      ESCALATED: 0,
+      SENT: 0,
+      FAILED: 0,
+      INVALIDATED: 0,
+    });
     mockRepository.save.mockResolvedValue(undefined);
 
     // Reset domain mock method defaults
@@ -681,21 +702,18 @@ describe('autoResponseRouter (caller tests)', () => {
   });
 
   describe('getStatsByStatus', () => {
-    it('should return counts for each status', async () => {
-      // getStatsByStatus uses tenantProcedure (IFC-194 migration)
-      // countByStatus is called sequentially per status; use mockImplementation by status arg
-      mockRepository.countByStatus.mockImplementation((_tenantId: string, status: string) => {
-        const counts: Record<string, number> = {
-          DRAFT: 5,
-          PENDING_APPROVAL: 3,
-          APPROVED: 10,
-          REJECTED: 2,
-          ESCALATED: 1,
-          SENT: 8,
-          FAILED: 1,
-          INVALIDATED: 0,
-        };
-        return Promise.resolve(counts[status] ?? 0);
+    it('should return counts for each status via a single countByStatusAll call', async () => {
+      // NP-043 fix: router now uses countByStatusAll (single groupBy) instead of
+      // 8 sequential countByStatus calls
+      mockRepository.countByStatusAll.mockResolvedValue({
+        DRAFT: 5,
+        PENDING_APPROVAL: 3,
+        APPROVED: 10,
+        REJECTED: 2,
+        ESCALATED: 1,
+        SENT: 8,
+        FAILED: 1,
+        INVALIDATED: 0,
       });
 
       const result = await caller.getStatsByStatus({
@@ -710,24 +728,28 @@ describe('autoResponseRouter (caller tests)', () => {
       expect(result.SENT).toBe(8);
       expect(result.FAILED).toBe(1);
       expect(result.INVALIDATED).toBe(0);
+
+      // Must use single countByStatusAll, NOT per-status countByStatus calls
+      expect(mockRepository.countByStatusAll).toHaveBeenCalledTimes(1);
+      expect(mockRepository.countByStatusAll).toHaveBeenCalledWith(TEST_TENANT_ID);
+      expect(mockRepository.countByStatus).not.toHaveBeenCalled();
     });
 
-    it('should call countByStatus for all 8 statuses', async () => {
-      mockRepository.countByStatus.mockResolvedValue(0);
+    it('should pass tenantId to countByStatusAll', async () => {
+      mockRepository.countByStatusAll.mockResolvedValue({
+        DRAFT: 0,
+        PENDING_APPROVAL: 0,
+        APPROVED: 0,
+        REJECTED: 0,
+        ESCALATED: 0,
+        SENT: 0,
+        FAILED: 0,
+        INVALIDATED: 0,
+      });
 
       await caller.getStatsByStatus({ tenantId: TEST_TENANT_ID });
 
-      expect(mockRepository.countByStatus).toHaveBeenCalled();
-    });
-
-    it('should pass tenantId to each countByStatus call', async () => {
-      mockRepository.countByStatus.mockResolvedValue(0);
-
-      await caller.getStatsByStatus({ tenantId: TEST_TENANT_ID });
-
-      for (const call of mockRepository.countByStatus.mock.calls) {
-        expect(call[0]).toBe(TEST_TENANT_ID);
-      }
+      expect(mockRepository.countByStatusAll).toHaveBeenCalledWith(TEST_TENANT_ID);
     });
   });
 });

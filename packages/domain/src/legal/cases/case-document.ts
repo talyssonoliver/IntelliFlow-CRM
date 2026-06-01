@@ -569,6 +569,14 @@ export interface CaseDocumentRepository {
   findById(id: string): Promise<CaseDocument | null>;
 
   /**
+   * Find multiple documents by IDs in a single query.
+   * Deduplicates ids internally; preserves the order of the returned slice
+   * (ordered by DB default — callers that need original order should build
+   * their own Map).  Only non-deleted documents are returned.
+   */
+  findByIds(ids: string[]): Promise<CaseDocument[]>;
+
+  /**
    * Find latest version of a document
    */
   findLatestVersion(documentId: string): Promise<CaseDocument | null>;

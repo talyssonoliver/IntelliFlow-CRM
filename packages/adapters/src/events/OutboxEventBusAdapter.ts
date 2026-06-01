@@ -113,26 +113,53 @@ export class OutboxEventBusAdapter implements EventBusPort {
     }
 
     await withTransaction(async (tx: TransactionClient) => {
-      for (const event of events) {
-        const idempotencyKey = this.generateIdempotencyKey(event);
+      // Compute idempotency keys for all events upfront
+      const keyedEvents = events.map((event) => ({
+        event,
+        idempotencyKey: this.generateIdempotencyKey(event),
+      }));
 
-        // Check for duplicate within transaction
-        const existing = await tx.domainEvent.findFirst({
-          where: {
-            metadata: {
-              path: ['idempotencyKey'],
-              equals: idempotencyKey,
-            },
-          },
-          select: { id: true },
-        });
+      // Deduplicate within the incoming batch itself (same key = same event)
+      const seenInBatch = new Set<string>();
+      const deduped = keyedEvents.filter(({ idempotencyKey }) => {
+        if (seenInBatch.has(idempotencyKey)) return false;
+        seenInBatch.add(idempotencyKey);
+        return true;
+      });
 
-        if (existing) {
+      // Batch idempotency check: one query instead of N findFirst calls
+      const existingKeys: Set<string> =
+        deduped.length === 0
+          ? new Set()
+          : await (async () => {
+              const existing = await (tx as any).domainEvent.findMany({
+                where: {
+                  OR: deduped.map(({ idempotencyKey }) => ({
+                    metadata: {
+                      path: ['idempotencyKey'],
+                      equals: idempotencyKey,
+                    },
+                  })),
+                },
+                select: { metadata: true },
+              });
+              return new Set<string>(
+                existing
+                  .map((e: { metadata: unknown }) => {
+                    const m = e.metadata as Record<string, unknown> | null;
+                    return m?.idempotencyKey as string | undefined;
+                  })
+                  .filter((k: string | undefined): k is string => Boolean(k))
+              );
+            })();
+
+      const tenantId = this.context.getTenantId() ?? this.defaultTenantId;
+
+      for (const { event, idempotencyKey } of deduped) {
+        if (existingKeys.has(idempotencyKey)) {
           // Skip duplicate
           continue;
         }
-
-        const tenantId = this.context.getTenantId() ?? this.defaultTenantId;
 
         await tx.domainEvent.create({
           data: {

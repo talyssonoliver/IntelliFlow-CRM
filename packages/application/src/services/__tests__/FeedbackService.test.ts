@@ -28,9 +28,20 @@ function createMockFeedbackRepo(): Record<string, any> {
 }
 
 function createMockLeadDataPort(): Record<string, any> {
-  return {
+  const port: Record<string, any> = {
     getLeadData: vi.fn(),
   };
+  // Default batched impl delegates to getLeadData per id so existing tests that
+  // only stub getLeadData keep working. NP-003 regression tests override this.
+  port.getLeadDataBatch = vi.fn(async (ids: string[]) => {
+    const map = new Map<string, unknown>();
+    for (const id of ids) {
+      const data = await port.getLeadData(id);
+      if (data) map.set(id, data);
+    }
+    return map;
+  });
+  return port;
 }
 
 function createMockEventBus(): Record<string, any> {
@@ -694,6 +705,37 @@ describe('FeedbackService', () => {
   // =========================================================================
 
   describe('exportTrainingData', () => {
+    it('batches lead-data into ONE port call regardless of correction count (NP-003)', async () => {
+      const makeManyCorrections = (n: number) =>
+        Array.from({ length: n }, (_, i) =>
+          makeCorrection({ id: `fb-${i}`, leadId: `lead-${i}`, correctedScore: 50 })
+        );
+      const batchMap = (n: number) =>
+        new Map(
+          Array.from({ length: n }, (_, i) => [
+            `lead-${i}`,
+            { email: `lead-${i}@t.com`, company: null, title: null, source: 'WEB' },
+          ])
+        );
+
+      feedbackRepo.findByModelVersion.mockResolvedValue(makeManyCorrections(2));
+      leadDataPort.getLeadDataBatch.mockResolvedValue(batchMap(2));
+      await service.exportTrainingData('v1', new Date(0), new Date(), 'e');
+      const callsForTwo = leadDataPort.getLeadDataBatch.mock.calls.length;
+
+      vi.clearAllMocks();
+
+      feedbackRepo.findByModelVersion.mockResolvedValue(makeManyCorrections(20));
+      leadDataPort.getLeadDataBatch.mockResolvedValue(batchMap(20));
+      await service.exportTrainingData('v1', new Date(0), new Date(), 'e');
+      const callsForTwenty = leadDataPort.getLeadDataBatch.mock.calls.length;
+
+      // ONE batched call at both sizes; the per-id getLeadData N+1 path is gone.
+      expect(callsForTwo).toBe(1);
+      expect(callsForTwenty).toBe(1);
+      expect(leadDataPort.getLeadData).not.toHaveBeenCalled();
+    });
+
     it('should export corrections with lead data', async () => {
       const corrections = [
         makeCorrection({ id: 'fb-1', leadId: 'lead-1', correctedScore: 60 }),

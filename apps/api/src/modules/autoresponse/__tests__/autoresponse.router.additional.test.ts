@@ -12,6 +12,17 @@ const mockRepository = {
   findActiveByLeadAndTrigger: vi.fn(),
   findPendingForApprover: vi.fn(),
   countByStatus: vi.fn(),
+  expireDraftsBeforeDate: vi.fn().mockResolvedValue(0),
+  countByStatusAll: vi.fn().mockResolvedValue({
+    DRAFT: 0,
+    PENDING_APPROVAL: 0,
+    APPROVED: 0,
+    REJECTED: 0,
+    ESCALATED: 0,
+    SENT: 0,
+    FAILED: 0,
+    INVALIDATED: 0,
+  }),
 };
 
 vi.mock('@intelliflow/adapters', () => {
@@ -95,6 +106,16 @@ describe('autoResponseRouter additional coverage', () => {
     mockRepository.findActiveByLeadAndTrigger.mockResolvedValue(null);
     mockRepository.findPendingForApprover.mockResolvedValue([]);
     mockRepository.countByStatus.mockResolvedValue(0);
+    mockRepository.countByStatusAll.mockResolvedValue({
+      DRAFT: 0,
+      PENDING_APPROVAL: 0,
+      APPROVED: 0,
+      REJECTED: 0,
+      ESCALATED: 0,
+      SENT: 0,
+      FAILED: 0,
+      INVALIDATED: 0,
+    });
     mockRepository.save.mockResolvedValue(undefined);
   });
 
@@ -256,11 +277,22 @@ describe('autoResponseRouter additional coverage', () => {
   });
 
   describe('getStatsByStatus', () => {
-    it('should count all statuses', async () => {
-      mockRepository.countByStatus.mockResolvedValue(5);
+    it('should count all statuses via countByStatusAll', async () => {
+      // NP-043 fix: router uses countByStatusAll (single groupBy) not per-status countByStatus
+      mockRepository.countByStatusAll.mockResolvedValue({
+        DRAFT: 5,
+        PENDING_APPROVAL: 0,
+        APPROVED: 0,
+        REJECTED: 0,
+        ESCALATED: 0,
+        SENT: 0,
+        FAILED: 0,
+        INVALIDATED: 0,
+      });
       const result = await caller.getStatsByStatus({ tenantId: TENANT_ID });
       expect(result).toBeDefined();
-      expect(mockRepository.countByStatus).toHaveBeenCalled();
+      expect(mockRepository.countByStatusAll).toHaveBeenCalledWith(TENANT_ID);
+      expect(mockRepository.countByStatus).not.toHaveBeenCalled();
     });
   });
 

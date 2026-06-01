@@ -255,6 +255,9 @@ export class AnalyticsAggregationService {
   /**
    * Export aggregated metrics for selected metric types in a date range.
    * Returns raw values for export accuracy (no normalization).
+   *
+   * NP-023 fix: fan-out all (metric × month) pairs in a single Promise.all
+   * instead of awaiting each metric's months sequentially.
    */
   async exportMetrics(
     tenantId: string,
@@ -264,24 +267,17 @@ export class AnalyticsAggregationService {
     // Build monthly date ranges within the given range
     const monthRanges = this.getMonthRangesInDateRange(dateRange);
 
-    const results: Array<{ month: string; metric: string; value: number }> = [];
+    // Flatten all (metric × month) pairs into a single parallel fan-out (NP-023)
+    const all = await Promise.all(
+      metrics.flatMap((metric) =>
+        monthRanges.map(({ range, label }) =>
+          this.getMetricValue(tenantId, metric, range).then((value) => ({ metric, label, value }))
+        )
+      )
+    );
 
-    // For each metric, query all months in parallel
-    for (const metric of metrics) {
-      const values = await Promise.all(
-        monthRanges.map(({ range }) => this.getMetricValue(tenantId, metric, range))
-      );
-
-      for (let i = 0; i < monthRanges.length; i++) {
-        results.push({
-          month: monthRanges[i].label,
-          metric,
-          value: values[i],
-        });
-      }
-    }
-
-    return results;
+    // Map directly from the flat array — flatMap preserves metric-outer × month-inner order
+    return all.map(({ metric, label, value }) => ({ month: label, metric, value }));
   }
 
   /**

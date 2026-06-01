@@ -37,10 +37,12 @@ const mockPrisma = {
     findUnique: vi.fn(),
     update: vi.fn(),
     count: vi.fn(),
+    groupBy: vi.fn(),
   },
   experimentResult: {
     create: vi.fn(),
     findUnique: vi.fn(),
+    findMany: vi.fn(),
     update: vi.fn(),
   },
 } as unknown as PrismaClient;
@@ -643,6 +645,42 @@ describe('PrismaExperimentRepository', () => {
     });
 
     // -------------------------------------------------------------------------
+    // assignments.countVariantsForExperiments (NP-001 batched groupBy)
+    // -------------------------------------------------------------------------
+    describe('countVariantsForExperiments', () => {
+      it('issues a SINGLE groupBy for all experiments and maps variant counts', async () => {
+        vi.mocked(mockPrisma.experimentAssignment.groupBy).mockResolvedValue([
+          { experimentId: EXPERIMENT_ID, variant: 'control', _count: 4 },
+          { experimentId: EXPERIMENT_ID, variant: 'treatment', _count: 6 },
+          { experimentId: EXPERIMENT_ID_2, variant: 'treatment', _count: 3 },
+        ] as any);
+
+        const rows = await repo.assignments.countVariantsForExperiments([
+          EXPERIMENT_ID,
+          EXPERIMENT_ID_2,
+        ]);
+
+        expect(mockPrisma.experimentAssignment.groupBy).toHaveBeenCalledTimes(1);
+        expect(mockPrisma.experimentAssignment.groupBy).toHaveBeenCalledWith({
+          by: ['experimentId', 'variant'],
+          where: { experimentId: { in: [EXPERIMENT_ID, EXPERIMENT_ID_2] } },
+          _count: true,
+        });
+        expect(rows).toEqual([
+          { experimentId: EXPERIMENT_ID, variant: 'control', count: 4 },
+          { experimentId: EXPERIMENT_ID, variant: 'treatment', count: 6 },
+          { experimentId: EXPERIMENT_ID_2, variant: 'treatment', count: 3 },
+        ]);
+      });
+
+      it('short-circuits without querying for an empty id list', async () => {
+        const rows = await repo.assignments.countVariantsForExperiments([]);
+        expect(rows).toEqual([]);
+        expect(mockPrisma.experimentAssignment.groupBy).not.toHaveBeenCalled();
+      });
+    });
+
+    // -------------------------------------------------------------------------
     // assignments.getScoresByVariant
     // -------------------------------------------------------------------------
     describe('getScoresByVariant', () => {
@@ -836,6 +874,33 @@ describe('PrismaExperimentRepository', () => {
         const result = await repo.results.findByExperimentId(EXPERIMENT_ID);
 
         expect(result).toBeNull();
+      });
+    });
+
+    // -------------------------------------------------------------------------
+    // results.findByExperimentIds (NP-001 batched findMany)
+    // -------------------------------------------------------------------------
+    describe('findByExperimentIds', () => {
+      it('issues a SINGLE findMany for all experiment ids and maps the rows', async () => {
+        vi.mocked(mockPrisma.experimentResult.findMany).mockResolvedValue([
+          createMockResultRow(),
+        ] as any);
+
+        const results = await repo.results.findByExperimentIds([EXPERIMENT_ID, EXPERIMENT_ID_2]);
+
+        expect(mockPrisma.experimentResult.findMany).toHaveBeenCalledTimes(1);
+        expect(mockPrisma.experimentResult.findMany).toHaveBeenCalledWith({
+          where: { experimentId: { in: [EXPERIMENT_ID, EXPERIMENT_ID_2] } },
+        });
+        expect(results).toHaveLength(1);
+        expect(results[0].id).toBe(RESULT_ID);
+        expect(results[0].analyzedAt).toBeInstanceOf(Date);
+      });
+
+      it('short-circuits without querying for an empty id list', async () => {
+        const results = await repo.results.findByExperimentIds([]);
+        expect(results).toEqual([]);
+        expect(mockPrisma.experimentResult.findMany).not.toHaveBeenCalled();
       });
     });
 

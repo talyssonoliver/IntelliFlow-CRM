@@ -730,25 +730,11 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      // bulkDelete calls findUnique sequentially in a for loop — use mockImplementation
-      // to return different contacts based on the id in the where clause
-      (prismaMock.contact.findUnique as any).mockImplementation(
-        (args: { where: { id: string } }) => {
-          const contactMap: Record<string, unknown> = {
-            [TEST_UUIDS.contact1]: {
-              ...mockContact,
-              id: TEST_UUIDS.contact1,
-              _count: { opportunities: 0 },
-            },
-            [TEST_UUIDS.contact2]: {
-              ...mockContact,
-              id: TEST_UUIDS.contact2,
-              _count: { opportunities: 0 },
-            },
-          };
-          return Promise.resolve(contactMap[args.where.id] ?? null);
-        }
-      );
+      // NP-012: bulkDelete now fetches all contacts in ONE findMany, then maps.
+      (prismaMock.contact.findMany as any).mockResolvedValue([
+        { ...mockContact, id: TEST_UUIDS.contact1, _count: { opportunities: 0 } },
+        { ...mockContact, id: TEST_UUIDS.contact2, _count: { opportunities: 0 } },
+      ]);
 
       ctx.services!.contact!.deleteContact = vi.fn().mockResolvedValue({
         isSuccess: true,
@@ -769,7 +755,7 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      prismaMock.contact.findUnique.mockResolvedValue(null);
+      prismaMock.contact.findMany.mockResolvedValue([]);
 
       const result = await caller.bulkDelete({
         ids: [TEST_UUIDS.nonExistent],
@@ -784,10 +770,9 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      prismaMock.contact.findUnique.mockResolvedValue({
-        ...mockContact,
-        _count: { opportunities: 2 },
-      } as any);
+      prismaMock.contact.findMany.mockResolvedValue([
+        { ...mockContact, id: TEST_UUIDS.contact1, _count: { opportunities: 2 } },
+      ] as any);
 
       const result = await caller.bulkDelete({
         ids: [TEST_UUIDS.contact1],
@@ -802,10 +787,9 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      prismaMock.contact.findUnique.mockResolvedValue({
-        ...mockContact,
-        _count: { opportunities: 0 },
-      } as any);
+      prismaMock.contact.findMany.mockResolvedValue([
+        { ...mockContact, id: TEST_UUIDS.contact1, _count: { opportunities: 0 } },
+      ] as any);
 
       ctx.services!.contact!.deleteContact = vi.fn().mockResolvedValue({
         isSuccess: false,
@@ -826,7 +810,10 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      prismaMock.contact.findUnique.mockRejectedValue(new Error('Database error'));
+      prismaMock.contact.findMany.mockResolvedValue([
+        { ...mockContact, id: TEST_UUIDS.contact1, _count: { opportunities: 0 } },
+      ] as any);
+      ctx.services!.contact!.deleteContact = vi.fn().mockRejectedValue(new Error('Database error'));
 
       const result = await caller.bulkDelete({
         ids: [TEST_UUIDS.contact1],
@@ -841,7 +828,10 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      prismaMock.contact.findUnique.mockRejectedValue('string error');
+      prismaMock.contact.findMany.mockResolvedValue([
+        { ...mockContact, id: TEST_UUIDS.contact1, _count: { opportunities: 0 } },
+      ] as any);
+      ctx.services!.contact!.deleteContact = vi.fn().mockRejectedValue('string error');
 
       const result = await caller.bulkDelete({
         ids: [TEST_UUIDS.contact1],
@@ -850,6 +840,38 @@ describe('Contact Router - Additional Coverage', () => {
       expect(result.successful).toHaveLength(0);
       expect(result.failed).toHaveLength(1);
       expect(result.failed[0].error).toBe('Unknown error');
+    });
+
+    it('fetches all contacts in ONE query regardless of id count (NP-012, no per-id findUnique)', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      ctx.services!.contact!.deleteContact = vi
+        .fn()
+        .mockResolvedValue({ isSuccess: true, isFailure: false, value: undefined });
+
+      const idAt = (i: number) => `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`;
+      const run = async (n: number) => {
+        (prismaMock.contact.findMany as any).mockResolvedValue(
+          Array.from({ length: n }, (_, i) => ({
+            ...mockContact,
+            id: idAt(i),
+            _count: { opportunities: 0 },
+          }))
+        );
+        return caller.bulkDelete({ ids: Array.from({ length: n }, (_, i) => idAt(i)) });
+      };
+
+      (prismaMock.contact.findMany as any).mockClear();
+      await run(2);
+      const callsForTwo = (prismaMock.contact.findMany as any).mock.calls.length;
+      (prismaMock.contact.findMany as any).mockClear();
+      await run(10);
+      const callsForTen = (prismaMock.contact.findMany as any).mock.calls.length;
+
+      // ONE batched read at both sizes; the per-id findUnique N+1 is gone.
+      expect(callsForTwo).toBe(1);
+      expect(callsForTen).toBe(1);
+      expect(prismaMock.contact.findUnique).not.toHaveBeenCalled();
     });
   });
 

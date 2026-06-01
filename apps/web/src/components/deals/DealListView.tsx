@@ -373,6 +373,24 @@ export const DealListView = React.memo(function DealListView() {
     },
   });
 
+  // NP-024: Bulk stage update — single round-trip replaces N per-deal mutations
+  const bulkUpdateStageMutation = trpc.opportunity.bulkUpdateStage.useMutation({
+    onSuccess: () => {
+      revalidateDealCaches(user?.id ?? null).catch(() => {});
+      utils.opportunity.list.invalidate();
+      utils.opportunity.stats.invalidate();
+    },
+  });
+
+  // NP-025: Bulk delete — single round-trip replaces N per-deal mutations
+  const bulkDeleteMutation = trpc.opportunity.bulkDelete.useMutation({
+    onSuccess: () => {
+      revalidateDealCaches(user?.id ?? null).catch(() => {});
+      utils.opportunity.list.invalidate();
+      utils.opportunity.stats.invalidate();
+    },
+  });
+
   // Reset page on filter change
   useEffect(() => {
     setCurrentPage(1);
@@ -467,11 +485,11 @@ export const DealListView = React.memo(function DealListView() {
       if (selected.length === 0) return;
       setIsSubmitting(true);
       try {
-        await Promise.all(
-          selected.map((deal) =>
-            updateMutation.mutateAsync({ id: deal.id, stage: newStage as OpportunityStage })
-          )
-        );
+        // NP-024: single bulk mutation instead of Promise.all over N per-deal mutations
+        await bulkUpdateStageMutation.mutateAsync({
+          ids: selected.map((deal) => deal.id),
+          stage: newStage as OpportunityStage,
+        });
         toast({
           title: 'Deals Updated',
           description: `${selected.length} deal(s) moved to ${PIPELINE_STAGE_CONFIG[newStage as OpportunityStage]?.label ?? newStage}.`,
@@ -487,7 +505,7 @@ export const DealListView = React.memo(function DealListView() {
         setShowBulkStageDialog(false);
       }
     },
-    [updateMutation]
+    [bulkUpdateStageMutation]
   );
 
   const handleBulkDelete = useCallback(async () => {
@@ -495,7 +513,8 @@ export const DealListView = React.memo(function DealListView() {
     if (selected.length === 0) return;
     setIsSubmitting(true);
     try {
-      await Promise.all(selected.map((deal) => deleteMutation.mutateAsync({ id: deal.id })));
+      // NP-025: single bulk mutation instead of Promise.all over N per-deal mutations
+      await bulkDeleteMutation.mutateAsync({ ids: selected.map((deal) => deal.id) });
       toast({
         title: 'Deals Deleted',
         description: `${selected.length} deal(s) deleted.`,
@@ -510,7 +529,7 @@ export const DealListView = React.memo(function DealListView() {
       setIsSubmitting(false);
       setShowBulkDeleteDialog(false);
     }
-  }, [deleteMutation]);
+  }, [bulkDeleteMutation]);
 
   const bulkActions: BulkAction<Deal>[] = useMemo(
     () => [

@@ -496,47 +496,49 @@ export class AutoResponseService {
 
   /**
    * Process expired drafts (for scheduled job)
+   *
+   * NP-004 fix: replaces N individual save() calls with a single
+   * expireDraftsBeforeDate() updateMany.  Per-draft domain events are still
+   * emitted (from the already-fetched domain objects) before the bulk persist,
+   * preserving the existing event contract.
    */
   async processExpiredDrafts(tenantId: string): Promise<number> {
+    const now = new Date();
     const drafts = await this.draftRepository.findExpired(tenantId);
-    let count = 0;
 
+    // Emit per-draft domain events (checkExpiry mutates status on the in-memory
+    // aggregate and adds AutoResponseExpiredEvent without touching persistence)
+    const expiredDrafts: typeof drafts = [];
     for (const draft of drafts) {
       if (draft.checkExpiry()) {
-        try {
-          await this.draftRepository.save(draft);
-          await this.publishEvents(draft);
-          count++;
-        } catch {
-          // Log error but continue with other drafts
-        }
+        await this.publishEvents(draft);
+        expiredDrafts.push(draft);
       }
     }
+
+    if (expiredDrafts.length === 0) {
+      return 0;
+    }
+
+    // Single bulk UPDATE instead of N individual saves
+    const terminalStatuses: AutoResponseStatus[] = ['SENT', 'FAILED', 'INVALIDATED'];
+    const count = await this.draftRepository.expireDraftsBeforeDate(
+      tenantId,
+      now,
+      terminalStatuses
+    );
 
     return count;
   }
 
   /**
    * Get draft statistics by status
+   *
+   * NP-043 fix: replaces 8 sequential count() calls with a single
+   * countByStatusAll() groupBy query.
    */
   async getStatsByStatus(tenantId: string): Promise<Record<AutoResponseStatus, number>> {
-    const statuses: AutoResponseStatus[] = [
-      'DRAFT',
-      'PENDING_APPROVAL',
-      'APPROVED',
-      'REJECTED',
-      'ESCALATED',
-      'SENT',
-      'FAILED',
-      'INVALIDATED',
-    ];
-
-    const stats: Record<string, number> = {};
-    for (const status of statuses) {
-      stats[status] = await this.draftRepository.countByStatus(tenantId, status);
-    }
-
-    return stats as Record<AutoResponseStatus, number>;
+    return this.draftRepository.countByStatusAll(tenantId);
   }
 
   /**

@@ -152,17 +152,19 @@ const requiredFieldsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
 
-      // All upserts must apply atomically — otherwise a mid-flight failure
-      // leaves the UI reporting "saved" with partial server state.
-      await ctx.prismaWithTenant.$transaction(
-        input.fields.map((f) =>
-          ctx.prismaWithTenant.contactRequiredField.upsert({
-            where: { tenantId_fieldKey: { tenantId, fieldKey: f.fieldKey } },
-            update: { isRequired: f.isRequired },
-            create: { tenantId, fieldKey: f.fieldKey, isRequired: f.isRequired },
-          })
-        )
-      );
+      // NP-056 fix: full-set replacement in 2 statements instead of N upserts.
+      // Atomic (single transaction) so a mid-flight failure cannot leave the UI
+      // reporting "saved" with partial server state.
+      await ctx.prismaWithTenant.$transaction(async (tx) => {
+        await tx.contactRequiredField.deleteMany({ where: { tenantId } });
+        await tx.contactRequiredField.createMany({
+          data: input.fields.map((f) => ({
+            tenantId,
+            fieldKey: f.fieldKey,
+            isRequired: f.isRequired,
+          })),
+        });
+      });
 
       return ctx.prismaWithTenant.contactRequiredField.findMany({
         where: { tenantId },

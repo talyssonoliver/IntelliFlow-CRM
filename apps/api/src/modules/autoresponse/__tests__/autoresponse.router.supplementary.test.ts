@@ -49,6 +49,17 @@ const { mockDraft, mockDraftCreate, mockResponseContentCreate, mockRepo } = vi.h
     find: vi.fn().mockResolvedValue([mockDraft]),
     findPendingForApprover: vi.fn().mockResolvedValue([mockDraft]),
     countByStatus: vi.fn().mockResolvedValue(5),
+    expireDraftsBeforeDate: vi.fn().mockResolvedValue(0),
+    countByStatusAll: vi.fn().mockResolvedValue({
+      DRAFT: 0,
+      PENDING_APPROVAL: 0,
+      APPROVED: 0,
+      REJECTED: 0,
+      ESCALATED: 0,
+      SENT: 0,
+      FAILED: 0,
+      INVALIDATED: 0,
+    }),
   };
   return { mockDraft, mockDraftCreate, mockResponseContentCreate, mockRepo };
 });

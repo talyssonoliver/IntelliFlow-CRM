@@ -408,10 +408,17 @@ describe('Document Settings Router', () => {
   });
 
   describe('requiredFields.updateAll', () => {
-    it('runs inside $transaction (upsert per field)', async () => {
+    it('replaces the full required-field set in 2 batched statements (NP-026, no N upserts)', async () => {
       const txMock: Record<string, any> = {
         documentRequiredField: {
-          upsert: vi.fn().mockResolvedValue(mockRequiredField),
+          deleteMany: vi.fn().mockResolvedValue({ count: 2 }),
+          createMany: vi.fn().mockResolvedValue({ count: 2 }),
+          findMany: vi
+            .fn()
+            .mockResolvedValue([
+              mockRequiredField,
+              { ...mockRequiredField, fieldKey: 'description', isRequired: false },
+            ]),
         },
       };
       (prismaMock.$transaction as any) = vi
@@ -426,7 +433,9 @@ describe('Document Settings Router', () => {
       });
 
       expect(prismaMock.$transaction).toHaveBeenCalled();
-      expect(txMock.documentRequiredField.upsert).toHaveBeenCalled();
+      // Constant 2 writes regardless of field count — not N upserts.
+      expect(txMock.documentRequiredField.deleteMany).toHaveBeenCalledTimes(1);
+      expect(txMock.documentRequiredField.createMany).toHaveBeenCalledTimes(1);
     });
   });
 

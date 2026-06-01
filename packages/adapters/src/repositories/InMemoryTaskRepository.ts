@@ -15,6 +15,26 @@ export class InMemoryTaskRepository implements TaskRepository {
     return this.tasks.get(id.value) ?? null;
   }
 
+  async findByIds(ids: string[]): Promise<Task[]> {
+    if (ids.length === 0) return [];
+
+    // Deduplicate while preserving original order
+    const seen = new Set<string>();
+    const uniqueIds: string[] = [];
+    for (const id of ids) {
+      if (!seen.has(id)) {
+        seen.add(id);
+        uniqueIds.push(id);
+      }
+    }
+
+    return uniqueIds.reduce<Task[]>((acc, id) => {
+      const task = this.tasks.get(id);
+      if (task) acc.push(task);
+      return acc;
+    }, []);
+  }
+
   async findByOwnerId(ownerId: string): Promise<Task[]> {
     return Array.from(this.tasks.values())
       .filter((task) => task.ownerId === ownerId)

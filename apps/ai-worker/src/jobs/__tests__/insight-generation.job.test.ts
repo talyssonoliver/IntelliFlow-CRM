@@ -7,6 +7,7 @@
  * 3. Prisma create throws → job fails cleanly for BullMQ retry
  * 4. Missing tenantId → validation error thrown immediately
  * 5. expiresAt is set to 24h from now on every created row
+ * 6. dispatchScheduledInsights: batched user lookups (NP-005/006)
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -17,6 +18,14 @@ const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockTaskCreate = vi.hoisted(() => vi.fn());
 const mockLeadAIInsightUpsert = vi.hoisted(() => vi.fn());
 const mockContactAIInsightUpsert = vi.hoisted(() => vi.fn());
+const mockUserFindMany = vi.hoisted(() => vi.fn());
+const mockLeadGroupBy = vi.hoisted(() => vi.fn());
+const mockOpportunityFindMany = vi.hoisted(() => vi.fn());
+const mockLeadFindMany = vi.hoisted(() => vi.fn());
+const mockTaskCount = vi.hoisted(() => vi.fn());
+const mockContactFindMany = vi.hoisted(() => vi.fn());
+const mockQueueAdd = vi.hoisted(() => vi.fn());
+const mockQueueClose = vi.hoisted(() => vi.fn());
 
 vi.mock('../..//chains/insight-generation.chain', () => {
   class InsightGenerationChain {
@@ -29,6 +38,15 @@ vi.mock('../..//chains/insight-generation.chain', () => {
   };
 });
 
+vi.mock('bullmq', () => {
+  // Must use a real constructor function (not an arrow fn) so `new Queue()` works.
+  function MockQueue(this: any) {
+    this.add = (...args: any[]) => mockQueueAdd(...args);
+    this.close = (...args: any[]) => mockQueueClose(...args);
+  }
+  return { Queue: MockQueue };
+});
+
 vi.mock('@intelliflow/db', () => ({
   prisma: {
     aIInsight: {
@@ -37,15 +55,30 @@ vi.mock('@intelliflow/db', () => ({
     },
     notification: {
       create: (...args: any[]) => mockNotificationCreate(...args),
+      findFirst: () => Promise.resolve(null),
     },
     task: {
       create: (...args: any[]) => mockTaskCreate(...args),
+      count: (...args: any[]) => mockTaskCount(...args),
     },
     leadAIInsight: {
       upsert: (...args: any[]) => mockLeadAIInsightUpsert(...args),
     },
     contactAIInsight: {
       upsert: (...args: any[]) => mockContactAIInsightUpsert(...args),
+    },
+    user: {
+      findMany: (...args: any[]) => mockUserFindMany(...args),
+    },
+    lead: {
+      groupBy: (...args: any[]) => mockLeadGroupBy(...args),
+      findMany: (...args: any[]) => mockLeadFindMany(...args),
+    },
+    opportunity: {
+      findMany: (...args: any[]) => mockOpportunityFindMany(...args),
+    },
+    contact: {
+      findMany: (...args: any[]) => mockContactFindMany(...args),
     },
   },
 }));
@@ -330,5 +363,162 @@ describe('processInsightJob — feature flag ai.insights.enabled', () => {
     const job = createMockJob({});
     const result = (await processInsightJob(job)) as any;
     expect(result.skipped).toBeUndefined();
+  });
+});
+
+// ============================================================================
+// NP-005/006 regression: dispatchScheduledInsights must batch user lookups
+// ============================================================================
+describe('dispatchScheduledInsights — batched user fetch (NP-005/006)', () => {
+  const TENANT_A = '00000000-0000-4000-a000-000000000011';
+  const TENANT_B = '00000000-0000-4000-a000-000000000022';
+  const TENANT_C = '00000000-0000-4000-a000-000000000033';
+
+  function createScheduledJob() {
+    return {
+      id: 'scheduled-job-1',
+      data: {
+        tenantId: '__scheduled__',
+        userId: 'system',
+        dealsAtRisk: [],
+        hotLeads: [],
+        overdueTasksCount: 0,
+        staleContacts: [],
+      },
+      updateProgress: vi.fn(),
+      extendLock: vi.fn().mockResolvedValue(undefined),
+      token: 'mock-lock-token',
+      queueName: 'ai-insights',
+    } as any;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockQueueAdd.mockResolvedValue(undefined);
+    mockQueueClose.mockResolvedValue(undefined);
+
+    // gatherTenantHeuristicData stubs
+    mockOpportunityFindMany.mockResolvedValue([]);
+    mockLeadFindMany.mockResolvedValue([]);
+    mockTaskCount.mockResolvedValue(0);
+    mockContactFindMany.mockResolvedValue([]);
+  });
+
+  it('fetches admins in ONE findMany call regardless of tenant count', async () => {
+    mockLeadGroupBy.mockResolvedValue([
+      { tenantId: TENANT_A, _count: 5 },
+      { tenantId: TENANT_B, _count: 3 },
+      { tenantId: TENANT_C, _count: 1 },
+    ]);
+
+    // All three tenants have an ADMIN — no fallback needed
+    mockUserFindMany
+      .mockResolvedValueOnce([
+        { id: 'user-admin-a', tenantId: TENANT_A },
+        { id: 'user-admin-b', tenantId: TENANT_B },
+        { id: 'user-admin-c', tenantId: TENANT_C },
+      ])
+      .mockResolvedValue([]); // fallback query (should not be reached)
+
+    const job = createScheduledJob();
+    const result = await processInsightJob(job);
+
+    // The dispatcher returns insightsCreated = enqueued count
+    expect((result as any).insightsCreated).toBe(3);
+
+    // CRITICAL: user.findMany called exactly ONCE for admins (no per-tenant findFirst)
+    expect(mockUserFindMany).toHaveBeenCalledTimes(1);
+    const adminCall = mockUserFindMany.mock.calls[0][0];
+    expect(adminCall.where.role).toBe('ADMIN');
+    expect(adminCall.where.tenantId.in).toEqual(
+      expect.arrayContaining([TENANT_A, TENANT_B, TENANT_C])
+    );
+    expect(adminCall.where.tenantId.in).toHaveLength(3);
+    expect(adminCall.distinct).toContain('tenantId');
+  });
+
+  it('issues a second findMany (fallback) only for tenants without an ADMIN', async () => {
+    mockLeadGroupBy.mockResolvedValue([
+      { tenantId: TENANT_A, _count: 5 },
+      { tenantId: TENANT_B, _count: 3 },
+    ]);
+
+    // Only TENANT_A has an admin; TENANT_B has none
+    mockUserFindMany
+      .mockResolvedValueOnce([{ id: 'user-admin-a', tenantId: TENANT_A }]) // admin query
+      .mockResolvedValueOnce([{ id: 'user-any-b', tenantId: TENANT_B }]); // fallback query
+
+    const job = createScheduledJob();
+    await processInsightJob(job);
+
+    // Exactly TWO findMany calls total — NOT four (2 per tenant)
+    expect(mockUserFindMany).toHaveBeenCalledTimes(2);
+
+    const fallbackCall = mockUserFindMany.mock.calls[1][0];
+    // Fallback must only request the tenants that lacked an admin
+    expect(fallbackCall.where.tenantId.in).toEqual([TENANT_B]);
+    // Fallback must NOT filter by role
+    expect(fallbackCall.where.role).toBeUndefined();
+    expect(fallbackCall.distinct).toContain('tenantId');
+  });
+
+  it('uses the resolved admin userId in enqueued payloads', async () => {
+    mockLeadGroupBy.mockResolvedValue([{ tenantId: TENANT_A, _count: 2 }]);
+    mockUserFindMany.mockResolvedValueOnce([{ id: 'the-admin-id', tenantId: TENANT_A }]);
+
+    const job = createScheduledJob();
+    await processInsightJob(job);
+
+    expect(mockQueueAdd).toHaveBeenCalledTimes(1);
+    const enqueuedPayload = mockQueueAdd.mock.calls[0][1];
+    expect(enqueuedPayload.userId).toBe('the-admin-id');
+    expect(enqueuedPayload.tenantId).toBe(TENANT_A);
+  });
+
+  it('falls back to "system" userId when no users exist for tenant', async () => {
+    mockLeadGroupBy.mockResolvedValue([{ tenantId: TENANT_A, _count: 1 }]);
+    // No admin and no any-user
+    mockUserFindMany
+      .mockResolvedValueOnce([]) // admin query — empty
+      .mockResolvedValueOnce([]); // fallback query — also empty
+
+    const job = createScheduledJob();
+    await processInsightJob(job);
+
+    expect(mockQueueAdd).toHaveBeenCalledTimes(1);
+    expect(mockQueueAdd.mock.calls[0][1].userId).toBe('system');
+  });
+
+  it('skips all DB work when no active tenants are found', async () => {
+    mockLeadGroupBy.mockResolvedValue([]);
+
+    const job = createScheduledJob();
+    const result = await processInsightJob(job);
+
+    expect(mockUserFindMany).not.toHaveBeenCalled();
+    expect(mockQueueAdd).not.toHaveBeenCalled();
+    expect((result as any).insightsCreated).toBe(0);
+  });
+
+  it('number of user.findMany calls is constant (at most 2) regardless of tenant count', async () => {
+    // Simulate 5 tenants — should still only trigger at most 2 findMany calls
+    const tenants = Array.from({ length: 5 }, (_, i) => ({
+      tenantId: `00000000-0000-4000-a000-0000000000${String(i + 1).padStart(2, '0')}`,
+      _count: 1,
+    }));
+    mockLeadGroupBy.mockResolvedValue(tenants);
+
+    // All have admins — only 1 findMany needed
+    mockUserFindMany.mockResolvedValueOnce(
+      tenants.map((t, i) => ({ id: `admin-${i}`, tenantId: t.tenantId }))
+    );
+
+    const job = createScheduledJob();
+    await processInsightJob(job);
+
+    // CONSTANT: 1 admin findMany, 0 fallback findMany (all tenants had admins)
+    expect(mockUserFindMany).toHaveBeenCalledTimes(1);
+    // All 5 tenants enqueued
+    expect(mockQueueAdd).toHaveBeenCalledTimes(5);
   });
 });
