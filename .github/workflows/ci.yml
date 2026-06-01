@@ -323,12 +323,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    # E2E has been chronically flaky on main since the monorepo grew (Next.js
-    # production build inside playwright.config.ts webServer.command exceeds
-    # the wall-clock budget). E2E is NOT in branch-protection required checks
-    # so this doesn't gate PRs; mark continue-on-error so the failure stops
-    # turning the whole CI Pipeline workflow red. Tracked at GH issue #95.
-    continue-on-error: true
+    # On main this job runs ONLY the smoke suite (tests/e2e/smoke.spec.ts) —
+    # fast, no-backend-required critical-path checks (homepage, login form,
+    # /api/health, responsive). It is a REAL signal: continue-on-error is
+    # removed so a broken smoke path turns the check-run red instead of
+    # silently green. The full 20-spec E2E suite (129 currently-failing
+    # data/auth specs that need a live backend) moved to the dedicated
+    # e2e-full.yml workflow (scheduled + manual), so the visible main check
+    # surface is no longer permanently red. Re-fold specs into smoke as they
+    # are made backend-independent / fixed. Tracked at GH issue #95.
     # Job-level env mirrors the Build job's env block — `next start` against
     # the downloaded production .next loads the same module-init guards as
     # `next build` did, so any required env var the build had stubbed must
@@ -399,15 +402,11 @@ jobs:
         # above. playwright.config.ts defines 6 projects (chromium, firefox,
         # webkit, mobile-chrome, mobile-safari, tablet); firefox/webkit/
         # mobile-safari/tablet need browser engines we do NOT install here,
-        # so `pnpm run test:e2e` (all projects) failed 635 specs at
-        # `browserType.launch: Executable doesn't exist at .../webkit-*`.
-        # The chromium project carries no testMatch restriction, so it runs
-        # the full spec set (including the VRT baseline) on the designated
-        # baseline engine — full coverage on one installed browser. Cross-
-        # engine E2E is tracked separately at issue #95; to re-enable it,
-        # install all browsers (`playwright install --with-deps`) and drop
-        # this --project filter.
-        run: pnpm exec playwright test --project=chromium
+        # Smoke suite only, chromium only (matches the chromium-only install).
+        # smoke.spec.ts is the fast critical-path set; backend-dependent
+        # assertions inside it already self-skip without E2E_AUTH_ENABLED.
+        # The full suite runs in e2e-full.yml (scheduled + manual).
+        run: pnpm exec playwright test --project=chromium tests/e2e/smoke.spec.ts
 
       - name: Upload E2E results
         uses: actions/upload-artifact@v7
