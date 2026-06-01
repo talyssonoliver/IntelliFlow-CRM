@@ -37,18 +37,35 @@ function sortRows(rows: any[], orderBy?: Record<string, 'asc' | 'desc'>) {
   });
 }
 
+// Resolve a nested JSON path (e.g. ['rollbackToken']) within a JSON column value.
+function resolveJsonPath(value: any, path: string[]): any {
+  let nested = value;
+  for (const segment of path) {
+    nested = nested == null ? undefined : nested[segment];
+  }
+  return nested;
+}
+
+// Match a single Prisma where condition against a row field. Supports the
+// operator objects this fake DB needs: gt/lt/not and the JSON-path filter
+// { path, equals } (mirrors how the real adapter matches
+// proposedState->>"rollbackToken").
+function matchesCondition(row: any, key: string, value: any): boolean {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    if ('gt' in value) return row[key] > value.gt;
+    if ('lt' in value) return row[key] < value.lt;
+    if ('not' in value) return row[key] !== value.not;
+    if ('path' in value && 'equals' in value) {
+      return resolveJsonPath(row[key], value.path as string[]) === value.equals;
+    }
+  }
+  return row[key] === value;
+}
+
 function matchesWhere(row: any, where: Record<string, any> | undefined) {
   if (!where) return true;
 
-  return Object.entries(where).every(([key, value]) => {
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      if ('gt' in value) return row[key] > value.gt;
-      if ('lt' in value) return row[key] < value.lt;
-      if ('not' in value) return row[key] !== value.not;
-    }
-
-    return row[key] === value;
-  });
+  return Object.entries(where).every(([key, value]) => matchesCondition(row, key, value));
 }
 
 vi.mock('@intelliflow/db', () => ({

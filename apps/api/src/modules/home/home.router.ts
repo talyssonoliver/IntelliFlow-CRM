@@ -887,21 +887,10 @@ async function createProactiveNotifications(
   );
   const withNullSourceId = candidates.filter((c) => c.sourceId === null);
 
-  // Deduplicate sourceIds before the IN query (same id could theoretically appear
-  // across categories, though in practice they are disjoint by sourceType).
-  const dedupedSourceIds = [...new Set(withSourceId.map((c) => c.sourceId))];
-
-  // Build OR conditions for the batch existence check
+  // Build OR conditions for the batch existence check: one entry per
+  // (sourceType, sourceId) pair. Prisma handles this efficiently because the
+  // candidate set is bounded by upstream take limits (≤150 rows).
   const orConditions: Array<{ sourceType: string; sourceId?: string | null }> = [];
-
-  // For entities with sourceIds: group by sourceType so the OR is compact.
-  const bySourceType = new Map<string, string[]>();
-  for (const c of withSourceId) {
-    if (!bySourceType.has(c.sourceType)) bySourceType.set(c.sourceType, []);
-    bySourceType.get(c.sourceType)!.push(c.sourceId);
-  }
-  // We build one OR entry per (sourceType, sourceId) pair — Prisma can handle
-  // this efficiently because the dedup query is bounded by take limits (≤150 rows).
   for (const c of withSourceId) {
     orConditions.push({ sourceType: c.sourceType, sourceId: c.sourceId });
   }
