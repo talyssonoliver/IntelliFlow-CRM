@@ -87,8 +87,6 @@ const ALL_EVENT_TYPES: readonly AISecurityEventType[] = [
   'AI_BIAS_THRESHOLD_EXCEEDED',
 ] as const;
 
-const ALL_SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
-
 // ---------------------------------------------------------------------------
 // In-memory mock Prisma client
 // ---------------------------------------------------------------------------
