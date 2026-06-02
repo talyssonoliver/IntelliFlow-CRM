@@ -186,7 +186,15 @@ jobs:
             echo "::error::Missing repo/env variable RAILWAY_PROJECT_ID. Set it under Settings -> Environments -> ${{ needs.preflight.outputs.environment }} (Variables tab)."
             exit 1
           fi
-          railway link --project "$RAILWAY_PROJECT_ID" --environment "${{ needs.preflight.outputs.environment }}"
+          # `railway link` only works with an ACCOUNT-scoped RAILWAY_TOKEN. With a
+          # PROJECT-scoped token (Railway's recommended CI mechanism, created in
+          # Project Settings -> Tokens) link returns "Unauthorized" — but the
+          # project token already binds the project + environment, so the
+          # `railway up` step below works without it. Make link non-fatal so BOTH
+          # token types work: account tokens link; project tokens skip + bind
+          # implicitly. See https://docs.railway.com/cli/deploying
+          railway link --project "$RAILWAY_PROJECT_ID" --environment "${{ needs.preflight.outputs.environment }}" \
+            || echo "::notice::railway link skipped — proceeding (expected for a project-scoped RAILWAY_TOKEN, which binds the project implicitly)."
 
       - name: Deploy ${{ matrix.service }}
         if: steps.gate.outputs.should_run == 'true'
