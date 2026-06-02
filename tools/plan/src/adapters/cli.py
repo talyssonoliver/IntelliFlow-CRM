@@ -26,10 +26,19 @@ DEFAULT_LINT_REPORT = "artifacts/reports/plan-lint-report.json"
 
 
 def find_project_root() -> Path:
-    """Find project root by looking for CLAUDE.md or package.json."""
+    """Find the monorepo root by walking up for a root-unique marker.
+
+    CLAUDE.md and package.json are NOT reliable markers: the Intent Layer
+    places a CLAUDE.md in many subtrees (e.g. tools/plan/CLAUDE.md) and every
+    workspace package has its own package.json, so either would stop at an
+    intermediate directory when the linter is invoked from there (CI runs it
+    from tools/plan). pnpm-workspace.yaml / turbo.json / .git only exist at the
+    repo root.
+    """
+    root_markers = ("pnpm-workspace.yaml", "turbo.json", ".git")
     current = Path.cwd()
     for parent in [current] + list(current.parents):
-        if (parent / "CLAUDE.md").exists() or (parent / "package.json").exists():
+        if any((parent / marker).exists() for marker in root_markers):
             return parent
     return current
 
