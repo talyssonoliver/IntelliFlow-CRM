@@ -125,6 +125,8 @@ export default defineConfig({
       'packages/db/vitest.config.ts',
       'packages/validators/vitest.config.ts',
       'packages/webhooks/vitest.config.ts',
+      // Property-based / race-condition tests (fast-check). Tier via FC_TIER env.
+      'tests/property/vitest.config.ts',
       // Integration tests project - requires database/services
       {
         test: {
@@ -209,6 +211,7 @@ export default defineConfig({
             'tests/e2e/**',
             'tests/a11y/**',
             'tests/integration/**', // Has its own inline project above — avoid running 15 tests twice
+            'tests/property/**', // Has its own 'property' project (fast-check) — avoid double-running
             // Exclude apps/packages with their own vitest configs (they run as separate projects)
             'apps/api/**',
             'apps/web/**',

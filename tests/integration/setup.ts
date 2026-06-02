@@ -13,6 +13,7 @@
 import { beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 const execAsync = promisify(exec);
 
@@ -50,6 +51,11 @@ try {
     infrastructureUnavailableReason = `Failed to load database client: ${errorMessage}`;
   }
 }
+
+// Prisma 7 requires a driver adapter — @prisma/adapter-pg is statically imported
+// at the top (it is a first-class dependency). The legacy Prisma-5
+// `datasources.db.url` constructor throws at runtime under engineType="client"
+// (audit finding RACE-TEST--M1).
 
 // Container and client state
 
@@ -235,15 +241,29 @@ export function getTestPrismaClient(): any {
   }
 
   if (!testPrismaClient) {
-    testPrismaClient = new PrismaClient({
-      datasources: {
-        db: {
-          url: databaseUrl || process.env.DATABASE_URL,
-        },
-      },
+    // Prisma 7: construct with the pg driver adapter (NOT datasources.db.url).
+    const adapter = new PrismaPg({
+      connectionString: databaseUrl || process.env.DATABASE_URL || process.env.TEST_DATABASE_URL,
     });
+    testPrismaClient = new PrismaClient({ adapter });
   }
   return testPrismaClient;
+}
+
+/**
+ * Create an ISOLATED Prisma client with its OWN connection pool — required for
+ * real concurrency tests. A single shared client serialises row-level locks, so
+ * concurrent transactions never actually contend and a race silently "passes".
+ * Caller MUST `$disconnect()`. Returns null when infrastructure is unavailable.
+ */
+export function createIsolatedTestPrismaClient(): any {
+  if (!isInfrastructureAvailable || !PrismaClient) {
+    return null;
+  }
+  const url = databaseUrl || process.env.DATABASE_URL || process.env.TEST_DATABASE_URL;
+  if (!url) return null;
+  const adapter = new PrismaPg({ connectionString: url });
+  return new PrismaClient({ adapter });
 }
 
 /**
@@ -404,6 +424,7 @@ export const testUtils = {
   createTestApiClient,
   waitForService,
   getTestPrismaClient,
+  createIsolatedTestPrismaClient,
   isDatabaseAvailable,
   isInfrastructureAvailable,
   infrastructureUnavailableReason,

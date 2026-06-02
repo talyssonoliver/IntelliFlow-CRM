@@ -146,9 +146,17 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
     const planModules = getModulesForPlan(plan);
     const now = new Date();
 
-    // Upsert each plan module as enabled
-    await Promise.all(
-      planModules.map((moduleId) =>
+    // Apply the plan atomically (RACE-ENTIT-M1):
+    //  1. enable every module in the new plan, and
+    //  2. disable any enabled override row whose module is NOT in the new plan.
+    // Step 2 is the fix for the downgrade leak: without it the method is
+    // additive-only, so above-plan override rows stay enabled=true and
+    // getEnabledModules merges them back in — a downgraded tenant would keep
+    // higher-plan (paid) module access. Running both in one transaction means
+    // the enabled set can never be observed in a half-synced state. CORE_CRM is
+    // part of every plan, so `notIn planModules` never disables it.
+    await this.prisma.$transaction([
+      ...planModules.map((moduleId) =>
         this.prisma.tenantModule.upsert({
           where: { tenantId_moduleId: { tenantId, moduleId } },
           create: {
@@ -163,10 +171,14 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
             disabledAt: null,
           },
         })
-      )
-    );
+      ),
+      this.prisma.tenantModule.updateMany({
+        where: { tenantId, enabled: true, moduleId: { notIn: [...planModules] } },
+        data: { enabled: false, disabledAt: now },
+      }),
+    ]);
 
-    // Return the full set of enabled modules (includes any à la carte additions)
+    // Return the resulting enabled set (now bounded by the new plan).
     return this.getEnabledModules(tenantId);
   }
 }
