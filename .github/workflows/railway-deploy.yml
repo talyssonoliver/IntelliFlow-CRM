@@ -198,25 +198,14 @@ jobs:
 
       - name: Deploy ${{ matrix.service }}
         if: steps.gate.outputs.should_run == 'true'
-        # `cd apps/<svc>` so Railway picks up the per-service railway.json
-        # via the CLI's working-directory lookup (otherwise it falls back
-        # to repo-root defaults, which would deploy with the wrong
-        # builder/config).
-        run: |
-          case "${{ matrix.service }}" in
-            api)
-              cd apps/api
-              railway up --service api --detach --ci
-              ;;
-            ai-worker)
-              cd apps/ai-worker
-              railway up --service ai-worker --detach --ci
-              ;;
-            *)
-              echo "::error::Unknown service: ${{ matrix.service }}"
-              exit 1
-              ;;
-          esac
+        # The api/ai-worker services deploy from a pre-built GHCR image
+        # (Build & Push Images -> ghcr.io/<owner>/intelliflow-crm-<svc>:latest ->
+        # Railway image source), NOT a Dockerfile built by Railway. So redeploy
+        # the service (which pulls + runs the latest GHCR image) instead of
+        # `railway up` (which would try to build a Dockerfile and fails with
+        # "couldn't locate the dockerfile" because the image-based service has no
+        # Railway build context).
+        run: railway redeploy --service "${{ matrix.service }}" --yes
 
       - name: Capture deployment status
         if: always() && steps.gate.outputs.should_run == 'true'
