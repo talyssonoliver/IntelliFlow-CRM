@@ -301,7 +301,13 @@ const createAdapters = (prismaClient: PrismaClient) => {
   // Storage & AV (IFC-094)
   const storageService = new SupabaseStorageAdapter(
     requiredProdEnv('SUPABASE_URL', process.env.SUPABASE_URL, 'http://localhost:54321'),
-    process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-service-key'
+    // Fail-fast: a real service-role key is required in production; the
+    // 'dev-service-key' placeholder must never be used against a live project.
+    requiredProdEnv(
+      'SUPABASE_SERVICE_ROLE_KEY',
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      'dev-service-key'
+    )
   );
 
   // AV Scanner (addressing audit finding)

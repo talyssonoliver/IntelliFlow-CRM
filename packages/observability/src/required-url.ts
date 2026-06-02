@@ -8,8 +8,13 @@
  * DO NOT add external imports — must remain dependency-free.
  */
 
-/** True when running in a production deployment. */
+/**
+ * True when running in a real production deployment. Deliberately false during
+ * the Next.js production *build* (NEXT_PHASE) — kept identical to
+ * packages/validators/src/required-url.ts.
+ */
 export function isProductionEnv(): boolean {
+  if (process.env.NEXT_PHASE === 'phase-production-build') return false;
   return process.env.NODE_ENV === 'production';
 }
 

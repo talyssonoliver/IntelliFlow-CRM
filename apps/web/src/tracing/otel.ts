@@ -38,16 +38,20 @@ function envString(value: string | undefined, fallback: string): string {
 
 function getOtelConfig(): OtelConfig {
   const environment = envString(process.env.NODE_ENV, 'development');
+  const enabled = process.env.OTEL_ENABLED !== 'false';
   return {
-    enabled: process.env.OTEL_ENABLED !== 'false',
+    enabled,
     serviceName: envString(process.env.OTEL_SERVICE_NAME, 'intelliflow-web'),
     serviceVersion: envString(process.env.npm_package_version, '0.1.0'),
     environment,
-    otlpEndpoint: requiredProdEnv(
-      'OTEL_EXPORTER_OTLP_ENDPOINT',
-      process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-      'http://localhost:4318'
-    ),
+    // Only require the endpoint when tracing is actually enabled (see api otel.ts).
+    otlpEndpoint: enabled
+      ? requiredProdEnv(
+          'OTEL_EXPORTER_OTLP_ENDPOINT',
+          process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+          'http://localhost:4318'
+        )
+      : (process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318'),
     exportToConsole: environment === 'development',
   };
 }
