@@ -1,38 +1,6 @@
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 158: File: unbound variable
-/c/Users/talys/tools/intent-layer/scripts/detect_staleness.sh: line 444: [: : integer expression expected
 ## Intent Layer Staleness Report
 
-Scanned: /c/Users/talys/projects/intelliFlow-CRM
+Scanned: <repo_root>
 Threshold: 90 days
 
 ### Potentially Stale Nodes

@@ -1,5 +1,5 @@
 === Intent Layer Token Analysis ===
-Target: /c/Users/talys/projects/intelliFlow-CRM
+Target: <repo_root>
 
 ## Token Estimates
 

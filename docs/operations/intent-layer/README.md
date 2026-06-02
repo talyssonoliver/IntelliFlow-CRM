@@ -21,13 +21,13 @@ to the repo's **Claude-only** policy. Upstream framework:
 
 ## Raw run artifacts (this folder)
 
-| File                          | Script                                | Notes                                                                                                      |
-| ----------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `detect_state.txt`            | `detect_state.sh`                     | root state → now `complete`                                                                                |
-| `estimate_candidates.txt`     | `estimate_all_candidates.sh`          | token estimate (⚠ absolute numbers unreliable here — counts generated artifacts; use relative signal only) |
-| `staleness_nodes.txt`         | `detect_staleness.sh`                 | node-level (all nodes "medium" = high commit churn, expected for active repo)                              |
-| `staleness_entries_quick.txt` | `detect_staleness.sh --entries-quick` | ⚠ upstream bug (`line 158: File: unbound variable`) — replaced by adapted scan below                       |
-| `staleness_adapted.txt`       | manual adaptation                     | broken-path-ref scan over in-repo `CLAUDE.md`                                                              |
+| File                          | Script                                | Notes                                                                                                                             |
+| ----------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `detect_state.txt`            | `detect_state.sh`                     | raw pre-fix scan (`has_intent_section: false`); root is `complete` after this PR adds the root `## Intent Layer` section (see §1) |
+| `estimate_candidates.txt`     | `estimate_all_candidates.sh`          | token estimate (⚠ absolute numbers unreliable here — counts generated artifacts; use relative signal only)                        |
+| `staleness_nodes.txt`         | `detect_staleness.sh`                 | node-level (all nodes "medium" = high commit churn, expected for active repo)                                                     |
+| `staleness_entries_quick.txt` | `detect_staleness.sh --entries-quick` | ⚠ upstream bug (`line 158: File: unbound variable`) — replaced by adapted scan below                                              |
+| `staleness_adapted.txt`       | manual adaptation                     | broken-path-ref scan over in-repo `CLAUDE.md`                                                                                     |
 
 ## Findings & actions taken (2026-05-30)
 
@@ -56,15 +56,16 @@ explored (package.json, README, barrel exports, file layout) before writing, to
 avoid fabricated content (repo rule: _Never Mock or Simulate Data_). Ranked by
 source-file count (the estimator's absolute token numbers are unreliable here).
 
-| Directory                                         | Source files | Status                                     |
-| ------------------------------------------------- | ------------ | ------------------------------------------ |
-| `tools/scripts`                                   | 191          | ✅ node created                            |
-| `packages/platform`                               | 51           | ✅ node created                            |
-| `apps/workers`                                    | 46           | ✅ node created (meta-pkg → 4 sub-workers) |
-| `packages/observability`                          | 19           | ✅ node created                            |
-| `packages/webhooks`                               | 11           | ✅ node created                            |
-| `packages/{ai,sdk,search}`                        | 4–6          | deferred — below threshold, optional       |
-| `infra/monitoring`, `tools/plan`, `docs/planning` | 0 code       | skip (docs/config only)                    |
+| Directory                        | Source files | Status                                                                                                   |
+| -------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------- |
+| `tools/scripts`                  | 191          | ✅ node created                                                                                          |
+| `packages/platform`              | 51           | ✅ node created                                                                                          |
+| `apps/workers`                   | 46           | ✅ node created (meta-pkg → 4 sub-workers)                                                               |
+| `packages/observability`         | 19           | ✅ node created                                                                                          |
+| `packages/webhooks`              | 11           | ✅ node created                                                                                          |
+| `packages/{ai,sdk,search}`       | 4–6          | initially below-threshold → ✅ node created after the §4 audit                                           |
+| `infra/monitoring`, `tools/plan` | 0 code       | initially "skip" → ✅ node created after the §4 audit (parked/config subtrees still benefit from a node) |
+| `docs/planning`                  | 0 code       | skipped — docs only, no node                                                                             |
 
 Node inventory is now **25** (was 15). Root `CLAUDE.md` "Context by Area" /
 Intent Layer section updated to match.
