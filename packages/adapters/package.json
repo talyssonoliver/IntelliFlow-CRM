@@ -59,9 +59,9 @@
     "@intelliflow/test-fixtures": "workspace:*",
     "@intelliflow/typescript-config": "workspace:*",
     "@types/node": "^25.9.1",
-    "@vitest/coverage-v8": "^4.1.7",
+    "@vitest/coverage-v8": "^4.1.8",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.8"
   }
 }
