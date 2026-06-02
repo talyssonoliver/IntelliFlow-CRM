@@ -26,9 +26,6 @@ import { propertyParams } from '../../support';
  */
 const standardCurrency = fc.constantFrom('GBP', 'EUR', 'CAD', 'AUD');
 
-/** All supported currencies including JPY. */
-const anySupportedCurrency = fc.constantFrom('GBP', 'EUR', 'CAD', 'AUD', 'JPY');
-
 /**
  * Non-negative integer cents bounded well within safe-integer range so that
  * adding two values never overflows Number.MAX_SAFE_INTEGER.

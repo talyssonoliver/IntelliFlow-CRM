@@ -49,7 +49,6 @@ import {
   TimeSlot,
   Buffer,
   AppointmentId,
-  APPOINTMENT_STATUSES,
   APPOINTMENT_TYPES,
   type AppointmentStatus,
   type AppointmentType,

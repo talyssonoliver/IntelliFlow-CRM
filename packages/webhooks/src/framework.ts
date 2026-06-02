@@ -727,6 +727,12 @@ export class WebhookFramework {
       if (this.config.loggingEnabled) {
         console.warn(`No handlers for event type: ${event.type}`);
       }
+      // Commit the idempotency claim: with no handlers there is nothing to run,
+      // so the event is "processed" (success/200). Without this the key claimed
+      // in handle() would stay stuck in `processing` forever — leaking the entry
+      // and (until TTL/cleanup) making a redelivery look like an in-flight dup
+      // rather than returning this same cached success. (RACE-WEBHO)
+      this.idempotency.complete(idempotencyKey, { success: true });
       return {
         success: true,
         eventId: event.id,

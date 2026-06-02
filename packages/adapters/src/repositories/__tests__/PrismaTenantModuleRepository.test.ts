@@ -17,10 +17,14 @@ import { PrismaTenantModuleRepository } from '../PrismaTenantModuleRepository';
 function createMockPrisma(): Record<string, any> {
   return {
     $queryRaw: vi.fn(),
+    // Array-form transaction used by syncModulesToPlan: the operation promises
+    // are already created when the array is built, so just await them.
+    $transaction: vi.fn().mockImplementation(async (ops: Promise<unknown>[]) => Promise.all(ops)),
     tenantModule: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       upsert: vi.fn(),
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
   };
 }

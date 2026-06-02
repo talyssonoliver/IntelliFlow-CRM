@@ -132,9 +132,6 @@ const arbModelName = fc
 /** Any QueryBudgetMode. */
 const arbMode = fc.constantFrom<QueryBudgetMode>('off', 'observe', 'throw');
 
-/** A string that is clearly not a recognised route (never matches ROUTE_BUDGETS). */
-const arbUnknownRoute = fc.string({ minLength: 1, maxLength: 40 }).filter((s) => ![''].includes(s));
-
 // ---------------------------------------------------------------------------
 // Property 1: at-most-once — emitter fires exactly once for any over-budget sequence
 // ---------------------------------------------------------------------------

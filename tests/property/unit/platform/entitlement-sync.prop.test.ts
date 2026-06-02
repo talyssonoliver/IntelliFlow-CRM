@@ -4,8 +4,8 @@
  *
  * Properties covered:
  *  1. (RACE-ENTIT-M1) syncModulesToPlan — downgrade invariant: after syncing to a
- *     lower plan tier, above-plan modules whose override rows remain enabled=true are
- *     still returned by getEnabledModules (documents the bug: additive-only sync).
+ *     lower plan tier, no module exclusive to the higher plan stays enabled — the
+ *     sync disables above-plan override rows (fix for the additive-only leak).
  *  2. (RACE-ENTIT-M1) syncModulesToPlan — upgrade invariant: after syncing to a
  *     higher plan tier all plan modules become accessible regardless of prior state.
  *  3. (RACE-ENTIT-M1) syncModulesToPlan — CORE_CRM is always present in the result
@@ -18,9 +18,9 @@
  *  6. getEnabledModules result ordering is always a subset of CRM_MODULES canonical order.
  *  7. getEnabledModules idempotency: calling it twice with the same DB state returns
  *     structurally equal arrays.
- *  8. (RACE-ENTIT-M1 bug) after syncModulesToPlan(STARTER) an ENTERPRISE tenant whose
- *     above-plan override rows were never cleared retains LEGAL/COMMERCE access —
- *     this property asserts the BUG EXISTS (skipped when/if the fix lands).
+ *  8. (RACE-ENTIT-M1) after syncModulesToPlan(STARTER) an ENTERPRISE tenant's
+ *     above-plan override rows (LEGAL/COMMERCE) are disabled — concrete regression
+ *     guard that the downgrade revokes higher-plan access.
  *  9. disableModule(CORE_CRM) is a no-op: CORE_CRM is always returned as enabled=true.
  * 10. enableModule followed by disableModule leaves the module in disabled state for
  *     any non-CORE_CRM moduleId.
@@ -53,9 +53,6 @@ import { propertyParams } from '../../support';
 
 /** Any valid plan tier. */
 const arbPlanTier: fc.Arbitrary<PlanTier> = fc.constantFrom(...PLAN_TIERS);
-
-/** Any valid module id. */
-const arbModuleId: fc.Arbitrary<ModuleId> = fc.constantFrom(...CRM_MODULES);
 
 /** Any non-CORE_CRM module id. */
 const arbNonCoreModuleId: fc.Arbitrary<ModuleId> = fc.constantFrom(
@@ -148,7 +145,33 @@ function createMockPrisma(
             return create;
           }
         ),
+      updateMany: vi.fn().mockImplementation(
+        async ({
+          where,
+          data,
+        }: {
+          where: {
+            tenantId: string;
+            enabled?: boolean;
+            moduleId?: { notIn?: string[] };
+          };
+          data: Partial<InMemoryModuleRow>;
+        }) => {
+          let count = 0;
+          for (const [key, row] of store) {
+            if (row.tenantId !== where.tenantId) continue;
+            if (where.enabled !== undefined && row.enabled !== where.enabled) continue;
+            if (where.moduleId?.notIn && where.moduleId.notIn.includes(row.moduleId)) continue;
+            store.set(key, { ...row, ...data });
+            count++;
+          }
+          return { count };
+        }
+      ),
     },
+    // Array-form transaction: the operations above already executed against the
+    // in-memory store when the array was built, so just await them.
+    $transaction: vi.fn().mockImplementation(async (ops: Promise<unknown>[]) => Promise.all(ops)),
   };
 }
 
@@ -165,38 +188,31 @@ function makeEnabledRow(moduleId: string, tenantId = TENANT): InMemoryModuleRow 
 }
 
 // ---------------------------------------------------------------------------
-// 1. RACE-ENTIT-M1 — syncModulesToPlan downgrade: above-plan enabled rows persist
-//    This property documents the bug: the method is additive-only so override rows
-//    for modules above the new plan are NOT cleared.
+// 1. RACE-ENTIT-M1 — syncModulesToPlan downgrade revokes above-plan access.
+//    Invariant: after syncing a tenant to a lower plan, no module exclusive to
+//    the higher plan remains enabled, even if it had an enabled override row.
 // ---------------------------------------------------------------------------
 
 describe('syncModulesToPlan — downgrade invariant (RACE-ENTIT-M1)', () => {
   test.prop([arbDowngradePair], propertyParams())(
-    '1. after downgrade sync, modules exclusive to the higher plan may remain accessible if override rows exist',
+    '1. after downgrade sync, no module exclusive to the higher plan stays enabled',
     async ([higherPlan, lowerPlan]) => {
       const above = abovePlanModules(higherPlan, lowerPlan);
       // Only run when there are modules exclusive to the higher plan
       fc.pre(above.length > 0);
 
-      // Simulate tenant that had ENTERPRISE-level override rows set to enabled=true
+      // Simulate a tenant that had higher-plan override rows set to enabled=true.
       const initialRows = above.map((m) => makeEnabledRow(m));
       const mockPrisma = createMockPrisma(initialRows, lowerPlan);
       const repo = new PrismaTenantModuleRepository(mockPrisma as unknown as PrismaClient);
 
-      // syncModulesToPlan only upserts the *new* plan's modules as enabled.
-      // It does NOT issue an updateMany to disable above-plan rows.
+      // syncModulesToPlan now disables any enabled override row whose module is
+      // not in the new plan, so the downgrade actually revokes above-plan access.
       const result = await repo.syncModulesToPlan(TENANT, lowerPlan);
 
-      // BUG (RACE-ENTIT-M1): above-plan modules still appear in getEnabledModules
-      // because their override rows remain enabled=true and the merge logic in
-      // getEnabledModules adds them back.
-      // The result SHOULD NOT contain above-plan modules after downgrade.
-      // Since the bug exists, we assert that above-plan modules ARE still in the result.
       const aboveSet = new Set(above);
       const stillEnabled = result.filter((m) => aboveSet.has(m));
-      // After a correct implementation, this would be 0 (no above-plan modules).
-      // With the current (buggy) implementation, above-plan enabled rows persist.
-      expect(stillEnabled.length).toBeGreaterThan(0);
+      expect(stillEnabled.length).toBe(0);
     }
   );
 });
@@ -354,20 +370,14 @@ describe('getEnabledModules — idempotency', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 8. BUG: RACE-ENTIT-M1 — ENTERPRISE→STARTER downgrade retains above-plan access
-//    This test.skip documents the BUG: syncModulesToPlan does not disable
-//    above-plan module override rows. Skip when/if the fix lands.
-//
-// BUG(RACE-ENTIT-M1): syncModulesToPlan only upserts plan modules as enabled=true;
-// it never issues updateMany to disable rows whose moduleId is NOT in the new plan.
-// After ENTERPRISE→STARTER sync, LEGAL and COMMERCE override rows remain enabled=true,
-// and getEnabledModules merges them back in — tenant retains full paid module access
-// despite being on STARTER plan.
+// 8. RACE-ENTIT-M1 — ENTERPRISE→STARTER downgrade revokes above-plan access.
+//    Concrete regression guard: syncModulesToPlan disables above-plan override
+//    rows (LEGAL, COMMERCE) so they do not survive the downgrade.
 // ---------------------------------------------------------------------------
 
-describe('syncModulesToPlan — ENTERPRISE→STARTER downgrade leaves no above-plan modules (BUG)', () => {
-  test.skip('BUG(RACE-ENTIT-M1): after syncModulesToPlan(STARTER) LEGAL and COMMERCE should be disabled', async () => {
-    // Pre-condition: tenant is on ENTERPRISE with LEGAL and COMMERCE override rows enabled=true
+describe('syncModulesToPlan — ENTERPRISE→STARTER downgrade leaves no above-plan modules', () => {
+  test('after syncModulesToPlan(STARTER) LEGAL and COMMERCE are disabled', async () => {
+    // Pre-condition: tenant was on ENTERPRISE with LEGAL and COMMERCE override rows enabled=true
     const enterpriseAbove: ModuleId[] = ['LEGAL', 'COMMERCE'];
     const initialRows = enterpriseAbove.map((m) => makeEnabledRow(m));
     const mockPrisma = createMockPrisma(initialRows, 'STARTER');
@@ -375,12 +385,11 @@ describe('syncModulesToPlan — ENTERPRISE→STARTER downgrade leaves no above-p
 
     const result = await repo.syncModulesToPlan(TENANT, 'STARTER');
 
-    // This is what SHOULD be true after a correct downgrade sync:
+    // After the fix, the downgrade revokes the above-plan override rows.
     expect(result).not.toContain('LEGAL' as ModuleId);
     expect(result).not.toContain('COMMERCE' as ModuleId);
-
-    // But syncModulesToPlan does not clear the above-plan rows, so this
-    // assertion FAILS with the current implementation — hence the test.skip.
+    // And the disable went through updateMany (not just an additive upsert).
+    expect(mockPrisma.tenantModule.updateMany).toHaveBeenCalled();
   });
 });
 

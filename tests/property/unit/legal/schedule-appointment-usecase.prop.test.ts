@@ -62,7 +62,6 @@ import {
   Appointment,
   APPOINTMENT_TYPES,
   type AppointmentType,
-  ConflictDetector,
 } from '@intelliflow/domain';
 import {
   ScheduleAppointmentUseCase,

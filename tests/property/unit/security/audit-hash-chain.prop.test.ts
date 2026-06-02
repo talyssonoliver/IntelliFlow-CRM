@@ -49,8 +49,6 @@
 
 import { describe, expect } from 'vitest';
 import { test, fc } from '@fast-check/vitest';
-import { createHmac } from 'node:crypto';
-
 import {
   DurableAuditLogAdapter,
   type AuditPrismaClient,
@@ -211,20 +209,6 @@ const arbMetadata = (tenantId?: string): fc.Arbitrary<AISecurityMetadata> =>
     ),
   });
 
-/** A valid AISecurityEventInput for a given tenantId. */
-function arbEvent(tenantId: string): fc.Arbitrary<AISecurityEventInput> {
-  return fc.record({
-    eventType: arbEventType,
-    severity: fc.constantFrom(...ALL_SEVERITIES),
-    tenantId: fc.constant(tenantId),
-    description: arbShortStr,
-    metadata: arbMetadata(tenantId),
-    userId: fc.option(arbShortStr, { nil: undefined }),
-    resourceType: fc.option(arbShortStr, { nil: undefined }),
-    resourceId: fc.option(arbShortStr, { nil: undefined }),
-  });
-}
-
 /** A valid TenantContext for a given tenantId. */
 function tenantCtx(tenantId: string): TenantContext {
   return { tenantId };
@@ -236,21 +220,6 @@ function tenantCtx(tenantId: string): TenantContext {
 
 function callComputeHash(adapter: DurableAuditLogAdapter, entry: Record<string, unknown>): string {
   return (adapter as any).computeHash(entry);
-}
-
-// ---------------------------------------------------------------------------
-// Helper: log one event, return persisted row
-// ---------------------------------------------------------------------------
-
-async function logOne(
-  adapter: DurableAuditLogAdapter,
-  event: AISecurityEventInput,
-  securityEvents: PersistedEntry[]
-): Promise<PersistedEntry> {
-  const before = securityEvents.length;
-  await adapter.logSecurityEvent(event, tenantCtx(event.tenantId));
-  // The newly appended row is always last
-  return securityEvents[securityEvents.length - 1];
 }
 
 // ---------------------------------------------------------------------------

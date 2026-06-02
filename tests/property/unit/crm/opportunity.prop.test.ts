@@ -26,13 +26,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { test, fc } from '@fast-check/vitest';
-import {
-  Opportunity,
-  OpportunityAlreadyClosedError,
-  InvalidOpportunityValueError,
-  InvalidProbabilityError,
-  OPPORTUNITY_STAGES,
-} from '@intelliflow/domain';
+import { Opportunity, OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { Money } from '@intelliflow/domain';
 import { Percentage } from '@intelliflow/domain';
 import { propertyParams } from '../../support';
@@ -52,12 +46,6 @@ const openStage = fc.constantFrom(
   'PROPOSAL' as const,
   'NEGOTIATION' as const
 );
-
-/** Any opportunity stage (including closed stages). */
-const anyStage = fc.constantFrom(...OPPORTUNITY_STAGES);
-
-/** Any closed opportunity stage. */
-const closedStage = fc.constantFrom('CLOSED_WON' as const, 'CLOSED_LOST' as const);
 
 /** Positive integer value in cents for an opportunity (1 cent to 10 million). */
 const positiveCents = fc.integer({ min: 1, max: 10_000_000 });
@@ -86,19 +74,6 @@ const minimalCreateProps = fc
     name: 'Test Opportunity',
     value: amount,
     currency: cur,
-    accountId,
-    ownerId,
-    tenantId,
-  }));
-
-/** CreateOpportunityProps with explicit stage. */
-const createPropsWithStage = fc
-  .tuple(positiveAmount, currency, openStage, entityId, entityId, entityId)
-  .map(([amount, cur, stage, accountId, ownerId, tenantId]) => ({
-    name: 'Test Opportunity',
-    value: amount,
-    currency: cur,
-    stage,
     accountId,
     ownerId,
     tenantId,

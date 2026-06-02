@@ -76,9 +76,6 @@ const LEAD_FIELDS = [
   'location',
   'tags',
 ] as const;
-const NUMERIC_FIELDS = ['leadScore', 'estimatedValue'] as const;
-const STRING_FIELDS = ['leadSource', 'leadStatus', 'location'] as const;
-
 /** A minimal LeadContext with bounded values. */
 const arbLeadCtx: fc.Arbitrary<LeadContext> = fc.record({
   score: fc.integer({ min: 0, max: 100 }),
