@@ -48,7 +48,6 @@ import {
 } from '@opentelemetry/api';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
-import { requiredProdEnv } from './required-url';
 
 /**
  * Tracing configuration options
@@ -95,13 +94,10 @@ export function initTracing(config: TracingConfig): void {
   // Type assertions needed due to OTel package version mismatches across dependencies
 
   const traceExporter = new OTLPTraceExporter({
-    url:
-      config.endpoint ||
-      requiredProdEnv(
-        'OTEL_EXPORTER_OTLP_ENDPOINT',
-        process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-        'http://localhost:4317'
-      ),
+    // OTel is optional infra — never throw on a missing endpoint (runs at service
+    // startup). The exporter only runs once tracing is enabled upstream; a
+    // missing endpoint just degrades (connection refused, handled by OTel). (#228)
+    url: config.endpoint || process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317',
   }) as any;
 
   const spanProcessor = new BatchSpanProcessor(traceExporter) as any;

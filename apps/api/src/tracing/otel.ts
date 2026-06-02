@@ -30,7 +30,7 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions/incubating';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
+import { isProductionEnv } from '@intelliflow/validators/required-url';
 
 /**
  * Configuration for OpenTelemetry
@@ -55,22 +55,21 @@ function envString(value: string | undefined, fallback: string): string {
  */
 function getOtelConfig(): OtelConfig {
   const environment = envString(process.env.NODE_ENV, 'development');
-  const enabled = process.env.OTEL_ENABLED !== 'false';
+  // OTel is OPTIONAL infrastructure and must never crash the app (it loads from
+  // the Next.js instrumentation hook at server startup). So we do NOT fail-fast
+  // on a missing endpoint. Instead: enable only when not explicitly disabled AND
+  // we have somewhere to export to in production. A prod deploy with no
+  // OTEL_EXPORTER_OTLP_ENDPOINT runs with tracing OFF rather than throwing or
+  // silently dialing localhost:4318. (#228 — fixes the E2E `next start` crash.)
+  const hasEndpoint = Boolean(process.env.OTEL_EXPORTER_OTLP_ENDPOINT);
+  const enabled = process.env.OTEL_ENABLED !== 'false' && (hasEndpoint || !isProductionEnv());
 
   return {
     enabled,
     serviceName: envString(process.env.OTEL_SERVICE_NAME, 'intelliflow-api'),
     serviceVersion: envString(process.env.npm_package_version, '0.1.0'),
     environment,
-    // Only require the endpoint when tracing is actually enabled — a prod deploy
-    // that sets OTEL_ENABLED=false must not be forced to also set the endpoint.
-    otlpEndpoint: enabled
-      ? requiredProdEnv(
-          'OTEL_EXPORTER_OTLP_ENDPOINT',
-          process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-          'http://localhost:4318'
-        )
-      : (process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318'),
+    otlpEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318',
     exportToConsole: environment === 'development',
   };
 }

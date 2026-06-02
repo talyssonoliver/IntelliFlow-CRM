@@ -82,4 +82,42 @@ describe('OpenTelemetry SDK (otel.ts)', () => {
     await shutdownOpenTelemetry(sdk);
     expect(nodeSdkShutdown).toHaveBeenCalledTimes(1);
   });
+
+  // Regression (#228): OTel loads from the Next.js instrumentation hook at server
+  // startup. A previous fail-fast threw in production when
+  // OTEL_EXPORTER_OTLP_ENDPOINT was unset, crashing `next start` (caught by the
+  // E2E smoke job only on main). OTel is optional infra and must NEVER crash the
+  // app: with no endpoint in production it must disable tracing, not throw.
+  it('does NOT throw and disables tracing in production when no OTLP endpoint is set', async () => {
+    process.env.NODE_ENV = 'production';
+    // Unrelated module-init guard (M4) fires at import in production.
+    process.env.PRISMA_FIELD_ENCRYPTION_KEY = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+    delete process.env.NEXT_PHASE;
+    delete process.env.OTEL_ENABLED; // default-enabled
+    delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
+
+    const { initializeOpenTelemetry } = await import('./otel.js');
+
+    let sdk: ReturnType<typeof initializeOpenTelemetry> | undefined;
+    expect(() => {
+      sdk = initializeOpenTelemetry();
+    }).not.toThrow();
+
+    // Disabled (no endpoint to export to in prod) — no SDK created.
+    expect(sdk).toBeNull();
+    expect(lastNodeSdkOptions).toBeUndefined();
+  }, 30000);
+
+  it('enables tracing in production when an OTLP endpoint IS set', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.PRISMA_FIELD_ENCRYPTION_KEY = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+    delete process.env.NEXT_PHASE;
+    delete process.env.OTEL_ENABLED;
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT = 'http://otel-collector.internal:4318';
+
+    const { initializeOpenTelemetry } = await import('./otel.js');
+
+    const sdk = initializeOpenTelemetry();
+    expect(sdk).not.toBeNull();
+  }, 30000);
 });
