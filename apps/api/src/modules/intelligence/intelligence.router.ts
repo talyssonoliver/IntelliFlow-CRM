@@ -27,6 +27,7 @@ import {
 } from '@intelliflow/validators';
 import { getTenantContext } from '../../security/tenant-context';
 import { SIGNIFICANCE_LEVELS, requiresHumanReview } from '@intelliflow/domain';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 // ── Structured sentiment data stored inside the Json `recommendations` field ──
 
@@ -893,7 +894,7 @@ export const intelligenceRouter = createTRPCRouter({
         const qConfig = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.AI_PREDICTION];
         const queue = new Queue(QUEUE_NAMES.AI_PREDICTION, {
           connection: {
-            host: process.env.REDIS_HOST || 'localhost',
+            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
             port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
           },
           defaultJobOptions: {

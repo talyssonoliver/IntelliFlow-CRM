@@ -19,6 +19,7 @@ import {
   enqueueSummarizationIfNeeded,
   SUMMARIZE_QUEUE,
 } from '../jobs/summarize-conversation.job.js';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 const logger = pino({
   name: 'conversation-record-handler',
@@ -116,7 +117,7 @@ export class ConversationRecordCallbackHandler extends BaseCallbackHandler {
       const { Queue } = await import('bullmq');
       const summarizeQueue = new Queue(SUMMARIZE_QUEUE, {
         connection: {
-          host: process.env.REDIS_HOST || 'localhost',
+          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
           port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
         },
       });

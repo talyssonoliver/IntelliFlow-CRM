@@ -19,6 +19,7 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions/incubating';
+import { requiredProdEnv } from '../lib/required-url';
 
 interface OtelConfig {
   enabled: boolean;
@@ -42,7 +43,11 @@ function getOtelConfig(): OtelConfig {
     serviceName: envString(process.env.OTEL_SERVICE_NAME, 'intelliflow-web'),
     serviceVersion: envString(process.env.npm_package_version, '0.1.0'),
     environment,
-    otlpEndpoint: envString(process.env.OTEL_EXPORTER_OTLP_ENDPOINT, 'http://localhost:4318'),
+    otlpEndpoint: requiredProdEnv(
+      'OTEL_EXPORTER_OTLP_ENDPOINT',
+      process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+      'http://localhost:4318'
+    ),
     exportToConsole: environment === 'development',
   };
 }

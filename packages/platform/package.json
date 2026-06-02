@@ -61,6 +61,7 @@
     "@bull-board/api": "^7.1.5",
     "@bull-board/ui": "^7.1.5",
     "@intelliflow/domain": "workspace:*",
+    "@intelliflow/validators": "workspace:*",
     "bullmq": "^5.77.6",
     "zod": "^4.4.3"
   },

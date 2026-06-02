@@ -325,6 +325,8 @@ describe('createLLM() — production LITELLM_MASTER_KEY assertion', () => {
   it('does NOT throw in production with a real key', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv('LITELLM_MASTER_KEY', 'sk-real-prod-key-abc123');
+    // #228: LITELLM_BASE_URL is required in production (no localhost fallback).
+    vi.stubEnv('LITELLM_BASE_URL', 'https://litellm.internal:4000/v1');
 
     const { createLLM, __resetFactoryCache } = await importFactory('litellm');
     __resetFactoryCache();
@@ -345,6 +347,8 @@ describe('createLLM() — production LITELLM_MASTER_KEY assertion', () => {
   it('assertion runs only once per module lifetime (second call does not re-throw)', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv('LITELLM_MASTER_KEY', 'sk-real-prod-key-xyz');
+    // #228: LITELLM_BASE_URL is required in production (no localhost fallback).
+    vi.stubEnv('LITELLM_BASE_URL', 'https://litellm.internal:4000/v1');
 
     const { createLLM, __resetFactoryCache } = await importFactory('litellm');
     __resetFactoryCache();

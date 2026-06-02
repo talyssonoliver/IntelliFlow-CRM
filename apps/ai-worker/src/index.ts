@@ -15,6 +15,7 @@ import './env';
 import './tracing/otel.js';
 
 import pino from 'pino';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 const logger = pino({
   name: 'ai-worker',
@@ -358,7 +359,11 @@ function resolveProviderEndpointUrl(config: {
 }): string {
   if (config.provider === 'ollama') return config.ollama.baseUrl;
   if (config.provider === 'mock') return 'mock';
-  return process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1';
+  return requiredProdEnv(
+    'LITELLM_BASE_URL',
+    process.env['LITELLM_BASE_URL'],
+    'http://localhost:4000/v1'
+  );
 }
 
 /**

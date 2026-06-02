@@ -743,7 +743,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const reports: string[] = body.reports || ['coverage'];
-    const lighthouseUrl: string = body.url || 'http://localhost:3000';
+    const lighthouseUrl: string =
+      body.url ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.NODE_ENV !== 'production' ? 'http://localhost:3000' : '');
     const scope: string = body.scope || 'standard';
     const jobId: string | undefined = body.jobId;
 

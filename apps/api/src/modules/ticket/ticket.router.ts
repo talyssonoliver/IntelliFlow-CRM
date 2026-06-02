@@ -39,6 +39,7 @@ import {
   resolveDefaultSlaPolicyId,
   trimTicketDescription,
 } from './ticket-automation';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
  * Helper to get ticket service from context
@@ -104,7 +105,7 @@ function notifyAssignee(
     const qConfig = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.EMAIL_NOTIFICATIONS];
     const queue = new Queue(QUEUE_NAMES.EMAIL_NOTIFICATIONS, {
       connection: {
-        host: process.env.REDIS_HOST || 'localhost',
+        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       },
       defaultJobOptions: {

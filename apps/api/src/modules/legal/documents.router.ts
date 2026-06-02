@@ -19,6 +19,7 @@ import { container } from '../../container';
 import { loadBullMQ } from '../../lib/load-bullmq';
 import { loadDocumentAutomation, assertNotDeleteGuarded } from './document-automation';
 import { enforceDocumentPolicies } from './document-policies';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 // PG-186 Cat-2 helpers (notifyDocumentReassignment, notifyOnDuplicate consumer)
 // are exported from document-automation.ts and will be consumed by:
 //   IFC-310 — duplicate-detection runtime (notifyOnDuplicate firing on collision)
@@ -151,7 +152,7 @@ export const documentsRouter = createTRPCRouter({
     (async () => {
       const { Queue } = await loadBullMQ();
       const connection = {
-        host: process.env.REDIS_HOST || 'localhost',
+        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       };
       const imageMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/tiff'];

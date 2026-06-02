@@ -34,6 +34,7 @@ import {
   ObservableGauge,
   metrics as otelMetrics,
 } from '@opentelemetry/api';
+import { requiredProdEnv } from './required-url';
 
 /**
  * Metrics configuration options
@@ -128,7 +129,13 @@ export function initMetrics(config: MetricsConfig): void {
   });
 
   const metricExporter = new OTLPMetricExporter({
-    url: config.endpoint || process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317',
+    url:
+      config.endpoint ||
+      requiredProdEnv(
+        'OTEL_EXPORTER_OTLP_ENDPOINT',
+        process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+        'http://localhost:4317'
+      ),
   });
 
   meterProvider = new MeterProvider({

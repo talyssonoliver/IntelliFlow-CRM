@@ -35,7 +35,7 @@ clear error message.
 | ------------------------------- | -------- | --------------------- | --------------------------- |
 | `NEXT_PUBLIC_SUPABASE_URL`      | **Yes**  | Public Supabase URL   | `https://xxx.supabase.co`   |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Yes**  | Public anon key       | `eyJhbGci...`               |
-| `NEXT_PUBLIC_API_URL`           | **Yes**  | tRPC API endpoint     | `http://localhost:3001`     |
+| `NEXT_PUBLIC_API_URL`           | **Yes**  | tRPC API endpoint     | `http://localhost:4000`     |
 | `NEXT_PUBLIC_SENTRY_DSN`        | No       | Sentry error tracking | `https://xxx@sentry.io/xxx` |
 
 ### AI Worker (`apps/ai-worker`)

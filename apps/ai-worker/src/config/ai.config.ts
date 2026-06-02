@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
  * AI Provider Configuration
@@ -79,7 +80,11 @@ export function loadAIConfig(): AIConfig {
     provider,
 
     litellm: {
-      baseUrl: process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1',
+      baseUrl: requiredProdEnv(
+        'LITELLM_BASE_URL',
+        process.env['LITELLM_BASE_URL'],
+        'http://localhost:4000/v1'
+      ),
       masterKey: process.env['LITELLM_MASTER_KEY'] || '',
       timeout: Number.parseInt(process.env['LITELLM_TIMEOUT'] || '120000', 10),
     },
@@ -94,7 +99,11 @@ export function loadAIConfig(): AIConfig {
     },
 
     ollama: {
-      baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+      baseUrl: requiredProdEnv(
+        'OLLAMA_BASE_URL',
+        process.env.OLLAMA_BASE_URL,
+        'http://localhost:11434'
+      ),
       model: process.env.OLLAMA_MODEL || 'mistral',
       temperature: Number.parseFloat(process.env.OLLAMA_TEMPERATURE || '0.7'),
       timeout: Number.parseInt(process.env.OLLAMA_TIMEOUT || '60000', 10),

@@ -12,6 +12,11 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
+    "./required-url": {
+      "types": "./dist/required-url.d.ts",
+      "import": "./dist/required-url.mjs",
+      "require": "./dist/required-url.js"
+    },
     "./lead": {
       "types": "./dist/lead.d.ts",
       "import": "./dist/lead.mjs",
@@ -74,8 +79,8 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/ticket.ts src/common.ts src/env.ts src/base-schemas.ts src/ai-review.ts src/case.ts src/help-article.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/ticket.ts src/common.ts src/env.ts src/base-schemas.ts src/ai-review.ts src/case.ts src/help-article.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.ts src/required-url.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/ticket.ts src/common.ts src/env.ts src/base-schemas.ts src/ai-review.ts src/case.ts src/help-article.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/required-url.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/ticket.ts src/common.ts src/env.ts src/base-schemas.ts src/ai-review.ts src/case.ts src/help-article.ts --format cjs,esm --dts --watch",
     "clean": "rm -rf dist .turbo",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",

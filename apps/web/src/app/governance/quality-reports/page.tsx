@@ -439,7 +439,7 @@ export default function QualityReportsPage() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [selectedReports, setSelectedReports] = useState<string[]>(['coverage']);
   const [selectedScope, setSelectedScope] = useState<ReportScope>('standard');
-  const [lighthouseUrl, setLighthouseUrl] = useState('http://localhost:3000');
+  const [lighthouseUrl, setLighthouseUrl] = useState('');
   const [generationJob, setGenerationJob] = useState<GenerationJob | null>(null);
   const [showCacheWarning, setShowCacheWarning] = useState<string[]>([]);
   const [showTestModal, setShowTestModal] = useState(false);

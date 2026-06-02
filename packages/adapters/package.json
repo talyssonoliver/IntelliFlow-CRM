@@ -43,6 +43,7 @@
     "@intelliflow/db": "workspace:*",
     "@intelliflow/domain": "workspace:*",
     "@intelliflow/platform": "workspace:*",
+    "@intelliflow/validators": "workspace:*",
     "@intelliflow/webhooks": "workspace:*",
     "@langchain/core": "^1.1.48",
     "@langchain/ollama": "^1.2.7",

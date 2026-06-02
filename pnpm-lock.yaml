@@ -974,6 +974,9 @@ importers:
       '@intelliflow/platform':
         specifier: workspace:*
         version: link:../platform
+      '@intelliflow/validators':
+        specifier: workspace:*
+        version: link:../validators
       '@intelliflow/webhooks':
         specifier: workspace:*
         version: link:../webhooks
@@ -1266,6 +1269,9 @@ importers:
       '@intelliflow/domain':
         specifier: workspace:*
         version: link:../domain
+      '@intelliflow/validators':
+        specifier: workspace:*
+        version: link:../validators
       bullmq:
         specifier: ^5.77.6
         version: 5.77.6

@@ -81,6 +81,7 @@ import { MonitoringFlushService } from './monitoring/monitoring-flush.service';
 import { setAuditLogAdapter } from './utils/audit-log';
 import { tenantContextStore } from './tracing/tenant-context.js';
 import { runWithLogContext } from '@intelliflow/observability';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 // ============================================================================
 // Constants
@@ -227,7 +228,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           opts: Record<string, unknown>
         ) => MonitoringRedisLike;
         const client = new RedisCtor({
-          host: process.env.REDIS_HOST || 'localhost',
+          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
           port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
           password: process.env.REDIS_PASSWORD || undefined,
           db: Number.parseInt(process.env.REDIS_DB || '0', 10),
@@ -315,7 +316,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       const { embeddingChain } = await import('./chains/embedding.chain.js');
       const { updateContactEmbedding } = await import('@intelliflow/db');
       const redisConnection = {
-        host: process.env.REDIS_HOST || 'localhost',
+        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
         ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
       };
@@ -363,7 +364,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    */
   private async setupDLQAndLifecycleListeners(): Promise<void> {
     const connection = {
-      host: process.env.REDIS_HOST || 'localhost',
+      host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
       port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
       ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
@@ -634,7 +635,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     // Also register external worker queues (read-only visibility)
     const { Queue } = await import('bullmq');
     const connection = {
-      host: process.env.REDIS_HOST || 'localhost',
+      host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
       port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
       ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
@@ -997,7 +998,11 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
   private getProviderEndpoint(): string {
     if (aiConfig.provider === 'litellm')
-      return process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1';
+      return requiredProdEnv(
+        'LITELLM_BASE_URL',
+        process.env['LITELLM_BASE_URL'],
+        'http://localhost:4000/v1'
+      );
     if (aiConfig.provider === 'openai') return aiConfig.openai.baseUrl || 'https://api.openai.com';
     if (aiConfig.provider === 'ollama') return aiConfig.ollama.baseUrl;
     return 'mock';

@@ -22,6 +22,7 @@
 import { randomBytes } from 'node:crypto';
 import { AuditLogger } from './audit-logger';
 import { EncryptionService, EncryptedData, KeyMetadata, EncryptionError } from './encryption';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
  * Key rotation configuration
@@ -185,7 +186,9 @@ export class VaultKeyVersionStore implements KeyVersionStore {
   private readonly keyName: string;
 
   constructor(options?: { address?: string; token?: string; keyName?: string }) {
-    this.vaultAddress = options?.address || process.env.VAULT_ADDR || 'http://127.0.0.1:8200';
+    this.vaultAddress =
+      options?.address ||
+      requiredProdEnv('VAULT_ADDR', process.env.VAULT_ADDR, 'http://127.0.0.1:8200');
     this.vaultToken = options?.token || process.env.VAULT_TOKEN || '';
     this.keyName = options?.keyName || 'intelliflow-data-key';
   }

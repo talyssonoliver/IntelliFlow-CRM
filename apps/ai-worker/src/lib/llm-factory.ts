@@ -6,6 +6,7 @@ import { aiConfig } from '../config/ai.config.js';
 import { CircuitBreaker } from '../utils/circuit-breaker.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
 import { wrapModelWithTracing, wrapEmbeddingsWithTracing } from '../tracing/llm-tracer.js';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 // ============================================================================
 // Types
@@ -193,7 +194,11 @@ export function createLLM(
       maxTokens,
       timeout,
       configuration: {
-        baseURL: process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1',
+        baseURL: requiredProdEnv(
+          'LITELLM_BASE_URL',
+          process.env['LITELLM_BASE_URL'],
+          'http://localhost:4000/v1'
+        ),
       },
     });
   }
@@ -277,7 +282,11 @@ export function createEmbeddings(tier: LLMTier = 'free'): Embeddings {
       apiKey: process.env['LITELLM_MASTER_KEY'] || 'sk-litellm-dev-change-me',
       modelName: `rag-${tier}`,
       configuration: {
-        baseURL: process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1',
+        baseURL: requiredProdEnv(
+          'LITELLM_BASE_URL',
+          process.env['LITELLM_BASE_URL'],
+          'http://localhost:4000/v1'
+        ),
       },
     });
   }

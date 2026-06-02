@@ -58,6 +58,7 @@ import { getLoginLimiter } from '../../security/login-limiter';
 import { getAuditLogger } from '../../security/audit-logger';
 import { getMfaService } from '../../services/mfa.service';
 import { getSessionService } from '../../services/session.service';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 // ============================================
 // Helper Functions
@@ -538,7 +539,7 @@ export const authRouter = createTRPCRouter({
     const provider = input.provider as OAuthProvider;
 
     // SF-003: Validate redirectTo against allowlist (prevent open redirect)
-    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const appUrl = requiredProdEnv('APP_URL', process.env.APP_URL, 'http://localhost:3000');
     let safeRedirectTo = input.redirectTo;
     if (safeRedirectTo) {
       if (!isAllowedRedirect(safeRedirectTo, appUrl)) {
@@ -1273,7 +1274,7 @@ export const authRouter = createTRPCRouter({
       });
     }
 
-    const redirectTo = `${process.env.APP_URL || 'http://localhost:3000'}/reset-password/callback`;
+    const redirectTo = `${requiredProdEnv('APP_URL', process.env.APP_URL, 'http://localhost:3000')}/reset-password/callback`;
 
     try {
       await resetPasswordForEmail(input.email, redirectTo);

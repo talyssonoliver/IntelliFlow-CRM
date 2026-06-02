@@ -71,6 +71,7 @@ import {
   type TenantAwareContext,
 } from '../../security/tenant-context';
 import { deriveContactInsights } from '../../shared/contact-insight-deriver';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
  * Search schema optimized for performance
@@ -397,7 +398,7 @@ async function enqueueContactAIEnrichment(entityId: string, tenantId: string): P
     const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
     const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
       connection: {
-        host: process.env.REDIS_HOST ?? 'localhost',
+        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       },
     });
@@ -632,7 +633,7 @@ export const contactRouter = createTRPCRouter({
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
           connection: {
-            host: process.env.REDIS_HOST ?? 'localhost',
+            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
             port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
           },
         });
@@ -1783,7 +1784,7 @@ export const contactRouter = createTRPCRouter({
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const queue = new Queue(QUEUE_NAMES.AI_PREDICTION, {
           connection: {
-            host: process.env.REDIS_HOST ?? 'localhost',
+            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
             port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
           },
         });
@@ -1965,7 +1966,7 @@ export const contactRouter = createTRPCRouter({
         const { Queue, QueueEvents } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const connection = {
-          host: process.env.REDIS_HOST ?? 'localhost',
+          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
           port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
         };
         const queue = new Queue(QUEUE_NAMES.AI_TAG_SUGGESTION, { connection });
@@ -2028,7 +2029,7 @@ export const contactRouter = createTRPCRouter({
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const queue = new Queue(QUEUE_NAMES.AI_ENTITY_INSIGHT, {
           connection: {
-            host: process.env.REDIS_HOST ?? 'localhost',
+            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
             port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
           },
         });
@@ -2090,7 +2091,7 @@ export const contactRouter = createTRPCRouter({
         const { Queue, QueueEvents } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const connection = {
-          host: process.env.REDIS_HOST ?? 'localhost',
+          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
           port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
         };
         const queue = new Queue(QUEUE_NAMES.AI_REPLY_DRAFT, { connection });
