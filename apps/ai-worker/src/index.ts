@@ -359,11 +359,17 @@ function resolveProviderEndpointUrl(config: {
 }): string {
   if (config.provider === 'ollama') return config.ollama.baseUrl;
   if (config.provider === 'mock') return 'mock';
-  return requiredProdEnv(
-    'LITELLM_BASE_URL',
-    process.env['LITELLM_BASE_URL'],
-    'http://localhost:4000/v1'
-  );
+  // Only require LITELLM_BASE_URL in prod when LiteLLM is the active provider.
+  // For openai/direct this value is display/telemetry only and must not crash
+  // startup when unset — consistent with loadAIConfig() and ADR-048.
+  if (config.provider === 'litellm') {
+    return requiredProdEnv(
+      'LITELLM_BASE_URL',
+      process.env['LITELLM_BASE_URL'],
+      'http://localhost:4000/v1'
+    );
+  }
+  return process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1';
 }
 
 /**
