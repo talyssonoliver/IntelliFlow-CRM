@@ -163,7 +163,7 @@ function InstallationTab() {
         </h2>
         <CodeBlock
           code={`# .env.local
-NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_API_URL=${process.env.NEXT_PUBLIC_API_URL || 'https://your-deployment.example.com'}
 INTELLIFLOW_API_KEY=ifc_test_your_key_here`}
           label=".env.local"
         />
@@ -190,7 +190,7 @@ function QuickstartTab() {
 
 function App({ children }) {
   return (
-    <TRPCProvider url="http://localhost:3001">
+    <TRPCProvider url="${process.env.NEXT_PUBLIC_API_URL || 'https://your-deployment.example.com'}">
       {children}
     </TRPCProvider>
   );
@@ -226,7 +226,7 @@ function LeadsList() {
           code={`import { createTRPCClient } from '@intelliflow/api-client';
 
 const client = createTRPCClient({
-  url: 'http://localhost:3001',
+  url: '${process.env.NEXT_PUBLIC_API_URL || 'https://your-deployment.example.com'}',
   headers: { Authorization: 'Bearer ifc_live_your_key' },
 });
 

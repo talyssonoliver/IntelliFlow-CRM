@@ -162,8 +162,13 @@ const nextConfig = {
   },
 
   // Environment variables to expose to browser
+  // Note: in production, NEXT_PUBLIC_API_URL must be set explicitly.
+  // Using empty string in production surfaces a clear config gap rather than
+  // silently inlining a localhost address into the built bundle (#228).
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+    NEXT_PUBLIC_API_URL:
+      process.env.NEXT_PUBLIC_API_URL ||
+      (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:4000'),
   },
 
   // Webpack: resolve Prisma 7 generated .js → .ts extension imports

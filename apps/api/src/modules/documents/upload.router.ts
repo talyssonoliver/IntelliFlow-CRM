@@ -3,6 +3,7 @@ import { createTRPCRouter, protectedProcedure, tenantProcedure } from '../../trp
 import { TRPCError } from '@trpc/server';
 import { IngestionOrchestrator } from '@intelliflow/application';
 import { loadBullMQ } from '../../lib/load-bullmq';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { loadDocumentAutomation, normalizeFilename } from '../legal/document-automation';
 import {
   assertMimeAllowed,
@@ -53,7 +54,7 @@ async function enqueueDocumentProcessing(params: {
 }) {
   const { Queue } = await loadBullMQ();
   const connection = {
-    host: process.env.REDIS_HOST || 'localhost',
+    host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
     port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
   };
 

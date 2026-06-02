@@ -30,6 +30,7 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions/incubating';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
  * Configuration for OpenTelemetry
@@ -54,13 +55,22 @@ function envString(value: string | undefined, fallback: string): string {
  */
 function getOtelConfig(): OtelConfig {
   const environment = envString(process.env.NODE_ENV, 'development');
+  const enabled = process.env.OTEL_ENABLED !== 'false';
 
   return {
-    enabled: process.env.OTEL_ENABLED !== 'false',
+    enabled,
     serviceName: envString(process.env.OTEL_SERVICE_NAME, 'intelliflow-api'),
     serviceVersion: envString(process.env.npm_package_version, '0.1.0'),
     environment,
-    otlpEndpoint: envString(process.env.OTEL_EXPORTER_OTLP_ENDPOINT, 'http://localhost:4318'),
+    // Only require the endpoint when tracing is actually enabled — a prod deploy
+    // that sets OTEL_ENABLED=false must not be forced to also set the endpoint.
+    otlpEndpoint: enabled
+      ? requiredProdEnv(
+          'OTEL_EXPORTER_OTLP_ENDPOINT',
+          process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+          'http://localhost:4318'
+        )
+      : (process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318'),
     exportToConsole: environment === 'development',
   };
 }

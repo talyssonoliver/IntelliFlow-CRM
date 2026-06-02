@@ -127,3 +127,6 @@ export * from './help-article';
 
 // Public Onboarding / Tour / Feedback Schemas (PG-126)
 export * from './public-onboarding';
+
+// Production-safe URL/host resolution — fail-fast instead of localhost (#228)
+export * from './required-url';

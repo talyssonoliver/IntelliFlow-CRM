@@ -39,6 +39,7 @@ import {
   getHourInTimezone,
   safeTimezone,
 } from '../../lib/timezone-utils';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
  * Maps pinnable entity types to their Prisma model delegate names.
@@ -411,7 +412,7 @@ async function enqueueInsightGeneration(
     const { queueName, queueConfig } = await getAIInsightsQueueConfig();
     const queue = new Queue(queueName, {
       connection: {
-        host: process.env.REDIS_HOST || 'localhost',
+        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       },
       defaultJobOptions: {

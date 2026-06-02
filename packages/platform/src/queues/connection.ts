@@ -8,6 +8,7 @@
  */
 
 import { ConnectionOptions } from 'bullmq';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 // ============================================================================
 // Connection Configuration
@@ -33,7 +34,7 @@ export interface RedisConnectionConfig {
  */
 export function getDefaultConnectionConfig(): RedisConnectionConfig {
   return {
-    host: process.env.REDIS_HOST || 'localhost',
+    host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
     port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
     password: process.env.REDIS_PASSWORD || undefined,
     db: Number.parseInt(process.env.REDIS_DB || '0', 10),

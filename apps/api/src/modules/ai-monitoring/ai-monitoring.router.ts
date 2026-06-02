@@ -26,6 +26,7 @@ import {
   tenantProcedure,
 } from '../../trpc';
 import { loadBullMQ } from '../../lib/load-bullmq';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 // ============================================================
 // Input Schemas
@@ -432,7 +433,7 @@ export const aiMonitoringRouter = createTRPCRouter({
           : ['ai-scoring', 'ai-prediction', 'ai-insights'];
 
         const connection = {
-          host: process.env.REDIS_HOST || 'localhost',
+          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
           port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
         };
 

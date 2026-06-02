@@ -8,6 +8,7 @@ import { AuthProvider } from '@/lib/auth';
 import { TimezoneProvider } from '@/providers/TimezoneProvider';
 import { RemindersProvider } from '@/lib/cases/reminders-context';
 import { AUTH_TOKEN_CHANGED_EVENT, clearTokenCookie } from '@/lib/shared/session-cleanup';
+import { requiredProdEnv } from '@/lib/required-url';
 // NOTE: We use a custom tRPC setup instead of TRPCProvider from @intelliflow/api-client
 // because we need:
 // - WebSocket support for real-time subscriptions
@@ -83,7 +84,11 @@ function getValidAccessToken(): string | null {
 function getBaseUrl() {
   if (typeof globalThis.window !== 'undefined') return '';
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return `http://localhost:${process.env.PORT ?? 3000}`;
+  return requiredProdEnv(
+    'NEXT_PUBLIC_APP_URL',
+    process.env.NEXT_PUBLIC_APP_URL,
+    `http://localhost:${process.env.PORT ?? 3000}`
+  );
 }
 
 /**

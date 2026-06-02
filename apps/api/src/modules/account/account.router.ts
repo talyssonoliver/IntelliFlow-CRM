@@ -58,6 +58,7 @@ import {
   logAccountReassignPermissionDenied,
   REASSIGN_ADMIN_ROLES,
 } from './account-reassign';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
  * Helper to get account service from context
@@ -114,7 +115,7 @@ async function enqueueAccountAIEnrichment(entityId: string, tenantId: string): P
     const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
     const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
       connection: {
-        host: process.env.REDIS_HOST ?? 'localhost',
+        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
         ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
         ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
@@ -1268,7 +1269,7 @@ export const accountRouter = createTRPCRouter({
         const { Queue, QueueEvents } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const connection = {
-          host: process.env.REDIS_HOST ?? 'localhost',
+          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
           port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
           ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
           ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
@@ -1326,7 +1327,7 @@ export const accountRouter = createTRPCRouter({
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const queue = new Queue(QUEUE_NAMES.AI_ENTITY_INSIGHT, {
           connection: {
-            host: process.env.REDIS_HOST ?? 'localhost',
+            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
             port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
           },
         });
@@ -1363,7 +1364,7 @@ export const accountRouter = createTRPCRouter({
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const queue = new Queue(QUEUE_NAMES.AI_ACCOUNT_SCORING, {
           connection: {
-            host: process.env.REDIS_HOST ?? 'localhost',
+            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
             port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
           },
         });

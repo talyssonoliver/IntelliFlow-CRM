@@ -568,7 +568,13 @@ export class WorkflowRouter {
  * Default Temporal configuration for local development
  */
 export const DEFAULT_TEMPORAL_CONFIG: TemporalEngineConfig = {
-  address: 'localhost:7233',
+  // Lazy, non-throwing (this is a module-level const — a throw here would crash
+  // every importer at load time). Read TEMPORAL_ADDRESS; fall back to localhost
+  // only outside production. In production with no TEMPORAL_ADDRESS the address
+  // is empty, so the engine fails to connect and case-handler degrades to
+  // simulation — instead of silently dialing localhost:7233. (#228)
+  address:
+    process.env.TEMPORAL_ADDRESS || (process.env.NODE_ENV === 'production' ? '' : 'localhost:7233'),
   namespace: 'intelliflow-crm',
   taskQueue: 'intelliflow-workflows',
 };

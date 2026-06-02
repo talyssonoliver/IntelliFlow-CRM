@@ -17,6 +17,7 @@
  */
 
 import { createTRPCClient } from '@intelliflow/api-client';
+import { requiredProdEnv } from '../required-url';
 
 // ============================================
 // Types
@@ -62,11 +63,16 @@ let _billingClient: ReturnType<typeof createTRPCClient> | null = null;
 
 function getBillingClient(): ReturnType<typeof createTRPCClient> {
   if (!_billingClient) {
+    // SSR self-call base URL (browser uses the relative path). Extracted to
+    // avoid a nested template literal. Fail-fast in prod, no localhost. (#228)
+    const devBaseUrl = `http://localhost:${process.env.PORT ?? 3000}`;
+    const ssrBaseUrl = requiredProdEnv(
+      'NEXT_PUBLIC_APP_URL',
+      process.env.NEXT_PUBLIC_APP_URL,
+      devBaseUrl
+    );
     _billingClient = createTRPCClient({
-      url:
-        typeof globalThis.window === 'undefined'
-          ? `http://localhost:${process.env.PORT ?? 3000}/api/trpc`
-          : '/api/trpc',
+      url: typeof globalThis.window === 'undefined' ? `${ssrBaseUrl}/api/trpc` : '/api/trpc',
       headers: (): Record<string, string> => {
         if (typeof globalThis.window === 'undefined') return {};
         const token = localStorage.getItem('accessToken');

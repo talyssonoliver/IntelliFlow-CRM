@@ -51,6 +51,7 @@ import {
   type LeadSource,
 } from '@intelliflow/domain';
 import { LEAD_SCORE_THRESHOLDS } from '@intelliflow/application';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 function buildNumberRange(
   min: number | undefined,
@@ -508,7 +509,7 @@ export const leadRouter = createTRPCRouter({
       const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
       const queue = new Queue(QUEUE_NAMES.AI_SCORING, {
         connection: {
-          host: process.env.REDIS_HOST || 'localhost',
+          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
           port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
         },
       });
@@ -746,7 +747,7 @@ export const leadRouter = createTRPCRouter({
       const lead = result.value;
       const queue = new Queue(QUEUE_NAMES.AI_SCORING, {
         connection: {
-          host: process.env.REDIS_HOST || 'localhost',
+          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
           port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
         },
       });

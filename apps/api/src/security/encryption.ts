@@ -26,6 +26,7 @@ import {
   pbkdf2Sync,
   timingSafeEqual,
 } from 'node:crypto';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
  * Encryption algorithm configuration
@@ -165,7 +166,9 @@ export class VaultKeyProvider implements KeyProvider {
     keyName?: string;
     initialVersion?: number;
   }) {
-    this.vaultAddress = options?.address || process.env.VAULT_ADDR || 'http://127.0.0.1:8200';
+    this.vaultAddress =
+      options?.address ||
+      requiredProdEnv('VAULT_ADDR', process.env.VAULT_ADDR, 'http://127.0.0.1:8200');
     this.vaultToken = options?.token || process.env.VAULT_TOKEN || '';
     this.keyName = options?.keyName || 'intelliflow-data-key';
     this.currentVersion = options?.initialVersion ?? 1;

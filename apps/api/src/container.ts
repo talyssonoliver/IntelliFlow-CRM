@@ -103,6 +103,7 @@ import {
   createAccountDuplicateDetectionService,
   type AccountDuplicateDetectionService,
 } from './modules/account/account-duplicate-detection.service';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
  * IFC-310: Generate an embedding for the check-time query contact.
@@ -195,7 +196,7 @@ function createCacheAdapter(): CachePort {
     const IORedis = require('ioredis');
     const RedisCtor = IORedis.default ?? IORedis;
     const client = new RedisCtor({
-      host: process.env.REDIS_HOST || 'localhost',
+      host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
       port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       password: process.env.REDIS_PASSWORD || undefined,
       db: Number.parseInt(process.env.REDIS_DB || '0', 10),
@@ -233,7 +234,7 @@ function createMonitoringRedisClient(): MonitoringRedisLike | null {
     const IORedis = require('ioredis');
     const RedisCtor = IORedis.default ?? IORedis;
     const client = new RedisCtor({
-      host: process.env.REDIS_HOST || 'localhost',
+      host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
       port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       password: process.env.REDIS_PASSWORD || undefined,
       db: Number.parseInt(process.env.REDIS_DB || '0', 10),
@@ -299,8 +300,14 @@ const createAdapters = (prismaClient: PrismaClient) => {
 
   // Storage & AV (IFC-094)
   const storageService = new SupabaseStorageAdapter(
-    process.env.SUPABASE_URL || 'http://localhost:54321',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-service-key'
+    requiredProdEnv('SUPABASE_URL', process.env.SUPABASE_URL, 'http://localhost:54321'),
+    // Fail-fast: a real service-role key is required in production; the
+    // 'dev-service-key' placeholder must never be used against a live project.
+    requiredProdEnv(
+      'SUPABASE_SERVICE_ROLE_KEY',
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      'dev-service-key'
+    )
   );
 
   // AV Scanner (addressing audit finding)
@@ -332,7 +339,11 @@ const createAdapters = (prismaClient: PrismaClient) => {
   let baseAIService: MockAIService | OllamaAIService | LiteLLMAIService | QueueAIService;
   if (aiProvider === 'ollama') {
     baseAIService = new OllamaAIService({
-      baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+      baseUrl: requiredProdEnv(
+        'OLLAMA_BASE_URL',
+        process.env.OLLAMA_BASE_URL,
+        'http://localhost:11434'
+      ),
       model: process.env.OLLAMA_MODEL || 'mistral',
       temperature: process.env.OLLAMA_TEMPERATURE
         ? Number.parseFloat(process.env.OLLAMA_TEMPERATURE)
@@ -346,7 +357,11 @@ const createAdapters = (prismaClient: PrismaClient) => {
   } else if (aiProvider === 'litellm') {
     // Explicit opt-in for the legacy in-process LLM path (LiteLLM proxy).
     baseAIService = new LiteLLMAIService({
-      baseUrl: process.env.LITELLM_BASE_URL || 'http://localhost:4000/v1',
+      baseUrl: requiredProdEnv(
+        'LITELLM_BASE_URL',
+        process.env.LITELLM_BASE_URL,
+        'http://localhost:4000/v1'
+      ),
       masterKey: process.env.LITELLM_MASTER_KEY || 'dev-master-key',
       timeout: process.env.LITELLM_TIMEOUT
         ? Number.parseInt(process.env.LITELLM_TIMEOUT, 10)
