@@ -49,7 +49,7 @@
     "@langchain/ollama": "^1.2.7",
     "@langchain/openai": "^1.4.7",
     "@prisma/client": "^7.8.0",
-    "@supabase/supabase-js": "^2.106.2",
+    "@supabase/supabase-js": "^2.107.0",
     "clamscan": "^2.2.1",
     "ics": "^3.12.0",
     "twilio": "^6.0.2",
