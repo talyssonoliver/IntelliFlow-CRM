@@ -17,7 +17,10 @@ def temp_project() -> Generator[Path, None, None]:
     with TemporaryDirectory() as tmpdir:
         root = Path(tmpdir)
 
-        # Create marker file
+        # Create root markers. find_project_root() keys off root-unique markers
+        # (pnpm-workspace.yaml / turbo.json / .git), not CLAUDE.md — the Intent
+        # Layer places CLAUDE.md in many subtrees, so it is no longer root-unique.
+        (root / "pnpm-workspace.yaml").touch()
         (root / "CLAUDE.md").touch()
 
         # Create metrics directory structure

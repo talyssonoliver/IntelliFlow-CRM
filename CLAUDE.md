@@ -105,6 +105,32 @@ Each subdirectory has its own CLAUDE.md with area-specific rules and patterns:
 | `packages/db/CLAUDE.md`          | Prisma 5.22.0, NEVER --no-engine, tenantId rule                     |
 | `packages/adapters/CLAUDE.md`    | Repository pattern, container wiring, mock casting                  |
 
+## Intent Layer
+
+This repo follows the **Intent Layer** model (upstream:
+`github.com/orban/intent-layer`): each `CLAUDE.md` is an **Intent Node** — a
+compressed, high-signal summary of its subtree (contracts, patterns, pitfalls).
+This root file is the map; the **Context by Area** table above plus the nodes
+below are the children.
+
+**Repo adaptation (overrides upstream defaults):** Claude-only — **no
+`AGENTS.md`, no `.intent-layer/`, no framework hooks**. Generated Intent Layer
+metadata (token/staleness analysis) lives in `docs/operations/intent-layer/`,
+not `.intent-layer/`.
+
+**Current Intent Nodes (25):** root,
+`apps/{web,api,ai-worker,project-tracker,workers}`,
+`packages/{adapters,ai,application,db,domain,observability,platform,sdk,search,test-fixtures,ui,validators,webhooks}`,
+`docs/{audit,compliance-and-governance,operations}`, `tools/{scripts,plan}`,
+`infra/monitoring`. ⚠ `packages/{ai,search}` are **orphaned/parked** — see their
+nodes and `docs/operations/intent-layer/README.md` (orphan & wiring audit).
+
+**Maintenance** (read-only; never registers hooks): run the upstream analysis
+scripts from an external clone against this repo, e.g. `detect_state.sh`,
+`estimate_all_candidates.sh`, `detect_staleness.sh`,
+`detect_changes.sh main HEAD`. See `docs/operations/intent-layer/` for the last
+analysis run, node-gap recommendations, and the compatibility report.
+
 ## Reference Docs
 
 Detailed guides loaded on-demand:

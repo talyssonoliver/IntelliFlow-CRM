@@ -1,0 +1,5 @@
+Entry Staleness Report
+======================
+
+Scanned: <repo_root>
+Mode: quick (file paths only)

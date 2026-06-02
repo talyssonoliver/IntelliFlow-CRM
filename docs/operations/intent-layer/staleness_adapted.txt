@@ -1,0 +1,12 @@
+### apps/api/CLAUDE.md (1 broken path refs)
+    BROKEN: src/types/intelliflow-adapters.d.ts
+### docs/operations/CLAUDE.md (2 broken path refs)
+    BROKEN: ./other-runbook.md
+    BROKEN: runbooks/notifications.md
+### packages/db/CLAUDE.md (1 broken path refs)
+    BROKEN: memory/db-schema-history.md
+### packages/domain/CLAUDE.md (1 broken path refs)
+    BROKEN: packages/validators/__tests__/enum-consistency.test.ts
+### packages/validators/CLAUDE.md (1 broken path refs)
+    BROKEN: __tests__/enum-consistency.test.ts
+Total broken path refs across in-repo CLAUDE.md: 6

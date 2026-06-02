@@ -1,0 +1,27 @@
+## Intent Layer Staleness Report
+
+Scanned: <repo_root>
+Threshold: 90 days
+
+### Potentially Stale Nodes
+
+| Severity | Node | Reason |
+|----------|------|--------|
+| medium | packages/validators/CLAUDE.md | 36 commits in 90d |
+| medium | packages/domain/CLAUDE.md | 29 commits in 90d |
+| medium | packages/db/CLAUDE.md | 42 commits in 90d |
+| medium | packages/application/CLAUDE.md | 27 commits in 90d |
+| medium | packages/adapters/CLAUDE.md | 32 commits in 90d |
+| medium | CLAUDE.md | 583 commits in 90d |
+| medium | apps/web/CLAUDE.md | 148 commits in 90d |
+| medium | apps/project-tracker/CLAUDE.md | 90 commits in 90d |
+| medium | apps/api/CLAUDE.md | 75 commits in 90d |
+| medium | apps/ai-worker/CLAUDE.md | 36 commits in 90d |
+| medium | AGENTS.md | 583 commits in 90d |
+
+---
+
+**Recommended**: Review stale nodes and update or confirm still accurate.
+Run mine_git_history.sh on affected directories to find new content.
+
+**Tip**: Use --entries to check for stale individual entries within fresh nodes.

@@ -1,0 +1,11 @@
+=== Intent Layer State ===
+root_file: CLAUDE.md
+has_intent_section: false
+child_nodes: 0
+
+## Warnings
+  ! Both CLAUDE.md and AGENTS.md exist at root (not symlinked). Consider symlinking one to the other.
+  ! Found CLAUDE.md in subdirectories (should be AGENTS.md for cross-tool compatibility): <repo_root>/apps/ai-worker/CLAUDE.md <repo_root>/apps/api/CLAUDE.md <repo_root>/apps/project-tracker/CLAUDE.md <repo_root>/apps/web/CLAUDE.md <repo_root>/docs/audit/CLAUDE.md <repo_root>/docs/compliance-and-governance/CLAUDE.md <repo_root>/docs/operations/CLAUDE.md <repo_root>/packages/adapters/CLAUDE.md <repo_root>/packages/application/CLAUDE.md <repo_root>/packages/db/CLAUDE.md <repo_root>/packages/domain/CLAUDE.md <repo_root>/packages/test-fixtures/CLAUDE.md <repo_root>/packages/ui/CLAUDE.md <repo_root>/packages/validators/CLAUDE.md
+
+state: partial
+action: Add Intent Layer section to CLAUDE.md
