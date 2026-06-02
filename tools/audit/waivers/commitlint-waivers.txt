@@ -38,6 +38,9 @@ a0917310d166 fix(db): historical AI-coauthor trailer — pre-policy (2026-04-26)
 # Reviewed: 2026-05-14. Follow-up: enforce squash-message rules via the
 # GitHub merge-commit-message template or a workflow lint instead.
 692e2f5cba95 feat(orchestration): Wave 0+1+2a — squashed body line 148 chars (PR #58)
+# Reviewed: 2026-06-02. GitHub appended " (#221)" to the PR title at squash time,
+# pushing the subject to 101 chars; merged + immutable. Prevention tracked in #227.
+147c4e00db78 test(property-based): squashed header 101 chars (PR #221)
 
 # Local merge commit + squash-merged PRs that the commit-msg hook missed.
 # Reviewed: 2026-05-25 as part of PR #157 (CI cost audit). The 'merge:' type
