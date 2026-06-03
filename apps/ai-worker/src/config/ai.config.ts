@@ -6,7 +6,7 @@ import { requiredProdEnv } from '@intelliflow/validators/required-url';
  * Supports both OpenAI (production) and Ollama (local development)
  */
 
-export const AIProviderSchema = z.enum(['litellm', 'openai', 'ollama', 'mock']);
+export const AIProviderSchema = z.enum(['litellm', 'openai', 'ollama', 'mock', 'openrouter']);
 export type AIProvider = z.infer<typeof AIProviderSchema>;
 
 export const AIConfigSchema = z.object({
