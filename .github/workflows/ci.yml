@@ -60,26 +60,19 @@ jobs:
       - name: Type check
         run: pnpm run typecheck
 
+  # Full ~30k-test suite, sharded 20 ways and merged into one coverage gate.
+  # Replaces the old single-runner `pnpm run test -- --coverage` — which also
+  # ran a SECOND time in pr-checks.yml (test-coverage) and a THIRD time in
+  # sonar.yml. The reusable workflow owns the whole flow: 20 shards -> merge
+  # (90/80/90/90 threshold gate) -> Codecov + PR comment -> SonarCloud (from the
+  # merged lcov) -> shard-balance. See ADR-057/058 and test-regression.yml.
   test:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-monorepo
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-          build-libs: 'true'
-
-      - name: Run tests
-        run: pnpm run test -- --coverage
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v6
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./artifacts/coverage/lcov.info
-          fail_ci_if_error: false
+    name: Unit Tests (sharded)
+    uses: ./.github/workflows/test-regression.yml
+    secrets: inherit
+    permissions:
+      contents: read
+      pull-requests: write
 
   # ==========================================
   # IFC-131: Architecture Boundary Enforcement
@@ -129,7 +122,8 @@ jobs:
   integration:
     name: Integration Tests
     runs-on: ubuntu-latest
-    needs: [test]
+    # Independent of the unit shards (own Postgres/Redis services) — runs in
+    # parallel with the sharded suite rather than after it, for faster feedback.
     services:
       postgres:
         # pgvector image so the baseline migration's `CREATE EXTENSION vector`
@@ -213,7 +207,10 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, test, architecture, integration]
+    # Gated only on the fast static checks so the build runs in PARALLEL with
+    # the sharded test suite + integration (was serialized after them). Branch
+    # protection requires both Build and the merge coverage gate independently.
+    needs: [lint, typecheck]
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-monorepo
@@ -365,6 +362,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
+
+      # F-09 / ADR-059: cache the browser download so repeat e2e runs skip the
+      # ~1-2 min `playwright install`. Keyed by the resolved @playwright/test
+      # version so a Playwright bump invalidates it deterministically.
+      - name: Resolve Playwright version
+        id: pw
+        run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.pw.outputs.version }}
 
       - name: Install Playwright
         run: pnpm exec playwright install --with-deps chromium

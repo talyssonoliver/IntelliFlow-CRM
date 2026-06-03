@@ -12,6 +12,9 @@ coverage/
 !apps/web/src/app/governance/quality-reports/coverage/
 artifacts/coverage-vitest/
 artifacts/coverage-parts/
+# Vitest blob reports (sharded CI runs write .vitest-reports/blob-<i>-<N>.json;
+# merged into artifacts/coverage/ by the test-regression workflow's merge job)
+.vitest-reports/
 test-results/
 playwright-report/
 

@@ -81,14 +81,19 @@ runs:
       if: inputs.install-deps == 'true'
       uses: actions/setup-node@v6
       with:
-        node-version: ${{ inputs.node-version }}
+        # .nvmrc at the repo root is the single source of truth for the Node
+        # version (F-08 / ADR-059) so local dev and CI never drift. The
+        # node-version input is retained for compatibility but superseded by
+        # node-version-file when the file is present.
+        node-version-file: '.nvmrc'
         cache: 'pnpm'
 
     - name: Setup Node.js (no cache, install-deps=false)
       if: inputs.install-deps != 'true'
       uses: actions/setup-node@v6
       with:
-        node-version: ${{ inputs.node-version }}
+        # See note above — .nvmrc is authoritative for the Node version.
+        node-version-file: '.nvmrc'
 
     - name: Install dependencies
       if: inputs.install-deps == 'true'
