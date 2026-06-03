@@ -1,28 +1,28 @@
 {
   "total": {
     "lines": {
-      "total": 17030,
-      "covered": 15168,
+      "total": 17383,
+      "covered": 15450,
       "skipped": 0,
-      "pct": 89.06
+      "pct": 88.87
     },
     "statements": {
-      "total": 18283,
-      "covered": 16075,
+      "total": 18677,
+      "covered": 16385,
       "skipped": 0,
-      "pct": 87.92
+      "pct": 87.72
     },
     "functions": {
-      "total": 4848,
-      "covered": 4166,
+      "total": 4963,
+      "covered": 4248,
       "skipped": 0,
-      "pct": 85.93
+      "pct": 85.59
     },
     "branches": {
-      "total": 10850,
-      "covered": 8474,
+      "total": 11131,
+      "covered": 8679,
       "skipped": 0,
-      "pct": 78.1
+      "pct": 77.97
     },
     "branchesTrue": {
       "total": 0,
@@ -320,9 +320,9 @@
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/ai-worker/src/monitoring/drift-detector.ts": {
     "lines": {
       "total": 167,
-      "covered": 162,
+      "covered": 160,
       "skipped": 0,
-      "pct": 97
+      "pct": 95.8
     },
     "functions": {
       "total": 29,
@@ -332,15 +332,15 @@
     },
     "statements": {
       "total": 180,
-      "covered": 173,
+      "covered": 170,
       "skipped": 0,
-      "pct": 96.11
+      "pct": 94.44
     },
     "branches": {
       "total": 66,
-      "covered": 57,
+      "covered": 55,
       "skipped": 0,
-      "pct": 86.36
+      "pct": 83.33
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/ai-worker/src/monitoring/hallucination-checker.ts": {
@@ -813,28 +813,28 @@
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/ai-worker/src/workers/case-deadline-monitor.job.ts": {
     "lines": {
-      "total": 61,
-      "covered": 50,
+      "total": 81,
+      "covered": 70,
       "skipped": 0,
-      "pct": 81.96
+      "pct": 86.41
     },
     "functions": {
-      "total": 12,
-      "covered": 6,
+      "total": 17,
+      "covered": 11,
       "skipped": 0,
-      "pct": 50
+      "pct": 64.7
     },
     "statements": {
-      "total": 64,
-      "covered": 52,
+      "total": 87,
+      "covered": 75,
       "skipped": 0,
-      "pct": 81.25
+      "pct": 86.2
     },
     "branches": {
-      "total": 26,
-      "covered": 22,
+      "total": 38,
+      "covered": 33,
       "skipped": 0,
-      "pct": 84.61
+      "pct": 86.84
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/ai-worker/src/workers/contact-embed-worker.ts": {
@@ -889,10 +889,62 @@
       "pct": 90.62
     }
   },
+  "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/ai-worker/src/workers/ticket-auto-close.job.ts": {
+    "lines": {
+      "total": 82,
+      "covered": 68,
+      "skipped": 0,
+      "pct": 82.92
+    },
+    "functions": {
+      "total": 16,
+      "covered": 11,
+      "skipped": 0,
+      "pct": 68.75
+    },
+    "statements": {
+      "total": 92,
+      "covered": 74,
+      "skipped": 0,
+      "pct": 80.43
+    },
+    "branches": {
+      "total": 38,
+      "covered": 25,
+      "skipped": 0,
+      "pct": 65.78
+    }
+  },
+  "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/ai-worker/src/workers/ticket-sla-monitor.job.ts": {
+    "lines": {
+      "total": 65,
+      "covered": 55,
+      "skipped": 0,
+      "pct": 84.61
+    },
+    "functions": {
+      "total": 11,
+      "covered": 6,
+      "skipped": 0,
+      "pct": 54.54
+    },
+    "statements": {
+      "total": 69,
+      "covered": 57,
+      "skipped": 0,
+      "pct": 82.6
+    },
+    "branches": {
+      "total": 28,
+      "covered": 23,
+      "skipped": 0,
+      "pct": 82.14
+    }
+  },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/proxy.ts": {
     "lines": {
-      "total": 51,
-      "covered": 51,
+      "total": 54,
+      "covered": 54,
       "skipped": 0,
       "pct": 100
     },
@@ -903,16 +955,16 @@
       "pct": 100
     },
     "statements": {
-      "total": 54,
-      "covered": 53,
+      "total": 57,
+      "covered": 56,
       "skipped": 0,
-      "pct": 98.14
+      "pct": 98.24
     },
     "branches": {
-      "total": 47,
-      "covered": 46,
+      "total": 49,
+      "covered": 48,
       "skipped": 0,
-      "pct": 97.87
+      "pct": 97.95
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/lib/documents/timeline-event-model.ts": {
@@ -1021,28 +1073,28 @@
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/app/providers.tsx": {
     "lines": {
-      "total": 106,
+      "total": 110,
       "covered": 40,
       "skipped": 0,
-      "pct": 37.73
+      "pct": 36.36
     },
     "functions": {
-      "total": 28,
+      "total": 29,
       "covered": 11,
       "skipped": 0,
-      "pct": 39.28
+      "pct": 37.93
     },
     "statements": {
-      "total": 124,
+      "total": 129,
       "covered": 42,
       "skipped": 0,
-      "pct": 33.87
+      "pct": 32.55
     },
     "branches": {
-      "total": 81,
+      "total": 83,
       "covered": 15,
       "skipped": 0,
-      "pct": 18.51
+      "pct": 18.07
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/app/robots.ts": {
@@ -1534,9 +1586,9 @@
     },
     "branches": {
       "total": 20,
-      "covered": 16,
+      "covered": 15,
       "skipped": 0,
-      "pct": 80
+      "pct": 75
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/app/api/openapi/route.ts": {
@@ -2111,6 +2163,32 @@
       "pct": 100
     }
   },
+  "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/app/settings/routing/RoutingContent.tsx": {
+    "lines": {
+      "total": 1,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 1,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 1,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/app/settings/routing/hooks/useRouting.ts": {
     "lines": {
       "total": 31,
@@ -2265,6 +2343,32 @@
       "covered": 8,
       "skipped": 0,
       "pct": 27.58
+    }
+  },
+  "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/components/accounts/AccountDetail.tsx": {
+    "lines": {
+      "total": 79,
+      "covered": 51,
+      "skipped": 0,
+      "pct": 64.55
+    },
+    "functions": {
+      "total": 32,
+      "covered": 15,
+      "skipped": 0,
+      "pct": 46.87
+    },
+    "statements": {
+      "total": 83,
+      "covered": 53,
+      "skipped": 0,
+      "pct": 63.85
+    },
+    "branches": {
+      "total": 116,
+      "covered": 80,
+      "skipped": 0,
+      "pct": 68.96
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/components/accounts/AccountHierarchy.tsx": {
@@ -4529,6 +4633,58 @@
       "pct": 100
     }
   },
+  "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/components/tickets/ticket-form.tsx": {
+    "lines": {
+      "total": 4,
+      "covered": 4,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 2,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 4,
+      "covered": 4,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/components/tickets/ticket-list.tsx": {
+    "lines": {
+      "total": 5,
+      "covered": 3,
+      "skipped": 0,
+      "pct": 60
+    },
+    "functions": {
+      "total": 2,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 50
+    },
+    "statements": {
+      "total": 6,
+      "covered": 3,
+      "skipped": 0,
+      "pct": 50
+    },
+    "branches": {
+      "total": 2,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 0
+    }
+  },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/components/workflows/ReactFlowComponent.tsx": {
     "lines": {
       "total": 113,
@@ -4787,6 +4943,32 @@
       "covered": 0,
       "skipped": 0,
       "pct": 100
+    }
+  },
+  "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/hooks/use-dynamic-filters.ts": {
+    "lines": {
+      "total": 49,
+      "covered": 43,
+      "skipped": 0,
+      "pct": 87.75
+    },
+    "functions": {
+      "total": 28,
+      "covered": 25,
+      "skipped": 0,
+      "pct": 89.28
+    },
+    "statements": {
+      "total": 58,
+      "covered": 51,
+      "skipped": 0,
+      "pct": 87.93
+    },
+    "branches": {
+      "total": 53,
+      "covered": 44,
+      "skipped": 0,
+      "pct": 83.01
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/hooks/use-trpc-subscriptions.ts": {
@@ -5179,6 +5361,32 @@
       "pct": 100
     }
   },
+  "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/lib/required-url.ts": {
+    "lines": {
+      "total": 7,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 28.57
+    },
+    "functions": {
+      "total": 2,
+      "covered": 1,
+      "skipped": 0,
+      "pct": 50
+    },
+    "statements": {
+      "total": 8,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 25
+    },
+    "branches": {
+      "total": 11,
+      "covered": 4,
+      "skipped": 0,
+      "pct": 36.36
+    }
+  },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/lib/session.ts": {
     "lines": {
       "total": 26,
@@ -5199,10 +5407,10 @@
       "pct": 100
     },
     "branches": {
-      "total": 21,
-      "covered": 19,
+      "total": 19,
+      "covered": 18,
       "skipped": 0,
-      "pct": 90.47
+      "pct": 94.73
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/lib/utils.ts": {
@@ -6715,10 +6923,10 @@
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/lib/pricing/stripe-integration.ts": {
     "lines": {
-      "total": 26,
-      "covered": 20,
+      "total": 28,
+      "covered": 22,
       "skipped": 0,
-      "pct": 76.92
+      "pct": 78.57
     },
     "functions": {
       "total": 8,
@@ -6727,16 +6935,16 @@
       "pct": 87.5
     },
     "statements": {
-      "total": 28,
-      "covered": 20,
+      "total": 30,
+      "covered": 22,
       "skipped": 0,
-      "pct": 71.42
+      "pct": 73.33
     },
     "branches": {
       "total": 16,
-      "covered": 8,
+      "covered": 10,
       "skipped": 0,
-      "pct": 50
+      "pct": 62.5
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/apps/web/src/lib/public/tour-storage.ts": {
@@ -7573,22 +7781,22 @@
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/packages/adapters/src/audit/DurableAuditLogAdapter.ts": {
     "lines": {
-      "total": 78,
-      "covered": 68,
+      "total": 86,
+      "covered": 76,
       "skipped": 0,
-      "pct": 87.17
+      "pct": 88.37
     },
     "functions": {
-      "total": 13,
-      "covered": 13,
+      "total": 20,
+      "covered": 20,
       "skipped": 0,
       "pct": 100
     },
     "statements": {
-      "total": 78,
-      "covered": 68,
+      "total": 88,
+      "covered": 78,
       "skipped": 0,
-      "pct": 87.17
+      "pct": 88.63
     },
     "branches": {
       "total": 43,
@@ -7807,10 +8015,10 @@
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/packages/adapters/src/messaging/email/attachments.ts": {
     "lines": {
-      "total": 121,
-      "covered": 117,
+      "total": 126,
+      "covered": 122,
       "skipped": 0,
-      "pct": 96.69
+      "pct": 96.82
     },
     "functions": {
       "total": 31,
@@ -7819,16 +8027,16 @@
       "pct": 100
     },
     "statements": {
-      "total": 130,
-      "covered": 126,
+      "total": 136,
+      "covered": 132,
       "skipped": 0,
-      "pct": 96.92
+      "pct": 97.05
     },
     "branches": {
-      "total": 112,
-      "covered": 101,
+      "total": 114,
+      "covered": 103,
       "skipped": 0,
-      "pct": 90.17
+      "pct": 90.35
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/packages/adapters/src/messaging/email/dkim-signer.ts": {
@@ -7859,10 +8067,10 @@
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/packages/adapters/src/messaging/email/inbound.ts": {
     "lines": {
-      "total": 221,
-      "covered": 210,
+      "total": 223,
+      "covered": 212,
       "skipped": 0,
-      "pct": 95.02
+      "pct": 95.06
     },
     "functions": {
       "total": 32,
@@ -7871,16 +8079,16 @@
       "pct": 100
     },
     "statements": {
-      "total": 245,
-      "covered": 232,
+      "total": 247,
+      "covered": 234,
       "skipped": 0,
-      "pct": 94.69
+      "pct": 94.73
     },
     "branches": {
-      "total": 193,
-      "covered": 161,
+      "total": 195,
+      "covered": 162,
       "skipped": 0,
-      "pct": 83.41
+      "pct": 83.07
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/packages/adapters/src/messaging/email/outbound.ts": {
@@ -8067,28 +8275,28 @@
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/packages/adapters/src/repositories/PrismaExperimentRepository.ts": {
     "lines": {
-      "total": 78,
-      "covered": 77,
+      "total": 86,
+      "covered": 85,
       "skipped": 0,
-      "pct": 98.71
+      "pct": 98.83
     },
     "functions": {
-      "total": 42,
-      "covered": 42,
+      "total": 48,
+      "covered": 48,
       "skipped": 0,
       "pct": 100
     },
     "statements": {
-      "total": 96,
-      "covered": 94,
+      "total": 108,
+      "covered": 106,
       "skipped": 0,
-      "pct": 97.91
+      "pct": 98.14
     },
     "branches": {
-      "total": 38,
-      "covered": 36,
+      "total": 42,
+      "covered": 40,
       "skipped": 0,
-      "pct": 94.73
+      "pct": 95.23
     }
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/packages/adapters/src/repositories/PrismaFeedbackSurveyRepository.ts": {
@@ -10667,10 +10875,10 @@
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/packages/validators/src/account-settings.ts": {
     "lines": {
-      "total": 32,
-      "covered": 31,
+      "total": 33,
+      "covered": 32,
       "skipped": 0,
-      "pct": 96.87
+      "pct": 96.96
     },
     "functions": {
       "total": 5,
@@ -10679,10 +10887,10 @@
       "pct": 60
     },
     "statements": {
-      "total": 33,
-      "covered": 31,
+      "total": 34,
+      "covered": 32,
       "skipped": 0,
-      "pct": 93.93
+      "pct": 94.11
     },
     "branches": {
       "total": 2,
@@ -10745,8 +10953,8 @@
   },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/packages/validators/src/deal-settings.ts": {
     "lines": {
-      "total": 36,
-      "covered": 36,
+      "total": 37,
+      "covered": 37,
       "skipped": 0,
       "pct": 100
     },
@@ -10757,8 +10965,8 @@
       "pct": 100
     },
     "statements": {
-      "total": 37,
-      "covered": 37,
+      "total": 38,
+      "covered": 38,
       "skipped": 0,
       "pct": 100
     },
@@ -10925,6 +11133,32 @@
       "pct": 100
     }
   },
+  "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/packages/validators/src/required-url.ts": {
+    "lines": {
+      "total": 7,
+      "covered": 7,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 2,
+      "covered": 2,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 8,
+      "covered": 8,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 11,
+      "covered": 11,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
   "/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM/packages/validators/src/sla-policy.ts": {
     "lines": {
       "total": 3,
@@ -11030,8 +11264,8 @@
     }
   },
   "meta": {
-    "lastRunAt": "2026-05-25T23:37:57.080Z",
-    "duration": 400,
+    "lastRunAt": "2026-06-03T07:49:53.198Z",
+    "duration": 422,
     "source": "ci",
     "workflow": "governance-metrics",
     "status": "passed",
