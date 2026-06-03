@@ -406,4 +406,31 @@ describe('createEmbeddings()', () => {
     >;
     expect(callArgs.modelName).toBe('rag-free');
   });
+
+  // Regression (#238): `new EmbeddingChain()` calls createEmbeddings() at
+  // module-init. An unconditional requiredProdEnv('LITELLM_BASE_URL') here
+  // crash-looped ai-worker in production under the openai direct path (ADR-048).
+  it('openai provider in production → does NOT throw when LITELLM_BASE_URL is unset (#238)', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_PHASE', '');
+    vi.stubEnv('LITELLM_BASE_URL', '');
+    const { createEmbeddings } = await importFactory('openai');
+    expect(() => createEmbeddings('free')).not.toThrow();
+
+    const callArgs = (OpenAIEmbeddings as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
+    expect((callArgs.configuration as Record<string, unknown>).baseURL).toBe(
+      'http://localhost:4000/v1'
+    );
+  });
+
+  it('litellm provider in production → DOES throw when LITELLM_BASE_URL is unset (active provider stays loud)', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_PHASE', '');
+    vi.stubEnv('LITELLM_BASE_URL', '');
+    const { createEmbeddings } = await importFactory('litellm');
+    expect(() => createEmbeddings('free')).toThrow(/LITELLM_BASE_URL must be set in production/);
+  });
 });

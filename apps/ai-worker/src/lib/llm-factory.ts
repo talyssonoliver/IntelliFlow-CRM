@@ -194,11 +194,19 @@ export function createLLM(
       maxTokens,
       timeout,
       configuration: {
-        baseURL: requiredProdEnv(
-          'LITELLM_BASE_URL',
-          process.env['LITELLM_BASE_URL'],
-          'http://localhost:4000/v1'
-        ),
+        // Provider-gate the LITELLM_BASE_URL fail-fast. requiredProdEnv() stays
+        // loud for AI_PROVIDER=litellm, but the openai direct path (ADR-048)
+        // falls back instead of throwing at module-init: `new EmbeddingChain()`
+        // runs createEmbeddings() at import time, so an unconditional throw here
+        // crash-looped ai-worker in production with AI_PROVIDER=openai. See #238.
+        baseURL:
+          aiConfig.provider === 'litellm'
+            ? requiredProdEnv(
+                'LITELLM_BASE_URL',
+                process.env['LITELLM_BASE_URL'],
+                'http://localhost:4000/v1'
+              )
+            : process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1',
       },
     });
   }
@@ -282,11 +290,19 @@ export function createEmbeddings(tier: LLMTier = 'free'): Embeddings {
       apiKey: process.env['LITELLM_MASTER_KEY'] || 'sk-litellm-dev-change-me',
       modelName: `rag-${tier}`,
       configuration: {
-        baseURL: requiredProdEnv(
-          'LITELLM_BASE_URL',
-          process.env['LITELLM_BASE_URL'],
-          'http://localhost:4000/v1'
-        ),
+        // Provider-gate the LITELLM_BASE_URL fail-fast. requiredProdEnv() stays
+        // loud for AI_PROVIDER=litellm, but the openai direct path (ADR-048)
+        // falls back instead of throwing at module-init: `new EmbeddingChain()`
+        // runs createEmbeddings() at import time, so an unconditional throw here
+        // crash-looped ai-worker in production with AI_PROVIDER=openai. See #238.
+        baseURL:
+          aiConfig.provider === 'litellm'
+            ? requiredProdEnv(
+                'LITELLM_BASE_URL',
+                process.env['LITELLM_BASE_URL'],
+                'http://localhost:4000/v1'
+              )
+            : process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1',
       },
     });
   }
