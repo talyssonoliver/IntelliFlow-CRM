@@ -7,6 +7,20 @@ import { CircuitBreaker } from '../utils/circuit-breaker.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
 import { wrapModelWithTracing, wrapEmbeddingsWithTracing } from '../tracing/llm-tracer.js';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
+import { GeminiEmbeddings } from './gemini-embeddings.js';
+
+/**
+ * Resolve the OpenRouter chat model for a tier. Per-tier overrides via
+ * `OPENROUTER_MODEL_{FREE,STANDARD,PREMIUM}`, else the single `OPENROUTER_MODEL`,
+ * else cao's proven free default. Lets ops retune models without a deploy.
+ */
+function openRouterModelForTier(tier: LLMTier): string {
+  return (
+    process.env[`OPENROUTER_MODEL_${tier.toUpperCase()}`] ||
+    process.env['OPENROUTER_MODEL'] ||
+    'openai/gpt-oss-120b:free'
+  );
+}
 
 // ============================================================================
 // Types
@@ -155,8 +169,9 @@ export function createLLM(
 ): BaseChatModel {
   const { temperature = 0.7, maxTokens = 2000, timeout = 120_000 } = options;
 
-  // Production startup assertion — throws once if LITELLM_MASTER_KEY is unsafe.
-  _assertProdKey();
+  // LITELLM_MASTER_KEY only matters for the litellm proxy path — gate the
+  // assertion so AI_PROVIDER=openrouter/ollama/mock don't trip it. (#238)
+  if (aiConfig.provider === 'litellm') _assertProdKey();
 
   // Check the instance cache before allocating a new model object.
   const cacheKey = _getFactoryCacheKey(purpose, tier, temperature, maxTokens, timeout);
@@ -183,6 +198,25 @@ export function createLLM(
       maxTokens,
       timeout,
       configuration: { baseURL: 'http://mock-litellm' },
+    });
+  } else if (aiConfig.provider === 'openrouter') {
+    // OpenRouter is OpenAI-compatible — real model ids (e.g. openai/gpt-oss-120b:free),
+    // NOT the litellm logical `${purpose}-${tier}` aliases. Used for production chat
+    // (free models); dev stays on Ollama. No proxy required.
+    model = new ChatOpenAI({
+      apiKey: process.env['OPENROUTER_API_KEY'] || '',
+      modelName: openRouterModelForTier(tier),
+      temperature,
+      maxTokens,
+      timeout,
+      configuration: {
+        baseURL: process.env['OPENROUTER_BASE_URL'] || 'https://openrouter.ai/api/v1',
+        // OpenRouter attribution headers (recommended, optional).
+        defaultHeaders: {
+          'HTTP-Referer': process.env['OPENROUTER_SITE_URL'] || 'https://intelliflow-crm.app',
+          'X-Title': 'IntelliFlow CRM',
+        },
+      },
     });
   } else {
     // Primary path — LiteLLM proxy (covers 'litellm' and legacy 'openai' provider values).
@@ -283,6 +317,16 @@ export function createEmbeddings(tier: LLMTier = 'free'): Embeddings {
       apiKey: 'mock-key',
       modelName: `rag-${tier}`,
       configuration: { baseURL: 'http://mock-litellm' },
+    });
+  } else if (process.env['EMBEDDING_PROVIDER'] === 'gemini') {
+    // Production embeddings via Google `gemini-embedding-001` at a dimension that
+    // matches the pgvector(1536) columns (no DB migration). OpenRouter has no free
+    // embeddings, so chat (OpenRouter) and embeddings (Gemini) are decoupled. The
+    // adapter makes no network call at construction, so module-init stays safe.
+    embeddings = new GeminiEmbeddings({
+      apiKey: process.env['GEMINI_API_KEY'] || '',
+      model: process.env['GEMINI_EMBEDDING_MODEL'] || 'gemini-embedding-001',
+      dimensions: Number.parseInt(process.env['EMBEDDING_DIMENSIONS'] || '1536', 10),
     });
   } else {
     // Primary + ollama fallback — both route through LiteLLM proxy.

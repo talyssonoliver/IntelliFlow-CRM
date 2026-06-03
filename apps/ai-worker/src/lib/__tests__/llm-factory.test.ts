@@ -76,7 +76,7 @@ vi.mock('@langchain/ollama', () => {
 // ---------------------------------------------------------------------------
 
 /** Re-import the factory with a specific aiConfig provider value. */
-async function importFactory(provider: 'litellm' | 'openai' | 'ollama' | 'mock') {
+async function importFactory(provider: 'litellm' | 'openai' | 'ollama' | 'mock' | 'openrouter') {
   vi.doMock('../../config/ai.config', () => ({
     aiConfig: {
       provider,
@@ -130,6 +130,49 @@ describe('createLLM()', () => {
     expect(ChatOllama).toHaveBeenCalledOnce();
     expect(ChatOpenAI).not.toHaveBeenCalled();
     expect(model).toBeDefined();
+  });
+
+  // (b2) OpenRouter path — OpenAI-compatible client at the OpenRouter base with a
+  // REAL model id (not a litellm logical alias), keyed by OPENROUTER_API_KEY.
+  it('openrouter provider → ChatOpenAI at OpenRouter base with a real model id', async () => {
+    vi.stubEnv('OPENROUTER_API_KEY', 'sk-or-test');
+    vi.stubEnv('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1');
+    vi.stubEnv('OPENROUTER_MODEL', 'openai/gpt-oss-120b:free');
+    const { createLLM } = await importFactory('openrouter');
+    createLLM('scoring', 'free');
+
+    const callArgs = (ChatOpenAI as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
+    expect(callArgs.apiKey).toBe('sk-or-test');
+    expect(callArgs.modelName).toBe('openai/gpt-oss-120b:free');
+    expect((callArgs.configuration as Record<string, unknown>).baseURL).toBe(
+      'https://openrouter.ai/api/v1'
+    );
+  });
+
+  it('openrouter provider → per-tier model override (OPENROUTER_MODEL_PREMIUM)', async () => {
+    vi.stubEnv('OPENROUTER_API_KEY', 'sk-or-test');
+    vi.stubEnv('OPENROUTER_MODEL', 'openai/gpt-oss-120b:free');
+    vi.stubEnv('OPENROUTER_MODEL_PREMIUM', 'moonshotai/kimi-k2.6:free');
+    const { createLLM } = await importFactory('openrouter');
+    createLLM('qualification', 'premium');
+
+    const callArgs = (ChatOpenAI as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
+    expect(callArgs.modelName).toBe('moonshotai/kimi-k2.6:free');
+  });
+
+  it('openrouter provider in production → does NOT require LITELLM_MASTER_KEY (no _assertProdKey)', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_PHASE', '');
+    vi.stubEnv('LITELLM_MASTER_KEY', '');
+    vi.stubEnv('OPENROUTER_API_KEY', 'sk-or-test');
+    const { createLLM } = await importFactory('openrouter');
+    expect(() => createLLM('scoring', 'free')).not.toThrow();
   });
 
   // (c) Default (litellm) path reads LITELLM_BASE_URL from env
@@ -379,6 +422,16 @@ describe('createEmbeddings()', () => {
       unknown
     >;
     expect((callArgs.configuration as Record<string, unknown>).baseURL).toBe('http://mock-litellm');
+  });
+
+  it('EMBEDDING_PROVIDER=gemini → uses Gemini embeddings, NOT OpenAIEmbeddings', async () => {
+    vi.stubEnv('EMBEDDING_PROVIDER', 'gemini');
+    vi.stubEnv('GEMINI_API_KEY', 'test-gemini-key');
+    const { createEmbeddings } = await importFactory('openrouter');
+    const emb = createEmbeddings('free');
+
+    expect(OpenAIEmbeddings).not.toHaveBeenCalled();
+    expect(emb.constructor.name).toBe('GeminiEmbeddings');
   });
 
   it('litellm provider → uses LITELLM_BASE_URL for embeddings', async () => {
