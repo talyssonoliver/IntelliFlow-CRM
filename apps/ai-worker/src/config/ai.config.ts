@@ -76,15 +76,31 @@ export function loadAIConfig(): AIConfig {
   const provider = (process.env.AI_PROVIDER || 'litellm') as AIProvider;
   const openAIBaseUrl = (process.env.OPENAI_BASE_URL || process.env.OPENAI_API_BASE || '').trim();
 
+  // Only the ACTIVE provider's base URL is required in production. This mirrors
+  // the provider-gated requiredProdEnv() in apps/api/src/container.ts and honors
+  // ADR-048: with AI_PROVIDER=openai (or mock) the worker uses the direct-client
+  // path and needs NEITHER LITELLM_BASE_URL nor OLLAMA_BASE_URL set. Calling
+  // requiredProdEnv() unconditionally here crash-looped ai-worker in production
+  // when only the OpenAI path was configured (see ADR-048). For an inactive
+  // provider we keep the plain dev-default fallback (it is never dialed).
+  const litellmBaseUrl =
+    provider === 'litellm'
+      ? requiredProdEnv(
+          'LITELLM_BASE_URL',
+          process.env['LITELLM_BASE_URL'],
+          'http://localhost:4000/v1'
+        )
+      : process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1';
+  const ollamaBaseUrl =
+    provider === 'ollama'
+      ? requiredProdEnv('OLLAMA_BASE_URL', process.env.OLLAMA_BASE_URL, 'http://localhost:11434')
+      : process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+
   const config: AIConfig = {
     provider,
 
     litellm: {
-      baseUrl: requiredProdEnv(
-        'LITELLM_BASE_URL',
-        process.env['LITELLM_BASE_URL'],
-        'http://localhost:4000/v1'
-      ),
+      baseUrl: litellmBaseUrl,
       masterKey: process.env['LITELLM_MASTER_KEY'] || '',
       timeout: Number.parseInt(process.env['LITELLM_TIMEOUT'] || '120000', 10),
     },
@@ -99,11 +115,7 @@ export function loadAIConfig(): AIConfig {
     },
 
     ollama: {
-      baseUrl: requiredProdEnv(
-        'OLLAMA_BASE_URL',
-        process.env.OLLAMA_BASE_URL,
-        'http://localhost:11434'
-      ),
+      baseUrl: ollamaBaseUrl,
       model: process.env.OLLAMA_MODEL || 'mistral',
       temperature: Number.parseFloat(process.env.OLLAMA_TEMPERATURE || '0.7'),
       timeout: Number.parseInt(process.env.OLLAMA_TIMEOUT || '60000', 10),
