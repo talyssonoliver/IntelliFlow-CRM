@@ -86,21 +86,44 @@ vitest.on('close', (code) => {
     }
   }
 
-  if (sawTestResults && testsFailedCount === 0 && testsPassedCount > 0) {
-    // Tests passed! Exit 0 regardless of worker crash
+  // F-06 hardening (CI Audit Report): Vitest's exit code is the source of
+  // truth. We ONLY forgive a non-zero exit when (a) results were printed,
+  // (b) zero tests failed, AND (c) the non-zero code is explained by a KNOWN
+  // post-run worker/teardown crash (OOM during cleanup, vitest-pool RPC
+  // teardown race — the same noise vitest.config.ts onUnhandledError swallows).
+  // Any OTHER non-zero exit fails the run, so a stdout-format change, an early
+  // crash, or a coverage-threshold breach can never be mis-read as green.
+  const KNOWN_CLEANUP_NOISE = [
+    'Worker exited unexpectedly',
+    'JS heap out of memory',
+    'EnvironmentTeardownError',
+    'Closing rpc while',
+    'onUserConsoleLog',
+    'vitest-pool',
+  ];
+  const sawCleanupNoise = KNOWN_CLEANUP_NOISE.some((marker) => strippedOutput.includes(marker));
+  const cleanPass = sawTestResults && testsFailedCount === 0 && testsPassedCount > 0;
+
+  if (cleanPass && code === 0) {
     console.log('\n✅ Tests completed successfully (' + testsPassedCount + ' passed)');
-    if (code !== 0) {
-      console.log('ℹ️  Worker cleanup crash ignored (all tests passed before crash)');
-    }
+    process.exit(0);
+  } else if (cleanPass && sawCleanupNoise) {
+    console.log('\n✅ Tests completed successfully (' + testsPassedCount + ' passed)');
+    console.log(
+      'ℹ️  Worker cleanup crash ignored (all tests passed; known teardown noise, exit ' + code + ')'
+    );
     process.exit(0);
   } else if (testsFailedCount > 0) {
-    // Tests failed
     console.log('\n❌ Tests failed (' + testsFailedCount + ' failures)');
     process.exit(1);
+  } else if (code !== 0) {
+    // Non-zero exit, no failed-test count, no recognised cleanup noise — treat
+    // as a real failure (early crash, reporter/format drift, threshold breach).
+    console.log('\n❌ Test run exited ' + code + ' without a clean pass signal — failing.');
+    process.exit(code);
   } else {
-    // No results seen - something went wrong
     console.log('\n❌ Test run did not complete properly');
-    process.exit(code || 1);
+    process.exit(1);
   }
 });
 

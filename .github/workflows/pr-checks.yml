@@ -81,129 +81,27 @@ jobs:
   # now-orphan context `PR Checks / Quality Checks` — see the PR
   # description for the exact `gh api` command.
 
-  test-coverage:
-    name: Test Coverage
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    steps:
-      # Skip-shim for Dependabot PRs — see Quality Checks job for the pattern
-      # rationale. ci.yml runs the unit/integration test suite against the
-      # bumped lockfile; the codecov comment is convenience for human authors.
-      - uses: actions/checkout@v6
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup-monorepo
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-          # MUST be true — apps/web/api tests import @intelliflow/domain,
-          # @intelliflow/validators, etc. which resolve from dist/. Without
-          # build-libs the tests fail with "Failed to resolve entry for
-          # package @intelliflow/domain". This is the unbuilt-internal-
-          # packages chronic failure pattern (registry entry
-          # `unbuilt-internal-packages`). Unit Tests in ci.yml sets it to
-          # true; Test Coverage was missing it and produced 270+ "FAIL"
-          # files in CI even though the underlying tests pass locally
-          # after a workspace build.
-          build-libs: 'true'
-
-      - name: Run tests with coverage
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: pnpm run test:coverage
-
-      - name: Generate coverage report
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        uses: codecov/codecov-action@v6
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./artifacts/coverage/lcov.info
-          flags: pr-tests
-          fail_ci_if_error: false
-
-      - name: Comment coverage on PR
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        uses: romeovs/lcov-reporter-action@v0.4.0
-        with:
-          lcov-file: ./artifacts/coverage/lcov.info
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          delete-old-comments: true
-        continue-on-error: true
-
-      - name: Skip-shim for Dependabot PRs
-        if: github.event.pull_request.user.login == 'dependabot[bot]'
-        run: echo "::notice::Test Coverage skipped for Dependabot PR — ci.yml runs unit + integration tests against the bumped lockfile"
-
-  build-preview:
-    name: Build Preview
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    steps:
-      # Skip-shim for Dependabot PRs — see Quality Checks job for the pattern
-      # rationale. ci.yml's Build job runs the same `pnpm run build` against
-      # the bumped lockfile, so a green ci.yml is sufficient signal that the
-      # dep bump did not break the build. This saves ~5 minutes per Dependabot PR.
-      - uses: actions/checkout@v6
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-      - uses: ./.github/actions/setup-monorepo
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-
-      - name: Build all packages
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: pnpm run build
-        env:
-          NODE_ENV: production
-          # Real key from repo's GitHub Actions secret. Configure at
-          # Settings → Secrets and variables → Actions → New repository secret
-          # named PRISMA_FIELD_ENCRYPTION_KEY (the same key that lives in
-          # .env.local locally). The `||` fallback is a 32-byte zero-key
-          # safety net for forked PRs where secrets are not exposed; the
-          # build only needs the value to satisfy the AES-256 key-length
-          # guard in `packages/db/src/field-encryption.ts` at module load.
-          # NEVER use the fallback at runtime.
-          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
-          # Stub connection strings prevent Prisma / pg-adapter from throwing at
-          # module-load time when the route.ts dynamic export is not sufficient to
-          # prevent eager evaluation (belt-and-suspenders for CI build isolation).
-          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
-          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
-          # Prevents the AI_AUDIT_SIGNING_KEY production guard in container.ts
-          # from throwing before the request handler is ever invoked.
-          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
-          # Supabase config — apps/api/src/lib/supabase.ts throws at module
-          # load when NODE_ENV=production and any of these are missing. The
-          # web build imports the api package via the tRPC chain, so the
-          # module-load guard fires during `next build` page-data collection.
-          # Real values come from repo secrets; stubs are RFC-shaped placeholders
-          # for forked PRs that don't have secret access. NEVER use stubs at runtime.
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
-
-      - name: Upload build artifacts
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        uses: actions/upload-artifact@v7
-        with:
-          name: pr-build-${{ github.event.pull_request.number }}
-          path: |
-            apps/*/dist
-            apps/*/.next
-          retention-days: 3
-
-      - name: Skip-shim for Dependabot PRs
-        if: github.event.pull_request.user.login == 'dependabot[bot]'
-        run: echo "::notice::Build Preview skipped for Dependabot PR — ci.yml runs the same build against the bumped lockfile"
+  # `test-coverage` REMOVED (CI Audit F-01 / ADR-057): it ran the full ~30k-test
+  # suite a SECOND time per PR (`pnpm run test:coverage`, 16 projects
+  # sequentially) on top of ci.yml's run. The sharded suite in
+  # test-regression.yml (called by ci.yml on every PR) now produces the merged
+  # lcov + Codecov upload + PR coverage comment from a SINGLE execution.
+  #
+  # `build-preview` REMOVED (CI Audit F-05): it duplicated ci.yml's `build` job
+  # (identical `pnpm run build`). ci.yml runs on pull_request, so its Build job
+  # is the canonical PR build signal. deploy-preview builds independently via
+  # `vercel build`, so it never consumed build-preview's artifact.
+  #
+  # EXTERNAL PRE-MERGE REQUIREMENT: branch protection lives outside this repo. A
+  # repo admin must PATCH required_status_checks to drop the now-orphan contexts
+  # `PR Checks / Test Coverage` and `PR Checks / Build Preview` — see ADR-060
+  # (docs/architecture/adr/) for the exact `gh api` command.
 
   deploy-preview:
     name: Deploy Preview
     runs-on: ubuntu-latest
-    needs: [build-preview]
+    # build-preview removed (F-05); deploy-preview builds independently via
+    # `vercel build`, so it no longer depends on a prior build job.
     # Always run for non-draft PRs so the required status context reports a
     # conclusion (not `skipped`). Branch protection treats `skipped` required
     # checks as never-reported, which BLOCKS merge. The actual deploy is
@@ -424,7 +322,10 @@ jobs:
     # quality-checks removed from needs as part of Recommendation E dedup —
     # ci.yml's lint + typecheck jobs are the canonical source for those signals
     # and the PR Summary surfaces only pr-checks.yml results.
-    needs: [pr-validation, test-coverage, build-preview, lighthouse]
+    # lighthouse dropped from needs: it is label-quarantined (usually skipped)
+    # and the summary script does not reference its result — keeping it here was
+    # dead weight and a latent branch-protection footgun (CI review 2026-06-03).
+    needs: [pr-validation, deploy-preview]
     if: always() && github.event.pull_request.draft == false
     permissions:
       # Default GITHUB_TOKEN doesn't grant PR-write on fork PRs, so the
@@ -441,8 +342,7 @@ jobs:
         with:
           script: |
             const validationStatus = '${{ needs.pr-validation.result }}';
-            const coverageStatus = '${{ needs.test-coverage.result }}';
-            const buildStatus = '${{ needs.build-preview.result }}';
+            const deployStatus = '${{ needs.deploy-preview.result }}';
 
             const statusIcon = (status) => {
               if (status === 'success') return '✅';
@@ -455,10 +355,11 @@ jobs:
             | Check | Status |
             |-------|--------|
             | PR Validation | ${statusIcon(validationStatus)} ${validationStatus} |
-            | Test Coverage | ${statusIcon(coverageStatus)} ${coverageStatus} |
-            | Build Preview | ${statusIcon(buildStatus)} ${buildStatus} |
+            | Deploy Preview | ${statusIcon(deployStatus)} ${deployStatus} |
 
-            ${validationStatus === 'success' && coverageStatus === 'success' && buildStatus === 'success' ? '✅ All checks passed! Ready for review. (lint/typecheck signal: see CI Pipeline workflow.)' : '⚠️ Some checks failed. Please review the logs.'}`;
+            > Test, coverage, build, lint and typecheck signals now live in the **CI Pipeline** workflow (sharded suite + merged coverage gate). See ADR-057.
+
+            ${validationStatus === 'success' ? '✅ PR-Checks signals green. Full test/build/coverage gate runs in CI Pipeline.' : '⚠️ Some checks failed. Please review the logs.'}`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
