@@ -86,3 +86,10 @@ be5aba42b1fb fix(ci): PR #112 squashed subject — proper noun "SLSA" upper-case
 430ce6c3aab8 feat(infra): branch commit subject — proper noun "Railway" upper-case (waived during PR; squash subject is conventional)
 75f93bb20d3e ci: PR #187 squash inherited uppercase "H0" from PR title (audit doc recommendation code). Squash subject cannot be rewritten. Pre-ship gate has no commitlint check on prospective squash subjects — see memory feedback_pre_ship_gate_gaps.
 d752919b684a fix(ci): PR #201 squash subject — uppercase "E2E" + 105 chars (header limit 100). Squash subject is the PR title; cannot be rewritten without rewriting main. Same root cause as 75f93bb20d3e — admin-merge did not dry-run commitlint on the PR title.
+
+# PR #243 (feat/openrouter-chat-gemini-embeddings) merged via merge-commit on
+# 2026-06-03, preserving the branch commit's subject which starts with the
+# proper noun "OpenRouter". Already on main; cannot rewrite. Same root cause as
+# 75f93bb20d3e / d752919b684a. Caught by system-audit/commitlint (scans last 20
+# commits) on PR #247 and every subsequent PR until waived.
+117154e003c54642e0dfe21bb1b5fd7f626af6cd feat(ai-worker): PR #243 subject — proper noun "OpenRouter" upper-case — merged, cannot rewrite
