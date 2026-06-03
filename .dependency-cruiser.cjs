@@ -57,6 +57,40 @@ module.exports = {
         ],
       },
     },
+    {
+      name: 'no-web-imports-worker-only-modules',
+      severity: 'error',
+      comment:
+        'apps/web must never import worker-only modules (BullMQ queues / queue services, ' +
+        'AI provider services that require REDIS_HOST/OLLAMA_BASE_URL/LITELLM_BASE_URL). ' +
+        'These modules require env vars the web tier does not have, causing 500s on every ' +
+        'route when the container is constructed at module load time. ' +
+        'If the web needs AI functionality, add a dedicated web-safe lightweight service. ' +
+        'See fix/web-worker-service-decoupling for the root cause analysis.',
+      from: {
+        path: '^apps/web',
+        pathNot: [
+          // Allow test files to import anything (mocked anyway)
+          '\\.(test|spec)\\.(ts|tsx)$',
+          '__tests__',
+          '__mocks__',
+        ],
+      },
+      to: {
+        path: [
+          // Queue AI service — requires REDIS_HOST at construction time
+          '^apps/api/src/services/queue',
+          // Platform queue connection helper — calls requiredProdEnv('REDIS_HOST')
+          '^packages/platform/src/queues/connection',
+          // Ollama AI service — requires OLLAMA_BASE_URL
+          '^packages/adapters/src/.*[Oo]llama',
+          // LiteLLM AI service — requires LITELLM_BASE_URL
+          '^packages/adapters/src/.*[Ll]ite[Ll]lm',
+          // BullMQ itself — never bundle in the web tier
+          'node_modules/bullmq',
+        ],
+      },
+    },
   ],
   options: {
     doNotFollow: {
