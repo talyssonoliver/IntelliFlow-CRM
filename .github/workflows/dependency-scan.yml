@@ -111,7 +111,7 @@ jobs:
         # coverage. To restore as strict gate later, either upgrade Snyk
         # plan or switch to a billing-aware wrapper that distinguishes
         # quota-exhausted from real findings.
-        uses: snyk/actions/node@9cf6ca713d71123d2d229cc3d7f145b96ea3c518
+        uses: snyk/actions/node@8e119fbb6c251787721d34ba683ed48eba792766
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
