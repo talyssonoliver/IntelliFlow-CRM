@@ -37,7 +37,7 @@ const logger = pino({
 export { aiConfig, loadAIConfig, calculateCost } from './config/ai.config';
 export { costTracker, CostTracker } from './utils/cost-tracker';
 export { leadScoringChain, LeadScoringChain } from './chains/scoring.chain';
-export { embeddingChain, EmbeddingChain } from './chains/embedding.chain';
+export { getEmbeddingChain, EmbeddingChain } from './chains/embedding.chain';
 export { BaseAgent } from './agents/base.agent';
 export {
   qualificationAgent,
@@ -405,7 +405,8 @@ async function initializeWorker() {
     const { leadScoringChain } = await import('./chains/scoring.chain.js');
     logger.info('Lead scoring chain initialized');
 
-    const { embeddingChain } = await import('./chains/embedding.chain.js');
+    const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
+    const embeddingChain = getEmbeddingChain();
     logger.info('Embedding chain initialized');
 
     // Initialize agents
