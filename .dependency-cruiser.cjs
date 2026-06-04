@@ -91,6 +91,36 @@ module.exports = {
         ],
       },
     },
+    {
+      name: 'no-web-imports-api-container',
+      severity: 'error',
+      comment:
+        'apps/web must never import apps/api/src/container directly. ' +
+        'The DI container constructs worker-only services (QueueAIService, ' +
+        'OllamaAIService, LiteLLMAIService, Redis clients) at module-load time, ' +
+        'causing Vercel boot failures when the required env vars are absent. ' +
+        'Allowed: importing @intelliflow/api for TypeScript type inference only. ' +
+        'Approved runtime pattern: HTTP tRPC client call from web to the Railway ' +
+        'API service — see ADR-063. ' +
+        'The existing /api/trpc route.ts + trpc-server.ts coupling is a known ' +
+        'architectural debt tracked in ADR-063; this rule blocks NEW direct ' +
+        'container imports from being introduced. ' +
+        'Root cause documented in incident-forensics-2026-06-04.md defects D1/D6.',
+      from: {
+        path: '^apps/web',
+        pathNot: ['\\.(test|spec)\\.(ts|tsx)$', '__tests__', '__mocks__'],
+      },
+      to: {
+        path: [
+          // The DI container itself — never import this from apps/web
+          '^apps/api/src/container',
+          // API-internal worker services wired directly in the container
+          '^apps/api/src/services/AIMonitoringService',
+          '^apps/api/src/modules/ai-monitoring/ai-monitoring\\.redis-store',
+          '^apps/api/src/modules/home/home\\.cache',
+        ],
+      },
+    },
   ],
   options: {
     doNotFollow: {

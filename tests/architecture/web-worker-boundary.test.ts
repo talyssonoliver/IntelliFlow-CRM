@@ -94,6 +94,118 @@ function isTestFile(filePath: string): boolean {
   );
 }
 
+/**
+ * Web Tier — API Container Import Guard
+ *
+ * Companion to the worker-only-module tests above. Catches the specific
+ * pattern where apps/web imports apps/api/src/container directly, which
+ * constructs the full DI container (including Redis, Ollama, LiteLLM
+ * services) at Vercel module-load time.
+ *
+ * What is allowed:
+ *   - apps/web importing @intelliflow/api for TypeScript type inference
+ *   - apps/web importing @intelliflow/api/context and @intelliflow/api/router
+ *     in the existing tRPC route handler (acknowledged architectural debt,
+ *     tracked in ADR-063; see note below)
+ *
+ * What is FORBIDDEN (this describe block catches violations):
+ *   - Any NEW direct import of apps/api/src/container from apps/web source
+ *   - Direct imports of API-internal worker-service modules
+ *     (AIMonitoringService, ai-monitoring.redis-store, home.cache)
+ *
+ * Note on the existing coupling: apps/web/src/app/api/trpc/[trpc]/route.ts
+ * and apps/web/src/lib/trpc-server.ts currently import @intelliflow/api/context
+ * and @intelliflow/api/router. This is the acknowledged tRPC route-handler
+ * pattern and is NOT forbidden by these tests. The approved long-term fix
+ * (HTTP-only tRPC client, splitting @intelliflow/api into type-only vs runtime
+ * entrypoints) is tracked in ADR-063. These tests enforce that no NEW direct
+ * container imports are introduced in the meantime.
+ */
+
+describe('Web Tier Boundary — no direct api container imports', () => {
+  const webSrcPath = path.join(projectRoot, 'apps/web/src');
+
+  test('web MUST NOT directly import apps/api/src/container', () => {
+    // The DI container constructs QueueAIService (Redis), OllamaAIService,
+    // LiteLLMAIService, and RedisCacheAdapter at module-load time. Any direct
+    // import from apps/web causes all these services to be constructed when
+    // Vercel loads the module — throwing when REDIS_HOST/OLLAMA_BASE_URL/
+    // LITELLM_BASE_URL are absent (they are not available on the web tier).
+    //
+    // The existing @intelliflow/api/context + @intelliflow/api/router imports
+    // in route.ts / trpc-server.ts are the acknowledged runtime coupling
+    // (documented in ADR-063) — they are not scanned by this test.
+    const webFiles = getTypeScriptFiles(webSrcPath).filter((f) => !isTestFile(f));
+
+    const violations: { file: string; imports: string[] }[] = [];
+    const forbidden = [
+      // Direct import of the DI container module
+      /apps\/api\/src\/container/,
+      // API-internal worker-service modules that should never be imported from web
+      /apps\/api\/src\/services\/AIMonitoringService/,
+      /apps\/api\/src\/modules\/ai-monitoring\/ai-monitoring\.redis-store/,
+      /apps\/api\/src\/modules\/home\/home\.cache/,
+    ];
+
+    for (const file of webFiles) {
+      const imports = getDirectImports(file);
+      const bad = imports.filter((imp) => forbidden.some((re) => re.test(imp)));
+      if (bad.length > 0) {
+        violations.push({ file: path.relative(projectRoot, file), imports: bad });
+      }
+    }
+
+    if (violations.length > 0) {
+      console.error('Web tier direct imports of API DI container (FORBIDDEN — ADR-063):');
+      for (const v of violations) {
+        console.error(`  ${v.file}:`);
+        for (const imp of v.imports) console.error(`    import '${imp}'`);
+      }
+      console.error(
+        'Fix: use an HTTP tRPC client call to the Railway API instead of importing the container.'
+      );
+    }
+
+    expect(violations).toHaveLength(0);
+  });
+
+  test('web MUST NOT directly import Ollama or LiteLLM adapter modules', () => {
+    // OllamaAIService requires OLLAMA_BASE_URL; LiteLLMAIService requires
+    // LITELLM_BASE_URL. Neither env var is present on the Vercel web tier.
+    // Direct imports from apps/web would cause module-load failures on boot.
+    const webFiles = getTypeScriptFiles(webSrcPath).filter((f) => !isTestFile(f));
+
+    const violations: { file: string; imports: string[] }[] = [];
+    const forbidden = [
+      /packages\/adapters\/src\/.*[Oo]llama/,
+      /packages\/adapters\/src\/.*[Ll]ite[Ll]lm/,
+      /@intelliflow\/adapters\/.*[Oo]llama/,
+      /@intelliflow\/adapters\/.*[Ll]ite[Ll]lm/,
+    ];
+
+    for (const file of webFiles) {
+      const imports = getDirectImports(file);
+      const bad = imports.filter((imp) => forbidden.some((re) => re.test(imp)));
+      if (bad.length > 0) {
+        violations.push({ file: path.relative(projectRoot, file), imports: bad });
+      }
+    }
+
+    if (violations.length > 0) {
+      console.error(
+        'Web tier direct imports of Ollama/LiteLLM AI adapters (FORBIDDEN — requires ' +
+          'OLLAMA_BASE_URL/LITELLM_BASE_URL which are absent on the Vercel web tier):'
+      );
+      for (const v of violations) {
+        console.error(`  ${v.file}:`);
+        for (const imp of v.imports) console.error(`    import '${imp}'`);
+      }
+    }
+
+    expect(violations).toHaveLength(0);
+  });
+});
+
 describe('Web Tier Boundary — no direct worker-only module imports', () => {
   const webSrcPath = path.join(projectRoot, 'apps/web/src');
 
