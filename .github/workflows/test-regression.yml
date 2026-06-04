@@ -180,6 +180,13 @@ jobs:
           pattern: blob-*
           path: .vitest-reports
           merge-multiple: true
+          # download-artifact@v8 defaults digest-mismatch:error → a transient
+          # GitHub artifact-service hash flake then HARD-FAILS the run, jamming
+          # the Sonar gate across the whole PR queue (upload@v7/download@v8 is the
+          # correct, latest pairing — this is a flake, not a version skew). 'warn'
+          # keeps the integrity check as a logged signal but non-fatal. Applied to
+          # COVERAGE/timing artifacts only; security-artifact downloads stay strict.
+          digest-mismatch: warn
 
       - name: Merge shards into one coverage report
         env:
@@ -249,6 +256,7 @@ jobs:
           # archive holds coverage/lcov.info + reports/junit.xml; extracting
           # under `artifacts` restores artifacts/coverage/lcov.info.
           path: artifacts
+          digest-mismatch: warn # transient artifact-svc digest flake → non-fatal (see merge job)
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v6
@@ -291,6 +299,7 @@ jobs:
         with:
           name: merged-coverage
           path: artifacts
+          digest-mismatch: warn # the queue-jammer: transient artifact-svc digest flake → non-fatal (see merge job)
 
       - name: SonarQube Cloud Scan
         # Official SonarQube Cloud action, SHA-pinned to v8.1.0 (supply-chain
@@ -330,6 +339,7 @@ jobs:
         with:
           pattern: shard-timing-*
           path: shard-timing
+          digest-mismatch: warn # transient artifact-svc digest flake → non-fatal (see merge job)
           merge-multiple: true
 
       - name: Compute skew
