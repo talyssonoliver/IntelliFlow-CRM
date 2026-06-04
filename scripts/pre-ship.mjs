@@ -4,9 +4,12 @@
  * surface on the dev laptop (free, fast feedback) instead of after a
  * 5-min wait + queued CI run.
  *
- * Wired into .husky/pre-push (default on). Override with SKIP_PRESHIP=1
- * when you genuinely need to push something the gate would reject
- * (record the reason in the commit/PR body).
+ * Wired into .husky/pre-push and runs on EVERY branch push. There is NO
+ * SKIP_PRESHIP full-bypass (removed in the #265 retro — a gate skippable by one
+ * env var is a gate that rots). A genuinely-unrunnable infra step (e.g. no local
+ * test DB) degrades to MISSING-required, acknowledgeable with
+ * PRESHIP_ALLOW_MISSING=1 (runs everything else, records the gap). The only full
+ * escape is the deliberate `git push --no-verify`.
  *
  * Resumable: writes per-step exit codes + timing to
  * artifacts/preship/last-run.json, keyed by git HEAD. Re-running with
@@ -42,7 +45,7 @@
  * Env:
  *   PRESHIP_KEEP_GOING=1     don't hard-stop on first required FAIL
  *   PRESHIP_ALLOW_MISSING=1  let required+SKIPPED_PRECONDITION steps pass
- *   SKIP_PRESHIP=1           bypass the gate entirely (husky pre-push only)
+ *                            (infra-unrunnable steps only; NOT a full bypass)
  */
 
 import fs from 'node:fs';
@@ -72,6 +75,29 @@ process.chdir(REPO_ROOT);
 const OUT_DIR = path.join(REPO_ROOT, 'artifacts/preship');
 const LOG_DIR = path.join(OUT_DIR, 'logs');
 const STATE_PATH = path.join(OUT_DIR, 'last-run.json');
+
+// Shared skip_if probes. The DB-backed steps (integration, coverage, and the
+// two coverage gates that consume the lcov) can't run without a local test DB.
+// Since the SKIP_PRESHIP full-bypass was removed, these degrade to
+// MISSING-required (acknowledge with PRESHIP_ALLOW_MISSING=1) instead of
+// hard-failing — so a DB-less env can still push the rest of the gate without a
+// wholesale skip. NOTE: this only detects "no DB stack"; pointing DATABASE_URL
+// at the correct (non-prod) DB remains the developer's responsibility.
+function dbStackUnavailable() {
+  const r = spawnSync('docker', ['ps', '--format', '{{.Names}}'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: process.platform === 'win32',
+  });
+  if (r.error || r.status !== 0) return true; // docker missing / daemon down
+  const names = (r.stdout || '').toLowerCase();
+  return !(names.includes('postgres') && names.includes('redis'));
+}
+// The coverage gates need the merged lcov the `coverage` step produces; if that
+// step was skipped (no DB), they have nothing to read.
+function lcovMissing() {
+  return !fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/lcov.info'));
+}
 
 // Step plan — fail-first token gate + 17 steps from audit doc §8. Each step has:
 //   id          : kebab-case identifier (also used as log filename)
@@ -196,6 +222,12 @@ const STEPS = [
     id: 'coverage',
     description: 'pnpm run test:coverage (merged Istanbul output)',
     cmd: ['pnpm', 'run', 'test:coverage'],
+    // Needs a local test DB (the merged run includes the integration project).
+    // Without one, degrade to MISSING-required rather than hard-fail against a
+    // possibly-wrong/prod DB.
+    skip_if: dbStackUnavailable,
+    skip_remediation:
+      'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis` and point DATABASE_URL at the LOCAL test DB (never prod). Then re-run, or set PRESHIP_ALLOW_MISSING=1 to acknowledge the gap for this push.',
     required: true,
   },
   {
@@ -207,6 +239,23 @@ const STEPS = [
     id: 'coverage-floor',
     description: 'enforce CI ratchet floor (78/70/75/80) on merged coverage — shared gate',
     cmd: ['node', 'scripts/check-coverage-floor.mjs'],
+    // Depends on the lcov from `coverage`; if that was skipped, skip too.
+    skip_if: lcovMissing,
+    skip_remediation: 'Run the `coverage` step first (needs the local test DB).',
+    required: true,
+  },
+  {
+    // Mirror SonarCloud's `new_coverage` (>=80% on the CHANGED lines) LOCALLY,
+    // using the SAME merged lcov. The overall ratchet floor above barely moves
+    // for a small diff, so it cannot catch an under-tested change — this step
+    // can. This is the exact gap that let PR #265 pass pre-ship's coverage gate
+    // while CI's `SonarCloud Scan` / new_coverage went red.
+    id: 'diff-coverage',
+    description: 'enforce Sonar new_coverage (>=80% on changed lines vs origin/main)',
+    cmd: ['node', 'scripts/check-diff-coverage.mjs'],
+    // Depends on the lcov from `coverage`; if that was skipped, skip too.
+    skip_if: lcovMissing,
+    skip_remediation: 'Run the `coverage` step first (needs the local test DB).',
     required: true,
   },
   {

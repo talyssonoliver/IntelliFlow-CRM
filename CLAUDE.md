@@ -158,6 +158,21 @@ show "pending" status. Never populate fields with fake values.
 ALL 4 validations are NON-NEGOTIABLE: TypeScript, Tests, Lint, **Build**.
 "Next.js compiles on demand" is NOT a valid reason to skip build.
 
+### Pre-ship Gate Is Not Skippable
+
+`scripts/pre-ship.mjs` (husky `pre-push`) mirrors CI's required checks locally
+and runs on **every** branch push. There is **no `SKIP_PRESHIP` bypass** — it
+was removed (the #265 retro: a gate skippable by one env var is a gate that
+rots). If a step genuinely can't run because infra is down (Docker / local test
+DB), use `PRESHIP_ALLOW_MISSING=1` — it runs **everything else** and records the
+gap; it is NOT a full skip. The only full escape is the deliberate
+`git push --no-verify`, which needs explicit owner approval. Provision the
+worktree instead: copy `.env.local` but point `DATABASE_URL` at the **local test
+DB** (never prod — `.env.local`'s `DATABASE_URL` is production Supabase; use
+`DATABASE_TEST_URL`). The gate includes `diff-coverage` (mirrors Sonar
+`new_coverage` ≥80% on changed lines) so under-tested diffs fail locally, not
+after a CI round.
+
 ### Sprint_plan.csv is Single Source of Truth
 
 Always edit CSV for task updates. Run sync after changes. Never edit derived

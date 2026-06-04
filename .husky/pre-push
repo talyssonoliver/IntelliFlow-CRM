@@ -12,9 +12,13 @@
 #       would catch it too, but failing here saves a server round-trip
 #       and surfaces a clearer message).
 #   (2) Run the pre-ship gate (scripts/pre-ship.mjs) which mirrors CI's
-#       required-check graph locally. Default on — set SKIP_PRESHIP=1
-#       to bypass when you genuinely need to push something the gate
-#       would reject (record the reason in the commit/PR body).
+#       required-check graph locally. ALWAYS runs on a branch push — there is
+#       NO env-var bypass (a gate you can skip with one env var is a gate that
+#       rots; see the #265 retro). For a genuinely-unrunnable infra step (e.g.
+#       Docker/test-DB down) use PRESHIP_ALLOW_MISSING=1 — that still runs
+#       EVERYTHING ELSE and records the gap; it is not a full bypass. The only
+#       full escape is the deliberate, discouraged `git push --no-verify`
+#       (bypasses ALL hooks; visible in shell history).
 
 # --- (1) refs/heads/main block ---
 # Drain stdin into a buffer so we can re-iterate. `git push` only sends
@@ -37,12 +41,9 @@ done
 if [ $? -ne 0 ]; then exit 1; fi
 
 # --- (2) pre-ship gate ---
-# Skip unless on a feature branch (no point gating a push that's just
-# updating a tag or notes). Also skip if SKIP_PRESHIP=1.
-if [ "${SKIP_PRESHIP:-0}" = "1" ]; then
-  echo "pre-push: SKIP_PRESHIP=1 — pre-ship gate bypassed." >&2
-  exit 0
-fi
+# Runs on EVERY branch push — there is NO SKIP_PRESHIP bypass (removed in the
+# #265 retro: the gate must not be skippable with a casual env var). Pushes to a
+# non-branch ref (tags, notes) are exempt below because there is nothing to gate.
 
 # Skip the gate when the only push is to a non-branch ref (tags, notes).
 # Each stdin line is `<local_ref> <local_sha> <remote_ref> <remote_sha>`.
@@ -54,14 +55,15 @@ if [ "$has_branch_push" = "0" ]; then
   exit 0
 fi
 
-echo "pre-push: running pre-ship gate (set SKIP_PRESHIP=1 to bypass) ..." >&2
+echo "pre-push: running pre-ship gate (no env-var bypass) ..." >&2
 if ! pnpm run pre-ship; then
   echo "" >&2
   echo "BLOCK [pre-push]: pre-ship gate failed." >&2
   echo "  See artifacts/preship/last-run.json for the per-step verdict." >&2
   echo "  See artifacts/preship/logs/<step-id>.log for the failing step's output." >&2
   echo "  Re-run targeted: pnpm exec node scripts/pre-ship.mjs --only=<step-id>" >&2
-  echo "  Override (rare, justify in commit body): SKIP_PRESHIP=1 git push ..." >&2
+  echo "  Infra step can't run (Docker / test-DB down)? PRESHIP_ALLOW_MISSING=1" >&2
+  echo "  runs the rest + records the gap — it is NOT a full bypass." >&2
   exit 1
 fi
 
