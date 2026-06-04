@@ -9,5 +9,5 @@
   "github": {
     "autoJobCancelation": true
   },
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD ':(exclude)*.md' ':(exclude)docs/**' ':(exclude).github/**'"
+  "ignoreCommand": "bash $(git rev-parse --show-toplevel)/scripts/vercel-ignore-build.sh"
 }

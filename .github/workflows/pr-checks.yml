@@ -108,104 +108,20 @@ jobs:
     # per-step gated below (DEPLOY_ELIGIBLE) so only same-repo PRs with Vercel
     # configured AND non-bot authors execute the deploy. Other cases hit the
     # success-shim step and the job still emits `success`.
+    # CI-Audit P0 (2026-06-04): the REAL preview deploy moved to the CI-gated
+    # workflow `.github/workflows/deploy-preview.yml` (trigger: workflow_run on
+    # `CI Pipeline` success), so previews build ONLY after CI is green — no more
+    # pre-green Vercel builds (wasted minutes) or broken-preview deploys. This
+    # job is now a required-status SHIM: it reports `success` so branch
+    # protection's `PR Checks / Deploy Preview` context stays satisfied, but it
+    # deploys nothing. (Vercel's own auto-build is suppressed by
+    # scripts/vercel-ignore-build.sh.) See ADR-062 + the retrospective doc.
     if: github.event.pull_request.draft == false
-    permissions:
-      pull-requests: write
-      issues: write
-    environment:
-      name: preview-pr-${{ github.event.pull_request.number }}
-      url: ${{ steps.deploy.outputs.preview-url }}
-    outputs:
-      preview-url: ${{ steps.deploy.outputs.preview-url }}
-    env:
-      # Project/Org IDs are not secrets — read from `vars.*` so the same value
-      # drives both the eligibility gate AND the Vercel CLI invocation. The
-      # previous setup gated on `vars.VERCEL_PROJECT_ID` but exported
-      # `secrets.VERCEL_PROJECT_ID` to the CLI; if the repo only sets one or
-      # the other, the job would either be ineligible-but-with-token or
-      # eligible-but-empty (and vercel pull/build/deploy would fail).
-      # `secrets.VERCEL_TOKEN` stays a secret — only the IDs are public.
-      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
-      # Deploy eligibility flag — referenced by every heavy step's `if:`. Three
-      # gates folded into one expression:
-      #   1. Same-repo PR (forks can't access secrets)
-      #   2. Vercel project configured (single source of truth: vars.VERCEL_PROJECT_ID)
-      #   3. Not a Dependabot PR (scoped to Dependabot secrets, not Actions secrets)
-      DEPLOY_ELIGIBLE: ${{ github.event.pull_request.head.repo.full_name == github.repository && vars.VERCEL_PROJECT_ID != '' && github.event.pull_request.user.login != 'dependabot[bot]' }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-monorepo
-        if: env.DEPLOY_ELIGIBLE == 'true'
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-          # Deploy uses pre-built artifact via `vercel pull` + `vercel build`,
-          # not the local install. Skip install to save a minute.
-          install-deps: 'false'
-
-      - name: Install Vercel CLI
-        if: env.DEPLOY_ELIGIBLE == 'true'
-        # amondnet/vercel-action@v25 is unmaintained and ships Vercel CLI 25.1.0,
-        # which the deploy endpoint rejects ("requires version 47.2.2 or later").
-        # Use the modern CLI directly: pull → build → deploy --prebuilt.
-        run: pnpm add -g vercel@latest
-
-      - name: Pull Vercel environment (preview)
-        if: env.DEPLOY_ELIGIBLE == 'true'
-        # Downloads project config + env vars to .vercel/. VERCEL_ORG_ID +
-        # VERCEL_PROJECT_ID env vars take the place of `.vercel/project.json`.
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build with Vercel
-        if: env.DEPLOY_ELIGIBLE == 'true'
-        # Uses the env vars pulled above; output goes to .vercel/output/.
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy to Vercel Preview
-        if: env.DEPLOY_ELIGIBLE == 'true'
-        id: deploy
-        # --archive=tgz uploads the build as a single tarball instead of
-        # streaming thousands of individual files. The Hobby plan caps file
-        # uploads at 5000 per 24h; a typical Next.js production build creates
-        # ~3000+ chunks, so two or three preview deploys per day exhaust the
-        # quota without the archive flag.
+      - name: Preview deploy is CI-gated (report-only)
         run: |
-          DEPLOY_URL=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})
-          echo "preview-url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
-          echo "Preview URL: $DEPLOY_URL"
-
-      - name: Comment preview URL
-        if: env.DEPLOY_ELIGIBLE == 'true'
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const url = `${{ steps.deploy.outputs.preview-url }}`;
-            const body = `#### Preview Deployment
-
-            Preview URL: ${url}
-
-            Status: ✅ Deployed successfully`;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body,
-            });
-
-      - name: Skip-shim (Deploy ineligible)
-        if: env.DEPLOY_ELIGIBLE != 'true'
-        # Emits success so the required status context reports green. Without
-        # this step, an ineligible job has 0 successful steps → conclusion
-        # `skipped` → branch protection blocks the PR. The shim resolves the
-        # deadlock for: fork PRs, Dependabot PRs, and repos without Vercel
-        # variables configured.
-        run: |
-          echo "::notice::Deploy Preview skipped — ineligible (fork PR, Dependabot, or VERCEL_PROJECT_ID unset)."
-          echo "Reason matrix:"
-          echo "  head.repo == origin: ${{ github.event.pull_request.head.repo.full_name == github.repository }}"
-          echo "  VERCEL_PROJECT_ID set: ${{ vars.VERCEL_PROJECT_ID != '' }}"
-          echo "  Not dependabot: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}"
+          echo "::notice::Preview deploy deferred to deploy-preview.yml (runs after 'CI Pipeline' succeeds)."
+          echo "This shim keeps the required 'Deploy Preview' status green; no pre-green build happens here."
 
   # `security-scan` was removed as part of Recommendation E of
   # docs/operations/ci-cost-audit-2026-05-25.md. It duplicated coverage

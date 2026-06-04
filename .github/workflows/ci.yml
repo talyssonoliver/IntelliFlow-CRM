@@ -3,6 +3,16 @@ name: CI Pipeline
 on:
   push:
     branches: [main, develop]
+    # CI-Audit P1 (2026-06-04): doc/metric-only pushes to main/develop don't need
+    # the full sharded suite. This is on the PUSH trigger ONLY — `pull_request`
+    # intentionally has no paths-ignore, so PR *required* checks always report
+    # (avoids the "skipped required check blocks merge" footgun).
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'artifacts/**'
+      - '.specify/**'
+      - 'apps/project-tracker/docs/metrics/**'
   pull_request:
     branches: [main, develop]
 

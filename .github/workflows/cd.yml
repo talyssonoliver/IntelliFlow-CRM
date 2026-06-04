@@ -1,7 +1,13 @@
 name: CD Pipeline
 
 on:
-  push:
+  # CI-Audit P0 (2026-06-04): deploys are GATED on CI green. This pipeline fires
+  # on the COMPLETION of `CI Pipeline` (not directly on push to main), so a
+  # broken build can never reach staging/prod in parallel with its own CI run.
+  # The `prepare` job below additionally asserts conclusion == success. See ADR-062.
+  workflow_run:
+    workflows: ['CI Pipeline']
+    types: [completed]
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -28,16 +34,26 @@ jobs:
   prepare:
     name: Prepare Deployment
     runs-on: ubuntu-latest
+    # Gate: a manual dispatch always proceeds; an automatic (workflow_run) run
+    # proceeds ONLY when the upstream CI Pipeline concluded success. Deploys can
+    # no longer run beside CI — they wait for green.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     outputs:
       environment: ${{ steps.set-env.outputs.environment }}
+      sha: ${{ steps.set-env.outputs.sha }}
     steps:
       - name: Set environment
         id: set-env
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
           else
+            # Deploy EXACTLY the commit CI validated, not whatever main's tip is now.
             echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "sha=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_OUTPUT
           fi
 
   deploy-staging:
@@ -50,6 +66,8 @@ jobs:
       url: https://staging.intelliflow-crm.dev
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
 
       - uses: pnpm/action-setup@v6
 
@@ -96,8 +114,10 @@ jobs:
         continue-on-error: true
         env:
           HAS_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          # IDs from vars.* (the CORRECT CRM project). secrets.VERCEL_PROJECT_ID
+          # has historically pointed at an unrelated project (ecommerce-bags).
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
         run: |
           npm install -g vercel@latest
           vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
@@ -122,6 +142,8 @@ jobs:
       url: https://intelliflow-crm.dev
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
 
       - uses: pnpm/action-setup@v6
 
@@ -161,21 +183,33 @@ jobs:
         continue-on-error: true
         env:
           HAS_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          # IDs from vars.* (the CORRECT CRM project). secrets.VERCEL_PROJECT_ID
+          # has historically pointed at an unrelated project (ecommerce-bags).
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
         run: |
           npm install -g vercel@latest
           vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
           vercel deploy --prebuilt --prod --archive=tgz --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Run smoke tests
-        # Smoke test best-effort — the production domain may not be live
-        # in all branches/environments. Failure here doesn't fail the job.
-        continue-on-error: true
+      - name: Run smoke tests (blocking)
+        # CI-Audit P2 (2026-06-04): production promotion now BLOCKS on a health
+        # check — a deploy that 500s must not be reported as a successful
+        # production deployment. Retries allow CDN/alias propagation. Override the
+        # target via vars.PRODUCTION_SMOKE_URL; defaults to the canonical Vercel
+        # domain (known-live). See ADR-062.
+        env:
+          SMOKE_URL: ${{ vars.PRODUCTION_SMOKE_URL || 'https://intelli-flow-crm-web.vercel.app' }}
         run: |
-          sleep 30
-          curl -f https://intelliflow-crm.dev/api/health || echo "Production smoke test skipped (domain not reachable)"
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" -m 20 "$SMOKE_URL/api/health" || echo 000)
+            echo "attempt $i: $SMOKE_URL/api/health -> $code"
+            if [ "$code" = "200" ]; then echo "Production health OK"; exit 0; fi
+            sleep 15
+          done
+          echo "::error::Production smoke test failed — /api/health never returned 200 at $SMOKE_URL"
+          exit 1
 
       - name: Notify deployment
         if: success()

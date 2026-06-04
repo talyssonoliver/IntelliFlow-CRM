@@ -163,6 +163,15 @@ ALL 4 validations are NON-NEGOTIABLE: TypeScript, Tests, Lint, **Build**.
 Always edit CSV for task updates. Run sync after changes. Never edit derived
 JSON files directly.
 
+### Co-Dependent Changes Ride the Feature Branch
+
+If a change exists **only** to make another change's CI pass — a commitlint
+waiver, an env stub, a config tweak, a required-check shim — it belongs on the
+**same branch/PR** as the change that needs it, never a standalone PR. A
+separate PR doubles CI runs, splits review, and lands a green PR whose own diff
+doesn't explain itself. (Lesson from #248: a full old-CI run for a 1-line
+waiver. See `docs/operations/ci-retrospective-dora-2026-06-04.md`.)
+
 ### Git Destructive Guard (PreToolUse Hook)
 
 A hook at `.claude/hooks/git-destructive-guard.mjs` blocks destructive git

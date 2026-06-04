@@ -1,0 +1,105 @@
+name: Deploy Preview
+
+# CI-Audit P0 (2026-06-04): previews must deploy ONLY after CI is green.
+# This workflow is triggered by the COMPLETION of `CI Pipeline` and runs the
+# real Vercel preview deploy via the CLI. Vercel's own auto-build for preview
+# branches is suppressed by scripts/vercel-ignore-build.sh, and the pre-green
+# deploy in pr-checks.yml has been reduced to a required-status shim. Net: a
+# preview is built exactly once, after green. See ADR-062.
+#
+# NOTE: workflow_run only activates from the file on the DEFAULT branch (main),
+# so this gate takes effect for PRs opened AFTER it merges.
+
+on:
+  workflow_run:
+    workflows: ['CI Pipeline']
+    types: [completed]
+
+# Least-privilege: comment on the PR + register the deployment.
+permissions:
+  contents: read
+  pull-requests: write
+  deployments: write
+
+concurrency:
+  group: deploy-preview-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  deploy-preview:
+    name: Deploy Preview (post-CI)
+    runs-on: ubuntu-latest
+    # Gate: only after a SUCCESSFUL CI run, only for non-production branches,
+    # only same-repo (forks can't read secrets), only when Vercel is configured.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch != 'main' &&
+      github.event.workflow_run.head_branch != 'develop' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.event == 'pull_request' &&
+      vars.VERCEL_PROJECT_ID != ''
+    env:
+      # IDs are not secrets — read from vars.* (the CORRECT CRM project; the
+      # secrets.VERCEL_PROJECT_ID has historically pointed at the wrong project).
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Deploy exactly the commit CI validated, not the branch tip.
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Install Vercel CLI
+        run: npm add -g vercel@latest
+
+      - name: Pull Vercel environment (preview)
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build with Vercel
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel Preview
+        id: deploy
+        # --archive=tgz: one tarball instead of thousands of files (Hobby plan
+        # caps file uploads/day). Mirrors the prior pr-checks.yml deploy.
+        run: |
+          DEPLOY_URL=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview-url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          echo "Preview URL: $DEPLOY_URL"
+
+      - name: Comment preview URL on the PR
+        uses: actions/github-script@v9
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.preview-url }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        with:
+          script: |
+            const { PREVIEW_URL, HEAD_SHA, HEAD_BRANCH } = process.env;
+            // Resolve the PR from the branch the CI run came from.
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${HEAD_BRANCH}`,
+            });
+            if (!prs.data.length) {
+              core.notice(`No open PR for ${HEAD_BRANCH}; preview at ${PREVIEW_URL}`);
+              return;
+            }
+            const body = [
+              '#### Preview Deployment (post-CI ✅)',
+              '',
+              `Preview URL: ${PREVIEW_URL}`,
+              '',
+              `Built from \`${HEAD_SHA.slice(0, 8)}\` **after** CI Pipeline passed — no pre-green build.`,
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prs.data[0].number,
+              body,
+            });
