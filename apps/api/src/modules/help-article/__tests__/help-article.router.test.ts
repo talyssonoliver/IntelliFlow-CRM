@@ -433,18 +433,20 @@ describe('helpArticleRouter', () => {
       const caller = helpArticleRouter.createCaller(createAdminContext());
       (prismaMock.helpArticle as any).findFirst.mockResolvedValue(mockArticle);
       const mockTx = {
-        helpArticle: { update: (prismaMock.helpArticle as any).update },
+        helpArticle: {
+          updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+          findUniqueOrThrow: vi.fn().mockResolvedValue({
+            ...mockArticle,
+            title: 'Updated Title',
+            sections: [mockSection],
+          }),
+        },
         articleSection: {
           deleteMany: (prismaMock.articleSection as any).deleteMany,
           createMany: (prismaMock.articleSection as any).createMany,
         },
       };
       (prismaMock as any).$transaction.mockImplementation(async (fn: any) => fn(mockTx));
-      (prismaMock.helpArticle as any).update.mockResolvedValue({
-        ...mockArticle,
-        title: 'Updated Title',
-        sections: [mockSection],
-      });
 
       const result = await caller.update({ id: ARTICLE_ID_1, title: 'Updated Title' });
       expect(result.title).toBe('Updated Title');
@@ -454,17 +456,19 @@ describe('helpArticleRouter', () => {
       const caller = helpArticleRouter.createCaller(createAdminContext());
       (prismaMock.helpArticle as any).findFirst.mockResolvedValue(mockArticle);
       const mockTx = {
-        helpArticle: { update: (prismaMock.helpArticle as any).update },
+        helpArticle: {
+          updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+          findUniqueOrThrow: vi.fn().mockResolvedValue({
+            ...mockArticle,
+            sections: [{ ...mockSection, heading: 'New Section' }],
+          }),
+        },
         articleSection: {
           deleteMany: (prismaMock.articleSection as any).deleteMany,
           createMany: (prismaMock.articleSection as any).createMany,
         },
       };
       (prismaMock as any).$transaction.mockImplementation(async (fn: any) => fn(mockTx));
-      (prismaMock.helpArticle as any).update.mockResolvedValue({
-        ...mockArticle,
-        sections: [{ ...mockSection, heading: 'New Section' }],
-      });
 
       await caller.update({
         id: ARTICLE_ID_1,
@@ -508,7 +512,7 @@ describe('helpArticleRouter', () => {
     it('deletes existing article', async () => {
       const caller = helpArticleRouter.createCaller(createAdminContext());
       (prismaMock.helpArticle as any).findFirst.mockResolvedValue(mockArticle);
-      (prismaMock.helpArticle as any).delete.mockResolvedValue(mockArticle);
+      (prismaMock.helpArticle as any).deleteMany.mockResolvedValue({ count: 1 });
 
       const result = await caller.delete({ id: ARTICLE_ID_1 });
       expect(result).toEqual({ success: true });
@@ -557,11 +561,7 @@ describe('helpArticleRouter', () => {
         id: ARTICLE_ID_1,
         status: 'DRAFT',
       });
-      (prismaMock.helpArticle as any).update.mockResolvedValue({
-        id: ARTICLE_ID_1,
-        status: 'PUBLISHED',
-        publishedAt: new Date(),
-      });
+      (prismaMock.helpArticle as any).updateMany.mockResolvedValue({ count: 1 });
 
       const result = await caller.publish({ id: ARTICLE_ID_1 });
       expect(result.status).toBe('PUBLISHED');
@@ -599,11 +599,7 @@ describe('helpArticleRouter', () => {
         id: ARTICLE_ID_1,
         status: 'PUBLISHED',
       });
-      (prismaMock.helpArticle as any).update.mockResolvedValue({
-        id: ARTICLE_ID_1,
-        status: 'DRAFT',
-        publishedAt: null,
-      });
+      (prismaMock.helpArticle as any).updateMany.mockResolvedValue({ count: 1 });
 
       const result = await caller.unpublish({ id: ARTICLE_ID_1 });
       expect(result.status).toBe('DRAFT');
@@ -646,6 +642,7 @@ describe('helpArticleRouter', () => {
         tenantId: TEST_UUIDS.tenant,
         createdAt: new Date('2026-03-19'),
       };
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({ id: ARTICLE_ID_1 });
       (prismaMock.articleFeedback as any).create.mockResolvedValue(mockFeedback);
 
       const result = await caller.submitFeedback({
@@ -678,6 +675,7 @@ describe('helpArticleRouter', () => {
         tenantId: TEST_UUIDS.tenant,
         createdAt: new Date('2026-03-19'),
       };
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({ id: ARTICLE_ID_1 });
       (prismaMock.articleFeedback as any).create.mockResolvedValue(mockFeedback);
 
       const result = await caller.submitFeedback({
@@ -702,6 +700,7 @@ describe('helpArticleRouter', () => {
         tenantId: TEST_UUIDS.tenant,
         createdAt: new Date('2026-03-19'),
       };
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({ id: ARTICLE_ID_1 });
       (prismaMock.articleFeedback as any).create.mockResolvedValue(mockFeedback);
 
       await caller.submitFeedback({
@@ -729,8 +728,18 @@ describe('helpArticleRouter', () => {
       ).rejects.toThrow();
     });
 
+    it('throws NOT_FOUND when article does not belong to tenant', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue(null);
+
+      await expect(
+        caller.submitFeedback({ articleId: ARTICLE_ID_1, value: 'helpful' })
+      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    });
+
     it('sets userId from ctx.tenant.userId', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({ id: ARTICLE_ID_1 });
       (prismaMock.articleFeedback as any).create.mockResolvedValue({
         id: generateTestUUID('feedback-4'),
         helpful: true,
@@ -746,6 +755,7 @@ describe('helpArticleRouter', () => {
 
     it('sets tenantId from ctx.tenant.tenantId', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({ id: ARTICLE_ID_1 });
       (prismaMock.articleFeedback as any).create.mockResolvedValue({
         id: generateTestUUID('feedback-5'),
         helpful: true,
@@ -757,6 +767,27 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.articleFeedback as any).create).toHaveBeenCalledWith({
         data: expect.objectContaining({ tenantId: TEST_UUIDS.tenant }),
       });
+    });
+
+    it('verifies article ownership before writing feedback', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({ id: ARTICLE_ID_1 });
+      (prismaMock.articleFeedback as any).create.mockResolvedValue({
+        id: generateTestUUID('feedback-6'),
+        helpful: true,
+        createdAt: new Date(),
+      });
+
+      await caller.submitFeedback({ articleId: ARTICLE_ID_1, value: 'helpful' });
+
+      expect((prismaMock.helpArticle as any).findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: ARTICLE_ID_1,
+            tenantId: TEST_UUIDS.tenant,
+          }),
+        })
+      );
     });
   });
 
@@ -785,17 +816,17 @@ describe('helpArticleRouter', () => {
       expect(result).toEqual({ helpful: 0, notHelpful: 0, total: 0 });
     });
 
-    it('scopes count queries to the given articleId', async () => {
+    it('scopes count queries to the given articleId and tenantId', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
       (prismaMock.articleFeedback as any).count.mockResolvedValueOnce(1).mockResolvedValueOnce(1);
 
       await caller.getFeedbackStats({ articleId: ARTICLE_ID_1 });
 
       expect((prismaMock.articleFeedback as any).count).toHaveBeenCalledWith({
-        where: { articleId: ARTICLE_ID_1, helpful: true },
+        where: { articleId: ARTICLE_ID_1, tenantId: TEST_UUIDS.tenant, helpful: true },
       });
       expect((prismaMock.articleFeedback as any).count).toHaveBeenCalledWith({
-        where: { articleId: ARTICLE_ID_1 },
+        where: { articleId: ARTICLE_ID_1, tenantId: TEST_UUIDS.tenant },
       });
     });
   });

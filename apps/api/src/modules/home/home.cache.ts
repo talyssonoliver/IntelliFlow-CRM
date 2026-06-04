@@ -5,11 +5,15 @@ import type { DomainEvent } from '@intelliflow/domain';
  * Home page response cache (IFC-196)
  *
  * Read-through cache over `home.getWelcomeSummary` with domain-event driven
- * invalidation. Cache key is keyed by userId only — tenant scoping is enforced
- * by the underlying Prisma-with-tenant queries, and userIds are globally
- * unique, so tenantId in the key would be redundant. Domain events expose
- * `ownerId` / `changedBy` / `completedBy` / etc. (user-UUID fields) but do not
- * carry tenantId, which drove this simplification from the original spec.
+ * invalidation. Cache key is keyed by userId only.
+ *
+ * tenantId is intentionally omitted from the key: event-based invalidation
+ * handlers receive only userId (not tenantId) from domain events, and
+ * CachePort.delete requires an exact key — wildcard/pattern deletion is not
+ * supported. Because all user IDs are CUIDs (globally unique across tenants)
+ * no cross-tenant key collision is possible. If tenantId is ever added to the
+ * key, it must also be propagated through every subscribed domain event so
+ * invalidation can reconstruct the full key.
  */
 
 export const HOME_SUMMARY_TTL_SECONDS = 300;

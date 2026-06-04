@@ -139,7 +139,7 @@ async function seedArticle(tenantId: string, article: (typeof DEFAULT_HELP_ARTIC
   };
   return prisma.helpArticle.upsert({
     where: { tenantId_slug: { tenantId, slug: article.slug } },
-    create: { ...data, tenantId },
+    create: { ...data, id: article.id, tenantId },
     update: data,
   });
 }

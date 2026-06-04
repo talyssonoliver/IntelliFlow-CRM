@@ -33,7 +33,11 @@ export function recordDpaSignature(version: string, signatoryName: string): void
     signatoryName,
     route: '/dpa',
   };
-  localStorage.setItem(DPA_SIGNATURE_KEY, JSON.stringify(record));
+  try {
+    localStorage.setItem(DPA_SIGNATURE_KEY, JSON.stringify(record));
+  } catch {
+    // Storage may be disabled or quota-exceeded; degrade gracefully.
+  }
 }
 
 export function getStoredDpaSignature(): import('./signature-handler').DpaSignatureRecord | null {

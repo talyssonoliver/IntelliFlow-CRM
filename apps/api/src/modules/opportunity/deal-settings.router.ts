@@ -352,8 +352,11 @@ const scoringRulesRouter = createTRPCRouter({
   resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
     // Reset wipes the tenant's list — admins author their own rules; no
-    // opinionated defaults (spec §Defaults).
-    await ctx.prismaWithTenant.dealScoringRule.deleteMany({ where: { tenantId } });
+    // opinionated defaults (spec §Defaults). Wrapped in $transaction to match
+    // the reset pattern used by every other sub-router (playbook §5).
+    await ctx.prismaWithTenant.$transaction([
+      ctx.prismaWithTenant.dealScoringRule.deleteMany({ where: { tenantId } }),
+    ]);
     return ctx.prismaWithTenant.dealScoringRule.findMany({
       where: { tenantId },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],

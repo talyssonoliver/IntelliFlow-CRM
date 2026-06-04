@@ -64,20 +64,22 @@ describe('TaskStatusChangedEvent', () => {
 describe('TaskCompletedEvent', () => {
   it('should create event when task is completed', () => {
     const taskId = TaskId.generate();
-    const event = new TaskCompletedEvent(taskId, 'user-123');
+    const event = new TaskCompletedEvent(taskId, 'owner-456', 'user-123');
 
     expect(event.eventType).toBe('task.completed');
     expect(event.taskId).toBe(taskId);
+    expect(event.ownerId).toBe('owner-456');
     expect(event.completedBy).toBe('user-123');
     expect(event.occurredAt).toBeInstanceOf(Date);
   });
 
   it('should serialize to payload correctly', () => {
     const taskId = TaskId.generate();
-    const event = new TaskCompletedEvent(taskId, 'user-123');
+    const event = new TaskCompletedEvent(taskId, 'owner-456', 'user-123');
     const payload = event.toPayload();
 
     expect(payload.taskId).toBe(taskId.value);
+    expect(payload.ownerId).toBe('owner-456');
     expect(payload.completedBy).toBe('user-123');
   });
 });

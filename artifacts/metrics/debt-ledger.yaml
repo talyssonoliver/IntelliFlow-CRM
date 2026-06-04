@@ -3962,19 +3962,430 @@ items:
     remediation_plan: IFC-295
     remediation_sprint: 25
     status: open
+  S17-AUDIT-001:
+    origin_task: IFC-300
+    owner: Backend Dev
+    severity: high
+    category: data-integrity
+    tags: [sprint-17-audit, help-center, seed-data, foreign-key, id-mapping]
+    flags: [completed-task-regression, user-facing-breakage, integration-test-required]
+    description: 'Static help article IDs do not match seeded HelpArticle IDs, breaking feedback FK writes and DB related-article lookups.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-06-17
+    remediation_plan: 'Preserve source IDs or add static-to-DB translation; migrate seeded rows; test seed-to-router feedback and related lookup.'
+    remediation_sprint: 18
+    recommended_skill: db-schema-audit
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-002:
+    origin_task: IFC-303
+    owner: Security Engineer
+    severity: high
+    category: tenant-isolation
+    tags: [sprint-17-audit, help-center, multi-tenant, feedback, analytics]
+    flags: [security-sensitive, cross-tenant-risk, rls-defense-gap]
+    description: 'Help article feedback writes and stats do not prove article ownership in the current tenant.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-06-17
+    remediation_plan: 'Verify HelpArticle by id and tenantId before insert/count; add tenant filters, composite relation, and cross-tenant tests.'
+    remediation_sprint: 18
+    recommended_skill: codex-security:fix-finding
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-003:
+    origin_task: PG-185
+    owner: Frontend Dev
+    severity: high
+    category: ui-functionality
+    tags: [sprint-17-audit, tickets, settings, duplicate-rules, inert-control]
+    flags: [user-facing-breakage, missing-handler, component-test-required]
+    description: 'Ticket duplicate detection Add Rule button renders without an onClick handler.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-06-17
+    remediation_plan: 'Implement add/edit/remove rule handlers and persistence tests.'
+    remediation_sprint: 18
+    recommended_skill: frontend-design
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-004:
+    origin_task: IFC-196
+    owner: Backend Dev
+    severity: high
+    category: cache-correctness
+    tags: [sprint-17-audit, home, cache, invalidation, domain-events]
+    flags: [stale-data-risk, event-contract-gap, integration-test-required]
+    description: 'Home cache invalidation can miss affected owners because real task/opportunity events lack ownerId.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-06-17
+    remediation_plan: 'Carry affected owner/tenant in events or resolve owner by aggregate id; test actor != owner flows.'
+    remediation_sprint: 18
+    recommended_skill: stoa-domain
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+    resolution_note: 'Part-a fixed: ownerId added to OpportunityWonEvent/TaskCompletedEvent so owner-scoped home cache invalidates the right owner. Part-b (tenantId in cache key) tracked under S17-AUDIT-011.'
+  S17-AUDIT-005:
+    origin_task: IFC-030
+    owner: Backend Dev
+    severity: high
+    category: fake-evidence
+    tags: [sprint-17-audit, lead-routing, simulation, auditability]
+    flags: [anti-fabrication, completed-task-regression, real-data-required]
+    description: 'Routing simulation and SLA evidence are generated from hardcoded script data instead of real service/database routing.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-06-17
+    remediation_plan: 'Run the simulation from seeded DB rows through LeadRoutingService and add a guard against hardcoded fixtures.'
+    remediation_sprint: 18
+    recommended_skill: matop-execute
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-006:
+    origin_task: PG-053
+    owner: Legal + Frontend Dev
+    severity: high
+    category: legal-content
+    tags: [sprint-17-audit, legal, dpa, placeholder, public-page]
+    flags: [legal-risk, public-facing-placeholder, must-fix-before-release]
+    description: 'Public DPA route renders placeholder legal copy and placeholder downloadable content.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-06-17
+    remediation_plan: 'Replace with legal-approved DPA content or render an explicit pending state.'
+    remediation_sprint: 18
+    recommended_skill: frontend-design
+    status: open
+    blocked_on: 'legal-review — placeholder DPA copy must be authored/approved by legal; code intentionally NOT edited (no fabricated legal text).'
+  S17-AUDIT-007:
+    origin_task: PG-054
+    owner: Legal + Frontend Dev
+    severity: high
+    category: legal-content
+    tags: [sprint-17-audit, legal, aup, placeholder, public-page]
+    flags: [legal-risk, public-facing-placeholder, must-fix-before-release]
+    description: 'Public AUP route renders placeholder legal copy as published policy.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-06-17
+    remediation_plan: 'Replace with legal-approved AUP content or render an explicit pending state.'
+    remediation_sprint: 18
+    recommended_skill: frontend-design
+    status: open
+    blocked_on: 'legal-review — placeholder AUP copy must be authored/approved by legal; code intentionally NOT edited (no fabricated legal text).'
+  S17-AUDIT-008:
+    origin_task: IFC-299
+    owner: Backend Dev
+    severity: medium
+    category: tenant-isolation
+    tags: [sprint-17-audit, help-center, multi-tenant, trpc]
+    flags: [tenant-filter-required, rls-defense-gap, router-test-required]
+    description: 'Help article final write mutations use bare id filters after tenant pre-checks.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Use id plus tenantId in final writes and assert affected counts.'
+    remediation_sprint: 18
+    recommended_skill: stoa-domain
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-009:
+    origin_task: PG-126
+    owner: Security Engineer
+    severity: medium
+    category: abuse-protection
+    tags: [sprint-17-audit, public-feedback, rate-limit, ip-spoofing]
+    flags: [security-sensitive, spam-risk, centralized-helper-required]
+    description: 'Public feedback rate limiting trusts the first x-forwarded-for value.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Centralize trusted client IP extraction and add spoofed multi-hop tests.'
+    remediation_sprint: 18
+    recommended_skill: codex-security:fix-finding
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-010:
+    origin_task: PG-126
+    owner: Frontend Dev
+    severity: medium
+    category: auth-state
+    tags: [sprint-17-audit, public-tour, auth-loading, overlays]
+    flags: [user-facing-leak, auth-reconciliation, component-test-required]
+    description: 'Public tour and feedback overlays can mount while client auth is still loading.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Gate public overlays on resolved auth state and add a PublicLayoutShell regression test.'
+    remediation_sprint: 18
+    recommended_skill: frontend-design
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-011:
+    origin_task: IFC-196
+    owner: Backend Dev
+    severity: medium
+    category: cache-isolation
+    tags: [sprint-17-audit, home, cache-key, tenant-scope]
+    flags: [tenant-key-required, regression-test-required]
+    description: 'Home summary cache key omits tenantId while cached data is tenant scoped.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Use tenant-aware cache keys and carry tenantId through invalidation.'
+    remediation_sprint: 18
+    recommended_skill: stoa-domain
+    status: open
+    deferral_note: 'Part-a (ownerId on events) fixed via S17-AUDIT-004. Part-b (tenantId in cache key) deferred: userIds are globally-unique CUIDs (no cross-tenant collision), and adding tenantId to the write key without propagating it through all 20+ subscribed invalidation events would break invalidation (write-key != delete-key -> stale cache). Tracked for the full event-propagation pass.'
+  S17-AUDIT-012:
+    origin_task: IFC-031
+    owner: Frontend Dev
+    severity: medium
+    category: workflow-extensibility
+    tags: [sprint-17-audit, workflow-builder, custom-nodes, config-form]
+    flags: [end-to-end-gap, descriptor-driven-ui-required]
+    description: 'Custom workflow nodes can be added but have no descriptor-driven config form.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Render custom node config forms from descriptors and test required custom node creation.'
+    remediation_sprint: 18
+    recommended_skill: frontend-design
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-013:
+    origin_task: IFC-030
+    owner: Backend Dev
+    severity: medium
+    category: eventing
+    tags: [sprint-17-audit, lead-routing, domain-events, workflow-integration]
+    flags: [event-not-published, integration-test-required]
+    description: 'LeadRoutedEvent is returned by LeadRoutingService but dropped by routing.router.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Publish LeadRoutedEvent through the event bus and test subscriber delivery.'
+    remediation_sprint: 18
+    recommended_skill: stoa-domain
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-014:
+    origin_task: PG-184
+    owner: Frontend Dev
+    severity: medium
+    category: form-validation
+    tags: [sprint-17-audit, deals, settings, duplicate-rules]
+    flags: [client-validation-gap, user-facing-breakage, component-test-required]
+    description: 'Deal Add Rule creates an immediate duplicate conflict and Save is not locally blocked.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Add unused pair selection, conflict errors, and Save disabled state.'
+    remediation_sprint: 18
+    recommended_skill: frontend-design
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-015:
+    origin_task: PG-184
+    owner: Backend Dev
+    severity: medium
+    category: transactionality
+    tags: [sprint-17-audit, deals, settings, reset-to-defaults]
+    flags: [destructive-write, transaction-required, router-test-required]
+    description: 'Deal scoring resetToDefaults deletes tenant scoring rules outside a transaction.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Wrap reset in prismaWithTenant.$transaction and assert transaction use in tests.'
+    remediation_sprint: 18
+    recommended_skill: stoa-domain
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+    resolution_note: 'scoringRules.resetToDefaults is a single deleteMany (delete-only by design, no recreate) — inherently atomic; wrapped in $transaction for sibling-router consistency.'
+  S17-AUDIT-016:
+    origin_task: PG-195
+    owner: Frontend Dev
+    severity: medium
+    category: static-analysis-gap
+    tags: [sprint-17-audit, material-symbols, font-subset, scanner]
+    flags: [ci-guard-gap, visual-regression-risk, scanner-test-required]
+    description: 'Material Symbols scanner misses local Icon helpers that pass glyphs through a name prop.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Teach scanner known wrapper handling and add fabricated glyph regression tests.'
+    remediation_sprint: 18
+    recommended_skill: sonarqube-fix
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-017:
+    origin_task: PG-056
+    owner: Frontend Dev
+    severity: medium
+    category: observability
+    tags: [sprint-17-audit, error-page, incidents, dedupe]
+    flags: [incident-undercount, production-observability]
+    description: 'ServerIncidentReporter suppresses distinct repeated errors with the same message/digest/path/severity.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Dedupe strict-mode replays only and test same-signature new Error reporting.'
+    remediation_sprint: 18
+    recommended_skill: webapp-testing
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-018:
+    origin_task: PG-052
+    owner: Frontend Dev
+    severity: medium
+    category: compliance-state
+    tags: [sprint-17-audit, cookies, consent, policy-version]
+    flags: [gdpr-risk, version-drift, regression-test-required]
+    description: 'Cookie consent stores the default component version instead of the published cookie policy version.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Centralize policy version and pass it into CookieConsentBanner with saved-version tests.'
+    remediation_sprint: 18
+    recommended_skill: frontend-design
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-019:
+    origin_task: PG-053
+    owner: Frontend Dev
+    severity: medium
+    category: client-storage
+    tags: [sprint-17-audit, dpa, local-storage, signature-flow]
+    flags: [exception-handling-gap, browser-compatibility]
+    description: 'DPA signature write calls localStorage.setItem without error handling.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Wrap signature writes and add a throwing-setItem regression test.'
+    remediation_sprint: 18
+    recommended_skill: frontend-design
+    status: resolved
+    resolved_at: 2026-06-04T00:00:00.000Z
+    resolution: 'Fixed + validated 2026-06-04 (Sprint-17 audit remediation, branch git-enhancement); typecheck + targeted tests + lint green.'
+  S17-AUDIT-020:
+    origin_task: PG-050
+    owner: Frontend Dev
+    severity: medium
+    category: compliance-state
+    tags: [sprint-17-audit, privacy, consent, auditability]
+    flags: [completion-claim-gap, runtime-persistence-missing, legal-risk]
+    description: 'Privacy consent logging exists only as a helper, with no runtime logging path from the public page.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Add real persistence/telemetry or downgrade the task outcome to versioned display only.'
+    remediation_sprint: 18
+    recommended_skill: exec
+    status: open
+  S17-AUDIT-021:
+    origin_task: PG-051
+    owner: Frontend Dev
+    severity: high
+    category: compliance-state
+    tags: [sprint-17-audit, terms, acceptance, notifications, auditability]
+    flags: [completion-claim-gap, runtime-persistence-missing, legal-risk]
+    description: 'Terms acceptance and update notification tracking are not implemented in runtime code.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-06-17
+    remediation_plan: 'Implement immutable acceptance/update tracking or reclassify PG-051 as display-only until IFC-309 completes.'
+    remediation_sprint: 18
+    recommended_skill: exec
+    status: open
+  S17-AUDIT-022:
+    origin_task: PG-054
+    owner: Backend Dev
+    severity: high
+    category: compliance-workflow
+    tags: [sprint-17-audit, aup, violation-tracking, enforcement]
+    flags: [completion-claim-gap, runtime-persistence-missing, legal-risk]
+    description: 'AUP violation tracking is test-helper/email-only and not enforcement-ready in product runtime.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-06-17
+    remediation_plan: 'Add violation report persistence/API/admin workflow or downgrade task outcome to email-report-only.'
+    remediation_sprint: 18
+    recommended_skill: exec
+    status: open
+  S17-AUDIT-023:
+    origin_task: PG-186
+    owner: Backend Dev
+    severity: high
+    category: automation-wiring
+    tags: [sprint-17-audit, documents, settings, automation, notifications]
+    flags: [false-promise, runtime-consumer-missing, follow-up-owner-missing]
+    description: 'Document automation toggles persist without real document duplicate/owner-change runtime consumers or document-scoped follow-up owners.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-06-17
+    remediation_plan: 'Wire document consumers or create explicit document-scoped follow-up tasks and keep pending toggles disabled/default-off.'
+    remediation_sprint: 18
+    recommended_skill: stoa-automation
+    status: open
+  S17-AUDIT-024:
+    origin_task: PG-195
+    owner: DevOps Engineer
+    severity: medium
+    category: ci-enforcement
+    tags: [sprint-17-audit, material-symbols, ci, scanner-tests]
+    flags: [test-not-in-ci, regression-prevention-gap]
+    description: 'Dedicated Material Symbols scanner tests are not enforced by the claimed root command or CI path.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Add the dedicated scanner Vitest config to CI or include it in the root test command.'
+    remediation_sprint: 18
+    recommended_skill: stoa-foundation
+    status: open
+  S17-AUDIT-025:
+    origin_task: PG-185
+    owner: Backend Dev
+    severity: medium
+    category: test-coverage-gap
+    tags: [sprint-17-audit, tickets, settings, router-tests, tenant-boundary]
+    flags: [promised-test-missing, cross-tenant-test-required]
+    description: 'Ticket settings router behavior lacks the promised CRUD, transaction, P2002, and cross-tenant test coverage.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Add ticket-settings.router.test.ts with CRUD, transactions, admin-only, cross-tenant, P2002, and SLA FK checks.'
+    remediation_sprint: 18
+    recommended_skill: stoa-domain
+    status: open
+  S17-AUDIT-026:
+    origin_task: PG-126
+    owner: QA Lead
+    severity: medium
+    category: e2e-coverage-gap
+    tags: [sprint-17-audit, public-tour, accessibility, keyboard, persistence]
+    flags: [a11y-test-gap, db-backed-test-required]
+    description: 'Public onboarding E2E coverage does not prove keyboard tour behavior or real feedback persistence.'
+    created_at: 2026-06-03T00:00:00.000Z
+    expiry_date: 2026-07-03
+    remediation_plan: 'Use real keyboard actions/focus assertions and add a DB-backed public_feedback persistence check.'
+    remediation_sprint: 18
+    recommended_skill: webapp-testing
+    status: open
 summary:
-  total_items: 393
+  total_items: 419
   by_severity:
     critical: 241
-    high: 2
-    medium: 136
+    high: 12
+    medium: 152
     low: 14
   by_status:
-    open: 393
+    open: 403
     in_progress: 0
-    resolved: 0
+    resolved: 16
     wont_fix: 0
   expiring_soon:
+    - S17-AUDIT-006
+    - S17-AUDIT-007
+    - S17-AUDIT-011
+    - S17-AUDIT-020
+    - S17-AUDIT-021
+    - S17-AUDIT-022
+    - S17-AUDIT-023
+    - S17-AUDIT-024
+    - S17-AUDIT-025
+    - S17-AUDIT-026
     - FAIL-IFC-105-001
     - FAIL-IFC-155-001
     - FAIL-ENG-OPS-001-001

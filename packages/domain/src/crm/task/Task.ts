@@ -237,7 +237,7 @@ export class Task extends AggregateRoot<TaskId> {
     this.props.completedAt = new Date();
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(new TaskCompletedEvent(this.id, completedBy));
+    this.addDomainEvent(new TaskCompletedEvent(this.id, this.props.ownerId, completedBy));
 
     return Result.ok(undefined);
   }

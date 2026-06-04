@@ -42,11 +42,11 @@ beforeEach(() => {
 });
 
 describe('extractClientIp', () => {
-  it('returns first IP from x-forwarded-for', () => {
+  it('returns last (rightmost/edge-set) IP from x-forwarded-for', () => {
     const req = new Request('http://x', {
       headers: { 'x-forwarded-for': '1.1.1.1, 2.2.2.2' },
     });
-    expect(extractClientIp(req)).toBe('1.1.1.1');
+    expect(extractClientIp(req)).toBe('2.2.2.2');
   });
 
   it('falls back to x-real-ip when no forwarded header', () => {

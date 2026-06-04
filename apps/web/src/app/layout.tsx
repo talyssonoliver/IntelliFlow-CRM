@@ -9,6 +9,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Navigation } from '@/components/navigation';
 import { RouteAccessGate } from '@/components/auth/RouteAccessGate';
 import { Toaster } from '@intelliflow/ui';
+import { getPrivacyPolicy } from '@/lib/legal/consent-tracker';
 
 // Lazy-load CookieConsentBanner — it ships with every page via the root
 // layout but is only interacted with once per visitor. Defer to keep it out
@@ -97,6 +98,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const cookiePolicyVersion = getPrivacyPolicy().metadata.version;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${materialSymbols.variable}`}>
@@ -123,7 +126,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               </RouteAccessGate>
             </div>
             <Toaster />
-            <CookieConsentBanner privacyPolicyUrl="/privacy" cookiePolicyUrl="/cookies" />
+            <CookieConsentBanner
+              privacyPolicyUrl="/privacy"
+              cookiePolicyUrl="/cookies"
+              policyVersion={cookiePolicyVersion}
+            />
           </Providers>
         </ThemeProvider>
       </body>

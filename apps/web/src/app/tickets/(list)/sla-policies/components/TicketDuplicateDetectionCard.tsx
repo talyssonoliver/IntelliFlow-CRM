@@ -21,10 +21,36 @@ const STRATEGY_LABELS: Record<string, string> = {
   fuzzy: 'Fuzzy',
 };
 
+const FIELD_OPTIONS = Object.keys(FIELD_LABELS) as TicketDuplicateRuleInput['field'][];
+const STRATEGY_OPTIONS = Object.keys(
+  STRATEGY_LABELS
+) as TicketDuplicateRuleInput['matchStrategy'][];
+const MAX_RULES = FIELD_OPTIONS.length * STRATEGY_OPTIONS.length;
+
 export function TicketDuplicateDetectionCard({ rules, onChange }: Props) {
   const toggleActive = (index: number) => {
     const next = rules.map((r, i) => (i === index ? { ...r, isActive: !r.isActive } : r));
     onChange(next);
+  };
+
+  const addRule = () => {
+    const existing = new Set(rules.map((r) => `${r.field}_${r.matchStrategy}`));
+    const firstFree = FIELD_OPTIONS.flatMap((field) =>
+      STRATEGY_OPTIONS.map((matchStrategy) => ({ field, matchStrategy }))
+    ).find((pair) => !existing.has(`${pair.field}_${pair.matchStrategy}`));
+
+    if (!firstFree) return;
+
+    onChange([
+      ...rules,
+      {
+        field: firstFree.field,
+        matchStrategy: firstFree.matchStrategy,
+        threshold: firstFree.matchStrategy === 'fuzzy' ? 85 : 100,
+        isActive: true,
+        sortOrder: rules.length,
+      },
+    ]);
   };
 
   return (
@@ -89,7 +115,12 @@ export function TicketDuplicateDetectionCard({ rules, onChange }: Props) {
       )}
 
       <div className="mt-4 flex justify-end">
-        <Button size="sm" aria-label="Add duplicate detection rule">
+        <Button
+          size="sm"
+          onClick={addRule}
+          disabled={rules.length >= MAX_RULES}
+          aria-label="Add duplicate detection rule"
+        >
           Add Rule
         </Button>
       </div>

@@ -17,6 +17,7 @@ import { validateNodeConfig } from '@/lib/workflow-builder/validation';
 import type { WorkflowNodeType, WorkflowNodeConfig } from '@/lib/workflow-types';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { getConfigForm } from './config-forms';
+import { GenericNodeConfig } from './config-forms/GenericNodeConfig';
 // Side-effect import: populates the config-form registry.
 import './config-forms';
 
@@ -82,9 +83,7 @@ export function NodeConfigPanel({
           {FormComponent ? (
             <FormComponent config={config} update={update} />
           ) : (
-            <p className="text-sm text-muted-foreground">
-              No configuration form registered for node type “{nodeType}”.
-            </p>
+            <GenericNodeConfig config={config} update={update} />
           )}
 
           {validationErrors.length > 0 && (
