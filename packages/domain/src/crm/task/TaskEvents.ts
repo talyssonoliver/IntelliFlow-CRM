@@ -89,6 +89,7 @@ export class TaskCompletedEvent extends DomainEvent {
 
   constructor(
     public readonly taskId: TaskId,
+    public readonly ownerId: string,
     public readonly completedBy: string
   ) {
     super();
@@ -97,6 +98,7 @@ export class TaskCompletedEvent extends DomainEvent {
   toPayload(): Record<string, unknown> {
     return {
       taskId: this.taskId.value,
+      ownerId: this.ownerId,
       completedBy: this.completedBy,
     };
   }

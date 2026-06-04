@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   DPA_SIGNATURE_KEY,
@@ -47,6 +47,18 @@ describe('recordDpaSignature', () => {
     expect(record.dpaVersion).toBe('v1.0');
     expect(record.route).toBe('/dpa');
     expect(typeof record.signedAt).toBe('string');
+  });
+
+  it('does not throw when localStorage.setItem throws (graceful degradation)', () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError');
+    });
+
+    try {
+      expect(() => recordDpaSignature('v1.0', 'Jane')).not.toThrow();
+    } finally {
+      setItemSpy.mockRestore();
+    }
   });
 });
 

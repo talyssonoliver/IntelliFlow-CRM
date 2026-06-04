@@ -103,6 +103,7 @@ export class OpportunityWonEvent extends DomainEvent {
   constructor(
     public readonly opportunityId: OpportunityId,
     public readonly value: number,
+    public readonly ownerId: string,
     public readonly closedBy: string
   ) {
     super();
@@ -112,6 +113,7 @@ export class OpportunityWonEvent extends DomainEvent {
     return {
       opportunityId: this.opportunityId.value,
       value: this.value,
+      ownerId: this.ownerId,
       closedBy: this.closedBy,
     };
   }

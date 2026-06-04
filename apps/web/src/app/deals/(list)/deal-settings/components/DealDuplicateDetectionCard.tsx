@@ -32,6 +32,11 @@ const STRATEGY_LABELS: Record<DealDuplicateRuleRow['matchStrategy'], string> = {
   fuzzy: 'Fuzzy',
 };
 
+// Single source of truth for the closed option sets (DRY — used by add(), the
+// all-combinations-used guard, and the per-row collision disabling).
+const ALL_FIELDS = Object.keys(FIELD_LABELS) as DealDuplicateRuleRow['field'][];
+const ALL_STRATEGIES = Object.keys(STRATEGY_LABELS) as DealDuplicateRuleRow['matchStrategy'][];
+
 export interface DealDuplicateDetectionCardProps {
   readonly rules: DealDuplicateRuleRow[];
   readonly onRulesChange: (rules: DealDuplicateRuleRow[]) => void;
@@ -51,17 +56,32 @@ export function DealDuplicateDetectionCard({
   };
 
   const add = () => {
-    onRulesChange([
-      ...rules,
-      {
-        field: 'name_account',
-        matchStrategy: 'exact',
-        threshold: 100,
-        isActive: true,
-        sortOrder: rules.length,
-      },
-    ]);
+    const existing = new Set(rules.map((r) => `${r.field}|${r.matchStrategy}`));
+    let newRule: Omit<DealDuplicateRuleRow, 'sortOrder'> | null = null;
+    outer: for (const field of ALL_FIELDS) {
+      for (const matchStrategy of ALL_STRATEGIES) {
+        if (!existing.has(`${field}|${matchStrategy}`)) {
+          newRule = { field, matchStrategy, threshold: 100, isActive: true };
+          break outer;
+        }
+      }
+    }
+    if (!newRule) return; // all combinations already present — button will be hidden
+    onRulesChange([...rules, { ...newRule, sortOrder: rules.length }]);
   };
+
+  // A rule combination is (field, matchStrategy). Duplicates are prevented
+  // structurally: add() only inserts an unused combination, and the per-row
+  // Selects below disable any option that would collide with another row — so
+  // update() cannot create a duplicate either, and Save can never persist one.
+  const allCombinationsUsed = rules.length >= ALL_FIELDS.length * ALL_STRATEGIES.length;
+
+  // True if some OTHER row already uses this (field, matchStrategy) combo.
+  const isComboTaken = (
+    idx: number,
+    field: DealDuplicateRuleRow['field'],
+    matchStrategy: DealDuplicateRuleRow['matchStrategy']
+  ) => rules.some((r, i) => i !== idx && r.field === field && r.matchStrategy === matchStrategy);
 
   return (
     <div className="space-y-3">
@@ -81,7 +101,15 @@ export function DealDuplicateDetectionCard({
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(FIELD_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>
+                      <SelectItem
+                        key={k}
+                        value={k}
+                        disabled={isComboTaken(
+                          idx,
+                          k as DealDuplicateRuleRow['field'],
+                          rule.matchStrategy
+                        )}
+                      >
                         {v}
                       </SelectItem>
                     ))}
@@ -98,7 +126,15 @@ export function DealDuplicateDetectionCard({
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(STRATEGY_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>
+                      <SelectItem
+                        key={k}
+                        value={k}
+                        disabled={isComboTaken(
+                          idx,
+                          rule.field,
+                          k as DealDuplicateRuleRow['matchStrategy']
+                        )}
+                      >
                         {v}
                       </SelectItem>
                     ))}
@@ -141,7 +177,7 @@ export function DealDuplicateDetectionCard({
         </div>
       )}
       <div className="flex justify-end">
-        <Button size="sm" onClick={add}>
+        <Button size="sm" onClick={add} disabled={allCombinationsUsed}>
           Add Rule
         </Button>
       </div>

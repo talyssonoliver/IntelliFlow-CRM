@@ -114,22 +114,24 @@ describe('OpportunityValueUpdatedEvent', () => {
 describe('OpportunityWonEvent', () => {
   it('should create event when opportunity is won', () => {
     const opportunityId = OpportunityId.generate();
-    const event = new OpportunityWonEvent(opportunityId, 750000, 'user-123');
+    const event = new OpportunityWonEvent(opportunityId, 750000, 'owner-456', 'user-123');
 
     expect(event.eventType).toBe('opportunity.won');
     expect(event.opportunityId).toBe(opportunityId);
     expect(event.value).toBe(750000);
+    expect(event.ownerId).toBe('owner-456');
     expect(event.closedBy).toBe('user-123');
     expect(event.occurredAt).toBeInstanceOf(Date);
   });
 
   it('should serialize to payload correctly', () => {
     const opportunityId = OpportunityId.generate();
-    const event = new OpportunityWonEvent(opportunityId, 750000, 'user-123');
+    const event = new OpportunityWonEvent(opportunityId, 750000, 'owner-456', 'user-123');
     const payload = event.toPayload();
 
     expect(payload.opportunityId).toBe(opportunityId.value);
     expect(payload.value).toBe(750000);
+    expect(payload.ownerId).toBe('owner-456');
     expect(payload.closedBy).toBe('user-123');
   });
 });

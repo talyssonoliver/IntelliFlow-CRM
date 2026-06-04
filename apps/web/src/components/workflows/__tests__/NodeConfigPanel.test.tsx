@@ -190,4 +190,40 @@ describe('NodeConfigPanel', () => {
     rerender(<NodeConfigPanel {...baseProps} nodeType="decision" config={{ conditions: [] }} />);
     expect(screen.getByText('Conditions')).toBeInTheDocument();
   });
+
+  it('renders GenericNodeConfig (not empty-state text) for an unregistered custom node type', () => {
+    // Cast through unknown so TypeScript accepts an unregistered node type at
+    // the call site — this exercises the `!FormComponent` branch in
+    // NodeConfigPanel which now falls back to <GenericNodeConfig> instead of
+    // the old "No configuration form" dead-end text.
+    const customType =
+      'custom_unregistered_type' as unknown as import('@/lib/workflow-types').WorkflowNodeType;
+    render(
+      <NodeConfigPanel
+        {...baseProps}
+        nodeType={customType}
+        config={{ actionParams: { endpoint: 'https://example.com' } }}
+      />
+    );
+
+    // GenericNodeConfig renders a labelled <Input> for each key in actionParams.
+    // The label text equals the param key ("endpoint").
+    expect(screen.getByLabelText('endpoint')).toBeInTheDocument();
+
+    // The old dead-end "No configuration form" text must NOT be present.
+    expect(screen.queryByText(/no configuration form/i)).not.toBeInTheDocument();
+  });
+
+  it('renders GenericNodeConfig informational row when custom node has no actionParams', () => {
+    // When actionParams is absent the GenericNodeConfig renders a single
+    // informational paragraph so the panel is never completely blank.
+    const customType =
+      'another_custom_type' as unknown as import('@/lib/workflow-types').WorkflowNodeType;
+    render(<NodeConfigPanel {...baseProps} nodeType={customType} config={{}} />);
+
+    expect(screen.getByText(/this node has no configurable parameters/i)).toBeInTheDocument();
+
+    // The old dead-end text must still not appear.
+    expect(screen.queryByText(/no configuration form/i)).not.toBeInTheDocument();
+  });
 });

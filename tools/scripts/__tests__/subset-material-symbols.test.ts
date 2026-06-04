@@ -105,6 +105,34 @@ describe('extractIconNamesFromSource', () => {
     expect(dynamicSites.length).toBe(0);
   });
 
+  it('captures glyph passed to local <Icon name="..."> helper (single-quote)', () => {
+    const src = `<Icon name='smart_toy' className="text-xl" />`;
+    const { icons } = extractIconNamesFromSource(src, 'icon-helper.tsx');
+    expect(icons.has('smart_toy')).toBe(true);
+  });
+
+  it('captures glyph passed to local <Icon name="..."> helper (double-quote)', () => {
+    const src = `<Icon name="refresh" className="text-base" />`;
+    const { icons } = extractIconNamesFromSource(src, 'icon-helper.tsx');
+    expect(icons.has('refresh')).toBe(true);
+  });
+
+  it('captures multiple <Icon name="..."> calls in the same file', () => {
+    const src =
+      `<Icon name="check" />\n` +
+      `<Icon name="close" className="text-sm" />\n` +
+      `<Icon name="arrow_upward" />`;
+    const { icons } = extractIconNamesFromSource(src, 'multi-icon.tsx');
+    expect([...icons].sort()).toEqual(['arrow_upward', 'check', 'close']);
+  });
+
+  it('does NOT capture name= from non-Icon JSX tags (avoids false positives)', () => {
+    const src = `<input name="email" /><form name="login" />`;
+    const { icons } = extractIconNamesFromSource(src, 'form.tsx');
+    expect(icons.has('email')).toBe(false);
+    expect(icons.has('login')).toBe(false);
+  });
+
   it('does NOT harvest icon names from block-comment example text', () => {
     const src = [
       '/**',

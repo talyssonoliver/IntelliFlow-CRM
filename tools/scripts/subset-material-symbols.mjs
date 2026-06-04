@@ -145,6 +145,12 @@ const ICON_PROP_RE =
 const ICON_JSX_PROP_RE =
   /\b(?:icon|iconName|leadingIcon|trailingIcon|emptyIcon|materialSymbol|materialIcon)=(?:"|')([a-z][a-z0-9_]+)(?:"|')/gm;
 
+// Catches local <Icon name="glyph_name"> helper usage where the component is
+// named exactly `Icon` (capital I). A plain `name=` sweep would produce too
+// many false positives (form fields, HTML attributes, etc.), so we anchor on
+// the component name.
+const ICON_HELPER_NAME_RE = /<Icon\b[^>]*\bname=(?:"|')([a-z][a-z0-9_]+)(?:"|')/gm;
+
 /**
  * Extract icon names and dynamic-site markers from a single source string.
  *
@@ -205,6 +211,12 @@ export function extractIconNamesFromSource(src, filename = '<memory>') {
 
   const jsxProp = new RegExp(ICON_JSX_PROP_RE.source, ICON_JSX_PROP_RE.flags);
   while ((m = jsxProp.exec(stripped)) !== null) {
+    icons.add(m[1]);
+  }
+
+  // Stage 3: harvest <Icon name="glyph"> local-helper call sites.
+  const iconHelper = new RegExp(ICON_HELPER_NAME_RE.source, ICON_HELPER_NAME_RE.flags);
+  while ((m = iconHelper.exec(stripped)) !== null) {
     icons.add(m[1]);
   }
 
@@ -416,7 +428,9 @@ export async function regenerate({ repoRoot = REPO_ROOT, subsetFont, log = conso
   const allIcons = new Set([...scan.icons, ...dyn.resolved]);
   const iconList = [...allIcons].sort();
 
-  log.info?.(`[pg-195] discovered icons=${scan.icons.size}, dyn.resolved=${dyn.resolved.size}, total=${iconList.length}`);
+  log.info?.(
+    `[pg-195] discovered icons=${scan.icons.size}, dyn.resolved=${dyn.resolved.size}, total=${iconList.length}`
+  );
   if (dyn.unresolved.length > 0) {
     log.error?.(`[pg-195] unresolved dynamic icon sites: ${dyn.unresolved.length}`);
     for (const s of dyn.unresolved) log.error?.(`  ${s.file}:${s.line}  ${s.snippet}`);
@@ -469,7 +483,10 @@ export async function verify({ repoRoot = REPO_ROOT, log = console } = {}) {
   const iconMapping = parseIconMapping(iconMappingSrc);
 
   const scan = await scanRepo({ repoRoot });
-  const dyn = resolveDynamicSites(scan, { iconMapping, allowList: audit.explicit_allow_list ?? [] });
+  const dyn = resolveDynamicSites(scan, {
+    iconMapping,
+    allowList: audit.explicit_allow_list ?? [],
+  });
   const discovered = [...new Set([...scan.icons, ...dyn.resolved])].sort();
   const diff = diffAgainstAudit(discovered, audit);
 
@@ -483,14 +500,20 @@ export async function verify({ repoRoot = REPO_ROOT, log = console } = {}) {
     for (const s of dyn.unresolved) log.error?.(`  ${s.file}:${s.line}  ${s.snippet}`);
     return 1;
   }
-  log.info?.(`[pg-195] audit OK — ${audit.icons.length} icons, ${scan.files.length} files scanned.`);
+  log.info?.(
+    `[pg-195] audit OK — ${audit.icons.length} icons, ${scan.files.length} files scanned.`
+  );
   return 0;
 }
 
 /**
  * --check-size mode.
  */
-export async function checkSize({ repoRoot = REPO_ROOT, maxBytes = MAX_FONT_BYTES, log = console } = {}) {
+export async function checkSize({
+  repoRoot = REPO_ROOT,
+  maxBytes = MAX_FONT_BYTES,
+  log = console,
+} = {}) {
   const fontPath = resolve(repoRoot, FONT_OUTPUT);
   if (!existsSync(fontPath)) {
     log.error?.(`[pg-195] font missing at ${FONT_OUTPUT}`);
@@ -521,7 +544,7 @@ export async function main(argv, deps = {}) {
         '  --verify      verify committed audit JSON matches current source',
         '  --check-size  assert font < 500 KB',
         '  --help        this message',
-      ].join('\n'),
+      ].join('\n')
     );
     return 0;
   }

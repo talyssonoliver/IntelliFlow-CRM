@@ -374,6 +374,13 @@ export const routingRouter = createTRPCRouter({
         forceReroute: input.forceReroute,
       });
 
+      // AC-007: publish LeadRoutedEvent via the shared event bus (same bus used
+      // by LeadService, ContactService, etc. — wired in container.ts).
+      if (result.events?.length) {
+        const eventBus = ctx.container?.adapters?.eventBus;
+        if (eventBus) await eventBus.publishAll(result.events);
+      }
+
       return {
         leadId: result.leadId,
         assignedUserId: result.assigneeId,

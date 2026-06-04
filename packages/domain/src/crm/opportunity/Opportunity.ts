@@ -390,7 +390,9 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     this.props.closedAt = new Date();
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(new OpportunityWonEvent(this.id, this.props.value.amount, closedBy));
+    this.addDomainEvent(
+      new OpportunityWonEvent(this.id, this.props.value.amount, this.props.ownerId, closedBy)
+    );
 
     return Result.ok(undefined);
   }

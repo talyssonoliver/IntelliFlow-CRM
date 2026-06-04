@@ -55,7 +55,10 @@ export function PublicLayoutShell({
   }
 
   // PG-126: mount tour + feedback FAB only for unauthenticated visitors.
-  const shouldMountPublicOverlays = !effectiveAuthenticated;
+  // Do not mount while auth is still resolving — treat authLoading=true as
+  // 'unknown' so the overlay never flashes for authenticated users whose
+  // client-side session hasn't finished hydrating yet.
+  const shouldMountPublicOverlays = !authLoading && !effectiveAuthenticated;
   const tourIsActiveRoute = pathname === '/features';
 
   const content = (

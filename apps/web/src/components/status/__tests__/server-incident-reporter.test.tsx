@@ -102,6 +102,20 @@ describe('ServerIncidentReporter', () => {
       rerender(<ServerIncidentReporter error={err} path="/boundary" />);
       expect(createIncident).toHaveBeenCalledTimes(1);
     });
+
+    it('re-fires for a DISTINCT error object with the same signature (PG-056: no over-suppression)', () => {
+      // Two genuinely distinct Error instances with identical message/digest/path/severity.
+      // Signature-based dedup would have suppressed the second; object-identity dedup reports both.
+      const first = new Error('recurring') as Error & { digest?: string };
+      first.digest = 'same-digest';
+      const { rerender } = render(<ServerIncidentReporter error={first} path="/recurring" />);
+      expect(createIncident).toHaveBeenCalledTimes(1);
+
+      const second = new Error('recurring') as Error & { digest?: string };
+      second.digest = 'same-digest';
+      rerender(<ServerIncidentReporter error={second} path="/recurring" />);
+      expect(createIncident).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('dev-mode console visibility', () => {

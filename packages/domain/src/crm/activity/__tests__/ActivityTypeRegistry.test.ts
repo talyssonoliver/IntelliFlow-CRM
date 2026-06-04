@@ -219,7 +219,7 @@ function getAllDomainEventTypes(): string[] {
     new OpportunityCreatedEvent({} as any),
     new OpportunityStageChangedEvent({} as any),
     new OpportunityValueUpdatedEvent({} as any),
-    new OpportunityWonEvent({} as any),
+    new OpportunityWonEvent({} as any, 0, '', ''),
     new OpportunityLostEvent({} as any),
     new OpportunityProbabilityUpdatedEvent({} as any),
     new OpportunityCloseDateChangedEvent({} as any),
@@ -229,7 +229,7 @@ function getAllDomainEventTypes(): string[] {
     // Task (10)
     new TaskCreatedEvent({} as any),
     new TaskStatusChangedEvent({} as any),
-    new TaskCompletedEvent({} as any),
+    new TaskCompletedEvent({} as any, '', ''),
     new TaskCancelledEvent({} as any),
     new TaskPriorityChangedEvent({} as any),
     new TaskDueDateChangedEvent({} as any),

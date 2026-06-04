@@ -21,13 +21,26 @@ import { publicFeedbackLimiter, PublicRateLimiter } from '../../security/public-
  * 'unknown' — in which case every unknown-IP request lands in the same
  * rate-limit bucket (intentional: suspicious traffic is throttled harder,
  * not less).
+ *
+ * Trust model: x-forwarded-for is a comma-separated list of IPs appended by
+ * each proxy hop ("client, proxy1, proxy2, …, edge"). The RIGHTMOST value is
+ * set by our platform's edge proxy (Railway / Vercel / nginx) and cannot be
+ * forged by the client. Using the leftmost value would let an attacker inject
+ * an arbitrary IP and bypass the per-IP rate limiter. We therefore take the
+ * last (rightmost) non-empty entry. If the header is absent, we fall back to
+ * x-real-ip (also set by the edge), then 'unknown'.
  */
 export function extractClientIp(req: Request | undefined): string {
   if (!req) return 'unknown';
   const forwarded = req.headers.get('x-forwarded-for');
   if (forwarded) {
-    const first = forwarded.split(',')[0]?.trim();
-    if (first) return first;
+    // Split and trim all entries; take the last (rightmost = edge-set, trusted).
+    const parts = forwarded
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (last) return last;
   }
   const realIp = req.headers.get('x-real-ip');
   if (realIp) return realIp;

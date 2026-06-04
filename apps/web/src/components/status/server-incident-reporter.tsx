@@ -15,18 +15,21 @@ export function ServerIncidentReporter({
   path,
   severity = 'error',
 }: ServerIncidentReporterProps) {
-  // Key-based dedup: Strict Mode invokes effects twice with the SAME deps, so
-  // comparing against the last-fired key skips the duplicate. A real
-  // reset-and-rethrow cycle produces a NEW error identity, which yields a new
-  // key and correctly re-fires.
-  const lastKeyRef = useRef<string | null>(null);
+  // Dedup on the error OBJECT identity, not its signature string. Strict Mode
+  // invokes the effect twice with the SAME error instance, so the second run is
+  // skipped. A genuinely DISTINCT error — a new Error instance — always reports,
+  // even if its message/digest/path/severity are identical to a prior one.
+  // (PG-056: the previous message|digest|path|severity key wrongly suppressed
+  // repeated distinct errors that happened to share a signature.) Reference
+  // identity is the precise signal: React only re-runs this effect when the
+  // `error` dep changes, so a real re-occurrence yields a new instance and fires.
+  const reportedErrorRef = useRef<Error | null>(null);
 
   useEffect(() => {
-    const key = `${error.message}|${error.digest ?? ''}|${path ?? ''}|${severity}`;
-    if (lastKeyRef.current === key) {
+    if (reportedErrorRef.current === error) {
       return;
     }
-    lastKeyRef.current = key;
+    reportedErrorRef.current = error;
 
     // Preserve dev DevTools visibility — Next's overlay may be suppressed in
     // Storybook/Playwright runs, and tests still assert no console noise in prod.

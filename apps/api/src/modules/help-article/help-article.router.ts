@@ -362,9 +362,16 @@ export const helpArticleRouter = createTRPCRouter({
           data.relatedArticleIds = articleFields.relatedArticleIds;
         if (articleFields.order !== undefined) data.order = articleFields.order;
 
-        return tx.helpArticle.update({
-          where: { id },
+        await tx.helpArticle.updateMany({
+          where: { id, tenantId },
           data,
+        });
+        // findUniqueOrThrow (not findUnique): the tenant-scoped updateMany above
+        // is the authoritative write; if the row vanished (concurrent delete
+        // after the pre-check) throw NOT_FOUND-equivalent rather than returning
+        // null. Also keeps the return type non-nullable for callers.
+        return tx.helpArticle.findUniqueOrThrow({
+          where: { id },
           include: { sections: { orderBy: { order: 'asc' } } },
         });
       });
@@ -395,8 +402,8 @@ export const helpArticleRouter = createTRPCRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
     }
 
-    await ctx.prismaWithTenant.helpArticle.delete({
-      where: { id: input.id },
+    await ctx.prismaWithTenant.helpArticle.deleteMany({
+      where: { id: input.id, tenantId },
     });
 
     return { success: true };
@@ -424,11 +431,12 @@ export const helpArticleRouter = createTRPCRouter({
       });
     }
 
-    return ctx.prismaWithTenant.helpArticle.update({
-      where: { id: input.id },
-      data: { status: 'PUBLISHED', publishedAt: new Date() },
-      select: { id: true, status: true, publishedAt: true },
+    const publishedAt = new Date();
+    await ctx.prismaWithTenant.helpArticle.updateMany({
+      where: { id: input.id, tenantId },
+      data: { status: 'PUBLISHED', publishedAt },
     });
+    return { id: input.id, status: 'PUBLISHED' as const, publishedAt };
   }),
 
   /**
@@ -453,11 +461,11 @@ export const helpArticleRouter = createTRPCRouter({
       });
     }
 
-    return ctx.prismaWithTenant.helpArticle.update({
-      where: { id: input.id },
+    await ctx.prismaWithTenant.helpArticle.updateMany({
+      where: { id: input.id, tenantId },
       data: { status: 'DRAFT', publishedAt: null },
-      select: { id: true, status: true, publishedAt: true },
     });
+    return { id: input.id, status: 'DRAFT' as const, publishedAt: null };
   }),
 
   // ─── Feedback (IFC-303) ─────────────────────────────────────────────────
@@ -467,13 +475,23 @@ export const helpArticleRouter = createTRPCRouter({
    * Maps FeedbackValue ('helpful' | 'not_helpful') to boolean.
    */
   submitFeedback: tenantProcedure.input(submitFeedbackSchema).mutation(async ({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
+
+    const article = await ctx.prismaWithTenant.helpArticle.findFirst({
+      where: { id: input.articleId, tenantId },
+      select: { id: true },
+    });
+    if (!article) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+    }
+
     const feedback = await ctx.prismaWithTenant.articleFeedback.create({
       data: {
         articleId: input.articleId,
         helpful: input.value === 'helpful',
         comment: input.comment,
         userId: ctx.tenant.userId,
-        tenantId: ctx.tenant.tenantId,
+        tenantId,
       },
     });
 
@@ -485,12 +503,14 @@ export const helpArticleRouter = createTRPCRouter({
    * Returns helpful count, not-helpful count, and total.
    */
   getFeedbackStats: tenantProcedure.input(getFeedbackStatsSchema).query(async ({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
+
     const [helpful, total] = await Promise.all([
       ctx.prismaWithTenant.articleFeedback.count({
-        where: { articleId: input.articleId, helpful: true },
+        where: { articleId: input.articleId, tenantId, helpful: true },
       }),
       ctx.prismaWithTenant.articleFeedback.count({
-        where: { articleId: input.articleId },
+        where: { articleId: input.articleId, tenantId },
       }),
     ]);
 
