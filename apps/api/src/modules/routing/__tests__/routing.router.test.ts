@@ -4,7 +4,7 @@
  * Tests for routing rule CRUD, assignments, agent workload, and lead queue.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { routingRouter } from '../routing.router';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 
@@ -599,6 +599,104 @@ describe('Routing Router', () => {
       expect((ctx.services!.leadRouting as any).routeLead).toHaveBeenCalledWith(
         expect.objectContaining({ forceReroute: true })
       );
+    });
+
+    // AC-007: event bus publishing
+    it('should call eventBus.publishAll with events when service returns non-empty events array', async () => {
+      const publishAllMock = vi.fn().mockResolvedValue(undefined);
+      const ctx = createTestContext({
+        container: {
+          adapters: {
+            eventBus: { publishAll: publishAllMock },
+          },
+        } as any,
+      });
+      const callerWithCtx = routingRouter.createCaller(ctx);
+
+      const mockEvents = [
+        { type: 'LeadRoutedEvent', payload: { leadId: TEST_UUIDS.lead1 } },
+        { type: 'LeadRoutedEvent', payload: { leadId: TEST_UUIDS.lead1, second: true } },
+      ];
+
+      (ctx.services!.leadRouting as any).routeLead.mockResolvedValue({
+        leadId: TEST_UUIDS.lead1,
+        assigneeId: TEST_UUIDS.user1,
+        assigneeName: 'Alice Agent',
+        auditId: 'audit-003',
+        reason: 'rule_match',
+        routingMethod: 'rule_match',
+        matchedSkill: null,
+        ruleId: 'rule-1',
+        score: 0.9,
+        executionTimeMs: 4,
+        events: mockEvents,
+      });
+
+      const result = await callerWithCtx.autoRouteLead({ leadId: TEST_UUIDS.lead1 });
+
+      expect(result.assignedUserId).toBe(TEST_UUIDS.user1);
+      expect(publishAllMock).toHaveBeenCalledOnce();
+      expect(publishAllMock).toHaveBeenCalledWith(mockEvents);
+    });
+
+    it('should NOT call eventBus.publishAll when service returns empty events array', async () => {
+      const publishAllMock = vi.fn().mockResolvedValue(undefined);
+      const ctx = createTestContext({
+        container: {
+          adapters: {
+            eventBus: { publishAll: publishAllMock },
+          },
+        } as any,
+      });
+      const callerWithCtx = routingRouter.createCaller(ctx);
+
+      (ctx.services!.leadRouting as any).routeLead.mockResolvedValue({
+        leadId: TEST_UUIDS.lead1,
+        assigneeId: TEST_UUIDS.user1,
+        assigneeName: 'Alice Agent',
+        auditId: 'audit-004',
+        reason: 'load_balance',
+        routingMethod: 'load_balance',
+        matchedSkill: null,
+        ruleId: null,
+        score: 0.4,
+        executionTimeMs: 2,
+        events: [],
+      });
+
+      await callerWithCtx.autoRouteLead({ leadId: TEST_UUIDS.lead1 });
+
+      expect(publishAllMock).not.toHaveBeenCalled();
+    });
+
+    it('should NOT call eventBus.publishAll when service returns no events field', async () => {
+      const publishAllMock = vi.fn().mockResolvedValue(undefined);
+      const ctx = createTestContext({
+        container: {
+          adapters: {
+            eventBus: { publishAll: publishAllMock },
+          },
+        } as any,
+      });
+      const callerWithCtx = routingRouter.createCaller(ctx);
+
+      (ctx.services!.leadRouting as any).routeLead.mockResolvedValue({
+        leadId: TEST_UUIDS.lead1,
+        assigneeId: TEST_UUIDS.user1,
+        assigneeName: 'Alice Agent',
+        auditId: 'audit-005',
+        reason: 'skill_match',
+        routingMethod: 'skill_match',
+        matchedSkill: 'sales',
+        ruleId: null,
+        score: 0.6,
+        executionTimeMs: 3,
+        // events field deliberately omitted to test undefined branch
+      });
+
+      await callerWithCtx.autoRouteLead({ leadId: TEST_UUIDS.lead1 });
+
+      expect(publishAllMock).not.toHaveBeenCalled();
     });
   });
 
