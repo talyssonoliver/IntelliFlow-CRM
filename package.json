@@ -140,7 +140,8 @@
     "validate:schemas": "tsx tools/scripts/validate-schemas.ts",
     "validate:platform-metrics": "tsx tools/scripts/validate-platform-metrics.ts",
     "validate:a11y-routes": "tsx tools/scripts/a11y-route-reconcile.ts",
-    "migrate:data": "tsx tools/scripts/migrate-data-to-schema.ts"
+    "migrate:data": "tsx tools/scripts/migrate-data-to-schema.ts",
+    "check:queue-consumers": "node tools/scripts/check-queue-consumers.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",

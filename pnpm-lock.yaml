@@ -309,6 +309,12 @@ importers:
       js-tiktoken:
         specifier: ^1.0.15
         version: 1.0.21
+      mammoth:
+        specifier: ^1.12.0
+        version: 1.12.0
+      pdf-parse:
+        specifier: ^2.4.5
+        version: 2.4.5
       pino:
         specifier: ^10.3.1
         version: 10.3.1
@@ -331,6 +337,9 @@ importers:
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
+      '@types/pdf-parse':
+        specifier: ^1.1.5
+        version: 1.1.5
       eslint:
         specifier: ^10.4.0
         version: 10.4.0(jiti@2.7.0)
