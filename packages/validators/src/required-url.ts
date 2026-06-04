@@ -35,6 +35,11 @@ export function isProductionEnv(): boolean {
  * - Else (dev/test): return `devDefault`.
  *
  * `hint` is appended to the production error to point at the fix.
+ *
+ * @remarks SAFETY CONTRACT
+ * Call only inside a function/factory, never at module-init scope (top-level
+ * const, class field, or module-level singleton) — at import time a missing var
+ * crashes the whole process. Enforced by the no-eager-requiredProdEnv lint rule.
  */
 export function requiredProdEnv(
   name: string,

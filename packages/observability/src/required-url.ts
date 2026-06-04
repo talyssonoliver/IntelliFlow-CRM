@@ -23,6 +23,11 @@ export function isProductionEnv(): boolean {
  * - If `value` is set (non-empty), return it.
  * - Else in production: throw (no silent localhost fallback).
  * - Else (dev/test): return `devDefault`.
+ *
+ * @remarks SAFETY CONTRACT
+ * Call only inside a function/factory, never at module-init scope (top-level
+ * const, class field, or module-level singleton) — at import time a missing var
+ * crashes the whole process. Enforced by the no-eager-requiredProdEnv lint rule.
  */
 export function requiredProdEnv(
   name: string,
