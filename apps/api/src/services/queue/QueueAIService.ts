@@ -56,8 +56,20 @@ const ScoringJobResultMirror = z.object({
 // Public options
 // ============================================================================
 export interface QueueAIServiceOptions {
-  /** Override BullMQ connection (default: `getBullMQConnectionOptions()`). */
-  connection?: ConnectionOptions;
+  /**
+   * Override BullMQ connection options.
+   *
+   * Accepts either a pre-built `ConnectionOptions` object **or** a zero-arg
+   * factory `() => ConnectionOptions`.  The factory form is preferred when the
+   * caller does not have env vars available at construction time (e.g. when the
+   * container is instantiated on the web tier before REDIS_HOST is validated):
+   * the factory is only invoked the first time the queue is actually needed
+   * (inside `ensureInit`), so a missing REDIS_HOST never throws on services
+   * that never enqueue a job.
+   *
+   * Default: `() => getBullMQConnectionOptions()` (lazy, evaluated on first use).
+   */
+  connection?: ConnectionOptions | (() => ConnectionOptions);
   /** waitUntilFinished timeout in ms. Default 60_000 (matches NF-002 SLA ceiling). */
   resultTimeoutMs?: number;
   /** TenantId injected into payloads when caller-side tenantId is omitted. Default 'default'. */
@@ -93,16 +105,43 @@ function parseScoreLeadOptions(
 // ============================================================================
 // QueueAIService
 // ============================================================================
+
+// Internal resolved options — connection is normalised to a factory so
+// getBullMQConnectionOptions() is never called at construction time.
+interface ResolvedQueueAIServiceOptions {
+  connectionFactory: () => ConnectionOptions;
+  resultTimeoutMs: number;
+  defaultTenantId: string;
+  eagerInit: boolean;
+  queueName: string;
+}
+
 export class QueueAIService implements AIServicePort {
   private queue: Queue | null = null;
   private events: QueueEvents | null = null;
   private initPromise: Promise<void> | null = null; // mutex for lazy init
   private closed = false;
-  private readonly opts: Required<QueueAIServiceOptions>;
+  private readonly opts: ResolvedQueueAIServiceOptions;
 
   constructor(opts: QueueAIServiceOptions = {}) {
+    const rawConnection = opts.connection;
+    // Normalise connection to a zero-arg factory so getBullMQConnectionOptions()
+    // is never called at construction time (avoids the requiredProdEnv throw on
+    // the web tier which has no REDIS_HOST). Three cases:
+    //   1. no connection provided → use getBullMQConnectionOptions as the factory
+    //   2. factory provided       → use as-is
+    //   3. static object provided → wrap in a thunk
+    let connectionFactory: () => ConnectionOptions;
+    if (rawConnection == null) {
+      connectionFactory = getBullMQConnectionOptions;
+    } else if (typeof rawConnection === 'function') {
+      connectionFactory = rawConnection;
+    } else {
+      const staticConn = rawConnection;
+      connectionFactory = () => staticConn;
+    }
     this.opts = {
-      connection: opts.connection ?? getBullMQConnectionOptions(),
+      connectionFactory,
       resultTimeoutMs: opts.resultTimeoutMs ?? 60_000,
       defaultTenantId: opts.defaultTenantId ?? 'default',
       eagerInit: opts.eagerInit ?? false,
@@ -120,6 +159,9 @@ export class QueueAIService implements AIServicePort {
   /**
    * Lazy-init the BullMQ Queue + QueueEvents pair. Concurrent calls share a single
    * promise so we never double-initialize (NF-007).
+   *
+   * The connection factory is invoked here (not in the constructor) so that
+   * requiredProdEnv('REDIS_HOST') is only called when the queue is actually needed.
    */
   private async ensureInit(): Promise<void> {
     if (this.queue && this.events) return;
@@ -127,10 +169,12 @@ export class QueueAIService implements AIServicePort {
       this.initPromise = (async () => {
         // Dynamic import keeps cold-start unchanged for non-queue providers (NF-008).
         const { Queue: QueueCtor, QueueEvents: QueueEventsCtor } = await import('bullmq');
-        this.queue = new QueueCtor(this.opts.queueName, { connection: this.opts.connection });
-        this.events = new QueueEventsCtor(this.opts.queueName, {
-          connection: this.opts.connection,
-        });
+        // Resolve connection options here — env vars are always available at
+        // this point because ensureInit() is only reached on the API tier
+        // (which has REDIS_HOST) or during an actual scoring request.
+        const connection = this.opts.connectionFactory();
+        this.queue = new QueueCtor(this.opts.queueName, { connection });
+        this.events = new QueueEventsCtor(this.opts.queueName, { connection });
       })().catch((err) => {
         // Reset so the next caller can retry init.
         this.initPromise = null;

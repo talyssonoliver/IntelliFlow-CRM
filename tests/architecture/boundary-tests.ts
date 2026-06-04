@@ -236,4 +236,89 @@ describe('Architecture Boundary Tests', () => {
       expect(hasApplicationImports).toBe(true);
     });
   });
+
+  describe('Web Tier Boundary (worker-only services)', () => {
+    /**
+     * Enforce that apps/web source files never directly import worker-only
+     * modules (BullMQ queues, AI provider services requiring REDIS_HOST /
+     * OLLAMA_BASE_URL / LITELLM_BASE_URL).
+     *
+     * Root cause of the Vercel 500-on-every-route incident:
+     *   apps/web/api/trpc/[trpc]/route.ts
+     *     → @intelliflow/api/context
+     *     → apps/api/src/container.ts (module-level singleton createServices())
+     *     → new QueueAIService({ eagerInit: true })
+     *     → getBullMQConnectionOptions() [EAGER, at construction time]
+     *     → requiredProdEnv('REDIS_HOST', undefined, 'localhost') [THROWS in prod]
+     *
+     * The fix (lazy connection factory in QueueAIService) prevents the throw,
+     * but this test ensures the web tier never DIRECTLY imports the worker
+     * modules — providing a second layer of defence and documenting intent.
+     *
+     * Note: the web's /api/trpc route.ts MUST import @intelliflow/api/context
+     * and @intelliflow/api/router to serve its tRPC procedures — those imports
+     * are intentional and are NOT forbidden here.  What IS forbidden is any
+     * direct import of the queue service module, the queue connection helper,
+     * or the AI provider service modules from the web package's own source.
+     */
+    test('web MUST NOT directly import the QueueAIService module', () => {
+      const webSrcPath = path.join(projectRoot, 'apps/web/src');
+      const webFiles = getTypeScriptFiles(webSrcPath);
+
+      const violations: string[] = [];
+      // Match direct imports of the queue service module — these should never
+      // appear in web source files (the api container wires them internally).
+      const forbiddenPatterns = [
+        /apps\/api\/src\/services\/queue/,
+        /@intelliflow\/platform\/queues\/connection/,
+      ];
+
+      for (const file of webFiles) {
+        // Skip test files (they mock everything anyway)
+        if (file.includes('__tests__') || file.includes('.test.') || file.includes('.spec.')) {
+          continue;
+        }
+        if (hasImportsFrom(file, forbiddenPatterns)) {
+          const relativePath = path.relative(projectRoot, file);
+          violations.push(relativePath);
+        }
+      }
+
+      if (violations.length > 0) {
+        console.error(
+          'Web tier direct imports of worker-only queue modules (FORBIDDEN — causes Vercel 500s):'
+        );
+        violations.forEach((v) => console.error(`  - ${v}`));
+      }
+
+      expect(violations).toHaveLength(0);
+    });
+
+    test('web MUST NOT directly import bullmq', () => {
+      const webSrcPath = path.join(projectRoot, 'apps/web/src');
+      const webFiles = getTypeScriptFiles(webSrcPath);
+
+      const violations: string[] = [];
+      const forbiddenPatterns = [/^bullmq$/];
+
+      for (const file of webFiles) {
+        if (file.includes('__tests__') || file.includes('.test.') || file.includes('.spec.')) {
+          continue;
+        }
+        if (hasImportsFrom(file, forbiddenPatterns)) {
+          const relativePath = path.relative(projectRoot, file);
+          violations.push(relativePath);
+        }
+      }
+
+      if (violations.length > 0) {
+        console.error(
+          'Web tier direct bullmq imports (FORBIDDEN — Redis not available on Vercel web tier):'
+        );
+        violations.forEach((v) => console.error(`  - ${v}`));
+      }
+
+      expect(violations).toHaveLength(0);
+    });
+  });
 });
