@@ -232,6 +232,159 @@ jobs:
               });
             }
 
+  # D6 fix (incident-forensics-2026-06-04): boot `next start` in production mode
+  # on EVERY pull request so module-load crashes (D1/D2/D4) are caught before
+  # merge. Previously the only `next start` job was ci.yml's `e2e` job, gated
+  # `if: push && ref == main` — boot crashes reached main before anyone saw red.
+  #
+  # This job is intentionally lean: build the web app, start it in production
+  # mode, assert /api/health returns HTTP 200. No Playwright, no full suite.
+  # It is additive — the existing push-to-main e2e job is unchanged.
+  #
+  # Env block is a verbatim copy of ci.yml e2e job (lines ~347-368) which is
+  # the #228/#231-proven set that lets `next start` boot without real secrets.
+  # The `${{ secrets.X || 'stub' }}` pattern works on fork PRs (no secret
+  # access) because the fallback stub is always available.
+  web-boot-smoke:
+    name: Web Boot Smoke
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    timeout-minutes: 15
+    env:
+      # --- module-load env guards (verbatim from ci.yml e2e job) ---
+      # `next start` boots in production mode; every module-init guard that
+      # `next build` satisfied must also be satisfied here or the server
+      # crashes at import time (defects D1/D2/D4 from incident-forensics-
+      # 2026-06-04). These are throwaway CI stubs — never used at runtime.
+      PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+      AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
+      DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
+      DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
+      # #228 fail-fast: additional URL/host stubs required by module-init code
+      # (Redis degrades gracefully; OTel is disabled; AI providers are not
+      # exercised by the health endpoint).
+      REDIS_HOST: localhost
+      REDIS_PORT: '6379'
+      OTEL_ENABLED: 'false'
+      APP_URL: https://stub.example.com
+      NEXT_PUBLIC_APP_URL: https://stub.example.com
+      OLLAMA_BASE_URL: http://localhost:11434
+      LITELLM_BASE_URL: http://localhost:4000/v1
+      VAULT_ADDR: http://localhost:8200
+      TEMPORAL_ADDRESS: localhost:7233
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-monorepo
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          build-libs: 'true'
+
+      - name: Build web app
+        # Mirror ci.yml build job: pre-build library deps (handled by build-libs
+        # above), then build only the web app so the .next directory exists for
+        # `next start`. Turbo remote cache reuses hits from ci.yml's Build job
+        # when TURBO_TOKEN + TURBO_TEAM are set, making this step near-instant
+        # on re-runs of the same commit.
+        run: pnpm --filter @intelliflow/web build
+        env:
+          NODE_ENV: production
+
+      - name: Start web server (background)
+        # Run `next start` in the background. PORT 3000 is the Next.js default.
+        # We capture stderr+stdout to a log file so it is printed if the smoke
+        # assertion fails — without this the crash is silent and the `curl` step
+        # just reports "connection refused" with no root cause.
+        run: |
+          pnpm --filter @intelliflow/web start --port 3000 > /tmp/next-start.log 2>&1 &
+          echo "NEXT_PID=$!" >> "$GITHUB_ENV"
+
+      - name: Wait for server ready
+        # Poll /api/health until it answers or we time out. /api/health is the
+        # dependency-free liveness probe (apps/web/src/app/api/health/route.ts)
+        # that returns { status: "ok" } without touching DB or Supabase — exactly
+        # the right gate for a boot smoke check. A 5xx or connection refused means
+        # the server crashed; we print the captured log and fail fast.
+        run: |
+          echo "Waiting for next start on :3000 ..."
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Server ready (attempt $i) — HTTP $STATUS"
+              exit 0
+            fi
+            echo "  attempt $i: HTTP ${STATUS:-no-response} — retrying in 5s"
+            sleep 5
+          done
+          echo "::error::Server did not become ready within 150 s"
+          echo "--- next start log ---"
+          cat /tmp/next-start.log || true
+          exit 1
+
+      - name: Assert /api/health returns HTTP 200
+        # Belt-and-suspenders: after the poll confirms readiness, do one clean
+        # assertion that the response body carries status=ok and no 5xx.
+        # Any boot-time crash that managed to limp past the poll step will show
+        # here as a 500 (or a non-JSON body) and fail the job.
+        run: |
+          BODY=$(curl -sf http://localhost:3000/api/health)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health)
+          echo "HTTP status : $STATUS"
+          echo "Response    : $BODY"
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Expected HTTP 200 from /api/health, got $STATUS"
+            echo "--- next start log ---"
+            cat /tmp/next-start.log || true
+            exit 1
+          fi
+          echo "$BODY" | node -e "
+            const b = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+            if (b.status !== 'ok') { console.error('status field not ok:', b); process.exit(1); }
+            console.log('ok — status:', b.status, 'service:', b.service);
+          "
+
+      - name: Assert tRPC container mounts (/api/trpc/health.ping not 5xx)
+        # /api/health is dependency-free and does NOT construct the API DI
+        # container. The D1/D2/D4 outages were the container throwing at
+        # module-load in apps/api (mounted by app/api/trpc/[trpc]/route.ts).
+        # health.ping is a publicProcedure with no ctx/DB, so hitting it forces
+        # full container construction without needing real infra — a boot-time
+        # throw surfaces here as a 5xx. THIS is the assertion that catches the
+        # class /api/health misses (defects D1/D2/D4/D6).
+        run: |
+          URL='http://localhost:3000/api/trpc/health.ping?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%7D%7D'
+          BODY=$(curl -s "$URL")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          echo "HTTP status : $STATUS"
+          echo "Response    : $BODY"
+          if [ "$STATUS" -ge 500 ]; then
+            echo "::error::tRPC container mount returned $STATUS — the API DI container crashed at boot (D1/D2/D4 class)"
+            echo "--- next start log ---"
+            cat /tmp/next-start.log || true
+            exit 1
+          fi
+          echo "$BODY" | node -e "
+            const txt = require('fs').readFileSync('/dev/stdin','utf8');
+            const j = JSON.parse(txt);
+            const data = Array.isArray(j) ? j[0] && j[0].result && j[0].result.data : j && j.result && j.result.data;
+            const status = (data && data.status) || (data && data.json && data.json.status);
+            if (status !== 'healthy') {
+              console.error('health.ping did not return status=healthy:', txt);
+              process.exit(1);
+            }
+            console.log('ok — API container mounted; health.ping:', status);
+          "
+
+      - name: Print server log on failure
+        if: failure()
+        run: cat /tmp/next-start.log || true
+
   pr-summary:
     name: PR Summary
     runs-on: ubuntu-latest
@@ -241,7 +394,9 @@ jobs:
     # lighthouse dropped from needs: it is label-quarantined (usually skipped)
     # and the summary script does not reference its result — keeping it here was
     # dead weight and a latent branch-protection footgun (CI review 2026-06-03).
-    needs: [pr-validation, deploy-preview]
+    # web-boot-smoke added (D6 fix 2026-06-04): boot-smoke result now appears
+    # in the PR summary so reviewers see it alongside validation + deploy.
+    needs: [pr-validation, deploy-preview, web-boot-smoke]
     if: always() && github.event.pull_request.draft == false
     permissions:
       # Default GITHUB_TOKEN doesn't grant PR-write on fork PRs, so the
@@ -259,6 +414,7 @@ jobs:
           script: |
             const validationStatus = '${{ needs.pr-validation.result }}';
             const deployStatus = '${{ needs.deploy-preview.result }}';
+            const bootSmokeStatus = '${{ needs.web-boot-smoke.result }}';
 
             const statusIcon = (status) => {
               if (status === 'success') return '✅';
@@ -272,6 +428,7 @@ jobs:
             |-------|--------|
             | PR Validation | ${statusIcon(validationStatus)} ${validationStatus} |
             | Deploy Preview | ${statusIcon(deployStatus)} ${deployStatus} |
+            | Web Boot Smoke | ${statusIcon(bootSmokeStatus)} ${bootSmokeStatus} |
 
             > Test, coverage, build, lint and typecheck signals now live in the **CI Pipeline** workflow (sharded suite + merged coverage gate). See ADR-057.
 
