@@ -3,7 +3,7 @@ import { AIServicePort, LeadScoringInput, LeadScoringResult } from '@intelliflow
 import { ChatOllama } from '@langchain/ollama';
 
 export interface OllamaAIServiceConfig {
-  baseUrl: string;
+  baseUrl: string | (() => string);
   model: string;
   temperature?: number;
   timeout?: number;
@@ -59,16 +59,30 @@ Return ONLY valid JSON with this exact structure:
  * Activate with AI_PROVIDER=ollama environment variable.
  */
 export class OllamaAIService implements AIServicePort {
-  private readonly model: ChatOllama;
+  private model: ChatOllama | null = null;
+  private readonly baseUrlFactory: () => string;
+  private readonly modelName: string;
+  private readonly temperature: number;
+  private readonly timeout: number;
   readonly modelVersion: string;
 
   constructor(config: OllamaAIServiceConfig) {
-    const ollamaTimeout = config.timeout ?? 60_000;
+    const rawBaseUrl = config.baseUrl;
+    this.baseUrlFactory = typeof rawBaseUrl === 'function' ? rawBaseUrl : () => rawBaseUrl;
+    this.modelName = config.model;
+    this.temperature = config.temperature ?? 0.1;
+    this.timeout = config.timeout ?? 60_000;
 
+    this.modelVersion = `ollama:${config.model}:v1`;
+  }
+
+  private getModel(): ChatOllama {
+    if (this.model) return this.model;
+    const ollamaTimeout = this.timeout;
     this.model = new ChatOllama({
-      baseUrl: config.baseUrl,
-      model: config.model,
-      temperature: config.temperature ?? 0.1,
+      baseUrl: this.baseUrlFactory(),
+      model: this.modelName,
+      temperature: this.temperature,
       numCtx: 4096,
       format: 'json',
       fetch: (url: string | URL | Request, init?: RequestInit) => {
@@ -78,11 +92,11 @@ export class OllamaAIService implements AIServicePort {
         });
       },
     });
-
-    this.modelVersion = `ollama:${config.model}:v1`;
+    return this.model;
   }
 
   async scoreLead(input: LeadScoringInput): Promise<Result<LeadScoringResult, DomainError>> {
+    const model = this.getModel();
     try {
       const prompt = SCORE_LEAD_PROMPT.replaceAll('{email}', input.email)
         .replaceAll('{firstName}', input.firstName ?? 'N/A')
@@ -92,7 +106,7 @@ export class OllamaAIService implements AIServicePort {
         .replaceAll('{phone}', input.phone ?? 'N/A')
         .replaceAll('{source}', input.source);
 
-      const response = await this.model.invoke(prompt);
+      const response = await model.invoke(prompt);
       const content =
         typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
 
@@ -133,13 +147,14 @@ export class OllamaAIService implements AIServicePort {
   }
 
   async generateEmail(leadId: string, template: string): Promise<Result<string, DomainError>> {
+    const model = this.getModel();
     try {
       const prompt = GENERATE_EMAIL_PROMPT.replaceAll('{leadId}', leadId).replaceAll(
         '{template}',
         template
       );
 
-      const response = await this.model.invoke(prompt);
+      const response = await model.invoke(prompt);
       const content =
         typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
 

@@ -12,7 +12,7 @@ const log = {
 
 export interface LiteLLMAIServiceConfig {
   /** LiteLLM proxy base URL, e.g. http://localhost:4000/v1 */
-  baseUrl: string;
+  baseUrl: string | (() => string);
   /** LITELLM_MASTER_KEY */
   masterKey: string;
   /** Request timeout in ms (default 120_000) */
@@ -64,19 +64,38 @@ const MODEL_EMAIL = 'email-free';
  * JSON responses with no manual parsing required.
  */
 export class LiteLLMAIService implements AIServicePort {
-  private readonly scoringModel: ReturnType<ChatOpenAI['withStructuredOutput']>;
-  private readonly qualifyModel: ReturnType<ChatOpenAI['withStructuredOutput']>;
-  private readonly emailModel: ReturnType<ChatOpenAI['withStructuredOutput']>;
+  private scoringModel: ReturnType<ChatOpenAI['withStructuredOutput']> | null = null;
+  private qualifyModel: ReturnType<ChatOpenAI['withStructuredOutput']> | null = null;
+  private emailModel: ReturnType<ChatOpenAI['withStructuredOutput']> | null = null;
+  private readonly baseUrlFactory: () => string;
 
   readonly modelVersion: string;
 
   constructor(private readonly config: LiteLLMAIServiceConfig) {
-    const timeout = config.timeout ?? 120_000;
+    const rawBaseUrl = config.baseUrl;
+    this.baseUrlFactory = typeof rawBaseUrl === 'function' ? rawBaseUrl : () => rawBaseUrl;
+    this.modelVersion = `litellm:${MODEL_SCORING}:v1`;
+  }
+
+  private ensureModels(): {
+    scoringModel: ReturnType<ChatOpenAI['withStructuredOutput']>;
+    qualifyModel: ReturnType<ChatOpenAI['withStructuredOutput']>;
+    emailModel: ReturnType<ChatOpenAI['withStructuredOutput']>;
+  } {
+    if (this.scoringModel && this.qualifyModel && this.emailModel) {
+      return {
+        scoringModel: this.scoringModel,
+        qualifyModel: this.qualifyModel,
+        emailModel: this.emailModel,
+      };
+    }
+
+    const timeout = this.config.timeout ?? 120_000;
     const commonConfig = {
       configuration: {
-        baseURL: config.baseUrl,
+        baseURL: this.baseUrlFactory(),
         defaultHeaders: {
-          Authorization: `Bearer ${config.masterKey}`,
+          Authorization: `Bearer ${this.config.masterKey}`,
         },
         timeout,
       },
@@ -92,10 +111,15 @@ export class LiteLLMAIService implements AIServicePort {
     this.qualifyModel = qualifyBase.withStructuredOutput(QualifyLeadOutputSchema);
     this.emailModel = emailBase.withStructuredOutput(GenerateEmailOutputSchema);
 
-    this.modelVersion = `litellm:${MODEL_SCORING}:v1`;
+    return {
+      scoringModel: this.scoringModel,
+      qualifyModel: this.qualifyModel,
+      emailModel: this.emailModel,
+    };
   }
 
   async scoreLead(input: LeadScoringInput): Promise<Result<LeadScoringResult, DomainError>> {
+    const { scoringModel } = this.ensureModels();
     try {
       const prompt = `You are a lead scoring AI for a CRM system.
 Analyze the following lead and score them based on their likely conversion potential.
@@ -118,9 +142,7 @@ Scoring anchors:
 
 Score the lead and provide confidence and factor breakdowns.`;
 
-      const parsed = (await this.scoringModel.invoke(prompt)) as z.infer<
-        typeof ScoreLeadOutputSchema
-      >;
+      const parsed = (await scoringModel.invoke(prompt)) as z.infer<typeof ScoreLeadOutputSchema>;
 
       log.info(
         { email: input.email, score: parsed.score, confidence: parsed.confidence },
@@ -152,6 +174,7 @@ Score the lead and provide confidence and factor breakdowns.`;
   }
 
   async qualifyLead(input: LeadScoringInput): Promise<Result<boolean, DomainError>> {
+    const { qualifyModel } = this.ensureModels();
     try {
       const prompt = `You are a lead qualification AI for a CRM system.
 Determine whether this lead meets minimum qualification criteria (score >= 70).
@@ -164,9 +187,7 @@ Lead data:
 
 Evaluate and return whether the lead is qualified.`;
 
-      const parsed = (await this.qualifyModel.invoke(prompt)) as z.infer<
-        typeof QualifyLeadOutputSchema
-      >;
+      const parsed = (await qualifyModel.invoke(prompt)) as z.infer<typeof QualifyLeadOutputSchema>;
 
       log.info(
         { email: input.email, qualified: parsed.qualified, score: parsed.score },
@@ -187,6 +208,7 @@ Evaluate and return whether the lead is qualified.`;
   }
 
   async generateEmail(leadId: string, template: string): Promise<Result<string, DomainError>> {
+    const { emailModel } = this.ensureModels();
     try {
       const prompt = `You are an email generation AI for a CRM system.
 Generate a professional outreach email using the following template guidance.
@@ -196,9 +218,7 @@ Template: ${template}
 
 Write a compelling, personalized outreach email with a clear subject line and body.`;
 
-      const parsed = (await this.emailModel.invoke(prompt)) as z.infer<
-        typeof GenerateEmailOutputSchema
-      >;
+      const parsed = (await emailModel.invoke(prompt)) as z.infer<typeof GenerateEmailOutputSchema>;
 
       log.info({ leadId }, 'LiteLLM email generation complete');
 
