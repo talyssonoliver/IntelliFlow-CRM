@@ -13,8 +13,9 @@
  * the same HEAD skips steps that previously PASSed — only re-runs FAIL
  * or NOT_RUN steps. Use `--clean` to force re-run all steps.
  *
- * Step plan mirrors audit doc §8 (the 17-step belt-and-suspenders gate
- * the maintainer chose explicitly). Each step is its own subprocess so
+ * Step plan mirrors audit doc §8 (the belt-and-suspenders gate the
+ * maintainer chose explicitly) + a fail-first token gate prepended
+ * 2026-06-04. Each step is its own subprocess so
  * a failure in one doesn't poison the next's exit code.
  *
  * Exit codes:
@@ -72,7 +73,7 @@ const OUT_DIR = path.join(REPO_ROOT, 'artifacts/preship');
 const LOG_DIR = path.join(OUT_DIR, 'logs');
 const STATE_PATH = path.join(OUT_DIR, 'last-run.json');
 
-// Step plan — 17 steps from audit doc §8. Each step has:
+// Step plan — fail-first token gate + 17 steps from audit doc §8. Each step has:
 //   id          : kebab-case identifier (also used as log filename)
 //   description : human-readable label printed during the run
 //   cmd         : argv to spawn (no shell, never a single string)
@@ -85,6 +86,16 @@ const STATE_PATH = path.join(OUT_DIR, 'last-run.json');
 //                 because the sub-project install is `continue-on-error`
 //                 in CI too.
 const STEPS = [
+  {
+    // FAIL-FIRST (2026-06-04): the very first gate. Several CI/CD/deploy jobs go
+    // red only because a required token/secret/runtime-env is unset. Catch that
+    // in seconds, before any test/build/coverage work — not after a ~10-min CI
+    // round. Degrades to advisory when gh/vercel auth isn't available locally.
+    id: 'required-tokens',
+    description: 'fail-first: required tokens/secrets present (gh secrets + Vercel prod env)',
+    cmd: ['node', 'scripts/check-required-tokens.mjs'],
+    required: true,
+  },
   {
     id: 'install',
     description: 'pnpm install --frozen-lockfile (sanity-check lockfile against package.json)',
@@ -185,6 +196,17 @@ const STEPS = [
     id: 'coverage',
     description: 'pnpm run test:coverage (merged Istanbul output)',
     cmd: ['pnpm', 'run', 'test:coverage'],
+    required: true,
+  },
+  {
+    // Enforce the SAME ratchet floor CI enforces, via the SAME script
+    // (scripts/check-coverage-floor.mjs) — so the laptop predicts CI's
+    // `Merge Coverage Gate`. Note: pre-ship's test:coverage merges all 16
+    // projects (a superset of CI's unit-only merge), so it's a conservative-ish
+    // local predictor; CI's sharded merge remains authoritative. See ADR-058.
+    id: 'coverage-floor',
+    description: 'enforce CI ratchet floor (78/70/75/80) on merged coverage — shared gate',
+    cmd: ['node', 'scripts/check-coverage-floor.mjs'],
     required: true,
   },
   {

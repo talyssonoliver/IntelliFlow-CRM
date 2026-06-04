@@ -211,32 +211,11 @@ jobs:
             --outputFile.junit=artifacts/reports/junit.xml || true
 
       - name: Enforce coverage ratchet floor (78 / 70 / 75 / 80)
-        # The REAL coverage gate. A RATCHET FLOOR at current measured coverage,
-        # NOT the aspirational 90/80/90/90 (which is documented but unenforced —
-        # ADR-058). Blocks REGRESSION below today's level; raise over time.
-        run: |
-          node -e '
-            const fs = require("fs");
-            const p = "artifacts/coverage/coverage-summary.json";
-            if (!fs.existsSync(p)) {
-              console.error("::error::coverage-summary.json missing — the merge step failed to produce a report.");
-              process.exit(1);
-            }
-            const t = JSON.parse(fs.readFileSync(p, "utf8")).total;
-            const floor = { statements: 78, branches: 70, functions: 75, lines: 80 };
-            let bad = false;
-            for (const k of Object.keys(floor)) {
-              const pct = t[k].pct;
-              const ok = pct >= floor[k];
-              console.log((ok ? "✓" : "✗") + " " + k + ": " + pct + "% (floor " + floor[k] + "%)");
-              if (!ok) bad = true;
-            }
-            if (bad) {
-              console.error("::error::Coverage is below the ratchet floor (78/70/75/80). See ADR-058.");
-              process.exit(1);
-            }
-            console.log("✅ Coverage meets the ratchet floor.");
-          '
+        # The REAL coverage gate — a RATCHET FLOOR at current measured coverage,
+        # NOT the aspirational 90/80/90/90 (documented but unenforced — ADR-058).
+        # Shared with pre-ship via scripts/check-coverage-floor.mjs so the laptop
+        # predicts CI exactly (single source of truth for the floor).
+        run: node scripts/check-coverage-floor.mjs
 
       - name: Upload merged coverage + junit
         if: always()
