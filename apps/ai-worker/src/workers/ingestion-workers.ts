@@ -99,6 +99,68 @@ function normalizeText(text: string): string {
   return getSharedOCRWorker().normalizeText(text);
 }
 
+/**
+ * Build a successful (or OCR-partial) extraction result. Shared by the
+ * text-extraction and OCR processors so the result shape is defined once.
+ */
+function buildResult(params: {
+  input: IngestionJobData;
+  text: string;
+  normalized: string;
+  chunks: string[];
+  startTime: number;
+  pages?: number;
+  author?: string;
+  title?: string;
+  status?: 'success' | 'failed';
+  error?: string;
+}): IngestionJobResult {
+  const { input, text, normalized, chunks, startTime, pages, author, title } = params;
+  return {
+    documentId: input.documentId,
+    text,
+    normalizedText: normalized,
+    wordCount: normalized.split(/\s+/).filter((w) => w.length > 0).length,
+    characterCount: normalized.length,
+    processingTimeMs: Date.now() - startTime,
+    metadata: {
+      format: input.format,
+      language: input.language,
+      pages,
+      author,
+      title,
+      extractedAt: new Date().toISOString(),
+    },
+    chunks,
+    status: params.status ?? 'success',
+    error: params.error,
+  };
+}
+
+/** Build a failed extraction result (identical across both processors). */
+function buildFailedResult(
+  input: IngestionJobData,
+  startTime: number,
+  error: unknown
+): IngestionJobResult {
+  return {
+    documentId: input.documentId,
+    text: '',
+    normalizedText: '',
+    wordCount: 0,
+    characterCount: 0,
+    processingTimeMs: Date.now() - startTime,
+    metadata: {
+      format: input.format,
+      language: input.language,
+      extractedAt: new Date().toISOString(),
+    },
+    chunks: [],
+    status: 'failed',
+    error: error instanceof Error ? error.message : String(error),
+  };
+}
+
 // ============================================================================
 // Text-extraction processor
 // ============================================================================
@@ -144,46 +206,22 @@ async function processTextExtractionJob(
       'Text extraction completed'
     );
 
-    return {
-      documentId: input.documentId,
+    return buildResult({
+      input,
       text,
-      normalizedText: normalized,
-      wordCount: normalized.split(/\s+/).filter((w) => w.length > 0).length,
-      characterCount: normalized.length,
-      processingTimeMs,
-      metadata: {
-        format: input.format,
-        language: input.language,
-        pages: metadata?.pages as number | undefined,
-        author: metadata?.author as string | undefined,
-        title: metadata?.title as string | undefined,
-        extractedAt: new Date().toISOString(),
-      },
+      normalized,
       chunks,
-      status: 'success',
-    };
+      startTime,
+      pages: metadata?.pages as number | undefined,
+      author: metadata?.author as string | undefined,
+      title: metadata?.title as string | undefined,
+    });
   } catch (error) {
-    const processingTimeMs = Date.now() - startTime;
     jobLogger.error(
       { error: error instanceof Error ? error.message : String(error) },
       'Text extraction failed'
     );
-    return {
-      documentId: input.documentId,
-      text: '',
-      normalizedText: '',
-      wordCount: 0,
-      characterCount: 0,
-      processingTimeMs,
-      metadata: {
-        format: input.format,
-        language: input.language,
-        extractedAt: new Date().toISOString(),
-      },
-      chunks: [],
-      status: 'failed',
-      error: error instanceof Error ? error.message : String(error),
-    };
+    return buildFailedResult(input, startTime, error);
   }
 }
 
@@ -240,45 +278,22 @@ async function processOCRJob(
       'OCR processing completed'
     );
 
-    return {
-      documentId: input.documentId,
+    return buildResult({
+      input,
       text: ocrResult.extractedText,
-      normalizedText: normalized,
-      wordCount: normalized.split(/\s+/).filter((w) => w.length > 0).length,
-      characterCount: normalized.length,
-      processingTimeMs,
-      metadata: {
-        format: input.format,
-        language: input.language,
-        pages: ocrResult.pageCount,
-        extractedAt: new Date().toISOString(),
-      },
+      normalized,
       chunks,
+      startTime,
+      pages: ocrResult.pageCount,
       status: ocrResult.status === 'failed' ? 'failed' : 'success',
       error: ocrResult.error,
-    };
+    });
   } catch (error) {
-    const processingTimeMs = Date.now() - startTime;
     jobLogger.error(
       { error: error instanceof Error ? error.message : String(error) },
       'OCR processing failed'
     );
-    return {
-      documentId: input.documentId,
-      text: '',
-      normalizedText: '',
-      wordCount: 0,
-      characterCount: 0,
-      processingTimeMs,
-      metadata: {
-        format: input.format,
-        language: input.language,
-        extractedAt: new Date().toISOString(),
-      },
-      chunks: [],
-      status: 'failed',
-      error: error instanceof Error ? error.message : String(error),
-    };
+    return buildFailedResult(input, startTime, error);
   }
 }
 
