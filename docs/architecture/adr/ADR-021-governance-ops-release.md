@@ -21,6 +21,11 @@
 4. **Paths:** Artifacts recorded under
    `.specify/.../attestations/<TASK_ID>/release/` plus central report
    `artifacts/reports/security-scan-final.pdf`.
+5. **Infrastructure changes (added 2026-06-05, see ADR-064):** any change under
+   `infra/terraform/**` requires a **`terraform plan`** posted on the PR and
+   reviewed/approved as a merge gate. Infrastructure is changed via Terraform PR,
+   never by out-of-band console/dashboard edits. This makes drift a reviewable
+   diff rather than an invisible surprise.
 
 ## Considered Options
 
