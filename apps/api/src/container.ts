@@ -339,11 +339,8 @@ const createAdapters = (prismaClient: PrismaClient) => {
   let baseAIService: MockAIService | OllamaAIService | LiteLLMAIService | QueueAIService;
   if (aiProvider === 'ollama') {
     baseAIService = new OllamaAIService({
-      baseUrl: requiredProdEnv(
-        'OLLAMA_BASE_URL',
-        process.env.OLLAMA_BASE_URL,
-        'http://localhost:11434'
-      ),
+      baseUrl: () =>
+        requiredProdEnv('OLLAMA_BASE_URL', process.env.OLLAMA_BASE_URL, 'http://localhost:11434'),
       model: process.env.OLLAMA_MODEL || 'mistral',
       temperature: process.env.OLLAMA_TEMPERATURE
         ? Number.parseFloat(process.env.OLLAMA_TEMPERATURE)
@@ -357,11 +354,12 @@ const createAdapters = (prismaClient: PrismaClient) => {
   } else if (aiProvider === 'litellm') {
     // Explicit opt-in for the legacy in-process LLM path (LiteLLM proxy).
     baseAIService = new LiteLLMAIService({
-      baseUrl: requiredProdEnv(
-        'LITELLM_BASE_URL',
-        process.env.LITELLM_BASE_URL,
-        'http://localhost:4000/v1'
-      ),
+      baseUrl: () =>
+        requiredProdEnv(
+          'LITELLM_BASE_URL',
+          process.env.LITELLM_BASE_URL,
+          'http://localhost:4000/v1'
+        ),
       masterKey: process.env.LITELLM_MASTER_KEY || 'dev-master-key',
       timeout: process.env.LITELLM_TIMEOUT
         ? Number.parseInt(process.env.LITELLM_TIMEOUT, 10)
