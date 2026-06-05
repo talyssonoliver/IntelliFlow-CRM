@@ -23,8 +23,6 @@ export function isProductionEnv(): boolean {
  * - If `value` is set (non-empty), return it.
  * - Else in production: throw (no silent localhost fallback).
  * - Else (dev/test): return `devDefault`.
- *
- * @remarks Module-init safety contract — see packages/validators/src/required-url.ts.
  */
 export function requiredProdEnv(
   name: string,

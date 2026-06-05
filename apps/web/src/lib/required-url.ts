@@ -29,8 +29,6 @@ export function isProductionEnv(): boolean {
  * - Else (dev/test): return `devDefault`.
  *
  * `hint` is appended to the production error to point at the fix.
- *
- * @remarks Module-init safety contract — see packages/validators/src/required-url.ts.
  */
 export function requiredProdEnv(
   name: string,
