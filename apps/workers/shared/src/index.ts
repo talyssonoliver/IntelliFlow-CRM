@@ -34,6 +34,9 @@ export type {
 export { BaseWorker } from './base-worker';
 export type { BaseWorkerOptions } from './base-worker';
 
+// Shared document text-extraction helpers
+export { fetchDocument, extractTextFromBuffer, htmlToText, createChunks } from './text-extraction';
+
 // Queue Connector
 export { QueueConnector } from './queue-connector';
 export type { QueueConnectionOptions, QueueStats, JobProcessor } from './queue-connector';

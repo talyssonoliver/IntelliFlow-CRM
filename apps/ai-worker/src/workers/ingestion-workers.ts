@@ -23,6 +23,7 @@
 import { Job, Worker, Queue } from 'bullmq';
 import pino from 'pino';
 import { z } from 'zod';
+import { fetchDocument, extractTextFromBuffer, createChunks } from '@intelliflow/worker-shared';
 import { OCRWorker } from './ocr-worker.js';
 
 // ============================================================================
@@ -75,17 +76,9 @@ export interface IngestionJobResult {
 }
 
 // ============================================================================
-// Text-extraction helpers (self-contained, no cycle)
+// Text normalisation (OCRWorker delegation, kept local — the fetch/extract/
+// chunk helpers are shared via @intelliflow/worker-shared)
 // ============================================================================
-
-async function fetchDocument(url: string): Promise<Buffer> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch document: ${response.status} ${response.statusText}`);
-  }
-  const ab = await response.arrayBuffer();
-  return Buffer.from(ab);
-}
 
 /**
  * Normalize text for search and RAG.
@@ -104,84 +97,6 @@ function getSharedOCRWorker(): OCRWorker {
 
 function normalizeText(text: string): string {
   return getSharedOCRWorker().normalizeText(text);
-}
-
-function createChunks(text: string, chunkSize = 512, overlap = 64): string[] {
-  const words = text.split(' ');
-  const chunks: string[] = [];
-  let currentChunk: string[] = [];
-  let currentLength = 0;
-
-  for (const word of words) {
-    if (currentLength + word.length + 1 > chunkSize && currentChunk.length > 0) {
-      chunks.push(currentChunk.join(' '));
-      const overlapWords = Math.ceil(overlap / 5);
-      currentChunk = currentChunk.slice(-overlapWords);
-      currentLength = currentChunk.join(' ').length;
-    }
-    currentChunk.push(word);
-    currentLength += word.length + 1;
-  }
-  if (currentChunk.length > 0) {
-    chunks.push(currentChunk.join(' '));
-  }
-  return chunks;
-}
-
-async function extractTextFromBuffer(
-  buffer: Buffer,
-  format: string
-): Promise<{ text: string; metadata?: Record<string, unknown> }> {
-  switch (format) {
-    case 'pdf': {
-      const { PDFParse } = await import('pdf-parse');
-      const parser = new PDFParse({ data: buffer });
-      const textResult = await parser.getText();
-      let pageCount: number | undefined;
-      try {
-        const info = await parser.getInfo();
-        pageCount = info.total;
-      } catch {
-        // getInfo is best-effort
-      }
-      return { text: textResult.text, metadata: { pages: pageCount } };
-    }
-    case 'docx': {
-      const mammoth = await import('mammoth');
-      const result = await mammoth.extractRawText({ buffer });
-      return { text: result.value };
-    }
-    case 'txt':
-    case 'md':
-    case 'rtf':
-      return { text: buffer.toString('utf-8') };
-    case 'html': {
-      const html = buffer.toString('utf-8');
-      // Strip <script>/<style> blocks INCLUDING their text content. The
-      // closing-tag alternation `(?:</script...>|$)` makes the match terminate
-      // at end-of-input when the tag is never closed, so an unclosed
-      // `<script>alert(1)` cannot leak its body as extracted text. Looping to a
-      // fixpoint neutralises nested/overlapping injections (e.g.
-      // `<scr<script>ipt>`). Both properties keep the sanitisation complete so
-      // CodeQL's incomplete-multi-character-sanitization check is satisfied.
-      let stripped = html;
-      for (;;) {
-        const next = stripped
-          .replaceAll(/<script\b[^>]*>[\s\S]*?(?:<\/script\s*>|$)/gi, '')
-          .replaceAll(/<style\b[^>]*>[\s\S]*?(?:<\/style\s*>|$)/gi, '');
-        if (next === stripped) break;
-        stripped = next;
-      }
-      const text = stripped
-        .replaceAll(/<[^>]+>/g, ' ')
-        .replaceAll(/\s+/g, ' ')
-        .trim();
-      return { text };
-    }
-    default:
-      // Fall back to plain-text read for unknown formats
-      return { text: buffer.toString('utf-8') };
-  }
 }
 
 // ============================================================================
