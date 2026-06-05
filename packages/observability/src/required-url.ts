@@ -24,10 +24,7 @@ export function isProductionEnv(): boolean {
  * - Else in production: throw (no silent localhost fallback).
  * - Else (dev/test): return `devDefault`.
  *
- * @remarks SAFETY CONTRACT
- * Call only inside a function/factory, never at module-init scope (top-level
- * const, class field, or module-level singleton) — at import time a missing var
- * crashes the whole process. Enforced by the no-eager-requiredProdEnv lint rule.
+ * @remarks Module-init safety contract — see packages/validators/src/required-url.ts.
  */
 export function requiredProdEnv(
   name: string,
