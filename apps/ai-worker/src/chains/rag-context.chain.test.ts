@@ -16,8 +16,8 @@ import {
 } from './rag-context.chain';
 
 // Mock the embedding chain
-vi.mock('./embedding.chain', () => ({
-  embeddingChain: {
+vi.mock('./embedding.chain', () => {
+  const mockEmbeddingChain = {
     generateEmbedding: vi.fn().mockResolvedValue({
       vector: new Array(1536).fill(0.1),
       dimensions: 1536,
@@ -28,9 +28,12 @@ vi.mock('./embedding.chain', () => ({
       model: 'text-embedding-3-small',
       dimensions: 1536,
     }),
-  },
-  EmbeddingChain: vi.fn(),
-}));
+  };
+  return {
+    getEmbeddingChain: vi.fn(() => mockEmbeddingChain),
+    EmbeddingChain: vi.fn(),
+  };
+});
 
 describe('RAGContextChain', () => {
   let chain: RAGContextChain;

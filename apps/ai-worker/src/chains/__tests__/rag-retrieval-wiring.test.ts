@@ -19,7 +19,7 @@ import {
 
 // Suppress the embedding chain module — wiring tests don't need real embeddings.
 vi.mock('../embedding.chain', () => ({
-  embeddingChain: {
+  getEmbeddingChain: () => ({
     generateEmbedding: vi.fn().mockResolvedValue({
       vector: new Array(1536).fill(0.1),
       dimensions: 1536,
@@ -27,7 +27,7 @@ vi.mock('../embedding.chain', () => ({
       text: 'test',
     }),
     getStats: vi.fn().mockReturnValue({ model: 'text-embedding-3-small', dimensions: 1536 }),
-  },
+  }),
   EmbeddingChain: class {
     generateEmbedding = vi.fn().mockResolvedValue({
       vector: new Array(1536).fill(0.1),

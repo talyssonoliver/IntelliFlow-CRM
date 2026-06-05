@@ -316,7 +316,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private async bootContactEmbedWorker(): Promise<void> {
     try {
       const { ContactEmbedWorker } = await import('./workers/contact-embed-worker.js');
-      const { embeddingChain } = await import('./chains/embedding.chain.js');
+      const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
       const { updateContactEmbedding } = await import('@intelliflow/db');
       const redisConnection = {
         host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
@@ -328,7 +328,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         redisConnection,
         {
           generateEmbedding: async (text: string) => {
-            const result = await embeddingChain.generateEmbedding({ text });
+            const result = await getEmbeddingChain().generateEmbedding({ text });
             return result?.vector ?? null;
           },
         },
@@ -354,13 +354,13 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    * (the intended consumer) was not deployed.  This method wires genuine BullMQ
    * workers so the queues drain instead of backlogging.
    *
-   * Depends on embeddingChain being available; must run after Prisma init.
+   * Depends on getEmbeddingChain() being available; must run after Prisma init.
    * Mirrors the shape of bootContactEmbedWorker().
    */
   private async bootIngestionWorkers(): Promise<void> {
     try {
       const { bootIngestionWorkers } = await import('./workers/ingestion-workers.js');
-      const { embeddingChain } = await import('./chains/embedding.chain.js');
+      const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
       const redisConnection = {
         host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
@@ -370,7 +370,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       this.ingestionWorkersHandle = await bootIngestionWorkers(
         redisConnection,
         async (text: string) => {
-          const result = await embeddingChain.generateEmbedding({ text });
+          const result = await getEmbeddingChain().generateEmbedding({ text });
           return result?.vector ?? null;
         },
         this.logger

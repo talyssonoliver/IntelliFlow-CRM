@@ -16,7 +16,7 @@
  */
 
 import { z } from 'zod';
-import { EmbeddingChain, embeddingChain } from './embedding.chain';
+import { EmbeddingChain, getEmbeddingChain } from './embedding.chain';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import pino from 'pino';
 
@@ -151,7 +151,7 @@ export class RAGContextChain {
     retrievalService?: IRetrievalService,
     options?: { useMockFallback?: boolean }
   ) {
-    this.embeddingChain = customEmbeddingChain || embeddingChain;
+    this.embeddingChain = customEmbeddingChain || getEmbeddingChain();
     this.retrievalService = retrievalService || null;
     this.useMockFallback = options?.useMockFallback ?? process.env.NODE_ENV === 'test';
 

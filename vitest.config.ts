@@ -342,11 +342,11 @@ export default defineConfig({
         // Port interfaces (just TypeScript contracts, no logic)
         'packages/application/src/ports/**',
         'packages/application/src/errors/**',
-        // LLM chain classes - scoring.chain.ts now has mocked tests
-        // embedding, sentiment, rag-context still need mock implementations
-        'apps/ai-worker/src/chains/embedding.chain.ts',
+        // LLM chain classes — scoring/embedding/rag-context now have mocked
+        // tests (embedding.chain.{test,methods,boot-safety}.test.ts cover the
+        // embedder methods + lazy getEmbeddingChain; rag-context.chain.test.ts
+        // covers the chain). sentiment.chain.ts still needs a mock harness.
         'apps/ai-worker/src/chains/sentiment.chain.ts',
-        'apps/ai-worker/src/chains/rag-context.chain.ts',
         // External service integrations
         'apps/api/src/lib/supabase.ts',
         'apps/api/src/tracing/otel.ts',

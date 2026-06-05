@@ -72,7 +72,7 @@ export {
 // =============================================================================
 export {
   EmbeddingChain,
-  embeddingChain,
+  getEmbeddingChain,
   embeddingInputSchema,
   embeddingResultSchema,
   type EmbeddingInput,

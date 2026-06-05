@@ -4,6 +4,7 @@ import importPlugin from 'eslint-plugin-import';
 import securityPlugin from 'eslint-plugin-security';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import prettierConfig from 'eslint-config-prettier';
+import { noEagerRequiredProdEnvSelectors } from './eslint-rules/no-eager-required-prod-env.mjs';
 
 // Inject tsconfigRootDir into typescript-eslint parser config.
 // The monorepo has multiple tsconfig.json files (root + apps/project-tracker)
@@ -189,8 +190,7 @@ export default [
             },
             {
               group: ['react', 'react/*', 'react-dom', 'react-dom/*'],
-              message:
-                'Domain layer cannot depend on React. UI concerns belong in apps layer.',
+              message: 'Domain layer cannot depend on React. UI concerns belong in apps layer.',
             },
             {
               group: ['next', 'next/*'],
@@ -204,8 +204,7 @@ export default [
             },
             {
               group: ['@aws-sdk/*', '@azure/*', '@google-cloud/*'],
-              message:
-                'Domain layer cannot depend on cloud SDKs. Wrap these in adapters layer.',
+              message: 'Domain layer cannot depend on cloud SDKs. Wrap these in adapters layer.',
             },
           ],
         },
@@ -311,6 +310,28 @@ export default [
             'getDate() uses server-local timezone. Use getUTCDate() for UTC or timezone-utils for user-aware boundaries.',
         },
       ],
+    },
+  },
+
+  // ==========================================
+  // D4 / defect-D4: no-eager-requiredProdEnv
+  // requiredProdEnv() must NEVER be called at module-init scope (top-level
+  // VariableDeclaration, exported const initializer, or class PropertyDefinition
+  // initializer). A single missing env var at that scope crashes the entire
+  // process at import/boot time before any request is handled. Always call
+  // requiredProdEnv() inside a function/factory so the throw is deferred until
+  // the code path that actually needs the value is executed.
+  // ==========================================
+  {
+    files: ['apps/**/*.ts', 'apps/**/*.tsx', 'packages/**/*.ts', 'packages/**/*.tsx'],
+    ignores: [
+      // Definitions are intentionally excluded — they declare, not call.
+      'packages/validators/src/required-url.ts',
+      'packages/observability/src/required-url.ts',
+      'apps/web/src/lib/required-url.ts',
+    ],
+    rules: {
+      'no-restricted-syntax': ['error', ...noEagerRequiredProdEnvSelectors],
     },
   },
 

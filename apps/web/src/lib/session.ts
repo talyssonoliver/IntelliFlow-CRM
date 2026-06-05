@@ -11,12 +11,22 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { requiredProdEnv } from './required-url';
 
-// Supabase configuration
-const SUPABASE_URL = requiredProdEnv(
-  'NEXT_PUBLIC_SUPABASE_URL',
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  'http://127.0.0.1:54321'
-);
+// Lazy memoized accessors — calling requiredProdEnv at module-init scope would
+// crash the entire process on boot if the env var is absent (defect D4).
+// Memoisation preserves the original one-evaluation-per-process semantics when
+// the var IS present.
+let _supabaseUrl: string | undefined;
+function getSupabaseUrl(): string {
+  if (_supabaseUrl === undefined) {
+    _supabaseUrl = requiredProdEnv(
+      'NEXT_PUBLIC_SUPABASE_URL',
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      'http://127.0.0.1:54321'
+    );
+  }
+  return _supabaseUrl;
+}
+
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 /**
@@ -35,7 +45,7 @@ export interface SessionData {
  * Create Supabase client for server-side operations
  */
 export function createServerClient() {
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  return createClient(getSupabaseUrl(), SUPABASE_ANON_KEY, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
