@@ -143,12 +143,13 @@ jobs:
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
         env:
-          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN }}
+          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_PERSONAL_ACCESS_TOKEN }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_TOKEN }}
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_environment: ${{ matrix.environment }}
         run: |
+          set -o pipefail
           terraform plan \
             -var-file="environments/${{ matrix.environment }}/terraform.tfvars" \
             -out=plan.tfplan \
@@ -225,8 +226,8 @@ jobs:
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
         env:
-          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN }}
+          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_PERSONAL_ACCESS_TOKEN }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_TOKEN }}
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
         run: terraform apply -auto-approve plan.tfplan
@@ -275,6 +276,7 @@ jobs:
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD_PROD }}
           TF_VAR_environment: production
         run: |
+          set -o pipefail
           terraform plan \
             -var-file="environments/production/terraform.tfvars" \
             -out=plan.tfplan \
