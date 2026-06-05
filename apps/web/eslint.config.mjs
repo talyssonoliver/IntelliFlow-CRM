@@ -2,6 +2,10 @@ import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import reactHooks from 'eslint-plugin-react-hooks';
+import {
+  noEagerRequiredProdEnvSelectors,
+  timezoneUnsafeSelectors,
+} from '../../eslint-rules/no-eager-required-prod-env.mjs';
 
 export default [
   {
@@ -27,7 +31,10 @@ export default [
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       // TypeScript rules
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       // Disable rules that are too strict for now
       '@typescript-eslint/explicit-function-return-type': 'off',
@@ -55,36 +62,40 @@ export default [
       // Foreign icon packages defeat the subsetted font (234 KB, 359 glyphs)
       // and re-introduce the Lighthouse ≥90 regression this task fixed.
       // See docs/design/ICON_USAGE.md for the full policy.
-      'no-restricted-imports': ['error', {
-        paths: [
-          {
-            name: 'lucide-react',
-            message: 'Use Material Symbols: <span className="material-symbols-outlined">name</span>. See docs/design/ICON_USAGE.md + ADR-046.',
-          },
-          {
-            name: '@heroicons/react',
-            message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
-          },
-          {
-            name: 'react-icons',
-            message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
-          },
-          {
-            name: '@radix-ui/react-icons',
-            message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
-          },
-          {
-            name: 'react-feather',
-            message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
-          },
-        ],
-        patterns: [
-          {
-            group: ['@heroicons/react/*', 'react-icons/*', '@radix-ui/react-icons/*'],
-            message: 'Use Material Symbols. See docs/design/ICON_USAGE.md + ADR-046.',
-          },
-        ],
-      }],
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'lucide-react',
+              message:
+                'Use Material Symbols: <span className="material-symbols-outlined">name</span>. See docs/design/ICON_USAGE.md + ADR-046.',
+            },
+            {
+              name: '@heroicons/react',
+              message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
+            },
+            {
+              name: 'react-icons',
+              message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
+            },
+            {
+              name: '@radix-ui/react-icons',
+              message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
+            },
+            {
+              name: 'react-feather',
+              message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@heroicons/react/*', 'react-icons/*', '@radix-ui/react-icons/*'],
+              message: 'Use Material Symbols. See docs/design/ICON_USAGE.md + ADR-046.',
+            },
+          ],
+        },
+      ],
     },
   },
   // Timezone Safety: prevent server/browser-local time usage
@@ -112,20 +123,32 @@ export default [
       ],
     },
   },
+  // D4 / defect-D4: no-eager-requiredProdEnv
+  // requiredProdEnv() must NEVER be called at module-init scope (top-level
+  // VariableDeclaration, exported const initializer, or class PropertyDefinition
+  // initializer). A single missing env var at that scope crashes the entire
+  // process at import/boot time before any request is handled.
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/lib/required-url.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...noEagerRequiredProdEnvSelectors,
+        ...timezoneUnsafeSelectors,
+      ],
+    },
+  },
   // Test files — allow `any` for mock flexibility (consistent with root config)
   {
     files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/**/*.spec.ts', 'src/**/*.spec.tsx'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      // Timezone/eager rules intentionally off in test files — see root config rationale.
+      'no-restricted-syntax': 'off',
     },
   },
   {
-    ignores: [
-      'node_modules/**',
-      '.next/**',
-      'dist/**',
-      'build/**',
-      'coverage/**',
-    ],
+    ignores: ['node_modules/**', '.next/**', 'dist/**', 'build/**', 'coverage/**'],
   },
 ];
