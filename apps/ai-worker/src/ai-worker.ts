@@ -313,7 +313,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private async bootContactEmbedWorker(): Promise<void> {
     try {
       const { ContactEmbedWorker } = await import('./workers/contact-embed-worker.js');
-      const { embeddingChain } = await import('./chains/embedding.chain.js');
+      const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
       const { updateContactEmbedding } = await import('@intelliflow/db');
       const redisConnection = {
         host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
@@ -325,7 +325,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         redisConnection,
         {
           generateEmbedding: async (text: string) => {
-            const result = await embeddingChain.generateEmbedding({ text });
+            const result = await getEmbeddingChain().generateEmbedding({ text });
             return result?.vector ?? null;
           },
         },

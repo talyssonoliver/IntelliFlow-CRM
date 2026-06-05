@@ -356,4 +356,18 @@ export class EmbeddingChain {
 /**
  * Global embedding chain instance
  */
-export const embeddingChain = new EmbeddingChain();
+let _embeddingChain: EmbeddingChain | null = null;
+
+/**
+ * Lazily construct and memoize the shared EmbeddingChain.
+ *
+ * Deferring construction keeps `new EmbeddingChain()` — which calls
+ * `createEmbeddings()` and therefore reads provider env vars via
+ * `requiredProdEnv` — OUT of module-import time. Importing this module (or the
+ * `@intelliflow/ai-worker` barrel that re-exports it) must never construct the
+ * chain, so a missing/absent provider env var can never crash the process at
+ * boot. The chain is built on first real use and reused thereafter.
+ */
+export function getEmbeddingChain(): EmbeddingChain {
+  return (_embeddingChain ??= new EmbeddingChain());
+}

@@ -72,7 +72,11 @@ console.log(result.output.recommendedActions); // Next steps
 Generate vector embeddings for semantic search and RAG:
 
 ```typescript
-import { embeddingChain } from '@intelliflow/ai-worker';
+import { getEmbeddingChain } from '@intelliflow/ai-worker';
+
+// getEmbeddingChain() lazily constructs and memoizes the shared chain on first
+// call, so importing this package never reads provider env vars at module load.
+const embeddingChain = getEmbeddingChain();
 
 // Generate single embedding
 const result = await embeddingChain.generateEmbedding({

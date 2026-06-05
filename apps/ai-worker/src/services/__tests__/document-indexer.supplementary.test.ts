@@ -13,7 +13,7 @@ vi.mock('../../chains/embedding.chain', () => {
     ],
   });
   const embeddingChain = new (EmbeddingChain as new () => object)();
-  return { EmbeddingChain, embeddingChain };
+  return { EmbeddingChain, getEmbeddingChain: () => embeddingChain };
 });
 
 import {
