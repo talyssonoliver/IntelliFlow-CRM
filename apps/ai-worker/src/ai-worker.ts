@@ -132,6 +132,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private prisma?: import('@intelliflow/db').PrismaClient;
   // IFC-310: contact embedding worker for duplicate-detection runtime.
   private contactEmbedWorker?: import('./workers/contact-embed-worker.js').ContactEmbedWorker;
+  // D5 / issue #259: ingestion queue consumers (text-extraction + ocr-processing).
+  private ingestionWorkersHandle?: import('./workers/ingestion-workers.js').IngestionWorkersHandle;
   /** Passive dead-letter queue — no worker, just for inspection and replay. */
   private dlqQueue: Queue | null = null;
   /** QueueEvents instances for each AI queue (used for lifecycle listeners). */
@@ -264,6 +266,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     await this.wireAuditLogAdapter();
     await this.wireRetrievalService();
     await this.bootContactEmbedWorker();
+    await this.bootIngestionWorkers();
   }
 
   /** H4: Wire AuditLogPort so logAIAgentAction() writes to DB in addition to pino. */
@@ -339,6 +342,47 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
         'Failed to boot ContactEmbedWorker — contact embeddings will not be populated'
+      );
+    }
+  }
+
+  /**
+   * D5 / issue #259: Boot consumers for the document-ingestion queues.
+   *
+   * intelliflow-text-extraction and intelliflow-ocr-processing were previously
+   * registered read-only on the Bull Board dashboard while the ingestion-worker
+   * (the intended consumer) was not deployed.  This method wires genuine BullMQ
+   * workers so the queues drain instead of backlogging.
+   *
+   * Depends on getEmbeddingChain() being available; must run after Prisma init.
+   * Mirrors the shape of bootContactEmbedWorker().
+   */
+  private async bootIngestionWorkers(): Promise<void> {
+    try {
+      const { bootIngestionWorkers } = await import('./workers/ingestion-workers.js');
+      const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
+      const redisConnection = {
+        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+        ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
+      };
+      this.ingestionWorkersHandle = await bootIngestionWorkers(
+        redisConnection,
+        async (text: string) => {
+          const result = await getEmbeddingChain().generateEmbedding({ text });
+          return result?.vector ?? null;
+        },
+        this.logger
+      );
+      this.logger.info(
+        'Ingestion workers started — intelliflow-text-extraction and ' +
+          'intelliflow-ocr-processing queues now consumed'
+      );
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to boot ingestion workers — document processing jobs will remain queued'
       );
     }
   }
@@ -632,7 +676,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       queues.push(new BullMQAdapter(this.dlqQueue));
     }
 
-    // Also register external worker queues (read-only visibility)
+    // Register other queues for dashboard visibility.
+    // intelliflow-text-extraction and intelliflow-ocr-processing are now consumed
+    // by bootIngestionWorkers() above — they are no longer "external/read-only".
+    // We still register Queue instances here so Bull Board can display job depth
+    // and history; the actual consumption is owned by the Workers in
+    // ingestion-workers.ts.
     const { Queue } = await import('bullmq');
     const connection = {
       host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
@@ -640,13 +689,17 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
       ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
     };
-    const externalQueueNames = [
+    // intelliflow-document-reindex and intelliflow-embedding-generation remain
+    // external (consumed by other services or future workers).
+    // intelliflow-text-extraction and intelliflow-ocr-processing are listed here
+    // so operators can monitor queue depth alongside the ai-worker-consumed queues.
+    const dashboardOnlyQueueNames = [
       'intelliflow-document-reindex',
       'intelliflow-text-extraction',
       'intelliflow-ocr-processing',
       'intelliflow-embedding-generation',
     ];
-    for (const name of externalQueueNames) {
+    for (const name of dashboardOnlyQueueNames) {
       queues.push(new BullMQAdapter(new Queue(name, { connection })));
     }
 
@@ -721,6 +774,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     await this.tryStop(this.contactEmbedWorker, 'ContactEmbedWorker');
     if (this.contactEmbedWorker) {
       this.logger.info('ContactEmbedWorker stopped');
+    }
+
+    // D5 / issue #259: Stop ingestion queue workers cleanly.
+    await this.tryStop(this.ingestionWorkersHandle, 'IngestionWorkers');
+    if (this.ingestionWorkersHandle) {
+      this.logger.info('IngestionWorkers stopped');
     }
 
     // H8: Close DLQ queue and lifecycle event listeners

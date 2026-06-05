@@ -14,6 +14,7 @@
 import { Job } from 'bullmq';
 import pino from 'pino';
 import { z } from 'zod';
+import { fetchDocument, extractTextFromBuffer, createChunks } from '@intelliflow/worker-shared';
 
 // ============================================================================
 // Types & Schemas
@@ -60,105 +61,10 @@ export interface TextExtractionResult {
 }
 
 // ============================================================================
-// Text Extractor Factory
-// ============================================================================
-
-interface TextExtractor {
-  extract(buffer: Buffer): Promise<{ text: string; metadata?: Record<string, unknown> }>;
-  supports(format: string): boolean;
-}
-
-class PDFExtractor implements TextExtractor {
-  supports(format: string): boolean {
-    return format === 'pdf';
-  }
-
-  async extract(buffer: Buffer): Promise<{ text: string; metadata?: Record<string, unknown> }> {
-    const { PDFParse } = await import('pdf-parse');
-    const parser = new PDFParse({ data: buffer });
-    const textResult = await parser.getText();
-    let pageCount: number | undefined;
-    try {
-      const infoResult = await parser.getInfo();
-      // InfoResult.total is the total page count
-      pageCount = infoResult.total;
-    } catch {
-      // getInfo is best-effort; proceed without it
-    }
-    return {
-      text: textResult.text,
-      metadata: { pages: pageCount },
-    };
-  }
-}
-
-class DOCXExtractor implements TextExtractor {
-  supports(format: string): boolean {
-    return format === 'docx';
-  }
-
-  async extract(buffer: Buffer): Promise<{ text: string; metadata?: Record<string, unknown> }> {
-    const mammoth = await import('mammoth');
-    const result = await mammoth.extractRawText({ buffer });
-    return { text: result.value };
-  }
-}
-
-class PlainTextExtractor implements TextExtractor {
-  supports(format: string): boolean {
-    return ['txt', 'md', 'rtf'].includes(format);
-  }
-
-  async extract(buffer: Buffer): Promise<{ text: string; metadata?: Record<string, unknown> }> {
-    return { text: buffer.toString('utf-8') };
-  }
-}
-
-class HTMLExtractor implements TextExtractor {
-  supports(format: string): boolean {
-    return format === 'html';
-  }
-
-  async extract(buffer: Buffer): Promise<{ text: string; metadata?: Record<string, unknown> }> {
-    // In production, use cheerio or jsdom
-    // const cheerio = await import('cheerio');
-    // const $ = cheerio.load(buffer.toString('utf-8'));
-    // return { text: $('body').text() };
-
-    // Simple implementation. The single-pass `replaceAll` chain is vulnerable
-    // to incomplete-multi-character-sanitization: e.g. `<<script>script>...`
-    // becomes `<script>...` after one pass. Iterate the script/style strip
-    // until stable, then drop remaining tag-shaped substrings.
-    const html = buffer.toString('utf-8');
-    let stripped = html;
-
-    // End tags accept arbitrary trailing whitespace and attribute-like
-    // junk before the closing `>` per HTML5 parser rules — e.g.
-    // `</script foo bar>` or `</script\t\n bar>`. Tolerate `[^>]*` after
-    // the tag name so the fixed-point strip can't leave a stray opening
-    // `<script>` matched to nothing.
-    for (;;) {
-      const next = stripped
-        .replaceAll(/<script[^>]*>[\s\S]*?<\/script[^>]*>/gi, '')
-        .replaceAll(/<style[^>]*>[\s\S]*?<\/style[^>]*>/gi, '');
-      if (next === stripped) break;
-      stripped = next;
-    }
-    const text = stripped
-      .replaceAll(/<[^>]+>/g, ' ')
-      .replaceAll(/\s+/g, ' ')
-      .trim();
-
-    return { text };
-  }
-}
-
-// ============================================================================
 // Job Processor
 // ============================================================================
 
 export class TextExtractionProcessor {
-  private readonly extractors: TextExtractor[];
   private readonly logger: pino.Logger;
 
   constructor(logger?: pino.Logger) {
@@ -168,14 +74,6 @@ export class TextExtractionProcessor {
         name: 'text-extraction',
         level: 'info',
       });
-
-    // Register extractors
-    this.extractors = [
-      new PDFExtractor(),
-      new DOCXExtractor(),
-      new PlainTextExtractor(),
-      new HTMLExtractor(),
-    ];
   }
 
   /**
@@ -195,22 +93,16 @@ export class TextExtractionProcessor {
 
     try {
       // 1. Fetch document from storage
-      const buffer = await this.fetchDocument(input.sourceUrl);
+      const buffer = await fetchDocument(input.sourceUrl);
 
-      // 2. Find appropriate extractor
-      const extractor = this.extractors.find((e) => e.supports(input.format));
-      if (!extractor) {
-        throw new Error(`No extractor available for format: ${input.format}`);
-      }
+      // 2. Extract text (shared helper — same logic as the ai-worker consumer)
+      const { text, metadata } = await extractTextFromBuffer(buffer, input.format);
 
-      // 3. Extract text
-      const { text, metadata } = await extractor.extract(buffer);
-
-      // 4. Normalize text
+      // 3. Normalize text
       const normalizedText = this.normalizeText(text);
 
-      // 5. Create chunks for RAG
-      const chunks = this.createChunks(normalizedText);
+      // 4. Create chunks for RAG
+      const chunks = createChunks(normalizedText);
 
       // 6. Build result
       const processingTimeMs = Date.now() - startTime;
@@ -268,19 +160,6 @@ export class TextExtractionProcessor {
   }
 
   /**
-   * Fetch document from storage URL
-   */
-  private async fetchDocument(url: string): Promise<Buffer> {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch document: ${response.status} ${response.statusText}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
-  }
-
-  /**
    * Normalize text for search and RAG
    */
   private normalizeText(text: string): string {
@@ -299,37 +178,6 @@ export class TextExtractionProcessor {
         // Trim
         .trim()
     );
-  }
-
-  /**
-   * Create chunks for RAG indexing
-   */
-  private createChunks(text: string, chunkSize = 512, overlap = 64): string[] {
-    const words = text.split(' ');
-    const chunks: string[] = [];
-
-    let currentChunk: string[] = [];
-    let currentLength = 0;
-
-    for (const word of words) {
-      if (currentLength + word.length + 1 > chunkSize && currentChunk.length > 0) {
-        chunks.push(currentChunk.join(' '));
-
-        // Keep overlap words for context
-        const overlapWords = Math.ceil(overlap / 5);
-        currentChunk = currentChunk.slice(-overlapWords);
-        currentLength = currentChunk.join(' ').length;
-      }
-
-      currentChunk.push(word);
-      currentLength += word.length + 1;
-    }
-
-    if (currentChunk.length > 0) {
-      chunks.push(currentChunk.join(' '));
-    }
-
-    return chunks;
   }
 }
 
