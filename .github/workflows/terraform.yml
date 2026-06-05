@@ -42,6 +42,10 @@ env:
   # remains under the original BSL-pre license.
   TF_VERSION: '1.9.8'
   TF_WORKING_DIR: 'infra/terraform'
+  # HCP Terraform auth for the remote state backend (cloud{} in providers.tf).
+  # Set the TF_API_TOKEN repo secret — see
+  # docs/operations/runbooks/terraform-hcp-backend.md.
+  TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
 jobs:
   validate:
@@ -62,7 +66,11 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform init -backend=false
+        # The cloud{} backend forbids `-backend=false`; init connects to HCP and
+        # selects a workspace (any env workspace is fine for validate-only).
+        env:
+          TF_WORKSPACE: intelliflow-crm-dev
+        run: terraform init -input=false
 
       - name: Terraform Validate
         working-directory: ${{ env.TF_WORKING_DIR }}
