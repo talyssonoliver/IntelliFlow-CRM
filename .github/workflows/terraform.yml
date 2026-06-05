@@ -147,6 +147,7 @@ jobs:
           TF_VAR_vercel_api_token: ${{ secrets.VERCEL_TOKEN }}
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
           TF_VAR_environment: ${{ matrix.environment }}
         run: |
           set -o pipefail
@@ -230,6 +231,7 @@ jobs:
           TF_VAR_vercel_api_token: ${{ secrets.VERCEL_TOKEN }}
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
         run: terraform apply -auto-approve plan.tfplan
 
       - name: Terraform Output
@@ -274,6 +276,7 @@ jobs:
           TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN_PROD }}
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN_PROD }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD_PROD }}
+          TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN_PROD }}
           TF_VAR_environment: production
         run: |
           set -o pipefail
@@ -324,6 +327,7 @@ jobs:
           TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN_PROD }}
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN_PROD }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD_PROD }}
+          TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN_PROD }}
         run: terraform apply -auto-approve plan.tfplan
 
       - name: Terraform Output

@@ -224,3 +224,17 @@ variable "cost_alert_threshold" {
   type        = number
   default     = 100
 }
+
+# Observability (consumed by the monitoring module + injected into services)
+variable "sentry_dsn" {
+  description = "Sentry DSN injected into deployed services (via TF_VAR_sentry_dsn from the SENTRY_DSN secret). Empty disables Sentry at the service."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "otel_exporter_endpoint" {
+  description = "OTLP collector endpoint for OpenTelemetry export. Empty (default) = no collector yet; services use their console/disabled exporter. No value is fabricated."
+  type        = string
+  default     = ""
+}
