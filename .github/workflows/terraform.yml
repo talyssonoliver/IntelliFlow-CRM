@@ -108,11 +108,17 @@ jobs:
     name: Terraform Plan
     runs-on: ubuntu-latest
     needs: [validate, security-scan]
-    if: github.event_name == 'pull_request' || github.event.inputs.action == 'plan'
+    # Auto-plan on PR/push is deferred until INFRA-TF-004 wires the provider
+    # credentials (TF_VAR_* secrets) + per-env tfvars. Until then, run on demand
+    # via workflow_dispatch (action=plan). State comes from the HCP cloud{}
+    # backend in providers.tf — there is no S3/AWS backend anymore.
+    if: github.event.inputs.action == 'plan'
     strategy:
       matrix:
         environment: [dev, staging]
     environment: ${{ matrix.environment }}
+    env:
+      TF_WORKSPACE: intelliflow-crm-${{ matrix.environment }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -122,18 +128,10 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Configure AWS Credentials (for state backend)
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: |
-          terraform init \
-            -backend-config="key=crm/${{ matrix.environment }}/terraform.tfstate"
+        # cloud{} backend: TF_WORKSPACE (job env) selects the per-env workspace.
+        run: terraform init -input=false
 
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
@@ -188,13 +186,16 @@ jobs:
     name: Terraform Apply
     runs-on: ubuntu-latest
     needs: plan
-    if: |
-      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
-      github.event.inputs.action == 'apply'
+    # Apply is deferred to INFRA-TF-004 (needs TF_VAR_* creds + the plan
+    # artifact from the gated plan job). Runs only via workflow_dispatch
+    # (action=apply); no auto-apply on push to main yet.
+    if: github.event.inputs.action == 'apply'
     strategy:
       matrix:
         environment: [dev, staging]
     environment: ${{ matrix.environment }}
+    env:
+      TF_WORKSPACE: intelliflow-crm-${{ matrix.environment }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -204,13 +205,6 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
       - name: Download Plan
         uses: actions/download-artifact@v8
         with:
@@ -219,9 +213,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: |
-          terraform init \
-            -backend-config="key=crm/${{ matrix.environment }}/terraform.tfstate"
+        run: terraform init -input=false
 
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
@@ -248,10 +240,12 @@ jobs:
     name: Production Plan
     runs-on: ubuntu-latest
     needs: [validate, security-scan]
-    if: |
-      github.ref == 'refs/heads/main' ||
-      github.event.inputs.environment == 'production'
+    # Deferred to INFRA-TF-004 (needs TF_VAR_*_PROD creds + tfvars). Runs only
+    # via workflow_dispatch (environment=production, action=plan).
+    if: github.event.inputs.environment == 'production' && github.event.inputs.action == 'plan'
     environment: production-plan
+    env:
+      TF_WORKSPACE: intelliflow-crm-production
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -261,16 +255,9 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform init -backend-config="key=crm/production/terraform.tfstate"
+        run: terraform init -input=false
 
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
@@ -300,6 +287,8 @@ jobs:
     needs: production-plan
     if: github.event.inputs.action == 'apply' && github.event.inputs.environment == 'production'
     environment: production
+    env:
+      TF_WORKSPACE: intelliflow-crm-production
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -309,13 +298,6 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
       - name: Download Plan
         uses: actions/download-artifact@v8
         with:
@@ -324,7 +306,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform init -backend-config="key=crm/production/terraform.tfstate"
+        run: terraform init -input=false
 
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}

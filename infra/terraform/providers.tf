@@ -8,7 +8,7 @@ terraform {
   # selects the env workspace via TF_WORKSPACE (intelliflow-crm-{dev,staging,
   # production}). One-time setup: docs/operations/runbooks/terraform-hcp-backend.md
   cloud {
-    organization = "intelliflow-crm"
+    organization = "Leangency"
 
     workspaces {
       tags = ["intelliflow-crm"]
