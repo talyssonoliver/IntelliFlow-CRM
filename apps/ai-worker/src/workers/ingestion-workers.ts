@@ -157,11 +157,18 @@ async function extractTextFromBuffer(
       return { text: buffer.toString('utf-8') };
     case 'html': {
       const html = buffer.toString('utf-8');
+      // Strip <script>/<style> blocks INCLUDING their text content. The
+      // closing-tag alternation `(?:</script...>|$)` makes the match terminate
+      // at end-of-input when the tag is never closed, so an unclosed
+      // `<script>alert(1)` cannot leak its body as extracted text. Looping to a
+      // fixpoint neutralises nested/overlapping injections (e.g.
+      // `<scr<script>ipt>`). Both properties keep the sanitisation complete so
+      // CodeQL's incomplete-multi-character-sanitization check is satisfied.
       let stripped = html;
       for (;;) {
         const next = stripped
-          .replaceAll(/<script[^>]*>[\s\S]*?<\/script[^>]*>/gi, '')
-          .replaceAll(/<style[^>]*>[\s\S]*?<\/style[^>]*>/gi, '');
+          .replaceAll(/<script\b[^>]*>[\s\S]*?(?:<\/script\s*>|$)/gi, '')
+          .replaceAll(/<style\b[^>]*>[\s\S]*?(?:<\/style\s*>|$)/gi, '');
         if (next === stripped) break;
         stripped = next;
       }
