@@ -22,10 +22,9 @@ variable "services" {
 }
 
 variable "shared_env_vars" {
-  description = "Shared environment variables for all services"
+  description = "Shared environment variables for all services. Not sensitive at the map level (keys needed for for_each); secret values are stored as Railway shared variables."
   type        = map(string)
   default     = {}
-  sensitive   = true
 }
 
 variable "api_domain" {

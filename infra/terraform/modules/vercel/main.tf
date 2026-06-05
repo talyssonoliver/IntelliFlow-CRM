@@ -24,19 +24,19 @@ resource "vercel_project" "main" {
   # Root directory (for monorepo)
   root_directory = var.root_directory
 
-  # Environment variables
-  dynamic "environment" {
-    for_each = var.environment_variables
-
-    content {
-      key    = environment.key
-      value  = environment.value
-      target = ["production", "preview", "development"]
-    }
-  }
-
   # Serverless function region
   serverless_function_region = var.region
+}
+
+# General environment variables (provider >=1.0: env vars are a separate resource,
+# not an inline `environment` block on vercel_project).
+resource "vercel_project_environment_variable" "general" {
+  for_each = var.environment_variables
+
+  project_id = vercel_project.main.id
+  key        = each.key
+  value      = each.value
+  target     = ["production", "preview", "development"]
 }
 
 # Custom domains
@@ -64,24 +64,19 @@ resource "vercel_project_environment_variable" "env_specific" {
 resource "vercel_edge_config" "main" {
   count = var.enable_edge_config ? 1 : 0
 
-  name       = "${local.project_name_full}-edge-config"
-  project_id = vercel_project.main.id
+  name = "${local.project_name_full}-edge-config"
 }
 
-# Edge Config Items
-resource "vercel_edge_config_item" "items" {
-  for_each = var.enable_edge_config ? var.edge_config_items : {}
-
-  edge_config_id = vercel_edge_config.main[0].id
-  key            = each.key
-  value          = jsonencode(each.value)
-}
+# NOTE (provider >=1.0): vercel_edge_config_item was removed. Edge Config items
+# are managed via the Vercel API/SDK or vercel_edge_config_schema, not a TF
+# resource. var.edge_config_items is retained for the future schema/seed step.
 
 # Deployment hooks (for triggering deploys)
 resource "vercel_webhook" "deploy_hook" {
   count = var.enable_deploy_hook ? 1 : 0
 
-  project_id = vercel_project.main.id
-  events     = ["deployment.created", "deployment.succeeded", "deployment.failed"]
-  url        = var.webhook_url
+  # provider >=1.0: project_ids (plural) + endpoint (was project_id + url).
+  project_ids = [vercel_project.main.id]
+  events      = ["deployment.created", "deployment.succeeded", "deployment.failed"]
+  endpoint    = var.webhook_url
 }

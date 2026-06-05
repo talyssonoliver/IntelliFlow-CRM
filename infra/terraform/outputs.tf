@@ -81,11 +81,8 @@ output "railway_api_url" {
   sensitive   = false
 }
 
-output "railway_worker_url" {
-  description = "Railway AI Worker service URL"
-  value       = module.railway.worker_url
-  sensitive   = false
-}
+# NOTE: railway_worker_url removed — the railway provider (>=0.3) exposes service
+# domains via railway_service_domain, not a `url` attribute on the service.
 
 # Connection Strings (for CI/CD and local development)
 output "connection_strings" {
@@ -95,7 +92,6 @@ output "connection_strings" {
     supabase_url = module.supabase.api_url
     frontend_url = module.vercel.url
     api_url      = module.railway.api_url
-    worker_url   = module.railway.worker_url
   }
   sensitive = true
 }
@@ -128,7 +124,6 @@ output "health_check_endpoints" {
   description = "Health check URLs for monitoring"
   value = {
     api      = "${module.railway.api_url}/health"
-    worker   = "${module.railway.worker_url}/health"
     frontend = "${module.vercel.url}/api/health"
     database = "${module.supabase.api_url}/rest/v1/"
   }

@@ -16,16 +16,10 @@ output "service_ids" {
 }
 
 output "api_url" {
-  description = "API service URL"
-  value       = var.api_domain != "" ? "https://${var.api_domain}" : railway_service.services["api"].url
+  description = "API service URL (custom domain when set; otherwise unset — the provider exposes service domains via railway_service_domain, not a service `url` attribute)."
+  value       = var.api_domain != "" ? "https://${var.api_domain}" : ""
 }
 
-output "worker_url" {
-  description = "AI Worker service URL"
-  value       = railway_service.services["ai-worker"].url
-}
-
-output "deployment_ids" {
-  description = "Deployment IDs"
-  value       = { for k, v in railway_deployment.services : k => v.id }
-}
+# NOTE (provider >=0.3): railway_deployment was removed, so the deployment_ids
+# output no longer exists. Service URLs are exposed via railway_service_domain
+# (managed separately), not a `url` attribute on the service.
