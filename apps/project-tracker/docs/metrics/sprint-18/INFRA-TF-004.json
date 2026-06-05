@@ -1,0 +1,57 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "INFRA-TF-004",
+  "section": "Infrastructure",
+  "description": "Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).",
+  "owner": "DevOps (STOA-Foundation)",
+  "sprint": "sprint-18",
+  "phase": "phase-0-context",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "INFRA-TF-001"
+    ],
+    "all_satisfied": false,
+    "verified_at": "2026-06-05T12:00:00.000Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 600,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "env_tfvars": {
+      "target": "3",
+      "actual": "",
+      "met": false
+    },
+    "remote_state": {
+      "target": "active",
+      "actual": "",
+      "met": false
+    },
+    "ai_worker_otel": {
+      "target": "emitting",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "infra/terraform/environments",
+      "infra/terraform/modules/monitoring/main.tf"
+    ],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-06-05T12:00:00.000Z"
+    }
+  ],
+  "notes": "Governed by ADR-064 (Terraform = single source of truth). Phase 2/3 of docs/planning/infra-terraform-iac-plan.md."
+}
