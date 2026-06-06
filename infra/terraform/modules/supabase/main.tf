@@ -19,14 +19,39 @@
 locals {
   project_name_full = "${var.project_name}-${var.environment}"
 
-  # Construct URLs. During plan for a brand-new project (not yet imported),
-  # supabase_project.main.id is "(known after apply)" — the URL will also be
-  # deferred. That is correct Terraform behaviour. Once imported, the id is
-  # known and all downstream values resolve at plan time.
+  # Supabase REST API URL (used for client SDK config)
   api_url = "https://${supabase_project.main.id}.supabase.co"
+
+  # ---------------------------------------------------------------------------
+  # Transaction-pooler URL (connection_string / DATABASE_URL)
+  # ---------------------------------------------------------------------------
+  # Supabase uses PgBouncer in transaction mode at port 6543. Serverless runtimes
+  # (Vercel Edge/Node functions, Railway containers that scale to zero) MUST use
+  # this URL — direct connections exhaust the Postgres connection limit quickly.
+  #
+  # Pooler hostname pattern: aws-0-<region>.pooler.supabase.com
+  # Username is tenant-qualified: postgres.<project_ref> (dot, not colon)
+  # The ?pgbouncer=true hint tells Prisma to skip prepared-statement caching.
+  pooler_host = (
+    var.db_pooler_host != ""
+    ? var.db_pooler_host
+    : "aws-0-${var.region}.pooler.supabase.com"
+  )
   db_url = (
     var.db_connection_string != ""
     ? var.db_connection_string
+    : "postgresql://postgres.${supabase_project.main.id}:${var.db_password}@${local.pooler_host}:6543/postgres?pgbouncer=true"
+  )
+
+  # ---------------------------------------------------------------------------
+  # Direct (non-pooled) URL (direct_url / DIRECT_URL)
+  # ---------------------------------------------------------------------------
+  # Prisma migrations and introspection require a direct connection (no PgBouncer)
+  # because they use advisory locks and session-mode features. Always direct,
+  # never via the pooler.
+  db_direct_url = (
+    var.db_direct_connection_string != ""
+    ? var.db_direct_connection_string
     : "postgresql://postgres:${var.db_password}@db.${supabase_project.main.id}.supabase.co:5432/postgres"
   )
 }

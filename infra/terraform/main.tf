@@ -25,6 +25,7 @@ module "supabase" {
   organization_id = var.supabase_organization_id
   project_ref     = var.supabase_project_ref
   db_password     = var.supabase_db_password
+  db_pooler_host  = var.supabase_db_pooler_host
   plan            = var.supabase_plan
 
   # Extensions
@@ -63,8 +64,7 @@ module "vercel" {
     NEXT_PUBLIC_SUPABASE_ANON_KEY = module.supabase.anon_key
     SUPABASE_SERVICE_ROLE_KEY     = module.supabase.service_role_key
 
-    # Database — DATABASE_URL = transaction pooler (serverless-safe);
-    # DIRECT_URL = direct connection for Prisma migrations.
+    # Database — pooler URL for runtime, direct URL for Prisma migrations
     DATABASE_URL = module.supabase.connection_string
     DIRECT_URL   = module.supabase.direct_url
 
@@ -92,7 +92,7 @@ module "railway" {
 
   # Shared environment variables + observability (monitoring module)
   shared_env_vars = merge({
-    # Supabase connection (DATABASE_URL = pooler; DIRECT_URL = direct/migrations)
+    # Supabase connection — pooler for runtime queries, direct for migrations
     DATABASE_URL              = module.supabase.connection_string
     DIRECT_URL                = module.supabase.direct_url
     SUPABASE_URL              = module.supabase.api_url

@@ -12,14 +12,14 @@ output "api_url" {
 }
 
 output "connection_string" {
-  description = "Runtime DATABASE_URL — transaction pooler (6543), serverless-safe"
+  description = "PostgreSQL transaction-pooler URL (DATABASE_URL). Uses PgBouncer port 6543; safe for serverless/Vercel/Railway."
   value       = local.db_url
   sensitive   = true
 }
 
 output "direct_url" {
-  description = "DIRECT_URL — direct connection (5432) for Prisma migrations"
-  value       = local.direct_db_url
+  description = "PostgreSQL direct connection URL (DIRECT_URL). Non-pooled port 5432; required for Prisma migrations and schema introspection."
+  value       = local.db_direct_url
   sensitive   = true
 }
 

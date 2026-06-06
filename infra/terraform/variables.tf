@@ -75,6 +75,17 @@ variable "supabase_db_password" {
   sensitive   = true
 }
 
+variable "supabase_db_pooler_host" {
+  description = <<-EOT
+    Supabase transaction-pooler hostname (overrides the default
+    aws-0-<region>.pooler.supabase.com). Find the exact host in your Supabase
+    project → Settings → Database → Connection pooling. Leave empty to use the
+    regional default.
+  EOT
+  type        = string
+  default     = ""
+}
+
 variable "supabase_plan" {
   description = "Supabase plan (free, pro, team, enterprise)"
   type        = string

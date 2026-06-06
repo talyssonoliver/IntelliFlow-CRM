@@ -46,10 +46,35 @@ variable "db_password" {
 }
 
 variable "db_connection_string" {
-  description = "Full database connection string (passed in from outside; not derived by this module)"
+  description = <<-EOT
+    Override for the transaction-pooler DATABASE_URL. When non-empty this value
+    is returned as connection_string and no URL is derived. Leave empty to let
+    the module compute the standard Supabase transaction-pooler URL.
+  EOT
   type        = string
   default     = ""
   sensitive   = true
+}
+
+variable "db_direct_connection_string" {
+  description = <<-EOT
+    Override for the direct (non-pooled) DIRECT_URL used by Prisma migrations.
+    When non-empty this value is returned as direct_url. Leave empty to let the
+    module compute the standard Supabase direct connection URL.
+  EOT
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "db_pooler_host" {
+  description = <<-EOT
+    Supabase transaction-pooler hostname. Defaults to the standard AWS pattern
+    aws-0-<region>.pooler.supabase.com. Override with the exact host shown in
+    your Supabase project → Settings → Database → Connection pooling.
+  EOT
+  type        = string
+  default     = ""
 }
 
 variable "plan" {
