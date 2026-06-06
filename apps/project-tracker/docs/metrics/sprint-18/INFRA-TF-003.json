@@ -1,0 +1,47 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "INFRA-TF-003",
+  "section": "Infrastructure",
+  "description": "Replace the Supabase null_resource + curl scaffolding with the official supabase/supabase Terraform provider so Supabase auth/storage/extensions config is genuinely drift-detected.",
+  "owner": "DevOps (STOA-Foundation)",
+  "sprint": "sprint-18",
+  "phase": "phase-0-context",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": ["INFRA-TF-001"],
+    "all_satisfied": false,
+    "verified_at": "2026-06-05T12:00:00.000Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 360,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "supabase_null_resources": {
+      "target": "0",
+      "actual": "",
+      "met": false
+    },
+    "drift_detection": {
+      "target": "active",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": ["infra/terraform/modules/supabase/main.tf"],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-06-05T12:00:00.000Z"
+    }
+  ],
+  "notes": "Governed by ADR-064 (Terraform = single source of truth). Phase 2/3 of docs/planning/infra-terraform-iac-plan.md."
+}

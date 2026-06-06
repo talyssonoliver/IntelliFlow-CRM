@@ -1,0 +1,51 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "INFRA-TF-005",
+  "section": "Infrastructure",
+  "description": "CI + import + runbooks: add the three workers to build-images.yml and railway-deploy.yml; terraform import existing live Vercel/Railway/Supabase infra into state; update railway-deploy / workers / observability runbooks.",
+  "owner": "DevOps (STOA-Foundation)",
+  "sprint": "sprint-18",
+  "phase": "phase-0-context",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": ["INFRA-TF-002", "INFRA-TF-004"],
+    "all_satisfied": false,
+    "verified_at": "2026-06-05T12:00:00.000Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 480,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "workers_in_ci": {
+      "target": "3",
+      "actual": "",
+      "met": false
+    },
+    "imported_resources_clean": {
+      "target": "true",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      ".github/workflows/build-images.yml",
+      ".github/workflows/railway-deploy.yml",
+      "docs/operations/runbooks/railway-deploy.md"
+    ],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-06-05T12:00:00.000Z"
+    }
+  ],
+  "notes": "Governed by ADR-064 (Terraform = single source of truth). Phase 2/3 of docs/planning/infra-terraform-iac-plan.md."
+}

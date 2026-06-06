@@ -3434,14 +3434,35 @@ PG-192:
 # METADATA
 # -----------------------------------------------------------------------------
 
+# =============================================================================
+# INFRASTRUCTURE-AS-CODE INITIATIVE (ADR-064)
+# =============================================================================
+# INFRA-TF-001 is Tier A (high fan-out: INFRA-TF-002/003/004 depend on it).
+INFRA-TF-001:
+  tier: A
+  gate_profile:
+    - terraform_fmt
+    - terraform_validate
+    - terraform_plan
+  acceptance_owner: 'Platform Lead'
+  debt_allowed: no
+  evidence_required:
+    - infra/terraform/modules/railway/main.tf
+    - infra/terraform/modules/vercel/main.tf
+    - infra/terraform/modules/supabase/main.tf
+  notes: |
+    Terraform = single source of truth (ADR-064). Tier A unblocker for the
+    INFRA-TF-* initiative. Acceptance = green `terraform validate` (and `plan`
+    once the remote backend + tfvars from INFRA-TF-004 exist).
+
 _meta:
   description: 'Plan overrides for Sprint plan validation and governance'
   created: '2025-12-17'
-  updated: '2026-04-19'
+  updated: '2026-06-05'
   author: 'Plan Linter System'
   version: '2.0.0'
   sprint_scope: 'all'
-  total_overrides: 162
+  total_overrides: 163
   cycles_fixed: 2
   cross_sprint_fixes: 25
-  tier_a_definitions: 134
+  tier_a_definitions: 135

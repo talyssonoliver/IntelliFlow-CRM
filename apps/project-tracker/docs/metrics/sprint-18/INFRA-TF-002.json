@@ -1,0 +1,50 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "INFRA-TF-002",
+  "section": "Infrastructure",
+  "description": "Provision the three apps/workers (events-worker, ingestion-worker, notifications-worker) as first-class Railway services in Terraform. Closes GH #230/#259/#270 (workers built/tested but never deployed).",
+  "owner": "DevOps (STOA-Foundation)",
+  "sprint": "sprint-18",
+  "phase": "phase-0-context",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": ["INFRA-TF-001"],
+    "all_satisfied": false,
+    "verified_at": "2026-06-05T12:00:00.000Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "workers_provisioned": {
+      "target": "3",
+      "actual": "",
+      "met": false
+    },
+    "undeployed_workers": {
+      "target": "0",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "infra/terraform/variables.tf",
+      "infra/terraform/modules/railway/main.tf"
+    ],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-06-05T12:00:00.000Z"
+    }
+  ],
+  "notes": "Governed by ADR-064 (Terraform = single source of truth). Phase 2/3 of docs/planning/infra-terraform-iac-plan.md."
+}
