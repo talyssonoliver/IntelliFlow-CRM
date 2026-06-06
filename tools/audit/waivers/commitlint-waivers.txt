@@ -93,3 +93,9 @@ d752919b684a fix(ci): PR #201 squash subject — uppercase "E2E" + 105 chars (he
 # 75f93bb20d3e / d752919b684a. Caught by system-audit/commitlint (scans last 20
 # commits) on PR #247 and every subsequent PR until waived.
 117154e003c54642e0dfe21bb1b5fd7f626af6cd feat(ai-worker): PR #243 subject — proper noun "OpenRouter" upper-case — merged, cannot rewrite
+
+# PR #289 (feat/infra-tf-002-workers) squash-merged 2026-06-06; the squash
+# subject = the PR title (101 chars, header limit 100). Already on main; cannot
+# rewrite. Same root cause as the entries above. Caught by system-audit/commitlint
+# (scans last ~20 commits) on every subsequent PR until waived.
+5289aa9a43a08305d1d42f1dd43c537386781115 feat(infra): INFRA-TF-002 workers squash subject — 101 chars (limit 100), cannot rewrite
