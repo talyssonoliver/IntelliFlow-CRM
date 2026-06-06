@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-29T21:54:51.665Z",
+  "last_updated": "2026-06-05T12:00:00.000Z",
   "tasks_by_status": {
     "DONE": [
       "EXC-INIT-001",
@@ -597,7 +597,12 @@
       "PG-208",
       "PG-209",
       "PG-210",
-      "IFC-313"
+      "IFC-313",
+      "INFRA-TF-001",
+      "INFRA-TF-002",
+      "INFRA-TF-003",
+      "INFRA-TF-004",
+      "INFRA-TF-005"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -10079,19 +10084,19 @@
       "in_review": 0
     },
     "sprint-18": {
-      "total_tasks": 1,
+      "total_tasks": 6,
       "completed": 0,
       "in_progress": 0,
       "validating": 0,
       "blocked": 0,
       "planned": 0,
-      "backlog": 1,
+      "backlog": 6,
       "failed": 0,
       "needs_human": 0,
       "in_review": 0
     }
   },
-  "total_tasks": 590,
+  "total_tasks": 595,
   "active_sprint": "sprint-18",
   "current_sprint": 18
 }

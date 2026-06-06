@@ -205,7 +205,7 @@ New ADRs should follow the [MADR template](./template.md) structure:
 | [ADR-031](./ADR-031-ai-pipeline-design.md)        | AI Pipeline Architecture           | ✅ Accepted (partially superseded by ADR-048) | 2026-02-22 | ENV-011-AI, IFC-005, IFC-015, IFC-020, IFC-021                |
 | [ADR-032](./ADR-032-feature-flags-performance.md) | Feature Flags & Performance        | ✅ Accepted                                   | 2026-02-22 | ENV-014-AI, ENV-015-AI                                        |
 | [ADR-033](./ADR-033-security-hardening.md)        | Security Hardening                 | ✅ Accepted                                   | 2026-02-22 | IFC-073, IFC-077, IFC-113, IFC-114, IFC-121, IFC-125, IFC-143 |
-| [ADR-034](./ADR-034-infrastructure-platform.md)   | Infrastructure & Platform          | ✅ Accepted                                   | 2026-02-22 | IFC-075, IFC-078, IFC-111, IFC-112, IFC-116, IFC-163, IFC-167 |
+| [ADR-034](./ADR-034-infrastructure-platform.md)   | Infrastructure & Platform          | ⚠️ Superseded by ADR-064                      | 2026-02-22 | IFC-075, IFC-078, IFC-111, IFC-112, IFC-116, IFC-163, IFC-167 |
 | [ADR-035](./ADR-035-case-document-pipeline.md)    | Case Document Pipeline             | ✅ Accepted                                   | 2026-02-22 | IFC-152–IFC-156                                               |
 | [ADR-036](./ADR-036-event-consumers.md)           | Event Consumer Framework           | ✅ Accepted                                   | 2026-02-22 | IFC-151, IFC-168                                              |
 | [ADR-037](./ADR-037-ai-output-review.md)          | AI Output Review Layer             | ✅ Accepted                                   | 2026-02-22 | IFC-176–IFC-181                                               |
@@ -239,6 +239,16 @@ Previously missing from the index — backfilled during the ADR consolidation:
 | [ADR-044](./ADR-044-timezone-strategy.md)                 | UTC-First Timezone Strategy                   | ✅ Accepted | 2026-03-15 | IFC-191, IFC-192 |
 | [ADR-046](./ADR-046-material-symbols-font-subsetting.md)  | Material Symbols Font Subsetting              | ⏳ Proposed | 2026-04-13 | PG-216           |
 | [ADR-047](./ADR-047-hexagonal-architecture.md)            | Hexagonal Architecture (Ports & Adapters)     | ✅ Accepted | 2025-12-21 | IFC-002          |
+
+### Sprint 17 ADRs (2026-06)
+
+Previously missing from the index — added 2026-06-05:
+
+| ADR                                                      | Title                                      | Status      | Date       | Technical Story   |
+| -------------------------------------------------------- | ------------------------------------------ | ----------- | ---------- | ----------------- |
+| [ADR-062](./ADR-062-deploy-gated-on-ci-green.md)         | Deploys Gated on CI Green                  | ✅ Accepted | 2026-06-04 | Post-#247 DORA    |
+| [ADR-063](./ADR-063-web-api-tier-boundary.md)            | Web/API Tier Boundary                      | ✅ Accepted | 2026-06-04 | Defects D1/D6     |
+| [ADR-064](./ADR-064-terraform-single-source-of-truth.md) | Terraform = Single Source of Truth (infra) | ✅ Accepted | 2026-06-05 | INFRA-TF-001..005 |
 
 ### Consolidated / Removed ADRs
 

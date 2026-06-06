@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-04-29T21:54:52.035Z",
+  "last_updated": "2026-06-05T12:00:00.000Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -4641,6 +4641,41 @@
       "sprint": 19,
       "status": "BACKLOG",
       "dependencies": ["IFC-312"],
+      "dependents": []
+    },
+    "INFRA-TF-001": {
+      "task_id": "INFRA-TF-001",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": [],
+      "dependents": ["INFRA-TF-002", "INFRA-TF-003", "INFRA-TF-004"]
+    },
+    "INFRA-TF-002": {
+      "task_id": "INFRA-TF-002",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": ["INFRA-TF-001"],
+      "dependents": ["INFRA-TF-005"]
+    },
+    "INFRA-TF-003": {
+      "task_id": "INFRA-TF-003",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": ["INFRA-TF-001"],
+      "dependents": []
+    },
+    "INFRA-TF-004": {
+      "task_id": "INFRA-TF-004",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": ["INFRA-TF-001"],
+      "dependents": ["INFRA-TF-005"]
+    },
+    "INFRA-TF-005": {
+      "task_id": "INFRA-TF-005",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": ["INFRA-TF-002", "INFRA-TF-004"],
       "dependents": []
     }
   },
