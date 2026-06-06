@@ -1,14 +1,19 @@
 # IntelliFlow CRM - FinOps Usage Alerts Configuration
 # Task: IFC-055 - Budget Tracking with FinOps
-# Version: 1.0.0
-# Last Updated: 2025-12-28
+# Version: 1.1.0
+# Last Updated: 2026-06-06
 
 metadata:
   task_id: IFC-055
   owner: CFO + PM (STOA-Leadership)
-  version: '1.0.0'
+  version: '1.1.0'
   created_at: '2025-12-28T22:30:00Z'
+  last_updated: '2026-06-06'
   review_frequency: weekly
+  # 1.1.0 (INFRA-TF-002): refreshed for the 5-service Railway footprint
+  # (api, ai-worker, events/ingestion/notifications workers) now under IaC, and
+  # the "strictly free until first paying customer" posture — near-zero ($1)
+  # tripwires that mirror the terraform cost_alert_threshold = 1 per env.
 
 # Global alert settings
 global:
@@ -40,6 +45,16 @@ global:
 
 # Budget alerts
 budget_alerts:
+  # STRICTLY-FREE TRIPWIRE (INFRA-TF-002): with no paying customers the target is
+  # $0 spend. Fire on the first real dollar across ALL providers combined; the
+  # weekly/monthly budgets below are the post-customer scaling targets, not the
+  # current operating budget.
+  free_tier_tripwire:
+    total_monthly_cost: 1.00
+    currency: USD
+    severity: critical
+    message: 'Spend exceeded $1 while on the free-tier plan - investigate before it grows'
+
   # Weekly budget threshold
   weekly_spend:
     budget: 125.00
@@ -141,28 +156,41 @@ service_alerts:
 
   railway:
     provider: railway
-    tier: starter
+    # Entry tier (Trial/Hobby). 5 services are now under IaC (INFRA-TF-002):
+    # api, ai-worker, and the events/ingestion/notifications workers (the 3
+    # workers are minimal: 512Mi / 0.5 cpu / 1 replica). NOTE: 5 always-on
+    # services exceed Railway's free compute allowance, so staying strictly free
+    # means applying a SUBSET (e.g. dev only) or scaling idle services to zero.
+    tier: hobby
+    services:
+      - api
+      - ai-worker
+      - events-worker
+      - ingestion-worker
+      - notifications-worker
     alerts:
       compute:
         metric: compute_hours
-        limit: 500
+        limit: 500 # assumed free allowance; 5 always-on services exceed this
         thresholds:
           - percent: 70
-            severity: info
-            message: 'Railway compute at 70%'
-          - percent: 85
             severity: warning
-            message: 'Railway compute at 85%'
+            message: 'Railway compute at 70% of the free allowance'
+          - percent: 85
+            severity: critical
+            message: 'Railway compute at 85% - paid usage imminent'
       cost:
         metric: monthly_cost
-        limit: 25.00
+        # Strictly-free: tripwire at the first dollar (mirrors the terraform
+        # cost_alert_threshold = 1 per env).
+        limit: 5.00
         thresholds:
-          - amount: 15.00
-            severity: info
-            message: 'Railway cost at $15'
-          - amount: 20.00
-            severity: warning
-            message: 'Railway cost approaching limit'
+          - amount: 1.00
+            severity: critical
+            message: 'Railway cost exceeded $1 - no longer free'
+          - amount: 5.00
+            severity: emergency
+            message: 'Railway cost at $5 - Hobby usage accruing'
 
   openai:
     provider: openai
