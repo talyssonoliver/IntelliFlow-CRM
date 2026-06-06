@@ -18,12 +18,13 @@ locals {
 module "supabase" {
   source = "./modules/supabase"
 
-  project_name = var.supabase_project_name
-  environment  = var.environment
-  region       = var.supabase_region
-  access_token = var.supabase_access_token
-  db_password  = var.supabase_db_password
-  plan         = var.supabase_plan
+  project_name   = var.supabase_project_name
+  environment    = var.environment
+  region         = var.supabase_region
+  access_token   = var.supabase_access_token
+  db_password    = var.supabase_db_password
+  db_pooler_host = var.supabase_db_pooler_host
+  plan           = var.supabase_plan
 
   # Extensions
   enable_pgvector = var.enable_pgvector
@@ -61,8 +62,10 @@ module "vercel" {
     NEXT_PUBLIC_SUPABASE_ANON_KEY = module.supabase.anon_key
     SUPABASE_SERVICE_ROLE_KEY     = module.supabase.service_role_key
 
-    # Database
+    # Database — DATABASE_URL = transaction pooler (serverless-safe);
+    # DIRECT_URL = direct connection for Prisma migrations.
     DATABASE_URL = module.supabase.connection_string
+    DIRECT_URL   = module.supabase.direct_url
 
     # Build configuration
     NODE_ENV                = var.environment == "production" ? "production" : "development"
@@ -88,8 +91,9 @@ module "railway" {
 
   # Shared environment variables + observability (monitoring module)
   shared_env_vars = merge({
-    # Supabase connection
+    # Supabase connection (DATABASE_URL = pooler; DIRECT_URL = direct/migrations)
     DATABASE_URL              = module.supabase.connection_string
+    DIRECT_URL                = module.supabase.direct_url
     SUPABASE_URL              = module.supabase.api_url
     SUPABASE_ANON_KEY         = module.supabase.anon_key
     SUPABASE_SERVICE_ROLE_KEY = module.supabase.service_role_key
@@ -146,6 +150,7 @@ resource "local_file" "env_template" {
     supabase_anon_key     = module.supabase.anon_key
     supabase_service_role = module.supabase.service_role_key
     database_url          = module.supabase.connection_string
+    direct_url            = module.supabase.direct_url
     vercel_url            = module.vercel.url
     railway_api_url       = module.railway.api_url
     environment           = var.environment

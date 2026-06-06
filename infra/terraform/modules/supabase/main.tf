@@ -121,5 +121,18 @@ locals {
 
   # Construct URLs
   api_url = var.project_ref != "" ? "https://${var.project_ref}.supabase.co" : ""
-  db_url  = var.project_ref != "" ? "postgresql://postgres:${var.db_password}@db.${var.project_ref}.supabase.co:5432/postgres" : ""
+
+  # Transaction-pooler host (Supavisor). Defaults to the common aws-0-<region>
+  # form; override via db_pooler_host to match the project's exact pooler host.
+  pooler_host = var.db_pooler_host != "" ? var.db_pooler_host : "aws-0-${var.region}.pooler.supabase.com"
+
+  # Runtime DATABASE_URL = the TRANSACTION POOLER (port 6543). Required for
+  # serverless (Vercel functions): the direct :5432 connection exhausts under
+  # serverless concurrency. Tenant-qualified user `postgres.<ref>` + pgbouncer=true
+  # (disables prepared statements, which the transaction pooler does not support).
+  db_url = var.project_ref != "" ? "postgresql://postgres.${var.project_ref}:${var.db_password}@${local.pooler_host}:6543/postgres?pgbouncer=true" : ""
+
+  # DIRECT connection (port 5432) = DIRECT_URL, for Prisma migrations (the pooler
+  # can't run DDL / prepared statements).
+  direct_db_url = var.project_ref != "" ? "postgresql://postgres:${var.db_password}@db.${var.project_ref}.supabase.co:5432/postgres" : ""
 }

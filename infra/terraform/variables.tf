@@ -51,6 +51,12 @@ variable "supabase_region" {
   default     = "us-east-1"
 }
 
+variable "supabase_db_pooler_host" {
+  description = "Supabase transaction-pooler host for DATABASE_URL (serverless). Empty derives aws-0-<region>.pooler.supabase.com; set to the project's exact pooler host (from the Supabase dashboard / the live DATABASE_URL) so apply matches it exactly and doesn't cause drift."
+  type        = string
+  default     = ""
+}
+
 variable "supabase_db_password" {
   description = "Supabase database password"
   type        = string

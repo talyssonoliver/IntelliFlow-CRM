@@ -6,6 +6,7 @@ SUPABASE_URL=${supabase_url}
 SUPABASE_ANON_KEY=${supabase_anon_key}
 SUPABASE_SERVICE_ROLE_KEY=${supabase_service_role}
 DATABASE_URL=${database_url}
+DIRECT_URL=${direct_url}
 
 # --- Vercel (frontend) ---
 VERCEL_URL=${vercel_url}

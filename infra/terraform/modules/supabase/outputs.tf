@@ -11,8 +11,14 @@ output "api_url" {
 }
 
 output "connection_string" {
-  description = "PostgreSQL connection string"
+  description = "Runtime DATABASE_URL — transaction pooler (6543), serverless-safe"
   value       = local.db_url
+  sensitive   = true
+}
+
+output "direct_url" {
+  description = "DIRECT_URL — direct connection (5432) for Prisma migrations"
+  value       = local.direct_db_url
   sensitive   = true
 }
 
