@@ -27,6 +27,11 @@ export interface UserSession {
   tenantId: string;
   stripeCustomerId?: string;
   timezone?: string;
+  // Avatar resolved once during context creation (DB `avatarUrl`, lazily
+  // backfilled from the OAuth provider's metadata). Carrying it on the session
+  // lets `auth.getStatus` reuse `ctx.user` instead of issuing its own
+  // `prisma.user.findUnique` per request (N+1 elimination).
+  avatarUrl?: string;
 }
 
 /**
@@ -263,6 +268,7 @@ async function resolveDbUserWith(
       tenantId: true,
       stripeCustomerId: true,
       timezone: true,
+      avatarUrl: true,
     },
   });
 
@@ -276,6 +282,7 @@ async function resolveDbUserWith(
     tenantId: dbUser.tenantId,
     stripeCustomerId: dbUser.stripeCustomerId ?? undefined,
     timezone: dbUser.timezone ?? 'Europe/London',
+    avatarUrl: dbUser.avatarUrl ?? undefined,
   };
 }
 
@@ -301,6 +308,7 @@ async function maybePromoteBootstrapAdmin(
       tenantId: true,
       stripeCustomerId: true,
       timezone: true,
+      avatarUrl: true,
     },
   });
 
@@ -314,6 +322,7 @@ async function maybePromoteBootstrapAdmin(
     tenantId: updated.tenantId,
     stripeCustomerId: updated.stripeCustomerId ?? undefined,
     timezone: updated.timezone ?? 'Europe/London',
+    avatarUrl: updated.avatarUrl ?? undefined,
   };
 }
 
@@ -434,6 +443,7 @@ async function provisionNewUserWith(
       name: newUser.name ?? undefined,
       role: newUser.role,
       tenantId: newUser.tenantId,
+      avatarUrl: newUser.avatarUrl ?? undefined,
     };
   } catch (provisionError) {
     console.error('[Auth] Failed to auto-provision user:', provisionError);
@@ -457,6 +467,13 @@ export async function ensureAppUserSession(
 ): Promise<UserSession> {
   const existing = await resolveDbUserWith(prisma, supabaseUser.id);
   if (existing) {
+    // Lazily backfill the avatar from the OAuth provider's metadata when the DB
+    // value is missing. Makes the DB the single source of truth for the avatar so
+    // `auth.getStatus` can reuse `ctx.user.avatarUrl` with no extra query, and it
+    // self-heals for users provisioned before avatar persistence existed.
+    const metaAvatar = extractAvatarUrl(supabaseUser.user_metadata ?? {});
+    const shouldBackfillAvatar = !existing.avatarUrl && Boolean(metaAvatar);
+
     // Track sign-in for existing user (fire-and-forget — no need to await)
     void prisma.user
       .update({
@@ -465,9 +482,13 @@ export async function ensureAppUserSession(
           lastSignInAt: new Date(),
           signInCount: { increment: 1 },
           emailVerified: extractEmailVerified(supabaseUser),
+          ...(shouldBackfillAvatar ? { avatarUrl: metaAvatar } : {}),
         },
       })
       .catch((err) => console.warn('[Auth] Failed to update sign-in metadata:', err));
+
+    // Reflect the backfill in-memory so the avatar is correct on THIS request too.
+    if (shouldBackfillAvatar) existing.avatarUrl = metaAvatar ?? undefined;
 
     return maybePromoteBootstrapAdmin(prisma, existing, supabaseUser);
   }
