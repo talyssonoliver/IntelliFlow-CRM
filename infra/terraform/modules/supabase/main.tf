@@ -19,8 +19,13 @@
 locals {
   project_name_full = "${var.project_name}-${var.environment}"
 
-  # Supabase REST API URL (used for client SDK config)
-  api_url = "https://${supabase_project.main.id}.supabase.co"
+  # When manage_project is true, Terraform owns the supabase_project resource and
+  # its id is the source of truth; otherwise (dev/staging on Docker) there is no
+  # managed project and the project ref is whatever was supplied (usually empty).
+  project_id = var.manage_project ? supabase_project.main[0].id : var.project_ref
+
+  # Supabase REST API URL (used for client SDK config). Empty when unmanaged.
+  api_url = var.manage_project ? "https://${supabase_project.main[0].id}.supabase.co" : ""
 
   # ---------------------------------------------------------------------------
   # Transaction-pooler URL (connection_string / DATABASE_URL)
@@ -32,15 +37,19 @@ locals {
   # Pooler hostname pattern: aws-0-<region>.pooler.supabase.com
   # Username is tenant-qualified: postgres.<project_ref> (dot, not colon)
   # The ?pgbouncer=true hint tells Prisma to skip prepared-statement caching.
+  #
+  # Resolution order: explicit override (db_connection_string, e.g. a Docker URL
+  # for dev/staging) → derived Supabase pooler URL (only when a project is
+  # managed) → empty.
   pooler_host = (
     var.db_pooler_host != ""
     ? var.db_pooler_host
     : "aws-0-${var.region}.pooler.supabase.com"
   )
   db_url = (
-    var.db_connection_string != ""
-    ? var.db_connection_string
-    : "postgresql://postgres.${supabase_project.main.id}:${var.db_password}@${local.pooler_host}:6543/postgres?pgbouncer=true"
+    var.db_connection_string != "" ? var.db_connection_string :
+    var.manage_project ? "postgresql://postgres.${supabase_project.main[0].id}:${var.db_password}@${local.pooler_host}:6543/postgres?pgbouncer=true" :
+    ""
   )
 
   # ---------------------------------------------------------------------------
@@ -50,9 +59,9 @@ locals {
   # because they use advisory locks and session-mode features. Always direct,
   # never via the pooler.
   db_direct_url = (
-    var.db_direct_connection_string != ""
-    ? var.db_direct_connection_string
-    : "postgresql://postgres:${var.db_password}@db.${supabase_project.main.id}.supabase.co:5432/postgres"
+    var.db_direct_connection_string != "" ? var.db_direct_connection_string :
+    var.manage_project ? "postgresql://postgres:${var.db_password}@db.${supabase_project.main[0].id}.supabase.co:5432/postgres" :
+    ""
   )
 }
 
@@ -60,6 +69,10 @@ locals {
 # Project lifecycle (official provider)
 # ---------------------------------------------------------------------------
 resource "supabase_project" "main" {
+  # Only production owns a Supabase project. dev/staging run on local Docker
+  # Postgres (manage_project = false) and declare no project here.
+  count = var.manage_project ? 1 : 0
+
   name              = local.project_name_full
   organization_id   = var.organization_id
   database_password = var.db_password
@@ -81,7 +94,9 @@ resource "supabase_project" "main" {
 # it requires the project to exist (imported or applied) before refresh runs.
 # ---------------------------------------------------------------------------
 data "supabase_apikeys" "main" {
-  project_ref = supabase_project.main.id
+  count = var.manage_project ? 1 : 0
+
+  project_ref = supabase_project.main[0].id
 
   depends_on = [supabase_project.main]
 }
@@ -91,7 +106,9 @@ data "supabase_apikeys" "main" {
 # Replaces null_resource.auth_config + curl local-exec.
 # ---------------------------------------------------------------------------
 resource "supabase_settings" "main" {
-  project_ref = supabase_project.main.id
+  count = var.manage_project ? 1 : 0
+
+  project_ref = supabase_project.main[0].id
 
   auth = jsonencode({
     site_url   = var.auth_site_url
@@ -140,12 +157,14 @@ locals {
 # Kept as null_resource until the provider adds storage support.
 # ---------------------------------------------------------------------------
 resource "null_resource" "storage_buckets" {
-  for_each = var.storage_buckets
+  # Only when a Supabase project is managed (production). dev/staging buckets,
+  # if any, are created against the local stack outside Terraform.
+  for_each = var.manage_project ? var.storage_buckets : {}
 
   triggers = {
     bucket_name = each.key
     public      = tostring(each.value.public)
-    project_ref = supabase_project.main.id
+    project_ref = supabase_project.main[0].id
   }
 
   provisioner "local-exec" {
@@ -154,7 +173,7 @@ resource "null_resource" "storage_buckets" {
       supabase storage create ${each.key} \
         --public=${each.value.public} \
         --file-size-limit=${each.value.file_size_limit} \
-        --project-ref=${supabase_project.main.id}
+        --project-ref=${supabase_project.main[0].id}
     EOT
   }
 
@@ -165,10 +184,12 @@ resource "null_resource" "storage_buckets" {
 # pgvector extension — no provider resource; kept as null_resource.
 # ---------------------------------------------------------------------------
 resource "null_resource" "pgvector" {
-  count = var.enable_pgvector ? 1 : 0
+  # Production only. On dev/staging Docker Postgres pgvector is provisioned by the
+  # compose init.sql (pgvector/pgvector:pg16 image), not Terraform.
+  count = var.manage_project && var.enable_pgvector ? 1 : 0
 
   triggers = {
-    project_ref = supabase_project.main.id
+    project_ref = supabase_project.main[0].id
   }
 
   provisioner "local-exec" {

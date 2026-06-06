@@ -2,8 +2,8 @@
 # All outputs consumed by root main.tf are preserved exactly.
 
 output "project_ref" {
-  description = "Supabase project reference ID"
-  value       = supabase_project.main.id
+  description = "Supabase project reference ID (empty when unmanaged, e.g. dev/staging on Docker)"
+  value       = local.project_id
 }
 
 output "api_url" {
@@ -24,14 +24,14 @@ output "direct_url" {
 }
 
 output "anon_key" {
-  description = "Supabase anonymous (public) key — sourced from data.supabase_apikeys"
-  value       = data.supabase_apikeys.main.anon_key
+  description = "Supabase anonymous (public) key — sourced from data.supabase_apikeys (empty when unmanaged)"
+  value       = var.manage_project ? data.supabase_apikeys.main[0].anon_key : ""
   sensitive   = true
 }
 
 output "service_role_key" {
-  description = "Supabase service role key — sourced from data.supabase_apikeys"
-  value       = data.supabase_apikeys.main.service_role_key
+  description = "Supabase service role key — sourced from data.supabase_apikeys (empty when unmanaged)"
+  value       = var.manage_project ? data.supabase_apikeys.main[0].service_role_key : ""
   sensitive   = true
 }
 
@@ -42,6 +42,6 @@ output "jwt_secret" {
 }
 
 output "storage_buckets" {
-  description = "Created storage buckets"
-  value       = keys(var.storage_buckets)
+  description = "Created storage buckets (empty when unmanaged)"
+  value       = var.manage_project ? keys(var.storage_buckets) : []
 }

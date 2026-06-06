@@ -10,6 +10,20 @@ variable "environment" {
   type        = string
 }
 
+variable "manage_project" {
+  description = <<-EOT
+    Whether Terraform owns a Supabase project in this environment. true (default)
+    declares the supabase_project resource + provider data sources — import the
+    existing project before the first apply. false skips them entirely, for
+    environments backed by a non-Supabase database (e.g. local Docker Postgres for
+    dev/staging); the connection strings then come from db_connection_string /
+    db_direct_connection_string and the Supabase keys resolve to empty. Root sets
+    this from the environment so only production manages the Supabase project.
+  EOT
+  type        = bool
+  default     = true
+}
+
 variable "region" {
   description = "Supabase region (e.g. us-east-1, eu-west-1)"
   type        = string

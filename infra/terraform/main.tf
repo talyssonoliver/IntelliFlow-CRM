@@ -28,6 +28,14 @@ module "supabase" {
   db_pooler_host  = var.supabase_db_pooler_host
   plan            = var.supabase_plan
 
+  # Only production owns a Supabase project; dev/staging run on local Docker
+  # Postgres (see docker-compose.yml, pgvector/pgvector:pg16). This keeps a
+  # dev/staging plan/apply from ever creating a Supabase project (free tier is
+  # capped at 2 projects/org and Supabase branching is a paid feature).
+  manage_project              = var.environment == "production"
+  db_connection_string        = var.supabase_db_connection_string
+  db_direct_connection_string = var.supabase_db_direct_connection_string
+
   # Extensions
   enable_pgvector = var.enable_pgvector
   enable_realtime = var.enable_realtime

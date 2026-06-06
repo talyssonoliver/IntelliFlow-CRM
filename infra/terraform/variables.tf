@@ -75,15 +75,18 @@ variable "supabase_db_password" {
   sensitive   = true
 }
 
-variable "supabase_db_pooler_host" {
-  description = <<-EOT
-    Supabase transaction-pooler hostname (overrides the default
-    aws-0-<region>.pooler.supabase.com). Find the exact host in your Supabase
-    project → Settings → Database → Connection pooling. Leave empty to use the
-    regional default.
-  EOT
+variable "supabase_db_connection_string" {
+  description = "Override for DATABASE_URL (transaction pooler). For dev/staging on local Docker Postgres, set the Docker URL here; for production leave empty so the module derives the pooler URL from the managed Supabase project."
   type        = string
   default     = ""
+  sensitive   = true
+}
+
+variable "supabase_db_direct_connection_string" {
+  description = "Override for DIRECT_URL (direct port 5432, Prisma migrations). For dev/staging on Docker set the Docker URL; production leaves empty to derive from the managed project."
+  type        = string
+  default     = ""
+  sensitive   = true
 }
 
 variable "supabase_plan" {
