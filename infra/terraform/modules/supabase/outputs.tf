@@ -1,8 +1,9 @@
 # Supabase Module Outputs
+# All outputs consumed by root main.tf are preserved exactly.
 
 output "project_ref" {
   description = "Supabase project reference ID"
-  value       = var.project_ref
+  value       = supabase_project.main.id
 }
 
 output "api_url" {
@@ -23,20 +24,20 @@ output "direct_url" {
 }
 
 output "anon_key" {
-  description = "Supabase anonymous (public) key"
-  value       = var.project_ref != "" ? local.project_data.anon_key : ""
+  description = "Supabase anonymous (public) key — sourced from data.supabase_apikeys"
+  value       = data.supabase_apikeys.main.anon_key
   sensitive   = true
 }
 
 output "service_role_key" {
-  description = "Supabase service role key"
-  value       = var.project_ref != "" ? local.project_data.service_role_key : ""
+  description = "Supabase service role key — sourced from data.supabase_apikeys"
+  value       = data.supabase_apikeys.main.service_role_key
   sensitive   = true
 }
 
 output "jwt_secret" {
-  description = "JWT signing secret"
-  value       = var.project_ref != "" ? local.project_data.jwt_secret : ""
+  description = "JWT signing secret — sourced via Management API (provider does not expose this)"
+  value       = local.jwt_secret
   sensitive   = true
 }
 

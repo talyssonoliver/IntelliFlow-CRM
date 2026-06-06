@@ -39,6 +39,18 @@ variable "supabase_access_token" {
   sensitive   = true
 }
 
+variable "supabase_organization_id" {
+  description = "Supabase organization ID (required by supabase_project resource; find it in app.supabase.com/org)"
+  type        = string
+  default     = ""
+}
+
+variable "supabase_project_ref" {
+  description = "Existing Supabase project reference (e.g. abcdefghijklmnop). Used for import-based drift detection. Empty is safe for plan; import before first apply."
+  type        = string
+  default     = ""
+}
+
 variable "supabase_project_name" {
   description = "Supabase project name"
   type        = string

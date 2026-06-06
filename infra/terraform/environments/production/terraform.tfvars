@@ -28,6 +28,8 @@ tags = {
 supabase_project_name = "intelliflow-crm-production"
 supabase_region       = "us-east-1"
 supabase_plan         = "free"
+# supabase_organization_id + supabase_project_ref: injected via TF_VAR_* secrets.
+# Default to "" (safe for plan). Required before first apply.
 
 vercel_project_name = "intelliflow-crm-production"
 vercel_framework    = "nextjs"

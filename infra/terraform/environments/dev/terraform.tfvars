@@ -25,6 +25,11 @@ tags = {
 supabase_project_name = "intelliflow-crm-dev"
 supabase_region       = "us-east-1"
 supabase_plan         = "free"
+# supabase_organization_id: find at app.supabase.com/org → Settings → General.
+# Injected via TF_VAR_supabase_organization_id (GitHub secret SUPABASE_ORG_ID).
+# supabase_project_ref: the short ref shown in the project URL (e.g. abcdefgh).
+# Injected via TF_VAR_supabase_project_ref (GitHub secret SUPABASE_PROJECT_REF_DEV).
+# Both default to "" which is safe for plan; required before first apply.
 
 # Vercel
 vercel_project_name = "intelliflow-crm-dev"

@@ -11,44 +11,49 @@ variable "environment" {
 }
 
 variable "region" {
-  description = "Supabase region"
+  description = "Supabase region (e.g. us-east-1, eu-west-1)"
   type        = string
   default     = "us-east-1"
 }
 
-variable "db_pooler_host" {
-  description = "Transaction-pooler host (Supavisor). Empty = derive aws-0-<region>.pooler.supabase.com. Set to the project's exact pooler host to match the live DATABASE_URL."
+variable "organization_id" {
+  description = "Supabase organization ID (required by supabase_project resource)"
   type        = string
-  default     = ""
 }
 
 variable "access_token" {
-  description = "Supabase Management API access token"
+  description = "Supabase Personal Access Token (used by the provider + HTTP data source)"
   type        = string
   sensitive   = true
 }
 
 variable "project_ref" {
-  description = "Existing Supabase project reference (for import)"
+  description = <<-EOT
+    Existing Supabase project reference ID. When non-empty the project
+    lifecycle is managed via import (run once: terraform import
+    module.supabase.supabase_project.main <ref>). When empty a new project
+    resource is declared but a real create would require apply — plan only
+    shows a 'create' intent, which is expected in a fresh-state context.
+  EOT
   type        = string
   default     = ""
 }
 
 variable "db_password" {
-  description = "Database password"
+  description = "Database password for the Supabase project"
   type        = string
   sensitive   = true
 }
 
 variable "db_connection_string" {
-  description = "Full database connection string"
+  description = "Full database connection string (passed in from outside; not derived by this module)"
   type        = string
   default     = ""
   sensitive   = true
 }
 
 variable "plan" {
-  description = "Supabase plan (free, pro, team, enterprise)"
+  description = "Supabase plan (free, pro, team, enterprise) — informational only; plan changes require manual action via the dashboard"
   type        = string
   default     = "free"
 }
@@ -90,7 +95,7 @@ variable "storage_buckets" {
 }
 
 variable "tags" {
-  description = "Resource tags"
+  description = "Resource tags (informational; Supabase does not support resource-level tags via Terraform)"
   type        = map(string)
   default     = {}
 }

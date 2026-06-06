@@ -13,18 +13,19 @@ locals {
 }
 
 # Supabase Module
-# Note: Supabase doesn't have an official Terraform provider
-# This module uses the Management API via HTTP requests
+# Uses the official supabase/supabase provider for project lifecycle, settings,
+# and API key retrieval. jwt_secret is still fetched via HTTP (provider gap).
 module "supabase" {
   source = "./modules/supabase"
 
-  project_name   = var.supabase_project_name
-  environment    = var.environment
-  region         = var.supabase_region
-  access_token   = var.supabase_access_token
-  db_password    = var.supabase_db_password
-  db_pooler_host = var.supabase_db_pooler_host
-  plan           = var.supabase_plan
+  project_name    = var.supabase_project_name
+  environment     = var.environment
+  region          = var.supabase_region
+  access_token    = var.supabase_access_token
+  organization_id = var.supabase_organization_id
+  project_ref     = var.supabase_project_ref
+  db_password     = var.supabase_db_password
+  plan            = var.supabase_plan
 
   # Extensions
   enable_pgvector = var.enable_pgvector
