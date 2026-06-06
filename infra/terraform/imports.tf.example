@@ -1,0 +1,46 @@
+# =============================================================================
+# Terraform import blocks (TEMPLATE) — INFRA-TF-005 import piece.
+# =============================================================================
+# This file is `.example` so Terraform does NOT auto-load it. It is a ONE-TIME
+# tool to adopt EXISTING live infrastructure into state before the first apply,
+# so apply manages those resources instead of trying to recreate (and possibly
+# duplicate/destroy) them. Full procedure + safety gates:
+#   docs/operations/runbooks/terraform-import.md
+#
+# To use: `cp imports.tf.example imports.tf`, select the CORRECT workspace
+# (TF_WORKSPACE — prod resources belong in intelliflow-crm-production, NOT dev),
+# fill in any discovered IDs, run `terraform plan` and REVIEW it (it will reveal
+# config-vs-reality diffs such as the Vercel project name), reconcile until
+# imported resources show NO changes, then apply. DELETE imports.tf afterward.
+#
+# Supabase is intentionally absent: the current module is null_resource + http
+# (nothing real to import). Proper Supabase import needs INFRA-TF-003's official
+# supabase/supabase provider.
+# =============================================================================
+
+# Vercel — the live project intelli-flow-crm-web (serving intelli-flow-crm-web.vercel.app)
+# under org team_v4UlyPGDvXOtXK8yPx1w90Hf. NOTE: config names it
+# intelliflow-crm-<env>; the plan WILL show a rename — reconcile before apply.
+import {
+  to = module.vercel.vercel_project.main
+  id = "prj_AQ1IS7N9VOtxgF48oYCe4mZdVYgd"
+}
+
+# Railway — the live project.
+import {
+  to = module.railway.railway_project.main
+  id = "8c2b7828-d508-4fb4-9ea4-98f9c35f9edc"
+}
+
+# Railway environment — discover the UUID (runbook §3) before enabling:
+# import {
+#   to = module.railway.railway_environment.main
+#   id = "<railway-environment-uuid>"
+# }
+
+# Existing Railway services / Vercel env vars — ONLY if they already exist.
+# Discover each id (runbook §3) and add one import block per resource, e.g.:
+# import {
+#   to = module.railway.railway_service.services["api"]
+#   id = "<railway-service-uuid>"
+# }

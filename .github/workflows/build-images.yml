@@ -55,23 +55,38 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Image metadata
-        id: meta
-        uses: docker/metadata-action@v6
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/intelliflow-crm-${{ matrix.service }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=short
-            type=ref,event=tag
-
-      - name: Build and push
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      # Retried buildx (was docker/build-push-action). The base-image pull from
+      # Docker Hub intermittently times out ("context deadline exceeded") on one
+      # matrix service, reddening main; a re-attempt clears it. The GHA layer
+      # cache makes retries cheap. Tags: latest + sha-<short> (+ the git tag on
+      # v* tag pushes), matching the previous metadata-action output.
+      - name: Build and push (retry transient registry timeouts)
+        shell: bash
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/intelliflow-crm-${{ matrix.service }}
+          DOCKERFILE: ${{ matrix.dockerfile }}
+        run: |
+          set -euo pipefail
+          short_sha="${GITHUB_SHA::7}"
+          tags=(--tag "$IMAGE:latest" --tag "$IMAGE:sha-$short_sha")
+          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
+            tags+=(--tag "$IMAGE:${GITHUB_REF#refs/tags/}")
+          fi
+          for attempt in 1 2 3; do
+            echo "::group::build $IMAGE (attempt $attempt)"
+            if docker buildx build --push \
+                 --file "$DOCKERFILE" \
+                 "${tags[@]}" \
+                 --cache-from type=gha \
+                 --cache-to type=gha,mode=max \
+                 .; then
+              echo "::endgroup::"
+              echo "build succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "attempt $attempt failed (likely a transient registry timeout); retrying in 20s"
+            sleep 20
+          done
+          echo "build failed after 3 attempts"
+          exit 1

@@ -1,0 +1,56 @@
+name: Deploy Workers (Railway)
+
+# INFRA-TF-005 — railway-deploy CI for the events/ingestion/notifications
+# workers. After their GHCR images are (re)built by "Build & Push Images", this
+# redeploys the corresponding Railway services so the running workers pick up
+# the new image.
+#
+# ⚠️ GATED + DORMANT BY DESIGN. The workers do NOT exist on Railway until they
+# are provisioned (terraform apply — a deliberate, cost-gated step; see
+# docs/operations/runbooks/terraform-import.md). Until then this workflow SKIPS
+# (the services it would redeploy don't exist). To activate it once the workers
+# are live on Railway, set the repo variable RAILWAY_WORKERS_DEPLOYED=true, and
+# verify the `railway redeploy` invocation against your actual project/service
+# names (it could not be validated pre-provisioning).
+
+on:
+  workflow_run:
+    workflows: ['Build & Push Images']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-workers
+  cancel-in-progress: false
+
+jobs:
+  redeploy:
+    name: Redeploy ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    # Dormant until the workers are provisioned + the flag is flipped; and (for
+    # the build-triggered path) only after a SUCCESSFUL image build.
+    if: >-
+      vars.RAILWAY_WORKERS_DEPLOYED == 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success')
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [events-worker, ingestion-worker, notifications-worker]
+    steps:
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Redeploy worker service
+        # RAILWAY_TOKEN scopes the CLI to the project. Service name mirrors the
+        # railway_service key in the env tfvars (INFRA-TF-002). Verify this
+        # invocation against your Railway project once the workers exist.
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "Redeploying ${{ matrix.service }} on Railway..."
+          railway redeploy --service "${{ matrix.service }}" --yes
