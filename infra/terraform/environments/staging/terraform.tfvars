@@ -54,6 +54,36 @@ railway_services = {
       LOG_LEVEL          = "info"
     }
   }
+  # INFRA-TF-002: events/ingestion/notifications workers (#230/#259/#270).
+  # Minimal free-tier footprint (512Mi / 0.5 cpu / 1 replica). DATABASE_URL,
+  # NODE_ENV, OTEL/Sentry come from shared_env_vars; the rest use code defaults.
+  events-worker = {
+    image    = "ghcr.io/talyssonoliver/intelliflow-crm-events-worker:latest"
+    replicas = 1
+    memory   = "512Mi"
+    cpu      = "0.5"
+    env_vars = {
+      LOG_LEVEL = "info"
+    }
+  }
+  ingestion-worker = {
+    image    = "ghcr.io/talyssonoliver/intelliflow-crm-ingestion-worker:latest"
+    replicas = 1
+    memory   = "512Mi"
+    cpu      = "0.5"
+    env_vars = {
+      LOG_LEVEL = "info"
+    }
+  }
+  notifications-worker = {
+    image    = "ghcr.io/talyssonoliver/intelliflow-crm-notifications-worker:latest"
+    replicas = 1
+    memory   = "512Mi"
+    cpu      = "0.5"
+    env_vars = {
+      LOG_LEVEL = "info"
+    }
+  }
 }
 
 enable_pgvector = true
@@ -65,4 +95,4 @@ auth_jwt_expiry = 3600
 enable_monitoring      = true
 enable_drift_detection = true
 enable_cost_alerts     = true
-cost_alert_threshold   = 75
+cost_alert_threshold   = 1
