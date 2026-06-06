@@ -16,6 +16,12 @@ variable "region" {
   default     = "us-east-1"
 }
 
+variable "db_pooler_host" {
+  description = "Transaction-pooler host (Supavisor). Empty = derive aws-0-<region>.pooler.supabase.com. Set to the project's exact pooler host to match the live DATABASE_URL."
+  type        = string
+  default     = ""
+}
+
 variable "access_token" {
   description = "Supabase Management API access token"
   type        = string
