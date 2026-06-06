@@ -102,8 +102,23 @@ export const queryPerformanceTracker = new QueryPerformanceTracker(
  * Prisma 7 requires a driver adapter for database connections
  */
 const createPrismaClient = () => {
+  // Cap the node-postgres pool size per process. On serverless (Vercel/Lambda)
+  // each function instance opens its own pool, so the default (max: 10) lets a
+  // handful of concurrent instances exhaust Supabase's pooler (EMAXCONNSESSION,
+  // pool_size 15) — which surfaces as 500s on every authenticated DB query and
+  // gets users signed out. Keep it tiny on serverless; allow larger pools for
+  // long-lived workers via DB_POOL_MAX. See docs/audit/auth-session-db-pool-audit.md.
+  const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  let poolMax: number;
+  if (process.env.DB_POOL_MAX) {
+    poolMax = Number.parseInt(process.env.DB_POOL_MAX, 10);
+  } else {
+    poolMax = isServerless ? 1 : 10;
+  }
+
   const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL!,
+    max: poolMax,
   });
 
   const client = new PrismaClient({
