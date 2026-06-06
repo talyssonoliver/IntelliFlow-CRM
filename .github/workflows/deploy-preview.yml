@@ -55,11 +55,20 @@ jobs:
       - name: Install Vercel CLI
         run: npm add -g vercel@latest
 
-      - name: Enable pnpm via corepack
-        # `vercel build` runs the project install command (pnpm install) in this
-        # runner, where pnpm is NOT on PATH by default -> "pnpm: not found"
-        # (exit 127). corepack activates the package.json packageManager (pnpm).
-        run: corepack enable
+      # `vercel build` runs the project install command (pnpm install) in this
+      # runner, so pnpm must be on PATH. Use the repo's proven setup
+      # (pnpm/action-setup + setup-node, mirroring .github/actions/setup-monorepo
+      # which all of CI passes with) rather than corepack, which doesn't put
+      # pnpm on PATH reliably here -> "pnpm: not found" (exit 127).
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.33.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
 
       - name: Pull Vercel environment (preview)
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
