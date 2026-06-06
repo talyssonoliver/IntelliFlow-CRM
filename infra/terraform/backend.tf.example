@@ -1,26 +1,25 @@
 # =============================================================================
-# Terraform remote state — EXAMPLE
+# Terraform remote state — now HCP Terraform (see providers.tf `cloud {}`)
 # =============================================================================
-# Copy to backend.tf in this directory (gitignored: backend.tf).
-# The .github/workflows/terraform.yml workflow runs
-#   terraform init -backend-config="key=crm/${env}/terraform.tfstate"
-# so the per-env `key` is supplied at init time — only bucket+region are pinned
-# here.
+# The S3 backend was replaced by HCP Terraform (free tier): no AWS account, with
+# built-in state locking + drift detection. The backend is configured by the
+# `cloud {}` block in providers.tf — there is NO separate backend.tf to copy.
 #
-# Required GitHub repo secrets:
-#   AWS_ACCESS_KEY_ID
-#   AWS_SECRET_ACCESS_KEY
+# One-time setup + the workspaces/token: docs/operations/runbooks/terraform-hcp-backend.md
 #
-# For local apply: aws configure (or AWS_PROFILE) before `terraform init`.
+# Required GitHub repo secret:
+#   TF_API_TOKEN   (HCP Terraform API token)
+#
+# Local: `terraform login`, then `TF_WORKSPACE=intelliflow-crm-dev terraform init`.
+#
+# (The previous S3 example is kept below, commented, for reference only.)
 # =============================================================================
 
-terraform {
-  backend "s3" {
-    bucket  = "intelliflow-terraform-state"
-    region  = "us-east-1"
-    encrypt = true
-
-    # Optional but recommended — DynamoDB table for state locking
-    # dynamodb_table = "intelliflow-terraform-locks"
-  }
-}
+# terraform {
+#   backend "s3" {
+#     bucket  = "intelliflow-terraform-state"
+#     region  = "us-east-1"
+#     encrypt = true
+#     # dynamodb_table = "intelliflow-terraform-locks"
+#   }
+# }

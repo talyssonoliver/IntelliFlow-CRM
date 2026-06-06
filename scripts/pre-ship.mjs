@@ -99,6 +99,19 @@ function lcovMissing() {
   return !fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/lcov.info'));
 }
 
+// Probe whether an optional IaC CLI (terraform / actionlint) is installed.
+// Missing -> the step SKIPs locally (CI still enforces it). Spawned with a shell
+// on win32 so PATH .exe/.cmd resolution works. NOTE: these local IaC gates catch
+// formatting + workflow-syntax issues; they CANNOT catch GitHub-Actions token /
+// SARIF-permission failures, which only manifest on GitHub's runners.
+function commandMissing(bin) {
+  const r = spawnSync(bin, ['--version'], {
+    stdio: 'ignore',
+    shell: process.platform === 'win32',
+  });
+  return !!r.error || r.status !== 0;
+}
+
 // Step plan — fail-first token gate + 17 steps from audit doc §8. Each step has:
 //   id          : kebab-case identifier (also used as log filename)
 //   description : human-readable label printed during the run
@@ -149,6 +162,26 @@ const STEPS = [
     description: 'prettier --check (catches the YAML/json format drift CI hits)',
     cmd: ['pnpm', 'run', 'format:check'],
     required: true,
+  },
+  {
+    // IaC formatting gate (INFRA-TF-004). Mirrors the terraform.yml `fmt -check`
+    // job so drift is caught locally, not after a CI round. SKIPs if terraform
+    // isn't installed; required when it is.
+    id: 'terraform-fmt',
+    description: 'terraform fmt -check -recursive (infra/terraform)',
+    cmd: ['terraform', '-chdir=infra/terraform', 'fmt', '-check', '-recursive'],
+    skip_if: () => commandMissing('terraform'),
+    required: true,
+  },
+  {
+    // GitHub Actions workflow linter. Advisory (required:false) for now: it's
+    // typically not installed locally (skips), and a clean pass across the whole
+    // workflow corpus hasn't been confirmed — promote to required once it has.
+    id: 'actionlint',
+    description: 'actionlint (.github/workflows syntax/expression lint) — advisory',
+    cmd: ['actionlint'],
+    skip_if: () => commandMissing('actionlint'),
+    required: false,
   },
   {
     id: 'lint',

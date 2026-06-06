@@ -2,6 +2,19 @@
 terraform {
   required_version = ">= 1.6.0"
 
+  # Remote state + state locking + drift detection via HCP Terraform (free tier).
+  # Replaces the previous S3 backend (no AWS account/creds needed). The org +
+  # workspaces are created once in HCP; CI authenticates with TF_API_TOKEN and
+  # selects the env workspace via TF_WORKSPACE (intelliflow-crm-{dev,staging,
+  # production}). One-time setup: docs/operations/runbooks/terraform-hcp-backend.md
+  cloud {
+    organization = "Leangency"
+
+    workspaces {
+      tags = ["intelliflow-crm"]
+    }
+  }
+
   required_providers {
     # Vercel provider for frontend/API deployment
     vercel = {

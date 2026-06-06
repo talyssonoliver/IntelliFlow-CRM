@@ -54,8 +54,8 @@ module "vercel" {
   # Custom domains
   domains = var.vercel_domains
 
-  # Environment variables from Supabase
-  environment_variables = {
+  # Environment variables from Supabase + observability (monitoring module)
+  environment_variables = merge({
     # Supabase connection
     NEXT_PUBLIC_SUPABASE_URL      = module.supabase.api_url
     NEXT_PUBLIC_SUPABASE_ANON_KEY = module.supabase.anon_key
@@ -67,7 +67,10 @@ module "vercel" {
     # Build configuration
     NODE_ENV                = var.environment == "production" ? "production" : "development"
     NEXT_TELEMETRY_DISABLED = "1"
-  }
+
+    # Sentry DSN (sensitive value; injected like the Supabase keys above)
+    SENTRY_DSN = var.sentry_dsn
+  }, module.monitoring.observability_env)
 
   tags = local.common_tags
 }
@@ -83,8 +86,8 @@ module "railway" {
   # Services configuration
   services = var.railway_services
 
-  # Shared environment variables
-  shared_env_vars = {
+  # Shared environment variables + observability (monitoring module)
+  shared_env_vars = merge({
     # Supabase connection
     DATABASE_URL              = module.supabase.connection_string
     SUPABASE_URL              = module.supabase.api_url
@@ -97,7 +100,31 @@ module "railway" {
 
     # Vercel (for API callbacks)
     FRONTEND_URL = module.vercel.url
-  }
+
+    # Sentry DSN (sensitive value; injected like the Supabase keys above)
+    SENTRY_DSN = var.sentry_dsn
+  }, module.monitoring.observability_env)
+
+  tags = local.common_tags
+}
+
+# Monitoring / Observability-as-code Module
+# Computes the observability env injected into the Vercel + Railway services
+# above and renders a tracked monitoring manifest. Provider-light (local only),
+# so it never needs credentials and is always safe to plan.
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  enable_monitoring      = var.enable_monitoring
+  enable_drift_detection = var.enable_drift_detection
+  drift_check_schedule   = var.drift_check_schedule
+  enable_cost_alerts     = var.enable_cost_alerts
+  cost_alert_threshold   = var.cost_alert_threshold
+
+  otel_exporter_endpoint = var.otel_exporter_endpoint
 
   tags = local.common_tags
 }
