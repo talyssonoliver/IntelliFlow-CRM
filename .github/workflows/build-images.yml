@@ -32,6 +32,15 @@ jobs:
             dockerfile: infra/docker/Dockerfile.api
           - service: ai-worker
             dockerfile: infra/docker/Dockerfile.ai-worker
+          # INFRA-TF-005: the 3 workers (events/ingestion/notifications) so their
+          # ghcr.io/<owner>/intelliflow-crm-<svc>:latest images exist for the
+          # Railway services defined in the env tfvars (INFRA-TF-002).
+          - service: events-worker
+            dockerfile: apps/workers/events-worker/Dockerfile
+          - service: ingestion-worker
+            dockerfile: apps/workers/ingestion-worker/Dockerfile
+          - service: notifications-worker
+            dockerfile: apps/workers/notifications-worker/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@v6
