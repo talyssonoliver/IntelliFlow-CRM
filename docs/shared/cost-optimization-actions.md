@@ -3,7 +3,30 @@
 ## IntelliFlow CRM FinOps Playbook
 
 **Task ID:** IFC-055 **Owner:** CFO + PM (STOA-Leadership) **Last Updated:**
-2025-12-28 **Version:** 1.0.0
+2026-06-06 **Version:** 1.1.0
+
+> **1.1.0 (INFRA-TF-002):** the 3 workers (events/ingestion/notifications) are
+> now defined under Terraform as Railway services, bringing the Railway
+> footprint to **5 services** (api, ai-worker + the 3 workers). The workers are
+> minimal (512Mi / 0.5 cpu / 1 replica). See "Strictly-Free Posture" below.
+> Historical spend figures in this doc predate that change and are unverified
+> here.
+
+---
+
+## Strictly-Free Posture (no paying customers yet)
+
+The current directive is **$0 spend** until the first paying customer. Guards:
+
+- Terraform `cost_alert_threshold = 1` per env + a `free_tier_tripwire` at $1
+  total in `infra/monitoring/usage-alerts-config.yaml` — alert on the first real
+  dollar across all providers.
+- **Railway reality:** 5 always-on services exceed Railway's free compute
+  allowance. To stay strictly free, **apply only a subset** (e.g. `dev` only) or
+  **scale idle services to zero**; do not `terraform apply` all envs at once.
+- Defining the workers in Terraform costs **nothing** — cost is incurred only on
+  `apply`. Provisioning is a deliberate, gated step (and needs the GHCR worker
+  images, published by INFRA-TF-005).
 
 ---
 
