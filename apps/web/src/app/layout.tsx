@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import { GoogleTagManager } from '@next/third-parties/google';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import { Providers } from './providers';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -133,6 +134,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             />
           </Providers>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
