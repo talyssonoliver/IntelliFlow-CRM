@@ -11,23 +11,30 @@
 # docs/operations/credential-coverage-remediation-2026-06-07.md) MUST treat it as
 # a hard gate and not dispatch the apply until it is green.
 
+# Only the UNCONDITIONALLY boot-required secrets are gated here. Two audit-Tier-0
+# vars are CONDITIONAL and intentionally NOT gated, because the live deployment
+# does not use those code paths:
+#   - litellm_master_key / litellm_base_url: only thrown when AI_PROVIDER=litellm.
+#     The live ai-worker runs AI_PROVIDER=openrouter (OPENROUTER_API_KEY + Gemini),
+#     so LiteLLM is unused. Set these only if you migrate the AI path to LiteLLM.
+#   - vault_token / vault_local_dek_secret: only required when VAULT_ENABLED=true.
+#     The live services use the EnvironmentKeyProvider (VAULT_ENABLED unset), which
+#     derives field keys from PRISMA_FIELD_ENCRYPTION_KEY directly. Set these only
+#     if you turn on the Vault Transit provider (see ADR-065 / issue #317).
 check "tier0_secrets_present" {
   assert {
     condition = var.environment != "production" || alltrue([
       var.prisma_field_encryption_key != "",
       var.ai_audit_signing_key != "",
-      var.litellm_master_key != "",
       var.redis_host != "",
       var.redis_password != "",
-      var.vault_local_dek_secret != "" || var.vault_token != "",
       var.sentry_dsn != "",
     ])
     error_message = join(" ", [
-      "Tier-0 secret(s) empty for production (issue #315):",
-      "one or more of PRISMA_FIELD_ENCRYPTION_KEY, AI_AUDIT_SIGNING_KEY,",
-      "LITELLM_MASTER_KEY, REDIS_HOST, REDIS_PASSWORD,",
-      "VAULT_LOCAL_DEK_SECRET/VAULT_TOKEN, SENTRY_DSN is unset.",
-      "Set them as sensitive HCP workspace variables before applying — see",
+      "Tier-0 secret(s) empty for production (issue #315): one or more of",
+      "PRISMA_FIELD_ENCRYPTION_KEY, AI_AUDIT_SIGNING_KEY, REDIS_HOST,",
+      "REDIS_PASSWORD, SENTRY_DSN is unset. Set them as sensitive HCP workspace",
+      "variables before applying — see",
       "docs/operations/credential-coverage-remediation-2026-06-07.md.",
     ])
   }
