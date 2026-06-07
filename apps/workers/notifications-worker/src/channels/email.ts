@@ -237,7 +237,7 @@ export class EmailChannel {
     } catch (error) {
       this.logger.warn(
         { error, host: this.config.host, port: this.config.port },
-        'Email SMTP verify failed — starting in degraded mode (email jobs will be attempted per-delivery and may fail until SMTP is configured)',
+        'Email SMTP verify failed — starting in degraded mode (email jobs will be attempted per-delivery and may fail until SMTP is configured)'
       );
     }
   }

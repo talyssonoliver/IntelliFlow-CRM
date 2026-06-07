@@ -208,7 +208,7 @@ export class RedisRateLimiter {
     const url = rawUrl && /^rediss?:\/\//i.test(rawUrl) ? rawUrl : process.env.REDIS_URL;
     if (!url) {
       throw new Error(
-        'REDIS_URL (ioredis rediss:// string) is required for distributed rate limiting',
+        'REDIS_URL (ioredis rediss:// string) is required for distributed rate limiting'
       );
     }
 
