@@ -375,7 +375,6 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
     // ADR-049: finalize-phase emission must fire whether the agent returns
     // cleanly, retries, rejects, or throws. We collect the outcome inside the
     // try block and let the finally block do the emission + logging.
-    // eslint-disable-next-line no-useless-assignment -- default needed for TS definite-assignment in finally
     let finalizeOutcome: 'success' | 'rejected' | 'error' | 'retry' = 'error';
     let finalizeError: string | undefined;
     let finalizeConfidence: number | undefined;
