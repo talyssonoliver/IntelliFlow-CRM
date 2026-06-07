@@ -89,11 +89,10 @@ module "vercel" {
     # Sentry DSN (sensitive value; injected like the Supabase keys above)
     SENTRY_DSN = var.sentry_dsn
 
-    # Tier-0 secrets consumed by web (server components / tRPC); issue #315.
-    # vault_* not wired — the web/api use the EnvironmentKeyProvider (VAULT_ENABLED
-    # unset), deriving field keys from PRISMA_FIELD_ENCRYPTION_KEY directly.
-    PRISMA_FIELD_ENCRYPTION_KEY = var.prisma_field_encryption_key
-    AI_AUDIT_SIGNING_KEY        = var.ai_audit_signing_key
+    # NOTE: PRISMA_FIELD_ENCRYPTION_KEY and AI_AUDIT_SIGNING_KEY already exist on
+    # the live Vercel project (the web has always had them), so they are NOT
+    # declared here — Terraform-creating them errors ENV_ALREADY_EXISTS. They stay
+    # web-managed; vault_* unused (EnvironmentKeyProvider). issue #315.
   }, module.monitoring.observability_env)
 
   tags = local.common_tags
