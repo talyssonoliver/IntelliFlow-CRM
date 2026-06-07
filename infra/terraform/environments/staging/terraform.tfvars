@@ -13,7 +13,7 @@ region       = "us-east-1"
 tags = {
   Project    = "IntelliFlow-CRM"
   ManagedBy  = "Terraform"
-  Repository = "intelliflow/intelliflow-crm"
+  Repository = "talyssonoliver/IntelliFlow-CRM"
   Team       = "Engineering"
   CostCenter = "Engineering"
   Env        = "staging"
@@ -95,7 +95,7 @@ railway_services = {
 enable_pgvector = true
 enable_realtime = true
 
-auth_site_url   = "https://staging.intelliflow-crm.example"
+auth_site_url   = "http://localhost:3000"
 auth_jwt_expiry = 3600
 
 enable_monitoring      = true

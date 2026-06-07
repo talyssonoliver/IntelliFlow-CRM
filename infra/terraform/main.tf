@@ -59,6 +59,11 @@ module "vercel" {
   environment  = var.environment
   framework    = var.vercel_framework
 
+  # Monorepo build configuration (matches live Vercel project settings)
+  root_directory  = "apps/web"
+  build_command   = "cd ../.. && pnpm exec turbo run build --filter=@intelliflow/web"
+  install_command = "cd ../.. && pnpm install --frozen-lockfile"
+
   # Git integration
   git_repository = var.vercel_git_repo
 

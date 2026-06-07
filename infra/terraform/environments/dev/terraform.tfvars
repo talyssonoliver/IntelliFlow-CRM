@@ -15,7 +15,7 @@ region       = "us-east-1"
 tags = {
   Project    = "IntelliFlow-CRM"
   ManagedBy  = "Terraform"
-  Repository = "intelliflow/intelliflow-crm"
+  Repository = "talyssonoliver/IntelliFlow-CRM"
   Team       = "Engineering"
   CostCenter = "Engineering"
   Env        = "dev"
@@ -104,7 +104,7 @@ railway_services = {
 enable_pgvector = true
 enable_realtime = true
 
-auth_site_url   = "https://dev.intelliflow-crm.example"
+auth_site_url   = "http://localhost:3000"
 auth_jwt_expiry = 3600
 
 # Observability + cost guardrails (kept low for dev)
