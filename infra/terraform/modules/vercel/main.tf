@@ -60,7 +60,7 @@ resource "vercel_project_environment_variable" "general" {
   project_id = vercel_project.main.id
   key        = each.key
   value      = each.value
-  target     = ["production", "preview", "development"]
+  target     = ["production", "preview"]
 }
 
 # Custom domains

@@ -55,20 +55,21 @@ railway_services = {
     replicas = 2
     memory   = "1Gi"
     cpu      = "1"
-    env_vars = {
-      PORT      = "4000"
-      LOG_LEVEL = "info"
-    }
+    # env_vars intentionally empty: the api service is ALREADY running live with
+    # its variables set on Railway. Terraform did not import those railway_variable
+    # resources, so it must not declare them here — setting PORT=4000 could clash
+    # with Railway's auto-assigned port, and any drift would fight the live service.
+    # Only the 3 NEW workers (below) get Terraform-managed env_vars.
+    env_vars = {}
   }
   ai-worker = {
     image    = "ghcr.io/talyssonoliver/intelliflow-crm-ai-worker:latest"
     replicas = 2
     memory   = "1Gi"
     cpu      = "1"
-    env_vars = {
-      WORKER_CONCURRENCY = "5"
-      LOG_LEVEL          = "info"
-    }
+    # env_vars intentionally empty — see api note above. ai-worker is live; leave
+    # its variables untouched.
+    env_vars = {}
   }
   # INFRA-TF-002: events/ingestion/notifications workers (#230/#259/#270).
   # Minimal free-tier footprint (512Mi / 0.5 cpu / 1 replica — even in prod,
@@ -112,3 +113,7 @@ enable_monitoring      = true
 enable_drift_detection = true
 enable_cost_alerts     = true
 cost_alert_threshold   = 1
+
+# Storage buckets exist live + are managed outside Terraform (the supabase CLI
+# isn't available to the runner); skip the local-exec creator.
+storage_buckets = {}

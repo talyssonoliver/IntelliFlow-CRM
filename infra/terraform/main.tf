@@ -77,8 +77,9 @@ module "vercel" {
     NEXT_PUBLIC_SUPABASE_ANON_KEY = module.supabase.anon_key
     SUPABASE_SERVICE_ROLE_KEY     = module.supabase.service_role_key
 
-    # Database — pooler URL for runtime, direct URL for Prisma migrations
-    DATABASE_URL = module.supabase.connection_string
+    # Database — SERVERLESS pooler URL (connection_limit=1, issue #312) for
+    # Vercel functions; direct URL for Prisma migrations.
+    DATABASE_URL = module.supabase.connection_string_serverless
     DIRECT_URL   = module.supabase.direct_url
 
     # Build configuration
@@ -87,6 +88,11 @@ module "vercel" {
 
     # Sentry DSN (sensitive value; injected like the Supabase keys above)
     SENTRY_DSN = var.sentry_dsn
+
+    # NOTE: PRISMA_FIELD_ENCRYPTION_KEY and AI_AUDIT_SIGNING_KEY already exist on
+    # the live Vercel project (the web has always had them), so they are NOT
+    # declared here — Terraform-creating them errors ENV_ALREADY_EXISTS. They stay
+    # web-managed; vault_* unused (EnvironmentKeyProvider). issue #315.
   }, module.monitoring.observability_env)
 
   tags = local.common_tags
@@ -105,9 +111,11 @@ module "railway" {
 
   # Shared environment variables + observability (monitoring module)
   shared_env_vars = merge({
-    # Supabase connection — pooler for runtime queries, direct for migrations
-    DATABASE_URL              = module.supabase.connection_string
-    DIRECT_URL                = module.supabase.direct_url
+    # Supabase connection — SESSION pooler (5432) for these long-running services
+    # (real pool + session features), matching the live api/ai-worker/ws. The new
+    # workers inherit this rather than the transaction pooler (6543).
+    DATABASE_URL              = module.supabase.connection_string_session
+    DIRECT_URL                = module.supabase.connection_string_session
     SUPABASE_URL              = module.supabase.api_url
     SUPABASE_ANON_KEY         = module.supabase.anon_key
     SUPABASE_SERVICE_ROLE_KEY = module.supabase.service_role_key
@@ -121,6 +129,23 @@ module "railway" {
 
     # Sentry DSN (sensitive value; injected like the Supabase keys above)
     SENTRY_DSN = var.sentry_dsn
+
+    # --- Tier-0 application secrets (issue #315) ---
+    # Boot/decrypt-required in prod; an empty value crash-boots the service.
+    # Shared across api + ai-worker + the 3 workers (a service that doesn't read
+    # a given key simply ignores it — harmless, and avoids per-service env_vars).
+    # litellm_* and vault_* are intentionally NOT wired: they are conditional
+    # (AI_PROVIDER=litellm / VAULT_ENABLED=true), unused in the current config, and
+    # would otherwise be injected EMPTY across the fleet. Wire them only if those
+    # paths are enabled (see the conditional note in checks.tf).
+    PRISMA_FIELD_ENCRYPTION_KEY = var.prisma_field_encryption_key
+    AI_AUDIT_SIGNING_KEY        = var.ai_audit_signing_key
+    REDIS_HOST                  = var.redis_host
+    REDIS_PORT                  = var.redis_port
+    REDIS_PASSWORD              = var.redis_password
+    REDIS_TLS                   = var.redis_tls
+    GEMINI_API_KEY              = var.gemini_api_key
+    OPENROUTER_API_KEY          = var.openrouter_api_key
   }, module.monitoring.observability_env)
 
   tags = local.common_tags
