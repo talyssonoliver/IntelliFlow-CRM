@@ -23,12 +23,11 @@ on:
         required: false
         default: 'false'
         type: boolean
-  push:
-    branches: [main]
-    paths:
-      - 'packages/**/*.ts'
-      - 'apps/**/*.ts'
-      - 'artifacts/metrics/debt-ledger.yaml'
+  # NOTE: the per-push trigger was removed deliberately. Regenerating + opening a
+  # metrics PR on EVERY push to main produced a backlog of never-merged
+  # chore(governance) PRs (#282/#283/#302 were closed as noise). Governance
+  # metrics only need a weekly refresh (schedule above) or an on-demand
+  # workflow_dispatch. The PR the commit-artifacts job opens now auto-merges.
 
 concurrency:
   group: governance-metrics-${{ github.ref }}
@@ -531,11 +530,18 @@ jobs:
           # the freshly-pushed branch so we don't leave orphans behind.
           git push -u origin "$branch"
 
-          if ! gh pr create \
+          if gh pr create \
               --base main \
               --head "$branch" \
               --title "chore(governance): update metrics artifacts" \
-              --body "Automated metrics update from the governance-metrics workflow. Safe to auto-merge once required checks pass."; then
+              --body "Automated metrics update from the governance-metrics workflow. Auto-merges once required checks pass."; then
+            # Enable auto-merge so the PR LANDS once required checks pass instead
+            # of lingering forever (the old behaviour that produced #282/#283/#302).
+            # Requires repo Settings > General > "Allow auto-merge" = ON; if it is
+            # OFF this is a no-op warning and the PR waits for a manual merge.
+            gh pr merge "$branch" --squash --auto ||
+              echo "::warning::Could not enable auto-merge on $branch — turn on 'Allow auto-merge' in repo settings; the PR needs a manual merge for now."
+          else
             echo "::warning::PR creation failed — likely the 'Allow GitHub Actions to create and approve pull requests' repo setting is OFF. Cleaning up orphan branch $branch."
             git push origin --delete "$branch" || echo "::warning::Could not delete orphan branch $branch — please remove manually."
             exit 1
