@@ -300,8 +300,10 @@ const checkGmailHealth = async (): Promise<ConnectorHealthSnapshot> => {
   try {
     const adapters = await loadAdapters();
     const adapter = new adapters.GmailAdapter({
-      clientId: process.env.GMAIL_CLIENT_ID!,
-      clientSecret: process.env.GMAIL_CLIENT_SECRET!,
+      // GMAIL_* is canonical; fall back to the GOOGLE_* names the .env actually
+      // defines so the Gmail integration health-check has credentials. Issue #316.
+      clientId: (process.env.GMAIL_CLIENT_ID || process.env.GOOGLE_CLIENT_ID)!,
+      clientSecret: (process.env.GMAIL_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET)!,
       redirectUri: process.env.GMAIL_REDIRECT_URI!,
     });
     const result = await adapter.checkConnection(

@@ -359,15 +359,20 @@ export class EmailChannel {
 // ============================================================================
 
 export function createEmailChannel(logger?: pino.Logger): EmailChannel {
+  // Accept SMTP_* (canonical) or legacy EMAIL_* names — the .env historically
+  // defined EMAIL_HOST/PORT/USER/PASSWORD/SECURE, which the worker never read, so
+  // email silently fell back to localhost. Issue #316.
+  const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const smtpPassword = process.env.SMTP_PASSWORD || process.env.EMAIL_PASSWORD;
   const config: EmailChannelConfig = {
-    host: process.env.SMTP_HOST || 'localhost',
-    port: Number.parseInt(process.env.SMTP_PORT || '1025', 10), // Default to Mailhog port for dev
-    secure: process.env.SMTP_SECURE === 'true',
+    host: process.env.SMTP_HOST || process.env.EMAIL_HOST || 'localhost',
+    port: Number.parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '1025', 10), // Mailhog port for dev
+    secure: (process.env.SMTP_SECURE || process.env.EMAIL_SECURE) === 'true',
     auth:
-      process.env.SMTP_USER && process.env.SMTP_PASSWORD
+      smtpUser && smtpPassword
         ? {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASSWORD,
+            user: smtpUser,
+            pass: smtpPassword,
           }
         : undefined,
     from: process.env.EMAIL_FROM || 'noreply@intelliflow.com',

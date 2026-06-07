@@ -199,9 +199,17 @@ export class RedisRateLimiter {
   private async getRedis(): Promise<NonNullable<RedisRateLimiter['redis']>> {
     if (this.redis) return this.redis;
 
-    const url = process.env.REDIS_URL;
+    // Accept REDIS_URL, or RATE_LIMIT_REDIS_URL when it is an ioredis-compatible
+    // redis(s):// string. The .env historically only defined RATE_LIMIT_REDIS_URL,
+    // so distributed rate limiting silently never activated. NOTE: an Upstash REST
+    // https:// URL is NOT usable by ioredis and is deliberately ignored here — set
+    // a rediss:// connection string. Issue #316.
+    const rawUrl = process.env.REDIS_URL || process.env.RATE_LIMIT_REDIS_URL;
+    const url = rawUrl && /^rediss?:\/\//i.test(rawUrl) ? rawUrl : process.env.REDIS_URL;
     if (!url) {
-      throw new Error('REDIS_URL environment variable is required for distributed rate limiting');
+      throw new Error(
+        'REDIS_URL (ioredis rediss:// string) is required for distributed rate limiting',
+      );
     }
 
     if (!this.connectionAttempted) {
