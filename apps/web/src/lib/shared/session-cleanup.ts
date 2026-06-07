@@ -93,16 +93,6 @@ export function syncTokenToCookie(token: string | null): void {
     const isSecure = globalThis.location.protocol === 'https:';
     const cookieValue = `accessToken=${token}; path=/; max-age=${maxAgeSeconds}; samesite=lax${isSecure ? '; secure' : ''}`;
     document.cookie = cookieValue;
-    // DEBUG: verify the write actually landed in the cookie jar
-    // TODO: remove once post-login flash is diagnosed
-    const verify = document.cookie.split('; ').find((c) => c.startsWith('accessToken='));
-    console.log('[syncTokenToCookie]', {
-      wrote: token.substring(0, 20) + '...',
-      maxAgeSeconds,
-      isSecure,
-      readBack: verify ? verify.substring(0, 40) + '...' : 'NOT FOUND',
-      ts: new Date().toISOString(),
-    });
     notifyAuthTokenChanged(true);
   } else {
     // Clear the cookie
@@ -118,6 +108,55 @@ export function clearTokenCookie(): void {
   if (typeof document === 'undefined') return;
   document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   notifyAuthTokenChanged(false);
+}
+
+// ============================================
+// Prod-safe auth breadcrumbs
+// ============================================
+// Production builds strip `console.*`, which left the post-login auth flow
+// undebuggable in prod (see docs/audit/auth-session-db-pool-audit.md, Finding 0).
+// These record a small, NON-SENSITIVE trail (step name + timestamp only — never
+// tokens or PII) in sessionStorage, so a user-reported auth issue can be
+// inspected in prod without re-instrumenting. Diagnostics must never throw.
+
+const AUTH_BREADCRUMB_KEY = 'intelliflow_auth_trace';
+const AUTH_BREADCRUMB_MAX = 20;
+
+export interface AuthBreadcrumb {
+  step: string;
+  ts: string;
+}
+
+/**
+ * Append a non-sensitive auth-flow breadcrumb (step + ISO timestamp) to a capped
+ * sessionStorage trail. Never record tokens or PII here.
+ */
+export function recordAuthBreadcrumb(step: string): void {
+  if (typeof globalThis.window === 'undefined') return;
+  try {
+    const trail = getAuthBreadcrumbs();
+    trail.push({ step, ts: new Date().toISOString() });
+    sessionStorage.setItem(AUTH_BREADCRUMB_KEY, JSON.stringify(trail.slice(-AUTH_BREADCRUMB_MAX)));
+  } catch {
+    // sessionStorage may be unavailable (privacy mode / quota); diagnostics must
+    // never break the auth flow.
+  }
+}
+
+/**
+ * Read the recorded auth-flow breadcrumb trail (oldest → newest). Returns [] if
+ * none / unavailable.
+ */
+export function getAuthBreadcrumbs(): AuthBreadcrumb[] {
+  if (typeof globalThis.window === 'undefined') return [];
+  try {
+    const raw = sessionStorage.getItem(AUTH_BREADCRUMB_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as AuthBreadcrumb[]) : [];
+  } catch {
+    return [];
+  }
 }
 
 const AUTH_COOKIE_PREFIXES = [

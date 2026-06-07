@@ -29,6 +29,7 @@ import { Card, cn } from '@intelliflow/ui';
 import { getSupabaseBrowserClient, clearSupabaseLocalStorage } from '@/lib/supabase-browser';
 import { storeSessionFingerprint } from '@/lib/shared/login-security';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
+import { syncTokenToCookie, recordAuthBreadcrumb } from '@/lib/shared/session-cleanup';
 
 // ============================================
 // Types
@@ -152,9 +153,17 @@ export function OAuthCallback({
       const user = userData?.user;
 
       setStatus('success');
+      recordAuthBreadcrumb('oauth:session-established');
 
       // Store tokens for API calls (our custom token management)
       storeSessionTokens(session.access_token, session.refresh_token);
+
+      // Sync the access token to the `accessToken` cookie so Next.js SSR server
+      // components (which read the cookie, not localStorage) see the session
+      // immediately on the post-OAuth redirect — otherwise the first server
+      // render of /dashboard misses auth and flashes the unauthenticated view.
+      syncTokenToCookie(session.access_token);
+      recordAuthBreadcrumb('oauth:cookie-synced');
 
       // Store device fingerprint for session verification
       storeSessionFingerprint();
@@ -181,6 +190,7 @@ export function OAuthCallback({
       }, 300);
     } catch (err) {
       setStatus('error');
+      recordAuthBreadcrumb('oauth:error');
       let errorMsg: string;
       if (err instanceof Error) {
         errorMsg =
