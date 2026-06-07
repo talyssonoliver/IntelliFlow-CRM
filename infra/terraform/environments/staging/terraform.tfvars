@@ -19,9 +19,15 @@ tags = {
   Env        = "staging"
 }
 
+# Supabase — staging does NOT manage a Supabase project (manage_project is
+# derived as environment == "production", so false here). Like dev, staging is
+# backed by local Docker Postgres rather than a dedicated Supabase project, since
+# the free tier caps at 2 projects/org and database branching is paid. No
+# supabase_project is created by a staging plan/apply. org_id/project_ref are
+# production-only; set supabase_db_connection_string to target a real DB instead.
 supabase_project_name = "intelliflow-crm-staging"
 supabase_region       = "us-east-1"
-supabase_plan         = "free" # bump to "pro" before prod traffic
+supabase_plan         = "free"
 
 vercel_project_name = "intelliflow-crm-staging"
 vercel_framework    = "nextjs"

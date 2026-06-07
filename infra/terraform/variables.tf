@@ -39,6 +39,18 @@ variable "supabase_access_token" {
   sensitive   = true
 }
 
+variable "supabase_organization_id" {
+  description = "Supabase organization ID (required by supabase_project resource; find it in app.supabase.com/org)"
+  type        = string
+  default     = ""
+}
+
+variable "supabase_project_ref" {
+  description = "Existing Supabase project reference (e.g. abcdefghijklmnop). Used for import-based drift detection. Empty is safe for plan; import before first apply."
+  type        = string
+  default     = ""
+}
+
 variable "supabase_project_name" {
   description = "Supabase project name"
   type        = string
@@ -60,6 +72,20 @@ variable "supabase_db_pooler_host" {
 variable "supabase_db_password" {
   description = "Supabase database password"
   type        = string
+  sensitive   = true
+}
+
+variable "supabase_db_connection_string" {
+  description = "Override for DATABASE_URL (transaction pooler). For dev/staging on local Docker Postgres, set the Docker URL here; for production leave empty so the module derives the pooler URL from the managed Supabase project."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "supabase_db_direct_connection_string" {
+  description = "Override for DIRECT_URL (direct port 5432, Prisma migrations). For dev/staging on Docker set the Docker URL; production leaves empty to derive from the managed project."
+  type        = string
+  default     = ""
   sensitive   = true
 }
 

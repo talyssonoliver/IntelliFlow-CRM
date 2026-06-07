@@ -10,45 +10,89 @@ variable "environment" {
   type        = string
 }
 
+variable "manage_project" {
+  description = <<-EOT
+    Whether Terraform owns a Supabase project in this environment. true (default)
+    declares the supabase_project resource + provider data sources — import the
+    existing project before the first apply. false skips them entirely, for
+    environments backed by a non-Supabase database (e.g. local Docker Postgres for
+    dev/staging); the connection strings then come from db_connection_string /
+    db_direct_connection_string and the Supabase keys resolve to empty. Root sets
+    this from the environment so only production manages the Supabase project.
+  EOT
+  type        = bool
+  default     = true
+}
+
 variable "region" {
-  description = "Supabase region"
+  description = "Supabase region (e.g. us-east-1, eu-west-1)"
   type        = string
   default     = "us-east-1"
 }
 
-variable "db_pooler_host" {
-  description = "Transaction-pooler host (Supavisor). Empty = derive aws-0-<region>.pooler.supabase.com. Set to the project's exact pooler host to match the live DATABASE_URL."
+variable "organization_id" {
+  description = "Supabase organization ID (required by supabase_project resource)"
   type        = string
-  default     = ""
 }
 
 variable "access_token" {
-  description = "Supabase Management API access token"
+  description = "Supabase Personal Access Token (used by the provider + HTTP data source)"
   type        = string
   sensitive   = true
 }
 
 variable "project_ref" {
-  description = "Existing Supabase project reference (for import)"
+  description = <<-EOT
+    Existing Supabase project reference ID. When non-empty the project
+    lifecycle is managed via import (run once: terraform import
+    module.supabase.supabase_project.main <ref>). When empty a new project
+    resource is declared but a real create would require apply — plan only
+    shows a 'create' intent, which is expected in a fresh-state context.
+  EOT
   type        = string
   default     = ""
 }
 
 variable "db_password" {
-  description = "Database password"
+  description = "Database password for the Supabase project"
   type        = string
   sensitive   = true
 }
 
 variable "db_connection_string" {
-  description = "Full database connection string"
+  description = <<-EOT
+    Override for the transaction-pooler DATABASE_URL. When non-empty this value
+    is returned as connection_string and no URL is derived. Leave empty to let
+    the module compute the standard Supabase transaction-pooler URL.
+  EOT
   type        = string
   default     = ""
   sensitive   = true
 }
 
+variable "db_direct_connection_string" {
+  description = <<-EOT
+    Override for the direct (non-pooled) DIRECT_URL used by Prisma migrations.
+    When non-empty this value is returned as direct_url. Leave empty to let the
+    module compute the standard Supabase direct connection URL.
+  EOT
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "db_pooler_host" {
+  description = <<-EOT
+    Supabase transaction-pooler hostname. Defaults to the standard AWS pattern
+    aws-0-<region>.pooler.supabase.com. Override with the exact host shown in
+    your Supabase project → Settings → Database → Connection pooling.
+  EOT
+  type        = string
+  default     = ""
+}
+
 variable "plan" {
-  description = "Supabase plan (free, pro, team, enterprise)"
+  description = "Supabase plan (free, pro, team, enterprise) — informational only; plan changes require manual action via the dashboard"
   type        = string
   default     = "free"
 }
@@ -90,7 +134,7 @@ variable "storage_buckets" {
 }
 
 variable "tags" {
-  description = "Resource tags"
+  description = "Resource tags (informational; Supabase does not support resource-level tags via Terraform)"
   type        = map(string)
   default     = {}
 }

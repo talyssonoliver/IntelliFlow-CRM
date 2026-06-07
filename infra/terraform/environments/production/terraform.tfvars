@@ -28,6 +28,12 @@ tags = {
 supabase_project_name = "intelliflow-crm-production"
 supabase_region       = "us-east-1"
 supabase_plan         = "free"
+# Production is the ONLY environment that manages a Supabase project
+# (manage_project = environment == "production"). Before the first apply, import
+# the existing project so Terraform adopts it instead of creating a new one:
+#   terraform import module.supabase.supabase_project.main <project-ref>
+# supabase_organization_id + supabase_project_ref injected via TF_VAR_* secrets
+# (SUPABASE_ORG_ID, SUPABASE_PROJECT_REF_PROD). Both required before apply.
 
 vercel_project_name = "intelliflow-crm-production"
 vercel_framework    = "nextjs"

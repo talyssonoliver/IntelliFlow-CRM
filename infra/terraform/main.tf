@@ -13,18 +13,28 @@ locals {
 }
 
 # Supabase Module
-# Note: Supabase doesn't have an official Terraform provider
-# This module uses the Management API via HTTP requests
+# Uses the official supabase/supabase provider for project lifecycle, settings,
+# and API key retrieval. jwt_secret is still fetched via HTTP (provider gap).
 module "supabase" {
   source = "./modules/supabase"
 
-  project_name   = var.supabase_project_name
-  environment    = var.environment
-  region         = var.supabase_region
-  access_token   = var.supabase_access_token
-  db_password    = var.supabase_db_password
-  db_pooler_host = var.supabase_db_pooler_host
-  plan           = var.supabase_plan
+  project_name    = var.supabase_project_name
+  environment     = var.environment
+  region          = var.supabase_region
+  access_token    = var.supabase_access_token
+  organization_id = var.supabase_organization_id
+  project_ref     = var.supabase_project_ref
+  db_password     = var.supabase_db_password
+  db_pooler_host  = var.supabase_db_pooler_host
+  plan            = var.supabase_plan
+
+  # Only production owns a Supabase project; dev/staging run on local Docker
+  # Postgres (see docker-compose.yml, pgvector/pgvector:pg16). This keeps a
+  # dev/staging plan/apply from ever creating a Supabase project (free tier is
+  # capped at 2 projects/org and Supabase branching is a paid feature).
+  manage_project              = var.environment == "production"
+  db_connection_string        = var.supabase_db_connection_string
+  db_direct_connection_string = var.supabase_db_direct_connection_string
 
   # Extensions
   enable_pgvector = var.enable_pgvector
@@ -62,8 +72,7 @@ module "vercel" {
     NEXT_PUBLIC_SUPABASE_ANON_KEY = module.supabase.anon_key
     SUPABASE_SERVICE_ROLE_KEY     = module.supabase.service_role_key
 
-    # Database — DATABASE_URL = transaction pooler (serverless-safe);
-    # DIRECT_URL = direct connection for Prisma migrations.
+    # Database — pooler URL for runtime, direct URL for Prisma migrations
     DATABASE_URL = module.supabase.connection_string
     DIRECT_URL   = module.supabase.direct_url
 
@@ -91,7 +100,7 @@ module "railway" {
 
   # Shared environment variables + observability (monitoring module)
   shared_env_vars = merge({
-    # Supabase connection (DATABASE_URL = pooler; DIRECT_URL = direct/migrations)
+    # Supabase connection — pooler for runtime queries, direct for migrations
     DATABASE_URL              = module.supabase.connection_string
     DIRECT_URL                = module.supabase.direct_url
     SUPABASE_URL              = module.supabase.api_url
