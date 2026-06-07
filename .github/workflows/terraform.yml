@@ -275,14 +275,17 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
+        # Single Supabase project (free tier) → production reuses the same
+        # credential secrets as dev/staging; there is no separate *_PROD set.
         env:
-          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_PERSONAL_ACCESS_TOKEN }}
           TF_VAR_supabase_organization_id: ${{ secrets.SUPABASE_ORG_ID }}
           TF_VAR_supabase_project_ref: ${{ secrets.SUPABASE_PROJECT_REF_PROD }}
-          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN_PROD }}
-          TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN_PROD }}
-          TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD_PROD }}
-          TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN_PROD }}
+          TF_VAR_supabase_db_pooler_host: ${{ secrets.SUPABASE_DB_POOLER_HOST }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_TOKEN }}
+          TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
           TF_VAR_environment: production
         run: |
           set -o pipefail
@@ -328,14 +331,17 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
+        # Single Supabase project (free tier) → production reuses the same
+        # credential secrets as dev/staging; there is no separate *_PROD set.
         env:
-          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_PERSONAL_ACCESS_TOKEN }}
           TF_VAR_supabase_organization_id: ${{ secrets.SUPABASE_ORG_ID }}
           TF_VAR_supabase_project_ref: ${{ secrets.SUPABASE_PROJECT_REF_PROD }}
-          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN_PROD }}
-          TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN_PROD }}
-          TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD_PROD }}
-          TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN_PROD }}
+          TF_VAR_supabase_db_pooler_host: ${{ secrets.SUPABASE_DB_POOLER_HOST }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_TOKEN }}
+          TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
         run: terraform apply -auto-approve plan.tfplan
 
       - name: Terraform Output

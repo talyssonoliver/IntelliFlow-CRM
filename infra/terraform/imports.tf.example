@@ -13,9 +13,8 @@
 # config-vs-reality diffs such as the Vercel project name), reconcile until
 # imported resources show NO changes, then apply. DELETE imports.tf afterward.
 #
-# Supabase is intentionally absent: the current module is null_resource + http
-# (nothing real to import). Proper Supabase import needs INFRA-TF-003's official
-# supabase/supabase provider.
+# Supabase is now importable (INFRA-TF-003 added the official provider). It is
+# production-only and count-gated, so the address is [0] — see the block below.
 # =============================================================================
 
 # Vercel — the live project intelli-flow-crm-web (serving intelli-flow-crm-web.vercel.app)
@@ -31,6 +30,16 @@ import {
   to = module.railway.railway_project.main
   id = "8c2b7828-d508-4fb4-9ea4-98f9c35f9edc"
 }
+
+# Supabase — the production database project (INFRA-TF-003). PRODUCTION workspace
+# ONLY (manage_project is true only for production → the resource is count[0]).
+# The ref is a secret (SUPABASE_PROJECT_REF_PROD) — do NOT hardcode it; fill <REF>
+# locally just for the import, or use the imperative form in runbook §4a. dev/
+# staging run on Docker and have no Supabase project to import.
+# import {
+#   to = module.supabase.supabase_project.main[0]
+#   id = "<REF>" # = SUPABASE_PROJECT_REF_PROD
+# }
 
 # Railway environment — discover the UUID (runbook §3) before enabling:
 # import {

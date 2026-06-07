@@ -22,14 +22,14 @@ resources exist. Meanwhile the live infra already exists:
 
 ## 1. What is importable now vs. blocked
 
-| Resource (config address)                                          | Live ID                                | Status                                                                                                                                                                                                                                                                                                                       |
-| ------------------------------------------------------------------ | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `module.vercel.vercel_project.main`                                | `prj_AQ1IS7N9VOtxgF48oYCe4mZdVYgd`     | ✅ importable                                                                                                                                                                                                                                                                                                                |
-| `module.railway.railway_project.main`                              | `8c2b7828-d508-4fb4-9ea4-98f9c35f9edc` | ✅ importable                                                                                                                                                                                                                                                                                                                |
-| `module.railway.railway_environment.main`                          | `<env-uuid>` (discover, §3)            | ✅ importable                                                                                                                                                                                                                                                                                                                |
-| `module.vercel.vercel_project_environment_variable.general["KEY"]` | per-var ID (discover)                  | ✅ if it already exists                                                                                                                                                                                                                                                                                                      |
-| `module.railway.railway_service.services["api"]` etc.              | per-service ID (discover)              | ✅ only if already deployed                                                                                                                                                                                                                                                                                                  |
-| **`module.supabase.*`**                                            | —                                      | ❌ **BLOCKED** — the module is `null_resource` + `data "http"`, not real Terraform resources, so there is nothing to import. Proper Supabase import needs the **official `supabase/supabase` provider → INFRA-TF-003.** Until then the Supabase module is a no-op against state and must NOT be applied against the prod DB. |
+| Resource (config address)                                          | Live ID                                    | Status                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------ | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `module.vercel.vercel_project.main`                                | `prj_AQ1IS7N9VOtxgF48oYCe4mZdVYgd`         | ✅ importable                                                                                                                                                                                                                                                                                                                                                                                 |
+| `module.railway.railway_project.main`                              | `8c2b7828-d508-4fb4-9ea4-98f9c35f9edc`     | ✅ importable                                                                                                                                                                                                                                                                                                                                                                                 |
+| `module.railway.railway_environment.main`                          | `<env-uuid>` (discover, §3)                | ✅ importable                                                                                                                                                                                                                                                                                                                                                                                 |
+| `module.vercel.vercel_project_environment_variable.general["KEY"]` | per-var ID (discover)                      | ✅ if it already exists                                                                                                                                                                                                                                                                                                                                                                       |
+| `module.railway.railway_service.services["api"]` etc.              | per-service ID (discover)                  | ✅ only if already deployed                                                                                                                                                                                                                                                                                                                                                                   |
+| **`module.supabase.supabase_project.main[0]`**                     | `<prod ref>` (`SUPABASE_PROJECT_REF_PROD`) | ✅ **importable — production only.** INFRA-TF-003 migrated the module to the official `supabase/supabase` provider. `manage_project` is true **only** in production, so the resource is `count`-indexed — import the **`[0]`** instance (`module.supabase.supabase_project.main[0]`). dev/staging run on local Docker Postgres and declare **no** Supabase project (nothing to import there). |
 
 The **3 workers, monitoring manifest, and most env vars are genuinely new** —
 they are the legitimate "to add" and do not need importing.
@@ -88,6 +88,32 @@ import {
 (Alternatively the imperative form:
 `terraform import module.railway.railway_project.main 8c2b7828-...`.)
 
+### 4a. Supabase (production) — adopt the prod database project
+
+INFRA-TF-003 made the Supabase project a real `supabase_project` resource. It is
+`count`-gated to production (`manage_project = environment == "production"`), so
+the instance address carries the **`[0]`** index. dev/staging declare no project
+(Docker Postgres) and need no import. Run from the **production** workspace:
+
+```bash
+cd infra/terraform
+export TF_WORKSPACE=intelliflow-crm-production
+export TF_VAR_supabase_access_token=...      # SUPABASE_PERSONAL_ACCESS_TOKEN
+export TF_VAR_supabase_organization_id=...   # SUPABASE_ORG_ID
+export TF_VAR_supabase_project_ref=<REF>     # SUPABASE_PROJECT_REF_PROD
+export TF_VAR_supabase_db_password=...        # DB_PASSWORD
+export TF_VAR_supabase_db_pooler_host=...     # SUPABASE_DB_POOLER_HOST (exact live host)
+terraform init
+
+terraform import -var-file=environments/production/terraform.tfvars \
+  'module.supabase.supabase_project.main[0]' <REF>
+```
+
+`lifecycle.prevent_destroy = true` + `ignore_changes = [database_password]` are
+set on the resource, so a bad plan cannot destroy the project and the hashed
+password will not show a perpetual diff. CI prod jobs use the SAME secrets as
+dev/staging (one free-tier project — no separate `*_PROD` set).
+
 ---
 
 ## 5. ⚠️ MANDATORY plan review — the safety gate
@@ -118,8 +144,10 @@ Railway cannot host 5 always-on services for free. Apply a subset:
 
 - `dev`-only, and/or
 - `replicas = 0` on idle workers (events/ingestion/notifications) until needed,
-- leave Supabase to INFRA-TF-003 (do not apply the `null_resource` module
-  against the prod DB).
+- Supabase is now a real resource (INFRA-TF-003): import the prod project first
+  (§4a), confirm the plan shows it as **no-change** (the pooler `DATABASE_URL`
+  must match the live value — set `SUPABASE_DB_POOLER_HOST` to the exact host),
+  then apply. dev/staging manage no Supabase project.
 
 Apply runs via the **gated CI dispatch** (`terraform.yml`, `action=apply`) or
 locally after §5. After a successful import, **delete `imports.tf`** (import
