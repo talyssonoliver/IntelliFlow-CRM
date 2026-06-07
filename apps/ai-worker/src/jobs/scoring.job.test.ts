@@ -18,10 +18,12 @@ import {
   ScoringJobResultSchema,
   processScoringJob,
   DEFAULT_SCORING_JOB_OPTIONS,
+  NIL_UUID,
   type ScoringJobData,
   type ScoringJobResult,
   type LeadTier,
 } from './scoring.job';
+import { prisma } from '@intelliflow/db';
 
 // Mock the scoring chain
 const mockScoreLead = vi.fn();
@@ -733,6 +735,47 @@ describe('ScoringJob', () => {
       delete process.env['ENABLE_AI_SCORING_JOB'];
       const result = (await processScoringJob(flagJob)) as any;
       expect(result.skipped).toBeUndefined();
+    });
+  });
+
+  // ============================================
+  // Placeholder / nil-UUID guard (FK violation prevention)
+  // ============================================
+
+  describe('nil-UUID scheduled sentinel', () => {
+    it('exposes the documented nil-UUID placeholder constant', () => {
+      expect(NIL_UUID).toBe('00000000-0000-0000-0000-000000000000');
+    });
+
+    it('routes the nil-UUID sentinel to the dispatcher (does NOT score a fake lead)', async () => {
+      const job = createMockJob({
+        leadId: NIL_UUID,
+        // a REAL tenant (not '__scheduled__') — proves the nil leadId is what
+        // triggers dispatch, matching the cron job registered in ai-worker.ts.
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'scheduled@system.internal', source: 'cron' },
+      });
+
+      const result = await processScoringJob(job);
+
+      expect(result.modelVersion).toBe('scheduler-dispatcher');
+      // No LLM scoring of the placeholder lead.
+      expect(mockScoreLead).not.toHaveBeenCalled();
+    });
+
+    it('NEVER upserts LeadAIInsight with the nil-UUID (prevents lead_ai_insights_leadId_fkey)', async () => {
+      const job = createMockJob({
+        leadId: NIL_UUID,
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'scheduled@system.internal', source: 'cron' },
+      });
+
+      await processScoringJob(job);
+
+      // The FK-violating upsert that caused the prod incident must not happen.
+      expect(
+        (prisma as { leadAIInsight: { upsert: ReturnType<typeof vi.fn> } }).leadAIInsight.upsert
+      ).not.toHaveBeenCalled();
     });
   });
 });

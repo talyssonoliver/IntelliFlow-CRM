@@ -122,6 +122,8 @@ __pycache__/
 .claude/hooks/state/
 .claude/ralph-loops/
 .claude/worktrees/
+# Regenerated benchmark artifacts — rewritten (perf jitter + timestamps) every run.
+.claude/artifacts/benchmarks/*.json
 tmpclaude-*-cwd
 tmpclaude-*-cwd/
 
