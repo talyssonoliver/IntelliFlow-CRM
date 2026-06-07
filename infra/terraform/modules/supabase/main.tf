@@ -79,11 +79,16 @@ resource "supabase_project" "main" {
   region            = var.region
 
   # lifecycle.prevent_destroy guards against accidental teardown of production data.
-  # ignore_changes on database_password: Supabase hashes the password internally;
-  # the provider would otherwise show a perpetual diff after first apply.
+  # ignore_changes:
+  #   - database_password: Supabase hashes it internally → perpetual diff otherwise.
+  #   - name + region: an IMPORTED project keeps its live name/region. region is
+  #     IMMUTABLE on Supabase, so a config/live mismatch (e.g. tfvars default
+  #     us-east-1 vs a live eu-central-1 project) must NOT generate a change — an
+  #     applied region change errors or forces destroy/recreate (data loss). name
+  #     is cosmetic and the derived value can double-suffix; leave the live name.
   lifecycle {
     prevent_destroy = true
-    ignore_changes  = [database_password]
+    ignore_changes  = [database_password, name, region]
   }
 }
 
@@ -139,15 +144,16 @@ data "http" "jwt_secret" {
 }
 
 locals {
-  # Parse the jwt_secret from the Management API secrets endpoint.
-  # Endpoint returns an array of {name, value} objects.
-  secrets_list = (
-    length(data.http.jwt_secret) > 0
-    ? jsondecode(data.http.jwt_secret[0].response_body)
-    : []
-  )
+  # JWT secret via the Management API — best-effort. The official provider does
+  # not expose it and there is no stable secrets endpoint (the call may 404), so
+  # decode defensively: if the data source is gated off (count = 0), returns a
+  # non-2xx/error body, or is otherwise not a JSON array of {name, value} objects,
+  # jwt_secret resolves to "". The previous `length(...) > 0 ? jsondecode(body) :
+  # []` crashed with "Inconsistent conditional result types" the moment `body` was
+  # the 404 error object (object) instead of an array (tuple) — which only
+  # surfaces at plan time against a real ref, so validate + CI never caught it.
   jwt_secret = try(
-    [for s in local.secrets_list : s.value if s.name == "JWT_SECRET"][0],
+    [for s in jsondecode(data.http.jwt_secret[0].response_body) : s.value if s.name == "JWT_SECRET"][0],
     ""
   )
 }

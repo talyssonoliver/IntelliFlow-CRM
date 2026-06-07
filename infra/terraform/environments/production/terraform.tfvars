@@ -26,12 +26,16 @@ tags = {
 # Stays on the free Supabase plan to keep the initiative cost-free; bump to
 # "pro" here when production traffic warrants it.
 supabase_project_name = "intelliflow-crm-production"
-supabase_region       = "us-east-1"
-supabase_plan         = "free"
+# Must match the LIVE project region — the prod project is in eu-central-1.
+# Supabase region is immutable; a mismatch makes plan want to change it (apply
+# errors / forces destroy-recreate). supabase_project also ignore_changes=[region].
+supabase_region = "eu-central-1"
+supabase_plan   = "free"
 # Production is the ONLY environment that manages a Supabase project
 # (manage_project = environment == "production"). Before the first apply, import
-# the existing project so Terraform adopts it instead of creating a new one:
-#   terraform import module.supabase.supabase_project.main <project-ref>
+# the existing project so Terraform adopts it instead of creating a new one
+# (the resource is count-gated, so the address carries [0]):
+#   terraform import module.supabase.supabase_project.main[0] <project-ref>
 # supabase_organization_id + supabase_project_ref injected via TF_VAR_* secrets
 # (SUPABASE_ORG_ID, SUPABASE_PROJECT_REF_PROD). Both required before apply.
 
