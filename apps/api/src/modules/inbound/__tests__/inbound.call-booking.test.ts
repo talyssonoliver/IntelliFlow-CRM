@@ -296,4 +296,131 @@ describe('inboundRouter — logCallBooking', () => {
       expect.arrayContaining(['campaign:summer-2026', 'vip', 'portal-call-booking'])
     );
   });
+
+  // ── upsertLeadByEmail — createLead failure branches ───────────────────────
+
+  it('dedupes via a race re-lookup when createLead reports the email already exists', async () => {
+    // First email lookup misses, so we attempt to create…
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null);
+    // …createLead loses a race and reports a duplicate…
+    (mockServices.lead.createLead as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      isFailure: true,
+      error: { message: 'Lead with this email already exists' },
+    });
+    // …and the re-lookup finds the lead the winner created.
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ id: LEAD_ID } as never);
+    prismaMock.appointment.findFirst.mockResolvedValueOnce(null);
+    prismaMock.appointment.create.mockResolvedValueOnce({ id: APPOINTMENT_ID } as never);
+    prismaMock.task.create.mockResolvedValueOnce({ id: TASK_ID } as never);
+    prismaMock.leadActivity.create.mockResolvedValueOnce({} as never);
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.logCallBooking(BASE_BOOKING_INPUT);
+
+    expect(result).toMatchObject({ leadId: LEAD_ID, leadCreated: false });
+    expect(prismaMock.appointment.create).toHaveBeenCalledOnce();
+  });
+
+  it('throws BAD_REQUEST when createLead fails for a non-duplicate reason', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null);
+    (mockServices.lead.createLead as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      isFailure: true,
+      error: { message: 'Invalid lead data' },
+    });
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.logCallBooking(BASE_BOOKING_INPUT)).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+    });
+    // No artifacts attempted when the lead upsert fails outright.
+    expect(prismaMock.appointment.create).not.toHaveBeenCalled();
+  });
+
+  // ── best-effort: task / activity create failures ──────────────────────────
+
+  it('returns taskId: null when task create fails (best-effort)', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ id: LEAD_ID } as never);
+    prismaMock.appointment.findFirst.mockResolvedValueOnce(null);
+    prismaMock.appointment.create.mockResolvedValueOnce({ id: APPOINTMENT_ID } as never);
+    prismaMock.task.create.mockRejectedValueOnce(new Error('DB error'));
+    prismaMock.leadActivity.create.mockResolvedValueOnce({} as never);
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.logCallBooking(BASE_BOOKING_INPUT);
+
+    expect(result).toMatchObject({ appointmentId: APPOINTMENT_ID, taskId: null });
+  });
+
+  it('still succeeds when leadActivity create fails (best-effort)', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ id: LEAD_ID } as never);
+    prismaMock.appointment.findFirst.mockResolvedValueOnce(null);
+    prismaMock.appointment.create.mockResolvedValueOnce({ id: APPOINTMENT_ID } as never);
+    prismaMock.task.create.mockResolvedValueOnce({ id: TASK_ID } as never);
+    prismaMock.leadActivity.create.mockRejectedValueOnce(new Error('DB error'));
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.logCallBooking(BASE_BOOKING_INPUT);
+
+    expect(result).toMatchObject({
+      appointmentId: APPOINTMENT_ID,
+      taskId: TASK_ID,
+      leadCreated: false,
+    });
+  });
+
+  // ── optional fields omitted — display-name + duration defaults ─────────────
+
+  it('falls back to the email for the display name and defaults duration when optionals are omitted', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null);
+    (mockServices.lead.createLead as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      isFailure: false,
+      value: { id: { value: LEAD_ID } },
+    });
+    prismaMock.appointment.findFirst.mockResolvedValueOnce(null);
+    prismaMock.appointment.create.mockResolvedValueOnce({ id: APPOINTMENT_ID } as never);
+    prismaMock.task.create.mockResolvedValueOnce({ id: TASK_ID } as never);
+    prismaMock.leadActivity.create.mockResolvedValueOnce({} as never);
+
+    // No firstName/lastName/notes/durationMinutes.
+    const minimal = {
+      submissionId: 'booking_minimal_001',
+      email: 'no-name@acme.example',
+      callDate: '2026-07-16',
+      callTime: '11:30',
+    };
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.logCallBooking(minimal);
+
+    expect(result).toMatchObject({ leadId: LEAD_ID, leadCreated: true });
+
+    const apptData = prismaMock.appointment.create.mock.calls[0][0].data;
+    expect(apptData.title).toBe('Discovery call — no-name@acme.example');
+    expect(apptData.description).toBeNull();
+
+    const actMeta = prismaMock.leadActivity.create.mock.calls[0][0].data.metadata as Record<
+      string,
+      unknown
+    >;
+    expect(actMeta.durationMinutes).toBe(30);
+    expect(actMeta.notes).toBeUndefined();
+  });
+
+  // ── idempotent retry — companion task not found ───────────────────────────
+
+  it('idempotent retry returns taskId: null when no companion task is found', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ id: LEAD_ID } as never);
+    prismaMock.appointment.findFirst.mockResolvedValueOnce({ id: APPOINTMENT_ID } as never);
+    prismaMock.task.findFirst.mockResolvedValueOnce(null);
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.logCallBooking(BASE_BOOKING_INPUT);
+
+    expect(result).toMatchObject({
+      appointmentId: APPOINTMENT_ID,
+      taskId: null,
+      leadCreated: false,
+    });
+    expect(prismaMock.appointment.create).not.toHaveBeenCalled();
+  });
 });
