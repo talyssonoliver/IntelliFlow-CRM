@@ -52,6 +52,14 @@ locals {
     ""
   )
 
+  # Serverless variant (Vercel functions): the same transaction-pooler URL with
+  # connection_limit=1, so each short-lived function instance holds exactly ONE
+  # pooler connection. This is the Supabase+Prisma+Vercel guidance and closes the
+  # pool-exhaustion mode (issue #312 / the 2026-06-06 EMAXCONNSESSION outage).
+  # Railway long-running services keep the un-capped pooled db_url above — they
+  # want a real connection pool, so connection_limit=1 must NOT be applied there.
+  db_url_serverless = local.db_url != "" ? "${local.db_url}&connection_limit=1" : ""
+
   # ---------------------------------------------------------------------------
   # Direct (non-pooled) URL (direct_url / DIRECT_URL)
   # ---------------------------------------------------------------------------

@@ -12,8 +12,14 @@ output "api_url" {
 }
 
 output "connection_string" {
-  description = "PostgreSQL transaction-pooler URL (DATABASE_URL). Uses PgBouncer port 6543; safe for serverless/Vercel/Railway."
+  description = "PostgreSQL transaction-pooler URL (DATABASE_URL). Uses PgBouncer port 6543; for Railway long-running services (un-capped pool)."
   value       = local.db_url
+  sensitive   = true
+}
+
+output "connection_string_serverless" {
+  description = "Serverless DATABASE_URL: transaction-pooler URL + connection_limit=1, for Vercel functions (one pooler connection per instance; issue #312)."
+  value       = local.db_url_serverless
   sensitive   = true
 }
 

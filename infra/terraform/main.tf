@@ -77,8 +77,9 @@ module "vercel" {
     NEXT_PUBLIC_SUPABASE_ANON_KEY = module.supabase.anon_key
     SUPABASE_SERVICE_ROLE_KEY     = module.supabase.service_role_key
 
-    # Database — pooler URL for runtime, direct URL for Prisma migrations
-    DATABASE_URL = module.supabase.connection_string
+    # Database — SERVERLESS pooler URL (connection_limit=1, issue #312) for
+    # Vercel functions; direct URL for Prisma migrations.
+    DATABASE_URL = module.supabase.connection_string_serverless
     DIRECT_URL   = module.supabase.direct_url
 
     # Build configuration
@@ -87,6 +88,12 @@ module "vercel" {
 
     # Sentry DSN (sensitive value; injected like the Supabase keys above)
     SENTRY_DSN = var.sentry_dsn
+
+    # Tier-0 secrets consumed by web (server components / tRPC); issue #315
+    PRISMA_FIELD_ENCRYPTION_KEY = var.prisma_field_encryption_key
+    AI_AUDIT_SIGNING_KEY        = var.ai_audit_signing_key
+    VAULT_TOKEN                 = var.vault_token
+    VAULT_LOCAL_DEK_SECRET      = var.vault_local_dek_secret
   }, module.monitoring.observability_env)
 
   tags = local.common_tags
@@ -121,6 +128,23 @@ module "railway" {
 
     # Sentry DSN (sensitive value; injected like the Supabase keys above)
     SENTRY_DSN = var.sentry_dsn
+
+    # --- Tier-0 application secrets (issue #315) ---
+    # Boot/decrypt-required in prod; an empty value crash-boots the service.
+    # Shared across api + ai-worker + the 3 workers (a service that doesn't read
+    # a given key simply ignores it — harmless, and avoids per-service env_vars).
+    PRISMA_FIELD_ENCRYPTION_KEY = var.prisma_field_encryption_key
+    AI_AUDIT_SIGNING_KEY        = var.ai_audit_signing_key
+    LITELLM_MASTER_KEY          = var.litellm_master_key
+    LITELLM_BASE_URL            = var.litellm_base_url
+    REDIS_HOST                  = var.redis_host
+    REDIS_PORT                  = var.redis_port
+    REDIS_PASSWORD              = var.redis_password
+    REDIS_TLS                   = var.redis_tls
+    VAULT_TOKEN                 = var.vault_token
+    VAULT_LOCAL_DEK_SECRET      = var.vault_local_dek_secret
+    GEMINI_API_KEY              = var.gemini_api_key
+    OPENROUTER_API_KEY          = var.openrouter_api_key
   }, module.monitoring.observability_env)
 
   tags = local.common_tags
