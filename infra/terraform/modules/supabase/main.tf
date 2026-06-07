@@ -60,6 +60,18 @@ locals {
   # want a real connection pool, so connection_limit=1 must NOT be applied there.
   db_url_serverless = local.db_url != "" ? "${local.db_url}&connection_limit=1" : ""
 
+  # Session-pooler variant (port 5432) for Railway LONG-RUNNING services. They want
+  # a real connection pool with full session features (prepared statements, advisory
+  # locks) — NOT the transaction pooler (6543), which the new workers' Prisma would
+  # otherwise inherit from the shared DATABASE_URL. This matches exactly how the live
+  # api/ai-worker/ws connect (aws-1 pooler :5432). Resolves the worker-pooler-mode
+  # correctness blocker raised before the full apply.
+  db_url_session = (
+    var.db_connection_string != "" ? var.db_connection_string :
+    var.manage_project ? "postgresql://postgres.${supabase_project.main[0].id}:${var.db_password}@${local.pooler_host}:5432/postgres" :
+    ""
+  )
+
   # ---------------------------------------------------------------------------
   # Direct (non-pooled) URL (direct_url / DIRECT_URL)
   # ---------------------------------------------------------------------------

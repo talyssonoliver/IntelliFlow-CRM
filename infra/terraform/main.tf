@@ -112,9 +112,11 @@ module "railway" {
 
   # Shared environment variables + observability (monitoring module)
   shared_env_vars = merge({
-    # Supabase connection — pooler for runtime queries, direct for migrations
-    DATABASE_URL              = module.supabase.connection_string
-    DIRECT_URL                = module.supabase.direct_url
+    # Supabase connection — SESSION pooler (5432) for these long-running services
+    # (real pool + session features), matching the live api/ai-worker/ws. The new
+    # workers inherit this rather than the transaction pooler (6543).
+    DATABASE_URL              = module.supabase.connection_string_session
+    DIRECT_URL                = module.supabase.connection_string_session
     SUPABASE_URL              = module.supabase.api_url
     SUPABASE_ANON_KEY         = module.supabase.anon_key
     SUPABASE_SERVICE_ROLE_KEY = module.supabase.service_role_key

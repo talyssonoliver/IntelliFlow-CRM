@@ -23,6 +23,12 @@ output "connection_string_serverless" {
   sensitive   = true
 }
 
+output "connection_string_session" {
+  description = "Session-pooler URL (port 5432) for Railway long-running services — real pool + session features, matching the live api/ai-worker/ws."
+  value       = local.db_url_session
+  sensitive   = true
+}
+
 output "direct_url" {
   description = "PostgreSQL direct connection URL (DIRECT_URL). Non-pooled port 5432; required for Prisma migrations and schema introspection."
   value       = local.db_direct_url
