@@ -25,9 +25,9 @@ variable "manage_project" {
 }
 
 variable "region" {
-  description = "Supabase region (e.g. us-east-1, eu-west-1)"
+  description = "Supabase region (e.g. eu-central-1, us-east-1)"
   type        = string
-  default     = "us-east-1"
+  default     = "eu-central-1"
 }
 
 variable "organization_id" {

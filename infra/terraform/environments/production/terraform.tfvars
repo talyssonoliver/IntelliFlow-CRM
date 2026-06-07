@@ -12,12 +12,12 @@
 
 environment  = "production"
 project_name = "intelliflow-crm"
-region       = "us-east-1"
+region       = "iad1"
 
 tags = {
   Project    = "IntelliFlow-CRM"
   ManagedBy  = "Terraform"
-  Repository = "intelliflow/intelliflow-crm"
+  Repository = "talyssonoliver/IntelliFlow-CRM"
   Team       = "Engineering"
   CostCenter = "Engineering"
   Env        = "production"
@@ -25,7 +25,7 @@ tags = {
 
 # Stays on the free Supabase plan to keep the initiative cost-free; bump to
 # "pro" here when production traffic warrants it.
-supabase_project_name = "intelliflow-crm-production"
+supabase_project_name = "Intelliflow"
 # Must match the LIVE project region — the prod project is in eu-central-1.
 # Supabase region is immutable; a mismatch makes plan want to change it (apply
 # errors / forces destroy-recreate). supabase_project also ignore_changes=[region].
@@ -39,15 +39,15 @@ supabase_plan   = "free"
 # supabase_organization_id + supabase_project_ref injected via TF_VAR_* secrets
 # (SUPABASE_ORG_ID, SUPABASE_PROJECT_REF_PROD). Both required before apply.
 
-vercel_project_name = "intelliflow-crm-production"
+vercel_project_name = "intelli-flow-crm-web"
 vercel_framework    = "nextjs"
 vercel_git_repo = {
   type = "github"
-  repo = "talyssonoliver/intelliFlow-CRM"
+  repo = "talyssonoliver/IntelliFlow-CRM"
 }
 vercel_domains = []
 
-railway_project_name = "intelliflow-crm-production"
+railway_project_name = "intelliflow-crm-dev"
 
 railway_services = {
   api = {
@@ -105,7 +105,7 @@ railway_services = {
 enable_pgvector = true
 enable_realtime = true
 
-auth_site_url   = "https://app.intelliflow-crm.example"
+auth_site_url   = "https://intelli-flow-crm-web.vercel.app"
 auth_jwt_expiry = 3600
 
 enable_monitoring      = true

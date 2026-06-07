@@ -19,7 +19,7 @@ variable "project_name" {
 variable "region" {
   description = "Primary deployment region"
   type        = string
-  default     = "us-east-1"
+  default     = "iad1"
 }
 
 variable "tags" {
@@ -28,7 +28,7 @@ variable "tags" {
   default = {
     Project    = "IntelliFlow-CRM"
     ManagedBy  = "Terraform"
-    Repository = "intelliflow/intelliflow-crm"
+    Repository = "talyssonoliver/IntelliFlow-CRM"
   }
 }
 
@@ -60,7 +60,7 @@ variable "supabase_project_name" {
 variable "supabase_region" {
   description = "Supabase project region"
   type        = string
-  default     = "us-east-1"
+  default     = "eu-central-1"
 }
 
 variable "supabase_db_pooler_host" {
@@ -127,7 +127,7 @@ variable "vercel_git_repo" {
   })
   default = {
     type = "github"
-    repo = "intelliflow/intelliflow-crm"
+    repo = "talyssonoliver/IntelliFlow-CRM"
   }
 }
 
@@ -161,14 +161,14 @@ variable "railway_services" {
   }))
   default = {
     api = {
-      image    = "ghcr.io/intelliflow/api:latest"
+      image    = "ghcr.io/talyssonoliver/intelliflow-crm-api:latest"
       replicas = 1
       memory   = "512Mi"
       cpu      = "0.5"
       env_vars = {}
     }
     ai-worker = {
-      image    = "ghcr.io/intelliflow/ai-worker:latest"
+      image    = "ghcr.io/talyssonoliver/intelliflow-crm-ai-worker:latest"
       replicas = 1
       memory   = "1Gi"
       cpu      = "1"
@@ -194,7 +194,7 @@ variable "enable_realtime" {
 variable "auth_site_url" {
   description = "Site URL for authentication redirects"
   type        = string
-  default     = "http://localhost:3000"
+  default     = ""
 }
 
 variable "auth_jwt_expiry" {

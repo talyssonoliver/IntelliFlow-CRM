@@ -7,12 +7,16 @@ locals {
 
 # Railway Project
 resource "railway_project" "main" {
-  name        = local.project_name_full
-  description = "IntelliFlow CRM ${var.environment} environment"
+  name        = var.project_name
+  description = ""
 
   # Default environment — provider >=0.3 expects an object, not a string.
   default_environment = {
     name = var.environment
+  }
+
+  lifecycle {
+    ignore_changes = [name, description]
   }
 }
 
