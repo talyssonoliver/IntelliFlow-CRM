@@ -47,6 +47,55 @@ export interface CreateLLMOptions {
 }
 
 // ============================================================================
+// Body-safe fetch (prod incident 2026-06)
+// ============================================================================
+
+/**
+ * Wrap a fetch implementation so the OpenAI SDK always receives a response whose
+ * body is still consumable.
+ *
+ * Symptom: `scoring-chain` and `insight-generation-chain` failed at runtime with
+ * `TypeError: Body is unusable: Body has already been read`. Both chains call the
+ * LLM through `createLLM()` → `ChatOpenAI` (OpenAI SDK → undici `fetch`). With
+ * OpenTelemetry's auto fetch/undici instrumentation active (see
+ * `tracing/otel.ts` → `getNodeAutoInstrumentations`), a telemetry interceptor can
+ * consume/lock the single response body stream; the SDK then reads the same
+ * stream and throws.
+ *
+ * Fix: return `response.clone()` — an independent tee taken BEFORE any consumer
+ * touches the body — so the interceptor and the SDK each read their own copy and
+ * the original stays consumable. Streaming responses (`text/event-stream`, e.g.
+ * the low-latency auto-response path) are passed through untouched so we don't
+ * buffer token streams in memory. `clone()` is best-effort: if the body was
+ * already disturbed we fall back to the original rather than make things worse.
+ */
+export function createBodySafeFetch(baseFetch: typeof fetch = fetch): typeof fetch {
+  return (async (
+    input: Parameters<typeof fetch>[0],
+    init?: Parameters<typeof fetch>[1]
+  ): Promise<Response> => {
+    const response = await baseFetch(input, init);
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!response.body || contentType.includes('text/event-stream')) {
+      return response;
+    }
+    try {
+      return response.clone();
+    } catch {
+      // Body already disturbed — nothing safe left to do; hand back the original.
+      return response;
+    }
+  }) as typeof fetch;
+}
+
+/**
+ * Process-wide singleton wrapper so every cached `ChatOpenAI`/`OpenAIEmbeddings`
+ * instance shares one allocation. Captured at module-load against the (possibly
+ * OTel-patched) global `fetch`, so telemetry spans are still emitted.
+ */
+const bodySafeFetch = createBodySafeFetch();
+
+// ============================================================================
 // LLM Instance Cache
 // ============================================================================
 
@@ -216,6 +265,10 @@ export function createLLM(
           'HTTP-Referer': process.env['OPENROUTER_SITE_URL'] || 'https://intelliflow-crm.app',
           'X-Title': 'IntelliFlow CRM',
         },
+        // Body-safe fetch — this is the PRODUCTION path (OpenRouter free models),
+        // so the "Body has already been read" double-read fix must live here too,
+        // not just on the legacy litellm/openai branch below.
+        fetch: bodySafeFetch,
       },
     });
   } else {
@@ -241,6 +294,9 @@ export function createLLM(
                 'http://localhost:4000/v1'
               )
             : process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1',
+        // Body-safe fetch — prevents "Body has already been read" when OTel fetch
+        // instrumentation consumes the response stream alongside the SDK.
+        fetch: bodySafeFetch,
       },
     });
   }
@@ -347,6 +403,9 @@ export function createEmbeddings(tier: LLMTier = 'free'): Embeddings {
                 'http://localhost:4000/v1'
               )
             : process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1',
+        // Body-safe fetch — see createBodySafeFetch (prevents double-read of the
+        // response body when OTel fetch instrumentation is active).
+        fetch: bodySafeFetch,
       },
     });
   }

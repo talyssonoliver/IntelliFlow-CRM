@@ -37,9 +37,13 @@ describe('loadAIConfig — production provider URL gating (regression)', () => {
     expect(loadAIConfig().provider).toBe('openai');
   });
 
-  it('does NOT throw for AI_PROVIDER=mock when LITELLM/OLLAMA URLs are unset', () => {
+  it('DOES throw for AI_PROVIDER=mock in production (issue 5: no silent zero-op mock fallback)', () => {
+    // mock is exempt from the base-URL gate (it dials no provider), but running
+    // the mock provider in production is itself a misconfiguration — zero real
+    // LLM calls, $0.00 cost (the 2026-06 incident). loadAIConfig() now fails
+    // fast instead of booting into a silent no-op. See ai.config.prod-guard.test.ts.
     vi.stubEnv('AI_PROVIDER', 'mock');
-    expect(() => loadAIConfig()).not.toThrow();
+    expect(() => loadAIConfig()).toThrow(/AI_PROVIDER="mock" is not permitted/);
   });
 
   it('DOES throw for AI_PROVIDER=litellm when LITELLM_BASE_URL is unset (active provider must be loud)', () => {
