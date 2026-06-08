@@ -259,7 +259,7 @@ jobs:
           digest-mismatch: warn # transient artifact-svc digest flake → non-fatal (see merge job)
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./artifacts/coverage/lcov.info
