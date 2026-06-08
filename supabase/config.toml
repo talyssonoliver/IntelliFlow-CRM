@@ -242,11 +242,17 @@ content_path = "./supabase/templates/recovery.html"
 subject = "Confirm your new IntelliFlow CRM email"
 content_path = "./supabase/templates/email_change.html"
 
-# Uncomment to customize notification email template
-# [auth.email.notification.password_changed]
-# enabled = true
-# subject = "Your password has been changed"
-# content_path = "./templates/password_changed_notification.html"
+[auth.email.template.reauthentication]
+subject = "Confirm it's you — IntelliFlow CRM"
+content_path = "./supabase/templates/reauthentication.html"
+
+# Account-security NOTIFICATION emails (password/email/phone changed, MFA
+# enrolled/unenrolled, identity linked/unlinked) are branded AND enabled on the
+# hosted project — they are the "was this you?" account-takeover tripwires and ship
+# DISABLED by GoTrue (security gap; git issue #350 / debt SEC-AUTH-NOTIF-001). They
+# are applied via the Management API by tools/scripts/apply-auth-email-templates.mjs
+# (hosted-only feature), with the branded HTML in
+# supabase/templates/notification_*.html — see supabase/templates/README.md.
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.
