@@ -13,8 +13,10 @@ import { z } from 'zod';
 import pino from 'pino';
 import {
   getInsightGenerationChain,
+  InsightGenerationChain,
   type GeneratedInsight,
 } from '../chains/insight-generation.chain';
+import { resolveFallbackProvider } from '../lib/llm-factory';
 // Fix #14: hallucination checker
 import { hallucinationChecker } from '../monitoring/hallucination-checker';
 // Fix #20: conversation record audit logging
@@ -593,6 +595,46 @@ async function dispatchScheduledInsights(
   };
 }
 
+/**
+ * #324: try the SECONDARY provider once for insight generation before accepting
+ * the heuristic. Returns the recovered insights, or null when no fallback is
+ * configured / it also failed or itself degraded to a heuristic.
+ */
+async function tryInsightFallbackProvider(
+  cappedData: InsightJobData,
+  LLM_TIMEOUT_MS: number
+): Promise<GeneratedInsight[] | null> {
+  const fallbackProvider = resolveFallbackProvider();
+  if (!fallbackProvider) return null;
+  try {
+    const fallbackChain = new InsightGenerationChain({
+      tenantId: cappedData.tenantId,
+      provider: fallbackProvider,
+    });
+    const gen = await Promise.race([
+      fallbackChain.generateInsightsWithMeta({
+        tenantId: cappedData.tenantId,
+        userId: cappedData.userId,
+        dealsAtRisk: cappedData.dealsAtRisk,
+        hotLeads: cappedData.hotLeads,
+        overdueTasksCount: cappedData.overdueTasksCount,
+        staleContacts: cappedData.staleContacts,
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`fallback insight inference timed out after ${LLM_TIMEOUT_MS}ms`)),
+          LLM_TIMEOUT_MS
+        )
+      ),
+    ]);
+    // Only a real LLM result counts as recovery — if the fallback provider also
+    // degraded to its own heuristic, let the primary's heuristic stand.
+    return gen.source === 'fallback' ? null : gen.insights;
+  } catch {
+    return null;
+  }
+}
+
 async function generateInsightsWithFallback(
   job: Job<InsightJobData>,
   chain: ReturnType<typeof getInsightGenerationChain>,
@@ -619,8 +661,28 @@ async function generateInsightsWithFallback(
         )
       ),
     ]);
+    if (generation.source === 'fallback') {
+      // Primary provider degraded to its heuristic inside the chain — try the
+      // secondary provider before accepting it.
+      const recovered = await tryInsightFallbackProvider(cappedData, LLM_TIMEOUT_MS);
+      if (recovered) {
+        logger.warn(
+          { jobId: job.id },
+          'Primary insight LLM degraded to heuristic — recovered via fallback provider'
+        );
+        return { insights: recovered, usedFallback: false };
+      }
+    }
     return { insights: generation.insights, usedFallback: generation.source === 'fallback' };
   } catch (error) {
+    const recovered = await tryInsightFallbackProvider(cappedData, LLM_TIMEOUT_MS);
+    if (recovered) {
+      logger.warn(
+        { jobId: job.id, primaryError: error instanceof Error ? error.message : String(error) },
+        'Primary insight LLM failed — recovered via fallback provider'
+      );
+      return { insights: recovered, usedFallback: false };
+    }
     logger.warn(
       { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
       'LLM inference failed or timed out — falling back to heuristic insights'

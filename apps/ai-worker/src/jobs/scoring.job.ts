@@ -13,7 +13,7 @@ import pino from 'pino';
 import { LeadScoringChain } from '../chains/scoring.chain';
 import type { LeadInput, ScoringResult } from '../chains/scoring.chain';
 import { logAIAgentAction } from '../utils/audit-log';
-import { getLLMBreaker } from '../lib/llm-factory';
+import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
 import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
@@ -224,6 +224,47 @@ async function generateScoringWithFallback(
     ]);
     return { result: scored, usedFallback: false };
   } catch (error) {
+    // #324: before dropping to the heuristic, try the SECONDARY provider once
+    // (e.g. AI_FALLBACK_PROVIDER=litellm when OpenRouter's free tier rate-limits
+    // or is unavailable). A real LLM result beats the heuristic; one shot, no
+    // breaker, so a hard outage still falls through to the heuristic quickly.
+    const fallbackProvider = resolveFallbackProvider();
+    if (fallbackProvider) {
+      try {
+        const fallbackChain = new LeadScoringChain({
+          tenantId: job.data.tenantId,
+          provider: fallbackProvider,
+        });
+        const scored = await Promise.race([
+          fallbackChain.scoreLead(input),
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new Error(`fallback LLM scoring timed out after ${timeoutMs}ms`)),
+              timeoutMs
+            )
+          ),
+        ]);
+        logger.warn(
+          {
+            jobId: job.id,
+            fallbackProvider,
+            primaryError: error instanceof Error ? error.message : String(error),
+          },
+          'Primary LLM scoring failed — recovered via fallback provider'
+        );
+        return { result: scored, usedFallback: false };
+      } catch (fallbackError) {
+        logger.warn(
+          {
+            jobId: job.id,
+            fallbackProvider,
+            error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+          },
+          'Fallback provider also failed — using heuristic'
+        );
+      }
+    }
+
     logger.warn(
       { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
       'LLM scoring failed or timed out — using heuristic fallback'
