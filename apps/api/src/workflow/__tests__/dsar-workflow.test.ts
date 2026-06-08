@@ -67,6 +67,11 @@ function createMockDb() {
       create: vi.fn(),
     },
     $executeRaw: vi.fn(),
+    // IFC-155: the GDPR search-index purge runs both UPDATEs in one
+    // $transaction (array form). The mock resolves the batched operations so
+    // the purge result is still observable, while letting tests assert that a
+    // single atomic transaction was used.
+    $transaction: vi.fn((ops: unknown[]) => Promise.all(ops)),
   };
 }
 
@@ -929,6 +934,23 @@ describe('DSARWorkflow', () => {
 
       // Should call $executeRaw for purge (2 calls for docs and notes) + 3 for anonymize
       expect(mockDb.$executeRaw).toHaveBeenCalled();
+    });
+
+    it('should purge document and note indexes atomically in one $transaction (IFC-155)', async () => {
+      setupErasureRequest();
+      mockDb.legal_holds.findMany.mockResolvedValue([]);
+      mockDb.$executeRaw.mockResolvedValue(3);
+
+      await workflow.processDSAR('dsar-erase');
+
+      // GDPR atomicity: both search-index purges (case_documents + contact_notes)
+      // must run in ONE transaction so a crash between them can't leave the
+      // subject partially erased. Assert a single $transaction carrying exactly
+      // the two purge operations.
+      expect(mockDb.$transaction).toHaveBeenCalledTimes(1);
+      const txOps = mockDb.$transaction.mock.calls[0][0];
+      expect(Array.isArray(txOps)).toBe(true);
+      expect(txOps).toHaveLength(2);
     });
 
     it('should anonymize data in leads, contacts, and accounts tables', async () => {

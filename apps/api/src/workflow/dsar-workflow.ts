@@ -442,8 +442,15 @@ export class DSARWorkflow {
     tenantId: string,
     requestId: string
   ): Promise<{ documentsPurged: number; notesPurged: number }> {
-    // Purge document embeddings, search vectors, and extracted text
-    const docResult = await this.db.$executeRaw`
+    // IFC-155 GDPR ATOMICITY (audit finding): the two purges run in a single
+    // $transaction so a crash / connection drop between them cannot leave the
+    // subject PARTIALLY erased (documents redacted but notes still holding
+    // personal data, or vice-versa). A DSAR/Article-17 erasure must be
+    // all-or-nothing. Previously these were two sequential bare $executeRaw
+    // calls — the "atomically" in the doc comment above was aspirational.
+    const [docResult, noteResult] = await this.db.$transaction([
+      // Purge document embeddings, search vectors, and extracted text
+      this.db.$executeRaw`
       UPDATE case_documents
       SET
         embedding = NULL,
@@ -451,10 +458,9 @@ export class DSARWorkflow {
         extracted_text = '[REDACTED - GDPR]'
       WHERE created_by = ${subjectId}::text
         AND tenant_id = ${tenantId}::uuid
-    `;
-
-    // Purge note embeddings, search vectors, and content
-    const noteResult = await this.db.$executeRaw`
+    `,
+      // Purge note embeddings, search vectors, and content
+      this.db.$executeRaw`
       UPDATE contact_notes
       SET
         embedding = NULL,
@@ -462,7 +468,8 @@ export class DSARWorkflow {
         content = '[REDACTED - GDPR]'
       WHERE author = ${subjectId}::text
         AND "tenantId" = ${tenantId}
-    `;
+    `,
+    ]);
 
     console.log(
       `[DSAR][IFC-155] Search index purge: ${docResult} docs, ${noteResult} notes for request ${requestId}`
