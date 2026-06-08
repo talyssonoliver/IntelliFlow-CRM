@@ -52,7 +52,7 @@
     "@intelliflow/typescript-config": "workspace:*",
     "@opentelemetry/sdk-trace-base": "^2.7.1",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.9.1",
+    "@types/node": "^25.9.2",
     "@types/pdf-parse": "^1.1.5",
     "eslint": "^10.4.1",
     "tsup": "^8.0.0",
