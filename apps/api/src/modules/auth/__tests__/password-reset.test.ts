@@ -48,7 +48,7 @@ vi.mock('../../../middleware/rate-limit', async (importOriginal) => {
   const original = await importOriginal<typeof import('../../../middleware/rate-limit')>();
   return {
     ...original,
-    createAuthEndpointRateLimitMiddleware:
+    createDistributedRateLimitMiddleware:
       () =>
       async ({ next }: { next: () => Promise<unknown> }) =>
         next(),
