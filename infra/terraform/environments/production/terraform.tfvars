@@ -114,6 +114,14 @@ enable_drift_detection = true
 enable_cost_alerts     = true
 cost_alert_threshold   = 1
 
+# #314: bring the live api + ai-worker services under TF management for
+# observability ONLY (SENTRY_DSN/SENTRY_ENVIRONMENT/OTEL_* at the service level;
+# their other live vars are left untouched). REQUIRES importing the hand-set
+# SENTRY_DSN + SENTRY_ENVIRONMENT for both services first (else apply errors
+# ENV_ALREADY_EXISTS), and exporting TF_VAR_sentry_dsn on apply (else SENTRY_DSN
+# is set empty). OTEL_ENABLED stays "false" until otel_exporter_endpoint is set.
+observability_managed_services = ["api", "ai-worker"]
+
 # Storage buckets exist live + are managed outside Terraform (the supabase CLI
 # isn't available to the runner); skip the local-exec creator.
 storage_buckets = {}

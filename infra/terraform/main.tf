@@ -148,6 +148,21 @@ module "railway" {
     OPENROUTER_API_KEY          = var.openrouter_api_key
   }, module.monitoring.observability_env)
 
+  # Service-level observability for the otherwise-unmanaged live services
+  # (api, ai-worker — #314). They keep env_vars = {} (so the full shared_env_vars
+  # are NOT pushed onto them), but Railway shared vars aren't auto-injected — so
+  # observability never reaches them. Set ONLY the observability keys at the
+  # service level (per-key, leaves their other live vars untouched). SENTRY_DSN is
+  # sensitive (from var.sentry_dsn); OTEL_*/SENTRY_ENVIRONMENT come from the
+  # monitoring module. SENTRY_DSN + SENTRY_ENVIRONMENT are hand-set today → import
+  # them before the first apply (see modules/railway/main.tf observability note).
+  service_observability_vars = {
+    for svc in var.observability_managed_services : svc => merge(
+      module.monitoring.observability_env,
+      { SENTRY_DSN = var.sentry_dsn },
+    )
+  }
+
   tags = local.common_tags
 }
 

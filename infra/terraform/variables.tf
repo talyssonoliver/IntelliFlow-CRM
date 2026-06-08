@@ -271,6 +271,12 @@ variable "otel_exporter_endpoint" {
   default     = ""
 }
 
+variable "observability_managed_services" {
+  description = "Live Railway services to bring under TF management for OBSERVABILITY only (#314) — sets SENTRY_DSN/SENTRY_ENVIRONMENT/OTEL_* at the service level without touching their other live vars. Empty (default) = none (current behaviour: only the 3 new workers get observability via shared_env_vars). Set to [\"api\", \"ai-worker\"] in prod once the hand-set SENTRY_DSN/SENTRY_ENVIRONMENT are imported."
+  type        = list(string)
+  default     = []
+}
+
 # ---------------------------------------------------------------------------
 # Tier-0 production application secrets (issue #315)
 # ---------------------------------------------------------------------------
