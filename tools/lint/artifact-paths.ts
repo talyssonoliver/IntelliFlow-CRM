@@ -79,6 +79,10 @@ const CONFIG = {
     'docs/design/**',
     'docs/company/**',
     'coverage/**',
+    // Supabase Auth (GoTrue) email templates: password-reset/magic-link copy
+    // legitimately contains the word "password" and the sender crm@leangency.com
+    // (not secrets/PII). The only dynamic value is the GoTrue {{ .ConfirmationURL }}.
+    'supabase/templates/**',
   ],
 };
 
