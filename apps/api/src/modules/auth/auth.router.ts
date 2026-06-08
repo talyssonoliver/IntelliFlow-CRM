@@ -47,7 +47,6 @@ import {
   getSession,
   signInWithOAuth,
   exchangeCodeForSession,
-  verifyToken,
   supabaseAdmin,
   resetPasswordForEmail,
   updateUserPassword,
@@ -254,71 +253,15 @@ type AuthenticatedAppUser = {
   avatar: string | null;
 };
 
-// ============================================
-// getStatus In-Process Result Cache
-// ============================================
-// Caches the full getStatus response payload keyed by the raw bearer token.
-// Keying by token is safe: each unique token encodes user identity + expiry
-// + signature, so token equality implies identical server response.
-// TTL: 55 s — slightly shorter than context.ts USER_SESSION_CACHE (60 s) so
-// we refresh before the session cache entry could silently expire.
-// Max size: 2000 entries (one per active token, tokens rotate ~hourly).
-//
-// This avoids the `prisma.user.findUnique` avatar lookup + `ensureAppUserSession`
-// DB read that `resolveAuthenticatedAppUser` performs on every warm getStatus call.
-
-interface GetStatusCacheEntry {
-  payload: {
-    authenticated: boolean;
-    user?: {
-      id: string;
-      email: string;
-      name: string | null;
-      role: string;
-      avatar: string | null;
-    };
-    expiresAt?: Date;
-  };
-  cachedAt: number;
-}
-
-const GET_STATUS_CACHE = new Map<string, GetStatusCacheEntry>();
-const GET_STATUS_CACHE_TTL_MS = 55_000;
-const GET_STATUS_CACHE_MAX_SIZE = 2_000;
-
-function getStatusFromCache(token: string): GetStatusCacheEntry['payload'] | null {
-  const entry = GET_STATUS_CACHE.get(token);
-  if (!entry) return null;
-  if (Date.now() - entry.cachedAt > GET_STATUS_CACHE_TTL_MS) {
-    GET_STATUS_CACHE.delete(token);
-    return null;
-  }
-  return entry.payload;
-}
-
-function setStatusInCache(token: string, payload: GetStatusCacheEntry['payload']): void {
-  if (GET_STATUS_CACHE.size >= GET_STATUS_CACHE_MAX_SIZE) {
-    const firstKey = GET_STATUS_CACHE.keys().next().value;
-    if (firstKey) GET_STATUS_CACHE.delete(firstKey);
-  }
-  GET_STATUS_CACHE.set(token, { payload, cachedAt: Date.now() });
-}
-
 /**
- * Evict a specific token from the getStatus cache.
- * Called on logout so the invalidated token is never served from cache.
- */
-export function evictStatusCache(token: string): void {
-  GET_STATUS_CACHE.delete(token);
-}
-
-/**
- * Clear the entire getStatus cache.
- * Exposed for test isolation — call in beforeEach to prevent cache pollution
- * between test runs that share the same module instance.
+ * No-op retained for test/back-compat: `auth.getStatus` used to keep a private,
+ * token-keyed result cache to dodge a per-request DB read. That cache is gone —
+ * `getStatus` now reuses the already-resolved `ctx.user` (resolved + cached once
+ * per request in context.ts via USER_SESSION_CACHE), so there is no second cache
+ * to clear. Kept exported so existing test isolation hooks stay valid.
  */
 export function clearStatusCache(): void {
-  GET_STATUS_CACHE.clear();
+  /* intentionally empty — getStatus no longer maintains its own cache */
 }
 
 async function resolveAuthenticatedAppUser(
@@ -326,11 +269,12 @@ async function resolveAuthenticatedAppUser(
   supabaseUser: SupabaseAuthUser
 ): Promise<AuthenticatedAppUser> {
   const session = await ensureAppUserSession(prisma, supabaseUser);
-  const dbUser = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { avatarUrl: true },
-  });
 
+  // Avatar now lives on the resolved session (DB `avatarUrl`, lazily backfilled
+  // from provider metadata inside ensureAppUserSession). This removes the extra
+  // `prisma.user.findUnique` avatar read that used to run on every login / OAuth /
+  // MFA / getStatus call. Fall back to the raw OAuth metadata for the very first
+  // request, before the fire-and-forget backfill write has landed.
   let metadataAvatar: string | null = null;
   if (typeof supabaseUser.user_metadata?.avatar_url === 'string') {
     metadataAvatar = supabaseUser.user_metadata.avatar_url;
@@ -340,7 +284,7 @@ async function resolveAuthenticatedAppUser(
 
   return {
     session,
-    avatar: dbUser?.avatarUrl || metadataAvatar,
+    avatar: session.avatarUrl ?? metadataAvatar,
   };
 }
 
@@ -1181,79 +1125,36 @@ export const authRouter = createTRPCRouter({
   }),
 
   /**
-   * Check current auth status
+   * Check current auth status.
    *
-   * IFC-007: Fixed to verify user's token from Authorization header
-   * instead of checking server-side session (which doesn't exist)
+   * IFC-007: derives auth status from the request's Bearer token.
    *
-   * Performance: results are cached in GET_STATUS_CACHE (55 s TTL, keyed by
-   * token) to avoid the Prisma avatar lookup on every warm call.  The token
-   * itself is always verified via verifyToken (local JOSE) — only the DB
-   * resolution step is cached.
+   * Performance (N+1 elimination): this reuses `ctx.user`, which context.ts
+   * resolves exactly once per request — Bearer verify (local JOSE, no network)
+   * plus a single `prisma.user` resolution that is itself memoised for 60 s
+   * (USER_SESSION_CACHE). getStatus therefore issues NO database query and NO
+   * second token verification of its own. Previously a single warm getStatus
+   * call cost: the context resolution + a redundant verifyToken +
+   * ensureAppUserSession + a separate avatar `findUnique` — three user reads per
+   * request. The avatar now travels on the session (`ctx.user.avatarUrl`,
+   * lazily backfilled from provider metadata in ensureAppUserSession).
    */
-  getStatus: publicProcedure.query(async ({ ctx }) => {
-    console.log('\n>>>>>>>>>> getStatus CALLED <<<<<<<<<<');
-
-    // Extract token from Authorization header
-    const authHeader =
-      ctx.req?.headers.get?.('Authorization') || ctx.req?.headers.get?.('authorization');
-
-    console.log('[getStatus] Auth header present:', !!authHeader);
-
-    if (!authHeader) {
-      console.log('[getStatus] No auth header, returning unauthenticated');
+  getStatus: publicProcedure.query(({ ctx }) => {
+    if (!ctx.user) {
       return { authenticated: false };
     }
 
-    const parts = authHeader.split(' ');
-    if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
-      console.log('[getStatus] Invalid auth header format');
-      return { authenticated: false };
-    }
-
-    const token = parts[1];
-    console.log('[getStatus] Token extracted, length:', token.length);
-
-    // Fast path: return cached result if available (avoids DB round-trip)
-    const cached = getStatusFromCache(token);
-    if (cached) {
-      console.log('[getStatus] Cache hit, returning cached status');
-      return cached;
-    }
-
-    // Verify token with Supabase (local JOSE — fast, no network call)
-    console.log('[getStatus] Calling verifyToken...');
-    const { user: supabaseUser, error } = await verifyToken(token);
-
-    console.log('[getStatus] verifyToken returned:', {
-      hasUser: !!supabaseUser,
-      userId: supabaseUser?.id,
-      email: supabaseUser?.email,
-      errorMessage: error?.message,
-      errorName: error?.name,
-      fullError: error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : null,
-    });
-
-    if (error || !supabaseUser) {
-      console.log('[getStatus] Token verification failed, returning unauthenticated');
-      console.log('>>>>>>>>>> getStatus RETURNING FALSE <<<<<<<<<<\n');
-      return { authenticated: false };
-    }
-
-    const appUser = await resolveAuthenticatedAppUser(ctx.prisma, supabaseUser);
-
-    const result = {
+    return {
       authenticated: true,
-      user: buildAuthUserPayload(appUser),
-      expiresAt: new Date(Date.now() + 3600 * 1000), // Token expiry from Supabase
+      user: {
+        id: ctx.user.userId,
+        email: ctx.user.email,
+        name: ctx.user.name ?? null,
+        role: ctx.user.role,
+        avatar: ctx.user.avatarUrl ?? null,
+      },
+      expiresAt: new Date(Date.now() + 3600 * 1000),
     };
-
-    // Cache the resolved result so subsequent calls within the TTL window skip
-    // the DB resolution entirely.  The unauthenticated fast-path is NOT cached
-    // to avoid locking out users whose tokens were just issued.
-    setStatusInCache(token, result);
-
-    return result;
   }),
 
   /**
