@@ -399,6 +399,125 @@ export class SendGridProvider implements EmailProvider {
 }
 
 /**
+ * Resend provider — sends over the Resend HTTP API (POST https://api.resend.com/emails,
+ * HTTPS/443). This is the IntelliFlow stack's provider (SendGrid was superseded; see
+ * ADR-041 + the Resend decision). Mirrors the notifications-worker's Resend transport so
+ * the API-originated emails (receipts, welcome, auto-response, DSAR) actually send instead
+ * of falling back to the mock provider. See git issue #360.
+ */
+export class ResendProvider implements EmailProvider {
+  readonly name = 'resend';
+  private readonly apiKey: string;
+  private readonly baseUrl: string;
+
+  constructor(apiKey: string, baseUrl = 'https://api.resend.com') {
+    if (!apiKey) {
+      throw new Error('Resend API key is required');
+    }
+    this.apiKey = apiKey;
+    this.baseUrl = baseUrl.replace(/\/$/, '');
+  }
+
+  private static formatRecipient(r: EmailRecipient): string {
+    return r.name ? `${r.name} <${r.email}>` : r.email;
+  }
+
+  async send(email: OutboundEmail): Promise<EmailSendResult> {
+    const messageId = email.messageId || `re-${Date.now()}-${randomUUID().replaceAll('-', '')}`;
+    const pick = (type: 'to' | 'cc' | 'bcc') =>
+      email.recipients.filter((r) => r.type === type).map(ResendProvider.formatRecipient);
+
+    const to = pick('to');
+    const cc = pick('cc');
+    const bcc = pick('bcc');
+
+    const payload: Record<string, unknown> = {
+      from: ResendProvider.formatRecipient(email.from),
+      to,
+      subject: email.subject,
+      ...(cc.length ? { cc } : {}),
+      ...(bcc.length ? { bcc } : {}),
+      ...(email.replyTo ? { reply_to: email.replyTo.email } : {}),
+      ...(email.htmlBody ? { html: email.htmlBody } : {}),
+      ...(email.textBody ? { text: email.textBody } : {}),
+      ...(email.headers ? { headers: email.headers } : {}),
+      ...(email.attachments
+        ? {
+            attachments: email.attachments.map((a) => ({
+              filename: a.filename,
+              content: Buffer.isBuffer(a.content)
+                ? a.content.toString('base64')
+                : Buffer.from(a.content).toString('base64'),
+              ...(a.cid ? { content_id: a.cid } : {}),
+            })),
+          }
+        : {}),
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
+    try {
+      const response = await fetch(`${this.baseUrl}/emails`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Email delivery failed (provider error ${response.status})`);
+      }
+
+      const data = (await response.json().catch(() => ({}))) as { id?: string };
+      return {
+        messageId: data.id || messageId,
+        provider: this.name,
+        status: 'queued',
+        timestamp: new Date(),
+        details: { statusCode: response.status },
+      };
+    } catch (error) {
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        errorMessage = error.message.replaceAll(this.apiKey, '[REDACTED]');
+      }
+      return {
+        messageId,
+        provider: this.name,
+        status: 'failed',
+        timestamp: new Date(),
+        error: errorMessage,
+      };
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  async getDeliverabilityStats(): Promise<DeliverabilityStats> {
+    // Resend exposes deliverability via webhooks/dashboard, not a pull API here.
+    return {
+      sent: 0,
+      delivered: 0,
+      bounced: 0,
+      complained: 0,
+      opened: 0,
+      clicked: 0,
+      deliverabilityRate: 0,
+      period: { start: new Date(Date.now() - 86400000 * 30), end: new Date() },
+    };
+  }
+
+  async checkBounce(_messageId: string): Promise<BounceInfo | null> {
+    // Resend reports bounces via webhooks, not a pull API.
+    return null;
+  }
+}
+
+/**
  * Outbound email service
  * Orchestrates email sending with rate limiting, templates, and provider failover
  */
@@ -523,6 +642,7 @@ export class OutboundEmailService {
 // Export factory function
 export function createOutboundEmailService(
   config: {
+    resendApiKey?: string;
     sendgridApiKey?: string;
     useMock?: boolean;
     rateLimits?: RateLimitConfig;
@@ -530,9 +650,15 @@ export function createOutboundEmailService(
 ): OutboundEmailService {
   const providers: EmailProvider[] = [];
 
+  // Resend is the IntelliFlow stack's provider (SendGrid superseded — ADR-041 / #360).
+  // Prefer Resend; keep SendGrid as a configurable fallback for failover.
+  if (config.resendApiKey) {
+    providers.push(new ResendProvider(config.resendApiKey));
+  }
   if (config.sendgridApiKey) {
     providers.push(new SendGridProvider(config.sendgridApiKey));
-  } else if (config.useMock || process.env.NODE_ENV === 'development') {
+  }
+  if (providers.length === 0 && (config.useMock || process.env.NODE_ENV === 'development')) {
     providers.push(new MockEmailProvider());
   }
 

@@ -3,6 +3,7 @@ import {
   OutboundEmailService,
   MockEmailProvider,
   SendGridProvider,
+  ResendProvider,
   EmailRateLimiter,
   EmailTemplateRenderer,
   createOutboundEmailService,
@@ -339,6 +340,106 @@ describe('OutboundEmailService', () => {
       // Should failover to mock provider
       expect(result.status).toBe('sent');
       expect(result.provider).toBe('mock');
+    });
+  });
+
+  describe('ResendProvider', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should throw when API key is empty string', () => {
+      expect(() => new ResendProvider('')).toThrow('Resend API key is required');
+    });
+
+    it('should POST to the Resend /emails endpoint with Bearer auth and formatted from/to', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ id: 'resend-id-123' }),
+      });
+
+      const provider = new ResendProvider('re_test_key');
+      const email: OutboundEmail = {
+        from: { email: 'crm@leangency.com', name: 'IntelliFlow CRM', type: 'to' },
+        recipients: [
+          { email: 'to@example.com', name: 'To User', type: 'to' },
+          { email: 'cc@example.com', type: 'cc' },
+        ],
+        subject: 'Test Email',
+        htmlBody: '<p>Hello</p>',
+        textBody: 'Hello',
+        trackOpens: true,
+        trackClicks: true,
+      };
+
+      const result = await provider.send(email);
+
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.resend.com/emails',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ Authorization: 'Bearer re_test_key' }),
+        })
+      );
+      const body = JSON.parse((fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+      expect(body.from).toBe('IntelliFlow CRM <crm@leangency.com>');
+      expect(body.to).toEqual(['To User <to@example.com>']);
+      expect(body.cc).toEqual(['cc@example.com']);
+      expect(body.html).toBe('<p>Hello</p>');
+      // Uses Resend's returned id as the message id.
+      expect(result.status).toBe('queued');
+      expect(result.messageId).toBe('resend-id-123');
+    });
+
+    it('should fail without exposing the response body', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 422,
+        json: async () => ({ message: 'invalid from field secret' }),
+      });
+
+      const provider = new ResendProvider('re_test_key');
+      const result = await provider.send({
+        from: { email: 'crm@leangency.com', type: 'to' },
+        recipients: [{ email: 'r@example.com', type: 'to' }],
+        subject: 'T',
+        textBody: 'T',
+      } as OutboundEmail);
+
+      expect(result.status).toBe('failed');
+      expect(result.error).toContain('provider error 422');
+      expect(result.error).not.toContain('secret');
+    });
+
+    it('should not expose the API key in error messages', async () => {
+      const apiKey = 're_secret_value';
+      global.fetch = vi.fn().mockRejectedValue(new Error(`failed with ${apiKey}`));
+
+      const provider = new ResendProvider(apiKey);
+      const result = await provider.send({
+        from: { email: 'crm@leangency.com', type: 'to' },
+        recipients: [{ email: 'r@example.com', type: 'to' }],
+        subject: 'T',
+        textBody: 'T',
+      } as OutboundEmail);
+
+      expect(result.status).toBe('failed');
+      expect(result.error).not.toContain(apiKey);
+      expect(result.error).toContain('[REDACTED]');
+    });
+  });
+
+  describe('createOutboundEmailService provider selection', () => {
+    it('prefers Resend when a resendApiKey is configured', async () => {
+      const svc = createOutboundEmailService({ resendApiKey: 're_x' });
+      // The first (preferred) provider is Resend.
+      expect((svc as unknown as { providers: EmailProvider[] }).providers[0].name).toBe('resend');
+    });
+
+    it('falls back to mock with no provider keys', () => {
+      const svc = createOutboundEmailService({});
+      expect((svc as unknown as { providers: EmailProvider[] }).providers[0].name).toBe('mock');
     });
   });
 
