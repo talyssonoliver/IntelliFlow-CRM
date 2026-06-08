@@ -53,6 +53,9 @@ const mockGetLLMBreaker = vi.hoisted(() => vi.fn(() => openBreaker));
 vi.mock('../../lib/llm-factory', () => ({
   getLLMBreaker: mockGetLLMBreaker,
   __resetBreakers: vi.fn(),
+  // No provider fallback configured — these tests exercise the HEURISTIC path
+  // (breaker OPEN → heuristic), so resolveFallbackProvider must return null (#324).
+  resolveFallbackProvider: () => null,
   createLLM: vi.fn(() => ({
     invoke: vi.fn().mockResolvedValue({ content: '{}' }),
     withStructuredOutput: vi.fn(() => ({ invoke: vi.fn().mockResolvedValue({}) })),

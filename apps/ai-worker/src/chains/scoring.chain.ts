@@ -1,7 +1,7 @@
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
-import { aiConfig } from '../config/ai.config';
+import { aiConfig, type AIProvider } from '../config/ai.config';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
 import type { MonitoredResult } from '../monitoring/chain-monitor';
 import { leadScoreSchema } from '@intelliflow/validators';
@@ -47,6 +47,8 @@ export class LeadScoringChain {
   private structuredModel: { invoke(input: unknown): Promise<unknown> };
   private readonly prompt: PromptTemplate;
   private readonly tenantId?: string;
+  /** Optional provider override (job-level fallback, #324). */
+  private readonly provider?: AIProvider;
 
   /** Default prompt template used when no versioned config is available */
   private static readonly DEFAULT_PROMPT = `You are an expert lead scoring AI for a CRM system. Analyze the provided lead information and assign a score from 0-100 based on the lead's quality and conversion potential.
@@ -77,14 +79,16 @@ Lead Information:
 
 Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.`;
 
-  constructor(options?: { tenantId?: string }) {
+  constructor(options?: { tenantId?: string; provider?: AIProvider }) {
     this.tenantId = options?.tenantId;
+    this.provider = options?.provider;
 
     // Initialize LLM via factory — provider/tier routing handled centrally
     this.model = createLLM('scoring', 'free', {
       temperature: aiConfig.openai.temperature,
       maxTokens: aiConfig.openai.maxTokens,
       timeout: aiConfig.openai.timeout,
+      provider: this.provider,
     });
 
     this.structuredModel = (this.model as any).withStructuredOutput(leadScoreSchema);
@@ -137,6 +141,7 @@ Respond with a structured JSON object containing the score, confidence, factors,
           temperature: aiConfig.openai.temperature,
           maxTokens: aiConfig.openai.maxTokens,
           timeout: aiConfig.openai.timeout,
+          provider: this.provider,
         });
         this.structuredModel = (tenantModel as any).withStructuredOutput(leadScoreSchema);
       }

@@ -2,7 +2,7 @@ import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
 import { ChatOllama } from '@langchain/ollama';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Embeddings } from '@langchain/core/embeddings';
-import { aiConfig } from '../config/ai.config.js';
+import { aiConfig, AIProviderSchema, type AIProvider } from '../config/ai.config.js';
 import { CircuitBreaker } from '../utils/circuit-breaker.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
 import { wrapModelWithTracing, wrapEmbeddingsWithTracing } from '../tracing/llm-tracer.js';
@@ -44,6 +44,13 @@ export interface CreateLLMOptions {
   temperature?: number;
   maxTokens?: number;
   timeout?: number;
+  /**
+   * Override the active provider for THIS instance only (does not touch the
+   * global `aiConfig.provider`). Used by the job-level provider fallback (#324)
+   * to build a model on the secondary provider when the primary fails. Threaded
+   * into the cache key so the fallback model is cached separately.
+   */
+  provider?: AIProvider;
 }
 
 // ============================================================================
@@ -133,13 +140,13 @@ const bodySafeFetch = createBodySafeFetch();
 const _factoryCache = new Map<string, BaseChatModel>();
 
 function _getFactoryCacheKey(
+  provider: AIProvider,
   purpose: LLMPurpose,
   tier: LLMTier,
   temperature: number,
   maxTokens: number,
   timeout: number
 ): string {
-  const provider = aiConfig.provider;
   return `${provider}:${purpose}:${tier}:${temperature}:${maxTokens}:${timeout}`;
 }
 
@@ -214,6 +221,23 @@ export function __resetBreakers(): void {
 // ============================================================================
 
 /**
+ * Resolve the configured fallback provider for the job-level provider fallback
+ * (#324). Reads `AI_FALLBACK_PROVIDER` (e.g. `litellm` when the primary is
+ * `openrouter`). Returns null — i.e. "no fallback, go straight to the heuristic" —
+ * when it is unset, invalid, the no-op `mock` provider, or identical to the
+ * active provider (falling back to the same provider is pointless).
+ */
+export function resolveFallbackProvider(): AIProvider | null {
+  const raw = (process.env['AI_FALLBACK_PROVIDER'] || '').trim();
+  if (!raw) return null;
+  const parsed = AIProviderSchema.safeParse(raw);
+  if (!parsed.success) return null;
+  const fallback = parsed.data;
+  if (fallback === 'mock' || fallback === aiConfig.provider) return null;
+  return fallback;
+}
+
+/**
  * Factory for all chat-model instantiation in IntelliFlow CRM.
  *
  * Default path  : LiteLLM proxy → real providers (Groq, Mistral, Anthropic, OpenAI, Gemini).
@@ -234,12 +258,16 @@ export function createLLM(
 ): BaseChatModel {
   const { temperature = 0.7, maxTokens = 2000, timeout = 120_000 } = options;
 
+  // Provider for THIS instance — the caller may override (job-level fallback,
+  // #324); otherwise use the global singleton.
+  const provider = options.provider ?? aiConfig.provider;
+
   // LITELLM_MASTER_KEY only matters for the litellm proxy path — gate the
   // assertion so AI_PROVIDER=openrouter/ollama/mock don't trip it. (#238)
-  if (aiConfig.provider === 'litellm') _assertProdKey();
+  if (provider === 'litellm') _assertProdKey();
 
   // Check the instance cache before allocating a new model object.
-  const cacheKey = _getFactoryCacheKey(purpose, tier, temperature, maxTokens, timeout);
+  const cacheKey = _getFactoryCacheKey(provider, purpose, tier, temperature, maxTokens, timeout);
   const cached = _factoryCache.get(cacheKey);
   if (cached !== undefined) {
     return cached;
@@ -248,13 +276,13 @@ export function createLLM(
   let model: BaseChatModel;
 
   // Offline escape hatch — local Ollama only (no LiteLLM dependency).
-  if (aiConfig.provider === 'ollama') {
+  if (provider === 'ollama') {
     model = new ChatOllama({
       baseUrl: aiConfig.ollama.baseUrl,
       model: aiConfig.ollama.model,
       temperature,
     });
-  } else if (aiConfig.provider === 'mock') {
+  } else if (provider === 'mock') {
     // Test path — aiConfig is normally singleton but tests override it via vi.mock.
     model = new ChatOpenAI({
       apiKey: 'mock-key',
@@ -264,7 +292,7 @@ export function createLLM(
       timeout,
       configuration: { baseURL: 'http://mock-litellm' },
     });
-  } else if (aiConfig.provider === 'openrouter') {
+  } else if (provider === 'openrouter') {
     // OpenRouter is OpenAI-compatible — real model ids (e.g. openai/gpt-oss-120b:free),
     // NOT the litellm logical `${purpose}-${tier}` aliases. Used for production chat
     // (free models); dev stays on Ollama. No proxy required.
@@ -303,7 +331,7 @@ export function createLLM(
         // runs createEmbeddings() at import time, so an unconditional throw here
         // crash-looped ai-worker in production with AI_PROVIDER=openai. See #238.
         baseURL:
-          aiConfig.provider === 'litellm'
+          provider === 'litellm'
             ? requiredProdEnv(
                 'LITELLM_BASE_URL',
                 process.env['LITELLM_BASE_URL'],

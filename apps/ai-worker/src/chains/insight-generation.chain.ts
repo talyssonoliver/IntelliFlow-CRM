@@ -17,7 +17,7 @@
 
 import { PromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
-import { aiConfig } from '../config/ai.config';
+import { aiConfig, type AIProvider } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
@@ -166,9 +166,12 @@ export class InsightGenerationChain {
   private structuredModel: { invoke(input: unknown): Promise<unknown> };
   private readonly prompt: PromptTemplate;
   private readonly tenantId?: string;
+  /** Optional provider override (job-level fallback, #324). */
+  private readonly provider?: AIProvider;
 
-  constructor(options?: { tenantId?: string }) {
+  constructor(options?: { tenantId?: string; provider?: AIProvider }) {
     this.tenantId = options?.tenantId;
+    this.provider = options?.provider;
     validateProviderForProduction();
 
     // Initialize LLM via factory — provider/tier routing handled centrally
@@ -176,6 +179,7 @@ export class InsightGenerationChain {
       temperature: 0.4,
       maxTokens: 2000,
       timeout: aiConfig.openai.timeout,
+      provider: this.provider,
     });
     this.structuredModel = (llm as any).withStructuredOutput(LLMInsightOutputSchema);
 
@@ -284,6 +288,7 @@ Respond with a structured JSON object containing an insights array.`,
           temperature: 0.4,
           maxTokens: 2000,
           timeout: aiConfig.openai.timeout,
+          provider: this.provider,
         });
         this.structuredModel = (tenantModel as any).withStructuredOutput(LLMInsightOutputSchema);
       }
