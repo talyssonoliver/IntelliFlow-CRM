@@ -26,7 +26,7 @@
       "passed": true
     }
   ],
-  "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports.",
+  "notes": "Evidence stub — the k6 load test was NEVER executed; 'DONE' reflects artifact existence only (attestation: 'verified by artifact existence'). The Sprint_plan acceptance '1,000 concurrent users, p99<100ms' is aspirational and infra-unrealistic at MVP (DB pooler pool_size 15, Supabase Realtime ~200, Hobby plans). The REAL perf budget + a local-runnable test are ADR-018 (5k leads/hour, p95<200ms, error<0.1%) and docs/operations/runbooks/load-testing-local.md; the real load-test implementation is tracked as IFC-047 (Sprint 22). '1,000 concurrent' is retained only as a future scale target gated on plan upgrades. Issue #318.",
   "actual_duration_minutes": 15,
   "dependencies_resolved": ["IFC-004", "IFC-005"]
 }
