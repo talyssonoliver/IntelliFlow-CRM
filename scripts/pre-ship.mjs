@@ -112,6 +112,18 @@ function commandMissing(bin) {
   return !!r.error || r.status !== 0;
 }
 
+// Resolve a Python interpreter for the audit's commit-message linter
+// (tools/audit/commit_msg_lint.py — the SAME script CI's system-audit runs).
+// Returns the binary name, or null when neither is installed (the
+// commit-msg-lint step then SKIPs locally; CI still enforces it).
+function resolvePython() {
+  for (const bin of ['python', 'python3']) {
+    if (!commandMissing(bin)) return bin;
+  }
+  return null;
+}
+const PYTHON_BIN = resolvePython();
+
 // Step plan — fail-first token gate + 17 steps from audit doc §8. Each step has:
 //   id          : kebab-case identifier (also used as log filename)
 //   description : human-readable label printed during the run
@@ -133,6 +145,24 @@ const STEPS = [
     id: 'required-tokens',
     description: 'fail-first: required tokens/secrets present (gh secrets + Vercel prod env)',
     cmd: ['node', 'scripts/check-required-tokens.mjs'],
+    required: true,
+  },
+  {
+    // COMMIT-MESSAGE GATE (2026-06-08): pre-ship previously ran NO commit-message
+    // lint — its `audit` step is `pnpm audit` (dependency CVEs only). So the
+    // commitlint rules CI's `system-audit` blocks on (subject must not start
+    // upper-case, body lines <=100, etc.) passed locally and only reddened in CI
+    // — e.g. an upper-case subject "feat(ai-worker): OpenRouter…" (#340). This
+    // runs the SAME linter (tools/audit/commit_msg_lint.py) over origin/main..HEAD
+    // so those are caught before push, not after a ~10-min CI round. Fast +
+    // deterministic; placed near the top for fail-first feedback. SKIPs only if
+    // no Python is installed (CI still gates); degrades to advisory if origin/main
+    // can't be resolved locally.
+    id: 'commit-msg-lint',
+    description:
+      'commit messages (origin/main..HEAD) pass the audit commitlint rules — same linter as CI system-audit',
+    cmd: [PYTHON_BIN || 'python', 'tools/audit/commit_msg_lint.py', '--base-ref', 'origin/main'],
+    skip_if: () => PYTHON_BIN === null,
     required: true,
   },
   {

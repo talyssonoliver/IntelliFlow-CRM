@@ -105,5 +105,6 @@ d752919b684a fix(ci): PR #201 squash subject — uppercase "E2E" + 105 chars (he
 # 2026-06-08; the squash body is a single 514-char line (body-max-line-length
 # limit 100). Already on main; cannot rewrite. Same root cause as the entries
 # above. Enters the last-~20 window on PRs opened after it landed (first hit:
-# #346) and fails system-audit/commitlint until waived.
+# #346) and fails system-audit/commitlint until waived. (PR #348 scopes the CI
+# commitlint to PR commits via --base-ref-env, making this moot for new PRs.)
 0a0398740c68e03d4ff4a5c129c7c5d48e701e03 feat(IFC-314): PR #333 squash body single 514-char line (limit 100), already on main
