@@ -7,7 +7,7 @@ locals {
 
 # Vercel Project
 resource "vercel_project" "main" {
-  name      = local.project_name_full
+  name      = var.project_name
   framework = var.framework
 
   # Git integration
@@ -26,6 +26,30 @@ resource "vercel_project" "main" {
 
   # Serverless function region
   serverless_function_region = var.region
+
+  # OIDC token generation (live project has enabled=true)
+  oidc_token_config = {
+    enabled = true
+  }
+
+  # ignore_changes (adopt-without-fighting on attributes Vercel auto-manages or
+  # that the provider can't faithfully represent):
+  #   - name: keep the imported live name ("intelli-flow-crm-web").
+  #   - vercel_authentication: live "all_except_custom_domains" isn't a settable
+  #     enum in provider v1.14, so never let an apply overwrite it.
+  #   - protection_bypass_for_automation_secret: Vercel auto-generates this; if
+  #     it isn't ignored, every apply ROTATES it (breaks the CI bypass secret).
+  #     The provider may warn it's computed — that warning is harmless; the diff
+  #     it suppresses is not.
+  lifecycle {
+    ignore_changes = [
+      name,
+      vercel_authentication,
+      protection_bypass_for_automation,        # bool Vercel auto-manages; unset config would disable it
+      protection_bypass_for_automation_secret, # the auto-generated secret behind it
+      team_id,                                 # provider-computed from the token's team scope
+    ]
+  }
 }
 
 # General environment variables (provider >=1.0: env vars are a separate resource,
@@ -36,7 +60,7 @@ resource "vercel_project_environment_variable" "general" {
   project_id = vercel_project.main.id
   key        = each.key
   value      = each.value
-  target     = ["production", "preview", "development"]
+  target     = ["production", "preview"]
 }
 
 # Custom domains

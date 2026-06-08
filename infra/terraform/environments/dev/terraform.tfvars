@@ -15,16 +15,25 @@ region       = "us-east-1"
 tags = {
   Project    = "IntelliFlow-CRM"
   ManagedBy  = "Terraform"
-  Repository = "intelliflow/intelliflow-crm"
+  Repository = "talyssonoliver/IntelliFlow-CRM"
   Team       = "Engineering"
   CostCenter = "Engineering"
   Env        = "dev"
 }
 
-# Supabase — sensitive values via TF_VAR_supabase_access_token / TF_VAR_supabase_db_password
+# Supabase — dev does NOT manage a Supabase project. manage_project is derived
+# as (environment == "production"), so it is false here: no supabase_project is
+# declared and a dev plan/apply never creates one. dev runs on LOCAL Docker
+# Postgres (docker-compose.yml: pgvector/pgvector:pg16, db intelliflow_dev); the
+# local DATABASE_URL/DIRECT_URL come from .env.local, not Terraform. The values
+# below are inert for dev. (Supabase free tier caps at 2 projects/org and
+# database branching is a paid feature — hence Docker for dev/staging.)
 supabase_project_name = "intelliflow-crm-dev"
 supabase_region       = "us-east-1"
 supabase_plan         = "free"
+# org_id / project_ref are PRODUCTION-only (no Supabase project here). To point a
+# deployed dev env at a real database instead of Docker, set
+# supabase_db_connection_string / supabase_db_direct_connection_string.
 
 # Vercel
 vercel_project_name = "intelliflow-crm-dev"
@@ -95,7 +104,7 @@ railway_services = {
 enable_pgvector = true
 enable_realtime = true
 
-auth_site_url   = "https://dev.intelliflow-crm.example"
+auth_site_url   = "http://localhost:3000"
 auth_jwt_expiry = 3600
 
 # Observability + cost guardrails (kept low for dev)

@@ -21,6 +21,8 @@ import {
   cleanupSession,
   hasActiveSession,
   getSessionInfo,
+  recordAuthBreadcrumb,
+  getAuthBreadcrumbs,
 } from '../session-cleanup';
 
 function createTestJwt(exp: number): string {
@@ -89,6 +91,49 @@ describe('session-cleanup (additional coverage)', () => {
 
       expect(handler).toHaveBeenCalledTimes(1);
       window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
+    });
+  });
+
+  // =========================================================================
+  // auth breadcrumbs (prod-safe diagnostic)
+  // =========================================================================
+  describe('recordAuthBreadcrumb / getAuthBreadcrumbs', () => {
+    it('returns [] when no breadcrumbs recorded', () => {
+      expect(getAuthBreadcrumbs()).toEqual([]);
+    });
+
+    it('records a breadcrumb with step + ISO timestamp', () => {
+      recordAuthBreadcrumb('oauth:cookie-synced');
+      const trail = getAuthBreadcrumbs();
+      expect(trail).toHaveLength(1);
+      expect(trail[0].step).toBe('oauth:cookie-synced');
+      expect(() => new Date(trail[0].ts).toISOString()).not.toThrow();
+    });
+
+    it('appends in order and never records tokens/PII', () => {
+      recordAuthBreadcrumb('oauth:session-established');
+      recordAuthBreadcrumb('oauth:cookie-synced');
+      const trail = getAuthBreadcrumbs();
+      expect(trail.map((b) => b.step)).toEqual([
+        'oauth:session-established',
+        'oauth:cookie-synced',
+      ]);
+      // The serialized trail must contain only step + ts keys (no token leakage).
+      const raw = sessionStorage.getItem('intelliflow_auth_trace') ?? '';
+      expect(raw).not.toMatch(/token|bearer|eyJ/i);
+    });
+
+    it('caps the trail at 20 entries (oldest dropped)', () => {
+      for (let i = 0; i < 25; i++) recordAuthBreadcrumb(`step-${i}`);
+      const trail = getAuthBreadcrumbs();
+      expect(trail).toHaveLength(20);
+      expect(trail[0].step).toBe('step-5');
+      expect(trail[19].step).toBe('step-24');
+    });
+
+    it('returns [] when stored value is malformed', () => {
+      sessionStorage.setItem('intelliflow_auth_trace', 'not-json');
+      expect(getAuthBreadcrumbs()).toEqual([]);
     });
   });
 
@@ -603,7 +648,7 @@ describe('session-cleanup (additional coverage)', () => {
       // Override clearLocalStorage to throw at top level by making
       // the for...of loop throw
       const _originalForEach = Array.prototype.forEach;
-      let _shouldThrow = false;
+      const _shouldThrow = false;
 
       // Instead, let's verify the function structure by checking successful path
       const result = await cleanupSession();

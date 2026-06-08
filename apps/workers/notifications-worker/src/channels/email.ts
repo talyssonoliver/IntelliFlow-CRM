@@ -225,9 +225,21 @@ export class EmailChannel {
 
     this.transporter = createTransport(transportOptions);
 
-    // Verify connection
-    await this.transporter.verify();
-    this.logger.info('Email transporter initialized and verified');
+    // Verify connection — NON-FATAL (degrade, don't throw). When SMTP is not
+    // configured/reachable in an environment (e.g. email not yet provisioned in
+    // prod, where the default points at localhost:1025), the worker must still
+    // start so SMS + webhook channels work; email delivery jobs then fail
+    // individually (and retry) instead of crash-looping the whole worker.
+    // Issue #319.
+    try {
+      await this.transporter.verify();
+      this.logger.info('Email transporter initialized and verified');
+    } catch (error) {
+      this.logger.warn(
+        { error, host: this.config.host, port: this.config.port },
+        'Email SMTP verify failed — starting in degraded mode (email jobs will be attempted per-delivery and may fail until SMTP is configured)'
+      );
+    }
   }
 
   /**
@@ -359,15 +371,20 @@ export class EmailChannel {
 // ============================================================================
 
 export function createEmailChannel(logger?: pino.Logger): EmailChannel {
+  // Accept SMTP_* (canonical) or legacy EMAIL_* names — the .env historically
+  // defined EMAIL_HOST/PORT/USER/PASSWORD/SECURE, which the worker never read, so
+  // email silently fell back to localhost. Issue #316.
+  const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const smtpPassword = process.env.SMTP_PASSWORD || process.env.EMAIL_PASSWORD;
   const config: EmailChannelConfig = {
-    host: process.env.SMTP_HOST || 'localhost',
-    port: Number.parseInt(process.env.SMTP_PORT || '1025', 10), // Default to Mailhog port for dev
-    secure: process.env.SMTP_SECURE === 'true',
+    host: process.env.SMTP_HOST || process.env.EMAIL_HOST || 'localhost',
+    port: Number.parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '1025', 10), // Mailhog port for dev
+    secure: (process.env.SMTP_SECURE || process.env.EMAIL_SECURE) === 'true',
     auth:
-      process.env.SMTP_USER && process.env.SMTP_PASSWORD
+      smtpUser && smtpPassword
         ? {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASSWORD,
+            user: smtpUser,
+            pass: smtpPassword,
           }
         : undefined,
     from: process.env.EMAIL_FROM || 'noreply@intelliflow.com',

@@ -99,3 +99,4 @@ d752919b684a fix(ci): PR #201 squash subject — uppercase "E2E" + 105 chars (he
 # rewrite. Same root cause as the entries above. Caught by system-audit/commitlint
 # (scans last ~20 commits) on every subsequent PR until waived.
 5289aa9a43a08305d1d42f1dd43c537386781115 feat(infra): INFRA-TF-002 workers squash subject — 101 chars (limit 100), cannot rewrite
+8154c618975f set-shared-env-vars-service-level subject 107>100; squash-merge uses the <=100 PR title

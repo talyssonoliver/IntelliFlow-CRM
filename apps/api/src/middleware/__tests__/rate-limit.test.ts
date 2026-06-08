@@ -651,10 +651,11 @@ describe('RateLimitMiddleware', () => {
     it('should require REDIS_URL to be configured', async () => {
       const { RedisRateLimiter } = await import('../rate-limit.js');
       delete process.env.REDIS_URL;
+      delete process.env.RATE_LIMIT_REDIS_URL; // code now falls back to this name (issue #316)
       const limiter = new RedisRateLimiter();
 
       await expect(limiter.checkLimit('test-key', 10, 60000)).rejects.toThrow(
-        'REDIS_URL environment variable is required'
+        'required for distributed rate limiting'
       );
     });
   });

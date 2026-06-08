@@ -7,12 +7,16 @@ locals {
 
 # Railway Project
 resource "railway_project" "main" {
-  name        = local.project_name_full
-  description = "IntelliFlow CRM ${var.environment} environment"
+  name        = var.project_name
+  description = ""
 
   # Default environment — provider >=0.3 expects an object, not a string.
   default_environment = {
     name = var.environment
+  }
+
+  lifecycle {
+    ignore_changes = [name, description]
   }
 }
 
@@ -46,11 +50,22 @@ resource "railway_shared_variable" "shared" {
   value          = each.value
 }
 
-# Service-specific Environment Variables
+# Service-specific Environment Variables.
+#
+# Railway `shared` variables are NOT auto-injected into services — a service only
+# gets them if it references ${{shared.X}}. So for every service the module FULLY
+# manages (i.e. has non-empty env_vars — the new events/ingestion/notifications
+# workers), we set the shared_env_vars at the SERVICE level here too, alongside its
+# own env_vars. Services with empty env_vars (api/ai-worker, which keep their live
+# service-level vars and must NOT be disturbed) get nothing.
 resource "railway_variable" "service_specific" {
   for_each = merge([
     for service_name, service_config in var.services : {
-      for var_name, var_value in service_config.env_vars :
+      for var_name, var_value in(
+        length(service_config.env_vars) > 0
+        ? merge(var.shared_env_vars, service_config.env_vars)
+        : {}
+      ) :
       "${service_name}:${var_name}" => {
         service = service_name
         name    = var_name

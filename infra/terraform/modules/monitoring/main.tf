@@ -17,7 +17,7 @@ locals {
   # own (intelliflow-api / intelliflow-ai-worker) in apps/*/src/tracing/otel.ts.
   # We only set the shared, non-secret identity + the per-env Sentry environment.
   base_observability_env = {
-    OTEL_ENABLED             = "true"
+    OTEL_ENABLED             = var.otel_exporter_endpoint != "" ? "true" : "false"
     OTEL_RESOURCE_ATTRIBUTES = "service.namespace=${var.project_name},deployment.environment=${var.environment}"
     SENTRY_ENVIRONMENT       = var.environment
   }

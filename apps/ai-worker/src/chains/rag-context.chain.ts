@@ -97,6 +97,30 @@ export const ragContextResultSchema = z.object({
 export type RAGContextResult = z.infer<typeof ragContextResultSchema>;
 
 /**
+ * Wiring status of the RAG chain at construction time.
+ * - `ready`          → a RetrievalService was injected; real retrieval available.
+ * - `mock`           → mock-fallback enabled (test mode); retrieval is simulated.
+ * - `pending_wiring` → no service yet, but one is expected to be wired in shortly
+ *                      via setRetrievalService() (the singleton boot path). This
+ *                      is NOT a failure state — log monitors must not alert on it.
+ */
+export type RAGInitStatus = 'ready' | 'mock' | 'pending_wiring';
+
+/**
+ * Derive the init status from the two boolean inputs. Pure + exported so the
+ * "is hasRetrievalService:false actually a problem?" decision is unit-testable
+ * and the constructor log can't drift from it.
+ */
+export function resolveRagInitStatus(
+  hasRetrievalService: boolean,
+  useMockFallback: boolean
+): RAGInitStatus {
+  if (hasRetrievalService) return 'ready';
+  if (useMockFallback) return 'mock';
+  return 'pending_wiring';
+}
+
+/**
  * RetrievalService interface for dependency injection
  * Matches the actual RetrievalService.search() signature
  */
@@ -155,8 +179,16 @@ export class RAGContextChain {
     this.retrievalService = retrievalService || null;
     this.useMockFallback = options?.useMockFallback ?? process.env.NODE_ENV === 'test';
 
+    // Emit an explicit `status` so log monitors don't read the transient
+    // pre-wiring state as a service failure. When the singleton is constructed
+    // without a RetrievalService (the common path), it is wired in shortly after
+    // by AIWorker.wireRetrievalService() — that intermediate window is
+    // `pending_wiring`, NOT a `false`/down signal. See ai-worker.ts:297.
+    const status = resolveRagInitStatus(!!this.retrievalService, this.useMockFallback);
+
     logger.info(
       {
+        status,
         hasRetrievalService: !!this.retrievalService,
         useMockFallback: this.useMockFallback,
       },
@@ -169,7 +201,10 @@ export class RAGContextChain {
    */
   setRetrievalService(service: IRetrievalService): void {
     this.retrievalService = service;
-    logger.info('RetrievalService connected to RAG chain');
+    logger.info(
+      { status: 'ready', hasRetrievalService: true },
+      'RetrievalService connected to RAG chain'
+    );
   }
 
   /**

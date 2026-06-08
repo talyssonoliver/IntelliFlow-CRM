@@ -50,6 +50,7 @@
     "lint:runtime-paths:report": "tsx tools/audit/runtime-path-linter.ts --format=all",
     "nplus1:scan": "node tools/scripts/nplus1-scan.mjs",
     "nplus1:scan:update": "node tools/scripts/nplus1-scan.mjs --update-baseline",
+    "check:dockerfile-node": "node tools/scripts/check-dockerfile-node-version.mjs",
     "typecheck": "turbo run typecheck && pnpm run lint:sonar:guard",
     "lint:sonar:guard": "tsx tools/scripts/lint-sonar-guard.ts",
     "lighthouse": "lhci autorun",

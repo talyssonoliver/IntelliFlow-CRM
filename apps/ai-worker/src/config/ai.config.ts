@@ -146,7 +146,23 @@ export function loadAIConfig(): AIConfig {
   };
 
   // Validate configuration
-  return AIConfigSchema.parse(config);
+  const parsed = AIConfigSchema.parse(config);
+
+  // Production guardrail (incident 2026-06): never silently run on the `mock`
+  // provider in production. A mock provider resolves model="mock"/endpoint="mock",
+  // performs ZERO real LLM calls, reports $0.00 cost, and degrades invisibly
+  // (observed: a 53-minute prod window of no-op scoring/insight jobs). Fail fast
+  // with a clear, actionable error instead of booting into a silent no-op.
+  if (parsed.provider === 'mock' && process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'Invalid AI configuration: AI_PROVIDER="mock" is not permitted when NODE_ENV=production. ' +
+        'Set AI_PROVIDER to "litellm" (LiteLLM proxy → OpenRouter/OpenAI/Anthropic/etc.) or "openai", ' +
+        'and supply valid credentials (LITELLM_BASE_URL + LITELLM_MASTER_KEY, or OPENAI_API_KEY) ' +
+        'plus live model routing. Refusing to start to avoid silent zero-op operation.'
+    );
+  }
+
+  return parsed;
 }
 
 /**

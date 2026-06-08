@@ -235,8 +235,22 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           password: process.env.REDIS_PASSWORD || undefined,
           db: Number.parseInt(process.env.REDIS_DB || '0', 10),
           lazyConnect: true,
-          enableOfflineQueue: false,
-          maxRetriesPerRequest: 1,
+          // During container rollouts the TCP stream briefly drops. With
+          // enableOfflineQueue:false ioredis throws "Stream isn't writeable and
+          // enableOfflineQueue options is false" and the snapshot tick is lost.
+          // Enable the offline queue so commands buffer until the reconnect
+          // completes instead of being dropped. This is metrics-publish traffic
+          // (small, idempotent, TTL'd), so short-lived buffering is safe.
+          // TRADE-OFF: during a PROLONGED outage this queue is unbounded (each 5s
+          // tick re-enqueues redundant snapshots). Low blast radius (small + TTL'd
+          // payloads), but a bounded approach (skip the tick when not `ready`) is
+          // tracked in #334.
+          enableOfflineQueue: true,
+          // Allow a few reconnect-backed retries per command rather than failing
+          // on the first transient blip; cap so a hard outage still surfaces.
+          maxRetriesPerRequest: 3,
+          // Bounded exponential reconnect backoff (50ms..2s) for the publisher.
+          retryStrategy: (times: number) => Math.min(times * 50, 2000),
         });
         this.redisMonitoringPublisher = new RedisMonitoringPublisher(client, this.prisma as never);
         this.redisMonitoringPublisher.start();

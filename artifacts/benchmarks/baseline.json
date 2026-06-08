@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-06-02T15:58:15.977Z",
+  "timestamp": "2026-06-07T13:01:46.097Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 61,
-    "total_endpoints": 527,
+    "total_endpoints": 528,
     "total_queries": 239,
-    "total_mutations": 288,
+    "total_mutations": 289,
     "routers": [
       {
         "name": "contact",
@@ -1333,6 +1333,12 @@
         "mutations": 1
       },
       {
+        "name": "inbound",
+        "endpoints": 2,
+        "queries": 0,
+        "mutations": 2
+      },
+      {
         "name": "dsar",
         "endpoints": 2,
         "queries": 1,
@@ -1358,12 +1364,6 @@
       },
       {
         "name": "emailInbound",
-        "endpoints": 1,
-        "queries": 0,
-        "mutations": 1
-      },
-      {
-        "name": "inbound",
         "endpoints": 1,
         "queries": 0,
         "mutations": 1
@@ -4389,6 +4389,11 @@
         "name": "inbound.createLead",
         "method": "POST",
         "description": "Create lead"
+      },
+      {
+        "name": "inbound.logCallBooking",
+        "method": "POST",
+        "description": "Log call booking"
       }
     ],
     "experiment": [

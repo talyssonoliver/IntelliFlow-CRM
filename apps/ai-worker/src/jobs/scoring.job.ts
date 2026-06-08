@@ -153,6 +153,15 @@ function generateRecommendations(tier: LeadTier, score: number): string[] {
 /** LLM inference timeout for scoring (120 s — matches insight job pattern). */
 const LLM_TIMEOUT_MS = 120_000;
 
+/**
+ * Nil UUID used as the placeholder `leadId` on the scheduled cron sentinel job
+ * (see ai-worker.ts registerScheduledJobs). It does NOT correspond to a real
+ * Lead row, so it must never reach a `leadAIInsight` upsert — doing so violates
+ * the `lead_ai_insights_leadId_fkey` foreign key. The sentinel is routed to the
+ * dispatcher and the persist step skips it defensively.
+ */
+export const NIL_UUID = '00000000-0000-0000-0000-000000000000';
+
 // ============================================================================
 // Fallback Scoring
 // ============================================================================
@@ -392,6 +401,18 @@ async function persistScoringResult(
   tier: LeadTier,
   recommendations: string[]
 ): Promise<void> {
+  // Defensive guard: never upsert against a placeholder / unresolved leadId.
+  // The scheduled cron sentinel uses NIL_UUID, and no real Lead row exists for
+  // it — an upsert here violates lead_ai_insights_leadId_fkey. Skip and log
+  // instead of letting the FK constraint blow up the job.
+  if (!leadId || leadId === NIL_UUID) {
+    logger.warn(
+      { leadId, tenantId },
+      'Skipping LeadAIInsight persist — leadId is unresolved/placeholder (no Lead row)'
+    );
+    return;
+  }
+
   try {
     const { prisma: rawPrisma } = await import('@intelliflow/db');
     const prisma = rawPrisma as unknown as import('@intelliflow/db').PrismaClient;
@@ -460,7 +481,13 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
       const startTime = Date.now();
       const { leadId, lead } = validatedData;
 
-      if (validatedData.tenantId === '__scheduled__') {
+      // Scheduled cron sentinel → fan out per-lead jobs instead of "scoring" a
+      // placeholder. The sentinel is identified by either the explicit
+      // '__scheduled__' tenant or the NIL_UUID placeholder leadId (the cron job
+      // registered in ai-worker.ts uses the system tenant + NIL_UUID lead). This
+      // prevents both a wasted LLM call and the downstream FK violation that
+      // occurred when the NIL_UUID lead fell through to persistScoringResult.
+      if (validatedData.tenantId === '__scheduled__' || leadId === NIL_UUID) {
         return handleScheduledDispatch(job, startTime);
       }
 

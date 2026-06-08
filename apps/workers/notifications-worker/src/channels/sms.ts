@@ -440,7 +440,14 @@ export function createSMSChannel(logger?: pino.Logger): SMSChannel {
     provider,
     accountSid: process.env.TWILIO_ACCOUNT_SID || process.env.SMS_ACCOUNT_SID,
     authToken: process.env.TWILIO_AUTH_TOKEN || process.env.SMS_AUTH_TOKEN,
-    from: process.env.SMS_FROM || '+15551234567',
+    // SMS_FROM is canonical; fall back to the adapter's TWILIO_FROM_NUMBER and
+    // the legacy .env TWILIO_PHONE_NUMBER so a configured number is actually used
+    // (the +1555… default makes Twilio reject every message). Issue #316.
+    from:
+      process.env.SMS_FROM ||
+      process.env.TWILIO_FROM_NUMBER ||
+      process.env.TWILIO_PHONE_NUMBER ||
+      '+15551234567',
     statusCallbackUrl: process.env.SMS_STATUS_CALLBACK_URL,
   };
 

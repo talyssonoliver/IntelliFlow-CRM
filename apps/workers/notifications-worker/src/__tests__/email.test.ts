@@ -106,6 +106,18 @@ describe('EmailChannel', () => {
 
       expect(mockVerify).toHaveBeenCalled();
     });
+
+    it('should start in degraded mode (not throw) when SMTP verify fails — issue #319', async () => {
+      mockVerify.mockRejectedValueOnce(
+        Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:1025'), { code: 'ESOCKET' })
+      );
+
+      // The worker must still start (SMS/webhook work) instead of crash-looping;
+      // initialize() catches the verify error and degrades.
+      await expect(channel.initialize()).resolves.toBeUndefined();
+      expect(mockCreateTransport).toHaveBeenCalled();
+      expect(mockVerify).toHaveBeenCalled();
+    });
   });
 
   describe('deliver()', () => {
