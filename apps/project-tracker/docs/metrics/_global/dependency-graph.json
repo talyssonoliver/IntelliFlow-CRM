@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-06-05T12:00:00.000Z",
+  "last_updated": "2026-06-07T19:29:01.565Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -3802,7 +3802,7 @@
     "IFC-227": {
       "task_id": "IFC-227",
       "sprint": 18,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [],
       "dependents": []
     },
@@ -4676,6 +4676,13 @@
       "sprint": 18,
       "status": "BACKLOG",
       "dependencies": ["INFRA-TF-002", "INFRA-TF-004"],
+      "dependents": []
+    },
+    "IFC-314": {
+      "task_id": "IFC-314",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": [],
       "dependents": []
     }
   },
@@ -9204,6 +9211,10 @@
     "PG-181",
     "PG-208",
     "PG-209",
+    "INFRA-TF-002",
+    "INFRA-TF-003",
+    "INFRA-TF-004",
+    "INFRA-TF-005",
     "IFC-033",
     "IFC-034",
     "PG-066",
@@ -9283,7 +9294,6 @@
     "IFC-211",
     "IFC-212",
     "IFC-214",
-    "IFC-227",
     "IFC-230",
     "IFC-234",
     "IFC-240",
@@ -9317,6 +9327,8 @@
     "PG-205",
     "PG-206",
     "PG-207",
+    "INFRA-TF-001",
+    "IFC-314",
     "PG-064",
     "PG-065",
     "PG-069",
@@ -9470,7 +9482,6 @@
     "sprint-18": {
       "group-1": ["PG-060", "PG-061", "PG-063"],
       "group-2": [
-        "IFC-227",
         "IFC-230",
         "IFC-234",
         "IFC-240",
@@ -9486,7 +9497,9 @@
         "IFC-271",
         "IFC-273",
         "IFC-282",
-        "IFC-287"
+        "IFC-287",
+        "INFRA-TF-001",
+        "IFC-314"
       ],
       "group-3": ["PG-188", "PG-191"],
       "group-4": ["PG-196", "PG-197"],
@@ -9494,7 +9507,8 @@
       "group-6": ["PG-200", "PG-201"],
       "group-7": ["PG-202", "PG-203"],
       "group-8": ["PG-205", "PG-207"],
-      "group-9": ["PG-208", "PG-209"]
+      "group-9": ["PG-208", "PG-209"],
+      "group-10": ["INFRA-TF-002", "INFRA-TF-003", "INFRA-TF-004"]
     },
     "sprint-19": {
       "group-1": ["PG-064", "PG-069"],

@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-06-07T13:01:46.097Z",
+  "timestamp": "2026-06-08T14:48:42.270Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1389,16 +1389,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 171,
-    "total_fields": 2515,
-    "total_indexes": 800,
-    "total_relations": 243,
+    "total_tables": 173,
+    "total_fields": 2543,
+    "total_indexes": 812,
+    "total_relations": 245,
     "tables_with_embeddings": 4,
-    "enums": 71,
+    "enums": 74,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 151,
+        "fields": 152,
         "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
@@ -1495,6 +1495,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "Opportunity",
+        "fields": 27,
+        "indexes": 14,
+        "relations": 4,
+        "hasEmbedding": false
+      },
+      {
         "name": "EmailRecord",
         "fields": 26,
         "indexes": 7,
@@ -1506,13 +1513,6 @@
         "fields": 25,
         "indexes": 7,
         "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Opportunity",
-        "fields": 24,
-        "indexes": 14,
-        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1814,6 +1814,13 @@
         "fields": 15,
         "indexes": 3,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "SetupInstalment",
+        "fields": 14,
+        "indexes": 6,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2164,6 +2171,13 @@
         "fields": 10,
         "indexes": 3,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "StripeSubscription",
+        "fields": 10,
+        "indexes": 6,
+        "relations": 0,
         "hasEmbedding": false
       },
       {

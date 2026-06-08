@@ -16,10 +16,20 @@
  * - NotificationServicePort: deal-won email notification
  */
 
-import { Result, DomainError, Opportunity, DealWonEnrichedEvent } from '@intelliflow/domain';
+import {
+  Result,
+  DomainError,
+  Opportunity,
+  DealWonEnrichedEvent,
+  buildSetupInstalmentPlan,
+} from '@intelliflow/domain';
 import { OpportunityService } from '../../services/OpportunityService';
 import { EventBusPort } from '../../ports/external';
 import { NotificationServicePort } from '../../ports/external/NotificationServicePort';
+import type {
+  SetupInstalmentRepository,
+  DeliveryTier,
+} from '../../ports/repositories/SetupInstalmentRepositoryPort';
 
 /**
  * Input for closing a deal as won
@@ -28,6 +38,13 @@ export interface CloseDealWonInput {
   opportunityId: string;
   closedBy: string;
   tenantId: string;
+  /**
+   * IFC-314: present only for **portal-delivery** deals. When set, the close
+   * seeds the 14-day setup-fee instalment plan (3 × £167 at day 0/7/14) for this
+   * opportunity, which the events-worker then pushes to the portal. Omitted for
+   * legacy / non-portal deals → no instalments, behaviour unchanged.
+   */
+  deliveryTier?: DeliveryTier;
 }
 
 /**
@@ -40,7 +57,13 @@ export class CloseDealWonUseCase {
   constructor(
     private readonly opportunityService: OpportunityService,
     private readonly eventBus: EventBusPort,
-    private readonly notificationService: NotificationServicePort
+    private readonly notificationService: NotificationServicePort,
+    /**
+     * IFC-314: optional. When provided AND the input carries a `deliveryTier`,
+     * the setup-fee instalment plan is persisted on close. Left undefined in
+     * contexts that don't run the portal-delivery flow.
+     */
+    private readonly setupInstalmentRepository?: SetupInstalmentRepository
   ) {}
 
   async execute(input: CloseDealWonInput): Promise<Result<Opportunity, DomainError>> {
@@ -60,6 +83,12 @@ export class CloseDealWonUseCase {
 
     // 2. Calculate sales cycle days
     const closedAt = opportunity.closedAt ?? new Date();
+
+    // 2b. IFC-314: seed the setup-fee instalment plan for portal-delivery deals.
+    // Awaited (so the instalments exist before the enriched event is dispatched
+    // and the events-worker reads them) but non-fatal — a billing-side failure
+    // must never roll back a won deal.
+    await this.seedSetupInstalments(input, closedAt);
     const salesCycleDays = Math.floor(
       (closedAt.getTime() - opportunity.createdAt.getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -102,5 +131,26 @@ export class CloseDealWonUseCase {
 
     // 5. Return success with the updated opportunity
     return Result.ok(opportunity);
+  }
+
+  /**
+   * IFC-314: persist the 3-instalment setup-fee plan for a portal-delivery deal.
+   * No-op unless a repository is wired AND the close carries a `deliveryTier`
+   * (the close-time signal that this opportunity maps to a portal tenant).
+   * Best-effort: failures are logged, never thrown — the deal stays won.
+   */
+  private async seedSetupInstalments(input: CloseDealWonInput, signedAt: Date): Promise<void> {
+    if (!this.setupInstalmentRepository || !input.deliveryTier) return;
+
+    try {
+      const instalments = buildSetupInstalmentPlan({ signedAt, tier: input.deliveryTier });
+      await this.setupInstalmentRepository.createForOpportunity({
+        opportunityId: input.opportunityId,
+        tenantId: input.tenantId,
+        instalments,
+      });
+    } catch (err) {
+      console.error('[CloseDealWon] Failed to seed setup instalments:', err);
+    }
   }
 }

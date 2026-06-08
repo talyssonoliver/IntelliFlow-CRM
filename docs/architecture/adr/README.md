@@ -249,6 +249,7 @@ Previously missing from the index — added 2026-06-05:
 | [ADR-062](./ADR-062-deploy-gated-on-ci-green.md)         | Deploys Gated on CI Green                  | ✅ Accepted | 2026-06-04 | Post-#247 DORA    |
 | [ADR-063](./ADR-063-web-api-tier-boundary.md)            | Web/API Tier Boundary                      | ✅ Accepted | 2026-06-04 | Defects D1/D6     |
 | [ADR-064](./ADR-064-terraform-single-source-of-truth.md) | Terraform = Single Source of Truth (infra) | ✅ Accepted | 2026-06-05 | INFRA-TF-001..005 |
+| [ADR-065](./ADR-065-crm-portal-delivery-sync.md)         | CRM → Portal delivery & billing sync       | 🚧 Proposed | 2026-06-07 | IFC-314           |
 
 ### Consolidated / Removed ADRs
 
@@ -259,7 +260,7 @@ Previously missing from the index — added 2026-06-05:
 
 ## Next Steps
 
-Future ADRs use IDs **048+**.
+Future ADRs use IDs **066+**.
 
 ## Resources
 

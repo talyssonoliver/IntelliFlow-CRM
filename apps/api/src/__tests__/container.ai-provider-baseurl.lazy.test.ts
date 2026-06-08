@@ -47,6 +47,8 @@ vi.mock('@intelliflow/adapters', () => {
     PrismaContactRepository: named('contactRepository'),
     PrismaAccountRepository: named('accountRepository'),
     PrismaOpportunityRepository: named('opportunityRepository'),
+    PrismaSetupInstalmentRepository: named('setupInstalmentRepository'),
+    PrismaStripeSubscriptionRepository: named('stripeSubscriptionRepository'),
     PrismaTaskRepository: named('taskRepository'),
     PrismaChainVersionRepository: named('chainVersionRepository'),
     PrismaChainVersionAuditRepository: named('chainVersionAuditRepository'),
