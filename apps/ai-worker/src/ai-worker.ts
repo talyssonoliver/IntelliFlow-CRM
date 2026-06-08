@@ -241,6 +241,10 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           // Enable the offline queue so commands buffer until the reconnect
           // completes instead of being dropped. This is metrics-publish traffic
           // (small, idempotent, TTL'd), so short-lived buffering is safe.
+          // TRADE-OFF: during a PROLONGED outage this queue is unbounded (each 5s
+          // tick re-enqueues redundant snapshots). Low blast radius (small + TTL'd
+          // payloads), but a bounded approach (skip the tick when not `ready`) is
+          // tracked in #334.
           enableOfflineQueue: true,
           // Allow a few reconnect-backed retries per command rather than failing
           // on the first transient blip; cap so a hard outage still surfaces.

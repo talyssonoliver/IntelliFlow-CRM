@@ -52,22 +52,30 @@ export interface CreateLLMOptions {
 
 /**
  * Wrap a fetch implementation so the OpenAI SDK always receives a response whose
- * body is still consumable.
+ * body is fully materialized and readable — regardless of what any interceptor
+ * or retry path did to the upstream stream.
  *
- * Symptom: `scoring-chain` and `insight-generation-chain` failed at runtime with
- * `TypeError: Body is unusable: Body has already been read`. Both chains call the
- * LLM through `createLLM()` → `ChatOpenAI` (OpenAI SDK → undici `fetch`). With
- * OpenTelemetry's auto fetch/undici instrumentation active (see
- * `tracing/otel.ts` → `getNodeAutoInstrumentations`), a telemetry interceptor can
- * consume/lock the single response body stream; the SDK then reads the same
- * stream and throws.
+ * Symptom (prod 2026-06): `scoring-chain` / `insight-generation-chain` failed
+ * with `TypeError: Body is unusable: Body has already been read`. Both call the
+ * LLM via `createLLM()` → `ChatOpenAI` (OpenAI SDK → undici `fetch`).
  *
- * Fix: return `response.clone()` — an independent tee taken BEFORE any consumer
- * touches the body — so the interceptor and the SDK each read their own copy and
- * the original stays consumable. Streaming responses (`text/event-stream`, e.g.
- * the low-latency auto-response path) are passed through untouched so we don't
- * buffer token streams in memory. `clone()` is best-effort: if the body was
- * already disturbed we fall back to the original rather than make things worse.
+ * IMPORTANT — this is a DEFENSIVE measure, not a verified fix. The exact second
+ * reader of the body was never reproduced. OTel's undici instrumentation reads
+ * request/response *metadata via diagnostics channels — it does NOT consume the
+ * body*, so it is unlikely to be the cause. Candidates (an SDK/LangChain retry
+ * re-read, or a litellm-era artifact predating the OpenRouter migration) and the
+ * post-deploy verification plan are tracked in #334. If a double-read happens on
+ * the *returned* response (SDK reads it twice), no fetch-layer wrapper can help —
+ * `Response` bodies are single-use.
+ *
+ * Strategy: read the upstream body ONCE here and hand the SDK a brand-new
+ * `Response` built from the buffered bytes, so nothing upstream can leave it
+ * half-consumed. `content-encoding`/`content-length` are dropped because `fetch`
+ * has already decompressed the body — the re-wrapped Response must not advertise
+ * the original encoding or the SDK would try to decompress again. Streaming
+ * (`text/event-stream`) is passed through untouched so we never buffer token
+ * streams. Best-effort: if the upstream body was already disturbed, fall back to
+ * the original rather than make things worse.
  */
 export function createBodySafeFetch(baseFetch: typeof fetch = fetch): typeof fetch {
   return (async (
@@ -80,9 +88,17 @@ export function createBodySafeFetch(baseFetch: typeof fetch = fetch): typeof fet
       return response;
     }
     try {
-      return response.clone();
+      const buffered = await response.arrayBuffer();
+      const headers = new Headers(response.headers);
+      headers.delete('content-encoding');
+      headers.delete('content-length');
+      return new Response(buffered, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
     } catch {
-      // Body already disturbed — nothing safe left to do; hand back the original.
+      // Upstream body already disturbed — nothing safe left to do; hand it back.
       return response;
     }
   }) as typeof fetch;
