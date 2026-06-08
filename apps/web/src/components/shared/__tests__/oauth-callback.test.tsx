@@ -27,6 +27,8 @@ const {
   mockStoreSessionTokens,
   mockStoreSessionFingerprint,
   mockClearSupabaseLocalStorage,
+  mockSyncTokenToCookie,
+  mockRecordAuthBreadcrumb,
   mockSearchParams,
 } = vi.hoisted(() => ({
   mockPush: vi.fn(),
@@ -36,6 +38,8 @@ const {
   mockStoreSessionTokens: vi.fn(),
   mockStoreSessionFingerprint: vi.fn(),
   mockClearSupabaseLocalStorage: vi.fn(),
+  mockSyncTokenToCookie: vi.fn(),
+  mockRecordAuthBreadcrumb: vi.fn(),
   mockSearchParams: new URLSearchParams('code=test123&nonce=test-nonce-uuid'),
 }));
 
@@ -63,6 +67,12 @@ vi.mock('@/lib/supabase-browser', () => ({
 // Mock token-exchange
 vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: mockStoreSessionTokens,
+}));
+
+// Mock session-cleanup (cookie sync + prod-safe breadcrumb)
+vi.mock('@/lib/shared/session-cleanup', () => ({
+  syncTokenToCookie: mockSyncTokenToCookie,
+  recordAuthBreadcrumb: mockRecordAuthBreadcrumb,
 }));
 
 // Mock login-security
@@ -150,6 +160,22 @@ describe('OAuthCallback', () => {
           'access_token_123',
           'refresh_token_123'
         );
+      });
+    });
+
+    it('syncs the access token to the SSR cookie on success', async () => {
+      render(<OAuthCallback />);
+
+      await waitFor(() => {
+        expect(mockSyncTokenToCookie).toHaveBeenCalledWith('access_token_123');
+      });
+    });
+
+    it('records a non-sensitive cookie-synced breadcrumb on success', async () => {
+      render(<OAuthCallback />);
+
+      await waitFor(() => {
+        expect(mockRecordAuthBreadcrumb).toHaveBeenCalledWith('oauth:cookie-synced');
       });
     });
 
