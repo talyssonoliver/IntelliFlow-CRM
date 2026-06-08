@@ -81,6 +81,37 @@ resource "railway_variable" "service_specific" {
   value          = each.value.value
 }
 
+# Service-level OBSERVABILITY variables for otherwise-unmanaged live services
+# (api, ai-worker — issue #314). These services keep env_vars = {} so the
+# service_specific resource above does NOT touch them (we must not push the full
+# shared_env_vars onto their live, hand-managed config). But Railway shared vars
+# are not auto-injected, so observability never reaches them. This resource sets
+# ONLY the observability keys (SENTRY_DSN/SENTRY_ENVIRONMENT/OTEL_*) at the
+# service level. railway_variable is per-(service, key), so adding these keys
+# leaves every OTHER live var on the service untouched.
+#
+# IMPORT-FIRST: SENTRY_DSN + SENTRY_ENVIRONMENT were hand-set on api/ai-worker
+# (manual drift). Import those 4 (2 keys x 2 services) before the first apply so
+# they reconcile in place instead of erroring ENV_ALREADY_EXISTS. OTEL_* are new.
+resource "railway_variable" "observability" {
+  for_each = merge([
+    for service_name, obs_vars in var.service_observability_vars : {
+      for var_name, var_value in obs_vars :
+      "${service_name}:${var_name}" => {
+        service = service_name
+        name    = var_name
+        value   = var_value
+      }
+    }
+  ]...)
+
+  # project_id is read-only on railway_variable (derived from service+environment).
+  environment_id = railway_environment.main.id
+  service_id     = railway_service.services[each.value.service].id
+  name           = each.value.name
+  value          = each.value.value
+}
+
 # NOTE: railway_deployment was removed from the provider (>=0.3). Deployments are
 # triggered by `railway up` / the service's source config, not a TF resource.
 

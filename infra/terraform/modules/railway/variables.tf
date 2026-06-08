@@ -27,6 +27,12 @@ variable "shared_env_vars" {
   default     = {}
 }
 
+variable "service_observability_vars" {
+  description = "Per-service observability env (SENTRY_DSN/SENTRY_ENVIRONMENT/OTEL_*) set at the SERVICE level on otherwise-unmanaged live services (api, ai-worker — #314). Map of service_name -> { key -> value }. Per-key railway_variable, so it never clobbers a service's other live vars. Keys must be non-sensitive at the map level (needed for for_each); secret values land as Railway variables."
+  type        = map(map(string))
+  default     = {}
+}
+
 variable "api_domain" {
   description = "Custom domain for API service"
   type        = string
