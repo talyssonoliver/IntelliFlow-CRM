@@ -71,7 +71,11 @@ export async function processPortalSweepJob(
     return { success: true, evaluated: 0, paused: [], skipped: true };
   }
 
-  const url = `${baseUrl.replace(/\/+$/, '')}/api/internal/delivery/sweep`;
+  // Strip trailing slashes with a linear loop rather than a `/\/+$/` regex (a
+  // `+`-before-`$` pattern trips static ReDoS scanners despite being linear).
+  let base = baseUrl;
+  while (base.endsWith('/')) base = base.slice(0, -1);
+  const url = `${base}/api/internal/delivery/sweep`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {

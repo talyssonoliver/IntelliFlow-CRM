@@ -215,6 +215,20 @@ function toDatabaseStatsStatusCode(status: 'ok' | 'unsupported' | 'error'): numb
   return status === 'error' ? 503 : 200;
 }
 
+/** Exact pathnames served by {@link handleHealthRoute} (both bare and /api-prefixed). */
+const HEALTH_PATHS = new Set<string>([
+  '/health',
+  '/api/health',
+  '/health/live',
+  '/api/health/live',
+  '/health/ready',
+  '/api/health/ready',
+  '/health/detailed',
+  '/api/health/detailed',
+  '/health/db',
+  '/api/health/db',
+]);
+
 async function handleHealthRoute(
   pathname: string,
   createContextFn: ApiContextFactory,
@@ -222,6 +236,13 @@ async function handleHealthRoute(
   res: ServerResponse,
   headOnly: boolean
 ): Promise<boolean> {
+  // Only health *paths* are GET/HEAD-only. The method guard must NOT run for
+  // unrelated pathnames — doing so 405s every non-GET request (Stripe webhook
+  // POSTs, tRPC mutations) before their own handlers, downstream, can see them.
+  if (!HEALTH_PATHS.has(pathname)) {
+    return false;
+  }
+
   const method = webRequest.method.toUpperCase();
   if (method !== 'GET' && method !== 'HEAD') {
     sendMethodNotAllowed(res, headOnly);

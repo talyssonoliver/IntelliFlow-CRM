@@ -45,8 +45,12 @@ export class HttpPortalDeliverySyncAdapter implements PortalDeliverySyncPort {
   private readonly timeoutMs: number;
 
   constructor(config: PortalDeliverySyncConfig) {
-    // Trim trailing slashes so `${baseUrl}${path}` never doubles up.
-    this.baseUrl = config.baseUrl.replace(/\/+$/, '');
+    // Trim trailing slashes so `${baseUrl}${path}` never doubles up. Done with a
+    // linear loop rather than a `/\/+$/` regex (a `+`-before-`$` pattern trips
+    // static ReDoS scanners even though it is, in fact, linear).
+    let base = config.baseUrl;
+    while (base.endsWith('/')) base = base.slice(0, -1);
+    this.baseUrl = base;
     this.secret = config.secret;
     this.timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
