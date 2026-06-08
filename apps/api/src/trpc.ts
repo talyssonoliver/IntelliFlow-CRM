@@ -15,10 +15,7 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import { Context } from './context';
 import { ZodError } from 'zod';
 import { tracingMiddleware } from './tracing/middleware';
-import {
-  createAuthenticatedRateLimitMiddleware,
-  createAuthEndpointRateLimitMiddleware,
-} from './middleware/rate-limit';
+import { createDistributedRateLimitMiddleware, RATE_LIMIT_TIERS } from './middleware/rate-limit';
 import { createTenantScopedPrisma } from './security/tenant-context';
 import { runWithLogContext } from '@intelliflow/observability';
 
@@ -67,7 +64,17 @@ export const createTRPCRouter = t.router;
  * @example
  * publicProcedure.query(() => ({ status: 'ok' }))
  */
-export const publicProcedure = t.procedure.use(tracingMiddleware);
+// Public rate limit — anonymous PUBLIC tier (100/min per client IP). Distributed
+// via Redis when a managed rediss:// URL is configured (prod); pass-through in
+// dev/test so the suite is unaffected. Issue #316 (caveat 3a).
+const _publicRateLimitFn = createDistributedRateLimitMiddleware(RATE_LIMIT_TIERS.PUBLIC, {
+  fallback: 'pass-through',
+});
+const publicRateLimitMiddleware = t.middleware(async (opts) => {
+  return _publicRateLimitFn({ ctx: opts.ctx, next: opts.next });
+});
+
+export const publicProcedure = t.procedure.use(tracingMiddleware).use(publicRateLimitMiddleware);
 
 /**
  * Middleware that binds correlationId / tenantId / userId into pino's
@@ -173,8 +180,11 @@ const csrfMiddleware = t.middleware(({ ctx, type, next }) => {
  *     return ctx.prisma.lead.findUnique({ where: { id: input.id } });
  *   })
  */
-// Rate limit middleware for authenticated endpoints (1000 req/min per user)
-const _rateLimitFn = createAuthenticatedRateLimitMiddleware();
+// Rate limit middleware for authenticated endpoints (AUTHENTICATED tier,
+// 1000 req/min per user) — distributed via Redis in prod, in-memory fallback.
+const _rateLimitFn = createDistributedRateLimitMiddleware(RATE_LIMIT_TIERS.AUTHENTICATED, {
+  fallback: 'in-memory',
+});
 const rateLimitMiddleware = t.middleware(async (opts) => {
   return _rateLimitFn({ ctx: opts.ctx, next: opts.next });
 });
@@ -329,7 +339,9 @@ export const adminTenantProcedure = t.procedure
  *   .input(loginSchema)
  *   .mutation(({ input }) => { ... })
  */
-const _authRateLimitFn = createAuthEndpointRateLimitMiddleware();
+const _authRateLimitFn = createDistributedRateLimitMiddleware(RATE_LIMIT_TIERS.AUTH, {
+  fallback: 'in-memory',
+});
 const authRateLimitMiddleware = t.middleware(async (opts) => {
   return _authRateLimitFn({ ctx: opts.ctx, next: opts.next });
 });
