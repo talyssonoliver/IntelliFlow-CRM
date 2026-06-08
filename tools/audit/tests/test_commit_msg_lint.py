@@ -9,6 +9,7 @@ upper-case subject pass locally and red in CI — #340).
 """
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -96,4 +97,35 @@ def test_comment_and_scissors_lines_are_ignored():
         "+" + "z" * 200 + "\n"  # an over-long diff line below the scissors
     )
     code, _ = _lint(message)
+    assert code == 0
+
+
+def _lint_base_ref_env(env_value: str | None) -> tuple[int, str]:
+    """Run the linter in --base-ref-env mode with a test env var."""
+    env = dict(os.environ)
+    if env_value is None:
+        env.pop("TEST_COMMITLINT_BASE_REF", None)
+    else:
+        env["TEST_COMMITLINT_BASE_REF"] = env_value
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT), "--base-ref-env", "TEST_COMMITLINT_BASE_REF"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        env=env,
+    )
+    return proc.returncode, proc.stdout + proc.stderr
+
+
+def test_base_ref_env_unset_is_advisory():
+    # Non-PR run (env var not set) must not fail the gate.
+    code, out = _lint_base_ref_env(None)
+    assert code == 0
+    assert "unset/empty" in out
+
+
+def test_base_ref_env_unresolvable_is_advisory():
+    # A base ref that can't be resolved (e.g. not fetched) degrades to advisory,
+    # never a false failure.
+    code, _ = _lint_base_ref_env("definitely/not/a/real/ref")
     assert code == 0

@@ -26,6 +26,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -344,6 +345,16 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     mode.add_argument(
+        "--base-ref-env",
+        metavar="ENV_VAR",
+        help=(
+            "Like --base-ref, but read the base ref from the named environment "
+            "variable (e.g. BASE_REF, which CI's system-audit exports as "
+            "origin/<base>). Used by audit-matrix.yml so CI lints only the PR's "
+            "commits, not main's history. Advisory when the env var is unset/empty."
+        ),
+    )
+    mode.add_argument(
         "--message-file",
         help=(
             "Lint a single pending commit-message file (the path git passes "
@@ -373,12 +384,24 @@ def main(argv: list[str] | None = None) -> int:
 
     waivers = _load_waivers(WAIVERS_PATH)
 
-    # --- Range mode (pre-ship/pre-push): <base-ref>..HEAD ---------------
-    if args.base_ref:
-        commits = _git_log_range(args.base_ref)
+    # --base-ref-env: read the base ref from a named env var (CI / audit-matrix
+    # exports BASE_REF=origin/<base>). Unset/empty -> advisory (non-PR run).
+    base_ref = args.base_ref
+    if args.base_ref_env:
+        base_ref = (os.environ.get(args.base_ref_env) or "").strip()
+        if not base_ref:
+            print(
+                f"[commitlint] env {args.base_ref_env} unset/empty — skipping "
+                "(advisory; non-PR run or no base ref)."
+            )
+            return 0
+
+    # --- Range mode (pre-ship/pre-push/CI): <base-ref>..HEAD ------------
+    if base_ref:
+        commits = _git_log_range(base_ref)
         if commits is None:
             print(
-                f"[commitlint] base ref {args.base_ref!r} not resolvable "
+                f"[commitlint] base ref {base_ref!r} not resolvable "
                 "locally — skipping (advisory; CI's system-audit still gates)."
             )
             return 0

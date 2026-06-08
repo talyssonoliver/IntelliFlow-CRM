@@ -102,7 +102,12 @@ tools:
     required: true
     owner: 'Tech Lead'
     scope: 'git'
-    command: 'python tools/audit/commit_msg_lint.py --count 20'
+    # Lint only THIS PR's commits (origin/<base>..HEAD), read from the BASE_REF
+    # env the system-audit workflow exports — not `--count 20`, which re-checked
+    # main's own history and failed every PR on a pre-existing main squash-body
+    # violation (e.g. #333's 514-char body). Matches the pre-ship commit-msg-lint
+    # step's scope. Falls back to advisory when BASE_REF is unset (non-PR runs).
+    command: 'python tools/audit/commit_msg_lint.py --base-ref-env BASE_REF'
     thresholds: {}
     expected_outputs: ['log']
 
