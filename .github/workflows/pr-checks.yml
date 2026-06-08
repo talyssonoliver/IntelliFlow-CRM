@@ -65,6 +65,24 @@ jobs:
             echo "::warning::PR is large ($changes lines changed). Consider breaking it into smaller PRs."
           fi
 
+      # D4: require traceability — a tracked task id, a GitHub issue ref, or an
+      # explicit hotfix waiver in the PR body. The body is passed via env (never
+      # interpolated into the script) to avoid shell injection from PR content.
+      - name: Require task ID or hotfix waiver in PR body
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          # Accept: a tracked task id (IFC-123, PG-045, S17-AUDIT-001, INFRA-TF-002,
+          # EXC-INIT-001, ...), a GitHub issue ref (#123), or an explicit hotfix waiver.
+          if printf '%s' "${PR_BODY:-}" | grep -qiE '([A-Z]{2,}(-[A-Z0-9]+)*-[0-9]+|#[0-9]+|\[hotfix\]|hotfix-waiver)'; then
+            echo "PR body references a tracked task id / issue / hotfix waiver. OK"
+          else
+            echo "::error::PR body must reference a tracked task id (e.g. IFC-123, PG-045), a GitHub issue (#123), or include a hotfix waiver marker ([hotfix])."
+            exit 1
+          fi
+
   # `quality-checks` was removed as part of Recommendation E of
   # docs/operations/ci-cost-audit-2026-05-25.md. It duplicated coverage
   # already provided by ci.yml:
