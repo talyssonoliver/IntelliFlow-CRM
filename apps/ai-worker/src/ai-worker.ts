@@ -29,12 +29,14 @@ import {
   SUMMARIZE_QUEUE,
   FEEDBACK_ANALYTICS_QUEUE,
   MEMORY_RETENTION_QUEUE,
+  PORTAL_SWEEP_QUEUE,
   processScoringJob,
   processPredictionJob,
   processInsightJob,
   processSummarizeJob,
   processFeedbackAnalyticsJob,
   processMemoryRetentionJob,
+  processPortalSweepJob,
   // IFC-312
   processEnrichmentJob,
   processEntityInsightJob,
@@ -50,8 +52,10 @@ import {
   DEFAULT_SCORING_JOB_OPTIONS,
   DEFAULT_FEEDBACK_ANALYTICS_JOB_OPTIONS,
   DEFAULT_MEMORY_RETENTION_JOB_OPTIONS,
+  DEFAULT_PORTAL_SWEEP_JOB_OPTIONS,
   FEEDBACK_ANALYTICS_CRON,
   MEMORY_RETENTION_CRON,
+  PORTAL_SWEEP_CRON,
   type ScoringJobData,
   type ScoringJobResult,
   type PredictionJobData,
@@ -669,6 +673,24 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         }
       );
       this.logger.info({ cron: accountScoringCron }, 'Scheduled account-scoring job registered');
+
+      // IFC-314: portal delivery sweep — daily heartbeat that drives the portal's
+      // time-based transitions (auto-pause stalled onboardings). The portal owns
+      // the logic; this is just the tick. 05:00 UTC, 1h before the portal's own
+      // Vercel-Cron backup, so the CRM job wins and the sweep is never doubled
+      // harmfully (it is idempotent regardless).
+      const portalSweepCron = process.env.PORTAL_SWEEP_CRON || PORTAL_SWEEP_CRON;
+      const portalSweepQueue = this.getQueue(PORTAL_SWEEP_QUEUE);
+      await portalSweepQueue.upsertJobScheduler(
+        'scheduled-portal-delivery-sweep',
+        { pattern: portalSweepCron },
+        {
+          name: 'scheduled-portal-delivery-sweep',
+          data: { correlationId: `scheduled-portal-sweep-${Date.now()}` },
+          opts: DEFAULT_PORTAL_SWEEP_JOB_OPTIONS,
+        }
+      );
+      this.logger.info({ cron: portalSweepCron }, 'Scheduled portal delivery sweep job registered');
     } catch (error) {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
@@ -900,6 +922,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           break;
         case MEMORY_RETENTION_QUEUE:
           result = await processMemoryRetentionJob(job as Job<MemoryRetentionJobData>); // NOSONAR
+          break;
+        // IFC-314 — portal delivery sweep (outside the legacy AIJobData union).
+        case PORTAL_SWEEP_QUEUE:
+          result = (await processPortalSweepJob(
+            job as unknown as Job<import('./jobs').PortalSweepJobData>
+          )) as unknown as AIJobResult;
           break;
         // IFC-312 — contact/account AI chain queues. Cast through `unknown`
         // because these payloads are outside the legacy `AIJobData` union.

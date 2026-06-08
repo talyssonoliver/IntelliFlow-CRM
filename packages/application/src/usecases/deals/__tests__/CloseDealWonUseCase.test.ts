@@ -492,4 +492,80 @@ describe('CloseDealWonUseCase', () => {
       // Notifications are fire-and-forget, so we just verify they're called
     });
   });
+
+  // ─── Setup-fee instalments — IFC-314 (6 tests) ─────────────────
+  describe('Setup-fee instalments (IFC-314)', () => {
+    let mockInstalmentRepo: Record<string, any>;
+    let useCaseWithRepo: CloseDealWonUseCase;
+
+    beforeEach(() => {
+      mockInstalmentRepo = {
+        createForOpportunity: vi.fn().mockResolvedValue(undefined),
+        findByOpportunity: vi.fn().mockResolvedValue([]),
+        setStripeInvoiceId: vi.fn().mockResolvedValue(undefined),
+      };
+      // closedAt = 2026-02-15 (from createMockOpportunity default) anchors the plan.
+      mockOpportunityService.markAsWon.mockResolvedValue(Result.ok(createMockOpportunity()));
+      useCaseWithRepo = new CloseDealWonUseCase(
+        mockOpportunityService as any as OpportunityService,
+        mockEventBus as any as EventBusPort,
+        mockNotificationService as any as NotificationServicePort,
+        mockInstalmentRepo as any
+      );
+    });
+
+    it('seeds the 3-instalment plan when a deliveryTier is given', async () => {
+      const result = await useCaseWithRepo.execute({ ...defaultInput, deliveryTier: 'core' });
+
+      expect(result.isSuccess).toBe(true);
+      expect(mockInstalmentRepo.createForOpportunity).toHaveBeenCalledTimes(1);
+      const arg = mockInstalmentRepo.createForOpportunity.mock.calls[0][0];
+      expect(arg.opportunityId).toBe(defaultInput.opportunityId);
+      expect(arg.tenantId).toBe(defaultInput.tenantId);
+      expect(arg.instalments).toHaveLength(3);
+      // Plan anchored on closedAt (2026-02-15): day 0 / 7 / 14.
+      expect(arg.instalments[0].dueAt.toISOString()).toBe('2026-02-15T00:00:00.000Z');
+      expect(arg.instalments[2].dueAt.toISOString()).toBe('2026-03-01T00:00:00.000Z');
+    });
+
+    it('does NOT seed instalments when deliveryTier is omitted', async () => {
+      const result = await useCaseWithRepo.execute(defaultInput);
+      expect(result.isSuccess).toBe(true);
+      expect(mockInstalmentRepo.createForOpportunity).not.toHaveBeenCalled();
+    });
+
+    it('does NOT seed instalments when no repository is wired', async () => {
+      // The default `useCase` (3-arg) has no instalment repo.
+      const result = await useCase.execute({ ...defaultInput, deliveryTier: 'premium' });
+      expect(result.isSuccess).toBe(true);
+      expect(mockInstalmentRepo.createForOpportunity).not.toHaveBeenCalled();
+    });
+
+    it('still returns success when instalment persistence throws (best-effort)', async () => {
+      mockInstalmentRepo.createForOpportunity.mockRejectedValue(new Error('DB down'));
+      const result = await useCaseWithRepo.execute({ ...defaultInput, deliveryTier: 'core' });
+      expect(result.isSuccess).toBe(true);
+    });
+
+    it('seeds instalments BEFORE the enriched event is published', async () => {
+      const order: string[] = [];
+      mockInstalmentRepo.createForOpportunity.mockImplementation(async () => {
+        order.push('seedInstalments');
+      });
+      mockEventBus.publish.mockImplementation(async () => {
+        order.push('enrichedEvent');
+      });
+
+      await useCaseWithRepo.execute({ ...defaultInput, deliveryTier: 'core' });
+      await flushPromises();
+
+      expect(order.indexOf('seedInstalments')).toBeLessThan(order.indexOf('enrichedEvent'));
+    });
+
+    it('honours the chosen tier (pilot still ships the standard plan)', async () => {
+      await useCaseWithRepo.execute({ ...defaultInput, deliveryTier: 'pilot' });
+      const arg = mockInstalmentRepo.createForOpportunity.mock.calls[0][0];
+      expect(arg.instalments.reduce((s: number, i: any) => s + i.amountCents, 0)).toBe(16700 * 3);
+    });
+  });
 });

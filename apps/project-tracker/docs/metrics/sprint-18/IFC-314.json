@@ -1,0 +1,81 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-314",
+  "section": "Integration",
+  "description": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
+  "owner": "Backend Eng (STOA-Domain)",
+  "status": "BACKLOG",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-06-07T19:29:01.435Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 960,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "scoped_coverage": {
+      "target": 90,
+      "actual": null,
+      "met": false,
+      "unit": "percent"
+    },
+    "portal_push_idempotent": {
+      "target": true,
+      "actual": null,
+      "met": false
+    },
+    "instalment_schedule": {
+      "target": "D0/7/14",
+      "actual": null,
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "packages/db/prisma/schema.prisma",
+      "packages/adapters/src/payments/stripe/handlers/invoices.ts",
+      "packages/application/src/usecases/deals/CloseDealWonUseCase.ts",
+      "packages/application/src/ports/PortalDeliverySyncPort.ts",
+      "apps/api/src/modules/billing/billing.router.ts",
+      "apps/workers/events-worker/src/main.ts",
+      "apps/ai-worker/src/ai-worker.ts",
+      "apps/ai-worker/src/jobs/portal-sweep.job.ts",
+      "docs/architecture/adr/ADR-065-crm-portal-delivery-sync.md",
+      ".specify/sprints/sprint-18/specifications/IFC-314-spec.md",
+      ".specify/sprints/sprint-18/planning/IFC-314-plan.md",
+      ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json"
+    ],
+    "created": [
+      "packages/db/prisma/schema.prisma",
+      "packages/adapters/src/payments/stripe/handlers/invoices.ts",
+      "packages/application/src/usecases/deals/CloseDealWonUseCase.ts",
+      "apps/api/src/modules/billing/billing.router.ts",
+      "apps/workers/events-worker/src/main.ts",
+      "apps/ai-worker/src/ai-worker.ts",
+      "docs/architecture/adr/ADR-065-crm-portal-delivery-sync.md",
+      ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json"
+    ],
+    "missing": [
+      "packages/application/src/ports/PortalDeliverySyncPort.ts",
+      "apps/ai-worker/src/jobs/portal-sweep.job.ts",
+      ".specify/sprints/sprint-18/specifications/IFC-314-spec.md",
+      ".specify/sprints/sprint-18/planning/IFC-314-plan.md"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-06-07T00:00:00Z",
+      "note": "Task created via /create-task — CRM→portal delivery & billing sync (Leangency 14-day flow). Portal side already shipped (leangency-portal feat/delivery-14day); this is the CRM-side return path."
+    }
+  ],
+  "notes": "Portal owns delivery phase + the 14-day SLA clock; the CRM mirrors billing only (instalments + subscription) and pushes via the domain_events outbox using Bearer PORTAL_INTERNAL_SECRET to LEANGENCY_PORTAL_INTERNAL_URL. Audit + contract in the portal repo docs/CRM_DELIVERY_AUDIT.md (kept local)."
+}

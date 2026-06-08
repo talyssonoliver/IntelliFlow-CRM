@@ -468,10 +468,11 @@ export const inboundRouter = createTRPCRouter({
 
       // Step 6: Create reminder Task
       try {
+        const notesSuffix = input.notes ? `\n\n${input.notes}` : '';
         const task = await ctx.prisma.task.create({
           data: {
             title: `Discovery call — ${displayName}`,
-            description: `Scheduled discovery call with ${displayName}${input.notes ? `\n\n${input.notes}` : ''}`,
+            description: `Scheduled discovery call with ${displayName}${notesSuffix}`,
             dueDate: startTime,
             priority: 'HIGH',
             status: 'PENDING',

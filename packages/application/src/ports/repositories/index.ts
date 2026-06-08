@@ -22,3 +22,9 @@ export * from './FeedbackSurveyRepositoryPort';
 
 // Public Feedback Repository Port (PG-126)
 export * from './PublicFeedbackRepositoryPort';
+
+// Setup Instalment Repository Port (IFC-314)
+export * from './SetupInstalmentRepositoryPort';
+
+// Stripe Subscription Repository Port (IFC-314)
+export * from './StripeSubscriptionRepositoryPort';
