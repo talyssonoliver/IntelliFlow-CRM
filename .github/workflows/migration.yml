@@ -55,7 +55,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm --filter @intelliflow/db prisma generate
+        # db:generate, NOT `prisma generate` — pnpm has no such script, so the
+        # old form errored ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT on every run.
+        run: pnpm --filter @intelliflow/db db:generate
 
       - name: Validate transformation rules
         run: |
@@ -138,7 +140,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm --filter @intelliflow/db prisma generate
+        # db:generate, NOT `prisma generate` — pnpm has no such script, so the
+        # old form errored ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT on every run.
+        run: pnpm --filter @intelliflow/db db:generate
 
       - name: Bootstrap Supabase schemas + roles
         run: |
@@ -222,7 +226,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm --filter @intelliflow/db prisma generate
+        # db:generate, NOT `prisma generate` — pnpm has no such script, so the
+        # old form errored ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT on every run.
+        run: pnpm --filter @intelliflow/db db:generate
 
       - name: Bootstrap Supabase schemas + roles
         run: |
@@ -317,7 +323,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm --filter @intelliflow/db prisma generate
+        # db:generate, NOT `prisma generate` — pnpm has no such script, so the
+        # old form errored ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT on every run.
+        run: pnpm --filter @intelliflow/db db:generate
 
       - name: Bootstrap Supabase schemas + roles
         run: |
