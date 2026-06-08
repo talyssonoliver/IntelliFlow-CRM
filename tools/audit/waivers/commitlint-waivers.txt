@@ -101,10 +101,9 @@ d752919b684a fix(ci): PR #201 squash subject — uppercase "E2E" + 105 chars (he
 5289aa9a43a08305d1d42f1dd43c537386781115 feat(infra): INFRA-TF-002 workers squash subject — 101 chars (limit 100), cannot rewrite
 8154c618975f set-shared-env-vars-service-level subject 107>100; squash-merge uses the <=100 PR title
 
-# PR #333 (wire CRM->portal delivery + billing sync, IFC-314) merged to main
-# 2026-06-08; its squash body line 3 is a single 514-char paragraph (limit 100)
-# — the description was not wrapped before merge. Already on main; cannot rewrite.
-# Surfaces in system-audit/commitlint (scans last ~20 commits) on every PR whose
-# merge-ref window includes it, until waived. Same class as the squash entries
-# above. Prevention: wrap PR/commit bodies at <=100 before squash-merge.
-0a0398740c68e03d4ff4a5c129c7c5d48e701e03 feat(IFC-314): PR #333 squash body line 3 is 514 chars (limit 100) — merged, cannot rewrite
+# PR #333 (IFC-314 CRM->portal delivery + billing) squash-merged to main
+# 2026-06-08; the squash body is a single 514-char line (body-max-line-length
+# limit 100). Already on main; cannot rewrite. Same root cause as the entries
+# above. Enters the last-~20 window on PRs opened after it landed (first hit:
+# #346) and fails system-audit/commitlint until waived.
+0a0398740c68e03d4ff4a5c129c7c5d48e701e03 feat(IFC-314): PR #333 squash body single 514-char line (limit 100), already on main

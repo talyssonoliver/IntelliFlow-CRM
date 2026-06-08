@@ -31,6 +31,9 @@ const mockHandlers = vi.hoisted(() => ({
   getInvoice: vi.fn(),
   listInvoices: vi.fn(),
   payInvoice: vi.fn(),
+  createInvoiceItem: vi.fn(),
+  createInvoice: vi.fn(),
+  finalizeInvoice: vi.fn(),
   constructWebhookEvent: vi.fn(),
   checkConnection: vi.fn(),
 }));
@@ -206,6 +209,29 @@ describe('StripeAdapter', () => {
     mockHandlers.payInvoice.mockReturnValue('result');
     const result = adapter.payInvoice('in_123');
     expect(mockHandlers.payInvoice).toHaveBeenCalledWith(config, 'in_123');
+    expect(result).toBe('result');
+  });
+
+  it('should delegate createInvoiceItem to handler', () => {
+    mockHandlers.createInvoiceItem.mockReturnValue('result');
+    const params = { customerId: 'cus_1', amountCents: 16700, currency: 'GBP' };
+    const result = adapter.createInvoiceItem(params);
+    expect(mockHandlers.createInvoiceItem).toHaveBeenCalledWith(config, params);
+    expect(result).toBe('result');
+  });
+
+  it('should delegate createInvoice to handler', () => {
+    mockHandlers.createInvoice.mockReturnValue('result');
+    const params = { customerId: 'cus_1' };
+    const result = adapter.createInvoice(params);
+    expect(mockHandlers.createInvoice).toHaveBeenCalledWith(config, params);
+    expect(result).toBe('result');
+  });
+
+  it('should delegate finalizeInvoice to handler', () => {
+    mockHandlers.finalizeInvoice.mockReturnValue('result');
+    const result = adapter.finalizeInvoice('in_123');
+    expect(mockHandlers.finalizeInvoice).toHaveBeenCalledWith(config, 'in_123');
     expect(result).toBe('result');
   });
 

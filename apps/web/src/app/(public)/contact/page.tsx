@@ -34,6 +34,8 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'crm@leangency.com';
+
   return (
     <main id="main-content" className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Hero Section */}
@@ -86,11 +88,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Email</h3>
-                    <a
-                      href="mailto:contact@intelliflow-crm.com"
-                      className="text-[#137fec] hover:underline"
-                    >
-                      contact@intelliflow-crm.com
+                    <a href={`mailto:${contactEmail}`} className="text-[#137fec] hover:underline">
+                      {contactEmail}
                     </a>
                   </div>
                 </div>

@@ -13,6 +13,13 @@ import { WebSocketServer, type WebSocket } from 'ws';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { appRouter } from './router';
 import { createWSContext, type Context } from './context';
+import {
+  evaluateRealtimeCapacity,
+  getRealtimeCapacityConfig,
+  logCapacityIfChanged,
+  type RealtimeCapacityEvaluation,
+  type RealtimeCapacityStatus,
+} from './realtime/capacity';
 
 // ============================================================================
 // Configuration
@@ -51,13 +58,25 @@ export function createWebSocketServer(port: number = WS_PORT): WebSocketServer {
     },
   });
 
+  // Realtime capacity evaluator (issue #318, caveat 3b): turn the live
+  // wss.clients count into an ok/warning/critical status, logging on transitions
+  // so capacity is real evidence rather than an assumed limit.
+  const capacityConfig = getRealtimeCapacityConfig();
+  let capacityStatus: RealtimeCapacityStatus = 'ok';
+  const reportCapacity = (): void => {
+    const evaluation = evaluateRealtimeCapacity(wss.clients.size, capacityConfig);
+    capacityStatus = logCapacityIfChanged(evaluation, capacityStatus);
+  };
+
   // Connection handling
   wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     const clientId = req.headers['sec-websocket-key'] || 'unknown';
     console.log(`[WS] Client connected: ${clientId}`);
+    reportCapacity();
 
     ws.on('close', () => {
       console.log(`[WS] Client disconnected: ${clientId}`);
+      reportCapacity();
     });
 
     ws.on('error', (error: Error) => {
@@ -85,6 +104,15 @@ export function createWebSocketServer(port: number = WS_PORT): WebSocketServer {
   });
 
   return wss;
+}
+
+/**
+ * Live realtime-capacity evaluator: evaluates the current concurrent-connection
+ * count of `wss` against the configured cap/thresholds. The queryable counterpart
+ * to the WS server's transition logging (issue #318, caveat 3b).
+ */
+export function getRealtimeCapacity(wss: WebSocketServer): RealtimeCapacityEvaluation {
+  return evaluateRealtimeCapacity(wss.clients.size);
 }
 
 // ============================================================================

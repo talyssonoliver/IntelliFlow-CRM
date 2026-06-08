@@ -244,6 +244,9 @@ export const mockAdapters = {
   contactRepository: mockDeep<any>(),
   accountRepository: mockDeep<any>(),
   opportunityRepository: mockDeep<any>(),
+  setupInstalmentRepository: mockDeep<any>(),
+  stripeSubscriptionRepository: mockDeep<any>(),
+  portalDeliverySync: null,
   taskRepository: mockDeep<any>(),
   chainVersionRepository: mockDeep<any>(),
   chainVersionAuditRepository: mockDeep<any>(),
@@ -579,6 +582,8 @@ export const mockOpportunity = {
   contactId: TEST_UUIDS.contact1,
   ownerId: TEST_UUIDS.user1,
   sourceLeadId: null,
+  deliveryTier: null,
+  tenantSlug: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };

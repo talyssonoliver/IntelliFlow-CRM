@@ -107,11 +107,16 @@ const createPrismaClient = () => {
   // handful of concurrent instances exhaust Supabase's pooler (EMAXCONNSESSION,
   // pool_size 15) — which surfaces as 500s on every authenticated DB query and
   // gets users signed out. Keep it tiny on serverless; allow larger pools for
-  // long-lived workers via DB_POOL_MAX. See docs/audit/auth-session-db-pool-audit.md.
+  // long-lived workers via DATABASE_POOL_MAX. See docs/audit/auth-session-db-pool-audit.md.
+  //
+  // Canonical name is DATABASE_POOL_MAX (unified across validate-env + system.router,
+  // issue #316); the legacy DB_POOL_MAX is kept as a backward-compatible fallback so
+  // existing worker env keeps working. An explicit value overrides the default.
   const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  const poolMaxEnv = process.env.DATABASE_POOL_MAX || process.env.DB_POOL_MAX;
   let poolMax: number;
-  if (process.env.DB_POOL_MAX) {
-    poolMax = Number.parseInt(process.env.DB_POOL_MAX, 10);
+  if (poolMaxEnv) {
+    poolMax = Number.parseInt(poolMaxEnv, 10);
   } else {
     poolMax = isServerless ? 1 : 10;
   }

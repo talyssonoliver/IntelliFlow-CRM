@@ -247,6 +247,8 @@ export const DOMAIN_EVENT_TYPES = {
   OPPORTUNITY_STAGE_CHANGED: 'opportunity.stage_changed',
   OPPORTUNITY_WON: 'opportunity.won',
   OPPORTUNITY_LOST: 'opportunity.lost',
+  // IFC-314: enriched deal-won event → portal delivery/billing sync
+  DEAL_WON_ENRICHED: 'opportunity.deal_won_enriched',
 
   // Task events
   TASK_CREATED: 'task.created',

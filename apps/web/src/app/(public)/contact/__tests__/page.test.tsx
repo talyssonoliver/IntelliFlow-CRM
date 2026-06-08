@@ -33,7 +33,7 @@ describe('Contact Page', () => {
     it('should display contact information', () => {
       render(<ContactPage />);
 
-      expect(screen.getByText(/contact@intelliflow-crm\.com/i)).toBeInTheDocument();
+      expect(screen.getByText(/crm@leangency\.com/i)).toBeInTheDocument();
       // The "24 hours" text appears in multiple places - use getAllByText
       const elements24Hours = screen.getAllByText(/within 24 hours/i);
       expect(elements24Hours.length).toBeGreaterThan(0);
@@ -79,8 +79,8 @@ describe('Contact Page', () => {
     it('should have accessible email link', () => {
       render(<ContactPage />);
 
-      const emailLink = screen.getByRole('link', { name: /contact@intelliflow-crm\.com/i });
-      expect(emailLink).toHaveAttribute('href', 'mailto:contact@intelliflow-crm.com');
+      const emailLink = screen.getByRole('link', { name: /crm@leangency\.com/i });
+      expect(emailLink).toHaveAttribute('href', 'mailto:crm@leangency.com');
     });
 
     it('should use semantic HTML for FAQ section', () => {

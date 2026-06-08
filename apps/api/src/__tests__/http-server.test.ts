@@ -275,4 +275,17 @@ describe('HTTP API Server', () => {
       expect(response.headers.get('x-content-type-options')).toBe('nosniff');
     });
   });
+
+  // Regression (IFC-314): the health route's GET/HEAD-only guard must apply ONLY
+  // to health paths. It previously ran before the path switch and 405'd *every*
+  // non-GET request — which made the Stripe webhook POST route unreachable.
+  it('does not 405 a non-GET request on a non-health path', async () => {
+    const { server, baseUrl } = await startTestServer();
+    servers.push(server);
+
+    const response = await fetch(`${baseUrl}/nonexistent-route`, { method: 'POST', body: '{}' });
+
+    expect(response.status).toBe(404);
+    expect(response.status).not.toBe(405);
+  });
 });

@@ -15,3 +15,4 @@ export * from './WebhookServicePort';
 export * from './StorageServicePort';
 export * from './AVScannerPort';
 export * from './SignatureProviderPort';
+export * from './PortalDeliverySyncPort';

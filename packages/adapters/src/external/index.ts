@@ -11,3 +11,4 @@ export * from './LiteLLMAIService';
 export * from './GuardrailsAIService';
 export * from './MockNotificationServiceAdapter';
 export * from './RealNotificationServiceAdapter';
+export * from './HttpPortalDeliverySyncAdapter';

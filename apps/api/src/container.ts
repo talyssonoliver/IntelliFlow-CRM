@@ -12,6 +12,9 @@ import {
   PrismaContactRepository,
   PrismaAccountRepository,
   PrismaOpportunityRepository,
+  PrismaSetupInstalmentRepository,
+  PrismaStripeSubscriptionRepository,
+  createHttpPortalDeliverySyncAdapter,
   PrismaTaskRepository,
   PrismaChainVersionRepository,
   PrismaChainVersionAuditRepository,
@@ -283,6 +286,18 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const contactRepository = new PrismaContactRepository(prismaClient);
   const accountRepository = new PrismaAccountRepository(prismaClient);
   const opportunityRepository = new PrismaOpportunityRepository(prismaClient);
+  const setupInstalmentRepository = new PrismaSetupInstalmentRepository(prismaClient);
+  const stripeSubscriptionRepository = new PrismaStripeSubscriptionRepository(prismaClient);
+  // IFC-314: portal delivery sync client — null unless the portal env is set
+  // (LEANGENCY_PORTAL_INTERNAL_URL + PORTAL_INTERNAL_SECRET). Used to reflect
+  // engine-subscription status on the portal from the billing webhook.
+  const portalDeliverySync = ((): ReturnType<typeof createHttpPortalDeliverySyncAdapter> | null => {
+    try {
+      return createHttpPortalDeliverySyncAdapter();
+    } catch {
+      return null;
+    }
+  })();
   const taskRepository = new PrismaTaskRepository(prismaClient);
   const chainVersionRepository = new PrismaChainVersionRepository(prismaClient);
   const chainVersionAuditRepository = new PrismaChainVersionAuditRepository(prismaClient);
@@ -405,6 +420,9 @@ const createAdapters = (prismaClient: PrismaClient) => {
     contactRepository,
     accountRepository,
     opportunityRepository,
+    setupInstalmentRepository,
+    stripeSubscriptionRepository,
+    portalDeliverySync,
     taskRepository,
     chainVersionRepository,
     chainVersionAuditRepository,
@@ -576,7 +594,8 @@ const createServices = (prismaClient: PrismaClient) => {
   const closeDealWonUseCase = new CloseDealWonUseCase(
     opportunityService,
     adapters.eventBus,
-    adapters.notificationService
+    adapters.notificationService,
+    adapters.setupInstalmentRepository
   );
 
   // IFC-066: Deal Lost Closure Workflow

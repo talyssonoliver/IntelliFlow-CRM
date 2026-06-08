@@ -15,6 +15,7 @@ vi.mock('ws', () => {
   function FakeWebSocketServer(this: any) {
     this.on = mockOn;
     this.close = mockClose;
+    this.clients = new Set();
   }
   return { WebSocketServer: FakeWebSocketServer };
 });
@@ -33,7 +34,7 @@ vi.mock('../context', () => ({
   }),
 }));
 
-import { createWebSocketServer, WS_PORT } from '../ws-server';
+import { createWebSocketServer, WS_PORT, getRealtimeCapacity } from '../ws-server';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { createWSContext } from '../context';
 
@@ -176,6 +177,33 @@ describe('server lifecycle handlers', () => {
     const handler = mockOn.mock.calls.find((c: any[]) => c[0] === 'error')?.[1];
     handler!(new Error('bind fail'));
     expect(spy).toHaveBeenCalledWith(expect.stringContaining('Server error'), expect.any(Error));
+    vi.restoreAllMocks();
+  });
+});
+
+describe('realtime capacity (issue #318 caveat 3b)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('getRealtimeCapacity evaluates the live client count', () => {
+    const wss = createWebSocketServer(4000) as any;
+    wss.clients = new Set([{}, {}, {}]);
+    const evaluation = getRealtimeCapacity(wss);
+    expect(evaluation.connections).toBe(3);
+    expect(evaluation.status).toBe('ok');
+    expect(evaluation.max).toBe(200);
+  });
+
+  it('logs a warning when the live connection count crosses the warn threshold', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const wss = createWebSocketServer(4000) as any;
+    // Simulate 160 active connections (>= the default 150 warn threshold).
+    wss.clients = new Set(Array.from({ length: 160 }, (_, i) => i));
+    const connHandler = mockOn.mock.calls.find((c: any[]) => c[0] === 'connection')?.[1];
+    connHandler!({ on: vi.fn() }, { headers: { 'sec-websocket-key': 'k' } });
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('status=warning'));
     vi.restoreAllMocks();
   });
 });

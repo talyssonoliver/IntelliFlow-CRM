@@ -54,7 +54,15 @@ export * from './PrismaTicketRepository';
 // Conversation Search Repository (IFC-148)
 export * from './PrismaConversationSearchRepository';
 
+// Setup Instalment Repository (IFC-314)
+export * from './PrismaSetupInstalmentRepository';
+
+// Stripe Subscription Repository (IFC-314)
+export * from './PrismaStripeSubscriptionRepository';
+
 // In-memory implementations (testing)
+export * from './InMemorySetupInstalmentRepository';
+export * from './InMemoryStripeSubscriptionRepository';
 export * from './InMemoryLeadRepository';
 export * from './InMemoryContactRepository';
 export * from './InMemoryAccountRepository';

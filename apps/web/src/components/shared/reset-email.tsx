@@ -487,8 +487,8 @@ IntelliFlow
 
   return {
     to: email,
-    from: 'noreply@intelliflow.com',
-    replyTo: 'support@intelliflow.com',
+    from: process.env.NEXT_PUBLIC_SENDER_EMAIL || 'crm@leangency.com',
+    replyTo: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@leangency.com',
     subject: 'Reset your IntelliFlow password',
     htmlBody,
     textBody,

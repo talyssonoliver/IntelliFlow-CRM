@@ -107,6 +107,20 @@ describe('EmailChannel', () => {
       expect(mockVerify).toHaveBeenCalled();
     });
 
+    it('should set SMTP socket timeouts so verify() cannot hang — issue #26', async () => {
+      await channel.initialize();
+
+      // Without these, transporter.verify() hangs forever when the SMTP host is
+      // unreachable (Railway → smtp.resend.com), wedging worker startup.
+      expect(mockCreateTransport).toHaveBeenCalledWith(
+        expect.objectContaining({
+          connectionTimeout: expect.any(Number),
+          greetingTimeout: expect.any(Number),
+          socketTimeout: expect.any(Number),
+        })
+      );
+    });
+
     it('should start in degraded mode (not throw) when SMTP verify fails — issue #319', async () => {
       mockVerify.mockRejectedValueOnce(
         Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:1025'), { code: 'ESOCKET' })
@@ -378,6 +392,150 @@ describe('EmailChannel', () => {
   });
 });
 
+describe('EmailChannel - Resend HTTP transport', () => {
+  const resendConfig: EmailChannelConfig = {
+    host: 'unused',
+    port: 0,
+    secure: false,
+    from: 'crm@leangency.com',
+    fromName: 'IntelliFlow CRM',
+    provider: 'resend',
+    apiKey: 're_test_key',
+    apiBaseUrl: 'https://api.resend.com',
+    requestTimeoutMs: 5000,
+  };
+
+  let fetchMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    setupDefaultMocks();
+    fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('initialize() does not create an SMTP transporter or call verify()', async () => {
+    const channel = new EmailChannel(resendConfig);
+    await channel.initialize();
+
+    expect(mockCreateTransport).not.toHaveBeenCalled();
+    expect(mockVerify).not.toHaveBeenCalled();
+  });
+
+  it('deliver() POSTs to the Resend API and returns success with the message id', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ id: 'resend-msg-123' }),
+      text: async () => '',
+    });
+
+    const channel = new EmailChannel(resendConfig);
+    await channel.initialize();
+
+    const result = await channel.deliver(
+      {
+        to: 'user@example.com',
+        subject: 'Hi',
+        body: 'Hello',
+        htmlBody: '<p>Hello</p>',
+      },
+      { correlationId: 'c1', tenantId: 't1' }
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.messageId).toBe('resend-msg-123');
+    expect(result.accepted).toContain('user@example.com');
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.resend.com/emails');
+    expect(init.method).toBe('POST');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer re_test_key');
+
+    const body = JSON.parse(init.body as string);
+    expect(body.from).toBe('IntelliFlow CRM <crm@leangency.com>');
+    expect(body.to).toEqual(['user@example.com']);
+    expect(body.subject).toBe('Hi');
+    expect(body.text).toBe('Hello');
+    expect(body.html).toBe('<p>Hello</p>');
+    expect(body.headers['X-Correlation-ID']).toBe('c1');
+    expect(body.headers['X-Tenant-ID']).toBe('t1');
+  });
+
+  it('maps cc, bcc, replyTo and attachments into the Resend payload', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ id: 'r-attach-1' }),
+      text: async () => '',
+    });
+
+    const channel = new EmailChannel(resendConfig);
+    await channel.initialize();
+
+    const result = await channel.deliver({
+      to: ['a@example.com', 'b@example.com'],
+      cc: ['cc@example.com'],
+      bcc: ['bcc@example.com'],
+      replyTo: 'reply@example.com',
+      subject: 'Attach',
+      body: 'See attachment',
+      attachments: [{ filename: 'note.txt', content: Buffer.from('hello') }],
+    });
+
+    expect(result.success).toBe(true);
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+    expect(body.to).toEqual(['a@example.com', 'b@example.com']);
+    expect(body.cc).toEqual(['cc@example.com']);
+    expect(body.bcc).toEqual(['bcc@example.com']);
+    expect(body.reply_to).toBe('reply@example.com');
+    expect(body.attachments[0].filename).toBe('note.txt');
+    expect(body.attachments[0].content).toBe(Buffer.from('hello').toString('base64'));
+  });
+
+  it('deliver() returns a failure result on a non-ok Resend response', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 422,
+      json: async () => ({}),
+      text: async () => 'invalid `from` field',
+    });
+
+    const channel = new EmailChannel(resendConfig);
+    await channel.initialize();
+
+    const result = await channel.deliver({
+      to: 'user@example.com',
+      subject: 'Hi',
+      body: 'Hello',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('422');
+    expect(result.rejected).toContain('user@example.com');
+  });
+
+  it('degrades (does not throw, does not call fetch) when apiKey is missing', async () => {
+    const channel = new EmailChannel({ ...resendConfig, apiKey: undefined });
+
+    await expect(channel.initialize()).resolves.toBeUndefined();
+
+    const result = await channel.deliver({
+      to: 'user@example.com',
+      subject: 'Hi',
+      body: 'Hello',
+    });
+
+    expect(result.success).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
 describe('createEmailChannel', () => {
   it('should create channel with environment config', () => {
     const originalEnv = process.env;
@@ -401,5 +559,41 @@ describe('createEmailChannel', () => {
   it('should use defaults when env not set', () => {
     const channel = createEmailChannel();
     expect(channel).toBeDefined();
+  });
+
+  it('selects the Resend HTTP transport when RESEND_API_KEY is set — issue #26', async () => {
+    const originalEnv = process.env;
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ id: 'r-factory-1' }),
+      text: async () => '',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    process.env = {
+      ...originalEnv,
+      RESEND_API_KEY: 're_factory_key',
+      RESEND_FROM_EMAIL: 'crm@leangency.com',
+      // Pin the sender name so the assertion is deterministic regardless of the
+      // ambient EMAIL_FROM_NAME (.env.test sets "IntelliFlow CRM (Test)").
+      EMAIL_FROM_NAME: 'IntelliFlow CRM',
+    };
+
+    try {
+      const channel = createEmailChannel();
+      await channel.initialize();
+      const result = await channel.deliver({ to: 'u@example.com', subject: 'S', body: 'B' });
+
+      expect(result.success).toBe(true);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe('https://api.resend.com/emails');
+      expect((init.headers as Record<string, string>).Authorization).toBe('Bearer re_factory_key');
+      const body = JSON.parse(init.body as string);
+      expect(body.from).toBe('IntelliFlow CRM <crm@leangency.com>');
+    } finally {
+      process.env = originalEnv;
+      vi.unstubAllGlobals();
+    }
   });
 });

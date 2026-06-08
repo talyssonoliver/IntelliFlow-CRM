@@ -196,6 +196,21 @@ export class RedisRateLimiter {
   } | null = null;
   private connectionAttempted = false;
 
+  /**
+   * @param redisClient optional pre-built client — tests inject a fake; prod omits
+   * it and a lazy ioredis connection is established on first use.
+   */
+  constructor(redisClient?: {
+    incr(key: string): Promise<number>;
+    pexpire(key: string, ms: number): Promise<number>;
+    connect(): Promise<void>;
+  }) {
+    if (redisClient) {
+      this.redis = redisClient;
+      this.connectionAttempted = true;
+    }
+  }
+
   private async getRedis(): Promise<NonNullable<RedisRateLimiter['redis']>> {
     if (this.redis) return this.redis;
 
@@ -350,4 +365,125 @@ let globalLimiter: ReturnType<typeof createGlobalLimiter> | null = null;
 export function getRateLimiter() {
   globalLimiter ??= createGlobalLimiter();
   return globalLimiter;
+}
+
+// ---------------------------------------------------------------------------
+// Distributed (Redis-backed) rate-limit middleware for tRPC procedures
+//
+// This is what finally ACTIVATES the RedisRateLimiter (issue #316, caveat 3a):
+// the limiter class existed but nothing instantiated it, so distributed rate
+// limiting silently never ran. These middlewares are wired into
+// publicProcedure / protectedProcedure / authProcedure in trpc.ts.
+// ---------------------------------------------------------------------------
+
+/**
+ * Process-wide RedisRateLimiter. Lazily connects on first use; only relevant
+ * when a managed (rediss://) Redis URL is configured.
+ */
+let sharedRedisLimiter: RedisRateLimiter | null = null;
+function getSharedRedisLimiter(): RedisRateLimiter {
+  sharedRedisLimiter ??= new RedisRateLimiter();
+  return sharedRedisLimiter;
+}
+
+/** Test-only: reset the shared limiter so a fresh Redis mock is picked up. */
+export function __resetSharedRedisLimiter(): void {
+  sharedRedisLimiter = null;
+}
+
+/** Test-only: inject a specific shared limiter (e.g. one with a fake Redis client). */
+export function __setSharedRedisLimiter(limiter: RedisRateLimiter | null): void {
+  sharedRedisLimiter = limiter;
+}
+
+/**
+ * Distributed rate limiting activates ONLY when a managed Redis (rediss:// TLS)
+ * URL is configured — i.e. production. Dev/test (no URL, or a plain redis://
+ * dev/CI instance) keep the prior single-process behaviour so the limiter never
+ * introduces shared, cross-test state into the suite. Issue #316 (caveat 3a).
+ */
+export function isDistributedRateLimitEnabled(): boolean {
+  const url = process.env.REDIS_URL || process.env.RATE_LIMIT_REDIS_URL;
+  return !!url && /^rediss:\/\//i.test(url);
+}
+
+/**
+ * Client identifier for anonymous rate-limit keys. Prefers x-real-ip (set by the
+ * Vercel/Railway edge to the real client IP), then the LEFTMOST x-forwarded-for
+ * hop, then 'unknown'.
+ *
+ * NOTE: this deliberately differs from public-feedback's extractClientIp, which
+ * takes the RIGHTMOST (edge) hop to throttle suspicious traffic HARDER on that
+ * one low-volume endpoint. For a GENERAL per-client limiter the rightmost hop is
+ * the shared edge IP — keying on it would drop ALL anonymous traffic into one
+ * bucket and throttle the whole public API at once. x-real-ip / leftmost give a
+ * per-client bucket (spoofable — the inherent limitation of IP rate limiting).
+ */
+function getRateLimitClientId(req: Request | undefined): string {
+  if (!req) return 'unknown';
+  const realIp = req.headers.get('x-real-ip');
+  if (realIp?.trim()) return realIp.trim();
+  const forwarded = req.headers.get('x-forwarded-for');
+  const first = forwarded?.split(',')[0]?.trim();
+  return first || 'unknown';
+}
+
+/** Per-tier rate-limit key: authenticated → userId; otherwise client IP. */
+function distributedKey(ctx: Context, tier: RateLimitTier): string {
+  const id = ctx.user?.userId || getRateLimitClientId(ctx.req);
+  return `${tier.name}:${id}`;
+}
+
+export interface DistributedRateLimitOptions {
+  /**
+   * Behaviour when distributed Redis is NOT enabled (dev/test):
+   * - 'in-memory' (default): apply the per-process tiered limiter — preserves the
+   *   prior behaviour of protected/auth procedures.
+   * - 'pass-through': no limit — preserves publicProcedure having had no limiter.
+   */
+  fallback?: 'in-memory' | 'pass-through';
+}
+
+/**
+ * tRPC middleware enforcing `tier` via the distributed RedisRateLimiter when a
+ * managed Redis is configured (prod), with a graceful fallback otherwise and on
+ * transient Redis errors.
+ */
+export function createDistributedRateLimitMiddleware(
+  tier: RateLimitTier,
+  options: DistributedRateLimitOptions = {}
+) {
+  const fallbackMode = options.fallback ?? 'in-memory';
+  const inMemoryFallback = createTieredRateLimitMiddleware(tier);
+
+  const runFallback = ({ ctx, next }: MiddlewareOpts) =>
+    fallbackMode === 'pass-through' ? next() : inMemoryFallback({ ctx, next });
+
+  return async ({ ctx, next }: MiddlewareOpts) => {
+    if (!isDistributedRateLimitEnabled()) {
+      return runFallback({ ctx, next });
+    }
+
+    try {
+      const allowed = await getSharedRedisLimiter().checkLimit(
+        distributedKey(ctx, tier),
+        tier.limit,
+        tier.windowMs
+      );
+      if (!allowed) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: `Rate limit exceeded. Try again in ${Math.ceil(tier.windowMs / 1000)} seconds.`,
+          cause: { tier: tier.name, limit: tier.limit, windowMs: tier.windowMs },
+        });
+      }
+      return next();
+    } catch (err) {
+      // A genuine limit rejection must propagate.
+      if (err instanceof TRPCError) throw err;
+      // Transient Redis failure → degrade to the fallback rather than failing the
+      // request (in-memory still throttles per instance; we don't fail-open).
+      return runFallback({ ctx, next });
+    }
+  };
 }

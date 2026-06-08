@@ -123,3 +123,61 @@ describe('ensureAppUserSession — JIT provisioning failure (L5)', () => {
     expect(session.tenantId).not.toBe('');
   });
 });
+
+describe('ensureAppUserSession — avatar backfill from provider metadata', () => {
+  const EXISTING_USER_ID = '22222222-2222-4222-8222-222222222222';
+
+  function existingUserRow(avatarUrl: string | null) {
+    return {
+      id: EXISTING_USER_ID,
+      email: 'existing@example.com',
+      name: 'Existing User',
+      role: 'USER',
+      tenantId: 'default-tenant-id',
+      stripeCustomerId: null,
+      timezone: 'Europe/London',
+      avatarUrl,
+    };
+  }
+
+  it('backfills avatarUrl from metadata when the DB value is null', async () => {
+    const prisma = makePrismaStub({
+      findUnique: vi.fn().mockResolvedValue(existingUserRow(null)),
+    });
+    const update = vi.fn().mockResolvedValue({});
+    (prisma.user as any).update = update;
+
+    const session = await ensureAppUserSession(prisma as any, {
+      id: EXISTING_USER_ID,
+      email: 'existing@example.com',
+      user_metadata: { avatar_url: 'https://cdn.example.com/pic.png' },
+    });
+
+    // returned session carries the avatar this request (in-memory backfill)
+    expect(session.avatarUrl).toBe('https://cdn.example.com/pic.png');
+    // and the fire-and-forget sign-in update persists it to the DB
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ avatarUrl: 'https://cdn.example.com/pic.png' }),
+      })
+    );
+  });
+
+  it('does NOT overwrite an existing DB avatarUrl', async () => {
+    const prisma = makePrismaStub({
+      findUnique: vi.fn().mockResolvedValue(existingUserRow('https://db.example.com/existing.png')),
+    });
+    const update = vi.fn().mockResolvedValue({});
+    (prisma.user as any).update = update;
+
+    const session = await ensureAppUserSession(prisma as any, {
+      id: EXISTING_USER_ID,
+      email: 'existing@example.com',
+      user_metadata: { picture: 'https://oauth.example.com/new.png' },
+    });
+
+    expect(session.avatarUrl).toBe('https://db.example.com/existing.png');
+    // sign-in update must NOT include an avatarUrl write
+    expect((update.mock.calls[0][0] as any).data.avatarUrl).toBeUndefined();
+  });
+});
