@@ -4931,3 +4931,25 @@ alerts:
     remediation_sprint: 3
     remediation_plan: '1. Build AI performance dashboard 2. Implement optimization suggestion engine 3. Configure ROI tracking 4. Set up automated reporting'
     notes: 'Basic DORA metrics. AI dashboard is enhancement.'
+  SEC-AUTH-NOTIF-001:
+    origin_task: PG-085
+    owner: Security Lead
+    severity: high
+    description: 'All 7 Supabase Auth account-security notification emails (password/email/phone changed, MFA enrolled/unenrolled, identity linked/unlinked) were DISABLED in prod, and reauthentication used the bare GoTrue default. No account-takeover tripwire (silent password/email/MFA changes). Found while branding auth emails (PR #346).'
+    created_at: 2026-06-08
+    status: resolved
+    expiry_date: 2026-07-08
+    remediation_sprint: 20
+    remediation_plan: 'DONE: branded + enabled all 7 security notifications + branded reauthentication; applied live (HTTP 200) and committed to supabase/templates/. Follow-up: consider enabling password_hibp (leaked-password check, currently false).'
+    notes: 'git issue #350. Live remediation via Management API + repo PR. Wider transactional/notification email branding remains (EMAIL-BRAND-001).'
+  EMAIL-BRAND-001:
+    origin_task: PG-085
+    owner: CRM FE+BE
+    severity: medium
+    description: 'Transactional/notification email branding is incomplete. DONE: 6 GoTrue auth action emails + 7 security notifications branded. NOT done: the notifications-worker email shell (~54 event types, generic unbranded format) and customer-facing emails (auto-response, appointment, case reminders). Must be implemented as cohesive slices, not scattered partials.'
+    created_at: 2026-06-08
+    status: open
+    expiry_date: 2026-08-31
+    remediation_sprint: 22
+    remediation_plan: '1. Brand the notifications-worker HTML email shell (one shell, all 54 types) with tests. 2. Brand customer-facing transactional emails. 3. Attach to PG-085 / dedicated task. Keep each a complete vertical slice.'
+    notes: 'See PG-085 findings + git issue #350. Root: no PRD/ADR/spec/attestation ever covered email content/branding (only flows + delivery).'
