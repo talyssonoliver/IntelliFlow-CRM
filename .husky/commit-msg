@@ -38,6 +38,17 @@ fi
 # pre-ship (which resolves python) and by CI's system-audit.
 echo "⚠️  python not found — running basic format check only (CI enforces the full rules)"
 COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+# Allow auto-generated merge/revert commits — git writes "Merge ..."/"Revert ..."
+# subjects that aren't Conventional Commits. commit_msg_lint.py special-cases
+# these too; mirror it here so a merge can't be blocked when python is absent
+# (e.g. the husky hook PATH on Windows during `git merge`).
+FIRST_LINE=$(printf '%s' "$COMMIT_MSG" | head -n1)
+case "$FIRST_LINE" in
+  "Merge "* | "Revert "*)
+    echo "✅ Merge/revert commit — allowed"
+    exit 0
+    ;;
+esac
 PATTERN="^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,100}"
 if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
   echo "❌ Invalid commit message format!"
