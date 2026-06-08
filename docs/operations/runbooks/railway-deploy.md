@@ -201,12 +201,52 @@ cd infra/terraform && source .env && terraform plan -var-file=environments/dev/t
 
 ## 9. Cost / quota notes
 
-- Free tier: $5/mo compute credit. Dev (`replicas=1` for both services) fits
-  inside this comfortably.
-- Staging (`api.replicas=2`) will burn the free tier within ~2 weeks. Move to
-  Hobby ($5/mo + usage) before going long-running.
-- Watch `cost_alert_threshold` in each `terraform.tfvars`; alerts fire via the
-  Railway billing settings, not Terraform itself.
+**Current plan: Railway Hobby** — $5/mo base + usage, with account ceilings of
+**8 GB RAM, 8 vCPU, 100 GB shared disk** (confirmed 2026-06-07). The `memory` /
+`cpu` values in `railway_services` are per-replica **limits** (ceilings), not
+reservations — actual billed usage idles well below them.
+
+### Production footprint vs. the Hobby ceiling
+
+| Service                | Replicas | Mem limit | vCPU limit | RAM ceiling | vCPU ceiling | In TF? |
+| ---------------------- | -------- | --------- | ---------- | ----------- | ------------ | ------ |
+| `api`                  | 2        | 1 GB      | 1          | 2.0 GB      | 2.0          | yes    |
+| `ai-worker`            | 2        | 1 GB      | 1          | 2.0 GB      | 2.0          | yes    |
+| `events-worker`        | 1        | 512 MB    | 0.5        | 0.5 GB      | 0.5          | yes    |
+| `ingestion-worker`     | 1        | 512 MB    | 0.5        | 0.5 GB      | 0.5          | yes    |
+| `notifications-worker` | 1        | 512 MB    | 0.5        | 0.5 GB      | 0.5          | yes    |
+| `Redis`                | 1        | ~0.5 GB   | ~0.5       | 0.5 GB      | 0.5          | no¹    |
+| `ws`                   | 1        | ~0.5 GB   | ~0.5       | 0.5 GB      | 0.5          | no¹    |
+| **Total (ceilings)**   |          |           |            | **~6.5 GB** | **~6.5**     |        |
+| **Hobby cap**          |          |           |            | **8 GB**    | **8**        |        |
+
+¹ `Redis` + `ws` exist live but are **not** Terraform-managed (left external on
+purpose). Only `Redis` uses a persistent **volume** (~a few GB) — disk usage is
+a rounding error against the 100 GB cap.
+
+### Verdict — are we good on Hobby?
+
+**Yes, comfortably for normal operation.** Even at _declared ceilings_ the fleet
+sums to ~6.5/8 GB and ~6.5/8 vCPU (real idle usage is far lower), and disk is a
+non-issue. Headroom notes:
+
+- **The 2× replicas on `api`/`ai-worker` are the main consumers** (4 GB / 4 vCPU
+  of the ceiling). Live currently runs them at **`replicas=1`**; a full
+  `terraform apply` would scale them to 2 (the SSOT default) — a deliberate +2
+  GB / +2 vCPU step. Keep them at `replicas=1` until traffic warrants HA, and
+  the ceiling drops to ~4.5/8.
+- The 3 workers + Redis + ws are tiny (≤0.5 GB each).
+- Disk (100 GB) is effectively unlimited for this workload.
+
+### Alerts
+
+- Watch `cost_alert_threshold` in each `terraform.tfvars`
+  (`cost_alert_threshold = 1` in prod); alerts fire via Railway billing
+  settings, not Terraform itself.
+- Pre-Hobby history: the old **Free** tier ($5 credit, no payment method) hit
+  _"You have used all your available resources"_ on any var-write/redeploy once
+  exhausted — which blocked the 2026-06-07 prod DB-rotation fix until the plan
+  was upgraded. Hobby removes that wall.
 
 ## 10. Related runbooks
 

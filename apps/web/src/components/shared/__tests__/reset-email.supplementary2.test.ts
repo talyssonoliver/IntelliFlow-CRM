@@ -162,8 +162,8 @@ IntelliFlow
 
   return {
     to: email,
-    from: 'noreply@intelliflow.com',
-    replyTo: 'support@intelliflow.com',
+    from: 'crm@leangency.com',
+    replyTo: 'support@leangency.com',
     subject: 'Reset your IntelliFlow password',
     htmlBody,
     textBody,
@@ -307,12 +307,12 @@ describe('reset-email - buildResetEmailPayload', () => {
 
     it('sets from to noreply address', () => {
       const payload = buildResetEmailPayload(defaultOptions);
-      expect(payload.from).toBe('noreply@intelliflow.com');
+      expect(payload.from).toBe('crm@leangency.com');
     });
 
     it('sets replyTo to support address', () => {
       const payload = buildResetEmailPayload(defaultOptions);
-      expect(payload.replyTo).toBe('support@intelliflow.com');
+      expect(payload.replyTo).toBe('support@leangency.com');
     });
 
     it('sets correct subject', () => {
@@ -663,6 +663,7 @@ describe('reset-email - ResetEmailSent logic', () => {
   describe('resend cooldown prop changes', () => {
     it('resets cooldown when prop changes', () => {
       let cooldown = 5;
+      expect(cooldown).toBe(5);
       const newPropCooldown = 60;
       cooldown = newPropCooldown;
       expect(cooldown).toBe(60);
