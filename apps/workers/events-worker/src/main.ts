@@ -36,6 +36,11 @@ import {
   type PortalSyncClient,
   type PortalSyncPrismaLike,
 } from './handlers/portal-delivery-sync.handler';
+import { invoiceSetupInstalments } from './handlers/setup-fee-invoicing';
+import {
+  createPrismaOpportunityCustomers,
+  type OpportunityCustomersPrisma,
+} from './handlers/opportunity-customers';
 
 // ============================================================================
 // Types
@@ -731,24 +736,102 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
       return;
     }
 
+    type BillingCall<T> = Promise<{ isFailure: boolean; value?: T; error?: { message?: string } }>;
     // Dynamic require to avoid a build-time dependency on the adapters package
     // (mirrors the PrismaOutboxRepository wiring in the constructor). Kept on the
     // line directly under the disable so prettier reflow can't displace it.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const adaptersModule = require('@intelliflow/adapters') as {
-      PrismaSetupInstalmentRepository: new (p: PrismaClient) => PortalSyncInstalmentReader;
+      PrismaSetupInstalmentRepository: new (p: PrismaClient) => {
+        // Full record (superset of PortalSyncInstalmentReader's row + the invoicing
+        // helper's row) so the one instance satisfies both consumers.
+        findByOpportunity(
+          opportunityId: string,
+          tenantId: string
+        ): Promise<
+          Array<{
+            n: number;
+            amountCents: number;
+            currency: string;
+            status: 'due' | 'paid' | 'overdue';
+            dueAt: Date | null;
+            paidAt: Date | null;
+            stripeInvoiceId: string | null;
+          }>
+        >;
+        setStripeInvoiceId(args: {
+          opportunityId: string;
+          tenantId: string;
+          n: number;
+          stripeInvoiceId: string;
+        }): Promise<void>;
+      };
       HttpPortalDeliverySyncAdapter: new (cfg: {
         baseUrl: string;
         secret: string;
       }) => PortalSyncClient;
+      StripeAdapter: new (cfg: {
+        secretKey: string;
+        webhookSecret?: string;
+        apiVersion?: string;
+      }) => {
+        createCustomer(p: {
+          email?: string;
+          name?: string;
+          metadata?: Record<string, string>;
+        }): BillingCall<{ id: string }>;
+        createInvoiceItem(p: {
+          customerId: string;
+          amount: number;
+          currency: string;
+          description?: string;
+        }): BillingCall<{ id: string }>;
+        createInvoice(p: {
+          customerId: string;
+          collectionMethod?: string;
+          daysUntilDue?: number;
+          autoAdvance?: boolean;
+          description?: string;
+        }): BillingCall<{ id: string }>;
+        finalizeInvoice(id: string): BillingCall<{ id: string }>;
+      };
     };
-    const { PrismaSetupInstalmentRepository, HttpPortalDeliverySyncAdapter } = adaptersModule;
+    const { PrismaSetupInstalmentRepository, HttpPortalDeliverySyncAdapter, StripeAdapter } =
+      adaptersModule;
+
+    const instalmentRepo = new PrismaSetupInstalmentRepository(prisma);
+
+    // IFC-314 step 8: setup-fee invoicing is wired only when Stripe is configured.
+    // Without STRIPE_SECRET_KEY the deal still provisions + pushes; only charging
+    // is skipped (the handler treats `invoiceSetupFee` as optional + best-effort).
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const invoiceSetupFee = stripeSecretKey
+      ? async (args: { opportunityId: string; tenantId: string }): Promise<void> => {
+          const stripe = new StripeAdapter({
+            secretKey: stripeSecretKey,
+            webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+            apiVersion: '2024-12-18.acacia',
+          });
+          await invoiceSetupInstalments(
+            {
+              instalments: instalmentRepo,
+              customers: createPrismaOpportunityCustomers(
+                prisma as unknown as OpportunityCustomersPrisma
+              ),
+              billing: stripe,
+              logger: this.logger,
+            },
+            args
+          );
+        }
+      : undefined;
 
     const handler = createPortalDeliverySyncHandler({
       prisma: prisma as unknown as PortalSyncPrismaLike,
-      setupInstalments: new PrismaSetupInstalmentRepository(prisma),
+      setupInstalments: instalmentRepo,
       portalSync: new HttpPortalDeliverySyncAdapter({ baseUrl, secret }),
       logger: this.logger,
+      invoiceSetupFee,
     });
 
     this.eventDispatcher.register(

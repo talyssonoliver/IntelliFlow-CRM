@@ -68,4 +68,12 @@ export class InMemorySetupInstalmentRepository implements SetupInstalmentReposit
     );
     if (row) row.stripeInvoiceId = args.stripeInvoiceId;
   }
+
+  async markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void> {
+    const row = this.store.find((r) => r.stripeInvoiceId === args.stripeInvoiceId);
+    if (row) {
+      row.status = 'paid';
+      row.paidAt = args.paidAt;
+    }
+  }
 }

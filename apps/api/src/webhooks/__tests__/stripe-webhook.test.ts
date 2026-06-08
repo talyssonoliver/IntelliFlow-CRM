@@ -33,19 +33,25 @@ function subscriptionEvent(overrides: Record<string, unknown> = {}): string {
   });
 }
 
+function invoiceEvent(object: Record<string, unknown>): string {
+  return JSON.stringify({ id: 'evt_inv', type: 'invoice.paid', data: { object } });
+}
+
 function makeDeps(overrides: Partial<StripeWebhookDeps> = {}) {
   const upsertFromWebhook = vi.fn().mockResolvedValue(undefined);
   const pushDelivery = vi.fn().mockResolvedValue({ isFailure: false });
   const syncModulesToPlan = vi.fn().mockResolvedValue([]);
+  const markPaidByStripeInvoiceId = vi.fn().mockResolvedValue(undefined);
   const deps = {
     subscriptionRepository: { upsertFromWebhook } as any,
     portalSync: { pushDelivery } as any,
     moduleAccess: { syncModulesToPlan } as any,
+    setupInstalments: { markPaidByStripeInvoiceId } as any,
     webhookSecret: SECRET,
     logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
     ...overrides,
   };
-  return { deps, upsertFromWebhook, pushDelivery, syncModulesToPlan };
+  return { deps, upsertFromWebhook, pushDelivery, syncModulesToPlan, markPaidByStripeInvoiceId };
 }
 
 describe('processStripeWebhook', () => {
@@ -77,6 +83,39 @@ describe('processStripeWebhook', () => {
     );
     // plan change → module sync (planTier uppercased)
     expect(h.syncModulesToPlan).toHaveBeenCalledWith('tenant_1', 'PROFESSIONAL');
+  });
+
+  it('marks a setup-fee instalment paid on invoice.paid (uses status_transitions.paid_at)', async () => {
+    const body = invoiceEvent({ id: 'in_42', status_transitions: { paid_at: 1_780_000_000 } });
+    const res = await processStripeWebhook(
+      body,
+      { 'stripe-signature': stripeSignature(body) },
+      h.deps
+    );
+    expect(res.statusCode).toBe(200);
+    expect(h.markPaidByStripeInvoiceId).toHaveBeenCalledWith({
+      stripeInvoiceId: 'in_42',
+      paidAt: new Date(1_780_000_000 * 1000),
+    });
+    // an invoice event must not be treated as a subscription
+    expect(h.upsertFromWebhook).not.toHaveBeenCalled();
+  });
+
+  it('invoice.paid without setupInstalments dep is a safe no-op', async () => {
+    const { deps } = makeDeps({ setupInstalments: null });
+    const body = invoiceEvent({ id: 'in_99', status_transitions: { paid_at: 1_780_000_000 } });
+    const res = await processStripeWebhook(
+      body,
+      { 'stripe-signature': stripeSignature(body) },
+      deps
+    );
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('invoice.paid without an invoice id warns and does not mark paid', async () => {
+    const body = invoiceEvent({ status_transitions: { paid_at: 1_780_000_000 } });
+    await processStripeWebhook(body, { 'stripe-signature': stripeSignature(body) }, h.deps);
+    expect(h.markPaidByStripeInvoiceId).not.toHaveBeenCalled();
   });
 
   it('rejects an invalid signature with 401 and does NOT process', async () => {

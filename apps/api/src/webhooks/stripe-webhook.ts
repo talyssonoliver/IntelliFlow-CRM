@@ -29,6 +29,15 @@ const SUBSCRIPTION_EVENTS = [
   'customer.subscription.deleted',
 ];
 
+// IFC-314 step 8: a paid setup-fee invoice marks its instalment PAID.
+const INVOICE_EVENTS = ['invoice.paid'];
+const ALLOWED_EVENTS = [...SUBSCRIPTION_EVENTS, ...INVOICE_EVENTS];
+
+/** Mark a setup-fee instalment paid by its (unique) Stripe invoice id. */
+interface SetupInstalmentPaidWriter {
+  markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void>;
+}
+
 interface PortalSyncClient {
   pushDelivery(input: {
     slug: string;
@@ -46,6 +55,8 @@ export interface StripeWebhookDeps {
   portalSync?: PortalSyncClient | null;
   /** Optional: sync TenantModules on a plan change (parity with the legacy handler). */
   moduleAccess?: ModuleAccessLike | null;
+  /** Optional: mark setup-fee instalments paid on `invoice.paid` (IFC-314 step 8). */
+  setupInstalments?: SetupInstalmentPaidWriter | null;
   /** Stripe webhook signing secret (whsec_…). */
   webhookSecret: string;
   logger?: {
@@ -81,7 +92,7 @@ export function buildStripeWebhookHandler(deps: StripeWebhookDeps): WebhookHandl
     secret: deps.webhookSecret,
     signatureVerifier: SignatureVerifiers.stripe(),
     enabled: true,
-    allowedEvents: SUBSCRIPTION_EVENTS,
+    allowedEvents: ALLOWED_EVENTS,
   });
 
   const syncSubscription = createSubscriptionSyncHandler({
@@ -91,6 +102,32 @@ export function buildStripeWebhookHandler(deps: StripeWebhookDeps): WebhookHandl
   });
 
   handler.getRouter().onAll(async (event) => {
+    // IFC-314 step 8: a paid setup-fee invoice → mark its instalment PAID.
+    if (INVOICE_EVENTS.includes(event.type)) {
+      const invoice = (
+        event.payload as {
+          object?: { id?: string; status_transitions?: { paid_at?: number | null } };
+        }
+      ).object;
+      if (!invoice?.id) {
+        logger.warn({ eventId: event.id }, '[stripe-webhook] invoice event without object.id');
+        return;
+      }
+      if (deps.setupInstalments) {
+        const paidUnix = invoice.status_transitions?.paid_at;
+        const paidAt = typeof paidUnix === 'number' ? new Date(paidUnix * 1000) : new Date();
+        await deps.setupInstalments.markPaidByStripeInvoiceId({
+          stripeInvoiceId: invoice.id,
+          paidAt,
+        });
+        logger.info(
+          { eventId: event.id, invoiceId: invoice.id },
+          '[stripe-webhook] setup-fee instalment marked paid'
+        );
+      }
+      return;
+    }
+
     if (!SUBSCRIPTION_EVENTS.includes(event.type)) return;
 
     // WebhookHandler maps `payload = parsed.data`, so the subscription is at .object.

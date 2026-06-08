@@ -870,6 +870,9 @@ model Opportunity {
   // The portal owns the delivery phase/clock; these fields drive the CRM→portal push.
   deliveryTier  DeliveryTier?
   tenantSlug    String?            // target portal tenant slug (push routing)
+  // Stripe customer for setup-fee invoicing. Resolution chain (resolveStripeCustomerId):
+  // this column → deal-owner `User.stripeCustomerId` → create-at-deal-won (stamped back here).
+  stripeCustomerId String?
   setupInstalments SetupInstalment[]
 
   @@index([stage])
