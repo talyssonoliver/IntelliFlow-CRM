@@ -23,12 +23,14 @@ on:
         required: false
         default: 'false'
         type: boolean
-  push:
-    branches: [main]
-    paths:
-      - 'packages/**/*.ts'
-      - 'apps/**/*.ts'
-      - 'artifacts/metrics/debt-ledger.yaml'
+  # NOTE: the per-push `push: branches: [main]` trigger was REMOVED (2026-06-08).
+  # The metric generators stamp `new Date().toISOString()` into their output, so
+  # EVERY run produced a diff and opened a fresh `chore/governance-metrics-<ts>`
+  # PR — one per code merge. With many merges that flooded the queue (~10 open
+  # PRs). Metrics are not time-sensitive: the weekly schedule + manual dispatch
+  # are sufficient, and the upstream jobs still upload them as workflow artifacts
+  # every run regardless. (Deterministic-output would let us restore on-push;
+  # tracked separately.)
 
 concurrency:
   group: governance-metrics-${{ github.ref }}
@@ -540,6 +542,12 @@ jobs:
             git push origin --delete "$branch" || echo "::warning::Could not delete orphan branch $branch — please remove manually."
             exit 1
           fi
+
+          # Best-effort: enable native auto-merge so the (now weekly) metrics PR
+          # merges itself once required checks pass — no babysitting, no
+          # accumulation. No-op if the repo "Allow auto-merge" setting is OFF.
+          gh pr merge --auto --squash "$branch" \
+            || echo "::notice::auto-merge not enabled — metrics PR $branch left for manual merge."
 
   summary:
     name: Generate Summary
