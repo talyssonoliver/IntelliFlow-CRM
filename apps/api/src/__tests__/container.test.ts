@@ -59,6 +59,16 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'opportunityRepo' };
     }
   },
+  PrismaSetupInstalmentRepository: class {
+    constructor() {
+      return { name: 'setupInstalmentRepo' };
+    }
+  },
+  PrismaStripeSubscriptionRepository: class {
+    constructor() {
+      return { name: 'stripeSubscriptionRepo' };
+    }
+  },
   PrismaTaskRepository: class {
     constructor() {
       return { name: 'taskRepo' };

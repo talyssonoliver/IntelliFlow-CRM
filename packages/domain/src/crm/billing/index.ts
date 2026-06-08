@@ -10,3 +10,5 @@ export * from './InvoiceRepository';
 export * from './ReceiptRepository';
 export * from './Invoice';
 export * from './Receipt';
+export * from './SetupInstalment';
+export * from './SubscriptionStatus';

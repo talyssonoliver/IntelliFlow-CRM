@@ -15,6 +15,8 @@ import {
   getPingHealth,
   getReadinessHealth,
 } from './modules/misc/health.service';
+import { container } from './container';
+import { processStripeWebhook } from './webhooks/stripe-webhook';
 
 export const API_PORT = Number(process.env.PORT ?? 4000);
 
@@ -292,6 +294,62 @@ async function handleTrpcRoute(
   return true;
 }
 
+/**
+ * IFC-314 (step 3): verified raw-body Stripe webhook route. Lives on the same
+ * service as tRPC; the raw bytes (needed for signature verification) are still
+ * intact here, before tRPC would JSON-parse them. Fails closed when the secret
+ * is unset. POST only.
+ */
+async function handleStripeWebhookRoute(
+  pathname: string,
+  req: IncomingMessage,
+  body: Buffer | undefined,
+  res: ServerResponse,
+  headOnly: boolean
+): Promise<boolean> {
+  if (pathname !== '/api/webhooks/stripe' && pathname !== '/webhooks/stripe') {
+    return false;
+  }
+  if ((req.method?.toUpperCase() ?? 'GET') !== 'POST') {
+    sendJson(res, 405, { error: 'method_not_allowed' }, headOnly);
+    return true;
+  }
+
+  const rawBody = body?.toString('utf8') ?? '';
+  const headers: Record<string, string> = {};
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (typeof value === 'string') headers[key] = value;
+    else if (Array.isArray(value)) headers[key] = value[0] ?? '';
+  }
+
+  const adapters = container.get<{
+    stripeSubscriptionRepository: import('@intelliflow/domain').StripeSubscriptionRepository;
+    portalDeliverySync: Parameters<typeof processStripeWebhook>[2]['portalSync'];
+  }>('adapters');
+  const moduleAccess = ((): Parameters<typeof processStripeWebhook>[2]['moduleAccess'] => {
+    try {
+      return container.get('moduleAccess');
+    } catch {
+      return null;
+    }
+  })();
+
+  const result = await processStripeWebhook(rawBody, headers, {
+    subscriptionRepository: adapters.stripeSubscriptionRepository,
+    portalSync: adapters.portalDeliverySync,
+    moduleAccess,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+  });
+
+  sendJson(
+    res,
+    result.statusCode,
+    { success: result.success, message: result.message, eventId: result.eventId },
+    headOnly
+  );
+  return true;
+}
+
 async function handleRequest(
   req: IncomingMessage,
   res: ServerResponse,
@@ -305,6 +363,10 @@ async function handleRequest(
   const webRequest = createWebRequest(req, origin, body);
 
   if (await handleHealthRoute(pathname, createContextFn, webRequest, res, headOnly)) {
+    return;
+  }
+
+  if (await handleStripeWebhookRoute(pathname, req, body, res, headOnly)) {
     return;
   }
 

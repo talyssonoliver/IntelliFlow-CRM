@@ -106,6 +106,16 @@ export {
   type TagSuggestionJobData,
 } from './tag-suggestion.job';
 
+export {
+  processPortalSweepJob,
+  PortalSweepJobDataSchema,
+  PORTAL_SWEEP_QUEUE,
+  PORTAL_SWEEP_CRON,
+  DEFAULT_PORTAL_SWEEP_JOB_OPTIONS,
+  type PortalSweepJobData,
+  type PortalSweepJobResult,
+} from './portal-sweep.job';
+
 /** All queue names this worker processes */
 export const AI_WORKER_QUEUES = [
   'ai-scoring',
@@ -120,6 +130,8 @@ export const AI_WORKER_QUEUES = [
   'ai-reply-draft',
   'ai-account-scoring',
   'ai-tag-suggestion',
+  // IFC-314 — portal delivery sweep heartbeat
+  'portal-sweep',
 ] as const;
 
 // PG-184 / PG-185 Cat-2 follow-through: AI automation consumers

@@ -68,6 +68,7 @@ model Tenant {
   performanceMetrics   PerformanceMetric[]        @ignore
   modules              TenantModule[]             @ignore
   dealProducts         DealProduct[]              @ignore
+  setupInstalments     SetupInstalment[]          @ignore
   dealFiles            DealFile[]                 @ignore
   agentActions         AgentAction[]              @ignore
   activityEvents       ActivityEvent[]            @ignore
@@ -865,6 +866,12 @@ model Opportunity {
   files         DealFile[]
   activities    ActivityEvent[]
 
+  // IFC-314: Leangency portal delivery sync (14-day flow) — CRM mirrors billing.
+  // The portal owns the delivery phase/clock; these fields drive the CRM→portal push.
+  deliveryTier  DeliveryTier?
+  tenantSlug    String?            // target portal tenant slug (push routing)
+  setupInstalments SetupInstalment[]
+
   @@index([stage])
   @@index([ownerId])
   @@index([accountId])
@@ -946,6 +953,94 @@ model DealProduct {
   @@index([opportunityId])
   @@index([tenantId])
   @@map("deal_products")
+}
+
+// ============================================
+// SETUP INSTALMENTS
+// IFC-314: Leangency portal billing mirror (3x Setup fee at day 0/7/14)
+// ============================================
+
+enum DeliveryTier {
+  CORE
+  PREMIUM
+  PILOT
+}
+
+enum SetupInstalmentStatus {
+  DUE
+  PAID
+  OVERDUE
+}
+
+model SetupInstalment {
+  id              String                @id @default(cuid())
+  n               Int                   // 1..3 (day 0 / 7 / 14)
+  amountCents     Int                   // minor units
+  currency        String                @default("GBP")
+  status          SetupInstalmentStatus @default(DUE)
+  dueAt           DateTime?
+  paidAt          DateTime?
+  stripeInvoiceId String?               @unique
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  // Relations
+  opportunityId   String
+  opportunity     Opportunity           @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  // Multi-tenancy (DB has tenantId NOT NULL)
+  tenantId        String
+  tenant          Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([opportunityId, n])
+  @@index([opportunityId])
+  @@index([tenantId])
+  @@index([status])
+  @@map("setup_instalments")
+}
+
+// IFC-314: persisted Stripe subscription status (the audit's step 4). Today the
+// CRM reads subscription status live from Stripe with a 5-min cache; this gives
+// an offline-reliable record updated on customer.subscription.* webhooks, and —
+// for ENGINE subscriptions (a portal client's delivery subscription) — the
+// tenantSlug linkage that lets the status be pushed to the portal. The CRM's own
+// SaaS-plan subscriptions arrive without a tenantSlug and are simply persisted.
+enum StripeSubscriptionStatus {
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  PAUSED
+}
+
+model StripeSubscription {
+  id                   String                   @id @default(cuid())
+  stripeSubscriptionId String                   @unique
+  stripeCustomerId     String
+  status               StripeSubscriptionStatus
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean                  @default(false)
+
+  // Portal linkage: present only for ENGINE subscriptions, stamped via Stripe
+  // metadata.tenantSlug at creation. CRM SaaS-plan subs leave this null (→ not
+  // pushed to the portal). This is the customer→portal-slug link the audit flagged.
+  tenantSlug           String?
+
+  // CRM tenant scope (from subscription metadata.tenantId). Plain string, no FK:
+  // webhook-sourced data must never be rejected for a tenant not in the table.
+  tenantId             String
+
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+
+  @@index([tenantId])
+  @@index([stripeCustomerId])
+  @@index([tenantSlug])
+  @@index([status])
+  @@map("stripe_subscriptions")
 }
 
 // ============================================
