@@ -2,84 +2,48 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 # IntelliFlow CRM Commit Message Validation
-# Enforces conventional commits format
+#
+# Single source of truth: delegates to tools/audit/commit_msg_lint.py — the SAME
+# linter CI's `system-audit` runs (mirrors tools/scripts/commitlint.config.js).
+# This replaced a hand-rolled shell regex that drifted from CI: it enforced
+# subject *length* but NOT subject *case*, so an upper-case subject like
+# "feat(ai-worker): OpenRouter…" passed locally and only reddened in CI (#340).
+# Routing the hook + pre-ship + CI through one linter makes that drift impossible.
 
 echo "📝 Validating commit message..."
-
-# Get the commit message file path
 COMMIT_MSG_FILE=$1
 
-# Read the commit message
+# Prefer python3, then python (Windows ships `python`).
+if command -v python3 >/dev/null 2>&1; then PY=python3
+elif command -v python >/dev/null 2>&1; then PY=python
+else PY=""; fi
+
+if [ -n "$PY" ]; then
+  if "$PY" tools/audit/commit_msg_lint.py --message-file "$COMMIT_MSG_FILE"; then
+    echo "✅ Commit message validated!"
+    exit 0
+  fi
+  echo ""
+  echo "Conventional Commits — type(scope?): subject"
+  echo "  • subject: lower-case start, 10–100 chars, no trailing period"
+  echo "  • body/footer lines ≤ 100 chars"
+  echo "  • no AI-coauthor trailers (repo policy)"
+  echo ""
+  echo "Same rules CI's system-audit enforces. Fix the message and re-commit."
+  exit 1
+fi
+
+# --- Fallback: python unavailable. Basic conventional-commit format only.
+# Full rules (subject-case, body-length, AI-coauthor) are still enforced by
+# pre-ship (which resolves python) and by CI's system-audit.
+echo "⚠️  python not found — running basic format check only (CI enforces the full rules)"
 COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
-
-# Conventional commit pattern
-# Format: type(scope?): description
-# Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert
 PATTERN="^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,100}"
-
 if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
   echo "❌ Invalid commit message format!"
-  echo ""
-  echo "Commit message must follow Conventional Commits:"
-  echo "  type(scope?): description"
-  echo ""
-  echo "Valid types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
-  echo ""
-  echo "Examples:"
-  echo "  feat: add user authentication"
-  echo "  fix(api): resolve CORS issue"
-  echo "  docs: update README with setup instructions"
-  echo "  refactor(domain): simplify lead scoring logic"
-  echo ""
-  echo "Your message: $COMMIT_MSG"
+  echo "   Expected: type(scope?): description"
+  echo "   Valid types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+  echo "   Your message: $COMMIT_MSG"
   exit 1
 fi
-
-# Subject length — hard cap at 100 to match the audit's commit_msg_lint.py rule.
-# Previously a soft warning; that let multiple commits ship with 100+ char headers
-# and accumulate in the waivers file. Now a real block — override with
-# ALLOW_LONG_HEADER=1 if you genuinely need it (rare).
-SUBJECT_LEN=$(echo "$COMMIT_MSG" | head -n1 | tr -d '\n' | wc -c)
-if [ "$SUBJECT_LEN" -gt 100 ] && [ "${ALLOW_LONG_HEADER:-0}" != "1" ]; then
-  echo "❌ Commit subject is too long (${SUBJECT_LEN} chars, max 100)."
-  echo "   Trim the subject or use ALLOW_LONG_HEADER=1 git commit ..."
-  exit 1
-fi
-
-# Body line length — same 100-char rule the audit enforces. Catches the
-# pattern that just shipped two waivers (e257f18d / 0eb68ff3): long prose
-# paragraphs in -m bodies. Soft-wrap at 100 in your editor or break the
-# message into multiple shorter -m blocks.
-LONG_BODY_LINES=$(echo "$COMMIT_MSG" | tail -n +2 | awk 'length($0) > 100 { print NR+1 ": " length($0) " chars" }')
-if [ -n "$LONG_BODY_LINES" ] && [ "${ALLOW_LONG_BODY:-0}" != "1" ]; then
-  echo "❌ Commit body has lines >100 chars (audit will fail):"
-  echo "$LONG_BODY_LINES"
-  echo "   Wrap them, or use ALLOW_LONG_BODY=1 git commit ..."
-  exit 1
-fi
-
-# Reject AI-coauthor trailers. The repo's authorship policy is that human
-# committers own the work; AI assistance is a tool, not a co-author. Catches
-# the canonical patterns emitted by various AI coding tools (Claude, Copilot,
-# Cursor, etc.) so any of them gets rejected at commit time, not in review.
-#
-# Override (rare, for genuine third-party-tool collaboration logging) by
-# setting ALLOW_AI_COAUTHOR=1 in the environment. Default is BLOCK.
-if [ "${ALLOW_AI_COAUTHOR:-0}" != "1" ]; then
-  AI_COAUTHOR_PATTERNS='Co-Authored-By: Claude|Co-Authored-By: GitHub Copilot|Co-authored-by: Claude|Co-authored-by: GitHub Copilot|noreply@anthropic\.com|🤖 Generated with .*Claude'
-  if echo "$COMMIT_MSG" | grep -qiE "$AI_COAUTHOR_PATTERNS"; then
-    echo "❌ Commit message contains an AI-coauthor trailer."
-    echo ""
-    echo "Repo policy: AI assistance is a tool, not a co-author."
-    echo "Remove any of these lines from your commit message:"
-    echo "  • Co-Authored-By: Claude ..."
-    echo "  • Co-Authored-By: GitHub Copilot ..."
-    echo "  • <noreply@anthropic.com>"
-    echo "  • 🤖 Generated with [Claude Code]"
-    echo ""
-    echo "(Override only if you really need it: ALLOW_AI_COAUTHOR=1 git commit ...)"
-    exit 1
-  fi
-fi
-
-echo "✅ Commit message validated!"
+echo "✅ Commit message format ok (basic check)"

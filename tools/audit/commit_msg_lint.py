@@ -107,32 +107,16 @@ def _is_waived(full_sha: str, waivers: set[str]) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def _git_log(count: int) -> list[tuple[str, str, str]]:
+def _messages_for_shas(shas: list[str]) -> list[tuple[str, str, str]]:
     """
-    Return a list of (full_sha, raw_commit_message, author_email) for the last
-    *count* commits.  The raw message includes the subject line, blank line,
-    and body (if any).
+    Return (full_sha, raw_commit_message, author_email) for each SHA.
 
-    Strategy: fetch SHAs first, then retrieve each body individually.  This
-    avoids NUL-separator issues on Windows when embedding NUL in a format
-    string passed through the shell.
+    Strategy: retrieve each body individually.  This avoids NUL-separator
+    issues on Windows when embedding NUL in a format string passed through
+    the shell.
     """
-    # Step 1: get the list of SHAs
-    sha_result = subprocess.run(
-        ["git", "log", f"-{count}", "--format=%H"],
-        capture_output=True,
-        text=True,
-        cwd=str(REPO_ROOT),
-    )
-    if sha_result.returncode != 0:
-        print(f"[commitlint] ERROR: git log failed: {sha_result.stderr.strip()}", file=sys.stderr)
-        sys.exit(1)
-
-    shas = [line.strip() for line in sha_result.stdout.splitlines() if line.strip()]
-
     commits: list[tuple[str, str, str]] = []
     for sha in shas:
-        # Step 2: fetch the commit message body + author email for each SHA
         msg_result = subprocess.run(
             ["git", "log", "-1", "--format=%B%x00%ae", sha],
             capture_output=True,
@@ -155,6 +139,59 @@ def _git_log(count: int) -> list[tuple[str, str, str]]:
         commits.append((sha, body.strip(), author_email.strip()))
 
     return commits
+
+
+def _git_log(count: int) -> list[tuple[str, str, str]]:
+    """Return (sha, message, author_email) for the last *count* commits."""
+    sha_result = subprocess.run(
+        ["git", "log", f"-{count}", "--format=%H"],
+        capture_output=True,
+        text=True,
+        cwd=str(REPO_ROOT),
+    )
+    if sha_result.returncode != 0:
+        print(f"[commitlint] ERROR: git log failed: {sha_result.stderr.strip()}", file=sys.stderr)
+        sys.exit(1)
+
+    shas = [line.strip() for line in sha_result.stdout.splitlines() if line.strip()]
+    return _messages_for_shas(shas)
+
+
+def _git_log_range(base_ref: str) -> list[tuple[str, str, str]] | None:
+    """
+    Return (sha, message, author_email) for the commits in ``base_ref..HEAD``
+    — i.e. exactly the commits this branch adds on top of *base_ref*.
+
+    Returns ``None`` (not an empty list) when *base_ref* can't be resolved
+    locally — e.g. ``origin/main`` isn't fetched in a shallow/fresh worktree —
+    so the caller can degrade to advisory instead of false-failing the gate.
+    """
+    rev_result = subprocess.run(
+        ["git", "rev-list", f"{base_ref}..HEAD"],
+        capture_output=True,
+        text=True,
+        cwd=str(REPO_ROOT),
+    )
+    if rev_result.returncode != 0:
+        return None
+    shas = [line.strip() for line in rev_result.stdout.splitlines() if line.strip()]
+    return _messages_for_shas(shas)
+
+
+def _read_message_file(path: str) -> str:
+    """
+    Read a pending commit-message file (the path git passes to the commit-msg
+    hook as ``$1``). Strips git comment lines (``#`` …) and the ``--verbose``
+    scissors diff section so only the author's message is linted.
+    """
+    kept: list[str] = []
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        if line.startswith("#") and ">8" in line:
+            break  # scissors marker — everything below is the verbose diff
+        if line.startswith("#"):
+            continue
+        kept.append(line)
+    return "\n".join(kept).strip()
 
 
 # Bot authors whose commits we don't gate. They use their own commit-message
@@ -277,19 +314,76 @@ def _lint_message(sha: str, raw_msg: str) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Commit messages legitimately contain non-ASCII (em-dashes, arrows like
+    # ⇄, accented names). On Windows the console defaults to cp1252, so printing
+    # an offending subject would crash with UnicodeEncodeError — which, in the
+    # commit-msg hook, would itself abort the commit for the wrong reason. Force
+    # UTF-8 (replace on the rare un-encodable byte) so output never crashes.
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass  # pytest capture / already-wrapped streams: leave as-is
+
     parser = argparse.ArgumentParser(
-        description="Lint the last N commit messages against the Conventional Commits spec."
+        description="Lint commit messages against the Conventional Commits spec."
     )
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--count",
         type=int,
         default=20,
-        help="Number of recent commits to check (default: 20).",
+        help="Lint the last N commits reachable from HEAD (default: 20).",
+    )
+    mode.add_argument(
+        "--base-ref",
+        help=(
+            "Lint the commits in <base-ref>..HEAD (the commits this branch "
+            "adds — used by pre-ship/pre-push). Degrades to advisory if "
+            "<base-ref> can't be resolved locally."
+        ),
+    )
+    mode.add_argument(
+        "--message-file",
+        help=(
+            "Lint a single pending commit-message file (the path git passes "
+            "to the commit-msg hook). Bypasses waiver/bot handling."
+        ),
     )
     args = parser.parse_args(argv)
 
+    # --- Single pending message (the commit-msg hook) --------------------
+    # Catches violations at commit time, before they're even committed.
+    if args.message_file:
+        msg = _read_message_file(args.message_file)
+        if not msg:
+            print("[commitlint] FAIL  commit message is empty", file=sys.stderr)
+            return 1
+        violations = _lint_message("pending", msg)
+        if violations:
+            for v in violations:
+                print(f"[commitlint] FAIL  {v}")
+            print(
+                f"\n[commitlint] {len(violations)} violation(s) — fix the commit message.",
+                file=sys.stderr,
+            )
+            return 1
+        print(f"[commitlint] PASS  {msg.splitlines()[0][:72]}")
+        return 0
+
     waivers = _load_waivers(WAIVERS_PATH)
-    commits = _git_log(args.count)
+
+    # --- Range mode (pre-ship/pre-push): <base-ref>..HEAD ---------------
+    if args.base_ref:
+        commits = _git_log_range(args.base_ref)
+        if commits is None:
+            print(
+                f"[commitlint] base ref {args.base_ref!r} not resolvable "
+                "locally — skipping (advisory; CI's system-audit still gates)."
+            )
+            return 0
+    else:
+        commits = _git_log(args.count)
 
     if not commits:
         print("[commitlint] No commits found — nothing to lint.")
