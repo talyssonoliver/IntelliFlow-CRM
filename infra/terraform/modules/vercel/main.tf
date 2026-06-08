@@ -7,7 +7,7 @@ locals {
 
 # Vercel Project
 resource "vercel_project" "main" {
-  name      = local.project_name_full
+  name      = var.project_name
   framework = var.framework
 
   # Git integration
@@ -24,19 +24,43 @@ resource "vercel_project" "main" {
   # Root directory (for monorepo)
   root_directory = var.root_directory
 
-  # Environment variables
-  dynamic "environment" {
-    for_each = var.environment_variables
-
-    content {
-      key    = environment.key
-      value  = environment.value
-      target = ["production", "preview", "development"]
-    }
-  }
-
   # Serverless function region
   serverless_function_region = var.region
+
+  # OIDC token generation (live project has enabled=true)
+  oidc_token_config = {
+    enabled = true
+  }
+
+  # ignore_changes (adopt-without-fighting on attributes Vercel auto-manages or
+  # that the provider can't faithfully represent):
+  #   - name: keep the imported live name ("intelli-flow-crm-web").
+  #   - vercel_authentication: live "all_except_custom_domains" isn't a settable
+  #     enum in provider v1.14, so never let an apply overwrite it.
+  #   - protection_bypass_for_automation_secret: Vercel auto-generates this; if
+  #     it isn't ignored, every apply ROTATES it (breaks the CI bypass secret).
+  #     The provider may warn it's computed — that warning is harmless; the diff
+  #     it suppresses is not.
+  lifecycle {
+    ignore_changes = [
+      name,
+      vercel_authentication,
+      protection_bypass_for_automation,        # bool Vercel auto-manages; unset config would disable it
+      protection_bypass_for_automation_secret, # the auto-generated secret behind it
+      team_id,                                 # provider-computed from the token's team scope
+    ]
+  }
+}
+
+# General environment variables (provider >=1.0: env vars are a separate resource,
+# not an inline `environment` block on vercel_project).
+resource "vercel_project_environment_variable" "general" {
+  for_each = var.environment_variables
+
+  project_id = vercel_project.main.id
+  key        = each.key
+  value      = each.value
+  target     = ["production", "preview"]
 }
 
 # Custom domains
@@ -64,24 +88,19 @@ resource "vercel_project_environment_variable" "env_specific" {
 resource "vercel_edge_config" "main" {
   count = var.enable_edge_config ? 1 : 0
 
-  name       = "${local.project_name_full}-edge-config"
-  project_id = vercel_project.main.id
+  name = "${local.project_name_full}-edge-config"
 }
 
-# Edge Config Items
-resource "vercel_edge_config_item" "items" {
-  for_each = var.enable_edge_config ? var.edge_config_items : {}
-
-  edge_config_id = vercel_edge_config.main[0].id
-  key            = each.key
-  value          = jsonencode(each.value)
-}
+# NOTE (provider >=1.0): vercel_edge_config_item was removed. Edge Config items
+# are managed via the Vercel API/SDK or vercel_edge_config_schema, not a TF
+# resource. var.edge_config_items is retained for the future schema/seed step.
 
 # Deployment hooks (for triggering deploys)
 resource "vercel_webhook" "deploy_hook" {
   count = var.enable_deploy_hook ? 1 : 0
 
-  project_id = vercel_project.main.id
-  events     = ["deployment.created", "deployment.succeeded", "deployment.failed"]
-  url        = var.webhook_url
+  # provider >=1.0: project_ids (plural) + endpoint (was project_id + url).
+  project_ids = [vercel_project.main.id]
+  events      = ["deployment.created", "deployment.succeeded", "deployment.failed"]
+  endpoint    = var.webhook_url
 }

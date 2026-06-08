@@ -251,19 +251,19 @@ curl http://localhost:3100/health/detailed | jq '.config.pollIntervalMs'
 
 #### Notifications Worker
 
-| Variable             | Default                   | Description                              |
-| -------------------- | ------------------------- | ---------------------------------------- |
-| `ENABLE_EMAIL`       | `true`                    | Enable email channel                     |
-| `ENABLE_SMS`         | `false`                   | Enable SMS channel                       |
-| `ENABLE_WEBHOOK`     | `false`                   | Enable webhook channel                   |
-| `SMTP_HOST`          | `localhost`               | SMTP server host                         |
-| `SMTP_PORT`          | `587`                     | SMTP server port                         |
-| `SMTP_USER`          | -                         | SMTP username                            |
-| `SMTP_PASSWORD`      | -                         | SMTP password                            |
-| `EMAIL_FROM`         | `noreply@intelliflow.com` | Default from address                     |
-| `SMS_PROVIDER`       | `mock`                    | SMS provider (twilio, messagebird, mock) |
-| `TWILIO_ACCOUNT_SID` | -                         | Twilio account SID                       |
-| `TWILIO_AUTH_TOKEN`  | -                         | Twilio auth token                        |
+| Variable             | Default             | Description                              |
+| -------------------- | ------------------- | ---------------------------------------- |
+| `ENABLE_EMAIL`       | `true`              | Enable email channel                     |
+| `ENABLE_SMS`         | `false`             | Enable SMS channel                       |
+| `ENABLE_WEBHOOK`     | `false`             | Enable webhook channel                   |
+| `SMTP_HOST`          | `localhost`         | SMTP server host                         |
+| `SMTP_PORT`          | `587`               | SMTP server port                         |
+| `SMTP_USER`          | -                   | SMTP username                            |
+| `SMTP_PASSWORD`      | -                   | SMTP password                            |
+| `EMAIL_FROM`         | `crm@leangency.com` | Default from address for Leangency prod  |
+| `SMS_PROVIDER`       | `mock`              | SMS provider (twilio, messagebird, mock) |
+| `TWILIO_ACCOUNT_SID` | -                   | Twilio account SID                       |
+| `TWILIO_AUTH_TOKEN`  | -                   | Twilio auth token                        |
 
 ## Retry Strategy
 

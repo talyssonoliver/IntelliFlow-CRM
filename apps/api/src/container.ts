@@ -12,6 +12,9 @@ import {
   PrismaContactRepository,
   PrismaAccountRepository,
   PrismaOpportunityRepository,
+  PrismaSetupInstalmentRepository,
+  PrismaStripeSubscriptionRepository,
+  createHttpPortalDeliverySyncAdapter,
   PrismaTaskRepository,
   PrismaChainVersionRepository,
   PrismaChainVersionAuditRepository,
@@ -283,6 +286,18 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const contactRepository = new PrismaContactRepository(prismaClient);
   const accountRepository = new PrismaAccountRepository(prismaClient);
   const opportunityRepository = new PrismaOpportunityRepository(prismaClient);
+  const setupInstalmentRepository = new PrismaSetupInstalmentRepository(prismaClient);
+  const stripeSubscriptionRepository = new PrismaStripeSubscriptionRepository(prismaClient);
+  // IFC-314: portal delivery sync client — null unless the portal env is set
+  // (LEANGENCY_PORTAL_INTERNAL_URL + PORTAL_INTERNAL_SECRET). Used to reflect
+  // engine-subscription status on the portal from the billing webhook.
+  const portalDeliverySync = ((): ReturnType<typeof createHttpPortalDeliverySyncAdapter> | null => {
+    try {
+      return createHttpPortalDeliverySyncAdapter();
+    } catch {
+      return null;
+    }
+  })();
   const taskRepository = new PrismaTaskRepository(prismaClient);
   const chainVersionRepository = new PrismaChainVersionRepository(prismaClient);
   const chainVersionAuditRepository = new PrismaChainVersionAuditRepository(prismaClient);
@@ -339,11 +354,8 @@ const createAdapters = (prismaClient: PrismaClient) => {
   let baseAIService: MockAIService | OllamaAIService | LiteLLMAIService | QueueAIService;
   if (aiProvider === 'ollama') {
     baseAIService = new OllamaAIService({
-      baseUrl: requiredProdEnv(
-        'OLLAMA_BASE_URL',
-        process.env.OLLAMA_BASE_URL,
-        'http://localhost:11434'
-      ),
+      baseUrl: () =>
+        requiredProdEnv('OLLAMA_BASE_URL', process.env.OLLAMA_BASE_URL, 'http://localhost:11434'),
       model: process.env.OLLAMA_MODEL || 'mistral',
       temperature: process.env.OLLAMA_TEMPERATURE
         ? Number.parseFloat(process.env.OLLAMA_TEMPERATURE)
@@ -357,11 +369,12 @@ const createAdapters = (prismaClient: PrismaClient) => {
   } else if (aiProvider === 'litellm') {
     // Explicit opt-in for the legacy in-process LLM path (LiteLLM proxy).
     baseAIService = new LiteLLMAIService({
-      baseUrl: requiredProdEnv(
-        'LITELLM_BASE_URL',
-        process.env.LITELLM_BASE_URL,
-        'http://localhost:4000/v1'
-      ),
+      baseUrl: () =>
+        requiredProdEnv(
+          'LITELLM_BASE_URL',
+          process.env.LITELLM_BASE_URL,
+          'http://localhost:4000/v1'
+        ),
       masterKey: process.env.LITELLM_MASTER_KEY || 'dev-master-key',
       timeout: process.env.LITELLM_TIMEOUT
         ? Number.parseInt(process.env.LITELLM_TIMEOUT, 10)
@@ -407,6 +420,9 @@ const createAdapters = (prismaClient: PrismaClient) => {
     contactRepository,
     accountRepository,
     opportunityRepository,
+    setupInstalmentRepository,
+    stripeSubscriptionRepository,
+    portalDeliverySync,
     taskRepository,
     chainVersionRepository,
     chainVersionAuditRepository,
@@ -578,7 +594,8 @@ const createServices = (prismaClient: PrismaClient) => {
   const closeDealWonUseCase = new CloseDealWonUseCase(
     opportunityService,
     adapters.eventBus,
-    adapters.notificationService
+    adapters.notificationService,
+    adapters.setupInstalmentRepository
   );
 
   // IFC-066: Deal Lost Closure Workflow

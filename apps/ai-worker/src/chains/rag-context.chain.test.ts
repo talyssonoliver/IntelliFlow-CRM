@@ -9,6 +9,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   RAGContextChain,
   createRAGContextChain,
+  resolveRagInitStatus,
   ragContextInputSchema,
   ragContextResultSchema,
   type RAGContextInput,
@@ -16,8 +17,8 @@ import {
 } from './rag-context.chain';
 
 // Mock the embedding chain
-vi.mock('./embedding.chain', () => ({
-  embeddingChain: {
+vi.mock('./embedding.chain', () => {
+  const mockEmbeddingChain = {
     generateEmbedding: vi.fn().mockResolvedValue({
       vector: new Array(1536).fill(0.1),
       dimensions: 1536,
@@ -28,9 +29,12 @@ vi.mock('./embedding.chain', () => ({
       model: 'text-embedding-3-small',
       dimensions: 1536,
     }),
-  },
-  EmbeddingChain: vi.fn(),
-}));
+  };
+  return {
+    getEmbeddingChain: vi.fn(() => mockEmbeddingChain),
+    EmbeddingChain: vi.fn(),
+  };
+});
 
 describe('RAGContextChain', () => {
   let chain: RAGContextChain;
@@ -531,6 +535,34 @@ describe('RAGContextChain', () => {
       const stats = chain.getStats();
       expect(stats.hasRetrievalService).toBe(true);
       expect(stats.useMockFallback).toBe(false);
+    });
+  });
+
+  // ============================================
+  // Init status (avoids false-positive "service down" alerts)
+  // ============================================
+  describe('resolveRagInitStatus', () => {
+    it('returns "ready" when a RetrievalService is present', () => {
+      expect(resolveRagInitStatus(true, false)).toBe('ready');
+      // service presence wins even if mock fallback is also on
+      expect(resolveRagInitStatus(true, true)).toBe('ready');
+    });
+
+    it('returns "mock" when no service but mock fallback is enabled', () => {
+      expect(resolveRagInitStatus(false, true)).toBe('mock');
+    });
+
+    it('returns "pending_wiring" (NOT a failure) when no service and not mock', () => {
+      // This is the singleton boot window before AIWorker.wireRetrievalService();
+      // it must read as pending, not as a down/false service.
+      expect(resolveRagInitStatus(false, false)).toBe('pending_wiring');
+    });
+
+    it('flips to "ready" once setRetrievalService wires a service in', () => {
+      const chain = new RAGContextChain(undefined, undefined, { useMockFallback: false });
+      expect(chain.getStats().hasRetrievalService).toBe(false);
+      chain.setRetrievalService({ search: vi.fn() });
+      expect(chain.getStats().hasRetrievalService).toBe(true);
     });
   });
 });

@@ -29,7 +29,7 @@ export function buildContactEmailPayload(formData: ContactFormInput): ContactEma
   const { name, email, company, subject, message, phone } = formData;
 
   // Default recipient (would come from env in production)
-  const recipientEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'contact@intelliflow-crm.com';
+  const recipientEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'crm@leangency.com';
 
   // Build subject line
   const emailSubject = subject ? `Contact Form: ${subject}` : 'Contact Form: New inquiry';

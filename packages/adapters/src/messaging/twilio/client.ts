@@ -218,7 +218,8 @@ export function createTwilioClient(config?: Partial<TwilioConfig>): TwilioClient
   const fullConfig: TwilioConfig = {
     accountSid: config?.accountSid || process.env.TWILIO_ACCOUNT_SID || '',
     authToken: config?.authToken || process.env.TWILIO_AUTH_TOKEN || '',
-    fromNumber: config?.fromNumber || process.env.TWILIO_FROM_NUMBER || '',
+    fromNumber:
+      config?.fromNumber || process.env.TWILIO_FROM_NUMBER || process.env.TWILIO_PHONE_NUMBER || '', // legacy .env name; issue #316
     statusCallbackUrl: config?.statusCallbackUrl || process.env.TWILIO_STATUS_CALLBACK_URL,
     messagingServiceSid: config?.messagingServiceSid || process.env.TWILIO_MESSAGING_SERVICE_SID,
   };

@@ -18,10 +18,12 @@ import {
   ScoringJobResultSchema,
   processScoringJob,
   DEFAULT_SCORING_JOB_OPTIONS,
+  NIL_UUID,
   type ScoringJobData,
   type ScoringJobResult,
   type LeadTier,
 } from './scoring.job';
+import { prisma } from '@intelliflow/db';
 
 // Mock the scoring chain
 const mockScoreLead = vi.fn();
@@ -61,6 +63,15 @@ vi.mock('@intelliflow/db', () => ({
     },
   },
 }));
+
+// Partially mock the factory: keep getLLMBreaker/__resetBreakers real, but force
+// a configured fallback provider so the #324 job-level fallback path is exercised
+// deterministically (independent of the test env's AI_PROVIDER/AI_FALLBACK_PROVIDER).
+vi.mock('../lib/llm-factory', async (importActual) => {
+  const actual = (await importActual()) as Record<string, unknown>;
+  return { ...actual, resolveFallbackProvider: vi.fn(() => 'litellm') };
+});
+import { __resetBreakers } from '../lib/llm-factory';
 
 // Test UUID constants
 const TEST_UUIDS = {
@@ -646,7 +657,10 @@ describe('ScoringJob', () => {
 
     it('should return heuristic fallback (not throw) when scoring chain rejects', async () => {
       // H10: scoring errors are caught and a heuristic fallback is returned instead of propagated.
-      mockScoreLead.mockRejectedValueOnce(new Error('LLM API error'));
+      // #324: with a fallback provider configured (mocked in this file), the heuristic is
+      // reached only when BOTH primary and fallback fail — so reject every attempt.
+      mockScoreLead.mockReset();
+      mockScoreLead.mockRejectedValue(new Error('LLM API error'));
 
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
@@ -733,6 +747,91 @@ describe('ScoringJob', () => {
       delete process.env['ENABLE_AI_SCORING_JOB'];
       const result = (await processScoringJob(flagJob)) as any;
       expect(result.skipped).toBeUndefined();
+    });
+  });
+
+  // ============================================
+  // Placeholder / nil-UUID guard (FK violation prevention)
+  // ============================================
+
+  describe('nil-UUID scheduled sentinel', () => {
+    it('exposes the documented nil-UUID placeholder constant', () => {
+      expect(NIL_UUID).toBe('00000000-0000-0000-0000-000000000000');
+    });
+
+    it('routes the nil-UUID sentinel to the dispatcher (does NOT score a fake lead)', async () => {
+      const job = createMockJob({
+        leadId: NIL_UUID,
+        // a REAL tenant (not '__scheduled__') — proves the nil leadId is what
+        // triggers dispatch, matching the cron job registered in ai-worker.ts.
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'scheduled@system.internal', source: 'cron' },
+      });
+
+      const result = await processScoringJob(job);
+
+      expect(result.modelVersion).toBe('scheduler-dispatcher');
+      // No LLM scoring of the placeholder lead.
+      expect(mockScoreLead).not.toHaveBeenCalled();
+    });
+
+    it('NEVER upserts LeadAIInsight with the nil-UUID (prevents lead_ai_insights_leadId_fkey)', async () => {
+      const job = createMockJob({
+        leadId: NIL_UUID,
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'scheduled@system.internal', source: 'cron' },
+      });
+
+      await processScoringJob(job);
+
+      // The FK-violating upsert that caused the prod incident must not happen.
+      expect(
+        (prisma as { leadAIInsight: { upsert: ReturnType<typeof vi.fn> } }).leadAIInsight.upsert
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  // ============================================
+  // Provider fallback (#324)
+  // ============================================
+
+  describe('provider fallback (#324)', () => {
+    beforeEach(() => {
+      __resetBreakers();
+    });
+
+    it('recovers via the fallback provider when the primary fails (no heuristic)', async () => {
+      mockScoreLead.mockReset();
+      mockScoreLead
+        .mockRejectedValueOnce(new Error('primary provider down (429)'))
+        .mockResolvedValueOnce(mockScoringResult);
+
+      const job = createMockJob({
+        leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'test@example.com', source: 'WEBSITE' },
+      });
+      const result = await processScoringJob(job);
+
+      // A real LLM result from the fallback provider — NOT the heuristic.
+      expect(result.modelVersion).not.toBe('fallback');
+      expect(result.score).toBe(75);
+      expect(mockScoreLead).toHaveBeenCalledTimes(2); // primary + fallback
+    });
+
+    it('falls through to the heuristic when BOTH providers fail', async () => {
+      mockScoreLead.mockReset();
+      mockScoreLead.mockRejectedValue(new Error('all providers down'));
+
+      const job = createMockJob({
+        leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'test@example.com', source: 'WEBSITE' },
+      });
+      const result = await processScoringJob(job);
+
+      expect(result.modelVersion).toBe('fallback'); // heuristic
+      expect(result.confidence).toBe(0.3);
     });
   });
 });

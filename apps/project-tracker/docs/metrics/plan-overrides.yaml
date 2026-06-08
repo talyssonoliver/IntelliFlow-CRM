@@ -3434,14 +3434,56 @@ PG-192:
 # METADATA
 # -----------------------------------------------------------------------------
 
+# =============================================================================
+# INFRASTRUCTURE-AS-CODE INITIATIVE (ADR-064)
+# =============================================================================
+# INFRA-TF-001 is Tier A (high fan-out: INFRA-TF-002/003/004 depend on it).
+INFRA-TF-001:
+  tier: A
+  gate_profile:
+    - terraform_fmt
+    - terraform_validate
+    - terraform_plan
+  acceptance_owner: 'Platform Lead'
+  debt_allowed: no
+  evidence_required:
+    - infra/terraform/modules/railway/main.tf
+    - infra/terraform/modules/vercel/main.tf
+    - infra/terraform/modules/supabase/main.tf
+  notes: |
+    Terraform = single source of truth (ADR-064). Tier A unblocker for the
+    INFRA-TF-* initiative. Acceptance = green `terraform validate` (and `plan`
+    once the remote backend + tfvars from INFRA-TF-004 exist).
+
+IFC-314:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - integration_test
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - packages/db/prisma/schema.prisma
+    - packages/adapters/src/payments/stripe/handlers/invoices.ts
+    - packages/application/src/usecases/deals/CloseDealWonUseCase.ts
+    - apps/workers/events-worker/src/main.ts
+    - apps/ai-worker/src/jobs/portal-sweep.job.ts
+    - docs/architecture/adr/ADR-065-crm-portal-delivery-sync.md
+  notes: |
+    Root task (no deps) -> auto Tier A. CRM->portal delivery & billing sync
+    (IFC-314). Portal side already shipped; this is the CRM-side return path.
+
 _meta:
   description: 'Plan overrides for Sprint plan validation and governance'
   created: '2025-12-17'
-  updated: '2026-04-19'
+  updated: '2026-06-05'
   author: 'Plan Linter System'
   version: '2.0.0'
   sprint_scope: 'all'
-  total_overrides: 162
+  total_overrides: 164
   cycles_fixed: 2
   cross_sprint_fixes: 25
-  tier_a_definitions: 134
+  tier_a_definitions: 136

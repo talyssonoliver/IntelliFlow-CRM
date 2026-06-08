@@ -29,12 +29,14 @@ import {
   SUMMARIZE_QUEUE,
   FEEDBACK_ANALYTICS_QUEUE,
   MEMORY_RETENTION_QUEUE,
+  PORTAL_SWEEP_QUEUE,
   processScoringJob,
   processPredictionJob,
   processInsightJob,
   processSummarizeJob,
   processFeedbackAnalyticsJob,
   processMemoryRetentionJob,
+  processPortalSweepJob,
   // IFC-312
   processEnrichmentJob,
   processEntityInsightJob,
@@ -50,8 +52,10 @@ import {
   DEFAULT_SCORING_JOB_OPTIONS,
   DEFAULT_FEEDBACK_ANALYTICS_JOB_OPTIONS,
   DEFAULT_MEMORY_RETENTION_JOB_OPTIONS,
+  DEFAULT_PORTAL_SWEEP_JOB_OPTIONS,
   FEEDBACK_ANALYTICS_CRON,
   MEMORY_RETENTION_CRON,
+  PORTAL_SWEEP_CRON,
   type ScoringJobData,
   type ScoringJobResult,
   type PredictionJobData,
@@ -132,6 +136,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private prisma?: import('@intelliflow/db').PrismaClient;
   // IFC-310: contact embedding worker for duplicate-detection runtime.
   private contactEmbedWorker?: import('./workers/contact-embed-worker.js').ContactEmbedWorker;
+  // D5 / issue #259: ingestion queue consumers (text-extraction + ocr-processing).
+  private ingestionWorkersHandle?: import('./workers/ingestion-workers.js').IngestionWorkersHandle;
   /** Passive dead-letter queue — no worker, just for inspection and replay. */
   private dlqQueue: Queue | null = null;
   /** QueueEvents instances for each AI queue (used for lifecycle listeners). */
@@ -233,8 +239,22 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           password: process.env.REDIS_PASSWORD || undefined,
           db: Number.parseInt(process.env.REDIS_DB || '0', 10),
           lazyConnect: true,
-          enableOfflineQueue: false,
-          maxRetriesPerRequest: 1,
+          // During container rollouts the TCP stream briefly drops. With
+          // enableOfflineQueue:false ioredis throws "Stream isn't writeable and
+          // enableOfflineQueue options is false" and the snapshot tick is lost.
+          // Enable the offline queue so commands buffer until the reconnect
+          // completes instead of being dropped. This is metrics-publish traffic
+          // (small, idempotent, TTL'd), so short-lived buffering is safe.
+          // TRADE-OFF: during a PROLONGED outage this queue is unbounded (each 5s
+          // tick re-enqueues redundant snapshots). Low blast radius (small + TTL'd
+          // payloads), but a bounded approach (skip the tick when not `ready`) is
+          // tracked in #334.
+          enableOfflineQueue: true,
+          // Allow a few reconnect-backed retries per command rather than failing
+          // on the first transient blip; cap so a hard outage still surfaces.
+          maxRetriesPerRequest: 3,
+          // Bounded exponential reconnect backoff (50ms..2s) for the publisher.
+          retryStrategy: (times: number) => Math.min(times * 50, 2000),
         });
         this.redisMonitoringPublisher = new RedisMonitoringPublisher(client, this.prisma as never);
         this.redisMonitoringPublisher.start();
@@ -264,6 +284,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     await this.wireAuditLogAdapter();
     await this.wireRetrievalService();
     await this.bootContactEmbedWorker();
+    await this.bootIngestionWorkers();
   }
 
   /** H4: Wire AuditLogPort so logAIAgentAction() writes to DB in addition to pino. */
@@ -313,7 +334,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private async bootContactEmbedWorker(): Promise<void> {
     try {
       const { ContactEmbedWorker } = await import('./workers/contact-embed-worker.js');
-      const { embeddingChain } = await import('./chains/embedding.chain.js');
+      const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
       const { updateContactEmbedding } = await import('@intelliflow/db');
       const redisConnection = {
         host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
@@ -325,7 +346,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         redisConnection,
         {
           generateEmbedding: async (text: string) => {
-            const result = await embeddingChain.generateEmbedding({ text });
+            const result = await getEmbeddingChain().generateEmbedding({ text });
             return result?.vector ?? null;
           },
         },
@@ -339,6 +360,47 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
         'Failed to boot ContactEmbedWorker — contact embeddings will not be populated'
+      );
+    }
+  }
+
+  /**
+   * D5 / issue #259: Boot consumers for the document-ingestion queues.
+   *
+   * intelliflow-text-extraction and intelliflow-ocr-processing were previously
+   * registered read-only on the Bull Board dashboard while the ingestion-worker
+   * (the intended consumer) was not deployed.  This method wires genuine BullMQ
+   * workers so the queues drain instead of backlogging.
+   *
+   * Depends on getEmbeddingChain() being available; must run after Prisma init.
+   * Mirrors the shape of bootContactEmbedWorker().
+   */
+  private async bootIngestionWorkers(): Promise<void> {
+    try {
+      const { bootIngestionWorkers } = await import('./workers/ingestion-workers.js');
+      const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
+      const redisConnection = {
+        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+        ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
+      };
+      this.ingestionWorkersHandle = await bootIngestionWorkers(
+        redisConnection,
+        async (text: string) => {
+          const result = await getEmbeddingChain().generateEmbedding({ text });
+          return result?.vector ?? null;
+        },
+        this.logger
+      );
+      this.logger.info(
+        'Ingestion workers started — intelliflow-text-extraction and ' +
+          'intelliflow-ocr-processing queues now consumed'
+      );
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to boot ingestion workers — document processing jobs will remain queued'
       );
     }
   }
@@ -611,6 +673,24 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         }
       );
       this.logger.info({ cron: accountScoringCron }, 'Scheduled account-scoring job registered');
+
+      // IFC-314: portal delivery sweep — daily heartbeat that drives the portal's
+      // time-based transitions (auto-pause stalled onboardings). The portal owns
+      // the logic; this is just the tick. 05:00 UTC, 1h before the portal's own
+      // Vercel-Cron backup, so the CRM job wins and the sweep is never doubled
+      // harmfully (it is idempotent regardless).
+      const portalSweepCron = process.env.PORTAL_SWEEP_CRON || PORTAL_SWEEP_CRON;
+      const portalSweepQueue = this.getQueue(PORTAL_SWEEP_QUEUE);
+      await portalSweepQueue.upsertJobScheduler(
+        'scheduled-portal-delivery-sweep',
+        { pattern: portalSweepCron },
+        {
+          name: 'scheduled-portal-delivery-sweep',
+          data: { correlationId: `scheduled-portal-sweep-${Date.now()}` },
+          opts: DEFAULT_PORTAL_SWEEP_JOB_OPTIONS,
+        }
+      );
+      this.logger.info({ cron: portalSweepCron }, 'Scheduled portal delivery sweep job registered');
     } catch (error) {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
@@ -632,7 +712,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       queues.push(new BullMQAdapter(this.dlqQueue));
     }
 
-    // Also register external worker queues (read-only visibility)
+    // Register other queues for dashboard visibility.
+    // intelliflow-text-extraction and intelliflow-ocr-processing are now consumed
+    // by bootIngestionWorkers() above — they are no longer "external/read-only".
+    // We still register Queue instances here so Bull Board can display job depth
+    // and history; the actual consumption is owned by the Workers in
+    // ingestion-workers.ts.
     const { Queue } = await import('bullmq');
     const connection = {
       host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
@@ -640,13 +725,17 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
       ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
     };
-    const externalQueueNames = [
+    // intelliflow-document-reindex and intelliflow-embedding-generation remain
+    // external (consumed by other services or future workers).
+    // intelliflow-text-extraction and intelliflow-ocr-processing are listed here
+    // so operators can monitor queue depth alongside the ai-worker-consumed queues.
+    const dashboardOnlyQueueNames = [
       'intelliflow-document-reindex',
       'intelliflow-text-extraction',
       'intelliflow-ocr-processing',
       'intelliflow-embedding-generation',
     ];
-    for (const name of externalQueueNames) {
+    for (const name of dashboardOnlyQueueNames) {
       queues.push(new BullMQAdapter(new Queue(name, { connection })));
     }
 
@@ -721,6 +810,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     await this.tryStop(this.contactEmbedWorker, 'ContactEmbedWorker');
     if (this.contactEmbedWorker) {
       this.logger.info('ContactEmbedWorker stopped');
+    }
+
+    // D5 / issue #259: Stop ingestion queue workers cleanly.
+    await this.tryStop(this.ingestionWorkersHandle, 'IngestionWorkers');
+    if (this.ingestionWorkersHandle) {
+      this.logger.info('IngestionWorkers stopped');
     }
 
     // H8: Close DLQ queue and lifecycle event listeners
@@ -827,6 +922,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           break;
         case MEMORY_RETENTION_QUEUE:
           result = await processMemoryRetentionJob(job as Job<MemoryRetentionJobData>); // NOSONAR
+          break;
+        // IFC-314 — portal delivery sweep (outside the legacy AIJobData union).
+        case PORTAL_SWEEP_QUEUE:
+          result = (await processPortalSweepJob(
+            job as unknown as Job<import('./jobs').PortalSweepJobData>
+          )) as unknown as AIJobResult;
           break;
         // IFC-312 — contact/account AI chain queues. Cast through `unknown`
         // because these payloads are outside the legacy `AIJobData` union.

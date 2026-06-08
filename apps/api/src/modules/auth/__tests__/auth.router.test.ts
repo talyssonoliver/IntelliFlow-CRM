@@ -125,7 +125,7 @@ vi.mock('../../../middleware/rate-limit', async (importOriginal) => {
   const original = await importOriginal<typeof import('../../../middleware/rate-limit')>();
   return {
     ...original,
-    createAuthEndpointRateLimitMiddleware:
+    createDistributedRateLimitMiddleware:
       () =>
       async ({ next }: { next: () => Promise<unknown> }) =>
         next(),
@@ -288,8 +288,8 @@ describe('authRouter', () => {
 
   beforeEach(() => {
     setupDefaultMocks();
-    // Clear the getStatus in-process cache between tests to prevent token-keyed
-    // cache entries from one test polluting another within the same Vitest worker.
+    // getStatus no longer keeps its own result cache (it reuses ctx.user); this
+    // is now a no-op retained for back-compat. Harmless to keep calling.
     clearStatusCache();
   });
 
@@ -784,41 +784,20 @@ describe('authRouter', () => {
   // ============================================
 
   describe('getStatus', () => {
-    it('should return authenticated status when session exists', async () => {
-      // Configure prismaMock to return user data for getStatus token verification.
-      // ensureAppUserSession calls findUnique (resolveDbUserWith) then update (sign-in
-      // tracking, fire-and-forget).  resolveAuthenticatedAppUser calls a second
-      // findUnique to fetch avatarUrl.  All three DB calls need mock coverage.
-      const userRow = {
-        id: TEST_UUIDS.user,
-        email: 'test@example.com',
-        name: 'Test User',
-        role: 'USER',
-        tenantId: TEST_UUIDS.tenant,
-        avatarUrl: null,
-      };
-      // 1st findUnique: resolveDbUserWith (session fields only)
-      prismaMock.user.findUnique.mockResolvedValueOnce(userRow as any);
-      // 2nd findUnique: avatar fetch in resolveAuthenticatedAppUser
-      prismaMock.user.findUnique.mockResolvedValueOnce({ avatarUrl: null } as any);
-      // user.update: sign-in counter increment (fire-and-forget, must return a thenable)
-      prismaMock.user.update.mockResolvedValueOnce(userRow as any);
-      // Create context with Authorization header
-      const mockHeaders = new Map([
-        ['Authorization', 'Bearer test-token-123'],
-        ['x-forwarded-for', '127.0.0.1'],
-        ['user-agent', 'Mozilla/5.0 Test Agent'],
-      ]);
-      // req uses a partial headers mock (get-only); cast to any is required for test-only mock
-      const mockReq = {
-        headers: {
-          get: (key: string) => mockHeaders.get(key) || mockHeaders.get(key.toLowerCase()),
-        },
-      } as any; // test-only mock
+    it('should return authenticated status from ctx.user (no DB round-trip)', async () => {
+      // getStatus reuses the already-resolved ctx.user (resolved + cached once
+      // per request in context.ts). It performs NO database read of its own —
+      // the avatar travels on the session.
       const mockContext = createTestContext({
         prisma: prismaMock,
-        req: mockReq,
-        user: undefined,
+        user: {
+          userId: TEST_UUIDS.user,
+          email: 'test@example.com',
+          name: 'Test User',
+          role: 'USER',
+          tenantId: TEST_UUIDS.tenant,
+          avatarUrl: 'https://cdn.example.com/avatar.png',
+        },
       });
       const caller = authRouter.createCaller(mockContext);
 
@@ -827,29 +806,51 @@ describe('authRouter', () => {
       expect(result.authenticated).toBe(true);
       expect(result.user).toBeDefined();
       expect(result.user?.email).toBe('test@example.com');
+      expect(result.user?.role).toBe('USER');
+      expect(result.user?.avatar).toBe('https://cdn.example.com/avatar.png');
     });
 
-    it('should return unauthenticated when no session', async () => {
-      mockVerifyToken.mockResolvedValueOnce({
-        user: null,
-        error: new Error('Invalid token'),
-      });
-
-      // Create context with Authorization header but invalid token
-      const mockHeaders = new Map([
-        ['Authorization', 'Bearer invalid-token'],
-        ['x-forwarded-for', '127.0.0.1'],
-        ['user-agent', 'Mozilla/5.0 Test Agent'],
-      ]);
-      // req uses a partial headers mock (get-only); cast to any is required for test-only mock
-      const mockReq = {
-        headers: {
-          get: (key: string) => mockHeaders.get(key) || mockHeaders.get(key.toLowerCase()),
-        },
-      } as any; // test-only mock
+    it('should not issue any Prisma user query (N+1 elimination)', async () => {
       const mockContext = createTestContext({
         prisma: prismaMock,
-        req: mockReq,
+        user: {
+          userId: TEST_UUIDS.user,
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: TEST_UUIDS.tenant,
+        },
+      });
+      const caller = authRouter.createCaller(mockContext);
+
+      await caller.getStatus();
+
+      // The whole point of the unification: getStatus must not re-resolve the
+      // user from the database — that is the N+1 we removed.
+      expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+      expect(prismaMock.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should return null avatar when the session has none', async () => {
+      const mockContext = createTestContext({
+        prisma: prismaMock,
+        user: {
+          userId: TEST_UUIDS.user,
+          email: 'noavatar@example.com',
+          role: 'USER',
+          tenantId: TEST_UUIDS.tenant,
+        },
+      });
+      const caller = authRouter.createCaller(mockContext);
+
+      const result = await caller.getStatus();
+
+      expect(result.authenticated).toBe(true);
+      expect(result.user?.avatar).toBeNull();
+    });
+
+    it('should return unauthenticated when ctx.user is absent', async () => {
+      const mockContext = createTestContext({
+        prisma: prismaMock,
         user: undefined,
       });
       const caller = authRouter.createCaller(mockContext);

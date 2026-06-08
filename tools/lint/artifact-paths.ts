@@ -66,6 +66,10 @@ const CONFIG = {
     'artifacts/coverage-parts/**',
     'artifacts/reports/**', // generated summary/report JSON (mentions field names like "password")
     'artifacts/test-failures/**', // test output JSON contains test titles mentioning password fields
+    // Tech-debt ledger: governance text that tracks SECURITY debt — legitimately
+    // contains "password"/"credential"/"secret" in prose (e.g. "leaked-password check").
+    // gitleaks (a dedicated scanner) is the real secret gate for this file.
+    'artifacts/metrics/debt-ledger.yaml',
     '**/coverage/**/*.html', // Istanbul HTML under apps/workers/shared/coverage/, apps/**/coverage/
     'apps/**/coverage/**', // coverage HTML files under any app
     // Infrastructure config/schemas contain field names in JSON structure (not actual secrets)
@@ -79,6 +83,10 @@ const CONFIG = {
     'docs/design/**',
     'docs/company/**',
     'coverage/**',
+    // Supabase Auth (GoTrue) email templates: password-reset/magic-link copy
+    // legitimately contains the word "password" and the sender crm@leangency.com
+    // (not secrets/PII). The only dynamic value is the GoTrue {{ .ConfirmationURL }}.
+    'supabase/templates/**',
   ],
 };
 

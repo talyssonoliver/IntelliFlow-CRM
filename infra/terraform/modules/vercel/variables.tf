@@ -71,17 +71,15 @@ variable "redirect_www" {
 
 # Environment Variables
 variable "environment_variables" {
-  description = "Environment variables for all targets"
+  description = "Environment variables for all targets. Not marked sensitive at the map level (the keys are non-secret and are needed for for_each); the value is marked sensitive on the vercel_project_environment_variable resource."
   type        = map(string)
   default     = {}
-  sensitive   = true
 }
 
 variable "environment_specific_vars" {
-  description = "Environment-specific variables"
+  description = "Environment-specific variables. See environment_variables re: value sensitivity handled at the resource."
   type        = map(string)
   default     = {}
-  sensitive   = true
 }
 
 # Region

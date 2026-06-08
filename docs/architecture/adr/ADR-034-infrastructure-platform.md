@@ -1,6 +1,7 @@
 # ADR-034: Infrastructure & Platform Engineering
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-064](ADR-064-terraform-single-source-of-truth.md)
+(2026-06-05)
 
 **Date:** 2026-02-22
 
@@ -57,16 +58,27 @@ apps/workers/ with BullMQ.
 
 ## Implementation Notes
 
-All related tasks are completed. See attestation files at
-`.specify/sprints/sprint-{N}/attestations/{TASK_ID}/` for validation evidence.
+> **Correction (2026-06-05, see ADR-064):** the "already in production" framing
+> above is **overstated**. An audit found `terraform validate` broken for ~2
+> weeks (provider-schema drift), empty environment `tfvars`, a `null_resource`
+> Supabase module (no real drift detection), and the three `apps/workers`
+> services **not provisioned to Railway at all**. `ai-worker` also ships no OTel
+> SDK. The tool/architecture choices below stand; their _implementation status_
+> did not. ADR-064 supersedes this ADR, extends scope to the workers +
+> monitoring stack, and tracks the real remaining work via the `INFRA-TF-*`
+> tasks.
+
+See attestation files at `.specify/sprints/sprint-{N}/attestations/{TASK_ID}/`
+for validation evidence.
 
 ### Validation Criteria
 
-- [x] Implementation complete (retroactive)
-- [x] Tests passing
-- [x] In production use
+- [x] Tool/architecture choices made (Terraform, blue/green, OTel, BullMQ)
+- [~] Implementation partial — see ADR-064 correction above
+- [ ] In production use — **NOT** true for the three workers; Terraform
+      provisioning is drifted/broken (ADR-064 Phase 2/3 to remediate)
 
 ### Rollback Plan
 
-N/A — decisions are already in production. Future changes should create a new
-ADR that supersedes this one.
+Superseded by [ADR-064](ADR-064-terraform-single-source-of-truth.md), which
+carries the live decision and remediation plan.

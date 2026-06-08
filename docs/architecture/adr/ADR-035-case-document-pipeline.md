@@ -9,8 +9,18 @@
 **Technical Story:** IFC-152, IFC-153, IFC-154, IFC-155, IFC-156
 
 > **Note**: This ADR was retroactively created to document architectural
-> decisions made during implementation. The decisions described here are already
-> in production.
+> decisions made during implementation.
+
+> **Correction (2026-06-07):** the original text claimed the entire pipeline —
+> including a "BullMQ OCR worker (Tesseract.js)" — was "already in production."
+> That is inaccurate on two counts: (1) there is **no Tesseract.js dependency**
+> anywhere in the workspace, and (2) the worker tier (including the
+> OCR/ingestion worker) has **no production deployment path** — see
+> [#230](https://github.com/talyssonoliver/IntelliFlow-CRM/issues/230) and
+> [#270](https://github.com/talyssonoliver/IntelliFlow-CRM/issues/270)
+> (ingestion-worker superseded by ai-worker). The storage/RLS, pgvector search,
+> and RAG-tool portions are in use; the async-OCR-worker portion is **designed
+> and present in code but not deployed**. See the qualified status below.
 
 ## Context and Problem Statement
 
@@ -61,9 +71,13 @@ All related tasks are completed. See attestation files at
 
 - [x] Implementation complete (retroactive)
 - [x] Tests passing
-- [x] In production use
+- [~] In production use — **partial**: storage/RLS, pgvector search, and the RAG
+  tool are in use; the async OCR/ingestion worker is implemented in code but
+  **not deployed** (no worker prod deploy path — #230; superseded by ai-worker —
+  #270), and does **not** use Tesseract.js.
 
 ### Rollback Plan
 
-N/A — decisions are already in production. Future changes should create a new
-ADR that supersedes this one.
+N/A for the deployed portions. The OCR/ingestion-worker portion is not in
+production (see Correction above). Future changes should create a new ADR that
+supersedes this one.

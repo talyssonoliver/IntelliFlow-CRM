@@ -2,7 +2,7 @@ import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
 import { ChatOllama } from '@langchain/ollama';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Embeddings } from '@langchain/core/embeddings';
-import { aiConfig } from '../config/ai.config.js';
+import { aiConfig, AIProviderSchema, type AIProvider } from '../config/ai.config.js';
 import { CircuitBreaker } from '../utils/circuit-breaker.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
 import { wrapModelWithTracing, wrapEmbeddingsWithTracing } from '../tracing/llm-tracer.js';
@@ -44,7 +44,79 @@ export interface CreateLLMOptions {
   temperature?: number;
   maxTokens?: number;
   timeout?: number;
+  /**
+   * Override the active provider for THIS instance only (does not touch the
+   * global `aiConfig.provider`). Used by the job-level provider fallback (#324)
+   * to build a model on the secondary provider when the primary fails. Threaded
+   * into the cache key so the fallback model is cached separately.
+   */
+  provider?: AIProvider;
 }
+
+// ============================================================================
+// Body-safe fetch (prod incident 2026-06)
+// ============================================================================
+
+/**
+ * Wrap a fetch implementation so the OpenAI SDK always receives a response whose
+ * body is fully materialized and readable — regardless of what any interceptor
+ * or retry path did to the upstream stream.
+ *
+ * Symptom (prod 2026-06): `scoring-chain` / `insight-generation-chain` failed
+ * with `TypeError: Body is unusable: Body has already been read`. Both call the
+ * LLM via `createLLM()` → `ChatOpenAI` (OpenAI SDK → undici `fetch`).
+ *
+ * IMPORTANT — this is a DEFENSIVE measure, not a verified fix. The exact second
+ * reader of the body was never reproduced. OTel's undici instrumentation reads
+ * request/response *metadata via diagnostics channels — it does NOT consume the
+ * body*, so it is unlikely to be the cause. Candidates (an SDK/LangChain retry
+ * re-read, or a litellm-era artifact predating the OpenRouter migration) and the
+ * post-deploy verification plan are tracked in #334. If a double-read happens on
+ * the *returned* response (SDK reads it twice), no fetch-layer wrapper can help —
+ * `Response` bodies are single-use.
+ *
+ * Strategy: read the upstream body ONCE here and hand the SDK a brand-new
+ * `Response` built from the buffered bytes, so nothing upstream can leave it
+ * half-consumed. `content-encoding`/`content-length` are dropped because `fetch`
+ * has already decompressed the body — the re-wrapped Response must not advertise
+ * the original encoding or the SDK would try to decompress again. Streaming
+ * (`text/event-stream`) is passed through untouched so we never buffer token
+ * streams. Best-effort: if the upstream body was already disturbed, fall back to
+ * the original rather than make things worse.
+ */
+export function createBodySafeFetch(baseFetch: typeof fetch = fetch): typeof fetch {
+  return (async (
+    input: Parameters<typeof fetch>[0],
+    init?: Parameters<typeof fetch>[1]
+  ): Promise<Response> => {
+    const response = await baseFetch(input, init);
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!response.body || contentType.includes('text/event-stream')) {
+      return response;
+    }
+    try {
+      const buffered = await response.arrayBuffer();
+      const headers = new Headers(response.headers);
+      headers.delete('content-encoding');
+      headers.delete('content-length');
+      return new Response(buffered, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
+    } catch {
+      // Upstream body already disturbed — nothing safe left to do; hand it back.
+      return response;
+    }
+  }) as typeof fetch;
+}
+
+/**
+ * Process-wide singleton wrapper so every cached `ChatOpenAI`/`OpenAIEmbeddings`
+ * instance shares one allocation. Captured at module-load against the (possibly
+ * OTel-patched) global `fetch`, so telemetry spans are still emitted.
+ */
+const bodySafeFetch = createBodySafeFetch();
 
 // ============================================================================
 // LLM Instance Cache
@@ -68,13 +140,13 @@ export interface CreateLLMOptions {
 const _factoryCache = new Map<string, BaseChatModel>();
 
 function _getFactoryCacheKey(
+  provider: AIProvider,
   purpose: LLMPurpose,
   tier: LLMTier,
   temperature: number,
   maxTokens: number,
   timeout: number
 ): string {
-  const provider = aiConfig.provider;
   return `${provider}:${purpose}:${tier}:${temperature}:${maxTokens}:${timeout}`;
 }
 
@@ -149,6 +221,23 @@ export function __resetBreakers(): void {
 // ============================================================================
 
 /**
+ * Resolve the configured fallback provider for the job-level provider fallback
+ * (#324). Reads `AI_FALLBACK_PROVIDER` (e.g. `litellm` when the primary is
+ * `openrouter`). Returns null — i.e. "no fallback, go straight to the heuristic" —
+ * when it is unset, invalid, the no-op `mock` provider, or identical to the
+ * active provider (falling back to the same provider is pointless).
+ */
+export function resolveFallbackProvider(): AIProvider | null {
+  const raw = (process.env['AI_FALLBACK_PROVIDER'] || '').trim();
+  if (!raw) return null;
+  const parsed = AIProviderSchema.safeParse(raw);
+  if (!parsed.success) return null;
+  const fallback = parsed.data;
+  if (fallback === 'mock' || fallback === aiConfig.provider) return null;
+  return fallback;
+}
+
+/**
  * Factory for all chat-model instantiation in IntelliFlow CRM.
  *
  * Default path  : LiteLLM proxy → real providers (Groq, Mistral, Anthropic, OpenAI, Gemini).
@@ -169,12 +258,16 @@ export function createLLM(
 ): BaseChatModel {
   const { temperature = 0.7, maxTokens = 2000, timeout = 120_000 } = options;
 
+  // Provider for THIS instance — the caller may override (job-level fallback,
+  // #324); otherwise use the global singleton.
+  const provider = options.provider ?? aiConfig.provider;
+
   // LITELLM_MASTER_KEY only matters for the litellm proxy path — gate the
   // assertion so AI_PROVIDER=openrouter/ollama/mock don't trip it. (#238)
-  if (aiConfig.provider === 'litellm') _assertProdKey();
+  if (provider === 'litellm') _assertProdKey();
 
   // Check the instance cache before allocating a new model object.
-  const cacheKey = _getFactoryCacheKey(purpose, tier, temperature, maxTokens, timeout);
+  const cacheKey = _getFactoryCacheKey(provider, purpose, tier, temperature, maxTokens, timeout);
   const cached = _factoryCache.get(cacheKey);
   if (cached !== undefined) {
     return cached;
@@ -183,13 +276,13 @@ export function createLLM(
   let model: BaseChatModel;
 
   // Offline escape hatch — local Ollama only (no LiteLLM dependency).
-  if (aiConfig.provider === 'ollama') {
+  if (provider === 'ollama') {
     model = new ChatOllama({
       baseUrl: aiConfig.ollama.baseUrl,
       model: aiConfig.ollama.model,
       temperature,
     });
-  } else if (aiConfig.provider === 'mock') {
+  } else if (provider === 'mock') {
     // Test path — aiConfig is normally singleton but tests override it via vi.mock.
     model = new ChatOpenAI({
       apiKey: 'mock-key',
@@ -199,7 +292,7 @@ export function createLLM(
       timeout,
       configuration: { baseURL: 'http://mock-litellm' },
     });
-  } else if (aiConfig.provider === 'openrouter') {
+  } else if (provider === 'openrouter') {
     // OpenRouter is OpenAI-compatible — real model ids (e.g. openai/gpt-oss-120b:free),
     // NOT the litellm logical `${purpose}-${tier}` aliases. Used for production chat
     // (free models); dev stays on Ollama. No proxy required.
@@ -216,6 +309,10 @@ export function createLLM(
           'HTTP-Referer': process.env['OPENROUTER_SITE_URL'] || 'https://intelliflow-crm.app',
           'X-Title': 'IntelliFlow CRM',
         },
+        // Body-safe fetch — this is the PRODUCTION path (OpenRouter free models),
+        // so the "Body has already been read" double-read fix must live here too,
+        // not just on the legacy litellm/openai branch below.
+        fetch: bodySafeFetch,
       },
     });
   } else {
@@ -234,13 +331,16 @@ export function createLLM(
         // runs createEmbeddings() at import time, so an unconditional throw here
         // crash-looped ai-worker in production with AI_PROVIDER=openai. See #238.
         baseURL:
-          aiConfig.provider === 'litellm'
+          provider === 'litellm'
             ? requiredProdEnv(
                 'LITELLM_BASE_URL',
                 process.env['LITELLM_BASE_URL'],
                 'http://localhost:4000/v1'
               )
             : process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1',
+        // Body-safe fetch — prevents "Body has already been read" when OTel fetch
+        // instrumentation consumes the response stream alongside the SDK.
+        fetch: bodySafeFetch,
       },
     });
   }
@@ -347,6 +447,9 @@ export function createEmbeddings(tier: LLMTier = 'free'): Embeddings {
                 'http://localhost:4000/v1'
               )
             : process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1',
+        // Body-safe fetch — see createBodySafeFetch (prevents double-read of the
+        // response body when OTel fetch instrumentation is active).
+        fetch: bodySafeFetch,
       },
     });
   }

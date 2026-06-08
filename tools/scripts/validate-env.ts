@@ -116,10 +116,12 @@ const ENV_DEFINITIONS: EnvVarDefinition[] = [
     description: 'Direct PostgreSQL connection URL (for migrations)',
   },
   {
-    name: 'DATABASE_POOL_SIZE',
+    // Canonical pool-size env name, unified with packages/db client.ts and
+    // apps/api system.router.ts (was DATABASE_POOL_SIZE, never read). Issue #316.
+    name: 'DATABASE_POOL_MAX',
     required: false,
     schema: z.coerce.number().int().min(1).max(100),
-    description: 'Database connection pool size',
+    description: 'Database connection pool size (max connections per process)',
     defaultValue: '20',
   },
 
@@ -311,14 +313,14 @@ class EnvValidator {
    * Validate a single environment variable
    */
   private validateVariable(definition: EnvVarDefinition, value: string | undefined): boolean {
-    const { name, required, schema, validate, environments, securityCheck } = definition;
+    const { name, required, environments, securityCheck } = definition;
 
-    // Check if variable is required for this environment
-    if (environments && !environments.includes(this.environment)) {
-      if (!value) return true; // Not required for this environment
+    // Not applicable to this environment and absent → OK
+    if (environments && !environments.includes(this.environment) && !value) {
+      return true;
     }
 
-    // Check if required variable is missing
+    // Required but missing
     if (required && !value) {
       this.errors.push({
         variable: name,
@@ -329,42 +331,45 @@ class EnvValidator {
       return false;
     }
 
-    // If optional and not provided, skip validation
-    if (!required && !value) {
+    // Optional and absent → skip the value-dependent checks
+    if (!value) {
       return true;
     }
 
-    // Validate format using Zod schema
-    if (schema && value) {
-      const result = schema.safeParse(value);
-      if (!result.success) {
-        this.errors.push({
-          variable: name,
-          type: 'invalid_format',
-          message: `Invalid format for '${name}': ${result.error.issues[0]?.message}`,
-          severity: 'high',
-        });
-        return false;
-      }
-    }
+    if (!this.validateSchema(definition, value)) return false;
+    if (!this.validateCustom(definition, value)) return false;
 
-    // Custom validation function
-    if (validate && value && !validate(value)) {
-      this.errors.push({
-        variable: name,
-        type: 'invalid_value',
-        message: `Invalid value for '${name}'`,
-        severity: 'high',
-      });
-      return false;
-    }
-
-    // Security checks
-    if (securityCheck && value) {
+    if (securityCheck) {
       this.performSecurityCheck(name, value);
     }
 
     return true;
+  }
+
+  /** Zod-schema format check; pushes an error and returns false on failure. */
+  private validateSchema(definition: EnvVarDefinition, value: string): boolean {
+    if (!definition.schema) return true;
+    const result = definition.schema.safeParse(value);
+    if (result.success) return true;
+    this.errors.push({
+      variable: definition.name,
+      type: 'invalid_format',
+      message: `Invalid format for '${definition.name}': ${result.error.issues[0]?.message}`,
+      severity: 'high',
+    });
+    return false;
+  }
+
+  /** Custom validate() check; pushes an error and returns false on failure. */
+  private validateCustom(definition: EnvVarDefinition, value: string): boolean {
+    if (!definition.validate || definition.validate(value)) return true;
+    this.errors.push({
+      variable: definition.name,
+      type: 'invalid_value',
+      message: `Invalid value for '${definition.name}'`,
+      severity: 'high',
+    });
+    return false;
   }
 
   /**
@@ -459,28 +464,8 @@ class EnvValidator {
     console.log(`${colors.yellow}Missing: ${missingCount}${colors.reset}`);
     console.log(`Duration: ${duration}ms\n`);
 
-    // Print errors
-    if (this.errors.length > 0) {
-      console.log(`${colors.red}Errors (${this.errors.length}):${colors.reset}`);
-      for (const error of this.errors) {
-        console.log(
-          `  ${colors.red}✗${colors.reset} [${error.severity.toUpperCase()}] ${error.variable}: ${error.message}`
-        );
-      }
-      console.log();
-    }
-
-    // Print warnings
-    if (this.warnings.length > 0) {
-      console.log(`${colors.yellow}Warnings (${this.warnings.length}):${colors.reset}`);
-      for (const warning of this.warnings) {
-        console.log(`  ${colors.yellow}⚠${colors.reset} ${warning.variable}: ${warning.message}`);
-        if (warning.recommendation) {
-          console.log(`    ${colors.gray}→ ${warning.recommendation}${colors.reset}`);
-        }
-      }
-      console.log();
-    }
+    this.printErrors();
+    this.printWarnings();
 
     const result: ValidationResult = {
       valid: this.errors.length === 0,
@@ -499,6 +484,31 @@ class EnvValidator {
     };
 
     return result;
+  }
+
+  /** Print accumulated errors to the console (no-op when there are none). */
+  private printErrors(): void {
+    if (this.errors.length === 0) return;
+    console.log(`${colors.red}Errors (${this.errors.length}):${colors.reset}`);
+    for (const error of this.errors) {
+      console.log(
+        `  ${colors.red}✗${colors.reset} [${error.severity.toUpperCase()}] ${error.variable}: ${error.message}`
+      );
+    }
+    console.log();
+  }
+
+  /** Print accumulated warnings (with recommendations) to the console. */
+  private printWarnings(): void {
+    if (this.warnings.length === 0) return;
+    console.log(`${colors.yellow}Warnings (${this.warnings.length}):${colors.reset}`);
+    for (const warning of this.warnings) {
+      console.log(`  ${colors.yellow}⚠${colors.reset} ${warning.variable}: ${warning.message}`);
+      if (warning.recommendation) {
+        console.log(`    ${colors.gray}→ ${warning.recommendation}${colors.reset}`);
+      }
+    }
+    console.log();
   }
 
   /**

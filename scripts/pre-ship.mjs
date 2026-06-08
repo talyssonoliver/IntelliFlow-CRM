@@ -99,6 +99,31 @@ function lcovMissing() {
   return !fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/lcov.info'));
 }
 
+// Probe whether an optional IaC CLI (terraform / actionlint) is installed.
+// Missing -> the step SKIPs locally (CI still enforces it). Spawned with a shell
+// on win32 so PATH .exe/.cmd resolution works. NOTE: these local IaC gates catch
+// formatting + workflow-syntax issues; they CANNOT catch GitHub-Actions token /
+// SARIF-permission failures, which only manifest on GitHub's runners.
+function commandMissing(bin) {
+  const r = spawnSync(bin, ['--version'], {
+    stdio: 'ignore',
+    shell: process.platform === 'win32',
+  });
+  return !!r.error || r.status !== 0;
+}
+
+// Resolve a Python interpreter for the audit's commit-message linter
+// (tools/audit/commit_msg_lint.py — the SAME script CI's system-audit runs).
+// Returns the binary name, or null when neither is installed (the
+// commit-msg-lint step then SKIPs locally; CI still enforces it).
+function resolvePython() {
+  for (const bin of ['python', 'python3']) {
+    if (!commandMissing(bin)) return bin;
+  }
+  return null;
+}
+const PYTHON_BIN = resolvePython();
+
 // Step plan — fail-first token gate + 17 steps from audit doc §8. Each step has:
 //   id          : kebab-case identifier (also used as log filename)
 //   description : human-readable label printed during the run
@@ -120,6 +145,24 @@ const STEPS = [
     id: 'required-tokens',
     description: 'fail-first: required tokens/secrets present (gh secrets + Vercel prod env)',
     cmd: ['node', 'scripts/check-required-tokens.mjs'],
+    required: true,
+  },
+  {
+    // COMMIT-MESSAGE GATE (2026-06-08): pre-ship previously ran NO commit-message
+    // lint — its `audit` step is `pnpm audit` (dependency CVEs only). So the
+    // commitlint rules CI's `system-audit` blocks on (subject must not start
+    // upper-case, body lines <=100, etc.) passed locally and only reddened in CI
+    // — e.g. an upper-case subject "feat(ai-worker): OpenRouter…" (#340). This
+    // runs the SAME linter (tools/audit/commit_msg_lint.py) over origin/main..HEAD
+    // so those are caught before push, not after a ~10-min CI round. Fast +
+    // deterministic; placed near the top for fail-first feedback. SKIPs only if
+    // no Python is installed (CI still gates); degrades to advisory if origin/main
+    // can't be resolved locally.
+    id: 'commit-msg-lint',
+    description:
+      'commit messages (origin/main..HEAD) pass the audit commitlint rules — same linter as CI system-audit',
+    cmd: [PYTHON_BIN || 'python', 'tools/audit/commit_msg_lint.py', '--base-ref', 'origin/main'],
+    skip_if: () => PYTHON_BIN === null,
     required: true,
   },
   {
@@ -149,6 +192,26 @@ const STEPS = [
     description: 'prettier --check (catches the YAML/json format drift CI hits)',
     cmd: ['pnpm', 'run', 'format:check'],
     required: true,
+  },
+  {
+    // IaC formatting gate (INFRA-TF-004). Mirrors the terraform.yml `fmt -check`
+    // job so drift is caught locally, not after a CI round. SKIPs if terraform
+    // isn't installed; required when it is.
+    id: 'terraform-fmt',
+    description: 'terraform fmt -check -recursive (infra/terraform)',
+    cmd: ['terraform', '-chdir=infra/terraform', 'fmt', '-check', '-recursive'],
+    skip_if: () => commandMissing('terraform'),
+    required: true,
+  },
+  {
+    // GitHub Actions workflow linter. Advisory (required:false) for now: it's
+    // typically not installed locally (skips), and a clean pass across the whole
+    // workflow corpus hasn't been confirmed — promote to required once it has.
+    id: 'actionlint',
+    description: 'actionlint (.github/workflows syntax/expression lint) — advisory',
+    cmd: ['actionlint'],
+    skip_if: () => commandMissing('actionlint'),
+    required: false,
   },
   {
     id: 'lint',

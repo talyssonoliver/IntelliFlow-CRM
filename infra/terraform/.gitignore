@@ -15,6 +15,16 @@ crash.*.log
 *.tfvars
 *.tfvars.json
 
+# EXCEPT the committed, non-sensitive per-environment tfvars. They hold only
+# config (project names, regions, images, domains); every secret is injected at
+# runtime via TF_VAR_* from CI. Committing them lets `terraform plan/apply` in
+# CI read -var-file=environments/<env>/terraform.tfvars. See INFRA-TF-004.
+# (Explicit per-file negations — never a glob — so a future secret-bearing
+# tfvars is not accidentally un-ignored.)
+!environments/dev/terraform.tfvars
+!environments/staging/terraform.tfvars
+!environments/production/terraform.tfvars
+
 # Ignore override files as they are usually used to override resources locally
 override.tf
 override.tf.json

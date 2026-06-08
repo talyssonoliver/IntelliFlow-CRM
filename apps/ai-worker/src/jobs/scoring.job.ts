@@ -13,7 +13,7 @@ import pino from 'pino';
 import { LeadScoringChain } from '../chains/scoring.chain';
 import type { LeadInput, ScoringResult } from '../chains/scoring.chain';
 import { logAIAgentAction } from '../utils/audit-log';
-import { getLLMBreaker } from '../lib/llm-factory';
+import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
 import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
@@ -153,6 +153,15 @@ function generateRecommendations(tier: LeadTier, score: number): string[] {
 /** LLM inference timeout for scoring (120 s — matches insight job pattern). */
 const LLM_TIMEOUT_MS = 120_000;
 
+/**
+ * Nil UUID used as the placeholder `leadId` on the scheduled cron sentinel job
+ * (see ai-worker.ts registerScheduledJobs). It does NOT correspond to a real
+ * Lead row, so it must never reach a `leadAIInsight` upsert — doing so violates
+ * the `lead_ai_insights_leadId_fkey` foreign key. The sentinel is routed to the
+ * dispatcher and the persist step skips it defensively.
+ */
+export const NIL_UUID = '00000000-0000-0000-0000-000000000000';
+
 // ============================================================================
 // Fallback Scoring
 // ============================================================================
@@ -215,6 +224,47 @@ async function generateScoringWithFallback(
     ]);
     return { result: scored, usedFallback: false };
   } catch (error) {
+    // #324: before dropping to the heuristic, try the SECONDARY provider once
+    // (e.g. AI_FALLBACK_PROVIDER=litellm when OpenRouter's free tier rate-limits
+    // or is unavailable). A real LLM result beats the heuristic; one shot, no
+    // breaker, so a hard outage still falls through to the heuristic quickly.
+    const fallbackProvider = resolveFallbackProvider();
+    if (fallbackProvider) {
+      try {
+        const fallbackChain = new LeadScoringChain({
+          tenantId: job.data.tenantId,
+          provider: fallbackProvider,
+        });
+        const scored = await Promise.race([
+          fallbackChain.scoreLead(input),
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new Error(`fallback LLM scoring timed out after ${timeoutMs}ms`)),
+              timeoutMs
+            )
+          ),
+        ]);
+        logger.warn(
+          {
+            jobId: job.id,
+            fallbackProvider,
+            primaryError: error instanceof Error ? error.message : String(error),
+          },
+          'Primary LLM scoring failed — recovered via fallback provider'
+        );
+        return { result: scored, usedFallback: false };
+      } catch (fallbackError) {
+        logger.warn(
+          {
+            jobId: job.id,
+            fallbackProvider,
+            error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+          },
+          'Fallback provider also failed — using heuristic'
+        );
+      }
+    }
+
     logger.warn(
       { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
       'LLM scoring failed or timed out — using heuristic fallback'
@@ -392,6 +442,18 @@ async function persistScoringResult(
   tier: LeadTier,
   recommendations: string[]
 ): Promise<void> {
+  // Defensive guard: never upsert against a placeholder / unresolved leadId.
+  // The scheduled cron sentinel uses NIL_UUID, and no real Lead row exists for
+  // it — an upsert here violates lead_ai_insights_leadId_fkey. Skip and log
+  // instead of letting the FK constraint blow up the job.
+  if (!leadId || leadId === NIL_UUID) {
+    logger.warn(
+      { leadId, tenantId },
+      'Skipping LeadAIInsight persist — leadId is unresolved/placeholder (no Lead row)'
+    );
+    return;
+  }
+
   try {
     const { prisma: rawPrisma } = await import('@intelliflow/db');
     const prisma = rawPrisma as unknown as import('@intelliflow/db').PrismaClient;
@@ -460,7 +522,13 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
       const startTime = Date.now();
       const { leadId, lead } = validatedData;
 
-      if (validatedData.tenantId === '__scheduled__') {
+      // Scheduled cron sentinel → fan out per-lead jobs instead of "scoring" a
+      // placeholder. The sentinel is identified by either the explicit
+      // '__scheduled__' tenant or the NIL_UUID placeholder leadId (the cron job
+      // registered in ai-worker.ts uses the system tenant + NIL_UUID lead). This
+      // prevents both a wasted LLM call and the downstream FK violation that
+      // occurred when the NIL_UUID lead fell through to persistScoringResult.
+      if (validatedData.tenantId === '__scheduled__' || leadId === NIL_UUID) {
         return handleScheduledDispatch(job, startTime);
       }
 

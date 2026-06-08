@@ -30,6 +30,12 @@ import {
   createTaskAssignmentRule,
 } from '@intelliflow/platform';
 import { MaintenanceScheduler } from './maintenance/scheduled-jobs';
+import {
+  createPortalDeliverySyncHandler,
+  type PortalSyncInstalmentReader,
+  type PortalSyncClient,
+  type PortalSyncPrismaLike,
+} from './handlers/portal-delivery-sync.handler';
 
 // ============================================================================
 // Types
@@ -505,6 +511,11 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
       'opportunity-won-handler'
     );
 
+    // IFC-314: portal delivery/billing sync on deal-won (enriched event).
+    // Gated on DB mode + the portal env being configured — otherwise inert, so
+    // non-portal deployments are unaffected.
+    this.registerPortalDeliverySyncHandler();
+
     // Notification events
     this.eventDispatcher.register(
       DOMAIN_EVENT_TYPES.NOTIFICATION_CREATED,
@@ -701,6 +712,51 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
       { patterns: this.eventDispatcher.getRegisteredPatterns() },
       'Event handlers registered'
     );
+  }
+
+  /**
+   * IFC-314: wire the portal delivery sync handler for `deal_won_enriched`.
+   * Requires DB mode (a PrismaClient) plus both portal env vars; otherwise the
+   * handler is not registered and deal-won simply never pushes to the portal.
+   */
+  private registerPortalDeliverySyncHandler(): void {
+    const prisma = this.workerConfig.prisma;
+    const baseUrl = process.env.LEANGENCY_PORTAL_INTERNAL_URL;
+    const secret = process.env.PORTAL_INTERNAL_SECRET;
+
+    if (!prisma || !baseUrl || !secret) {
+      this.logger.info(
+        'Portal delivery sync disabled (needs DB mode + LEANGENCY_PORTAL_INTERNAL_URL + PORTAL_INTERNAL_SECRET)'
+      );
+      return;
+    }
+
+    // Dynamic require to avoid a build-time dependency on the adapters package
+    // (mirrors the PrismaOutboxRepository wiring in the constructor). Kept on the
+    // line directly under the disable so prettier reflow can't displace it.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const adaptersModule = require('@intelliflow/adapters') as {
+      PrismaSetupInstalmentRepository: new (p: PrismaClient) => PortalSyncInstalmentReader;
+      HttpPortalDeliverySyncAdapter: new (cfg: {
+        baseUrl: string;
+        secret: string;
+      }) => PortalSyncClient;
+    };
+    const { PrismaSetupInstalmentRepository, HttpPortalDeliverySyncAdapter } = adaptersModule;
+
+    const handler = createPortalDeliverySyncHandler({
+      prisma: prisma as unknown as PortalSyncPrismaLike,
+      setupInstalments: new PrismaSetupInstalmentRepository(prisma),
+      portalSync: new HttpPortalDeliverySyncAdapter({ baseUrl, secret }),
+      logger: this.logger,
+    });
+
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.DEAL_WON_ENRICHED,
+      this.createHandler('opportunity.deal_won_enriched', handler),
+      'portal-delivery-sync-handler'
+    );
+    this.logger.info('Portal delivery sync handler registered');
   }
 
   /**

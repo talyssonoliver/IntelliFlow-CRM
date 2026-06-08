@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Maps every BullMQ queue produced by a deployed app to the deployed service that consumes it. Used by tools/scripts/check-queue-consumers.mjs to catch un-consumed queues in CI.",
+  "version": "1",
+  "queues": {
+    "ai-scoring": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Lead scoring jobs — consumed by AIWorker.processJob (SCORING_QUEUE)"
+    },
+    "ai-prediction": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Churn / NBA / qualification predictions — consumed by AIWorker.processJob (PREDICTION_QUEUE)"
+    },
+    "ai-insights": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Insight generation — consumed by AIWorker.processJob (INSIGHT_QUEUE)"
+    },
+    "ai-summarize-conversation": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Conversation summarisation — consumed by AIWorker.processJob (SUMMARIZE_QUEUE)"
+    },
+    "ai-feedback-analytics": {
+      "producer": "apps/ai-worker",
+      "consumer": "apps/ai-worker",
+      "notes": "Feedback analytics cron — scheduled and consumed by AIWorker (FEEDBACK_ANALYTICS_QUEUE)"
+    },
+    "ai-memory-retention": {
+      "producer": "apps/ai-worker",
+      "consumer": "apps/ai-worker",
+      "notes": "Memory retention sweep cron — scheduled and consumed by AIWorker (MEMORY_RETENTION_QUEUE)"
+    },
+    "ai-enrichment": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Contact / account enrichment (IFC-312) — consumed by AIWorker case ai-enrichment"
+    },
+    "ai-entity-insight": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Entity insight generation (IFC-312) — consumed by AIWorker case ai-entity-insight"
+    },
+    "ai-reply-draft": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Reply draft generation (IFC-312) — consumed by AIWorker case ai-reply-draft"
+    },
+    "ai-account-scoring": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Account scoring (IFC-312) — consumed by AIWorker case ai-account-scoring"
+    },
+    "ai-tag-suggestion": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Tag suggestion (IFC-312) — consumed by AIWorker case ai-tag-suggestion"
+    },
+    "intelliflow-contact-embed": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Contact embedding for duplicate detection (IFC-310) — consumed by ContactEmbedWorker booted in AIWorker.bootContactEmbedWorker"
+    },
+    "intelliflow-text-extraction": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Document text extraction — consumed by bootIngestionWorkers (D5 / issue #259). Processors: TextExtractionProcessor-equivalent in workers/ingestion-workers.ts"
+    },
+    "intelliflow-ocr-processing": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Image OCR — consumed by bootIngestionWorkers (D5 / issue #259). Processor: OCRWorker from workers/ocr-worker.ts"
+    },
+    "intelliflow-document-reindex": {
+      "producer": "apps/ai-worker",
+      "consumer": "apps/ai-worker",
+      "notes": "Document re-indexing / embedding generation — consumed by ReindexWorker (IFC-155). Wired via IngestionWorker.processEmbedding delegate path."
+    },
+    "intelliflow-notifications-email": {
+      "producer": "apps/api",
+      "consumer": "apps/workers/notifications-worker",
+      "notes": "Email notifications — consumed by notifications-worker email channel"
+    },
+    "intelliflow:webhook-delivery": {
+      "producer": "apps/api",
+      "consumer": "apps/workers/events-worker",
+      "notes": "Webhook delivery — consumed by events-worker subscription bridge"
+    },
+    "intelliflow-ticket-sla-monitor": {
+      "producer": "apps/ai-worker",
+      "consumer": "apps/ai-worker",
+      "notes": "Ticket SLA breach monitor cron (PG-185) — consumed by TicketSlaMonitorWorker in ai-worker"
+    },
+    "intelliflow-ticket-auto-close": {
+      "producer": "apps/ai-worker",
+      "consumer": "apps/ai-worker",
+      "notes": "Ticket auto-close sweep cron (PG-185) — consumed by TicketAutoCloseWorker in ai-worker"
+    },
+    "intelliflow-ticket-ai-automation": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Ticket AI automation jobs — consumed by processTicketAiAutomationJob in ai-worker"
+    },
+    "intelliflow-deal-ai-automation": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Deal AI automation jobs — consumed by processDealAiAutomationJob in ai-worker"
+    },
+    "intelliflow-case-deadline-monitor": {
+      "producer": "apps/ai-worker",
+      "consumer": "apps/ai-worker",
+      "notes": "Case deadline monitor cron — consumed by CaseDeadlineMonitorWorker in ai-worker"
+    },
+    "intelliflow-embedding-generation": {
+      "producer": "apps/ai-worker",
+      "consumer": "apps/ai-worker",
+      "notes": "Embedding generation (visible on Bull Board dashboard); consumed indirectly via intelliflow-document-reindex delegation path"
+    },
+    "ai-case-ai-automation": {
+      "producer": "apps/api",
+      "consumer": "apps/ai-worker",
+      "notes": "Case AI automation jobs — consumed by processCaseAiAutomationJob in ai-worker"
+    }
+  }
+}

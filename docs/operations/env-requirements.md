@@ -66,15 +66,19 @@ clear error message.
 
 ### Email
 
-| Variable     | Required | Description           | Example                   |
-| ------------ | -------- | --------------------- | ------------------------- |
-| `SMTP_HOST`  | Yes\*    | SMTP server host      | `smtp.sendgrid.net`       |
-| `SMTP_PORT`  | No       | SMTP port             | `587`                     |
-| `SMTP_USER`  | Yes\*    | SMTP username         | `apikey`                  |
-| `SMTP_PASS`  | Yes\*    | SMTP password/API key | Secret                    |
-| `EMAIL_FROM` | Yes\*    | Default sender email  | `noreply@intelliflow.com` |
+| Variable     | Required | Description           | Example             |
+| ------------ | -------- | --------------------- | ------------------- |
+| `SMTP_HOST`  | Yes\*    | SMTP server host      | `smtp.sendgrid.net` |
+| `SMTP_PORT`  | No       | SMTP port             | `587`               |
+| `SMTP_USER`  | Yes\*    | SMTP username         | `apikey`            |
+| `SMTP_PASS`  | Yes\*    | SMTP password/API key | Secret              |
+| `EMAIL_FROM` | Yes\*    | Default sender email  | `crm@leangency.com` |
 
 \*Required if email notifications are enabled
+
+For the Leangency production tenant, use Zoho/Resend-verified operational
+addresses: `crm@leangency.com` for IntelliFlow CRM system/contact mail and
+`support@leangency.com` for support replies.
 
 ### Webhooks
 

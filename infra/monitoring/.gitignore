@@ -1,0 +1,3 @@
+# Terraform-rendered monitoring manifests (modules/monitoring local_file).
+# Generated on `terraform apply`; derived artifact, not source.
+*.monitoring.generated.json

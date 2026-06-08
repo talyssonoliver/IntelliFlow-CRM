@@ -651,10 +651,11 @@ describe('RateLimitMiddleware', () => {
     it('should require REDIS_URL to be configured', async () => {
       const { RedisRateLimiter } = await import('../rate-limit.js');
       delete process.env.REDIS_URL;
+      delete process.env.RATE_LIMIT_REDIS_URL; // code now falls back to this name (issue #316)
       const limiter = new RedisRateLimiter();
 
       await expect(limiter.checkLimit('test-key', 10, 60000)).rejects.toThrow(
-        'REDIS_URL environment variable is required'
+        'required for distributed rate limiting'
       );
     });
   });
@@ -1109,5 +1110,143 @@ describe('RateLimitMiddleware', () => {
         expect(error.cause.retryAfter).toBeDefined();
       }
     });
+  });
+});
+
+describe('createDistributedRateLimitMiddleware() — issue #316 caveat 3a', () => {
+  const ORIGINAL_ENV = process.env;
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.useRealTimers();
+    process.env = { ...ORIGINAL_ENV };
+  });
+
+  afterEach(() => {
+    process.env = ORIGINAL_ENV;
+    vi.restoreAllMocks();
+  });
+
+  const authedCtx = (userId: string): Context =>
+    createMockContext({ user: { userId, email: 'a@b.c', role: 'USER', tenantId: 't' } });
+
+  it('pass-through fallback never limits when Redis is not enabled (dev/test)', async () => {
+    delete process.env.REDIS_URL;
+    delete process.env.RATE_LIMIT_REDIS_URL;
+    const { createDistributedRateLimitMiddleware, RATE_LIMIT_TIERS } =
+      await import('../rate-limit.js');
+    const mw = createDistributedRateLimitMiddleware(RATE_LIMIT_TIERS.PUBLIC, {
+      fallback: 'pass-through',
+    });
+    const next = vi.fn(async () => ({ ok: true }));
+    const ctx = createMockContext();
+    for (let i = 0; i < RATE_LIMIT_TIERS.PUBLIC.limit + 5; i++) {
+      await mw({ ctx, next });
+    }
+    expect(next).toHaveBeenCalledTimes(RATE_LIMIT_TIERS.PUBLIC.limit + 5);
+  });
+
+  it('in-memory fallback enforces the tier when Redis is not enabled', async () => {
+    delete process.env.REDIS_URL;
+    delete process.env.RATE_LIMIT_REDIS_URL;
+    const { createDistributedRateLimitMiddleware, RATE_LIMIT_TIERS } =
+      await import('../rate-limit.js');
+    const mw = createDistributedRateLimitMiddleware(RATE_LIMIT_TIERS.AUTH, {
+      fallback: 'in-memory',
+    });
+    const next = vi.fn(async () => ({ ok: true }));
+    const ctx = authedCtx('u-auth');
+    for (let i = 0; i < RATE_LIMIT_TIERS.AUTH.limit; i++) {
+      await mw({ ctx, next });
+    }
+    await expect(mw({ ctx, next })).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
+  });
+
+  it('activates the RedisRateLimiter when a rediss:// URL is configured', async () => {
+    process.env.REDIS_URL = 'rediss://managed-host:6379';
+    const {
+      createDistributedRateLimitMiddleware,
+      RATE_LIMIT_TIERS,
+      RedisRateLimiter,
+      __setSharedRedisLimiter,
+    } = await import('../rate-limit.js');
+    const counts = new Map<string, number>();
+    const incr = vi.fn(async (key: string) => {
+      const c = (counts.get(key) ?? 0) + 1;
+      counts.set(key, c);
+      return c;
+    });
+    __setSharedRedisLimiter(
+      new RedisRateLimiter({ incr, pexpire: async () => 1, connect: async () => {} })
+    );
+    const mw = createDistributedRateLimitMiddleware(RATE_LIMIT_TIERS.AUTH, {
+      fallback: 'in-memory',
+    });
+    const next = vi.fn(async () => ({ ok: true }));
+    const ctx = authedCtx('u-redis');
+    for (let i = 0; i < RATE_LIMIT_TIERS.AUTH.limit; i++) {
+      await mw({ ctx, next });
+    }
+    await expect(mw({ ctx, next })).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
+    expect(incr).toHaveBeenCalled();
+  });
+
+  it('keys anonymous requests per client IP (separate buckets) on the Redis path', async () => {
+    process.env.REDIS_URL = 'rediss://managed-host:6379';
+    const {
+      createDistributedRateLimitMiddleware,
+      RATE_LIMIT_TIERS,
+      RedisRateLimiter,
+      __setSharedRedisLimiter,
+    } = await import('../rate-limit.js');
+    const counts = new Map<string, number>();
+    const incr = vi.fn(async (key: string) => {
+      const c = (counts.get(key) ?? 0) + 1;
+      counts.set(key, c);
+      return c;
+    });
+    __setSharedRedisLimiter(
+      new RedisRateLimiter({ incr, pexpire: async () => 1, connect: async () => {} })
+    );
+    const mw = createDistributedRateLimitMiddleware(RATE_LIMIT_TIERS.AUTH, {
+      fallback: 'in-memory',
+    });
+    const next = vi.fn(async () => ({ ok: true }));
+    const ctxA = createMockContext({
+      req: new Request('http://x', { headers: { 'x-real-ip': '1.1.1.1' } }),
+    });
+    const ctxB = createMockContext({
+      req: new Request('http://x', { headers: { 'x-real-ip': '2.2.2.2' } }),
+    });
+    for (let i = 0; i < RATE_LIMIT_TIERS.AUTH.limit; i++) {
+      await mw({ ctx: ctxA, next });
+    }
+    await expect(mw({ ctx: ctxA, next })).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
+    await expect(mw({ ctx: ctxB, next })).resolves.toBeDefined();
+  });
+
+  it('degrades to the fallback (does not fail the request) on a Redis error', async () => {
+    process.env.REDIS_URL = 'rediss://managed-host:6379';
+    const {
+      createDistributedRateLimitMiddleware,
+      RATE_LIMIT_TIERS,
+      RedisRateLimiter,
+      __setSharedRedisLimiter,
+    } = await import('../rate-limit.js');
+    __setSharedRedisLimiter(
+      new RedisRateLimiter({
+        incr: async () => {
+          throw new Error('redis down');
+        },
+        pexpire: async () => 1,
+        connect: async () => {},
+      })
+    );
+    const mw = createDistributedRateLimitMiddleware(RATE_LIMIT_TIERS.PUBLIC, {
+      fallback: 'pass-through',
+    });
+    const next = vi.fn(async () => ({ ok: true }));
+    await mw({ ctx: createMockContext(), next });
+    expect(next).toHaveBeenCalled();
   });
 });

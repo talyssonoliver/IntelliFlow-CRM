@@ -32,6 +32,15 @@ jobs:
             dockerfile: infra/docker/Dockerfile.api
           - service: ai-worker
             dockerfile: infra/docker/Dockerfile.ai-worker
+          # INFRA-TF-005: the 3 workers (events/ingestion/notifications) so their
+          # ghcr.io/<owner>/intelliflow-crm-<svc>:latest images exist for the
+          # Railway services defined in the env tfvars (INFRA-TF-002).
+          - service: events-worker
+            dockerfile: apps/workers/events-worker/Dockerfile
+          - service: ingestion-worker
+            dockerfile: apps/workers/ingestion-worker/Dockerfile
+          - service: notifications-worker
+            dockerfile: apps/workers/notifications-worker/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -46,23 +55,117 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Image metadata
-        id: meta
-        uses: docker/metadata-action@v6
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/intelliflow-crm-${{ matrix.service }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=short
-            type=ref,event=tag
+      # Retried buildx (was docker/build-push-action). The base-image pull from
+      # Docker Hub intermittently times out ("context deadline exceeded") on one
+      # matrix service, reddening main; a re-attempt clears it. The GHA layer
+      # cache makes retries cheap. Tags: latest + sha-<short> (+ the git tag on
+      # v* tag pushes), matching the previous metadata-action output.
+      - name: Build and push (retry transient registry timeouts)
+        shell: bash
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/intelliflow-crm-${{ matrix.service }}
+          DOCKERFILE: ${{ matrix.dockerfile }}
+        run: |
+          set -euo pipefail
+          short_sha="${GITHUB_SHA::7}"
+          tags=(--tag "$IMAGE:latest" --tag "$IMAGE:sha-$short_sha")
+          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
+            tags+=(--tag "$IMAGE:${GITHUB_REF#refs/tags/}")
+          fi
+          for attempt in 1 2 3; do
+            echo "::group::build $IMAGE (attempt $attempt)"
+            if docker buildx build --push \
+                 --file "$DOCKERFILE" \
+                 "${tags[@]}" \
+                 --cache-from type=gha \
+                 --cache-to type=gha,mode=max \
+                 .; then
+              echo "::endgroup::"
+              echo "build succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "attempt $attempt failed (likely a transient registry timeout); retrying in 20s"
+            sleep 20
+          done
+          echo "build failed after 3 attempts"
+          exit 1
 
-      - name: Build and push
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+  # ---------------------------------------------------------------------------
+  # D3: container boot-crash smoke (ADVISORY — continue-on-error while proving).
+  # Builds the API / AI-worker images locally (--load, no push) and asserts the
+  # container does not crash-loop on boot under a representative stub env. This is
+  # the gate whose absence let the 2026-06-03 prod boot outage ship (module-init
+  # crashes that passed tsc + unit + `docker build`).
+  #
+  # `continue-on-error` is intentional for now: the job must NOT block image
+  # publishing / deploys until its stub env is proven across several real CI runs.
+  # Once it is consistently green, drop continue-on-error to make it a hard gate.
+  # ---------------------------------------------------------------------------
+  boot-smoke:
+    name: Container boot smoke (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: api
+            dockerfile: infra/docker/Dockerfile.api
+          - service: ai-worker
+            dockerfile: infra/docker/Dockerfile.ai-worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build image locally (no push)
+        run: |
+          set -euo pipefail
+          docker buildx build --load \
+            --file "${{ matrix.dockerfile }}" \
+            --tag "boot-smoke/${{ matrix.service }}:test" \
+            --cache-from type=gha \
+            .
+
+      - name: Boot the container and assert it does not crash-loop
+        run: |
+          set -euo pipefail
+          name="smoke-${{ matrix.service }}"
+          # Representative stub env. Real secrets are injected at deploy time; these
+          # only need to let module-init succeed (the boot-crash class). AI_PROVIDER
+          # is gated to openai so the LiteLLM module-init sites do not require a proxy.
+          docker run -d --name "$name" \
+            -e NODE_ENV=production \
+            -e AI_PROVIDER=openai \
+            -e OPENAI_API_KEY=sk-boot-smoke-placeholder \
+            -e DATABASE_URL=postgresql://stub:stub@127.0.0.1:5432/stub \
+            -e DIRECT_URL=postgresql://stub:stub@127.0.0.1:5432/stub \
+            -e PRISMA_FIELD_ENCRYPTION_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+            -e AI_AUDIT_SIGNING_KEY=boot-smoke-placeholder \
+            -e SUPABASE_URL=https://supabase.example.com \
+            -e SUPABASE_ANON_KEY=boot-smoke-placeholder \
+            -e SUPABASE_SERVICE_ROLE_KEY=boot-smoke-placeholder \
+            "boot-smoke/${{ matrix.service }}:test"
+
+          # A boot crash exits within a couple of seconds; 20s comfortably covers
+          # module-init either succeeding or crashing.
+          sleep 20
+
+          running="$(docker inspect -f '{{.State.Running}}' "$name" 2>/dev/null || echo false)"
+          echo "--- container logs (${{ matrix.service }}) ---"
+          docker logs "$name" 2>&1 | tail -80 || true
+          echo "--- end logs ---"
+
+          if [ "$running" != "true" ]; then
+            code="$(docker inspect -f '{{.State.ExitCode}}' "$name" 2>/dev/null || echo '?')"
+            echo "BOOT SMOKE FAIL: ${{ matrix.service }} is not running (exit code $code) — likely a module-init / boot crash."
+            exit 1
+          fi
+          echo "BOOT SMOKE OK: ${{ matrix.service }} stayed up through module-init."
+
+      - name: Tear down
+        if: always()
+        run: docker rm -f "smoke-${{ matrix.service }}" 2>/dev/null || true

@@ -75,18 +75,22 @@ vi.mock('../jobs', () => ({
   SUMMARIZE_QUEUE: 'ai-summarize-conversation',
   FEEDBACK_ANALYTICS_QUEUE: 'ai-feedback-analytics',
   MEMORY_RETENTION_QUEUE: 'ai-memory-retention',
+  PORTAL_SWEEP_QUEUE: 'portal-sweep',
   FEEDBACK_ANALYTICS_CRON: '0 2 * * *',
   MEMORY_RETENTION_CRON: '0 3 * * *',
+  PORTAL_SWEEP_CRON: '0 5 * * *',
   DEFAULT_SCORING_JOB_OPTIONS: { attempts: 3 },
   DEFAULT_INSIGHT_JOB_OPTIONS: { attempts: 3 },
   DEFAULT_FEEDBACK_ANALYTICS_JOB_OPTIONS: { attempts: 3 },
   DEFAULT_MEMORY_RETENTION_JOB_OPTIONS: { attempts: 3 },
+  DEFAULT_PORTAL_SWEEP_JOB_OPTIONS: { attempts: 3 },
   processScoringJob: mocks.mockProcessScoringJob,
   processPredictionJob: mocks.mockProcessPredictionJob,
   processInsightJob: vi.fn().mockResolvedValue({}),
   processSummarizeJob: vi.fn().mockResolvedValue({}),
   processFeedbackAnalyticsJob: vi.fn().mockResolvedValue({}),
   processMemoryRetentionJob: vi.fn().mockResolvedValue({}),
+  processPortalSweepJob: vi.fn().mockResolvedValue({}),
 }));
 
 // ============================================================
