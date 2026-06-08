@@ -27,3 +27,8 @@ apps/web/src/components/blog/markdown-renderer.tsx
 **/*.test.tsx
 **/*.spec.ts
 **/*.spec.tsx
+
+# Supabase Auth (GoTrue) email templates — static email HTML, not an app render
+# path. The {{ .ConfirmationURL }} in the <a href> is GoTrue's own server-rendered,
+# signed single-use URL (not user input), but it trips the raw-href template rule.
+supabase/templates/
