@@ -42,8 +42,37 @@ jobs:
             ci
             chore
             revert
+          # The squash subject is built from the PR TITLE at merge time, so a
+          # title whose subject starts upper-case produces a squash commit that
+          # CI's system-audit commit_msg_lint.py rejects AFTER merge (recurring:
+          # #58 / #118 / #221 / #340, tracked as #227). Mirror the linter's
+          # subject-case rule here so the title can't pass review and then red
+          # the post-merge commitlint. Proper nouns included — lower-case start.
+          subjectPattern: '^(?![A-Z]).+$'
+          subjectPatternError: |
+            The subject "{subject}" must start with a lower-case letter — the
+            squash commit is built from this title and CI's commit_msg_lint
+            (system-audit) rejects an upper-case subject. e.g. use
+            "feat(ai): openRouter fallback", not "feat(ai): OpenRouter fallback".
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate PR title length (squash subject <= 100)
+        # commit_msg_lint.py caps the header at 100 chars; the squash subject is
+        # the PR title, so enforce the same cap here (PR_TITLE via env, never
+        # interpolated into the script — injection-safe). Dependabot titles can
+        # legitimately run long (version tables); it's bot-exempt as elsewhere.
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+          len=${#PR_TITLE}
+          if [ "$len" -gt 100 ]; then
+            echo "::error::PR title is ${len} chars (max 100). The squash subject is built from the title and CI's commit_msg_lint rejects headers >100. Shorten it."
+            exit 1
+          fi
+          echo "PR title length ${len} <= 100. OK"
 
       - name: Check branch name
         # Dependabot uses its own `dependabot/<ecosystem>/<dep>-<version>` naming
