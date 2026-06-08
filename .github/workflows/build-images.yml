@@ -90,3 +90,82 @@ jobs:
           done
           echo "build failed after 3 attempts"
           exit 1
+
+  # ---------------------------------------------------------------------------
+  # D3: container boot-crash smoke (ADVISORY — continue-on-error while proving).
+  # Builds the API / AI-worker images locally (--load, no push) and asserts the
+  # container does not crash-loop on boot under a representative stub env. This is
+  # the gate whose absence let the 2026-06-03 prod boot outage ship (module-init
+  # crashes that passed tsc + unit + `docker build`).
+  #
+  # `continue-on-error` is intentional for now: the job must NOT block image
+  # publishing / deploys until its stub env is proven across several real CI runs.
+  # Once it is consistently green, drop continue-on-error to make it a hard gate.
+  # ---------------------------------------------------------------------------
+  boot-smoke:
+    name: Container boot smoke (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: api
+            dockerfile: infra/docker/Dockerfile.api
+          - service: ai-worker
+            dockerfile: infra/docker/Dockerfile.ai-worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build image locally (no push)
+        run: |
+          set -euo pipefail
+          docker buildx build --load \
+            --file "${{ matrix.dockerfile }}" \
+            --tag "boot-smoke/${{ matrix.service }}:test" \
+            --cache-from type=gha \
+            .
+
+      - name: Boot the container and assert it does not crash-loop
+        run: |
+          set -euo pipefail
+          name="smoke-${{ matrix.service }}"
+          # Representative stub env. Real secrets are injected at deploy time; these
+          # only need to let module-init succeed (the boot-crash class). AI_PROVIDER
+          # is gated to openai so the LiteLLM module-init sites do not require a proxy.
+          docker run -d --name "$name" \
+            -e NODE_ENV=production \
+            -e AI_PROVIDER=openai \
+            -e OPENAI_API_KEY=sk-boot-smoke-placeholder \
+            -e DATABASE_URL=postgresql://stub:stub@127.0.0.1:5432/stub \
+            -e DIRECT_URL=postgresql://stub:stub@127.0.0.1:5432/stub \
+            -e PRISMA_FIELD_ENCRYPTION_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+            -e AI_AUDIT_SIGNING_KEY=boot-smoke-placeholder \
+            -e SUPABASE_URL=https://supabase.example.com \
+            -e SUPABASE_ANON_KEY=boot-smoke-placeholder \
+            -e SUPABASE_SERVICE_ROLE_KEY=boot-smoke-placeholder \
+            "boot-smoke/${{ matrix.service }}:test"
+
+          # A boot crash exits within a couple of seconds; 20s comfortably covers
+          # module-init either succeeding or crashing.
+          sleep 20
+
+          running="$(docker inspect -f '{{.State.Running}}' "$name" 2>/dev/null || echo false)"
+          echo "--- container logs (${{ matrix.service }}) ---"
+          docker logs "$name" 2>&1 | tail -80 || true
+          echo "--- end logs ---"
+
+          if [ "$running" != "true" ]; then
+            code="$(docker inspect -f '{{.State.ExitCode}}' "$name" 2>/dev/null || echo '?')"
+            echo "BOOT SMOKE FAIL: ${{ matrix.service }} is not running (exit code $code) — likely a module-init / boot crash."
+            exit 1
+          fi
+          echo "BOOT SMOKE OK: ${{ matrix.service }} stayed up through module-init."
+
+      - name: Tear down
+        if: always()
+        run: docker rm -f "smoke-${{ matrix.service }}" 2>/dev/null || true

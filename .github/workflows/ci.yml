@@ -47,6 +47,12 @@ jobs:
       - name: Format check
         run: pnpm run format:check
 
+      # D3: assert every `FROM node:<major>` in the Dockerfiles matches .nvmrc.
+      # Catches the boot-outage class (2026-06-03) where a Dockerfile node major
+      # drifted from the runtime Node the app needs — passes build, crashes boot.
+      - name: Dockerfile Node version guard
+        run: pnpm run check:dockerfile-node
+
       # Folded in from the removed `PR Checks / Quality Checks` job
       # (Recommendation E of docs/operations/ci-cost-audit-2026-05-25.md) so a11y route
       # reconciliation is still enforced after deduplication. lint:artifacts
