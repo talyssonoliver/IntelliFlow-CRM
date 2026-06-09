@@ -428,6 +428,44 @@ describe('OutboundEmailService', () => {
       expect(result.error).not.toContain(apiKey);
       expect(result.error).toContain('[REDACTED]');
     });
+
+    it('covers the stub deliverability methods', async () => {
+      const provider = new ResendProvider('re_x');
+      const stats = await provider.getDeliverabilityStats();
+      expect(stats.sent).toBe(0);
+      expect(stats.deliverabilityRate).toBe(0);
+      expect(await provider.checkBounce('msg-1')).toBeNull();
+    });
+
+    it('serializes bcc, reply_to and base64 attachments', async () => {
+      global.fetch = vi
+        .fn()
+        .mockResolvedValue({ ok: true, status: 200, json: async () => ({ id: 'r1' }) });
+      const provider = new ResendProvider('re_x');
+      await provider.send({
+        from: { email: 'crm@leangency.com', type: 'to' },
+        replyTo: { email: 'reply@leangency.com', type: 'to' },
+        recipients: [
+          { email: 'to@example.com', type: 'to' },
+          { email: 'bcc@example.com', type: 'bcc' },
+        ],
+        subject: 'S',
+        textBody: 'T',
+        attachments: [
+          {
+            filename: 'r.pdf',
+            content: 'data',
+            contentType: 'application/pdf',
+            contentDisposition: 'attachment',
+          },
+        ],
+      } as OutboundEmail);
+      const body = JSON.parse((fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+      expect(body.bcc).toEqual(['bcc@example.com']);
+      expect(body.reply_to).toBe('reply@leangency.com');
+      expect(body.attachments[0].filename).toBe('r.pdf');
+      expect(body.attachments[0].content).toBe(Buffer.from('data').toString('base64'));
+    });
   });
 
   describe('createOutboundEmailService provider selection', () => {
@@ -435,6 +473,11 @@ describe('OutboundEmailService', () => {
       const svc = createOutboundEmailService({ resendApiKey: 're_x' });
       // The first (preferred) provider is Resend.
       expect((svc as unknown as { providers: EmailProvider[] }).providers[0].name).toBe('resend');
+    });
+
+    it('uses SendGrid when only a sendgridApiKey is configured', () => {
+      const svc = createOutboundEmailService({ sendgridApiKey: 'SG.x' });
+      expect((svc as unknown as { providers: EmailProvider[] }).providers[0].name).toBe('sendgrid');
     });
 
     it('falls back to mock with no provider keys', () => {

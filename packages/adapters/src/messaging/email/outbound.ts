@@ -272,6 +272,75 @@ export class MockEmailProvider implements EmailProvider {
 /**
  * SendGrid email provider
  */
+/** Shared "no pull-API" deliverability stub used by HTTP providers. */
+function defaultDeliverabilityStats(): DeliverabilityStats {
+  return {
+    sent: 0,
+    delivered: 0,
+    bounced: 0,
+    complained: 0,
+    opened: 0,
+    clicked: 0,
+    deliverabilityRate: 0,
+    period: { start: new Date(Date.now() - 86400000 * 30), end: new Date() },
+  };
+}
+
+/**
+ * Shared HTTP transport for JSON email APIs (SendGrid, Resend). Handles the
+ * AbortController timeout, Bearer auth, error mapping that never leaks the response
+ * body or the API key, and the success/failure {@link EmailSendResult} shape.
+ */
+async function deliverViaHttpJson(args: {
+  url: string;
+  apiKey: string;
+  payload: unknown;
+  providerName: string;
+  fallbackMessageId: string;
+  timeoutMs?: number;
+  extractMessageId?: (body: unknown) => string | undefined;
+}): Promise<EmailSendResult> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), args.timeoutMs ?? 10_000);
+  try {
+    const response = await fetch(args.url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${args.apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args.payload),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`Email delivery failed (provider error ${response.status})`);
+    }
+    let messageId = args.fallbackMessageId;
+    if (args.extractMessageId) {
+      const body = await response.json().catch(() => ({}));
+      messageId = args.extractMessageId(body) || args.fallbackMessageId;
+    }
+    return {
+      messageId,
+      provider: args.providerName,
+      status: 'queued',
+      timestamp: new Date(),
+      details: { statusCode: response.status },
+    };
+  } catch (error) {
+    let errorMessage = 'Unknown error';
+    if (error instanceof Error) {
+      errorMessage = error.message.replaceAll(args.apiKey, '[REDACTED]');
+    }
+    return {
+      messageId: args.fallbackMessageId,
+      provider: args.providerName,
+      status: 'failed',
+      timestamp: new Date(),
+      error: errorMessage,
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export class SendGridProvider implements EmailProvider {
   readonly name = 'sendgrid';
   private readonly apiKey: string;
@@ -331,65 +400,18 @@ export class SendGridProvider implements EmailProvider {
       send_at: email.scheduledAt ? Math.floor(email.scheduledAt.getTime() / 1000) : undefined,
     };
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10_000);
-
-    try {
-      const response = await fetch(`${this.baseUrl}/mail/send`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Email delivery failed (provider error ${response.status})`);
-      }
-
-      return {
-        messageId,
-        provider: this.name,
-        status: 'queued',
-        timestamp: new Date(),
-        details: {
-          statusCode: response.status,
-        },
-      };
-    } catch (error) {
-      let errorMessage = 'Unknown error';
-      if (error instanceof Error) {
-        errorMessage = error.message.replaceAll(this.apiKey, '[REDACTED]');
-      }
-      return {
-        messageId,
-        provider: this.name,
-        status: 'failed',
-        timestamp: new Date(),
-        error: errorMessage,
-      };
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    return deliverViaHttpJson({
+      url: `${this.baseUrl}/mail/send`,
+      apiKey: this.apiKey,
+      payload,
+      providerName: this.name,
+      fallbackMessageId: messageId,
+    });
   }
 
   async getDeliverabilityStats(): Promise<DeliverabilityStats> {
-    // In production, call SendGrid Stats API
-    return {
-      sent: 0,
-      delivered: 0,
-      bounced: 0,
-      complained: 0,
-      opened: 0,
-      clicked: 0,
-      deliverabilityRate: 0,
-      period: {
-        start: new Date(Date.now() - 86400000 * 30),
-        end: new Date(),
-      },
-    };
+    // In production, call SendGrid Stats API.
+    return defaultDeliverabilityStats();
   }
 
   async checkBounce(_messageId: string): Promise<BounceInfo | null> {
@@ -454,61 +476,19 @@ export class ResendProvider implements EmailProvider {
         : {}),
     };
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10_000);
-
-    try {
-      const response = await fetch(`${this.baseUrl}/emails`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Email delivery failed (provider error ${response.status})`);
-      }
-
-      const data = (await response.json().catch(() => ({}))) as { id?: string };
-      return {
-        messageId: data.id || messageId,
-        provider: this.name,
-        status: 'queued',
-        timestamp: new Date(),
-        details: { statusCode: response.status },
-      };
-    } catch (error) {
-      let errorMessage = 'Unknown error';
-      if (error instanceof Error) {
-        errorMessage = error.message.replaceAll(this.apiKey, '[REDACTED]');
-      }
-      return {
-        messageId,
-        provider: this.name,
-        status: 'failed',
-        timestamp: new Date(),
-        error: errorMessage,
-      };
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    return deliverViaHttpJson({
+      url: `${this.baseUrl}/emails`,
+      apiKey: this.apiKey,
+      payload,
+      providerName: this.name,
+      fallbackMessageId: messageId,
+      extractMessageId: (body) => (body as { id?: string }).id,
+    });
   }
 
   async getDeliverabilityStats(): Promise<DeliverabilityStats> {
-    // Resend exposes deliverability via webhooks/dashboard, not a pull API here.
-    return {
-      sent: 0,
-      delivered: 0,
-      bounced: 0,
-      complained: 0,
-      opened: 0,
-      clicked: 0,
-      deliverabilityRate: 0,
-      period: { start: new Date(Date.now() - 86400000 * 30), end: new Date() },
-    };
+    // Resend exposes deliverability via webhooks/dashboard, not a pull API.
+    return defaultDeliverabilityStats();
   }
 
   async checkBounce(_messageId: string): Promise<BounceInfo | null> {
