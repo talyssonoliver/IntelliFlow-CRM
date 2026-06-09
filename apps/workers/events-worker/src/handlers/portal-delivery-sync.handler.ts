@@ -13,13 +13,13 @@
  * the concrete Prisma / HTTP adapters. Failures from provision/push throw, so
  * the outbox retries (both portal endpoints are idempotent).
  *
- * NOTE: the Stripe setup-fee *invoicing* (finalize instalment-1, day-7/14 jobs,
- * invoice.paid → status) is intentionally NOT done here — there is no
- * opportunity→Stripe-customer link in the schema today (stripeCustomerId lives
- * on User), so charging is a separate billing wire. The instalment *amounts and
- * due dates* are still reflected to the portal from the persisted plan.
+ * After provisioning + pushing, it also fires the setup-fee *invoicing*
+ * (`invoiceSetupFee`, optional dep): now that `Opportunity.stripeCustomerId`
+ * exists (with an owner-fallback + create chain), each DUE instalment is billed
+ * via a finalised Stripe invoice. Best-effort + idempotent — a billing failure
+ * never blocks delivery, and already-invoiced instalments are skipped.
  *
- * @task IFC-314 - CRM->portal delivery/billing sync (step 7)
+ * @task IFC-314 - CRM->portal delivery/billing sync (steps 7 + 8)
  */
 
 import type { OutboxEvent } from '../outbox/event-dispatcher';
@@ -106,6 +106,13 @@ export interface PortalDeliverySyncHandlerDeps {
   setupInstalments: PortalSyncInstalmentReader;
   portalSync: PortalSyncClient;
   logger: LoggerLike;
+  /**
+   * Optional: bill the persisted setup-fee instalments (IFC-314 step 8). Wired in
+   * the container to {@link invoiceSetupInstalments}. Best-effort — left undefined
+   * (e.g. in unit tests / when Stripe is unconfigured) the deal still provisions +
+   * pushes; only the charging is skipped.
+   */
+  invoiceSetupFee?: (args: { opportunityId: string; tenantId: string }) => Promise<void>;
 }
 
 /**
@@ -203,5 +210,19 @@ export function createPortalDeliverySyncHandler(deps: PortalDeliverySyncHandlerD
       { opportunityId, slug, instalments: setupInstalments.length },
       '[portal-sync] provisioned + pushed delivery'
     );
+
+    // 4. IFC-314 step 8: bill the setup-fee instalments (best-effort; the helper
+    // swallows its own errors, but guard here too so a throw can never undo the
+    // already-succeeded provision + push).
+    if (deps.invoiceSetupFee) {
+      try {
+        await deps.invoiceSetupFee({ opportunityId, tenantId });
+      } catch (err) {
+        deps.logger.error(
+          { opportunityId, slug, error: err instanceof Error ? err.message : String(err) },
+          '[portal-sync] setup-fee invoicing threw (non-fatal)'
+        );
+      }
+    }
   };
 }

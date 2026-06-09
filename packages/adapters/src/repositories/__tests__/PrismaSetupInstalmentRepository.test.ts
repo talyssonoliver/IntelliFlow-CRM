@@ -129,4 +129,16 @@ describe('PrismaSetupInstalmentRepository', () => {
       });
     });
   });
+
+  describe('markPaidByStripeInvoiceId', () => {
+    it('updateMany by the unique invoice id → status PAID + paidAt', async () => {
+      (mockPrisma.setupInstalment.updateMany as any).mockResolvedValue({ count: 1 });
+      const paidAt = new Date('2026-06-09T10:00:00.000Z');
+      await repo.markPaidByStripeInvoiceId({ stripeInvoiceId: 'in_xyz', paidAt });
+      expect((mockPrisma.setupInstalment.updateMany as any).mock.calls[0][0]).toEqual({
+        where: { stripeInvoiceId: 'in_xyz' },
+        data: { status: 'PAID', paidAt },
+      });
+    });
+  });
 });

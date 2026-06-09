@@ -198,4 +198,20 @@ describe('createPortalDeliverySyncHandler', () => {
     await createPortalDeliverySyncHandler(h.deps)(event);
     expect(h.findUnique.mock.calls[0][0].where.id).toBe(OPP);
   });
+
+  it('fires setup-fee invoicing after a successful push', async () => {
+    const invoiceSetupFee = vi.fn().mockResolvedValue(undefined);
+    await createPortalDeliverySyncHandler({ ...h.deps, invoiceSetupFee })(makeEvent());
+    expect(h.pushDelivery).toHaveBeenCalled();
+    expect(invoiceSetupFee).toHaveBeenCalledWith({ opportunityId: OPP, tenantId: TENANT });
+  });
+
+  it('a throwing invoiceSetupFee never undoes the already-succeeded provision + push', async () => {
+    const invoiceSetupFee = vi.fn().mockRejectedValue(new Error('stripe down'));
+    await expect(
+      createPortalDeliverySyncHandler({ ...h.deps, invoiceSetupFee })(makeEvent())
+    ).resolves.toBeUndefined();
+    expect(h.provisionTenant).toHaveBeenCalled();
+    expect(h.pushDelivery).toHaveBeenCalled();
+  });
 });

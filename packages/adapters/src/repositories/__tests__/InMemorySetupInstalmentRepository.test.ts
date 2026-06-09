@@ -64,4 +64,31 @@ describe('InMemorySetupInstalmentRepository', () => {
     await repo.createForOpportunity({ opportunityId: OPP, tenantId: TENANT, instalments: [] });
     expect(await repo.findByOpportunity(OPP, TENANT)).toEqual([]);
   });
+
+  it('marks the instalment carrying a given invoice id paid', async () => {
+    await repo.createForOpportunity({ opportunityId: OPP, tenantId: TENANT, instalments: plan() });
+    await repo.setStripeInvoiceId({
+      opportunityId: OPP,
+      tenantId: TENANT,
+      n: 2,
+      stripeInvoiceId: 'in_2',
+    });
+    const paidAt = new Date('2026-06-09T10:00:00.000Z');
+
+    await repo.markPaidByStripeInvoiceId({ stripeInvoiceId: 'in_2', paidAt });
+
+    const rows = await repo.findByOpportunity(OPP, TENANT);
+    expect(rows.find((r) => r.n === 2)).toMatchObject({ status: 'paid', paidAt });
+    // siblings untouched
+    expect(rows.find((r) => r.n === 1)).toMatchObject({ status: 'due', paidAt: null });
+  });
+
+  it('markPaidByStripeInvoiceId is a no-op for an unknown invoice id', async () => {
+    await repo.createForOpportunity({ opportunityId: OPP, tenantId: TENANT, instalments: plan() });
+    await expect(
+      repo.markPaidByStripeInvoiceId({ stripeInvoiceId: 'in_missing', paidAt: new Date() })
+    ).resolves.toBeUndefined();
+    const rows = await repo.findByOpportunity(OPP, TENANT);
+    expect(rows.every((r) => r.status === 'due')).toBe(true);
+  });
 });
