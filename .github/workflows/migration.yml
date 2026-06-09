@@ -83,9 +83,15 @@ jobs:
           npx prisma format
           echo "Schema validation passed"
 
-      - name: Check governance columns (ADR-007)
-        # Single source of truth — the same gate runs in pre-ship + PR CI so a
-        # missing governance column can't rot red only on main (see the script).
+      - name: Check governance schema (ADR-007)
+        # Single source of truth: scripts/check-governance-schema.mjs. The SAME
+        # script runs in pre-ship (so the gate can't rot red only on main, per the
+        # original brief) and here in CI. It asserts the ADR-007 primitives —
+        # DataClassification taxonomy + applied metadata + DocumentRetentionPolicy —
+        # PLUS per-model classification on the four PII entities (Lead/Contact/
+        # Account/Opportunity), which #370 implements. DSAR/legal-hold stay raw-SQL
+        # tables + the DSAR workflow (#355), NOT Prisma models — so they are
+        # deliberately not asserted here.
         run: node scripts/check-governance-schema.mjs
 
   # Job 2: Execute dry-run migration
@@ -93,6 +99,14 @@ jobs:
     name: Dry-Run Migration
     runs-on: ubuntu-latest
     needs: validate
+    # Only run the actual legacy->new migration dry-run when a source DB is
+    # provided (workflow_dispatch with source_url). On schedule / push to
+    # schema.prisma / input-less dispatch there is nothing to migrate FROM, so
+    # skip — `validate` is the meaningful CI check. reconciliation + target jobs
+    # cascade off this via `needs:`, so they skip too. (This is why Migration
+    # ETL stayed red after `validate` went green: the chain forced a sourceless
+    # dry-run that can't succeed.)
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.source_url != '' }}
     timeout-minutes: 30
 
     services:
@@ -137,6 +151,13 @@ jobs:
             CREATE SCHEMA IF NOT EXISTS extensions;
             DO $$
             BEGIN
+              -- The squashed baseline migration GRANTs to / ALTERs DEFAULT
+              -- PRIVILEGES FOR ROLE postgres (Supabase's owner role). The CI
+              -- service runs as `test`, so create postgres explicitly or the
+              -- baseline fails P3018 "role postgres does not exist".
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'postgres') THEN
+                CREATE ROLE postgres NOLOGIN;
+              END IF;
               IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
                 CREATE ROLE anon NOLOGIN;
               END IF;
@@ -146,14 +167,11 @@ jobs:
               IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
                 CREATE ROLE service_role NOLOGIN BYPASSRLS;
               END IF;
-              -- Supabase's superuser-equivalent. The CI Postgres superuser is `test`,
-              -- so `postgres` must exist for the baseline migration's
-              -- `GRANT ... TO postgres` (and any OWNER/RLS refs) to apply.
-              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'postgres') THEN
-                CREATE ROLE postgres SUPERUSER;
-              END IF;
             END
             $$;
+            -- test (the CI superuser) must be a member of postgres to run the
+            -- baseline's ALTER DEFAULT PRIVILEGES FOR ROLE postgres.
+            GRANT postgres TO test;
             GRANT USAGE ON SCHEMA extensions TO test, anon, authenticated, service_role;
           SQL
 
@@ -177,14 +195,6 @@ jobs:
             --since "2020-01-01T00:00:00Z" \
             --dry-run
 
-      - name: Build library packages
-        # The integration tests below import @intelliflow/db, which resolves to its
-        # built ./dist entry (package.json main/module/exports). The full CI Pipeline
-        # builds libs first; this job must too, or vite fails to resolve the entry
-        # ("Failed to resolve entry for package @intelliflow/db"). turbo builds
-        # @intelliflow/db + its workspace deps (dependsOn ^build).
-        run: pnpm exec turbo run build --filter=@intelliflow/db
-
       - name: Run integration tests
         run: |
           pnpm exec vitest run scripts/migration/__tests__/migration.integration.test.ts
@@ -195,11 +205,6 @@ jobs:
     name: Reconciliation Report
     runs-on: ubuntu-latest
     needs: dry-run
-    # IFC-070 data-migration reconciliation only has meaning for an actual
-    # legacy->new migration (source_url provided). On routine schema pushes/PRs the
-    # test DB is freshly migrated + empty, so reconciliation.ts FAILs on 0 rows.
-    # Gate it to explicit data-migration runs; target-validation follows via needs.
-    if: ${{ github.event.inputs.source_url != '' }}
     timeout-minutes: 15
 
     services:
@@ -244,6 +249,13 @@ jobs:
             CREATE SCHEMA IF NOT EXISTS extensions;
             DO $$
             BEGIN
+              -- The squashed baseline migration GRANTs to / ALTERs DEFAULT
+              -- PRIVILEGES FOR ROLE postgres (Supabase's owner role). The CI
+              -- service runs as `test`, so create postgres explicitly or the
+              -- baseline fails P3018 "role postgres does not exist".
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'postgres') THEN
+                CREATE ROLE postgres NOLOGIN;
+              END IF;
               IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
                 CREATE ROLE anon NOLOGIN;
               END IF;
@@ -253,14 +265,11 @@ jobs:
               IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
                 CREATE ROLE service_role NOLOGIN BYPASSRLS;
               END IF;
-              -- Supabase's superuser-equivalent. The CI Postgres superuser is `test`,
-              -- so `postgres` must exist for the baseline migration's
-              -- `GRANT ... TO postgres` (and any OWNER/RLS refs) to apply.
-              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'postgres') THEN
-                CREATE ROLE postgres SUPERUSER;
-              END IF;
             END
             $$;
+            -- test (the CI superuser) must be a member of postgres to run the
+            -- baseline's ALTER DEFAULT PRIVILEGES FOR ROLE postgres.
+            GRANT postgres TO test;
             GRANT USAGE ON SCHEMA extensions TO test, anon, authenticated, service_role;
           SQL
 
@@ -268,7 +277,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
         run: |
-          pnpm --filter @intelliflow/db db:migrate
+          pnpm --filter @intelliflow/db prisma migrate deploy
 
       - name: Generate reconciliation report
         env:
@@ -303,9 +312,6 @@ jobs:
     name: Target Validation
     runs-on: ubuntu-latest
     needs: reconciliation
-    # Data-migration validation — same gating as reconciliation (only for an actual
-    # legacy->new migration). Skips on routine schema pushes/PRs.
-    if: ${{ github.event.inputs.source_url != '' }}
     timeout-minutes: 15
 
     services:
@@ -350,6 +356,13 @@ jobs:
             CREATE SCHEMA IF NOT EXISTS extensions;
             DO $$
             BEGIN
+              -- The squashed baseline migration GRANTs to / ALTERs DEFAULT
+              -- PRIVILEGES FOR ROLE postgres (Supabase's owner role). The CI
+              -- service runs as `test`, so create postgres explicitly or the
+              -- baseline fails P3018 "role postgres does not exist".
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'postgres') THEN
+                CREATE ROLE postgres NOLOGIN;
+              END IF;
               IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
                 CREATE ROLE anon NOLOGIN;
               END IF;
@@ -359,14 +372,11 @@ jobs:
               IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
                 CREATE ROLE service_role NOLOGIN BYPASSRLS;
               END IF;
-              -- Supabase's superuser-equivalent. The CI Postgres superuser is `test`,
-              -- so `postgres` must exist for the baseline migration's
-              -- `GRANT ... TO postgres` (and any OWNER/RLS refs) to apply.
-              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'postgres') THEN
-                CREATE ROLE postgres SUPERUSER;
-              END IF;
             END
             $$;
+            -- test (the CI superuser) must be a member of postgres to run the
+            -- baseline's ALTER DEFAULT PRIVILEGES FOR ROLE postgres.
+            GRANT postgres TO test;
             GRANT USAGE ON SCHEMA extensions TO test, anon, authenticated, service_role;
           SQL
 
@@ -374,7 +384,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
         run: |
-          pnpm --filter @intelliflow/db db:migrate
+          pnpm --filter @intelliflow/db prisma migrate deploy
 
       - name: Run target validation
         env:
@@ -395,11 +405,6 @@ jobs:
             echo "✗ migration-log.txt not found"
             exit 1
           fi
-
-      - name: Build library packages
-        # The rollback integration test imports @intelliflow/db (resolves to ./dist);
-        # build the lib first or vite fails to resolve the entry (same as the dry-run job).
-        run: pnpm exec turbo run build --filter=@intelliflow/db
 
       - name: Run rollback procedure tests
         run: pnpm exec vitest run scripts/migration/__tests__/rollback.integration.test.ts

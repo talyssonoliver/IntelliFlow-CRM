@@ -262,6 +262,17 @@ function createNotificationServiceAdapter():
   | MockNotificationServiceAdapter
   | RealNotificationServiceAdapter {
   const emailProvider = process.env.EMAIL_PROVIDER || 'mock';
+  // Resend is the IntelliFlow stack's provider (#360). Degrade to mock if the key is
+  // missing — never throw at container/module init (that crash-loops the app; see the
+  // module-init fail-fast incident).
+  if (emailProvider === 'resend' && process.env.RESEND_API_KEY) {
+    const emailAdapter = createEmailServiceAdapter({ resendApiKey: process.env.RESEND_API_KEY });
+    return new RealNotificationServiceAdapter(emailAdapter, {
+      fromAddress:
+        process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'crm@leangency.com',
+      fromName: process.env.EMAIL_FROM_NAME,
+    });
+  }
   if (emailProvider === 'sendgrid') {
     const sendgridApiKey = process.env.SENDGRID_API_KEY;
     if (!sendgridApiKey) {

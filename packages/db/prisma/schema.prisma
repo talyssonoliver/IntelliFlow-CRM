@@ -33,10 +33,6 @@ model Tenant {
   accounts             Account[]                  @ignore
   opportunities        Opportunity[]              @ignore
   tasks                Task[]                     @ignore
-  // ADR-007 data governance
-  dataGovernancePolicies DataGovernancePolicy[]   @ignore
-  legalHolds           LegalHold[]                @ignore
-  dsarRequests         DSARRequest[]              @ignore
   tickets              Ticket[]                   @ignore
   auditLogs            AuditLog[]                 @ignore
   auditLogEntries      AuditLogEntry[]            @ignore
@@ -2605,66 +2601,13 @@ enum DataClassification {
   PRIVILEGED
 }
 
-/// ADR-007 data governance — retention policy per (tenant, entity type).
-model DataGovernancePolicy {
-  id                  String             @id @default(uuid())
-  tenantId            String
-  tenant              Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  entityType          String
-  classification      DataClassification
-  retentionPeriodDays Int
-  autoDeleteEnabled   Boolean            @default(true)
-  legalHoldOverride   Boolean            @default(false)
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-
-  @@index([tenantId])
-  @@index([entityType])
-  @@map("data_governance_policies")
-}
-
-/// ADR-007 legal hold — litigation hold overriding retention/deletion. placedBy/
-/// releasedBy are user ids and caseId a case id (plain columns, not relations, to
-/// avoid widening the generated Tenant/User types).
-model LegalHold {
-  id         String    @id @default(uuid())
-  tenantId   String
-  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  caseId     String?
-  entityType String
-  entityId   String
-  reason     String
-  placedBy   String
-  placedAt   DateTime  @default(now())
-  releasedAt DateTime?
-  releasedBy String?
-
-  @@index([tenantId])
-  @@index([entityType, entityId])
-  @@map("legal_holds")
-}
-
-/// ADR-007 DSAR — data-subject access request (GDPR Art. 15-22), 30-day SLA.
-model DSARRequest {
-  id               String    @id @default(uuid())
-  tenantId         String
-  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  subjectEmail     String
-  requestType      String
-  status           String    @default("pending")
-  identityVerified Boolean   @default(false)
-  verifiedAt       DateTime?
-  verifiedBy       String?
-  results          Json?
-  completedAt      DateTime?
-  createdAt        DateTime  @default(now())
-  dueAt            DateTime
-
-  @@index([tenantId])
-  @@index([subjectEmail])
-  @@index([status])
-  @@map("dsar_requests")
-}
+// ADR-007 NOTE: per-model `dataClassification` (above, on Lead/Contact/Account/
+// Opportunity) plus the DataClassification taxonomy and DocumentRetentionPolicy
+// are the Prisma-modelled governance surface. Retention-policy / legal-hold /
+// DSAR storage is enforced via raw-SQL tables + the DSAR workflow (#355) — NOT
+// Prisma models — so they are intentionally absent here to avoid a second source
+// of truth (and a CREATE TABLE collision with the existing legal_holds /
+// dsar_requests relations).
 
 /// Security event type enum for SecurityEvent model
 enum SecurityEventType {

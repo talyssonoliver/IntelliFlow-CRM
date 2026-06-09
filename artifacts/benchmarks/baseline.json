@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-06-09T09:32:14.912Z",
+  "timestamp": "2026-06-08T14:48:42.270Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1389,16 +1389,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 176,
-    "total_fields": 2584,
-    "total_indexes": 822,
-    "total_relations": 248,
+    "total_tables": 173,
+    "total_fields": 2543,
+    "total_indexes": 812,
+    "total_relations": 245,
     "tables_with_embeddings": 4,
     "enums": 74,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 155,
+        "fields": 152,
         "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
@@ -1412,16 +1412,9 @@
       },
       {
         "name": "Contact",
-        "fields": 37,
+        "fields": 36,
         "indexes": 14,
         "relations": 4,
-        "hasEmbedding": true
-      },
-      {
-        "name": "Lead",
-        "fields": 36,
-        "indexes": 13,
-        "relations": 3,
         "hasEmbedding": true
       },
       {
@@ -1430,6 +1423,13 @@
         "indexes": 7,
         "relations": 2,
         "hasEmbedding": false
+      },
+      {
+        "name": "Lead",
+        "fields": 35,
+        "indexes": 13,
+        "relations": 3,
+        "hasEmbedding": true
       },
       {
         "name": "CaseDocument",
@@ -1467,13 +1467,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "Account",
-        "fields": 29,
-        "indexes": 7,
-        "relations": 5,
-        "hasEmbedding": false
-      },
-      {
         "name": "Ticket",
         "fields": 29,
         "indexes": 11,
@@ -1481,10 +1474,10 @@
         "hasEmbedding": false
       },
       {
-        "name": "Opportunity",
+        "name": "Account",
         "fields": 28,
-        "indexes": 14,
-        "relations": 4,
+        "indexes": 7,
+        "relations": 5,
         "hasEmbedding": false
       },
       {
@@ -1499,6 +1492,13 @@
         "fields": 28,
         "indexes": 10,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Opportunity",
+        "fields": 27,
+        "indexes": 14,
+        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1901,13 +1901,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "DSARRequest",
-        "fields": 13,
-        "indexes": 4,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
         "name": "AgentAvailability",
         "fields": 13,
         "indexes": 5,
@@ -2076,13 +2069,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "LegalHold",
-        "fields": 11,
-        "indexes": 3,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
         "name": "UserPermission",
         "fields": 11,
         "indexes": 5,
@@ -2245,13 +2231,6 @@
       },
       {
         "name": "TicketTag",
-        "fields": 10,
-        "indexes": 3,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "DataGovernancePolicy",
         "fields": 10,
         "indexes": 3,
         "relations": 1,

@@ -1431,10 +1431,13 @@ export const billingRouter = createTRPCRouter({
           (await import('@intelliflow/adapters')) as typeof import('@intelliflow/adapters');
 
         const emailAdapter = createEmailServiceAdapter({
+          resendApiKey: process.env.RESEND_API_KEY,
           sendgridApiKey: process.env.SENDGRID_API_KEY,
         });
 
-        const fromEmail = process.env.BILLING_FROM_EMAIL || 'billing@intelliflow.app';
+        // Prefer the verified Resend sender — Resend rejects unverified `from` domains.
+        const fromEmail =
+          process.env.RESEND_FROM_EMAIL || process.env.BILLING_FROM_EMAIL || 'crm@leangency.com';
 
         const sendResult = await emailAdapter.sendEmail({
           from: { email: fromEmail, name: 'IntelliFlow Billing' },

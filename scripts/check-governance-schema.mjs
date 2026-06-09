@@ -1,15 +1,22 @@
 #!/usr/bin/env node
 /**
- * ADR-007 governance-schema gate.
+ * ADR-007 governance-schema gate (single source of truth).
  *
- * Requires the Accepted data-governance schema to be present:
- *   - `dataClassification` on the core PII-bearing entities (Lead/Contact/
- *     Account/Opportunity), and
- *   - the DataGovernancePolicy / LegalHold / DSARRequest models.
+ * Asserts the Prisma-modelled governance surface that ADR-007 requires:
+ *   1. the `DataClassification` taxonomy (enum), and
+ *   2. that classification is APPLIED per-model on the core PII-bearing entities
+ *      (Lead / Contact / Account / Opportunity), and
+ *   3. the `DocumentRetentionPolicy` model (retention requirement).
  *
- * This is the single source of truth for the check. It runs in pre-ship and in
- * `.github/workflows/migration.yml` (both call this script) so the gate can't rot
- * red only on `main` — a missing governance column fails a PR / pre-ship too.
+ * Deliberately NOT asserted: DataGovernancePolicy / LegalHold / DSARRequest as
+ * Prisma models. Retention-policy / legal-hold / DSAR storage is enforced via
+ * raw-SQL tables + the DSAR workflow (#355); modelling them in Prisma would split
+ * the source of truth and collide with the existing legal_holds / dsar_requests
+ * relations. (See the ADR-007 note in schema.prisma.)
+ *
+ * This SAME script runs in pre-ship and in `.github/workflows/migration.yml`, so
+ * the gate can't rot red only on `main` — a missing governance column fails a PR
+ * and pre-ship too.
  *
  * Exit 0 when satisfied, 1 (with the specific misses) otherwise.
  */
@@ -17,8 +24,8 @@ import { readFileSync } from 'node:fs';
 
 const SCHEMA = 'packages/db/prisma/schema.prisma';
 
+// Entities that must carry a classification tier (ADR-007 per-model coverage).
 const CLASSIFIED_MODELS = ['Lead', 'Contact', 'Account', 'Opportunity'];
-const REQUIRED_MODELS = ['DataGovernancePolicy', 'LegalHold', 'DSARRequest'];
 
 let schema;
 try {
@@ -36,23 +43,30 @@ function modelBody(name) {
 
 const failures = [];
 
+// (1) The DataClassification taxonomy — the core of ADR-007.
+if (/enum DataClassification \{/.test(schema)) {
+  console.log('✓ DataClassification enum present');
+} else {
+  failures.push('DataClassification enum missing');
+}
+
+// (2) Classification is applied per-model on the core PII entities.
 for (const model of CLASSIFIED_MODELS) {
   const body = modelBody(model);
   if (body === null) {
     failures.push(`model ${model} not found`);
-  } else if (!/\bdataClassification\b/.test(body)) {
+  } else if (!/\bdataClassification\s+DataClassification\b/.test(body)) {
     failures.push(`${model} missing dataClassification`);
   } else {
     console.log(`✓ ${model} has dataClassification`);
   }
 }
 
-for (const model of REQUIRED_MODELS) {
-  if (modelBody(model) === null) {
-    failures.push(`${model} model missing`);
-  } else {
-    console.log(`✓ ${model} model exists`);
-  }
+// (3) Retention policy model (ADR-007 retention requirement).
+if (modelBody('DocumentRetentionPolicy') !== null) {
+  console.log('✓ DocumentRetentionPolicy model present');
+} else {
+  failures.push('DocumentRetentionPolicy model missing');
 }
 
 if (failures.length > 0) {
@@ -64,4 +78,7 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('\n✓ All governance requirements met (ADR-007)');
+console.log(
+  '\n✓ ADR-007 governance surface present (taxonomy + per-model classification + retention). ' +
+    'DSAR/legal-hold are raw-SQL (#355), intentionally not Prisma-modelled.'
+);
