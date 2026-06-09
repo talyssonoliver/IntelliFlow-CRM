@@ -8,7 +8,14 @@
  * @module billing/receipt-email
  */
 
-export interface ReceiptEmailInput {
+/** The receipt/invoice fields the email needs (a subset of the Stripe invoice). */
+export interface ReceiptInvoice {
+  status: string;
+  paidAt?: Date | null;
+  hostedInvoiceUrl?: string | null;
+}
+
+interface ReceiptEmailInput {
   receiptNumber: string;
   amountFormatted: string;
   status: string;
@@ -96,7 +103,18 @@ function buildHtml(data: ReceiptEmailInput, paidDate?: string): string {
 }
 
 /** Build the subject, plain-text, and branded HTML for a receipt email. */
-export function buildReceiptEmail(data: ReceiptEmailInput): ReceiptEmailContent {
+export function buildReceiptEmail(
+  receiptNumber: string,
+  amountFormatted: string,
+  invoice: ReceiptInvoice
+): ReceiptEmailContent {
+  const data: ReceiptEmailInput = {
+    receiptNumber,
+    amountFormatted,
+    status: invoice.status,
+    paidAt: invoice.paidAt ?? undefined,
+    hostedInvoiceUrl: invoice.hostedInvoiceUrl ?? undefined,
+  };
   const paidDate = formatPaidDate(data.paidAt);
   const subject = `Your Receipt ${data.receiptNumber} from IntelliFlow`;
   const textBody = [

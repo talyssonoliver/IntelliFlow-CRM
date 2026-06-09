@@ -1408,13 +1408,11 @@ export const billingRouter = createTRPCRouter({
       }).format(invoice.amountPaid / 100);
 
       // Brand-matched receipt content (issue #360 / EMAIL-BRAND-001).
-      const { subject, textBody, htmlBody } = buildReceiptEmail({
-        receiptNumber: String(receiptNumber),
+      const { subject, textBody, htmlBody } = buildReceiptEmail(
+        String(receiptNumber),
         amountFormatted,
-        status: invoice.status,
-        paidAt: invoice.paidAt || undefined,
-        hostedInvoiceUrl: invoice.hostedInvoiceUrl || undefined,
-      });
+        invoice
+      );
 
       try {
         const { createEmailServiceAdapter } =

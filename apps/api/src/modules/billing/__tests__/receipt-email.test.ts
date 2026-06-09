@@ -2,14 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { buildReceiptEmail } from '../receipt-email';
 
 describe('buildReceiptEmail', () => {
-  const base = {
-    receiptNumber: 'RC-1001',
-    amountFormatted: '£167.00',
-    status: 'paid',
-  };
+  const num = 'RC-1001';
+  const amount = '£167.00';
 
   it('builds subject and plain-text body', () => {
-    const { subject, textBody } = buildReceiptEmail(base);
+    const { subject, textBody } = buildReceiptEmail(num, amount, { status: 'paid' });
     expect(subject).toBe('Your Receipt RC-1001 from IntelliFlow');
     expect(textBody).toContain('Receipt: RC-1001');
     expect(textBody).toContain('Amount: £167.00');
@@ -17,7 +14,7 @@ describe('buildReceiptEmail', () => {
   });
 
   it('wraps the HTML in the IntelliFlow brand shell', () => {
-    const { htmlBody } = buildReceiptEmail(base);
+    const { htmlBody } = buildReceiptEmail(num, amount, { status: 'paid' });
     expect(htmlBody).toContain('<!DOCTYPE html>');
     expect(htmlBody).toContain('INTELLIFLOW');
     expect(htmlBody).toContain('#137fec');
@@ -29,27 +26,30 @@ describe('buildReceiptEmail', () => {
 
   it('formats and shows the Paid row/line only when paidAt is given', () => {
     const paidAt = new Date('2026-06-09T12:00:00Z');
-    const withPaid = buildReceiptEmail({ ...base, paidAt });
+    const withPaid = buildReceiptEmail(num, amount, { status: 'paid', paidAt });
     expect(withPaid.htmlBody).toContain('9 Jun 2026');
     expect(withPaid.textBody).toContain('Paid: 9 Jun 2026');
 
-    const noPaid = buildReceiptEmail(base);
+    const noPaid = buildReceiptEmail(num, amount, { status: 'paid', paidAt: null });
     expect(noPaid.htmlBody).not.toContain('Paid');
     expect(noPaid.textBody).not.toContain('Paid:');
   });
 
   it('shows the "View receipt online" button + text link only with a hostedInvoiceUrl', () => {
-    const withUrl = buildReceiptEmail({ ...base, hostedInvoiceUrl: 'https://pay.example/r' });
+    const withUrl = buildReceiptEmail(num, amount, {
+      status: 'paid',
+      hostedInvoiceUrl: 'https://pay.example/r',
+    });
     expect(withUrl.htmlBody).toContain('https://pay.example/r');
     expect(withUrl.htmlBody).toContain('View receipt online');
     expect(withUrl.textBody).toContain('View receipt: https://pay.example/r');
 
-    const noUrl = buildReceiptEmail(base);
+    const noUrl = buildReceiptEmail(num, amount, { status: 'paid' });
     expect(noUrl.htmlBody).not.toContain('View receipt online');
   });
 
   it('escapes HTML in inputs (no injection)', () => {
-    const { htmlBody } = buildReceiptEmail({ ...base, status: '<script>x</script>' });
+    const { htmlBody } = buildReceiptEmail(num, amount, { status: '<script>x</script>' });
     expect(htmlBody).not.toContain('<script>x</script>');
     expect(htmlBody).toContain('&lt;script&gt;x&lt;/script&gt;');
   });
