@@ -83,43 +83,16 @@ jobs:
           npx prisma format
           echo "Schema validation passed"
 
-      - name: Check governance columns (ADR-007)
-        # CORRECTED 2026-06-09: the original check grepped for a schema shape that
-        # was NEVER implemented — dataClassification on Lead/Contact/Account/
-        # Opportunity + Prisma models DataGovernancePolicy/LegalHold/DSARRequest.
-        # None ever existed, so this step failed on 12/12 all-time runs. The real
-        # ADR-007 implementation uses the DataClassification enum + classification
-        # metadata + a DocumentRetentionPolicy model; DSAR/legal-hold are enforced
-        # via raw SQL tables + the DSAR workflow (#355), not Prisma models. Assert
-        # the governance PRIMITIVES that genuinely encode ADR-007. Full per-model
-        # classification coverage is the governance-owner roadmap call tracked in
-        # #368 — this corrects (does not silently weaken) the gate.
-        run: |
-          echo "Checking ADR-007 governance primitives in schema..."
-          SCHEMA="packages/db/prisma/schema.prisma"
-
-          # (1) The DataClassification taxonomy — the core of ADR-007.
-          if grep -qE 'enum DataClassification \{' "$SCHEMA"; then
-            echo "✓ DataClassification enum present"
-          else
-            echo "✗ DataClassification enum missing"; exit 1
-          fi
-
-          # (2) Classification metadata is actually applied (a dataClassification field).
-          if grep -qE 'dataClassification[[:space:]]+DataClassification' "$SCHEMA"; then
-            echo "✓ dataClassification metadata applied"
-          else
-            echo "✗ dataClassification metadata not applied"; exit 1
-          fi
-
-          # (3) Retention policy model (ADR-007 retention requirement).
-          if grep -qE 'model DocumentRetentionPolicy \{' "$SCHEMA"; then
-            echo "✓ DocumentRetentionPolicy model present"
-          else
-            echo "✗ DocumentRetentionPolicy model missing"; exit 1
-          fi
-
-          echo "ADR-007 governance primitives present (classification taxonomy + metadata + retention). Per-model coverage tracked in #368."
+      - name: Check governance schema (ADR-007)
+        # Single source of truth: scripts/check-governance-schema.mjs. The SAME
+        # script runs in pre-ship (so the gate can't rot red only on main, per the
+        # original brief) and here in CI. It asserts the ADR-007 primitives —
+        # DataClassification taxonomy + applied metadata + DocumentRetentionPolicy —
+        # PLUS per-model classification on the four PII entities (Lead/Contact/
+        # Account/Opportunity), which #370 implements. DSAR/legal-hold stay raw-SQL
+        # tables + the DSAR workflow (#355), NOT Prisma models — so they are
+        # deliberately not asserted here.
+        run: node scripts/check-governance-schema.mjs
 
   # Job 2: Execute dry-run migration
   dry-run:

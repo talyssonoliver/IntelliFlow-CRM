@@ -27,6 +27,7 @@ function demonstratePrismaTypes() {
   // Lead type is fully typed from Prisma schema
   const lead: Lead = {
     id: 'lead_123',
+    dataClassification: 'INTERNAL',
     email: 'test@example.com',
     firstName: 'John',
     lastName: 'Doe',
