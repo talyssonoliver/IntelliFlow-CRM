@@ -750,5 +750,10 @@ describe('EmailServiceAdapter', () => {
       });
       expect(instance).toBeInstanceOf(EmailServiceAdapter);
     });
+
+    it('should accept a resendApiKey (Resend transport)', () => {
+      const instance = createEmailServiceAdapter({ resendApiKey: 're_test_key' });
+      expect(instance).toBeInstanceOf(EmailServiceAdapter);
+    });
   });
 });

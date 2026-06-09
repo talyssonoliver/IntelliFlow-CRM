@@ -29,6 +29,7 @@ import { InboundEmailParser, createInboundEmailParser } from './inbound';
  * Email Service Adapter Configuration
  */
 export interface EmailServiceAdapterConfig {
+  resendApiKey?: string;
   sendgridApiKey?: string;
   useMock?: boolean;
   rateLimits?: {
@@ -50,6 +51,7 @@ export class EmailServiceAdapter implements EmailServicePort {
 
   constructor(config: EmailServiceAdapterConfig = {}) {
     this.outboundService = createOutboundEmailService({
+      resendApiKey: config.resendApiKey,
       sendgridApiKey: config.sendgridApiKey,
       useMock: config.useMock,
       rateLimits: config.rateLimits,
