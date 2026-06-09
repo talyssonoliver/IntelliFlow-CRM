@@ -89,4 +89,13 @@ export class PrismaSetupInstalmentRepository implements SetupInstalmentRepositor
       data: { stripeInvoiceId: args.stripeInvoiceId },
     });
   }
+
+  async markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void> {
+    // The invoice id is globally unique (@unique); updateMany keeps this a no-op
+    // when the invoice is not a setup-fee instalment, instead of throwing.
+    await this.prisma.setupInstalment.updateMany({
+      where: { stripeInvoiceId: args.stripeInvoiceId },
+      data: { status: TO_DB.paid, paidAt: args.paidAt },
+    });
+  }
 }

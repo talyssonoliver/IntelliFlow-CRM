@@ -346,6 +346,7 @@ async function handleStripeWebhookRoute(
   const adapters = container.get<{
     stripeSubscriptionRepository: import('@intelliflow/domain').StripeSubscriptionRepository;
     portalDeliverySync: Parameters<typeof processStripeWebhook>[2]['portalSync'];
+    setupInstalmentRepository: Parameters<typeof processStripeWebhook>[2]['setupInstalments'];
   }>('adapters');
   const moduleAccess = ((): Parameters<typeof processStripeWebhook>[2]['moduleAccess'] => {
     try {
@@ -358,6 +359,7 @@ async function handleStripeWebhookRoute(
   const result = await processStripeWebhook(rawBody, headers, {
     subscriptionRepository: adapters.stripeSubscriptionRepository,
     portalSync: adapters.portalDeliverySync,
+    setupInstalments: adapters.setupInstalmentRepository,
     moduleAccess,
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   });

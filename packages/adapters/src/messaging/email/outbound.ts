@@ -272,6 +272,75 @@ export class MockEmailProvider implements EmailProvider {
 /**
  * SendGrid email provider
  */
+/** Shared "no pull-API" deliverability stub used by HTTP providers. */
+function defaultDeliverabilityStats(): DeliverabilityStats {
+  return {
+    sent: 0,
+    delivered: 0,
+    bounced: 0,
+    complained: 0,
+    opened: 0,
+    clicked: 0,
+    deliverabilityRate: 0,
+    period: { start: new Date(Date.now() - 86400000 * 30), end: new Date() },
+  };
+}
+
+/**
+ * Shared HTTP transport for JSON email APIs (SendGrid, Resend). Handles the
+ * AbortController timeout, Bearer auth, error mapping that never leaks the response
+ * body or the API key, and the success/failure {@link EmailSendResult} shape.
+ */
+async function deliverViaHttpJson(args: {
+  url: string;
+  apiKey: string;
+  payload: unknown;
+  providerName: string;
+  fallbackMessageId: string;
+  timeoutMs?: number;
+  extractMessageId?: (body: unknown) => string | undefined;
+}): Promise<EmailSendResult> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), args.timeoutMs ?? 10_000);
+  try {
+    const response = await fetch(args.url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${args.apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args.payload),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`Email delivery failed (provider error ${response.status})`);
+    }
+    let messageId = args.fallbackMessageId;
+    if (args.extractMessageId) {
+      const body = await response.json().catch(() => ({}));
+      messageId = args.extractMessageId(body) || args.fallbackMessageId;
+    }
+    return {
+      messageId,
+      provider: args.providerName,
+      status: 'queued',
+      timestamp: new Date(),
+      details: { statusCode: response.status },
+    };
+  } catch (error) {
+    let errorMessage = 'Unknown error';
+    if (error instanceof Error) {
+      errorMessage = error.message.replaceAll(args.apiKey, '[REDACTED]');
+    }
+    return {
+      messageId: args.fallbackMessageId,
+      provider: args.providerName,
+      status: 'failed',
+      timestamp: new Date(),
+      error: errorMessage,
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export class SendGridProvider implements EmailProvider {
   readonly name = 'sendgrid';
   private readonly apiKey: string;
@@ -331,69 +400,99 @@ export class SendGridProvider implements EmailProvider {
       send_at: email.scheduledAt ? Math.floor(email.scheduledAt.getTime() / 1000) : undefined,
     };
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10_000);
-
-    try {
-      const response = await fetch(`${this.baseUrl}/mail/send`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Email delivery failed (provider error ${response.status})`);
-      }
-
-      return {
-        messageId,
-        provider: this.name,
-        status: 'queued',
-        timestamp: new Date(),
-        details: {
-          statusCode: response.status,
-        },
-      };
-    } catch (error) {
-      let errorMessage = 'Unknown error';
-      if (error instanceof Error) {
-        errorMessage = error.message.replaceAll(this.apiKey, '[REDACTED]');
-      }
-      return {
-        messageId,
-        provider: this.name,
-        status: 'failed',
-        timestamp: new Date(),
-        error: errorMessage,
-      };
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    return deliverViaHttpJson({
+      url: `${this.baseUrl}/mail/send`,
+      apiKey: this.apiKey,
+      payload,
+      providerName: this.name,
+      fallbackMessageId: messageId,
+    });
   }
 
   async getDeliverabilityStats(): Promise<DeliverabilityStats> {
-    // In production, call SendGrid Stats API
-    return {
-      sent: 0,
-      delivered: 0,
-      bounced: 0,
-      complained: 0,
-      opened: 0,
-      clicked: 0,
-      deliverabilityRate: 0,
-      period: {
-        start: new Date(Date.now() - 86400000 * 30),
-        end: new Date(),
-      },
-    };
+    // In production, call SendGrid Stats API.
+    return defaultDeliverabilityStats();
   }
 
   async checkBounce(_messageId: string): Promise<BounceInfo | null> {
     // In production, call SendGrid Bounces API
+    return null;
+  }
+}
+
+/**
+ * Resend provider — sends over the Resend HTTP API (POST https://api.resend.com/emails,
+ * HTTPS/443). This is the IntelliFlow stack's provider (SendGrid was superseded; see
+ * ADR-041 + the Resend decision). Mirrors the notifications-worker's Resend transport so
+ * the API-originated emails (receipts, welcome, auto-response, DSAR) actually send instead
+ * of falling back to the mock provider. See git issue #360.
+ */
+export class ResendProvider implements EmailProvider {
+  readonly name = 'resend';
+  private readonly apiKey: string;
+  private readonly baseUrl: string;
+
+  constructor(apiKey: string, baseUrl = 'https://api.resend.com') {
+    if (!apiKey) {
+      throw new Error('Resend API key is required');
+    }
+    this.apiKey = apiKey;
+    this.baseUrl = baseUrl.replace(/\/$/, '');
+  }
+
+  private static formatRecipient(r: EmailRecipient): string {
+    return r.name ? `${r.name} <${r.email}>` : r.email;
+  }
+
+  async send(email: OutboundEmail): Promise<EmailSendResult> {
+    const messageId = email.messageId || `re-${Date.now()}-${randomUUID().replaceAll('-', '')}`;
+    const pick = (type: 'to' | 'cc' | 'bcc') =>
+      email.recipients.filter((r) => r.type === type).map(ResendProvider.formatRecipient);
+
+    const to = pick('to');
+    const cc = pick('cc');
+    const bcc = pick('bcc');
+
+    const payload: Record<string, unknown> = {
+      from: ResendProvider.formatRecipient(email.from),
+      to,
+      subject: email.subject,
+      ...(cc.length ? { cc } : {}),
+      ...(bcc.length ? { bcc } : {}),
+      ...(email.replyTo ? { reply_to: email.replyTo.email } : {}),
+      ...(email.htmlBody ? { html: email.htmlBody } : {}),
+      ...(email.textBody ? { text: email.textBody } : {}),
+      ...(email.headers ? { headers: email.headers } : {}),
+      ...(email.attachments
+        ? {
+            attachments: email.attachments.map((a) => ({
+              filename: a.filename,
+              content: Buffer.isBuffer(a.content)
+                ? a.content.toString('base64')
+                : Buffer.from(a.content).toString('base64'),
+              ...(a.cid ? { content_id: a.cid } : {}),
+            })),
+          }
+        : {}),
+    };
+
+    return deliverViaHttpJson({
+      url: `${this.baseUrl}/emails`,
+      apiKey: this.apiKey,
+      payload,
+      providerName: this.name,
+      fallbackMessageId: messageId,
+      extractMessageId: (body) => (body as { id?: string }).id,
+    });
+  }
+
+  async getDeliverabilityStats(): Promise<DeliverabilityStats> {
+    // Resend exposes deliverability via webhooks/dashboard, not a pull API.
+    return defaultDeliverabilityStats();
+  }
+
+  async checkBounce(_messageId: string): Promise<BounceInfo | null> {
+    // Resend reports bounces via webhooks, not a pull API.
     return null;
   }
 }
@@ -523,6 +622,7 @@ export class OutboundEmailService {
 // Export factory function
 export function createOutboundEmailService(
   config: {
+    resendApiKey?: string;
     sendgridApiKey?: string;
     useMock?: boolean;
     rateLimits?: RateLimitConfig;
@@ -530,9 +630,15 @@ export function createOutboundEmailService(
 ): OutboundEmailService {
   const providers: EmailProvider[] = [];
 
+  // Resend is the IntelliFlow stack's provider (SendGrid superseded — ADR-041 / #360).
+  // Prefer Resend; keep SendGrid as a configurable fallback for failover.
+  if (config.resendApiKey) {
+    providers.push(new ResendProvider(config.resendApiKey));
+  }
   if (config.sendgridApiKey) {
     providers.push(new SendGridProvider(config.sendgridApiKey));
-  } else if (config.useMock || process.env.NODE_ENV === 'development') {
+  }
+  if (providers.length === 0 && (config.useMock || process.env.NODE_ENV === 'development')) {
     providers.push(new MockEmailProvider());
   }
 

@@ -486,6 +486,7 @@ export const TEST_UUIDS = {
 export const mockLead = {
   id: TEST_UUIDS.lead1,
   tenantId: TEST_UUIDS.tenant,
+  dataClassification: 'INTERNAL' as const,
   email: 'lead@example.com',
   firstName: 'John',
   lastName: 'Doe',
@@ -518,6 +519,7 @@ export const mockLead = {
 export const mockContact = {
   id: TEST_UUIDS.contact1,
   tenantId: TEST_UUIDS.tenant,
+  dataClassification: 'INTERNAL' as const,
   email: 'contact@example.com',
   firstName: 'Jane',
   lastName: 'Smith',
@@ -546,6 +548,7 @@ export const mockContact = {
 export const mockAccount = {
   id: TEST_UUIDS.account1,
   tenantId: TEST_UUIDS.tenant,
+  dataClassification: 'INTERNAL' as const,
   name: 'TechCorp Inc',
   website: 'https://techcorp.example.com',
   industry: 'Technology',
@@ -570,6 +573,7 @@ export const mockAccount = {
 export const mockOpportunity = {
   id: TEST_UUIDS.opportunity1,
   tenantId: TEST_UUIDS.tenant,
+  dataClassification: 'INTERNAL' as const,
   name: 'Enterprise Deal',
   value: new Prisma.Decimal(50000),
   stage: 'PROPOSAL' as const,
@@ -584,6 +588,7 @@ export const mockOpportunity = {
   sourceLeadId: null,
   deliveryTier: null,
   tenantSlug: null,
+  stripeCustomerId: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };
