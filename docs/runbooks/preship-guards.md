@@ -221,3 +221,42 @@ documented and the guard sees it.
 - Keep dependencies to Node built-ins + `js-yaml` (already a devDependency).
 - Honor `--staged-only`: a guard must be cheap and incremental in that mode
   (inspect only staged/added content), and slow guards should `skip`.
+
+---
+
+## PR Body Token (pre-PR-create, not pre-commit)
+
+**What it detects.** The required `PR Checks / PR Validation` context greps the
+PR **body** and fails the PR unless it references a tracked task id, a GitHub
+issue, or a hotfix waiver:
+
+```
+([A-Z]{2,}(-[A-Z0-9]+)*-[0-9]+|#[0-9]+|\[hotfix\]|hotfix-waiver)   (case-insensitive)
+```
+
+i.e. one of: a task id (`IFC-123`, `PG-045`, `S17-AUDIT-001`, `INFRA-TF-002`),
+an issue ref (`#123`), or a hotfix waiver (`[hotfix]` / `hotfix-waiver`).
+
+**Why it is not in the pre-commit orchestrator.** This check runs against the PR
+body, which **does not exist** at commit/push time — so the pre-ship gate
+structurally cannot mirror it. Instead it is enforced at **PR-create time**:
+
+- `tools/scripts/preship/check-pr-body.mjs` — validate a body
+  (`--body-file <path>`, `--body <text>`, or stdin); exits non-zero with
+  remediation if it carries no token.
+- `tools/scripts/preship/safe-pr-create.mjs` (a.k.a. `pnpm pr:create`) — a
+  drop-in `gh pr create` wrapper that validates `--body-file`/`--body` first and
+  refuses to open the PR if the body is invalid, otherwise forwards every
+  argument to `gh pr create`.
+
+**How to use.**
+
+```bash
+pnpm pr:create --base main --head my-branch --title "..." --body-file body.md
+```
+
+**When to use `[hotfix]` / `hotfix-waiver`.** Only for work with no tracked task
+— meta/infra hardening of CI or the preship system itself, urgent production
+hotfixes, or chores that don't map to a sprint task. Prefer a real task id or
+`#issue` whenever one exists; the waiver is the honest marker when one genuinely
+does not. Add a one-line justification after `hotfix-waiver:`.

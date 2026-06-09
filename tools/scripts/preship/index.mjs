@@ -27,6 +27,11 @@ import { run as runVitestCleanExit } from './check-vitest-clean-exit.mjs';
 import { run as runUnhandledEmitters } from './check-unhandled-event-emitters.mjs';
 import { run as runMigrationRoles } from './check-migration-role-bootstrap.mjs';
 
+// Re-exported for reuse (e.g. safe-pr-create.mjs / `pnpm pr:create`). NOT part
+// of GUARDS below: PR-body validation is a pre-PR-create check, not a
+// pre-commit check, so it must never run in the pre-commit orchestrator.
+export { validatePrBody, PR_BODY_TOKEN_RE } from './check-pr-body.mjs';
+
 const GUARDS = [
   { id: 'vitest-clean-exit', run: runVitestCleanExit },
   { id: 'unhandled-event-emitters', run: runUnhandledEmitters },
