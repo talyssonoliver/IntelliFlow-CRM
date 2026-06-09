@@ -59,6 +59,13 @@ jobs:
         # old form errored ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT on every run.
         run: pnpm --filter @intelliflow/db db:generate
 
+      - name: Build @intelliflow/db
+        # The migration unit tests import @intelliflow/db, whose package.json
+        # exports resolve to ./dist (built by tsup). Install + db:generate do NOT
+        # build it, so vitest failed: "Failed to resolve entry for package
+        # @intelliflow/db". Build it (+ deps via turbo) so the exports resolve.
+        run: pnpm exec turbo run build --filter=@intelliflow/db
+
       - name: Validate transformation rules
         run: |
           echo "Validating delta-sync.ts transformation rules..."
@@ -168,8 +175,10 @@ jobs:
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
         run: |
-          pnpm --filter @intelliflow/db prisma migrate deploy
-          pnpm --filter @intelliflow/db prisma db seed || echo "Seeding skipped or failed"
+          # db:migrate / db:seed scripts — NOT `prisma migrate deploy` / `prisma
+          # db seed`, which pnpm reads as (nonexistent) script names.
+          pnpm --filter @intelliflow/db db:migrate
+          pnpm --filter @intelliflow/db db:seed || echo "Seeding skipped or failed"
 
       - name: Run delta-sync dry-run
         env:
