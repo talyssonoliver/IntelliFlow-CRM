@@ -31,6 +31,7 @@ import {
 import { callStripeAPI } from '../../shared/external-service-wrapper';
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
 import { createSubscriptionSyncHandler } from './subscription-sync';
+import { buildReceiptEmail } from './receipt-email';
 import {
   PLAN_TIERS,
   type PlanTier,
@@ -1406,25 +1407,12 @@ export const billingRouter = createTRPCRouter({
         currency: invoice.currency.toUpperCase(),
       }).format(invoice.amountPaid / 100);
 
-      const subject = `Your Receipt ${receiptNumber} from IntelliFlow`;
-      const textBody = [
-        `Receipt: ${receiptNumber}`,
-        `Amount: ${amountFormatted}`,
-        `Status: ${invoice.status}`,
-        invoice.paidAt
-          ? `Paid: ${invoice.paidAt.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}`
-          : '',
-        invoice.hostedInvoiceUrl ? `\nView receipt: ${invoice.hostedInvoiceUrl}` : '',
-      ]
-        .filter(Boolean)
-        .join('\n');
-      const htmlBody = `
-        <p><strong>Receipt:</strong> ${receiptNumber}</p>
-        <p><strong>Amount:</strong> ${amountFormatted}</p>
-        <p><strong>Status:</strong> ${invoice.status}</p>
-        ${invoice.paidAt ? `<p><strong>Paid:</strong> ${invoice.paidAt.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>` : ''}
-        ${invoice.hostedInvoiceUrl ? `<p><a href="${invoice.hostedInvoiceUrl}">View receipt online</a></p>` : ''}
-      `;
+      // Brand-matched receipt content (issue #360 / EMAIL-BRAND-001).
+      const { subject, textBody, htmlBody } = buildReceiptEmail(
+        String(receiptNumber),
+        amountFormatted,
+        invoice
+      );
 
       try {
         const { createEmailServiceAdapter } =

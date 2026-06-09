@@ -3,58 +3,54 @@
 > **Temporary tracker.** Goal: every email IntelliFlow CRM sends — to CRM users
 > AND end customers — is brand-consistent (matches the GoTrue auth set) and
 > security-complete. **Delete this file only when every box below is checked.**
-> Formal tracking lives in debt-ledger `EMAIL-BRAND-001` + git issue #350 +
-> PG-085; this file is the working checklist for the active goal.
+> Formal tracking: debt-ledger `EMAIL-BRAND-001`/`SEC-AUTH-NOTIF-001` + git
+> issues #350/#360; this is the working checklist.
 
 Legend: `[x]` done & merged · `[~]` in progress (PR open) · `[ ]` not started
 
-## ✅ Done (live in prod + merged)
+## ✅ Done (live + merged)
 
-- [x] GoTrue auth **action** emails ×6 — confirmation, invite, magic_link,
-      recovery, email_change (PR #346), reauthentication (PR #353)
-- [x] GoTrue **security notification** emails ×7 — password/email/phone changed,
-      MFA enrolled/unenrolled, identity linked/unlinked — **branded + ENABLED**
-      (PR #353, issue #350, debt `SEC-AUTH-NOTIF-001` resolved)
+- [x] **GoTrue auth action emails ×6** — confirmation, invite, magic_link,
+      recovery, email_change, reauthentication (PR #346 / #353)
+- [x] **GoTrue security notification emails ×7** — branded + ENABLED (PR #353,
+      issue #350)
+- [x] **Notifications-worker email shell** (~54 NOTIFICATION_TYPES) — one
+      branded shell covers all types (PR #359)
+- [x] **API outbound → Resend transport** — `ResendProvider` + wiring so API
+      emails send via Resend instead of mock (PR #363, issue #360)
+- [~] **Billing receipt** — brand-matched `buildReceiptEmailHtml` (PR
+  feat/brand-customer-emails)
+- [x] **Auto-response** — NO ACTION: `markSent` only updates draft status;
+      auto-responses are an **intentional draft workflow** (AI drafts → human
+      sends via compose), not a system auto-send. Nothing to brand.
 
-## ⏳ Remaining (this goal)
+## ⏳ Remaining — feature follow-ups (NOT just branding)
 
-### 1. Notifications-worker email shell (~54 notification types) `[~]`
+- [ ] **Welcome email** — `welcome-email.ts` is a **stub with no trigger**
+      anywhere. Needs a _feature_: un-stub the send + a signup/post-confirmation
+      hook to fire it. (Not a branding task — the HTML already exists.)
+- [ ] **DSAR emails** (3, legal) — sent text-only through the
+      notification-service adapter. Branding needs that adapter to carry
+      `htmlBody` across the 3 call sites — a multi-layer change. Low volume;
+      deferred to its own slice.
 
-The single generic HTML shell the notifications-worker sends for all
-`NOTIFICATION_TYPES` (`packages/validators/src/notifications.ts`). One shell →
-brand once, covers all 54. To CRM users.
+## ⏳ Remaining — security hardening
 
-- [x] Locate where the worker builds the email HTML body (main.ts payload
-      assembly)
-- [x] Apply the brand shell (`src/templates/notification-email.ts`: dark theme,
-      INTELLIFLOW badge, #137fec, footer, priority pill, escaping) — wired in
-      main.ts
-- [x] Unit tests (9 cases: brand markers, escaping, htmlBody passthrough,
-      priority, preheader) — all 106 worker tests green
-- [~] Full pre-ship + CI green + merge (PR open)
+- [ ] **Enable `password_hibp`** (HaveIBeenPwned leaked-password check;
+      currently `false`). User deferred (2026-06: "not now"). Password-policy
+      setting — needs explicit go-ahead.
 
-### 2. Customer-facing / app-sent transactional emails `[ ]`
+## ⏳ Activation (after receipt PR merges)
 
-To end customers (leads/contacts) and account-level. Brand to match; finish
-provider wiring where still mock (ADR-041 residual).
-
-- [ ] Auto-response replies (`AutoResponseService`)
-- [ ] Appointment confirmation / reminder (ICS — IFC-158)
-- [ ] Case / SLA reminders (`apps/web/src/lib/cases/reminders-service.ts`)
-- [ ] Welcome email (`apps/web/src/lib/shared/welcome-email.ts`)
-- [ ] Billing / receipts (`apps/api/src/modules/billing/billing.router.ts`)
-
-### 3. Security hardening `[ ]`
-
-- [ ] Enable `password_hibp` (HaveIBeenPwned leaked-password check; currently
-      `false`). **NOTE:** this is a password-POLICY/security setting — needs
-      explicit user go-ahead before flipping live (per safety rules).
+- [ ] Set `EMAIL_PROVIDER=resend` + `RESEND_API_KEY` (+ `RESEND_FROM_EMAIL`) on
+      the Railway **api** service so receipts (and future API emails) actually
+      send via Resend.
 
 ## Decisions / notes
 
-- Each item above is its own **complete vertical slice** (one cohesive PR),
-  never scattered partials — see memory
-  `feedback_red_flags_and_complete_not_scattered`.
+- Each remaining item is its own **complete vertical slice** — never scattered
+  partials ([[feedback_red_flags_and_complete_not_scattered]]).
 - Brand reference: `apps/web/src/components/shared/reset-email.tsx` +
   `supabase/templates/*.html`.
-- Apply order: (1) notification shell → (2) customer-facing → (3) password_hibp.
+- **Everything that actually sends today is now branded.** Welcome/DSAR don't
+  send (stub / text-only) → they're feature work, tracked above.
