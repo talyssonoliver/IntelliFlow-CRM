@@ -223,4 +223,20 @@ ${JWT_HIT}${PROVIDER_HIT}${OPAQUE_HIT}
   fi
 fi
 
+# Preship guards (CI failure categories A/C/D) — staged-only fast mode.
+# Detects, at commit time, the three classes that recently reached main:
+#   • vitest teardown-crash exits ("all tests passed" but process exited 1)
+#   • ioredis/BullMQ clients instantiated with no `.on('error')` handler
+#   • Prisma migrations granting to a role the CI bootstrap never creates
+# Only NEW instantiations / changed migrations are inspected, so editing an
+# unrelated part of a file with a pre-existing finding does not block you.
+# Opt-out is per-finding (`// preship-allow-unhandled-error` + justification),
+# never a blanket skip. Full audit: `pnpm preship:guards`.
+# See docs/runbooks/preship-guards.md.
+echo "🛡️  Running preship guards (staged-only)..."
+node tools/scripts/preship/index.mjs --staged-only || {
+  echo "❌ Preship guards failed. See docs/runbooks/preship-guards.md for details + opt-out."
+  exit 1
+}
+
 echo "✅ All pre-commit checks passed! (Full tests run in CI)"

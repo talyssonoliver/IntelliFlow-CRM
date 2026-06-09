@@ -126,6 +126,7 @@
     "pre-ship": "node scripts/pre-ship.mjs",
     "pre-ship:clean": "node scripts/pre-ship.mjs --clean",
     "pre-ship:list": "node scripts/pre-ship.mjs --list",
+    "preship:guards": "node tools/scripts/preship/index.mjs",
     "ci": "pnpm run lint && pnpm run typecheck && pnpm run test",
     "ci:governance": "pnpm run validate:sprint0 --strict && pnpm run validate:sprint-data --strict && pnpm run lint:runtime-paths:strict",
     "plan-lint": "cd tools/plan-linter && npm install --silent && node index.js",
