@@ -33,6 +33,10 @@ model Tenant {
   accounts             Account[]                  @ignore
   opportunities        Opportunity[]              @ignore
   tasks                Task[]                     @ignore
+  // ADR-007 data governance
+  dataGovernancePolicies DataGovernancePolicy[]   @ignore
+  legalHolds           LegalHold[]                @ignore
+  dsarRequests         DSARRequest[]              @ignore
   tickets              Ticket[]                   @ignore
   auditLogs            AuditLog[]                 @ignore
   auditLogEntries      AuditLogEntry[]            @ignore
@@ -427,6 +431,8 @@ enum UserRole {
 
 model Lead {
   id              String      @id @default(cuid())
+  // ADR-007: data classification tier (drives retention / legal-hold policy).
+  dataClassification DataClassification @default(INTERNAL)
   email           String
   firstName       String?
   lastName        String?
@@ -594,6 +600,8 @@ enum ContactStatus {
 
 model Contact {
   id            String    @id @default(cuid())
+  // ADR-007: data classification tier (drives retention / legal-hold policy).
+  dataClassification DataClassification @default(INTERNAL)
   // DBA-020: Changed from global @unique to tenant-scoped (prevents cross-tenant enumeration)
   email         String
   firstName     String
@@ -660,6 +668,8 @@ model Contact {
 
 model Account {
   id            String    @id @default(cuid())
+  // ADR-007: data classification tier (drives retention / legal-hold policy).
+  dataClassification DataClassification @default(INTERNAL)
   name          String
   website       String?
   industry      String?
@@ -838,6 +848,8 @@ model AccountAutomationSetting {
 
 model Opportunity {
   id            String              @id @default(cuid())
+  // ADR-007: data classification tier (drives retention / legal-hold policy).
+  dataClassification DataClassification @default(INTERNAL)
   name          String
   value         Decimal             @db.Decimal(15, 2)
   stage         OpportunityStage    @default(PROSPECTING)
@@ -2591,6 +2603,67 @@ enum DataClassification {
   INTERNAL
   CONFIDENTIAL
   PRIVILEGED
+}
+
+/// ADR-007 data governance — retention policy per (tenant, entity type).
+model DataGovernancePolicy {
+  id                  String             @id @default(uuid())
+  tenantId            String
+  tenant              Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  entityType          String
+  classification      DataClassification
+  retentionPeriodDays Int
+  autoDeleteEnabled   Boolean            @default(true)
+  legalHoldOverride   Boolean            @default(false)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  @@index([tenantId])
+  @@index([entityType])
+  @@map("data_governance_policies")
+}
+
+/// ADR-007 legal hold — litigation hold overriding retention/deletion. placedBy/
+/// releasedBy are user ids and caseId a case id (plain columns, not relations, to
+/// avoid widening the generated Tenant/User types).
+model LegalHold {
+  id         String    @id @default(uuid())
+  tenantId   String
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  caseId     String?
+  entityType String
+  entityId   String
+  reason     String
+  placedBy   String
+  placedAt   DateTime  @default(now())
+  releasedAt DateTime?
+  releasedBy String?
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@map("legal_holds")
+}
+
+/// ADR-007 DSAR — data-subject access request (GDPR Art. 15-22), 30-day SLA.
+model DSARRequest {
+  id               String    @id @default(uuid())
+  tenantId         String
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subjectEmail     String
+  requestType      String
+  status           String    @default("pending")
+  identityVerified Boolean   @default(false)
+  verifiedAt       DateTime?
+  verifiedBy       String?
+  results          Json?
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  dueAt            DateTime
+
+  @@index([tenantId])
+  @@index([subjectEmail])
+  @@index([status])
+  @@map("dsar_requests")
 }
 
 /// Security event type enum for SecurityEvent model

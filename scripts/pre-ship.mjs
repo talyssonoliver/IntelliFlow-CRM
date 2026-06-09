@@ -226,6 +226,12 @@ const STEPS = [
     required: true,
   },
   {
+    id: 'governance-schema',
+    description: 'ADR-007 governance schema gate (dataClassification + policy/hold/DSAR models)',
+    cmd: ['node', 'scripts/check-governance-schema.mjs'],
+    required: true,
+  },
+  {
     id: 'lint-artifacts',
     description: 'artifact-path linter (catches misplaced reports/logs)',
     cmd: ['pnpm', 'run', 'lint:artifacts'],
