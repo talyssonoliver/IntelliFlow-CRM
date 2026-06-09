@@ -427,6 +427,8 @@ enum UserRole {
 
 model Lead {
   id              String      @id @default(cuid())
+  // ADR-007: data classification tier (drives retention / legal-hold policy).
+  dataClassification DataClassification @default(INTERNAL)
   email           String
   firstName       String?
   lastName        String?
@@ -594,6 +596,8 @@ enum ContactStatus {
 
 model Contact {
   id            String    @id @default(cuid())
+  // ADR-007: data classification tier (drives retention / legal-hold policy).
+  dataClassification DataClassification @default(INTERNAL)
   // DBA-020: Changed from global @unique to tenant-scoped (prevents cross-tenant enumeration)
   email         String
   firstName     String
@@ -660,6 +664,8 @@ model Contact {
 
 model Account {
   id            String    @id @default(cuid())
+  // ADR-007: data classification tier (drives retention / legal-hold policy).
+  dataClassification DataClassification @default(INTERNAL)
   name          String
   website       String?
   industry      String?
@@ -838,6 +844,8 @@ model AccountAutomationSetting {
 
 model Opportunity {
   id            String              @id @default(cuid())
+  // ADR-007: data classification tier (drives retention / legal-hold policy).
+  dataClassification DataClassification @default(INTERNAL)
   name          String
   value         Decimal             @db.Decimal(15, 2)
   stage         OpportunityStage    @default(PROSPECTING)
@@ -2595,6 +2603,14 @@ enum DataClassification {
   CONFIDENTIAL
   PRIVILEGED
 }
+
+// ADR-007 NOTE: per-model `dataClassification` (above, on Lead/Contact/Account/
+// Opportunity) plus the DataClassification taxonomy and DocumentRetentionPolicy
+// are the Prisma-modelled governance surface. Retention-policy / legal-hold /
+// DSAR storage is enforced via raw-SQL tables + the DSAR workflow (#355) — NOT
+// Prisma models — so they are intentionally absent here to avoid a second source
+// of truth (and a CREATE TABLE collision with the existing legal_holds /
+// dsar_requests relations).
 
 /// Security event type enum for SecurityEvent model
 enum SecurityEventType {

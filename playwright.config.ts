@@ -159,6 +159,10 @@ export default defineConfig({
       NODE_ENV: 'test',
       DATABASE_URL: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || '',
       NEXT_PUBLIC_API_URL: process.env.E2E_BASE_URL || 'http://localhost:3000',
+      // #278: the web app's module-init guard hard-fails `next start` (prod mode)
+      // unless NEXT_PUBLIC_APP_URL is set, so the E2E webServer refused to boot and
+      // every spec failed. Provide it to the webServer process.
+      NEXT_PUBLIC_APP_URL: process.env.E2E_BASE_URL || 'http://localhost:3000',
     },
   },
 

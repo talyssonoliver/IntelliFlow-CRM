@@ -11,6 +11,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
 import { WorkflowCanvas } from './WorkflowCanvas';
 import { api } from '@/lib/api';
@@ -73,13 +74,13 @@ export function CanvasScreen({ workflowId }: CanvasScreenProps) {
           aria-label="Breadcrumb"
           className="flex items-center gap-2 text-sm text-muted-foreground mb-1"
         >
-          <a href="/cases" className="hover:text-foreground transition-colors">
+          <Link href="/cases" className="hover:text-foreground transition-colors">
             Cases
-          </a>
+          </Link>
           <span aria-hidden="true">/</span>
-          <a href="/cases/case-workflows" className="hover:text-foreground transition-colors">
+          <Link href="/cases/case-workflows" className="hover:text-foreground transition-colors">
             Case Workflows
-          </a>
+          </Link>
           <span aria-hidden="true">/</span>
           <span aria-current="page" className="text-foreground font-medium truncate">
             {displayName}

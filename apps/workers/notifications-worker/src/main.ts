@@ -19,6 +19,7 @@ import { BaseWorker, type ComponentHealth } from '@intelliflow/worker-shared';
 import { EmailChannel, createEmailChannel, type EmailPayload } from './channels/email';
 import { SMSChannel, createSMSChannel, type SMSPayload } from './channels/sms';
 import { WebhookChannel, createWebhookChannel, type WebhookPayload } from './channels/webhook';
+import { renderNotificationEmail } from './templates/notification-email';
 
 // ============================================================================
 // Queue Names
@@ -366,7 +367,15 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
       to: notification.recipient.email,
       subject: notification.content.subject || 'Notification',
       body: notification.content.body,
-      htmlBody: notification.content.htmlBody,
+      // Wrap every notification email in the IntelliFlow brand shell so they match
+      // the auth emails (inner htmlBody is preserved; plain text is escaped). The
+      // plain-text `body` above remains the multipart fallback.
+      htmlBody: renderNotificationEmail({
+        subject: notification.content.subject,
+        body: notification.content.body,
+        htmlBody: notification.content.htmlBody,
+        priority: notification.priority,
+      }),
     };
 
     const result = await this.emailChannel.deliver(emailPayload, {
