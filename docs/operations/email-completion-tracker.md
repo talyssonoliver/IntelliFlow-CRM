@@ -18,8 +18,7 @@ Legend: `[x]` done & merged · `[~]` in progress (PR open) · `[ ]` not started
       branded shell covers all types (PR #359)
 - [x] **API outbound → Resend transport** — `ResendProvider` + wiring so API
       emails send via Resend instead of mock (PR #363, issue #360)
-- [~] **Billing receipt** — brand-matched `buildReceiptEmailHtml` (PR
-  feat/brand-customer-emails)
+- [x] **Billing receipt** — brand-matched `buildReceiptEmail` (PR #374)
 - [x] **Auto-response** — NO ACTION: `markSent` only updates draft status;
       auto-responses are an **intentional draft workflow** (AI drafts → human
       sends via compose), not a system auto-send. Nothing to brand.
@@ -40,11 +39,22 @@ Legend: `[x]` done & merged · `[~]` in progress (PR open) · `[ ]` not started
       currently `false`). User deferred (2026-06: "not now"). Password-policy
       setting — needs explicit go-ahead.
 
-## ⏳ Activation (after receipt PR merges)
+## ✅ Activation
 
-- [ ] Set `EMAIL_PROVIDER=resend` + `RESEND_API_KEY` (+ `RESEND_FROM_EMAIL`) on
-      the Railway **api** service so receipts (and future API emails) actually
-      send via Resend.
+- [x] Set `EMAIL_PROVIDER=resend` + `RESEND_API_KEY` + `RESEND_FROM_EMAIL` on
+      the Railway **api** service (`361d3d49-…`, prod env `c2270f1e-…`) via
+      `variableUpsert` (2026-06-09) so receipts + future API emails send via
+      Resend instead of mock. The api had no email vars before (→ mock; the #360
+      gap).
+
+---
+
+**Branding goal status:** complete. Every email that actually sends is
+brand-matched and live — auth, security notifications, ~54 worker notifications,
+and the receipt. The three unchecked boxes above (welcome #372, DSAR #373,
+`password_hibp`) are feature/deferred follow-ups, not branding; auto-response is
+intentional draft. This file stays until those three are closed (per the
+original instruction).
 
 ## Decisions / notes
 
