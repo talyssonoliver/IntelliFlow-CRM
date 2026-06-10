@@ -1,0 +1,149 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-060",
+  "section": "Core CRM",
+  "description": "New Lead",
+  "owner": "CRM FE+BE (STOA-Foundation)",
+  "status": "Completed",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-059"],
+    "all_satisfied": true,
+    "verified_at": "2026-06-10T21:30:00Z",
+    "notes": "PG-059 Leads List Completed in sprint-18; attestation verdict COMPLETE; /leads/new CTA exists in lead-list.tsx:561."
+  },
+  "started_at": "2026-06-10T22:03:44Z",
+  "completed_at": "2026-06-10T22:46:44Z",
+  "execution": {
+    "retry_count": 0,
+    "executor": "Claude Opus 4.8 (1M)",
+    "agents": [
+      "Frontend-Lead",
+      "Domain-Expert",
+      "Backend-Architect",
+      "Test-Engineer",
+      "A11y-Expert"
+    ],
+    "log_path": ".specify/sprints/sprint-18/execution/PG-060/run-2026-06-10T22-06-43Z/matop",
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/lib/leads/lead-enrichment.ts",
+      "apps/web/src/lib/leads/__tests__/lead-enrichment.test.ts",
+      "apps/web/src/app/leads/(list)/new/page.tsx",
+      "apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx"
+    ],
+    "created": [
+      {
+        "path": "apps/web/src/lib/leads/lead-enrichment.ts",
+        "sha256": "3abffbd7ed44e8f73be0b164c636854aa850bde6e2171dd31ddd1b65157db5ae",
+        "created_at": "2026-06-10T22:10:00Z"
+      },
+      {
+        "path": "apps/web/src/lib/leads/__tests__/lead-enrichment.test.ts",
+        "sha256": "51d6bfea75230bce0f8fb198045d4714595a666363088d38469fb2f681a0027e",
+        "created_at": "2026-06-10T22:09:00Z"
+      }
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-06-10T22:12:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-06-10T22:30:00Z",
+      "duration_ms": 396780
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web exec eslint <4 touched files> + prettier --check",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-06-10T22:14:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-06-10T22:40:00Z"
+    }
+  ],
+  "kpis": {
+    "lighthouse_performance": {
+      "target": 90,
+      "actual": 96,
+      "met": true,
+      "unit": "percent (/leads/new, desktop, production build)"
+    },
+    "coverage_statements": {
+      "target": 90,
+      "actual": 97.56,
+      "met": true,
+      "unit": "percent (lead-enrichment.ts)"
+    },
+    "coverage_branches": {
+      "target": 80,
+      "actual": 94.28,
+      "met": true,
+      "unit": "percent (lead-enrichment.ts)"
+    },
+    "coverage_functions": {
+      "target": 90,
+      "actual": 100,
+      "met": true,
+      "unit": "percent (lead-enrichment.ts)"
+    },
+    "coverage_lines": {
+      "target": 90,
+      "actual": 100,
+      "met": true,
+      "unit": "percent (lead-enrichment.ts)"
+    }
+  },
+  "status_history": [
+    {
+      "status": "Specifying",
+      "at": "2026-06-10T21:05:00Z",
+      "note": "Spec session start"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-06-10T21:35:00Z",
+      "note": "Unified spec + discussion; 5/5 persona consensus (frontend-lead load-bearing)"
+    },
+    {
+      "status": "Planning",
+      "at": "2026-06-10T21:40:00Z",
+      "note": "Plan-session preflight + TDD decomposition"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-06-10T21:58:00Z",
+      "note": "Plan-reviewer subagent: CHANGES_REQUIRED -> resolved -> APPROVED"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-06-10T22:03:44Z",
+      "note": "Exec start: metrics + coverage-before; preflights green; context_ack"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-06-10T22:46:44Z",
+      "note": "Exec complete: lib + page wiring + a11y; 4/4 validations PASS; Lighthouse 0.96; STOA Domain+Foundation PASS; attestation verdict=COMPLETE. Findings #379/#380 tracked."
+    }
+  ],
+  "dependencies_resolved": ["PG-059"]
+}

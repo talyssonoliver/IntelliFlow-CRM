@@ -1,0 +1,113 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-060",
+  "attestor": "Claude Opus 4.8 (1M) — /exec full-pipeline",
+  "attestation_timestamp": "2026-06-10T22:46:44Z",
+  "verdict": "COMPLETE",
+  "run_id": "run-2026-06-10T22-06-43Z",
+  "context_acknowledgment": {
+    "context_ack_file": ".specify/sprints/sprint-18/attestations/PG-060/context_ack.json",
+    "files_read": 3,
+    "invariants_acknowledged": 9
+  },
+  "evidence_summary": "PG-060 adds the missing required artifact apps/web/src/lib/leads/lead-enrichment.ts (pure, synchronous, no network/LLM/tRPC) deriving website/company from the email domain, wires it into the existing New Lead page via the email onBlur (non-destructive), and adds an accessibility pass (aria-invalid/aria-describedby + aria-live region + step-group label). 'assignment automated' is satisfied by the existing ownerId = creator behavior (apps/api/src/modules/lead/lead.router.ts:484). Two out-of-scope findings tracked (issues #379, #380). TDD RED->GREEN: 49 lib tests + 6 new page tests (4 wiring + 2 a11y); existing 6 page tests preserved.",
+  "artifact_hashes": {
+    "apps/web/src/lib/leads/lead-enrichment.ts": "3abffbd7ed44e8f73be0b164c636854aa850bde6e2171dd31ddd1b65157db5ae",
+    "apps/web/src/lib/leads/__tests__/lead-enrichment.test.ts": "51d6bfea75230bce0f8fb198045d4714595a666363088d38469fb2f681a0027e",
+    "apps/web/src/app/leads/(list)/new/page.tsx": "44af9aaac1d62ae255a477cd565f4590a3c01077db44b0df3af451ed4f9b373a",
+    "apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx": "b4ae3bd239a0b58631e584dbabc16850761de93ecf30641f105d5256a731b4d7",
+    "artifacts/lighthouse/PG-060/leads-new.json": "86bd7980019a1e7cd8a5ceafb852d7d82db913f08fdb41eec9f346adf68119e6"
+  },
+  "dependencies_verified": [
+    {
+      "task_id": "PG-059",
+      "claim": "Leads List page delivered (provides /leads/new CTA)",
+      "verified": true,
+      "method": "attestation.json verdict=COMPLETE; lead-list.tsx:561 CTA href='/leads/new'"
+    }
+  ],
+  "definition_of_done_items": [
+    { "item": "Artifact apps/web/src/app/leads/(list)/new/page.tsx exists and creates leads via api.lead.create", "met": true },
+    { "item": "Artifact apps/web/src/lib/leads/lead-enrichment.ts exists (enrichment working — derives website/company from email domain, non-destructive)", "met": true },
+    { "item": "Assignment automated (ownerId = creator on create; no manual owner-selection step)", "met": true },
+    { "item": "Lighthouse >= 90 on /leads/new", "met": true },
+    { "item": "Response < 200ms (no added network latency; enrichment is synchronous/pure)", "met": true }
+  ],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-10T22:12:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-10T22:30:00Z",
+      "duration_ms": 396780
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web exec eslint <4 touched files> && prettier --check",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-10T22:14:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-10T22:40:00Z"
+    }
+  ],
+  "gate_results": [
+    { "gate_id": "context-ack", "passed": true },
+    { "gate_id": "plan-checkboxes", "passed": true, "score": 10 },
+    { "gate_id": "artifact-hashes", "passed": true },
+    { "gate_id": "import-reachability", "passed": true },
+    { "gate_id": "runtime-wiring", "passed": true },
+    { "gate_id": "build-validation-4", "passed": true },
+    { "gate_id": "scoped-coverage", "passed": true },
+    { "gate_id": "stoa-domain", "passed": true },
+    { "gate_id": "stoa-foundation", "passed": true },
+    { "gate_id": "lighthouse-evidence", "passed": true }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Lighthouse performance >= 0.90 on /leads/new",
+      "target": "performance >= 0.90",
+      "actual": "0.96 (FCP 0.3s, LCP 1.1s, TBT 10ms, CLS 0.004); artifacts/lighthouse/PG-060/leads-new.json, fetchTime 2026-06-10T22:45:01.780Z",
+      "met": true
+    },
+    {
+      "kpi": "lead-enrichment.ts scoped coverage",
+      "target": "Statements >=90, Branches >=80, Functions >=90, Lines >=90",
+      "actual": "Statements 97.56%, Branches 94.28%, Functions 100%, Lines 100% (61 tests)",
+      "met": true
+    },
+    {
+      "kpi": "No regressions in @intelliflow/web",
+      "target": "full web suite green",
+      "actual": "587 files / 10392 tests passed, 0 failed",
+      "met": true
+    },
+    {
+      "kpi": "Server response < 200ms",
+      "target": "< 200ms",
+      "actual": "Enrichment is synchronous/pure (zero added latency); lead.create unchanged",
+      "met": true
+    }
+  ],
+  "environment": {
+    "node": "via pnpm 10.33.0",
+    "branch": "feat/pg-060",
+    "package": "@intelliflow/web",
+    "test_db": "postgres-test 5433 / intelliflow_test"
+  },
+  "notes": "Scope: web-layer only. lead-enrichment.ts is a new pure module imported by the New Lead page (Gate 2b import-reachability PASS). 'assignment automated' = existing ownerId=creator (no routing engine in scope). Out-of-scope findings filed per Rule 8: dead autoAssignment toggle (issue #379) and annualRevenue->estimatedValue NaN (issue #380, owned by IFC-242), both in debt-ledger.yaml. SVG icon rewrite excluded (ESLint passes; no DESIGN mockup). STOA verdicts: Domain PASS, Foundation PASS. Lighthouse Path A (production build, port 3400) — real run, 0.96 performance."
+}

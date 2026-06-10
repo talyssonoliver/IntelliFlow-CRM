@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 
 // ---------------------------------------------------------------------------
 // vi.hoisted — variables available inside vi.mock factories
@@ -42,9 +42,19 @@ const { mockUseRequireAuth, mockCreateMutation, mockPush } = vi.hoisted(() => {
   };
 });
 
+// PG-060: enrichment lib mock — default returns the form unchanged so the
+// existing 6 tests stay green; individual tests override the implementation.
+const { mockEnrichFromEmail } = vi.hoisted(() => ({
+  mockEnrichFromEmail: vi.fn((_email: string, fields: Record<string, unknown>) => fields),
+}));
+
 // ---------------------------------------------------------------------------
 // Module mocks
 // ---------------------------------------------------------------------------
+vi.mock('@/lib/leads/lead-enrichment', () => ({
+  enrichFromEmail: mockEnrichFromEmail,
+}));
+
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) =>
     React.createElement('a', { href, ...props }, children),
@@ -104,6 +114,11 @@ describe('CreateNewLeadPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    // clearAllMocks does not reset implementations — restore the default
+    // non-destructive identity so test order cannot leak a custom impl.
+    mockEnrichFromEmail.mockImplementation(
+      (_email: string, fields: Record<string, unknown>) => fields
+    );
     mockUseRequireAuth.mockReturnValue({
       isLoading: false,
       isAuthenticated: true,
@@ -209,5 +224,98 @@ describe('CreateNewLeadPage', () => {
     const callArgs = mockCreateMutation.mock.calls[0]?.[0];
     expect(callArgs).toHaveProperty('onError');
     expect(typeof callArgs!.onError).toBe('function');
+  });
+
+  // -------------------------------------------------------------------------
+  // PG-060: enrichment wiring (W-1..W-4)
+  // -------------------------------------------------------------------------
+  const fillBasicStep = () => {
+    fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'Sarah' } });
+    fireEvent.change(screen.getByLabelText(/last name/i), { target: { value: 'Connor' } });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: 'sarah@acme.com' },
+    });
+  };
+
+  it('invokes enrichFromEmail when the email field loses focus (W-1, AC-006)', () => {
+    render(<CreateNewLeadPage />);
+
+    const emailInput = screen.getByLabelText(/email address/i);
+    fireEvent.change(emailInput, { target: { value: 'sarah@acme.com' } });
+    fireEvent.blur(emailInput);
+
+    expect(mockEnrichFromEmail).toHaveBeenCalled();
+    expect(mockEnrichFromEmail.mock.calls[0]?.[0]).toBe('sarah@acme.com');
+  });
+
+  it('applies the enriched company to the empty company field (W-2, AC-003)', () => {
+    mockEnrichFromEmail.mockImplementation((_email: string, fields: Record<string, unknown>) => ({
+      ...fields,
+      company: 'Acme',
+    }));
+    render(<CreateNewLeadPage />);
+
+    fillBasicStep();
+    fireEvent.blur(screen.getByLabelText(/email address/i));
+    // Advance to the Company step where the company input renders.
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+
+    expect((screen.getByLabelText(/company name/i) as HTMLInputElement).value).toBe('Acme');
+  });
+
+  it('forwards the current form (incl. a pre-filled company) to enrichFromEmail (W-3, AC-005)', () => {
+    render(<CreateNewLeadPage />);
+
+    fillBasicStep();
+    // Move to step 2, set a company, return to step 1, then blur email.
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+    fireEvent.change(screen.getByLabelText(/company name/i), { target: { value: 'Manual Co' } });
+    fireEvent.click(screen.getByRole('button', { name: /previous/i }));
+    fireEvent.blur(screen.getByLabelText(/email address/i));
+
+    expect(mockEnrichFromEmail).toHaveBeenLastCalledWith(
+      'sarah@acme.com',
+      expect.objectContaining({ company: 'Manual Co' })
+    );
+  });
+
+  it('includes the enriched website in the create payload (W-4, AC-003)', () => {
+    mockEnrichFromEmail.mockImplementation((_email: string, fields: Record<string, unknown>) => ({
+      ...fields,
+      website: 'https://acme.com',
+    }));
+    render(<CreateNewLeadPage />);
+
+    fillBasicStep();
+    fireEvent.blur(screen.getByLabelText(/email address/i));
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // → company
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // → qualification
+    fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+
+    const mutationResult = mockCreateMutation.mock.results[0]?.value;
+    expect(mutationResult.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ website: 'https://acme.com' })
+    );
+  });
+
+  // -------------------------------------------------------------------------
+  // PG-060: accessibility (A-1, A-2 — AC-008)
+  // -------------------------------------------------------------------------
+  it('associates the email error via aria-invalid + aria-describedby (A-1, AC-008)', () => {
+    render(<CreateNewLeadPage />);
+
+    // Leave email empty and attempt to advance → validation error on email.
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+
+    const emailInput = screen.getByLabelText(/email address/i);
+    expect(emailInput.getAttribute('aria-invalid')).toBe('true');
+    const describedBy = emailInput.getAttribute('aria-describedby');
+    expect(describedBy).toBeTruthy();
+    expect(document.getElementById(describedBy as string)).not.toBeNull();
+  });
+
+  it('renders an aria-live region for enrichment announcements (A-2, AC-008)', () => {
+    render(<CreateNewLeadPage />);
+    expect(document.querySelector('[aria-live="polite"]')).not.toBeNull();
   });
 });

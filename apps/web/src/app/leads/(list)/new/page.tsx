@@ -16,6 +16,7 @@ import {
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useFormUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { enrichFromEmail } from '@/lib/leads/lead-enrichment';
 
 // Step configuration
 type StepId = 'basic' | 'company' | 'qualification';
@@ -153,6 +154,8 @@ export default function CreateNewLeadPage() {
     title: '',
     description: '',
   });
+  // PG-060: screen-reader announcement when enrichment auto-fills a field.
+  const [enrichmentNotice, setEnrichmentNotice] = useState('');
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
 
@@ -184,6 +187,29 @@ export default function CreateNewLeadPage() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+  };
+
+  // PG-060: derive website/company from the email domain when the email field
+  // loses focus. Non-destructive — only fills fields the user left blank.
+  const handleEmailBlur = () => {
+    const enriched = enrichFromEmail(formData.email, {
+      website: formData.website,
+      company: formData.company,
+    });
+    const filledWebsite = !formData.website.trim() && !!enriched.website;
+    const filledCompany = !formData.company.trim() && !!enriched.company;
+    if (!filledWebsite && !filledCompany) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      website: enriched.website ?? prev.website,
+      company: enriched.company ?? prev.company,
+    }));
+
+    const parts = [filledCompany ? 'company' : null, filledWebsite ? 'website' : null].filter(
+      Boolean
+    );
+    setEnrichmentNotice(`Auto-filled ${parts.join(' and ')} from the email domain.`);
   };
 
   // Validate current step
@@ -389,6 +415,11 @@ export default function CreateNewLeadPage() {
               Capture information about a potential opportunity.
             </p>
           </div>
+
+          {/* PG-060: a11y live region — announces enrichment auto-fills to AT. */}
+          <output aria-live="polite" className="sr-only">
+            {enrichmentNotice}
+          </output>
         </div>
 
         {/* Form Card */}
@@ -415,6 +446,7 @@ export default function CreateNewLeadPage() {
                   <button
                     key={step.id}
                     type="button"
+                    aria-current={status === 'current' ? 'step' : undefined}
                     onClick={() => handleStepClick(step)}
                     disabled={!isClickable}
                     className={`flex flex-col items-center gap-2 ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
@@ -481,6 +513,8 @@ export default function CreateNewLeadPage() {
                         autoComplete="given-name"
                         value={formData.firstName}
                         onChange={(e) => updateField('firstName', e.target.value)}
+                        aria-invalid={!!errors.firstName}
+                        aria-describedby={errors.firstName ? 'firstName-error' : undefined}
                         placeholder="e.g. Sarah"
                         className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${
                           errors.firstName
@@ -489,7 +523,9 @@ export default function CreateNewLeadPage() {
                         }`}
                       />
                       {errors.firstName && (
-                        <p className="text-xs text-red-500">{errors.firstName}</p>
+                        <p id="firstName-error" className="text-xs text-red-500">
+                          {errors.firstName}
+                        </p>
                       )}
                     </div>
 
@@ -507,6 +543,8 @@ export default function CreateNewLeadPage() {
                         autoComplete="family-name"
                         value={formData.lastName}
                         onChange={(e) => updateField('lastName', e.target.value)}
+                        aria-invalid={!!errors.lastName}
+                        aria-describedby={errors.lastName ? 'lastName-error' : undefined}
                         placeholder="e.g. Connor"
                         className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${
                           errors.lastName
@@ -514,7 +552,11 @@ export default function CreateNewLeadPage() {
                             : 'border-slate-200 dark:border-slate-700'
                         }`}
                       />
-                      {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
+                      {errors.lastName && (
+                        <p id="lastName-error" className="text-xs text-red-500">
+                          {errors.lastName}
+                        </p>
+                      )}
                     </div>
 
                     {/* Email */}
@@ -537,6 +579,9 @@ export default function CreateNewLeadPage() {
                           autoComplete="email"
                           value={formData.email}
                           onChange={(e) => updateField('email', e.target.value)}
+                          onBlur={handleEmailBlur}
+                          aria-invalid={!!errors.email}
+                          aria-describedby={errors.email ? 'email-error' : undefined}
                           placeholder="sarah@example.com"
                           className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${
                             errors.email
@@ -545,7 +590,11 @@ export default function CreateNewLeadPage() {
                           }`}
                         />
                       </div>
-                      {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+                      {errors.email && (
+                        <p id="email-error" className="text-xs text-red-500">
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
 
                     {/* Phone */}
@@ -647,6 +696,8 @@ export default function CreateNewLeadPage() {
                           id="sourceOther"
                           value={formData.sourceOther}
                           onChange={(e) => updateField('sourceOther', e.target.value)}
+                          aria-invalid={!!errors.sourceOther}
+                          aria-describedby={errors.sourceOther ? 'sourceOther-error' : undefined}
                           placeholder="e.g. Industry newsletter, Partner referral, Podcast ad..."
                           className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${
                             errors.sourceOther
@@ -655,7 +706,9 @@ export default function CreateNewLeadPage() {
                           }`}
                         />
                         {errors.sourceOther && (
-                          <p className="text-xs text-red-500">{errors.sourceOther}</p>
+                          <p id="sourceOther-error" className="text-xs text-red-500">
+                            {errors.sourceOther}
+                          </p>
                         )}
                       </div>
                     )}

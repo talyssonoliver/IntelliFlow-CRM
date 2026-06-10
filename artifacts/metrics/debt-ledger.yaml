@@ -5005,3 +5005,25 @@ alerts:
     remediation_sprint: 22
     remediation_plan: '1. Brand the notifications-worker HTML email shell (one shell, all 54 types) with tests. 2. Brand customer-facing transactional emails. 3. Attach to PG-085 / dedicated task. Keep each a complete vertical slice.'
     notes: 'See PG-085 findings + git issue #350. Root: no PRD/ADR/spec/attestation ever covered email content/branding (only flows + delivery).'
+  DEAD-TOGGLE-LEAD-ASSIGN-001:
+    origin_task: PG-060
+    owner: Backend Dev
+    severity: medium
+    description: 'leadAutomationSetting.autoAssignment (apps/api/src/modules/lead/lead-settings.router.ts:329, default true) is stored and toggled via lead.settings.automation.update but is NEVER read by the lead.create procedure (apps/api/src/modules/lead/lead.router.ts:484 always sets ownerId = creator). A tenant admin who sets autoAssignment=false sees no behavior change — a dead/unwired configuration toggle. Found during PG-060 New Lead spec exploration.'
+    created_at: 2026-06-10
+    status: open
+    expiry_date: 2026-08-31
+    remediation_sprint: 18
+    remediation_plan: 'In lead.router.ts create, read leadAutomationSetting.autoAssignment and branch: when false, skip creator auto-assign (leave ownerId unset / route to a pool); when true/default, keep current behavior. Backend scope (out of PG-060 web-layer scope), tracked here per project Rule 8.'
+    notes: 'git issue #379. Out of PG-060 scope (frontend page task). Spec finding PG-060-F1.'
+  REVENUE-MAP-NAN-001:
+    origin_task: PG-060
+    owner: CRM FE+BE
+    severity: medium
+    description: 'New Lead page annualRevenue select yields banded string values (e.g. "1M-10M"); handleSubmit does parseFloat("1M-10M")*100 = NaN, then Math.round(NaN) || undefined, so estimatedValue is ALWAYS undefined regardless of selection (silent data loss). apps/web/src/app/leads/(list)/new/page.tsx annualRevenue -> estimatedValue mapping.'
+    created_at: 2026-06-10
+    status: open
+    expiry_date: 2026-08-31
+    remediation_sprint: 18
+    remediation_plan: 'Owned by IFC-242 (Lead Create Form Fixes — revenue mapping). Map the banded select value to a numeric cents value (or switch to a numeric input). NOT fixed in PG-060 per scope boundary.'
+    notes: 'git issue #380. Owned by IFC-242. Spec finding PG-060-F2.'

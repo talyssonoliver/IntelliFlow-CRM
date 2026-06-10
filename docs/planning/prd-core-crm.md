@@ -6,8 +6,11 @@
 **Related Tasks:** IFC-014, IFC-016, IFC-061, IFC-062, IFC-063, IFC-064,
 IFC-065, IFC-066, IFC-089, IFC-090, IFC-091, IFC-092, IFC-093, IFC-094,
 IFC-101–IFC-110, IFC-192, IFC-220, IFC-225, IFC-226, IFC-236, IFC-239, IFC-278,
-IFC-232, IFC-305, PG-131, PG-175 **Decision Records:**
+IFC-232, IFC-305, PG-131, PG-175, PG-059, PG-060 **Decision Records:**
 ADR-019-core-crm-foundation.md, ADR-045-entity-detail-componentization.md
+
+**Last Updated:** 2026-06-10 (PG-060 New Lead page + client-side lead
+enrichment)
 
 ## Summary
 
