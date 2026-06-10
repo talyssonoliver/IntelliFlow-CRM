@@ -33,6 +33,14 @@ const steps: Step[] = [
   { id: 'qualification', number: 3, label: 'Qualification' },
 ];
 
+// Accessible-name suffix per step status (branchless — keeps the page component
+// under the cognitive-complexity budget; current step is conveyed via aria-current).
+const STEP_STATUS_SUFFIX: Record<'completed' | 'current' | 'upcoming', string> = {
+  completed: ' (completed)',
+  current: '',
+  upcoming: '',
+};
+
 // Form data structure
 interface LeadFormData {
   // Step 1: Basic Info
@@ -198,7 +206,10 @@ export default function CreateNewLeadPage() {
     });
     const filledWebsite = !formData.website.trim() && !!enriched.website;
     const filledCompany = !formData.company.trim() && !!enriched.company;
-    if (!filledWebsite && !filledCompany) return;
+    if (!filledWebsite && !filledCompany) {
+      setEnrichmentNotice('');
+      return;
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -241,6 +252,7 @@ export default function CreateNewLeadPage() {
     const nextIndex = currentStepIndex + 1;
     if (nextIndex < steps.length) {
       setCurrentStep(steps[nextIndex].id);
+      setEnrichmentNotice('');
     }
   };
 
@@ -249,6 +261,7 @@ export default function CreateNewLeadPage() {
     const prevIndex = currentStepIndex - 1;
     if (prevIndex >= 0) {
       setCurrentStep(steps[prevIndex].id);
+      setEnrichmentNotice('');
     }
   };
 
@@ -368,6 +381,7 @@ export default function CreateNewLeadPage() {
     // Only allow navigating to completed steps or current step
     if (targetIndex <= currentStepIndex) {
       setCurrentStep(step.id);
+      setEnrichmentNotice('');
     }
   };
 
@@ -426,9 +440,15 @@ export default function CreateNewLeadPage() {
         <Card className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           {/* Step Indicator */}
           <div className="px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700">
-            <div className="relative flex items-center justify-between w-full max-w-2xl mx-auto">
+            <nav
+              aria-label="Form steps"
+              className="relative flex items-center justify-between w-full max-w-2xl mx-auto"
+            >
               {/* Progress Line */}
-              <div className="absolute left-0 top-5 w-full h-0.5 bg-slate-100 dark:bg-slate-700 -z-10" />
+              <div
+                className="absolute left-0 top-5 w-full h-0.5 bg-slate-100 dark:bg-slate-700 -z-10"
+                aria-hidden="true"
+              />
 
               {steps.map((step) => {
                 const status = getStepStatus(step);
@@ -447,6 +467,7 @@ export default function CreateNewLeadPage() {
                     key={step.id}
                     type="button"
                     aria-current={status === 'current' ? 'step' : undefined}
+                    aria-label={`Step ${step.number}: ${step.label}${STEP_STATUS_SUFFIX[status]}`}
                     onClick={() => handleStepClick(step)}
                     disabled={!isClickable}
                     className={`flex flex-col items-center gap-2 ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
@@ -455,7 +476,12 @@ export default function CreateNewLeadPage() {
                       className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all ${stepCircleClass}`}
                     >
                       {status === 'completed' ? (
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                        <svg
+                          className="w-5 h-5"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
                           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                         </svg>
                       ) : (
@@ -475,7 +501,7 @@ export default function CreateNewLeadPage() {
                   </button>
                 );
               })}
-            </div>
+            </nav>
           </div>
 
           {/* Form Content */}
@@ -569,7 +595,12 @@ export default function CreateNewLeadPage() {
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
                             <path d="M4 20q-.825 0-1.412-.587Q2 18.825 2 18V6q0-.825.588-1.412Q3.175 4 4 4h16q.825 0 1.413.588Q22 5.175 22 6v12q0 .825-.587 1.413Q20.825 20 20 20Zm8-7 8-5V6l-8 5-8-5v2Z" />
                           </svg>
                         </span>
@@ -607,7 +638,12 @@ export default function CreateNewLeadPage() {
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
                             <path d="M19.95 21q-3.125 0-6.175-1.362-3.05-1.363-5.55-3.863-2.5-2.5-3.862-5.55Q3 7.175 3 4.05q0-.45.3-.75t.75-.3H8.1q.35 0 .625.238.275.237.325.562l.65 3.5q.05.4-.025.675-.075.275-.275.475L6.65 11.2q.7 1.3 1.65 2.475.95 1.175 2.1 2.175l2.65-2.65q.225-.225.525-.325.3-.1.625-.025l3.3.7q.35.1.563.363.212.262.212.587v4.05q0 .45-.3.75t-.75.3Z" />
                           </svg>
                         </span>
@@ -674,7 +710,12 @@ export default function CreateNewLeadPage() {
                           ))}
                         </select>
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
                             <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
                           </svg>
                         </span>
@@ -758,7 +799,12 @@ export default function CreateNewLeadPage() {
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
                           </svg>
                         </span>
@@ -800,7 +846,12 @@ export default function CreateNewLeadPage() {
                           ))}
                         </select>
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
                             <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
                           </svg>
                         </span>
@@ -833,7 +884,12 @@ export default function CreateNewLeadPage() {
                           ))}
                         </select>
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
                             <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
                           </svg>
                         </span>
@@ -866,7 +922,12 @@ export default function CreateNewLeadPage() {
                           ))}
                         </select>
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
                             <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
                           </svg>
                         </span>
@@ -969,7 +1030,12 @@ export default function CreateNewLeadPage() {
                           ))}
                         </select>
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
                             <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
                           </svg>
                         </span>
@@ -1014,7 +1080,12 @@ export default function CreateNewLeadPage() {
                     className="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all active:scale-95"
                   >
                     <span>Next Step</span>
-                    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
+                    <svg
+                      className="w-[18px] h-[18px]"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
                       <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" />
                     </svg>
                   </button>
@@ -1027,7 +1098,11 @@ export default function CreateNewLeadPage() {
                   >
                     {isSubmitting ? (
                       <>
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <svg
+                          className="animate-spin h-4 w-4"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
                           <circle
                             className="opacity-25"
                             cx="12"
@@ -1048,7 +1123,12 @@ export default function CreateNewLeadPage() {
                     ) : (
                       <>
                         <span>Create Lead</span>
-                        <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
+                        <svg
+                          className="w-[18px] h-[18px]"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
                           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                         </svg>
                       </>
@@ -1066,6 +1146,7 @@ export default function CreateNewLeadPage() {
             className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"
             viewBox="0 0 24 24"
             fill="currentColor"
+            aria-hidden="true"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
           </svg>

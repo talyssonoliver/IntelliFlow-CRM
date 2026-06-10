@@ -33,6 +33,24 @@ const FREEMAIL_DOMAINS: ReadonlySet<string> = new Set([
   'zoho.com',
 ]);
 
+/**
+ * Second-level public-suffix labels (e.g. `co.uk`, `com.br`). When the label
+ * before the TLD is one of these, the registrable label is one position earlier
+ * (so `acme.co.uk` / `acme.com.br` both derive `Acme`, not `Co` / `Com`).
+ */
+const SLD_LABELS: ReadonlySet<string> = new Set([
+  'com',
+  'net',
+  'org',
+  'gov',
+  'edu',
+  'co',
+  'ac',
+  'ne',
+  'or',
+  'gob',
+]);
+
 /** Fields this module can derive — a subset of the New Lead form. */
 export interface EnrichableLeadFields {
   website?: string;
@@ -83,7 +101,7 @@ export function deriveWebsiteFromEmail(email: string): string | null {
 
 /**
  * Canonicalize a user-entered URL: bare domain → https, http → https, and
- * strip a trailing slash on the root. An empty/whitespace input yields ''.
+ * strip any trailing slash(es). An empty/whitespace input yields ''.
  */
 export function normalizeWebsiteUrl(url: string): string {
   const trimmed = url.trim();
@@ -104,8 +122,13 @@ export function deriveCompanyHint(email: string): string | null {
   const domain = extractDomain(email);
   if (!domain || FREEMAIL_DOMAINS.has(domain)) return null;
   const labels = domain.split('.');
-  // Registrable label = the one before the TLD (handles sub.acme.com → acme).
-  const registrable = labels.length >= 2 ? labels[labels.length - 2] : labels[0];
+  // Registrable label = the one before the TLD, skipping a country-code SLD
+  // (handles sub.acme.com → Acme and acme.co.uk / acme.com.br → Acme).
+  let idx = labels.length >= 2 ? labels.length - 2 : 0;
+  if (labels.length >= 3 && SLD_LABELS.has(labels[idx])) {
+    idx = labels.length - 3;
+  }
+  const registrable = labels[idx];
   if (!registrable) return null;
   return titleCaseLabel(registrable);
 }

@@ -15,6 +15,10 @@ describe('deriveWebsiteFromEmail', () => {
     expect(deriveWebsiteFromEmail('sarah@mail.acme.com')).toBe('https://mail.acme.com');
   });
 
+  it('keeps the full ccSLD domain for the website', () => {
+    expect(deriveWebsiteFromEmail('user@acme.co.uk')).toBe('https://acme.co.uk');
+  });
+
   it('is case-insensitive on the domain', () => {
     expect(deriveWebsiteFromEmail('Sarah@ACME.com')).toBe('https://acme.com');
   });
@@ -23,10 +27,13 @@ describe('deriveWebsiteFromEmail', () => {
     'x@gmail.com',
     'x@googlemail.com',
     'x@yahoo.com',
+    'x@yahoo.co.uk',
     'x@hotmail.com',
     'x@outlook.com',
     'x@live.com',
+    'x@msn.com',
     'x@icloud.com',
+    'x@me.com',
     'x@aol.com',
     'x@protonmail.com',
     'x@proton.me',
@@ -83,6 +90,10 @@ describe('normalizeWebsiteUrl', () => {
     expect(normalizeWebsiteUrl('https://acme.com/en')).toBe('https://acme.com/en');
   });
 
+  it('strips a trailing slash on a subpath too', () => {
+    expect(normalizeWebsiteUrl('https://acme.com/en/')).toBe('https://acme.com/en');
+  });
+
   it('returns empty string for empty input', () => {
     expect(normalizeWebsiteUrl('')).toBe('');
   });
@@ -111,6 +122,12 @@ describe('deriveCompanyHint', () => {
 
   it('uses the registrable label for a subdomain email', () => {
     expect(deriveCompanyHint('sarah@mail.acme.com')).toBe('Acme');
+  });
+
+  it('uses the registrable label for ccSLD domains (co.uk, com.br)', () => {
+    expect(deriveCompanyHint('user@acme.co.uk')).toBe('Acme');
+    expect(deriveCompanyHint('user@acme.com.br')).toBe('Acme');
+    expect(deriveCompanyHint('sarah@mail.acme.co.uk')).toBe('Acme');
   });
 
   it('returns null for a freemail email', () => {

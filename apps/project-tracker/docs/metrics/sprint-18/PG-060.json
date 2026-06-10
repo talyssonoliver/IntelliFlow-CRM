@@ -39,12 +39,12 @@
     "created": [
       {
         "path": "apps/web/src/lib/leads/lead-enrichment.ts",
-        "sha256": "3abffbd7ed44e8f73be0b164c636854aa850bde6e2171dd31ddd1b65157db5ae",
+        "sha256": "33657635506c1f60a925aeaf8f7b73e1bd499e9450bf53459fa519d6ef6e71d0",
         "created_at": "2026-06-10T22:10:00Z"
       },
       {
         "path": "apps/web/src/lib/leads/__tests__/lead-enrichment.test.ts",
-        "sha256": "51d6bfea75230bce0f8fb198045d4714595a666363088d38469fb2f681a0027e",
+        "sha256": "06d2acbe8af38bce1a08577cde07a617c4b9a33d61adb9fb480aa4295c7159a4",
         "created_at": "2026-06-10T22:09:00Z"
       }
     ],
@@ -84,19 +84,19 @@
   "kpis": {
     "lighthouse_performance": {
       "target": 90,
-      "actual": 96,
+      "actual": 97,
       "met": true,
       "unit": "percent (/leads/new, desktop, production build)"
     },
     "coverage_statements": {
       "target": 90,
-      "actual": 97.56,
+      "actual": 97.77,
       "met": true,
       "unit": "percent (lead-enrichment.ts)"
     },
     "coverage_branches": {
       "target": 80,
-      "actual": 94.28,
+      "actual": 94.87,
       "met": true,
       "unit": "percent (lead-enrichment.ts)"
     },

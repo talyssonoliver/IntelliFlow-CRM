@@ -3,7 +3,7 @@
   "schema_version": "1.0.0",
   "task_id": "PG-060",
   "attestor": "Claude Opus 4.8 (1M) — /exec full-pipeline",
-  "attestation_timestamp": "2026-06-10T22:46:44Z",
+  "attestation_timestamp": "2026-06-10T23:13:48Z",
   "verdict": "COMPLETE",
   "run_id": "run-2026-06-10T22-06-43Z",
   "context_acknowledgment": {
@@ -13,11 +13,11 @@
   },
   "evidence_summary": "PG-060 adds the missing required artifact apps/web/src/lib/leads/lead-enrichment.ts (pure, synchronous, no network/LLM/tRPC) deriving website/company from the email domain, wires it into the existing New Lead page via the email onBlur (non-destructive), and adds an accessibility pass (aria-invalid/aria-describedby + aria-live region + step-group label). 'assignment automated' is satisfied by the existing ownerId = creator behavior (apps/api/src/modules/lead/lead.router.ts:484). Two out-of-scope findings tracked (issues #379, #380). TDD RED->GREEN: 49 lib tests + 6 new page tests (4 wiring + 2 a11y); existing 6 page tests preserved.",
   "artifact_hashes": {
-    "apps/web/src/lib/leads/lead-enrichment.ts": "3abffbd7ed44e8f73be0b164c636854aa850bde6e2171dd31ddd1b65157db5ae",
-    "apps/web/src/lib/leads/__tests__/lead-enrichment.test.ts": "51d6bfea75230bce0f8fb198045d4714595a666363088d38469fb2f681a0027e",
-    "apps/web/src/app/leads/(list)/new/page.tsx": "44af9aaac1d62ae255a477cd565f4590a3c01077db44b0df3af451ed4f9b373a",
+    "apps/web/src/lib/leads/lead-enrichment.ts": "33657635506c1f60a925aeaf8f7b73e1bd499e9450bf53459fa519d6ef6e71d0",
+    "apps/web/src/lib/leads/__tests__/lead-enrichment.test.ts": "06d2acbe8af38bce1a08577cde07a617c4b9a33d61adb9fb480aa4295c7159a4",
+    "apps/web/src/app/leads/(list)/new/page.tsx": "517806f8b9d11b14488659032a9934610c35af26fbdcc1062033baa51c65b5ec",
     "apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx": "b4ae3bd239a0b58631e584dbabc16850761de93ecf30641f105d5256a731b4d7",
-    "artifacts/lighthouse/PG-060/leads-new.json": "86bd7980019a1e7cd8a5ceafb852d7d82db913f08fdb41eec9f346adf68119e6"
+    "artifacts/lighthouse/PG-060/leads-new.json": "4d72681caadbe725aee356e7c0293b4800441093a295d2e68a154ababcfa6fe6"
   },
   "dependencies_verified": [
     {
@@ -81,13 +81,13 @@
     {
       "kpi": "Lighthouse performance >= 0.90 on /leads/new",
       "target": "performance >= 0.90",
-      "actual": "0.96 (FCP 0.3s, LCP 1.1s, TBT 10ms, CLS 0.004); artifacts/lighthouse/PG-060/leads-new.json, fetchTime 2026-06-10T22:45:01.780Z",
+      "actual": "0.97 (FCP 0.2s, CLS 0.004); artifacts/lighthouse/PG-060/leads-new.json, fetchTime 2026-06-10T23:12:43.442Z",
       "met": true
     },
     {
       "kpi": "lead-enrichment.ts scoped coverage",
       "target": "Statements >=90, Branches >=80, Functions >=90, Lines >=90",
-      "actual": "Statements 97.56%, Branches 94.28%, Functions 100%, Lines 100% (61 tests)",
+      "actual": "Statements 97.77%, Branches 94.87%, Functions 100%, Lines 100% (67 tests)",
       "met": true
     },
     {
