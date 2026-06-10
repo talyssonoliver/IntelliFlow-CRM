@@ -1475,4 +1475,88 @@ describe('TicketService', () => {
       expect(mockPrisma.ticket.update).not.toHaveBeenCalled();
     });
   });
+
+  // ============================================
+  // listByContact Tests (IFC-256)
+  // ============================================
+
+  describe('listByContact', () => {
+    it('queries tickets scoped to tenant + contact, newest first', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([]);
+
+      await service.listByContact({
+        tenantId: 'tenant-1',
+        contactId: 'contact-1',
+        limit: 5,
+      });
+
+      expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { tenantId: 'tenant-1', contactId: 'contact-1' },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        })
+      );
+    });
+
+    it('defaults the limit when none is provided', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([]);
+
+      await service.listByContact({ tenantId: 'tenant-1', contactId: 'contact-1' });
+
+      expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 20 })
+      );
+    });
+
+    it('returns the projected ticket fields for the contact', async () => {
+      const createdAt = new Date('2025-01-10T09:00:00Z');
+      mockPrisma.ticket.findMany.mockResolvedValue([
+        {
+          id: 'ticket-1',
+          ticketNumber: 'T-00001',
+          subject: 'Integration API question',
+          status: 'RESOLVED' as TicketStatus,
+          priority: 'MEDIUM' as TicketPriority,
+          createdAt,
+          resolvedAt: null,
+        },
+      ]);
+
+      const result = await service.listByContact({
+        tenantId: 'tenant-1',
+        contactId: 'contact-1',
+      });
+
+      expect(result).toEqual([
+        {
+          id: 'ticket-1',
+          ticketNumber: 'T-00001',
+          subject: 'Integration API question',
+          status: 'RESOLVED',
+          priority: 'MEDIUM',
+          createdAt,
+          resolvedAt: null,
+        },
+      ]);
+    });
+
+    it('requests only the projection fields (no heavy includes)', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([]);
+
+      await service.listByContact({ tenantId: 'tenant-1', contactId: 'contact-1' });
+
+      const call = mockPrisma.ticket.findMany.mock.calls[0][0];
+      expect(call.select).toEqual({
+        id: true,
+        ticketNumber: true,
+        subject: true,
+        status: true,
+        priority: true,
+        createdAt: true,
+        resolvedAt: true,
+      });
+      expect(call.include).toBeUndefined();
+    });
+  });
 });

@@ -200,10 +200,23 @@ interface ContactWithRelations {
     priority: string | null;
     status: string;
   }>;
+  tickets?: Array<{
+    id: string;
+    ticketNumber: string;
+    subject: string;
+    status: string;
+    priority: string;
+    createdAt: string | Date;
+    resolvedAt: string | Date | null;
+  }>;
   documents?: Array<{
     id: string;
     name: string;
+    fileName: string;
     fileType: string;
+    fileSize: number;
+    fileUrl: string;
+    category: string;
     createdAt: string | Date;
   }>;
   calendarEvents?: Array<{
@@ -683,6 +696,36 @@ function formatContactRelativeTime(dateString: string, timezone: string): string
   if (diffDays < 7) return `${diffDays} days ago`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
   return formatContactDate(dateString, timezone);
+}
+
+// IFC-256: format a byte count into a human-readable size (e.g. 2400000 → "2.4 MB").
+function formatFileSize(bytes: number): string {
+  if (!bytes || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const value = bytes / Math.pow(1024, exponent);
+  const rounded = exponent === 0 || value >= 10 ? Math.round(value) : Number(value.toFixed(1));
+  return `${rounded} ${units[exponent]}`;
+}
+
+// IFC-256: humanise an enum-ish label (e.g. "IN_PROGRESS" → "In progress").
+function titleCaseLabel(value: string): string {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase().replace(/_/g, ' ');
+}
+
+// IFC-256: ticket subtext line, e.g. "T-00001 • Resolved • Medium Priority".
+function formatTicketMeta(ticketNumber: string, status: string, priority: string): string {
+  return `${ticketNumber} • ${titleCaseLabel(status)} • ${titleCaseLabel(priority)} Priority`;
+}
+
+// IFC-256: status colour for the ticket marker (resolved/closed = green, else blue).
+function getTicketStatusColor(status: string): string {
+  const normalized = status?.toUpperCase();
+  if (normalized === 'RESOLVED' || normalized === 'CLOSED') {
+    return 'bg-green-100 dark:bg-green-900/30 text-green-600';
+  }
+  return 'bg-[#137fec]/10 text-[#137fec]';
 }
 
 function getStageColor(stage: string): string {
@@ -1472,6 +1515,35 @@ export default function Contact360Page() {
     });
   }, [apiContact?.opportunities]);
 
+  // Transform tickets from API (IFC-256 — replaces the previously hardcoded ticket)
+  const tickets = useMemo(() => {
+    if (!apiContact?.tickets) return [];
+    return apiContact.tickets.map((ticket) => ({
+      id: ticket.id,
+      ticketNumber: ticket.ticketNumber,
+      subject: ticket.subject,
+      status: ticket.status,
+      priority: ticket.priority,
+      createdAt:
+        typeof ticket.createdAt === 'string' ? ticket.createdAt : ticket.createdAt.toISOString(),
+    }));
+  }, [apiContact?.tickets]);
+
+  // Transform documents from API (IFC-256 — replaces hardcoded PDFs)
+  const documents = useMemo(() => {
+    if (!apiContact?.documents) return [];
+    return apiContact.documents.map((doc) => ({
+      id: doc.id,
+      name: doc.name,
+      fileName: doc.fileName,
+      fileType: doc.fileType,
+      fileSize: doc.fileSize,
+      fileUrl: doc.fileUrl,
+      category: doc.category,
+      createdAt: typeof doc.createdAt === 'string' ? doc.createdAt : doc.createdAt.toISOString(),
+    }));
+  }, [apiContact?.documents]);
+
   // Transform tasks from API
   const _tasks = useMemo(() => {
     if (!apiContact?.tasks) return [];
@@ -1554,12 +1626,12 @@ export default function Contact360Page() {
       { id: 'activity', label: 'Activity', count: activities.length },
       { id: 'tasks', label: 'Tasks' },
       { id: 'deals', label: 'Deals', count: deals.length },
-      { id: 'tickets', label: 'Tickets', count: 0 },
-      { id: 'documents', label: 'Documents', count: apiContact?.documents?.length || 0 },
+      { id: 'tickets', label: 'Tickets', count: tickets.length },
+      { id: 'documents', label: 'Documents', count: documents.length },
       { id: 'notes', label: 'Notes', count: notes.length },
       { id: 'ai-insights', label: 'AI Insights' },
     ],
-    [activities.length, deals.length, notes.length, apiContact?.documents?.length]
+    [activities.length, deals.length, notes.length, tickets.length, documents.length]
   );
 
   // Filter and search activities
@@ -2488,31 +2560,42 @@ export default function Contact360Page() {
                   Create Ticket
                 </button>
               </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <svg
-                        className="w-5 h-5 text-green-600"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-900 dark:text-white">
-                        Integration API question
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        TKT-1234 ÔÇó Resolved ÔÇó Medium Priority
-                      </p>
-                    </div>
+              <div className="space-y-3" data-testid="contact-tickets-tab">
+                {tickets.length === 0 ? (
+                  <div data-testid="contact-tickets-empty">
+                    <EmptyState entity="tickets" phase="passive" className="py-2" />
                   </div>
-                  <span className="text-xs text-slate-500">
-                    {formatContactRelativeTime('2024-12-15T14:00:00Z', timezone)}
-                  </span>
-                </div>
+                ) : (
+                  tickets.map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center ${getTicketStatusColor(
+                            ticket.status
+                          )}`}
+                        >
+                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900 dark:text-white">
+                            {ticket.subject}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {formatTicketMeta(ticket.ticketNumber, ticket.status, ticket.priority)}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-xs text-slate-500">
+                        {formatContactRelativeTime(ticket.createdAt, timezone)}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </Card>
           )}
@@ -2529,39 +2612,48 @@ export default function Contact360Page() {
                   Upload
                 </button>
               </div>
-              <div className="space-y-3">
-                <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <svg className="w-8 h-8 text-[#137fec]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6Zm0 2h7v5h5v11H6V4Zm2 8v2h8v-2H8Zm0 4v2h5v-2H8Z" />
-                  </svg>
-                  <div className="flex-1">
-                    <p className="font-medium text-slate-900 dark:text-white">
-                      Enterprise License Proposal.pdf
-                    </p>
-                    <p className="text-sm text-slate-500">Sent Dec 15, 2024 ÔÇó 2.4 MB</p>
+              <div className="space-y-3" data-testid="contact-documents-tab">
+                {documents.length === 0 ? (
+                  <div data-testid="contact-documents-empty">
+                    <EmptyState entity="documents" phase="passive" className="py-2" />
                   </div>
-                  <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7m-2 16H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7Z" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <svg className="w-8 h-8 text-[#137fec]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6Zm0 2h7v5h5v11H6V4Zm2 8v2h8v-2H8Zm0 4v2h5v-2H8Z" />
-                  </svg>
-                  <div className="flex-1">
-                    <p className="font-medium text-slate-900 dark:text-white">
-                      SOC2 Compliance Report.pdf
-                    </p>
-                    <p className="text-sm text-slate-500">Sent Dec 10, 2024 ÔÇó 1.8 MB</p>
-                  </div>
-                  <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7m-2 16H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7Z" />
-                    </svg>
-                  </button>
-                </div>
+                ) : (
+                  documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                    >
+                      <svg
+                        className="w-8 h-8 text-[#137fec] shrink-0"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6Zm0 2h7v5h5v11H6V4Zm2 8v2h8v-2H8Zm0 4v2h5v-2H8Z" />
+                      </svg>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-slate-900 dark:text-white truncate">
+                          {doc.name}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {formatContactDate(doc.createdAt, timezone)} •{' '}
+                          {formatFileSize(doc.fileSize)}
+                        </p>
+                      </div>
+                      <a
+                        href={doc.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                        aria-label={`Download ${doc.name}`}
+                        className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7m-2 16H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7Z" />
+                        </svg>
+                      </a>
+                    </div>
+                  ))
+                )}
               </div>
             </Card>
           )}

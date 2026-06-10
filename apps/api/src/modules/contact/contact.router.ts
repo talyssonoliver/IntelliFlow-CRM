@@ -738,6 +738,36 @@ export const contactRouter = createTRPCRouter({
       });
     }
 
+    // IFC-256: Contact 360 — tickets (via TicketService) + documents (tenant-scoped).
+    // `Ticket`/`Document` have no `ownerId` (so `createTenantWhereClause` is not used);
+    // both are scoped by `{ tenantId, contactId }`, and the contact above is already
+    // access-checked, so contact-level authorization gates these reads. A missing
+    // ticket service degrades to an empty list rather than failing the 360 view.
+    const tenantId = typedCtx.tenant.tenantId;
+    const [contactTickets, contactDocuments] = await Promise.all([
+      ctx.services?.ticket
+        ? ctx.services.ticket.listByContact({ tenantId, contactId: input.id, limit: 20 })
+        : Promise.resolve([]),
+      typedCtx.prismaWithTenant.document.findMany({
+        where: { tenantId, contactId: input.id, status: { not: 'DELETED' } },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+        select: {
+          id: true,
+          name: true,
+          fileName: true,
+          fileType: true,
+          fileSize: true,
+          fileUrl: true,
+          category: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+    // Both reads always resolve to arrays (the service degrades to [] and
+    // findMany never returns null), so no nullish fallback is needed here.
+    const relatedTabs = { tickets: contactTickets, documents: contactDocuments };
+
     // Derive AI insights when none exist in DB (ensures entity pages always show data)
     if (!contactWithRelations.aiInsight) {
       const derived = deriveContactInsights({
@@ -777,10 +807,10 @@ export const contactRouter = createTRPCRouter({
         })
         ?.catch(() => {}); // Best-effort persistence — silently ignore
 
-      return { ...contactWithRelations, aiInsight: syntheticInsight };
+      return { ...contactWithRelations, aiInsight: syntheticInsight, ...relatedTabs };
     }
 
-    return contactWithRelations;
+    return { ...contactWithRelations, ...relatedTabs };
   }),
 
   /**

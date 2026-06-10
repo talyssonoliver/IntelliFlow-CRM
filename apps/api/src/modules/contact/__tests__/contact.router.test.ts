@@ -37,6 +37,7 @@ import {
   mockLead,
   mockOpportunity,
   mockTask,
+  mockServices,
 } from '../../../test/setup';
 
 /**
@@ -201,29 +202,130 @@ describe('Contact Router', () => {
   });
 
   describe('getById', () => {
-    it('should return contact with related data', async () => {
-      const contactWithRelations = {
-        ...mockContact,
-        owner: mockUser,
-        account: mockAccount,
-        lead: mockLead,
-        opportunities: [mockOpportunity],
-        tasks: [mockTask],
-        activities: [],
-        notes: [],
-        aiInsight: { id: 'ai-1' },
-        calendarEvents: [],
-      };
+    // IFC-256: base 360-view relations (aiInsight present → normal return path)
+    const baseRelations = (overrides: Record<string, unknown> = {}) => ({
+      ...mockContact,
+      owner: mockUser,
+      account: mockAccount,
+      lead: mockLead,
+      opportunities: [mockOpportunity],
+      tasks: [mockTask],
+      activities: [],
+      notes: [],
+      aiInsight: { id: 'ai-1' },
+      calendarEvents: [],
+      ...overrides,
+    });
 
+    const sampleTicket = {
+      id: 'tk-1',
+      ticketNumber: 'T-00001',
+      subject: 'Integration API question',
+      status: 'RESOLVED',
+      priority: 'MEDIUM',
+      createdAt: new Date('2025-01-10T09:00:00Z'),
+      resolvedAt: null,
+    };
+    const sampleDocument = {
+      id: 'doc-1',
+      name: 'Enterprise License Proposal',
+      fileName: 'proposal.pdf',
+      fileType: 'application/pdf',
+      fileSize: 2_400_000,
+      fileUrl: 'https://files.example.com/proposal.pdf',
+      category: 'proposal',
+      createdAt: new Date('2025-01-09T09:00:00Z'),
+    };
+
+    it('should return contact with related data including tickets and documents', async () => {
+      const contactWithRelations = baseRelations();
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
       // IFC-252: findFirst with tenant WHERE (no service pre-flight)
       prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations as any);
+      // IFC-256: tickets via TicketService, documents via prisma
+      (mockServices.ticket.listByContact as any).mockResolvedValue([sampleTicket]);
+      (prismaMock.document.findMany as any).mockResolvedValue([sampleDocument]);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
       expect(result).toMatchObject(contactWithRelations);
+      expect(result.tickets).toHaveLength(1);
+      expect(result.tickets[0].ticketNumber).toBe('T-00001');
+      expect(result.documents).toHaveLength(1);
+      expect(result.documents[0].fileName).toBe('proposal.pdf');
+    });
+
+    it('returns empty tickets and documents arrays when the contact has none', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findFirst.mockResolvedValue(baseRelations() as any);
+      (mockServices.ticket.listByContact as any).mockResolvedValue([]);
+      (prismaMock.document.findMany as any).mockResolvedValue([]);
+
+      const result = await caller.getById({ id: TEST_UUIDS.contact1 });
+
+      expect(result.tickets).toEqual([]);
+      expect(result.documents).toEqual([]);
+    });
+
+    it('scopes the tickets/documents queries to tenant + contact and excludes deleted documents', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findFirst.mockResolvedValue(baseRelations() as any);
+      (mockServices.ticket.listByContact as any).mockResolvedValue([]);
+      (prismaMock.document.findMany as any).mockResolvedValue([]);
+
+      await caller.getById({ id: TEST_UUIDS.contact1 });
+
+      expect(mockServices.ticket.listByContact).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tenantId: TEST_UUIDS.tenant,
+          contactId: TEST_UUIDS.contact1,
+        })
+      );
+      expect(prismaMock.document.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            tenantId: TEST_UUIDS.tenant,
+            contactId: TEST_UUIDS.contact1,
+            status: { not: 'DELETED' },
+          }),
+        })
+      );
+    });
+
+    it('degrades to empty tickets when the ticket service is unavailable', async () => {
+      const ctx = createTestContext({
+        services: { ...mockServices, ticket: undefined } as any,
+      });
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findFirst.mockResolvedValue(baseRelations() as any);
+      (prismaMock.document.findMany as any).mockResolvedValue([]);
+
+      const result = await caller.getById({ id: TEST_UUIDS.contact1 });
+
+      expect(result.tickets).toEqual([]);
+    });
+
+    it('includes tickets and documents on the derived-insight path (no DB insight)', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      // aiInsight null → getById derives a synthetic insight (separate return path)
+      prismaMock.contact.findFirst.mockResolvedValue(baseRelations({ aiInsight: null }) as any);
+      (mockServices.ticket.listByContact as any).mockResolvedValue([sampleTicket]);
+      (prismaMock.document.findMany as any).mockResolvedValue([sampleDocument]);
+
+      const result = await caller.getById({ id: TEST_UUIDS.contact1 });
+
+      expect(result.aiInsight).toBeTruthy();
+      expect(result.tickets).toHaveLength(1);
+      expect(result.documents).toHaveLength(1);
     });
 
     it('should throw NOT_FOUND for non-existent contact', async () => {
