@@ -406,6 +406,13 @@ describe('createEmbeddings()', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    // Hermetic default (#347): neutralize any ambient EMBEDDING_PROVIDER. Vitest
+    // auto-loads dotenv files, and a developer whose local .env mirrors prod has
+    // EMBEDDING_PROVIDER=gemini — which would route createEmbeddings() through the
+    // Gemini branch (llm-factory.ts) so OpenAIEmbeddings is never constructed and
+    // the default-path assertions read undefined mock.calls. The gemini-specific
+    // test re-stubs this; every other case asserts the default OpenAI/LiteLLM path.
+    vi.stubEnv('EMBEDDING_PROVIDER', '');
   });
 
   afterEach(() => {
