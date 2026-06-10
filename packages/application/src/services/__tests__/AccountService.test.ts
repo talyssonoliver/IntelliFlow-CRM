@@ -165,6 +165,29 @@ describe('AccountService', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Account not found');
     });
+
+    it('should propagate a domain validation failure (B-16)', async () => {
+      const account = Account.create({
+        name: 'Validate Update',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-123',
+      }).value;
+      await accountRepository.save(account);
+
+      // Malformed URL → the Account aggregate rejects the update. The service
+      // must surface that failure instead of silently reporting success.
+      const result = await service.updateAccountInfo(
+        account.id.value,
+        { website: '://bad' },
+        'updater',
+        'tenant-123'
+      );
+
+      expect(result.isFailure).toBe(true);
+
+      const reloaded = await accountRepository.findById(account.id, 'tenant-123');
+      expect(reloaded?.website).toBeUndefined();
+    });
   });
 
   describe('updateRevenue()', () => {
@@ -547,6 +570,71 @@ describe('AccountService', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Account not found');
+    });
+
+    it('should publish an AccountDeletedEvent on successful delete (D-01)', async () => {
+      const account = Account.create({
+        name: 'Emit Delete',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-123',
+      }).value;
+      await accountRepository.save(account);
+      eventBus.clearPublishedEvents();
+
+      const result = await service.deleteAccount(account.id.value, 'tenant-123', 'deleter-1');
+
+      expect(result.isSuccess).toBe(true);
+
+      const deletedEvent = eventBus
+        .getPublishedEvents()
+        .find((e) => e.eventType === 'account.deleted');
+      expect(deletedEvent).toBeDefined();
+      expect(deletedEvent?.toPayload().deletedBy).toBe('deleter-1');
+    });
+
+    it('should record a system actor when no deletedBy is supplied', async () => {
+      const account = Account.create({
+        name: 'System Delete',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-123',
+      }).value;
+      await accountRepository.save(account);
+      eventBus.clearPublishedEvents();
+
+      const result = await service.deleteAccount(account.id.value, 'tenant-123');
+
+      expect(result.isSuccess).toBe(true);
+      const deletedEvent = eventBus
+        .getPublishedEvents()
+        .find((e) => e.eventType === 'account.deleted');
+      expect(deletedEvent?.toPayload().deletedBy).toBe('system');
+    });
+
+    it('should not publish a delete event when the account cannot be deleted', async () => {
+      const account = Account.create({
+        name: 'Blocked Delete',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-123',
+      }).value;
+      await accountRepository.save(account);
+
+      const contact = Contact.create({
+        email: 'blocked@example.com',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        accountId: account.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await contactRepository.save(contact);
+      eventBus.clearPublishedEvents();
+
+      const result = await service.deleteAccount(account.id.value, 'tenant-123', 'deleter-1');
+
+      expect(result.isFailure).toBe(true);
+      const deletedEvent = eventBus
+        .getPublishedEvents()
+        .find((e) => e.eventType === 'account.deleted');
+      expect(deletedEvent).toBeUndefined();
     });
   });
 

@@ -9,6 +9,7 @@ import {
   AccountIndustryCategorizedEvent,
   AccountHierarchyUpdatedEvent,
   AccountOwnerAssignedEvent,
+  AccountDeletedEvent,
 } from './AccountEvents';
 
 export class InvalidRevenueError extends DomainError {
@@ -304,6 +305,21 @@ export class Account extends AggregateRoot<AccountId> {
     return Result.ok(undefined);
   }
 
+  /**
+   * Mark this account as deleted, raising an {@link AccountDeletedEvent}.
+   *
+   * The aggregate is removed from persistence by the application layer; this
+   * records the deletion as a domain event so the audit trail and downstream
+   * consumers (events worker — IFC-272) observe it. There is no aggregate-level
+   * invariant on deletion — the cross-aggregate rules (no contacts, no active
+   * opportunities) are enforced by the service.
+   */
+  markAsDeleted(deletedBy: string): void {
+    this.addDomainEvent(
+      new AccountDeletedEvent(this.id, this.props.name, this.props.ownerId, deletedBy)
+    );
+  }
+
   // Serialization
   toJSON(): Record<string, unknown> {
     return {
@@ -316,6 +332,7 @@ export class Account extends AggregateRoot<AccountId> {
       description: this.description,
       parentAccountId: this.parentAccountId,
       ownerId: this.ownerId,
+      tenantId: this.tenantId,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
     };

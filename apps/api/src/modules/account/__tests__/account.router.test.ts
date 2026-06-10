@@ -383,8 +383,10 @@ describe('Account Router', () => {
 
       expect(result.success).toBe(true);
       expect(result.id).toBe(TEST_UUIDS.account1);
+      // IFC-271 D-01: delete now threads the acting user (tenantId, deletedBy)
       expect(ctx.services!.account!.deleteAccount).toHaveBeenCalledWith(
         TEST_UUIDS.account1,
+        expect.any(String),
         expect.any(String)
       );
     });
@@ -454,6 +456,32 @@ describe('Account Router', () => {
         expect.objectContaining({
           code: 'NOT_FOUND',
         })
+      );
+    });
+  });
+
+  describe('setParent', () => {
+    it('forwards the guaranteed-non-null tenant actor, not an unsafe ctx.user! (B-06)', async () => {
+      // Exercises the real procedure: it must pass typedCtx.tenant.userId (typed
+      // non-null by tenantProcedure) as the actor — the fix that replaced the
+      // unsafe `typedCtx.user!.userId` non-null assertion.
+      ctx.services!.account!.setParent = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainAccount({ parentAccountId: TEST_UUIDS.account2 }),
+      });
+
+      const result = await caller.setParent({
+        accountId: TEST_UUIDS.account1,
+        parentAccountId: TEST_UUIDS.account2,
+      });
+
+      expect(result).toBeDefined();
+      expect(ctx.services!.account!.setParent).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        TEST_UUIDS.account2,
+        TEST_UUIDS.tenant,
+        TEST_UUIDS.user1
       );
     });
   });

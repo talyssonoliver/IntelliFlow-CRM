@@ -4,6 +4,7 @@ import {
   AccountUpdatedEvent,
   AccountRevenueUpdatedEvent,
   AccountIndustryCategorizedEvent,
+  AccountDeletedEvent,
 } from '../AccountEvents';
 import { AccountId } from '../AccountId';
 
@@ -125,5 +126,30 @@ describe('AccountIndustryCategorizedEvent', () => {
     expect(payload.accountId).toBe(accountId.value);
     expect(payload.industry).toBe('Technology');
     expect(payload.categorizedBy).toBe('user-123');
+  });
+});
+
+describe('AccountDeletedEvent', () => {
+  it('should create event with correct payload', () => {
+    const accountId = AccountId.generate();
+    const event = new AccountDeletedEvent(accountId, 'Acme Corp', 'owner-123', 'deleter-456');
+
+    expect(event.eventType).toBe('account.deleted');
+    expect(event.accountId).toBe(accountId);
+    expect(event.name).toBe('Acme Corp');
+    expect(event.ownerId).toBe('owner-123');
+    expect(event.deletedBy).toBe('deleter-456');
+    expect(event.occurredAt).toBeInstanceOf(Date);
+  });
+
+  it('should serialize to payload correctly', () => {
+    const accountId = AccountId.generate();
+    const event = new AccountDeletedEvent(accountId, 'Acme Corp', 'owner-123', 'deleter-456');
+    const payload = event.toPayload();
+
+    expect(payload.accountId).toBe(accountId.value);
+    expect(payload.name).toBe('Acme Corp');
+    expect(payload.ownerId).toBe('owner-123');
+    expect(payload.deletedBy).toBe('deleter-456');
   });
 });
