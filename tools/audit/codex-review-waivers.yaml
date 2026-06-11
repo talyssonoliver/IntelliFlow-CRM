@@ -70,19 +70,25 @@ waivers:
       outlier and break IFC-272's dot.case dispatcher registration.
     author: talyssonoliver
     date: '2026-06-11'
-  - fingerprint: '14fb71cfda228a5199fdc81be1a3d6480e5412c3abd00fb413b70922a4fbf64c'
+  - fingerprint: '73cace130ba5426e3fb1c6e5ef354e1daf67932d6bda0598c25f814a711147da'
     reason: >-
-      Verified false positive (reproducible codex hallucination). Codex cites
+      Verified false positive (reproducible codex hallucination, post-extraction
+      fingerprint — replaces the pre-extraction 14fb71cf... entry after the form
+      logic moved from page.tsx to NewLeadForm.tsx). Codex cites
       `const estimatedValueCents = REVENUE_BAND_TO_CENTS[formData.annualRevenue]`
-      as evidence, but that line does NOT exist anywhere in the codebase — grep
-      for REVENUE_BAND_TO_CENTS returns nothing, and `git diff origin/main...HEAD`
-      plus the codex prompt file both contain zero occurrences. The New Lead
-      create payload INTENTIONALLY OMITS estimatedValue (handleSubmit builds
-      leadData with no estimatedValue key); annualRevenue is never mapped to
-      estimatedValue — which is exactly what codex's own recommended fix asks for.
-      The flagged page.tsx line is the comment explaining estimatedValue is left
-      unset. Proper annualRevenue persistence is owned by IFC-242. The fingerprint
-      is source-anchored, so this waiver auto-re-blocks if the code ever changes
-      to actually perform the mapping.
+      as evidence, but that line exists in ZERO source files — grep for
+      REVENUE_BAND_TO_CENTS / estimatedValueCents across the repo returns only
+      codex's own output artifacts and this waiver. Codex flags
+      `page.tsx:337`, but page.tsx is now a 12-line route shell that only
+      re-exports NewLeadForm — there is no line 337 and no estimatedValue logic
+      there at all. The real create payload (NewLeadForm.tsx ~:326-332)
+      INTENTIONALLY OMITS estimatedValue ("left unset: this form has no
+      deal-value input"); annualRevenue is a UI-only BANT field never mapped to
+      estimatedValue — exactly codex's own recommended fix. A regression test
+      (page.test.tsx it.each over all five revenue bands) asserts
+      `payload.estimatedValue` is undefined, so the mapping codex claims is
+      actively prevented. Proper annualRevenue persistence is owned by IFC-242.
+      The fingerprint is source-anchored, so this waiver auto-re-blocks if the
+      code ever changes to actually perform the mapping.
     author: talyssonoliver
     date: '2026-06-11'
