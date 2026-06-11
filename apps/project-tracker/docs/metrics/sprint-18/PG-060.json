@@ -39,12 +39,12 @@
     "created": [
       {
         "path": "apps/web/src/lib/leads/lead-enrichment.ts",
-        "sha256": "33657635506c1f60a925aeaf8f7b73e1bd499e9450bf53459fa519d6ef6e71d0",
+        "sha256": "838fb32d06e86e224acdd640d5cba5d5e85ad24456a97b0f876a171cb859d1b7",
         "created_at": "2026-06-10T22:10:00Z"
       },
       {
         "path": "apps/web/src/lib/leads/__tests__/lead-enrichment.test.ts",
-        "sha256": "06d2acbe8af38bce1a08577cde07a617c4b9a33d61adb9fb480aa4295c7159a4",
+        "sha256": "ab23f6ad1e494f885fd6728d9d3333a7f0c67f716620fbb630c532a266666c51",
         "created_at": "2026-06-10T22:09:00Z"
       }
     ],
@@ -90,13 +90,13 @@
     },
     "coverage_statements": {
       "target": 90,
-      "actual": 97.77,
+      "actual": 97.91,
       "met": true,
       "unit": "percent (lead-enrichment.ts)"
     },
     "coverage_branches": {
       "target": 80,
-      "actual": 94.87,
+      "actual": 95.12,
       "met": true,
       "unit": "percent (lead-enrichment.ts)"
     },

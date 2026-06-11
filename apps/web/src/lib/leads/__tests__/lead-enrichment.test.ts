@@ -94,6 +94,13 @@ describe('normalizeWebsiteUrl', () => {
     expect(normalizeWebsiteUrl('https://acme.com/en/')).toBe('https://acme.com/en');
   });
 
+  it('strips a huge run of trailing slashes in O(n) without hanging (ReDoS guard)', () => {
+    const evil = 'https://acme.com' + '/'.repeat(100000);
+    const start = performance.now();
+    expect(normalizeWebsiteUrl(evil)).toBe('https://acme.com');
+    expect(performance.now() - start).toBeLessThan(50);
+  });
+
   it('returns empty string for empty input', () => {
     expect(normalizeWebsiteUrl('')).toBe('');
   });

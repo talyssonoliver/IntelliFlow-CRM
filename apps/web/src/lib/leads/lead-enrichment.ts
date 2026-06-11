@@ -110,7 +110,11 @@ export function normalizeWebsiteUrl(url: string): string {
     ? trimmed.replace(/^https?:\/\//i, 'https://')
     : `https://${trimmed}`;
   // Strip trailing slash(es) so "https://acme.com/" === "https://acme.com".
-  return withScheme.replace(/\/+$/, '');
+  // Use an O(n) reverse scan rather than a regex like /\/+$/, which backtracks
+  // quadratically on a long run of trailing slashes (ReDoS — Sonar S5852).
+  let end = withScheme.length;
+  while (end > 0 && withScheme[end - 1] === '/') end--;
+  return withScheme.slice(0, end);
 }
 
 /**
