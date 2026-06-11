@@ -749,12 +749,31 @@ export const contactRouter = createTRPCRouter({
     // Tickets/documents are projected with a limit for the tab lists; the *Count
     // fields carry the true totals so the tab badges never undercount when a
     // contact has more than the projected number of rows.
+    //
+    // CaseDocument enforces per-document ACLs (the documents list + signed-URL
+    // procedures gate on creator-or-ACL-VIEW), so the contact tab must NOT leak
+    // titles/types/sizes/counts for confidential documents the viewer cannot
+    // access. Mirror PrismaCaseDocumentRepository.findAccessibleByUser: include a
+    // document only when the viewer created it or holds a non-expired, non-NONE ACL.
+    const viewerId = typedCtx.tenant.userId;
     const documentWhere = {
       tenantId,
       relatedContactId: input.id,
       deletedAt: null,
       isLatestVersion: true,
-    } as const;
+      OR: [
+        { createdBy: viewerId },
+        {
+          acl: {
+            some: {
+              principalId: viewerId,
+              accessLevel: { not: 'NONE' as const },
+              OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+            },
+          },
+        },
+      ],
+    };
     const [contactTickets, caseDocuments, ticketCount, documentCount] = await Promise.all([
       ctx.services?.ticket
         ? ctx.services.ticket.listByContact({ tenantId, contactId: input.id, limit: 20 })

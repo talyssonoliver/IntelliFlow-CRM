@@ -303,6 +303,16 @@ describe('Contact Router', () => {
           }),
         })
       );
+      // documents are ACL-filtered: the viewer must be the creator or hold an ACL
+      const docWhere = (prismaMock.caseDocument.findMany as any).mock.calls[0][0].where;
+      expect(docWhere.OR).toEqual(
+        expect.arrayContaining([
+          { createdBy: TEST_UUIDS.user1 },
+          expect.objectContaining({
+            acl: { some: expect.objectContaining({ principalId: TEST_UUIDS.user1 }) },
+          }),
+        ])
+      );
       // counts use the same tenant/contact scope (true totals for the badges)
       expect(mockServices.ticket.countByContact).toHaveBeenCalledWith(
         expect.objectContaining({ tenantId: TEST_UUIDS.tenant, contactId: TEST_UUIDS.contact1 })
