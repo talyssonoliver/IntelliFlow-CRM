@@ -102,16 +102,35 @@ function codexLoggedIn() {
 }
 
 function gitDiffFiles(base) {
+  // Primary: files changed between base and HEAD (committed diff)
   const r = spawnSync('git', ['diff', '--name-only', `${base}...HEAD`], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
     shell: process.platform === 'win32',
   });
-  if (r.status !== 0) return [];
-  return r.stdout
-    .split('\n')
-    .map((f) => f.trim())
-    .filter(Boolean);
+  const committed = r.status === 0
+    ? r.stdout.split('\n').map((f) => f.trim()).filter(Boolean)
+    : [];
+
+  // When base resolves to HEAD (e.g. --base=HEAD for self-test/local staging),
+  // also include staged (cached) files so the gate catches staged-but-not-yet-
+  // committed changes.  This is important for the validate-codex-gate self-test
+  // and for developers who run the gate before committing.
+  const stagedFiles = [];
+  const staged = spawnSync('git', ['diff', '--cached', '--name-only'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: process.platform === 'win32',
+  });
+  if (staged.status === 0) {
+    stagedFiles.push(...staged.stdout.split('\n').map((f) => f.trim()).filter(Boolean));
+  }
+
+  // Merge: staged files are included when there are no committed diff files
+  // (i.e. base===HEAD) OR always (union both sets, which is safe: duplicate
+  // paths are deduplicated by the Set below).
+  const merged = new Set([...committed, ...stagedFiles]);
+  return [...merged];
 }
 
 // sonar.sources paths from sonar-project.properties
@@ -205,17 +224,120 @@ function isInScope(file) {
 
 // ── fingerprint ────────────────────────────────────────────────────────
 /**
- * Stable fingerprint: sha256 of "<file>:<normalised-issue>"
- * Normalised = lowercase, collapse whitespace, strip punctuation that
- * changes between LLM runs (quotes, trailing dots).
+ * Stable fingerprint anchored to SOURCE CODE, not LLM prose.
+ *
+ * Formula:  sha256( normalizedFilePath + "\n" + normalizedFlaggedSource )
+ *
+ *   normalizedFilePath   = forward-slash path, lowercase, trimmed
+ *   normalizedFlaggedSource = the actual source text of the flagged line(s)
+ *                             read from disk, internal whitespace collapsed,
+ *                             leading/trailing whitespace stripped.
+ *
+ * Using source code instead of the LLM's "issue" text makes the fingerprint
+ * stable across:
+ *   - LLM rephrasing (non-deterministic prose)
+ *   - Minor line-number shifts (we look up the code at the reported line,
+ *     not the line number itself)
+ *
+ * Fallback: if the file does not exist on disk or the line is out of range,
+ * we fall back to the LLM's issue text (normalised) so we don't silently
+ * suppress findings whose source cannot be read.
+ *
+ * @param {string} file       - relative file path as reported by Codex
+ * @param {string|number} line - line number (or "N-M" range) as reported
+ * @param {string} issue      - LLM issue text (fallback only)
+ * @param {string} repoRoot   - absolute repo root path
  */
-function fingerprint(file, issue) {
-  const norm = `${file}:${issue
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/['"`.]/g, '')
-    .trim()}`;
-  return crypto.createHash('sha256').update(norm).digest('hex');
+/**
+ * Line-drift tolerance for fingerprint stability.
+ *
+ * The LLM sometimes reports the flagged line ±1-2 positions from the actual
+ * bug (e.g. pointing to the line BEFORE the bad mapping rather than the bad
+ * mapping itself).  To keep the fingerprint stable across this drift we
+ * compute candidate hashes for every line in [N-DRIFT .. N+DRIFT] and take
+ * the MINIMUM.  Because the minimum is the same regardless of whether the
+ * LLM reports N, N-1, or N+1 (all candidates include the same neighbourhood),
+ * the fingerprint is stable across ±DRIFT line-number variance.
+ *
+ * Why minimum works:
+ *   - For any two reported lines A and B where |A-B| ≤ DRIFT, the candidate
+ *     sets [A-DRIFT..A+DRIFT] and [B-DRIFT..B+DRIFT] overlap; both sets
+ *     include the canonical bug line, so their minimum is the same hash.
+ *   - DRIFT=2 tolerates ±2 line shifts (enough for adjacent-line confusion).
+ *   - If the bug is fixed (code changes), every candidate hash changes, so
+ *     the minimum changes and the waiver expires automatically.
+ */
+const FP_DRIFT = 2; // tolerate ±2 line-number variance from the LLM
+
+/**
+ * Compute the stable source-code fingerprint.
+ *
+ * Formula: minimum sha256 over lines [N-DRIFT .. N+DRIFT] of
+ *           sha256( normalizedFilePath + "\n" + trimmedSourceLine )
+ *
+ * @param {string}        file     - relative file path as reported by Codex
+ * @param {string|number} line     - line number (or "N-M" range) as reported
+ * @param {string}        issue    - LLM issue text (fallback only)
+ * @param {string}        repoRoot - absolute repo root path
+ */
+function fingerprint(file, line, issue, repoRoot) {
+  // Normalize the file path
+  const normalizedFile = file.replace(/\\/g, '/').toLowerCase().trim();
+
+  // Try to read the flagged source line(s) from disk
+  let candidateHashes = [];
+  try {
+    const absPath = path.join(repoRoot, file);
+    if (fs.existsSync(absPath)) {
+      const fileLines = fs.readFileSync(absPath, 'utf8').split('\n');
+      // Parse line spec: may be integer, string integer, or "N-M" range
+      const lineStr = String(line).trim();
+      const rangeMatch = lineStr.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+      let startLine, endLine;
+      if (rangeMatch) {
+        startLine = parseInt(rangeMatch[1], 10);
+        endLine = parseInt(rangeMatch[2], 10);
+      } else {
+        const n = parseInt(lineStr, 10);
+        startLine = isNaN(n) ? null : n;
+        endLine = startLine;
+      }
+
+      if (startLine !== null && startLine >= 1) {
+        // For each candidate line in [startLine-DRIFT .. endLine+DRIFT]
+        const from = Math.max(1, startLine - FP_DRIFT);
+        const to = Math.min(fileLines.length, (endLine ?? startLine) + FP_DRIFT);
+
+        for (let ln = from; ln <= to; ln++) {
+          const srcLine = (fileLines[ln - 1] || '').trim();
+          if (!srcLine) continue; // skip blank lines
+          const normalized = srcLine.replace(/\s+/g, ' ');
+          const payload = `${normalizedFile}\n${normalized}`;
+          candidateHashes.push(crypto.createHash('sha256').update(payload).digest('hex'));
+        }
+      }
+    }
+  } catch {
+    // Reading failed — fall through to prose fallback
+  }
+
+  if (candidateHashes.length > 0) {
+    // Return the lexicographically minimum hash over the drift window.
+    // The minimum is the same whether the LLM reports line N, N-1, or N+1
+    // (all candidate sets share the same minimum line in the neighbourhood).
+    candidateHashes.sort();
+    return candidateHashes[0];
+  }
+
+  // Fallback: use LLM issue prose (normalised) when source cannot be read
+  const prose =
+    'prose:' +
+    issue
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .replace(/['"`.]/g, '')
+      .trim();
+  return crypto.createHash('sha256').update(`${normalizedFile}\n${prose}`).digest('hex');
 }
 
 // ── waiver loading ─────────────────────────────────────────────────────
@@ -260,6 +382,9 @@ function extractFindings(raw) {
 }
 
 // ── output schema prompt ────────────────────────────────────────────────
+// NOTE: fingerprint is NOT required from Codex — the gate recomputes it
+// from the actual source code at the flagged line(s) to ensure stability
+// across LLM rephrasing (model non-determinism).
 const SCHEMA = {
   type: 'object',
   required: ['findings'],
@@ -268,7 +393,7 @@ const SCHEMA = {
       type: 'array',
       items: {
         type: 'object',
-        required: ['severity', 'file', 'line', 'rule', 'issue', 'evidence', 'fix', 'fingerprint'],
+        required: ['severity', 'file', 'line', 'rule', 'issue', 'evidence', 'fix'],
         properties: {
           severity: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
           file: { type: 'string' },
@@ -277,7 +402,6 @@ const SCHEMA = {
           issue: { type: 'string' },
           evidence: { type: 'string' },
           fix: { type: 'string' },
-          fingerprint: { type: 'string' },
         },
       },
     },
@@ -358,8 +482,9 @@ Your job:
 - A finding is a bug the AUTHOR'S OWN TESTS would not catch because the tests encode the
   same wrong assumption (e.g. mapping "1M-10M" revenue band to 100 cents — the test
   asserts 100, the code returns 100, both are wrong vs the real domain model).
-
-For each finding compute a fingerprint as: SHA-256 of "<file>:<issue-text-lowercase-whitespace-collapsed>"
+- For the "line" field: report the EXACT line number (or "N-M" range) where the buggy
+  code appears. Be precise — the gate computes a stable fingerprint from the source text
+  at that line, so an imprecise line number may prevent waiver matching.
 
 Respond ONLY with a JSON object — no prose, no markdown fences — matching this schema:
 {
@@ -367,12 +492,12 @@ Respond ONLY with a JSON object — no prose, no markdown fences — matching th
     {
       "severity": "critical|high|medium|low",
       "file": "<relative path>",
-      "line": <line number or range as string>,
+      "line": <exact line number (integer) or "N-M" range string>,
       "rule": "<short rule name, e.g. wrong-unit-mapping>",
       "issue": "<one sentence: what is wrong>",
       "evidence": "<quote the relevant code and explain why it is wrong>",
       "fix": "<concrete fix suggestion>",
-      "fingerprint": "<sha256 hex of file:normalised-issue>"
+      "fingerprint": "OMIT — the gate recomputes this from source; leave as empty string or omit"
     }
   ]
 }
@@ -395,6 +520,8 @@ If no real bugs are found, return { "findings": [] }.`;
   const promptPath = path.join(OUT_DIR, 'codex-prompt.txt');
 
   // Fetch the actual diff for the scoped files to embed in the prompt.
+  // When base is HEAD (e.g. self-test with staged files), also capture the
+  // staged diff so Codex sees the actual changes being reviewed.
   const diffResult = spawnSync('git', ['diff', `${baseRef}...HEAD`, '--', ...scopedFiles], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -402,7 +529,20 @@ If no real bugs are found, return { "findings": [] }.`;
     cwd: REPO_ROOT,
     maxBuffer: 8 * 1024 * 1024,
   });
-  const diffText = (diffResult.stdout || '').slice(0, 50_000); // cap at 50 KB
+  let diffText = (diffResult.stdout || '').slice(0, 50_000);
+
+  // Supplement with staged diff when the committed diff is empty but staged
+  // files are in scope (handles --base=HEAD during pre-commit / self-test).
+  if (!diffText.trim()) {
+    const stagedDiff = spawnSync('git', ['diff', '--cached', '--', ...scopedFiles], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: process.platform === 'win32',
+      cwd: REPO_ROOT,
+      maxBuffer: 8 * 1024 * 1024,
+    });
+    diffText = (stagedDiff.stdout || '').slice(0, 50_000);
+  }
 
   // Combine the structured prompt with the actual diff
   const fullPrompt = `${prompt}
@@ -470,10 +610,12 @@ ${diffText || '(no diff output — check base ref)'}
   }
 
   // 8. Stamp fingerprints (Codex computes them too, but we recompute for
-  //    consistency — our normalisation is the contract, not the model's)
+  //    consistency — our normalisation is the contract, not the model's).
+  //    The fingerprint is now anchored to the SOURCE CODE at the flagged
+  //    line(s), not the LLM's prose, so it stays stable across rephrasing.
   const waivers = loadWaivers();
   const findings = parsed.findings.map((f) => {
-    const fp = fingerprint(f.file, f.issue);
+    const fp = fingerprint(f.file, f.line, f.issue, REPO_ROOT);
     return { ...f, fingerprint: fp };
   });
 

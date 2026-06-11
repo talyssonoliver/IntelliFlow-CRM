@@ -1,14 +1,20 @@
 #!/usr/bin/env node
 /**
- * Gate self-test: proves three invariants of scripts/codex-review.mjs
+ * Gate self-test: proves four invariants of scripts/codex-review.mjs
  *
- *   1. CLEAN  — a diff with no in-scope files exits 0 (nothing to review)
- *   2. BUGGY  — a diff containing a data-integrity bug exits 1 (gate blocks)
- *   3. WAIVER — adding a waiver for the finding exits 0 (suppression works)
+ *   1. CLEAN    — a diff with no in-scope files exits 0 (nothing to review)
+ *   2. BUGGY    — a diff containing a data-integrity bug exits 1 (gate blocks)
+ *   3. WAIVER×3 — adding a stable source-code fingerprint waiver exits 0 on
+ *                 THREE consecutive runs of the same buggy diff — proving the
+ *                 waiver survives LLM rephrasing (model non-determinism).
+ *   4. DISTINCT — an unrelated bug on a DIFFERENT line is NOT suppressed by
+ *                 the waiver for the first bug (exits 1).
  *
- * This script creates an in-scope fixture file with a deliberate
- * revenue-band unit bug, stages it, runs the gate, then restores state.
- * It does NOT commit anything.
+ * The fingerprint is now computed from the SOURCE TEXT at the flagged line(s),
+ * not the LLM's prose, so it stays stable across runs.
+ *
+ * This script creates in-scope fixture files with deliberate bugs, stages
+ * them, runs the gate, then restores state. It does NOT commit anything.
  *
  * Usage:
  *   node scripts/validate-codex-gate.mjs
@@ -21,6 +27,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 
 function detectRepoRoot() {
@@ -50,8 +57,11 @@ function run(cmd, args, env) {
 }
 
 const FIXTURE_PATH = 'packages/validators/src/__codex_gate_test_fixture__.ts';
+const FIXTURE2_PATH = 'packages/validators/src/__codex_gate_test_fixture2__.ts';
 const WAIVERS_PATH = 'tools/audit/codex-review-waivers.yaml';
 
+// Buggy fixture: revenue-band unit mapping bug on a known line.
+// The BUG line is line 14 (1-indexed) in this content.
 const BUGGY_CONTENT = `/**
  * CODEX GATE TEST FIXTURE — do NOT commit this file.
  * This file contains a deliberate data-integrity bug for gate validation.
@@ -62,8 +72,8 @@ const BUGGY_CONTENT = `/**
 // This is the exact class of bug that passes TypeScript + tests + lint
 // when the test also asserts 100 (encoding the same wrong assumption).
 export const REVENUE_BAND_CENTS: Record<string, number> = {
-  '0-100K':   10_000_00,   // $100K = 10,000,00 cents  ✓
-  '100K-1M':  100_000_00,  // $1M   = 100,000,00 cents ✓
+  '0-100K':   10_000_00,   // $100K = 10,000,00 cents  OK
+  '100K-1M':  100_000_00,  // $1M   = 100,000,00 cents OK
   '1M-10M':   100,         // BUG: should be 1_000_000_00 (maps $1M band to $1)
   '10M+':     10_000_000_00,
 };
@@ -73,6 +83,86 @@ export function getRevenueBandCents(band: string): number {
 }
 `;
 
+// Distinct second fixture: different file, different bug (off-by-one in slice)
+// Used to prove the first waiver does NOT suppress an unrelated finding.
+const DISTINCT_BUGGY_CONTENT = `/**
+ * CODEX GATE TEST FIXTURE 2 — do NOT commit this file.
+ * Deliberate off-by-one: slice should start at 1, not 0.
+ */
+export function getTopN<T>(items: T[], n: number): T[] {
+  // BUG: skips sorting; returns wrong slice when items are unordered
+  return items.slice(0, n - 1); // off-by-one: should be slice(0, n)
+}
+`;
+
+// Must match FP_DRIFT in scripts/codex-review.mjs exactly.
+const FP_DRIFT = 2;
+
+/**
+ * Compute the stable source-code fingerprint the same way codex-review.mjs does.
+ * Uses minimum-hash over [N-DRIFT .. N+DRIFT] so ±2 line-number drift from the
+ * LLM does not change the fingerprint.
+ * Must stay in sync with the fingerprint() function in scripts/codex-review.mjs.
+ */
+function computeFingerprint(file, line, repoRoot) {
+  const normalizedFile = file.replace(/\\/g, '/').toLowerCase().trim();
+  const candidateHashes = [];
+  try {
+    const absPath = path.join(repoRoot, file);
+    if (fs.existsSync(absPath)) {
+      const fileLines = fs.readFileSync(absPath, 'utf8').split('\n');
+      const lineStr = String(line).trim();
+      const rangeMatch = lineStr.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+      let startLine, endLine;
+      if (rangeMatch) {
+        startLine = parseInt(rangeMatch[1], 10);
+        endLine = parseInt(rangeMatch[2], 10);
+      } else {
+        const n = parseInt(lineStr, 10);
+        startLine = isNaN(n) ? null : n;
+        endLine = startLine;
+      }
+      if (startLine !== null && startLine >= 1) {
+        const from = Math.max(1, startLine - FP_DRIFT);
+        const to = Math.min(fileLines.length, (endLine ?? startLine) + FP_DRIFT);
+        for (let ln = from; ln <= to; ln++) {
+          const srcLine = (fileLines[ln - 1] || '').trim();
+          if (!srcLine) continue;
+          const normalized = srcLine.replace(/\s+/g, ' ');
+          const payload = `${normalizedFile}\n${normalized}`;
+          candidateHashes.push(crypto.createHash('sha256').update(payload).digest('hex'));
+        }
+      }
+    }
+  } catch {
+    // fall through
+  }
+  if (candidateHashes.length === 0) return null; // can't compute without source on disk
+  candidateHashes.sort();
+  return candidateHashes[0];
+}
+
+/**
+ * Given the findings.json artifact, find all fingerprints from unwaived findings
+ * and the line numbers reported for the fixture file so we can compute the
+ * stable fingerprint independently.
+ */
+function getStableFingerprintsFromArtifact(findingsPath, fixtureFile) {
+  if (!fs.existsSync(findingsPath)) return [];
+  const data = JSON.parse(fs.readFileSync(findingsPath, 'utf8'));
+  const relevantFindings = (data.findings || []).filter(
+    (f) => f.file && f.file.includes('__codex_gate_test_fixture__')
+  );
+  const results = [];
+  for (const f of relevantFindings) {
+    // First try: use the fingerprint already stamped by our gate (already source-based)
+    if (f.fingerprint && f.fingerprint.length === 64) {
+      results.push({ fingerprint: f.fingerprint, line: f.line, file: f.file });
+    }
+  }
+  return results;
+}
+
 async function main() {
   const pass = (msg) => process.stdout.write(`  PASS  ${msg}\n`);
   const fail = (msg) => {
@@ -81,7 +171,7 @@ async function main() {
   };
   const info = (msg) => process.stdout.write(`        ${msg}\n`);
 
-  process.stdout.write('=== Codex Gate Self-Test ===\n\n');
+  process.stdout.write('=== Codex Gate Self-Test (stable source-code fingerprints) ===\n\n');
 
   // Precondition checks
   const codexCheck = run('codex', ['--version'], {});
@@ -96,7 +186,6 @@ async function main() {
   info(`codex version: ${codexCheck.stdout.trim()}`);
 
   // Auth probe — codex uses local OAuth (ChatGPT/Codex login), not an API key.
-  // The CLI writes "Logged in using ChatGPT" to stderr in codex 0.133.x.
   const authCheck = run('codex', ['login', 'status'], {});
   const authCombined = ((authCheck.stdout || '') + (authCheck.stderr || '')).toLowerCase();
   if (authCheck.status !== 0 || !authCombined.includes('logged in')) {
@@ -110,16 +199,17 @@ async function main() {
   }
   info(`codex auth: ${(authCheck.stdout || authCheck.stderr || '').trim()}`);
 
+  const findingsPath = path.join(REPO_ROOT, 'artifacts/codex-review/findings.json');
+  const currentWaivers = fs.readFileSync(path.join(REPO_ROOT, WAIVERS_PATH), 'utf8');
+
   // ── Test 1: CLEAN — no in-scope files changed ──────────────────────
   process.stdout.write('Test 1: CLEAN diff (no in-scope files) → exit 0\n');
-  // Stash any working-tree changes to ensure a clean diff
   const diffFiles = run('git', ['diff', '--name-only', 'origin/main...HEAD'], {});
   const inScope = diffFiles.stdout.split('\n').filter((f) => {
     const t = f.trim();
     return t.startsWith('packages/') || t.startsWith('apps/');
   });
   if (inScope.length === 0) {
-    // No in-scope files → gate should exit 0 immediately
     const r = run('node', ['scripts/codex-review.mjs', '--base=HEAD'], {});
     info(`exit: ${r.status}`);
     if (r.status === 0) {
@@ -128,22 +218,18 @@ async function main() {
       fail(`expected exit 0 on empty diff, got ${r.status}\n${r.stdout}`);
     }
   } else {
-    info(
-      'Worktree has in-scope changes; skipping Test 1 clean check (testing buggy diff instead).'
-    );
+    info('Worktree has in-scope changes; skipping clean-diff check (Test 1).');
   }
 
   // ── Test 2: BUGGY — fixture with deliberate bug → exit 1 ──────────
   process.stdout.write('\nTest 2: BUGGY fixture (revenue-band unit mapping bug) → exit 1\n');
 
-  // Write the buggy fixture
   fs.writeFileSync(path.join(REPO_ROOT, FIXTURE_PATH), BUGGY_CONTENT);
-  // Stage it so git diff HEAD~0..HEAD picks it up (use diff --diff-filter for unstaged)
   run('git', ['add', FIXTURE_PATH], {});
 
   let buggyResult;
+  let bugFingerprints = [];
   try {
-    // Review the uncommitted staged change (vs HEAD which doesn't have it)
     buggyResult = run('node', ['scripts/codex-review.mjs', '--base=HEAD'], {
       CODEX_REVIEW_VERBOSE: '0',
     });
@@ -153,57 +239,69 @@ async function main() {
 
     if (buggyResult.status === 1) {
       pass('exit 1 on buggy fixture (gate correctly blocked)');
+      // Extract the stable fingerprints from the artifact
+      bugFingerprints = getStableFingerprintsFromArtifact(findingsPath, FIXTURE_PATH);
+      info(`stable fingerprints from artifact: ${bugFingerprints.length}`);
+      for (const bf of bugFingerprints) {
+        info(`  fp=${bf.fingerprint.slice(0, 16)}... line=${bf.line} file=${bf.file}`);
+      }
     } else if (buggyResult.status === 0) {
-      // Codex may have not caught it — that is a false-negative in the model,
-      // not a gate implementation bug. Report it but don't hard-fail the script.
       process.stdout.write(
         '  WARN  exit 0 on buggy fixture — Codex did not flag the revenue-band bug.\n' +
           '        This is a model false-negative, not a gate implementation bug.\n' +
-          '        Manual review of the fixture is recommended.\n'
+          '        Skipping waiver stability tests (no fingerprint to waive).\n'
       );
+      // Clean up and exit without failing — model miss is not a gate bug
+      run('git', ['restore', '--staged', FIXTURE_PATH], {});
+      if (fs.existsSync(path.join(REPO_ROOT, FIXTURE_PATH))) {
+        fs.unlinkSync(path.join(REPO_ROOT, FIXTURE_PATH));
+      }
+      process.stdout.write('\n=== Self-test complete (partial — model did not flag bug) ===\n');
+      return;
     } else {
       fail(`unexpected exit ${buggyResult.status}\n${buggyResult.stdout}\n${buggyResult.stderr}`);
     }
   } finally {
-    // Always restore — unstage + delete the fixture
+    // Unstage + delete so Test 3 can re-stage cleanly
     run('git', ['restore', '--staged', FIXTURE_PATH], {});
     if (fs.existsSync(path.join(REPO_ROOT, FIXTURE_PATH))) {
       fs.unlinkSync(path.join(REPO_ROOT, FIXTURE_PATH));
     }
   }
 
-  // ── Test 3: WAIVER — prove waiver suppresses a finding ────────────
-  process.stdout.write('\nTest 3: WAIVER suppression\n');
-  // Read the findings from Test 2 to get a fingerprint to waive
-  const findingsPath = path.join(REPO_ROOT, 'artifacts/codex-review/findings.json');
-  if (!fs.existsSync(findingsPath)) {
-    info('No findings.json from Test 2 — skipping waiver test');
-  } else {
-    const data = JSON.parse(fs.readFileSync(findingsPath, 'utf8'));
-    const unwaived = (data.findings || []).filter((f) => {
-      // Check it's not already waived
-      const waiverData = fs.readFileSync(path.join(REPO_ROOT, WAIVERS_PATH), 'utf8');
-      return !waiverData.includes(f.fingerprint);
-    });
+  if (bugFingerprints.length === 0) {
+    info('No fingerprints extracted — skipping waiver stability test.');
+    process.stdout.write('\n=== Self-test complete ===\n');
+    return;
+  }
 
-    if (unwaived.length === 0) {
-      info('No unwaived findings to test with — skipping waiver test');
-    } else {
-      const fp = unwaived[0].fingerprint;
-      info(`Adding temporary waiver for fingerprint: ${fp.slice(0, 16)}...`);
+  // ── Test 3: WAIVER ×3 — same buggy diff, waived, must exit 0 three times ──
+  process.stdout.write(
+    '\nTest 3: WAIVER stability — same diff, 3 consecutive runs must all exit 0\n'
+  );
+  info(
+    'Fingerprints are SOURCE-CODE anchored: they do not change when the LLM rephrases.'
+  );
 
-      // Read current waivers
-      const currentWaivers = fs.readFileSync(path.join(REPO_ROOT, WAIVERS_PATH), 'utf8');
-      // Add a temporary waiver entry
-      const testWaiverEntry =
-        `\n  - fingerprint: "${fp}"\n` +
-        `    reason: "GATE-SELF-TEST temporary waiver — do not commit"\n` +
+  // Build waiver entries for all fingerprints from the bug run
+  const waiverEntries = bugFingerprints
+    .map(
+      (bf) =>
+        `\n  - fingerprint: "${bf.fingerprint}"\n` +
+        `    reason: "GATE-SELF-TEST stable fingerprint waiver — do not commit"\n` +
         `    author: gate-self-test\n` +
-        `    date: "2026-06-11"\n`;
-      const waiverWithTest = currentWaivers.replace('waivers: []', `waivers:${testWaiverEntry}`);
-      fs.writeFileSync(path.join(REPO_ROOT, WAIVERS_PATH), waiverWithTest);
+        `    date: "2026-06-11"\n`
+    )
+    .join('');
+  const waiverWithTest = currentWaivers.replace('waivers: []', `waivers:${waiverEntries}`);
 
-      // Re-stage the buggy fixture
+  const waiverResults = [];
+  try {
+    fs.writeFileSync(path.join(REPO_ROOT, WAIVERS_PATH), waiverWithTest);
+
+    for (let i = 1; i <= 3; i++) {
+      process.stdout.write(`\n  Run ${i}/3:\n`);
+      // Re-write and re-stage the fixture
       fs.writeFileSync(path.join(REPO_ROOT, FIXTURE_PATH), BUGGY_CONTENT);
       run('git', ['add', FIXTURE_PATH], {});
 
@@ -212,27 +310,79 @@ async function main() {
         waiverResult = run('node', ['scripts/codex-review.mjs', '--base=HEAD'], {
           CODEX_REVIEW_VERBOSE: '0',
         });
-        info(`exit: ${waiverResult.status}`);
-
-        if (waiverResult.status === 0) {
-          pass('exit 0 after waiver (finding suppressed correctly)');
-        } else {
-          // The waiver may not have covered all findings if Codex emitted more
-          const remaining = waiverResult.stdout.match(/Unwaived\s*:\s*(\d+)/);
-          info(`unwaived remaining: ${remaining ? remaining[1] : 'unknown'}`);
-          info('Note: waiver covered one finding but Codex may have emitted others.');
-          info('This is expected behaviour — the gate is working correctly.');
-        }
+        info(`  exit: ${waiverResult.status}`);
+        const remaining = waiverResult.stdout.match(/Unwaived\s*:\s*(\d+)/);
+        info(`  unwaived: ${remaining ? remaining[1] : 'unknown'}`);
+        const waivd = waiverResult.stdout.match(/Waived\s*:\s*(\d+)/);
+        info(`  waived: ${waivd ? waivd[1] : 'unknown'}`);
+        waiverResults.push(waiverResult.status);
       } finally {
-        // Restore waivers file and remove fixture
-        fs.writeFileSync(path.join(REPO_ROOT, WAIVERS_PATH), currentWaivers);
         run('git', ['restore', '--staged', FIXTURE_PATH], {});
         if (fs.existsSync(path.join(REPO_ROOT, FIXTURE_PATH))) {
           fs.unlinkSync(path.join(REPO_ROOT, FIXTURE_PATH));
         }
-        info('Restored waivers file and removed fixture.');
       }
     }
+  } finally {
+    // Always restore the real waivers file
+    fs.writeFileSync(path.join(REPO_ROOT, WAIVERS_PATH), currentWaivers);
+    info('\nRestored waivers file.');
+  }
+
+  process.stdout.write('\n');
+  info(`Waiver run exits: ${waiverResults.join(', ')}`);
+  const allPassed = waiverResults.every((s) => s === 0);
+  if (allPassed) {
+    pass(
+      `all 3 waived runs exited 0 — fingerprint is STABLE across LLM rephrasing`
+    );
+  } else {
+    fail(
+      `waiver run exits: ${waiverResults.join(', ')} — fingerprint is NOT stable. ` +
+        `Fix the fingerprint formula in scripts/codex-review.mjs.`
+    );
+  }
+
+  // ── Test 4: DISTINCT — unrelated bug not suppressed by first waiver ──
+  process.stdout.write(
+    '\nTest 4: DISTINCT bug (different file/line) → NOT suppressed by existing waiver → exit 1\n'
+  );
+  info('Planting a second distinct bug in a separate fixture file.');
+
+  fs.writeFileSync(path.join(REPO_ROOT, FIXTURE2_PATH), DISTINCT_BUGGY_CONTENT);
+  run('git', ['add', FIXTURE2_PATH], {});
+
+  // Add only the waiver for the FIRST bug (not the second)
+  const waiverWithFirstOnly = currentWaivers.replace('waivers: []', `waivers:${waiverEntries}`);
+  let distinctResult;
+  try {
+    fs.writeFileSync(path.join(REPO_ROOT, WAIVERS_PATH), waiverWithFirstOnly);
+    distinctResult = run('node', ['scripts/codex-review.mjs', '--base=HEAD'], {
+      CODEX_REVIEW_VERBOSE: '0',
+    });
+    info(`exit: ${distinctResult.status}`);
+    const remaining = distinctResult.stdout.match(/Unwaived\s*:\s*(\d+)/);
+    info(`unwaived: ${remaining ? remaining[1] : 'unknown'}`);
+  } finally {
+    fs.writeFileSync(path.join(REPO_ROOT, WAIVERS_PATH), currentWaivers);
+    run('git', ['restore', '--staged', FIXTURE2_PATH], {});
+    if (fs.existsSync(path.join(REPO_ROOT, FIXTURE2_PATH))) {
+      fs.unlinkSync(path.join(REPO_ROOT, FIXTURE2_PATH));
+    }
+    info('Restored waivers and removed fixture 2.');
+  }
+
+  if (distinctResult.status === 1) {
+    pass('exit 1 for distinct unrelated bug — waiver correctly did NOT suppress it');
+  } else if (distinctResult.status === 0) {
+    // Codex may have not flagged the distinct bug (model false-negative)
+    process.stdout.write(
+      '  WARN  exit 0 for distinct bug — Codex did not flag the off-by-one.\n' +
+        '        This is a model false-negative, not a gate implementation bug.\n' +
+        '        The waiver selectivity cannot be proven when Codex misses bugs.\n'
+    );
+  } else {
+    fail(`unexpected exit ${distinctResult.status}`);
   }
 
   process.stdout.write('\n=== Self-test complete ===\n');
@@ -243,13 +393,25 @@ main().catch((e) => {
   // Cleanup attempt
   try {
     const REPO_ROOT_ERR = detectRepoRoot();
-    const fixturePath = path.join(REPO_ROOT_ERR, FIXTURE_PATH);
-    if (fs.existsSync(fixturePath)) {
-      spawnSync('git', ['restore', '--staged', FIXTURE_PATH], {
-        cwd: REPO_ROOT_ERR,
-        shell: process.platform === 'win32',
-      });
-      fs.unlinkSync(fixturePath);
+    for (const fp of [FIXTURE_PATH, FIXTURE2_PATH]) {
+      const p = path.join(REPO_ROOT_ERR, fp);
+      if (fs.existsSync(p)) {
+        spawnSync('git', ['restore', '--staged', fp], {
+          cwd: REPO_ROOT_ERR,
+          shell: process.platform === 'win32',
+        });
+        fs.unlinkSync(p);
+      }
+    }
+    // Restore waivers
+    const wp = path.join(REPO_ROOT_ERR, WAIVERS_PATH);
+    if (fs.existsSync(wp)) {
+      const raw = fs.readFileSync(wp, 'utf8');
+      // If it still has the test entry, restore to empty
+      if (raw.includes('GATE-SELF-TEST')) {
+        const orig = raw.replace(/waivers:[\s\S]*$/, 'waivers: []');
+        fs.writeFileSync(wp, orig);
+      }
     }
   } catch {
     /* ignore cleanup errors */
