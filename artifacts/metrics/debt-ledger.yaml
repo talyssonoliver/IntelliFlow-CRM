@@ -35,6 +35,25 @@ items:
     remediation_plan: Migrate to html-strip utility + packages/validators email schema.
     remediation_sprint: 7
     status: open
+  GATE-CODEX-001:
+    origin_task: chore/codex-semantic-review-gate
+    owner: Tech Lead
+    severity: high
+    description: >
+      Revenue-band string "1M-10M" was mapped to 100 cents in a validator.
+      Author tests asserted 100 (encoding the same wrong assumption), so
+      TypeScript + ESLint + Sonar + coverage gates all passed. The bug class
+      (author tests encode author wrong assumption) was not caught by any
+      prior gate. Remediation: Codex Semantic Review gate (scripts/codex-review.mjs)
+      added 2026-06-11. Local-only enforcement via pre-push; uses OAuth, no API key.
+    created_at: 2026-06-11T00:00:00.000Z
+    expiry_date: null
+    remediation_plan: >
+      Gate is live. Any future occurrence of this bug class is caught at
+      pre-push via the local OAuth-authenticated codex CLI. No API key required.
+      Confirm auth with: codex login status.
+    remediation_sprint: chore
+    status: remediated
   FAIL-IFC-105-001:
     origin_task: IFC-105
     owner: Tech Lead
