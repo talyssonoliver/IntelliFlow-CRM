@@ -175,10 +175,11 @@ describe('AccountService', () => {
       await accountRepository.save(account);
 
       // Malformed URL → the Account aggregate rejects the update. The service
-      // must surface that failure instead of silently reporting success.
+      // must surface that failure instead of silently reporting success, and
+      // the failed (atomic) update must not partially apply the name change.
       const result = await service.updateAccountInfo(
         account.id.value,
-        { website: '://bad' },
+        { name: 'Should Not Persist', website: '://bad' },
         'updater',
         'tenant-123'
       );
@@ -186,6 +187,7 @@ describe('AccountService', () => {
       expect(result.isFailure).toBe(true);
 
       const reloaded = await accountRepository.findById(account.id, 'tenant-123');
+      expect(reloaded?.name).toBe('Validate Update');
       expect(reloaded?.website).toBeUndefined();
     });
   });

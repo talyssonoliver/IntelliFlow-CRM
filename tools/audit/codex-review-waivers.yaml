@@ -53,4 +53,20 @@
 #     author: talyssonoliver
 #     date: "2026-06-11"
 #
-waivers: []
+waivers:
+  - fingerprint: '215f89acf5fbd0edffd6a85e3201f297b0458c6b77b33c7dbac5dd2682d173a6'
+    reason: >-
+      False positive. 'account.deleted' follows the established dot.case
+      domain-event convention used by every sibling event (account.created,
+      account.updated, contact.created, opportunity.created, lead.created,
+      etc.); the events-worker dispatcher's DOMAIN_EVENT_TYPES map (`n`) keys
+      handlers by these dot.case strings (e.g. n.LEAD_CREATED === 'lead.created').
+      The PascalCase 'AccountDeleted' is the audit-event-handler registry key,
+      not the domain eventType — bridging the dot.case event through
+      DOMAIN_EVENT_TYPES + a worker handler + the audit mapping is explicitly
+      IFC-272's scope (account-detail-wiring-audit.md section 14, W-01/W-02/W-03,
+      "requires IFC-271"; account events do not reach the audit handler yet).
+      Emitting PascalCase here would make account.deleted the lone convention
+      outlier and break IFC-272's dot.case dispatcher registration.
+    author: talyssonoliver
+    date: '2026-06-11'

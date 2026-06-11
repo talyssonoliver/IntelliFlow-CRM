@@ -272,6 +272,19 @@ describe('Account Aggregate', () => {
       expect(account.website?.value).toBe('https://original.com'); // Unchanged
       expect(account.description).toBe('Original description'); // Unchanged
     });
+
+    it('should not mutate any field when validation fails (atomic command)', () => {
+      const result = account.updateAccountInfo(
+        { name: 'Changed Name', website: '://bad' },
+        'user-123'
+      );
+
+      expect(result.isFailure).toBe(true);
+      // An invalid website must not leave a half-applied name change behind.
+      expect(account.name).toBe('Original Corp');
+      expect(account.website?.value).toBe('https://original.com');
+      expect(account.getDomainEvents()).toHaveLength(0);
+    });
   });
 
   describe('updateRevenue()', () => {

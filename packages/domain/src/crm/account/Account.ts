@@ -194,16 +194,12 @@ export class Account extends AggregateRoot<AccountId> {
     }>,
     updatedBy: string
   ): Result<void, DomainError> {
-    const updatedFields: string[] = [];
-
-    if (updates.name !== undefined && updates.name !== this.props.name) {
-      this.props.name = updates.name;
-      updatedFields.push('name');
-    }
-
+    // Validate every fallible field BEFORE mutating any state, so a failed
+    // update leaves the aggregate unchanged (atomic command). Previously the
+    // name was applied before the website was validated, so an invalid website
+    // left a half-applied name change behind.
+    let newWebsite: WebsiteUrl | undefined;
     if (updates.website !== undefined) {
-      let newWebsite: WebsiteUrl | undefined;
-
       if (typeof updates.website === 'string') {
         const websiteResult = WebsiteUrl.create(updates.website);
         if (websiteResult.isFailure) {
@@ -213,11 +209,20 @@ export class Account extends AggregateRoot<AccountId> {
       } else {
         newWebsite = updates.website;
       }
+    }
 
-      if (!this.props.website?.equals(newWebsite)) {
-        this.props.website = newWebsite;
-        updatedFields.push('website');
-      }
+    const updatedFields: string[] = [];
+
+    if (updates.name !== undefined && updates.name !== this.props.name) {
+      this.props.name = updates.name;
+      updatedFields.push('name');
+    }
+
+    // newWebsite is set iff a website was supplied (and validated above), so
+    // this narrows it to a defined WebsiteUrl for the equality check.
+    if (newWebsite !== undefined && !this.props.website?.equals(newWebsite)) {
+      this.props.website = newWebsite;
+      updatedFields.push('website');
     }
 
     if (updates.description !== undefined && updates.description !== this.props.description) {
