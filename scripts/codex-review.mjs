@@ -157,13 +157,13 @@ function parseSonarSources() {
       const m = trimmed.match(/^sonar\.sources\s*=\s*(.*)/);
       if (!m) continue;
       collecting = true;
-      const part = m[1].replace(/\\+$/, '').trim(); // strip trailing backslashes
+      const part = m[1].replace(/\\$/, '').trim(); // strip trailing backslash (line continuation)
       if (part) valueParts.push(part);
       if (!trimmed.endsWith('\\')) collecting = false; // single-line value
       continue;
     }
     // Continuation line: must be indented or start with a value character
-    const part = trimmed.replace(/\\+$/, '').trim();
+    const part = trimmed.replace(/\\$/, '').trim(); // strip trailing backslash (line continuation)
     if (part) valueParts.push(part);
     if (!trimmed.endsWith('\\')) {
       collecting = false; // last continuation line
@@ -348,32 +348,60 @@ function loadWaivers() {
   // Format: "  - fingerprint: \"<hex>\""
   const set = new Set();
   const today = new Date().toISOString().slice(0, 10);
-  // We parse with a simple regex approach (no yaml dep required)
-  // Blocks: each "- fingerprint: X" optionally followed by "  expires: Y"
-  const blocks = raw.split(/\n(?=\s*-\s+fingerprint:)/);
-  for (const block of blocks) {
-    const fpMatch = block.match(/fingerprint\s*:\s*["']?([a-f0-9]{64})["']?/);
-    if (!fpMatch) continue;
-    const fp = fpMatch[1];
-    const expiresMatch = block.match(/expires\s*:\s*["']?(\d{4}-\d{2}-\d{2})["']?/);
-    if (expiresMatch && expiresMatch[1] < today) {
+  // We parse line-by-line (no yaml dep required)
+  // Each waiver entry starts with a "- fingerprint: <hex>" line,
+  // optionally followed by an "  expires: YYYY-MM-DD" line.
+  const lines = raw.split('\n');
+  let currentFp = null;
+  let currentExpires = null;
+  const flushEntry = () => {
+    if (!currentFp) return;
+    if (currentExpires && currentExpires < today) {
       process.stderr.write(
-        `[codex-review] WARN: waiver ${fp.slice(0, 12)}... expired ${expiresMatch[1]} — treating as not waived\n`
+        `[codex-review] WARN: waiver ${currentFp.slice(0, 12)}... expired ${currentExpires} — treating as not waived\n`
       );
+    } else {
+      set.add(currentFp);
+    }
+    currentFp = null;
+    currentExpires = null;
+  };
+  for (const line of lines) {
+    const fpMatch = line.match(/fingerprint\s*:\s*["']?([a-f0-9]{64})["']?/);
+    if (fpMatch) {
+      flushEntry();
+      currentFp = fpMatch[1];
       continue;
     }
-    set.add(fp);
+    const expMatch = line.match(/expires\s*:\s*["']?(\d{4}-\d{2}-\d{2})["']?/);
+    if (expMatch && currentFp) {
+      currentExpires = expMatch[1];
+    }
   }
+  flushEntry();
   return set;
 }
 
 // ── extract JSON from Codex output ─────────────────────────────────────
 function extractFindings(raw) {
-  // Codex may emit markdown fences around the JSON
-  const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/) || raw.match(/(\{[\s\S]*\})/);
-  if (!jsonMatch) return null;
+  // Codex may emit markdown fences around the JSON.
+  // Use string operations instead of backtracking-vulnerable regexes.
+  let candidate = raw;
+  const fenceStart = raw.indexOf('```');
+  if (fenceStart !== -1) {
+    // Skip past the opening fence line (e.g. "```json\n")
+    const afterFence = raw.indexOf('\n', fenceStart);
+    const fenceEnd = afterFence !== -1 ? raw.indexOf('```', afterFence + 1) : -1;
+    if (afterFence !== -1 && fenceEnd !== -1) {
+      candidate = raw.slice(afterFence + 1, fenceEnd);
+    }
+  }
+  // Find outermost JSON object by locating first '{' and last '}'
+  const objStart = candidate.indexOf('{');
+  const objEnd = candidate.lastIndexOf('}');
+  if (objStart === -1 || objEnd <= objStart) return null;
   try {
-    const parsed = JSON.parse(jsonMatch[1].trim());
+    const parsed = JSON.parse(candidate.slice(objStart, objEnd + 1).trim());
     if (parsed && Array.isArray(parsed.findings)) return parsed;
     return null;
   } catch {
