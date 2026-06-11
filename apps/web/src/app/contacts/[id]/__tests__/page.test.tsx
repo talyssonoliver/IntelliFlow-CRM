@@ -574,11 +574,9 @@ describe('Contact360Page - Tickets & Documents tabs (IFC-256)', () => {
   const sampleDocument = {
     id: 'doc-1',
     name: 'Enterprise License Proposal',
-    fileName: 'proposal.pdf',
     fileType: 'application/pdf',
     fileSize: 2_400_000,
-    fileUrl: 'https://files.example.com/proposal.pdf',
-    category: 'proposal',
+    category: 'CONTRACT',
     createdAt: '2025-01-09T09:00:00.000Z',
   };
 
@@ -676,10 +674,10 @@ describe('Contact360Page - Tickets & Documents tabs (IFC-256)', () => {
     const panel = screen.getByTestId('contact-documents-tab');
     expect(panel).toHaveTextContent('Enterprise License Proposal');
     expect(screen.queryByText(/SOC2 Compliance Report\.pdf/)).not.toBeInTheDocument();
-    // download link points at the real fileUrl
+    // each document links to its detail page (where the signed download lives)
     const link = screen
       .getAllByRole('link')
-      .find((l) => l.getAttribute('href') === sampleDocument.fileUrl);
+      .find((l) => l.getAttribute('href') === `/documents/${sampleDocument.id}`);
     expect(link).toBeDefined();
   });
 

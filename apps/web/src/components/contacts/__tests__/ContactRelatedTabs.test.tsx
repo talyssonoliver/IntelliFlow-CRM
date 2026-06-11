@@ -6,8 +6,16 @@
  * the active Contact 360 tab. Covers each tab branch, the "other tab" no-op, and
  * a null contact.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+
+vi.mock('next/link', () => ({
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
 
 import { ContactRelatedTabs } from '../ContactRelatedTabs';
 
@@ -27,11 +35,9 @@ const contact = {
     {
       id: 'doc-1',
       name: 'Enterprise License Proposal',
-      fileName: 'proposal.pdf',
       fileType: 'application/pdf',
       fileSize: 2_400_000,
-      fileUrl: 'https://files.example.com/proposal.pdf',
-      category: 'proposal',
+      category: 'CONTRACT',
       createdAt: '2025-01-09T09:00:00.000Z',
     },
   ],

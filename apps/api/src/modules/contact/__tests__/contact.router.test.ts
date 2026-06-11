@@ -226,14 +226,13 @@ describe('Contact Router', () => {
       createdAt: new Date('2025-01-10T09:00:00Z'),
       resolvedAt: null,
     };
-    const sampleDocument = {
+    // Raw CaseDocument row as returned by prisma; getById maps it to the view shape.
+    const sampleCaseDocument = {
       id: 'doc-1',
-      name: 'Enterprise License Proposal',
-      fileName: 'proposal.pdf',
-      fileType: 'application/pdf',
-      fileSize: 2_400_000,
-      fileUrl: 'https://files.example.com/proposal.pdf',
-      category: 'proposal',
+      title: 'Enterprise License Proposal',
+      mimeType: 'application/pdf',
+      sizeBytes: BigInt(2_400_000),
+      documentType: 'CONTRACT',
       createdAt: new Date('2025-01-09T09:00:00Z'),
     };
 
@@ -247,8 +246,8 @@ describe('Contact Router', () => {
       // IFC-256: tickets via TicketService, documents via prisma
       (mockServices.ticket.listByContact as any).mockResolvedValue([sampleTicket]);
       (mockServices.ticket.countByContact as any).mockResolvedValue(23);
-      (prismaMock.document.findMany as any).mockResolvedValue([sampleDocument]);
-      (prismaMock.document.count as any).mockResolvedValue(50);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([sampleCaseDocument]);
+      (prismaMock.caseDocument.count as any).mockResolvedValue(50);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
@@ -256,7 +255,9 @@ describe('Contact Router', () => {
       expect(result.tickets).toHaveLength(1);
       expect(result.tickets[0].ticketNumber).toBe('T-00001');
       expect(result.documents).toHaveLength(1);
-      expect(result.documents[0].fileName).toBe('proposal.pdf');
+      // CaseDocument row mapped to the view shape (title→name, sizeBytes→number)
+      expect(result.documents[0].name).toBe('Enterprise License Proposal');
+      expect(result.documents[0].fileSize).toBe(2_400_000);
       // badge counts reflect the true totals, not the capped list lengths
       expect(result.ticketCount).toBe(23);
       expect(result.documentCount).toBe(50);
@@ -268,7 +269,7 @@ describe('Contact Router', () => {
 
       prismaMock.contact.findFirst.mockResolvedValue(baseRelations() as any);
       (mockServices.ticket.listByContact as any).mockResolvedValue([]);
-      (prismaMock.document.findMany as any).mockResolvedValue([]);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([]);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
@@ -282,7 +283,7 @@ describe('Contact Router', () => {
 
       prismaMock.contact.findFirst.mockResolvedValue(baseRelations() as any);
       (mockServices.ticket.listByContact as any).mockResolvedValue([]);
-      (prismaMock.document.findMany as any).mockResolvedValue([]);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([]);
 
       await caller.getById({ id: TEST_UUIDS.contact1 });
 
@@ -292,12 +293,13 @@ describe('Contact Router', () => {
           contactId: TEST_UUIDS.contact1,
         })
       );
-      expect(prismaMock.document.findMany).toHaveBeenCalledWith(
+      expect(prismaMock.caseDocument.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId: TEST_UUIDS.tenant,
-            contactId: TEST_UUIDS.contact1,
-            status: { not: 'DELETED' },
+            relatedContactId: TEST_UUIDS.contact1,
+            deletedAt: null,
+            isLatestVersion: true,
           }),
         })
       );
@@ -305,12 +307,13 @@ describe('Contact Router', () => {
       expect(mockServices.ticket.countByContact).toHaveBeenCalledWith(
         expect.objectContaining({ tenantId: TEST_UUIDS.tenant, contactId: TEST_UUIDS.contact1 })
       );
-      expect(prismaMock.document.count).toHaveBeenCalledWith(
+      expect(prismaMock.caseDocument.count).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId: TEST_UUIDS.tenant,
-            contactId: TEST_UUIDS.contact1,
-            status: { not: 'DELETED' },
+            relatedContactId: TEST_UUIDS.contact1,
+            deletedAt: null,
+            isLatestVersion: true,
           }),
         })
       );
@@ -323,8 +326,8 @@ describe('Contact Router', () => {
       const caller = contactRouter.createCaller(ctx);
 
       prismaMock.contact.findFirst.mockResolvedValue(baseRelations() as any);
-      (prismaMock.document.findMany as any).mockResolvedValue([]);
-      (prismaMock.document.count as any).mockResolvedValue(0);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([]);
+      (prismaMock.caseDocument.count as any).mockResolvedValue(0);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
@@ -339,7 +342,7 @@ describe('Contact Router', () => {
       // aiInsight null → getById derives a synthetic insight (separate return path)
       prismaMock.contact.findFirst.mockResolvedValue(baseRelations({ aiInsight: null }) as any);
       (mockServices.ticket.listByContact as any).mockResolvedValue([sampleTicket]);
-      (prismaMock.document.findMany as any).mockResolvedValue([sampleDocument]);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([sampleCaseDocument]);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 

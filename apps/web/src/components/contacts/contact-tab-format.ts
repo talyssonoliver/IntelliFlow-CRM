@@ -20,10 +20,8 @@ export interface ContactTicketInput {
 export interface ContactDocumentInput {
   id: string;
   name: string;
-  fileName: string;
   fileType: string;
   fileSize: number;
-  fileUrl: string;
   category: string;
   createdAt: string | Date;
 }
@@ -40,10 +38,8 @@ export interface TicketViewModel {
 export interface DocumentViewModel {
   id: string;
   name: string;
-  fileName: string;
   fileType: string;
   fileSize: number;
-  fileUrl: string;
   category: string;
   createdAt: string;
 }
@@ -104,10 +100,8 @@ export function toDocumentViewModels(
   return documents.map((doc) => ({
     id: doc.id,
     name: doc.name,
-    fileName: doc.fileName,
     fileType: doc.fileType,
     fileSize: doc.fileSize,
-    fileUrl: doc.fileUrl,
     category: doc.category,
     createdAt: toIso(doc.createdAt),
   }));

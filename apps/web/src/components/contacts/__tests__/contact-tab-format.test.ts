@@ -139,11 +139,9 @@ describe('toDocumentViewModels', () => {
       {
         id: 'doc-1',
         name: 'Enterprise License Proposal',
-        fileName: 'proposal.pdf',
         fileType: 'application/pdf',
         fileSize: 2_400_000,
-        fileUrl: 'https://files.example.com/proposal.pdf',
-        category: 'proposal',
+        category: 'CONTRACT',
         createdAt: new Date('2025-01-09T09:00:00.000Z'),
       },
     ]);
@@ -151,11 +149,9 @@ describe('toDocumentViewModels', () => {
       {
         id: 'doc-1',
         name: 'Enterprise License Proposal',
-        fileName: 'proposal.pdf',
         fileType: 'application/pdf',
         fileSize: 2_400_000,
-        fileUrl: 'https://files.example.com/proposal.pdf',
-        category: 'proposal',
+        category: 'CONTRACT',
         createdAt: '2025-01-09T09:00:00.000Z',
       },
     ]);

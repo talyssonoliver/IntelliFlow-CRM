@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { Card, EmptyState } from '@intelliflow/ui';
 
 import { formatContactDate } from './contact-date-format';
@@ -12,9 +14,10 @@ export interface ContactDocumentsTabProps {
 
 /**
  * IFC-256: Contact 360 → Documents tab. Renders the contact's real documents
- * (or a proper empty state) with working download links. Extracted from the
- * route page so it is unit-tested and counted by coverage. The "Upload" action
- * is wired separately (IFC-257).
+ * (or a proper empty state). Each row links to the document detail page, which
+ * issues the signed download URL. Extracted from the route page so it is
+ * unit-tested and counted by coverage. The "Upload" action is wired separately
+ * (IFC-257).
  */
 export function ContactDocumentsTab({ documents, timezone }: ContactDocumentsTabProps) {
   return (
@@ -52,18 +55,15 @@ export function ContactDocumentsTab({ documents, timezone }: ContactDocumentsTab
                   {formatContactDate(doc.createdAt, timezone)} • {formatFileSize(doc.fileSize)}
                 </p>
               </div>
-              <a
-                href={doc.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                aria-label={`Download ${doc.name}`}
+              <Link
+                href={`/documents/${doc.id}`}
+                aria-label={`View ${doc.name}`}
                 className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7m-2 16H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7Z" />
                 </svg>
-              </a>
+              </Link>
             </div>
           ))
         )}
