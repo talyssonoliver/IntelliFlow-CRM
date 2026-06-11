@@ -168,7 +168,13 @@ export class AccountService {
       }
     }
 
-    account.updateAccountInfo(updates, updatedBy);
+    // B-16: propagate domain validation failures instead of discarding them —
+    // e.g. an invalid website URL must surface as a failed Result, not a silent
+    // success.
+    const updateResult = account.updateAccountInfo(updates, updatedBy);
+    if (updateResult.isFailure) {
+      return Result.fail(updateResult.error);
+    }
 
     try {
       await this.accountRepository.save(account);
@@ -470,7 +476,14 @@ export class AccountService {
   /**
    * Delete account with business rules
    */
-  async deleteAccount(accountId: string, tenantId: string): Promise<Result<void, DomainError>> {
+  async deleteAccount(
+    accountId: string,
+    tenantId: string,
+    // Defaults to a system actor so an unattributed/system-initiated delete is
+    // recorded as 'system' rather than undefined in the audit trail. Production
+    // callers (the router) always pass the acting user's id.
+    deletedBy: string = 'system'
+  ): Promise<Result<void, DomainError>> {
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) {
       return Result.fail(accountIdResult.error);
@@ -507,6 +520,12 @@ export class AccountService {
     } catch {
       return Result.fail(new PersistenceError('Failed to delete account'));
     }
+
+    // D-01: emit the deletion event only after persistence succeeds, so the
+    // audit trail and events worker (IFC-272) observe a delete that actually
+    // happened.
+    account.markAsDeleted(deletedBy);
+    await this.publishEvents(account);
 
     return Result.ok(undefined);
   }

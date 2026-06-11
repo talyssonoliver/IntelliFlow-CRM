@@ -661,7 +661,12 @@ export const accountRouter = createTRPCRouter({
     }
 
     // IFC-269 B-02+B-05: Tenant isolation via service layer (repository enforces tenantId)
-    const result = await accountService.deleteAccount(input.id, typedCtx.tenant.tenantId);
+    // IFC-271 D-01: thread the acting user so the delete emits an AccountDeletedEvent
+    const result = await accountService.deleteAccount(
+      input.id,
+      typedCtx.tenant.tenantId,
+      typedCtx.tenant.userId
+    );
 
     if (result.isFailure) {
       const errorCode = result.error.code;
@@ -968,7 +973,9 @@ export const accountRouter = createTRPCRouter({
       input.accountId,
       input.parentAccountId,
       typedCtx.tenant.tenantId,
-      typedCtx.user!.userId
+      // IFC-271 B-06: tenant.userId is guaranteed non-null by tenantProcedure,
+      // matching the audit-log call below — no unsafe non-null assertion.
+      typedCtx.tenant.userId
     );
 
     if (result.isFailure) {

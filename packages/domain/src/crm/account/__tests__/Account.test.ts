@@ -22,6 +22,7 @@ import {
   AccountRevenueUpdatedEvent,
   AccountIndustryCategorizedEvent,
   AccountOwnerAssignedEvent,
+  AccountDeletedEvent,
 } from '../AccountEvents';
 
 describe('Account Aggregate', () => {
@@ -271,6 +272,19 @@ describe('Account Aggregate', () => {
       expect(account.website?.value).toBe('https://original.com'); // Unchanged
       expect(account.description).toBe('Original description'); // Unchanged
     });
+
+    it('should not mutate any field when validation fails (atomic command)', () => {
+      const result = account.updateAccountInfo(
+        { name: 'Changed Name', website: '://bad' },
+        'user-123'
+      );
+
+      expect(result.isFailure).toBe(true);
+      // An invalid website must not leave a half-applied name change behind.
+      expect(account.name).toBe('Original Corp');
+      expect(account.website?.value).toBe('https://original.com');
+      expect(account.getDomainEvents()).toHaveLength(0);
+    });
   });
 
   describe('updateRevenue()', () => {
@@ -502,6 +516,39 @@ describe('Account Aggregate', () => {
     });
   });
 
+  describe('markAsDeleted()', () => {
+    let account: Account;
+
+    beforeEach(() => {
+      const result = Account.create({
+        name: 'Delete Me Corp',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+      });
+      account = result.value;
+      account.clearDomainEvents();
+    });
+
+    it('should emit a single AccountDeletedEvent', () => {
+      account.markAsDeleted('deleter-456');
+
+      const events = account.getDomainEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0]).toBeInstanceOf(AccountDeletedEvent);
+    });
+
+    it('should carry account identity and the deleting actor', () => {
+      account.markAsDeleted('deleter-456');
+
+      const deletedEvent = account.getDomainEvents()[0] as AccountDeletedEvent;
+      expect(deletedEvent.eventType).toBe('account.deleted');
+      expect(deletedEvent.accountId).toBe(account.id);
+      expect(deletedEvent.name).toBe('Delete Me Corp');
+      expect(deletedEvent.ownerId).toBe('owner-123');
+      expect(deletedEvent.deletedBy).toBe('deleter-456');
+    });
+  });
+
   describe('Serialization', () => {
     it('should serialize account to JSON', () => {
       const result = Account.create({
@@ -526,6 +573,7 @@ describe('Account Aggregate', () => {
       expect(json.revenue).toBe(2500000);
       expect(json.description).toBe('JSON test company');
       expect(json.ownerId).toBe('owner-789');
+      expect(json.tenantId).toBe('tenant-123');
       expect(json).toHaveProperty('createdAt');
       expect(json).toHaveProperty('updatedAt');
     });

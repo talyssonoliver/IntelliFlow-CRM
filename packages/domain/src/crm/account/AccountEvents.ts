@@ -145,3 +145,33 @@ export class AccountOwnerAssignedEvent extends DomainEvent {
     };
   }
 }
+
+/**
+ * Event: Account was deleted
+ *
+ * Raised by `Account.markAsDeleted()` after the aggregate has been removed from
+ * persistence. Mirrors `AccountCreatedEvent` (id / name / ownerId) and adds the
+ * `deletedBy` actor for the audit trail and the events-worker dispatcher
+ * (IFC-272), consistent with the other account mutation events.
+ */
+export class AccountDeletedEvent extends DomainEvent {
+  readonly eventType = 'account.deleted';
+
+  constructor(
+    public readonly accountId: AccountId,
+    public readonly name: string,
+    public readonly ownerId: string,
+    public readonly deletedBy: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      accountId: this.accountId.value,
+      name: this.name,
+      ownerId: this.ownerId,
+      deletedBy: this.deletedBy,
+    };
+  }
+}

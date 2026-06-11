@@ -9,6 +9,7 @@ import {
   AccountIndustryCategorizedEvent,
   AccountHierarchyUpdatedEvent,
   AccountOwnerAssignedEvent,
+  AccountDeletedEvent,
 } from './AccountEvents';
 
 export class InvalidRevenueError extends DomainError {
@@ -193,16 +194,12 @@ export class Account extends AggregateRoot<AccountId> {
     }>,
     updatedBy: string
   ): Result<void, DomainError> {
-    const updatedFields: string[] = [];
-
-    if (updates.name !== undefined && updates.name !== this.props.name) {
-      this.props.name = updates.name;
-      updatedFields.push('name');
-    }
-
+    // Validate every fallible field BEFORE mutating any state, so a failed
+    // update leaves the aggregate unchanged (atomic command). Previously the
+    // name was applied before the website was validated, so an invalid website
+    // left a half-applied name change behind.
+    let newWebsite: WebsiteUrl | undefined;
     if (updates.website !== undefined) {
-      let newWebsite: WebsiteUrl | undefined;
-
       if (typeof updates.website === 'string') {
         const websiteResult = WebsiteUrl.create(updates.website);
         if (websiteResult.isFailure) {
@@ -212,11 +209,20 @@ export class Account extends AggregateRoot<AccountId> {
       } else {
         newWebsite = updates.website;
       }
+    }
 
-      if (!this.props.website?.equals(newWebsite)) {
-        this.props.website = newWebsite;
-        updatedFields.push('website');
-      }
+    const updatedFields: string[] = [];
+
+    if (updates.name !== undefined && updates.name !== this.props.name) {
+      this.props.name = updates.name;
+      updatedFields.push('name');
+    }
+
+    // newWebsite is set iff a website was supplied (and validated above), so
+    // this narrows it to a defined WebsiteUrl for the equality check.
+    if (newWebsite !== undefined && !this.props.website?.equals(newWebsite)) {
+      this.props.website = newWebsite;
+      updatedFields.push('website');
     }
 
     if (updates.description !== undefined && updates.description !== this.props.description) {
@@ -304,6 +310,21 @@ export class Account extends AggregateRoot<AccountId> {
     return Result.ok(undefined);
   }
 
+  /**
+   * Mark this account as deleted, raising an {@link AccountDeletedEvent}.
+   *
+   * The aggregate is removed from persistence by the application layer; this
+   * records the deletion as a domain event so the audit trail and downstream
+   * consumers (events worker — IFC-272) observe it. There is no aggregate-level
+   * invariant on deletion — the cross-aggregate rules (no contacts, no active
+   * opportunities) are enforced by the service.
+   */
+  markAsDeleted(deletedBy: string): void {
+    this.addDomainEvent(
+      new AccountDeletedEvent(this.id, this.props.name, this.props.ownerId, deletedBy)
+    );
+  }
+
   // Serialization
   toJSON(): Record<string, unknown> {
     return {
@@ -316,6 +337,7 @@ export class Account extends AggregateRoot<AccountId> {
       description: this.description,
       parentAccountId: this.parentAccountId,
       ownerId: this.ownerId,
+      tenantId: this.tenantId,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
     };
