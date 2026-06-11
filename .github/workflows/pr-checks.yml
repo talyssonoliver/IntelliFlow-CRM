@@ -4,6 +4,14 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [main, develop]
+  # Merge Queue: run PR Checks required contexts (Deploy Preview, PR Summary,
+  # PR Validation) on the queue's temp refs. Jobs with draft-only guards
+  # (github.event.pull_request.draft == false) use the always() + non-draft
+  # guard pattern below and evaluate correctly on merge_group (draft is false
+  # on the merge ref). Deploy-only steps are no-ops on merge_group — the shim
+  # already emits success without deploying.
+  merge_group:
+    branches: [main, develop]
 
 concurrency:
   group: pr-${{ github.event.pull_request.number }}
@@ -13,7 +21,8 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   NODE_VERSION: '22'
   PNPM_VERSION: '10.33.0'
-  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  # TURBO_TOKEN reuses VERCEL_TOKEN — see ci.yml env block for rationale.
+  TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   NODE_OPTIONS: --max-old-space-size=4096
 
@@ -21,13 +30,19 @@ jobs:
   pr-validation:
     name: PR Validation
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    # On merge_group events github.event.pull_request is null; the queue only
+    # processes non-draft PRs by definition, so we allow the run unconditionally
+    # when the trigger is merge_group.
+    if: github.event_name == 'merge_group' || github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Validate PR title
+        # PR-specific: the merge queue has already validated the title at PR open
+        # time. Skip on merge_group events where github.event.pull_request is null.
+        if: github.event_name == 'pull_request'
         uses: amannn/action-semantic-pull-request@v6
         with:
           types: |
@@ -62,7 +77,10 @@ jobs:
         # the PR title, so enforce the same cap here (PR_TITLE via env, never
         # interpolated into the script — injection-safe). Dependabot titles can
         # legitimately run long (version tables); it's bot-exempt as elsewhere.
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        # Skip on merge_group: already validated when the PR was opened.
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login != 'dependabot[bot]'
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
@@ -79,7 +97,10 @@ jobs:
         # convention that we don't control. Exempt Dependabot PRs from the
         # human-author branch-name regex; the dependabot-bot author check is
         # enough auth signal.
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        # Skip on merge_group: branch name was validated at PR open time.
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           branch="${{ github.head_ref }}"
           if [[ ! "$branch" =~ ^(feat|fix|docs|refactor|test|chore|agent|ci|build|perf|style|revert)/.+ ]]; then
@@ -88,6 +109,8 @@ jobs:
           fi
 
       - name: Validate PR size
+        # Skip on merge_group: github.base_ref is null on merge_group events.
+        if: github.event_name == 'pull_request'
         run: |
           changes=$(git diff --stat origin/${{ github.base_ref }}...HEAD | tail -n1 | grep -oP '\d+(?= insertion)|\d+(?= deletion)' | awk '{sum+=$1} END {print sum}')
           if [ "$changes" -gt 1000 ]; then
@@ -98,7 +121,10 @@ jobs:
       # explicit hotfix waiver in the PR body. The body is passed via env (never
       # interpolated into the script) to avoid shell injection from PR content.
       - name: Require task ID or hotfix waiver in PR body
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        # Skip on merge_group: already checked when the PR was opened/updated.
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login != 'dependabot[bot]'
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
@@ -111,6 +137,12 @@ jobs:
             echo "::error::PR body must reference a tracked task id (e.g. IFC-123, PG-045), a GitHub issue (#123), or include a hotfix waiver marker ([hotfix])."
             exit 1
           fi
+
+      - name: Merge queue pass-through
+        # Explicit success step so the job always completes on merge_group refs
+        # even when all PR-specific steps above are skipped.
+        if: github.event_name == 'merge_group'
+        run: echo "merge_group event — PR validations already passed at PR review time. OK"
 
   # `quality-checks` was removed as part of Recommendation E of
   # docs/operations/ci-cost-audit-2026-05-25.md. It duplicated coverage
@@ -149,21 +181,11 @@ jobs:
     runs-on: ubuntu-latest
     # build-preview removed (F-05); deploy-preview builds independently via
     # `vercel build`, so it no longer depends on a prior build job.
-    # Always run for non-draft PRs so the required status context reports a
-    # conclusion (not `skipped`). Branch protection treats `skipped` required
-    # checks as never-reported, which BLOCKS merge. The actual deploy is
-    # per-step gated below (DEPLOY_ELIGIBLE) so only same-repo PRs with Vercel
-    # configured AND non-bot authors execute the deploy. Other cases hit the
-    # success-shim step and the job still emits `success`.
-    # CI-Audit P0 (2026-06-04): the REAL preview deploy moved to the CI-gated
-    # workflow `.github/workflows/deploy-preview.yml` (trigger: workflow_run on
-    # `CI Pipeline` success), so previews build ONLY after CI is green — no more
-    # pre-green Vercel builds (wasted minutes) or broken-preview deploys. This
-    # job is now a required-status SHIM: it reports `success` so branch
-    # protection's `PR Checks / Deploy Preview` context stays satisfied, but it
-    # deploys nothing. (Vercel's own auto-build is suppressed by
-    # scripts/vercel-ignore-build.sh.) See ADR-062 + the retrospective doc.
-    if: github.event.pull_request.draft == false
+    # Always run for non-draft PRs and on merge_group so the required status
+    # context reports a conclusion (not `skipped`). Branch protection treats
+    # `skipped` required checks as never-reported, which BLOCKS merge.
+    # This job is a required-status SHIM — see comment above for rationale.
+    if: github.event_name == 'merge_group' || github.event.pull_request.draft == false
     steps:
       - name: Preview deploy is CI-gated (report-only)
         run: |
@@ -295,7 +317,8 @@ jobs:
   web-boot-smoke:
     name: Web Boot Smoke
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    # Run on merge_group to catch boot-crash regressions before the merge lands.
+    if: github.event_name == 'merge_group' || github.event.pull_request.draft == false
     timeout-minutes: 15
     env:
       # --- module-load env guards (verbatim from ci.yml e2e job) ---
@@ -444,7 +467,7 @@ jobs:
     # web-boot-smoke added (D6 fix 2026-06-04): boot-smoke result now appears
     # in the PR summary so reviewers see it alongside validation + deploy.
     needs: [pr-validation, deploy-preview, web-boot-smoke]
-    if: always() && github.event.pull_request.draft == false
+    if: always() && (github.event_name == 'merge_group' || github.event.pull_request.draft == false)
     permissions:
       # Default GITHUB_TOKEN doesn't grant PR-write on fork PRs, so the
       # github.rest.issues.createComment call in the script below 403s with

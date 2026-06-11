@@ -17,7 +17,14 @@
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY"
   ],
-  "globalPassThroughEnv": ["CI", "VERCEL", "VERCEL_ENV", "GITHUB_ACTIONS"],
+  "globalPassThroughEnv": [
+    "CI",
+    "VERCEL",
+    "VERCEL_ENV",
+    "GITHUB_ACTIONS",
+    "TURBO_TEAM",
+    "TURBO_TOKEN"
+  ],
   "ui": "tui",
   "concurrency": "20",
   "tasks": {
