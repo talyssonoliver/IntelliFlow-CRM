@@ -68,6 +68,14 @@ describe('deriveWebsiteFromEmail', () => {
     expect(deriveWebsiteFromEmail('  sarah@acme.com  ')).toBe('https://acme.com');
   });
 
+  it('returns null when the address contains internal whitespace', () => {
+    // Regression (Codex review): internal whitespace means this is not a single
+    // valid address, so `bad local@acme.com` must NOT enrich from acme.com.
+    expect(deriveWebsiteFromEmail('bad local@acme.com')).toBeNull();
+    expect(deriveWebsiteFromEmail('user @acme.com')).toBeNull();
+    expect(deriveWebsiteFromEmail('user@ac me.com')).toBeNull();
+  });
+
   it.each([
     'user@acme.com/path',
     'user@acme.com:8080',

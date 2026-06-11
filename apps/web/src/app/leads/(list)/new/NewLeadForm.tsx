@@ -177,6 +177,39 @@ export default function NewLeadForm() {
     isDirty,
   });
 
+  // tRPC mutation for creating leads (IFC-004 integration).
+  // Declared BEFORE the auth-gate early return below so this hook is called on
+  // every render. Moving it after the `return` would make it a conditional hook
+  // (Rules of Hooks violation) that throws "rendered more hooks than during the
+  // previous render" on the loading -> authenticated transition.
+  const createLead = api.lead.create.useMutation({
+    onSuccess: () => {
+      // Show success toast
+      setToast({
+        open: true,
+        variant: 'success',
+        title: 'Success!',
+        description: 'Lead created successfully. Redirecting...',
+      });
+
+      // Redirect to leads list after a short delay
+      setTimeout(() => {
+        router.push('/leads');
+      }, 1500);
+    },
+    onError: (error) => {
+      console.error('Failed to create lead:', error.message);
+
+      // Show error toast
+      setToast({
+        open: true,
+        variant: 'destructive',
+        title: 'Failed to create lead',
+        description: error.message,
+      });
+    },
+  });
+
   // Auth gate — show skeleton while checking authentication or if not authenticated
   // useRequireAuth() handles the redirect to /login internally via useEffect,
   // but we must prevent the form from rendering during the redirect frame
@@ -267,35 +300,6 @@ export default function NewLeadForm() {
       setEnrichmentNotice('');
     }
   };
-
-  // tRPC mutation for creating leads (IFC-004 integration)
-  const createLead = api.lead.create.useMutation({
-    onSuccess: () => {
-      // Show success toast
-      setToast({
-        open: true,
-        variant: 'success',
-        title: 'Success!',
-        description: 'Lead created successfully. Redirecting...',
-      });
-
-      // Redirect to leads list after a short delay
-      setTimeout(() => {
-        router.push('/leads');
-      }, 1500);
-    },
-    onError: (error) => {
-      console.error('Failed to create lead:', error.message);
-
-      // Show error toast
-      setToast({
-        open: true,
-        variant: 'destructive',
-        title: 'Failed to create lead',
-        description: error.message,
-      });
-    },
-  });
 
   // Handle form submission
   const handleSubmit = async () => {

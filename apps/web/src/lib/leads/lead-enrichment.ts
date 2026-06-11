@@ -90,6 +90,10 @@ function isValidHost(domain: string): boolean {
  */
 function extractDomain(email: string): string | null {
   const trimmed = email.trim().toLowerCase();
+  // Any internal whitespace means this is not a single valid address — reject
+  // before deriving a domain (otherwise `bad local@acme.com` would enrich from
+  // `acme.com`). Honours the contract above: "whitespace ... yields null".
+  if (/\s/.test(trimmed)) return null;
   const at = trimmed.indexOf('@');
   // at <= 0 covers both "no @" (-1) and "empty local part" (0).
   if (at <= 0) return null;
