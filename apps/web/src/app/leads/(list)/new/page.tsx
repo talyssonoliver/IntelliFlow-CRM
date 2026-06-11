@@ -17,6 +17,7 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useFormUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { enrichFromEmail } from '@/lib/leads/lead-enrichment';
+import { emailSchema } from '@intelliflow/validators';
 
 // Step configuration
 type StepId = 'basic' | 'company' | 'qualification';
@@ -232,7 +233,9 @@ export default function CreateNewLeadPage() {
       if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
       if (!formData.email.trim()) {
         newErrors.email = 'Email is required';
-      } else if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(formData.email)) {
+      } else if (!emailSchema.safeParse(formData.email).success) {
+        // Use the shared/server email validator so the client accepts exactly
+        // what the API does (multi-label domains: acme.co.uk, mail.acme.com).
         newErrors.email = 'Please enter a valid email address';
       }
       // Validate sourceOther when 'Other' is selected
@@ -313,12 +316,6 @@ export default function CreateNewLeadPage() {
       const toOptional = (value: string): string | undefined =>
         value.trim() ? value.trim() : undefined;
 
-      // Convert annualRevenue (string like "1000000") to estimatedValue (integer cents)
-      // if provided; field is schema-supported as an integer in cents.
-      const estimatedValueCents = formData.annualRevenue
-        ? Math.round(Number.parseFloat(formData.annualRevenue) * 100) || undefined
-        : undefined;
-
       const leadData = {
         email: formData.email.trim(),
         firstName: toOptional(formData.firstName),
@@ -329,9 +326,14 @@ export default function CreateNewLeadPage() {
         source: mapSourceToEnum(formData.source),
         // Lead 360 fields (schema-supported)
         website: toOptional(formData.website),
-        estimatedValue: estimatedValueCents,
-        // companySize, industry, qualificationNotes, budget, authority, need, timeline
-        // are not yet in createLeadSchema — see IFC-004 for schema extension.
+        // NOTE: `annualRevenue` is a BANDED company-revenue selector ("<1M",
+        // "1M-10M", …) — NOT the lead's deal value. The previous code did
+        // `parseFloat(band) * 100`, which silently corrupted estimatedValue
+        // ("1M-10M" -> 100 cents, "<1M" -> undefined). estimatedValue (the
+        // lead's deal value, in cents) is therefore intentionally NOT derived
+        // from it. Persisting annualRevenue meaningfully (dedicated field /
+        // metadata) is owned by IFC-242, alongside companySize, industry, and
+        // the BANT fields — all collected in the UI but not yet in createLeadSchema.
       };
 
       await createLead.mutateAsync(leadData);

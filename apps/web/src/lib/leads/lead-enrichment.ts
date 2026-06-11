@@ -58,8 +58,35 @@ export interface EnrichableLeadFields {
 }
 
 /**
+ * Only valid hostname characters (rejects URL syntax: `/ : ? # @` and spaces).
+ * A single anchored character class — linear, no backtracking.
+ */
+const HOSTNAME_CHARS_RE = /^[a-z0-9.-]+$/;
+/** A plausible TLD: alphabetic, at least two characters. */
+const TLD_RE = /^[a-z]{2,}$/;
+
+/**
+ * True when `domain` is a syntactically valid host: dot-separated labels of
+ * alphanumerics/hyphens (no empty label, no leading/trailing hyphen) ending in
+ * an alphabetic TLD. Rejects URL fragments like `acme.com/path` or `acme.com:80`
+ * that would otherwise yield a bogus website URL. (Network-level SSRF defence
+ * stays server-side; this is purely input-shape validation.)
+ */
+function isValidHost(domain: string): boolean {
+  if (!HOSTNAME_CHARS_RE.test(domain)) return false;
+  const labels = domain.split('.');
+  if (labels.length < 2) return false;
+  for (const label of labels) {
+    if (label === '' || label.startsWith('-') || label.endsWith('-')) return false;
+  }
+  return TLD_RE.test(labels[labels.length - 1]);
+}
+
+/**
  * Extract a normalized (trimmed, lower-cased) domain from an email address.
- * Returns null for anything that is not a plausible `local@domain.tld`.
+ * Returns null for anything that is not a plausible, syntactically valid
+ * `local@domain.tld` (a second `@`, whitespace, URL syntax, or a missing/
+ * malformed host all yield null).
  */
 function extractDomain(email: string): string | null {
   const trimmed = email.trim().toLowerCase();
@@ -67,12 +94,7 @@ function extractDomain(email: string): string | null {
   // at <= 0 covers both "no @" (-1) and "empty local part" (0).
   if (at <= 0) return null;
   const domain = trimmed.slice(at + 1);
-  if (!domain) return null;
-  // Reject malformed domains: a second @, whitespace, or no dot (e.g. localhost).
-  if (domain.includes('@') || /\s/.test(domain) || !domain.includes('.')) {
-    return null;
-  }
-  return domain;
+  return isValidHost(domain) ? domain : null;
 }
 
 /** True for empty / whitespace-only values (treated as "user has not filled this"). */

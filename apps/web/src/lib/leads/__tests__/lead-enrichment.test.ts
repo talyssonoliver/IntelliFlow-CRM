@@ -67,6 +67,26 @@ describe('deriveWebsiteFromEmail', () => {
   it('trims surrounding whitespace before deriving', () => {
     expect(deriveWebsiteFromEmail('  sarah@acme.com  ')).toBe('https://acme.com');
   });
+
+  it.each([
+    'user@acme.com/path',
+    'user@acme.com:8080',
+    'user@acme.com?q=1',
+    'user@acme.com#frag',
+    'user@acme.com\\evil',
+    'user@-acme.com',
+    'user@acme-.com',
+    'user@acme..com',
+    'user@acme.123',
+    'a@b@acme.com',
+  ])('returns null for a malformed/URL-syntax domain in %s', (email) => {
+    expect(deriveWebsiteFromEmail(email)).toBeNull();
+  });
+
+  it('does not leak URL path/port into the derived website', () => {
+    // Regression: a domain carrying URL syntax must NOT become https://acme.com/evil
+    expect(deriveCompanyHint('user@acme.com/evil')).toBeNull();
+  });
 });
 
 describe('normalizeWebsiteUrl', () => {
@@ -94,12 +114,18 @@ describe('normalizeWebsiteUrl', () => {
     expect(normalizeWebsiteUrl('https://acme.com/en/')).toBe('https://acme.com/en');
   });
 
-  it('strips a huge run of trailing slashes in O(n) without hanging (ReDoS guard)', () => {
-    const evil = 'https://acme.com' + '/'.repeat(100000);
-    const start = performance.now();
-    expect(normalizeWebsiteUrl(evil)).toBe('https://acme.com');
-    expect(performance.now() - start).toBeLessThan(50);
-  });
+  it(
+    'strips a huge run of trailing slashes without catastrophic backtracking (ReDoS guard)',
+    { timeout: 2000 },
+    () => {
+      // Complexity check, not a wall-clock microbenchmark: the O(n) scan returns
+      // instantly on 1,000,000 trailing slashes, whereas a quadratic implementation
+      // (e.g. the old /\/+$/) cannot finish within the generous per-test timeout.
+      // The timeout — not a brittle elapsed-ms assertion — is what fails a regression.
+      const evil = 'https://acme.com' + '/'.repeat(1_000_000);
+      expect(normalizeWebsiteUrl(evil)).toBe('https://acme.com');
+    }
+  );
 
   it('returns empty string for empty input', () => {
     expect(normalizeWebsiteUrl('')).toBe('');

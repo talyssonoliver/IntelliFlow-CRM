@@ -318,4 +318,51 @@ describe('CreateNewLeadPage', () => {
     render(<CreateNewLeadPage />);
     expect(document.querySelector('[aria-live="polite"]')).not.toBeNull();
   });
+
+  // -------------------------------------------------------------------------
+  // PG-060: revenue-band data-corruption guard (Codex review #1)
+  // -------------------------------------------------------------------------
+  it.each(['<1M', '1M-10M', '10M-50M', '50M-100M', '100M+'])(
+    'never sends a corrupted estimatedValue for revenue band %s',
+    (band) => {
+      render(<CreateNewLeadPage />);
+      fillBasicStep();
+      fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
+      fireEvent.change(screen.getByLabelText(/annual revenue/i), { target: { value: band } });
+      fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
+      fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+
+      const mutationResult = mockCreateMutation.mock.results[0]?.value;
+      const payload = mutationResult.mutateAsync.mock.calls[0]?.[0];
+      // estimatedValue (deal value in cents) must NOT be derived from the
+      // banded annual-revenue string — no key at all rather than a wrong number.
+      expect(payload).not.toHaveProperty('estimatedValue');
+    }
+  );
+
+  // -------------------------------------------------------------------------
+  // PG-060: email validation parity with the server validator (Codex review #2)
+  // -------------------------------------------------------------------------
+  it.each(['sarah@mail.acme.com', 'user@acme.co.uk', 'x@acme.io'])(
+    'accepts the valid multi-label email %s and advances to step 2',
+    (email) => {
+      render(<CreateNewLeadPage />);
+      fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'Sarah' } });
+      fireEvent.change(screen.getByLabelText(/last name/i), { target: { value: 'Connor' } });
+      fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: email } });
+      fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+      // Reaching step 2 means validation accepted the multi-label domain.
+      expect(screen.getByLabelText(/company name/i)).toBeTruthy();
+    }
+  );
+
+  it('rejects an invalid email and keeps the user on step 1', () => {
+    render(<CreateNewLeadPage />);
+    fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'Sarah' } });
+    fireEvent.change(screen.getByLabelText(/last name/i), { target: { value: 'Connor' } });
+    fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: 'notanemail' } });
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+    expect(screen.queryByLabelText(/company name/i)).toBeNull();
+    expect(screen.getByLabelText(/email address/i).getAttribute('aria-invalid')).toBe('true');
+  });
 });
