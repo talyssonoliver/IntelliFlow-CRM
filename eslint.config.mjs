@@ -101,6 +101,17 @@ export default [
       'no-unused-vars': 'off', // Prefer TS compiler for now
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+
+      // ==========================================
+      // ReDoS / SAST gate (2026-06-11, issue #382, extends #349)
+      // Mirrors SonarCloud rule S5852 ("slow-regex") locally so a polynomial-
+      // backtracking regex (e.g. /\/+$/) fails `pnpm run lint` BEFORE push —
+      // the exact gap that let PG-060 pass pre-ship and red CI on a Security
+      // Hotspot. Uses sonarjs/slow-regex (eslint-plugin-sonarjs >=3) which
+      // flags quadratic/exponential quantifier patterns without requiring type
+      // info, unlike the weaker security/detect-unsafe-regex (safe-regex-based,
+      // doesn't catch polynomial cases).
+      'sonarjs/slow-regex': 'error',
     },
   },
 

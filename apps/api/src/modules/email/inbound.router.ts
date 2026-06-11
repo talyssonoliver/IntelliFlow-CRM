@@ -1137,8 +1137,11 @@ export const inboundEmailRouter = createTRPCRouter({
         });
 
         return emails.map((e: any) => {
+          // Strip HTML tags for a plain-text preview. Use a bounded quantifier
+          // {0,500} to avoid S5852 (sonarjs/slow-regex): the hard cap prevents
+          // polynomial backtracking on crafted input with no closing >.
           const bodyText =
-            typeof e.body === 'string' ? e.body.replace(/<[^>]*>/g, '').slice(0, 60) : '';
+            typeof e.body === 'string' ? e.body.replace(/<[^>]{0,500}>/g, '').slice(0, 60) : '';
           return {
             id: e.id,
             subject: e.subject ?? '(No subject)',
