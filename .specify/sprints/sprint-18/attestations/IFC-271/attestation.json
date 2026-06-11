@@ -7,10 +7,10 @@
   "attestation_timestamp": "2026-06-10T22:30:00Z",
   "verdict": "COMPLETE",
   "evidence_summary": {
-    "artifacts_verified": 8,
+    "artifacts_verified": 9,
     "validations_passed": 4,
     "validations_failed": 0,
-    "gates_passed": 5,
+    "gates_passed": 6,
     "gates_failed": 0,
     "kpis_met": 4,
     "kpis_missed": 0,
@@ -18,13 +18,14 @@
   },
   "artifact_hashes": {
     "packages/domain/src/crm/account/AccountEvents.ts": "67f989efc8e0bae22994df06239787628a4ad9c8564e45877652d9b799bd7dd3",
-    "packages/domain/src/crm/account/Account.ts": "66d1a0ace8fd294563509fd9128da53dd75fcbbd95c8097bd4e0f9883004f885",
+    "packages/domain/src/crm/account/Account.ts": "7671bb2c991b55f556ce840156fa4f58276927fd26937d7ef362b651dc7fcccf",
     "packages/application/src/services/AccountService.ts": "2f047c72a89b38013da6e450638231498794c9537d414fe4a6a0024febd9d1f1",
     "apps/api/src/modules/account/account.router.ts": "c70cb663e1dcb7b3b743fd0d3504f5796f26f5b0b5cc3a4f3f43c68fdf476d8d",
     "packages/domain/src/crm/account/__tests__/AccountEvents.test.ts": "4d0e47d88d555d51e71bb5b0ad65416c41724f6f4dc6a5caff00d862ae5b4f47",
-    "packages/domain/src/crm/account/__tests__/Account.test.ts": "408f4799e96d7c9e7519dc0f5578494f560d395a85c2ae9f0c20d7ae5d3d445a",
-    "packages/application/src/services/__tests__/AccountService.test.ts": "9e55e1b46ba08889acfd08f7448ee556db1ab11b0cf61d8e6d1da46c6159aaec",
-    "apps/api/src/modules/account/__tests__/account.router.test.ts": "6a4743625a6bd130b6768b10f3603a6e3f234d9fd566387d18d899f051d2eb5e"
+    "packages/domain/src/crm/account/__tests__/Account.test.ts": "956fbf9f3f9cf1d0319e1f092145df2b363d8e67c60231ea288c97b69a82a056",
+    "packages/application/src/services/__tests__/AccountService.test.ts": "3c8bf958cbe88a2f224ccf58f46b616345fa96bcf63b5f0d2f69918dfd1133d9",
+    "apps/api/src/modules/account/__tests__/account.router.test.ts": "6a4743625a6bd130b6768b10f3603a6e3f234d9fd566387d18d899f051d2eb5e",
+    "tools/audit/codex-review-waivers.yaml": "25dfec0023685a99232f7c9181a6cc49c7b37b60f1f92057c5283948c22a4524"
   },
   "validation_results": [
     {
@@ -36,7 +37,7 @@
     },
     {
       "name": "Tests",
-      "command": "pnpm --filter @intelliflow/domain test (2717) ; pnpm --filter @intelliflow/application test (1392) ; pnpm --filter @intelliflow/api test (6130 passed, 2 skipped)",
+      "command": "pnpm --filter @intelliflow/domain test (2718) ; pnpm --filter @intelliflow/application test (1392) ; pnpm --filter @intelliflow/api test (6130 passed, 2 skipped)",
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-06-10T22:10:00Z"
@@ -83,6 +84,11 @@
       "gate_id": "public-contract-additive-only",
       "passed": true,
       "log_path": "deleteAccount adds an OPTIONAL deletedBy (default 'system') — backward compatible. tRPC account.delete and account.setParent request/response shapes are byte-identical (only the internal service call args + actor source changed). toJSON gains an additive tenantId field; no API response mapper consumes toJSON."
+    },
+    {
+      "gate_id": "codex-semantic-review",
+      "passed": true,
+      "log_path": "node scripts/codex-review.mjs -> Verdict PASS, 0 unwaived findings. Of 2 initial findings: (1) non-atomic Account.updateAccountInfo (name mutated before website validated) was a REAL bug — fixed by validating the website first, then applying mutations (+ domain atomicity test + strengthened service B-16 test); (2) event-type 'account.deleted' flagged as not matching the 'AccountDeleted' audit key — FALSE POSITIVE (dot.case is the domain convention for all sibling events; PascalCase is the audit-handler registry key wired by IFC-272), waived in tools/audit/codex-review-waivers.yaml with a documented reason."
     }
   ],
   "kpi_results": [
@@ -141,8 +147,8 @@
   "environment": {
     "os": "win32 (10.0.26200)",
     "node_version": "v25.2.1",
-    "git_commit": "07faddab7af57961b7e417c3d839b09fb69c760e",
+    "git_commit": "5176fae9c9f89a0d676b55da834433140f2ef76b",
     "branch": "feat/ifc-271"
   },
-  "notes": "IFC-271 Account Domain Model Fixes — remediates four findings from docs/audit/account-detail-wiring-audit.md sections 11-13 (D-01, B-15, B-16, B-06) on a worktree branched from origin/main@d8d154230.\n\nD-01 (AccountDeletedEvent): new domain event 'account.deleted' carrying accountId/name/ownerId/deletedBy, mirroring AccountCreatedEvent + the actor parity of the other account mutation events. Raised by a new aggregate command Account.markAsDeleted(deletedBy) (void, like removeParent/categorizeIndustry — deletion has no aggregate-internal invariant; cross-aggregate rules stay in the service). AccountService.deleteAccount() emits + publishes ONLY after accountRepository.delete() succeeds (publish-after-commit per packages/domain/CLAUDE.md); a delete blocked by the contacts/active-opportunities rules emits nothing. deletedBy defaults to a 'system' actor so unattributed deletions are never undefined; the router threads typedCtx.tenant.userId.\n\nB-15 (toJSON tenantId): additive field; the two existing serialization tests assert fields individually (not exact-shape), and no API response path consumes toJSON (mapAccountToResponse reads the getter directly).\n\nB-16 (updateAccountInfo Result): the discarded domain Result is now captured and propagated (Result.fail) before persistence, so an invalid website surfaces as a failed Result instead of a silent success.\n\nB-06 (non-null assertion): account.router setParent replaced typedCtx.user!.userId with the guaranteed-non-null typedCtx.tenant.userId (synced from the authenticated user by tenantProcedure, already the convention at every other call site in the file) — a type-safety/consistency fix, behaviour-preserving post-middleware.\n\nValidation: 4/4 (TypeScript, Tests, Lint, Build) green on the affected workspaces. Tests: @intelliflow/domain 2717, @intelliflow/application 1392, @intelliflow/api 6130 passed (2 skipped, pre-existing). Touched-file coverage >=90% (Account 95.9% / AccountEvents 97.8% / AccountService 93.0%); diff coverage effectively 100% (every added line exercised). Hexagonal boundary preserved (dependency-cruiser clean). An independent backend-architect review pass confirmed all four fixes and flagged the stale 1-arg deleteAccount test calls, resolved by the 'system' default. Out of scope and deliberately untouched: events-worker handler/DOMAIN_EVENT_TYPES registration (IFC-272), router update field-drop/schema-key (IFC-270), list-page type safety (IFC-273)."
+  "notes": "IFC-271 Account Domain Model Fixes — remediates four findings from docs/audit/account-detail-wiring-audit.md sections 11-13 (D-01, B-15, B-16, B-06) on a worktree branched from origin/main@d8d154230.\n\nD-01 (AccountDeletedEvent): new domain event 'account.deleted' carrying accountId/name/ownerId/deletedBy, mirroring AccountCreatedEvent + the actor parity of the other account mutation events. Raised by a new aggregate command Account.markAsDeleted(deletedBy) (void, like removeParent/categorizeIndustry — deletion has no aggregate-internal invariant; cross-aggregate rules stay in the service). AccountService.deleteAccount() emits + publishes ONLY after accountRepository.delete() succeeds (publish-after-commit per packages/domain/CLAUDE.md); a delete blocked by the contacts/active-opportunities rules emits nothing. deletedBy defaults to a 'system' actor so unattributed deletions are never undefined; the router threads typedCtx.tenant.userId.\n\nB-15 (toJSON tenantId): additive field; the two existing serialization tests assert fields individually (not exact-shape), and no API response path consumes toJSON (mapAccountToResponse reads the getter directly).\n\nB-16 (updateAccountInfo Result): the discarded domain Result is now captured and propagated (Result.fail) before persistence, so an invalid website surfaces as a failed Result instead of a silent success.\n\nB-06 (non-null assertion): account.router setParent replaced typedCtx.user!.userId with the guaranteed-non-null typedCtx.tenant.userId (synced from the authenticated user by tenantProcedure, already the convention at every other call site in the file) — a type-safety/consistency fix, behaviour-preserving post-middleware.\n\nValidation: 4/4 (TypeScript, Tests, Lint, Build) green on the affected workspaces. Tests: @intelliflow/domain 2717, @intelliflow/application 1392, @intelliflow/api 6130 passed (2 skipped, pre-existing). Touched-file coverage >=90% (Account 95.9% / AccountEvents 97.8% / AccountService 93.0%); diff coverage effectively 100% (every added line exercised). Hexagonal boundary preserved (dependency-cruiser clean). An independent backend-architect review pass confirmed all four fixes and flagged the stale 1-arg deleteAccount test calls, resolved by the 'system' default. Out of scope and deliberately untouched: events-worker handler/DOMAIN_EVENT_TYPES registration (IFC-272), router update field-drop/schema-key (IFC-270), list-page type safety (IFC-273).\n\nREBASE + GATE REMEDIATION (2026-06-11): rebased feat/ifc-271 onto current main (origin/main@8c32ece6f), which added a local codex semantic-review pre-push gate, a sonarjs/slow-regex ESLint rule, and stricter diff-coverage. No merge conflicts (my account files were disjoint from main's tools/eslint/husky changes). The codex semantic-review gate raised two MEDIUM findings: (1) Account.updateAccountInfo mutated the name before validating the website (non-atomic command) — a REAL bug, fixed by validating the website first then applying mutations, with a new domain atomicity test and a strengthened service B-16 test (name + invalid website); domain tests 2717 -> 2718. (2) eventType 'account.deleted' vs the audit-handler 'AccountDeleted' key — a FALSE POSITIVE (dot.case is the universal domain-event convention; the PascalCase key is wired by IFC-272), waived in tools/audit/codex-review-waivers.yaml. codex-review gate now PASS (0 unwaived). Lint --force clean (no slow-regex hits in the account diff). Full pre-ship re-run including codex-review."
 }
