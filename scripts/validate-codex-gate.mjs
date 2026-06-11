@@ -75,7 +75,10 @@ export function getRevenueBandCents(band: string): number {
 
 async function main() {
   const pass = (msg) => process.stdout.write(`  PASS  ${msg}\n`);
-  const fail = (msg) => { process.stdout.write(`  FAIL  ${msg}\n`); process.exit(1); };
+  const fail = (msg) => {
+    process.stdout.write(`  FAIL  ${msg}\n`);
+    process.exit(1);
+  };
   const info = (msg) => process.stdout.write(`        ${msg}\n`);
 
   process.stdout.write('=== Codex Gate Self-Test ===\n\n');
@@ -85,8 +88,8 @@ async function main() {
   if (codexCheck.status !== 0) {
     process.stdout.write(
       'SKIPPED_PRECONDITION: codex CLI not found on PATH.\n' +
-      '  Install with: npm install -g @openai/codex\n' +
-      '  Then authenticate: codex login\n'
+        '  Install with: npm install -g @openai/codex\n' +
+        '  Then authenticate: codex login\n'
     );
     process.exit(0);
   }
@@ -99,9 +102,9 @@ async function main() {
   if (authCheck.status !== 0 || !authCombined.includes('logged in')) {
     process.stdout.write(
       'SKIPPED_PRECONDITION: codex CLI is not logged in.\n' +
-      '  Run: codex login\n' +
-      '  Confirm: codex login status\n' +
-      '  This gate uses local OAuth — no OPENAI_API_KEY required.\n'
+        '  Run: codex login\n' +
+        '  Confirm: codex login status\n' +
+        '  This gate uses local OAuth — no OPENAI_API_KEY required.\n'
     );
     process.exit(0);
   }
@@ -125,7 +128,9 @@ async function main() {
       fail(`expected exit 0 on empty diff, got ${r.status}\n${r.stdout}`);
     }
   } else {
-    info('Worktree has in-scope changes; skipping Test 1 clean check (testing buggy diff instead).');
+    info(
+      'Worktree has in-scope changes; skipping Test 1 clean check (testing buggy diff instead).'
+    );
   }
 
   // ── Test 2: BUGGY — fixture with deliberate bug → exit 1 ──────────
@@ -139,11 +144,9 @@ async function main() {
   let buggyResult;
   try {
     // Review the uncommitted staged change (vs HEAD which doesn't have it)
-    buggyResult = run(
-      'node',
-      ['scripts/codex-review.mjs', '--base=HEAD'],
-      { CODEX_REVIEW_VERBOSE: '0' }
-    );
+    buggyResult = run('node', ['scripts/codex-review.mjs', '--base=HEAD'], {
+      CODEX_REVIEW_VERBOSE: '0',
+    });
     info(`exit: ${buggyResult.status}`);
     const findingsMatch = buggyResult.stdout.match(/Total findings\s*:\s*(\d+)/);
     info(`findings: ${findingsMatch ? findingsMatch[1] : '?'}`);
@@ -155,8 +158,8 @@ async function main() {
       // not a gate implementation bug. Report it but don't hard-fail the script.
       process.stdout.write(
         '  WARN  exit 0 on buggy fixture — Codex did not flag the revenue-band bug.\n' +
-        '        This is a model false-negative, not a gate implementation bug.\n' +
-        '        Manual review of the fixture is recommended.\n'
+          '        This is a model false-negative, not a gate implementation bug.\n' +
+          '        Manual review of the fixture is recommended.\n'
       );
     } else {
       fail(`unexpected exit ${buggyResult.status}\n${buggyResult.stdout}\n${buggyResult.stderr}`);
@@ -206,11 +209,9 @@ async function main() {
 
       let waiverResult;
       try {
-        waiverResult = run(
-          'node',
-          ['scripts/codex-review.mjs', '--base=HEAD'],
-          { CODEX_REVIEW_VERBOSE: '0' }
-        );
+        waiverResult = run('node', ['scripts/codex-review.mjs', '--base=HEAD'], {
+          CODEX_REVIEW_VERBOSE: '0',
+        });
         info(`exit: ${waiverResult.status}`);
 
         if (waiverResult.status === 0) {
@@ -244,9 +245,14 @@ main().catch((e) => {
     const REPO_ROOT_ERR = detectRepoRoot();
     const fixturePath = path.join(REPO_ROOT_ERR, FIXTURE_PATH);
     if (fs.existsSync(fixturePath)) {
-      spawnSync('git', ['restore', '--staged', FIXTURE_PATH], { cwd: REPO_ROOT_ERR, shell: process.platform === 'win32' });
+      spawnSync('git', ['restore', '--staged', FIXTURE_PATH], {
+        cwd: REPO_ROOT_ERR,
+        shell: process.platform === 'win32',
+      });
       fs.unlinkSync(fixturePath);
     }
-  } catch { /* ignore cleanup errors */ }
+  } catch {
+    /* ignore cleanup errors */
+  }
   process.exit(1);
 });

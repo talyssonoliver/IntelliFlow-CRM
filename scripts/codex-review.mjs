@@ -102,13 +102,16 @@ function codexLoggedIn() {
 }
 
 function gitDiffFiles(base) {
-  const r = spawnSync(
-    'git',
-    ['diff', '--name-only', `${base}...HEAD`],
-    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], shell: process.platform === 'win32' }
-  );
+  const r = spawnSync('git', ['diff', '--name-only', `${base}...HEAD`], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: process.platform === 'win32',
+  });
   if (r.status !== 0) return [];
-  return r.stdout.split('\n').map((f) => f.trim()).filter(Boolean);
+  return r.stdout
+    .split('\n')
+    .map((f) => f.trim())
+    .filter(Boolean);
 }
 
 // sonar.sources paths from sonar-project.properties
@@ -207,7 +210,11 @@ function isInScope(file) {
  * changes between LLM runs (quotes, trailing dots).
  */
 function fingerprint(file, issue) {
-  const norm = `${file}:${issue.toLowerCase().replace(/\s+/g, ' ').replace(/['"`.]/g, '').trim()}`;
+  const norm = `${file}:${issue
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/['"`.]/g, '')
+    .trim()}`;
   return crypto.createHash('sha256').update(norm).digest('hex');
 }
 
@@ -241,8 +248,7 @@ function loadWaivers() {
 // ── extract JSON from Codex output ─────────────────────────────────────
 function extractFindings(raw) {
   // Codex may emit markdown fences around the JSON
-  const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/) ||
-    raw.match(/(\{[\s\S]*\})/);
+  const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/) || raw.match(/(\{[\s\S]*\})/);
   if (!jsonMatch) return null;
   try {
     const parsed = JSON.parse(jsonMatch[1].trim());
@@ -295,8 +301,8 @@ function main() {
   if (!commandAvailable('codex')) {
     process.stdout.write(
       'SKIPPED_PRECONDITION: codex CLI not found on PATH.\n' +
-      '  Install with: npm install -g @openai/codex\n' +
-      '  Then authenticate: codex login\n'
+        '  Install with: npm install -g @openai/codex\n' +
+        '  Then authenticate: codex login\n'
     );
     process.exit(0);
   }
@@ -307,9 +313,9 @@ function main() {
   if (!codexLoggedIn()) {
     process.stdout.write(
       'SKIPPED_PRECONDITION: codex CLI is not logged in.\n' +
-      '  Run: codex login\n' +
-      '  Confirm with: codex login status\n' +
-      '  This gate uses local OAuth (ChatGPT/Codex login), not an API key.\n'
+        '  Run: codex login\n' +
+        '  Confirm with: codex login status\n' +
+        '  This gate uses local OAuth (ChatGPT/Codex login), not an API key.\n'
     );
     process.exit(0);
   }
@@ -323,7 +329,9 @@ function main() {
   process.stdout.write(`[codex-review] in scope : ${scopedFiles.length} files\n`);
 
   if (scopedFiles.length === 0) {
-    process.stdout.write('[codex-review] No source files changed — gate PASS (nothing to review).\n');
+    process.stdout.write(
+      '[codex-review] No source files changed — gate PASS (nothing to review).\n'
+    );
     const result = { findings: [], scoped_files: [], base_ref: baseRef, verdict: 'PASS' };
     fs.writeFileSync(FINDINGS_PATH, JSON.stringify(result, null, 2));
     fs.writeFileSync(SUMMARY_PATH, 'No source files changed. Gate PASS.\n');
@@ -387,17 +395,13 @@ If no real bugs are found, return { "findings": [] }.`;
   const promptPath = path.join(OUT_DIR, 'codex-prompt.txt');
 
   // Fetch the actual diff for the scoped files to embed in the prompt.
-  const diffResult = spawnSync(
-    'git',
-    ['diff', `${baseRef}...HEAD`, '--', ...scopedFiles],
-    {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      shell: process.platform === 'win32',
-      cwd: REPO_ROOT,
-      maxBuffer: 8 * 1024 * 1024,
-    }
-  );
+  const diffResult = spawnSync('git', ['diff', `${baseRef}...HEAD`, '--', ...scopedFiles], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: process.platform === 'win32',
+    cwd: REPO_ROOT,
+    maxBuffer: 8 * 1024 * 1024,
+  });
   const diffText = (diffResult.stdout || '').slice(0, 50_000); // cap at 50 KB
 
   // Combine the structured prompt with the actual diff
@@ -417,7 +421,8 @@ ${diffText || '(no diff output — check base ref)'}
     'exec',
     '-', // read prompt from stdin
     '--ephemeral',
-    '-o', lastMsgPath,
+    '-o',
+    lastMsgPath,
   ];
 
   const r = spawnSync('codex', codexArgs, {
@@ -453,13 +458,13 @@ ${diffText || '(no diff output — check base ref)'}
     const exitCode = r.status ?? -1;
     process.stderr.write(
       `[codex-review] WARN: Could not parse Codex output (exit ${exitCode}). ` +
-      `Raw saved to artifacts/codex-review/codex-raw.txt\n`
+        `Raw saved to artifacts/codex-review/codex-raw.txt\n`
     );
     if (r.stderr) process.stderr.write(r.stderr.slice(0, 2000) + '\n');
 
     process.stdout.write(
       'SKIPPED_PRECONDITION: Codex returned unparseable output. ' +
-      'Review artifacts/codex-review/codex-raw.txt.\n'
+        'Review artifacts/codex-review/codex-raw.txt.\n'
     );
     process.exit(0);
   }
@@ -509,7 +514,9 @@ ${diffText || '(no diff output — check base ref)'}
   if (waived.length > 0) {
     lines.push('WAIVED FINDINGS (suppressed):');
     for (const f of waived) {
-      lines.push(`  [${f.severity.toUpperCase()}] ${f.file}:${f.line} — ${f.rule} (fp: ${f.fingerprint.slice(0, 12)}...)`);
+      lines.push(
+        `  [${f.severity.toUpperCase()}] ${f.file}:${f.line} — ${f.rule} (fp: ${f.fingerprint.slice(0, 12)}...)`
+      );
     }
     lines.push('');
   }
@@ -526,8 +533,8 @@ ${diffText || '(no diff output — check base ref)'}
 
   process.stderr.write(
     `[codex-review] Gate FAIL — ${unwaived.length} unwaived finding(s).\n` +
-    `  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml\n` +
-    `  with a non-empty reason, author, and date.\n`
+      `  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml\n` +
+      `  with a non-empty reason, author, and date.\n`
   );
   process.exit(1);
 }

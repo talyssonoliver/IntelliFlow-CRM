@@ -6,8 +6,8 @@
 
 ## What it is
 
-An independent LLM-powered code-review pass that runs on every diff locally
-via pre-push. The codex CLI is installed globally and authenticated via OAuth
+An independent LLM-powered code-review pass that runs on every diff locally via
+pre-push. The codex CLI is installed globally and authenticated via OAuth
 (ChatGPT/Codex login) on the developer's machine. No API key is required.
 
 Unlike TypeScript, ESLint, and SonarQube — which all operate on the code the
@@ -32,9 +32,9 @@ Excluded: docs, lockfiles, generated files, `infra/`, `scripts/`, `tools/`,
 
 ## Trigger points
 
-| Where          | Trigger                                                          | Consequence                                                       |
-| -------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Local pre-push | `pre-ship.mjs` step `codex-review`                               | Degrades to SKIPPED if codex absent or not logged in; required:true |
+| Where          | Trigger                            | Consequence                                                         |
+| -------------- | ---------------------------------- | ------------------------------------------------------------------- |
+| Local pre-push | `pre-ship.mjs` step `codex-review` | Degrades to SKIPPED if codex absent or not logged in; required:true |
 
 **There is NO CI enforcement.** CI runners do not have the codex OAuth session.
 The gate runs local-only where the authenticated codex CLI lives.
@@ -63,7 +63,8 @@ The engine (`scripts/codex-review.mjs`) runs:
 codex review --base <base-ref> "<structured prompt requesting JSON {findings:[...]}"
 ```
 
-It computes stable fingerprints, filters waivers, writes artifacts, and exits 0/1.
+It computes stable fingerprints, filters waivers, writes artifacts, and exits
+0/1.
 
 ## Agent usage
 
@@ -112,11 +113,11 @@ Codex is an LLM. It will produce false positives. The policy:
 
 ## Artifacts
 
-| Path                                            | Description                          |
-| ----------------------------------------------- | ------------------------------------ |
-| `artifacts/codex-review/findings.json`          | Raw structured findings with verdict |
-| `artifacts/codex-review/summary.txt`            | Human-readable summary               |
-| `artifacts/codex-review/codex-raw.txt`          | Raw Codex stdout for debugging       |
+| Path                                   | Description                          |
+| -------------------------------------- | ------------------------------------ |
+| `artifacts/codex-review/findings.json` | Raw structured findings with verdict |
+| `artifacts/codex-review/summary.txt`   | Human-readable summary               |
+| `artifacts/codex-review/codex-raw.txt` | Raw Codex stdout for debugging       |
 
 ## Debt ledger note
 
