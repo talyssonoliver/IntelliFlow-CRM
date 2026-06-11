@@ -326,14 +326,9 @@ export default function CreateNewLeadPage() {
         source: mapSourceToEnum(formData.source),
         // Lead 360 fields (schema-supported)
         website: toOptional(formData.website),
-        // estimatedValue (the lead's DEAL value, in cents) is intentionally NOT
-        // populated here. The `annualRevenue` selector captures the COMPANY's
-        // revenue band — a different business metric (codex review: HIGH
-        // wrong-field-mapping; IFC-242 calls out annualRevenue->estimatedValue as
-        // a semantic mismatch). The old parseFloat(band)*100 also corrupted it
-        // ("1M-10M" -> 100 cents). Persisting annualRevenue properly (a dedicated
-        // field) is owned by IFC-242, alongside companySize/industry/BANT — all
-        // collected in the UI but not yet in createLeadSchema.
+        // estimatedValue (the lead's deal value, in cents) is left unset: this form
+        // has no deal-value input. The company revenue band, company size, industry
+        // and BANT inputs are UI-only pending dedicated schema fields (see IFC-242).
       };
 
       await createLead.mutateAsync(leadData);

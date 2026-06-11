@@ -15,7 +15,7 @@
   "artifact_hashes": {
     "apps/web/src/lib/leads/lead-enrichment.ts": "ed92a1b7d6f9b4e567551934c3bc89bd0af8db916503ce48dec17efe46d2f40b",
     "apps/web/src/lib/leads/__tests__/lead-enrichment.test.ts": "99e18a8e1205cac960dd6adecd7822ddcc6ee2a9340c571ad59fb34c6471222e",
-    "apps/web/src/app/leads/(list)/new/page.tsx": "05288e48fa191e9ec416d1961b22df350fd3888f10351d996629d0ed972bba59",
+    "apps/web/src/app/leads/(list)/new/page.tsx": "6ac3bad0a0fc7f6f6053f62f6d67ae9363b4f57c605e618ef418719d1e8246be",
     "apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx": "99c108c7d248d1710ce91e018e7d69563a7e7549c8e3d42f646f4be06feaa644",
     "artifacts/lighthouse/PG-060/leads-new.json": "2ceac283e611d94f424dfea11e76c79cbd8a9816099e59333e305567fc4018de"
   },
