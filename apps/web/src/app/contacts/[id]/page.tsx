@@ -42,6 +42,11 @@ import { QuickLogComposer } from '@/components/shared/quick-log-composer';
 // IFC-312 ÔÇö AI chain UI surfaces
 import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
 import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
+import { ContactRelatedTabs } from '@/components/contacts/ContactRelatedTabs';
+import {
+  formatContactDate,
+  formatContactRelativeTime,
+} from '@/components/contacts/contact-date-format';
 
 // Common nullable date type
 type DateStringNull = string | Date | null;
@@ -664,26 +669,6 @@ function ContactAiSummaryCard({
 }
 
 // ÔöÇÔöÇÔöÇ Module-level pure helpers (extracted to reduce cognitive complexity of Contact360Page) ÔöÇÔöÇÔöÇ
-
-function formatContactDate(dateString: string, timezone: string): string {
-  return new Date(dateString).toLocaleDateString('en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: timezone,
-  });
-}
-
-function formatContactRelativeTime(dateString: string, timezone: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  return formatContactDate(dateString, timezone);
-}
 
 function getStageColor(stage: string): string {
   switch (stage) {
@@ -1554,12 +1539,12 @@ export default function Contact360Page() {
       { id: 'activity', label: 'Activity', count: activities.length },
       { id: 'tasks', label: 'Tasks' },
       { id: 'deals', label: 'Deals', count: deals.length },
-      { id: 'tickets', label: 'Tickets', count: 0 },
-      { id: 'documents', label: 'Documents', count: apiContact?.documents?.length || 0 },
+      { id: 'tickets', label: 'Tickets', count: rawApiContact?.ticketCount ?? 0 },
+      { id: 'documents', label: 'Documents', count: rawApiContact?.documentCount ?? 0 },
       { id: 'notes', label: 'Notes', count: notes.length },
       { id: 'ai-insights', label: 'AI Insights' },
     ],
-    [activities.length, deals.length, notes.length, apiContact?.documents?.length]
+    [activities.length, deals.length, notes.length, rawApiContact]
   );
 
   // Filter and search activities
@@ -2476,95 +2461,8 @@ export default function Contact360Page() {
             </Card>
           )}
 
-          {/* Tickets Tab */}
-          {activeTab === 'tickets' && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Tickets</h3>
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
-                  </svg>{' '}
-                  Create Ticket
-                </button>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <svg
-                        className="w-5 h-5 text-green-600"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-900 dark:text-white">
-                        Integration API question
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        TKT-1234 ÔÇó Resolved ÔÇó Medium Priority
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-500">
-                    {formatContactRelativeTime('2024-12-15T14:00:00Z', timezone)}
-                  </span>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* Documents Tab */}
-          {activeTab === 'documents' && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Documents</h3>
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
-                  </svg>{' '}
-                  Upload
-                </button>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <svg className="w-8 h-8 text-[#137fec]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6Zm0 2h7v5h5v11H6V4Zm2 8v2h8v-2H8Zm0 4v2h5v-2H8Z" />
-                  </svg>
-                  <div className="flex-1">
-                    <p className="font-medium text-slate-900 dark:text-white">
-                      Enterprise License Proposal.pdf
-                    </p>
-                    <p className="text-sm text-slate-500">Sent Dec 15, 2024 ÔÇó 2.4 MB</p>
-                  </div>
-                  <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7m-2 16H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7Z" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <svg className="w-8 h-8 text-[#137fec]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6Zm0 2h7v5h5v11H6V4Zm2 8v2h8v-2H8Zm0 4v2h5v-2H8Z" />
-                  </svg>
-                  <div className="flex-1">
-                    <p className="font-medium text-slate-900 dark:text-white">
-                      SOC2 Compliance Report.pdf
-                    </p>
-                    <p className="text-sm text-slate-500">Sent Dec 10, 2024 ÔÇó 1.8 MB</p>
-                  </div>
-                  <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7m-2 16H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7Z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </Card>
-          )}
+          {/* Tickets & Documents tabs (IFC-256) */}
+          <ContactRelatedTabs activeTab={activeTab} contact={rawApiContact} timezone={timezone} />
 
           {/* Notes Tab */}
           {activeTab === 'notes' && (

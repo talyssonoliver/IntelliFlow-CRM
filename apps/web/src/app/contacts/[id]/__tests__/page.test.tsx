@@ -51,6 +51,9 @@ const mockContactQueryState = {
     opportunities: [],
     tasks: [],
     documents: [],
+    tickets: [],
+    ticketCount: 0,
+    documentCount: 0,
     calendarEvents: [],
   },
   isLoading: false,
@@ -555,5 +558,151 @@ describe('Contact360Page - Company-to-Account Link (IFC-227)', () => {
       .filter((l) => l.getAttribute('href') === '/accounts/account-1');
     expect(accountLinks.length).toBeGreaterThanOrEqual(1);
     expect(accountLinks[0].textContent).not.toBe('');
+  });
+});
+
+describe('Contact360Page - Tickets & Documents tabs (IFC-256)', () => {
+  const sampleTicket = {
+    id: 'tk-1',
+    ticketNumber: 'T-00001',
+    subject: 'Integration API question',
+    status: 'RESOLVED',
+    priority: 'MEDIUM',
+    createdAt: '2025-01-10T09:00:00.000Z',
+    resolvedAt: null,
+  };
+  const sampleDocument = {
+    id: 'doc-1',
+    name: 'Enterprise License Proposal',
+    fileType: 'application/pdf',
+    fileSize: 2_400_000,
+    category: 'CONTRACT',
+    createdAt: '2025-01-09T09:00:00.000Z',
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockContactQueryState.error = null;
+    mockContactQueryState.isLoading = false;
+    mockUseActivityFeed.mockReturnValue({ items: [], isLoading: false });
+    // Reset the relational arrays this suite mutates
+    mockContactQueryState.data = {
+      ...mockContactQueryState.data,
+      tickets: [],
+      documents: [],
+      ticketCount: 0,
+      documentCount: 0,
+    } as typeof mockContactQueryState.data;
+  });
+
+  afterEach(() => {
+    mockContactQueryState.data = {
+      ...mockContactQueryState.data,
+      tickets: [],
+      documents: [],
+      ticketCount: 0,
+      documentCount: 0,
+    } as typeof mockContactQueryState.data;
+  });
+
+  // --- Tickets tab (F-02, F-21) ---
+
+  it('Tickets tab renders real tickets from the API, not the hardcoded TKT-1234', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=tickets'));
+    mockContactQueryState.data = {
+      ...mockContactQueryState.data,
+      tickets: [
+        sampleTicket,
+        {
+          ...sampleTicket,
+          id: 'tk-2',
+          ticketNumber: 'T-00002',
+          subject: 'Billing discrepancy',
+          status: 'OPEN',
+          priority: 'HIGH',
+        },
+      ],
+    } as typeof mockContactQueryState.data;
+
+    render(<Contact360Page />);
+
+    const panel = screen.getByTestId('contact-tickets-tab');
+    expect(panel).toHaveTextContent('Integration API question');
+    expect(panel).toHaveTextContent('T-00001');
+    // open ticket renders its humanised status/priority meta line
+    expect(panel).toHaveTextContent('Billing discrepancy');
+    expect(panel).toHaveTextContent('T-00002 • Open • High Priority');
+    expect(screen.queryByText(/TKT-1234/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Dec 15, 2024/)).not.toBeInTheDocument();
+  });
+
+  it('Tickets tab shows an empty state when the contact has no tickets', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=tickets'));
+
+    render(<Contact360Page />);
+
+    expect(screen.getByTestId('contact-tickets-empty')).toBeInTheDocument();
+    expect(screen.queryByText(/TKT-1234/)).not.toBeInTheDocument();
+  });
+
+  it('Tickets tab badge shows the true total count (not the capped list length)', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=overview'));
+    mockContactQueryState.data = {
+      ...mockContactQueryState.data,
+      // list is capped at 2 items but the contact actually has 24 tickets
+      tickets: [sampleTicket, { ...sampleTicket, id: 'tk-2', ticketNumber: 'T-00002' }],
+      ticketCount: 24,
+    } as typeof mockContactQueryState.data;
+
+    render(<Contact360Page />);
+
+    const ticketsTab = screen.getByRole('button', { name: /Tickets/ });
+    expect(ticketsTab).toHaveTextContent('24');
+  });
+
+  // --- Documents tab (F-03) ---
+
+  it('Documents tab renders real documents from the API, not the hardcoded PDFs', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=documents'));
+    mockContactQueryState.data = {
+      ...mockContactQueryState.data,
+      documents: [sampleDocument],
+    } as typeof mockContactQueryState.data;
+
+    render(<Contact360Page />);
+
+    const panel = screen.getByTestId('contact-documents-tab');
+    expect(panel).toHaveTextContent('Enterprise License Proposal');
+    expect(screen.queryByText(/SOC2 Compliance Report\.pdf/)).not.toBeInTheDocument();
+    // each document links to its detail page (where the signed download lives)
+    const link = screen
+      .getAllByRole('link')
+      .find((l) => l.getAttribute('href') === `/documents/${sampleDocument.id}`);
+    expect(link).toBeDefined();
+  });
+
+  it('Documents tab shows an empty state when the contact has no documents', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=documents'));
+
+    render(<Contact360Page />);
+
+    expect(screen.getByTestId('contact-documents-empty')).toBeInTheDocument();
+    expect(screen.queryByText(/Enterprise License Proposal\.pdf/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/SOC2 Compliance Report\.pdf/)).not.toBeInTheDocument();
+  });
+
+  it('Documents tab badge shows the true total count (not the capped list length)', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=overview'));
+    mockContactQueryState.data = {
+      ...mockContactQueryState.data,
+      // list is capped at 1 item but the contact actually has 51 documents
+      documents: [sampleDocument],
+      documentCount: 51,
+    } as typeof mockContactQueryState.data;
+
+    render(<Contact360Page />);
+
+    const documentsTab = screen.getByRole('button', { name: /Documents/ });
+    expect(documentsTab).toHaveTextContent('51');
   });
 });

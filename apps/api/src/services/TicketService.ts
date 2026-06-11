@@ -237,6 +237,54 @@ export class TicketService {
   }
 
   /**
+   * IFC-256: List a single contact's tickets for the Contact 360 view.
+   *
+   * Lean, tenant-scoped projection (no SLA enrichment / heavy includes) used by
+   * `contact.getById` to populate the Tickets tab and its badge count. Scoped by
+   * `{ tenantId, contactId }` — `Ticket` has no `ownerId`, so the caller's
+   * contact-level authorization (already enforced upstream) is what gates access.
+   */
+  async listByContact(params: { tenantId: string; contactId: string; limit?: number }): Promise<
+    Array<{
+      id: string;
+      ticketNumber: string;
+      subject: string;
+      status: TicketStatus;
+      priority: TicketPriority;
+      createdAt: Date;
+      resolvedAt: Date | null;
+    }>
+  > {
+    const { tenantId, contactId, limit = 20 } = params;
+
+    return this.prisma.ticket.findMany({
+      where: { tenantId, contactId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        ticketNumber: true,
+        subject: true,
+        status: true,
+        priority: true,
+        createdAt: true,
+        resolvedAt: true,
+      },
+    });
+  }
+
+  /**
+   * IFC-256: Total number of tickets for a contact (tenant-scoped). Used for the
+   * Contact 360 Tickets tab badge so it reflects the true total even when the
+   * `listByContact` projection is capped by its `limit`.
+   */
+  async countByContact(params: { tenantId: string; contactId: string }): Promise<number> {
+    return this.prisma.ticket.count({
+      where: { tenantId: params.tenantId, contactId: params.contactId },
+    });
+  }
+
+  /**
    * Get a single ticket by ID
    */
   async findById(id: string) {

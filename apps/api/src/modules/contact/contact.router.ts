@@ -738,6 +738,83 @@ export const contactRouter = createTRPCRouter({
       });
     }
 
+    // IFC-256: Contact 360 — tickets (via TicketService) + documents. Tickets are
+    // scoped by `{ tenantId, contactId }` (Ticket has no `ownerId`, so
+    // `createTenantWhereClause` is not used). Documents live in `CaseDocument`
+    // keyed by `relatedContactId` (the upload/create flows persist there — the
+    // legacy `Document` table is unused), latest version only, not soft-deleted.
+    // The contact above is already access-checked, so contact-level authorization
+    // gates these reads. A missing ticket service degrades to an empty list.
+    const tenantId = typedCtx.tenant.tenantId;
+    // Tickets/documents are projected with a limit for the tab lists; the *Count
+    // fields carry the true totals so the tab badges never undercount when a
+    // contact has more than the projected number of rows.
+    //
+    // CaseDocument enforces per-document ACLs (the documents list + signed-URL
+    // procedures gate on creator-or-ACL-VIEW), so the contact tab must NOT leak
+    // titles/types/sizes/counts for confidential documents the viewer cannot
+    // access. Mirror PrismaCaseDocumentRepository.findAccessibleByUser: include a
+    // document only when the viewer created it or holds a non-expired, non-NONE ACL.
+    const viewerId = typedCtx.tenant.userId;
+    const documentWhere = {
+      tenantId,
+      relatedContactId: input.id,
+      deletedAt: null,
+      isLatestVersion: true,
+      OR: [
+        { createdBy: viewerId },
+        {
+          acl: {
+            some: {
+              principalId: viewerId,
+              accessLevel: { not: 'NONE' as const },
+              OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+            },
+          },
+        },
+      ],
+    };
+    const [contactTickets, caseDocuments, ticketCount, documentCount] = await Promise.all([
+      ctx.services?.ticket
+        ? ctx.services.ticket.listByContact({ tenantId, contactId: input.id, limit: 20 })
+        : Promise.resolve([]),
+      typedCtx.prismaWithTenant.caseDocument.findMany({
+        where: documentWhere,
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+        select: {
+          id: true,
+          title: true,
+          mimeType: true,
+          sizeBytes: true,
+          documentType: true,
+          createdAt: true,
+        },
+      }),
+      ctx.services?.ticket
+        ? ctx.services.ticket.countByContact({ tenantId, contactId: input.id })
+        : Promise.resolve(0),
+      typedCtx.prismaWithTenant.caseDocument.count({ where: documentWhere }),
+    ]);
+    // Map CaseDocument rows to the Contact 360 document view shape (BigInt size →
+    // number; the route links each row to /documents/[id] for the signed download).
+    const contactDocuments = caseDocuments.map((doc) => ({
+      id: doc.id,
+      name: doc.title,
+      fileType: doc.mimeType,
+      fileSize: Number(doc.sizeBytes),
+      category: doc.documentType,
+      createdAt: doc.createdAt,
+    }));
+    // The reads always resolve (the service degrades to []/0 and findMany/count
+    // never return null), so no nullish fallback is needed here.
+    const relatedTabs = {
+      tickets: contactTickets,
+      documents: contactDocuments,
+      ticketCount,
+      documentCount,
+    };
+
     // Derive AI insights when none exist in DB (ensures entity pages always show data)
     if (!contactWithRelations.aiInsight) {
       const derived = deriveContactInsights({
@@ -777,10 +854,10 @@ export const contactRouter = createTRPCRouter({
         })
         ?.catch(() => {}); // Best-effort persistence — silently ignore
 
-      return { ...contactWithRelations, aiInsight: syntheticInsight };
+      return { ...contactWithRelations, aiInsight: syntheticInsight, ...relatedTabs };
     }
 
-    return contactWithRelations;
+    return { ...contactWithRelations, ...relatedTabs };
   }),
 
   /**

@@ -37,6 +37,7 @@ import {
   mockLead,
   mockOpportunity,
   mockTask,
+  mockServices,
 } from '../../../test/setup';
 
 /**
@@ -201,29 +202,163 @@ describe('Contact Router', () => {
   });
 
   describe('getById', () => {
-    it('should return contact with related data', async () => {
-      const contactWithRelations = {
-        ...mockContact,
-        owner: mockUser,
-        account: mockAccount,
-        lead: mockLead,
-        opportunities: [mockOpportunity],
-        tasks: [mockTask],
-        activities: [],
-        notes: [],
-        aiInsight: { id: 'ai-1' },
-        calendarEvents: [],
-      };
+    // IFC-256: base 360-view relations (aiInsight present → normal return path)
+    const baseRelations = (overrides: Record<string, unknown> = {}) => ({
+      ...mockContact,
+      owner: mockUser,
+      account: mockAccount,
+      lead: mockLead,
+      opportunities: [mockOpportunity],
+      tasks: [mockTask],
+      activities: [],
+      notes: [],
+      aiInsight: { id: 'ai-1' },
+      calendarEvents: [],
+      ...overrides,
+    });
 
+    const sampleTicket = {
+      id: 'tk-1',
+      ticketNumber: 'T-00001',
+      subject: 'Integration API question',
+      status: 'RESOLVED',
+      priority: 'MEDIUM',
+      createdAt: new Date('2025-01-10T09:00:00Z'),
+      resolvedAt: null,
+    };
+    // Raw CaseDocument row as returned by prisma; getById maps it to the view shape.
+    const sampleCaseDocument = {
+      id: 'doc-1',
+      title: 'Enterprise License Proposal',
+      mimeType: 'application/pdf',
+      sizeBytes: BigInt(2_400_000),
+      documentType: 'CONTRACT',
+      createdAt: new Date('2025-01-09T09:00:00Z'),
+    };
+
+    it('should return contact with related data including tickets and documents', async () => {
+      const contactWithRelations = baseRelations();
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
       // IFC-252: findFirst with tenant WHERE (no service pre-flight)
       prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations as any);
+      // IFC-256: tickets via TicketService, documents via prisma
+      (mockServices.ticket.listByContact as any).mockResolvedValue([sampleTicket]);
+      (mockServices.ticket.countByContact as any).mockResolvedValue(23);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([sampleCaseDocument]);
+      (prismaMock.caseDocument.count as any).mockResolvedValue(50);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
       expect(result).toMatchObject(contactWithRelations);
+      expect(result.tickets).toHaveLength(1);
+      expect(result.tickets[0].ticketNumber).toBe('T-00001');
+      expect(result.documents).toHaveLength(1);
+      // CaseDocument row mapped to the view shape (title→name, sizeBytes→number)
+      expect(result.documents[0].name).toBe('Enterprise License Proposal');
+      expect(result.documents[0].fileSize).toBe(2_400_000);
+      // badge counts reflect the true totals, not the capped list lengths
+      expect(result.ticketCount).toBe(23);
+      expect(result.documentCount).toBe(50);
+    });
+
+    it('returns empty tickets and documents arrays when the contact has none', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findFirst.mockResolvedValue(baseRelations() as any);
+      (mockServices.ticket.listByContact as any).mockResolvedValue([]);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([]);
+
+      const result = await caller.getById({ id: TEST_UUIDS.contact1 });
+
+      expect(result.tickets).toEqual([]);
+      expect(result.documents).toEqual([]);
+    });
+
+    it('scopes the tickets/documents queries to tenant + contact and excludes deleted documents', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findFirst.mockResolvedValue(baseRelations() as any);
+      (mockServices.ticket.listByContact as any).mockResolvedValue([]);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([]);
+
+      await caller.getById({ id: TEST_UUIDS.contact1 });
+
+      expect(mockServices.ticket.listByContact).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tenantId: TEST_UUIDS.tenant,
+          contactId: TEST_UUIDS.contact1,
+        })
+      );
+      expect(prismaMock.caseDocument.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            tenantId: TEST_UUIDS.tenant,
+            relatedContactId: TEST_UUIDS.contact1,
+            deletedAt: null,
+            isLatestVersion: true,
+          }),
+        })
+      );
+      // documents are ACL-filtered: the viewer must be the creator or hold an ACL
+      const docWhere = (prismaMock.caseDocument.findMany as any).mock.calls[0][0].where;
+      expect(docWhere.OR).toEqual(
+        expect.arrayContaining([
+          { createdBy: TEST_UUIDS.user1 },
+          expect.objectContaining({
+            acl: { some: expect.objectContaining({ principalId: TEST_UUIDS.user1 }) },
+          }),
+        ])
+      );
+      // counts use the same tenant/contact scope (true totals for the badges)
+      expect(mockServices.ticket.countByContact).toHaveBeenCalledWith(
+        expect.objectContaining({ tenantId: TEST_UUIDS.tenant, contactId: TEST_UUIDS.contact1 })
+      );
+      expect(prismaMock.caseDocument.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            tenantId: TEST_UUIDS.tenant,
+            relatedContactId: TEST_UUIDS.contact1,
+            deletedAt: null,
+            isLatestVersion: true,
+          }),
+        })
+      );
+    });
+
+    it('degrades to empty tickets and a zero ticket count when the service is unavailable', async () => {
+      const ctx = createTestContext({
+        services: { ...mockServices, ticket: undefined } as any,
+      });
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findFirst.mockResolvedValue(baseRelations() as any);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([]);
+      (prismaMock.caseDocument.count as any).mockResolvedValue(0);
+
+      const result = await caller.getById({ id: TEST_UUIDS.contact1 });
+
+      expect(result.tickets).toEqual([]);
+      expect(result.ticketCount).toBe(0);
+    });
+
+    it('includes tickets and documents on the derived-insight path (no DB insight)', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      // aiInsight null → getById derives a synthetic insight (separate return path)
+      prismaMock.contact.findFirst.mockResolvedValue(baseRelations({ aiInsight: null }) as any);
+      (mockServices.ticket.listByContact as any).mockResolvedValue([sampleTicket]);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([sampleCaseDocument]);
+
+      const result = await caller.getById({ id: TEST_UUIDS.contact1 });
+
+      expect(result.aiInsight).toBeTruthy();
+      expect(result.tickets).toHaveLength(1);
+      expect(result.documents).toHaveLength(1);
     });
 
     it('should throw NOT_FOUND for non-existent contact', async () => {

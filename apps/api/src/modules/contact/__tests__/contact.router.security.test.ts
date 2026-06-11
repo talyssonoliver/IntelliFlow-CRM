@@ -416,6 +416,8 @@ describe('Contact Router Security — Tenant Isolation (IFC-252)', () => {
       const caller = contactRouter.createCaller(ctx);
 
       prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations as any);
+      // IFC-256: getById also reads the contact's CaseDocument list/count
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([]);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
