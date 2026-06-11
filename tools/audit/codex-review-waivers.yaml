@@ -1,0 +1,56 @@
+# Codex Semantic Review Waivers
+# -----------------------------------------------------------------------
+# Each entry suppresses ONE finding whose fingerprint (stable hash of
+# file + actual source code at the flagged line) would otherwise block
+# the gate.
+#
+# FINGERPRINT FORMULA (as computed by scripts/codex-review.mjs):
+#   sha256( normalizedFilePath + "\n" + normalizedFlaggedSource )
+#
+#   normalizedFilePath   = forward-slash path, lowercase, trimmed
+#   normalizedFlaggedSource = trimmed source text of the flagged line(s)
+#                             read from disk, internal whitespace collapsed
+#
+# The fingerprint is anchored to the SOURCE CODE being flagged, NOT the
+# LLM's prose description.  This means:
+#   - The same line of code always produces the same fingerprint regardless
+#     of how the LLM phrases the finding on each run (non-determinism safe).
+#   - If the buggy line is FIXED (code changes), the fingerprint changes
+#     and the waiver no longer matches — the gate re-blocks automatically.
+#   - If only a line number shifts (code added above), the fingerprint
+#     stays stable because it is keyed on the source TEXT, not the line number.
+#
+# Fields:
+#   fingerprint : REQUIRED — sha256 hex as described above,
+#                 as produced by scripts/codex-review.mjs
+#   reason      : REQUIRED non-empty — why this finding is acceptable or
+#                 a false-positive. Vague reasons ("known issue") are
+#                 grounds for reverting the waiver.
+#   author      : GitHub handle of the person who approved the waiver
+#   date        : ISO-8601 date the waiver was created
+#   expires     : optional ISO-8601 date after which the waiver is
+#                 treated as expired (gate re-blocks)
+#
+# Policy:
+#   - One waiver entry per finding; duplicate fingerprints are an error.
+#   - Only real false-positives or explicitly accepted risks go here.
+#   - The waiver file is reviewed in every code-review pass.
+#   - Expired waivers are automatically re-blocked by the gate script.
+#
+# To get a fingerprint for a new waiver:
+#   1. Run the gate: node scripts/codex-review.mjs
+#   2. Read artifacts/codex-review/summary.txt — the fingerprint is listed
+#      under each UNWAIVED FINDING.
+#
+# This file is intentionally empty at bootstrap.  The first real waiver
+# should follow the format below.
+#
+# Example:
+#   - fingerprint: "a3f9c2e1b4d8f7e6a5c3b2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1"
+#     reason: "Revenue band strings are display-only labels passed to a
+#              UI formatter; the cents mapping is in a separate validated
+#              constant. Confirmed no data-integrity path."
+#     author: talyssonoliver
+#     date: "2026-06-11"
+#
+waivers: []

@@ -401,6 +401,43 @@ const STEPS = [
     cmd: ['pnpm', 'run', 'validate:sprint-data'],
     required: true,
   },
+  {
+    // SEMANTIC REVIEW GATE (2026-06-11): drives an independent Codex review
+    // of the diff vs origin/main, flagging correctness / data-integrity /
+    // security bugs that pass TypeScript + tests + lint because the author's
+    // own tests encode the same wrong assumption (e.g. revenue-band "1M-10M"
+    // mapped to 100 cents with green tests). Block on ANY unwaived finding.
+    //
+    // LOCAL-ONLY enforcement: the codex CLI must be installed and OAuth-
+    // authenticated (ChatGPT/Codex login). No API key is required or used.
+    // Degrades to SKIPPED_PRECONDITION when codex is absent or not logged in
+    // (mirrors the actionlint / semgrep degrade pattern).
+    // There is NO CI enforcement — this gate is pre-push only.
+    id: 'codex-review',
+    description:
+      'Codex semantic review (OAuth, local-only): correctness/data-integrity/security bugs in diff',
+    cmd: ['node', 'scripts/codex-review.mjs'],
+    skip_if: () => {
+      if (commandMissing('codex')) return true;
+      // Auth probe: codex login status exits 0 and prints "Logged in" when authed.
+      // No OPENAI_API_KEY check — gate uses local OAuth session only.
+      const r = spawnSync('codex', ['login', 'status'], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        shell: process.platform === 'win32',
+        timeout: 10_000,
+      });
+      if (r.error || r.status !== 0) return true;
+      // CLI writes "Logged in using ChatGPT" to stderr in codex 0.133.x.
+      // Check both streams for forward-compatibility.
+      const combined = ((r.stdout || '') + (r.stderr || '')).toLowerCase();
+      return !combined.includes('logged in');
+    },
+    skip_remediation:
+      'Install codex CLI (`npm i -g @openai/codex`) and authenticate: `codex login`. ' +
+      'Confirm with: `codex login status`. No API key required — uses local OAuth.',
+    required: true,
+  },
 ];
 
 const args = process.argv.slice(2);

@@ -30,9 +30,12 @@ api:
       gpt-3.5-turbo: 0.002
 
 # Authentication
+# The codex CLI used by this project authenticates via OAuth (ChatGPT/Codex
+# login). No OPENAI_API_KEY is used for the semantic review gate.
+# Run `codex login` to authenticate; confirm with `codex login status`.
 auth:
-  method: api_key
-  key_source: environment # OPENAI_API_KEY
+  method: oauth
+  key_source: local_session # OAuth via `codex login` — no API key
   organization_id: ${OPENAI_ORG_ID} # Optional
   verify_ssl: true
 
