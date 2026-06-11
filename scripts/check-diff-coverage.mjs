@@ -67,8 +67,10 @@ const SONAR_SOURCE_ROOTS = [
   /^apps\/web\/src\//,
   /^apps\/project-tracker\/(app|components|lib)\//,
   /^packages\/(adapters|api-client|application|db|domain|observability|platform|ui|validators)\/src\//,
-  // workers share packages; apps/workers has worker-specific source under src/
-  /^apps\/workers\//,
+  // Note: apps/workers/ is intentionally excluded — it is NOT in sonar.sources
+  // (sonar-project.properties lists only apps/{api,ai-worker,web,project-tracker} and packages/).
+  // Workers source is excluded from both SonarCloud analysis and the lcov coverage report,
+  // so treating changed worker files as coverable causes false-positive 0% failures.
 ];
 const EXCLUDE = [
   /\.(test|spec)\.[cm]?[jt]sx?$/,
@@ -84,6 +86,10 @@ const SONAR_COVERAGE_EXCLUDE = [
   /^apps\/project-tracker\/components\//,
   /^apps\/project-tracker\/lib\/data-sync\.ts$/,
   /^apps\/ai-worker\/src\/index\.ts$/,
+  // Mock adapters in packages/adapters/src/external/ are test-infrastructure with
+  // no coverage expectation (same exclusion applied in the root vitest coverage config
+  // for packages/adapters/src/external/OpenAIService.ts).
+  /^packages\/adapters\/src\/external\/Mock[A-Za-z]+\.ts$/,
 ];
 const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
 const isCoverableFile = (f) =>
