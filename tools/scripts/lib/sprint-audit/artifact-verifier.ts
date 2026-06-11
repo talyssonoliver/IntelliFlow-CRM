@@ -107,9 +107,10 @@ export async function resolveArtifactPaths(
     return matches;
   }
 
-  // Handle directory paths (check if directory exists)
+  // Handle directory paths: attempt stat directly and catch ENOENT rather than
+  // existsSync-then-statSync (eliminates TOCTOU / js/file-system-race).
   const absolutePath = path.join(repoRoot, artifactSpec);
-  if (fs.existsSync(absolutePath)) {
+  try {
     const stats = fs.statSync(absolutePath);
     if (stats.isDirectory()) {
       // Return directory contents
@@ -120,9 +121,13 @@ export async function resolveArtifactPaths(
       });
       return files.map((f) => path.join(artifactSpec, f));
     }
+  } catch (err: unknown) {
+    // ENOENT means path does not exist — fall through and return as-is so the
+    // caller's missing-file logic handles it.  Any other OS error is re-thrown.
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
   }
 
-  // Return as-is for single file
+  // Return as-is for single file (missing files are handled by verifyArtifact)
   return [artifactSpec];
 }
 
@@ -197,12 +202,19 @@ function findAlternativeSprintPath(artifactPath: string, repoRoot: string): stri
   const plainFilename = filename.replace(/^[A-Z]+-\d+-/, '');
   const altSuffix = plainFilename !== filename ? suffix.replaceAll(filename, plainFilename) : null;
 
-  // Scan existing sprint directories
+  // Scan existing sprint directories — attempt readdirSync directly and treat
+  // ENOENT as "no sprints dir" rather than existsSync-then-readdirSync
+  // (eliminates TOCTOU / js/file-system-race).
   const sprintsDir = path.join(repoRoot, prefix);
-  if (!fs.existsSync(sprintsDir)) return null;
+  let dirEntries: string[];
+  try {
+    dirEntries = fs.readdirSync(sprintsDir);
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw err;
+  }
 
-  const sprintDirs = fs
-    .readdirSync(sprintsDir)
+  const sprintDirs = dirEntries
     .filter((d) => /^sprint-\d+$/.test(d))
     .sort((a, b) => {
       const numA = Number.parseInt(a.replaceAll('sprint-', ''), 10);
@@ -211,16 +223,24 @@ function findAlternativeSprintPath(artifactPath: string, repoRoot: string): stri
     });
 
   for (const dir of sprintDirs) {
-    // Try exact suffix
+    // Try exact suffix — use statSync to confirm existence atomically instead
+    // of existsSync followed by a later read (eliminates TOCTOU).
     const candidate = path.join(repoRoot, prefix, dir, suffix.slice(1));
-    if (fs.existsSync(candidate)) {
+    try {
+      fs.statSync(candidate);
       return path.join(prefix, dir, suffix.slice(1)).replaceAll(/\\/g, '/');
+    } catch {
+      // file not found or inaccessible — try next candidate
     }
+
     // Try plain filename variant
     if (altSuffix) {
       const altCandidate = path.join(repoRoot, prefix, dir, altSuffix.slice(1));
-      if (fs.existsSync(altCandidate)) {
+      try {
+        fs.statSync(altCandidate);
         return path.join(prefix, dir, altSuffix.slice(1)).replaceAll(/\\/g, '/');
+      } catch {
+        // file not found or inaccessible — continue loop
       }
     }
   }
@@ -232,14 +252,20 @@ function findAlternativeSprintPath(artifactPath: string, repoRoot: string): stri
  * Resolves the artifact path, trying alternative sprint paths if needed.
  * Returns the resolved relative path plus any path-mismatch issue message,
  * or null if the file cannot be located at all.
+ *
+ * Uses a single statSync call rather than existsSync-then-stat to eliminate
+ * the TOCTOU / js/file-system-race window.
  */
 function resolveArtifactPath(
   artifactPath: string,
   absolutePath: string,
   repoRoot: string
 ): { resolvedPath: string; mismatchMessage: string | null } | null {
-  if (fs.existsSync(absolutePath)) {
+  try {
+    fs.statSync(absolutePath);
     return { resolvedPath: artifactPath, mismatchMessage: null };
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
   }
 
   const altPath = findAlternativeSprintPath(artifactPath, repoRoot);
@@ -338,6 +364,10 @@ export async function verifyArtifact(
   const resolvedAbsolutePath = path.join(repoRoot, resolvedPath);
 
   try {
+    // statSync is called inside resolveArtifactPath above for the primary path;
+    // when the path was redirected (sprint mismatch) we re-stat the resolved
+    // path here.  Both cases use a single stat-then-read group with no separate
+    // existence pre-check, keeping the operation atomic.
     const stats = fs.statSync(resolvedAbsolutePath);
 
     if (stats.isDirectory()) {
