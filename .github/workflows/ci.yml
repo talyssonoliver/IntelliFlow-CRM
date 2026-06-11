@@ -15,6 +15,13 @@ on:
       - 'apps/project-tracker/docs/metrics/**'
   pull_request:
     branches: [main, develop]
+  # Merge Queue: run on the temporary merge ref so the required checks
+  # (Architecture Tests, Build, Integration Tests, Lint & Format,
+  # Sprint Plan Validation, Type Check) report on the queue's ref.
+  # E2E is gated push+main only below and is NOT a required check —
+  # it is skipped cleanly on merge_group refs.
+  merge_group:
+    branches: [main, develop]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -24,7 +31,11 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   NODE_VERSION: '22'
   PNPM_VERSION: '10.33.0'
-  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  # TURBO_TOKEN reuses VERCEL_TOKEN (both are Vercel-issued tokens and the
+  # Turborepo remote cache API accepts a Vercel token). TURBO_TEAM must be
+  # set by the operator as a repo variable (the Vercel team slug, e.g.
+  # "talyssonoliver"). See PR body for setup instructions.
+  TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   NODE_OPTIONS: --max-old-space-size=4096
 
@@ -336,6 +347,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # merge_group refs are not 'refs/heads/main', so this job is naturally
+    # skipped on merge queue runs without extra gating needed.
     # On main this job runs ONLY the smoke suite (tests/e2e/smoke.spec.ts) —
     # fast, no-backend-required critical-path checks (homepage, login form,
     # /api/health, responsive). It is a REAL signal: continue-on-error is

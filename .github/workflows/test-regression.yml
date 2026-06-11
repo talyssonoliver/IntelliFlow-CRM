@@ -31,6 +31,13 @@ on:
   schedule:
     # 05:00 UTC nightly — after property tests (04:00) and system audits (03:00)
     - cron: '0 5 * * *'
+  # Merge Queue: run the sharded unit suite on the queue's temp merge ref so
+  # the required checks (Unit Shard N/20 -> Merge Coverage Gate, SonarCloud Scan)
+  # report under the same names as on pull_request. workflow_call from ci.yml
+  # is how the queue reaches this workflow on merge_group (ci.yml has the
+  # merge_group trigger and calls this workflow via `uses:`).
+  merge_group:
+    branches: [main, develop]
 
 concurrency:
   # Only takes effect for standalone (dispatch/schedule) runs; when called via
@@ -41,7 +48,8 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   PNPM_VERSION: '10.33.0'
-  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  # TURBO_TOKEN reuses VERCEL_TOKEN — see ci.yml env block for rationale.
+  TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   NODE_OPTIONS: --max-old-space-size=4096
   SHARD_TOTAL: '20'
