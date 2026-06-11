@@ -1,12 +1,13 @@
 import { Card, EmptyState } from '@intelliflow/ui';
 
+import { formatContactDate } from './contact-date-format';
 import { formatFileSize, type DocumentViewModel } from './contact-tab-format';
 
 export interface ContactDocumentsTabProps {
   /** Documents for this contact (already normalised to view models). */
   documents: DocumentViewModel[];
-  /** Formats an ISO date into a display date (e.g. "Jan 9, 2025"). */
-  formatDate: (isoDate: string) => string;
+  /** IANA timezone used to render the document date. */
+  timezone: string;
 }
 
 /**
@@ -15,7 +16,7 @@ export interface ContactDocumentsTabProps {
  * route page so it is unit-tested and counted by coverage. The "Upload" action
  * is wired separately (IFC-257).
  */
-export function ContactDocumentsTab({ documents, formatDate }: ContactDocumentsTabProps) {
+export function ContactDocumentsTab({ documents, timezone }: ContactDocumentsTabProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -48,7 +49,7 @@ export function ContactDocumentsTab({ documents, formatDate }: ContactDocumentsT
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-slate-900 dark:text-white truncate">{doc.name}</p>
                 <p className="text-sm text-slate-500">
-                  {formatDate(doc.createdAt)} • {formatFileSize(doc.fileSize)}
+                  {formatContactDate(doc.createdAt, timezone)} • {formatFileSize(doc.fileSize)}
                 </p>
               </div>
               <a

@@ -42,9 +42,11 @@ import { QuickLogComposer } from '@/components/shared/quick-log-composer';
 // IFC-312 ÔÇö AI chain UI surfaces
 import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
 import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
-import { ContactTicketsTab } from '@/components/contacts/ContactTicketsTab';
-import { ContactDocumentsTab } from '@/components/contacts/ContactDocumentsTab';
-import { toTicketViewModels, toDocumentViewModels } from '@/components/contacts/contact-tab-format';
+import { ContactRelatedTabs } from '@/components/contacts/ContactRelatedTabs';
+import {
+  formatContactDate,
+  formatContactRelativeTime,
+} from '@/components/contacts/contact-date-format';
 
 // Common nullable date type
 type DateStringNull = string | Date | null;
@@ -203,23 +205,10 @@ interface ContactWithRelations {
     priority: string | null;
     status: string;
   }>;
-  tickets?: Array<{
-    id: string;
-    ticketNumber: string;
-    subject: string;
-    status: string;
-    priority: string;
-    createdAt: string | Date;
-    resolvedAt: string | Date | null;
-  }>;
   documents?: Array<{
     id: string;
     name: string;
-    fileName: string;
     fileType: string;
-    fileSize: number;
-    fileUrl: string;
-    category: string;
     createdAt: string | Date;
   }>;
   calendarEvents?: Array<{
@@ -680,26 +669,6 @@ function ContactAiSummaryCard({
 }
 
 // ÔöÇÔöÇÔöÇ Module-level pure helpers (extracted to reduce cognitive complexity of Contact360Page) ÔöÇÔöÇÔöÇ
-
-function formatContactDate(dateString: string, timezone: string): string {
-  return new Date(dateString).toLocaleDateString('en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: timezone,
-  });
-}
-
-function formatContactRelativeTime(dateString: string, timezone: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  return formatContactDate(dateString, timezone);
-}
 
 function getStageColor(stage: string): string {
   switch (stage) {
@@ -1488,15 +1457,6 @@ export default function Contact360Page() {
     });
   }, [apiContact?.opportunities]);
 
-  // Transform tickets/documents from API (IFC-256). The transforms + tab
-  // rendering live in tested modules under components/contacts/ (route page.tsx
-  // files are excluded from the merged coverage report).
-  const tickets = useMemo(() => toTicketViewModels(apiContact?.tickets), [apiContact?.tickets]);
-  const documents = useMemo(
-    () => toDocumentViewModels(apiContact?.documents),
-    [apiContact?.documents]
-  );
-
   // Transform tasks from API
   const _tasks = useMemo(() => {
     if (!apiContact?.tasks) return [];
@@ -1579,12 +1539,12 @@ export default function Contact360Page() {
       { id: 'activity', label: 'Activity', count: activities.length },
       { id: 'tasks', label: 'Tasks' },
       { id: 'deals', label: 'Deals', count: deals.length },
-      { id: 'tickets', label: 'Tickets', count: tickets.length },
-      { id: 'documents', label: 'Documents', count: documents.length },
+      { id: 'tickets', label: 'Tickets', count: rawApiContact?.tickets?.length ?? 0 },
+      { id: 'documents', label: 'Documents', count: rawApiContact?.documents?.length ?? 0 },
       { id: 'notes', label: 'Notes', count: notes.length },
       { id: 'ai-insights', label: 'AI Insights' },
     ],
-    [activities.length, deals.length, notes.length, tickets.length, documents.length]
+    [activities.length, deals.length, notes.length, rawApiContact]
   );
 
   // Filter and search activities
@@ -2501,21 +2461,8 @@ export default function Contact360Page() {
             </Card>
           )}
 
-          {/* Tickets Tab (IFC-256) */}
-          {activeTab === 'tickets' && (
-            <ContactTicketsTab
-              tickets={tickets}
-              formatRelativeTime={(iso) => formatContactRelativeTime(iso, timezone)}
-            />
-          )}
-
-          {/* Documents Tab (IFC-256) */}
-          {activeTab === 'documents' && (
-            <ContactDocumentsTab
-              documents={documents}
-              formatDate={(iso) => formatContactDate(iso, timezone)}
-            />
-          )}
+          {/* Tickets & Documents tabs (IFC-256) */}
+          <ContactRelatedTabs activeTab={activeTab} contact={rawApiContact} timezone={timezone} />
 
           {/* Notes Tab */}
           {activeTab === 'notes' && (

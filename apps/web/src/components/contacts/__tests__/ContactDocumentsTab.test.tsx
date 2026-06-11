@@ -5,7 +5,7 @@
  * Component-level coverage for the Contact 360 Documents tab: real-data render
  * with download links + formatted size/date, and the empty state.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import { ContactDocumentsTab } from '../ContactDocumentsTab';
@@ -25,14 +25,12 @@ const doc = (overrides: Partial<DocumentViewModel> = {}): DocumentViewModel => (
 
 describe('ContactDocumentsTab', () => {
   it('renders real documents with a formatted date + size and a working download link', () => {
-    const formatDate = vi.fn(() => 'Jan 9, 2025');
-    render(<ContactDocumentsTab documents={[doc()]} formatDate={formatDate} />);
+    render(<ContactDocumentsTab documents={[doc()]} timezone="UTC" />);
 
     const panel = screen.getByTestId('contact-documents-tab');
     expect(panel).toHaveTextContent('Enterprise License Proposal');
-    expect(panel).toHaveTextContent('Jan 9, 2025');
+    expect(panel).toHaveTextContent('9 Jan 2025');
     expect(panel).toHaveTextContent('2.3 MB');
-    expect(formatDate).toHaveBeenCalledWith('2025-01-09T09:00:00.000Z');
 
     const link = screen
       .getAllByRole('link')
@@ -43,7 +41,7 @@ describe('ContactDocumentsTab', () => {
   });
 
   it('renders an empty state when there are no documents', () => {
-    render(<ContactDocumentsTab documents={[]} formatDate={() => ''} />);
+    render(<ContactDocumentsTab documents={[]} timezone="UTC" />);
     expect(screen.getByTestId('contact-documents-empty')).toBeInTheDocument();
     expect(screen.queryByText('Enterprise License Proposal')).not.toBeInTheDocument();
   });

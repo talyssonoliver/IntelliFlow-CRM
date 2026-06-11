@@ -1,12 +1,13 @@
 import { Card, EmptyState } from '@intelliflow/ui';
 
+import { formatContactRelativeTime } from './contact-date-format';
 import { formatTicketMeta, getTicketStatusColor, type TicketViewModel } from './contact-tab-format';
 
 export interface ContactTicketsTabProps {
   /** Tickets for this contact (already normalised to view models). */
   tickets: TicketViewModel[];
-  /** Formats an ISO date into a relative-time label (e.g. "2 days ago"). */
-  formatRelativeTime: (isoDate: string) => string;
+  /** IANA timezone used to render the relative created-time. */
+  timezone: string;
 }
 
 /**
@@ -14,7 +15,7 @@ export interface ContactTicketsTabProps {
  * proper empty state). Extracted from the route page so it is unit-tested and
  * counted by coverage. The "Create Ticket" action is wired separately (IFC-257).
  */
-export function ContactTicketsTab({ tickets, formatRelativeTime }: ContactTicketsTabProps) {
+export function ContactTicketsTab({ tickets, timezone }: ContactTicketsTabProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -54,7 +55,9 @@ export function ContactTicketsTab({ tickets, formatRelativeTime }: ContactTicket
                   </p>
                 </div>
               </div>
-              <span className="text-xs text-slate-500">{formatRelativeTime(ticket.createdAt)}</span>
+              <span className="text-xs text-slate-500">
+                {formatContactRelativeTime(ticket.createdAt, timezone)}
+              </span>
             </div>
           ))
         )}
