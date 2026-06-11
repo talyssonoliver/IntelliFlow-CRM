@@ -43,4 +43,12 @@ describe('formatContactRelativeTime', () => {
   it('falls back to a formatted date beyond a month', () => {
     expect(formatContactRelativeTime('2024-11-01T08:00:00.000Z', 'UTC')).toBe('1 Nov 2024');
   });
+
+  it('uses calendar days in the supplied timezone for the boundary (not elapsed time)', () => {
+    // "now" is just after midnight UTC; the date is late the previous UTC day.
+    vi.setSystemTime(new Date('2025-01-20T00:30:00.000Z'));
+    // Elapsed time is only 1h, but it is the previous calendar day → "Yesterday"
+    // (the old elapsed-ms logic would have returned "Today").
+    expect(formatContactRelativeTime('2025-01-19T23:30:00.000Z', 'UTC')).toBe('Yesterday');
+  });
 });

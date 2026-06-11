@@ -16,11 +16,25 @@ export function formatContactDate(dateString: string, timezone: string): string 
   });
 }
 
+/** Whole-day index (days since the epoch) for `date`'s calendar day in `timezone`. */
+function calendarDayIndex(date: Date, timezone: string): number {
+  // en-CA renders an ISO-like "YYYY-MM-DD" in the target timezone; parsing it as
+  // UTC midnight yields a stable, DST-safe day index for calendar-day math.
+  const ymd = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+  return Math.floor(Date.parse(`${ymd}T00:00:00Z`) / 86_400_000);
+}
+
 /** Format an ISO date as a relative label ("Today", "3 days ago", or a date). */
 export function formatContactRelativeTime(dateString: string, timezone: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  // Compare calendar days *in the supplied timezone* so a date near local
+  // midnight is not mislabeled (e.g. 23:30 "yesterday" viewed at 00:30 "today").
+  const diffDays =
+    calendarDayIndex(new Date(), timezone) - calendarDayIndex(new Date(dateString), timezone);
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
