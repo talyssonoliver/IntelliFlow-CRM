@@ -50,8 +50,26 @@ const root = (() => {
   return r.status === 0 ? r.stdout.trim().replace(/\\/g, '/') : process.cwd().replace(/\\/g, '/');
 })();
 
-// Source files only; mirror Sonar's coverage exclusions (tests/configs/types/generated).
-// Base exclusions match sonar.exclusions + sonar.coverage.exclusions in sonar-project.properties.
+// Source files only; mirror Sonar's sonar.sources + sonar.coverage.exclusions so the
+// local gate operates on exactly the same file set as SonarCloud.
+//
+// sonar.sources in sonar-project.properties covers:
+//   apps/api/src, apps/ai-worker/src, apps/web/src,
+//   apps/project-tracker/{app,components,lib},
+//   packages/{adapters,api-client,application,db,domain,observability,platform,ui,validators}/src
+//
+// Files outside those paths (scripts/, tools/, infra/, tests/, artifacts/) are NOT
+// instrumented by Sonar and must be excluded here to avoid false positives on
+// changed tooling/config files that will never appear in lcov.
+const SONAR_SOURCE_ROOTS = [
+  /^apps\/api\/src\//,
+  /^apps\/ai-worker\/src\//,
+  /^apps\/web\/src\//,
+  /^apps\/project-tracker\/(app|components|lib)\//,
+  /^packages\/(adapters|api-client|application|db|domain|observability|platform|ui|validators)\/src\//,
+  // workers share packages; apps/workers has worker-specific source under src/
+  /^apps\/workers\//,
+];
 const EXCLUDE = [
   /\.(test|spec)\.[cm]?[jt]sx?$/,
   /\.d\.ts$/,
@@ -68,7 +86,10 @@ const SONAR_COVERAGE_EXCLUDE = [
   /^apps\/ai-worker\/src\/index\.ts$/,
 ];
 const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
-const isCoverableFile = (f) => INCLUDE_EXT.test(f) && !EXCLUDE.some((re) => re.test(f));
+const isCoverableFile = (f) =>
+  INCLUDE_EXT.test(f) &&
+  SONAR_SOURCE_ROOTS.some((re) => re.test(f)) &&
+  !EXCLUDE.some((re) => re.test(f));
 // Files in Sonar's coverage exclusion list are skipped entirely (no coverage expectation).
 const isSonarCoverageExcluded = (f) => SONAR_COVERAGE_EXCLUDE.some((re) => re.test(f));
 
@@ -120,7 +141,7 @@ if (added.size === 0) {
 }
 
 // --- lcov per-file per-line hits ---
-const lcovPath = path.join(root, LCOV);
+const lcovPath = path.isAbsolute(LCOV) ? LCOV : path.join(root, LCOV);
 if (!fs.existsSync(lcovPath)) {
   console.error(`::error::check-diff-coverage: ${LCOV} missing — run the coverage step first.`);
   process.exit(1);

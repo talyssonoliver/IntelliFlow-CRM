@@ -44,6 +44,14 @@ function runScript(lcovContent: string, env: Record<string, string> = {}) {
 // doesn't test the real behaviour.
 // ---------------------------------------------------------------------------
 
+const SONAR_SOURCE_ROOTS = [
+  /^apps\/api\/src\//,
+  /^apps\/ai-worker\/src\//,
+  /^apps\/web\/src\//,
+  /^apps\/project-tracker\/(app|components|lib)\//,
+  /^packages\/(adapters|api-client|application|db|domain|observability|platform|ui|validators)\/src\//,
+  /^apps\/workers\//,
+];
 const EXCLUDE = [
   /\.(test|spec)\.[cm]?[jt]sx?$/,
   /\.d\.ts$/,
@@ -58,7 +66,10 @@ const SONAR_COVERAGE_EXCLUDE = [
   /^apps\/project-tracker\/lib\/data-sync\.ts$/,
   /^apps\/ai-worker\/src\/index\.ts$/,
 ];
-const isCoverableFile = (f: string) => INCLUDE_EXT.test(f) && !EXCLUDE.some((re) => re.test(f));
+const isCoverableFile = (f: string) =>
+  INCLUDE_EXT.test(f) &&
+  SONAR_SOURCE_ROOTS.some((re) => re.test(f)) &&
+  !EXCLUDE.some((re) => re.test(f));
 const isSonarCoverageExcluded = (f: string) => SONAR_COVERAGE_EXCLUDE.some((re) => re.test(f));
 
 // ---------------------------------------------------------------------------
@@ -154,6 +165,14 @@ describe('check-diff-coverage: file classification', () => {
 
   it('does NOT exclude a normal source file from Sonar coverage exclusions', () => {
     expect(isSonarCoverageExcluded('apps/web/src/app/contacts/[id]/page.tsx')).toBe(false);
+  });
+
+  it('does NOT classify scripts/ as coverable (not in sonar.sources)', () => {
+    expect(isCoverableFile('scripts/check-diff-coverage.mjs')).toBe(false);
+  });
+
+  it('does NOT classify tools/ as coverable (not in sonar.sources)', () => {
+    expect(isCoverableFile('tools/scripts/some-util.ts')).toBe(false);
   });
 });
 
