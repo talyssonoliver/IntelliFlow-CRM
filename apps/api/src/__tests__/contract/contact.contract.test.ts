@@ -291,6 +291,8 @@ describe('Contact Router Contract Tests', () => {
       });
 
       prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations);
+      // IFC-256: getById also reads the contact's CaseDocument list/count
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([]);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
