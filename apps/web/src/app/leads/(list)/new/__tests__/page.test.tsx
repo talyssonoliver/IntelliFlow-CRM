@@ -320,38 +320,23 @@ describe('CreateNewLeadPage', () => {
   });
 
   // -------------------------------------------------------------------------
-  // PG-060: revenue-band -> cents mapping (Codex review #1)
+  // PG-060: annualRevenue is NEVER mapped into estimatedValue (Codex review #1 —
+  // HIGH wrong-field-mapping: company annual revenue != lead deal value, IFC-242).
   // -------------------------------------------------------------------------
-  it.each([
-    ['<1M', 50_000_000],
-    ['1M-10M', 100_000_000],
-    ['10M-50M', 1_000_000_000],
-    ['50M-100M', 5_000_000_000],
-    ['100M+', 10_000_000_000],
-  ])('maps revenue band %s to %d cents (no parseFloat corruption)', (band, cents) => {
-    render(<CreateNewLeadPage />);
-    fillBasicStep();
-    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
-    fireEvent.change(screen.getByLabelText(/annual revenue/i), { target: { value: band } });
-    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
-    fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+  it.each(['<1M', '1M-10M', '10M-50M', '50M-100M', '100M+'])(
+    'never maps revenue band %s into estimatedValue (distinct business metric)',
+    (band) => {
+      render(<CreateNewLeadPage />);
+      fillBasicStep();
+      fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
+      fireEvent.change(screen.getByLabelText(/annual revenue/i), { target: { value: band } });
+      fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
+      fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
 
-    const mutationResult = mockCreateMutation.mock.results[0]?.value;
-    const payload = mutationResult.mutateAsync.mock.calls[0]?.[0];
-    expect(payload.estimatedValue).toBe(cents);
-  });
-
-  it('omits estimatedValue when no revenue band is selected', () => {
-    render(<CreateNewLeadPage />);
-    fillBasicStep();
-    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
-    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
-    fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
-
-    const mutationResult = mockCreateMutation.mock.results[0]?.value;
-    const payload = mutationResult.mutateAsync.mock.calls[0]?.[0];
-    expect(payload.estimatedValue).toBeUndefined();
-  });
+      const payload = mockCreateMutation.mock.results[0]?.value.mutateAsync.mock.calls[0]?.[0];
+      expect(payload.estimatedValue).toBeUndefined();
+    }
+  );
 
   // -------------------------------------------------------------------------
   // PG-060: email validation parity with the server validator (Codex review #2)

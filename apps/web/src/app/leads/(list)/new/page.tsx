@@ -133,18 +133,6 @@ const revenueOptions = [
   { value: '100M+', label: '$100M+' },
 ];
 
-// Map each annual-revenue band to a representative value in CENTS (estimatedValue
-// is an integer number of cents). Bounded bands use their lower bound (e.g.
-// "1M-10M" -> $1,000,000 -> 100_000_000 cents); the open "<1M" band uses a $500k
-// midpoint. An empty/unknown selection yields undefined (estimatedValue omitted).
-const REVENUE_BAND_TO_CENTS: Record<string, number> = {
-  '<1M': 50_000_000, // ~$500,000
-  '1M-10M': 100_000_000, // $1,000,000
-  '10M-50M': 1_000_000_000, // $10,000,000
-  '50M-100M': 5_000_000_000, // $50,000,000
-  '100M+': 10_000_000_000, // $100,000,000
-};
-
 // Timeline options
 const timelineOptions = [
   { value: '', label: 'Select timeline...' },
@@ -328,14 +316,6 @@ export default function CreateNewLeadPage() {
       const toOptional = (value: string): string | undefined =>
         value.trim() ? value.trim() : undefined;
 
-      // Map the banded annual-revenue selection to an explicit value in cents via
-      // the REVENUE_BAND_TO_CENTS lookup. The old `parseFloat(band) * 100` silently
-      // corrupted this ("1M-10M" -> 100 cents, "<1M" -> NaN -> undefined); the table
-      // yields the correct integer (e.g. "1M-10M" -> 100_000_000 = $1M) or undefined
-      // when no band is selected. (companySize, industry and the BANT fields remain
-      // UI-only pending dedicated schema fields — IFC-242.)
-      const estimatedValueCents = REVENUE_BAND_TO_CENTS[formData.annualRevenue];
-
       const leadData = {
         email: formData.email.trim(),
         firstName: toOptional(formData.firstName),
@@ -346,7 +326,14 @@ export default function CreateNewLeadPage() {
         source: mapSourceToEnum(formData.source),
         // Lead 360 fields (schema-supported)
         website: toOptional(formData.website),
-        estimatedValue: estimatedValueCents,
+        // estimatedValue (the lead's DEAL value, in cents) is intentionally NOT
+        // populated here. The `annualRevenue` selector captures the COMPANY's
+        // revenue band — a different business metric (codex review: HIGH
+        // wrong-field-mapping; IFC-242 calls out annualRevenue->estimatedValue as
+        // a semantic mismatch). The old parseFloat(band)*100 also corrupted it
+        // ("1M-10M" -> 100 cents). Persisting annualRevenue properly (a dedicated
+        // field) is owned by IFC-242, alongside companySize/industry/BANT — all
+        // collected in the UI but not yet in createLeadSchema.
       };
 
       await createLead.mutateAsync(leadData);
