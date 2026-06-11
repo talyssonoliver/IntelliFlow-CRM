@@ -105,7 +105,7 @@ vi.mock('@intelliflow/ui', async () => {
 // ---------------------------------------------------------------------------
 // Import component under test (AFTER mocks)
 // ---------------------------------------------------------------------------
-import CreateNewLeadPage from '../page';
+import CreateNewLeadPage from '../NewLeadForm';
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -362,5 +362,69 @@ describe('CreateNewLeadPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /next step/i }));
     expect(screen.queryByLabelText(/company name/i)).toBeNull();
     expect(screen.getByLabelText(/email address/i).getAttribute('aria-invalid')).toBe('true');
+  });
+
+  // -------------------------------------------------------------------------
+  // PG-060: full field coverage across all three steps + navigation
+  // -------------------------------------------------------------------------
+  it('fills every field across all three steps and submits', () => {
+    render(<CreateNewLeadPage />);
+    // Step 1 — Basic Info
+    fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'Sarah' } });
+    fireEvent.change(screen.getByLabelText(/last name/i), { target: { value: 'Connor' } });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: 'sarah@acme.com' },
+    });
+    fireEvent.change(screen.getByLabelText(/phone/i), { target: { value: '+1 555 000 0000' } });
+    fireEvent.change(screen.getByLabelText(/job title/i), { target: { value: 'VP Marketing' } });
+    fireEvent.change(screen.getByLabelText(/lead source/i), { target: { value: 'referral' } });
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
+    // Step 2 — Company Details
+    fireEvent.change(screen.getByLabelText(/company name/i), { target: { value: 'Acme' } });
+    fireEvent.change(screen.getByLabelText(/website/i), { target: { value: 'https://acme.com' } });
+    fireEvent.change(screen.getByLabelText(/industry/i), { target: { value: 'technology' } });
+    fireEvent.change(screen.getByLabelText(/company size/i), { target: { value: '51-200' } });
+    fireEvent.change(screen.getByLabelText(/annual revenue/i), { target: { value: '1M-10M' } });
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
+    // Step 3 — Qualification (BANT)
+    fireEvent.change(screen.getByLabelText(/^budget/i), { target: { value: '$50k-$100k' } });
+    fireEvent.change(screen.getByLabelText(/^authority/i), { target: { value: 'Decision maker' } });
+    fireEvent.change(screen.getByLabelText(/^need/i), { target: { value: 'CRM solution' } });
+    fireEvent.change(screen.getByLabelText(/timeline/i), { target: { value: 'short' } });
+    fireEvent.change(screen.getByLabelText(/qualification notes/i), {
+      target: { value: 'Hot lead' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+
+    expect(mockCreateMutation.mock.results[0]?.value.mutateAsync).toHaveBeenCalled();
+  });
+
+  it('navigates back via the step indicator and via the Previous button', () => {
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
+    expect(screen.getByLabelText(/company name/i)).toBeTruthy();
+    // back to step 1 by clicking the completed step indicator button
+    fireEvent.click(screen.getByRole('button', { name: /step 1/i }));
+    expect(screen.queryByLabelText(/company name/i)).toBeNull();
+    // forward, then back via the Previous button
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+    fireEvent.click(screen.getByRole('button', { name: /previous/i }));
+    expect(screen.queryByLabelText(/company name/i)).toBeNull();
+  });
+
+  it('reveals the "please specify" field when source is Other', () => {
+    render(<CreateNewLeadPage />);
+    fireEvent.change(screen.getByLabelText(/lead source/i), { target: { value: 'other' } });
+    const specify = screen.getByLabelText(/please specify/i) as HTMLInputElement;
+    expect(specify).toBeTruthy();
+    fireEvent.change(specify, { target: { value: 'Podcast ad' } });
+    expect(specify.value).toBe('Podcast ad');
+  });
+
+  it('cancels back to /leads from step 1', () => {
+    render(<CreateNewLeadPage />);
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(mockPush).toHaveBeenCalledWith('/leads');
   });
 });

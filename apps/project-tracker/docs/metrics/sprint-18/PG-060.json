@@ -34,6 +34,7 @@
       "apps/web/src/lib/leads/lead-enrichment.ts",
       "apps/web/src/lib/leads/__tests__/lead-enrichment.test.ts",
       "apps/web/src/app/leads/(list)/new/page.tsx",
+      "apps/web/src/app/leads/(list)/new/NewLeadForm.tsx",
       "apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx"
     ],
     "created": [
@@ -46,6 +47,21 @@
         "path": "apps/web/src/lib/leads/__tests__/lead-enrichment.test.ts",
         "sha256": "99e18a8e1205cac960dd6adecd7822ddcc6ee2a9340c571ad59fb34c6471222e",
         "created_at": "2026-06-10T22:09:00Z"
+      },
+      {
+        "path": "apps/web/src/app/leads/(list)/new/NewLeadForm.tsx",
+        "sha256": "59310fa95ed338603b240dfcc3967665147d22e458af8d7ae7f2b8dba849312e",
+        "created_at": "2026-06-11T20:00:00Z"
+      },
+      {
+        "path": "apps/web/src/app/leads/(list)/new/page.tsx",
+        "sha256": "9d2fd1c9d87e939f044dd19856cdd3de2219bad6981166a33e65f444bbbcd560",
+        "created_at": "2026-06-11T20:00:00Z"
+      },
+      {
+        "path": "apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx",
+        "sha256": "4cf019bcfba2e522071b6850733363cb0d2f0717e5da2263df42ff813ea28fc7",
+        "created_at": "2026-06-11T20:00:00Z"
       }
     ],
     "missing": []

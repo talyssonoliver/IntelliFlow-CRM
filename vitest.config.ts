@@ -329,11 +329,10 @@ export default defineConfig({
         'apps/ai-worker/src/types/index.ts',
         // Web app entry points and generated files (not business logic)
         'apps/web/src/app/layout.tsx',
-        // NOTE: `apps/web/src/app/**/page.tsx` was previously excluded (thin-shell
-        // convention — logic lives in tested *PageClient/*Content components). It is
-        // now MEASURED so the diff-coverage gate (#382) sees real coverage for pages
-        // that carry inline logic (e.g. the New Lead page, PG-060). Pages that are
-        // genuinely thin shells contribute few lines.
+        // App page.tsx are thin route shells — their logic lives in tested
+        // *PageClient / *Content / *Form client components (e.g. NewLeadForm.tsx
+        // for the New Lead page). Those client components ARE measured.
+        'apps/web/src/app/**/page.tsx',
         'apps/web/next.config.js',
         'apps/web/vitest.config.ts',
         'apps/web/vitest.setup.ts',
