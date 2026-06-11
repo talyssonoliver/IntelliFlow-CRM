@@ -153,7 +153,7 @@ function parseCsvArtifacts(artifactsField: string): string[] {
       .trim();
 
     // Remove backticks and surrounding quotes
-    path = path.replaceAll(/^[`"']+|[`"']+$/g, '');
+    path = path.replace(/^[`"']{1,10}/, '').replace(/[`"']{1,10}$/, '');
 
     // Skip non-path entries (plain text descriptions, etc.)
     if (!path || (path.includes(' ') && !path.includes('/'))) continue;
@@ -373,36 +373,34 @@ function runAudit(): AuditSummary {
 // Display Helpers
 // ---------------------------------------------------------------------------
 
-function printResult(result: ReconciliationResult): void {
-  console.log('');
-  console.log('='.repeat(70));
-  console.log(`  ARTIFACT RECONCILIATION — Task: ${result.taskId}`);
-  console.log('='.repeat(70));
-  console.log('');
-  console.log(`  CSV Artifacts:  ${result.csvArtifacts.length}`);
-  console.log(`  Plan Artifacts: ${result.planArtifacts.length}`);
-  console.log(`  Plan File:      ${result.planPath ?? '(not found)'}`);
-  console.log('');
+function artifactSource(s: ArtifactStatus): string {
+  if (s.inCsv && s.inPlan) return 'Both';
+  if (s.inCsv) return 'CSV';
+  return 'Plan';
+}
 
-  if (result.statuses.length === 0) {
-    console.log('  No artifacts found in either source.');
-    console.log('');
-    return;
-  }
+function diskLabel(s: ArtifactStatus): string {
+  if (s.path.includes('*')) return 'N/A';
+  if (s.onDisk) return 'YES';
+  return 'NO';
+}
 
-  // Full table
+function printArtifactTable(statuses: ArtifactStatus[]): void {
   console.log('  | Source | Path | On Disk | In Plan | In CSV |');
   console.log('  |--------|------|---------|---------|--------|');
-  for (const s of result.statuses) {
-    const source = s.inCsv && s.inPlan ? 'Both' : s.inCsv ? 'CSV' : 'Plan';
-    const disk = s.path.includes('*') ? 'N/A' : s.onDisk ? 'YES' : 'NO';
+  for (const s of statuses) {
+    const source = artifactSource(s);
+    const disk = diskLabel(s);
+    const inPlan = s.inPlan ? 'YES' : 'NO';
+    const inCsv = s.inCsv ? 'YES' : 'NO';
     console.log(
-      `  | ${source.padEnd(6)} | ${s.path} | ${disk.padEnd(7)} | ${(s.inPlan ? 'YES' : 'NO').padEnd(7)} | ${(s.inCsv ? 'YES' : 'NO').padEnd(6)} |`
+      `  | ${source.padEnd(6)} | ${s.path} | ${disk.padEnd(7)} | ${inPlan.padEnd(7)} | ${inCsv.padEnd(6)} |`
     );
   }
   console.log('');
+}
 
-  // Discrepancies
+function printDiscrepancies(result: ReconciliationResult): void {
   if (result.csvOnlyPaths.length > 0) {
     console.log('  CSV-only (in CSV but not in plan):');
     for (const p of result.csvOnlyPaths) {
@@ -426,6 +424,27 @@ function printResult(result: ReconciliationResult): void {
     }
     console.log('');
   }
+}
+
+function printResult(result: ReconciliationResult): void {
+  console.log('');
+  console.log('='.repeat(70));
+  console.log(`  ARTIFACT RECONCILIATION — Task: ${result.taskId}`);
+  console.log('='.repeat(70));
+  console.log('');
+  console.log(`  CSV Artifacts:  ${result.csvArtifacts.length}`);
+  console.log(`  Plan Artifacts: ${result.planArtifacts.length}`);
+  console.log(`  Plan File:      ${result.planPath ?? '(not found)'}`);
+  console.log('');
+
+  if (result.statuses.length === 0) {
+    console.log('  No artifacts found in either source.');
+    console.log('');
+    return;
+  }
+
+  printArtifactTable(result.statuses);
+  printDiscrepancies(result);
 
   if (result.fullyAligned.length > 0) {
     console.log(`  Fully aligned: ${result.fullyAligned.length} artifact(s)`);

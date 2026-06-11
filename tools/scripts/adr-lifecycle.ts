@@ -62,7 +62,7 @@ function parseADR(filePath: string): ADRMetadata | null {
     const lines = content.split('\n');
 
     // Extract title from first heading
-    const titleMatch = content.match(/^#\s+(.+)$/m);
+    const titleMatch = content.match(/^#[ \t]+([^\n]{1,200})$/m);
     const title = titleMatch ? titleMatch[1].trim() : 'Unknown';
 
     // Extract ID from filename or title

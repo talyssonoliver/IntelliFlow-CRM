@@ -269,13 +269,13 @@ const VALIDATION_PATTERNS: Array<{
   { pattern: /linting passing/i, tags: ['VALIDATE:pnpm lint'] },
 
   // Coverage gates
-  { pattern: /coverage[^,]*>?\s*9\d%/i, tags: ['GATE:coverage-90'] },
-  { pattern: /coverage[^,]*>?\s*8\d%/i, tags: ['GATE:coverage-80'] },
+  { pattern: /coverage[^,\s]*>?[ \t]*9\d%/i, tags: ['GATE:coverage-90'] },
+  { pattern: /coverage[^,\s]*>?[ \t]*8\d%/i, tags: ['GATE:coverage-80'] },
 
   // Performance gates
-  { pattern: /lighthouse[^,]*>?\s*9\d/i, tags: ['GATE:lighthouse-90'] },
-  { pattern: /response.*<?\s*\d+\s*ms/i, tags: ['GATE:response-time'] },
-  { pattern: /p9[59].*<?\s*\d+\s*ms/i, tags: ['GATE:p95-latency-check'] },
+  { pattern: /lighthouse[^,\s]*>?[ \t]*9\d/i, tags: ['GATE:lighthouse-90'] },
+  { pattern: /response[^<\n]{0,200}<?[ \t]*\d{1,6}[ \t]*ms/i, tags: ['GATE:response-time'] },
+  { pattern: /p9[59][^<\n]{0,200}<?[ \t]*\d{1,6}[ \t]*ms/i, tags: ['GATE:p95-latency-check'] },
   { pattern: /latency/i, tags: ['GATE:response-time'] },
 
   // Security gates
@@ -337,6 +337,65 @@ function stripPlainText(value: string, prefixes: string[]): string {
   return taggedParts.join(';');
 }
 
+function extractEnvTags(plainText: string, tags: string[]): void {
+  const envMatches = plainText.match(/\b([A-Z][A-Z0-9_]+)\b/g);
+  if (!envMatches) return;
+  for (const env of envMatches) {
+    if (env.includes('_') && env === env.toUpperCase()) {
+      const tag = `ENV:${env}`;
+      if (!tags.includes(tag)) tags.push(tag);
+    }
+  }
+}
+
+function extractFileTags(lowerPlainText: string, tags: string[]): void {
+  for (const [keyword, files] of Object.entries(KEYWORD_TO_FILES)) {
+    if (lowerPlainText.includes(keyword)) {
+      for (const file of files) {
+        const tag = `FILE:${file}`;
+        if (!tags.includes(tag)) tags.push(tag);
+      }
+    }
+  }
+}
+
+function extractEnvKeywordTags(lowerPlainText: string, tags: string[]): void {
+  for (const [keyword, envs] of Object.entries(KEYWORD_TO_ENV)) {
+    if (lowerPlainText.includes(keyword)) {
+      for (const env of envs) {
+        const tag = `ENV:${env}`;
+        if (!tags.includes(tag)) tags.push(tag);
+      }
+    }
+  }
+}
+
+function extractPolicyTags(lowerPlainText: string, tags: string[]): void {
+  for (const [keyword, policies] of Object.entries(KEYWORD_TO_POLICY)) {
+    if (lowerPlainText.includes(keyword)) {
+      for (const policy of policies) {
+        const tag = `POLICY:${policy}`;
+        if (!tags.includes(tag)) tags.push(tag);
+      }
+    }
+  }
+}
+
+function inferTagsFromTaskContext(task: Record<string, string>, tags: string[]): void {
+  const section = task['Section']?.toLowerCase() || '';
+  const desc = task['Description']?.toLowerCase() || '';
+
+  if (section.includes('ai') || desc.includes('ai')) {
+    if (!tags.includes('POLICY:ai-safety-review')) tags.push('POLICY:ai-safety-review');
+  }
+  if (section.includes('validation') || desc.includes('validat')) {
+    if (!tags.includes('POLICY:validation-standards')) tags.push('POLICY:validation-standards');
+  }
+  if (section.includes('foundation') || desc.includes('foundation')) {
+    if (!tags.includes('POLICY:foundation-baseline')) tags.push('POLICY:foundation-baseline');
+  }
+}
+
 function convertPrerequisites(prereqs: string, task: Record<string, string>): string {
   if (!prereqs || prereqs.trim() === '') return '';
 
@@ -368,63 +427,16 @@ function convertPrerequisites(prereqs: string, task: Record<string, string>): st
   const plainText = plainTextParts.join(' ');
   const lowerPlainText = plainText.toLowerCase();
 
-  // Extract ENV variables mentioned directly in plain text
-  const envMatches = plainText.match(/\b([A-Z][A-Z0-9_]+)\b/g);
-  if (envMatches) {
-    for (const env of envMatches) {
-      if (env.includes('_') && env === env.toUpperCase()) {
-        const tag = `ENV:${env}`;
-        if (!tags.includes(tag)) tags.push(tag);
-      }
-    }
-  }
-
-  // Match keywords to files (only from plain text)
-  for (const [keyword, files] of Object.entries(KEYWORD_TO_FILES)) {
-    if (lowerPlainText.includes(keyword)) {
-      for (const file of files) {
-        const tag = `FILE:${file}`;
-        if (!tags.includes(tag)) tags.push(tag);
-      }
-    }
-  }
-
-  // Match keywords to env vars (only from plain text)
-  for (const [keyword, envs] of Object.entries(KEYWORD_TO_ENV)) {
-    if (lowerPlainText.includes(keyword)) {
-      for (const env of envs) {
-        const tag = `ENV:${env}`;
-        if (!tags.includes(tag)) tags.push(tag);
-      }
-    }
-  }
-
-  // Match keywords to policies (only from plain text)
-  for (const [keyword, policies] of Object.entries(KEYWORD_TO_POLICY)) {
-    if (lowerPlainText.includes(keyword)) {
-      for (const policy of policies) {
-        const tag = `POLICY:${policy}`;
-        if (!tags.includes(tag)) tags.push(tag);
-      }
-    }
-  }
+  extractEnvTags(plainText, tags);
+  extractFileTags(lowerPlainText, tags);
+  extractEnvKeywordTags(lowerPlainText, tags);
+  extractPolicyTags(lowerPlainText, tags);
 
   // If plain text had no matches, infer from task context
-  const newTagsAdded =
-    tags.length > (existingTags ? existingTags.split(';').filter((t) => t).length : 0);
+  const existingTagCount = existingTags ? existingTags.split(';').filter((t) => t).length : 0;
+  const newTagsAdded = tags.length > existingTagCount;
   if (!newTagsAdded) {
-    const section = task['Section']?.toLowerCase() || '';
-    const desc = task['Description']?.toLowerCase() || '';
-
-    if (section.includes('ai') || desc.includes('ai')) {
-      if (!tags.includes('POLICY:ai-safety-review')) tags.push('POLICY:ai-safety-review');
-    }
-    if (section.includes('validation') || desc.includes('validat')) {
-      if (!tags.includes('POLICY:validation-standards')) tags.push('POLICY:validation-standards');
-    }
-    if (section.includes('foundation') || desc.includes('foundation')) {
-      if (!tags.includes('POLICY:foundation-baseline')) tags.push('POLICY:foundation-baseline');
-    }
+    inferTagsFromTaskContext(task, tags);
   }
 
   // Deduplicate and sort
@@ -515,11 +527,10 @@ function escapeField(value: string): string {
   if (!value) return '""';
   const needsQuotes = value.includes(',') || value.includes('"') || value.includes('\n');
   const escaped = value.replaceAll(/"/g, '""');
-  return needsQuotes || value.includes(';')
-    ? `"${escaped}"`
-    : escaped.includes(' ')
-      ? `"${escaped}"`
-      : escaped;
+  if (needsQuotes || value.includes(';') || escaped.includes(' ')) {
+    return `"${escaped}"`;
+  }
+  return escaped;
 }
 
 function stringifyCsv(tasks: Record<string, string>[], headers: string[]): string {

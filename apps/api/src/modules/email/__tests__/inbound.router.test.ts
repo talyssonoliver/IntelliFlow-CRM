@@ -467,3 +467,49 @@ describe('Inbound Email Router - Integration with AppRouter', () => {
     expect(appRouter._def.record.email).toBeDefined();
   });
 });
+
+describe('getRelatedMessages', () => {
+  it('strips HTML tags from body to produce a plain-text preview', async () => {
+    (prismaMock.emailRecord.findMany as any).mockResolvedValue([
+      {
+        id: 'email-abc',
+        subject: 'Hello',
+        body: '<p>Hello <strong>world</strong></p>',
+        createdAt: new Date('2025-01-01T00:00:00Z'),
+      },
+    ]);
+
+    const caller = inboundEmailRouter.createCaller(createTestContext());
+    const result = await caller.getRelatedMessages({ email: 'test@example.com' });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].preview).toBe('Hello world');
+    expect(result[0].subject).toBe('Hello');
+    expect(result[0].receivedAt).toBe('2025-01-01T00:00:00.000Z');
+  });
+
+  it('returns "(No preview)" when body is absent', async () => {
+    (prismaMock.emailRecord.findMany as any).mockResolvedValue([
+      {
+        id: 'email-xyz',
+        subject: 'Empty',
+        body: null,
+        createdAt: new Date('2025-01-02T00:00:00Z'),
+      },
+    ]);
+
+    const caller = inboundEmailRouter.createCaller(createTestContext());
+    const result = await caller.getRelatedMessages({ email: 'other@example.com' });
+
+    expect(result[0].preview).toBe('(No preview)');
+  });
+
+  it('returns empty array when no matching emails exist', async () => {
+    (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
+
+    const caller = inboundEmailRouter.createCaller(createTestContext());
+    const result = await caller.getRelatedMessages({ email: 'nobody@example.com' });
+
+    expect(result).toEqual([]);
+  });
+});

@@ -130,7 +130,7 @@ function extractImports(filePath: string): Array<{ path: string; line: number }>
 
   // Match various import patterns
   const importPatterns = [
-    /import\s+.*\s+from\s+['"]([^'"]+)['"]/g,
+    /import\s[^'"]*\bfrom\s+['"]([^'"]+)['"]/g,
     /import\s+['"]([^'"]+)['"]/g,
     /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
     /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g, // Dynamic imports

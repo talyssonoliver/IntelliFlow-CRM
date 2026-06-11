@@ -77,7 +77,7 @@ function getDirectImports(filePath: string): string[] {
   }
 
   const imports: string[] = [];
-  const importRegex = /import\s+(?:.*\s+from\s+)?['"]([^'"]+)['"]/g;
+  const importRegex = /import[ \t]+(?:[^'"]{0,200}\bfrom[ \t]+)?['"]([^'"]+)['"]/g;
   let match: RegExpExecArray | null;
   while ((match = importRegex.exec(content)) !== null) {
     imports.push(match[1]);

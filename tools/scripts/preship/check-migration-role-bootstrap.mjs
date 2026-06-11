@@ -144,16 +144,16 @@ export function extractReferencedRoles(sqlRaw) {
   let m;
 
   // GRANT ... TO <role-list>;   (capture is single-statement: [^;]+)
-  const grantRe = /\bGRANT\b[^;]*?\bTO\b\s+([^;]+);/gis;
+  const grantRe = /\bGRANT\b[^;]{0,500}\bTO\b[ \t]+([^;\n]{1,200});/gis;
   while ((m = grantRe.exec(sql)) !== null) addList(m[1], m.index);
 
   // REVOKE ... FROM <role-list>;
-  const revokeRe = /\bREVOKE\b[^;]*?\bFROM\b\s+([^;]+);/gis;
+  const revokeRe = /\bREVOKE\b[^;]{0,500}\bFROM\b[ \t]+([^;\n]{1,200});/gis;
   while ((m = revokeRe.exec(sql)) !== null) addList(m[1], m.index);
 
   // ALTER DEFAULT PRIVILEGES FOR ROLE <role[, role]>
   const forRoleRe =
-    /\bFOR\s+ROLE\s+([a-z_"'`][a-z0-9_$"'`,\s]*?)(?:\s+IN\b|\s+GRANT\b|\s+REVOKE\b|\n|;)/gi;
+    /\bFOR[ \t]+ROLE[ \t]+([a-z_"'`][a-z0-9_$"'`, \t]{0,100}?)(?:[ \t]+IN\b|[ \t]+GRANT\b|[ \t]+REVOKE\b|\n|;)/gi;
   while ((m = forRoleRe.exec(sql)) !== null) addList(m[1], m.index);
 
   // ALTER ROLE <role>   (not "ALTER DEFAULT PRIVILEGES FOR ROLE", handled above)

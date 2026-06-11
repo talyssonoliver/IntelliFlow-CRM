@@ -134,7 +134,7 @@ export class MockNotificationServiceAdapter implements NotificationServicePort {
     // before the three-`[^\s@]+` regex defuses polynomial-redos on
     // input missing `@`; bounded input is then linear.
     if (email.length > 320) return false;
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    return /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{1,63}$/.test(email);
   }
 
   validatePhoneNumber(phoneNumber: string): boolean {

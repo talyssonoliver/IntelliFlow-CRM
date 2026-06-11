@@ -71,10 +71,10 @@ function hasArtifactReference(dod: string, artifacts: string): boolean {
  */
 function hasMeasurableCriteria(dod: string): boolean {
   const measurablePatterns = [
-    /\d+%/, // percentages
+    /\d{1,10}%/, // percentages
     /<\d+/, // less than
     />\d+/, // greater than
-    /\d+\s*(ms|s|min|hour|day)/i, // time units
+    /\d{1,10}[ \t]*(ms|s|min|hour|day)/i, // time units
     /100%/, // full coverage
     /zero|0\s+(error|issue|fail|bug)/i, // zero defects
     /all\s+\w+\s+(pass|complete|covered|tested)/i, // all X pass
@@ -231,7 +231,7 @@ function extractMeasurableCriteria(kpis: string): string[] {
   const criteria: string[] = [];
 
   // Extract percentages
-  const percentages = kpis.match(/\d+%/g);
+  const percentages = kpis.match(/\d{1,10}%/g);
   if (percentages) criteria.push(...percentages.map((p) => `>=${p}`));
 
   // Extract time limits
@@ -247,6 +247,61 @@ function extractMeasurableCriteria(kpis: string): string[] {
 }
 
 /**
+ * Append artifact reference to DOD if missing
+ */
+function appendArtifactRef(dod: string, artifacts: string): string {
+  const artifactNames = extractArtifactNames(artifacts);
+  if (artifactNames.length === 0 || hasArtifactReference(dod, artifacts)) {
+    return dod;
+  }
+  return dod + `; artifacts: ${artifactNames.join(', ')}`;
+}
+
+/**
+ * Append measurable targets to DOD if missing
+ */
+function appendMeasurableTargets(dod: string, kpis: string): string {
+  if (hasMeasurableCriteria(dod) || !kpis) {
+    return dod;
+  }
+  const criteria = extractMeasurableCriteria(kpis);
+  if (criteria.length === 0) {
+    return dod;
+  }
+  return dod + `; targets: ${criteria.join(', ')}`;
+}
+
+/**
+ * Append VALIDATE commands to DOD if missing
+ */
+function appendValidateCmds(dod: string, validation: string): string {
+  if (!validation.includes('VALIDATE:') || dod.toLowerCase().includes('test')) {
+    return dod;
+  }
+  const validateCmds = validation.match(/VALIDATE:([^;]+)/g);
+  if (!validateCmds || validateCmds.length === 0) {
+    return dod;
+  }
+  const cmds = validateCmds.map((v) => v.replaceAll('VALIDATE:', '').trim()).join(', ');
+  return dod + `; verified by: ${cmds}`;
+}
+
+/**
+ * Append GATE names to DOD if missing
+ */
+function appendGateNames(dod: string, validation: string): string {
+  if (!validation.includes('GATE:') || dod.toLowerCase().includes('gate')) {
+    return dod;
+  }
+  const gates = validation.match(/GATE:([^;]+)/g);
+  if (!gates || gates.length === 0) {
+    return dod;
+  }
+  const gateNames = gates.map((g) => g.replaceAll('GATE:', '').trim()).join(', ');
+  return dod + `; gates: ${gateNames}`;
+}
+
+/**
  * Enhance DOD to be more verifiable
  */
 function enhanceDoD(
@@ -255,43 +310,11 @@ function enhanceDoD(
   artifacts: string,
   validation: string
 ): string {
-  const parts: string[] = [];
-
-  // Start with original DOD (cleaned up)
   let enhancedDoD = originalDoD.trim();
-
-  // If DOD doesn't mention artifacts, add reference
-  const artifactNames = extractArtifactNames(artifacts);
-  if (artifactNames.length > 0 && !hasArtifactReference(originalDoD, artifacts)) {
-    const artifactRef = artifactNames.join(', ');
-    enhancedDoD += `; artifacts: ${artifactRef}`;
-  }
-
-  // If DOD doesn't have measurable criteria, extract from KPIs
-  if (!hasMeasurableCriteria(originalDoD) && kpis) {
-    const criteria = extractMeasurableCriteria(kpis);
-    if (criteria.length > 0) {
-      enhancedDoD += `; targets: ${criteria.join(', ')}`;
-    }
-  }
-
-  // Add validation reference if missing
-  if (validation.includes('VALIDATE:') && !originalDoD.toLowerCase().includes('test')) {
-    const validateCmds = validation.match(/VALIDATE:([^;]+)/g);
-    if (validateCmds && validateCmds.length > 0) {
-      const cmds = validateCmds.map((v) => v.replaceAll('VALIDATE:', '').trim()).join(', ');
-      enhancedDoD += `; verified by: ${cmds}`;
-    }
-  }
-
-  if (validation.includes('GATE:') && !originalDoD.toLowerCase().includes('gate')) {
-    const gates = validation.match(/GATE:([^;]+)/g);
-    if (gates && gates.length > 0) {
-      const gateNames = gates.map((g) => g.replaceAll('GATE:', '').trim()).join(', ');
-      enhancedDoD += `; gates: ${gateNames}`;
-    }
-  }
-
+  enhancedDoD = appendArtifactRef(enhancedDoD, artifacts);
+  enhancedDoD = appendMeasurableTargets(enhancedDoD, kpis);
+  enhancedDoD = appendValidateCmds(enhancedDoD, validation);
+  enhancedDoD = appendGateNames(enhancedDoD, validation);
   return enhancedDoD;
 }
 
@@ -372,23 +395,41 @@ function stringifyCsv(tasks: Record<string, string>[], headers: string[]): strin
 // MAIN
 // ============================================================================
 
-async function main() {
-  console.log('=== Fix Definition of Done to be Verifiable ===\n');
+interface TaskIssue {
+  taskId: string;
+  issue: string;
+}
 
-  // Read CSV
-  console.log('Reading CSV...');
-  const csvContent = readFileSync(CSV_PATH, 'utf-8');
-  const tasks = parse(csvContent, { columns: true, bom: true, relax_quotes: true }) as Record<
-    string,
-    string
-  >[];
-  console.log(`Found ${tasks.length} tasks\n`);
+interface ProcessResult {
+  dodEnhanced: number;
+  validationEnhanced: number;
+  issues: TaskIssue[];
+}
 
-  // Analyze and fix
+/**
+ * Collect issues for a completed task's verification
+ */
+function collectCompletedTaskIssues(taskId: string, verification: DoDVerification): TaskIssue[] {
+  const found: TaskIssue[] = [];
+  if (!verification.hasArtifactRef) {
+    found.push({ taskId, issue: 'Completed but DOD has no artifact reference' });
+  }
+  if (!verification.hasMeasurableCriteria && !verification.hasTestableAssertion) {
+    found.push({ taskId, issue: 'Completed but DOD has no measurable/testable criteria' });
+  }
+  if (!verification.matchesValidation) {
+    found.push({ taskId, issue: 'Validation method does not match DOD requirements' });
+  }
+  return found;
+}
+
+/**
+ * Process all tasks: verify, enhance DOD, enhance validation
+ */
+function processTasks(tasks: Record<string, string>[]): ProcessResult {
   let dodEnhanced = 0;
   let validationEnhanced = 0;
-
-  const issues: { taskId: string; issue: string }[] = [];
+  const issues: TaskIssue[] = [];
 
   for (const task of tasks) {
     const taskId = task['Task ID'];
@@ -398,30 +439,18 @@ async function main() {
     const artifacts = task['Artifacts To Track'] || '';
     const validation = task['Validation Method'] || '';
 
-    // Verify current DOD
     const verification = verifyDoD(dod, kpis, artifacts, validation);
 
-    // Track issues for completed tasks
     if (status.toLowerCase() === 'completed') {
-      if (!verification.hasArtifactRef) {
-        issues.push({ taskId, issue: 'Completed but DOD has no artifact reference' });
-      }
-      if (!verification.hasMeasurableCriteria && !verification.hasTestableAssertion) {
-        issues.push({ taskId, issue: 'Completed but DOD has no measurable/testable criteria' });
-      }
-      if (!verification.matchesValidation) {
-        issues.push({ taskId, issue: 'Validation method does not match DOD requirements' });
-      }
+      issues.push(...collectCompletedTaskIssues(taskId, verification));
     }
 
-    // Enhance DOD
     const enhancedDoD = enhanceDoD(dod, kpis, artifacts, validation);
     if (enhancedDoD !== dod) {
       task['Definition of Done'] = enhancedDoD;
       dodEnhanced++;
     }
 
-    // Enhance Validation Method
     const enhancedValidation = enhanceValidation(dod, kpis, validation);
     if (enhancedValidation !== validation) {
       task['Validation Method'] = enhancedValidation;
@@ -429,45 +458,68 @@ async function main() {
     }
   }
 
-  const issuesFound = issues.length;
+  return { dodEnhanced, validationEnhanced, issues };
+}
 
-  console.log(`DOD enhanced: ${dodEnhanced}`);
-  console.log(`Validation enhanced: ${validationEnhanced}`);
-  console.log(`Issues found in completed tasks: ${issuesFound}\n`);
+/**
+ * Print issues found in completed tasks
+ */
+function printIssues(issues: TaskIssue[]): void {
+  if (issues.length === 0) return;
 
-  // Write back
-  const headers = Object.keys(tasks[0]);
-  const output = stringifyCsv(tasks, headers);
-  writeFileSync(CSV_PATH, output, 'utf-8');
-  console.log(`Written to: ${CSV_PATH}\n`);
-
-  // Show issues
-  if (issues.length > 0) {
-    console.log('=== Issues in Completed Tasks ===\n');
-    for (const issue of issues.slice(0, 20)) {
-      console.log(`  ${issue.taskId}: ${issue.issue}`);
-    }
-    if (issues.length > 20) {
-      console.log(`  ... and ${issues.length - 20} more`);
-    }
-    console.log('');
+  console.log('=== Issues in Completed Tasks ===\n');
+  for (const issue of issues.slice(0, 20)) {
+    console.log(`  ${issue.taskId}: ${issue.issue}`);
   }
+  if (issues.length > 20) {
+    console.log(`  ... and ${issues.length - 20} more`);
+  }
+  console.log('');
+}
 
-  // Show samples
+/**
+ * Print sample enhanced tasks
+ */
+function printSamples(tasks: Record<string, string>[]): void {
   console.log('=== Sample Enhanced Tasks ===\n');
   const sampleIds = ['EXC-INIT-001', 'ENV-004-AI', 'IFC-003', 'IFC-044', 'IFC-072'];
 
   for (const id of sampleIds) {
     const task = tasks.find((t) => t['Task ID'] === id);
-    if (task) {
-      console.log(`${'='.repeat(70)}`);
-      console.log(`Task: ${id} (${task['Status']})`);
-      console.log(`\nDOD: ${task['Definition of Done']}`);
-      console.log(`\nKPIs: ${task['KPIs']}`);
-      console.log(`\nValidation: ${task['Validation Method']}`);
-      console.log('');
-    }
+    if (!task) continue;
+    console.log('='.repeat(70));
+    console.log(`Task: ${id} (${task['Status']})`);
+    console.log(`\nDOD: ${task['Definition of Done']}`);
+    console.log(`\nKPIs: ${task['KPIs']}`);
+    console.log(`\nValidation: ${task['Validation Method']}`);
+    console.log('');
   }
+}
+
+async function main() {
+  console.log('=== Fix Definition of Done to be Verifiable ===\n');
+
+  console.log('Reading CSV...');
+  const csvContent = readFileSync(CSV_PATH, 'utf-8');
+  const tasks = parse(csvContent, { columns: true, bom: true, relax_quotes: true }) as Record<
+    string,
+    string
+  >[];
+  console.log(`Found ${tasks.length} tasks\n`);
+
+  const { dodEnhanced, validationEnhanced, issues } = processTasks(tasks);
+
+  console.log(`DOD enhanced: ${dodEnhanced}`);
+  console.log(`Validation enhanced: ${validationEnhanced}`);
+  console.log(`Issues found in completed tasks: ${issues.length}\n`);
+
+  const headers = Object.keys(tasks[0]);
+  const output = stringifyCsv(tasks, headers);
+  writeFileSync(CSV_PATH, output, 'utf-8');
+  console.log(`Written to: ${CSV_PATH}\n`);
+
+  printIssues(issues);
+  printSamples(tasks);
 }
 
 main().catch(console.error);

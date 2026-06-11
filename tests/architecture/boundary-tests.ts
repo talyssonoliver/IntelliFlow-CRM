@@ -49,7 +49,7 @@ function hasImportsFrom(filePath: string, forbiddenPatterns: RegExp[]): boolean 
   const content = fs.readFileSync(filePath, 'utf-8');
 
   // Match import statements
-  const importRegex = /import\s+.*\s+from\s+['"]([^'"]+)['"]/g;
+  const importRegex = /import\s[^'"]*\bfrom\s+['"]([^'"]+)['"]/g;
   const matches = content.matchAll(importRegex);
 
   for (const match of matches) {

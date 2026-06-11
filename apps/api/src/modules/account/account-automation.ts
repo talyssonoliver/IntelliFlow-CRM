@@ -115,8 +115,10 @@ export function normalizeWebsite(
   const slashIdx = noWww.indexOf('/');
   const host = slashIdx === -1 ? noWww : noWww.slice(0, slashIdx);
   const path = slashIdx === -1 ? '' : noWww.slice(slashIdx);
-  // Drop a single trailing slash on "host only"
-  const cleanedPath = path === '/' ? '' : path.replace(/\/+$/, '');
+  // Drop trailing slashes. Avoid /\/+$/ (S5852: polynomial backtracking on long
+  // slash sequences). Use a while-loop which is O(n) and clear in intent.
+  let cleanedPath = path === '/' ? '' : path;
+  while (cleanedPath.endsWith('/')) cleanedPath = cleanedPath.slice(0, -1);
   return host.toLowerCase() + cleanedPath;
 }
 

@@ -29,7 +29,7 @@ import { color, isMain } from './util.mjs';
 
 // Keep IN SYNC with .github/workflows/pr-checks.yml "Require task ID or hotfix
 // waiver in PR body". Case-insensitive, mirroring grep -i.
-export const PR_BODY_TOKEN_RE = /([A-Z]{2,}(-[A-Z0-9]+)*-[0-9]+|#[0-9]+|\[hotfix\]|hotfix-waiver)/i;
+export const PR_BODY_TOKEN_RE = /([A-Z]{2,10}(?:-[A-Z0-9]{1,20}){0,5}-[0-9]{1,10}|#[0-9]{1,10}|\[hotfix\]|hotfix-waiver)/i;
 
 /**
  * @param {string} body

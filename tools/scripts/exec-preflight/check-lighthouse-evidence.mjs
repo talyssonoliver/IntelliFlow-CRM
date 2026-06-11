@@ -91,7 +91,7 @@ function isHumanApprover(token) {
   const low = s.toLowerCase();
   if (REJECTED_APPROVERS.has(low)) return false;
   // Accept emails: x@y.z
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return true;
+  if (/^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{1,63}$/.test(s)) return true;
   // Accept @handle with at least 3 chars
   if (/^@[A-Za-z0-9][A-Za-z0-9_.-]{2,}$/.test(s)) return true;
   // Accept plain name with at least 3 chars and a letter, excluding blocked list
@@ -254,7 +254,7 @@ function main() {
         continue;
       }
 
-      const threshold = /\b([0-9]*\.?[0-9]+)\b/.exec(String(k.target ?? ''));
+      const threshold = /\b([0-9]{0,10}\.?[0-9]{1,10})\b/.exec(String(k.target ?? ''));
       const thr = threshold ? Math.min(1, parseFloat(threshold[1]) / (parseFloat(threshold[1]) > 1 ? 100 : 1)) : 0.9;
       const scoreCheck = reportScoresMeetThresholds(best, thr);
       if (!scoreCheck.passed) {

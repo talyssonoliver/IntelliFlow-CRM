@@ -43,10 +43,10 @@ function hasArtifactReference(dod: string): boolean {
 
 function hasMeasurableCriteria(dod: string): boolean {
   const measurablePatterns = [
-    /\d+%/, // percentages
+    /\d{1,10}%/, // percentages
     /<\d+/, // less than
     />\d+/, // greater than
-    /\d+\s*(ms|s|min|hour|day)/i, // time units
+    /\d{1,10}[ \t]*(ms|s|min|hour|day)/i, // time units
     /100%/, // full coverage
     /zero|0\s+(error|issue|fail|bug)/i, // zero defects
     /all\s+\w+\s+(pass|complete|covered|tested)/i, // all X pass

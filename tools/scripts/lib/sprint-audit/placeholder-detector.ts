@@ -42,7 +42,7 @@ export const PLACEHOLDER_PATTERNS: Record<PlaceholderPattern, RegExp> = {
 
   // Empty or placeholder implementations
   EMPTY_FUNCTION:
-    /(?:function\s+\w+|\w+\s*[:=]\s*(?:async\s+)?function|\w+\s*[:=]\s*(?:async\s+)?\([^)]*\)\s*=>)\s*\{\s*\}/g,
+    /(?:function[ \t]+\w{1,100}|\w{1,100}[ \t]*[:=][ \t]*(?:async[ \t]+)?(?:function|\([^)]{0,200}\)[ \t]*=>))[ \t]*\{[ \t]*\}/g,
   THROW_NOT_IMPLEMENTED:
     /throw\s+(?:new\s+)?(?:Error|NotImplementedError)\s*\(\s*['"`](?:Not implemented|TODO|FIXME|STUB)/gi,
 
@@ -69,14 +69,14 @@ export const PLACEHOLDER_PATTERNS: Record<PlaceholderPattern, RegExp> = {
 
   // Null fallback returns (IFC-020, IFC-155)
   NULL_FALLBACK:
-    /\/\/\s*For now,?\s*return\s*null\s*to\s*fallback|return\s*null\s*;?\s*\/\/\s*(placeholder|TODO|fallback)/gi,
+    /\/\/[ \t]*For now,?[ \t]*return[ \t]*null[ \t]*to[ \t]*fallback|return[ \t]*null[ \t]*(?:;[ \t]*)?\/\/[ \t]*(placeholder|TODO|fallback)/gi,
 
   // Hardcoded AI prediction values (IFC-095)
   HARDCODED_PREDICTION:
-    /\/\/\s*TODO:\s*Implement\s+with\s+real\s+.*chain|return\s*\{\s*(confidence|score|risk|churnProbability):\s*\d+\.?\d*\s*,/gi,
+    /\/\/[ \t]*TODO:[ \t]*Implement[ \t]+with[ \t]+real[ \t]+[^\n]{0,80}chain|return[ \t]*\{[ \t]*(confidence|score|risk|churnProbability):[ \t]*\d{1,10}\.?\d{0,10}[ \t]*,/gi,
 
   // Deferred audit logging (IFC-125)
-  DEFERRED_AUDIT: /\/\/\s*TODO:?\s*.*audit\s*log/gi,
+  DEFERRED_AUDIT: /\/\/[ \t]*TODO:?[ \t]*[^\n]{0,80}audit[ \t]*log/gi,
 
   // Placeholder demonstration comments (IFC-128)
   DEMONSTRATION_PLACEHOLDER: /\/\/\s*This\s+is\s+a\s+placeholder\s+for\s+demonstration/gi,
@@ -152,6 +152,387 @@ export async function discoverFiles(
 }
 
 // =============================================================================
+// Per-line filter context
+// =============================================================================
+
+interface LineFilterContext {
+  line: string;
+  lineIndex: number;
+  lines: string[];
+  relativePath: string;
+  isTestFile: boolean;
+  isVitestConfig: boolean;
+}
+
+// =============================================================================
+// Per-pattern skip helpers
+// =============================================================================
+
+/** Returns true if the SKIP_TEST / PENDING_TEST / EMPTY_TEST finding should be suppressed. */
+function shouldSkipTestPattern(patternName: string, isTestFile: boolean): boolean {
+  return isTestFile && ['SKIP_TEST', 'PENDING_TEST', 'EMPTY_TEST'].includes(patternName);
+}
+
+/** Returns true if STUB in a vitest config should be suppressed. */
+function shouldSkipStubInVitestConfig(patternName: string, isVitestConfig: boolean): boolean {
+  return patternName === 'STUB' && isVitestConfig;
+}
+
+/** Returns true if the PLACEHOLDER match is an HTML/JSX attribute value. */
+function isInsidePlaceholderAttributeValue(line: string, matchIndex: number): boolean {
+  return /\bplaceholder\s*=\s*(['"`{])/.test(line.substring(0, matchIndex + 'PLACEHOLDER'.length));
+}
+
+/** Returns true if the PLACEHOLDER match is inside a test/describe description string. */
+function isPlaceholderInTestDescription(line: string, matchIndex: number): boolean {
+  const isTestDescription =
+    /^[ \t]*(?:it|test|describe)[ \t]*(?:\.(?:each|skip|only|todo)[ \t]*)?\(/.test(line);
+  if (!isTestDescription) return false;
+
+  const firstQuoteMatch = /\(\s*(['"`])/.exec(line);
+  if (!firstQuoteMatch) return false;
+
+  const quoteChar = firstQuoteMatch[1];
+  const quoteStart = firstQuoteMatch.index + firstQuoteMatch[0].length - 1;
+  let quoteEnd = line.indexOf(quoteChar, quoteStart + 1);
+  if (quoteEnd === -1) quoteEnd = line.length;
+  return matchIndex >= quoteStart && matchIndex <= quoteEnd;
+}
+
+/** Returns true if the PLACEHOLDER match is a Tailwind CSS utility class. */
+function isPlaceholderTailwindClass(line: string, matchIndex: number): boolean {
+  return (
+    /\bplaceholder[-:]/.test(line.substring(Math.max(0, matchIndex - 1))) &&
+    /(?:className|class)\s*[={]/.test(line)
+  );
+}
+
+/** Returns true if the PLACEHOLDER match is a CSS-in-JS pseudo-element. */
+function isPlaceholderCssInJsPseudo(line: string): boolean {
+  return /['"]::placeholder['"]/.test(line);
+}
+
+/** Returns true if the PLACEHOLDER match is a React Query placeholderData option. */
+function isReactQueryPlaceholderData(line: string): boolean {
+  return /\bplaceholderData\s*:/.test(line);
+}
+
+/** Returns true if the PLACEHOLDER match is a CSS color-named placeholder class. */
+function isPlaceholderCssColorClass(line: string): boolean {
+  return /\bplaceholder(?::text-|[-](?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|white|black|inherit|current|transparent)\b)/.test(
+    line
+  );
+}
+
+/** Returns true if the PLACEHOLDER match is an HTML prop value string. */
+function isPlaceholderHtmlPropValue(line: string): boolean {
+  return (
+    /^\s*placeholder\s*:\s*['"`]/.test(line) ||
+    /\bplaceholder\s*=\s*['"`][^'"` ]{0,80}['"`]/.test(line)
+  );
+}
+
+/** Returns true if the PLACEHOLDER match is a camelCase/compound identifier. */
+function isPlaceholderAsIdentifier(line: string): boolean {
+  return (
+    /\bplaceholder[A-Z]\w*\b/.test(line) ||
+    /\b\w+[Pp]laceholder\b/.test(line) ||
+    /['"]placeholder-?\w*-?zone['"]/.test(line) ||
+    /\b(?:const|let|var)\s+placeholder\b/.test(line)
+  );
+}
+
+/** Returns true if the PLACEHOLDER match is in a tooling/scripts directory. */
+function isPlaceholderInTooling(relativePath: string): boolean {
+  return /(?:tools?|scripts?|lint)[/\\]/.test(relativePath);
+}
+
+/** Returns true if the PLACEHOLDER match is a test label query. */
+function isPlaceholderInTestLabel(line: string): boolean {
+  return (
+    /(?:getByText|queryByText|findByText|toHaveTextContent|getByRole|getByLabelText)\s*\(/.test(
+      line
+    ) ||
+    /(?:expect|screen)\s*\(/.test(line) ||
+    /['"][^'"]{0,200}placeholder[^'"]{0,200}['"][ \t]*[,)]/.test(line)
+  );
+}
+
+/**
+ * Returns true if a PLACEHOLDER match should be suppressed.
+ * Applies all 12 exclusion guards in order.
+ */
+function shouldSkipPlaceholder(ctx: LineFilterContext, matchIndex: number): boolean {
+  const { line, relativePath, isTestFile, isVitestConfig } = ctx;
+
+  if (isInsidePlaceholderAttributeValue(line, matchIndex)) return true;
+  if (isPlaceholderInTestDescription(line, matchIndex)) return true;
+  if (isPlaceholderTailwindClass(line, matchIndex)) return true;
+  if (isPlaceholderCssInJsPseudo(line)) return true;
+  if (isReactQueryPlaceholderData(line)) return true;
+  if (isPlaceholderCssColorClass(line)) return true;
+  if (isPlaceholderHtmlPropValue(line)) return true;
+  if (isVitestConfig) return true;
+  if (isPlaceholderAsIdentifier(line)) return true;
+  if (isPlaceholderInTooling(relativePath)) return true;
+  if (isTestFile && isPlaceholderInTestLabel(line)) return true;
+  // Test-file comments using "placeholder" as English prose
+  if (isTestFile && /^\s*\/\//.test(line)) return true;
+
+  return false;
+}
+
+/** Returns true if an XXX match is a UUID format string. */
+function isXxxUuidFormatString(line: string, matchIndex: number): boolean {
+  const snippet = line.substring(Math.max(0, matchIndex - 8), matchIndex + 'XXX'.length + 8);
+  return /[0-9a-f]{0,16}xxx[0-9a-f]{0,16}-|[0-9a-f]{0,16}xxx[0-9a-f]{0,16}'/.test(snippet);
+}
+
+/** Returns true if an XXX match is inside a URL/OData token. */
+function isXxxUrlToken(line: string, matchIndex: number): boolean {
+  const snippet = line.substring(Math.max(0, matchIndex - 40), matchIndex + 'XXX'.length + 10);
+  return /https?:\/\/[^\s'"]*xxx|[?&$][a-z]+=xxx/.test(snippet);
+}
+
+/** Returns true if an XXX match is in a format comment. */
+function isXxxFormatComment(line: string): boolean {
+  return /\/\/[^\n]{0,200}\bformat\b[^\n]{0,200}xxx|\/\/[^\n]{0,200}uuid[^\n]{0,200}xxx/i.test(
+    line
+  );
+}
+
+/**
+ * Returns true if an XXX match should be suppressed.
+ */
+function shouldSkipXxx(line: string, matchIndex: number): boolean {
+  if (isXxxUuidFormatString(line, matchIndex)) return true;
+  if (isXxxUrlToken(line, matchIndex)) return true;
+  if (isXxxFormatComment(line)) return true;
+  return false;
+}
+
+/** Returns true if a SIMULATED_DATA match is a synthetic browser event. */
+function isSimulatedDataSyntheticEvent(line: string): boolean {
+  return (
+    /\bsynthetic\s*(?:Event|Change|Input|Click|Key|Mouse|Focus|Blur)/i.test(line) ||
+    /new\s+Event\b/.test(line) ||
+    /\bdispatchEvent\b/.test(line)
+  );
+}
+
+/** Returns true if a SIMULATED_DATA match has a documented dev/test/mock fallback comment. */
+function isSimulatedDataDocumentedFallback(line: string, prevLine: string): boolean {
+  const pattern =
+    /\/\/[^\n]{0,300}(?:dev|test|fallback|mock|stub|production|replace|NOTE|MS Graph|sentinel)/i;
+  return pattern.test(line) || pattern.test(prevLine);
+}
+
+/** Returns true if a SIMULATED_DATA match is a mock class name pattern. */
+function isSimulatedDataMockClassName(line: string): boolean {
+  return /\bclass\s+(?:Mock|Fake)\w+/.test(line) || /\b(?:Mock|Fake)\w+\s*[({]/.test(line);
+}
+
+/** Returns true if a SIMULATED_DATA match is in a string literal. */
+function isSimulatedDataStringLiteral(line: string): boolean {
+  return /['"`][^'"`]{0,300}(?:simulated|synthetic)[^'"`]{0,300}['"`]/i.test(line);
+}
+
+/**
+ * Returns true if a SIMULATED_DATA match should be suppressed.
+ */
+function shouldSkipSimulatedData(ctx: LineFilterContext): boolean {
+  const { line, lineIndex, lines, relativePath, isTestFile } = ctx;
+  const prevLine = lineIndex > 0 ? lines[lineIndex - 1] : '';
+
+  if (isTestFile) return true;
+  if (isSimulatedDataSyntheticEvent(line)) return true;
+  if (/(?:scripts?|tools?|benchmarks?)[/\\]/.test(relativePath)) return true;
+  if (/\.stories\.[jt]sx?$/.test(relativePath)) return true;
+  if (isSimulatedDataDocumentedFallback(line, prevLine)) return true;
+  if (isSimulatedDataMockClassName(line)) return true;
+  if (/^\s*(?:\/\/|\*|\/\*\*)/.test(line)) return true;
+  if (isSimulatedDataStringLiteral(line)) return true;
+  return false;
+}
+
+/** Returns true if a TODO match is a domain status config key. */
+function isTodoDomainStatusKey(line: string): boolean {
+  return /^\s*['"]?TODO['"]?\s*:\s*\{/.test(line) || /^\s*TODO\s*:\s*\{/.test(line);
+}
+
+/** Returns true if a TODO match is in a test skip description. */
+function isTodoInSkipDescription(line: string, nextLine: string): boolean {
+  const skipPattern = /\b(?:it|test|describe)\.skip\s*\(/;
+  return skipPattern.test(line) || skipPattern.test(nextLine);
+}
+
+/** Returns true if a TODO match is a flaky-test comment in a test file. */
+function isTodoFlakytestComment(line: string, isTestFile: boolean): boolean {
+  return (
+    isTestFile &&
+    /^\s*\/\//.test(line) &&
+    /\/\/\s*TODO:?\s*(?:Flaky|timing|intermittent|skip|re-?enable|investigate)/i.test(line)
+  );
+}
+
+/**
+ * Returns true if a TODO match should be suppressed.
+ */
+function shouldSkipTodo(ctx: LineFilterContext): boolean {
+  const { line, lineIndex, lines, isTestFile } = ctx;
+  const nextLine = lineIndex < lines.length - 1 ? lines[lineIndex + 1] : '';
+
+  if (isTodoDomainStatusKey(line)) return true;
+  if (isTodoInSkipDescription(line, nextLine)) return true;
+  if (isTodoFlakytestComment(line, isTestFile)) return true;
+  return false;
+}
+
+/**
+ * Returns true if a STUB match should be suppressed.
+ */
+function shouldSkipStub(ctx: LineFilterContext): boolean {
+  const { line, lineIndex, lines, isTestFile } = ctx;
+  const prevLine = lineIndex > 0 ? lines[lineIndex - 1] : '';
+
+  // vi.mock/jest.mock stubs in test files
+  if (isTestFile) {
+    const isViMockStub =
+      /\bvi\.mock\b/.test(line) ||
+      /\bjest\.mock\b/.test(line) ||
+      /\bvi\.fn\b/.test(line) ||
+      />\w+\s+stub</.test(line) ||
+      /['"`]\w+\s+stub['"`]/.test(line);
+    if (isViMockStub) return true;
+  }
+
+  // Documented DI fallback
+  const diPattern = /\/\/[^\n]{0,300}(?:DI|container|production|OutboxEventBus|wired|inject)/i;
+  if (diPattern.test(line) || diPattern.test(prevLine)) return true;
+
+  return false;
+}
+
+/** Returns true if an EMPTY_FUNCTION match is a null-coalescing defensive fallback. */
+function isEmptyFunctionNullCoalescing(line: string, prevLine: string): boolean {
+  return (
+    /\?\?\s*\(\s*\(\s*\)\s*=>\s*\{\s*\}\s*\)/.test(line) ||
+    /\?\?\s*\{\s*mutateAsync\s*:\s*async\s*\(\s*\)\s*=>\s*\{\s*\}\s*\}/.test(line) ||
+    /\?\?[ \t]*(?:\{[ \t]*)?$/.test(prevLine)
+  );
+}
+
+/** Returns true if an EMPTY_FUNCTION match is a menu separator no-op onClick. */
+function isEmptyFunctionMenuSeparator(line: string): boolean {
+  return /\bseparator\s*:\s*true\b/.test(line) && /onClick\s*:\s*\(\s*\)\s*=>\s*\{\s*\}/.test(line);
+}
+
+/** Returns true if an EMPTY_FUNCTION match is a fire-and-forget .catch. */
+function isEmptyFunctionFireAndForget(line: string): boolean {
+  return /\.catch\s*\(\s*(?:async\s+)?\(\s*\)\s*=>\s*\{\s*\}\s*\)/.test(line);
+}
+
+/** Returns true if an EMPTY_FUNCTION match is test mock boilerplate. */
+function isEmptyFunctionTestMockBoilerplate(line: string, isTestFile: boolean): boolean {
+  if (!isTestFile) return false;
+  return (
+    /\bclearDomainEvents\s*:\s*\(\s*\)\s*=>\s*\{\s*\}/.test(line) ||
+    /\bvi\.fn\s*\(\s*\)/.test(line) ||
+    /\bvi\.fn\s*\(\s*\)\s*\.mockImplementation\s*\(\s*\(\s*\)\s*=>\s*\{\s*\}\s*\)/.test(line) ||
+    /\(\s*\)\s*=>\s*<[A-Za-z]/.test(line)
+  );
+}
+
+/** Returns true if an EMPTY_FUNCTION match has a commented no-op/intentional annotation. */
+function isEmptyFunctionCommentedNoop(line: string, prevLine: string): boolean {
+  const noopPattern =
+    /\/\/\s*(?:No-op|no-op|Defensive fallback|read-only|Read-only|intentional|Intentional|Swallow|swallow|Silent fail|silent fail)/i;
+  return noopPattern.test(line) || noopPattern.test(prevLine);
+}
+
+/** Returns true if an EMPTY_FUNCTION match is a spy mock implementation in a test file. */
+function isEmptyFunctionSpyMock(line: string, isTestFile: boolean): boolean {
+  return (
+    isTestFile && /\.mockImplementation\s*\(\s*(?:async\s+)?\(\s*\)\s*=>\s*\{\s*\}\s*\)/.test(line)
+  );
+}
+
+/** Returns true if an EMPTY_FUNCTION match is a React event handler prop in a test. */
+function isEmptyFunctionTestEventHandler(line: string, isTestFile: boolean): boolean {
+  return (
+    isTestFile &&
+    /\bon[A-Z]\w{0,50}[ \t]*[:=][ \t]*(?:\{[ \t]*)?\([ \t]*\)[ \t]*=>[ \t]*\{[ \t]*\}[ \t]*\}?/.test(
+      line
+    )
+  );
+}
+
+/** Returns true if an EMPTY_FUNCTION match is a react-hook-form handleSubmit noop in a test. */
+function isEmptyFunctionFormHandleSubmit(line: string, isTestFile: boolean): boolean {
+  return isTestFile && /\bhandleSubmit\s*\(\s*\(\s*\)\s*=>\s*\{\s*\}\s*\)/.test(line);
+}
+
+/** Returns true if an EMPTY_FUNCTION match is a named noop variable. */
+function isEmptyFunctionNamedNoop(line: string): boolean {
+  return /\b(?:const|let|var)\s+no[_-]?[Oo]p\b/i.test(line);
+}
+
+/** Returns true if an EMPTY_FUNCTION match is in a storybook file. */
+function isEmptyFunctionInStorybook(relativePath: string): boolean {
+  return /\.stories\.[jt]sx?$/.test(relativePath);
+}
+
+/** Returns true if an EMPTY_FUNCTION match is an empty lifecycle hook delegated via comment. */
+function isEmptyFunctionEmptyLifecycle(line: string, isTestFile: boolean): boolean {
+  return (
+    isTestFile &&
+    /\b(?:beforeEach|afterEach|beforeAll|afterAll)\s*\(\s*(?:async\s+)?\(\s*\)\s*=>\s*\{/.test(line)
+  );
+}
+
+/**
+ * Returns true if an EMPTY_FUNCTION match should be suppressed.
+ */
+function shouldSkipEmptyFunction(ctx: LineFilterContext): boolean {
+  const { line, lineIndex, lines, relativePath, isTestFile } = ctx;
+  const prevLine = lineIndex > 0 ? lines[lineIndex - 1] : '';
+
+  if (isEmptyFunctionNullCoalescing(line, prevLine)) return true;
+  if (isEmptyFunctionMenuSeparator(line)) return true;
+  if (isEmptyFunctionFireAndForget(line)) return true;
+  if (isEmptyFunctionTestMockBoilerplate(line, isTestFile)) return true;
+  if (isEmptyFunctionCommentedNoop(line, prevLine)) return true;
+  if (isEmptyFunctionSpyMock(line, isTestFile)) return true;
+  if (isEmptyFunctionTestEventHandler(line, isTestFile)) return true;
+  if (isEmptyFunctionFormHandleSubmit(line, isTestFile)) return true;
+  if (isEmptyFunctionNamedNoop(line)) return true;
+  if (isEmptyFunctionInStorybook(relativePath)) return true;
+  if (isEmptyFunctionEmptyLifecycle(line, isTestFile)) return true;
+  return false;
+}
+
+/**
+ * Determines if a specific pattern match on a line should be skipped.
+ * This is the orchestrator that delegates to per-pattern helpers.
+ */
+function shouldSkipMatch(patternName: string, matchIndex: number, ctx: LineFilterContext): boolean {
+  const { line, isTestFile, isVitestConfig } = ctx;
+
+  if (shouldSkipTestPattern(patternName, isTestFile)) return true;
+  if (shouldSkipStubInVitestConfig(patternName, isVitestConfig)) return true;
+
+  if (patternName === 'PLACEHOLDER') return shouldSkipPlaceholder(ctx, matchIndex);
+  if (patternName === 'XXX') return shouldSkipXxx(line, matchIndex);
+  if (patternName === 'SIMULATED_DATA') return shouldSkipSimulatedData(ctx);
+  if (patternName === 'TODO') return shouldSkipTodo(ctx);
+  if (patternName === 'MOCK_RETURN') return isTestFile;
+  if (patternName === 'STUB') return shouldSkipStub(ctx);
+  if (patternName === 'EMPTY_FUNCTION') return shouldSkipEmptyFunction(ctx);
+
+  return false;
+}
+
+// =============================================================================
 // Placeholder Detection
 // =============================================================================
 
@@ -188,6 +569,15 @@ export async function scanFile(filePath: string, repoRoot: string): Promise<Plac
       );
       if (isDocumentedDebt) continue;
 
+      const ctx: LineFilterContext = {
+        line,
+        lineIndex,
+        lines,
+        relativePath,
+        isTestFile,
+        isVitestConfig,
+      };
+
       // Check each pattern
       for (const [patternName, regex] of Object.entries(PLACEHOLDER_PATTERNS)) {
         // Reset regex state for global patterns
@@ -195,514 +585,7 @@ export async function scanFile(filePath: string, repoRoot: string): Promise<Plac
 
         let match;
         while ((match = regex.exec(line)) !== null) {
-          // Skip certain patterns in test files
-          if (isTestFile && ['SKIP_TEST', 'PENDING_TEST', 'EMPTY_TEST'].includes(patternName)) {
-            continue;
-          }
-
-          // STUB in vitest config files: lines like "// Stub CSS-only imports that
-          // break in test env" and "// Stub temporal polyfill side-effect import"
-          // are intentional test-infrastructure configuration, not production stubs.
-          if (patternName === 'STUB' && isVitestConfig) {
-            continue;
-          }
-
-          // For PLACEHOLDER pattern: apply additional line-level exclusions to
-          // avoid false positives from legitimate UI / test code.
-          if (patternName === 'PLACEHOLDER') {
-            // 1. Skip HTML/JSX attribute values: the word "placeholder" that
-            //    appears as the *value* inside placeholder="..." or
-            //    placeholder={...}. These look like:
-            //      placeholder="Enter email"   → value contains "placeholder"
-            //      placeholder='Search...'     → value contains "placeholder"
-            //    The regex already excludes the attribute *name* via the
-            //    negative lookahead (?!\s*=). This guard covers the rarer case
-            //    where the string value itself spells out "placeholder".
-            //    We detect this by checking if the match is surrounded by
-            //    quote characters that are inside a placeholder="..." attribute.
-            const isInsideAttributeValue = /\bplaceholder\s*=\s*(['"`{])/.test(
-              line.substring(0, match.index + match[0].length)
-            );
-            if (isInsideAttributeValue) {
-              continue;
-            }
-
-            // 2. Skip test-description strings that merely mention the word
-            //    "placeholder" as human-readable text, e.g.:
-            //      it('renders SearchFilterBar with search placeholder text', ...)
-            //      describe('placeholder behavior', ...)
-            //    These are identified when the line begins a test/describe call
-            //    and the match sits inside the opening quoted string argument.
-            const isTestDescription =
-              /^\s*(?:it|test|describe)\s*(?:\.(?:each|skip|only|todo))?\s*\(/.test(line);
-            if (isTestDescription) {
-              // Find the start and end of the first string argument.
-              const firstQuoteMatch = /\(\s*(['"`])/.exec(line);
-              if (firstQuoteMatch) {
-                const quoteChar = firstQuoteMatch[1];
-                const quoteStart = firstQuoteMatch.index + firstQuoteMatch[0].length - 1;
-                // Find closing quote (simple scan — good enough for single-line titles)
-                let quoteEnd = line.indexOf(quoteChar, quoteStart + 1);
-                if (quoteEnd === -1) quoteEnd = line.length;
-                if (match.index >= quoteStart && match.index <= quoteEnd) {
-                  continue;
-                }
-              }
-            }
-
-            // 3. Skip Tailwind CSS utility classes used in className/class attributes.
-            //    Patterns like `placeholder-slate-400`, `placeholder:text-muted-foreground`,
-            //    `placeholder:text-slate-400`, `placeholder:text-slate-500` are valid
-            //    Tailwind classes, not placeholder code markers.
-            //    Detect: the match is preceded (on the same token) by a hyphen or colon
-            //    indicating it is part of a CSS utility class name, AND the line contains
-            //    a JSX/HTML class attribute.
-            const isTailwindClass =
-              /\bplaceholder[-:]/.test(line.substring(Math.max(0, match.index - 1))) &&
-              /(?:className|class)\s*[={]/.test(line);
-            if (isTailwindClass) {
-              continue;
-            }
-
-            // 4. Skip CSS-in-JS pseudo-element selectors: '::placeholder': { ... }
-            //    This is the Stripe Elements / CSS-in-JS pattern for styling the
-            //    native <input> placeholder pseudo-element. It is not a code placeholder.
-            const isCssInJsPseudo = /['"]::placeholder['"]/.test(line);
-            if (isCssInJsPseudo) {
-              continue;
-            }
-
-            // 5. Skip React Query / TanStack Query API: placeholderData property.
-            //    `placeholderData: ...` is a standard React Query option that provides
-            //    stale data while a query is loading — it is not a placeholder marker.
-            const isReactQueryOption = /\bplaceholderData\s*:/.test(line);
-            if (isReactQueryOption) {
-              continue;
-            }
-
-            // 6. CSS placeholder classes — Tailwind form-plugin and raw CSS utility
-            //    classes that style the browser's native <input> placeholder text.
-            //    Examples (in .tsx / .ts / .css files):
-            //      placeholder:text-muted-foreground
-            //      placeholder-slate-400
-            //      placeholder-gray-500
-            //      placeholder="Search..."   (HTML attribute value in JSX/TSX)
-            //    The `isTailwindClass` guard above (guard #3) already handles the case
-            //    where `placeholder[-:]` appears AND a `className`/`class` attribute is
-            //    on the same line.  This guard catches the remaining cases where the
-            //    line contains a standalone Tailwind placeholder utility OR an HTML
-            //    `placeholder=` attribute in a JSX/TSX/CSS file without a className.
-            //    guardName: css-placeholder-class
-            const isCssPlaceholderClass =
-              /\bplaceholder(?::text-|[-](?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|white|black|inherit|current|transparent)\b)/.test(
-                line
-              );
-            if (isCssPlaceholderClass) {
-              continue;
-            }
-
-            // 7. HTML placeholder prop values in stories and UI component files.
-            //    Lines like:
-            //      placeholder: 'Search...'
-            //      placeholder: 'Enter text'
-            //      placeholder="Search contacts"
-            //    appearing in .stories.tsx files or general component source files are
-            //    legitimate HTML input prop values, not code-quality markers.
-            //    guardName: html-placeholder-prop-value
-            const isHtmlPlaceholderPropValue =
-              /^\s*placeholder\s*:\s*['"`]/.test(line) ||
-              /\bplaceholder\s*=\s*['"`][^'"` ]{0,80}['"`]/.test(line);
-            if (isHtmlPlaceholderPropValue) {
-              continue;
-            }
-
-            // 8. vitest.config.ts exclusion comments that mention "placeholder" as
-            //    part of documentation about excluded test-file patterns.
-            //    guardName: vitest-config-placeholder-comment
-            if (isVitestConfig) {
-              continue;
-            }
-          }
-
-          // For XXX pattern: skip occurrences inside URL strings, OData delta tokens,
-          // and UUID format comments where "xxx" is a literal format placeholder in a
-          // string template, not a code-quality marker.
-          //   - $deltatoken=xxx  (Microsoft Graph OData continuation token in test URL)
-          //   - xxxxxxxx-xxxx-4xxx-...  (UUID v4 format template)
-          //   - // Format: xxxxxxxx-xxxx-...  (UUID format comment)
-          if (patternName === 'XXX') {
-            // UUID format string: a run of x characters adjacent to hyphens and digits
-            // as in 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.
-            const isUuidFormatString = /[0-9a-f]*xxx[0-9a-f]*-|[0-9a-f]*xxx[0-9a-f]*'/.test(
-              line.substring(Math.max(0, match.index - 8), match.index + match[0].length + 8)
-            );
-            if (isUuidFormatString) {
-              continue;
-            }
-
-            // URL / OData token: xxx appears inside a quoted URL string or query parameter
-            // e.g. 'https://...?$deltatoken=xxx' or similar token placeholders in URLs.
-            const isUrlToken = /https?:\/\/[^\s'"]*xxx|[?&$][a-z]+=xxx/.test(
-              line.substring(Math.max(0, match.index - 40), match.index + match[0].length + 10)
-            );
-            if (isUrlToken) {
-              continue;
-            }
-
-            // UUID format comment: lines like
-            //   // Format: xxxxxxxx-xxxx-4xxx-[89ab]xxx-xxxxxxxxxxxx
-            //   // UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-            const isFormatComment = /\/\/.*\bformat\b.*xxx|\/\/.*uuid.*xxx/i.test(line);
-            if (isFormatComment) {
-              continue;
-            }
-          }
-
-          // For SIMULATED_DATA pattern: suppress false positives from test
-          // fixtures, synthetic browser events, documented DI fallbacks,
-          // benchmark scripts, and storybook files.
-          if (patternName === 'SIMULATED_DATA') {
-            // 1. Test files: simulated/synthetic/mock data is expected
-            //    guardName: simulated-data-in-test
-            if (isTestFile) {
-              continue;
-            }
-
-            // 2. Synthetic browser events (React SyntheticEvent, etc.)
-            //    guardName: synthetic-event-construction
-            const isSyntheticEvent =
-              /\bsynthetic\s*(?:Event|Change|Input|Click|Key|Mouse|Focus|Blur)/i.test(line) ||
-              /new\s+Event\b/.test(line) ||
-              /\bdispatchEvent\b/.test(line);
-            if (isSyntheticEvent) {
-              continue;
-            }
-
-            // 3. Scripts and tools directories (benchmarks, linters, etc.)
-            //    guardName: simulated-in-tooling
-            if (/(?:scripts?|tools?|benchmarks?)[/\\]/.test(relativePath)) {
-              continue;
-            }
-
-            // 4. Storybook files
-            //    guardName: simulated-in-storybook
-            if (/\.stories\.[jt]sx?$/.test(relativePath)) {
-              continue;
-            }
-
-            // 5. Documented dev/test/mock fallbacks with intent comments
-            //    guardName: simulated-documented-fallback
-            const prevLineSim = lineIndex > 0 ? lines[lineIndex - 1] : '';
-            const isDocumentedFallback =
-              /\/\/.*(?:dev|test|fallback|mock|stub|production|replace|NOTE|MS Graph|sentinel)/i.test(
-                line
-              ) ||
-              /\/\/.*(?:dev|test|fallback|mock|stub|production|replace|NOTE|MS Graph|sentinel)/i.test(
-                prevLineSim
-              );
-            if (isDocumentedFallback) {
-              continue;
-            }
-
-            // 6. Class/variable names containing "Mock" or "Fake" (naming convention)
-            //    guardName: simulated-mock-class-name
-            const isMockClassName =
-              /\bclass\s+(?:Mock|Fake)\w+/.test(line) || /\b(?:Mock|Fake)\w+\s*[({]/.test(line);
-            if (isMockClassName) {
-              continue;
-            }
-
-            // 7. JSDoc / comment-only lines where "synthetic" or "simulated" is
-            //    English documentation, not a code marker.
-            //    e.g. `* real API; omit it to fall back to the synthetic dev-mode response.`
-            //    guardName: simulated-in-comment
-            const isCommentOnly = /^\s*(?:\/\/|\*|\/\*\*)/.test(line);
-            if (isCommentOnly) {
-              continue;
-            }
-
-            // 8. String literals inside Mock-prefixed classes (e.g. 'Mock.Simulated.Threat')
-            //    where the match is inside a quoted string, not structural code.
-            //    guardName: simulated-in-string-literal
-            const isStringLiteral = /['"`].*(?:simulated|synthetic).*['"`]/i.test(line);
-            if (isStringLiteral) {
-              continue;
-            }
-          }
-
-          // For TODO pattern: suppress domain status config keys and test skip
-          // description strings where "TODO" is content, not a code marker.
-          if (patternName === 'TODO') {
-            // 1. Domain status enum/config key: `TODO: { label: '...' }`
-            //    where TODO is a task-management status value, not a code TODO.
-            //    guardName: todo-domain-status-key
-            const isDomainStatusKey =
-              /^\s*['"]?TODO['"]?\s*:\s*\{/.test(line) || /^\s*TODO\s*:\s*\{/.test(line);
-            if (isDomainStatusKey) {
-              continue;
-            }
-
-            // 2. Test skip descriptions: `it.skip('TODO: implement ...')`
-            //    The TODO is in the test name string, not actionable code.
-            //    Also catches TODO comments on the line immediately before `it.skip(`.
-            //    guardName: todo-in-skip-description
-            const nextLine = lineIndex < lines.length - 1 ? lines[lineIndex + 1] : '';
-            const isSkipDescription =
-              /\b(?:it|test|describe)\.skip\s*\(/.test(line) ||
-              /\b(?:it|test|describe)\.skip\s*\(/.test(nextLine);
-            if (isSkipDescription) {
-              continue;
-            }
-
-            // 3. TODO in test-file comments about flaky/timing issues.
-            //    Test files often have `// TODO: Flaky test due to ...` which is
-            //    documented test debt, not a production code stub.
-            //    guardName: todo-in-test-comment
-            if (isTestFile && /^\s*\/\//.test(line)) {
-              const isTodoTestComment =
-                /\/\/\s*TODO:?\s*(?:Flaky|timing|intermittent|skip|re-?enable|investigate)/i.test(
-                  line
-                );
-              if (isTodoTestComment) {
-                continue;
-              }
-            }
-          }
-
-          // For MOCK_RETURN pattern: suppress standard test mock return values.
-          // Test files returning mock/fake/dummy data is expected behavior.
-          if (patternName === 'MOCK_RETURN') {
-            if (isTestFile) {
-              continue;
-            }
-          }
-
-          // For STUB pattern: suppress vi.mock() component stubs in test files
-          // and documented DI-pattern production code.
-          if (patternName === 'STUB') {
-            // 1. vi.mock() stubs in test files — matches direct vi.mock lines
-            //    AND mock factory return values (JSX component stubs with "stub"
-            //    in the display text, e.g. `<div>PaymentMethods stub</div>`).
-            //    guardName: vi-mock-stub
-            if (isTestFile) {
-              const isViMockStub =
-                /\bvi\.mock\b/.test(line) ||
-                /\bjest\.mock\b/.test(line) ||
-                /\bvi\.fn\b/.test(line) ||
-                />\w+\s+stub</.test(line) ||
-                /['"`]\w+\s+stub['"`]/.test(line);
-              if (isViMockStub) {
-                continue;
-              }
-            }
-
-            // 2. Documented DI fallback: "stub" in a comment about production wiring
-            //    guardName: stub-documented-di
-            const prevLineStub = lineIndex > 0 ? lines[lineIndex - 1] : '';
-            const isDocumentedDI =
-              /\/\/.*(?:DI|container|production|OutboxEventBus|wired|inject)/i.test(line) ||
-              /\/\/.*(?:DI|container|production|OutboxEventBus|wired|inject)/i.test(prevLineStub);
-            if (isDocumentedDI) {
-              continue;
-            }
-          }
-
-          // For PLACEHOLDER pattern: additional guards beyond the existing 8.
-          if (patternName === 'PLACEHOLDER') {
-            // 9. Test variable/class names containing "placeholder" as identifier.
-            //    e.g. `const placeholderItems = [...]`, `placeholderZone` CSS class,
-            //    or standalone `const placeholder = querySelector(...)`.
-            //    guardName: placeholder-as-identifier
-            const isPlaceholderIdentifier =
-              /\bplaceholder[A-Z]\w*\b/.test(line) ||
-              /\b\w+[Pp]laceholder\b/.test(line) ||
-              /['"]placeholder-?\w*-?zone['"]/.test(line) ||
-              /\b(?:const|let|var)\s+placeholder\b/.test(line);
-            if (isPlaceholderIdentifier) {
-              continue;
-            }
-
-            // 10. Lint/tool scripts where "placeholder" is algorithm/regex content.
-            //     guardName: placeholder-in-tooling
-            if (/(?:tools?|scripts?|lint)[/\\]/.test(relativePath)) {
-              continue;
-            }
-
-            // 11. UI test label text mentioning "placeholder" as visible content.
-            //     guardName: placeholder-in-test-label
-            if (isTestFile) {
-              const isTestLabel =
-                /(?:getByText|queryByText|findByText|toHaveTextContent|getByRole|getByLabelText)\s*\(/.test(
-                  line
-                ) ||
-                /(?:expect|screen)\s*\(/.test(line) ||
-                /['"].*placeholder.*['"]\s*[,)]/.test(line);
-              if (isTestLabel) {
-                continue;
-              }
-            }
-
-            // 12. Test-file comments using "placeholder" as English prose.
-            //     e.g. `// should show placeholder text, not the full content`
-            //     The word describes a UI concept, not a code-quality marker.
-            //     guardName: placeholder-in-test-comment
-            if (isTestFile && /^\s*\/\//.test(line)) {
-              continue;
-            }
-          }
-
-          // For EMPTY_FUNCTION pattern: suppress well-known false-positive
-          // patterns where an empty/no-op arrow function is intentional rather
-          // than a forgotten implementation stub.
-          if (patternName === 'EMPTY_FUNCTION') {
-            // 1. Null-coalescing defensive fallbacks.
-            //    `?? (() => {})` is a safe default for an optional callback prop.
-            //    `?? { mutateAsync: async () => {} }` is a safe default for an
-            //    optional React Query mutation object.
-            //    Also catches multi-line patterns where `??` is on the previous line
-            //    and the empty function is on the current line (e.g. `?? {\n  mutateAsync: async () => {},`).
-            //    Neither is a forgotten implementation — they are intentional guards
-            //    against calling undefined.
-            //    guardName: null-coalescing-defensive-fallback
-            const prevLineNc = lineIndex > 0 ? lines[lineIndex - 1] : '';
-            const isNullCoalescingFallback =
-              /\?\?\s*\(\s*\(\s*\)\s*=>\s*\{\s*\}\s*\)/.test(line) ||
-              /\?\?\s*\{\s*mutateAsync\s*:\s*async\s*\(\s*\)\s*=>\s*\{\s*\}\s*\}/.test(line) ||
-              /\?\?\s*\{?\s*$/.test(prevLineNc);
-            if (isNullCoalescingFallback) {
-              continue;
-            }
-
-            // 2. Menu-separator no-op click handlers.
-            //    Menu separator items use `{ separator: true, onClick: () => {} }`.
-            //    The empty onClick is intentional — separators are not clickable
-            //    UI elements and the handler is required only by the type contract.
-            //    guardName: menu-separator-noop-onclick
-            const isMenuSeparatorNoop =
-              /\bseparator\s*:\s*true\b/.test(line) &&
-              /onClick\s*:\s*\(\s*\)\s*=>\s*\{\s*\}/.test(line);
-            if (isMenuSeparatorNoop) {
-              continue;
-            }
-
-            // 3. Fire-and-forget `.catch(() => {})` anywhere on a line.
-            //    Notification dispatches, analytics pings, audio.play(), and
-            //    other side-effect calls intentionally swallow errors so the
-            //    calling code path is not interrupted.  Not unfinished stubs.
-            //    guardName: fire-and-forget-catch
-            const isFireAndForgetCatch =
-              /\.catch\s*\(\s*(?:async\s+)?\(\s*\)\s*=>\s*\{\s*\}\s*\)/.test(line);
-            if (isFireAndForgetCatch) {
-              continue;
-            }
-
-            // 4. Test mock setup patterns in test files.
-            //    Several boilerplate patterns inside `__tests__/` and `.test.ts`
-            //    files generate EMPTY_FUNCTION false positives:
-            //      - `clearDomainEvents: () => {}`  — domain-event test helper
-            //      - `vi.fn()` and `vi.fn().mockImplementation(() => {})` — vitest mocks
-            //      - `() => <div ...` — component stubs (JSX return, not empty body)
-            //    These are all expected, test-infrastructure boilerplate.
-            //    guardName: test-mock-setup-boilerplate
-            if (isTestFile) {
-              const isTestMockBoilerplate =
-                /\bclearDomainEvents\s*:\s*\(\s*\)\s*=>\s*\{\s*\}/.test(line) ||
-                /\bvi\.fn\s*\(\s*\)/.test(line) ||
-                /\bvi\.fn\s*\(\s*\)\s*\.mockImplementation\s*\(\s*\(\s*\)\s*=>\s*\{\s*\}\s*\)/.test(
-                  line
-                ) ||
-                /\(\s*\)\s*=>\s*<[A-Za-z]/.test(line);
-              if (isTestMockBoilerplate) {
-                continue;
-              }
-            }
-
-            // 5. Explicitly commented no-op / read-only / intentional callbacks.
-            //    When the current line (or the immediately preceding line) contains
-            //    a comment that says "No-op", "no-op", "Defensive fallback",
-            //    "read-only", "intentional", or "Intentional", the empty arrow
-            //    function is documented as deliberate.
-            //    guardName: commented-noop-intentional
-            const prevLine = lineIndex > 0 ? lines[lineIndex - 1] : '';
-            const isCommentedNoop =
-              /\/\/\s*(?:No-op|no-op|Defensive fallback|read-only|Read-only|intentional|Intentional|Swallow|swallow|Silent fail|silent fail)/i.test(
-                line
-              ) ||
-              /\/\/\s*(?:No-op|no-op|Defensive fallback|read-only|Read-only|intentional|Intentional|Swallow|swallow|Silent fail|silent fail)/i.test(
-                prevLine
-              );
-            if (isCommentedNoop) {
-              continue;
-            }
-
-            // 6. vi.spyOn() mock implementations in test files.
-            //    `vi.spyOn(console, 'warn').mockImplementation(() => {})`
-            //    `vi.spyOn(obj, 'method').mockReturnValue(() => {})`
-            //    Standard Vitest patterns for suppressing/capturing output.
-            //    guardName: spy-mock-implementation
-            if (isTestFile) {
-              const isSpyMockImpl =
-                /\.mockImplementation\s*\(\s*(?:async\s+)?\(\s*\)\s*=>\s*\{\s*\}\s*\)/.test(line);
-              if (isSpyMockImpl) {
-                continue;
-              }
-            }
-
-            // 7. React event handler callback props in test renders.
-            //    `onChange={() => {}}`, `onRetry={() => {}}`, `onFeedback={() => {}}`
-            //    Required props for controlled components in test fixtures.
-            //    guardName: test-event-handler-prop
-            if (isTestFile) {
-              const isTestEventHandlerProp =
-                /\bon[A-Z]\w*\s*[:=]\s*\{?\s*\(\s*\)\s*=>\s*\{\s*\}\s*\}?/.test(line);
-              if (isTestEventHandlerProp) {
-                continue;
-              }
-            }
-
-            // 8. react-hook-form handleSubmit no-op in test harnesses.
-            //    `form.handleSubmit(() => {})` is standard for testing
-            //    form validation without a real submit handler.
-            //    guardName: form-handleSubmit-noop
-            if (isTestFile) {
-              const isFormHandleSubmit = /\bhandleSubmit\s*\(\s*\(\s*\)\s*=>\s*\{\s*\}\s*\)/.test(
-                line
-              );
-              if (isFormHandleSubmit) {
-                continue;
-              }
-            }
-
-            // 9. Explicitly named noop variables / callbacks.
-            //    `const noop = useCallback(() => {}, [])` or `const noop = () => {}`
-            //    Named to signal "no operation" — not stubs.
-            //    guardName: named-noop-variable
-            const isNamedNoop = /\b(?:const|let|var)\s+no[_-]?[Oo]p\b/i.test(line);
-            if (isNamedNoop) {
-              continue;
-            }
-
-            // 10. Storybook story files where empty functions are default args.
-            //     `.stories.tsx` files use `args: { onClick: () => {} }`.
-            //     guardName: storybook-noop-arg
-            const isStorybookFile = /\.stories\.[jt]sx?$/.test(relativePath);
-            if (isStorybookFile) {
-              continue;
-            }
-
-            // 11. Empty beforeEach/afterEach with only comments (delegation).
-            //     `beforeEach(() => { // Reset handled by setup.ts })` in test files.
-            //     guardName: empty-lifecycle-delegated
-            if (isTestFile) {
-              const isEmptyLifecycle =
-                /\b(?:beforeEach|afterEach|beforeAll|afterAll)\s*\(\s*(?:async\s+)?\(\s*\)\s*=>\s*\{/.test(
-                  line
-                );
-              if (isEmptyLifecycle) {
-                continue;
-              }
-            }
-          }
+          if (shouldSkipMatch(patternName, match.index, ctx)) continue;
 
           findings.push({
             file: relativePath,
@@ -727,6 +610,86 @@ export async function scanFile(filePath: string, repoRoot: string): Promise<Plac
   return findings;
 }
 
+// =============================================================================
+// Multi-line empty function guards
+// =============================================================================
+
+interface MultiLineEmptyFunctionContext {
+  matchedText: string;
+  context: string;
+  contextStart: number;
+  matchIndex: number;
+  isTestFileMl: boolean;
+  isStorybookMl: boolean;
+}
+
+/** Returns true if a multi-line empty function is a null-coalescing fallback. */
+function isMlNullCoalescingFallback(ctx: MultiLineEmptyFunctionContext): boolean {
+  return (
+    /\?\?\s*\{/.test(ctx.context) && ctx.context.indexOf('??') < ctx.matchIndex - ctx.contextStart
+  );
+}
+
+/** Returns true if a multi-line empty function is a fire-and-forget .catch. */
+function isMlFireAndForgetCatch(ctx: MultiLineEmptyFunctionContext): boolean {
+  const beforeMatch = ctx.context.substring(
+    Math.max(0, ctx.matchIndex - ctx.contextStart - 30),
+    ctx.matchIndex - ctx.contextStart
+  );
+  return (
+    /\.catch\s*\(\s*(?:async\s+)?\(\s*\)\s*=>/.test(ctx.matchedText) ||
+    /\.catch\s*\(/.test(beforeMatch)
+  );
+}
+
+/** Returns true if a multi-line empty function has a commented no-op annotation. */
+function isMlCommentedNoop(ctx: MultiLineEmptyFunctionContext): boolean {
+  return /\/\/\s*(?:No-op|Defensive|intentional|Swallow|Silent|read-only)/i.test(ctx.context);
+}
+
+/** Returns true if a multi-line empty function is test mock boilerplate. */
+function isMlTestMockBoilerplate(ctx: MultiLineEmptyFunctionContext): boolean {
+  if (!ctx.isTestFileMl) return false;
+  return (
+    /\.mockImplementation\s*\(/.test(ctx.context) ||
+    /\bclearDomainEvents\s*:/.test(ctx.context) ||
+    /\bvi\.fn\b/.test(ctx.context) ||
+    /\bon[A-Z]\w*\s*[:=]/.test(ctx.context) ||
+    /\bhandleSubmit\s*\(/.test(ctx.context) ||
+    /\b(?:beforeEach|afterEach|beforeAll|afterAll)\s*\(/.test(ctx.context)
+  );
+}
+
+/** Returns true if a multi-line empty function is a named noop. */
+function isMlNamedNoop(ctx: MultiLineEmptyFunctionContext): boolean {
+  return /\b(?:const|let|var)\s+no[_-]?[Oo]p\b/i.test(ctx.context);
+}
+
+/** Returns true if a multi-line empty function is a menu separator no-op. */
+function isMlMenuSeparator(ctx: MultiLineEmptyFunctionContext): boolean {
+  return /\bseparator\s*:\s*true\b/.test(ctx.context) && /onClick\s*:/.test(ctx.context);
+}
+
+/** Returns true if a multi-line empty function has a defensive fallback comment. */
+function isMlDefensiveFallbackComment(ctx: MultiLineEmptyFunctionContext): boolean {
+  return /\/\/\s*(?:Defensive|Separator|Required by type)/i.test(ctx.context);
+}
+
+/**
+ * Returns true if a multi-line empty function match should be suppressed.
+ */
+function shouldSkipMultiLineEmptyFunction(ctx: MultiLineEmptyFunctionContext): boolean {
+  if (isMlNullCoalescingFallback(ctx)) return true;
+  if (isMlFireAndForgetCatch(ctx)) return true;
+  if (isMlCommentedNoop(ctx)) return true;
+  if (isMlTestMockBoilerplate(ctx)) return true;
+  if (isMlNamedNoop(ctx)) return true;
+  if (ctx.isStorybookMl) return true;
+  if (isMlMenuSeparator(ctx)) return true;
+  if (isMlDefensiveFallbackComment(ctx)) return true;
+  return false;
+}
+
 /**
  * Detects empty functions that span multiple lines
  */
@@ -735,7 +698,7 @@ function detectEmptyFunctions(content: string, relativePath: string): Placeholde
 
   // Pattern for functions with only whitespace/comments in body
   const multiLineEmptyFunction =
-    /(?:function\s+(\w+)|(\w+)\s*[:=]\s*(?:async\s+)?function|\([\w\s,]*\)\s*=>)\s*\{[\s\n]*(?:\/\/[^\n]*\n)*[\s\n]*\}/g;
+    /(?:function[ \t]+(\w{1,100})|(\w{1,100})[ \t]*[:=][ \t]*(?:async[ \t]+)?function|\([\w, \t]{0,200}\)[ \t]*=>)[ \t]*\{[ \t\n]*(?:\/\/[^\n]{0,200}\n[ \t\n]*){0,20}\}/g;
 
   let match;
   while ((match = multiLineEmptyFunction.exec(content)) !== null) {
@@ -750,72 +713,23 @@ function detectEmptyFunctions(content: string, relativePath: string): Placeholde
         .trim().length > 0;
 
     if (!hasRealCode) {
-      // Apply context-aware guards to multi-line empty functions.
-      // These mirror the single-line guards above.
       const contextStart = Math.max(0, match.index - 200);
       const contextEnd = Math.min(content.length, match.index + match[0].length + 100);
       const context = content.substring(contextStart, contextEnd);
-      const matchedText = match[0];
 
       const isTestFileMl = CONTEXT_EXCLUSIONS.testFilePaths.some((p) => p.test(relativePath));
       const isStorybookMl = /\.stories\.[jt]sx?$/.test(relativePath);
 
-      // Guard: null-coalescing fallback `?? { ... () => {} }`
-      if (/\?\?\s*\{/.test(context) && context.indexOf('??') < match.index - contextStart) {
-        continue;
-      }
+      const mlCtx: MultiLineEmptyFunctionContext = {
+        matchedText: match[0],
+        context,
+        contextStart,
+        matchIndex: match.index,
+        isTestFileMl,
+        isStorybookMl,
+      };
 
-      // Guard: fire-and-forget `.catch(() => {})`
-      if (
-        /\.catch\s*\(\s*(?:async\s+)?\(\s*\)\s*=>/.test(matchedText) ||
-        /\.catch\s*\(/.test(
-          context.substring(
-            Math.max(0, match.index - contextStart - 30),
-            match.index - contextStart
-          )
-        )
-      ) {
-        continue;
-      }
-
-      // Guard: commented no-op / intentional / swallow
-      if (/\/\/\s*(?:No-op|Defensive|intentional|Swallow|Silent|read-only)/i.test(context)) {
-        continue;
-      }
-
-      // Guard: test mock patterns
-      if (isTestFileMl) {
-        if (
-          /\.mockImplementation\s*\(/.test(context) ||
-          /\bclearDomainEvents\s*:/.test(context) ||
-          /\bvi\.fn\b/.test(context) ||
-          /\bon[A-Z]\w*\s*[:=]/.test(context) ||
-          /\bhandleSubmit\s*\(/.test(context) ||
-          /\b(?:beforeEach|afterEach|beforeAll|afterAll)\s*\(/.test(context)
-        ) {
-          continue;
-        }
-      }
-
-      // Guard: named noop
-      if (/\b(?:const|let|var)\s+no[_-]?[Oo]p\b/i.test(context)) {
-        continue;
-      }
-
-      // Guard: storybook file
-      if (isStorybookMl) {
-        continue;
-      }
-
-      // Guard: separator no-op onClick handlers (menu items)
-      if (/\bseparator\s*:\s*true\b/.test(context) && /onClick\s*:/.test(context)) {
-        continue;
-      }
-
-      // Guard: defensive fallback comment on nearby line
-      if (/\/\/\s*(?:Defensive|Separator|Required by type)/i.test(context)) {
-        continue;
-      }
+      if (shouldSkipMultiLineEmptyFunction(mlCtx)) continue;
 
       findings.push({
         file: relativePath,

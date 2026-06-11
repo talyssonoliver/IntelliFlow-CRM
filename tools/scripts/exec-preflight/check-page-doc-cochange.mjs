@@ -132,7 +132,7 @@ function parseCsvLine(line) {
  */
 function extractSection(planContent, headingPatterns) {
   const lines = planContent.split(/\r?\n/);
-  const headingRe = /^#{2,4}\s+(.+?)\s*$/;
+  const headingRe = /^#{2,4}[ \t]+([^ \t\n][^\n]{0,200}?)[ \t]*$/;
   let inSection = false;
   const captured = [];
 
@@ -167,7 +167,7 @@ function listFilePaths(sectionText) {
   let match;
   while ((match = re.exec(sectionText)) !== null) {
     // Strip trailing punctuation that isn't part of a path.
-    const raw = match[0].replace(/[.,;:)\]`]+$/, '');
+    const raw = match[0].replace(/[.,;:)\]`]{1,10}$/, '');
     found.add(raw);
   }
   return [...found];
@@ -224,10 +224,10 @@ function checkReachabilityEntry(taskId) {
 
   const WAIVER_PATTERNS = [
     /direct\s*URL\s*only/i,
-    /\bdeferred\b(?![^\n]*(?:[A-Z]+-\d+|FOLLOWUP-))/i,
-    /\bfollow-?up\s+(?:task|ticket)\b(?![^\n]*(?:[A-Z]+-\d+|FOLLOWUP-))/i,
-    /\bsidebar\s+wiring[^\n]*(?:later|future|subsequent|deferred)(?![^\n]*(?:[A-Z]+-\d+|FOLLOWUP-))/i,
-    /\bwired\s+later\b(?![^\n]*(?:[A-Z]+-\d+|FOLLOWUP-))/i,
+    /\bdeferred\b(?![^\n]{0,200}(?:[A-Z]+-\d+|FOLLOWUP-))/i,
+    /\bfollow-?up[ \t]+(?:task|ticket)\b(?![^\n]{0,200}(?:[A-Z]+-\d+|FOLLOWUP-))/i,
+    /\bsidebar[ \t]+wiring[^\n]{0,200}(?:later|future|subsequent|deferred)(?![^\n]{0,200}(?:[A-Z]+-\d+|FOLLOWUP-))/i,
+    /\bwired[ \t]+later\b(?![^\n]{0,200}(?:[A-Z]+-\d+|FOLLOWUP-))/i,
   ];
   const TASK_ID_NEAR = /\b([A-Z]+-\d+(?:-[A-Z0-9]+)?)\b/g;
 

@@ -23,7 +23,7 @@ const KPI_PATTERNS: Array<{
 }> = [
   // Coverage >90%, Coverage ≥90%, Coverage >= 90%
   {
-    pattern: /(?:test\s+)?coverage\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*%/i,
+    pattern: /(?:test[ \t]+)?coverage[ \t]*([><=!]+)[ \t]*(\d{1,10}(?:\.\d{1,10})?)[ \t]*%/i,
     extract: (m) => ({
       metric: 'coverage',
       operator: normalizeOperator(m[1]),
@@ -34,7 +34,8 @@ const KPI_PATTERNS: Array<{
   },
   // Response <200ms, Latency <100ms
   {
-    pattern: /(?:response|latency)\s*(?:time)?\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*(ms|s|sec)/i,
+    pattern:
+      /(?:response|latency)[ \t]*(?:time[ \t]*)?([><=!]+)[ \t]*(\d{1,10}(?:\.\d{1,10})?)[ \t]*(ms|s|sec)/i,
     extract: (m) => ({
       metric: 'response_time',
       operator: normalizeOperator(m[1]),
@@ -46,7 +47,7 @@ const KPI_PATTERNS: Array<{
   // Load time <1s, First Contentful Paint <1s
   {
     pattern:
-      /(?:load\s+time|fcp|lcp|first\s+contentful\s+paint)\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*(ms|s|sec)/i,
+      /(?:load[ \t]+time|fcp|lcp|first[ \t]+contentful[ \t]+paint)[ \t]*([><=!]+)[ \t]*(\d{1,10}(?:\.\d{1,10})?)[ \t]*(ms|s|sec)/i,
     extract: (m) => ({
       metric: 'load_time',
       operator: normalizeOperator(m[1]),
@@ -57,7 +58,8 @@ const KPI_PATTERNS: Array<{
   },
   // Build time <3min, Build <180s
   {
-    pattern: /(?:build\s+time|build)\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*(min|minutes?|s|sec)/i,
+    pattern:
+      /(?:build[ \t]+time|build)[ \t]*([><=!]+)[ \t]*(\d{1,10}(?:\.\d{1,10})?)[ \t]*(min|minutes?|s|sec)/i,
     extract: (m) => ({
       metric: 'build_time',
       operator: normalizeOperator(m[1]),
@@ -68,7 +70,7 @@ const KPI_PATTERNS: Array<{
   },
   // Lighthouse >90, Lighthouse score ≥90
   {
-    pattern: /lighthouse\s*(?:score)?\s*([><=!]+)\s*(\d+)/i,
+    pattern: /lighthouse[ \t]*(?:score[ \t]*)?([><=!]+)[ \t]*(\d{1,10})/i,
     extract: (m) => ({
       metric: 'lighthouse',
       operator: normalizeOperator(m[1]),
@@ -79,7 +81,7 @@ const KPI_PATTERNS: Array<{
   },
   // Type errors = 0, Zero type errors
   {
-    pattern: /(?:type\s+errors?|typescript\s+errors?)\s*([><=!]+|=)\s*(\d+)/i,
+    pattern: /(?:type[ \t]+errors?|typescript[ \t]+errors?)[ \t]*([><=!]+|=)[ \t]*(\d{1,10})/i,
     extract: (m) => ({
       metric: 'type_errors',
       operator: normalizeOperator(m[1]),
@@ -90,7 +92,7 @@ const KPI_PATTERNS: Array<{
   },
   // Zero type errors (alternate form)
   {
-    pattern: /zero\s+(?:type\s+)?errors?/i,
+    pattern: /zero[ \t]+(?:type[ \t]+)?errors?/i,
     extract: () => ({
       metric: 'type_errors',
       operator: '=',
@@ -101,7 +103,7 @@ const KPI_PATTERNS: Array<{
   },
   // Lint errors = 0
   {
-    pattern: /(?:lint\s+errors?|eslint\s+errors?)\s*([><=!]+|=)\s*(\d+)/i,
+    pattern: /(?:lint[ \t]+errors?|eslint[ \t]+errors?)[ \t]*([><=!]+|=)[ \t]*(\d{1,10})/i,
     extract: (m) => ({
       metric: 'lint_errors',
       operator: normalizeOperator(m[1]),
@@ -112,7 +114,8 @@ const KPI_PATTERNS: Array<{
   },
   // Setup time <10 minutes
   {
-    pattern: /(?:setup\s+time|setup)\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*(min|minutes?|s|sec)/i,
+    pattern:
+      /(?:setup[ \t]+time|setup)[ \t]*([><=!]+)[ \t]*(\d{1,10}(?:\.\d{1,10})?)[ \t]*(min|minutes?|s|sec)/i,
     extract: (m) => ({
       metric: 'setup_time',
       operator: normalizeOperator(m[1]),
@@ -123,7 +126,7 @@ const KPI_PATTERNS: Array<{
   },
   // API calls <N
   {
-    pattern: /(?:api\s+)?calls?\s*([><=!]+)\s*(\d+)/i,
+    pattern: /(?:api[ \t]+)?calls?[ \t]*([><=!]+)[ \t]*(\d{1,10})/i,
     extract: (m) => ({
       metric: 'api_calls',
       operator: normalizeOperator(m[1]),
@@ -134,7 +137,7 @@ const KPI_PATTERNS: Array<{
   },
   // Uptime >99.9%
   {
-    pattern: /uptime\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*%/i,
+    pattern: /uptime[ \t]*([><=!]+)[ \t]*(\d{1,10}(?:\.\d{1,10})?)[ \t]*%/i,
     extract: (m) => ({
       metric: 'uptime',
       operator: normalizeOperator(m[1]),
@@ -145,9 +148,9 @@ const KPI_PATTERNS: Array<{
   },
   // Generic percentage: X >90%
   {
-    pattern: /(\w+(?:\s+\w+)?)\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*%/i,
+    pattern: /(\w{1,40}(?:[ \t]+\w{1,40})?)[ \t]*([><=!]+)[ \t]*(\d{1,10}(?:\.\d{1,10})?)[ \t]*%/i,
     extract: (m) => ({
-      metric: m[1].toLowerCase().replaceAll(/\s+/g, '_'),
+      metric: m[1].toLowerCase().replaceAll(/[ \t]+/g, '_'),
       operator: normalizeOperator(m[2]),
       target: parseFloat(m[3]),
       unit: '%',
@@ -156,9 +159,9 @@ const KPI_PATTERNS: Array<{
   },
   // Generic numeric: X <100
   {
-    pattern: /(\w+(?:\s+\w+)?)\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*$/i,
+    pattern: /(\w{1,40}(?:[ \t]+\w{1,40})?)[ \t]*([><=!]+)[ \t]*(\d{1,10}(?:\.\d{1,10})?)[ \t]*$/i,
     extract: (m) => ({
-      metric: m[1].toLowerCase().replaceAll(/\s+/g, '_'),
+      metric: m[1].toLowerCase().replaceAll(/[ \t]+/g, '_'),
       operator: normalizeOperator(m[2]),
       target: parseFloat(m[3]),
       unit: null,
@@ -316,17 +319,17 @@ function runMeasurementCommand(
 function extractMetricValue(metric: string, output: string): number | null {
   const patterns: Record<string, RegExp[]> = {
     coverage: [
-      /All files[^|]*\|\s*(\d+(?:\.\d+)?)/,
-      /Statements\s*:\s*(\d+(?:\.\d+)?)/,
-      /Coverage\s*:\s*(\d+(?:\.\d+)?)/,
-      /(\d+(?:\.\d+)?)\s*%\s*coverage/i,
+      /All files[^|]*\|[ \t]*(\d{1,10}(?:\.\d{1,10})?)/,
+      /Statements[ \t]*:[ \t]*(\d{1,10}(?:\.\d{1,10})?)/,
+      /Coverage[ \t]*:[ \t]*(\d{1,10}(?:\.\d{1,10})?)/,
+      /(\d{1,10}(?:\.\d{1,10})?)[ \t]*%[ \t]*coverage/i,
     ],
     type_errors: [
-      /Found\s+(\d+)\s+errors?/i,
-      /(\d+)\s+errors?/i,
+      /Found[ \t]+(\d{1,10})[ \t]+errors?/i,
+      /(\d{1,10})[ \t]+errors?/i,
       // Zero errors = successful exit with no error count
     ],
-    lint_errors: [/(\d+)\s+problems?/i, /(\d+)\s+errors?/i],
+    lint_errors: [/(\d{1,10})[ \t]+problems?/i, /(\d{1,10})[ \t]+errors?/i],
   };
 
   const metricPatterns = patterns[metric] || [];

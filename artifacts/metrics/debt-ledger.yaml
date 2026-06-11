@@ -1,7 +1,40 @@
 schema_version: 1.0.0
-last_updated: 2026-03-06
+last_updated: 2026-06-11
 maintainer: Tech Lead
 items:
+  PRESHIP-385-lcov-absent-blind-spot:
+    origin_task: IFC-256
+    owner: DevOps Lead
+    severity: high
+    description: >
+      check-diff-coverage.mjs skipped source files absent from lcov (no tests), so
+      brand-new untested files passed the local diff-coverage gate at 100% while
+      SonarCloud reported them as 0% new_coverage. Fixed in PR #382 (absent files
+      now counted as 0%). Issue #385. Relates to pre-ship gate parity gap (#349).
+    created_at: 2026-06-11T10:00:00.000Z
+    expiry_date: 2026-09-11
+    remediation_plan: >
+      Fixed — absent-from-lcov files now treated as 0% covered. Remaining:
+      (a) inbound.router.ts /<[^>]*>/ HTML-strip and autoresponse email regex
+      should migrate to proper utilities (issue #383, tracked below).
+    remediation_sprint: 6
+    status: resolved
+  PRESHIP-383-redos-bounded-disable:
+    origin_task: PG-060
+    owner: DevOps Lead
+    severity: medium
+    description: >
+      Two production regexes and one test regex have sonarjs/slow-regex (S5852)
+      eslint-disable suppressions with justification: /<[^>]*>/g (inbound.router.ts,
+      bounded by > stop char) and /^[^\s@]+@[^\s@]+\.[^\s@]+$/ (test fixture).
+      The trailing-slash /\/+$/ and leading/trailing underscore /^_+|_+$/ cases
+      were fixed with safe alternatives. Suppressed cases tracked for migration
+      to proper utilities (html-strip, validator email schema).
+    created_at: 2026-06-11T10:00:00.000Z
+    expiry_date: 2026-09-11
+    remediation_plan: Migrate to html-strip utility + packages/validators email schema.
+    remediation_sprint: 7
+    status: open
   FAIL-IFC-105-001:
     origin_task: IFC-105
     owner: Tech Lead

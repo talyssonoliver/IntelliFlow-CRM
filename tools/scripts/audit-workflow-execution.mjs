@@ -210,7 +210,7 @@ function push(section, id, name, verdict, detail, mandatory = true) {
   const disc = readTextSafe(DISCUSSION_PATH);
   if (!disc) push('SPEC', '0.75', 'Codebase Exploration', 'MISSING', 'no discussion file');
   else {
-    const hasCites = /[a-zA-Z_/-]+\.(ts|tsx|prisma|md)(:\d+|\b)/i.test(disc);
+    const hasCites = /[a-zA-Z_/.-]{1,200}\.(ts|tsx|prisma|md)(:\d+|(?=[^a-zA-Z]))/i.test(disc);
     const hasAnalysis = /ANALYSIS|Round\s*1|Phase\s*1/i.test(disc);
     if (hasCites && hasAnalysis)
       push('SPEC', '0.75', 'Codebase Exploration', 'PASS', 'file citations present in discussion');
@@ -248,7 +248,8 @@ function push(section, id, name, verdict, detail, mandatory = true) {
   const spec = readTextSafe(SPEC_PATH);
   if (!spec) push('SPEC', '0.9', 'Dependency Chain Verification', 'MISSING', 'no spec file');
   else {
-    const has = /##+\s+(Dependency Chain|Dependencies Used|Dependencies Verified|Integration Points)|Dependencies\s+Used\s*\(Completed/i.test(spec);
+    const has = /#{2,6}[ \t]+(Dependency Chain|Dependencies Used|Dependencies Verified|Integration Points)/i.test(spec) ||
+      /Dependencies[ \t]{1,10}Used[ \t]{0,10}\(Completed/i.test(spec);
     push('SPEC', '0.9', 'Dependency Chain Verification',
       has ? 'PASS' : 'WARN',
       has ? 'section present in spec' : 'spec missing Dependency Chain / Verified section');
@@ -274,9 +275,9 @@ function push(section, id, name, verdict, detail, mandatory = true) {
   const spec = readTextSafe(SPEC_PATH);
   if (!spec) push('SPEC', '0.97', 'PRD/ADR Resolution', 'MISSING', 'no spec file');
   else {
-    const hasRelated = /##+\s+Related Documents/i.test(spec);
+    const hasRelated = /#{2,6}[ \t]+Related Documents/i.test(spec);
     const prdRefs = [...spec.matchAll(/docs\/planning\/prd-[^\s)'"`|]+\.md/g)].map((m) => m[0]);
-    const adrRefs = [...spec.matchAll(/docs\/architecture\/adr\/(ADR-\d+[^\s)'"`|]*\.md)/g)].map((m) => m[0]);
+    const adrRefs = [...spec.matchAll(/docs\/architecture\/adr\/(ADR-\d+[^'"`|\s)]{0,200}\.md)/g)].map((m) => m[0]);
     const unresolved = [...prdRefs, ...adrRefs].filter((p) => !existsSync(join(REPO_ROOT, p)));
     if (!hasRelated) push('SPEC', '0.97', 'PRD/ADR Resolution', 'BLOCK', 'spec missing ## Related Documents');
     else if (unresolved.length > 0)
@@ -322,16 +323,16 @@ push('PLAN', '0', 'Load Spec + Prereqs',
 
 // Phase 1 Dependency chain + deep verification
 push('PLAN', '1', 'Dependency Deep Verify',
-  plan && /##+\s+Dependencies Verified/i.test(plan) ? 'PASS' : 'WARN',
+  plan && /#{2,6}[ \t]+Dependencies Verified/i.test(plan) ? 'PASS' : 'WARN',
   plan ? (plan.match(/Dependencies Verified/i) ? 'section present' : 'missing Dependencies Verified section') : 'no plan');
 
 // Phase 2 TDD decomposition
 if (!plan) push('PLAN', '2', 'TDD Decomposition', 'MISSING', 'no plan file');
 else {
-  const hasRed = /Phase\s*1\s*[—-]\s*RED|###+\s*Red\b/i.test(plan);
-  const hasGreen = /Phase\s*2\s*[—-]\s*GREEN|###+\s*Green\b/i.test(plan);
-  const hasRef = /Phase\s*3\s*[—-]\s*REFACTOR/i.test(plan);
-  const hasVal = /Phase\s*4\s*[—-]\s*VALIDATION|##+\s+Validation Matrix/i.test(plan);
+  const hasRed = /Phase[ \t]{0,4}1[ \t]{0,4}[—-][ \t]{0,4}RED/i.test(plan) || /#{3,6}[ \t]{0,4}Red\b/i.test(plan);
+  const hasGreen = /Phase[ \t]{0,4}2[ \t]{0,4}[—-][ \t]{0,4}GREEN/i.test(plan) || /#{3,6}[ \t]{0,4}Green\b/i.test(plan);
+  const hasRef = /Phase[ \t]{0,4}3[ \t]{0,4}[—-][ \t]{0,4}REFACTOR/i.test(plan);
+  const hasVal = /Phase[ \t]{0,4}4[ \t]{0,4}[—-][ \t]{0,4}VALIDATION/i.test(plan) || /#{2,6}[ \t]+Validation Matrix/i.test(plan);
   const count = [hasRed, hasGreen, hasRef, hasVal].filter(Boolean).length;
   push('PLAN', '2', 'TDD Decomposition',
     count === 4 ? 'PASS' : 'WARN',
@@ -400,7 +401,13 @@ push('EXEC', '1.3', 'PRD/ADR Verification',
 // Phase 1.4 Preflight Checkbox Enforcement
 if (!plan) push('EXEC', '1.4', 'Preflight Checkboxes', 'MISSING', 'no plan');
 else {
-  const preflightSection = plan.match(/##+\s+Preflight Checks[\s\S]*?(?=\n##+\s|$)/i)?.[0] ?? '';
+  const preflightSection = (() => {
+    const idx = plan.search(/#{2,6}[ \t]+Preflight Checks/i);
+    if (idx === -1) return '';
+    const rest = plan.slice(idx);
+    const nextHeading = rest.slice(1).search(/\n#{2,6}[ \t]/);
+    return nextHeading === -1 ? rest : rest.slice(0, nextHeading + 1);
+  })();
   if (!preflightSection) push('EXEC', '1.4', 'Preflight Checkboxes', 'WARN',
     'plan has no "## Preflight Checks" section');
   else {
@@ -453,8 +460,15 @@ else {
     // Only count routers introduced in plan's "Files to Create" section —
     // reference citations in the Related Documents / header would otherwise
     // trigger false BLOCKs for contact-settings.router.ts etc.
-    const createSection = plan?.match(/###+\s+CREATE[\s\S]*?(?=\n###+\s+(MODIFY|DELETE|$))/i)?.[0] ?? '';
-    const routerMatches = [...new Set((createSection.match(/([a-zA-Z-]+\.router\.ts)/g) ?? []))]
+    const createSection = (() => {
+      if (!plan) return '';
+      const idx = plan.search(/#{3,6}[ \t]+CREATE/i);
+      if (idx === -1) return '';
+      const rest = plan.slice(idx);
+      const nextHeading = rest.slice(1).search(/\n#{3,6}[ \t]+(MODIFY|DELETE)/i);
+      return nextHeading === -1 ? rest : rest.slice(0, nextHeading + 1);
+    })();
+    const routerMatches = [...new Set((createSection.match(/([a-zA-Z][a-zA-Z-]{0,80}\.router\.ts)/g) ?? []))]
       .map((m) => {
         // e.g. "deal-settings.router.ts" → "dealSettingsRouter"
         const stem = m.replace('.router.ts', '');

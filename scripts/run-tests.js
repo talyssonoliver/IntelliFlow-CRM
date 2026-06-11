@@ -58,7 +58,7 @@ vitest.stdout.on('data', (data) => {
     testsPassedCount = Number.parseInt(testsMatch[1], 10);
   }
 
-  const failedMatch = stripped.match(/(\d+)\s+failed/);
+  const failedMatch = stripped.match(/(\d{1,10})[ \t]+failed/);
   if (failedMatch) {
     testsFailedCount = Number.parseInt(failedMatch[1], 10);
   }

@@ -76,8 +76,8 @@ function runTypecheckCheck(): QualityMetrics['typecheck'] {
 function runLintCheck(): QualityMetrics['lint'] {
   console.log('🔍 Running lint...');
   const result = exec('pnpm run lint 2>&1');
-  const errors = (result.stdout.match(/\d+ error/g) || []).length;
-  const warnings = (result.stdout.match(/\d+ warning/g) || []).length;
+  const errors = (result.stdout.match(/\d{1,10} error/g) || []).length;
+  const warnings = (result.stdout.match(/\d{1,10} warning/g) || []).length;
 
   let status: 'pass' | 'fail' | 'warn' = 'pass';
   let icon = '✅';
@@ -96,8 +96,8 @@ function runTestsCheck(): QualityMetrics['tests'] {
   console.log('🧪 Running tests...');
   const result = exec('pnpm test --run --passWithNoTests 2>&1');
   const status = result.success ? 'pass' : 'fail';
-  const passedMatch = /(\d+) passed/.exec(result.stdout);
-  const failedMatch = /(\d+) failed/.exec(result.stdout);
+  const passedMatch = /(\d{1,10}) passed/.exec(result.stdout);
+  const failedMatch = /(\d{1,10}) failed/.exec(result.stdout);
   const passed = Number.parseInt(passedMatch?.[1] ?? '0', 10);
   const failed = Number.parseInt(failedMatch?.[1] ?? '0', 10);
   const icon = status === 'pass' ? '✅' : '❌';

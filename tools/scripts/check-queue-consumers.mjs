@@ -119,7 +119,7 @@ function extractQueueNames(src) {
 
   // Explicit queue name string in externalQueueNames / dashboardOnlyQueueNames arrays:
   //   'intelliflow-text-extraction',
-  const arrayLiteralPattern = /^\s*['"]([^'"]+)['"]\s*,?\s*$/gm;
+  const arrayLiteralPattern = /^[ \t]*['"]([^'"]{1,100})['"][ \t]*(?:,[ \t]*)?$/gm;
   while ((m = arrayLiteralPattern.exec(src)) !== null) {
     if (QUEUE_NAME_REGEX.test(m[1])) names.add(m[1]);
   }

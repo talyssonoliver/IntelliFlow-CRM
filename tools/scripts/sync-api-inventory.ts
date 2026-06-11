@@ -215,7 +215,8 @@ function extractEndpointsFromFile(filePath: string, routerName: string): Extract
 
   // Strategy: Find all procedure names by looking for pattern `name: [any]Procedure`
   // Then search forward to find .query or .mutation
-  const procedureDefPattern = /(\w+)\s*:\s*(?:protected|tenant|admin|public)?[Pp]rocedure/g;
+  const procedureDefPattern =
+    /(\w{1,100})[ \t]*:[ \t]*(?:protected|tenant|admin|public)?[Pp]rocedure/g;
 
   let match;
   while ((match = procedureDefPattern.exec(routerBody)) !== null) {
@@ -237,7 +238,7 @@ function extractEndpointsFromFile(filePath: string, routerName: string): Extract
     // Find the next procedure definition (if any)
     const nextProcMatch = routerBody
       .slice(startIdx)
-      .match(/\n\s+\w+\s*:\s*(?:protected|tenant|admin|public)?[Pp]rocedure/);
+      .match(/\n[ \t]+\w+[ \t]*:[ \t]*(?:protected|tenant|admin|public)?[Pp]rocedure/);
     const endIdx = nextProcMatch
       ? startIdx + (nextProcMatch.index ?? routerBody.length)
       : routerBody.length;

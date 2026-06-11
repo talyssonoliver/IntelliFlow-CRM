@@ -491,7 +491,7 @@ export function matchForbiddenDocsRuntimeArtifacts(
   forbiddenPatterns: string[] = ['.locks', '.status', 'logs', 'backups', 'artifacts']
 ): string[] {
   const forbiddenSegments = forbiddenPatterns
-    .map((p) => p.replaceAll(/(?:^\/+)|(?:\/+$)/g, ''))
+    .map((p) => p.replace(/^[/]{1,100}/, '').replace(/[/]{1,100}$/, ''))
     .filter(Boolean);
   const forbiddenMetricsFileSuffixes = ['.lock', '.log', '.tmp', '.bak', '.heartbeat', '.input'];
 
@@ -805,12 +805,13 @@ export interface AuditMatrixResult {
 
 // Regex patterns for YAML parsing
 const YAML_PATTERNS = {
-  id: /^\s+-\s+id:\s*['"]?([^'"]+)['"]?\s*$/,
-  tier: /^\s+tier:\s*(\d+)\s*$/,
-  enabled: /^\s+enabled:\s*(true|false)\s*$/,
-  required: /^\s+required:\s*(true|false)\s*$/,
-  owner: /^\s+owner:\s*['"]?([^'"]+)['"]?\s*$/,
-  command: /^\s+command:\s*(.+)$/,
+  id: /^[ \t]+-[ \t]+id:[ \t]*['"]?([\w.-]{1,100})['"]?[ \t]*$/,
+  tier: /^[ \t]+tier:[ \t]*(\d+)[ \t]*$/,
+  enabled: /^[ \t]+enabled:[ \t]*(true|false)[ \t]*$/,
+  required: /^[ \t]+required:[ \t]*(true|false)[ \t]*$/,
+  owner:
+    /^[ \t]+owner:[ \t]*(?:"([^"\n\r]{1,200})"|'([^'\n\r]{1,200})'|([^\s'"\n\r][^'"\n\r]{0,197}[^\s'"\n\r]|[^\s'"\n\r]{1,2}))[ \t]*$/,
+  command: /^[ \t]+command:[ \t]*([^\n\r]{1,500})$/,
   quoteStrip: /(?:^['"])|(?:['"]$)/g,
 } as const;
 
@@ -855,7 +856,7 @@ function parseYamlToolLine(
 
   const ownerMatch = YAML_PATTERNS.owner.exec(line);
   if (ownerMatch) {
-    currentTool.owner = ownerMatch[1];
+    currentTool.owner = (ownerMatch[1] ?? ownerMatch[2] ?? ownerMatch[3] ?? '').trim();
     return { tool: currentTool, finishedTool: null };
   }
 

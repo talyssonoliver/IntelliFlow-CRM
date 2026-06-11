@@ -98,7 +98,7 @@ function parseCsvLine(line) {
 // higher. Nested subsections stay inside.
 function extractSignoffSection(content) {
   const lines = content.split(/\r?\n/);
-  const headingRe = /^(#{1,6})\s+(.+?)\s*$/;
+  const headingRe = /^(#{1,6})[ \t]+([^ \t\n\r][^\n\r]{0,198}[^ \t\n\r]|[^ \t\n\r])$/;
   let sectionLevel = null;
   const captured = [];
   for (const line of lines) {

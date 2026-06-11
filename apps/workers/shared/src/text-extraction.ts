@@ -100,7 +100,7 @@ function stripTagBlocks(input: string, tag: string): string {
 export function htmlToText(html: string): string {
   const withoutBlocks = stripTagBlocks(stripTagBlocks(html, 'script'), 'style');
   return withoutBlocks
-    .replaceAll(/<[^>]+>/g, ' ')
+    .replaceAll(/<[^>]{0,10000}>/g, ' ')
     .replaceAll(/\s+/g, ' ')
     .trim();
 }

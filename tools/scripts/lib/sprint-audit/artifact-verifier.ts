@@ -41,21 +41,21 @@ const MIN_FILE_SIZES: Record<string, number> = {
  */
 const STUB_CONTENT_PATTERNS = [
   // Empty exports
-  /^export\s*\{\s*\}\s*;?\s*$/m,
+  /^export[ \t]*\{[ \t]*\}[ \t]*(?:;[ \t]*)?$/m,
   // Single placeholder comment
-  /^\/\/\s*(TODO|PLACEHOLDER|STUB)\s*$/m,
+  /^\/\/[ \t]*(TODO|PLACEHOLDER|STUB)[ \t]*$/m,
   // Empty default export
-  /export\s+default\s+\{\s*\}/,
+  /export[ \t]+default[ \t]+\{[ \t]*\}/,
   // Empty function body only
-  /^(?:export\s+)?(?:async\s+)?function\s+\w+\s*\([^)]*\)\s*\{\s*\}\s*$/m,
+  /^(?:export[ \t]+)?(?:async[ \t]+)?function[ \t]+\w+[ \t]*\([^)]*\)[ \t]*\{[ \t]*\}[ \t]*$/m,
   // "Not implemented" content
-  /^\s*throw\s+new\s+Error\s*\(\s*['"`]Not implemented/m,
+  /^[ \t]*throw[ \t]+new[ \t]+Error[ \t]*\([ \t]*['"`]Not implemented/m,
   // Empty JSON objects/arrays
-  /^\s*(?:\{\s*\}|\[\s*\])\s*$/,
+  /^[ \t]*(?:\{[ \t]*\}|\[[ \t]*\])[ \t]*$/,
   // Template file markers
   /<<REPLACE|<<TODO|<<INSERT/i,
   // Placeholder strings only
-  /^['"`](?:placeholder|todo|fixme|stub|implement)['"`]\s*;?\s*$/im,
+  /^['"`](?:placeholder|todo|fixme|stub|implement)['"`][ \t]*(?:;[ \t]*)?$/im,
 ];
 
 /**
@@ -229,6 +229,85 @@ function findAlternativeSprintPath(artifactPath: string, repoRoot: string): stri
 }
 
 /**
+ * Resolves the artifact path, trying alternative sprint paths if needed.
+ * Returns the resolved relative path plus any path-mismatch issue message,
+ * or null if the file cannot be located at all.
+ */
+function resolveArtifactPath(
+  artifactPath: string,
+  absolutePath: string,
+  repoRoot: string
+): { resolvedPath: string; mismatchMessage: string | null } | null {
+  if (fs.existsSync(absolutePath)) {
+    return { resolvedPath: artifactPath, mismatchMessage: null };
+  }
+
+  const altPath = findAlternativeSprintPath(artifactPath, repoRoot);
+  if (!altPath) {
+    return null;
+  }
+
+  const message =
+    `Sprint path mismatch: CSV declares ${artifactPath}, found at ${altPath}. ` +
+    `Update CSV "Artifacts To Track" to match.`;
+  return { resolvedPath: altPath, mismatchMessage: message };
+}
+
+/**
+ * Checks file size constraints and returns any size-related issue message.
+ */
+function checkFileSize(
+  size: number,
+  extension: string
+): { status: ArtifactStatus | null; issue: string | null } {
+  if (size === 0) {
+    return { status: 'empty', issue: 'File is empty (0 bytes)' };
+  }
+
+  const minSize = getMinFileSize(extension);
+  if (size < minSize) {
+    return {
+      status: null,
+      issue: `File is very small (${size} bytes, expected ≥${minSize} for ${extension})`,
+    };
+  }
+
+  return { status: null, issue: null };
+}
+
+/**
+ * Analyses JSON content and appends issues found.
+ */
+function analyseJsonContent(content: string, issues: string[]): ArtifactStatus {
+  try {
+    const parsed = JSON.parse(content) as unknown;
+    if (typeof parsed === 'object' && parsed !== null && Object.keys(parsed).length === 0) {
+      issues.push('JSON file contains empty object');
+      return 'stub';
+    }
+  } catch {
+    issues.push('JSON file has invalid syntax');
+  }
+  return 'found';
+}
+
+/**
+ * Analyses TypeScript/TSX content and appends issues found.
+ */
+function analyseTypeScriptContent(content: string, issues: string[]): void {
+  const hasExport = /export\s+(?!type\s)/.test(content);
+  const hasOnlyTypeExports = /export\s+type/.test(content) && !hasExport;
+  const lines = content.split('\n').filter((l) => l.trim() && !l.trim().startsWith('//'));
+
+  if (lines.length < 3 && !hasExport) {
+    issues.push('TypeScript file has minimal content with no exports');
+  }
+  if (hasOnlyTypeExports && lines.length < 5) {
+    issues.push('TypeScript file only exports types with minimal content');
+  }
+}
+
+/**
  * Verifies a single artifact file
  */
 export async function verifyArtifact(
@@ -238,29 +317,22 @@ export async function verifyArtifact(
 ): Promise<ArtifactVerification> {
   const absolutePath = path.join(repoRoot, artifactPath);
   const issues: string[] = [];
-  let status: ArtifactStatus = 'found';
-  let size: number | null = null;
-  let sha256: string | null = null;
-  let resolvedPath = artifactPath;
 
-  // Check if file exists — if not, try alternative sprint paths
-  if (!fs.existsSync(absolutePath)) {
-    const altPath = findAlternativeSprintPath(artifactPath, repoRoot);
-    if (altPath) {
-      resolvedPath = altPath;
-      issues.push(
-        `Sprint path mismatch: CSV declares ${artifactPath}, found at ${altPath}. Update CSV "Artifacts To Track" to match.`
-      );
-    } else {
-      return {
-        path: artifactPath,
-        expectedBy: taskId,
-        status: 'missing',
-        size: null,
-        sha256: null,
-        issues: [`Artifact not found: ${artifactPath}`],
-      };
-    }
+  const resolved = resolveArtifactPath(artifactPath, absolutePath, repoRoot);
+  if (!resolved) {
+    return {
+      path: artifactPath,
+      expectedBy: taskId,
+      status: 'missing',
+      size: null,
+      sha256: null,
+      issues: [`Artifact not found: ${artifactPath}`],
+    };
+  }
+
+  const { resolvedPath, mismatchMessage } = resolved;
+  if (mismatchMessage) {
+    issues.push(mismatchMessage);
   }
 
   const resolvedAbsolutePath = path.join(repoRoot, resolvedPath);
@@ -268,7 +340,6 @@ export async function verifyArtifact(
   try {
     const stats = fs.statSync(resolvedAbsolutePath);
 
-    // Skip directories
     if (stats.isDirectory()) {
       return {
         path: artifactPath,
@@ -280,78 +351,63 @@ export async function verifyArtifact(
       };
     }
 
-    size = stats.size;
     const extension = path.extname(resolvedPath).toLowerCase();
-    const minSize = getMinFileSize(extension);
+    const sizeCheck = checkFileSize(stats.size, extension);
 
-    // Check for empty file
-    if (size === 0) {
+    if (sizeCheck.status === 'empty') {
       return {
         path: artifactPath,
         expectedBy: taskId,
         status: 'empty',
         size: 0,
         sha256: null,
-        issues: ['File is empty (0 bytes)'],
+        issues: [sizeCheck.issue as string],
       };
     }
 
-    // Check for suspiciously small file
-    if (size < minSize) {
-      issues.push(`File is very small (${size} bytes, expected ≥${minSize} for ${extension})`);
+    if (sizeCheck.issue) {
+      issues.push(sizeCheck.issue);
     }
 
-    // Read content for deeper analysis
     const content = fs.readFileSync(resolvedAbsolutePath, 'utf-8');
+    let status: ArtifactStatus = 'found';
 
-    // Check for stub content
     if (isStubContent(content, extension)) {
       status = 'stub';
       issues.push('File appears to contain placeholder/stub content');
     }
 
-    // Generate hash
-    sha256 = sha256File(resolvedAbsolutePath);
+    const sha256 = sha256File(resolvedAbsolutePath);
 
-    // Additional checks for specific file types
     if (extension === '.json') {
-      try {
-        const parsed = JSON.parse(content);
-        if (typeof parsed === 'object' && Object.keys(parsed).length === 0) {
-          status = 'stub';
-          issues.push('JSON file contains empty object');
-        }
-      } catch {
-        issues.push('JSON file has invalid syntax');
+      const jsonStatus = analyseJsonContent(content, issues);
+      if (jsonStatus === 'stub') {
+        status = 'stub';
       }
     }
 
     if (extension === '.ts' || extension === '.tsx') {
-      // Check for files with only imports and no exports
-      const hasExport = /export\s+(?!type\s)/.test(content);
-      const hasOnlyTypeExports = /export\s+type/.test(content) && !hasExport;
-      const lines = content.split('\n').filter((l) => l.trim() && !l.trim().startsWith('//'));
-
-      if (lines.length < 3 && !hasExport) {
-        issues.push('TypeScript file has minimal content with no exports');
-      }
-      if (hasOnlyTypeExports && lines.length < 5) {
-        issues.push('TypeScript file only exports types with minimal content');
-      }
+      analyseTypeScriptContent(content, issues);
     }
-  } catch (error) {
-    issues.push(`Error reading artifact: ${error}`);
-    status = 'missing';
-  }
 
-  return {
-    path: artifactPath,
-    expectedBy: taskId,
-    status,
-    size,
-    sha256,
-    issues,
-  };
+    return {
+      path: artifactPath,
+      expectedBy: taskId,
+      status,
+      size: stats.size,
+      sha256,
+      issues,
+    };
+  } catch (error) {
+    return {
+      path: artifactPath,
+      expectedBy: taskId,
+      status: 'missing',
+      size: null,
+      sha256: null,
+      issues: [`Error reading artifact: ${error}`],
+    };
+  }
 }
 
 // =============================================================================

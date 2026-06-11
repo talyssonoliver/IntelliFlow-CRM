@@ -30,10 +30,16 @@ import { assertCanCreateTag, loadAccountAutomation } from './account-automation'
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function generateFieldKey(fieldName: string): string {
-  return fieldName
+  // Normalise to snake_case, then strip leading/trailing underscores.
+  // The leading strip uses /^_+/ which is anchored at the start (clean).
+  // For the trailing strip we avoid /_+$/ (S5852: polynomial on long runs)
+  // by trimming character-by-character — safe and O(n).
+  let key = fieldName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
+    .replace(/^_+/, '');
+  while (key.endsWith('_')) key = key.slice(0, -1);
+  return key;
 }
 
 const HIERARCHY_DEFAULTS = {

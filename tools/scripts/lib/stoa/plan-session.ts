@@ -85,10 +85,12 @@ export function loadSpecification(
 function parseSpecificationMarkdown(content: string): SpecificationDocument {
   const taskIdMatch = content.match(/# Specification: ([^\n]+)/);
   const sessionIdMatch = content.match(/\*\*Session ID:\*\* ([^\n]+)/);
-  const overviewMatch = content.match(/## Overview\s*\n\n([^#]+?)(?=\n---|\n##)/s);
-  const technicalMatch = content.match(/## Technical Approach\s*\n\n([^#]+?)(?=\n---|\n##)/s);
-  const interfacesMatch = content.match(/## Interfaces & Contracts\s*\n\n([^#]+?)(?=\n---|\n##)/s);
-  const acceptanceMatch = content.match(/## Acceptance Criteria\s*\n\n([^#]+?)(?=\n---|\n##)/s);
+  const overviewMatch = content.match(/## Overview[ \t]*\n\n([^#]+?)(?=\n---|\n##)/s);
+  const technicalMatch = content.match(/## Technical Approach[ \t]*\n\n([^#]+?)(?=\n---|\n##)/s);
+  const interfacesMatch = content.match(
+    /## Interfaces & Contracts[ \t]*\n\n([^#]+?)(?=\n---|\n##)/s
+  );
+  const acceptanceMatch = content.match(/## Acceptance Criteria[ \t]*\n\n([^#]+?)(?=\n---|\n##)/s);
 
   // Parse components table
   const components: SpecComponent[] = [];
@@ -615,6 +617,53 @@ export function writePlanSession(
 }
 
 /**
+ * Render a single plan step as markdown
+ */
+function renderPlanStep(step: PlanStep, checkpoints: IntegrationCheckpoint[]): string {
+  let out = `#### Step ${step.stepNumber}: ${step.name}\n\n**Type:** ${step.type}\n`;
+
+  if (step.filesToCreate.length > 0) {
+    const createList = step.filesToCreate.map((f) => `- \`${f}\``).join('\n');
+    out += `\n**Files to Create:**\n${createList}\n`;
+  }
+
+  if (step.filesToModify.length > 0) {
+    const modifyList = step.filesToModify.map((f) => `- \`${f}\``).join('\n');
+    out += `\n**Files to Modify:**\n${modifyList}\n`;
+  }
+
+  if (step.acceptanceCriteriaAddressed.length > 0) {
+    const criteriaList = step.acceptanceCriteriaAddressed.map((c) => `- ${c}`).join('\n');
+    out += `\n**Acceptance Criteria Addressed:**\n${criteriaList}\n`;
+  }
+
+  const validationList = step.validationChecks.map((v) => `- [ ] ${v}`).join('\n');
+  out += `\n**Validation:**\n${validationList}\n\n`;
+
+  const checkpoint = checkpoints.find((c) => c.afterStep === step.stepNumber);
+  if (checkpoint) {
+    out += `> **Checkpoint:** ${checkpoint.verify}\n> \`${checkpoint.command}\`\n\n`;
+  }
+
+  return out;
+}
+
+/**
+ * Group plan steps by TDD phase
+ */
+function groupStepsByPhase(steps: PlanStep[]): Record<string, PlanStep[]> {
+  const grouped: Record<string, PlanStep[]> = {};
+  for (const step of steps) {
+    const phase = step.tddPhase || 'VALIDATION';
+    if (!grouped[phase]) {
+      grouped[phase] = [];
+    }
+    grouped[phase].push(step);
+  }
+  return grouped;
+}
+
+/**
  * Generate plan markdown
  */
 export function generatePlanMarkdown(plan: PlanDocument): string {
@@ -649,65 +698,15 @@ ${plan.preflightChecks.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
 `;
 
-  // Group steps by TDD phase
-  const groupedSteps: Record<string, PlanStep[]> = {};
-  for (const step of plan.steps) {
-    const phase = step.tddPhase || 'VALIDATION';
-    if (!groupedSteps[phase]) {
-      groupedSteps[phase] = [];
-    }
-    groupedSteps[phase].push(step);
-  }
-
-  // Output by phase
+  const groupedSteps = groupStepsByPhase(plan.steps);
   const phaseOrder = ['RED', 'GREEN', 'REFACTOR', 'VALIDATION'];
   for (const phase of phaseOrder) {
     const steps = groupedSteps[phase];
     if (!steps?.length) continue;
 
     md += `### ${getPhaseTitle(phase)}\n\n`;
-
     for (const step of steps) {
-      md += `#### Step ${step.stepNumber}: ${step.name}
-
-**Type:** ${step.type}
-`;
-
-      if (step.filesToCreate.length > 0) {
-        md += `
-**Files to Create:**
-${step.filesToCreate.map((f) => `- \`${f}\``).join('\n')}
-`;
-      }
-
-      if (step.filesToModify.length > 0) {
-        md += `
-**Files to Modify:**
-${step.filesToModify.map((f) => `- \`${f}\``).join('\n')}
-`;
-      }
-
-      if (step.acceptanceCriteriaAddressed.length > 0) {
-        md += `
-**Acceptance Criteria Addressed:**
-${step.acceptanceCriteriaAddressed.map((c) => `- ${c}`).join('\n')}
-`;
-      }
-
-      md += `
-**Validation:**
-${step.validationChecks.map((v) => `- [ ] ${v}`).join('\n')}
-
-`;
-
-      // Add checkpoint if exists
-      const checkpoint = plan.integrationCheckpoints.find((c) => c.afterStep === step.stepNumber);
-      if (checkpoint) {
-        md += `> **Checkpoint:** ${checkpoint.verify}
-> \`${checkpoint.command}\`
-
-`;
-      }
+      md += renderPlanStep(step, plan.integrationCheckpoints);
     }
   }
 

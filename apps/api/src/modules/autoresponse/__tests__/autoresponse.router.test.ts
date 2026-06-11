@@ -341,8 +341,12 @@ describe('autoResponseRouter', () => {
 
     it('should validate email format for recipient', () => {
       const validEmail = 'test@example.com';
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      expect(validEmail).toMatch(emailRegex);
+      // Simple structural check: contains exactly one '@', non-empty local and domain parts,
+      // and a dot in the domain. Avoids /[^\s@]+/ negated class which triggers S5852.
+      const parts = validEmail.split('@');
+      expect(parts).toHaveLength(2);
+      expect(parts[0].length).toBeGreaterThan(0);
+      expect(parts[1]).toContain('.');
     });
 
     it('should validate aiConfidence is between 0 and 1', () => {

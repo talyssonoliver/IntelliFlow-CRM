@@ -40,6 +40,359 @@ function sha256(content: string): string {
   return createHash('sha256').update(content).digest('hex');
 }
 
+// ---------------------------------------------------------------------------
+// Attestation record migration helpers
+// ---------------------------------------------------------------------------
+
+function fixAttestationTimestamp(data: Record<string, unknown>): void {
+  if (data.attestation_timestamp) return;
+  const ack = data.context_acknowledgment as Record<string, unknown> | undefined;
+  if (ack?.acknowledged_at) {
+    data.attestation_timestamp = ack.acknowledged_at;
+  } else if (data.timestamp) {
+    data.attestation_timestamp = data.timestamp;
+    delete data.timestamp;
+  } else {
+    data.attestation_timestamp = new Date().toISOString();
+  }
+}
+
+function fixAttestationVerdict(data: Record<string, unknown>, result: MigrationResult): boolean {
+  const validVerdicts = ['COMPLETE', 'INCOMPLETE', 'PARTIAL', 'BLOCKED', 'NEEDS_HUMAN'];
+  let modified = false;
+  if (data.verdict && !validVerdicts.includes(data.verdict as string)) {
+    const verdictMap: Record<string, string> = {
+      PASSED: 'COMPLETE',
+      PASS: 'COMPLETE',
+      DONE: 'COMPLETE',
+      SUCCESS: 'COMPLETE',
+      FAILED: 'INCOMPLETE',
+      FAIL: 'INCOMPLETE',
+      PENDING: 'PARTIAL',
+    };
+    if (verdictMap[data.verdict as string]) {
+      data.verdict = verdictMap[data.verdict as string];
+      result.changes.push(`Mapped verdict to ${data.verdict}`);
+      modified = true;
+    }
+  }
+  if (!data.verdict) {
+    data.verdict = 'COMPLETE';
+    result.changes.push('Added default verdict: COMPLETE');
+    modified = true;
+  }
+  return modified;
+}
+
+function fixArtifactHashes(data: Record<string, unknown>, result: MigrationResult): boolean {
+  if (!data.artifact_hashes) return false;
+  const sha256Regex = /^[a-f0-9]{64}$/;
+  let modified = false;
+  for (const [path, hash] of Object.entries(data.artifact_hashes as Record<string, unknown>)) {
+    if (typeof hash === 'string' && !sha256Regex.test(hash)) {
+      (data.artifact_hashes as Record<string, unknown>)[path] = sha256(
+        `placeholder:${path}:${hash}`
+      );
+      result.changes.push(`Fixed artifact_hashes[${path}]`);
+      modified = true;
+    }
+  }
+  return modified;
+}
+
+function fixDependenciesVerified(data: Record<string, unknown>, result: MigrationResult): boolean {
+  let modified = false;
+  if (data.dependencies_verified && Array.isArray(data.dependencies_verified)) {
+    const needsFix = (data.dependencies_verified as unknown[]).some((d) => typeof d !== 'string');
+    if (needsFix) {
+      data.dependencies_verified = (data.dependencies_verified as unknown[]).map((d) => {
+        if (typeof d === 'object' && d !== null && 'task_id' in d) {
+          return (d as { task_id: string }).task_id;
+        }
+        return String(d);
+      });
+      result.changes.push('Fixed dependencies_verified to string array');
+      modified = true;
+    }
+  }
+  if (
+    data.dependencies_verified &&
+    typeof data.dependencies_verified === 'object' &&
+    !Array.isArray(data.dependencies_verified)
+  ) {
+    const deps = data.dependencies_verified as Record<string, unknown>;
+    data.dependencies_verified = Object.keys(deps);
+    result.changes.push('Converted dependencies_verified object to array');
+    modified = true;
+  }
+  return modified;
+}
+
+function resolveValidationCommand(vr: Record<string, unknown>, index: number): unknown {
+  if (vr.name) return vr.name;
+  if (vr.validation) return vr.validation;
+  return `validation-${index}`;
+}
+
+function fixSingleValidationResult(
+  vr: Record<string, unknown>,
+  index: number,
+  fallbackTs: unknown
+): boolean {
+  let vrModified = false;
+  if (!vr.command) {
+    vr.command = resolveValidationCommand(vr, index);
+    vrModified = true;
+  }
+  if (vr.exit_code === undefined) {
+    vr.exit_code = vr.passed ? 0 : 1;
+    vrModified = true;
+  }
+  if (!vr.timestamp) {
+    vr.timestamp = fallbackTs || new Date().toISOString();
+    vrModified = true;
+  }
+  if (vr.passed === undefined) {
+    vr.passed = vr.exit_code === 0;
+    vrModified = true;
+  }
+  return vrModified;
+}
+
+function fixValidationResultsArray(
+  data: Record<string, unknown>,
+  result: MigrationResult
+): boolean {
+  if (!data.validation_results || !Array.isArray(data.validation_results)) return false;
+  let modified = false;
+  const vrs = data.validation_results as Record<string, unknown>[];
+  for (let i = 0; i < vrs.length; i++) {
+    if (fixSingleValidationResult(vrs[i], i, data.attestation_timestamp)) {
+      result.changes.push(`Fixed validation_results[${i}]`);
+      modified = true;
+    }
+  }
+  return modified;
+}
+
+function fixGateResults(data: Record<string, unknown>, result: MigrationResult): boolean {
+  if (!data.gate_results || !Array.isArray(data.gate_results)) return false;
+  let modified = false;
+  const grs = data.gate_results as Record<string, unknown>[];
+  for (let i = 0; i < grs.length; i++) {
+    const gr = grs[i];
+    let grModified = false;
+    if (!gr.gate_id) {
+      if (gr.name) {
+        gr.gate_id = gr.name;
+        delete gr.name;
+      } else if (gr.gate) {
+        gr.gate_id = gr.gate;
+        delete gr.gate;
+      } else {
+        gr.gate_id = `gate-${i}`;
+      }
+      grModified = true;
+    }
+    if (gr.passed === undefined) {
+      gr.passed = gr.exit_code === 0 || gr.status === 'passed' || gr.result === 'pass';
+      grModified = true;
+    }
+    if (grModified) {
+      result.changes.push(`Fixed gate_results[${i}]`);
+      modified = true;
+    }
+  }
+  return modified;
+}
+
+function fixKpiId(kr: Record<string, unknown>, index: number): boolean {
+  if (kr.kpi) return false;
+  if (kr.name) {
+    kr.kpi = kr.name;
+    delete kr.name;
+  } else if (kr.metric) {
+    kr.kpi = kr.metric;
+    delete kr.metric;
+  } else {
+    kr.kpi = `kpi-${index}`;
+  }
+  return true;
+}
+
+function fixKpiResults(data: Record<string, unknown>, result: MigrationResult): boolean {
+  if (!data.kpi_results || !Array.isArray(data.kpi_results)) return false;
+  let modified = false;
+  const krs = data.kpi_results as Record<string, unknown>[];
+  for (let i = 0; i < krs.length; i++) {
+    const kr = krs[i];
+    let krModified = fixKpiId(kr, i);
+    if (kr.target !== undefined && typeof kr.target !== 'string') {
+      kr.target = String(kr.target);
+      krModified = true;
+    }
+    if (kr.actual !== undefined && typeof kr.actual !== 'string') {
+      kr.actual = String(kr.actual);
+      krModified = true;
+    }
+    if (krModified) {
+      result.changes.push(`Fixed kpi_results[${i}]`);
+      modified = true;
+    }
+  }
+  return modified;
+}
+
+function fixDodItems(data: Record<string, unknown>, result: MigrationResult): boolean {
+  if (!data.definition_of_done_items || !Array.isArray(data.definition_of_done_items)) {
+    return false;
+  }
+  let modified = false;
+  const dods = data.definition_of_done_items as Record<string, unknown>[];
+  for (let i = 0; i < dods.length; i++) {
+    const dod = dods[i];
+    if (dod.evidence && Array.isArray(dod.evidence)) {
+      dod.evidence = (dod.evidence as unknown[]).join('; ');
+      result.changes.push(`Fixed definition_of_done_items[${i}].evidence`);
+      modified = true;
+    }
+  }
+  return modified;
+}
+
+function fixValidationResultsObject(
+  data: Record<string, unknown>,
+  result: MigrationResult
+): boolean {
+  if (
+    !data.validation_results ||
+    Array.isArray(data.validation_results) ||
+    typeof data.validation_results !== 'object'
+  ) {
+    return false;
+  }
+  const vrObject = data.validation_results as Record<string, unknown>;
+  const vrArray: unknown[] = [];
+  for (const [name, value] of Object.entries(vrObject)) {
+    if (typeof value === 'object' && value !== null) {
+      const v = value as Record<string, unknown>;
+      vrArray.push({
+        name,
+        command: v.test || v.command || name,
+        exit_code: v.passed ? 0 : 1,
+        passed: v.passed === true || v.passed === 'true',
+        timestamp: data.attestation_timestamp || new Date().toISOString(),
+      });
+    } else if (typeof value === 'boolean') {
+      vrArray.push({
+        name,
+        command: name,
+        exit_code: value ? 0 : 1,
+        passed: value,
+        timestamp: data.attestation_timestamp || new Date().toISOString(),
+      });
+    }
+  }
+  if (vrArray.length > 0) {
+    data.validation_results = vrArray;
+    result.changes.push('Converted validation_results object to array');
+  } else {
+    delete data.validation_results;
+    result.changes.push('Removed invalid validation_results object');
+  }
+  return true;
+}
+
+function fixFilesRead(data: Record<string, unknown>, result: MigrationResult): boolean {
+  const ack = data.context_acknowledgment as Record<string, unknown> | undefined;
+  if (!ack?.files_read || !Array.isArray(ack.files_read)) return false;
+  const sha256Regex = /^[a-f0-9]{64}$/;
+  let modified = false;
+
+  const needsStringFix = (ack.files_read as unknown[]).some((f) => typeof f === 'string');
+  if (needsStringFix) {
+    ack.files_read = (ack.files_read as unknown[]).map((f) => {
+      if (typeof f === 'string') {
+        return { path: f, sha256: sha256(`placeholder:${f}`) };
+      }
+      return f;
+    });
+    result.changes.push('Converted files_read strings to objects');
+    modified = true;
+  }
+
+  const frs = ack.files_read as Record<string, unknown>[];
+  for (let i = 0; i < frs.length; i++) {
+    const fr = frs[i];
+    if (fr.sha256 && !sha256Regex.test(fr.sha256 as string)) {
+      fr.sha256 = sha256(`placeholder:${fr.path}:${fr.sha256}`);
+      result.changes.push(`Fixed context_acknowledgment.files_read[${i}].sha256`);
+      modified = true;
+    }
+  }
+  return modified;
+}
+
+function fixAttestationScalars(data: Record<string, unknown>, result: MigrationResult): boolean {
+  let modified = false;
+  if (!data.schema_version) {
+    data.schema_version = '1.0.0';
+    result.changes.push('Added schema_version: 1.0.0');
+    modified = true;
+  }
+  if (!data.attestor) {
+    data.attestor = 'Claude Code - Task Integrity Validator';
+    result.changes.push('Added attestor');
+    modified = true;
+  }
+  if (!data.attestation_timestamp) {
+    fixAttestationTimestamp(data);
+    result.changes.push('Added attestation_timestamp');
+    modified = true;
+  }
+  if (data.notes && Array.isArray(data.notes)) {
+    data.notes = (data.notes as unknown[]).join('\n');
+    result.changes.push('Converted notes array to string');
+    modified = true;
+  }
+  return modified;
+}
+
+function fixAttestationTaskId(
+  file: string,
+  data: Record<string, unknown>,
+  result: MigrationResult
+): boolean {
+  if (data.task_id) return false;
+  const pathMatch = file.match(/attestations[/\\]([A-Z]+-[A-Z0-9-]+)[/\\]/);
+  if (!pathMatch) return false;
+  data.task_id = pathMatch[1];
+  result.changes.push(`Added task_id from path: ${data.task_id}`);
+  return true;
+}
+
+function migrateAttestationRecord(
+  file: string,
+  data: Record<string, unknown>,
+  result: MigrationResult
+): boolean {
+  let modified = false;
+
+  if (fixAttestationScalars(data, result)) modified = true;
+  if (fixAttestationVerdict(data, result)) modified = true;
+  if (fixArtifactHashes(data, result)) modified = true;
+  if (fixDependenciesVerified(data, result)) modified = true;
+  if (fixValidationResultsArray(data, result)) modified = true;
+  if (fixGateResults(data, result)) modified = true;
+  if (fixKpiResults(data, result)) modified = true;
+  if (fixDodItems(data, result)) modified = true;
+  if (fixValidationResultsObject(data, result)) modified = true;
+  if (fixFilesRead(data, result)) modified = true;
+  if (fixAttestationTaskId(file, data, result)) modified = true;
+
+  return modified;
+}
+
 /**
  * Migrate attestation files
  */
@@ -56,318 +409,9 @@ async function migrateAttestationFiles(): Promise<void> {
 
     try {
       const content = readFileSync(file, 'utf-8');
-      const data = JSON.parse(content);
-      let modified = false;
+      const data = JSON.parse(content) as Record<string, unknown>;
 
-      // Add schema_version if missing
-      if (!data.schema_version) {
-        data.schema_version = '1.0.0';
-        result.changes.push('Added schema_version: 1.0.0');
-        modified = true;
-      }
-
-      // Add attestor if missing
-      if (!data.attestor) {
-        data.attestor = 'Claude Code - Task Integrity Validator';
-        result.changes.push('Added attestor');
-        modified = true;
-      }
-
-      // Add attestation_timestamp if missing
-      if (!data.attestation_timestamp) {
-        // Use timestamp from context_acknowledgment if available, or status_history, or now
-        if (data.context_acknowledgment?.acknowledged_at) {
-          data.attestation_timestamp = data.context_acknowledgment.acknowledged_at;
-        } else if (data.timestamp) {
-          data.attestation_timestamp = data.timestamp;
-          delete data.timestamp;
-        } else {
-          data.attestation_timestamp = new Date().toISOString();
-        }
-        result.changes.push('Added attestation_timestamp');
-        modified = true;
-      }
-
-      // Ensure verdict is valid
-      const validVerdicts = ['COMPLETE', 'INCOMPLETE', 'PARTIAL', 'BLOCKED', 'NEEDS_HUMAN'];
-      if (data.verdict && !validVerdicts.includes(data.verdict)) {
-        // Map common variations
-        const verdictMap: Record<string, string> = {
-          PASSED: 'COMPLETE',
-          PASS: 'COMPLETE',
-          DONE: 'COMPLETE',
-          SUCCESS: 'COMPLETE',
-          FAILED: 'INCOMPLETE',
-          FAIL: 'INCOMPLETE',
-          PENDING: 'PARTIAL',
-        };
-        if (verdictMap[data.verdict]) {
-          data.verdict = verdictMap[data.verdict];
-          result.changes.push(`Mapped verdict to ${data.verdict}`);
-          modified = true;
-        }
-      }
-      if (!data.verdict) {
-        data.verdict = 'COMPLETE';
-        result.changes.push('Added default verdict: COMPLETE');
-        modified = true;
-      }
-
-      // Fix artifact_hashes - replace non-SHA256 values with placeholder
-      if (data.artifact_hashes) {
-        const sha256Regex = /^[a-f0-9]{64}$/;
-        for (const [path, hash] of Object.entries(data.artifact_hashes)) {
-          if (typeof hash === 'string' && !sha256Regex.test(hash)) {
-            // Replace invalid hashes with a placeholder hash
-            data.artifact_hashes[path] = sha256(`placeholder:${path}:${hash}`);
-            result.changes.push(`Fixed artifact_hashes[${path}]`);
-            modified = true;
-          }
-        }
-      }
-
-      // Fix dependencies_verified - should be array of strings
-      if (data.dependencies_verified && Array.isArray(data.dependencies_verified)) {
-        const needsFix = data.dependencies_verified.some((d: unknown) => typeof d !== 'string');
-        if (needsFix) {
-          data.dependencies_verified = data.dependencies_verified.map((d: unknown) => {
-            if (typeof d === 'object' && d !== null && 'task_id' in d) {
-              return (d as { task_id: string }).task_id;
-            }
-            return String(d);
-          });
-          result.changes.push('Fixed dependencies_verified to string array');
-          modified = true;
-        }
-      }
-
-      // Fix validation_results - add missing required fields
-      if (data.validation_results && Array.isArray(data.validation_results)) {
-        for (let i = 0; i < data.validation_results.length; i++) {
-          const vr = data.validation_results[i];
-          let vrModified = false;
-
-          // Use name as command if command is missing
-          if (!vr.command) {
-            if (vr.name) {
-              vr.command = vr.name;
-            } else if (vr.validation) {
-              vr.command = vr.validation;
-            } else {
-              vr.command = `validation-${i}`;
-            }
-            vrModified = true;
-          }
-          if (vr.exit_code === undefined) {
-            vr.exit_code = vr.passed ? 0 : 1;
-            vrModified = true;
-          }
-          if (!vr.timestamp) {
-            vr.timestamp = data.attestation_timestamp || new Date().toISOString();
-            vrModified = true;
-          }
-          if (vr.passed === undefined) {
-            vr.passed = vr.exit_code === 0;
-            vrModified = true;
-          }
-
-          if (vrModified) {
-            result.changes.push(`Fixed validation_results[${i}]`);
-            modified = true;
-          }
-        }
-      }
-
-      // Fix gate_results - add missing gate_id and passed
-      if (data.gate_results && Array.isArray(data.gate_results)) {
-        for (let i = 0; i < data.gate_results.length; i++) {
-          const gr = data.gate_results[i];
-          let grModified = false;
-
-          if (!gr.gate_id) {
-            if (gr.name) {
-              gr.gate_id = gr.name;
-              delete gr.name;
-            } else if (gr.gate) {
-              gr.gate_id = gr.gate;
-              delete gr.gate;
-            } else {
-              gr.gate_id = `gate-${i}`;
-            }
-            grModified = true;
-          }
-          if (gr.passed === undefined) {
-            gr.passed = gr.exit_code === 0 || gr.status === 'passed' || gr.result === 'pass';
-            grModified = true;
-          }
-
-          if (grModified) {
-            result.changes.push(`Fixed gate_results[${i}]`);
-            modified = true;
-          }
-        }
-      }
-
-      // Fix kpi_results - add missing kpi field
-      if (data.kpi_results && Array.isArray(data.kpi_results)) {
-        for (let i = 0; i < data.kpi_results.length; i++) {
-          const kr = data.kpi_results[i];
-          let krModified = false;
-
-          if (!kr.kpi) {
-            if (kr.name) {
-              kr.kpi = kr.name;
-              delete kr.name;
-            } else if (kr.metric) {
-              kr.kpi = kr.metric;
-              delete kr.metric;
-            } else {
-              kr.kpi = `kpi-${i}`;
-            }
-            krModified = true;
-          }
-          // Ensure target and actual are strings
-          if (kr.target !== undefined && typeof kr.target !== 'string') {
-            kr.target = String(kr.target);
-            krModified = true;
-          }
-          if (kr.actual !== undefined && typeof kr.actual !== 'string') {
-            kr.actual = String(kr.actual);
-            krModified = true;
-          }
-
-          if (krModified) {
-            result.changes.push(`Fixed kpi_results[${i}]`);
-            modified = true;
-          }
-        }
-      }
-
-      // Fix notes - convert array to string
-      if (data.notes && Array.isArray(data.notes)) {
-        data.notes = data.notes.join('\n');
-        result.changes.push('Converted notes array to string');
-        modified = true;
-      }
-
-      // Fix definition_of_done_items.evidence - convert array to string
-      if (data.definition_of_done_items && Array.isArray(data.definition_of_done_items)) {
-        for (let i = 0; i < data.definition_of_done_items.length; i++) {
-          const dod = data.definition_of_done_items[i];
-          if (dod.evidence && Array.isArray(dod.evidence)) {
-            dod.evidence = dod.evidence.join('; ');
-            result.changes.push(`Fixed definition_of_done_items[${i}].evidence`);
-            modified = true;
-          }
-        }
-      }
-
-      // Fix dependencies_verified - handle object format
-      if (
-        data.dependencies_verified &&
-        typeof data.dependencies_verified === 'object' &&
-        !Array.isArray(data.dependencies_verified)
-      ) {
-        // Convert object to array of task_ids
-        const deps = data.dependencies_verified as Record<string, unknown>;
-        const taskIds = Object.keys(deps);
-        data.dependencies_verified = taskIds;
-        result.changes.push('Converted dependencies_verified object to array');
-        modified = true;
-      }
-
-      // Extract task_id from file path if missing
-      if (!data.task_id) {
-        const pathMatch = file.match(/attestations[/\\]([A-Z]+-[A-Z0-9-]+)[/\\]/);
-        if (pathMatch) {
-          data.task_id = pathMatch[1];
-          result.changes.push(`Added task_id from path: ${data.task_id}`);
-          modified = true;
-        }
-      }
-
-      // Fix validation_results if it's an object instead of array
-      if (
-        data.validation_results &&
-        !Array.isArray(data.validation_results) &&
-        typeof data.validation_results === 'object'
-      ) {
-        // Convert object format to array format
-        const vrObject = data.validation_results as Record<string, unknown>;
-        const vrArray: unknown[] = [];
-
-        for (const [name, value] of Object.entries(vrObject)) {
-          if (typeof value === 'object' && value !== null) {
-            const v = value as Record<string, unknown>;
-            vrArray.push({
-              name: name,
-              command: v.test || v.command || name,
-              exit_code: v.passed ? 0 : 1,
-              passed: v.passed === true || v.passed === 'true',
-              timestamp: data.attestation_timestamp || new Date().toISOString(),
-            });
-          } else if (typeof value === 'boolean') {
-            vrArray.push({
-              name: name,
-              command: name,
-              exit_code: value ? 0 : 1,
-              passed: value,
-              timestamp: data.attestation_timestamp || new Date().toISOString(),
-            });
-          }
-        }
-
-        if (vrArray.length > 0) {
-          data.validation_results = vrArray;
-          result.changes.push('Converted validation_results object to array');
-          modified = true;
-        } else {
-          // If we couldn't convert, remove the invalid field
-          delete data.validation_results;
-          result.changes.push('Removed invalid validation_results object');
-          modified = true;
-        }
-      }
-
-      // Fix context_acknowledgment.files_read if it contains strings
-      if (
-        data.context_acknowledgment?.files_read &&
-        Array.isArray(data.context_acknowledgment.files_read)
-      ) {
-        const needsFix = data.context_acknowledgment.files_read.some(
-          (f: unknown) => typeof f === 'string'
-        );
-        if (needsFix) {
-          data.context_acknowledgment.files_read = data.context_acknowledgment.files_read.map(
-            (f: unknown) => {
-              if (typeof f === 'string') {
-                return {
-                  path: f,
-                  sha256: sha256(`placeholder:${f}`),
-                };
-              }
-              return f;
-            }
-          );
-          result.changes.push('Converted files_read strings to objects');
-          modified = true;
-        }
-      }
-
-      // Fix context_acknowledgment.files_read SHA256 hashes
-      if (data.context_acknowledgment?.files_read) {
-        const sha256Regex = /^[a-f0-9]{64}$/;
-        for (let i = 0; i < data.context_acknowledgment.files_read.length; i++) {
-          const fr = data.context_acknowledgment.files_read[i];
-          if (fr.sha256 && !sha256Regex.test(fr.sha256)) {
-            fr.sha256 = sha256(`placeholder:${fr.path}:${fr.sha256}`);
-            result.changes.push(`Fixed context_acknowledgment.files_read[${i}].sha256`);
-            modified = true;
-          }
-        }
-      }
-
-      if (modified) {
+      if (migrateAttestationRecord(file, data, result)) {
         // Reorder properties for consistency
         const ordered = {
           $schema: data.$schema,
@@ -389,10 +433,8 @@ async function migrateAttestationFiles(): Promise<void> {
           environment: data.environment,
           notes: data.notes,
         };
-
         // Remove undefined values
         const cleaned = JSON.parse(JSON.stringify(ordered));
-
         writeFileSync(file, JSON.stringify(cleaned, null, 2) + '\n');
         result.status = 'updated';
         console.log(`  ✓ ${file.replaceAll(REPO_ROOT, '.')}`);
@@ -408,6 +450,197 @@ async function migrateAttestationFiles(): Promise<void> {
 
     results.push(result);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Task status record migration helpers
+// ---------------------------------------------------------------------------
+
+const TASK_VALID_STATUSES = ['PLANNED', 'NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE', 'FAILED'];
+const TASK_STATUS_MAP: Record<string, string> = {
+  planned: 'PLANNED',
+  not_started: 'NOT_STARTED',
+  'not started': 'NOT_STARTED',
+  in_progress: 'IN_PROGRESS',
+  'in progress': 'IN_PROGRESS',
+  inprogress: 'IN_PROGRESS',
+  blocked: 'BLOCKED',
+  done: 'DONE',
+  completed: 'DONE',
+  complete: 'DONE',
+  failed: 'FAILED',
+  error: 'FAILED',
+  config_created: 'IN_PROGRESS',
+  deployed: 'DONE',
+  validated: 'DONE',
+  created: 'IN_PROGRESS',
+  started: 'IN_PROGRESS',
+  running: 'IN_PROGRESS',
+  pending: 'NOT_STARTED',
+  ready: 'NOT_STARTED',
+};
+
+function normalizeStatusHistoryEntry(
+  sh: Record<string, unknown>,
+  index: number,
+  fallbackAt: unknown,
+  result: MigrationResult
+): boolean {
+  let shModified = false;
+  if (!sh.at) {
+    sh.at = fallbackAt || new Date().toISOString();
+    result.changes.push(`Added status_history[${index}].at timestamp`);
+    shModified = true;
+  }
+  if (sh.status && !TASK_VALID_STATUSES.includes(sh.status as string)) {
+    const statusLower = String(sh.status).toLowerCase();
+    if (TASK_STATUS_MAP[statusLower]) {
+      sh.status = TASK_STATUS_MAP[statusLower];
+      result.changes.push(
+        `Normalized status_history[${index}].status: ${statusLower} → ${sh.status}`
+      );
+    } else {
+      sh.status = 'IN_PROGRESS';
+      result.changes.push(
+        `Set status_history[${index}].status to IN_PROGRESS (was: ${statusLower})`
+      );
+    }
+    shModified = true;
+  }
+  return shModified;
+}
+
+function fixStatusHistory(data: Record<string, unknown>, result: MigrationResult): boolean {
+  if (!data.status_history || !Array.isArray(data.status_history)) return false;
+  let modified = false;
+  const history = data.status_history as Record<string, unknown>[];
+  const exec = data.execution as Record<string, unknown> | undefined;
+  for (let i = 0; i < history.length; i++) {
+    const prevAt = i > 0 ? (history[i - 1] as Record<string, unknown>)?.at : null;
+    const fallbackAt = prevAt || data.completed_at || exec?.completed_at;
+    if (normalizeStatusHistoryEntry(history[i], i, fallbackAt, result)) {
+      modified = true;
+    }
+  }
+  return modified;
+}
+
+function fixArtifactsCreated(data: Record<string, unknown>, result: MigrationResult): boolean {
+  const artifacts = data.artifacts as Record<string, unknown> | undefined;
+  if (!artifacts?.created || !Array.isArray(artifacts.created)) return false;
+  const exec = data.execution as Record<string, unknown> | undefined;
+  const fallbackTs = data.completed_at || exec?.completed_at || new Date().toISOString();
+  let modified = false;
+  const created = artifacts.created as unknown[];
+  for (let i = 0; i < created.length; i++) {
+    const artifact = created[i];
+    if (typeof artifact === 'string') {
+      created[i] = {
+        path: artifact,
+        sha256: sha256(`placeholder:${artifact}`),
+        created_at: fallbackTs,
+      };
+      result.changes.push(`Converted artifacts.created[${i}] string to object`);
+      modified = true;
+    } else if (artifact && typeof artifact === 'object') {
+      const art = artifact as Record<string, unknown>;
+      if (art.sha256 === null || art.sha256 === undefined || art.sha256 === '') {
+        art.sha256 = sha256(`placeholder:${art.path || 'unknown'}`);
+        result.changes.push(`Fixed artifacts.created[${i}].sha256 from null`);
+        modified = true;
+      }
+      if (!art.created_at) {
+        art.created_at = fallbackTs;
+        result.changes.push(`Added artifacts.created[${i}].created_at`);
+        modified = true;
+      }
+    }
+  }
+  return modified;
+}
+
+function fixArtifactsExpected(data: Record<string, unknown>, result: MigrationResult): boolean {
+  const artifacts = data.artifacts as Record<string, unknown> | undefined;
+  if (!artifacts?.expected || !Array.isArray(artifacts.expected)) return false;
+  const originalLength = (artifacts.expected as unknown[]).length;
+  artifacts.expected = (artifacts.expected as unknown[]).filter(
+    (e) => e !== null && e !== undefined && e !== ''
+  );
+  if ((artifacts.expected as unknown[]).length !== originalLength) {
+    const removed = originalLength - (artifacts.expected as unknown[]).length;
+    result.changes.push(`Removed ${removed} null values from artifacts.expected`);
+    return true;
+  }
+  return false;
+}
+
+function fixKpis(data: Record<string, unknown>, result: MigrationResult): boolean {
+  if (!data.kpis) return false;
+  let modified = false;
+  for (const [kpiName, kpi] of Object.entries(data.kpis as Record<string, unknown>)) {
+    const k = kpi as Record<string, unknown>;
+    if (k.actual === null || k.actual === undefined) {
+      k.actual = 'N/A';
+      result.changes.push(`Fixed kpis.${kpiName}.actual from null to 'N/A'`);
+      modified = true;
+    }
+  }
+  return modified;
+}
+
+function fixValidations(data: Record<string, unknown>, result: MigrationResult): boolean {
+  if (!data.validations || !Array.isArray(data.validations)) return false;
+  const exec = data.execution as Record<string, unknown> | undefined;
+  const fallbackTs = data.completed_at || exec?.completed_at || new Date().toISOString();
+  let modified = false;
+  const vals = data.validations as Record<string, unknown>[];
+  for (let i = 0; i < vals.length; i++) {
+    const v = vals[i];
+    let vModified = false;
+    if (v.exit_code === undefined || v.exit_code === null) {
+      v.exit_code = v.passed ? 0 : 1;
+      result.changes.push(`Added validations[${i}].exit_code`);
+      vModified = true;
+    }
+    if (!v.timestamp) {
+      v.timestamp = fallbackTs;
+      result.changes.push(`Added validations[${i}].timestamp`);
+      vModified = true;
+    }
+    if (vModified) modified = true;
+  }
+  return modified;
+}
+
+function migrateTaskStatusRecord(
+  file: string,
+  data: Record<string, unknown>,
+  result: MigrationResult
+): boolean {
+  let modified = false;
+
+  if (!data.task_id) {
+    const filenameMatch = file.match(/([A-Z]{1,20}-[A-Z0-9-]{1,40})\.json$/);
+    if (filenameMatch) {
+      data.task_id = filenameMatch[1];
+      result.changes.push(`Added task_id from filename: ${data.task_id}`);
+      modified = true;
+    }
+  }
+
+  if (typeof data.sprint === 'number') {
+    data.sprint = `sprint-${data.sprint}`;
+    result.changes.push(`Fixed sprint from number to string`);
+    modified = true;
+  }
+
+  if (fixStatusHistory(data, result)) modified = true;
+  if (fixArtifactsCreated(data, result)) modified = true;
+  if (fixArtifactsExpected(data, result)) modified = true;
+  if (fixKpis(data, result)) modified = true;
+  if (fixValidations(data, result)) modified = true;
+
+  return modified;
 }
 
 /**
@@ -439,201 +672,17 @@ async function migrateTaskStatusFiles(): Promise<void> {
     allFiles = allFiles.concat(files);
   }
 
-  // Deduplicate
   allFiles = [...new Set(allFiles)];
-
   console.log(`Found ${allFiles.length} task status files\n`);
-
-  // Valid status values
-  const validStatuses = ['PLANNED', 'NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE', 'FAILED'];
-  const statusMap: Record<string, string> = {
-    planned: 'PLANNED',
-    not_started: 'NOT_STARTED',
-    'not started': 'NOT_STARTED',
-    in_progress: 'IN_PROGRESS',
-    'in progress': 'IN_PROGRESS',
-    inprogress: 'IN_PROGRESS',
-    blocked: 'BLOCKED',
-    done: 'DONE',
-    completed: 'DONE',
-    complete: 'DONE',
-    failed: 'FAILED',
-    error: 'FAILED',
-    // Map non-standard statuses
-    config_created: 'IN_PROGRESS',
-    deployed: 'DONE',
-    validated: 'DONE',
-    created: 'IN_PROGRESS',
-    started: 'IN_PROGRESS',
-    running: 'IN_PROGRESS',
-    pending: 'NOT_STARTED',
-    ready: 'NOT_STARTED',
-  };
 
   for (const file of allFiles) {
     const result: MigrationResult = { file, status: 'skipped', changes: [] };
 
     try {
       const content = readFileSync(file, 'utf-8');
-      const data = JSON.parse(content);
-      let modified = false;
+      const data = JSON.parse(content) as Record<string, unknown>;
 
-      // Extract task_id from filename if missing
-      if (!data.task_id) {
-        const filenameMatch = file.match(/([A-Z]+-[A-Z0-9-]+)\.json$/);
-        if (filenameMatch) {
-          data.task_id = filenameMatch[1];
-          result.changes.push(`Added task_id from filename: ${data.task_id}`);
-          modified = true;
-        }
-      }
-
-      // Fix sprint - should be string like "sprint-0"
-      if (typeof data.sprint === 'number') {
-        data.sprint = `sprint-${data.sprint}`;
-        result.changes.push(`Fixed sprint from number to string`);
-        modified = true;
-      }
-
-      // Fix status_history - add missing timestamps and normalize status values
-      if (data.status_history && Array.isArray(data.status_history)) {
-        for (let i = 0; i < data.status_history.length; i++) {
-          const sh = data.status_history[i];
-          let shModified = false;
-
-          // Add missing 'at' timestamp
-          if (!sh.at) {
-            // Use previous timestamp, or completed_at, or create a synthetic one
-            const prevTimestamp = i > 0 ? data.status_history[i - 1]?.at : null;
-            sh.at =
-              prevTimestamp ||
-              data.completed_at ||
-              data.execution?.completed_at ||
-              new Date().toISOString();
-            result.changes.push(`Added status_history[${i}].at timestamp`);
-            shModified = true;
-          }
-
-          // Normalize status values
-          if (sh.status) {
-            const statusLower = sh.status.toLowerCase();
-            if (!validStatuses.includes(sh.status)) {
-              if (statusMap[statusLower]) {
-                sh.status = statusMap[statusLower];
-                result.changes.push(
-                  `Normalized status_history[${i}].status: ${statusLower} → ${sh.status}`
-                );
-                shModified = true;
-              } else {
-                // Default to IN_PROGRESS for unknown statuses
-                sh.status = 'IN_PROGRESS';
-                result.changes.push(
-                  `Set status_history[${i}].status to IN_PROGRESS (was: ${statusLower})`
-                );
-                shModified = true;
-              }
-            }
-          }
-
-          if (shModified) {
-            modified = true;
-          }
-        }
-      }
-
-      // Fix artifacts.created - convert strings to objects and fix null sha256
-      if (data.artifacts?.created && Array.isArray(data.artifacts.created)) {
-        for (let i = 0; i < data.artifacts.created.length; i++) {
-          const artifact = data.artifacts.created[i];
-          let artModified = false;
-
-          if (typeof artifact === 'string') {
-            data.artifacts.created[i] = {
-              path: artifact,
-              sha256: sha256(`placeholder:${artifact}`),
-              created_at:
-                data.completed_at || data.execution?.completed_at || new Date().toISOString(),
-            };
-            result.changes.push(`Converted artifacts.created[${i}] string to object`);
-            artModified = true;
-          } else if (artifact && typeof artifact === 'object') {
-            // Fix null sha256
-            if (
-              artifact.sha256 === null ||
-              artifact.sha256 === undefined ||
-              artifact.sha256 === ''
-            ) {
-              artifact.sha256 = sha256(`placeholder:${artifact.path || 'unknown'}`);
-              result.changes.push(`Fixed artifacts.created[${i}].sha256 from null`);
-              artModified = true;
-            }
-            // Add missing created_at
-            if (!artifact.created_at) {
-              artifact.created_at =
-                data.completed_at || data.execution?.completed_at || new Date().toISOString();
-              result.changes.push(`Added artifacts.created[${i}].created_at`);
-              artModified = true;
-            }
-          }
-
-          if (artModified) {
-            modified = true;
-          }
-        }
-      }
-
-      // Fix artifacts.expected - remove null values
-      if (data.artifacts?.expected && Array.isArray(data.artifacts.expected)) {
-        const originalLength = data.artifacts.expected.length;
-        data.artifacts.expected = data.artifacts.expected.filter(
-          (e: unknown) => e !== null && e !== undefined && e !== ''
-        );
-        if (data.artifacts.expected.length !== originalLength) {
-          result.changes.push(
-            `Removed ${originalLength - data.artifacts.expected.length} null values from artifacts.expected`
-          );
-          modified = true;
-        }
-      }
-
-      // Fix KPI actual values - convert null to appropriate defaults
-      if (data.kpis) {
-        for (const [kpiName, kpi] of Object.entries(data.kpis)) {
-          const k = kpi as Record<string, unknown>;
-          if (k.actual === null || k.actual === undefined) {
-            // Use 'N/A' for null values
-            k.actual = 'N/A';
-            result.changes.push(`Fixed kpis.${kpiName}.actual from null to 'N/A'`);
-            modified = true;
-          }
-        }
-      }
-
-      // Fix validations - add missing timestamps and exit_code
-      if (data.validations && Array.isArray(data.validations)) {
-        for (let i = 0; i < data.validations.length; i++) {
-          const v = data.validations[i];
-          let vModified = false;
-
-          if (v.exit_code === undefined || v.exit_code === null) {
-            v.exit_code = v.passed ? 0 : 1;
-            result.changes.push(`Added validations[${i}].exit_code`);
-            vModified = true;
-          }
-          if (!v.timestamp) {
-            v.timestamp =
-              data.completed_at || data.execution?.completed_at || new Date().toISOString();
-            result.changes.push(`Added validations[${i}].timestamp`);
-            vModified = true;
-          }
-
-          if (vModified) {
-            modified = true;
-          }
-        }
-      }
-
-      if (modified) {
+      if (migrateTaskStatusRecord(file, data, result)) {
         writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
         result.status = 'updated';
         console.log(`  ✓ ${file.replaceAll(REPO_ROOT, '.')}`);
@@ -649,6 +698,168 @@ async function migrateTaskStatusFiles(): Promise<void> {
 
     results.push(result);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Sprint summary record migration helpers
+// ---------------------------------------------------------------------------
+
+const PHASE_VALID_STATUSES = ['NOT_STARTED', 'IN_PROGRESS', 'DONE', 'BLOCKED'];
+const PHASE_STATUS_MAP: Record<string, string> = {
+  not_started: 'NOT_STARTED',
+  'not started': 'NOT_STARTED',
+  in_progress: 'IN_PROGRESS',
+  'in progress': 'IN_PROGRESS',
+  inprogress: 'IN_PROGRESS',
+  done: 'DONE',
+  completed: 'DONE',
+  complete: 'DONE',
+  blocked: 'BLOCKED',
+  planning: 'NOT_STARTED',
+  planned: 'NOT_STARTED',
+};
+
+function buildPhaseId(phase: Record<string, unknown>, index: number): string {
+  if (!phase.name) return `phase-${index}-phase${index}`;
+  const name = String(phase.name);
+  const nameMatch = name.match(/phase\s*(\d+)/i);
+  const phaseNum = nameMatch ? nameMatch[1] : String(index);
+  const phaseName =
+    name
+      .toLowerCase()
+      .replace(/phase\s*\d+\s*[-:.]?\s*/i, '')
+      .replaceAll(/\s+/g, '-')
+      .replaceAll(/[^a-z0-9-]/g, '')
+      .replaceAll(/-+/g, '-')
+      .replaceAll(/^-|-$/g, '') || 'default';
+  return `phase-${phaseNum}-${phaseName}`;
+}
+
+function fixPhases(data: Record<string, unknown>, result: MigrationResult): boolean {
+  if (!data.phases || !Array.isArray(data.phases)) return false;
+  let modified = false;
+  const phases = data.phases as Record<string, unknown>[];
+  const phaseIdPattern = /^phase-[0-9]+-[a-z-]+$/;
+  for (let i = 0; i < phases.length; i++) {
+    const phase = phases[i];
+    let phaseModified = false;
+    if (!phase.id || !phaseIdPattern.test(phase.id as string)) {
+      phase.id = buildPhaseId(phase, i);
+      phaseModified = true;
+    }
+    if (!phase.status || !PHASE_VALID_STATUSES.includes(phase.status as string)) {
+      const statusLower = ((phase.status as string) || 'NOT_STARTED').toLowerCase();
+      phase.status = PHASE_STATUS_MAP[statusLower] || 'NOT_STARTED';
+      phaseModified = true;
+    }
+    if (phaseModified) {
+      result.changes.push(`Fixed phases[${i}]`);
+      modified = true;
+    }
+  }
+  return modified;
+}
+
+const KPI_SUMMARY_VALID_STATUSES = [
+  'MEASURING',
+  'ON_TARGET',
+  'BELOW_TARGET',
+  'ABOVE_TARGET',
+  'MET',
+];
+const KPI_SUMMARY_STATUS_MAP: Record<string, string> = {
+  met: 'MET',
+  on_target: 'ON_TARGET',
+  below_target: 'BELOW_TARGET',
+  above_target: 'ABOVE_TARGET',
+  measuring: 'MEASURING',
+};
+
+function fixKpiSummaryEntry(
+  kpi: Record<string, unknown>,
+  kpiName: string,
+  result: MigrationResult
+): boolean {
+  let kpiModified = false;
+  if (kpi.actual === undefined) {
+    if (kpi.current !== undefined) {
+      kpi.actual = kpi.current;
+    } else if (kpi.target !== undefined) {
+      kpi.actual = kpi.target;
+    } else {
+      kpi.actual = 0;
+    }
+    kpiModified = true;
+  }
+  if (kpi.target === undefined) {
+    kpi.target = kpi.actual !== undefined ? kpi.actual : 0;
+    kpiModified = true;
+  }
+  if (
+    !kpi.status ||
+    (typeof kpi.status === 'string' && !KPI_SUMMARY_VALID_STATUSES.includes(kpi.status))
+  ) {
+    if (
+      kpi.status &&
+      typeof kpi.status === 'string' &&
+      KPI_SUMMARY_STATUS_MAP[kpi.status.toLowerCase()]
+    ) {
+      kpi.status = KPI_SUMMARY_STATUS_MAP[kpi.status.toLowerCase()];
+    } else {
+      kpi.status = 'MEASURING';
+    }
+    kpiModified = true;
+  }
+  if (kpiModified) {
+    result.changes.push(`Fixed kpi_summary.${kpiName}`);
+  }
+  return kpiModified;
+}
+
+function fixKpiSummary(data: Record<string, unknown>, result: MigrationResult): boolean {
+  if (!data.kpi_summary) return false;
+  let modified = false;
+  for (const [kpiName, kpiValue] of Object.entries(data.kpi_summary as Record<string, unknown>)) {
+    if (typeof kpiValue === 'number' || typeof kpiValue === 'string') {
+      (data.kpi_summary as Record<string, unknown>)[kpiName] = {
+        current: kpiValue,
+        target: kpiValue,
+        actual: kpiValue,
+        status: 'MEASURING',
+      };
+      result.changes.push(`Converted kpi_summary.${kpiName} to object`);
+      modified = true;
+    } else if (typeof kpiValue === 'object' && kpiValue !== null) {
+      if (fixKpiSummaryEntry(kpiValue as Record<string, unknown>, kpiName, result)) {
+        modified = true;
+      }
+    }
+  }
+  return modified;
+}
+
+function migrateSprintSummaryRecord(
+  data: Record<string, unknown>,
+  result: MigrationResult
+): boolean {
+  let modified = false;
+
+  if (data.target_date === null) {
+    data.target_date = 'TBD';
+    result.changes.push('Fixed target_date from null to TBD');
+    modified = true;
+  }
+
+  if (typeof data.sprint === 'number') {
+    data.sprint = `sprint-${data.sprint}`;
+    result.changes.push(`Fixed sprint from number to string`);
+    modified = true;
+  }
+
+  if (fixPhases(data, result)) modified = true;
+  if (fixKpiSummary(data, result)) modified = true;
+
+  return modified;
 }
 
 /**
@@ -667,145 +878,9 @@ async function migrateSprintSummaryFiles(): Promise<void> {
 
     try {
       const content = readFileSync(file, 'utf-8');
-      const data = JSON.parse(content);
-      let modified = false;
+      const data = JSON.parse(content) as Record<string, unknown>;
 
-      // Fix target_date - convert null to valid date or remove
-      if (data.target_date === null) {
-        data.target_date = 'TBD';
-        result.changes.push('Fixed target_date from null to TBD');
-        modified = true;
-      }
-
-      // Fix sprint - should be string
-      if (typeof data.sprint === 'number') {
-        data.sprint = `sprint-${data.sprint}`;
-        result.changes.push(`Fixed sprint from number to string`);
-        modified = true;
-      }
-
-      // Fix phases - add id if missing
-      if (data.phases && Array.isArray(data.phases)) {
-        for (let i = 0; i < data.phases.length; i++) {
-          const phase = data.phases[i];
-          let phaseModified = false;
-
-          // Generate proper phase id if missing or invalid
-          const phaseIdPattern = /^phase-[0-9]+-[a-z-]+$/;
-          if (!phase.id || !phaseIdPattern.test(phase.id)) {
-            if (phase.name) {
-              // Extract number from name or use index
-              const nameMatch = phase.name.match(/phase\s*(\d+)/i);
-              const phaseNum = nameMatch ? nameMatch[1] : String(i);
-              const phaseName =
-                phase.name
-                  .toLowerCase()
-                  .replace(/phase\s*\d+\s*[-:.]?\s*/i, '')
-                  .replaceAll(/\s+/g, '-')
-                  .replaceAll(/[^a-z0-9-]/g, '')
-                  .replaceAll(/-+/g, '-')
-                  .replaceAll(/^-|-$/g, '') || 'default';
-              phase.id = `phase-${phaseNum}-${phaseName}`;
-              phaseModified = true;
-            } else {
-              phase.id = `phase-${i}-phase${i}`;
-              phaseModified = true;
-            }
-          }
-
-          // Fix status
-          const validStatuses = ['NOT_STARTED', 'IN_PROGRESS', 'DONE', 'BLOCKED'];
-          if (!phase.status || !validStatuses.includes(phase.status)) {
-            const statusMap: Record<string, string> = {
-              not_started: 'NOT_STARTED',
-              'not started': 'NOT_STARTED',
-              in_progress: 'IN_PROGRESS',
-              'in progress': 'IN_PROGRESS',
-              inprogress: 'IN_PROGRESS',
-              done: 'DONE',
-              completed: 'DONE',
-              complete: 'DONE',
-              blocked: 'BLOCKED',
-              planning: 'NOT_STARTED',
-              planned: 'NOT_STARTED',
-            };
-            const statusLower = (phase.status || 'NOT_STARTED').toLowerCase();
-            phase.status = statusMap[statusLower] || 'NOT_STARTED';
-            phaseModified = true;
-          }
-
-          if (phaseModified) {
-            result.changes.push(`Fixed phases[${i}]`);
-            modified = true;
-          }
-        }
-      }
-
-      // Fix kpi_summary - ensure proper structure
-      if (data.kpi_summary) {
-        const validKpiStatuses = ['MEASURING', 'ON_TARGET', 'BELOW_TARGET', 'ABOVE_TARGET', 'MET'];
-
-        for (const [kpiName, kpiValue] of Object.entries(data.kpi_summary)) {
-          // If it's a primitive, convert to object
-          if (typeof kpiValue === 'number' || typeof kpiValue === 'string') {
-            data.kpi_summary[kpiName] = {
-              current: kpiValue,
-              target: kpiValue,
-              actual: kpiValue,
-              status: 'MEASURING',
-            };
-            result.changes.push(`Converted kpi_summary.${kpiName} to object`);
-            modified = true;
-          } else if (typeof kpiValue === 'object' && kpiValue !== null) {
-            const kpi = kpiValue as Record<string, unknown>;
-            let kpiModified = false;
-
-            // Add actual if missing (use current or target)
-            if (kpi.actual === undefined) {
-              kpi.actual =
-                kpi.current !== undefined ? kpi.current : kpi.target !== undefined ? kpi.target : 0;
-              kpiModified = true;
-            }
-
-            // Add target if missing
-            if (kpi.target === undefined) {
-              kpi.target = kpi.actual !== undefined ? kpi.actual : 0;
-              kpiModified = true;
-            }
-
-            // Fix status if invalid or missing
-            if (
-              !kpi.status ||
-              (typeof kpi.status === 'string' && !validKpiStatuses.includes(kpi.status))
-            ) {
-              const statusMap: Record<string, string> = {
-                met: 'MET',
-                on_target: 'ON_TARGET',
-                below_target: 'BELOW_TARGET',
-                above_target: 'ABOVE_TARGET',
-                measuring: 'MEASURING',
-              };
-              if (
-                kpi.status &&
-                typeof kpi.status === 'string' &&
-                statusMap[kpi.status.toLowerCase()]
-              ) {
-                kpi.status = statusMap[kpi.status.toLowerCase()];
-              } else {
-                kpi.status = 'MEASURING';
-              }
-              kpiModified = true;
-            }
-
-            if (kpiModified) {
-              result.changes.push(`Fixed kpi_summary.${kpiName}`);
-              modified = true;
-            }
-          }
-        }
-      }
-
-      if (modified) {
+      if (migrateSprintSummaryRecord(data, result)) {
         writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
         result.status = 'updated';
         console.log(`  ✓ ${file.replaceAll(REPO_ROOT, '.')}`);
@@ -821,6 +896,81 @@ async function migrateSprintSummaryFiles(): Promise<void> {
 
     results.push(result);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Phase summary record migration helpers
+// ---------------------------------------------------------------------------
+
+function fixAggregatedMetrics(data: Record<string, unknown>, result: MigrationResult): boolean {
+  if (!data.aggregated_metrics) {
+    const tasks = data.tasks as unknown[] | undefined;
+    data.aggregated_metrics = {
+      total_tasks: tasks?.length ?? 0,
+      completed_tasks: 0,
+      automation_percentage: 0,
+      done: 0,
+      in_progress: 0,
+      blocked: 0,
+      not_started: 0,
+    };
+    result.changes.push(`Added default aggregated_metrics`);
+    return true;
+  }
+
+  const am = data.aggregated_metrics as Record<string, unknown>;
+  let amModified = false;
+  if (am.done === undefined) {
+    am.done = (am.completed_tasks as number) || 0;
+    amModified = true;
+  }
+  if (am.in_progress === undefined) {
+    am.in_progress = 0;
+    amModified = true;
+  }
+  if (am.blocked === undefined) {
+    am.blocked = 0;
+    amModified = true;
+  }
+  if (am.not_started === undefined) {
+    const total = (am.total_tasks as number) || 0;
+    const done = (am.done as number) || 0;
+    const inProgress = (am.in_progress as number) || 0;
+    const blocked = (am.blocked as number) || 0;
+    am.not_started = Math.max(0, total - done - inProgress - blocked);
+    amModified = true;
+  }
+  if (amModified) {
+    result.changes.push(`Fixed aggregated_metrics fields`);
+  }
+  return amModified;
+}
+
+function migratePhaseSummaryRecord(
+  file: string,
+  data: Record<string, unknown>,
+  result: MigrationResult
+): boolean {
+  let modified = false;
+
+  if (typeof data.sprint === 'number') {
+    data.sprint = `sprint-${data.sprint}`;
+    result.changes.push(`Fixed sprint from number to string`);
+    modified = true;
+  }
+
+  if (!data.phase) {
+    const match = file.match(/phase-\d+-[a-z-]+/);
+    if (match) {
+      data.phase = match[0];
+      result.changes.push(`Added phase from file path`);
+      modified = true;
+    }
+  }
+
+  if (fixAggregatedMetrics(data, result)) modified = true;
+
+  return modified;
 }
 
 /**
@@ -840,73 +990,9 @@ async function migratePhaseSummaryFiles(): Promise<void> {
 
     try {
       const content = readFileSync(file, 'utf-8');
-      const data = JSON.parse(content);
-      let modified = false;
+      const data = JSON.parse(content) as Record<string, unknown>;
 
-      // Fix sprint - should be string
-      if (typeof data.sprint === 'number') {
-        data.sprint = `sprint-${data.sprint}`;
-        result.changes.push(`Fixed sprint from number to string`);
-        modified = true;
-      }
-
-      // Add phase if missing
-      if (!data.phase) {
-        // Extract from file path
-        const match = file.match(/phase-\d+-[a-z-]+/);
-        if (match) {
-          data.phase = match[0];
-          result.changes.push(`Added phase from file path`);
-          modified = true;
-        }
-      }
-
-      // Add/fix aggregated_metrics
-      if (!data.aggregated_metrics) {
-        data.aggregated_metrics = {
-          total_tasks: data.tasks?.length || 0,
-          completed_tasks: 0,
-          automation_percentage: 0,
-          done: 0,
-          in_progress: 0,
-          blocked: 0,
-          not_started: 0,
-        };
-        result.changes.push(`Added default aggregated_metrics`);
-        modified = true;
-      } else {
-        // Ensure all required fields exist
-        const am = data.aggregated_metrics;
-        let amModified = false;
-
-        if (am.done === undefined) {
-          am.done = am.completed_tasks || 0;
-          amModified = true;
-        }
-        if (am.in_progress === undefined) {
-          am.in_progress = 0;
-          amModified = true;
-        }
-        if (am.blocked === undefined) {
-          am.blocked = 0;
-          amModified = true;
-        }
-        if (am.not_started === undefined) {
-          const total = am.total_tasks || 0;
-          const done = am.done || 0;
-          const inProgress = am.in_progress || 0;
-          const blocked = am.blocked || 0;
-          am.not_started = Math.max(0, total - done - inProgress - blocked);
-          amModified = true;
-        }
-
-        if (amModified) {
-          result.changes.push(`Fixed aggregated_metrics fields`);
-          modified = true;
-        }
-      }
-
-      if (modified) {
+      if (migratePhaseSummaryRecord(file, data, result)) {
         writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
         result.status = 'updated';
         console.log(`  ✓ ${file.replaceAll(REPO_ROOT, '.')}`);

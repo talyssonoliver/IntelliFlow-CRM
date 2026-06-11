@@ -120,9 +120,9 @@ export function scanFile(rel, text, addedLines = null) {
       //   const x = / let x = / var x = / this.x = / x =
       const before = line.slice(0, m.index);
       const varMatch =
-        before.match(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*$/) ||
-        before.match(/this\.([A-Za-z_$][\w$]*)\s*=\s*$/) ||
-        before.match(/([A-Za-z_$][\w$]*)\s*=\s*$/);
+        before.match(/(?:const|let|var)[ \t]+([A-Za-z_$][\w$]*)[ \t]*=[ \t]*$/) ||
+        before.match(/this\.([A-Za-z_$][\w$]*)[ \t]*=[ \t]*$/) ||
+        before.match(/([A-Za-z_$][\w$]{0,100})[ \t]*=[ \t]*$/);
       const varName = varMatch ? varMatch[1] : null;
 
       // Is the error handler registered ON THIS INSTANCE?
