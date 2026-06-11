@@ -294,6 +294,18 @@ jobs:
         with:
           fetch-depth: 0 # full history for SonarCloud blame analysis
 
+      # Install node_modules so the SonarCloud TS analyser can resolve tsconfig
+      # `extends` chains (e.g. @intelliflow/typescript-config/base.json,
+      # @ljharb/tsconfig) that live inside pnpm-workspace packages.  Without
+      # this the scanner warns "At least one referenced/extended tsconfig.json
+      # was not found" and reports a degraded analysis.
+      # build-libs is intentionally omitted (defaults false) — @intelliflow/*
+      # config packages are plain JSON and need no compilation; the scan step
+      # does NOT re-run any tests.
+      - uses: ./.github/actions/setup-monorepo
+        with:
+          pnpm-version: ${{ env.PNPM_VERSION }}
+
       - name: Download merged coverage
         uses: actions/download-artifact@v8
         with:
