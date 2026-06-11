@@ -2,9 +2,9 @@
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "IFC-256",
-  "run_id": "IFC-256-validation-20260610-231500",
+  "run_id": "IFC-256-validation-20260611-080000",
   "attestor": "Claude Code",
-  "attestation_timestamp": "2026-06-10T23:15:00.000Z",
+  "attestation_timestamp": "2026-06-11T08:00:00.000Z",
   "verdict": "COMPLETE",
   "evidence_summary": {
     "artifacts_verified": 6,
@@ -54,9 +54,9 @@
       "met": true
     },
     {
-      "kpi": "test_coverage >=90% on changed source",
+      "kpi": "test_coverage >=90% on changed source (Sonar new_coverage >=80%)",
       "target": ">=90%",
-      "actual": "TicketService.ts 94.57% lines / 88.02% branch (listByContact fully covered); changed-API-files aggregate 90.71% lines / 90.42% stmts; page.tsx new lines (memos, helpers, both tab render paths incl. empty states + both ticket-status colour branches) exercised by 6 new IFC-256 web tests. Sonar new_coverage (>=80% changed lines) enforced at pre-ship diff-coverage gate.",
+      "actual": "Tab logic (formatters, view-model transforms, Tickets/Documents tab rendering incl. empty states + both status-colour branches) extracted from the route page into components/contacts/{contact-tab-format.ts,ContactTicketsTab.tsx,ContactDocumentsTab.tsx} — 100% covered (stmts 29/29, branches 24/24, funcs 13/13, lines 23/23) by 20 new component/util tests. API: TicketService.ts 94.57% lines / 88.02% branch; changed-API aggregate 90.71% lines. ROOT CAUSE of the first SonarCloud miss (36.7%): Next.js route page.tsx files are excluded from the merged lcov, so logic kept inline in page.tsx counted as uncovered to Sonar (and was silently skipped by the local check-diff-coverage gate). Fix moves the coverable logic into tested modules whose coverage reaches the merged lcov.",
       "met": true
     }
   ],
@@ -120,8 +120,14 @@
     "apps/api/src/modules/contact/contact.router.ts": "d1151464a1ab83e5714a9e26e1b78fd518bc583ccf8c3aa923ce85127c37c289",
     "apps/api/src/modules/contact/__tests__/contact.router.test.ts": "c5f689cbd5f9ac7435e8771a5de0832ec3406d7a33081c940b9716f71dc34306",
     "apps/api/src/services/__tests__/TicketService.test.ts": "e15ba2a125279ceda86b211bea442f14aa4df19262368d86d9e50a0db47dcbe8",
-    "apps/web/src/app/contacts/[id]/page.tsx": "45139c62e5792d2561c3cc6fa472e7839c5769d4652d8de310b7a40040dc54ac",
-    "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx": "0f54f2e71105174daa9d22d36f9c4ce4a5f1a5089c7b87bbaea0ad75d1a63236"
+    "apps/web/src/app/contacts/[id]/page.tsx": "eaa80af466822b70aa98f80653228b3543a8e936bb55e0d99a4f04f04642e494",
+    "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx": "0f54f2e71105174daa9d22d36f9c4ce4a5f1a5089c7b87bbaea0ad75d1a63236",
+    "apps/web/src/components/contacts/contact-tab-format.ts": "444d3f560668d39d85eddb8915f15db63e38672762c2accef790029ad2e1541e",
+    "apps/web/src/components/contacts/ContactTicketsTab.tsx": "0ded126c5ab5c63c6b76ee9d9cddbe674447e32e86a42ccea599f6e4a9ca1f39",
+    "apps/web/src/components/contacts/ContactDocumentsTab.tsx": "b2c260b8fe307a6209d1171c3dfeb072e6746ecaea2494ef0bd7656d5f097a5d",
+    "apps/web/src/components/contacts/__tests__/contact-tab-format.test.ts": "196f3ef28ee9514d6c2adf28976cbac0b1047df2be062dd6a6810f15078ace45",
+    "apps/web/src/components/contacts/__tests__/ContactTicketsTab.test.tsx": "943ca1d9b6d98fef4c3d83d37a8a0fde5bbb4193162cda25b85fd3887d9455b9",
+    "apps/web/src/components/contacts/__tests__/ContactDocumentsTab.test.tsx": "313d103691b7bd27b5e636eb90c726616f8ca5f3b198abc35048a6d892fa93ef"
   },
   "environment": {
     "os": "win32",
@@ -130,5 +136,5 @@
     "branch": "feat/ifc-256"
   },
   "nav_wiring_confirmed": true,
-  "notes": "IFC-256 — Contact Detail hardcoded Tickets & Documents tabs replaced with real tRPC/API data (resolves audit findings F-02, F-03, F-21). Backend: TicketService.listByContact (lean tenant+contact-scoped projection) + contact.getById now returns tickets (via TicketService) and documents (prismaWithTenant.document.findMany, { tenantId, contactId, status != DELETED }), both fetched in parallel and spread into both getById return paths; missing ticket service degrades to []. Frontend (apps/web/src/app/contacts/[id]/page.tsx): ContactWithRelations gains tickets + richer documents; new tickets/documents memos; Tickets/Documents tabs render real data with shared EmptyState empty states and working document download links; tab badges now read tickets.length / documents.length. No schema/migration change (query-only over existing scalar contactId columns). Validations: api+web typecheck clean; full api suite 6137 passed/2 skipped; full web suite 10343 passed; eslint 0 errors on changed files; api build + web prod build (stub Supabase env, pre-ship parity) green. Coverage of changed source >=90% lines. nav_wiring_confirmed: no new page.tsx created — this task changes existing-tab content on an already-reachable route (/contacts/[id], reachable via tab switcher + ?tab=tickets/documents). PRD docs/planning/prd-core-crm.md (Contacts/Tickets/Documents) referenced; ADR N/A (no new architecture)."
+  "notes": "IFC-256 — Contact Detail hardcoded Tickets & Documents tabs replaced with real tRPC/API data (resolves audit findings F-02, F-03, F-21). Backend: TicketService.listByContact (lean tenant+contact-scoped projection) + contact.getById now returns tickets (via TicketService) and documents (prismaWithTenant.document.findMany, { tenantId, contactId, status != DELETED }), both fetched in parallel and spread into both getById return paths; missing ticket service degrades to []. Frontend (apps/web/src/app/contacts/[id]/page.tsx): ContactWithRelations gains tickets + richer documents; new tickets/documents memos; Tickets/Documents tabs render real data with shared EmptyState empty states and working document download links; tab badges now read tickets.length / documents.length. No schema/migration change (query-only over existing scalar contactId columns). Validations: api+web typecheck clean; full api suite 6137 passed/2 skipped; full web suite 10343 passed; eslint 0 errors on changed files; api build + web prod build (stub Supabase env, pre-ship parity) green. Coverage of changed source >=90% lines. nav_wiring_confirmed: no new page.tsx created — this task changes existing-tab content on an already-reachable route (/contacts/[id], reachable via tab switcher + ?tab=tickets/documents). PRD docs/planning/prd-core-crm.md (Contacts/Tickets/Documents) referenced; ADR N/A (no new architecture). COVERAGE FIX (after PR #382 SonarCloud new_coverage = 36.7%): the tab logic was extracted out of the route page.tsx — which is excluded from the merged coverage report — into three unit-tested modules under apps/web/src/components/contacts/ (contact-tab-format.ts + ContactTicketsTab.tsx + ContactDocumentsTab.tsx), 100% covered by 20 new component/util tests. page.tsx is now a thin consumer (37 added lines, mostly imports + type-only interface fields). Follow-up filed for the check-diff-coverage blind spot (route page.tsx absent from merged lcov → silently skipped instead of counted uncovered)."
 }
