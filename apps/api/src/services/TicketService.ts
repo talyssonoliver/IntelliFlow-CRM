@@ -274,6 +274,17 @@ export class TicketService {
   }
 
   /**
+   * IFC-256: Total number of tickets for a contact (tenant-scoped). Used for the
+   * Contact 360 Tickets tab badge so it reflects the true total even when the
+   * `listByContact` projection is capped by its `limit`.
+   */
+  async countByContact(params: { tenantId: string; contactId: string }): Promise<number> {
+    return this.prisma.ticket.count({
+      where: { tenantId: params.tenantId, contactId: params.contactId },
+    });
+  }
+
+  /**
    * Get a single ticket by ID
    */
   async findById(id: string) {

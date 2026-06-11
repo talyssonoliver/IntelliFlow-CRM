@@ -744,12 +744,16 @@ export const contactRouter = createTRPCRouter({
     // access-checked, so contact-level authorization gates these reads. A missing
     // ticket service degrades to an empty list rather than failing the 360 view.
     const tenantId = typedCtx.tenant.tenantId;
-    const [contactTickets, contactDocuments] = await Promise.all([
+    // Tickets/documents are projected with a limit for the tab lists; the *Count
+    // fields carry the true totals so the tab badges never undercount when a
+    // contact has more than the projected number of rows.
+    const documentWhere = { tenantId, contactId: input.id, status: { not: 'DELETED' } } as const;
+    const [contactTickets, contactDocuments, ticketCount, documentCount] = await Promise.all([
       ctx.services?.ticket
         ? ctx.services.ticket.listByContact({ tenantId, contactId: input.id, limit: 20 })
         : Promise.resolve([]),
       typedCtx.prismaWithTenant.document.findMany({
-        where: { tenantId, contactId: input.id, status: { not: 'DELETED' } },
+        where: documentWhere,
         orderBy: { createdAt: 'desc' },
         take: 50,
         select: {
@@ -763,10 +767,19 @@ export const contactRouter = createTRPCRouter({
           createdAt: true,
         },
       }),
+      ctx.services?.ticket
+        ? ctx.services.ticket.countByContact({ tenantId, contactId: input.id })
+        : Promise.resolve(0),
+      typedCtx.prismaWithTenant.document.count({ where: documentWhere }),
     ]);
-    // Both reads always resolve to arrays (the service degrades to [] and
-    // findMany never returns null), so no nullish fallback is needed here.
-    const relatedTabs = { tickets: contactTickets, documents: contactDocuments };
+    // The reads always resolve (the service degrades to []/0 and findMany/count
+    // never return null), so no nullish fallback is needed here.
+    const relatedTabs = {
+      tickets: contactTickets,
+      documents: contactDocuments,
+      ticketCount,
+      documentCount,
+    };
 
     // Derive AI insights when none exist in DB (ensures entity pages always show data)
     if (!contactWithRelations.aiInsight) {

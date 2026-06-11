@@ -51,6 +51,9 @@ const mockContactQueryState = {
     opportunities: [],
     tasks: [],
     documents: [],
+    tickets: [],
+    ticketCount: 0,
+    documentCount: 0,
     calendarEvents: [],
   },
   isLoading: false,
@@ -589,6 +592,8 @@ describe('Contact360Page - Tickets & Documents tabs (IFC-256)', () => {
       ...mockContactQueryState.data,
       tickets: [],
       documents: [],
+      ticketCount: 0,
+      documentCount: 0,
     } as typeof mockContactQueryState.data;
   });
 
@@ -597,6 +602,8 @@ describe('Contact360Page - Tickets & Documents tabs (IFC-256)', () => {
       ...mockContactQueryState.data,
       tickets: [],
       documents: [],
+      ticketCount: 0,
+      documentCount: 0,
     } as typeof mockContactQueryState.data;
   });
 
@@ -640,17 +647,19 @@ describe('Contact360Page - Tickets & Documents tabs (IFC-256)', () => {
     expect(screen.queryByText(/TKT-1234/)).not.toBeInTheDocument();
   });
 
-  it('Tickets tab badge reflects the real ticket count', () => {
+  it('Tickets tab badge shows the true total count (not the capped list length)', () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=overview'));
     mockContactQueryState.data = {
       ...mockContactQueryState.data,
+      // list is capped at 2 items but the contact actually has 24 tickets
       tickets: [sampleTicket, { ...sampleTicket, id: 'tk-2', ticketNumber: 'T-00002' }],
+      ticketCount: 24,
     } as typeof mockContactQueryState.data;
 
     render(<Contact360Page />);
 
     const ticketsTab = screen.getByRole('button', { name: /Tickets/ });
-    expect(ticketsTab).toHaveTextContent('2');
+    expect(ticketsTab).toHaveTextContent('24');
   });
 
   // --- Documents tab (F-03) ---
@@ -684,16 +693,18 @@ describe('Contact360Page - Tickets & Documents tabs (IFC-256)', () => {
     expect(screen.queryByText(/SOC2 Compliance Report\.pdf/)).not.toBeInTheDocument();
   });
 
-  it('Documents tab badge reflects the real document count', () => {
+  it('Documents tab badge shows the true total count (not the capped list length)', () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=overview'));
     mockContactQueryState.data = {
       ...mockContactQueryState.data,
+      // list is capped at 1 item but the contact actually has 51 documents
       documents: [sampleDocument],
+      documentCount: 51,
     } as typeof mockContactQueryState.data;
 
     render(<Contact360Page />);
 
     const documentsTab = screen.getByRole('button', { name: /Documents/ });
-    expect(documentsTab).toHaveTextContent('1');
+    expect(documentsTab).toHaveTextContent('51');
   });
 });

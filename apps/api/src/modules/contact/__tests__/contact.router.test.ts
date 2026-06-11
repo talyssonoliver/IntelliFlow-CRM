@@ -246,7 +246,9 @@ describe('Contact Router', () => {
       prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations as any);
       // IFC-256: tickets via TicketService, documents via prisma
       (mockServices.ticket.listByContact as any).mockResolvedValue([sampleTicket]);
+      (mockServices.ticket.countByContact as any).mockResolvedValue(23);
       (prismaMock.document.findMany as any).mockResolvedValue([sampleDocument]);
+      (prismaMock.document.count as any).mockResolvedValue(50);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
@@ -255,6 +257,9 @@ describe('Contact Router', () => {
       expect(result.tickets[0].ticketNumber).toBe('T-00001');
       expect(result.documents).toHaveLength(1);
       expect(result.documents[0].fileName).toBe('proposal.pdf');
+      // badge counts reflect the true totals, not the capped list lengths
+      expect(result.ticketCount).toBe(23);
+      expect(result.documentCount).toBe(50);
     });
 
     it('returns empty tickets and documents arrays when the contact has none', async () => {
@@ -296,9 +301,22 @@ describe('Contact Router', () => {
           }),
         })
       );
+      // counts use the same tenant/contact scope (true totals for the badges)
+      expect(mockServices.ticket.countByContact).toHaveBeenCalledWith(
+        expect.objectContaining({ tenantId: TEST_UUIDS.tenant, contactId: TEST_UUIDS.contact1 })
+      );
+      expect(prismaMock.document.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            tenantId: TEST_UUIDS.tenant,
+            contactId: TEST_UUIDS.contact1,
+            status: { not: 'DELETED' },
+          }),
+        })
+      );
     });
 
-    it('degrades to empty tickets when the ticket service is unavailable', async () => {
+    it('degrades to empty tickets and a zero ticket count when the service is unavailable', async () => {
       const ctx = createTestContext({
         services: { ...mockServices, ticket: undefined } as any,
       });
@@ -306,10 +324,12 @@ describe('Contact Router', () => {
 
       prismaMock.contact.findFirst.mockResolvedValue(baseRelations() as any);
       (prismaMock.document.findMany as any).mockResolvedValue([]);
+      (prismaMock.document.count as any).mockResolvedValue(0);
 
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
       expect(result.tickets).toEqual([]);
+      expect(result.ticketCount).toBe(0);
     });
 
     it('includes tickets and documents on the derived-insight path (no DB insight)', async () => {

@@ -1559,4 +1559,17 @@ describe('TicketService', () => {
       expect(call.include).toBeUndefined();
     });
   });
+
+  describe('countByContact', () => {
+    it('counts tickets scoped to tenant + contact', async () => {
+      mockPrisma.ticket.count.mockResolvedValue(23);
+
+      const total = await service.countByContact({ tenantId: 'tenant-1', contactId: 'contact-1' });
+
+      expect(total).toBe(23);
+      expect(mockPrisma.ticket.count).toHaveBeenCalledWith({
+        where: { tenantId: 'tenant-1', contactId: 'contact-1' },
+      });
+    });
+  });
 });
