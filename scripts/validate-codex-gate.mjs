@@ -99,50 +99,6 @@ export function getTopN<T>(items: T[], n: number): T[] {
 const FP_DRIFT = 2;
 
 /**
- * Compute the stable source-code fingerprint the same way codex-review.mjs does.
- * Uses minimum-hash over [N-DRIFT .. N+DRIFT] so ±2 line-number drift from the
- * LLM does not change the fingerprint.
- * Must stay in sync with the fingerprint() function in scripts/codex-review.mjs.
- */
-function computeFingerprint(file, line, repoRoot) {
-  const normalizedFile = file.replace(/\\/g, '/').toLowerCase().trim();
-  const candidateHashes = [];
-  try {
-    const absPath = path.join(repoRoot, file);
-    if (fs.existsSync(absPath)) {
-      const fileLines = fs.readFileSync(absPath, 'utf8').split('\n');
-      const lineStr = String(line).trim();
-      const rangeMatch = lineStr.match(/^(\d+)\s*[-–]\s*(\d+)$/);
-      let startLine, endLine;
-      if (rangeMatch) {
-        startLine = parseInt(rangeMatch[1], 10);
-        endLine = parseInt(rangeMatch[2], 10);
-      } else {
-        const n = parseInt(lineStr, 10);
-        startLine = isNaN(n) ? null : n;
-        endLine = startLine;
-      }
-      if (startLine !== null && startLine >= 1) {
-        const from = Math.max(1, startLine - FP_DRIFT);
-        const to = Math.min(fileLines.length, (endLine ?? startLine) + FP_DRIFT);
-        for (let ln = from; ln <= to; ln++) {
-          const srcLine = (fileLines[ln - 1] || '').trim();
-          if (!srcLine) continue;
-          const normalized = srcLine.replace(/\s+/g, ' ');
-          const payload = `${normalizedFile}\n${normalized}`;
-          candidateHashes.push(crypto.createHash('sha256').update(payload).digest('hex'));
-        }
-      }
-    }
-  } catch {
-    // fall through
-  }
-  if (candidateHashes.length === 0) return null; // can't compute without source on disk
-  candidateHashes.sort();
-  return candidateHashes[0];
-}
-
-/**
  * Given the findings.json artifact, find all fingerprints from unwaived findings
  * and the line numbers reported for the fixture file so we can compute the
  * stable fingerprint independently.
@@ -405,13 +361,15 @@ main().catch((e) => {
     }
     // Restore waivers
     const wp = path.join(REPO_ROOT_ERR, WAIVERS_PATH);
-    if (fs.existsSync(wp)) {
+    try {
       const raw = fs.readFileSync(wp, 'utf8');
       // If it still has the test entry, restore to empty
       if (raw.includes('GATE-SELF-TEST')) {
         const orig = raw.replace(/waivers:[\s\S]*$/, 'waivers: []');
         fs.writeFileSync(wp, orig);
       }
+    } catch {
+      /* file may not exist or changed between check and use — ignore cleanup errors */
     }
   } catch {
     /* ignore cleanup errors */
