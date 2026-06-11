@@ -345,10 +345,13 @@ export default function NewLeadForm() {
     }
   };
 
-  // Map UI source values to API enum
+  // Map UI source values to the API enum. Returns undefined for a blank/unknown
+  // selection so the create payload omits `source` and the server default
+  // (WEBSITE — see createLeadSchema) applies, instead of mislabelling an
+  // unspecified source as the explicit "Other" option.
   function mapSourceToEnum(
     source: string
-  ): 'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'EMAIL' | 'COLD_CALL' | 'EVENT' | 'OTHER' {
+  ): 'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'EMAIL' | 'COLD_CALL' | 'EVENT' | 'OTHER' | undefined {
     const sourceMap: Record<
       string,
       'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'EMAIL' | 'COLD_CALL' | 'EVENT' | 'OTHER'
@@ -360,7 +363,7 @@ export default function NewLeadForm() {
       cold_outreach: 'COLD_CALL',
       other: 'OTHER',
     };
-    return sourceMap[source] || 'OTHER';
+    return sourceMap[source];
   }
 
   // Cancel and go back

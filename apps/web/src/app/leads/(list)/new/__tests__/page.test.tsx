@@ -339,6 +339,34 @@ describe('CreateNewLeadPage', () => {
   );
 
   // -------------------------------------------------------------------------
+  // PG-060: an unselected Lead Source is omitted (Codex review — blank-source).
+  // The server schema defaults an omitted source to WEBSITE; mapping blank to
+  // the explicit OTHER option would mislabel "unspecified" as "Other".
+  // -------------------------------------------------------------------------
+  it('omits source when none is selected (lets the API default apply)', () => {
+    render(<CreateNewLeadPage />);
+    fillBasicStep(); // leaves Lead Source unselected
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
+    fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+
+    const payload = mockCreateMutation.mock.results[0]?.value.mutateAsync.mock.calls[0]?.[0];
+    expect(payload.source).toBeUndefined();
+  });
+
+  it('sends the selected Lead Source enum when one is chosen', () => {
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+    fireEvent.change(screen.getByLabelText(/lead source/i), { target: { value: 'referral' } });
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
+    fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+
+    const payload = mockCreateMutation.mock.results[0]?.value.mutateAsync.mock.calls[0]?.[0];
+    expect(payload.source).toBe('REFERRAL');
+  });
+
+  // -------------------------------------------------------------------------
   // PG-060: email validation parity with the server validator (Codex review #2)
   // -------------------------------------------------------------------------
   it.each(['sarah@mail.acme.com', 'user@acme.co.uk', 'x@acme.io'])(
