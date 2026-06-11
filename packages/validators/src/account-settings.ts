@@ -23,8 +23,8 @@ export function generateIndustryKey(label: string): string {
     .slice(0, MAX_LABEL_INPUT_LENGTH)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^[_]{1,100}/, '')
-    .replace(/[_]{1,100}$/, '');
+    .replace(/^_{1,100}/, '')
+    .replace(/_{1,100}$/, '');
 }
 
 // ─── Default industries (canonical taxonomy) ────────────────────────────────
