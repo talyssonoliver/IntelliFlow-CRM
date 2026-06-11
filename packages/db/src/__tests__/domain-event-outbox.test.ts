@@ -21,7 +21,7 @@ const hasDatabase: boolean = await (async () => {
     const url = process.env.DATABASE_URL || '';
     if (!url.startsWith('postgresql://') && !url.startsWith('postgres://')) return false;
     // Extract host:port from DATABASE_URL and probe TCP connectivity
-    const match = url.match(/@([^:/]+):(\d+)\//);
+    const match = url.match(/@([^:/@]+):(\d+)\//);
     if (!match) return false;
     const [, host, port] = match;
     return await new Promise<boolean>((resolve) => {

@@ -229,7 +229,7 @@ class DependencyValidator {
 
     if (installed) {
       const versionOutput = this.exec('docker --version');
-      currentVersion = versionOutput.match(/(\d+\.\d+\.\d+)/)?.[0] || '';
+      currentVersion = versionOutput.match(/(\d{1,10}\.\d{1,10}\.\d{1,10})/)?.[0] || '';
     }
 
     return {
@@ -253,9 +253,11 @@ class DependencyValidator {
 
     if (installed) {
       try {
-        currentVersion = this.exec('docker-compose --version').match(/(\d+\.\d+\.\d+)/)?.[0] || '';
+        currentVersion =
+          this.exec('docker-compose --version').match(/(\d{1,10}\.\d{1,10}\.\d{1,10})/)?.[0] || '';
       } catch {
-        currentVersion = this.exec('docker compose version').match(/(\d+\.\d+\.\d+)/)?.[0] || '';
+        currentVersion =
+          this.exec('docker compose version').match(/(\d{1,10}\.\d{1,10}\.\d{1,10})/)?.[0] || '';
       }
     }
 
@@ -398,6 +400,72 @@ class DependencyValidator {
   }
 
   /**
+   * Print system dependency check results
+   */
+  private printSystemChecks(): void {
+    console.log(`${colors.blue}System Dependencies:${colors.reset}`);
+    for (const check of this.checks) {
+      const status = check.satisfies
+        ? `${colors.green}✓${colors.reset}`
+        : `${colors.red}✗${colors.reset}`;
+      const requirement = check.required ? '(required)' : '(optional)';
+      console.log(`  ${status} ${check.name} ${colors.gray}${requirement}${colors.reset}`);
+      if (this.verbose && check.message) {
+        console.log(`    ${colors.gray}${check.message}${colors.reset}`);
+      }
+    }
+  }
+
+  /**
+   * Print dependency inconsistencies
+   */
+  private printInconsistencies(): void {
+    if (this.inconsistencies.length === 0) return;
+    console.log(
+      `\n${colors.yellow}Dependency Inconsistencies (${this.inconsistencies.length}):${colors.reset}`
+    );
+    for (const inconsistency of this.inconsistencies) {
+      console.log(`  ${colors.yellow}⚠${colors.reset} ${inconsistency.package}`);
+      if (this.verbose) {
+        for (const { workspace, version } of inconsistency.versions) {
+          console.log(`    ${colors.gray}${workspace}: ${version}${colors.reset}`);
+        }
+        console.log(`    ${colors.gray}Recommended: ${inconsistency.recommended}${colors.reset}`);
+      }
+    }
+  }
+
+  /**
+   * Print outdated packages (verbose only)
+   */
+  private printOutdated(): void {
+    if (this.outdated.length === 0 || !this.verbose) return;
+    console.log(`\n${colors.yellow}Outdated Packages (${this.outdated.length}):${colors.reset}`);
+    for (const pkg of this.outdated.slice(0, 10)) {
+      console.log(`  ${colors.yellow}⚠${colors.reset} ${pkg.name}: ${pkg.current} → ${pkg.latest}`);
+    }
+    if (this.outdated.length > 10) {
+      console.log(`  ${colors.gray}... and ${this.outdated.length - 10} more${colors.reset}`);
+    }
+  }
+
+  /**
+   * Print summary section
+   */
+  private printSummary(passed: number, failed: number, warnings: number): void {
+    console.log(`\n${colors.blue}═══════════════════════════════════════${colors.reset}`);
+    console.log(`${colors.blue}Summary${colors.reset}`);
+    console.log(`${colors.blue}═══════════════════════════════════════${colors.reset}`);
+    console.log(`Total Checks: ${this.checks.length}`);
+    console.log(`${colors.green}Passed: ${passed}${colors.reset}`);
+    console.log(`${colors.red}Failed: ${failed}${colors.reset}`);
+    console.log(`${colors.yellow}Warnings: ${warnings}${colors.reset}`);
+    console.log(`Workspaces: ${this.packages.length}`);
+    console.log(`Inconsistencies: ${this.inconsistencies.length}`);
+    console.log(`Outdated: ${this.outdated.length}\n`);
+  }
+
+  /**
    * Run all dependency checks
    */
   async validate(): Promise<ValidationResult> {
@@ -417,62 +485,16 @@ class DependencyValidator {
     this.checkOutdated();
 
     // Print results
-    console.log(`${colors.blue}System Dependencies:${colors.reset}`);
-    for (const check of this.checks) {
-      const status = check.satisfies
-        ? `${colors.green}✓${colors.reset}`
-        : `${colors.red}✗${colors.reset}`;
-      const requirement = check.required ? '(required)' : '(optional)';
-      console.log(`  ${status} ${check.name} ${colors.gray}${requirement}${colors.reset}`);
-      if (this.verbose && check.message) {
-        console.log(`    ${colors.gray}${check.message}${colors.reset}`);
-      }
-    }
-
-    // Print inconsistencies
-    if (this.inconsistencies.length > 0) {
-      console.log(
-        `\n${colors.yellow}Dependency Inconsistencies (${this.inconsistencies.length}):${colors.reset}`
-      );
-      for (const inconsistency of this.inconsistencies) {
-        console.log(`  ${colors.yellow}⚠${colors.reset} ${inconsistency.package}`);
-        if (this.verbose) {
-          for (const { workspace, version } of inconsistency.versions) {
-            console.log(`    ${colors.gray}${workspace}: ${version}${colors.reset}`);
-          }
-          console.log(`    ${colors.gray}Recommended: ${inconsistency.recommended}${colors.reset}`);
-        }
-      }
-    }
-
-    // Print outdated packages
-    if (this.outdated.length > 0 && this.verbose) {
-      console.log(`\n${colors.yellow}Outdated Packages (${this.outdated.length}):${colors.reset}`);
-      for (const pkg of this.outdated.slice(0, 10)) {
-        console.log(
-          `  ${colors.yellow}⚠${colors.reset} ${pkg.name}: ${pkg.current} → ${pkg.latest}`
-        );
-      }
-      if (this.outdated.length > 10) {
-        console.log(`  ${colors.gray}... and ${this.outdated.length - 10} more${colors.reset}`);
-      }
-    }
+    this.printSystemChecks();
+    this.printInconsistencies();
+    this.printOutdated();
 
     // Summary
     const passed = this.checks.filter((c) => c.satisfies).length;
     const failed = this.checks.filter((c) => !c.satisfies && c.required).length;
     const warnings = this.checks.filter((c) => !c.satisfies && !c.required).length;
 
-    console.log(`\n${colors.blue}═══════════════════════════════════════${colors.reset}`);
-    console.log(`${colors.blue}Summary${colors.reset}`);
-    console.log(`${colors.blue}═══════════════════════════════════════${colors.reset}`);
-    console.log(`Total Checks: ${this.checks.length}`);
-    console.log(`${colors.green}Passed: ${passed}${colors.reset}`);
-    console.log(`${colors.red}Failed: ${failed}${colors.reset}`);
-    console.log(`${colors.yellow}Warnings: ${warnings}${colors.reset}`);
-    console.log(`Workspaces: ${this.packages.length}`);
-    console.log(`Inconsistencies: ${this.inconsistencies.length}`);
-    console.log(`Outdated: ${this.outdated.length}\n`);
+    this.printSummary(passed, failed, warnings);
 
     const valid = failed === 0;
 

@@ -58,7 +58,7 @@ function classifyRequirement(
       /^[a-z0-9_-]+\.(json|yaml|yml|md|ts|js|prisma|toml|config|txt)$/i.test(lower))
   ) {
     // Extract file path - must contain a slash or be a root config file
-    const fileMatch = req.match(/([a-zA-Z0-9_./-]+\/[a-zA-Z0-9_./-]+\.[a-z]{2,5})/);
+    const fileMatch = req.match(/([a-zA-Z0-9_./-]{1,120}\/[a-zA-Z0-9_.-]{1,80}\.[a-z]{2,5})/);
     if (fileMatch) {
       return { type: 'FILE', value: fileMatch[1] };
     }
@@ -288,26 +288,24 @@ function getOriginalCsvFromGit(): Record<string, string>[] {
 // MAIN
 // ============================================================================
 
-async function main() {
-  console.log('=== Smart Pre-requisites Fix ===\n');
+interface OriginalData {
+  prereqs: string;
+  artifacts: string;
+  deps: string[];
+}
 
-  // Read current CSV (with correct Artifacts and Owner)
-  console.log('Reading current CSV...');
-  const csvContent = readFileSync(CSV_PATH, 'utf-8');
-  const currentTasks = parse(csvContent, {
-    columns: true,
-    bom: true,
-    relax_quotes: true,
-  }) as Record<string, string>[];
-  console.log(`Found ${currentTasks.length} tasks in current CSV\n`);
+interface TaskDataForInheritance {
+  taskId: string;
+  originalPrereqs: string;
+  dependencies: string[];
+  primaryArtifact: string | null;
+}
 
-  // Get original CSV from git (with original Pre-requisites)
-  console.log('Fetching original CSV from git...');
-  const originalTasks = getOriginalCsvFromGit();
-  console.log(`Found ${originalTasks.length} tasks in original CSV\n`);
-
-  // Build map of original pre-requisites and original artifacts
-  const originalMap = new Map<string, { prereqs: string; artifacts: string; deps: string[] }>();
+/**
+ * Build map of original task data from git CSV
+ */
+function buildOriginalMap(originalTasks: Record<string, string>[]): Map<string, OriginalData> {
+  const originalMap = new Map<string, OriginalData>();
   for (const task of originalTasks) {
     const taskId = task['Task ID'];
     originalMap.set(taskId, {
@@ -319,15 +317,15 @@ async function main() {
         .filter((d) => d),
     });
   }
+  return originalMap;
+}
 
-  // Build task map for dependency resolution (using ORIGINAL artifacts for inheritance)
-  interface TaskDataForInheritance {
-    taskId: string;
-    originalPrereqs: string;
-    dependencies: string[];
-    primaryArtifact: string | null;
-  }
-
+/**
+ * Build inheritance map from original artifact data
+ */
+function buildInheritanceMap(
+  originalMap: Map<string, OriginalData>
+): Map<string, TaskDataForInheritance> {
   const taskMapForInheritance = new Map<string, TaskDataForInheritance>();
   for (const [taskId, orig] of originalMap.entries()) {
     taskMapForInheritance.set(taskId, {
@@ -337,65 +335,72 @@ async function main() {
       primaryArtifact: getPrimaryArtifact(orig.artifacts),
     });
   }
+  return taskMapForInheritance;
+}
 
-  // Process each task
-  console.log('Processing tasks...\n');
+/**
+ * Compute smart prereqs string for one task
+ */
+function computeSmartPrereqs(
+  original: OriginalData,
+  taskMapForInheritance: Map<string, TaskDataForInheritance>
+): string {
+  const tags: string[] = [];
+
+  for (const file of GOVERNANCE_FILES) {
+    tags.push(`FILE:${file}`);
+  }
+
+  const originalTags = parseOriginalPrereqs(original.prereqs);
+  tags.push(...originalTags);
+
+  const inheritedFiles: string[] = [];
+  for (const depId of original.deps) {
+    const depData = taskMapForInheritance.get(depId);
+    if (depData && depData.primaryArtifact) {
+      inheritedFiles.push(depData.primaryArtifact);
+    }
+    if (inheritedFiles.length >= MAX_INHERITED_FILES) break;
+  }
+  for (const file of inheritedFiles) {
+    tags.push(`FILE:${file}`);
+  }
+
+  return [...new Set(tags)].join(';');
+}
+
+/**
+ * Apply smart prereqs to all current tasks, returning count of updates
+ */
+function applySmartPrereqs(
+  currentTasks: Record<string, string>[],
+  originalMap: Map<string, OriginalData>,
+  taskMapForInheritance: Map<string, TaskDataForInheritance>
+): number {
   let updated = 0;
-
   for (const task of currentTasks) {
     const taskId = task['Task ID'];
     const original = originalMap.get(taskId);
-
     if (!original) {
       console.log(`  WARN: No original data for ${taskId}`);
       continue;
     }
-
-    // Build smart pre-requisites using original data
-    const tags: string[] = [];
-
-    // 1. Always add mandatory governance files
-    for (const file of GOVERNANCE_FILES) {
-      tags.push(`FILE:${file}`);
-    }
-
-    // 2. Convert original plain-text requirements
-    const originalTags = parseOriginalPrereqs(original.prereqs);
-    tags.push(...originalTags);
-
-    // 3. Inherit primary files from dependencies (using original artifacts)
-    const inheritedFiles: string[] = [];
-    for (const depId of original.deps) {
-      const depData = taskMapForInheritance.get(depId);
-      if (depData && depData.primaryArtifact) {
-        inheritedFiles.push(depData.primaryArtifact);
-      }
-      if (inheritedFiles.length >= MAX_INHERITED_FILES) break;
-    }
-    for (const file of inheritedFiles) {
-      tags.push(`FILE:${file}`);
-    }
-
-    // Deduplicate
-    const unique = [...new Set(tags)];
-    const newPrereqs = unique.join(';');
-
-    const oldPrereqs = task['Pre-requisites'];
-    if (newPrereqs !== oldPrereqs) {
+    const newPrereqs = computeSmartPrereqs(original, taskMapForInheritance);
+    if (newPrereqs !== task['Pre-requisites']) {
       task['Pre-requisites'] = newPrereqs;
       updated++;
     }
   }
+  return updated;
+}
 
-  console.log(`Updated ${updated} tasks\n`);
-
-  // Write back
-  const headers = Object.keys(currentTasks[0]);
-  const output = stringifyCsv(currentTasks, headers);
-  writeFileSync(CSV_PATH, output, 'utf-8');
-  console.log(`Written to: ${CSV_PATH}\n`);
-
-  // Show samples
+/**
+ * Print sample conversions
+ */
+function printSampleConversions(
+  currentTasks: Record<string, string>[],
+  originalMap: Map<string, OriginalData>
+): void {
   console.log('=== Sample Conversions ===\n');
   const sampleIds = [
     'EXC-INIT-001',
@@ -405,18 +410,47 @@ async function main() {
     'IFC-003',
     'IFC-010',
   ];
-
   for (const id of sampleIds) {
     const task = currentTasks.find((t) => t['Task ID'] === id);
     const orig = originalMap.get(id);
-    if (task && orig) {
-      console.log(`${id}:`);
-      console.log(`  Original: "${orig.prereqs}"`);
-      console.log(`  Deps: [${orig.deps.join(', ')}]`);
-      console.log(`  New: ${task['Pre-requisites']}`);
-      console.log('');
-    }
+    if (!task || !orig) continue;
+    console.log(`${id}:`);
+    console.log(`  Original: "${orig.prereqs}"`);
+    console.log(`  Deps: [${orig.deps.join(', ')}]`);
+    console.log(`  New: ${task['Pre-requisites']}`);
+    console.log('');
   }
+}
+
+async function main() {
+  console.log('=== Smart Pre-requisites Fix ===\n');
+
+  console.log('Reading current CSV...');
+  const csvContent = readFileSync(CSV_PATH, 'utf-8');
+  const currentTasks = parse(csvContent, {
+    columns: true,
+    bom: true,
+    relax_quotes: true,
+  }) as Record<string, string>[];
+  console.log(`Found ${currentTasks.length} tasks in current CSV\n`);
+
+  console.log('Fetching original CSV from git...');
+  const originalTasks = getOriginalCsvFromGit();
+  console.log(`Found ${originalTasks.length} tasks in original CSV\n`);
+
+  const originalMap = buildOriginalMap(originalTasks);
+  const taskMapForInheritance = buildInheritanceMap(originalMap);
+
+  console.log('Processing tasks...\n');
+  const updated = applySmartPrereqs(currentTasks, originalMap, taskMapForInheritance);
+  console.log(`Updated ${updated} tasks\n`);
+
+  const headers = Object.keys(currentTasks[0]);
+  const output = stringifyCsv(currentTasks, headers);
+  writeFileSync(CSV_PATH, output, 'utf-8');
+  console.log(`Written to: ${CSV_PATH}\n`);
+
+  printSampleConversions(currentTasks, originalMap);
 }
 
 main().catch(console.error);

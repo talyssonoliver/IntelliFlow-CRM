@@ -92,7 +92,7 @@ function isHumanApprover(token) {
   const s = token.trim();
   if (s.length < 3) return false;
   if (REJECTED_APPROVERS.has(s.toLowerCase())) return false;
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return true; // email
+  if (/^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{1,63}$/.test(s)) return true; // email
   if (/^@[A-Za-z0-9][A-Za-z0-9_.-]{2,}$/.test(s)) return true; // @handle
   if (/^[A-Za-z][A-Za-z0-9._-]{2,}$/.test(s)) return true; // plain name
   return false;

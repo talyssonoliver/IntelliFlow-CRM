@@ -77,7 +77,7 @@ export function analyzeOutput(rawOutput) {
   const originRe = /This error originated in "?([^"\n]+\.(?:tsx?|jsx?|mjs|cjs))"?/gi;
   const latestRe =
     /latest test that might'?ve caused the error is "?([^"\n]+\.(?:tsx?|jsx?|mjs|cjs))"?/gi;
-  const genericTestRe = /[\w./\\-]+\.(?:test|spec)\.(?:tsx?|jsx?)/g;
+  const genericTestRe = /[\w/\\-]{1,120}\.(?:test|spec)\.(?:tsx?|jsx?)/g;
   let m;
   while ((m = originRe.exec(text)) !== null) blamed.add(m[1].trim());
   while ((m = latestRe.exec(text)) !== null) blamed.add(m[1].trim());

@@ -117,7 +117,7 @@ export function normalizeAppRoute(relPath: string): string | null {
     .replace(/\/$/, ''); // Strip trailing slash
 
   // Check for dynamic segments
-  if (/\[.+\]/.test(rel)) return null;
+  if (/\[[^\]]{1,200}\]/.test(rel)) return null;
 
   if (rel === '' || rel === '/') return '/';
   return rel.startsWith('/') ? rel : '/' + rel;

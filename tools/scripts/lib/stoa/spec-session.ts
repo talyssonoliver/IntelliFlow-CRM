@@ -366,6 +366,31 @@ function formatContributionForPrompt(contrib: AgentContribution): string {
 // ============================================================================
 
 /**
+ * Apply parsed JSON fields onto a contribution object
+ */
+function applyParsedFields(contribution: AgentContribution, parsed: Record<string, unknown>): void {
+  if (parsed.interpretation) contribution.interpretation = parsed.interpretation as string;
+  if (parsed.questions) contribution.questions = parsed.questions as string[];
+  if (parsed.concerns) contribution.concerns = parsed.concerns as string[];
+  if (parsed.dependencies) contribution.dependencies = parsed.dependencies as string[];
+  if (parsed.proposal) contribution.proposal = parsed.proposal as string;
+  if (parsed.challenges) contribution.challenges = parsed.challenges as string[];
+  if (parsed.consensus) contribution.consensus = parsed.consensus as string;
+}
+
+/**
+ * Extract JSON object from a raw response string
+ */
+function extractJsonFromResponse(response: string): string | null {
+  const jsonStart = response.indexOf('{');
+  const jsonEnd = response.lastIndexOf('}');
+  if (jsonStart !== -1 && jsonEnd > jsonStart) {
+    return response.slice(jsonStart, jsonEnd + 1);
+  }
+  return null;
+}
+
+/**
  * Parse agent response into contribution
  */
 export function parseAgentResponse(
@@ -382,19 +407,10 @@ export function parseAgentResponse(
   };
 
   try {
-    // Extract JSON from response
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-
-      // Map fields based on round type
-      if (parsed.interpretation) contribution.interpretation = parsed.interpretation;
-      if (parsed.questions) contribution.questions = parsed.questions;
-      if (parsed.concerns) contribution.concerns = parsed.concerns;
-      if (parsed.dependencies) contribution.dependencies = parsed.dependencies;
-      if (parsed.proposal) contribution.proposal = parsed.proposal;
-      if (parsed.challenges) contribution.challenges = parsed.challenges;
-      if (parsed.consensus) contribution.consensus = parsed.consensus;
+    const jsonStr = extractJsonFromResponse(response);
+    if (jsonStr) {
+      const parsed = JSON.parse(jsonStr) as Record<string, unknown>;
+      applyParsedFields(contribution, parsed);
     }
   } catch {
     // If JSON parsing fails, use raw response as interpretation
@@ -608,26 +624,44 @@ function buildTechnicalApproach(
   return approaches.join('\n\n') || 'Technical approach to be determined.';
 }
 
+/**
+ * Build a SpecComponent from a file path match and agent name
+ */
+function buildComponentFromMatch(pathMatch: RegExpMatchArray, agentName: string): SpecComponent {
+  const filePath = pathMatch[1];
+  return {
+    name: filePath.split('/').pop() || filePath,
+    type: filePath.endsWith('.tsx') ? 'Component' : 'Module',
+    location: filePath,
+    purpose: `Proposed by ${agentName}`,
+  };
+}
+
+/**
+ * Extract SpecComponents from a single proposal string
+ */
+function extractComponentsFromProposal(proposal: string, agentName: string): SpecComponent[] {
+  const result: SpecComponent[] = [];
+  const fileMatches = proposal.match(
+    /(?:create|modify|add)[^()\n]{0,120}?([a-zA-Z0-9_\-/]{1,120}\.tsx?)/gi
+  );
+  if (!fileMatches) return result;
+
+  for (const match of fileMatches) {
+    const pathMatch = match.match(/([a-zA-Z0-9_\-/]{1,120}\.tsx?)/);
+    if (pathMatch) {
+      result.push(buildComponentFromMatch(pathMatch, agentName));
+    }
+  }
+  return result;
+}
+
 function extractComponents(proposals: AgentContribution[]): SpecComponent[] {
   const components: SpecComponent[] = [];
 
   for (const c of proposals) {
     if (c.proposal) {
-      // Extract file mentions as components
-      const fileMatches = c.proposal.match(/(?:create|modify|add).*?([a-zA-Z0-9_\-/.]+\.tsx?)/gi);
-      if (fileMatches) {
-        for (const match of fileMatches) {
-          const pathMatch = match.match(/([a-zA-Z0-9_\-/.]+\.tsx?)/);
-          if (pathMatch) {
-            components.push({
-              name: pathMatch[1].split('/').pop() || pathMatch[1],
-              type: pathMatch[1].endsWith('.tsx') ? 'Component' : 'Module',
-              location: pathMatch[1],
-              purpose: `Proposed by ${c.agent}`,
-            });
-          }
-        }
-      }
+      components.push(...extractComponentsFromProposal(c.proposal, c.agent));
     }
   }
 
@@ -890,21 +924,77 @@ ${Object.entries(spec.agentSignoffs)
 }
 
 /**
+ * Render a single agent contribution as markdown
+ */
+function renderContribution(contrib: AgentContribution): string {
+  let out = `##### ${contrib.agent}\n\n`;
+
+  if (contrib.interpretation) {
+    out += `**Interpretation:** ${contrib.interpretation}\n\n`;
+  }
+  if (contrib.questions?.length) {
+    const questionList = contrib.questions.map((q: string) => `- ${q}`).join('\n');
+    out += `**Questions:**\n${questionList}\n\n`;
+  }
+  if (contrib.concerns?.length) {
+    const concernList = contrib.concerns.map((c: string) => `- ${c}`).join('\n');
+    out += `**Concerns:**\n${concernList}\n\n`;
+  }
+  if (contrib.proposal) {
+    out += `**Proposal:** ${contrib.proposal}\n\n`;
+  }
+  if (contrib.challenges?.length) {
+    const challengeList = contrib.challenges.map((c: string) => `- ${c}`).join('\n');
+    out += `**Challenges:**\n${challengeList}\n\n`;
+  }
+  if (contrib.consensus) {
+    out += `**Consensus:** ${contrib.consensus}\n\n`;
+  }
+
+  return out;
+}
+
+/**
+ * Render a single spec round as markdown
+ */
+function renderRound(round: SpecSessionRound): string {
+  const completedAt = round.completedAt || 'In progress';
+  const consensusLabel = round.consensusReached ? 'Yes' : 'No';
+
+  let out = `### Round ${round.roundNumber}: ${round.roundType}\n\n`;
+  out += `**Topic:** ${round.topic}\n`;
+  out += `**Started:** ${round.startedAt}\n`;
+  out += `**Completed:** ${completedAt}\n`;
+  out += `**Consensus Reached:** ${consensusLabel}\n\n`;
+  out += `#### Contributions\n\n`;
+
+  for (const contrib of round.contributions) {
+    out += renderContribution(contrib);
+  }
+
+  out += '---\n\n';
+  return out;
+}
+
+/**
  * Generate discussion log markdown
  */
 export function generateDiscussionMarkdown(session: SpecSession): string {
+  const completedAt = session.completedAt || 'In progress';
+  const agentList = session.selectedAgents.selectedAgents.map((a: string) => `- ${a}`).join('\n');
+
   let md = `# Discussion Log: ${session.taskId}
 
 **Session ID:** ${session.sessionId}
 **Status:** ${session.status}
 **Started:** ${session.startedAt}
-**Completed:** ${session.completedAt || 'In progress'}
+**Completed:** ${completedAt}
 
 ---
 
 ## Participating Agents
 
-${session.selectedAgents.selectedAgents.map((a: string) => `- ${a}`).join('\n')}
+${agentList}
 
 ---
 
@@ -913,33 +1003,7 @@ ${session.selectedAgents.selectedAgents.map((a: string) => `- ${a}`).join('\n')}
 `;
 
   for (const round of session.rounds) {
-    md += `### Round ${round.roundNumber}: ${round.roundType}
-
-**Topic:** ${round.topic}
-**Started:** ${round.startedAt}
-**Completed:** ${round.completedAt || 'In progress'}
-**Consensus Reached:** ${round.consensusReached ? 'Yes' : 'No'}
-
-#### Contributions
-
-`;
-
-    for (const contrib of round.contributions) {
-      md += `##### ${contrib.agent}
-
-`;
-      if (contrib.interpretation) md += `**Interpretation:** ${contrib.interpretation}\n\n`;
-      if (contrib.questions?.length)
-        md += `**Questions:**\n${contrib.questions.map((q: string) => `- ${q}`).join('\n')}\n\n`;
-      if (contrib.concerns?.length)
-        md += `**Concerns:**\n${contrib.concerns.map((c: string) => `- ${c}`).join('\n')}\n\n`;
-      if (contrib.proposal) md += `**Proposal:** ${contrib.proposal}\n\n`;
-      if (contrib.challenges?.length)
-        md += `**Challenges:**\n${contrib.challenges.map((c: string) => `- ${c}`).join('\n')}\n\n`;
-      if (contrib.consensus) md += `**Consensus:** ${contrib.consensus}\n\n`;
-    }
-
-    md += '---\n\n';
+    md += renderRound(round);
   }
 
   return md;

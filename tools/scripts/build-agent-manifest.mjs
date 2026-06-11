@@ -41,7 +41,7 @@ function parseFrontmatter(body) {
   const fm = body.slice(3, end + 1);
   const out = {};
   for (const line of fm.split('\n')) {
-    const m = line.match(/^([a-zA-Z_]+)\s*:\s*(.+?)\s*$/);
+    const m = line.match(/^([a-zA-Z_]{1,80})[ \t]*:[ \t]*([^ \t\n\r][^\n\r]{0,498}[^ \t\n\r]|[^ \t\n\r])$/);
     if (m) out[m[1]] = m[2].replace(/^["']|["']$/g, '');
   }
   return out;

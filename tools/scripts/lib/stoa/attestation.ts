@@ -445,7 +445,7 @@ function checkGlobArtifact(
   found: string[],
   missing: string[]
 ): void {
-  const parentDir = trimmedArtifact.replace(/\/?\*.*$/, '');
+  const parentDir = trimmedArtifact.replace(/\/?\*[^\n]{0,500}$/, '');
   const fullParentPath = join(repoRoot, parentDir);
 
   if (!existsSync(fullParentPath) || !statSync(fullParentPath).isDirectory()) {

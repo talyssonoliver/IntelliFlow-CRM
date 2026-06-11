@@ -760,49 +760,44 @@ export function resolveSitemapMatch(route: string, sitemapMap: Map<string, strin
 // Sitemap Cross-Reference
 // ============================================================================
 
-export function buildSitemapSet(sitemapPath: string, dataDir: string): Map<string, string> {
-  const result = new Map<string, string>();
-
-  // Read and parse sitemap.ts
-  let sitemapSource: string;
-  try {
-    sitemapSource = readFileSync(sitemapPath, 'utf-8');
-  } catch {
-    return result;
-  }
-
-  // Extract static route URLs: url: `${BASE_URL}/path` or url: `${BASE_URL}`
+function addStaticSitemapRoutes(sitemapSource: string, result: Map<string, string>): void {
   const urlRegex = /url:\s*`\$\{BASE_URL\}([^`]*)`/g;
   let match;
   while ((match = urlRegex.exec(sitemapSource)) !== null) {
     const path = match[1] || '/';
-    if (path.includes('${')) continue;
-    result.set(path, 'STATIC_LAST_MODIFIED');
+    if (!path.includes('${')) {
+      result.set(path, 'STATIC_LAST_MODIFIED');
+    }
   }
+}
 
-  // Dynamic blog routes from blog-posts.ts
+function addBlogRoutes(dataDir: string, result: Map<string, string>): void {
   try {
     const blogSource = readFileSync(resolve(dataDir, 'blog-posts.ts'), 'utf-8');
     const slugRegex = /slug:\s*'([^']+)'/g;
+    let match;
     while ((match = slugRegex.exec(blogSource)) !== null) {
       result.set(`/blog/${match[1]}`, 'data-field');
     }
   } catch {
     /* skip if file missing */
   }
+}
 
-  // Dynamic career routes from job-listings.ts
+function addCareerRoutes(dataDir: string, result: Map<string, string>): void {
   try {
     const jobSource = readFileSync(resolve(dataDir, 'job-listings.ts'), 'utf-8');
     const idRegex = /id:\s*'([^']+)'/g;
+    let match;
     while ((match = idRegex.exec(jobSource)) !== null) {
       result.set(`/careers/${match[1]}`, 'data-field');
     }
   } catch {
     /* skip if file missing */
   }
+}
 
-  // Dynamic LP routes from landing-pages.json
+function addLandingPageRoutes(dataDir: string, result: Map<string, string>): void {
   try {
     const lpJson = JSON.parse(readFileSync(resolve(dataDir, 'landing-pages.json'), 'utf-8'));
     if (lpJson.pages) {
@@ -813,20 +808,37 @@ export function buildSitemapSet(sitemapPath: string, dataDir: string): Map<strin
   } catch {
     /* skip if file missing */
   }
+}
 
-  // Dynamic press routes from press-releases.json
+function addPressRoutes(dataDir: string, result: Map<string, string>): void {
   try {
     const pressJson = JSON.parse(readFileSync(resolve(dataDir, 'press-releases.json'), 'utf-8'));
-    if (Array.isArray(pressJson.releases)) {
-      for (const release of pressJson.releases) {
-        if (typeof release?.id === 'string' && release.id.length > 0) {
-          result.set(`/press/${release.id}`, 'data-field');
-        }
+    if (!Array.isArray(pressJson.releases)) return;
+    for (const release of pressJson.releases) {
+      if (typeof release?.id === 'string' && release.id.length > 0) {
+        result.set(`/press/${release.id}`, 'data-field');
       }
     }
   } catch {
     /* skip if file missing */
   }
+}
+
+export function buildSitemapSet(sitemapPath: string, dataDir: string): Map<string, string> {
+  const result = new Map<string, string>();
+
+  let sitemapSource: string;
+  try {
+    sitemapSource = readFileSync(sitemapPath, 'utf-8');
+  } catch {
+    return result;
+  }
+
+  addStaticSitemapRoutes(sitemapSource, result);
+  addBlogRoutes(dataDir, result);
+  addCareerRoutes(dataDir, result);
+  addLandingPageRoutes(dataDir, result);
+  addPressRoutes(dataDir, result);
 
   return result;
 }
@@ -880,7 +892,7 @@ export function detectStaleContent(source: string): StaleContentResult {
     classification = 'static-by-design-dated';
     patternsFound.push('currency');
   }
-  if (/\d+(\.\d+)?%/.test(source)) {
+  if (/\d{1,10}(\.\d{1,10})?%/.test(source)) {
     classification = 'static-by-design-dated';
     patternsFound.push('percentage');
   }

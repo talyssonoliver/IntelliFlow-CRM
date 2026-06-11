@@ -229,9 +229,9 @@ function check5PlanPreflightSection(planPath) {
 
   // Accept any of: a heading "## Preflight Checks", an explicit N/A line,
   // or a heading that starts with "## Preflight" (flexible).
-  const hasHeading = /^##+\s+Preflight\s+Checks/im.test(content);
-  const hasNA = /##+\s+Preflight\s+Checks.*\n[\s\S]{0,200}N\/A/im.test(content) ||
-    /Preflight Checks:\s*N\/A/i.test(content) ||
+  const hasHeading = /^#{2,6}[ \t]+Preflight[ \t]+Checks/im.test(content);
+  const hasNA = /#{2,6}[ \t]+Preflight[ \t]+Checks[^\n]*\n[\s\S]{0,200}N\/A/im.test(content) ||
+    /Preflight Checks:[ \t]*N\/A/i.test(content) ||
     /No preflight checks required/i.test(content);
 
   if (hasHeading) {

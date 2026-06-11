@@ -349,7 +349,7 @@ function classifyRequirement(
 
   // File references
   if (lower.includes('/') || lower.includes('\\')) {
-    const fileMatch = req.match(/([a-zA-Z0-9_./-]+\/[a-zA-Z0-9_./-]+\.[a-z]{2,5})/);
+    const fileMatch = req.match(/([a-zA-Z0-9_./-]{1,120}\/[a-zA-Z0-9_.-]{1,80}\.[a-z]{2,5})/);
     if (fileMatch) {
       return { type: 'FILE', value: fileMatch[1] };
     }
@@ -432,33 +432,17 @@ function stringifyCsv(tasks: Record<string, string>[], headers: string[]): strin
 // MAIN
 // ============================================================================
 
-async function main() {
-  console.log('=== Smart Pre-requisites Fix with Foundational Artifacts ===\n');
+interface TaskMaps {
+  taskMap: Map<string, OriginalTask>;
+  completedStatuses: Map<string, boolean>;
+  artifactsMap: Map<string, string[]>;
+}
 
-  // Read current CSV
-  console.log('Reading current CSV...');
-  const csvContent = readFileSync(CSV_PATH, 'utf-8');
-  const currentTasks = parse(csvContent, {
-    columns: true,
-    bom: true,
-    relax_quotes: true,
-  }) as Record<string, string>[];
-  console.log(`Found ${currentTasks.length} tasks\n`);
+function parseCsvTasks(raw: string): Record<string, string>[] {
+  return parse(raw, { columns: true, bom: true, relax_quotes: true }) as Record<string, string>[];
+}
 
-  // Get original CSV from git
-  console.log('Fetching original CSV from git...');
-  const gitOutput = execSync(
-    'git show HEAD:"apps/project-tracker/docs/metrics/_global/Sprint_plan.csv"',
-    { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 }
-  );
-  const originalTasks = parse(gitOutput, {
-    columns: true,
-    bom: true,
-    relax_quotes: true,
-  }) as Record<string, string>[];
-  console.log(`Found ${originalTasks.length} tasks in original CSV\n`);
-
-  // Build task map
+function buildTaskMaps(originalTasks: Record<string, string>[]): TaskMaps {
   const taskMap = new Map<string, OriginalTask>();
   const completedStatuses = new Map<string, boolean>();
   const artifactsMap = new Map<string, string[]>();
@@ -485,83 +469,101 @@ async function main() {
     artifactsMap.set(taskId, artifacts);
   }
 
-  // Process each task
-  console.log('Processing tasks with foundational artifacts...\n');
+  return { taskMap, completedStatuses, artifactsMap };
+}
+
+function buildPrereqsForTask(taskId: string, original: OriginalTask, maps: TaskMaps): string[] {
+  const prereqs: string[] = [];
+
+  // 1. Always add mandatory governance files
+  for (const file of GOVERNANCE_FILES) {
+    prereqs.push(`FILE:${file}`);
+  }
+
+  // 2. Convert original plain-text requirements
+  const origParts = original.originalPrereqs
+    .split(',')
+    .map((p) => p.trim())
+    .filter((p) => p);
+  for (const part of origParts) {
+    const classified = classifyRequirement(part);
+    if (classified) {
+      prereqs.push(`${classified.type}:${classified.value}`);
+    }
+  }
+
+  // 3. Get completed tasks (for foundational artifact eligibility)
+  const completedTasks = getCompletedTasksUpToTask(taskId, maps.taskMap, maps.completedStatuses);
+
+  // 4. Add foundational artifacts based on task context
+  const foundations = getApplicableFoundations(
+    taskId,
+    original.description,
+    original.section,
+    completedTasks
+  );
+  for (const file of foundations) {
+    prereqs.push(`FILE:${file}`);
+  }
+
+  // 5. Add primary artifacts from direct dependencies
+  for (const depId of original.dependencies) {
+    const depArtifacts = maps.artifactsMap.get(depId);
+    if (depArtifacts) {
+      const primary = getPrimaryArtifact(depArtifacts);
+      if (primary) {
+        prereqs.push(`FILE:${primary}`);
+      }
+    }
+  }
+
+  return prereqs;
+}
+
+function applyPrereqUpdates(currentTasks: Record<string, string>[], maps: TaskMaps): number {
   let updated = 0;
 
   for (const task of currentTasks) {
     const taskId = task['Task ID'];
-    const original = taskMap.get(taskId);
+    const original = maps.taskMap.get(taskId);
 
     if (!original) {
       console.log(`  WARN: No original data for ${taskId}`);
       continue;
     }
 
-    const prereqs: string[] = [];
-
-    // 1. Always add mandatory governance files
-    for (const file of GOVERNANCE_FILES) {
-      prereqs.push(`FILE:${file}`);
-    }
-
-    // 2. Convert original plain-text requirements
-    const origParts = original.originalPrereqs
-      .split(',')
-      .map((p) => p.trim())
-      .filter((p) => p);
-    for (const part of origParts) {
-      const classified = classifyRequirement(part);
-      if (classified) {
-        prereqs.push(`${classified.type}:${classified.value}`);
-      }
-    }
-
-    // 3. Get completed tasks (for foundational artifact eligibility)
-    const completedTasks = getCompletedTasksUpToTask(taskId, taskMap, completedStatuses);
-
-    // 4. Add foundational artifacts based on task context
-    const foundations = getApplicableFoundations(
-      taskId,
-      original.description,
-      original.section,
-      completedTasks
-    );
-    for (const file of foundations) {
-      prereqs.push(`FILE:${file}`);
-    }
-
-    // 5. Add primary artifacts from direct dependencies
-    for (const depId of original.dependencies) {
-      const depArtifacts = artifactsMap.get(depId);
-      if (depArtifacts) {
-        const primary = getPrimaryArtifact(depArtifacts);
-        if (primary) {
-          prereqs.push(`FILE:${primary}`);
-        }
-      }
-    }
-
-    // Deduplicate and limit
+    const prereqs = buildPrereqsForTask(taskId, original, maps);
     const unique = [...new Set(prereqs)].slice(0, MAX_PREREQ_FILES);
     const newPrereqs = unique.join(';');
 
-    const oldPrereqs = task['Pre-requisites'];
-    if (newPrereqs !== oldPrereqs) {
+    if (newPrereqs !== task['Pre-requisites']) {
       task['Pre-requisites'] = newPrereqs;
       updated++;
     }
   }
 
-  console.log(`Updated ${updated} tasks\n`);
+  return updated;
+}
 
-  // Write back
-  const headers = Object.keys(currentTasks[0]);
-  const output = stringifyCsv(currentTasks, headers);
-  writeFileSync(CSV_PATH, output, 'utf-8');
-  console.log(`Written to: ${CSV_PATH}\n`);
+function printSampleTask(id: string, task: Record<string, string>, orig: OriginalTask): void {
+  console.log(`${'='.repeat(70)}`);
+  console.log(`Task: ${id} - ${orig.description.substring(0, 50)}...`);
+  console.log(`Section: ${orig.section}`);
+  console.log(`Deps: [${orig.dependencies.join(', ')}]`);
+  console.log(`\nPre-requisites:`);
+  const prereqParts = task['Pre-requisites'].split(';');
+  for (const part of prereqParts) {
+    const isFoundation = FOUNDATIONAL_ARTIFACTS.some((f) => part.includes(f.file));
+    const marker = isFoundation ? '[F]' : '   ';
+    console.log(`  ${marker} ${part}`);
+  }
+  console.log('');
+}
 
-  // Show detailed samples
+function printSamples(
+  currentTasks: Record<string, string>[],
+  taskMap: Map<string, OriginalTask>
+): void {
   console.log('=== Sample Tasks with Foundational Artifacts ===\n');
 
   const sampleIds = [
@@ -577,19 +579,39 @@ async function main() {
     const task = currentTasks.find((t) => t['Task ID'] === id);
     const orig = taskMap.get(id);
     if (task && orig) {
-      console.log(`${'='.repeat(70)}`);
-      console.log(`Task: ${id} - ${orig.description.substring(0, 50)}...`);
-      console.log(`Section: ${orig.section}`);
-      console.log(`Deps: [${orig.dependencies.join(', ')}]`);
-      console.log(`\nPre-requisites:`);
-      const prereqParts = task['Pre-requisites'].split(';');
-      for (const part of prereqParts) {
-        const isFoundation = FOUNDATIONAL_ARTIFACTS.some((f) => part.includes(f.file));
-        console.log(`  ${isFoundation ? '[F]' : '   '} ${part}`);
-      }
-      console.log('');
+      printSampleTask(id, task, orig);
     }
   }
+}
+
+async function main() {
+  console.log('=== Smart Pre-requisites Fix with Foundational Artifacts ===\n');
+
+  console.log('Reading current CSV...');
+  const csvContent = readFileSync(CSV_PATH, 'utf-8');
+  const currentTasks = parseCsvTasks(csvContent);
+  console.log(`Found ${currentTasks.length} tasks\n`);
+
+  console.log('Fetching original CSV from git...');
+  const gitOutput = execSync(
+    'git show HEAD:"apps/project-tracker/docs/metrics/_global/Sprint_plan.csv"',
+    { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 }
+  );
+  const originalTasks = parseCsvTasks(gitOutput);
+  console.log(`Found ${originalTasks.length} tasks in original CSV\n`);
+
+  const maps = buildTaskMaps(originalTasks);
+
+  console.log('Processing tasks with foundational artifacts...\n');
+  const updated = applyPrereqUpdates(currentTasks, maps);
+  console.log(`Updated ${updated} tasks\n`);
+
+  const headers = Object.keys(currentTasks[0]);
+  const output = stringifyCsv(currentTasks, headers);
+  writeFileSync(CSV_PATH, output, 'utf-8');
+  console.log(`Written to: ${CSV_PATH}\n`);
+
+  printSamples(currentTasks, maps.taskMap);
 }
 
 main().catch(console.error);

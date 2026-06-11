@@ -180,9 +180,14 @@ export class OllamaAIService implements AIServicePort {
       return JSON.parse(content);
     } catch {
       // Fallback: extract JSON from markdown code blocks
-      const match = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (match?.[1]) {
-        return JSON.parse(match[1].trim());
+      const fenceStart = content.indexOf('```');
+      if (fenceStart !== -1) {
+        const afterFence = content.slice(fenceStart + 3);
+        const jsonStart = afterFence.startsWith('json') ? afterFence.slice(4) : afterFence;
+        const fenceEnd = jsonStart.indexOf('```');
+        if (fenceEnd !== -1) {
+          return JSON.parse(jsonStart.slice(0, fenceEnd).trim());
+        }
       }
       throw new Error(`Failed to parse JSON from Ollama response: ${content.slice(0, 200)}`);
     }

@@ -261,7 +261,7 @@ export function resolveDynamicSites(scan, opts) {
   //   - bare string literal inside a JSX child (single quote pair)
   const coveredPatterns = [
     /\.(icon|Icon|iconName|iconKey|symbol|glyph|name|Name|materialSymbol|materialIcon|type)\b/,
-    /\[[^\]]+\]/, // array/map subscript lookup like ICONS[x] or activityIcons[activity.type]
+    /\[[^\]]{1,200}\]/, // array/map subscript lookup like ICONS[x] or activityIcons[activity.type]
     /\bget[A-Z][A-Za-z0-9_]*Icon\s*\(/,
     /(?:^|[^A-Za-z0-9_])[a-zA-Z_][A-Za-z0-9_]*(?:Icon|Name)(?![A-Za-z0-9_])/,
     /^\s*(?:icon|Icon|name|Name|iconName|symbolName|IconName|SymbolName)\s*$/,
@@ -371,7 +371,7 @@ export function parseIconMapping(src) {
   const out = {};
   const body = src.match(/ICON_MAPPING\s*=\s*\{([\s\S]*?)\}\s*as\s*const/);
   if (!body) return out;
-  const entryRe = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:\s*'([a-z_][a-z0-9_]*)'/gm;
+  const entryRe = /^[ \t]*([A-Za-z_][A-Za-z0-9_]*)[ \t]*:[ \t]*'([a-z_][a-z0-9_]*)'/gm;
   let m;
   while ((m = entryRe.exec(body[1])) !== null) {
     out[m[1]] = m[2];

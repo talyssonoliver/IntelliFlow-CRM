@@ -31,7 +31,7 @@ const CSV_PATH = join(
 );
 
 // Next.js segment markers that do not appear in a runtime URL.
-const SEGMENT_NOISE = /\((?:[^)]+)\)/g; // route groups: (list), (public), ...
+const SEGMENT_NOISE = /\([^)]{1,100}\)/g; // route groups: (list), (public), ...
 
 const SIDEBAR_CONFIG_GLOB =
   'apps/web/src/components/sidebar/configs';
@@ -115,7 +115,7 @@ function readPlan(taskId, sprintArg) {
 
 function extractSection(planContent, headingPatterns) {
   const lines = planContent.split(/\r?\n/);
-  const headingRe = /^#{2,4}\s+(.+?)\s*$/;
+  const headingRe = /^#{2,4}[ \t]+([^ \t\n][^\n]{0,200}?)[ \t]*$/;
   let inSection = false;
   const captured = [];
   for (const line of lines) {
@@ -140,7 +140,7 @@ function listFilePaths(sectionText) {
     /(?:(?:apps|packages|docs|tools|\.specify|\.claude|\.github|\.agents)\/[^\s'"`[\]()]+)/g;
   let match;
   while ((match = re.exec(sectionText)) !== null) {
-    const raw = match[0].replace(/[.,;:)\]`]+$/, '');
+    const raw = match[0].replace(/[.,;:)\]`]{1,10}$/, '');
     found.add(raw);
   }
   return [...found];
@@ -162,7 +162,7 @@ function pagePathToRoute(pagePath) {
   const rel = pagePath.slice(prefix.length).replace(/\/page\.tsx$/, '');
   // Strip route groups like (list), (public), (legal).
   const stripped = rel.replace(SEGMENT_NOISE, '').replace(/\/{2,}/g, '/');
-  return '/' + stripped.replace(/^\/+|\/+$/g, '');
+  return '/' + stripped.replace(/^[/]{1,100}/, '').replace(/[/]{1,100}$/, '');
 }
 
 // ── File-scan helpers (pure Node; no shell, no rg dependency) ────────────
