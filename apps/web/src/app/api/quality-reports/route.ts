@@ -267,7 +267,7 @@ function loadLighthouseWebVitals(): LighthouseWebVitals {
   }
 }
 
-function parseLighthouseFileReport(data: Record<string, unknown>): QualityReport | null {
+function parseLighthouseFileReport(data: Record<string, unknown>): QualityReport {
   const isPlaceholder = data.type === 'unavailable' || data.source === 'placeholder';
   const { scores, generatedAt, vitals: parsedVitals } = parseLighthouseScores(data);
   const avgScore = Math.round(
@@ -312,7 +312,7 @@ function getLighthouseReport(): QualityReport {
   if (filePath) {
     try {
       const data = JSON.parse(fs.readFileSync(filePath, 'utf8')) as Record<string, unknown>;
-      return parseLighthouseFileReport(data) ?? getLighthousePlaceholder();
+      return parseLighthouseFileReport(data);
     } catch (error) {
       console.error('Failed to read lighthouse report:', error);
     }
