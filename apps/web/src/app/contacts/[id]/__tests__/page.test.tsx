@@ -241,6 +241,36 @@ vi.mock('@/lib/shared/avatar-utils', () => ({
   normalizeAvatarSource: (value: string | null | undefined) => value ?? null,
 }));
 
+// IFC-257: the Email/Log Call header actions and the map preview are extracted
+// into their own components (unit-tested separately). Stub them here so the page
+// render stays light (no EmailCompose/trpc graph) and existing blocks stay green.
+vi.mock('@/components/contacts/ContactQuickActions', () => ({
+  ContactQuickActions: ({
+    contact,
+    onLogCall,
+    isLoggingCall,
+  }: {
+    contact: { id: string; email: string };
+    onLogCall: (input: { contactId: string; type: 'CALL'; title: string }) => void;
+    isLoggingCall: boolean;
+  }) => (
+    <div data-testid="contact-quick-actions" data-logging={String(isLoggingCall)}>
+      <button
+        type="button"
+        onClick={() => onLogCall({ contactId: contact.id, type: 'CALL', title: 'Test call' })}
+      >
+        QA Log Call
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('@/components/contacts/ContactMapPreview', () => ({
+  ContactMapPreview: ({ location }: { location: string | null | undefined }) => (
+    <div data-testid="contact-map-preview" data-location={location ?? ''} />
+  ),
+}));
+
 import Contact360Page from '../page';
 
 describe('Contact360Page - AI null state', () => {
@@ -716,5 +746,43 @@ describe('Contact360Page - Tickets & Documents tabs (IFC-256)', () => {
 
     const documentsTab = screen.getByRole('button', { name: /Documents/ });
     expect(documentsTab).toHaveTextContent('51');
+  });
+});
+
+describe('Contact360Page - IFC-257 action wiring', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockContactQueryState.error = null;
+    mockContactQueryState.isLoading = false;
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+  });
+
+  it('renders the extracted ContactQuickActions and ContactMapPreview', () => {
+    render(<Contact360Page />);
+    expect(screen.getByTestId('contact-quick-actions')).toBeInTheDocument();
+    expect(screen.getByTestId('contact-map-preview')).toBeInTheDocument();
+  });
+
+  it('wires ContactQuickActions.onLogCall to the contact.logActivity mutation', () => {
+    render(<Contact360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /QA Log Call/i }));
+    expect(mockLogActivityMutate).toHaveBeenCalledWith({
+      contactId: 'contact-1',
+      type: 'CALL',
+      title: 'Test call',
+    });
+  });
+
+  it('passes the contact location through to ContactMapPreview', () => {
+    render(<Contact360Page />);
+    // location is hardcoded '' in the view-model until IFC-259 wires it from the API.
+    expect(screen.getByTestId('contact-map-preview')).toHaveAttribute('data-location', '');
+  });
+
+  it('navigates to /deals/new with the contactId when "Add Deal" is clicked', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=deals'));
+    render(<Contact360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /Add Deal/i }));
+    expect(mockPush).toHaveBeenCalledWith('/deals/new?contactId=contact-1');
   });
 });

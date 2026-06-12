@@ -7,14 +7,14 @@
   "sprint": "sprint-18",
   "phase": "",
   "stream": null,
-  "status": "BACKLOG",
+  "status": "Plan Complete",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.864Z"
   },
   "dependencies_resolved": [],
-  "started_at": null,
+  "started_at": "2026-06-12T23:03:06Z",
   "completed_at": null,
   "target_duration_minutes": 480,
   "actual_duration_minutes": null,
@@ -41,7 +41,23 @@
     {
       "status": "Backlog",
       "at": "2026-03-05T00:00:00Z"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-06-12T23:03:06Z"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-06-12T23:03:06Z"
+    },
+    {
+      "status": "Planning",
+      "at": "2026-06-12T23:30:00Z"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-06-12T23:30:00Z"
     }
   ],
-  "notes": "Contact audit finding: F-04,F-05,F-06,F-23. See docs/audit/contact-detail-wiring-audit.md"
+  "notes": "Contact audit finding: F-04,F-05,F-06,F-23. See docs/audit/contact-detail-wiring-audit.md. Spec (2026-06-12): audit is stale — logActivity/addNote mutations + 5 useMutation calls already wired by IFC-220/253/256/227. Real remaining scope = genuinely-dead buttons: Email (EmailCompose sheet), Log Call (logActivity CALL via Dialog), Add Deal (navigate), View Map, Play Recording, Download. Merge stub deferred to IFC-262."
 }

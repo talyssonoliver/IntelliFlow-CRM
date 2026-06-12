@@ -2509,3 +2509,17 @@ inference), ADR-050 (duplicate-detection parallel).
   conditional render only when `contact.account` non-null;
   `company || account.name` prevents empty link text)
 - `deals/[id]/page.tsx` — reference implementation, unchanged.
+
+### IFC-257 — Contact 360 action-button wiring
+
+- `contacts/[id]/page.tsx → ContactQuickActions → { Sheet + EmailCompose (PG-141), Dialog }`
+  — header "Email" opens an `EmailCompose` sheet; "Log Call" opens a dialog →
+  `contact.logActivity({ type: 'CALL' })` (existing mutation).
+- `contacts/[id]/page.tsx → router.push('/deals/new?contactId=…')` — "Add Deal"
+  (consumed by `deals/(list)/new/page.tsx`).
+- `contacts/[id]/page.tsx → ContactMapPreview → buildContactMapsHref → Google Maps`
+  — "View Map" (disabled until IFC-259 wires `contact.location`).
+- `contacts/[id]/page.tsx → renderRichPreview('call') → window.open(meta.recordingUrl)`
+  — "Play Recording" (rendered only when a recording URL exists); the
+  document-preview Download no-op was removed (no download URL in activity
+  metadata).
