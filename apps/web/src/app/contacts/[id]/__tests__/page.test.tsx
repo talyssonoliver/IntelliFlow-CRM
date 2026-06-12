@@ -370,6 +370,18 @@ describe('Contact360Page - scoreWithAI mutation (IFC-220)', () => {
     expect(banner.className).toContain('bg-amber-50');
   });
 
+  it('T-004b: compact pending state uses p-3 while full banner uses p-4', () => {
+    render(<Contact360Page />);
+    const banner = screen.getByTestId('contact-ai-pending-banner');
+    const summaryBanner = screen.getByTestId('contact-ai-pending-summary');
+    // Non-compact (full banner) should have p-4
+    expect(banner.className).toContain('p-4');
+    // Compact (sidebar summary) should have p-3 (tighter padding for sidebar)
+    expect(summaryBanner.className).toContain('p-3');
+    // Compact should NOT have p-4 at the container level
+    expect(summaryBanner.className).not.toContain('p-4');
+  });
+
   it('T-005: no pending banners shown when aiInsight data exists', () => {
     mockContactQueryState.data = {
       ...mockContactQueryState.data,

@@ -207,10 +207,6 @@ function sendInternalError(res: ServerResponse, error: unknown, headOnly: boolea
   );
 }
 
-function toHealthStatusCode(status: 'healthy' | 'degraded'): number {
-  return status === 'healthy' ? 200 : 200;
-}
-
 function toDatabaseStatsStatusCode(status: 'ok' | 'unsupported' | 'error'): number {
   return status === 'error' ? 503 : 200;
 }
@@ -269,7 +265,12 @@ async function handleHealthRoute(
     case '/api/health/detailed': {
       const ctx = await Promise.resolve(createContextFn({ req: webRequest }));
       const health = await getDetailedHealth(ctx, { includeDatabaseStats: true });
-      sendJson(res, toHealthStatusCode(health.status), health, headOnly);
+      // /health/detailed always returns 200; degradation is carried in the JSON
+      // body. This matches the worker health convention (degraded = "still
+      // operational, just degraded") and the documented contract. Only
+      // /health/ready and /health/db return 503 (not-ready / DB error) so
+      // load balancers don't pull a merely-degraded API out of rotation.
+      sendJson(res, 200, health, headOnly);
       return true;
     }
     case '/health/db':

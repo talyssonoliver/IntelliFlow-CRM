@@ -16,6 +16,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { validateWorkflowTopology, validateNodeConfig } from '@/lib/workflow-builder/validation';
+import { pickAutoLinkSource } from '@/hooks/useWorkflowCanvas';
 
 // ---------------------------------------------------------------------------
 // Topology validation tests (exercised by useWorkflowCanvas on every render)
@@ -198,5 +199,49 @@ describe('useWorkflowCanvas — module contract', () => {
   it('removeNode also removes connected edges', () => {
     const source = readFileSync(resolve(__dirname, '../../hooks/useWorkflowCanvas.ts'), 'utf-8');
     expect(source).toMatch(/filter.*source.*nodeId.*target.*nodeId/s);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// pickAutoLinkSource — pure auto-link logic (S6959 fix: reduce with initial value)
+// ---------------------------------------------------------------------------
+
+describe('pickAutoLinkSource', () => {
+  it('returns null when nodes list is empty', () => {
+    expect(pickAutoLinkSource([], { x: 100, y: 200 })).toBeNull();
+  });
+
+  it('returns null when the only node is an end node above position', () => {
+    const nodes = [{ id: 'n1', type: 'end', position: { x: 0, y: 100 } }];
+    expect(pickAutoLinkSource(nodes, { x: 0, y: 200 })).toBeNull();
+  });
+
+  it('falls back to last node when no candidates are above position', () => {
+    const nodes = [
+      { id: 'n1', type: 'action', position: { x: 0, y: 300 } },
+      { id: 'n2', type: 'action', position: { x: 0, y: 400 } },
+    ];
+    // New node is at y=100, both existing nodes are BELOW it — no candidates above
+    const result = pickAutoLinkSource(nodes, { x: 0, y: 100 });
+    // Fallback: last node in array (n2)
+    expect(result?.id).toBe('n2');
+  });
+
+  it('picks the nearest node above by Y when candidates exist (exercises reduce initial value)', () => {
+    const nodes = [
+      { id: 'n1', type: 'action', position: { x: 0, y: 50 } },
+      { id: 'n2', type: 'action', position: { x: 0, y: 150 } },
+      { id: 'n3', type: 'action', position: { x: 0, y: 200 } },
+    ];
+    // New node at y=250 — all three are candidates (y < 250); nearest is n3 (y=200, delta=50)
+    const result = pickAutoLinkSource(nodes, { x: 0, y: 250 });
+    expect(result?.id).toBe('n3');
+  });
+
+  it('returns single candidate node when only one is above', () => {
+    const nodes = [{ id: 'n1', type: 'start', position: { x: 0, y: 100 } }];
+    // One candidate above y=200 — reduce with initial value candidates[0] = n1
+    const result = pickAutoLinkSource(nodes, { x: 0, y: 200 });
+    expect(result?.id).toBe('n1');
   });
 });

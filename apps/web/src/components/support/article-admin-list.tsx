@@ -125,7 +125,9 @@ export function ArticleAdminList({ initialData, role }: Readonly<ArticleAdminLis
   const hasFilters = Boolean(debouncedSearch || statusFilter || categoryFilter);
 
   const categoryOptions = useMemo(() => {
-    const distinct = Array.from(new Set(items.map((item) => item.categoryId))).sort();
+    const distinct = Array.from(new Set(items.map((item) => item.categoryId))).sort((a, b) =>
+      a.localeCompare(b)
+    );
     return [
       { value: '', label: 'All categories' },
       ...distinct.map((id) => ({ value: id, label: id })),

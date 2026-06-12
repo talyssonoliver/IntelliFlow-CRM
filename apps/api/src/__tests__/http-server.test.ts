@@ -276,6 +276,28 @@ describe('HTTP API Server', () => {
     });
   });
 
+  it('returns HTTP 200 with degraded status in the body for detailed health', async () => {
+    // /health/detailed stays 200 even when degraded — degradation is reported
+    // in the body (the worker convention: degraded = "still operational").
+    // A merely-degraded API must NOT be pulled from rotation by load balancers.
+    prismaMock.$queryRaw.mockRejectedValueOnce(new Error('connection refused'));
+
+    const { server, baseUrl } = await startTestServer({
+      createContext: (opts) =>
+        createPublicContext({
+          prisma: prismaMock,
+          req: opts?.req,
+        }),
+    });
+    servers.push(server);
+
+    const response = await fetch(`${baseUrl}/health/detailed`);
+    const body = await readJson<{ status: string }>(response);
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe('degraded');
+  });
+
   // Regression (IFC-314): the health route's GET/HEAD-only guard must apply ONLY
   // to health paths. It previously ran before the path switch and 405'd *every*
   // non-GET request — which made the Stripe webhook POST route unreachable.

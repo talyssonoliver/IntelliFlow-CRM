@@ -403,6 +403,29 @@ describe('ArticleAdminList', () => {
     expect(sawCategory).toBe(true);
   });
 
+  it('category filter lists distinct categories sorted alphabetically', async () => {
+    mockListData = {
+      // Deliberately out of order + a duplicate so both the de-dupe and the
+      // localeCompare sort are exercised.
+      items: [
+        buildArticle({ id: 'a', slug: 'a', title: 'A', categoryId: 'zebra' }),
+        buildArticle({ id: 'b', slug: 'b', title: 'B', categoryId: 'alpha' }),
+        buildArticle({ id: 'c', slug: 'c', title: 'C', categoryId: 'alpha' }),
+      ],
+      total: 3,
+      page: 1,
+      limit: 20,
+      hasMore: false,
+    };
+    const { ArticleAdminList } = await loadComponent();
+    render(<ArticleAdminList role="ADMIN" />);
+
+    const select = screen.getByTestId('filter-category') as HTMLSelectElement;
+    const optionValues = Array.from(select.options).map((o) => o.value);
+    // 'All categories' ('') first, then distinct ids sorted: alpha before zebra.
+    expect(optionValues).toEqual(['', 'alpha', 'zebra']);
+  });
+
   it('publish mutation success invalidates the list and shows a toast', async () => {
     const { ArticleAdminList } = await loadComponent();
     render(<ArticleAdminList role="ADMIN" />);

@@ -40,12 +40,14 @@ function fingerprint(model: string, operation: string, args: unknown): string {
   let shape = '';
   if (args && typeof args === 'object') {
     const a = args as Record<string, unknown>;
-    const topKeys = Object.keys(a).sort().join(',');
+    const topKeys = Object.keys(a)
+      .sort((x, y) => x.localeCompare(y))
+      .join(',');
     let whereKeys = '';
     const where = a['where'];
     if (where && typeof where === 'object') {
       whereKeys = Object.keys(where as Record<string, unknown>)
-        .sort()
+        .sort((x, y) => x.localeCompare(y))
         .join(',');
     }
     shape = `${topKeys}|${whereKeys}`;
