@@ -211,6 +211,13 @@ export default function NewLeadForm() {
   });
   // PG-060: screen-reader announcement when enrichment auto-fills a field.
   const [enrichmentNotice, setEnrichmentNotice] = useState('');
+  // PG-060: which enrichable fields currently hold an auto-filled value (vs a
+  // hand-entered one). Lets a later email change refresh stale auto-fills while
+  // never clobbering a value the user typed themselves.
+  const [autoFilled, setAutoFilled] = useState<{ website: boolean; company: boolean }>({
+    website: false,
+    company: false,
+  });
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
 
@@ -262,11 +269,6 @@ export default function NewLeadForm() {
     },
   });
 
-  // Persists the qualification/company-detail fields that lead.create has no
-  // schema home for (see handleSubmit). Declared before the auth gate for the
-  // same Rules-of-Hooks reason as createLead above.
-  const addLeadNote = api.lead.addNote.useMutation();
-
   // Auth gate — show skeleton while checking authentication or if not authenticated
   // useRequireAuth() handles the redirect to /login internally via useEffect,
   // but we must prevent the form from rendering during the redirect frame
@@ -286,32 +288,49 @@ export default function NewLeadForm() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+    // A hand edit to an enrichable field makes it user-owned, so a later email
+    // change must not overwrite it.
+    if (field === 'website' || field === 'company') {
+      setAutoFilled((prev) => ({ ...prev, [field]: false }));
+    }
   };
 
   // PG-060: derive website/company from the email domain when the email field
-  // loses focus. Non-destructive — only fills fields the user left blank.
+  // loses focus. Fills a field the user left blank AND refreshes a field we
+  // previously auto-filled (so changing the email domain replaces a now-stale
+  // Acme website/company), but never overwrites a value the user typed by hand.
   const handleEmailBlur = () => {
     const enriched = enrichFromEmail(formData.email, {
-      website: formData.website,
-      company: formData.company,
+      // Pass blank for auto-filled fields so the lib re-derives them; pass the
+      // user's value for hand-entered fields so they are preserved.
+      website: autoFilled.website ? '' : formData.website,
+      company: autoFilled.company ? '' : formData.company,
     });
-    const filledWebsite = !formData.website.trim() && !!enriched.website;
-    const filledCompany = !formData.company.trim() && !!enriched.company;
-    if (!filledWebsite && !filledCompany) {
-      setEnrichmentNotice('');
-      return;
+
+    const websiteFillable = !formData.website.trim() || autoFilled.website;
+    const companyFillable = !formData.company.trim() || autoFilled.company;
+    const nextWebsite = websiteFillable ? (enriched.website ?? '') : formData.website;
+    const nextCompany = companyFillable ? (enriched.company ?? '') : formData.company;
+
+    if (nextWebsite !== formData.website || nextCompany !== formData.company) {
+      setFormData((prev) => ({ ...prev, website: nextWebsite, company: nextCompany }));
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      website: enriched.website ?? prev.website,
-      company: enriched.company ?? prev.company,
-    }));
+    // Remember which fields now hold an auto-filled value (cleared if the new
+    // email yields nothing for a field we'd been auto-filling).
+    setAutoFilled({
+      website: websiteFillable ? !!nextWebsite : autoFilled.website,
+      company: companyFillable ? !!nextCompany : autoFilled.company,
+    });
 
+    const filledCompany = companyFillable && !!nextCompany;
+    const filledWebsite = websiteFillable && !!nextWebsite;
     const parts = [filledCompany ? 'company' : null, filledWebsite ? 'website' : null].filter(
       Boolean
     );
-    setEnrichmentNotice(`Auto-filled ${parts.join(' and ')} from the email domain.`);
+    setEnrichmentNotice(
+      parts.length ? `Auto-filled ${parts.join(' and ')} from the email domain.` : ''
+    );
   };
 
   // Validate current step
@@ -377,6 +396,13 @@ export default function NewLeadForm() {
       const toOptional = (value: string): string | undefined =>
         value.trim() ? value.trim() : undefined;
 
+      // The qualification / company-detail + required "Other" source fields have
+      // no first-class column yet (IFC-242 / IFC-004). They ride along on create
+      // as `qualificationNote`, which the server persists atomically with the
+      // lead (rolling the lead back if the note write fails) — so the user's
+      // input is never silently dropped by a best-effort second write.
+      const qualificationNote = buildQualificationNote(formData);
+
       const leadData = {
         email: formData.email.trim(),
         firstName: toOptional(formData.firstName),
@@ -390,23 +416,10 @@ export default function NewLeadForm() {
         // estimatedValue (the lead's deal value, in cents) is left unset: this form
         // has no deal-value input. The company revenue band, company size, industry
         // and BANT inputs are UI-only pending dedicated schema fields (see IFC-242).
+        ...(qualificationNote ? { qualificationNote } : {}),
       };
 
-      const created = await createLead.mutateAsync(leadData);
-
-      // Persist the qualification / company-detail + "Other" source fields that
-      // the lead.create schema cannot hold yet, as a structured note, so the
-      // user's input is not silently dropped (interim until IFC-242 / IFC-004
-      // add first-class fields). Best-effort: a note failure must NOT undo the
-      // already-created lead or block the success/redirect flow.
-      const qualificationNote = buildQualificationNote(formData);
-      if (created?.id && qualificationNote) {
-        try {
-          await addLeadNote.mutateAsync({ leadId: created.id, content: qualificationNote });
-        } catch (noteError) {
-          console.error('Lead created, but failed to attach the qualification note:', noteError);
-        }
-      }
+      await createLead.mutateAsync(leadData);
       // Success handled by mutation onSuccess callback
     } catch (error) {
       // Error handled by mutation onError callback

@@ -73,6 +73,75 @@ describe('Lead Router', () => {
       expect(ctx.services!.lead!.createLead).toHaveBeenCalled();
     });
 
+    it('persists the qualificationNote atomically with the lead when provided', async () => {
+      const input = {
+        email: 'noted@example.com',
+        source: 'WEBSITE' as const,
+        qualificationNote: 'Source detail: Podcast ad\nBudget: $50k-$100k',
+      };
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: input.email },
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 0, confidence: 0, tier: 'cold' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+      ctx.services!.lead!.createLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
+      prismaMock.leadNote.create.mockResolvedValue({ id: 'note-1' } as any);
+
+      await callerWithService.create(input);
+
+      expect(prismaMock.leadNote.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            content: input.qualificationNote,
+            leadId: TEST_UUIDS.lead1,
+          }),
+        })
+      );
+    });
+
+    it('rolls the lead back and throws when the qualificationNote write fails', async () => {
+      const input = {
+        email: 'rollback@example.com',
+        source: 'WEBSITE' as const,
+        qualificationNote: 'Source detail: Podcast ad',
+      };
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: input.email },
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 0, confidence: 0, tier: 'cold' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+      ctx.services!.lead!.createLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
+      prismaMock.leadNote.create.mockRejectedValue(new Error('db unavailable'));
+      prismaMock.lead.delete.mockResolvedValue({} as any);
+
+      await expect(callerWithService.create(input)).rejects.toThrow(TRPCError);
+      expect(prismaMock.lead.delete).toHaveBeenCalledWith({ where: { id: TEST_UUIDS.lead1 } });
+    });
+
     it('should throw for invalid email', async () => {
       const input = {
         email: 'invalid-email',

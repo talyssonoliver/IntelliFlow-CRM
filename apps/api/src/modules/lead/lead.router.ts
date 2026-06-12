@@ -479,8 +479,10 @@ export const leadRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const leadService = getLeadService(ctx);
 
+    const { qualificationNote, ...leadInput } = input;
+
     const result = await leadService.createLead({
-      ...input,
+      ...leadInput,
       ownerId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
     });
@@ -490,6 +492,34 @@ export const leadRouter = createTRPCRouter({
         code: 'BAD_REQUEST',
         message: result.error.message,
       });
+    }
+
+    // Persist the qualification note (the required "Other" source detail + BANT
+    // fields that have no first-class column yet) as part of create. If the note
+    // cannot be saved, roll the lead back so a required detail is never silently
+    // dropped — the client sees a failed create instead of a false success.
+    if (qualificationNote && qualificationNote.trim().length > 0) {
+      try {
+        await typedCtx.prismaWithTenant.leadNote.create({
+          data: {
+            content: qualificationNote,
+            author: ctx.user?.email ?? 'System',
+            leadId: result.value.id.value,
+            tenantId: typedCtx.tenant.tenantId,
+          },
+        });
+      } catch (noteError) {
+        await typedCtx.prismaWithTenant.lead
+          .delete({ where: { id: result.value.id.value } })
+          .catch(() => {
+            /* best-effort rollback; the original failure is surfaced regardless */
+          });
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to save the lead qualification details — please retry.',
+          cause: noteError,
+        });
+      }
     }
 
     await writeLeadActivityLog(typedCtx, {

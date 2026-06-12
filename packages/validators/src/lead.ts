@@ -40,6 +40,11 @@ const baseLeadFieldsSchema = z.object({
 // Create Lead Schema - uses base fields with source default
 export const createLeadSchema = baseLeadFieldsSchema.extend({
   source: leadSourceSchema.default('WEBSITE'),
+  // Optional free-text note persisted atomically with the lead on create
+  // (carries fields with no first-class column yet — e.g. the required "Other"
+  // source detail + BANT). Capped to the lead.addNote content budget so the
+  // server write cannot exceed leadNote.content's limit.
+  qualificationNote: z.string().max(5000).optional(),
 });
 
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
