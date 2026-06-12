@@ -30,6 +30,7 @@ export function mapLeadToResponse(lead: Lead) {
     website: lead.website ?? null,
     avatarUrl: lead.avatarUrl ?? null,
     estimatedValue: lead.estimatedValue ?? null,
+    lastContactedAt: lead.lastContactedAt ?? null,
     tags: lead.tags ?? [],
     ownerId: lead.ownerId,
     tenantId: lead.tenantId,

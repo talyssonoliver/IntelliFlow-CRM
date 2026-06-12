@@ -3,7 +3,8 @@ import { Lead } from '@intelliflow/domain';
 import { mapLeadToResponse } from '../mappers';
 
 describe('mapLeadToResponse — Lead 360 fields (IFC-004)', () => {
-  it('surfaces location, website, avatarUrl, estimatedValue and tags', () => {
+  it('surfaces location, website, avatarUrl, estimatedValue, lastContactedAt and tags', () => {
+    const lastContacted = new Date('2026-01-15T00:00:00.000Z');
     const lead = Lead.create({
       email: 'l360@example.com',
       ownerId: 'owner-1',
@@ -12,6 +13,7 @@ describe('mapLeadToResponse — Lead 360 fields (IFC-004)', () => {
       website: 'https://acme.com',
       avatarUrl: 'https://cdn.example.com/a.png',
       estimatedValue: 250000,
+      lastContactedAt: lastContacted,
       tags: ['enterprise', 'inbound'],
     }).value;
 
@@ -21,6 +23,7 @@ describe('mapLeadToResponse — Lead 360 fields (IFC-004)', () => {
     expect(dto.website).toBe('https://acme.com');
     expect(dto.avatarUrl).toBe('https://cdn.example.com/a.png');
     expect(dto.estimatedValue).toBe(250000);
+    expect(dto.lastContactedAt).toEqual(lastContacted);
     expect(dto.tags).toEqual(['enterprise', 'inbound']);
   });
 
@@ -37,6 +40,7 @@ describe('mapLeadToResponse — Lead 360 fields (IFC-004)', () => {
     expect(dto.website).toBeNull();
     expect(dto.avatarUrl).toBeNull();
     expect(dto.estimatedValue).toBeNull();
+    expect(dto.lastContactedAt).toBeNull();
     expect(dto.tags).toEqual([]);
   });
 });

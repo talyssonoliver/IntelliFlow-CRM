@@ -168,7 +168,8 @@ describe('PrismaLeadRepository', () => {
   });
 
   describe('Lead 360 fields (IFC-004)', () => {
-    it('persists location, website, avatarUrl, estimatedValue and tags on save', async () => {
+    it('persists location, website, avatarUrl, estimatedValue, lastContactedAt and tags on save', async () => {
+      const lastContacted = new Date('2026-01-15T00:00:00.000Z');
       const leadResult = Lead.create({
         email: 'l360@example.com',
         ownerId: 'owner-123',
@@ -177,6 +178,7 @@ describe('PrismaLeadRepository', () => {
         website: 'https://acme.com',
         avatarUrl: 'https://cdn.example.com/a.png',
         estimatedValue: 250000,
+        lastContactedAt: lastContacted,
         tags: ['enterprise', 'inbound'],
       });
       const upsertMock = mockPrisma.lead.upsert;
@@ -191,8 +193,27 @@ describe('PrismaLeadRepository', () => {
             website: 'https://acme.com',
             avatarUrl: 'https://cdn.example.com/a.png',
             estimatedValue: 250000,
+            lastContactedAt: lastContacted,
             tags: ['enterprise', 'inbound'],
           }),
+        })
+      );
+    });
+
+    it('persists null estimatedValue (not 0) when no estimate is supplied', async () => {
+      const leadResult = Lead.create({
+        email: 'noestimate@example.com',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+      });
+      const upsertMock = mockPrisma.lead.upsert;
+      upsertMock.mockResolvedValue({});
+
+      await repository.save(leadResult.value);
+
+      expect(upsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({ estimatedValue: null }),
         })
       );
     });
@@ -214,6 +235,7 @@ describe('PrismaLeadRepository', () => {
         website: 'https://acme.com',
         avatarUrl: 'https://cdn.example.com/a.png',
         estimatedValue: 250000,
+        lastContactedAt: new Date('2026-01-15T00:00:00.000Z'),
         tags: ['enterprise', 'inbound'],
         ownerId: 'owner-123',
         tenantId: 'tenant-123',
@@ -227,6 +249,7 @@ describe('PrismaLeadRepository', () => {
       expect(result?.website).toBe('https://acme.com');
       expect(result?.avatarUrl).toBe('https://cdn.example.com/a.png');
       expect(result?.estimatedValue).toBe(250000);
+      expect(result?.lastContactedAt).toEqual(new Date('2026-01-15T00:00:00.000Z'));
       expect(result?.tags).toEqual(['enterprise', 'inbound']);
     });
   });

@@ -58,6 +58,7 @@ function recordToLeadProps(record: LeadRecord) {
     website: record.website ?? undefined,
     avatarUrl: record.avatarUrl ?? undefined,
     estimatedValue: record.estimatedValue ?? undefined,
+    lastContactedAt: record.lastContactedAt ?? undefined,
     tags: record.tags,
     score: {
       value: record.score,
@@ -94,10 +95,13 @@ export class PrismaLeadRepository implements LeadRepository {
       score: lead.score.value,
       // Lead 360 fields (IFC-004) — persist the fields the domain entity, Zod
       // schema and DB columns all support (were previously dropped on save).
+      // estimatedValue is null (not 0) when unset so "no estimate" round-trips
+      // as null instead of being coerced into a $0 deal.
       location: lead.location ?? null,
       website: lead.website ?? null,
       avatarUrl: lead.avatarUrl ?? null,
-      estimatedValue: lead.estimatedValue ?? 0,
+      estimatedValue: lead.estimatedValue ?? null,
+      lastContactedAt: lead.lastContactedAt ?? null,
       tags: lead.tags ?? [],
       ownerId: lead.ownerId,
       tenantId: lead.tenantId,
