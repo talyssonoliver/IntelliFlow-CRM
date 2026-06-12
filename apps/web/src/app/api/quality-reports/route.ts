@@ -267,6 +267,18 @@ function loadLighthouseWebVitals(): LighthouseWebVitals {
   }
 }
 
+const VALID_REPORT_SOURCES = new Set<ReportSource>(['ci', 'manual', 'placeholder', 'dynamic']);
+
+// Coerce an untrusted `source` field to a valid ReportSource. An empty string
+// or any value outside the union defaults to 'ci' — matching the pre-refactor
+// `data.source || 'ci'` behaviour (`?? 'ci'` alone would leak `source: ""`,
+// violating the declared union).
+function toReportSource(value: unknown): ReportSource {
+  return typeof value === 'string' && VALID_REPORT_SOURCES.has(value as ReportSource)
+    ? (value as ReportSource)
+    : 'ci';
+}
+
 function parseLighthouseFileReport(data: Record<string, unknown>): QualityReport {
   const isPlaceholder = data.type === 'unavailable' || data.source === 'placeholder';
   const { scores, generatedAt, vitals: parsedVitals } = parseLighthouseScores(data);
@@ -289,9 +301,7 @@ function parseLighthouseFileReport(data: Record<string, unknown>): QualityReport
     status: lighthouseStatus,
     score: hasValidData ? avgScore : undefined,
     generatedAt,
-    source: (isPlaceholder
-      ? 'placeholder'
-      : ((data.source as ReportSource | undefined) ?? 'ci')) as ReportSource,
+    source: isPlaceholder ? 'placeholder' : toReportSource(data.source),
     htmlPath: '/api/quality-reports/view?report=lighthouse',
     details: { ...scores, vitals },
     isPlaceholder: isPlaceholder && !hasValidData,

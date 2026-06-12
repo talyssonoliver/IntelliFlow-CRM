@@ -121,6 +121,24 @@ describe('/api/quality-reports', () => {
     expect(d.data.isPlaceholder).toBeFalsy();
   });
 
+  it('defaults an empty or invalid lighthouse source to "ci"', async () => {
+    mockExistsSync.mockImplementation(
+      (p: string) => typeof p === 'string' && p.includes('lighthouse-summary.json')
+    );
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        generatedAt: '2026-01-01T00:00:00Z',
+        // Empty string must NOT leak through — it would violate ReportSource.
+        source: '',
+        type: 'real',
+        scores: { performance: 90, accessibility: 95, bestPractices: 85, seo: 92 },
+      })
+    );
+    const res = await GET(makeReq({ action: 'detail', id: 'lighthouse' }));
+    const d = await res.json();
+    expect(d.data.source).toBe('ci');
+  });
+
   it('returns coverage report with istanbul format data', async () => {
     mockExistsSync.mockImplementation(
       (p: string) => typeof p === 'string' && p.includes('coverage-summary.json')
