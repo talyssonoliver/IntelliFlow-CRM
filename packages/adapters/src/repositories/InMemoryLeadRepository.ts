@@ -8,7 +8,9 @@ import { LeadRepository } from '@intelliflow/application';
 export class InMemoryLeadRepository implements LeadRepository {
   private readonly leads: Map<string, Lead> = new Map();
 
-  async save(lead: Lead): Promise<void> {
+  async save(lead: Lead, _opts?: { note?: { content: string; author: string } }): Promise<void> {
+    // In-memory store keeps only the lead aggregate; an initial note (opts.note)
+    // has no separate store here and is intentionally ignored.
     this.leads.set(lead.id.value, lead);
   }
 

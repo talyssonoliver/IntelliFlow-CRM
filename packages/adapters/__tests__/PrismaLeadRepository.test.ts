@@ -200,6 +200,51 @@ describe('PrismaLeadRepository', () => {
       );
     });
 
+    it('persists an initial note atomically (nested write) when opts.note is supplied', async () => {
+      const leadResult = Lead.create({
+        email: 'noted@example.com',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+      });
+      const upsertMock = mockPrisma.lead.upsert;
+      upsertMock.mockResolvedValue({});
+
+      await repository.save(leadResult.value, {
+        note: { content: 'Source detail: Podcast ad', author: 'me@example.com' },
+      });
+
+      expect(upsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            notes: {
+              create: [
+                expect.objectContaining({
+                  content: 'Source detail: Podcast ad',
+                  author: 'me@example.com',
+                  tenantId: 'tenant-123',
+                }),
+              ],
+            },
+          }),
+        })
+      );
+    });
+
+    it('does not nest a note when opts.note is absent', async () => {
+      const leadResult = Lead.create({
+        email: 'nonote@example.com',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+      });
+      const upsertMock = mockPrisma.lead.upsert;
+      upsertMock.mockResolvedValue({});
+
+      await repository.save(leadResult.value);
+
+      const callArg = upsertMock.mock.calls[0][0];
+      expect(callArg.create.notes).toBeUndefined();
+    });
+
     it('persists null estimatedValue (not 0) when no estimate is supplied', async () => {
       const leadResult = Lead.create({
         email: 'noestimate@example.com',

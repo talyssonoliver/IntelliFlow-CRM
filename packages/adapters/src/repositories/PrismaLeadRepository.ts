@@ -81,7 +81,7 @@ function recordToLeadProps(record: LeadRecord) {
 export class PrismaLeadRepository implements LeadRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async save(lead: Lead): Promise<void> {
+  async save(lead: Lead, opts?: { note?: { content: string; author: string } }): Promise<void> {
     const data = {
       id: lead.id.value,
       email: lead.email.value,
@@ -111,7 +111,23 @@ export class PrismaLeadRepository implements LeadRepository {
 
     await this.prisma.lead.upsert({
       where: { id: data.id },
-      create: data,
+      // Nest the initial note into the create so the lead + note commit in a
+      // single transaction (Prisma nested write) — no orphaned lead if the note
+      // write fails, no orphaned note if the lead write fails.
+      create: opts?.note
+        ? {
+            ...data,
+            notes: {
+              create: [
+                {
+                  content: opts.note.content,
+                  author: opts.note.author,
+                  tenantId: data.tenantId,
+                },
+              ],
+            },
+          }
+        : data,
       update: data,
     });
   }

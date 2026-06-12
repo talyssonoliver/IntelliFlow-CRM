@@ -481,45 +481,29 @@ export const leadRouter = createTRPCRouter({
 
     const { qualificationNote, ...leadInput } = input;
 
-    const result = await leadService.createLead({
-      ...leadInput,
-      ownerId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-    });
+    // The qualification note (required "Other" source detail + BANT fields with
+    // no first-class column yet) is persisted atomically with the lead by the
+    // repository (single transaction) — never a best-effort second write that
+    // could drop required data behind a false success.
+    const note =
+      qualificationNote && qualificationNote.trim().length > 0
+        ? { content: qualificationNote, author: ctx.user?.email ?? 'System' }
+        : undefined;
+
+    const result = await leadService.createLead(
+      {
+        ...leadInput,
+        ownerId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+      },
+      note ? { note } : undefined
+    );
 
     if (result.isFailure) {
       throw new TRPCError({
         code: 'BAD_REQUEST',
         message: result.error.message,
       });
-    }
-
-    // Persist the qualification note (the required "Other" source detail + BANT
-    // fields that have no first-class column yet) as part of create. If the note
-    // cannot be saved, roll the lead back so a required detail is never silently
-    // dropped — the client sees a failed create instead of a false success.
-    if (qualificationNote && qualificationNote.trim().length > 0) {
-      try {
-        await typedCtx.prismaWithTenant.leadNote.create({
-          data: {
-            content: qualificationNote,
-            author: ctx.user?.email ?? 'System',
-            leadId: result.value.id.value,
-            tenantId: typedCtx.tenant.tenantId,
-          },
-        });
-      } catch (noteError) {
-        await typedCtx.prismaWithTenant.lead
-          .delete({ where: { id: result.value.id.value } })
-          .catch(() => {
-            /* best-effort rollback; the original failure is surfaced regardless */
-          });
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to save the lead qualification details — please retry.',
-          cause: noteError,
-        });
-      }
     }
 
     await writeLeadActivityLog(typedCtx, {

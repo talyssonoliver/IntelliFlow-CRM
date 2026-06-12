@@ -97,7 +97,10 @@ export class LeadService {
   /**
    * Create a new lead with validation
    */
-  async createLead(props: CreateLeadProps): Promise<Result<Lead, DomainError>> {
+  async createLead(
+    props: CreateLeadProps,
+    opts?: { note?: { content: string; author: string } }
+  ): Promise<Result<Lead, DomainError>> {
     // Check for duplicate email
     const emailResult = Email.create(props.email);
     if (emailResult.isFailure) {
@@ -117,9 +120,10 @@ export class LeadService {
 
     const lead = leadResult.value;
 
-    // Persist
+    // Persist the lead — and, when supplied, its required initial note — in a
+    // single transaction via the repository (no best-effort second write).
     try {
-      await this.leadRepository.save(lead);
+      await this.leadRepository.save(lead, opts);
     } catch {
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
