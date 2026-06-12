@@ -34,6 +34,42 @@ function toPhoneNumber(phone: string | null): PhoneNumber | undefined {
   return result.value;
 }
 
+/** The persisted Prisma Lead record shape (derived from the client). */
+type LeadRecord = NonNullable<Awaited<ReturnType<PrismaClient['lead']['findUnique']>>>;
+
+/**
+ * Map a persisted Prisma Lead record to the props used to reconstitute the
+ * domain entity. Centralises hydration so every query path returns the same
+ * fields — including the Lead 360 fields (location, website, avatarUrl,
+ * estimatedValue, tags) that the DB columns, Zod schema and domain entity all
+ * model but earlier reconstitution silently dropped.
+ */
+function recordToLeadProps(record: LeadRecord) {
+  return {
+    email: Email.create(record.email).value,
+    firstName: record.firstName ?? undefined,
+    lastName: record.lastName ?? undefined,
+    company: record.company ?? undefined,
+    title: record.title ?? undefined,
+    phone: toPhoneNumber(record.phone),
+    source: record.source as LeadSource,
+    status: record.status as LeadStatus,
+    location: record.location ?? undefined,
+    website: record.website ?? undefined,
+    avatarUrl: record.avatarUrl ?? undefined,
+    estimatedValue: record.estimatedValue ?? undefined,
+    tags: record.tags,
+    score: {
+      value: record.score,
+      confidence: 1, // Prisma stores only the score value; default confidence
+    },
+    ownerId: record.ownerId,
+    tenantId: record.tenantId,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+  };
+}
+
 /**
  * Prisma Lead Repository
  * Implements LeadRepository port using Prisma ORM
@@ -56,6 +92,13 @@ export class PrismaLeadRepository implements LeadRepository {
       source: lead.source,
       status: lead.status,
       score: lead.score.value,
+      // Lead 360 fields (IFC-004) — persist the fields the domain entity, Zod
+      // schema and DB columns all support (were previously dropped on save).
+      location: lead.location ?? null,
+      website: lead.website ?? null,
+      avatarUrl: lead.avatarUrl ?? null,
+      estimatedValue: lead.estimatedValue ?? 0,
+      tags: lead.tags ?? [],
       ownerId: lead.ownerId,
       tenantId: lead.tenantId,
       createdAt: lead.createdAt,
@@ -76,24 +119,7 @@ export class PrismaLeadRepository implements LeadRepository {
 
     if (!record) return null;
 
-    return Lead.reconstitute(createLeadId(record.id), {
-      email: Email.create(record.email).value,
-      firstName: record.firstName ?? undefined,
-      lastName: record.lastName ?? undefined,
-      company: record.company ?? undefined,
-      title: record.title ?? undefined,
-      phone: toPhoneNumber(record.phone),
-      source: record.source as LeadSource,
-      status: record.status as LeadStatus,
-      score: {
-        value: record.score,
-        confidence: 1, // Default confidence since Prisma only stores score value
-      },
-      ownerId: record.ownerId,
-      tenantId: record.tenantId,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-    });
+    return Lead.reconstitute(createLeadId(record.id), recordToLeadProps(record));
   }
 
   async findByEmail(email: Email): Promise<Lead | null> {
@@ -104,24 +130,7 @@ export class PrismaLeadRepository implements LeadRepository {
 
     if (!record) return null;
 
-    return Lead.reconstitute(createLeadId(record.id), {
-      email: Email.create(record.email).value,
-      firstName: record.firstName ?? undefined,
-      lastName: record.lastName ?? undefined,
-      company: record.company ?? undefined,
-      title: record.title ?? undefined,
-      phone: toPhoneNumber(record.phone),
-      source: record.source as LeadSource,
-      status: record.status as LeadStatus,
-      score: {
-        value: record.score,
-        confidence: 1,
-      },
-      ownerId: record.ownerId,
-      tenantId: record.tenantId,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-    });
+    return Lead.reconstitute(createLeadId(record.id), recordToLeadProps(record));
   }
 
   async findByOwnerId(ownerId: string): Promise<Lead[]> {
@@ -131,24 +140,7 @@ export class PrismaLeadRepository implements LeadRepository {
     });
 
     return records.map((record) =>
-      Lead.reconstitute(createLeadId(record.id), {
-        email: Email.create(record.email).value,
-        firstName: record.firstName ?? undefined,
-        lastName: record.lastName ?? undefined,
-        company: record.company ?? undefined,
-        title: record.title ?? undefined,
-        phone: toPhoneNumber(record.phone),
-        source: record.source as LeadSource,
-        status: record.status as LeadStatus,
-        score: {
-          value: record.score,
-          confidence: 1,
-        },
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      })
+      Lead.reconstitute(createLeadId(record.id), recordToLeadProps(record))
     );
   }
 
@@ -162,24 +154,7 @@ export class PrismaLeadRepository implements LeadRepository {
     });
 
     return records.map((record) =>
-      Lead.reconstitute(createLeadId(record.id), {
-        email: Email.create(record.email).value,
-        firstName: record.firstName ?? undefined,
-        lastName: record.lastName ?? undefined,
-        company: record.company ?? undefined,
-        title: record.title ?? undefined,
-        phone: toPhoneNumber(record.phone),
-        source: record.source as LeadSource,
-        status: record.status as LeadStatus,
-        score: {
-          value: record.score,
-          confidence: 1,
-        },
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      })
+      Lead.reconstitute(createLeadId(record.id), recordToLeadProps(record))
     );
   }
 
@@ -193,24 +168,7 @@ export class PrismaLeadRepository implements LeadRepository {
     });
 
     return records.map((record) =>
-      Lead.reconstitute(createLeadId(record.id), {
-        email: Email.create(record.email).value,
-        firstName: record.firstName ?? undefined,
-        lastName: record.lastName ?? undefined,
-        company: record.company ?? undefined,
-        title: record.title ?? undefined,
-        phone: toPhoneNumber(record.phone),
-        source: record.source as LeadSource,
-        status: record.status as LeadStatus,
-        score: {
-          value: record.score,
-          confidence: 1,
-        },
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      })
+      Lead.reconstitute(createLeadId(record.id), recordToLeadProps(record))
     );
   }
 
@@ -257,24 +215,7 @@ export class PrismaLeadRepository implements LeadRepository {
     });
 
     return records.map((record) =>
-      Lead.reconstitute(createLeadId(record.id), {
-        email: Email.create(record.email).value,
-        firstName: record.firstName ?? undefined,
-        lastName: record.lastName ?? undefined,
-        company: record.company ?? undefined,
-        title: record.title ?? undefined,
-        phone: toPhoneNumber(record.phone),
-        source: record.source as LeadSource,
-        status: record.status as LeadStatus,
-        score: {
-          value: record.score,
-          confidence: 1,
-        },
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      })
+      Lead.reconstitute(createLeadId(record.id), recordToLeadProps(record))
     );
   }
 

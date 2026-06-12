@@ -24,6 +24,13 @@ export function mapLeadToResponse(lead: Lead) {
     score: lead.score.value,
     scoreConfidence: lead.score.confidence,
     scoreTier: lead.score.tier,
+    // Lead 360 fields (IFC-004) — modelled by the domain entity + DB columns and
+    // now persisted by PrismaLeadRepository, so the API response surfaces them.
+    location: lead.location ?? null,
+    website: lead.website ?? null,
+    avatarUrl: lead.avatarUrl ?? null,
+    estimatedValue: lead.estimatedValue ?? null,
+    tags: lead.tags ?? [],
     ownerId: lead.ownerId,
     tenantId: lead.tenantId,
     createdAt: lead.createdAt,
