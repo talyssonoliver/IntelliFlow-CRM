@@ -713,6 +713,12 @@ describe('Account Validators', () => {
       );
     });
 
+    it('rejects a whitespace-only industry (trim before non-empty check)', () => {
+      expect(updateAccountIndustrySchema.safeParse({ id: VALID_ID, industry: '   ' }).success).toBe(
+        false
+      );
+    });
+
     it('rejects an industry exceeding 100 characters', () => {
       expect(
         updateAccountIndustrySchema.safeParse({ id: VALID_ID, industry: 'x'.repeat(101) }).success

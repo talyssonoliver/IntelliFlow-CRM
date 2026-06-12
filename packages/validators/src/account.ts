@@ -60,11 +60,9 @@ export type UpdateAccountEmployeeCountInput = z.infer<typeof updateAccountEmploy
 
 export const updateAccountIndustrySchema = z.object({
   id: idSchema,
-  industry: z
-    .string()
-    .min(1)
-    .max(100)
-    .transform((val) => val.trim()),
+  // trim BEFORE min(1) so a whitespace-only industry ("   ") is rejected rather
+  // than being transformed into an empty string and persisted.
+  industry: z.string().trim().min(1).max(100),
 });
 export type UpdateAccountIndustryInput = z.infer<typeof updateAccountIndustrySchema>;
 
