@@ -217,6 +217,29 @@ afterEach(() => {
   // Clear localStorage mock state
   localStorageMock.clear();
 
+  // Clear document cookies to prevent cross-test/cross-file leakage.
+  // The merged coverage run executes all web files in one process
+  // (isolate:false), so an auth cookie set by one file otherwise survives
+  // into the next — e.g. session-cleanup's hasActiveSession() tests would
+  // intermittently see a stale `sb-`/`accessToken` cookie. Expire every
+  // cookie by name with a fixed past date so it works under both jsdom and
+  // happy-dom (an `expires=<now>` clear is unreliable under jsdom).
+  // Best-effort: jsdom's document.cookie getter throws (tough-cookie
+  // getCookieContext) when a test left the document in an invalid-URL
+  // context, so never let cleanup throw and fail an unrelated test.
+  try {
+    if (typeof document !== 'undefined' && typeof document.cookie === 'string') {
+      for (const cookie of document.cookie.split(';')) {
+        const name = cookie.split('=')[0].trim();
+        if (name) {
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+        }
+      }
+    }
+  } catch {
+    // ignore — no usable cookie jar in this environment/context
+  }
+
   // Reset Next.js router mock state
   mockRouter.push.mockClear();
   mockRouter.replace.mockClear();
