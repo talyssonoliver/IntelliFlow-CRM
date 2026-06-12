@@ -276,7 +276,10 @@ describe('HTTP API Server', () => {
     });
   });
 
-  it('returns HTTP 503 when detailed health status is degraded', async () => {
+  it('returns HTTP 200 with degraded status in the body for detailed health', async () => {
+    // /health/detailed stays 200 even when degraded — degradation is reported
+    // in the body (the worker convention: degraded = "still operational").
+    // A merely-degraded API must NOT be pulled from rotation by load balancers.
     prismaMock.$queryRaw.mockRejectedValueOnce(new Error('connection refused'));
 
     const { server, baseUrl } = await startTestServer({
@@ -291,7 +294,7 @@ describe('HTTP API Server', () => {
     const response = await fetch(`${baseUrl}/health/detailed`);
     const body = await readJson<{ status: string }>(response);
 
-    expect(response.status).toBe(503);
+    expect(response.status).toBe(200);
     expect(body.status).toBe('degraded');
   });
 
