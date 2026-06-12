@@ -70,3 +70,14 @@ export function formatRelativeTime(dateString: string, timezone: string = 'Europ
     timeZone: timezone,
   });
 }
+
+/**
+ * Format a lead's estimated value — stored in CENTS per the domain contract
+ * (packages/validators/src/lead.ts:36, packages/domain/src/crm/lead/Lead.ts:73) —
+ * as a compact currency label: `5_000_000` cents -> `"$50k"`, `50_000` -> `"$500"`.
+ */
+export function formatEstimatedValue(cents: number): string {
+  const dollars = cents / 100;
+  if (dollars >= 1000) return `$${(dollars / 1000).toFixed(0)}k`;
+  return `$${dollars.toFixed(0)}`;
+}

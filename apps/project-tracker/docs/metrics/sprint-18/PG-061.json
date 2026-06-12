@@ -42,7 +42,7 @@
     "created": [
       {
         "path": "apps/web/src/components/leads/lead-detail.tsx",
-        "sha256": "ce42baa113ac5428dfbb61754c793d7c41ee64768ac8737fb7925d216b5b0b4f",
+        "sha256": "d915537b9b45659e17f04c95cce4ae3e6ef3d7ee20e72b4073c66c59f668f737",
         "created_at": "2026-06-13T00:00:00Z"
       },
       {
@@ -52,12 +52,12 @@
       },
       {
         "path": "apps/web/src/lib/leads/lead-format.ts",
-        "sha256": "18d0260b51cf70bf030a5d5f2c72ec14f85be8b2098c810600adfb1fb8d55f2a",
+        "sha256": "d87f39322ac97db8dac96ae94a4366b4c9c6fd0e812af7db75b3e4b1cd913032",
         "created_at": "2026-06-13T00:02:00Z"
       },
       {
         "path": "apps/web/src/components/leads/__tests__/lead-detail.test.tsx",
-        "sha256": "445a703a7ba07daf010cb312cd8c0deb2cb6d1639149d68dac7d04caf24e106d",
+        "sha256": "153dc80c5ff088adff45ae9d091db2674cd65705dad0f7a576a8336aa1593645",
         "created_at": "2026-06-13T00:25:00Z"
       },
       {
@@ -67,7 +67,7 @@
       },
       {
         "path": "apps/web/src/lib/leads/__tests__/lead-format.test.ts",
-        "sha256": "88f6fc696231b17482e4438fa8921a797278352e35b3a39851192d83369bcd2d",
+        "sha256": "fb300984c05f688600749ace458a22301b9348cb142a8591056ad564e095c262",
         "created_at": "2026-06-13T00:25:00Z"
       }
     ],

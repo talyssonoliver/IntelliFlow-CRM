@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import { AppAvatar } from '@/components/shared/app-avatar';
+import { formatEstimatedValue } from '@/lib/leads/lead-format';
 
 /**
  * Lead 360 details — identity, contact info, status/source/temperature badges,
@@ -294,7 +295,7 @@ export function LeadProfileCard({
         <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
             <p className="text-lg font-bold text-slate-900 dark:text-white">
-              ${(leadMetrics.estimatedValue / 1000).toFixed(0)}k
+              {formatEstimatedValue(leadMetrics.estimatedValue)}
             </p>
             <p className="text-xs text-slate-500">Est. Value</p>
           </div>

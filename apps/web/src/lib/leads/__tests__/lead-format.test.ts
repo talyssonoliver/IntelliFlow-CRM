@@ -3,6 +3,7 @@ import {
   getActivityIcon,
   getActivityIconBg,
   formatRelativeTime,
+  formatEstimatedValue,
   type ActivityType,
 } from '../lead-format';
 
@@ -75,5 +76,21 @@ describe('lead-format · formatRelativeTime', () => {
     const out = formatRelativeTime('2026-05-01T12:00:00.000Z', 'Europe/London');
     expect(out).toContain('2026');
     expect(out).toContain('May');
+  });
+});
+
+describe('lead-format · formatEstimatedValue', () => {
+  it('formats values >= $1,000 as compact thousands (cents in)', () => {
+    expect(formatEstimatedValue(5_000_000)).toBe('$50k');
+    expect(formatEstimatedValue(100_000_000)).toBe('$1000k');
+  });
+
+  it('formats sub-$1,000 values as whole dollars (no 100x error)', () => {
+    expect(formatEstimatedValue(50_000)).toBe('$500');
+    expect(formatEstimatedValue(99_900)).toBe('$999');
+  });
+
+  it('formats zero', () => {
+    expect(formatEstimatedValue(0)).toBe('$0');
   });
 });

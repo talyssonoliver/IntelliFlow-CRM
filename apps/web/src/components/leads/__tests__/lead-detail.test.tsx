@@ -68,7 +68,7 @@ function makeLead(overrides: Partial<LeadProfileData> = {}): LeadProfileData {
 }
 
 const metrics: LeadMetrics = {
-  estimatedValue: 50000,
+  estimatedValue: 5_000_000, // cents -> $50,000 -> "$50k"
   emailsSent: 10,
   emailsOpened: 5,
   meetings: 2,
