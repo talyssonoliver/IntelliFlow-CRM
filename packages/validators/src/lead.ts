@@ -174,6 +174,15 @@ export const leadResponseSchema = z.object({
   scoreConfidence: z.number().nullable(),
   scoreTier: z.enum(['HOT', 'WARM', 'COLD']).nullable(),
   isStarred: z.boolean().optional().default(false), // PG-059 sidebar "Starred" view
+  // Lead 360 fields (IFC-004) — mirror mapLeadToResponse's nullable/default shape
+  // so the response contract surfaces them instead of Zod silently stripping the
+  // now-persisted values. Optional so non-mapper response builders don't break.
+  location: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
+  avatarUrl: z.string().nullable().optional(),
+  estimatedValue: z.number().int().nullable().optional(),
+  lastContactedAt: z.coerce.date().nullable().optional(),
+  tags: z.array(z.string()).optional().default([]),
   ownerId: idSchema,
   tenantId: idSchema,
   createdAt: z.coerce.date(),
