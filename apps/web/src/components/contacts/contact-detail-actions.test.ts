@@ -1,16 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { buildDealNewHref, buildContactMapsHref } from './contact-detail-actions';
-
-describe('buildDealNewHref (IFC-257)', () => {
-  it('builds the /deals/new href with the contactId query param', () => {
-    expect(buildDealNewHref('c1')).toBe('/deals/new?contactId=c1');
-  });
-
-  it('URL-encodes the contact id', () => {
-    expect(buildDealNewHref('a b/c')).toBe('/deals/new?contactId=a%20b%2Fc');
-  });
-});
+import { buildContactMapsHref } from './contact-detail-actions';
 
 describe('buildContactMapsHref (IFC-257)', () => {
   it('returns null for an empty location', () => {

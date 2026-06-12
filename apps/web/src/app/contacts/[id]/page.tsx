@@ -45,7 +45,6 @@ import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
 import { ContactRelatedTabs } from '@/components/contacts/ContactRelatedTabs';
 import { ContactQuickActions } from '@/components/contacts/ContactQuickActions';
 import { ContactMapPreview } from '@/components/contacts/ContactMapPreview';
-import { buildDealNewHref } from '@/components/contacts/contact-detail-actions';
 import {
   formatContactDate,
   formatContactRelativeTime,
@@ -2408,7 +2407,7 @@ export default function Contact360Page() {
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Deals</h3>
                 <button
                   type="button"
-                  onClick={() => router.push(buildDealNewHref(contactId))}
+                  onClick={() => router.push('/deals/new')}
                   className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">

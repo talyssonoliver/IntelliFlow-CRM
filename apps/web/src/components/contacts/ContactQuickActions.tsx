@@ -137,6 +137,7 @@ export function ContactQuickActions({
                 type="text"
                 value={logCallTitle}
                 onChange={(e) => setLogCallTitle(e.target.value)}
+                maxLength={200}
                 placeholder="e.g. Discovery call, Follow-up"
                 className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
               />
@@ -152,6 +153,7 @@ export function ContactQuickActions({
                 id="contact-log-call-description"
                 value={logCallDescription}
                 onChange={(e) => setLogCallDescription(e.target.value)}
+                maxLength={2000}
                 placeholder="Call summary, outcomes, next steps..."
                 rows={3}
                 className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent resize-none"

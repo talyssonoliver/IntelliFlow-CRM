@@ -779,10 +779,10 @@ describe('Contact360Page - IFC-257 action wiring', () => {
     expect(screen.getByTestId('contact-map-preview')).toHaveAttribute('data-location', '');
   });
 
-  it('navigates to /deals/new with the contactId when "Add Deal" is clicked', () => {
+  it('navigates to the new-deal page when "Add Deal" is clicked', () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=deals'));
     render(<Contact360Page />);
     fireEvent.click(screen.getByRole('button', { name: /Add Deal/i }));
-    expect(mockPush).toHaveBeenCalledWith('/deals/new?contactId=contact-1');
+    expect(mockPush).toHaveBeenCalledWith('/deals/new');
   });
 });

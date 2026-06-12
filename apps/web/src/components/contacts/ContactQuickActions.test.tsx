@@ -71,11 +71,12 @@ describe('ContactQuickActions (IFC-257) — Email', () => {
 });
 
 describe('ContactQuickActions (IFC-257) — Log Call', () => {
-  it('opens the Log Call dialog when the header button is clicked', () => {
+  it('opens the Log Call dialog with length-bounded inputs (mirrors logActivitySchema)', () => {
     renderActions();
     fireEvent.click(screen.getByRole('button', { name: /Log Call/i }));
     const dialog = screen.getByRole('dialog', { name: /Log Call/i });
-    expect(within(dialog).getByLabelText(/Call Title/i)).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/Call Title/i)).toHaveAttribute('maxLength', '200');
+    expect(within(dialog).getByLabelText(/Notes/i)).toHaveAttribute('maxLength', '2000');
   });
 
   it('calls onLogCall with the CALL payload on submit', () => {

@@ -2515,8 +2515,10 @@ inference), ADR-050 (duplicate-detection parallel).
 - `contacts/[id]/page.tsx → ContactQuickActions → { Sheet + EmailCompose (PG-141), Dialog }`
   — header "Email" opens an `EmailCompose` sheet; "Log Call" opens a dialog →
   `contact.logActivity({ type: 'CALL' })` (existing mutation).
-- `contacts/[id]/page.tsx → router.push('/deals/new?contactId=…')` — "Add Deal"
-  (consumed by `deals/(list)/new/page.tsx`).
+- `contacts/[id]/page.tsx → router.push('/deals/new')` — "Add Deal" opens the
+  new-deal flow. (Pre-associating the contact on the new deal needs account
+  context in `DealForm`; tracked as a follow-up — debt-ledger
+  `CONTACT-ADD-DEAL-PREFILL-001`, git issue #405.)
 - `contacts/[id]/page.tsx → ContactMapPreview → buildContactMapsHref → Google Maps`
   — "View Map" (disabled until IFC-259 wires `contact.location`).
 - `contacts/[id]/page.tsx → renderRichPreview('call') → window.open(meta.recordingUrl)`

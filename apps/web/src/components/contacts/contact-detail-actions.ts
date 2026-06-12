@@ -8,15 +8,6 @@
  */
 
 /**
- * Build the href for the "Add Deal" action. The create-deal page
- * (`apps/web/src/app/deals/(list)/new/page.tsx`) reads `contactId` from the query
- * string to pre-associate the new deal with this contact.
- */
-export function buildDealNewHref(contactId: string): string {
-  return `/deals/new?contactId=${encodeURIComponent(contactId)}`;
-}
-
-/**
  * Build a Google Maps search URL for a contact's location, or `null` when the
  * location is empty/whitespace. The contact view-model currently hardcodes an
  * empty location (IFC-259 owns wiring it from the API), so the "View Map" control
