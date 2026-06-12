@@ -520,6 +520,39 @@ describe('CreateNewLeadPage', () => {
     expect(mockAddNoteMutateAsync).toHaveBeenCalledTimes(1);
   });
 
+  it('truncates an oversized qualification note to the addNote length budget', async () => {
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
+    fireEvent.change(screen.getByLabelText(/qualification notes/i), {
+      target: { value: 'x'.repeat(6000) },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockAddNoteMutateAsync).toHaveBeenCalledTimes(1);
+    const noteArg = mockAddNoteMutateAsync.mock.calls[0][0];
+    expect(noteArg.content.length).toBeLessThanOrEqual(5000);
+  });
+
+  it('resets the form to pristine on successful create (clears the dirty registry)', () => {
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+    expect((screen.getByLabelText(/first name/i) as HTMLInputElement).value).toBe('Sarah');
+
+    // Trigger the captured onSuccess (the mock does not auto-invoke it).
+    act(() => {
+      mockCreateMutation.mock.results[0]?.value._onSuccess?.();
+    });
+
+    expect((screen.getByLabelText(/first name/i) as HTMLInputElement).value).toBe('');
+  });
+
   it('navigates back via the step indicator and via the Previous button', () => {
     render(<CreateNewLeadPage />);
     fillBasicStep();

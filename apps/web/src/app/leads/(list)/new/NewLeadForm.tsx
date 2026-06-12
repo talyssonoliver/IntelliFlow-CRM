@@ -148,6 +148,11 @@ function labelFor(options: { value: string; label: string }[], value: string): s
   return options.find((option) => option.value === value)?.label ?? value;
 }
 
+// Mirrors the lead.addNote contract (`content: z.string().max(5000)`). The note
+// is truncated to this budget client-side so an oversized free-text qualification
+// note is persisted (truncated) rather than rejected by the API and lost.
+const NOTE_MAX_LENGTH = 5000;
+
 /**
  * Build a human-readable note from the qualification / company-detail fields the
  * `lead.create` schema cannot persist yet (BANT + company profile + the required
@@ -178,7 +183,10 @@ function buildQualificationNote(formData: LeadFormData): string {
   if (formData.qualificationNotes.trim())
     lines.push(`Notes: ${formData.qualificationNotes.trim()}`);
   if (lines.length === 0) return '';
-  return `Lead qualification details (captured on the New Lead form):\n${lines.join('\n')}`;
+  const body = `Lead qualification details (captured on the New Lead form):\n${lines.join('\n')}`;
+  // Cap at the API note budget so an oversized free-text note is persisted
+  // (truncated) instead of being rejected by lead.addNote and silently lost.
+  return body.length > NOTE_MAX_LENGTH ? `${body.slice(0, NOTE_MAX_LENGTH - 1)}…` : body;
 }
 
 type ToastData = {
@@ -222,6 +230,12 @@ export default function NewLeadForm() {
   // previous render" on the loading -> authenticated transition.
   const createLead = api.lead.create.useMutation({
     onSuccess: () => {
+      // Reset to the pristine form so the unsaved-changes registry is no longer
+      // dirty before we navigate away (useFormUnsavedChanges registers from
+      // isDirty and has no unmount cleanup — a stale 'newLeadForm' entry would
+      // otherwise trigger a false unsaved-work warning after redirect).
+      setFormData(initialFormData);
+
       // Show success toast
       setToast({
         open: true,
