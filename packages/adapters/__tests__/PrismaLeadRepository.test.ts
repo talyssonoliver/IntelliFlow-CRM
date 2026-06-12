@@ -167,6 +167,138 @@ describe('PrismaLeadRepository', () => {
     });
   });
 
+  describe('Lead 360 fields (IFC-004)', () => {
+    it('persists location, website, avatarUrl, estimatedValue, lastContactedAt and tags on save', async () => {
+      const lastContacted = new Date('2026-01-15T00:00:00.000Z');
+      const leadResult = Lead.create({
+        email: 'l360@example.com',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+        location: 'London, UK',
+        website: 'https://acme.com',
+        avatarUrl: 'https://cdn.example.com/a.png',
+        estimatedValue: 250000,
+        lastContactedAt: lastContacted,
+        tags: ['enterprise', 'inbound'],
+      });
+      const upsertMock = mockPrisma.lead.upsert;
+      upsertMock.mockResolvedValue({});
+
+      await repository.save(leadResult.value);
+
+      expect(upsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            location: 'London, UK',
+            website: 'https://acme.com',
+            avatarUrl: 'https://cdn.example.com/a.png',
+            estimatedValue: 250000,
+            lastContactedAt: lastContacted,
+            tags: ['enterprise', 'inbound'],
+          }),
+        })
+      );
+    });
+
+    it('persists an initial note atomically (nested write) when opts.note is supplied', async () => {
+      const leadResult = Lead.create({
+        email: 'noted@example.com',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+      });
+      const upsertMock = mockPrisma.lead.upsert;
+      upsertMock.mockResolvedValue({});
+
+      await repository.save(leadResult.value, {
+        note: { content: 'Source detail: Podcast ad', author: 'me@example.com' },
+      });
+
+      expect(upsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            notes: {
+              create: [
+                expect.objectContaining({
+                  content: 'Source detail: Podcast ad',
+                  author: 'me@example.com',
+                  tenantId: 'tenant-123',
+                }),
+              ],
+            },
+          }),
+        })
+      );
+    });
+
+    it('does not nest a note when opts.note is absent', async () => {
+      const leadResult = Lead.create({
+        email: 'nonote@example.com',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+      });
+      const upsertMock = mockPrisma.lead.upsert;
+      upsertMock.mockResolvedValue({});
+
+      await repository.save(leadResult.value);
+
+      const callArg = upsertMock.mock.calls[0][0];
+      expect(callArg.create.notes).toBeUndefined();
+    });
+
+    it('persists null estimatedValue (not 0) when no estimate is supplied', async () => {
+      const leadResult = Lead.create({
+        email: 'noestimate@example.com',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+      });
+      const upsertMock = mockPrisma.lead.upsert;
+      upsertMock.mockResolvedValue({});
+
+      await repository.save(leadResult.value);
+
+      expect(upsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({ estimatedValue: null }),
+        })
+      );
+    });
+
+    it('reconstitutes the Lead 360 fields from a persisted record', async () => {
+      const findUniqueMock = mockPrisma.lead.findUnique;
+      findUniqueMock.mockResolvedValue({
+        id: testLeadId.value,
+        email: 'l360@example.com',
+        firstName: null,
+        lastName: null,
+        company: null,
+        title: null,
+        phone: null,
+        source: 'WEBSITE',
+        status: 'NEW',
+        score: 0,
+        location: 'London, UK',
+        website: 'https://acme.com',
+        avatarUrl: 'https://cdn.example.com/a.png',
+        estimatedValue: 250000,
+        lastContactedAt: new Date('2026-01-15T00:00:00.000Z'),
+        tags: ['enterprise', 'inbound'],
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await repository.findById(testLeadId);
+
+      expect(result?.location).toBe('London, UK');
+      expect(result?.website).toBe('https://acme.com');
+      expect(result?.avatarUrl).toBe('https://cdn.example.com/a.png');
+      expect(result?.estimatedValue).toBe(250000);
+      expect(result?.lastContactedAt).toEqual(new Date('2026-01-15T00:00:00.000Z'));
+      expect(result?.tags).toEqual(['enterprise', 'inbound']);
+    });
+  });
+
   describe('findById()', () => {
     it('should return lead when found', async () => {
       const mockRecord = {

@@ -40,6 +40,11 @@ const baseLeadFieldsSchema = z.object({
 // Create Lead Schema - uses base fields with source default
 export const createLeadSchema = baseLeadFieldsSchema.extend({
   source: leadSourceSchema.default('WEBSITE'),
+  // Optional free-text note persisted atomically with the lead on create
+  // (carries fields with no first-class column yet — e.g. the required "Other"
+  // source detail + BANT). Capped to the lead.addNote content budget so the
+  // server write cannot exceed leadNote.content's limit.
+  qualificationNote: z.string().max(5000).optional(),
 });
 
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
@@ -169,6 +174,15 @@ export const leadResponseSchema = z.object({
   scoreConfidence: z.number().nullable(),
   scoreTier: z.enum(['HOT', 'WARM', 'COLD']).nullable(),
   isStarred: z.boolean().optional().default(false), // PG-059 sidebar "Starred" view
+  // Lead 360 fields (IFC-004) — mirror mapLeadToResponse's nullable/default shape
+  // so the response contract surfaces them instead of Zod silently stripping the
+  // now-persisted values. Optional so non-mapper response builders don't break.
+  location: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
+  avatarUrl: z.string().nullable().optional(),
+  estimatedValue: z.number().int().nullable().optional(),
+  lastContactedAt: z.coerce.date().nullable().optional(),
+  tags: z.array(z.string()).optional().default([]),
   ownerId: idSchema,
   tenantId: idSchema,
   createdAt: z.coerce.date(),

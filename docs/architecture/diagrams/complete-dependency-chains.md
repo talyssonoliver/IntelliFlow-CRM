@@ -2259,6 +2259,24 @@ Status: ✅ Complete (PG-059 sprint 18). Pure module `bulk-actions.ts` meets
 strict coverage thresholds (100 / 97.87 / 100 / 100 Istanbul). `lead-list.tsx`
 coverage tracked informationally (extracted production code).
 
+### New Lead (PG-060 — create page + client enrichment)
+
+```
+apps/web/src/lib/leads/lead-enrichment.ts          (pure module: derive website/company from email domain)
+  └─ apps/web/src/app/leads/(list)/new/NewLeadForm.tsx  (client component: 3-step wizard; email onBlur → enrichFromEmail)
+      └─ apps/web/src/app/leads/(list)/new/page.tsx     (thin route shell: renders <NewLeadForm/>)
+          └─ api.lead.create (tRPC)                     (existing; ownerId = creator → "assignment automated")
+```
+
+Status: ✅ Complete (PG-060 sprint 18). The form logic lives in the measured
+client component `NewLeadForm.tsx` (96.12% lines / 89.28% branches Istanbul) so
+the diff-coverage gate sees real coverage; `page.tsx` is a thin route shell
+(excluded from coverage by the app-page convention). Pure module
+`lead-enrichment.ts` meets strict thresholds (98.18 / 95.55 / 100 / 100).
+Enrichment is non-destructive (only fills blank website/company) and adds zero
+submission latency (no network/LLM). "assignment automated" satisfied by the
+existing `ownerId = creator` behavior in `lead.router.ts`.
+
 ## Lead Settings Dependency Chain
 
 ### Lead Settings (PG-178)

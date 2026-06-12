@@ -73,6 +73,41 @@ describe('Lead Router', () => {
       expect(ctx.services!.lead!.createLead).toHaveBeenCalled();
     });
 
+    it('passes the qualificationNote to the service for atomic persistence', async () => {
+      const input = {
+        email: 'noted@example.com',
+        source: 'WEBSITE' as const,
+        qualificationNote: 'Source detail: Podcast ad\nBudget: $50k-$100k',
+      };
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: input.email },
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 0, confidence: 0, tier: 'cold' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+      const createLeadSpy = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
+      ctx.services!.lead!.createLead = createLeadSpy;
+
+      await callerWithService.create(input);
+
+      // The note rides into the service as opts so the repository can persist it
+      // atomically with the lead — the router no longer does a second write.
+      expect(createLeadSpy).toHaveBeenCalledWith(expect.objectContaining({ email: input.email }), {
+        note: { content: input.qualificationNote, author: expect.any(String) },
+      });
+    });
+
     it('should throw for invalid email', async () => {
       const input = {
         email: 'invalid-email',

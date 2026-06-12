@@ -7,9 +7,24 @@ import { LeadRepository } from '@intelliflow/application';
  */
 export class InMemoryLeadRepository implements LeadRepository {
   private readonly leads: Map<string, Lead> = new Map();
+  /** Initial notes captured on save (opts.note), keyed by lead id. */
+  private readonly leadNotes: Map<string, Array<{ content: string; author: string }>> = new Map();
 
-  async save(lead: Lead): Promise<void> {
+  async save(lead: Lead, opts?: { note?: { content: string; author: string } }): Promise<void> {
+    // Persist the lead and, per the repository contract, any initial note
+    // together — atomic by construction here since both writes are synchronous
+    // in-memory map mutations that cannot partially fail.
     this.leads.set(lead.id.value, lead);
+    if (opts?.note) {
+      const existing = this.leadNotes.get(lead.id.value) ?? [];
+      existing.push(opts.note);
+      this.leadNotes.set(lead.id.value, existing);
+    }
+  }
+
+  /** Initial notes captured for a lead — test/dev introspection only. */
+  getNotes(leadId: string): Array<{ content: string; author: string }> {
+    return this.leadNotes.get(leadId) ?? [];
   }
 
   async findById(id: LeadId): Promise<Lead | null> {

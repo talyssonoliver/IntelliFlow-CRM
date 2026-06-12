@@ -519,6 +519,29 @@ describe('Lead Validators', () => {
       expect(result.success).toBe(true);
     });
 
+    it('preserves the Lead 360 fields instead of stripping them (IFC-004)', () => {
+      const responseWith360 = {
+        ...baseResponse,
+        location: 'London, UK',
+        website: 'https://acme.com',
+        avatarUrl: 'https://cdn.example.com/a.png',
+        estimatedValue: 250000,
+        lastContactedAt: '2026-01-15T00:00:00Z',
+        tags: ['enterprise', 'inbound'],
+      };
+
+      const result = leadResponseSchema.safeParse(responseWith360);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.location).toBe('London, UK');
+        expect(result.data.website).toBe('https://acme.com');
+        expect(result.data.avatarUrl).toBe('https://cdn.example.com/a.png');
+        expect(result.data.estimatedValue).toBe(250000);
+        expect(result.data.lastContactedAt).toBeInstanceOf(Date);
+        expect(result.data.tags).toEqual(['enterprise', 'inbound']);
+      }
+    });
+
     it('should coerce date strings to Date objects', () => {
       const result = leadResponseSchema.safeParse(baseResponse);
       expect(result.success).toBe(true);

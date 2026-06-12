@@ -479,11 +479,25 @@ export const leadRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const leadService = getLeadService(ctx);
 
-    const result = await leadService.createLead({
-      ...input,
-      ownerId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-    });
+    const { qualificationNote, ...leadInput } = input;
+
+    // The qualification note (required "Other" source detail + BANT fields with
+    // no first-class column yet) is persisted atomically with the lead by the
+    // repository (single transaction) — never a best-effort second write that
+    // could drop required data behind a false success.
+    const note =
+      qualificationNote && qualificationNote.trim().length > 0
+        ? { content: qualificationNote, author: ctx.user?.email ?? 'System' }
+        : undefined;
+
+    const result = await leadService.createLead(
+      {
+        ...leadInput,
+        ownerId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+      },
+      note ? { note } : undefined
+    );
 
     if (result.isFailure) {
       throw new TRPCError({

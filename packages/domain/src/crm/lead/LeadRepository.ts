@@ -13,9 +13,14 @@ import { DateRange } from '../../shared/QueryTypes';
  */
 export interface LeadRepository {
   /**
-   * Save a lead (create or update)
+   * Save a lead (create or update).
+   *
+   * When `opts.note` is supplied on a create, the note MUST be persisted
+   * atomically with the lead (single transaction) so a required initial note —
+   * e.g. the New Lead form's "Other" source detail — is never left dangling
+   * without its lead, or the lead without its required detail.
    */
-  save(lead: Lead): Promise<void>;
+  save(lead: Lead, opts?: { note?: { content: string; author: string } }): Promise<void>;
 
   /**
    * Find a lead by ID
