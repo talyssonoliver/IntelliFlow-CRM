@@ -160,3 +160,19 @@ waivers:
       is ever genuinely dropped again.
     author: talyssonoliver
     date: '2026-06-12'
+  - fingerprint: '033cc15d4f79b9fdff1779f4ac9985007f053ded5ae23af11c02ab655754ac75'
+    reason: >-
+      Verified false positive (codex hallucination — cites the pre-fix schema).
+      The evidence claims leadResponseSchema "contains no Lead 360 fields", but
+      they were ADDED. The current schema (verify with
+      `git show HEAD:packages/validators/src/lead.ts`) declares location,
+      website, avatarUrl, estimatedValue, lastContactedAt and tags
+      (nullable/optional, mirroring mapLeadToResponse), and a regression test
+      (`leadResponseSchema preserves the Lead 360 fields`) asserts they survive a
+      parse rather than being stripped. This is the same hallucinate-the-old-code
+      pattern as the non-atomic-rollback and InMemory findings — codex describes
+      the prior version while its source-anchored fingerprint hashes the current
+      (fixed) lines. Re-blocks if the Lead 360 fields are ever removed from the
+      response schema.
+    author: talyssonoliver
+    date: '2026-06-12'
