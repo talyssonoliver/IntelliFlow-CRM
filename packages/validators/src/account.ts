@@ -41,6 +41,33 @@ export const updateAccountSchema = baseAccountFieldsSchema.partial().extend({
 
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
 
+// IFC-270 B-10/11/12: dedicated single-field command schemas for the
+// updateRevenue / updateEmployeeCount / categorizeIndustry router procedures.
+// Bounds mirror the domain commands: revenue >= 0 (Account.updateRevenue rejects
+// only < 0, so nonnegative — NOT the base schema's positive(), which rejects 0),
+// employees > 0, industry 1..100 chars.
+export const updateAccountRevenueSchema = z.object({
+  id: idSchema,
+  revenue: z.number().nonnegative(),
+});
+export type UpdateAccountRevenueInput = z.infer<typeof updateAccountRevenueSchema>;
+
+export const updateAccountEmployeeCountSchema = z.object({
+  id: idSchema,
+  employees: z.number().int().positive(),
+});
+export type UpdateAccountEmployeeCountInput = z.infer<typeof updateAccountEmployeeCountSchema>;
+
+export const updateAccountIndustrySchema = z.object({
+  id: idSchema,
+  industry: z
+    .string()
+    .min(1)
+    .max(100)
+    .transform((val) => val.trim()),
+});
+export type UpdateAccountIndustryInput = z.infer<typeof updateAccountIndustrySchema>;
+
 // IFC-269 B-04: Whitelist of safe sortable Account columns
 export const ACCOUNT_SORT_FIELDS = [
   'createdAt',
@@ -84,7 +111,9 @@ export type AccountResponse = z.infer<typeof accountResponseSchema>;
 
 // Account List Response Schema - consistent with pagination pattern
 export const accountListResponseSchema = z.object({
-  data: z.array(accountResponseSchema), // Renamed from 'accounts' to 'data'
+  // IFC-270 B-09: key is `accounts` to match the account.list router response
+  // (`return { accounts, … }`) and every frontend consumer (`data?.accounts`).
+  accounts: z.array(accountResponseSchema),
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   limit: z.number().int().positive().max(100),

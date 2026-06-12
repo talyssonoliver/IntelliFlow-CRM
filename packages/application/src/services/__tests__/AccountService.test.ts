@@ -190,6 +190,43 @@ describe('AccountService', () => {
       expect(reloaded?.name).toBe('Validate Update');
       expect(reloaded?.website).toBeUndefined();
     });
+
+    it('should update revenue, employees and industry via updateAccountInfo (B-08)', async () => {
+      const account = Account.create({ name: 'Fields Co', ownerId: 'owner-1' }).value;
+      await accountRepository.save(account);
+
+      const result = await service.updateAccountInfo(
+        account.id.value,
+        { revenue: 7_500_000, employees: 250, industry: 'Logistics' },
+        'updater'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.revenue).toBe(7_500_000);
+      expect(result.value.employees).toBe(250);
+      expect(result.value.industry).toBe('Logistics');
+    });
+
+    it('should propagate an invalid-revenue domain failure without applying name (B-08)', async () => {
+      const account = Account.create({
+        name: 'Atomic Co',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-123',
+      }).value;
+      await accountRepository.save(account);
+
+      const result = await service.updateAccountInfo(
+        account.id.value,
+        { name: 'Should Not Persist', revenue: -1 },
+        'updater',
+        'tenant-123'
+      );
+
+      expect(result.isFailure).toBe(true);
+      const reloaded = await accountRepository.findById(account.id, 'tenant-123');
+      expect(reloaded?.name).toBe('Atomic Co');
+      expect(reloaded?.revenue).toBeUndefined();
+    });
   });
 
   describe('updateRevenue()', () => {
@@ -224,6 +261,8 @@ describe('AccountService', () => {
       const result = await service.updateRevenue(fakeId, 1000, 'updater');
 
       expect(result.isFailure).toBe(true);
+      // IFC-270 B-10: not-found is a NotFoundError (router → HTTP 404), not VALIDATION_ERROR.
+      expect(result.error.code).toBe('NOT_FOUND_ERROR');
     });
   });
 
@@ -259,6 +298,8 @@ describe('AccountService', () => {
       const result = await service.updateEmployeeCount(fakeId, 100, 'updater');
 
       expect(result.isFailure).toBe(true);
+      // IFC-270 B-11: not-found is a NotFoundError (router → HTTP 404).
+      expect(result.error.code).toBe('NOT_FOUND_ERROR');
     });
   });
 
@@ -286,6 +327,8 @@ describe('AccountService', () => {
       const result = await service.categorizeIndustry(fakeId, 'Technology', 'categorizer');
 
       expect(result.isFailure).toBe(true);
+      // IFC-270 B-12: not-found is a NotFoundError (router → HTTP 404).
+      expect(result.error.code).toBe('NOT_FOUND_ERROR');
     });
   });
 
