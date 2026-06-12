@@ -6,12 +6,10 @@
  * so that vitest can resolve the module without building the full package.
  */
 
- 
 export function getCurrentLogContext(): any {
   return {};
 }
 
- 
 export function runWithLogContext(_ctx: unknown, fn: () => any): any {
   return fn();
 }
