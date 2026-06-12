@@ -67,7 +67,14 @@ export class QueueConnector {
   }
 
   /**
-   * Connect to Redis
+   * Connect to Redis with exponential-backoff retry.
+   *
+   * Rather than throwing on ECONNREFUSED / "Connection is closed", we retry
+   * indefinitely with capped exponential backoff (1 s → 2 s → … → 30 s).
+   * This keeps the Node event loop alive so:
+   *  – the container boot smoke reports the process as "running" (not exit 1)
+   *  – a transient Redis blip on prod deploy does not crash-loop the worker
+   * Once Redis is reachable, behaviour is identical to before.
    */
   async connect(): Promise<void> {
     if (this.isConnected && this.connection) {
@@ -80,26 +87,63 @@ export class QueueConnector {
       'Connecting to Redis'
     );
 
-    this.connection = new IORedis({
-      host: this.redisConfig.host,
-      port: this.redisConfig.port,
-      password: this.redisConfig.password,
-      db: this.redisConfig.db,
-      maxRetriesPerRequest: this.redisConfig.maxRetriesPerRequest,
-      enableOfflineQueue: this.redisConfig.enableOfflineQueue,
-      lazyConnect: this.redisConfig.lazyConnect,
-      tls: this.redisConfig.tls ? {} : undefined,
-    });
+    const INITIAL_DELAY_MS = 1_000;
+    const MAX_DELAY_MS = 30_000;
+    let attempt = 0;
+    let delayMs = INITIAL_DELAY_MS;
 
-    // Wait for connection
-    if (this.redisConfig.lazyConnect) {
-      await this.connection.connect();
+    while (true) {
+      // Create a fresh IORedis instance on each attempt so that a previous
+      // failed connection object does not affect the next try.
+      const conn = new IORedis({
+        host: this.redisConfig.host,
+        port: this.redisConfig.port,
+        password: this.redisConfig.password,
+        db: this.redisConfig.db,
+        maxRetriesPerRequest: this.redisConfig.maxRetriesPerRequest,
+        enableOfflineQueue: this.redisConfig.enableOfflineQueue,
+        lazyConnect: this.redisConfig.lazyConnect,
+        tls: this.redisConfig.tls ? {} : undefined,
+      });
+
+      // Suppress unhandled-error-event process crash.
+      conn.on('error', (err: Error) => {
+        this.logger.warn({ err: err.message }, 'Redis connection error event');
+      });
+
+      try {
+        if (this.redisConfig.lazyConnect) {
+          await conn.connect();
+        }
+        await conn.ping();
+
+        // Success — store and mark connected.
+        this.connection = conn;
+        this.isConnected = true;
+        this.logger.info({ attempt }, 'Connected to Redis successfully');
+        return;
+      } catch (err) {
+        // Clean up the failed connection to avoid leaking event listeners.
+        try {
+          conn.disconnect();
+        } catch {
+          // ignore disconnect errors on a broken connection
+        }
+
+        attempt += 1;
+        this.logger.warn(
+          {
+            attempt,
+            retryInMs: delayMs,
+            err: err instanceof Error ? err.message : String(err),
+          },
+          `Redis unavailable, retrying in ${delayMs}ms — worker will start once Redis is reachable`
+        );
+
+        await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+        delayMs = Math.min(delayMs * 2, MAX_DELAY_MS);
+      }
     }
-
-    // Verify connection
-    await this.connection.ping();
-    this.isConnected = true;
-    this.logger.info('Connected to Redis successfully');
   }
 
   /**
@@ -111,7 +155,12 @@ export class QueueConnector {
       throw new Error('Not connected to Redis. Call connect() first.');
     }
     // BullMQ accepts Redis instances as ConnectionOptions
-    return this.connection.duplicate() as ConnectionOptions;
+    const dup = this.connection.duplicate() as IORedis;
+    // Suppress unhandled-error-event process crash on duplicated connections.
+    dup.on('error', (err: Error) => {
+      this.logger.warn({ err: err.message }, 'Redis duplicate connection error event');
+    });
+    return dup as ConnectionOptions;
   }
 
   /**
