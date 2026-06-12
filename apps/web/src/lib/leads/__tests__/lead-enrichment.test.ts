@@ -11,12 +11,22 @@ describe('deriveWebsiteFromEmail', () => {
     expect(deriveWebsiteFromEmail('sarah@acme.com')).toBe('https://acme.com');
   });
 
-  it('uses the raw domain verbatim for a subdomain corporate email', () => {
-    expect(deriveWebsiteFromEmail('sarah@mail.acme.com')).toBe('https://mail.acme.com');
+  it('reduces a mail/eng subdomain to the registrable company domain', () => {
+    // Codex review (subdomain-as-company-website): mail.acme.com is a mail host,
+    // not the company website — derive the registrable acme.com so the website
+    // agrees with deriveCompanyHint (which yields "Acme" for the same address).
+    expect(deriveWebsiteFromEmail('sarah@mail.acme.com')).toBe('https://acme.com');
+    expect(deriveWebsiteFromEmail('sarah@eng.acme.com')).toBe('https://acme.com');
+    expect(deriveWebsiteFromEmail('sarah@eng.acme.co.uk')).toBe('https://acme.co.uk');
   });
 
   it('keeps the full ccSLD domain for the website', () => {
     expect(deriveWebsiteFromEmail('user@acme.co.uk')).toBe('https://acme.co.uk');
+  });
+
+  it('derives a website consistent with the company hint for a subdomain email', () => {
+    expect(deriveWebsiteFromEmail('sarah@mail.acme.com')).toBe('https://acme.com');
+    expect(deriveCompanyHint('sarah@mail.acme.com')).toBe('Acme');
   });
 
   it('is case-insensitive on the domain', () => {

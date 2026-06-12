@@ -116,13 +116,31 @@ function titleCaseLabel(label: string): string {
 }
 
 /**
+ * Reduce a host to its registrable domain (eTLD+1), skipping a country-code
+ * second-level suffix: `mail.acme.com` → `acme.com`, `eng.acme.co.uk` →
+ * `acme.co.uk`, `acme.com` → `acme.com`. Shared by the website and company
+ * derivations so both agree on the company's domain.
+ */
+function registrableDomain(domain: string): string {
+  const labels = domain.split('.');
+  let idx = labels.length >= 2 ? labels.length - 2 : 0;
+  if (labels.length >= 3 && SLD_LABELS.has(labels[idx])) {
+    idx = labels.length - 3;
+  }
+  return labels.slice(idx).join('.');
+}
+
+/**
  * Derive a canonical `https://<domain>` website from a corporate email.
- * Returns null for freemail, invalid, or domain-less input.
+ * Returns null for freemail, invalid, or domain-less input. Uses the registrable
+ * domain so a mail/eng subdomain maps to the company's main site
+ * (`mail.acme.com` → `https://acme.com`) and the website stays consistent with
+ * deriveCompanyHint; `acme.co.uk` is preserved.
  */
 export function deriveWebsiteFromEmail(email: string): string | null {
   const domain = extractDomain(email);
   if (!domain || FREEMAIL_DOMAINS.has(domain)) return null;
-  return normalizeWebsiteUrl(domain);
+  return normalizeWebsiteUrl(registrableDomain(domain));
 }
 
 /**
@@ -151,14 +169,9 @@ export function normalizeWebsiteUrl(url: string): string {
 export function deriveCompanyHint(email: string): string | null {
   const domain = extractDomain(email);
   if (!domain || FREEMAIL_DOMAINS.has(domain)) return null;
-  const labels = domain.split('.');
-  // Registrable label = the one before the TLD, skipping a country-code SLD
-  // (handles sub.acme.com → Acme and acme.co.uk / acme.com.br → Acme).
-  let idx = labels.length >= 2 ? labels.length - 2 : 0;
-  if (labels.length >= 3 && SLD_LABELS.has(labels[idx])) {
-    idx = labels.length - 3;
-  }
-  const registrable = labels[idx];
+  // The company label is the first label of the registrable domain (handles
+  // sub.acme.com → Acme and acme.co.uk / acme.com.br → Acme).
+  const registrable = registrableDomain(domain).split('.')[0];
   if (!registrable) return null;
   return titleCaseLabel(registrable);
 }
