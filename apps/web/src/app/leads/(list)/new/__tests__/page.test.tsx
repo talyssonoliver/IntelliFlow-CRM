@@ -308,7 +308,10 @@ describe('CreateNewLeadPage', () => {
   it('refreshes an auto-filled company/website when the email domain changes (W-5)', () => {
     // Domain-aware enrichment: derive per domain, keep any value the form passes through.
     mockEnrichFromEmail.mockImplementation((email: string, fields: Record<string, unknown>) => {
-      const domain = email.includes('globex.com') ? 'globex' : 'acme';
+      // Exact host match (not substring .includes) so CodeQL's incomplete-URL-
+      // sanitization rule stays happy — the email host is everything after '@'.
+      const host = email.split('@')[1] ?? '';
+      const domain = host === 'globex.com' ? 'globex' : 'acme';
       const derivedCompany = domain === 'globex' ? 'Globex' : 'Acme';
       const website = (fields.website as string | undefined)?.trim();
       const company = (fields.company as string | undefined)?.trim();
