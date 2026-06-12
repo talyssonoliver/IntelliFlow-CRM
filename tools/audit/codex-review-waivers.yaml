@@ -92,3 +92,22 @@ waivers:
       code ever changes to actually perform the mapping.
     author: talyssonoliver
     date: '2026-06-11'
+  - fingerprint: '8058d06e429b929edb6b8c1cd8cfa318032e6a4cbb7fcae47427c0fbc70de08a'
+    reason: >-
+      Accepted design behaviour, not a defect — flagged here for product review.
+      The New Lead form was specced with Lead Source OPTIONAL (placeholder
+      "Select a source..."), and createLeadSchema deliberately sets
+      `source: leadSourceSchema.default('WEBSITE')`, so an unselected source
+      intentionally falls through to that server default. mapSourceToEnum returns
+      undefined for a blank selection (the create payload omits `source`); the
+      actual bug — the previous blank -> 'OTHER' mislabel — is fixed and covered
+      by a regression test. Codex flip-flopped on this exact line (first flagged
+      blank -> OTHER, now flags blank -> WEBSITE-default), confirming this is a
+      subjective classification preference rather than a correctness bug. Making
+      Lead Source a required field (the only resolution codex would accept) is a
+      product/UX change that reverses the form's spec'd optional-source design
+      and is out of PG-060's scope; raised to the operator for an explicit
+      decision. The fingerprint is source-anchored, so this re-blocks if the
+      blank-source handling changes.
+    author: talyssonoliver
+    date: '2026-06-12'
