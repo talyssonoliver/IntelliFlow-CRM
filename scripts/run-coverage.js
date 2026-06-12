@@ -32,6 +32,13 @@ const PROJECTS = [
   'web',
   'ai-worker',
   'domain',
+  // `db` is in sonar.sources (so Sonar's new_coverage covers it via the CI
+  // sharded run) and its src is NOT in sonar.coverage.exclusions, but it was
+  // missing here — so pre-ship's local merged lcov had zero db coverage and
+  // diff-coverage flagged every db logic change as "no lcov". Add it to close
+  // the pre-ship↔Sonar parity gap. db tests are node-env unit tests (no live
+  // DB) and run in ~2s.
+  'db',
   'adapters',
   'application',
   'validators',
