@@ -143,6 +143,44 @@ const timelineOptions = [
   { value: 'unknown', label: 'Unknown / Not discussed' },
 ];
 
+/** Resolve a select value to its human label, falling back to the raw value. */
+function labelFor(options: { value: string; label: string }[], value: string): string {
+  return options.find((option) => option.value === value)?.label ?? value;
+}
+
+/**
+ * Build a human-readable note from the qualification / company-detail fields the
+ * `lead.create` schema cannot persist yet (BANT + company profile + the required
+ * "Other" source detail). Returns '' when the user filled none of them.
+ *
+ * This is interim persistence until IFC-242 / IFC-004 add first-class Lead
+ * fields: without it these user-entered values would be silently dropped on
+ * create. Kept pure (no hooks) so it is unit-testable.
+ */
+function buildQualificationNote(formData: LeadFormData): string {
+  const lines: string[] = [];
+  if (formData.source === 'other' && formData.sourceOther.trim()) {
+    lines.push(`Source detail: ${formData.sourceOther.trim()}`);
+  }
+  if (formData.budget.trim()) lines.push(`Budget: ${formData.budget.trim()}`);
+  if (formData.authority.trim()) lines.push(`Authority: ${formData.authority.trim()}`);
+  if (formData.need.trim()) lines.push(`Need: ${formData.need.trim()}`);
+  if (formData.timeline.trim())
+    lines.push(`Timeline: ${labelFor(timelineOptions, formData.timeline)}`);
+  if (formData.companySize.trim()) {
+    lines.push(`Company size: ${labelFor(companySizeOptions, formData.companySize)}`);
+  }
+  if (formData.industry.trim())
+    lines.push(`Industry: ${labelFor(industryOptions, formData.industry)}`);
+  if (formData.annualRevenue.trim()) {
+    lines.push(`Annual revenue: ${labelFor(revenueOptions, formData.annualRevenue)}`);
+  }
+  if (formData.qualificationNotes.trim())
+    lines.push(`Notes: ${formData.qualificationNotes.trim()}`);
+  if (lines.length === 0) return '';
+  return `Lead qualification details (captured on the New Lead form):\n${lines.join('\n')}`;
+}
+
 type ToastData = {
   open: boolean;
   variant: 'default' | 'destructive' | 'success';
@@ -209,6 +247,11 @@ export default function NewLeadForm() {
       });
     },
   });
+
+  // Persists the qualification/company-detail fields that lead.create has no
+  // schema home for (see handleSubmit). Declared before the auth gate for the
+  // same Rules-of-Hooks reason as createLead above.
+  const addLeadNote = api.lead.addNote.useMutation();
 
   // Auth gate — show skeleton while checking authentication or if not authenticated
   // useRequireAuth() handles the redirect to /login internally via useEffect,
@@ -335,7 +378,21 @@ export default function NewLeadForm() {
         // and BANT inputs are UI-only pending dedicated schema fields (see IFC-242).
       };
 
-      await createLead.mutateAsync(leadData);
+      const created = await createLead.mutateAsync(leadData);
+
+      // Persist the qualification / company-detail + "Other" source fields that
+      // the lead.create schema cannot hold yet, as a structured note, so the
+      // user's input is not silently dropped (interim until IFC-242 / IFC-004
+      // add first-class fields). Best-effort: a note failure must NOT undo the
+      // already-created lead or block the success/redirect flow.
+      const qualificationNote = buildQualificationNote(formData);
+      if (created?.id && qualificationNote) {
+        try {
+          await addLeadNote.mutateAsync({ leadId: created.id, content: qualificationNote });
+        } catch (noteError) {
+          console.error('Lead created, but failed to attach the qualification note:', noteError);
+        }
+      }
       // Success handled by mutation onSuccess callback
     } catch (error) {
       // Error handled by mutation onError callback

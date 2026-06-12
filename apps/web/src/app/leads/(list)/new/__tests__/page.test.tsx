@@ -9,8 +9,16 @@ import { render, screen, act, fireEvent } from '@testing-library/react';
 // ---------------------------------------------------------------------------
 // vi.hoisted — variables available inside vi.mock factories
 // ---------------------------------------------------------------------------
-const { mockUseRequireAuth, mockCreateMutation, mockPush } = vi.hoisted(() => {
+const {
+  mockUseRequireAuth,
+  mockCreateMutation,
+  mockMutateAsync,
+  mockAddNoteMutation,
+  mockAddNoteMutateAsync,
+  mockPush,
+} = vi.hoisted(() => {
   const mockMutateAsync = vi.fn().mockResolvedValue({ id: 'new-lead-1' });
+  const mockAddNoteMutateAsync = vi.fn().mockResolvedValue({ id: 'note-1' });
   const mockPush = vi.fn();
   let capturedOnSuccess: (() => void) | undefined;
   let capturedOnError: ((err: { message: string }) => void) | undefined;
@@ -38,6 +46,11 @@ const { mockUseRequireAuth, mockCreateMutation, mockPush } = vi.hoisted(() => {
         };
       }
     ),
+    mockAddNoteMutateAsync,
+    mockAddNoteMutation: vi.fn(() => ({
+      mutateAsync: mockAddNoteMutateAsync,
+      isPending: false,
+    })),
     mockPush,
   };
 });
@@ -82,6 +95,7 @@ vi.mock('@/lib/api', () => ({
   api: {
     lead: {
       create: { useMutation: mockCreateMutation },
+      addNote: { useMutation: mockAddNoteMutation },
     },
   },
 }));
@@ -124,6 +138,10 @@ describe('CreateNewLeadPage', () => {
       isAuthenticated: true,
       user: { id: 'u1', email: 'test@test.com' },
     });
+    // Restore mutation resolved values (the config resets implementations each
+    // test). create returns the new lead id so the form can attach a note to it.
+    mockMutateAsync.mockResolvedValue({ id: 'new-lead-1' });
+    mockAddNoteMutateAsync.mockResolvedValue({ id: 'note-1' });
   });
 
   afterEach(() => {
@@ -425,6 +443,81 @@ describe('CreateNewLeadPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
 
     expect(mockCreateMutation.mock.results[0]?.value.mutateAsync).toHaveBeenCalled();
+  });
+
+  // -------------------------------------------------------------------------
+  // PG-060: fields with no schema home (source detail + BANT/company profile)
+  // are persisted as a note after create, not silently dropped (Codex review —
+  // required-source-detail-dropped + collected-qualification-data-dropped).
+  // -------------------------------------------------------------------------
+  it('persists source detail + BANT/company fields as a note after create', async () => {
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+    fireEvent.change(screen.getByLabelText(/lead source/i), { target: { value: 'other' } });
+    fireEvent.change(screen.getByLabelText(/please specify/i), { target: { value: 'Podcast ad' } });
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
+    fireEvent.change(screen.getByLabelText(/industry/i), { target: { value: 'technology' } });
+    fireEvent.change(screen.getByLabelText(/annual revenue/i), { target: { value: '1M-10M' } });
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
+    fireEvent.change(screen.getByLabelText(/^budget/i), { target: { value: '$50k-$100k' } });
+    fireEvent.change(screen.getByLabelText(/^need/i), { target: { value: 'CRM solution' } });
+    fireEvent.change(screen.getByLabelText(/qualification notes/i), {
+      target: { value: 'Hot lead' },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+      // flush the create -> note microtask chain (fake timers don't gate microtasks)
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockAddNoteMutateAsync).toHaveBeenCalledTimes(1);
+    const noteArg = mockAddNoteMutateAsync.mock.calls[0][0];
+    expect(noteArg.leadId).toBe('new-lead-1');
+    expect(noteArg.content).toContain('Source detail: Podcast ad');
+    expect(noteArg.content).toContain('Budget: $50k-$100k');
+    expect(noteArg.content).toContain('Need: CRM solution');
+    expect(noteArg.content).toContain('Annual revenue: $1M - $10M');
+    expect(noteArg.content).toContain('Industry: Technology');
+    expect(noteArg.content).toContain('Notes: Hot lead');
+  });
+
+  it('does not create a note when no schema-less fields are filled', async () => {
+    render(<CreateNewLeadPage />);
+    fillBasicStep(); // basic only; source blank, no company/BANT detail
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+      // flush the create -> note microtask chain (fake timers don't gate microtasks)
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockCreateMutation.mock.results[0]?.value.mutateAsync).toHaveBeenCalled();
+    expect(mockAddNoteMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('still redirects on success when the qualification note write fails', async () => {
+    mockAddNoteMutateAsync.mockRejectedValueOnce(new Error('note write failed'));
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
+    fireEvent.change(screen.getByLabelText(/industry/i), { target: { value: 'technology' } });
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+      // flush the create -> note microtask chain (fake timers don't gate microtasks)
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    // The create itself succeeded; a failed note must not surface as a thrown error.
+    expect(mockCreateMutation.mock.results[0]?.value.mutateAsync).toHaveBeenCalled();
+    expect(mockAddNoteMutateAsync).toHaveBeenCalledTimes(1);
   });
 
   it('navigates back via the step indicator and via the Previous button', () => {
