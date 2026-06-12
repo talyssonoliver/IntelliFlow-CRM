@@ -223,7 +223,7 @@ function loadLighthouseWebVitals(): LighthouseWebVitals {
     const files = fs
       .readdirSync(lhciDir)
       .filter((f) => f.endsWith('.json') && f.startsWith('lhr-'))
-      .sort();
+      .sort((a, b) => a.localeCompare(b));
     if (files.length === 0) return empty;
 
     interface LhrRun {
@@ -267,6 +267,41 @@ function loadLighthouseWebVitals(): LighthouseWebVitals {
   }
 }
 
+function parseLighthouseFileReport(data: Record<string, unknown>): QualityReport | null {
+  const isPlaceholder = data.type === 'unavailable' || data.source === 'placeholder';
+  const { scores, generatedAt, vitals: parsedVitals } = parseLighthouseScores(data);
+  const avgScore = Math.round(
+    (scores.performance + scores.accessibility + scores.bestPractices + scores.seo) / 4
+  );
+  const hasValidData = avgScore > 0 || Object.values(scores).some((s) => s > 0);
+  let lighthouseStatus: 'unknown' | 'passing' | 'failing';
+  if (isPlaceholder) {
+    lighthouseStatus = 'unknown';
+  } else {
+    lighthouseStatus = avgScore >= 90 ? 'passing' : 'failing';
+  }
+  const hasEmbeddedVitals = parsedVitals && Object.values(parsedVitals).some((v) => v != null);
+  const vitals = hasEmbeddedVitals ? parsedVitals : loadLighthouseWebVitals();
+  return {
+    id: 'lighthouse',
+    name: 'Lighthouse Performance',
+    type: 'lighthouse',
+    status: lighthouseStatus,
+    score: hasValidData ? avgScore : undefined,
+    generatedAt,
+    source: (isPlaceholder
+      ? 'placeholder'
+      : ((data.source as ReportSource | undefined) ?? 'ci')) as ReportSource,
+    htmlPath: '/api/quality-reports/view?report=lighthouse',
+    details: { ...scores, vitals },
+    isPlaceholder: isPlaceholder && !hasValidData,
+    placeholderReason:
+      isPlaceholder && !hasValidData
+        ? (data.message as string) || 'Lighthouse not available'
+        : undefined,
+  };
+}
+
 function getLighthouseReport(): QualityReport {
   // Check multiple possible file locations
   const filePath = findFile([
@@ -274,50 +309,19 @@ function getLighthouseReport(): QualityReport {
     'artifacts/lighthouse/lighthouse-report.json',
   ]);
 
-  try {
-    if (filePath) {
-      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-
-      // Check if this is explicitly a placeholder report
-      const isPlaceholder = data.type === 'unavailable' || data.source === 'placeholder';
-
-      const { scores, generatedAt, vitals: parsedVitals } = parseLighthouseScores(data);
-
-      const avgScore = Math.round(
-        (scores.performance + scores.accessibility + scores.bestPractices + scores.seo) / 4
-      );
-
-      // If we have valid scores, it's not a placeholder
-      const hasValidData = avgScore > 0 || Object.values(scores).some((s) => s > 0);
-
-      const scoreStatus: 'passing' | 'failing' = avgScore >= 90 ? 'passing' : 'failing';
-      const lighthouseStatus: 'unknown' | 'passing' | 'failing' = isPlaceholder
-        ? 'unknown'
-        : scoreStatus;
-
-      // Prefer vitals embedded in the summary file; fall back to scanning .lighthouseci/
-      const hasEmbeddedVitals = parsedVitals && Object.values(parsedVitals).some((v) => v != null);
-      const vitals = hasEmbeddedVitals ? parsedVitals : loadLighthouseWebVitals();
-
-      return {
-        id: 'lighthouse',
-        name: 'Lighthouse Performance',
-        type: 'lighthouse',
-        status: lighthouseStatus,
-        score: hasValidData ? avgScore : undefined,
-        generatedAt,
-        source: isPlaceholder ? 'placeholder' : data.source || 'ci',
-        htmlPath: '/api/quality-reports/view?report=lighthouse',
-        details: { ...scores, vitals },
-        isPlaceholder: isPlaceholder && !hasValidData,
-        placeholderReason:
-          isPlaceholder && !hasValidData ? data.message || 'Lighthouse not available' : undefined,
-      };
+  if (filePath) {
+    try {
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8')) as Record<string, unknown>;
+      return parseLighthouseFileReport(data) ?? getLighthousePlaceholder();
+    } catch (error) {
+      console.error('Failed to read lighthouse report:', error);
     }
-  } catch (error) {
-    console.error('Failed to read lighthouse report:', error);
   }
 
+  return getLighthousePlaceholder();
+}
+
+function getLighthousePlaceholder(): QualityReport {
   return {
     id: 'lighthouse',
     name: 'Lighthouse Performance',
@@ -677,12 +681,14 @@ function getTRPCBenchmarkReport(): QualityReport {
     };
 
     const totals = data.totals ?? { total: 0, completed: 0, passed: 0, failedKpi: 0, errored: 0 };
-    const status: ReportStatus =
-      totals.completed === 0
-        ? 'unknown'
-        : totals.failedKpi === 0 && totals.errored === 0
-          ? 'passing'
-          : 'failing';
+    let status: ReportStatus;
+    if (totals.completed === 0) {
+      status = 'unknown';
+    } else if (totals.failedKpi === 0 && totals.errored === 0) {
+      status = 'passing';
+    } else {
+      status = 'failing';
+    }
 
     // Score = share of completed benchmarks that passed KPI, scaled 0–100.
     const score = totals.completed > 0 ? Math.round((totals.passed / totals.completed) * 100) : 0;

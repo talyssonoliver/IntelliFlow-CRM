@@ -246,7 +246,7 @@ export class NotificationPreference extends Entity<string> {
     if (!valid) {
       throw new Error('Days must be integers between 0 (Sunday) and 6 (Saturday)');
     }
-    this.props.quietHoursDays = [...new Set(days)].sort();
+    this.props.quietHoursDays = [...new Set(days)].sort((a, b) => a - b);
     this.props.updatedAt = new Date();
   }
 

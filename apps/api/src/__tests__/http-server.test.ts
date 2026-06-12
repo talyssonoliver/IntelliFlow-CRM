@@ -276,6 +276,25 @@ describe('HTTP API Server', () => {
     });
   });
 
+  it('returns HTTP 503 when detailed health status is degraded', async () => {
+    prismaMock.$queryRaw.mockRejectedValueOnce(new Error('connection refused'));
+
+    const { server, baseUrl } = await startTestServer({
+      createContext: (opts) =>
+        createPublicContext({
+          prisma: prismaMock,
+          req: opts?.req,
+        }),
+    });
+    servers.push(server);
+
+    const response = await fetch(`${baseUrl}/health/detailed`);
+    const body = await readJson<{ status: string }>(response);
+
+    expect(response.status).toBe(503);
+    expect(body.status).toBe('degraded');
+  });
+
   // Regression (IFC-314): the health route's GET/HEAD-only guard must apply ONLY
   // to health paths. It previously ran before the path switch and 405'd *every*
   // non-GET request — which made the Stripe webhook POST route unreachable.

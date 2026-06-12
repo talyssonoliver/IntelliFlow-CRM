@@ -332,7 +332,7 @@ function ContactAiPendingState({
     <div
       data-testid={compact ? 'contact-ai-pending-summary' : 'contact-ai-pending-banner'}
       className={`rounded-lg border border-dashed border-amber-300 bg-amber-50 dark:bg-amber-950/20 ${
-        compact ? 'p-4' : 'p-4'
+        compact ? 'p-3' : 'p-4'
       }`}
     >
       <p className="text-sm font-medium text-amber-700 dark:text-amber-400">

@@ -208,7 +208,7 @@ function sendInternalError(res: ServerResponse, error: unknown, headOnly: boolea
 }
 
 function toHealthStatusCode(status: 'healthy' | 'degraded'): number {
-  return status === 'healthy' ? 200 : 200;
+  return status === 'healthy' ? 200 : 503;
 }
 
 function toDatabaseStatsStatusCode(status: 'ok' | 'unsupported' | 'error'): number {

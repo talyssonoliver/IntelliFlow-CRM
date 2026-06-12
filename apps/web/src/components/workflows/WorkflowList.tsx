@@ -115,7 +115,7 @@ export function WorkflowList({ onEdit }: WorkflowListProps) {
   }, [data]);
 
   const uniqueCategories = useMemo(
-    () => Array.from(new Set(rows.map((wf) => wf.category))).sort(),
+    () => Array.from(new Set(rows.map((wf) => wf.category))).sort((a, b) => a.localeCompare(b)),
     [rows]
   );
   const categoryFilterOptions = useMemo(

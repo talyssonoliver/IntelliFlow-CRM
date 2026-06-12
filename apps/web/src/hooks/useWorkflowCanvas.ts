@@ -160,8 +160,9 @@ export function useWorkflowCanvas(
         const candidates = nodes.filter((n) => n.type !== 'end' && n.position.y < position.y);
         const source =
           candidates.length > 0
-            ? candidates.reduce((best, n) =>
-                position.y - n.position.y < position.y - best.position.y ? n : best
+            ? candidates.reduce(
+                (best, n) => (position.y - n.position.y < position.y - best.position.y ? n : best),
+                candidates[0]
               )
             : nodes[nodes.length - 1];
         if (source && source.type !== 'end') {

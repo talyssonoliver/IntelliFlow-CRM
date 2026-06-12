@@ -46,11 +46,9 @@ function insertMarkdown(
     const cursorPos = selected
       ? selectionStart + replacement.length
       : selectionStart + prefix.length + 'text'.length;
+    const rangeStart = selectionStart + prefix.length;
     textarea.focus();
-    textarea.setSelectionRange(
-      selected ? selectionStart + prefix.length : selectionStart + prefix.length,
-      selected ? selectionStart + prefix.length + selected.length : cursorPos
-    );
+    textarea.setSelectionRange(rangeStart, selected ? rangeStart + selected.length : cursorPos);
   });
 }
 

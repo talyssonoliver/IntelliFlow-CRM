@@ -1131,9 +1131,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     });
 
     // Join arms with UNION ALL
-    const unionSql = arms.reduce((acc, arm, i) =>
-      i === 0 ? arm : Prisma.sql`${acc} UNION ALL ${arm}`
-    );
+    const unionSql = arms
+      .slice(1)
+      .reduce((acc, arm) => Prisma.sql`${acc} UNION ALL ${arm}`, arms[0]);
 
     const rows =
       await this.prisma.$queryRaw<Array<{ source: string; type: string; count: bigint }>>(unionSql);
