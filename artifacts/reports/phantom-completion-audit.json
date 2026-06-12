@@ -1,17 +1,17 @@
 {
   "audit_metadata": {
-    "generated_at": "2026-06-10T22:50:01.938Z",
+    "generated_at": "2026-06-12T23:42:32.046Z",
     "audit_type": "PHANTOM_COMPLETION_DETECTION",
     "sprint_scope": "all",
     "severity": "CRITICAL"
   },
   "summary": {
-    "total_completed_tasks": 394,
-    "verified_completions": 216,
-    "phantom_completions": 178,
+    "total_completed_tasks": 396,
+    "verified_completions": 217,
+    "phantom_completions": 179,
     "sprint_path_mismatches": 0,
     "integrity_score": "55%",
-    "conclusion": "178 tasks marked as Completed but missing artifacts or unverifiable DOD"
+    "conclusion": "179 tasks marked as Completed but missing artifacts or unverifiable DOD"
   },
   "verified_tasks": [
     {
@@ -1345,12 +1345,13 @@
       ]
     },
     {
-      "task_id": "PG-060",
-      "description": "New Lead",
+      "task_id": "PG-061",
+      "description": "Lead Detail",
       "artifacts_verified": [
-        "apps/web/src/app/leads/(list)/new/page.tsx",
-        "apps/web/src/lib/leads/lead-enrichment.ts",
-        ".specify/sprints/sprint-18/attestations/PG-060/context_ack.json"
+        "apps/web/src/app/leads/[id]/page.tsx",
+        "apps/web/src/components/leads/lead-detail.tsx",
+        "apps/web/src/components/leads/lead-timeline.tsx",
+        ".specify/sprints/sprint-18/attestations/PG-061/context_ack.json"
       ]
     },
     {
@@ -2353,6 +2354,13 @@
       ]
     },
     {
+      "task_id": "IFC-256",
+      "description": "Contact Detail Hardcoded Tabs — Tickets & Documents. (1) Tic",
+      "artifacts_verified": [
+        "apps/web/src/app/contacts/[id]/page.tsx"
+      ]
+    },
+    {
       "task_id": "PG-185",
       "description": "Module Settings - Tickets (/tickets/sla-policies)",
       "artifacts_verified": [
@@ -2984,6 +2992,18 @@
       "missing_artifacts": [
         ".specify/sprints/sprint-17/specifications/PG-057-spec.md",
         ".specify/sprints/sprint-17/planning/PG-057-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-060",
+      "description": "New Lead",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        ".specify/sprints/sprint-18/attestations/PG-060/context_ack.json"
       ],
       "dod_issues": []
     },
