@@ -111,3 +111,35 @@ waivers:
       blank-source handling changes.
     author: talyssonoliver
     date: '2026-06-12'
+  - fingerprint: '036e220e95807cb520dff6bf0fc108ef4ae4884045d844b1f46514da04f0ea58'
+    reason: >-
+      Accepted as out of scope, raised for product review. Codex wants
+      createLeadSchema to require a non-blank qualificationNote whenever
+      source === 'OTHER'. That is a form-specific UX rule (the New Lead form
+      makes the user specify the "Other" detail), NOT an API-wide invariant:
+      OTHER is a legitimate lead source for other createLead callers
+      (inbound/bulk) that do not send a qualificationNote, so adding a cross-field
+      refinement to the shared createLeadSchema would break those callers and
+      over-restrict the API. The qualificationNote bundle is an interim carrier;
+      the correct server-side enforcement is a first-class `sourceOther` field
+      with its own conditional requirement, owned by IFC-242. The fingerprint is
+      source-anchored, so this re-blocks if the schema changes.
+    author: talyssonoliver
+    date: '2026-06-12'
+  - fingerprint: '048f75563165fff1c9d39b1cd27e72b72260729a186025794e02bcf9612a2392'
+    reason: >-
+      Verified false positive (codex hallucination — cites removed code). The
+      evidence quotes a best-effort compensating
+      `typedCtx.prismaWithTenant.lead.delete({ where: { id: result.value.id.value } }).catch(...)`
+      in the create path, but that code was REMOVED: the lead and its
+      qualification note now persist in a SINGLE Prisma nested write
+      (PrismaLeadRepository.save -> `create: { ...data, notes: { create: [...] } }`),
+      one transaction, no compensating delete. `grep "lead.delete"` in
+      lead.router.ts returns only the unrelated `deleteMany` in the delete
+      procedure; the create flow goes straight from the failure check to
+      writeLeadActivityLog. There is no orphan path. The finding is also
+      non-deterministic (it did not reproduce on an immediate re-run). The
+      fingerprint is source-anchored, so this re-blocks if a non-atomic
+      compensating delete is reintroduced to the create path.
+    author: talyssonoliver
+    date: '2026-06-12'
