@@ -28,6 +28,27 @@ export type CanvasEdge = Edge;
 
 const MAX_HISTORY = 50;
 
+/**
+ * Pick the auto-link source node when adding a new node at `position`.
+ * Exported for unit testing (the hook itself cannot be renderHook'd due to
+ * @xyflow/react OOM in jsdom — see useWorkflowCanvas.test.ts).
+ */
+export function pickAutoLinkSource(
+  nodes: Array<{ id: string; type?: string; position: { x: number; y: number } }>,
+  position: { x: number; y: number }
+): (typeof nodes)[0] | null {
+  if (nodes.length === 0) return null;
+  const candidates = nodes.filter((n) => n.type !== 'end' && n.position.y < position.y);
+  const source =
+    candidates.length > 0
+      ? candidates.reduce(
+          (best, n) => (position.y - n.position.y < position.y - best.position.y ? n : best),
+          candidates[0]
+        )
+      : nodes[nodes.length - 1];
+  return source && source.type !== 'end' ? source : null;
+}
+
 interface HistoryEntry {
   nodes: CanvasNode[];
   edges: CanvasEdge[];
@@ -153,23 +174,17 @@ export function useWorkflowCanvas(
       };
       setNodes((nds) => [...nds, newNode]);
 
-      // Auto-link: pick the "source" candidate — nearest node above the
-      // new position by Y, or the last node in the array if nothing sits
-      // above. End-type nodes never act as sources (they are terminal).
-      if (nodes.length > 0) {
-        const candidates = nodes.filter((n) => n.type !== 'end' && n.position.y < position.y);
-        const source =
-          candidates.length > 0
-            ? candidates.reduce(
-                (best, n) => (position.y - n.position.y < position.y - best.position.y ? n : best),
-                candidates[0]
-              )
-            : nodes[nodes.length - 1];
-        if (source && source.type !== 'end') {
-          setEdges((eds) =>
-            addEdge({ source: source.id, target: id, id: `edge-${Date.now()}` }, eds)
-          );
-        }
+      // Auto-link: use pickAutoLinkSource (exported for unit tests) to find
+      // the nearest node above the new position, or fall back to the last node.
+      // istanbul ignore next — hook callbacks cannot be unit-tested via renderHook
+      // (OOM from @xyflow/react in jsdom); logic is covered by pickAutoLinkSource tests.
+      /* istanbul ignore next */
+      const autoSource = pickAutoLinkSource(nodes, position);
+      /* istanbul ignore next */
+      if (autoSource) {
+        setEdges((eds) =>
+          addEdge({ source: autoSource.id, target: id, id: `edge-${Date.now()}` }, eds)
+        );
       }
     },
     [nodes, edges, pushHistory, setNodes, setEdges]

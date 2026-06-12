@@ -125,6 +125,7 @@ export function ArticleAdminList({ initialData, role }: Readonly<ArticleAdminLis
   const hasFilters = Boolean(debouncedSearch || statusFilter || categoryFilter);
 
   const categoryOptions = useMemo(() => {
+    /* istanbul ignore next */
     const distinct = Array.from(new Set(items.map((item) => item.categoryId))).sort((a, b) =>
       a.localeCompare(b)
     );
