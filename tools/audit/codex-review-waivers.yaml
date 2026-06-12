@@ -143,3 +143,20 @@ waivers:
       compensating delete is reintroduced to the create path.
     author: talyssonoliver
     date: '2026-06-12'
+  - fingerprint: '05a2bcade174ca4d2ca1a4cbb7e4b3114435b58915a1b841a749460852b27586'
+    reason: >-
+      Verified false positive (codex hallucination — cites removed code). The
+      evidence quotes `async save(lead: Lead, _opts?: ...)`, a
+      `// ... initial note (opts.note) ... is intentionally ignored` comment and
+      a bare `this.leads.set(lead.id.value, lead)` as proof the note is dropped —
+      but that code was REPLACED. The current InMemoryLeadRepository.save (verify
+      with `git show HEAD:packages/adapters/src/repositories/InMemoryLeadRepository.ts`)
+      stores the note in a `leadNotes` map keyed by lead id and exposes
+      getNotes(); the parameter is `opts` (not `_opts`) and there is no
+      "intentionally ignored" comment. The contract is honoured — the in-memory
+      writes are synchronous map mutations that cannot partially fail. This is
+      the same hallucinate-the-removed-code pattern as the non-atomic-rollback
+      finding. The fingerprint is source-anchored, so this re-blocks if the note
+      is ever genuinely dropped again.
+    author: talyssonoliver
+    date: '2026-06-12'
