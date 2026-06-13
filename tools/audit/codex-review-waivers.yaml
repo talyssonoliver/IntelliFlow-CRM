@@ -477,3 +477,21 @@ waivers:
       hallucination).
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '4eb8fc76b53f3ca175b0bc66b347b8ecb0160b6a38ef5386c1212d0c62e2042d'
+    reason: >-
+      #420 — REAL but OUT-OF-SCOPE + pre-existing, tracked in gh #427. Codex flags
+      that updateEmail's duplicate-email check (ContactService.updateContactEmail ->
+      contactRepository.findByEmail(email), PrismaContactRepository.ts:170) is
+      email-only, not tenant-scoped, so a cross-tenant contact with the same email
+      yields a false "already in use" conflict + reveals another tenant uses that
+      email (Contact uses @@unique([tenantId,email])). This is genuine but is a
+      SERVICE/ADAPTER-layer duplicate-detection defect, distinct from #420's scope
+      (the router-level ACCESS preflight for which contact you may mutate — done via
+      assertContactInTenant + createTenantWhereClause). It is pre-existing (this PR
+      did not touch findByEmail) and the fix has cross-package blast radius (signature
+      + all findByEmail callers), so it is tracked for a dedicated task (gh #427 +
+      debt-ledger CONTACT-EMAIL-UNIQ-TENANT-SCOPE-001), not fixed here. Waived per the
+      project convention for out-of-scope findings with a filed follow-up (PG-062 #412
+      precedent).
+    author: talyssonoliver
+    date: '2026-06-13'
