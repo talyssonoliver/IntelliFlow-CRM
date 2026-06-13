@@ -33,6 +33,9 @@ const mockContactQueryState = {
     createdAt: '2026-03-01T00:00:00.000Z',
     updatedAt: '2026-03-02T00:00:00.000Z',
     avatarUrl: null,
+    streetAddress: '123 Market St',
+    city: 'San Francisco',
+    zipCode: '94105',
     account: {
       id: 'account-1',
       name: 'Acme Corp',
@@ -774,10 +777,12 @@ describe('Contact360Page - IFC-257 action wiring', () => {
     });
   });
 
-  it('passes the contact location through to ContactMapPreview', () => {
+  it('composes the contact street/city/zip into the ContactMapPreview location', () => {
     render(<Contact360Page />);
-    // location is hardcoded '' in the view-model until IFC-259 wires it from the API.
-    expect(screen.getByTestId('contact-map-preview')).toHaveAttribute('data-location', '');
+    expect(screen.getByTestId('contact-map-preview')).toHaveAttribute(
+      'data-location',
+      '123 Market St, San Francisco, 94105'
+    );
   });
 
   it('navigates to the new-deal page with the contact context when "Add Deal" is clicked', () => {

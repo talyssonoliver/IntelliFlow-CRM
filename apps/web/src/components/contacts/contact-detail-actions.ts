@@ -8,10 +8,25 @@
  */
 
 /**
+ * Compose a single human-readable location string from a contact's address parts
+ * (`streetAddress`, `city`, `zipCode` — all optional/nullable in the API). Empty
+ * and whitespace-only parts are dropped; the result is `''` when no part is set.
+ */
+export function buildContactLocation(parts: {
+  streetAddress?: string | null;
+  city?: string | null;
+  zipCode?: string | null;
+}): string {
+  return [parts.streetAddress, parts.city, parts.zipCode]
+    .map((part) => part?.trim())
+    .filter((part): part is string => Boolean(part))
+    .join(', ');
+}
+
+/**
  * Build a Google Maps search URL for a contact's location, or `null` when the
- * location is empty/whitespace. The contact view-model currently hardcodes an
- * empty location (IFC-259 owns wiring it from the API), so the "View Map" control
- * renders disabled until a real location is available — never a deceptive no-op.
+ * location is empty/whitespace. The "View Map" control renders disabled (never a
+ * deceptive no-op) when no location is available.
  */
 export function buildContactMapsHref(location: string | null | undefined): string | null {
   const trimmed = (location ?? '').trim();

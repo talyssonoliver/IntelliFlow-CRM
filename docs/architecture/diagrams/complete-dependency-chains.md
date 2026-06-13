@@ -2520,8 +2520,10 @@ inference), ADR-050 (duplicate-detection parallel).
   create-deal page does not yet consume the param (it needs `DealForm` account
   context); fixing consumption for both entry points is tracked — debt-ledger
   `CONTACT-ADD-DEAL-PREFILL-001`, git issue #405.
-- `contacts/[id]/page.tsx → ContactMapPreview → buildContactMapsHref → Google Maps`
-  — "View Map" (disabled until IFC-259 wires `contact.location`).
+- `contacts/[id]/page.tsx → transformContactForUI → buildContactLocation(streetAddress, city, zipCode) → ContactMapPreview → buildContactMapsHref → Google Maps`
+  — "View Map" opens Maps for the contact's composed address (the `getById` API
+  returns these scalar fields; the prior `location: ''` hardcode was stale).
+  Disabled when the contact has no address.
 - The call-preview "Play Recording" and document-preview "Download" no-op
   buttons were **removed** — neither has a populated data source in the contact
   activity feed (no call-recording integration; no download URL in activity

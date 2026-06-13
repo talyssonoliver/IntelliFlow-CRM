@@ -45,6 +45,7 @@ import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
 import { ContactRelatedTabs } from '@/components/contacts/ContactRelatedTabs';
 import { ContactQuickActions } from '@/components/contacts/ContactQuickActions';
 import { ContactMapPreview } from '@/components/contacts/ContactMapPreview';
+import { buildContactLocation } from '@/components/contacts/contact-detail-actions';
 import {
   formatContactDate,
   formatContactRelativeTime,
@@ -153,6 +154,9 @@ interface ContactWithRelations {
   createdAt: string | Date;
   updatedAt: string | Date;
   avatarUrl?: string | null;
+  streetAddress?: string | null;
+  city?: string | null;
+  zipCode?: string | null;
   account?: {
     id: string;
     name: string;
@@ -1175,7 +1179,7 @@ function transformContactForUI(apiContact: ContactWithRelations) {
     company: apiContact.account?.name || '',
     title: apiContact.title || '',
     department: apiContact.department || '',
-    location: '',
+    location: buildContactLocation(apiContact),
     timezone: '',
     status: (apiContact.status || 'ACTIVE') as ContactStatus,
     isOnline: false,
