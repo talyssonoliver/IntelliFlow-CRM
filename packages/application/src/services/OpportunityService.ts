@@ -301,6 +301,34 @@ export class OpportunityService {
   }
 
   /**
+   * IFC-280: apply account/contact re-assignment to the aggregate. Enforces the
+   * contact-belongs-to-account invariant (mirrors the create path) so a stakeholder
+   * change cannot persist a mismatched pair. accountId/contactId existence is already
+   * checked by validateForeignKeys; this adds the cross-field relationship guard.
+   */
+  private async applyStakeholderUpdates(
+    opportunity: Opportunity,
+    data: { accountId?: string; contactId?: string | null }
+  ): Promise<DomainError | null> {
+    if (data.contactId) {
+      const effectiveAccountId = data.accountId ?? opportunity.accountId;
+      const contactIdResult = ContactId.create(data.contactId);
+      if (contactIdResult.isFailure) return contactIdResult.error;
+      const contact = await this.contactRepository.findById(contactIdResult.value);
+      if (contact && contact.accountId !== effectiveAccountId) {
+        return new ValidationError('Contact does not belong to the selected account');
+      }
+    }
+    if (data.accountId !== undefined) {
+      opportunity.changeAccount(data.accountId);
+    }
+    if (data.contactId !== undefined) {
+      opportunity.changeContact(data.contactId);
+    }
+    return null;
+  }
+
+  /**
    * Apply all scalar field updates to the opportunity domain entity.
    * Returns the first domain error encountered, or null if all updates succeed.
    */
@@ -371,6 +399,13 @@ export class OpportunityService {
     if (data.description !== undefined) {
       opportunity.updateDescription(data.description);
     }
+
+    // IFC-280: accountId/contactId were FK-validated but never applied — the
+    // Edit/Stakeholders dialog's stakeholder change was silently dropped. Apply
+    // them, enforcing the contact-belongs-to-account invariant (mirrors create)
+    // before mutating, so a re-assignment cannot persist a mismatched pair.
+    const stakeholderError = await this.applyStakeholderUpdates(opportunity, data);
+    if (stakeholderError) return Result.fail(stakeholderError);
 
     const updateError = this.applyScalarUpdates(opportunity, data, updatedBy);
     if (updateError) return Result.fail(updateError);

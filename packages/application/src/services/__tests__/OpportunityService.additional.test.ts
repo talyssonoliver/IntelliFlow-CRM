@@ -328,6 +328,113 @@ describe('OpportunityService (additional coverage)', () => {
       expect(reloaded?.description).toBe('A freshly edited deal description');
     });
 
+    // IFC-280: accountId/contactId were FK-validated but never applied (the
+    // Edit/Stakeholders dialog silently dropped stakeholder changes — fake save).
+    it('should persist an account re-assignment', async () => {
+      const account2 = Account.create({ name: 'Second Account', ownerId: 'owner-1' } as any).value;
+      await accountRepository.save(account2);
+      const opp = Opportunity.create({
+        name: 'Reassign Account',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { accountId: account2.id.value },
+        'updater'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.accountId).toBe(account2.id.value);
+    });
+
+    it('should persist a contact assignment that belongs to the account', async () => {
+      const contact = Contact.create({
+        email: 'stakeholder@test.com',
+        firstName: 'Stake',
+        lastName: 'Holder',
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      } as any).value;
+      await contactRepository.save(contact);
+      const opp = Opportunity.create({
+        name: 'Assign Contact',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { contactId: contact.id.value },
+        'updater'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.contactId).toBe(contact.id.value);
+    });
+
+    it('should clear the contact when contactId is null', async () => {
+      const contact = Contact.create({
+        email: 'tobe@test.com',
+        firstName: 'To',
+        lastName: 'Clear',
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      } as any).value;
+      await contactRepository.save(contact);
+      const opp = Opportunity.create({
+        name: 'Clear Contact',
+        value: 50000,
+        accountId: testAccount.id.value,
+        contactId: contact.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(opp.id.value, { contactId: null }, 'updater');
+
+      expect(result.isSuccess).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.contactId).toBeUndefined();
+    });
+
+    it('should reject a contact that does not belong to the account', async () => {
+      const account2 = Account.create({ name: 'Other Account', ownerId: 'owner-1' } as any).value;
+      await accountRepository.save(account2);
+      const foreignContact = Contact.create({
+        email: 'foreign@test.com',
+        firstName: 'For',
+        lastName: 'Eign',
+        accountId: account2.id.value,
+        ownerId: 'owner-1',
+      } as any).value;
+      await contactRepository.save(foreignContact);
+      const opp = Opportunity.create({
+        name: 'Invariant',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { contactId: foreignContact.id.value },
+        'updater'
+      );
+
+      expect(result.isFailure).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.contactId).toBeUndefined();
+    });
+
     it('should fail an update with an empty name', async () => {
       const opp = Opportunity.create({
         name: 'Keep Name',

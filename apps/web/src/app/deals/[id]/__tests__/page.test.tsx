@@ -639,7 +639,7 @@ describe('DealDetailPage', () => {
 
     it('moveStage onError surfaces the already-closed message', async () => {
       await renderDealPage();
-      capturedMoveStageConfig.onError?.({ message: 'OpportunityAlreadyClosedError' });
+      capturedMoveStageConfig.onError?.({ message: 'Opportunity has already been closed' });
       expect(mockToast).toHaveBeenCalledWith(
         expect.objectContaining({
           variant: 'destructive',

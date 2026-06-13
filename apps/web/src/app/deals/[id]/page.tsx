@@ -500,10 +500,9 @@ export default function DealDetailPage() {
     },
     onError: (err) => {
       setPendingAction(null);
-      const message =
-        err.message === 'OpportunityAlreadyClosedError'
-          ? 'This deal has already been closed by another user'
-          : 'Failed to update deal stage. Please try again.';
+      const message = /already been closed/i.test(err.message ?? '')
+        ? 'This deal has already been closed by another user'
+        : 'Failed to update deal stage. Please try again.';
       toast({ title: message, variant: 'destructive' });
     },
   });
@@ -579,8 +578,11 @@ export default function DealDetailPage() {
       probability: data.probability,
       expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : undefined,
       accountId: data.accountId,
-      contactId: data.contactId || undefined,
-      description: data.description.trim() || undefined,
+      contactId: data.contactId || null,
+      // Send the trimmed value (incl. '') so clearing the description persists;
+      // the service threads it through (IFC-280). expectedCloseDate clearing is a
+      // tracked follow-up — the domain has no clear path — so empty stays "no change".
+      description: data.description.trim(),
     });
   };
 
