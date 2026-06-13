@@ -784,6 +784,9 @@ export const opportunityRouter = createTRPCRouter({
       isClosed: record.stage === 'CLOSED_WON' || record.stage === 'CLOSED_LOST',
       isWon: record.stage === 'CLOSED_WON',
       isLost: record.stage === 'CLOSED_LOST',
+      // IFC-282 B-11: surface closedAt on the detail (Deal-360) response too, not
+      // just the mapped list/create responses.
+      closedAt: record.closedAt ?? null,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       description: record.description,

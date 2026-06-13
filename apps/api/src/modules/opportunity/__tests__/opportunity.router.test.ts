@@ -257,6 +257,53 @@ describe('Opportunity Router', () => {
       );
     });
 
+    it('includes closedAt on the detail response for a closed deal (B-11)', async () => {
+      const closedAt = new Date('2025-07-01T12:00:00Z');
+      prismaMock.opportunity.findFirst.mockResolvedValue({
+        ...mockOpportunity,
+        id: TEST_UUIDS.opportunity1,
+        name: 'Won Deal',
+        value: new Prisma.Decimal(50000),
+        probability: 100,
+        stage: 'CLOSED_WON',
+        expectedCloseDate: new Date('2025-06-30'),
+        description: null,
+        accountId: TEST_UUIDS.account1,
+        contactId: TEST_UUIDS.contact1,
+        ownerId: TEST_UUIDS.user1,
+        closedAt,
+        owner: null,
+        account: null,
+        contact: null,
+      } as any);
+
+      const result = await caller.getById({ id: TEST_UUIDS.opportunity1 });
+
+      expect(result.closedAt).toEqual(closedAt);
+      expect(result.isWon).toBe(true);
+    });
+
+    it('returns closedAt: null on the detail response for an open deal (B-11)', async () => {
+      prismaMock.opportunity.findFirst.mockResolvedValue({
+        ...mockOpportunity,
+        id: TEST_UUIDS.opportunity1,
+        value: new Prisma.Decimal(50000),
+        probability: 60,
+        stage: 'PROPOSAL',
+        accountId: TEST_UUIDS.account1,
+        contactId: null,
+        ownerId: TEST_UUIDS.user1,
+        closedAt: null,
+        owner: null,
+        account: null,
+        contact: null,
+      } as any);
+
+      const result = await caller.getById({ id: TEST_UUIDS.opportunity1 });
+
+      expect(result.closedAt).toBeNull();
+    });
+
     it('should throw NOT_FOUND for non-existent opportunity', async () => {
       prismaMock.opportunity.findFirst.mockResolvedValue(null);
 

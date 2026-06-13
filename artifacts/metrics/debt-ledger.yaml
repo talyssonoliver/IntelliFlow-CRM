@@ -5049,3 +5049,14 @@ alerts:
     remediation_sprint: 20
     remediation_plan: 'Change the save serialization to a nullish check: account.revenue != null ? new Decimal(account.revenue.toString()) : null (the reconstitute path at :46 already maps a stored Decimal(0) correctly). Add a Prisma-backed revenue=0 round-trip regression test. If the product decides $0 revenue accounts are valid, also relax create/update/updateRevenue schemas from positive() to nonnegative() in the same change for end-to-end consistency. Out of IFC-270 scope (adapter layer; audit section 12 = router/validators/service).'
     notes: 'git issue #406. IFC-270 out-of-scope finding. Adapter-layer defect, pre-existing. Tracked per project Rule 8 (file issues for out-of-scope findings).'
+  OPP-LIST-SCHEMA-SHAPE-001:
+    origin_task: IFC-282
+    owner: Backend Dev
+    severity: low
+    description: 'opportunityListResponseSchema.opportunities uses opportunityResponseSchema, whose value field is moneySchema ({amount,currency}), but opportunity.list returns raw Prisma rows (value is a Decimal scalar) WITH owner/account/contact relation includes. The exported OpportunityListResponse type therefore misrepresents the actual list item shape. Latent: the schema is NOT wired as a tRPC .output() on opportunity.list, so there is no runtime validation (the frontend gets types via tRPC inference from the router return, not this schema). Pre-existing (the item shape never matched raw rows). Found during IFC-282 via codex (waived fingerprint 2c5eeef9).'
+    created_at: 2026-06-13
+    status: open
+    expiry_date: 2026-08-31
+    remediation_sprint: 20
+    remediation_plan: 'Define a dedicated opportunityListItemSchema matching the raw list row (numeric/string value + owner/account/contact relation shapes) and use it in opportunityListResponseSchema, OR wire a proper .output() with a mapper that preserves relations. Do NOT route list rows through mapOpportunityToResponse (it drops the relations the deals list renders). Out of IFC-282 B-07 scope (B-07 = response key name only).'
+    notes: 'git issue #413. IFC-282 out-of-scope finding. Decorative-schema contract inaccuracy, pre-existing. Tracked per project Rule 8.'
