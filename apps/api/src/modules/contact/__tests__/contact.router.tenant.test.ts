@@ -66,8 +66,12 @@ describe('Contact Router — Tenant Isolation (IFC-265, T-04)', () => {
     });
   });
 
-  // update: forwards the caller userId to the domain service; a cross-tenant id
-  // the service cannot resolve surfaces as NOT_FOUND.
+  // update: the router's tenant responsibility is forwarding the authenticated
+  // caller's userId to the domain service. The DATA boundary for this path lives
+  // in the service/repository/RLS layer (NOT a router-level scoped lookup like
+  // delete/addNote) — see issue #420 for the hardening + a meaningful negative
+  // test. We deliberately do NOT assert "mocked service failure -> NOT_FOUND"
+  // here: that would only re-test the mock, not isolation.
   describe('update', () => {
     it('forwards the caller userId to the update service', async () => {
       const ctx = createTestContext();
@@ -80,18 +84,6 @@ describe('Contact Router — Tenant Isolation (IFC-265, T-04)', () => {
 
       expect(updateSpy).toHaveBeenCalled();
       expect(updateSpy.mock.calls[0]).toContain(TEST_UUIDS.user1);
-    });
-
-    it('rejects a cross-tenant contact id with NOT_FOUND', async () => {
-      const ctx = createTestContext();
-      const caller = contactRouter.createCaller(ctx);
-      ctx.services!.contact!.updateContactInfo = vi
-        .fn()
-        .mockResolvedValue(fail(`Contact not found: ${FOREIGN_CONTACT_ID}`));
-
-      await expect(caller.update({ id: FOREIGN_CONTACT_ID, title: 'Hijack' })).rejects.toThrow(
-        expect.objectContaining({ code: 'NOT_FOUND' })
-      );
     });
   });
 
@@ -173,7 +165,8 @@ describe('Contact Router — Tenant Isolation (IFC-265, T-04)', () => {
     });
   });
 
-  // unlinkFromAccount: forwards the caller userId; a cross-tenant id → NOT_FOUND.
+  // unlinkFromAccount: router forwards the caller userId. Data boundary is in the
+  // service/RLS layer — see #420 (no router-level scoped lookup on this path yet).
   describe('unlinkFromAccount', () => {
     it('forwards the caller userId to disassociateFromAccount', async () => {
       const ctx = createTestContext();
@@ -185,21 +178,10 @@ describe('Contact Router — Tenant Isolation (IFC-265, T-04)', () => {
 
       expect(unlinkSpy.mock.calls[0]).toContain(TEST_UUIDS.user1);
     });
-
-    it('rejects a cross-tenant contact id with NOT_FOUND', async () => {
-      const ctx = createTestContext();
-      const caller = contactRouter.createCaller(ctx);
-      ctx.services!.contact!.disassociateFromAccount = vi
-        .fn()
-        .mockResolvedValue(fail(`Contact not found: ${FOREIGN_CONTACT_ID}`));
-
-      await expect(caller.unlinkFromAccount({ contactId: FOREIGN_CONTACT_ID })).rejects.toThrow(
-        expect.objectContaining({ code: 'NOT_FOUND' })
-      );
-    });
   });
 
-  // updateEmail: forwards the caller userId; a cross-tenant id → NOT_FOUND.
+  // updateEmail: router forwards the caller userId. Data boundary is in the
+  // service/RLS layer — see #420 (no router-level scoped lookup on this path yet).
   describe('updateEmail', () => {
     it('forwards the caller userId to updateContactEmail', async () => {
       const ctx = createTestContext();
@@ -210,18 +192,6 @@ describe('Contact Router — Tenant Isolation (IFC-265, T-04)', () => {
       await caller.updateEmail({ id: TEST_UUIDS.contact1, email: 'updated@example.com' });
 
       expect(emailSpy.mock.calls[0]).toContain(TEST_UUIDS.user1);
-    });
-
-    it('rejects a cross-tenant contact id with NOT_FOUND', async () => {
-      const ctx = createTestContext();
-      const caller = contactRouter.createCaller(ctx);
-      ctx.services!.contact!.updateContactEmail = vi
-        .fn()
-        .mockResolvedValue(fail(`Contact not found: ${FOREIGN_CONTACT_ID}`));
-
-      await expect(
-        caller.updateEmail({ id: FOREIGN_CONTACT_ID, email: 'hijack@example.com' })
-      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
     });
   });
 });

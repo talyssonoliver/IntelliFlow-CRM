@@ -5060,3 +5060,14 @@ alerts:
     remediation_sprint: 20
     remediation_plan: 'Define a dedicated opportunityListItemSchema matching the raw list row (numeric/string value + owner/account/contact relation shapes) and use it in opportunityListResponseSchema, OR wire a proper .output() with a mapper that preserves relations. Do NOT route list rows through mapOpportunityToResponse (it drops the relations the deals list renders). Out of IFC-282 B-07 scope (B-07 = response key name only).'
     notes: 'git issue #413. IFC-282 out-of-scope finding. Decorative-schema contract inaccuracy, pre-existing. Tracked per project Rule 8.'
+  CONTACT-MUTATION-TENANT-SCOPE-001:
+    origin_task: IFC-265
+    owner: Backend Dev
+    severity: high
+    description: 'contact.router update/updateEmail/unlinkFromAccount delegate to the singleton ContactService, whose updateContactInfo/updateContactEmail/disassociateFromAccount call contactRepository.findById(id) with NO tenant argument (packages/application/src/services/ContactService.ts:142,173,267) — unlike accountRepository.findById(id, tenantId). Those paths have NO router-level tenant-scoped preflight (delete/addNote/bulkDelete DO, via ctx.prismaWithTenant.findUnique/findMany). Cross-tenant isolation for the 3 mutation paths relies entirely on the Postgres RLS session var SET app.current_tenant_id issued by createTenantScopedPrisma $extends (apps/api/src/security/tenant-context.ts:146-162), which is set on ctx.prismaWithTenant, NOT on the container singleton service prisma. Session vars are per-connection; not statically verifiable that a foreign findById through ContactService fails closed. Found during IFC-265 via the codex semantic-review gate (3 HIGH mocked-tenant-isolation findings).'
+    created_at: 2026-06-13
+    status: open
+    expiry_date: 2026-08-31
+    remediation_sprint: 20
+    remediation_plan: 'Verify the actual RLS policy + connection behaviour for the container-service prisma. If not fail-closed, add a router-level tenant-scoped preflight to update/updateEmail/unlinkFromAccount (ctx.prismaWithTenant.contact.findUnique -> NOT_FOUND, parity with delete/addNote) OR thread tenantId through the ContactService mutation contract + repository findById. Then strengthen the IFC-265 tenant tests to mock prismaWithTenant.contact.findUnique -> null and assert the mutation service is NOT called for a foreign id. Blast radius: existing update/updateEmail/unlink unit tests mock the service (not findUnique) and will need findUnique mocks added.'
+    notes: 'git issue #420. IFC-265 surfaced this; out of scope (IFC-265 is test-only). The 3 misleading IFC-265 tests that mocked the service failure (proving nothing about isolation) were removed; router-forwarding + RLS-denial (delete/addNote/bulkDelete) + create-stamping tests remain. Tracked per project Rule 8.'
