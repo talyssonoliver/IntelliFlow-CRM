@@ -22,7 +22,7 @@
     "apps/api/src/modules/opportunity/opportunity.router.ts": "233047424cd2b5ba574c162c07ba28c8bdc0d13b59936f79310b2495a68fee74",
     "apps/api/src/modules/opportunity/pipeline-config.router.ts": "0c3672b33d42e32fc2a82315f52875b7308b48443267e7ed67520e496d46655f",
     "packages/validators/src/opportunity.ts": "f3b5e17ef5e5055cebaff2e5dd3671a009c6382647c713a4e825343cfb5531bd",
-    "apps/api/src/shared/mappers.ts": "173c0196e56e4bc6f5c9d5349517fcc1b8a52d77820f5d0e346b628b7c968931",
+    "apps/api/src/shared/mappers.ts": "7bce5b987df68953907d56f776d39c07b745b839f395228ffd93f3eea8a52fcf",
     "tools/audit/codex-review-waivers.yaml": "a79e72ed18523ed6289b4a37ef9ac7b1fc110cba49ab63054a6b14570ab9ac50"
   },
   "validation_results": [
