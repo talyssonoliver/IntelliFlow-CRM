@@ -245,27 +245,20 @@ vi.mock('@/lib/shared/avatar-utils', () => ({
   normalizeAvatarSource: (value: string | null | undefined) => value ?? null,
 }));
 
-// IFC-257: the Email/Log Call header actions and the map preview are extracted
-// into their own components (unit-tested separately). Stub them here so the page
-// render stays light (no EmailCompose/trpc graph) and existing blocks stay green.
+// IFC-257: the header actions, map preview and Add Deal action are extracted into
+// their own (separately unit-tested) components. Stub them here so the page render
+// stays light (no EmailCompose/trpc graph) and existing blocks stay green.
 vi.mock('@/components/contacts/ContactQuickActions', () => ({
-  ContactQuickActions: ({
-    contact,
-    onLogCall,
-    isLoggingCall,
-  }: {
-    contact: { id: string; email: string };
-    onLogCall: (input: { contactId: string; type: 'CALL'; title: string }) => void;
-    isLoggingCall: boolean;
-  }) => (
-    <div data-testid="contact-quick-actions" data-logging={String(isLoggingCall)}>
-      <button
-        type="button"
-        onClick={() => onLogCall({ contactId: contact.id, type: 'CALL', title: 'Test call' })}
-      >
-        QA Log Call
-      </button>
-    </div>
+  ContactQuickActions: ({ contact }: { contact: { id: string } }) => (
+    <div data-testid="contact-quick-actions" data-contact-id={contact.id} />
+  ),
+}));
+
+vi.mock('@/components/contacts/ContactAddDealButton', () => ({
+  ContactAddDealButton: ({ contactId }: { contactId: string }) => (
+    <button type="button" data-testid="contact-add-deal" data-contact-id={contactId}>
+      Add Deal
+    </button>
   ),
 }));
 
@@ -761,20 +754,13 @@ describe('Contact360Page - IFC-257 action wiring', () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams());
   });
 
-  it('renders the extracted ContactQuickActions and ContactMapPreview', () => {
+  it('mounts the extracted ContactQuickActions and ContactMapPreview', () => {
     render(<Contact360Page />);
-    expect(screen.getByTestId('contact-quick-actions')).toBeInTheDocument();
+    expect(screen.getByTestId('contact-quick-actions')).toHaveAttribute(
+      'data-contact-id',
+      'contact-1'
+    );
     expect(screen.getByTestId('contact-map-preview')).toBeInTheDocument();
-  });
-
-  it('wires ContactQuickActions.onLogCall to the contact.logActivity mutation', () => {
-    render(<Contact360Page />);
-    fireEvent.click(screen.getByRole('button', { name: /QA Log Call/i }));
-    expect(mockLogActivityMutate).toHaveBeenCalledWith({
-      contactId: 'contact-1',
-      type: 'CALL',
-      title: 'Test call',
-    });
   });
 
   it('composes the contact street/city/zip into the ContactMapPreview location', () => {
@@ -785,11 +771,9 @@ describe('Contact360Page - IFC-257 action wiring', () => {
     );
   });
 
-  it('navigates to the new-deal page with the contact context when "Add Deal" is clicked', () => {
-    // Matches the contact-list "Create Deal" pattern (ContactsPageClient.tsx).
+  it('mounts the Add Deal action with the contact context in the deals tab', () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=deals'));
     render(<Contact360Page />);
-    fireEvent.click(screen.getByRole('button', { name: /Add Deal/i }));
-    expect(mockPush).toHaveBeenCalledWith('/deals/new?contactId=contact-1');
+    expect(screen.getByTestId('contact-add-deal')).toHaveAttribute('data-contact-id', 'contact-1');
   });
 });

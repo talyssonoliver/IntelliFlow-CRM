@@ -1,6 +1,17 @@
 import { describe, it, expect } from 'vitest';
 
-import { buildContactLocation, buildContactMapsHref } from './contact-detail-actions';
+import {
+  buildDealNewHref,
+  buildContactLocation,
+  buildContactMapsHref,
+} from './contact-detail-actions';
+
+describe('buildDealNewHref (IFC-257)', () => {
+  it('builds the /deals/new href with an encoded contactId', () => {
+    expect(buildDealNewHref('c1')).toBe('/deals/new?contactId=c1');
+    expect(buildDealNewHref('a b/c')).toBe('/deals/new?contactId=a%20b%2Fc');
+  });
+});
 
 describe('buildContactLocation (IFC-257)', () => {
   it('joins street, city and zip with commas', () => {

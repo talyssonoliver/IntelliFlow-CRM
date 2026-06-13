@@ -8,6 +8,16 @@
  */
 
 /**
+ * Build the href for the "Add Deal" action, matching the contact-list pattern
+ * (`ContactsPageClient.tsx`). The create-deal page does not yet read `contactId`
+ * (it needs `DealForm` account context) — tracked in debt-ledger
+ * `CONTACT-ADD-DEAL-PREFILL-001` / git issue #405.
+ */
+export function buildDealNewHref(contactId: string): string {
+  return `/deals/new?contactId=${encodeURIComponent(contactId)}`;
+}
+
+/**
  * Compose a single human-readable location string from a contact's address parts
  * (`streetAddress`, `city`, `zipCode` — all optional/nullable in the API). Empty
  * and whitespace-only parts are dropped; the result is `''` when no part is set.

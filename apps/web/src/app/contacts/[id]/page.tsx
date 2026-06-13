@@ -44,6 +44,7 @@ import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
 import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
 import { ContactRelatedTabs } from '@/components/contacts/ContactRelatedTabs';
 import { ContactQuickActions } from '@/components/contacts/ContactQuickActions';
+import { ContactAddDealButton } from '@/components/contacts/ContactAddDealButton';
 import { ContactMapPreview } from '@/components/contacts/ContactMapPreview';
 import { buildContactLocation } from '@/components/contacts/contact-detail-actions';
 import {
@@ -1317,9 +1318,6 @@ export default function Contact360Page() {
       utils.activityFeed.getUnifiedFeed.invalidate();
       utils.activityFeed.getEntityFeed.invalidate();
     },
-    onError: (err) => {
-      toast({ title: 'Failed to log activity', description: err.message, variant: 'destructive' });
-    },
   });
   const addNoteMutation = api.contact.addNote.useMutation({
     onSuccess: () => {
@@ -1666,16 +1664,7 @@ export default function Contact360Page() {
             </svg>{' '}
             Edit Profile
           </button>
-          <ContactQuickActions
-            contact={{
-              id: contact.id,
-              firstName: contact.firstName,
-              lastName: contact.lastName,
-              email: contact.email,
-            }}
-            onLogCall={(input) => logActivityMutation.mutateAsync(input)}
-            isLoggingCall={logActivityMutation.isPending}
-          />
+          <ContactQuickActions contact={contact} />
           <PinButton
             entityType="contact"
             entityId={contact.id}
@@ -2400,16 +2389,7 @@ export default function Contact360Page() {
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Deals</h3>
-                <button
-                  type="button"
-                  onClick={() => router.push(`/deals/new?contactId=${contactId}`)}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
-                  </svg>{' '}
-                  Add Deal
-                </button>
+                <ContactAddDealButton contactId={contactId} />
               </div>
               <div className="space-y-3">
                 {deals.map((deal) => (

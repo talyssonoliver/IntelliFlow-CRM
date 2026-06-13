@@ -12,8 +12,10 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  toast,
 } from '@intelliflow/ui';
 
+import { api } from '@/lib/api';
 import { EmailCompose } from '@/components/email/EmailCompose';
 
 export interface ContactQuickActionsContact {
@@ -23,36 +25,32 @@ export interface ContactQuickActionsContact {
   email: string;
 }
 
-export interface ContactLogCallInput {
-  contactId: string;
-  type: 'CALL';
-  title: string;
-  description?: string;
-}
-
 export interface ContactQuickActionsProps {
   contact: ContactQuickActionsContact;
-  /**
-   * Called with the validated payload when a call is logged. The page wires this
-   * to `contact.logActivity.mutateAsync`. Returning a promise lets the dialog stay
-   * open (preserving the user's input) when the mutation rejects.
-   */
-  onLogCall: (input: ContactLogCallInput) => void | Promise<unknown>;
-  /** Reflects the parent mutation's pending state so the submit button can show progress. */
-  isLoggingCall: boolean;
 }
 
 /**
  * IFC-257: the Contact 360 header "Email" + "Log Call" actions, plus their
- * overlays (an `EmailCompose` sheet and a Log Call dialog). Extracted from the
- * route page so the wiring is unit-tested and counted by the merged coverage
- * report (route `page.tsx` is excluded from that report).
+ * overlays (an `EmailCompose` sheet and a Log Call dialog) and the
+ * `contact.logActivity` mutation that records the call. Self-contained so the
+ * wiring is unit-tested and counted by the merged coverage report — route
+ * `page.tsx` is excluded from that report, so logic kept inline there is
+ * uncovered new code in the diff-coverage gate.
  */
-export function ContactQuickActions({
-  contact,
-  onLogCall,
-  isLoggingCall,
-}: Readonly<ContactQuickActionsProps>) {
+export function ContactQuickActions({ contact }: Readonly<ContactQuickActionsProps>) {
+  const utils = api.useUtils();
+  const logActivity = api.contact.logActivity.useMutation({
+    onSuccess: () => {
+      toast({ title: 'Activity logged', description: 'Activity has been recorded.' });
+      utils.contact.getById.invalidate({ id: contact.id });
+      utils.activityFeed.getUnifiedFeed.invalidate();
+      utils.activityFeed.getEntityFeed.invalidate();
+    },
+    onError: (err) => {
+      toast({ title: 'Failed to log activity', description: err.message, variant: 'destructive' });
+    },
+  });
+
   const [emailSheetOpen, setEmailSheetOpen] = useState(false);
   const [logCallOpen, setLogCallOpen] = useState(false);
   const [logCallTitle, setLogCallTitle] = useState('');
@@ -71,9 +69,8 @@ export function ContactQuickActions({
     if (!title) return;
     try {
       // Reset only AFTER the activity is recorded. A failed mutation keeps the
-      // dialog open with the user's title/notes intact (mirrors the page's
-      // addNote close-on-success behaviour).
-      await onLogCall({
+      // dialog open with the user's title/notes intact.
+      await logActivity.mutateAsync({
         contactId: contact.id,
         type: 'CALL',
         title,
@@ -180,10 +177,10 @@ export function ContactQuickActions({
             <button
               type="button"
               onClick={submitLogCall}
-              disabled={!logCallTitle.trim() || isLoggingCall}
+              disabled={!logCallTitle.trim() || logActivity.isPending}
               className="px-4 py-2 rounded-md bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoggingCall ? 'Saving...' : 'Log Call'}
+              {logActivity.isPending ? 'Saving...' : 'Log Call'}
             </button>
           </DialogFooter>
         </DialogContent>
