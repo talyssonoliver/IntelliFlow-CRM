@@ -48,11 +48,11 @@ const mockContactQueryState = {
       email: 'alex@example.com',
       avatarUrl: null,
     },
-    activities: [],
-    notes: [],
+    activities: [] as unknown[],
+    notes: [] as unknown[],
     aiInsight: null,
-    opportunities: [],
-    tasks: [],
+    opportunities: [] as unknown[],
+    tasks: [] as unknown[],
     documents: [],
     tickets: [],
     ticketCount: 0,
@@ -193,7 +193,14 @@ vi.mock('@/components/shared/app-avatar', () => ({
 }));
 
 vi.mock('@/components/tasks/RelatedTasksCard', () => ({
-  RelatedTasksCard: () => <div>Related Tasks</div>,
+  // Expose maxItems so the tasks-TAB instance (maxItems=20) can be told apart
+  // from the always-present sidebar instance (maxItems=2). Text is unchanged so
+  // existing presence assertions still hold.
+  RelatedTasksCard: ({ maxItems }: { maxItems?: number }) => (
+    <div data-testid="related-tasks" data-max-items={maxItems}>
+      Related Tasks
+    </div>
+  ),
 }));
 
 vi.mock('@/components/shared', () => ({
@@ -778,5 +785,121 @@ describe('Contact360Page - IFC-257 action wiring', () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=deals'));
     render(<Contact360Page />);
     expect(screen.getByTestId('contact-add-deal')).toHaveAttribute('data-contact-id', 'contact-1');
+  });
+});
+
+// IFC-265 (T-01 / T-08): tab content rendering, loading + not-found states, and
+// the addNote mutation — the page-level gaps the §19 audit flagged.
+describe('Contact360Page - tab content, states & addNote (IFC-265)', () => {
+  // mockContactQueryState.data is shared + mutable and is NOT reset by the other
+  // describes' beforeEach blocks, so restore a pristine clone before each test.
+  const PRISTINE_CONTACT = structuredClone(mockContactQueryState.data);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockContactQueryState.data = structuredClone(PRISTINE_CONTACT);
+    mockContactQueryState.error = null;
+    mockContactQueryState.isLoading = false;
+    mockUseActivityFeed.mockReturnValue({ items: [], isLoading: false });
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+  });
+
+  it('renders the Activity tab content (timeline view + source toggle, ActivityFeed on All Sources)', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=activity'));
+    render(<Contact360Page />);
+
+    // Default 'timeline' view: the activity-tab-only search + source toggle.
+    expect(screen.getByPlaceholderText('Search activities...')).toBeInTheDocument();
+    expect(screen.getByText('All Sources')).toBeInTheDocument();
+
+    // Switching to the unified view mounts the shared ActivityFeed component.
+    fireEvent.click(screen.getByText('All Sources'));
+    expect(screen.getByText('Activity Feed')).toBeInTheDocument();
+  });
+
+  it('does not render the Activity tab content on the overview tab', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=overview'));
+    render(<Contact360Page />);
+    expect(screen.queryByPlaceholderText('Search activities...')).not.toBeInTheDocument();
+    expect(screen.queryByText('All Sources')).not.toBeInTheDocument();
+  });
+
+  it('renders the Notes tab with the contact notes', () => {
+    mockContactQueryState.data = structuredClone(PRISTINE_CONTACT);
+    mockContactQueryState.data.notes = [
+      {
+        id: 'note-1',
+        content: 'Prefers afternoon meetings',
+        author: 'rep@example.com',
+        createdAt: '2026-03-05T10:00:00.000Z',
+      },
+    ];
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=notes'));
+    render(<Contact360Page />);
+
+    // The notes-tab header button has visible text "Add Note" (the sidebar uses
+    // an icon button with title="Add note"), so it marks the tab is rendered.
+    expect(screen.getByText('Add Note')).toBeInTheDocument();
+    expect(screen.getAllByText('Prefers afternoon meetings').length).toBeGreaterThan(0);
+  });
+
+  it('renders the Tasks tab content (RelatedTasksCard with maxItems=20)', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=tasks'));
+    render(<Contact360Page />);
+    const tabCard = screen
+      .getAllByTestId('related-tasks')
+      .find((el) => el.getAttribute('data-max-items') === '20');
+    expect(tabCard).toBeTruthy();
+  });
+
+  it('renders the Deals tab list with deal name, stage and value', () => {
+    mockContactQueryState.data = structuredClone(PRISTINE_CONTACT);
+    mockContactQueryState.data.opportunities = [
+      {
+        id: 'opp-1',
+        name: 'Acme Expansion',
+        value: 50000,
+        stage: 'PROPOSAL',
+        probability: 60,
+        closeDate: '2026-04-01T00:00:00.000Z',
+      },
+    ];
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=deals'));
+    render(<Contact360Page />);
+
+    expect(screen.getByText('Acme Expansion')).toBeInTheDocument();
+    expect(screen.getByText('PROPOSAL')).toBeInTheDocument();
+    expect(screen.getByText('$50,000')).toBeInTheDocument();
+    expect(screen.getByText('60% probability')).toBeInTheDocument();
+  });
+
+  it('renders the loading skeleton while the contact query is loading', () => {
+    mockContactQueryState.isLoading = true;
+    const { container } = render(<Contact360Page />);
+    // The real contact header (name/title) is replaced by skeleton blocks.
+    expect(screen.queryByText('VP Sales')).not.toBeInTheDocument();
+    expect(container.querySelector('[class*="h-96"]')).toBeTruthy();
+  });
+
+  it('renders the "Contact Not Found" state on a NOT_FOUND query error', () => {
+    mockContactQueryState.error = { data: { code: 'NOT_FOUND' } };
+    render(<Contact360Page />);
+    expect(screen.getByText('Contact Not Found')).toBeInTheDocument();
+  });
+
+  it('calls addNote.mutate when a note is written and saved from the Notes tab', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=notes'));
+    render(<Contact360Page />);
+
+    // Reveal the note composer via the notes-tab "Add Note" button.
+    fireEvent.click(screen.getByText('Add Note'));
+    const textarea = screen.getByPlaceholderText('Write a note...');
+    fireEvent.change(textarea, { target: { value: 'Followed up by email' } });
+    fireEvent.click(screen.getByText('Save Note'));
+
+    expect(mockAddNoteMutate).toHaveBeenCalledWith({
+      contactId: 'contact-1',
+      content: 'Followed up by email',
+    });
   });
 });

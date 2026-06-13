@@ -263,6 +263,62 @@ describe('Contact Router', () => {
       expect(result.documentCount).toBe(50);
     });
 
+    // IFC-265 (T-07): activities + notes were always seeded as empty arrays in
+    // getById tests; assert they are surfaced with populated, ordered data.
+    it('surfaces populated activities and notes from the getById relations', async () => {
+      // ContactActivity rows are ordered by `timestamp` desc in getById
+      // (contact.router.ts:696) — fixture mirrors the real model field.
+      const sampleActivities = [
+        {
+          id: 'act-1',
+          type: 'EMAIL',
+          title: 'Sent proposal',
+          description: 'Proposal v2 emailed',
+          userName: 'rep@example.com',
+          timestamp: new Date('2025-02-02T10:00:00Z'),
+        },
+        {
+          id: 'act-2',
+          type: 'CALL',
+          title: 'Intro call',
+          description: 'Discovery call',
+          userName: 'rep@example.com',
+          timestamp: new Date('2025-02-01T10:00:00Z'),
+        },
+      ];
+      const sampleNotes = [
+        {
+          id: 'note-1',
+          content: 'Prefers afternoon meetings',
+          author: 'rep@example.com',
+          createdAt: new Date('2025-02-03T10:00:00Z'),
+        },
+      ];
+      const contactWithRelations = baseRelations({
+        activities: sampleActivities,
+        notes: sampleNotes,
+      });
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations as any);
+      (mockServices.ticket.listByContact as any).mockResolvedValue([]);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([]);
+
+      const result = await caller.getById({ id: TEST_UUIDS.contact1 });
+
+      expect(result.activities).toHaveLength(2);
+      // surfaced in the DB's timestamp-desc order (most recent first)
+      expect(result.activities.map((a: { id: string }) => a.id)).toEqual(['act-1', 'act-2']);
+      expect(result.activities[0]).toEqual(
+        expect.objectContaining({ id: 'act-1', title: 'Sent proposal' })
+      );
+      expect(result.notes).toHaveLength(1);
+      expect(result.notes[0]).toEqual(
+        expect.objectContaining({ id: 'note-1', content: 'Prefers afternoon meetings' })
+      );
+    });
+
     it('returns empty tickets and documents arrays when the contact has none', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
