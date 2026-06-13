@@ -197,3 +197,35 @@ waivers:
       changes.
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '5cd16d3b8338099543b08e445d28889608dec8d6e85f468313732bd279b9e56f'
+    reason: >-
+      Same accepted decision as 00ce5862 (codex re-flags the revenue schema line
+      with a shifted fingerprint each run — documented non-determinism).
+      updateAccountRevenueSchema uses positive() to match the EXPLICIT, TESTED
+      API contract: createAccountSchema/updateAccountSchema reject 0 revenue and
+      packages/validators/__tests__/account.test.ts has a dedicated
+      "should reject zero revenue" test. The domain Account.updateRevenue allows
+      the broader >=0 as an internal invariant; the API is intentionally stricter
+      and uniform (> 0) across create/update/updateRevenue. Accepting 0 here would
+      both contradict that tested contract AND hit a pre-existing persistence
+      truthiness bug (PrismaAccountRepository.save coerces 0 -> null) that no API
+      path can reach and is tracked in debt-ledger.yaml (REVENUE-ZERO-PERSIST-001)
+      + gh issue #406. Re-blocks if the schema line changes.
+    author: talyssonoliver
+    date: '2026-06-13'
+  - fingerprint: '2ebae265f1be7d34f9074c4be08353e75c829a9a66ebeaaf79897d61c936d3c7'
+    reason: >-
+      Verified false positive (codex hallucinates removed code). The evidence
+      cites `const { parentAccountId: _excludedParent, ...serviceData } =
+      updateData` and `updateAccountSchema ... parentAccountId:
+      idSchema.nullable().optional()`, but BOTH were removed in this PR — grep for
+      _excludedParent in account.router.ts returns nothing, and updateAccountSchema
+      now declares only `id` (the only nullable parentAccountId left is the
+      unrelated setParentSchema). parentAccountId is intentionally NOT part of
+      updateAccountSchema; a stray parentAccountId on update is dropped by Zod's
+      standard unknown-key stripping (uniform across every endpoint, not a
+      defect), and hierarchy changes go through the dedicated, invariant-enforcing
+      account.setParent procedure that the frontend already uses. Re-blocks if the
+      router/update-schema code changes.
+    author: talyssonoliver
+    date: '2026-06-13'
