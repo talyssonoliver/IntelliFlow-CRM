@@ -10,8 +10,12 @@ import {
   type AccountRowHandlers,
 } from '@/components/accounts/AccountCard';
 import { api } from '@/lib/api';
-import type { RouterOutputs } from '@/lib/trpc';
+import type { inferRouterOutputs } from '@trpc/server';
+import type { AppRouter } from '@intelliflow/api-client';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+
+/** Inferred output of the `account.stats` tRPC procedure (server-prefetched + client-fetched). */
+export type AccountStats = inferRouterOutputs<AppRouter>['account']['stats'];
 import { useAccountFilterOptions } from '@/hooks/use-dynamic-filters';
 import { invalidateAccountsCache } from './actions';
 import { revalidateAccountCaches } from '../actions';
@@ -198,7 +202,7 @@ function AccountsContent({
 // =============================================================================
 
 interface AccountsPageClientProps {
-  initialStats?: RouterOutputs['account']['stats'];
+  initialStats?: AccountStats;
 }
 
 export default function AccountsPageClient({
