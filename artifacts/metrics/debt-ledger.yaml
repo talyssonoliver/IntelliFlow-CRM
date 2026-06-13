@@ -5060,6 +5060,28 @@ alerts:
     remediation_sprint: 20
     remediation_plan: 'Define a dedicated opportunityListItemSchema matching the raw list row (numeric/string value + owner/account/contact relation shapes) and use it in opportunityListResponseSchema, OR wire a proper .output() with a mapper that preserves relations. Do NOT route list rows through mapOpportunityToResponse (it drops the relations the deals list renders). Out of IFC-282 B-07 scope (B-07 = response key name only).'
     notes: 'git issue #413. IFC-282 out-of-scope finding. Decorative-schema contract inaccuracy, pre-existing. Tracked per project Rule 8.'
+  DEAL-DETAIL-ACTIONS-NO-BACKEND-001:
+    origin_task: IFC-280
+    owner: Backend Dev
+    severity: low
+    description: 'Four deal-detail action buttons (apps/web/src/app/deals/[id]/page.tsx) have NO backing tRPC procedure in opportunity.router.ts, so IFC-280 wired them to an honest "Coming soon" toast (the IFC-257 precedent — not fake data) instead of a real mutation. Clone: no opportunity.clone procedure. Archive: no procedure AND no archived/archivedAt column on the Opportunity Prisma model (schema.prisma:845 has only deletedAt/closedAt). Add Product: getProducts is read-only; no addProduct (DealProduct model exists). File upload: no attachFile and no storage wiring on the deal router (DealFile model exists).'
+    created_at: 2026-06-13
+    status: open
+    expiry_date: 2026-09-30
+    remediation_sprint: 20
+    remediation_plan: 'Clone (cheapest, no migration): cloneOpportunitySchema + OpportunityService.cloneOpportunity + opportunity.clone (read getById, create copy, stage=PROSPECTING). Archive: add archivedAt column + MIGRATION + Opportunity.archive() domain method + service + archive/unarchive procedures (high parallel-run migration risk -> its own task). Add Product: addProduct/updateProduct/removeProduct writing DealProduct (no migration). File upload: attachFile/listFiles/removeFile + Supabase storage -> DealFile. Then replace each "Coming soon" toast with the real mutation + confirmation/dialog.'
+    notes: 'git issue #421. IFC-280 deferred (orchestrator rule: wire existing procedures; only add a genuinely-missing procedure if feasible — these need new backend/migration, out of a frontend wiring task during a parallel run). The 2026-03-06 audit "14 no-ops" count was stale (predates IFC-278, which wired the account/contact links). Tracked per project Rule 8.'
+  DEAL-DETAIL-SHARED-A11Y-001:
+    origin_task: IFC-280
+    owner: Frontend Dev
+    severity: low
+    description: 'App-wide WCAG 2.1 AA gaps in SHARED primitives surfaced during IFC-280 a11y review (affect every entity detail page — leads/contacts/accounts/tickets/deals — and pre-date IFC-280): entity-header.tsx loading spinner span lacks aria-hidden + button lacks aria-busy + action icon span lacks aria-hidden; entity-action-sheet.tsx icon spans lack aria-hidden (ligature leaks into the button name); packages/ui toast.tsx destructive variant lacks role=alert; more-actions-button.tsx does not forward aria-expanded/aria-haspopup=dialog.'
+    created_at: 2026-06-13
+    status: open
+    expiry_date: 2026-09-30
+    remediation_sprint: 20
+    remediation_plan: 'Add aria-hidden to all material-symbols icon spans inside buttons in entity-header.tsx + entity-action-sheet.tsx; add aria-busy={loading} to the entity-header ActionButton; conditionally set role=alert on the destructive toast variant in packages/ui/src/components/toast.tsx; forward aria-expanded/aria-haspopup on MoreActionsButton. Add render tests per primitive.'
+    notes: 'git issue #422. IFC-280 deferred (R-4) — fixing shared primitives is a cross-page change (blast radius + diff-coverage on heavily-used files) out of a deals-only wiring task. IFC-280 own new UI (Edit/Delete dialogs, LossReasonModal) is accessible (Radix + in-scope label/aria-live/autofocus). Tracked per project Rule 8.'
   CSV-EXPORT-FORMULA-INJECTION-001:
     origin_task: PG-063
     owner: CRM FE

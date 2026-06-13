@@ -125,12 +125,17 @@ function findTaskJsonPath(sprint, taskId) {
 
 function findDepAttestation(depTaskId) {
   if (!existsSync(SPECIFY_ROOT)) return null;
+  // Dependency strings are `<taskId>:<type>` (e.g. `IFC-278:FS` — the dominant
+  // CSV convention, 500+ rows). Attestation directories are named by the bare
+  // task id, so strip the dependency-type suffix before resolving the path.
+  // Without this, ANY typed dependency (FS/SS/FF/SF) is unresolvable. (IFC-280)
+  const bareId = depTaskId.split(':')[0];
   for (const sprintDir of readdirSync(SPECIFY_ROOT)) {
     const candidate = join(
       SPECIFY_ROOT,
       sprintDir,
       'attestations',
-      depTaskId,
+      bareId,
       'attestation.json'
     );
     if (existsSync(candidate)) return candidate;

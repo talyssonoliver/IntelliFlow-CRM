@@ -41,6 +41,12 @@ export interface DealFormProps {
   readonly isSubmitting: boolean;
   readonly mode: 'create' | 'edit';
   readonly onDirtyChange?: (isDirty: boolean) => void;
+  /**
+   * Cancel handler. When provided (e.g. the deal-detail Edit dialog), Cancel
+   * closes via this callback instead of navigating to /deals — makes the form
+   * usable inside a modal. When omitted, Cancel stays a Link to /deals.
+   */
+  readonly onCancel?: () => void;
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -125,6 +131,7 @@ export function DealForm({
   isSubmitting,
   mode,
   onDirtyChange,
+  onCancel,
 }: DealFormProps) {
   const initialFormData = useMemo<DealFormData>(
     () => ({
@@ -231,6 +238,7 @@ export function DealForm({
   }, []);
 
   const submitLabel = mode === 'create' ? 'Create Deal' : 'Save Changes';
+  const submittingLabel = mode === 'create' ? 'Creating...' : 'Saving...';
 
   return (
     <form onSubmit={handleSubmit}>
@@ -408,11 +416,17 @@ export function DealForm({
           {/* Actions */}
           <div className="flex items-center gap-3 pt-4 border-t">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating...' : submitLabel}
+              {isSubmitting ? submittingLabel : submitLabel}
             </Button>
-            <Button type="button" variant="outline" asChild>
-              <Link href="/deals">Cancel</Link>
-            </Button>
+            {onCancel ? (
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+            ) : (
+              <Button type="button" variant="outline" asChild>
+                <Link href="/deals">Cancel</Link>
+              </Button>
+            )}
           </div>
         </div>
       </Card>

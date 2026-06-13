@@ -273,8 +273,12 @@ export class OpportunityService {
     expectedCloseDate: Date | null | undefined,
     updatedBy: string
   ): DomainError | null {
-    if (expectedCloseDate === undefined || expectedCloseDate === null) return null;
-    const result = opportunity.updateExpectedCloseDate(expectedCloseDate, updatedBy);
+    // IFC-280: undefined = field omitted (no change); null = explicit clear.
+    if (expectedCloseDate === undefined) return null;
+    const result =
+      expectedCloseDate === null
+        ? opportunity.clearExpectedCloseDate(updatedBy)
+        : opportunity.updateExpectedCloseDate(expectedCloseDate, updatedBy);
     return result.isFailure ? result.error : null;
   }
 
@@ -301,6 +305,67 @@ export class OpportunityService {
   }
 
   /**
+   * IFC-280: apply account/contact re-assignment to the aggregate. Enforces the
+   * contact-belongs-to-account invariant (mirrors the create path) so a stakeholder
+   * change cannot persist a mismatched pair. accountId/contactId existence is already
+   * checked by validateForeignKeys; this adds the cross-field relationship guard.
+   */
+  /**
+   * IFC-280: validate the contact-belongs-to-account invariant for a stakeholder
+   * re-assignment WITHOUT mutating (so it can run in the validation pass). Checks
+   * the EFFECTIVE pair — an explicit contact change wins, else the deal's current
+   * contact — so an account-only change cannot strand a cross-account contact.
+   */
+  private async validateStakeholderInvariant(
+    opportunity: Opportunity,
+    data: { accountId?: string; contactId?: string | null }
+  ): Promise<DomainError | null> {
+    const effectiveAccountId = data.accountId ?? opportunity.accountId;
+    const effectiveContactId =
+      data.contactId !== undefined ? data.contactId : (opportunity.contactId ?? null);
+    if (!effectiveContactId) return null;
+    const contactIdResult = ContactId.create(effectiveContactId);
+    if (contactIdResult.isFailure) return contactIdResult.error;
+    const contact = await this.contactRepository.findById(contactIdResult.value);
+    if (contact && contact.accountId !== effectiveAccountId) {
+      return new ValidationError('Contact does not belong to the selected account');
+    }
+    return null;
+  }
+
+  /**
+   * IFC-280: validate the stage-independent scalar inputs without mutating, so
+   * the mutation pass cannot apply one scalar then reject a sibling. Mirrors the
+   * domain guards (updateValue requires > 0; updateProbability requires a valid
+   * 0..100 Percentage) — the domain methods remain authoritative and re-check.
+   */
+  private validateScalarInputs(data: { value?: number; probability?: number }): DomainError | null {
+    if (data.value !== undefined && data.value <= 0) {
+      return new ValidationError('Opportunity value must be greater than zero');
+    }
+    if (data.probability !== undefined && (data.probability < 0 || data.probability > 100)) {
+      return new ValidationError('Probability must be between 0 and 100');
+    }
+    return null;
+  }
+
+  /**
+   * IFC-280: apply account/contact re-assignment. Non-fallible — the invariant is
+   * validated by validateStakeholderInvariant in the validation pass beforehand.
+   */
+  private applyStakeholderMutations(
+    opportunity: Opportunity,
+    data: { accountId?: string; contactId?: string | null }
+  ): void {
+    if (data.accountId !== undefined) {
+      opportunity.changeAccount(data.accountId);
+    }
+    if (data.contactId !== undefined) {
+      opportunity.changeContact(data.contactId);
+    }
+  }
+
+  /**
    * Apply all scalar field updates to the opportunity domain entity.
    * Returns the first domain error encountered, or null if all updates succeed.
    */
@@ -317,13 +382,16 @@ export class OpportunityService {
     const valueError = this.applyValueUpdate(opportunity, data.value, updatedBy);
     if (valueError) return valueError;
 
-    const probError = this.applyProbabilityUpdate(opportunity, data.probability, updatedBy);
-    if (probError) return probError;
-
+    // IFC-280: apply stage BEFORE probability. changeStage resets probability to
+    // the stage default, so applying an explicit probability afterwards lets a
+    // user-supplied probability override the default rather than be overwritten.
     if (data.stage !== undefined) {
       const stageError = this.applyStageChange(opportunity, data.stage, updatedBy);
       if (stageError) return stageError;
     }
+
+    const probError = this.applyProbabilityUpdate(opportunity, data.probability, updatedBy);
+    if (probError) return probError;
 
     return this.applyExpectedCloseDateUpdate(opportunity, data.expectedCloseDate, updatedBy);
   }
@@ -339,6 +407,7 @@ export class OpportunityService {
       probability?: number;
       stage?: OpportunityStage;
       expectedCloseDate?: Date | null;
+      description?: string;
       accountId?: string;
       contactId?: string | null;
     },
@@ -353,19 +422,42 @@ export class OpportunityService {
       return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
     }
 
+    // --- Validation pass (no mutation) -------------------------------------
     const fkError = await this.validateForeignKeys(data, tenantId);
     if (fkError) return Result.fail(fkError);
 
-    // IFC-282 B-04: apply the name change first (validate-then-mutate ordering)
-    // so an invalid name surfaces before any scalar mutation. Previously the name
-    // was silently dropped (the old TODO).
+    // IFC-280: validate the contact-belongs-to-account invariant BEFORE any
+    // mutation, so a stakeholder re-assignment cannot persist a mismatched pair.
+    const stakeholderError = await this.validateStakeholderInvariant(opportunity, data);
+    if (stakeholderError) return Result.fail(stakeholderError);
+
+    // IFC-280 (atomicity): pre-validate the stage-independent scalar inputs
+    // (value > 0, probability in 0..100) BEFORE mutating, so an invalid value or
+    // probability cannot leave an earlier scalar (e.g. stage, which changeStage
+    // mutates while resetting probability) already applied on the loaded aggregate.
+    const scalarInputError = this.validateScalarInputs(data);
+    if (scalarInputError) return Result.fail(scalarInputError);
+
+    // --- Mutation pass -----------------------------------------------------
+    // IFC-282 B-04: name validates-then-mutates internally (kept first).
     if (data.name !== undefined) {
       const nameResult = opportunity.updateName(data.name, updatedBy);
       if (nameResult.isFailure) return Result.fail(nameResult.error);
     }
 
+    // IFC-280 (atomicity, the IFC-271 lesson): apply the fallible scalar updates
+    // (value/stage/probability/date — each closed-guarded) BEFORE the non-fallible
+    // stakeholder + description mutations, so a scalar validation failure cannot
+    // leave description/account/contact already mutated on the loaded aggregate.
     const updateError = this.applyScalarUpdates(opportunity, data, updatedBy);
     if (updateError) return Result.fail(updateError);
+
+    // Stakeholder mutation is non-fallible here (invariant validated above);
+    // description (updateDescription) cannot fail. Apply both last.
+    this.applyStakeholderMutations(opportunity, data);
+    if (data.description !== undefined) {
+      opportunity.updateDescription(data.description);
+    }
 
     try {
       await this.opportunityRepository.save(opportunity);

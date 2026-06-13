@@ -256,4 +256,21 @@ describe('DealForm', () => {
 
     expect(screen.getByText('Cancel').closest('a')).toHaveAttribute('href', '/deals');
   });
+
+  // IFC-280 — edit-mode label + dialog-friendly onCancel.
+  it('renders "Saving..." while an edit submission is pending', () => {
+    renderDealForm({ mode: 'edit', isSubmitting: true });
+
+    expect(screen.getByText('Saving...')).toBeDisabled();
+  });
+
+  it('renders Cancel as a button calling onCancel when provided (dialog mode)', () => {
+    const onCancel = vi.fn();
+    renderDealForm({ mode: 'edit', onCancel });
+
+    const cancel = screen.getByText('Cancel');
+    expect(cancel.closest('a')).toBeNull();
+    fireEvent.click(cancel);
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
 });

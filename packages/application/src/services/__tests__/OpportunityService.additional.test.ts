@@ -305,6 +305,237 @@ describe('OpportunityService (additional coverage)', () => {
       expect(reloaded?.name).toBe('New Name');
     });
 
+    // IFC-280: description updates were silently dropped (omitted from the
+    // updateOpportunity data param, the same gap pattern as IFC-282 B-04 name).
+    it('should persist a description update', async () => {
+      const opp = Opportunity.create({
+        name: 'Desc Test',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { description: 'A freshly edited deal description' },
+        'updater'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.description).toBe('A freshly edited deal description');
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.description).toBe('A freshly edited deal description');
+    });
+
+    // IFC-280: accountId/contactId were FK-validated but never applied (the
+    // Edit/Stakeholders dialog silently dropped stakeholder changes — fake save).
+    it('should persist an account re-assignment', async () => {
+      const account2 = Account.create({ name: 'Second Account', ownerId: 'owner-1' } as any).value;
+      await accountRepository.save(account2);
+      const opp = Opportunity.create({
+        name: 'Reassign Account',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { accountId: account2.id.value },
+        'updater'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.accountId).toBe(account2.id.value);
+    });
+
+    it('should persist a contact assignment that belongs to the account', async () => {
+      const contact = Contact.create({
+        email: 'stakeholder@test.com',
+        firstName: 'Stake',
+        lastName: 'Holder',
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      } as any).value;
+      await contactRepository.save(contact);
+      const opp = Opportunity.create({
+        name: 'Assign Contact',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { contactId: contact.id.value },
+        'updater'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.contactId).toBe(contact.id.value);
+    });
+
+    it('should clear the contact when contactId is null', async () => {
+      const contact = Contact.create({
+        email: 'tobe@test.com',
+        firstName: 'To',
+        lastName: 'Clear',
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      } as any).value;
+      await contactRepository.save(contact);
+      const opp = Opportunity.create({
+        name: 'Clear Contact',
+        value: 50000,
+        accountId: testAccount.id.value,
+        contactId: contact.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(opp.id.value, { contactId: null }, 'updater');
+
+      expect(result.isSuccess).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.contactId).toBeUndefined();
+    });
+
+    it('should reject a contact that does not belong to the account', async () => {
+      const account2 = Account.create({ name: 'Other Account', ownerId: 'owner-1' } as any).value;
+      await accountRepository.save(account2);
+      const foreignContact = Contact.create({
+        email: 'foreign@test.com',
+        firstName: 'For',
+        lastName: 'Eign',
+        accountId: account2.id.value,
+        ownerId: 'owner-1',
+      } as any).value;
+      await contactRepository.save(foreignContact);
+      const opp = Opportunity.create({
+        name: 'Invariant',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { contactId: foreignContact.id.value },
+        'updater'
+      );
+
+      expect(result.isFailure).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.contactId).toBeUndefined();
+    });
+
+    // IFC-280 F-A: re-assigning only the account must not strand a now-incompatible
+    // existing contact (validate the EFFECTIVE pair, not just an explicit contact).
+    it('should reject an account-only re-assignment that strands an incompatible contact', async () => {
+      const account2 = Account.create({ name: 'Strand Account', ownerId: 'owner-1' } as any).value;
+      await accountRepository.save(account2);
+      const contact = Contact.create({
+        email: 'strand@test.com',
+        firstName: 'Str',
+        lastName: 'And',
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      } as any).value;
+      await contactRepository.save(contact);
+      const opp = Opportunity.create({
+        name: 'Strand',
+        value: 50000,
+        accountId: testAccount.id.value,
+        contactId: contact.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { accountId: account2.id.value },
+        'updater'
+      );
+
+      expect(result.isFailure).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.accountId).toBe(testAccount.id.value);
+    });
+
+    // IFC-280 F-C: stage is applied before probability so an explicit probability
+    // overrides the stage default instead of being reset by changeStage.
+    it('preserves an explicit probability when stage and probability change together', async () => {
+      const opp = Opportunity.create({
+        name: 'Stage+Prob',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { stage: 'QUALIFICATION', probability: 25 },
+        'updater'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.stage).toBe('QUALIFICATION');
+      expect(reloaded?.probability.value).toBe(25);
+    });
+
+    // IFC-280 F-D: clearing an existing expected close date must persist.
+    it('should clear the expected close date when expectedCloseDate is null', async () => {
+      const opp = Opportunity.create({
+        name: 'Clear Date',
+        value: 50000,
+        accountId: testAccount.id.value,
+        expectedCloseDate: new Date('2026-06-30'),
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { expectedCloseDate: null },
+        'updater'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.expectedCloseDate).toBeUndefined();
+    });
+
+    // IFC-280 F-E: a failing scalar update must not leave description (or other
+    // non-scalar fields) mutated on the loaded aggregate (validate-then-mutate).
+    it('does not mutate description when a scalar update fails (atomicity)', async () => {
+      const opp = Opportunity.create({
+        name: 'Atomic',
+        value: 50000,
+        description: 'original',
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { description: 'changed', probability: 150 },
+        'updater'
+      );
+
+      expect(result.isFailure).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.description).toBe('original');
+    });
+
     it('should fail an update with an empty name', async () => {
       const opp = Opportunity.create({
         name: 'Keep Name',

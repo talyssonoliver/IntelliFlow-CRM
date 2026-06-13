@@ -381,6 +381,21 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return Result.ok(undefined);
   }
 
+  /**
+   * IFC-280: clear the expected close date. Closed-guarded like
+   * updateExpectedCloseDate. Emits no domain event (the close-date-changed event
+   * models a new Date; a clear is a metadata reset, consistent with how
+   * updateDescription emits none) — no subscriber consumes a clear.
+   */
+  clearExpectedCloseDate(_changedBy: string): Result<void, OpportunityAlreadyClosedError> {
+    if (this.isClosed) {
+      return Result.fail(new OpportunityAlreadyClosedError());
+    }
+    this.props.expectedCloseDate = undefined;
+    this.props.updatedAt = new Date();
+    return Result.ok(undefined);
+  }
+
   markAsWon(closedBy: string): Result<void, DomainError> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
@@ -448,6 +463,27 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
 
   updateDescription(description: string): void {
     this.props.description = description;
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * IFC-280: re-assign the deal's account. A reference correction (like name /
+   * description) — intentionally NOT closed-guarded (fixing a closed deal's
+   * account is a legitimate clerical edit). The application service validates
+   * the account exists and the contact-belongs-to-account invariant before
+   * calling this.
+   */
+  changeAccount(accountId: string): void {
+    this.props.accountId = accountId;
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * IFC-280: re-assign the deal's primary contact, or clear it (pass null). The
+   * application service validates the contact exists and belongs to the account.
+   */
+  changeContact(contactId: string | null): void {
+    this.props.contactId = contactId ?? undefined;
     this.props.updatedAt = new Date();
   }
 

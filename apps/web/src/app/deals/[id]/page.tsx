@@ -3,8 +3,19 @@
 import * as React from 'react';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { Card, Button, Skeleton, EmptyState } from '@intelliflow/ui';
+import { useParams, useRouter } from 'next/navigation';
+import {
+  Card,
+  Button,
+  Skeleton,
+  EmptyState,
+  toast,
+  ConfirmationDialog,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@intelliflow/ui';
 import { type OpportunityStage } from '@intelliflow/domain';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
@@ -15,6 +26,9 @@ import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
+import { LossReasonModal } from '@/components/deals/LossReasonModal';
+import { DealForm, type DealFormData } from '@/components/deals/DealForm';
+import { revalidateDealCaches } from '@/app/deals/actions';
 
 // Material Symbols icon helper component
 const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: string }>) => (
@@ -214,14 +228,21 @@ function AboutDealCard({ deal }: Readonly<{ deal: DealDetail }>) {
   );
 }
 
-function StakeholdersCard({ deal }: Readonly<{ deal: DealDetail }>) {
+function StakeholdersCard({ deal, onEdit }: Readonly<{ deal: DealDetail; onEdit: () => void }>) {
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between mb-4 border-b pb-2">
         <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
           Stakeholders
         </h3>
-        <button className="text-primary hover:text-primary/80 text-xs font-semibold">Edit</button>
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label="Edit stakeholders"
+          className="text-primary hover:text-primary/80 text-xs font-semibold"
+        >
+          Edit
+        </button>
       </div>
       <div className="flex flex-col gap-4">
         {/* Account */}
@@ -307,7 +328,10 @@ function StakeholdersCard({ deal }: Readonly<{ deal: DealDetail }>) {
   );
 }
 
-function ProductsCard({ dealId }: Readonly<{ dealId: string }>) {
+function ProductsCard({
+  dealId,
+  onAddProduct,
+}: Readonly<{ dealId: string; onAddProduct: () => void }>) {
   const { data, isLoading } = api.opportunity.getProducts.useQuery({ opportunityId: dealId });
 
   if (isLoading) {
@@ -333,7 +357,12 @@ function ProductsCard({ dealId }: Readonly<{ dealId: string }>) {
         <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
           Products
         </h3>
-        <button className="w-6 h-6 flex items-center justify-center rounded bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
+        <button
+          type="button"
+          onClick={onAddProduct}
+          aria-label="Add product"
+          className="w-6 h-6 flex items-center justify-center rounded bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+        >
           <Icon name="add" className="text-base" />
         </button>
       </div>
@@ -369,14 +398,19 @@ function ProductsCard({ dealId }: Readonly<{ dealId: string }>) {
   );
 }
 
-function FilesCard() {
+function FilesCard({ onUpload }: Readonly<{ onUpload: () => void }>) {
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
           Files
         </h3>
-        <button className="w-6 h-6 flex items-center justify-center rounded bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
+        <button
+          type="button"
+          onClick={onUpload}
+          aria-label="Upload file"
+          className="w-6 h-6 flex items-center justify-center rounded bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+        >
           <Icon name="upload" className="text-base" />
         </button>
       </div>
@@ -435,9 +469,15 @@ function DealNotFoundError() {
 
 export default function DealDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const dealId = params.id as string;
+  const utils = api.useUtils();
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const [lossModalOpen, setLossModalOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'WON' | 'LOST' | null>(null);
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
 
   const {
     data: deal,
@@ -448,6 +488,49 @@ export default function DealDetailPage() {
     { enabled: isAuthenticated && !authLoading && !!dealId }
   );
 
+  const moveStage = api.opportunity.moveStage.useMutation({
+    onSuccess: (_data, variables) => {
+      revalidateDealCaches(user?.id ?? null).catch(() => {});
+      utils.opportunity.getById.invalidate({ id: dealId });
+      setPendingAction(null);
+      toast({
+        title:
+          variables.targetStage === 'CLOSED_WON' ? 'Deal marked as Won' : 'Deal marked as Lost',
+      });
+    },
+    onError: (err) => {
+      setPendingAction(null);
+      const message = /already been closed/i.test(err.message ?? '')
+        ? 'This deal has already been closed by another user'
+        : 'Failed to update deal stage. Please try again.';
+      toast({ title: message, variant: 'destructive' });
+    },
+  });
+
+  const deleteMutation = api.opportunity.delete.useMutation({
+    onSuccess: () => {
+      revalidateDealCaches(user?.id ?? null).catch(() => {});
+      setDeleteConfirmOpen(false);
+      toast({ title: 'Deal moved to trash' });
+      router.push('/deals');
+    },
+    onError: () => {
+      toast({ title: 'Failed to delete deal. Please try again.', variant: 'destructive' });
+    },
+  });
+
+  const updateMutation = api.opportunity.update.useMutation({
+    onSuccess: () => {
+      revalidateDealCaches(user?.id ?? null).catch(() => {});
+      utils.opportunity.getById.invalidate({ id: dealId });
+      setEditDialogOpen(false);
+      toast({ title: 'Deal updated' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to update deal. Please try again.', variant: 'destructive' });
+    },
+  });
+
   if (authLoading || isLoading) return <DealDetailSkeleton />;
   if (error || !deal) return <DealNotFoundError />;
 
@@ -455,6 +538,71 @@ export default function DealDetailPage() {
   // This is a single validated boundary cast rather than scattered field-level casts
   const d = deal as DealDetail;
   const stage = d.stage as OpportunityStage;
+
+  const comingSoon = (feature: string) =>
+    toast({ title: 'Coming soon', description: `${feature} is under development` });
+
+  const handleWon = () => {
+    setPendingAction('WON');
+    moveStage.mutate({ id: dealId, targetStage: 'CLOSED_WON' });
+  };
+
+  const handleLossConfirm = (reason: string) => {
+    setLossModalOpen(false);
+    setPendingAction('LOST');
+    moveStage.mutate({ id: dealId, targetStage: 'CLOSED_LOST', reason });
+  };
+
+  // Map the loaded deal onto the DealForm shape for the inline Edit dialog.
+  const editInitialData: Partial<DealFormData> = {
+    name: d.name,
+    value: { amount: d.value, currency: d.currency },
+    stage: stage as DealFormData['stage'],
+    probability: d.probability,
+    expectedCloseDate: d.expectedCloseDate
+      ? new Date(d.expectedCloseDate).toISOString().slice(0, 10)
+      : '',
+    accountId: d.accountId,
+    accountName: d.account?.name ?? '',
+    contactId: d.contactId ?? '',
+    contactName: d.contact ? `${d.contact.firstName} ${d.contact.lastName}` : '',
+    description: d.description ?? '',
+  };
+
+  const handleEditSubmit = (data: DealFormData) => {
+    // Send only changed fields (dirty diff). value/probability/stage/date are
+    // closed-guarded in the domain, so submitting them unchanged on a closed deal
+    // would reject the whole update before the allowed clerical edits (name,
+    // description, account, contact) persist. Omitting unchanged fields avoids that.
+    const payload: {
+      id: string;
+      name?: string;
+      value?: { amount: number; currency: string };
+      stage?: OpportunityStage;
+      probability?: number;
+      expectedCloseDate?: Date | null;
+      accountId?: string;
+      contactId?: string | null;
+      description?: string;
+    } = { id: dealId };
+
+    if (data.name.trim() !== d.name) payload.name = data.name.trim();
+    if (data.value.amount !== d.value) {
+      payload.value = { amount: data.value.amount, currency: data.value.currency };
+    }
+    if (data.stage !== stage) payload.stage = data.stage;
+    if (data.probability !== d.probability) payload.probability = data.probability;
+    // expectedCloseDate: send a Date when set, or null to clear (the service +
+    // domain clearExpectedCloseDate persist the clear). Only when it changed.
+    if (data.expectedCloseDate !== (editInitialData.expectedCloseDate ?? '')) {
+      payload.expectedCloseDate = data.expectedCloseDate ? new Date(data.expectedCloseDate) : null;
+    }
+    if (data.accountId !== d.accountId) payload.accountId = data.accountId;
+    if ((data.contactId || '') !== (d.contactId ?? '')) payload.contactId = data.contactId || null;
+    if (data.description !== (d.description ?? '')) payload.description = data.description.trim();
+
+    updateMutation.mutate(payload);
+  };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -478,18 +626,23 @@ export default function DealDetailPage() {
             {
               label: 'Lost',
               variant: 'secondary',
-              onClick: () => {},
+              onClick: () => setLossModalOpen(true),
+              disabled: d.isClosed,
+              loading: moveStage.isPending && pendingAction === 'LOST',
             },
             {
               label: 'Edit',
               variant: 'secondary',
-              onClick: () => {},
+              onClick: () => setEditDialogOpen(true),
+              loading: updateMutation.isPending,
             },
             {
               label: 'Won',
               icon: 'check',
               variant: 'primary',
-              onClick: () => {},
+              onClick: handleWon,
+              disabled: d.isClosed || stage !== 'NEGOTIATION',
+              loading: moveStage.isPending && pendingAction === 'WON',
             },
           ]}
           endContent={
@@ -517,11 +670,60 @@ export default function DealDetailPage() {
             url: `/deals/${dealId}`,
           }}
           extraActions={[
-            { label: 'Clone Deal', icon: 'content_copy', onClick: () => {} },
-            { label: 'Archive', icon: 'archive', onClick: () => {} },
-            { label: 'Delete', icon: 'delete', onClick: () => {}, destructive: true },
+            { label: 'Clone Deal', icon: 'content_copy', onClick: () => comingSoon('Clone deal') },
+            { label: 'Archive', icon: 'archive', onClick: () => comingSoon('Archive deal') },
+            {
+              label: 'Delete',
+              icon: 'delete',
+              onClick: () => setDeleteConfirmOpen(true),
+              destructive: true,
+            },
           ]}
         />
+
+        {/* Mark-as-Lost reason modal (CLOSED_LOST requires a reason >=10 chars) */}
+        <LossReasonModal
+          open={lossModalOpen}
+          dealName={d.name}
+          onConfirm={handleLossConfirm}
+          onCancel={() => setLossModalOpen(false)}
+        />
+
+        {/* Delete confirmation (soft-delete → trash) */}
+        <ConfirmationDialog
+          open={deleteConfirmOpen}
+          onOpenChange={setDeleteConfirmOpen}
+          title="Delete Deal"
+          description="This deal will be moved to trash. You can restore it from the Deals trash view."
+          confirmLabel="Delete"
+          variant="destructive"
+          icon="delete"
+          isLoading={deleteMutation.isPending}
+          onConfirm={async () => {
+            try {
+              await deleteMutation.mutateAsync({ id: dealId });
+            } catch {
+              // deleteMutation.onError shows the destructive toast; swallow the
+              // rejection so it doesn't surface as an unhandled promise rejection.
+            }
+          }}
+        />
+
+        {/* Inline Edit dialog (reuses DealForm in edit mode → opportunity.update) */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Deal</DialogTitle>
+            </DialogHeader>
+            <DealForm
+              mode="edit"
+              initialData={editInitialData}
+              isSubmitting={updateMutation.isPending}
+              onSubmit={handleEditSubmit}
+              onCancel={() => setEditDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
 
         {/* Stage Progress */}
         <StageProgress value={d.value} stage={stage} probability={d.probability} />
@@ -531,7 +733,7 @@ export default function DealDetailPage() {
           {/* Left Sidebar */}
           <div className="lg:col-span-3 flex flex-col gap-6">
             <AboutDealCard deal={d} />
-            <StakeholdersCard deal={d} />
+            <StakeholdersCard deal={d} onEdit={() => setEditDialogOpen(true)} />
           </div>
 
           {/* Center - Activity Timeline */}
@@ -553,9 +755,9 @@ export default function DealDetailPage() {
 
           {/* Right Sidebar */}
           <div className="lg:col-span-3 flex flex-col gap-6">
-            <ProductsCard dealId={dealId} />
+            <ProductsCard dealId={dealId} onAddProduct={() => comingSoon('Adding products')} />
             <RelatedTasksCard entityType="opportunity" entityId={dealId} title="Next Steps" />
-            <FilesCard />
+            <FilesCard onUpload={() => comingSoon('File upload')} />
           </div>
         </div>
       </div>

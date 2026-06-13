@@ -414,6 +414,38 @@ waivers:
       zero-backend behaviour-preserving extraction scope. Source-anchored.
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '4139ed9c3b40bff6f652f0fedc1b5952f6035b1d80d3b9be91a7e7bf12188fa1'
+    reason: >-
+      Verified false positive (IFC-280) — codex re-flags the mutation-pass order
+      while ignoring the validation pass that now guards it (shifted fingerprint
+      after lines moved; supersedes the prior 032a08fb anchor). updateOpportunity
+      now runs validateScalarInputs (OpportunityService.ts ~L438) in the VALIDATION
+      pass BEFORE applyScalarUpdates (~L452): it rejects probability outside 0..100
+      and value <= 0. So the cited `{ stage, probability: 150 }` returns Result.fail
+      at validateScalarInputs BEFORE changeStage runs — stage is NOT mutated. For an
+      OPEN deal a 0..100 probability cannot then fail updateProbability (its only
+      checks are the closed-guard and Percentage.create 0..100); for a CLOSED deal
+      value/stage hit their own isClosed guard (changeStage checks isClosed before
+      mutating) and fail first. The regression test "does not mutate description when
+      a scalar update fails (atomicity)" drives `{ description, probability: 150 }`
+      and asserts no mutation persisted. This is codex's own recommended fix
+      ("validate the explicit probability before mutating stage"), already applied.
+      Source-anchored — re-blocks if validateScalarInputs is removed or order regresses.
+    author: talyssonoliver
+    date: '2026-06-13'
+  - fingerprint: '192bb0db7150eaba30fff759a8acee7d91af19473790e9de4e1483d94c924538'
+    reason: >-
+      Verified false positive (IFC-280) — codex cites the pre-fix code. The Delete
+      ConfirmationDialog onConfirm now WRAPS the await in try/catch
+      (deals/[id]/page.tsx ~L703-707): the await deleteMutation.mutateAsync is inside
+      a try with a catch that swallows the rejection (the mutation's onError shows the
+      destructive toast). The async handler therefore resolves even on a failed
+      delete, so ConfirmationDialog's `await onConfirm()` never sees a rejected promise
+      — no unhandled rejection. This is codex's own recommended fix ("catch the
+      mutateAsync rejection inside onConfirm"), already applied. Source-anchored —
+      re-blocks if the try/catch is removed.
+    author: talyssonoliver
+    date: '2026-06-13'
   - fingerprint: '080bed5cc7fdadc5f30c0542e7579d464725645af72439231142a73c9b803bad'
     reason: >-
       PG-063 — codex hallucination citing PRE-FIX code. The

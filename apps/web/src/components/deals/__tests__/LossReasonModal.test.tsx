@@ -169,4 +169,36 @@ describe('LossReasonModal', () => {
       'Budget constraints prevented the deal from closing'
     );
   });
+
+  // IFC-280 AC-A11Y-02 — the modal gained a new entry point (deal-detail Lost
+  // button), so its WCAG gaps are fixed in-scope.
+  describe('accessibility (AC-A11Y-02)', () => {
+    const renderModal = () =>
+      render(
+        <LossReasonModal
+          open={true}
+          onConfirm={mockOnConfirm}
+          onCancel={mockOnCancel}
+          dealName="Enterprise License"
+        />
+      );
+
+    it('associates a visible label with the reason textarea', () => {
+      renderModal();
+      const textarea = screen.getByLabelText('Loss reason');
+      expect(textarea.tagName).toBe('TEXTAREA');
+    });
+
+    it('announces the character count via a polite live region', () => {
+      renderModal();
+      const count = screen.getByText(/characters minimum/i);
+      expect(count.getAttribute('aria-live')).toBe('polite');
+      expect(count.getAttribute('aria-atomic')).toBe('true');
+    });
+
+    it('moves focus to the reason textarea on open', () => {
+      renderModal();
+      expect(screen.getByLabelText('Loss reason')).toHaveFocus();
+    });
+  });
 });

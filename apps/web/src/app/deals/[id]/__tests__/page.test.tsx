@@ -4,10 +4,25 @@
 
 import * as React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
+
+// IFC-280 — mutation + toast spies for the wired action buttons.
+const mockMoveStage = vi.fn();
+const mockUpdate = vi.fn();
+const mockDeleteAsync = vi.fn().mockResolvedValue({ success: true, id: 'deal-123' });
+const mockInvalidate = vi.fn();
+const mockToast = vi.fn();
+type CapturedMutationConfig = {
+  onSuccess?: (...args: unknown[]) => void;
+  onError?: (...args: unknown[]) => void;
+};
+let capturedMoveStageConfig: CapturedMutationConfig = {};
+let capturedUpdateConfig: CapturedMutationConfig = {};
+let capturedDeleteConfig: CapturedMutationConfig = {};
+const mutationPending = { moveStage: false, update: false, delete: false };
 
 const mockOpportunityQueryState = {
   data: {
@@ -122,9 +137,29 @@ vi.mock('@/lib/api', () => ({
           isLoading: mockProductsQueryState.isLoading,
         }),
       },
+      // IFC-280 — capture each mutation's config so onSuccess/onError can be
+      // exercised directly (mirrors deals/(list)/__tests__/page.test.tsx).
+      moveStage: {
+        useMutation: (config: CapturedMutationConfig) => {
+          capturedMoveStageConfig = config;
+          return { mutate: mockMoveStage, isPending: mutationPending.moveStage };
+        },
+      },
+      update: {
+        useMutation: (config: CapturedMutationConfig) => {
+          capturedUpdateConfig = config;
+          return { mutate: mockUpdate, isPending: mutationPending.update };
+        },
+      },
+      delete: {
+        useMutation: (config: CapturedMutationConfig) => {
+          capturedDeleteConfig = config;
+          return { mutateAsync: mockDeleteAsync, isPending: mutationPending.delete };
+        },
+      },
     },
     useUtils: () => ({
-      opportunity: { getById: { invalidate: vi.fn() } },
+      opportunity: { getById: { invalidate: mockInvalidate } },
     }),
   },
 }));
@@ -148,10 +183,98 @@ vi.mock('@intelliflow/ui', () => ({
   EmptyState: ({ entity }: Record<string, unknown>) => (
     <p data-testid="empty-state">No {entity as string} yet</p>
   ),
+  toast: (args: unknown) => mockToast(args),
+  // ConfirmationDialog stub: Cancel rendered BEFORE Confirm to mirror the real
+  // component's AlertDialogCancel-first DOM order (AC-A11Y-03).
+  ConfirmationDialog: ({
+    open,
+    title,
+    onConfirm,
+    onOpenChange,
+    isLoading,
+  }: Record<string, unknown>) =>
+    (open as boolean) ? (
+      <div data-testid="confirm-dialog" role="alertdialog">
+        <span data-testid="confirm-title">{title as string}</span>
+        <button
+          data-testid="confirm-cancel"
+          onClick={() => (onOpenChange as (o: boolean) => void)(false)}
+        >
+          Cancel
+        </button>
+        <button
+          data-testid="confirm-delete"
+          disabled={isLoading as boolean}
+          onClick={() => (onConfirm as () => void)()}
+        >
+          Delete
+        </button>
+      </div>
+    ) : null,
+  Dialog: ({ open, children }: Record<string, unknown>) =>
+    (open as boolean) ? <div data-testid="edit-dialog">{children as React.ReactNode}</div> : null,
+  DialogContent: ({ children }: Record<string, unknown>) => (
+    <div>{children as React.ReactNode}</div>
+  ),
+  DialogHeader: ({ children }: Record<string, unknown>) => <div>{children as React.ReactNode}</div>,
+  DialogTitle: ({ children }: Record<string, unknown>) => <h2>{children as React.ReactNode}</h2>,
 }));
 
+vi.mock('@/components/deals/LossReasonModal', () => ({
+  LossReasonModal: ({ open, onConfirm, onCancel }: Record<string, unknown>) =>
+    (open as boolean) ? (
+      <div data-testid="loss-reason-modal">
+        <button
+          data-testid="confirm-loss"
+          onClick={() => (onConfirm as (r: string) => void)('Lost on price after a long review')}
+        >
+          Confirm Loss
+        </button>
+        <button data-testid="cancel-loss" onClick={() => (onCancel as () => void)()}>
+          Cancel
+        </button>
+      </div>
+    ) : null,
+}));
+
+vi.mock('@/components/deals/DealForm', () => ({
+  DealForm: ({ initialData, onSubmit, onCancel }: Record<string, unknown>) => (
+    <div data-testid="deal-form">
+      <span data-testid="deal-form-name">{(initialData as { name?: string })?.name}</span>
+      <button
+        data-testid="deal-form-submit"
+        onClick={() =>
+          (onSubmit as (d: unknown) => void)({
+            ...(initialData as Record<string, unknown>),
+            name: 'Edited Deal Name',
+          })
+        }
+      >
+        Save Changes
+      </button>
+      <button data-testid="deal-form-cancel" onClick={() => (onCancel as () => void)()}>
+        Cancel
+      </button>
+    </div>
+  ),
+}));
+
+// Plain function (not vi.fn) so vi.clearAllMocks() can't strip the resolved
+// value — the page calls `revalidateDealCaches(...).catch(...)` in onSuccess.
+vi.mock('@/app/deals/actions', () => ({
+  revalidateDealCaches: () => Promise.resolve(),
+}));
+
+type StubAction = {
+  label: string;
+  href?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+};
+
 vi.mock('@/components/shared', () => ({
-  EntityHeader: ({ title, badges }: Record<string, unknown>) => (
+  EntityHeader: ({ title, badges, actions }: Record<string, unknown>) => (
     <div data-testid="entity-header">
       <span data-testid="entity-title">{title as string}</span>
       {(badges as Array<{ label: string }>)?.map((b, i) => (
@@ -159,6 +282,23 @@ vi.mock('@/components/shared', () => ({
           {b.label}
         </span>
       ))}
+      {(actions as StubAction[])?.map((a) =>
+        a.href ? (
+          <a key={a.label} href={a.href} data-testid={`action-${a.label}`}>
+            {a.label}
+          </a>
+        ) : (
+          <button
+            key={a.label}
+            data-testid={`action-${a.label}`}
+            disabled={a.disabled}
+            data-loading={a.loading ? 'true' : 'false'}
+            onClick={a.onClick}
+          >
+            {a.label}
+          </button>
+        )
+      )}
     </div>
   ),
   AppAvatar: ({ name }: Record<string, unknown>) => (
@@ -171,7 +311,15 @@ vi.mock('@/components/shared/activity-feed', () => ({
 }));
 
 vi.mock('@/components/shared/entity-action-sheet', () => ({
-  EntityActionSheet: () => <div data-testid="entity-action-sheet" />,
+  EntityActionSheet: ({ extraActions }: Record<string, unknown>) => (
+    <div data-testid="entity-action-sheet">
+      {(extraActions as Array<{ label: string; onClick: () => void }>)?.map((a) => (
+        <button key={a.label} data-testid={`extra-${a.label}`} onClick={() => a.onClick()}>
+          {a.label}
+        </button>
+      ))}
+    </div>
+  ),
 }));
 
 vi.mock('@/components/shared/more-actions-button', () => ({
@@ -234,6 +382,12 @@ function resetMockData() {
     totalValue: 80000,
   };
   mockProductsQueryState.isLoading = false;
+  mutationPending.moveStage = false;
+  mutationPending.update = false;
+  mutationPending.delete = false;
+  capturedMoveStageConfig = {};
+  capturedUpdateConfig = {};
+  capturedDeleteConfig = {};
 }
 
 describe('DealDetailPage', () => {
@@ -241,6 +395,18 @@ describe('DealDetailPage', () => {
     vi.clearAllMocks();
     resetMockData();
   });
+
+  // IFC-280 — render helper (page is a 'use client' module with module state).
+  async function renderDealPage() {
+    const { default: DealDetailPage } = await import('../page');
+    render(<DealDetailPage />);
+  }
+  function patchDeal(patch: Record<string, unknown>) {
+    mockOpportunityQueryState.data = {
+      ...(mockOpportunityQueryState.data as Record<string, unknown>),
+      ...patch,
+    };
+  }
 
   describe('Auth guard (AC-002)', () => {
     it('does not render deal data when unauthenticated and shows not-found state', async () => {
@@ -455,6 +621,224 @@ describe('DealDetailPage', () => {
       const { default: DealDetailPage } = await import('../page');
       render(<DealDetailPage />);
       expect(screen.getByText('No files yet')).toBeTruthy();
+    });
+  });
+
+  // ── IFC-280 — Action button wiring ─────────────────────────────────────────
+
+  describe('IFC-280 — Won button (AC-001, AC-002, AC-004)', () => {
+    it('Won click calls moveStage with CLOSED_WON', async () => {
+      await renderDealPage();
+      fireEvent.click(screen.getByTestId('action-Won'));
+      expect(mockMoveStage).toHaveBeenCalledWith({ id: 'deal-123', targetStage: 'CLOSED_WON' });
+    });
+
+    it('Won onSuccess invalidates getById and shows a Won toast', async () => {
+      await renderDealPage();
+      capturedMoveStageConfig.onSuccess?.({}, { targetStage: 'CLOSED_WON' });
+      expect(mockInvalidate).toHaveBeenCalledWith({ id: 'deal-123' });
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: expect.stringMatching(/won/i) })
+      );
+    });
+
+    it('moveStage onError surfaces the already-closed message', async () => {
+      await renderDealPage();
+      capturedMoveStageConfig.onError?.({ message: 'Opportunity has already been closed' });
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variant: 'destructive',
+          title: expect.stringMatching(/already been closed/i),
+        })
+      );
+    });
+
+    it('Won is disabled when stage is not NEGOTIATION', async () => {
+      patchDeal({ stage: 'PROPOSAL' });
+      await renderDealPage();
+      expect((screen.getByTestId('action-Won') as HTMLButtonElement).disabled).toBe(true);
+    });
+  });
+
+  describe('IFC-280 — Lost button (AC-003)', () => {
+    it('Lost click opens the LossReasonModal', async () => {
+      await renderDealPage();
+      expect(screen.queryByTestId('loss-reason-modal')).toBeNull();
+      fireEvent.click(screen.getByTestId('action-Lost'));
+      expect(screen.getByTestId('loss-reason-modal')).toBeTruthy();
+    });
+
+    it('cancelling the modal does not call moveStage', async () => {
+      await renderDealPage();
+      fireEvent.click(screen.getByTestId('action-Lost'));
+      fireEvent.click(screen.getByTestId('cancel-loss'));
+      expect(mockMoveStage).not.toHaveBeenCalled();
+    });
+
+    it('confirming with a reason calls moveStage with CLOSED_LOST + reason', async () => {
+      await renderDealPage();
+      fireEvent.click(screen.getByTestId('action-Lost'));
+      fireEvent.click(screen.getByTestId('confirm-loss'));
+      expect(mockMoveStage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'deal-123',
+          targetStage: 'CLOSED_LOST',
+          reason: expect.any(String),
+        })
+      );
+    });
+
+    it('Lost is disabled when the deal is closed', async () => {
+      patchDeal({ isClosed: true });
+      await renderDealPage();
+      expect((screen.getByTestId('action-Lost') as HTMLButtonElement).disabled).toBe(true);
+    });
+  });
+
+  describe('IFC-280 — Delete (AC-005, AC-A11Y-03)', () => {
+    it('Delete extraAction opens the confirmation dialog', async () => {
+      await renderDealPage();
+      expect(screen.queryByTestId('confirm-dialog')).toBeNull();
+      fireEvent.click(screen.getByTestId('extra-Delete'));
+      expect(screen.getByTestId('confirm-dialog')).toBeTruthy();
+    });
+
+    it('Cancel control precedes the destructive Confirm in DOM order (AC-A11Y-03)', async () => {
+      await renderDealPage();
+      fireEvent.click(screen.getByTestId('extra-Delete'));
+      const buttons = screen.getByTestId('confirm-dialog').querySelectorAll('button');
+      expect(buttons[0].getAttribute('data-testid')).toBe('confirm-cancel');
+      expect(buttons[1].getAttribute('data-testid')).toBe('confirm-delete');
+    });
+
+    it('confirming Delete calls delete mutateAsync', async () => {
+      await renderDealPage();
+      fireEvent.click(screen.getByTestId('extra-Delete'));
+      fireEvent.click(screen.getByTestId('confirm-delete'));
+      expect(mockDeleteAsync).toHaveBeenCalledWith({ id: 'deal-123' });
+    });
+
+    it('delete onSuccess toasts and navigates to /deals', async () => {
+      await renderDealPage();
+      capturedDeleteConfig.onSuccess?.();
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: expect.stringMatching(/trash|deleted/i) })
+      );
+      expect(mockPush).toHaveBeenCalledWith('/deals');
+    });
+
+    it('delete onError shows a destructive toast', async () => {
+      await renderDealPage();
+      capturedDeleteConfig.onError?.();
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
+    });
+  });
+
+  describe('IFC-280 — Edit dialog (AC-006)', () => {
+    it('Edit click opens the DealForm dialog pre-populated', async () => {
+      await renderDealPage();
+      expect(screen.queryByTestId('edit-dialog')).toBeNull();
+      fireEvent.click(screen.getByTestId('action-Edit'));
+      expect(screen.getByTestId('edit-dialog')).toBeTruthy();
+      expect(screen.getByTestId('deal-form-name').textContent).toBe('Test Deal Wire');
+    });
+
+    it('submitting the form calls update with the id and only the changed field (dirty diff)', async () => {
+      await renderDealPage();
+      fireEvent.click(screen.getByTestId('action-Edit'));
+      fireEvent.click(screen.getByTestId('deal-form-submit'));
+      // The stub changes only `name`; the dirty diff must send id + name and omit
+      // the unchanged closed-guardable fields (value/stage/probability/date).
+      expect(mockUpdate).toHaveBeenCalledWith({ id: 'deal-123', name: 'Edited Deal Name' });
+    });
+
+    it('update onSuccess invalidates getById and toasts', async () => {
+      await renderDealPage();
+      capturedUpdateConfig.onSuccess?.();
+      expect(mockInvalidate).toHaveBeenCalledWith({ id: 'deal-123' });
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: expect.stringMatching(/updated/i) })
+      );
+    });
+
+    it('update onError shows a destructive toast', async () => {
+      await renderDealPage();
+      capturedUpdateConfig.onError?.();
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
+    });
+  });
+
+  describe('IFC-280 — Stakeholders Edit (AC-007)', () => {
+    it('Stakeholders Edit button opens the edit dialog', async () => {
+      await renderDealPage();
+      fireEvent.click(screen.getByLabelText('Edit stakeholders'));
+      expect(screen.getByTestId('edit-dialog')).toBeTruthy();
+    });
+  });
+
+  describe('IFC-280 — Coming-soon toasts (AC-009)', () => {
+    it('Clone Deal shows a coming-soon toast', async () => {
+      await renderDealPage();
+      fireEvent.click(screen.getByTestId('extra-Clone Deal'));
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Coming soon' }));
+    });
+
+    it('Archive shows a coming-soon toast', async () => {
+      await renderDealPage();
+      fireEvent.click(screen.getByTestId('extra-Archive'));
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Coming soon' }));
+    });
+
+    it('Add Product shows a coming-soon toast', async () => {
+      await renderDealPage();
+      fireEvent.click(screen.getByLabelText('Add product'));
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Coming soon' }));
+    });
+
+    it('File upload shows a coming-soon toast', async () => {
+      await renderDealPage();
+      fireEvent.click(screen.getByLabelText('Upload file'));
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Coming soon' }));
+    });
+  });
+
+  describe('IFC-280 — a11y attributes (AC-A11Y-01)', () => {
+    it('Stakeholders Edit button has type=button + aria-label', async () => {
+      await renderDealPage();
+      expect((screen.getByLabelText('Edit stakeholders') as HTMLButtonElement).type).toBe('button');
+    });
+
+    it('Add Product button has type=button + aria-label', async () => {
+      await renderDealPage();
+      expect((screen.getByLabelText('Add product') as HTMLButtonElement).type).toBe('button');
+    });
+
+    it('File upload button has type=button + aria-label', async () => {
+      await renderDealPage();
+      expect((screen.getByLabelText('Upload file') as HTMLButtonElement).type).toBe('button');
+    });
+  });
+
+  describe('IFC-280 — loading states (AC-010)', () => {
+    it('Won shows loading only on the active button after click', async () => {
+      mutationPending.moveStage = true;
+      await renderDealPage();
+      fireEvent.click(screen.getByTestId('action-Won'));
+      expect(screen.getByTestId('action-Won').getAttribute('data-loading')).toBe('true');
+      expect(screen.getByTestId('action-Lost').getAttribute('data-loading')).toBe('false');
+    });
+
+    it('Edit shows loading while update is pending', async () => {
+      mutationPending.update = true;
+      await renderDealPage();
+      expect(screen.getByTestId('action-Edit').getAttribute('data-loading')).toBe('true');
+    });
+
+    it('Delete confirm is disabled while delete is pending', async () => {
+      mutationPending.delete = true;
+      await renderDealPage();
+      fireEvent.click(screen.getByTestId('extra-Delete'));
+      expect((screen.getByTestId('confirm-delete') as HTMLButtonElement).disabled).toBe(true);
     });
   });
 });
