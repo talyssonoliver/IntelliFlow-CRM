@@ -305,6 +305,29 @@ describe('OpportunityService (additional coverage)', () => {
       expect(reloaded?.name).toBe('New Name');
     });
 
+    // IFC-280: description updates were silently dropped (omitted from the
+    // updateOpportunity data param, the same gap pattern as IFC-282 B-04 name).
+    it('should persist a description update', async () => {
+      const opp = Opportunity.create({
+        name: 'Desc Test',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { description: 'A freshly edited deal description' },
+        'updater'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.description).toBe('A freshly edited deal description');
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.description).toBe('A freshly edited deal description');
+    });
+
     it('should fail an update with an empty name', async () => {
       const opp = Opportunity.create({
         name: 'Keep Name',

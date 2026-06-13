@@ -318,6 +318,14 @@ Deal Detail Page (IFC-278 ✅):
   StakeholdersCard → Link to /accounts/[accountId], /contacts/[contactId]
   useRequireAuth() guard, loading skeleton, error state
 
+Deal Detail Page actions (IFC-280 ✅):
+  Won → api.opportunity.moveStage (CLOSED_WON; disabled unless stage=NEGOTIATION)
+  Lost → LossReasonModal → api.opportunity.moveStage (CLOSED_LOST + reason >=10)
+  Delete → ConfirmationDialog → api.opportunity.delete (soft-delete) → router.push('/deals')
+  Edit + Stakeholders Edit → DealForm-in-Dialog → api.opportunity.update
+    (IFC-280 threaded `description` through OpportunityService.updateOpportunity)
+  Clone / Archive / Add Product / File upload → "Coming soon" toast (deferred; tracked follow-ups)
+
 Deals Trash Page (PG-175 ✅):
   /deals/trash (page.tsx) → TrashList → trpc.opportunity.listTrashed (query)
   Restore: trpc.opportunity.restore → OpportunityService.restoreOpportunity()

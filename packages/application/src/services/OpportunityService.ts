@@ -339,6 +339,7 @@ export class OpportunityService {
       probability?: number;
       stage?: OpportunityStage;
       expectedCloseDate?: Date | null;
+      description?: string;
       accountId?: string;
       contactId?: string | null;
     },
@@ -362,6 +363,13 @@ export class OpportunityService {
     if (data.name !== undefined) {
       const nameResult = opportunity.updateName(data.name, updatedBy);
       if (nameResult.isFailure) return Result.fail(nameResult.error);
+    }
+
+    // IFC-280: description was silently dropped (omitted from the data param,
+    // like the IFC-282 B-04 name gap). Thread it through so the Edit dialog's
+    // description field actually persists instead of faking a save.
+    if (data.description !== undefined) {
+      opportunity.updateDescription(data.description);
     }
 
     const updateError = this.applyScalarUpdates(opportunity, data, updatedBy);

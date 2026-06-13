@@ -6,7 +6,7 @@
  */
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +32,16 @@ export const LossReasonModal = React.memo(function LossReasonModal({
   dealName,
 }: Readonly<LossReasonModalProps>) {
   const [reason, setReason] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Move focus to the reason input when the modal opens (AC-A11Y-02) — done via
+  // ref/effect rather than the autoFocus prop (lint-policy + avoids the close
+  // button stealing first focus). Lands on the sole meaningful control.
+  useEffect(() => {
+    if (open) {
+      textareaRef.current?.focus();
+    }
+  }, [open]);
 
   const isValid = reason.trim().length >= MIN_REASON_LENGTH;
 
@@ -59,14 +69,21 @@ export const LossReasonModal = React.memo(function LossReasonModal({
         </DialogHeader>
 
         <div className="py-4">
+          <label
+            htmlFor="loss-reason-input"
+            className="mb-1.5 block text-sm font-medium text-foreground"
+          >
+            Loss reason
+          </label>
           <textarea
+            id="loss-reason-input"
+            ref={textareaRef}
             className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             placeholder="Enter the reason for losing this deal (minimum 10 characters)..."
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            aria-label="Loss reason"
           />
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-muted-foreground" aria-live="polite" aria-atomic="true">
             {reason.trim().length}/{MIN_REASON_LENGTH} characters minimum
           </p>
         </div>
