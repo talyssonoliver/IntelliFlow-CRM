@@ -310,9 +310,15 @@ export class OpportunityService {
     opportunity: Opportunity,
     data: { accountId?: string; contactId?: string | null }
   ): Promise<DomainError | null> {
-    if (data.contactId) {
-      const effectiveAccountId = data.accountId ?? opportunity.accountId;
-      const contactIdResult = ContactId.create(data.contactId);
+    const effectiveAccountId = data.accountId ?? opportunity.accountId;
+    // The contact that will be attached after this update: an explicit change
+    // wins, otherwise the deal's current contact. Validating the EFFECTIVE pair
+    // also catches re-assigning the account while an incompatible contact stays
+    // attached (account-only change must not leave a stale cross-account contact).
+    const effectiveContactId =
+      data.contactId !== undefined ? data.contactId : (opportunity.contactId ?? null);
+    if (effectiveContactId) {
+      const contactIdResult = ContactId.create(effectiveContactId);
       if (contactIdResult.isFailure) return contactIdResult.error;
       const contact = await this.contactRepository.findById(contactIdResult.value);
       if (contact && contact.accountId !== effectiveAccountId) {
@@ -345,13 +351,16 @@ export class OpportunityService {
     const valueError = this.applyValueUpdate(opportunity, data.value, updatedBy);
     if (valueError) return valueError;
 
-    const probError = this.applyProbabilityUpdate(opportunity, data.probability, updatedBy);
-    if (probError) return probError;
-
+    // IFC-280: apply stage BEFORE probability. changeStage resets probability to
+    // the stage default, so applying an explicit probability afterwards lets a
+    // user-supplied probability override the default rather than be overwritten.
     if (data.stage !== undefined) {
       const stageError = this.applyStageChange(opportunity, data.stage, updatedBy);
       if (stageError) return stageError;
     }
+
+    const probError = this.applyProbabilityUpdate(opportunity, data.probability, updatedBy);
+    if (probError) return probError;
 
     return this.applyExpectedCloseDateUpdate(opportunity, data.expectedCloseDate, updatedBy);
   }

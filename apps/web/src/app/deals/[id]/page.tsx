@@ -570,20 +570,39 @@ export default function DealDetailPage() {
   };
 
   const handleEditSubmit = (data: DealFormData) => {
-    updateMutation.mutate({
-      id: dealId,
-      name: data.name.trim(),
-      value: { amount: data.value.amount, currency: data.value.currency },
-      stage: data.stage,
-      probability: data.probability,
-      expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : undefined,
-      accountId: data.accountId,
-      contactId: data.contactId || null,
-      // Send the trimmed value (incl. '') so clearing the description persists;
-      // the service threads it through (IFC-280). expectedCloseDate clearing is a
-      // tracked follow-up — the domain has no clear path — so empty stays "no change".
-      description: data.description.trim(),
-    });
+    // Send only changed fields (dirty diff). value/probability/stage/date are
+    // closed-guarded in the domain, so submitting them unchanged on a closed deal
+    // would reject the whole update before the allowed clerical edits (name,
+    // description, account, contact) persist. Omitting unchanged fields avoids that.
+    const payload: {
+      id: string;
+      name?: string;
+      value?: { amount: number; currency: string };
+      stage?: OpportunityStage;
+      probability?: number;
+      expectedCloseDate?: Date;
+      accountId?: string;
+      contactId?: string | null;
+      description?: string;
+    } = { id: dealId };
+
+    if (data.name.trim() !== d.name) payload.name = data.name.trim();
+    if (data.value.amount !== d.value) {
+      payload.value = { amount: data.value.amount, currency: data.value.currency };
+    }
+    if (data.stage !== stage) payload.stage = data.stage;
+    if (data.probability !== d.probability) payload.probability = data.probability;
+    // expectedCloseDate: only send a real (set) date that changed. Clearing an
+    // existing date is a tracked follow-up (the domain has no clear path), so an
+    // emptied date is treated as "no change" rather than a silently-dropped clear.
+    if (data.expectedCloseDate && data.expectedCloseDate !== editInitialData.expectedCloseDate) {
+      payload.expectedCloseDate = new Date(data.expectedCloseDate);
+    }
+    if (data.accountId !== d.accountId) payload.accountId = data.accountId;
+    if ((data.contactId || '') !== (d.contactId ?? '')) payload.contactId = data.contactId || null;
+    if (data.description !== (d.description ?? '')) payload.description = data.description.trim();
+
+    updateMutation.mutate(payload);
   };
 
   return (

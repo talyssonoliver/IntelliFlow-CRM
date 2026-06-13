@@ -435,6 +435,62 @@ describe('OpportunityService (additional coverage)', () => {
       expect(reloaded?.contactId).toBeUndefined();
     });
 
+    // IFC-280 F-A: re-assigning only the account must not strand a now-incompatible
+    // existing contact (validate the EFFECTIVE pair, not just an explicit contact).
+    it('should reject an account-only re-assignment that strands an incompatible contact', async () => {
+      const account2 = Account.create({ name: 'Strand Account', ownerId: 'owner-1' } as any).value;
+      await accountRepository.save(account2);
+      const contact = Contact.create({
+        email: 'strand@test.com',
+        firstName: 'Str',
+        lastName: 'And',
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      } as any).value;
+      await contactRepository.save(contact);
+      const opp = Opportunity.create({
+        name: 'Strand',
+        value: 50000,
+        accountId: testAccount.id.value,
+        contactId: contact.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { accountId: account2.id.value },
+        'updater'
+      );
+
+      expect(result.isFailure).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.accountId).toBe(testAccount.id.value);
+    });
+
+    // IFC-280 F-C: stage is applied before probability so an explicit probability
+    // overrides the stage default instead of being reset by changeStage.
+    it('preserves an explicit probability when stage and probability change together', async () => {
+      const opp = Opportunity.create({
+        name: 'Stage+Prob',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { stage: 'QUALIFICATION', probability: 25 },
+        'updater'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.stage).toBe('QUALIFICATION');
+      expect(reloaded?.probability.value).toBe(25);
+    });
+
     it('should fail an update with an empty name', async () => {
       const opp = Opportunity.create({
         name: 'Keep Name',

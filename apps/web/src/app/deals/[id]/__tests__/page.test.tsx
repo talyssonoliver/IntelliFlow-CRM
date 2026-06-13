@@ -243,7 +243,12 @@ vi.mock('@/components/deals/DealForm', () => ({
       <span data-testid="deal-form-name">{(initialData as { name?: string })?.name}</span>
       <button
         data-testid="deal-form-submit"
-        onClick={() => (onSubmit as (d: unknown) => void)(initialData)}
+        onClick={() =>
+          (onSubmit as (d: unknown) => void)({
+            ...(initialData as Record<string, unknown>),
+            name: 'Edited Deal Name',
+          })
+        }
       >
         Save Changes
       </button>
@@ -738,13 +743,13 @@ describe('DealDetailPage', () => {
       expect(screen.getByTestId('deal-form-name').textContent).toBe('Test Deal Wire');
     });
 
-    it('submitting the form calls update with the deal id and description', async () => {
+    it('submitting the form calls update with the id and only the changed field (dirty diff)', async () => {
       await renderDealPage();
       fireEvent.click(screen.getByTestId('action-Edit'));
       fireEvent.click(screen.getByTestId('deal-form-submit'));
-      expect(mockUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'deal-123', description: 'A real wired deal' })
-      );
+      // The stub changes only `name`; the dirty diff must send id + name and omit
+      // the unchanged closed-guardable fields (value/stage/probability/date).
+      expect(mockUpdate).toHaveBeenCalledWith({ id: 'deal-123', name: 'Edited Deal Name' });
     });
 
     it('update onSuccess invalidates getById and toasts', async () => {
