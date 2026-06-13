@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-23T14:16:07.458Z",
+  "generatedAt": "2026-06-13T12:59:30.016Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -329,9 +329,19 @@
       ".specify/sprints/sprint-18/attestations/IFC-078/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-227/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-256/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-257/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-270/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-271/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-273/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-282/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-311/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-059/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-060/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-061/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-062/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-132/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-180/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-187/attestation.json",
@@ -467,14 +477,14 @@
   "overview": {
     "numberedSprintCount": 30,
     "numberedSprintRange": "0-29",
-    "totalTasks": 590,
-    "totalNumberedSprintTasks": 585,
+    "totalTasks": 596,
+    "totalNumberedSprintTasks": 591,
     "continuousTaskCount": 5,
-    "completedTasks": 393,
-    "backlogTasks": 197,
+    "completedTasks": 400,
+    "backlogTasks": 195,
     "blockedTasks": 0,
-    "completionPercentage": 66.61,
-    "inProgressTasks": 0,
+    "completionPercentage": 67.11,
+    "inProgressTasks": 1,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -487,6 +497,24 @@
         "status": "Backlog",
         "sprint": 18,
         "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json"
+      },
+      {
+        "taskId": "IFC-257",
+        "status": "In Progress",
+        "sprint": 18,
+        "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-257/attestation.json"
+      },
+      {
+        "taskId": "IFC-271",
+        "status": "Backlog",
+        "sprint": 18,
+        "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-271/attestation.json"
+      },
+      {
+        "taskId": "IFC-314",
+        "status": "Backlog",
+        "sprint": 18,
+        "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json"
       }
     ],
     "duplicateCanonicalAttestations": [],
@@ -13393,8 +13421,8 @@
           "sprint": 14,
           "status": "Completed",
           "section": "Notifications",
-          "title": "Wire actual Email Outbound Adapter (Resolves R-018)",
-          "description": "Wire actual Email Outbound Adapter (Resolves R-018)",
+          "title": "Wire actual Email Outbound Adapter (Resolves R-018) [2026-06-09 audit: shipped as Completed but was MOCK in prod — container.ts had no resend branch; actually wired to Resend via #363/#360 + activated on Railway api service]",
+          "description": "Wire actual Email Outbound Adapter (Resolves R-018) [2026-06-09 audit: shipped as Completed but was MOCK in prod — container.ts had no resend branch; actually wired to Resend via #363/#360 + activated on Railway api service]",
           "summary": "IFC-223: Wired email outbound adapter. Created RealNotificationServiceAdapter bridging NotificationServicePort to EmailServiceAdapter. Hardened SendGridProvider with API key validation (SG.... Email outbound connects to real SMTP/API provider",
           "definitionOfDone": "Email outbound connects to real SMTP/API provider; verified by: pnpm test",
           "definitionOfDoneSnapshot": "Email outbound connects to real SMTP/API provider",
@@ -17438,14 +17466,14 @@
       "sprint": 18,
       "name": "Sprint 18",
       "summarySource": "specify",
-      "totalTasks": 60,
-      "completedTasks": 11,
-      "backlogTasks": 49,
+      "totalTasks": 66,
+      "completedTasks": 18,
+      "backlogTasks": 47,
       "blockedTasks": 0,
-      "inProgressTasks": 0,
-      "attestedCompletedTasks": 11,
+      "inProgressTasks": 1,
+      "attestedCompletedTasks": 18,
       "missingCompletedAttestations": [],
-      "context": "Primary focus areas: Core CRM (27), Settings (19), AI/ML (3).",
+      "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
       "notableCompleted": [
         {
           "taskId": "IFC-070",
@@ -17612,6 +17640,36 @@
       ],
       "openTasks": [
         {
+          "taskId": "IFC-257",
+          "sprint": 18,
+          "status": "In Progress",
+          "section": "Core CRM",
+          "title": "Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.",
+          "description": "Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.",
+          "summary": "IFC-257 — Contact Detail action-button wiring (audit F-04/F-05/F-06/F-23). The 2026-03-05 audit was STALE:... Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation",
+          "definitionOfDone": "Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation; Add Deal navigates to deals/new; activity action buttons functional or removed; tests >=90%",
+          "definitionOfDoneSnapshot": "Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation",
+          "dependencies": [],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-257/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-13T02:01:46.000Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 2,
+            "met": 2,
+            "missed": 0
+          }
+        },
+        {
           "taskId": "IFC-032",
           "sprint": 18,
           "status": "Backlog",
@@ -17678,15 +17736,15 @@
           }
         },
         {
-          "taskId": "PG-060",
+          "taskId": "PG-063",
           "sprint": 18,
           "status": "Backlog",
           "section": "Core CRM",
-          "title": "New Lead",
-          "description": "New Lead",
-          "summary": "response under 200ms, Lighthouse 90, leads created",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, leads created; artifacts: page.tsx, lead-enrichment.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, leads created",
+          "title": "Import Leads",
+          "description": "Import Leads",
+          "summary": "response under 200ms, Lighthouse 90, imports processed",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports processed; artifacts: page.tsx, csv-importer.tsx, field-mapper.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports processed",
           "dependencies": [
             "PG-059"
           ],
@@ -17710,49 +17768,19 @@
           }
         },
         {
-          "taskId": "PG-061",
+          "taskId": "DOC-015",
           "sprint": 18,
           "status": "Backlog",
-          "section": "Core CRM",
-          "title": "Lead Detail",
-          "description": "Lead Detail",
-          "summary": "response under 200ms, Lighthouse 90, details complete",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, details complete; artifacts: page.tsx, lead-detail.tsx, lead-timeline.tsx",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, details complete",
+          "section": "Documentation",
+          "title": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
+          "description": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
+          "summary": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
+          "definitionOfDone": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-architecture.md, and content-audit.md; stale references (68/101/103/118 mismatches) are removed or explicitly reconciled; each updated doc includes canonical counting rule and verification timestamp; verified by: npx tsx tools/scripts/content-audit.ts && pnpm lint",
+          "definitionOfDoneSnapshot": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
           "dependencies": [
-            "PG-059"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "PG-062",
-          "sprint": 18,
-          "status": "Backlog",
-          "section": "Core CRM",
-          "title": "Edit Lead",
-          "description": "Edit Lead",
-          "summary": "response under 200ms, Lighthouse 90, updates saved",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, updates saved; artifacts: page.tsx, lead-editor.tsx, change-tracker.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, updates saved",
-          "dependencies": [
-            "PG-061"
+            "DOC-014",
+            "IFC-209",
+            "IFC-210"
           ],
           "attestation": {
             "exists": false,
@@ -17778,14 +17806,20 @@
         {
           "section": "Core CRM",
           "total": 27,
-          "completed": 4,
-          "open": 23
+          "completed": 11,
+          "open": 16
         },
         {
           "section": "Settings",
           "total": 19,
           "completed": 3,
           "open": 16
+        },
+        {
+          "section": "Infrastructure",
+          "total": 6,
+          "completed": 0,
+          "open": 6
         },
         {
           "section": "AI/ML",
@@ -17818,7 +17852,7 @@
           "open": 1
         },
         {
-          "section": "Infrastructure",
+          "section": "Integration",
           "total": 1,
           "completed": 0,
           "open": 1
@@ -18008,96 +18042,96 @@
         {
           "taskId": "PG-060",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "New Lead",
           "description": "New Lead",
-          "summary": "response under 200ms, Lighthouse 90, leads created",
+          "summary": "Scope: web-layer only. lead-enrichment.ts is a new pure module imported by the New Lead page (Gate 2b import-reachability PASS). 'assignment automated' = existing ownerId=creator (no routing engine in scope).......",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, leads created; artifacts: page.tsx, lead-enrichment.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, leads created",
+          "definitionOfDoneSnapshot": "Artifact apps/web/src/app/leads/(list)/new/page.tsx exists and creates leads via api.lead.create; Artifact apps/web/src/lib/leads/lead-enrichment.ts exists (enrichment working — derives website/company from email domain, non-destructive);...",
           "dependencies": [
             "PG-059"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-060/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-11T20:04:21Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
         {
           "taskId": "PG-061",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Lead Detail",
           "description": "Lead Detail",
-          "summary": "response under 200ms, Lighthouse 90, details complete",
+          "summary": "Scope: web-layer only — behaviour-preserving extraction, no backend/domain/schema change. Strategy mirrors PG-059 (1,105 LOC extracted, byte-for-byte preserved, validated by existing regression suites + focused smoke tests).......",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, details complete; artifacts: page.tsx, lead-detail.tsx, lead-timeline.tsx",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, details complete",
+          "definitionOfDoneSnapshot": "Artifact components/leads/lead-detail.tsx exists (LeadDetail — details shown); Artifact components/leads/lead-timeline.tsx exists (LeadTimeline — timeline displayed); Actions available (convert/edit/delete/archive/log)...",
           "dependencies": [
             "PG-059"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-061/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-13T00:40:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 3,
             "missed": 0
           }
         },
         {
           "taskId": "PG-062",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Edit Lead",
           "description": "Edit Lead",
-          "summary": "response under 200ms, Lighthouse 90, updates saved",
+          "summary": "Scope: web-layer only — behaviour-preserving extraction, no backend/domain/schema change. Strategy mirrors PG-059/PG-061. Plan-reviewer subagent (adcafe3c) returned CHANGES_REQUIRED and all findings were resolved:......",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, updates saved; artifacts: page.tsx, lead-editor.tsx, change-tracker.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, updates saved",
+          "definitionOfDoneSnapshot": "Artifact components/leads/lead-editor.tsx exists (LeadEditor — edits working); Artifact lib/leads/change-tracker.ts exists (changes tracked — changeset + minimal patch);...",
           "dependencies": [
             "PG-061"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-062/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-13T09:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 3,
             "missed": 0
           }
         },
@@ -18610,60 +18644,60 @@
         {
           "taskId": "IFC-256",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Contact Detail Hardcoded Tabs — Tickets & Documents. (1) Tickets tab fully hardcoded with 'TKT-1234' and static timestamp (F-02, F-21). ContactWithRelations has no tickets relation. Tab badge hardcoded to 0. (2) Documents tab hardcoded with 2 static PDFs — apiContact.documents data exists in interface but is completely ignored (F-03). Need: wire tickets via TicketService query, wire documents from apiContact.documents or file infrastructure. Audit: docs/audit/contact-detail-wiring-audit.md §5,§9,§16.",
           "description": "Contact Detail Hardcoded Tabs — Tickets & Documents. (1) Tickets tab fully hardcoded with 'TKT-1234' and static timestamp (F-02, F-21). ContactWithRelations has no tickets relation. Tab badge hardcoded to 0. (2) Documents tab hardcoded with 2 static PDFs — apiContact.documents data exists in interface but is completely ignored (F-03). Need: wire tickets via TicketService query, wire documents from apiContact.documents or file infrastructure. Audit: docs/audit/contact-detail-wiring-audit.md §5,§9,§16.",
-          "summary": "Tickets tab shows real data from API (or proper empty state); Documents tab renders apiContact.documents; tab badges dynamic; no hardcoded data; tests >=90%",
+          "summary": "IFC-256 — Contact Detail hardcoded Tickets & Documents tabs replaced with real tRPC/API data (resolves audit findings F-02, F-03, F-21). Backend:... Tickets tab shows real data from API (or proper empty state);...",
           "definitionOfDone": "Tickets tab shows real data from API (or proper empty state); Documents tab renders apiContact.documents; tab badges dynamic; no hardcoded data; tests >=90%",
-          "definitionOfDoneSnapshot": "Tickets tab shows real data from API (or proper empty state); Documents tab renders apiContact.documents; tab badges dynamic; no hardcoded data; tests >=90%",
+          "definitionOfDoneSnapshot": "Tickets tab shows real data from API (or proper empty state); Documents tab renders the contact's real documents; Tab badges dynamic",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-256/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-11T18:00:00.000Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
         {
           "taskId": "IFC-257",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "In Progress",
           "section": "Core CRM",
           "title": "Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.",
           "description": "Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.",
-          "summary": "Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation; Add Deal navigates to deals/new; activity action buttons functional or removed; tests >=90%",
+          "summary": "IFC-257 — Contact Detail action-button wiring (audit F-04/F-05/F-06/F-23). The 2026-03-05 audit was STALE:... Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation",
           "definitionOfDone": "Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation; Add Deal navigates to deals/new; activity action buttons functional or removed; tests >=90%",
-          "definitionOfDoneSnapshot": "Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation; Add Deal navigates to deals/new; activity action buttons functional or removed; tests >=90%",
+          "definitionOfDoneSnapshot": "Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-257/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-13T02:01:46.000Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
@@ -18730,30 +18764,30 @@
         {
           "taskId": "IFC-270",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Account Router Missing Procedures & Update Fix. (1) Update procedure silently drops revenue/employees/industry/parentAccountId fields accepted by schema (B-08). (2) accountListResponseSchema uses 'data' key but router returns 'accounts' — mismatch (B-09). (3) No updateRevenue procedure — domain Account.updateRevenue() unreachable via API (B-10). (4) No updateEmployeeCount procedure (B-11). (5) No categorizeIndustry procedure (B-12). (6) mapAccountToResponse returns raw WebsiteUrl value object instead of string (B-13). Audit: docs/audit/account-detail-wiring-audit.md section 12.",
           "description": "Account Router Missing Procedures & Update Fix. (1) Update procedure silently drops revenue/employees/industry/parentAccountId fields accepted by schema (B-08). (2) accountListResponseSchema uses 'data' key but router returns 'accounts' — mismatch (B-09). (3) No updateRevenue procedure — domain Account.updateRevenue() unreachable via API (B-10). (4) No updateEmployeeCount procedure (B-11). (5) No categorizeIndustry procedure (B-12). (6) mapAccountToResponse returns raw WebsiteUrl value object instead of string (B-13). Audit: docs/audit/account-detail-wiring-audit.md section 12.",
-          "summary": "Update procedure passes all accepted fields to service; schema key matches router response; updateRevenue/updateEmployeeCount/categorizeIndustry procedures added; WebsiteUrl serialized to string; tests >=90%",
+          "summary": "IFC-270 Account Router Missing Procedures & Update Fix — remediates docs/audit/account-detail-wiring-audit.md section 12 (B-08..B-13) on a worktree branched from origin/main@c8065198b. B-08:... Update procedure passes all accepted fields to service;...",
           "definitionOfDone": "Update procedure passes all accepted fields to service; schema key matches router response; updateRevenue/updateEmployeeCount/categorizeIndustry procedures added; WebsiteUrl serialized to string; tests >=90%",
-          "definitionOfDoneSnapshot": "Update procedure passes all accepted fields to service; schema key matches router response; updateRevenue/updateEmployeeCount/categorizeIndustry procedures added; WebsiteUrl serialized to string; tests >=90%",
+          "definitionOfDoneSnapshot": "Update procedure passes all accepted fields to service; Schema key matches router response; updateRevenue/updateEmployeeCount/categorizeIndustry procedures added",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-270/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-13T01:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
@@ -18764,56 +18798,56 @@
           "section": "Core CRM",
           "title": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
           "description": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
-          "summary": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated; non-null assertion replaced with proper null check; tests >=90%",
+          "summary": "IFC-271 Account Domain Model Fixes — remediates four findings from docs/audit/account-detail-wiring-audit.md sections 11-13 (D-01, B-15, B-16, B-06) on a worktree branched from origin/main@d8d154230. D-01 (AccountDeletedEvent):......",
           "definitionOfDone": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated; non-null assertion replaced with proper null check; tests >=90%",
-          "definitionOfDoneSnapshot": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated; non-null assertion replaced with proper null check; tests >=90%",
+          "definitionOfDoneSnapshot": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-271/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-10T22:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
         {
           "taskId": "IFC-273",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Account List Page Type Safety & Filter Enums. (1) serverStats cast to any loses type safety (L-01, AccountsPageClient.tsx:154). (2) Double unsafe cast for withOpportunities stat (L-02, AccountsPageClient.tsx:206-208). (3) AccountTier type and getAccountTier() duplicated locally in AccountCard.tsx instead of using domain enum (L-04). (4) Contact status filter uses hardcoded inline option values instead of ContactStatus domain enum (F-09, AccountContactsList.tsx:81-83). (5) Opportunity stage filter uses hardcoded inline strings instead of OpportunityStage domain enum (F-12, AccountOpportunitiesList.tsx:109-114). Audit: docs/audit/account-detail-wiring-audit.md sections 4-5, 15.",
           "description": "Account List Page Type Safety & Filter Enums. (1) serverStats cast to any loses type safety (L-01, AccountsPageClient.tsx:154). (2) Double unsafe cast for withOpportunities stat (L-02, AccountsPageClient.tsx:206-208). (3) AccountTier type and getAccountTier() duplicated locally in AccountCard.tsx instead of using domain enum (L-04). (4) Contact status filter uses hardcoded inline option values instead of ContactStatus domain enum (F-09, AccountContactsList.tsx:81-83). (5) Opportunity stage filter uses hardcoded inline strings instead of OpportunityStage domain enum (F-12, AccountOpportunitiesList.tsx:109-114). Audit: docs/audit/account-detail-wiring-audit.md sections 4-5, 15.",
-          "summary": "Stats query properly typed without any cast; AccountTier uses domain enum; filter dropdowns derive options from domain enums; tests >=90%",
+          "summary": "Compliance-check: PASS — no PII/secret/data-retention surface; pure type-safety + DRY-enum + UI filter change, no schema/migration/auth touch. Work is committed (95251e308, 0eccc846a) and pushed to origin/feat/ifc-273;......",
           "definitionOfDone": "Stats query properly typed without any cast; AccountTier uses domain enum; filter dropdowns derive options from domain enums; tests >=90%",
           "definitionOfDoneSnapshot": "Stats query properly typed without any cast; AccountTier uses domain enum; filter dropdowns derive options from domain enums; tests >=90%",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-273/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-13T10:50:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 3,
+            "met": 3,
             "missed": 0
           }
         },
@@ -18852,30 +18886,30 @@
         {
           "taskId": "IFC-282",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Deal Router Correctness Fixes. (1) Name updates silently dropped — service has TODO 'Add updateName method' (B-04, OpportunityService.ts:313). Add updateName to domain and wire in service. (2) data.probability?.value unwrapping may be undefined if percentageSchema returns plain number (B-05, router:460). Verify and fix. (3) opportunityListResponseSchema key 'data' vs router key 'opportunities' mismatch (B-07, validators:88 vs router:437). (4) throwOpportunityCreateError maps VALIDATION_ERROR to NOT_FOUND — wrong HTTP semantic (B-09, router:55). (5) validateStageDeactivation throws plain Error → 500 instead of BAD_REQUEST (B-10, validators:214). (6) mapOpportunityToResponse drops closedAt field (B-11, mappers.ts:88-108). (7) CLOSED_LOST no-reason passes Zod but fails at service (B-12, router:322). Audit: docs/audit/deal-detail-wiring-audit.md section 6.",
           "description": "Deal Router Correctness Fixes. (1) Name updates silently dropped — service has TODO 'Add updateName method' (B-04, OpportunityService.ts:313). Add updateName to domain and wire in service. (2) data.probability?.value unwrapping may be undefined if percentageSchema returns plain number (B-05, router:460). Verify and fix. (3) opportunityListResponseSchema key 'data' vs router key 'opportunities' mismatch (B-07, validators:88 vs router:437). (4) throwOpportunityCreateError maps VALIDATION_ERROR to NOT_FOUND — wrong HTTP semantic (B-09, router:55). (5) validateStageDeactivation throws plain Error → 500 instead of BAD_REQUEST (B-10, validators:214). (6) mapOpportunityToResponse drops closedAt field (B-11, mappers.ts:88-108). (7) CLOSED_LOST no-reason passes Zod but fails at service (B-12, router:322). Audit: docs/audit/deal-detail-wiring-audit.md section 6.",
-          "summary": "Name updates persisted; probability correctly unwrapped; schema key matches router; VALIDATION_ERROR → BAD_REQUEST; validateStageDeactivation throws TRPCError; closedAt included in response; CLOSED_LOST reason properly validated;...",
+          "summary": "IFC-282 Deal Router Correctness Fixes — remediates docs/audit/deal-detail-wiring-audit.md section 6 (B-04, B-05, B-07, B-09, B-10, B-11, B-12;... Name updates persisted; probability correctly unwrapped (verified); schema key matches router response",
           "definitionOfDone": "Name updates persisted; probability correctly unwrapped; schema key matches router; VALIDATION_ERROR → BAD_REQUEST; validateStageDeactivation throws TRPCError; closedAt included in response; CLOSED_LOST reason properly validated; tests >=90%",
-          "definitionOfDoneSnapshot": "Name updates persisted; probability correctly unwrapped; schema key matches router; VALIDATION_ERROR → BAD_REQUEST; validateStageDeactivation throws TRPCError; closedAt included in response; CLOSED_LOST reason properly validated;...",
+          "definitionOfDoneSnapshot": "Name updates persisted; probability correctly unwrapped (verified); schema key matches router response",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-282/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-13T10:00:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
@@ -19759,6 +19793,195 @@
           "kpiSummary": {
             "total": 0,
             "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "INFRA-TF-001",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Infrastructure",
+          "title": "Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deployment->railway_service source_image, default_environment object, and Vercel env->vercel_project_environment_variable / vercel_webhook / edge-config to the current provider schemas.",
+          "description": "Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deployment->railway_service source_image, default_environment object, and Vercel env->vercel_project_environment_variable / vercel_webhook / edge-config to the current provider schemas.",
+          "summary": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
+          "definitionOfDone": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
+          "definitionOfDoneSnapshot": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
+          "dependencies": [],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "INFRA-TF-002",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Infrastructure",
+          "title": "Provision the three apps/workers (events-worker, ingestion-worker, notifications-worker) as first-class Railway services in Terraform. Closes GH #230/#259/#270 (workers built/tested but never deployed).",
+          "description": "Provision the three apps/workers (events-worker, ingestion-worker, notifications-worker) as first-class Railway services in Terraform. Closes GH #230/#259/#270 (workers built/tested but never deployed).",
+          "summary": "Workers present in variables.tf railway_services + covered by the module for_each; a reproducible Railway deploy path exists for each.",
+          "definitionOfDone": "Workers present in variables.tf railway_services + covered by the module for_each; a reproducible Railway deploy path exists for each.",
+          "definitionOfDoneSnapshot": "Workers present in variables.tf railway_services + covered by the module for_each; a reproducible Railway deploy path exists for each.",
+          "dependencies": [
+            "INFRA-TF-001"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "INFRA-TF-003",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Infrastructure",
+          "title": "Replace the Supabase null_resource + curl scaffolding with the official supabase/supabase Terraform provider so Supabase auth/storage/extensions config is genuinely drift-detected.",
+          "description": "Replace the Supabase null_resource + curl scaffolding with the official supabase/supabase Terraform provider so Supabase auth/storage/extensions config is genuinely drift-detected.",
+          "summary": "Supabase module uses the official provider; null_resource/curl removed; terraform plan shows real Supabase resources with drift detection.",
+          "definitionOfDone": "Supabase module uses the official provider; null_resource/curl removed; terraform plan shows real Supabase resources with drift detection.",
+          "definitionOfDoneSnapshot": "Supabase module uses the official provider; null_resource/curl removed; terraform plan shows real Supabase resources with drift detection.",
+          "dependencies": [
+            "INFRA-TF-001"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "INFRA-TF-004",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Infrastructure",
+          "title": "Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).",
+          "description": "Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).",
+          "summary": "tfvars exist for all 3 envs; remote backend bootstrapped; monitoring module provisions the stack; OTel endpoint is a TF output; ai-worker emits traces.",
+          "definitionOfDone": "tfvars exist for all 3 envs; remote backend bootstrapped; monitoring module provisions the stack; OTel endpoint is a TF output; ai-worker emits traces.",
+          "definitionOfDoneSnapshot": "tfvars exist for all 3 envs; remote backend bootstrapped; monitoring module provisions the stack; OTel endpoint is a TF output; ai-worker emits traces.",
+          "dependencies": [
+            "INFRA-TF-001"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "INFRA-TF-005",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Infrastructure",
+          "title": "CI + import + runbooks: add the three workers to build-images.yml and railway-deploy.yml; terraform import existing live Vercel/Railway/Supabase infra into state; update railway-deploy / workers / observability runbooks.",
+          "description": "CI + import + runbooks: add the three workers to build-images.yml and railway-deploy.yml; terraform import existing live Vercel/Railway/Supabase infra into state; update railway-deploy / workers / observability runbooks.",
+          "summary": "build-images + railway-deploy cover the 3 workers; live infra imported into TF state (plan shows no spurious recreate); runbooks updated.",
+          "definitionOfDone": "build-images + railway-deploy cover the 3 workers; live infra imported into TF state (plan shows no spurious recreate); runbooks updated.",
+          "definitionOfDoneSnapshot": "build-images + railway-deploy cover the 3 workers; live infra imported into TF state (plan shows no spurious recreate); runbooks updated.",
+          "dependencies": [
+            "INFRA-TF-002",
+            "INFRA-TF-004"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-314",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Integration",
+          "title": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
+          "description": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
+          "summary": "IFC-314 — N+1 Query-Budget Detector + cross-context N+1 remediation, governed by ADR-053 (Accepted). DETECTOR (packages/db/src/query-budget/): AsyncLocalStorage request-scoped store (context.ts:... All 56 findings fixed-or-documented;...",
+          "definitionOfDone": "SetupInstalment + DeliveryTier + tenantSlug on Opportunity (migration applied); Stripe adapter createInvoiceItem/createInvoice/finalizeInvoice; StripeSubscription persisted on customer.subscription.*; PortalDeliverySync POSTs provision + delivery via the domain_events outbox; CloseDealWonUseCase creates 3 instalments + finalises instalment-1 + enqueues the push; events-worker handles opportunity.deal_won_enriched; ai-worker runs a daily portal-delivery-sweep job; handleSubscriptionWebhook verifies the Stripe signature; artifacts: packages/db, packages/adapters, packages/application, apps/api, apps/workers/events-worker, apps/ai-worker; targets: >=90% scoped coverage, idempotent push; verified by: pnpm typecheck/test/lint/build + pre-ship",
+          "definitionOfDoneSnapshot": "All 56 findings fixed-or-documented; Each fixed N+1 has a query-count regression test proving non-linear growth; Detector suite passes (counter, isolation, over/under budget, background no-throw, missing-context no-crash)",
+          "dependencies": [],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-05-31T18:00:00Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         }
@@ -22849,8 +23072,8 @@
           "sprint": 22,
           "status": "Backlog",
           "section": "Core CRM",
-          "title": "Email Templates",
-          "description": "Email Templates",
+          "title": "Email Templates (all auth/notification/in-app surfaces; findings: git issue #350 + debt EMAIL-BRAND-001/SEC-AUTH-NOTIF-001)",
+          "description": "Email Templates (all auth/notification/in-app surfaces; findings: git issue #350 + debt EMAIL-BRAND-001/SEC-AUTH-NOTIF-001)",
           "summary": "response under 200ms, Lighthouse 90, templates saved",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, templates saved",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, templates saved",

@@ -1,17 +1,17 @@
 # Session Context Snapshot
-_Generated: 2026-05-23T14:16:07.560Z • Branch: main_
+_Generated: 2026-06-13T12:59:30.128Z • Branch: chore/sprint18-reconcile-w2_
 
 > Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 18** (sprint-18) — 17% complete (10/60 tasks). 0 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 23d ago; 590 total tasks across the project.
+Active sprint: **Sprint 18** (sprint-18) — 17% complete (10/60 tasks). 0 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 5d ago; 596 total tasks across the project.
 
 ## Project Health
 
-- **Progress:** 393/590 tasks completed (66.61%) — 197 backlog, 0 blocked, 0 in progress.
+- **Progress:** 400/596 tasks completed (67.11%) — 195 backlog, 0 blocked, 1 in progress.
 - **Focus band:** Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
-- **Evidence issues:** 1 attested but CSV not updated.
+- **Evidence issues:** 4 attested but CSV not updated.
 - _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
 
 ## Active Tasks (IN_PROGRESS)
@@ -20,8 +20,8 @@ _None. The active sprint has no tasks currently in progress._
 
 ## Recently Completed (last 5)
 
-- **IFC-078** — 23d ago (15m)
-- **PG-132** — 23d ago (15m)
+- **IFC-078** — 1mo ago (15m)
+- **PG-132** — 1mo ago (15m)
 - **IFC-311** — 1mo ago (15m)
 - **IFC-310** — 1mo ago (15m)
 - **PG-059** — 1mo ago (15m)
@@ -34,19 +34,19 @@ _None. The active sprint has no tasks currently in progress._
 
 ## Git Activity
 
-- **Branch:** `main` (3 dirty file(s))
-- **Dirty preview:** `artifacts/reports/current-state-report.json`, `docs/CURRENT_STATE_REPORT.md`, `docs/SESSION_CONTEXT.md`
+- **Branch:** `chore/sprint18-reconcile-w2` (5 dirty file(s))
+- **Dirty preview:** `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`, `apps/project-tracker/docs/metrics/_global/Sprint_plan_H.csv`, `apps/project-tracker/docs/metrics/sprint-18/IFC-273.json`, `artifacts/reports/current-state-report.json`, `docs/CURRENT_STATE_REPORT.md`
 - **Last 10 commits:**
-  - `25855a869` fix: ship PWA manifest + audit ratchet + final cleanup (#102) — Talysson Da Silva Oliveira, 3 minutes ago
-  - `6d5ba89ff` fix(web): explicit viewport export + themeColor (Lighthouse easy wins) (#101) — Talysson Da Silva Oliveira, 88 minutes ago
-  - `8707006b0` ci: delete broken orphan-audit workflow file (#100) — Talysson Da Silva Oliveira, 88 minutes ago
-  - `2c0f902ec` ci: mark E2E job continue-on-error (#99) — Talysson Da Silva Oliveira, 3 hours ago
-  - `63f0cc5e8` ci: delete broken terraform-drift workflow (#98) — Talysson Da Silva Oliveira, 4 hours ago
-  - `8a74610c4` fix: properly resolve test exclusions + chronic CI debt (replaces issue documentation with fixes) (#97) — Talysson Da Silva Oliveira, 4 hours ago
-  - `d17688738` fix(test): exclude *.crossprocess.test.ts from Unit Tests — fixes main CI (#93) — Talysson Da Silva Oliveira, 5 hours ago
-  - `1d90766e6` feat(IFC-212): Redis monitoring snapshot bridge for AI metrics (#59) — Talysson Da Silva Oliveira, 7 hours ago
-  - `c50cc560e` chore(deps-dev)(deps-dev): bump puppeteer from 24.40.0 to 25.0.3 (#78) — dependabot[bot], 7 hours ago
-  - `02129b476` fix(docker): build ai-worker workspace deps before compile (#81) — Talysson Da Silva Oliveira, 8 hours ago
+  - `cb974e527` fix(deals): deal router correctness fixes B-04/B-07/B-09/B-10/B-11/B-12 (IFC-282) (#416) — Talysson Da Silva Oliveira, 45 minutes ago
+  - `bc8b1afac` feat(accounts): type-safe account list stats + domain-derived filter enums (IFC-273) (#415) — Talysson Da Silva Oliveira, 2 hours ago
+  - `3e739e52a` feat(PG-062): extract Edit Lead form into lead-editor + change-tracker (#414) — Talysson Da Silva Oliveira, 2 hours ago
+  - `9c438badc` feat(contacts): wire IFC-257 contact-detail action buttons (#410) — Talysson Da Silva Oliveira, 9 hours ago
+  - `6e7b4884c` fix(account): account update fields + revenue/employees/industry procedures (IFC-270) (#409) — Talysson Da Silva Oliveira, 10 hours ago
+  - `80100ee02` feat(PG-061): extract Lead Detail into lead-detail + lead-timeline components (#408) — Talysson Da Silva Oliveira, 11 hours ago
+  - `c8065198b` fix(security): bump esbuild override to >=0.28.1 (GHSA-gv7w-rqvm-qjhr) (#404) — Talysson Da Silva Oliveira, 15 hours ago
+  - `065465cd3` fix(workers): retry Redis with backoff instead of fatal-exit on boot (#401) (#402) — Talysson Da Silva Oliveira, 16 hours ago
+  - `6d46e8fa6` fix(reliability): clear 12 Sonar new-code bugs + health contract + coverage parity (#398) (#399) — Talysson Da Silva Oliveira, 19 hours ago
+  - `967dcddc3` feat(PG-060): new lead page with client-side enrichment and a11y — Talysson Da Silva Oliveira, 26 hours ago
 
 ## Key File References
 
