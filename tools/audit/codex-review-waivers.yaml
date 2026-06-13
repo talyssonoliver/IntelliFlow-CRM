@@ -321,3 +321,17 @@ waivers:
       safe in-scope case and is fixed. Source-anchored — re-blocks if the logic changes.
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '091fade14c125487cf5e7e976fe3f515e7520418cf397178b8295eccb82dbb11'
+    reason: >-
+      Verified false positive — codex hallucinates the PRE-FIX behaviour. The
+      evidence claims 'LeadEditor.handleSubmit always sends that payload', but HEAD
+      guards it (verify with git show HEAD:apps/web/src/components/leads/lead-editor.tsx):
+      handleSubmit returns early when changedFields.length === 0 (lead-editor.tsx:107)
+      and the Save button is disabled until the form is dirty
+      (lead-editor.tsx:296, disabled={isSaving || !isDirty}). So an unchanged form
+      never reaches buildLeadUpdatePayload/onSave and the {id}-only no-op codex
+      describes cannot occur. This is the same hallucinate-the-fixed-code pattern the
+      memory documents (codex did it on PG-060/PG-061). Source-anchored — re-blocks if
+      the no-op guard is removed.
+    author: talyssonoliver
+    date: '2026-06-13'

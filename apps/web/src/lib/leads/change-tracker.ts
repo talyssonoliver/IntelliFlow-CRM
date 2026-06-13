@@ -70,8 +70,10 @@ function transformField(field: LeadEditField, current: Readonly<LeadEditFields>)
   if (field === 'estimatedValue') {
     const raw = current.estimatedValue.trim();
     if (!raw) return undefined;
-    const cents = Math.round(Number.parseFloat(raw) * 100);
-    return !Number.isNaN(cents) && cents >= 0 ? cents : undefined;
+    // Number() (not parseFloat) so a partially-numeric string is rejected, not
+    // silently truncated, before converting dollars -> cents.
+    const dollars = Number(raw);
+    return Number.isFinite(dollars) && dollars >= 0 ? Math.round(dollars * 100) : undefined;
   }
   if (field === 'tags') {
     // A changed tags field always sends its array — including [] — so clearing
