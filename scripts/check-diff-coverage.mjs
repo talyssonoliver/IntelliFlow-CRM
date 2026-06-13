@@ -90,6 +90,12 @@ const SONAR_COVERAGE_EXCLUDE = [
   // no coverage expectation (same exclusion applied in the root vitest coverage config
   // for packages/adapters/src/external/OpenAIService.ts).
   /^packages\/adapters\/src\/external\/Mock[A-Za-z]+\.ts$/,
+  // Next.js App Router page.tsx files are thin route shells (their logic lives in
+  // tested components). vitest.config.ts excludes apps/web/src/app/**/page.tsx from
+  // coverage instrumentation, so they never appear in lcov; mirror that here — and in
+  // sonar.coverage.exclusions — so wiring-only route-shell edits are not counted as
+  // 0% new_coverage (PG-061). Real new components/libs are still enforced.
+  /^apps\/web\/src\/app\/.*\/page\.tsx$/,
 ];
 const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
 const isCoverableFile = (f) =>

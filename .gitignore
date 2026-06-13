@@ -366,3 +366,6 @@ build-output.txt
 tsconfig.tsbuildinfo
 **/tsconfig.tsbuildinfo
 scripts/railway-provision-dev.ps1
+
+# Codex semantic-review run artifacts (regenerated each run, not source)
+artifacts/codex-review/

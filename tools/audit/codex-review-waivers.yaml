@@ -200,3 +200,24 @@ waivers:
       is source-anchored, so this re-blocks if the Add Deal navigation changes.
     author: talyssonoliver
     date: '2026-06-12'
+  - fingerprint: '6056c76ead9d71d273f0bb3d5394bd781798f20dc8027bb19d080c3b56ffca4d'
+    reason: >-
+      Verified false positive — codex non-determinism on PG-061's
+      formatEstimatedValue line. Codex flip-flopped on this EXACT fingerprint:
+      run 1 claimed estimatedValue is in cents (so the old `/1000` rendered it
+      100x too high — which was the REAL pre-existing bug that this PR fixed),
+      then run 2 claimed it is in dollars (so `/100` renders 100x too low).
+      Ground truth: estimatedValue IS in cents. validators/src/lead.ts:36 and
+      domain/src/crm/lead/Lead.ts:73 both annotate it `// In cents`; the lead
+      edit page divides by 100 to display (edit/page.tsx:104) and multiplies by
+      100 to persist with the comment "Convert dollars to cents"
+      (edit/page.tsx:181), and edit/__tests__/page.test.tsx:226 asserts
+      "5000 cents = 50.00 dollars". Run 2's evidence cites
+      `profile.estimatedValue * 100` in "insight derivation code" — that string
+      exists in ZERO source files (grep for `* 100` in the page returns nothing;
+      same hallucinate-nonexistent-code pattern as waivers 73cace13 / 048f7556).
+      formatEstimatedValue(cents) correctly converts cents -> dollars -> compact
+      and is unit-tested (lead-format.test.ts). Source-anchored, so this
+      re-blocks if the conversion ever changes.
+    author: talyssonoliver
+    date: '2026-06-13'
