@@ -473,6 +473,22 @@ describe('Opportunity Aggregate', () => {
       expect(opportunity.expectedCloseDate).toBe(newDate);
     });
 
+    // IFC-280: clearExpectedCloseDate (no event; closed-guarded).
+    it('should clear the expected close date', () => {
+      const result = opportunity.clearExpectedCloseDate('user-123');
+
+      expect(result.isSuccess).toBe(true);
+      expect(opportunity.expectedCloseDate).toBeUndefined();
+      expect(opportunity.getDomainEvents()).toHaveLength(0);
+    });
+
+    it('should reject clearing the close date on a closed deal', () => {
+      opportunity.markAsWon('user-1');
+      const result = opportunity.clearExpectedCloseDate('user-123');
+
+      expect(result.isFailure).toBe(true);
+    });
+
     it('should emit OpportunityCloseDateChangedEvent', () => {
       const newDate = new Date('2024-09-30');
       opportunity.updateExpectedCloseDate(newDate, 'user-789');

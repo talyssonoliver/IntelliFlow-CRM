@@ -580,7 +580,7 @@ export default function DealDetailPage() {
       value?: { amount: number; currency: string };
       stage?: OpportunityStage;
       probability?: number;
-      expectedCloseDate?: Date;
+      expectedCloseDate?: Date | null;
       accountId?: string;
       contactId?: string | null;
       description?: string;
@@ -592,11 +592,10 @@ export default function DealDetailPage() {
     }
     if (data.stage !== stage) payload.stage = data.stage;
     if (data.probability !== d.probability) payload.probability = data.probability;
-    // expectedCloseDate: only send a real (set) date that changed. Clearing an
-    // existing date is a tracked follow-up (the domain has no clear path), so an
-    // emptied date is treated as "no change" rather than a silently-dropped clear.
-    if (data.expectedCloseDate && data.expectedCloseDate !== editInitialData.expectedCloseDate) {
-      payload.expectedCloseDate = new Date(data.expectedCloseDate);
+    // expectedCloseDate: send a Date when set, or null to clear (the service +
+    // domain clearExpectedCloseDate persist the clear). Only when it changed.
+    if (data.expectedCloseDate !== (editInitialData.expectedCloseDate ?? '')) {
+      payload.expectedCloseDate = data.expectedCloseDate ? new Date(data.expectedCloseDate) : null;
     }
     if (data.accountId !== d.accountId) payload.accountId = data.accountId;
     if ((data.contactId || '') !== (d.contactId ?? '')) payload.contactId = data.contactId || null;

@@ -491,6 +491,51 @@ describe('OpportunityService (additional coverage)', () => {
       expect(reloaded?.probability.value).toBe(25);
     });
 
+    // IFC-280 F-D: clearing an existing expected close date must persist.
+    it('should clear the expected close date when expectedCloseDate is null', async () => {
+      const opp = Opportunity.create({
+        name: 'Clear Date',
+        value: 50000,
+        accountId: testAccount.id.value,
+        expectedCloseDate: new Date('2026-06-30'),
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { expectedCloseDate: null },
+        'updater'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.expectedCloseDate).toBeUndefined();
+    });
+
+    // IFC-280 F-E: a failing scalar update must not leave description (or other
+    // non-scalar fields) mutated on the loaded aggregate (validate-then-mutate).
+    it('does not mutate description when a scalar update fails (atomicity)', async () => {
+      const opp = Opportunity.create({
+        name: 'Atomic',
+        value: 50000,
+        description: 'original',
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(
+        opp.id.value,
+        { description: 'changed', probability: 150 },
+        'updater'
+      );
+
+      expect(result.isFailure).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.description).toBe('original');
+    });
+
     it('should fail an update with an empty name', async () => {
       const opp = Opportunity.create({
         name: 'Keep Name',

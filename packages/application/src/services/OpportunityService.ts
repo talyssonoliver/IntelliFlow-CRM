@@ -273,8 +273,12 @@ export class OpportunityService {
     expectedCloseDate: Date | null | undefined,
     updatedBy: string
   ): DomainError | null {
-    if (expectedCloseDate === undefined || expectedCloseDate === null) return null;
-    const result = opportunity.updateExpectedCloseDate(expectedCloseDate, updatedBy);
+    // IFC-280: undefined = field omitted (no change); null = explicit clear.
+    if (expectedCloseDate === undefined) return null;
+    const result =
+      expectedCloseDate === null
+        ? opportunity.clearExpectedCloseDate(updatedBy)
+        : opportunity.updateExpectedCloseDate(expectedCloseDate, updatedBy);
     return result.isFailure ? result.error : null;
   }
 
@@ -306,32 +310,43 @@ export class OpportunityService {
    * change cannot persist a mismatched pair. accountId/contactId existence is already
    * checked by validateForeignKeys; this adds the cross-field relationship guard.
    */
-  private async applyStakeholderUpdates(
+  /**
+   * IFC-280: validate the contact-belongs-to-account invariant for a stakeholder
+   * re-assignment WITHOUT mutating (so it can run in the validation pass). Checks
+   * the EFFECTIVE pair — an explicit contact change wins, else the deal's current
+   * contact — so an account-only change cannot strand a cross-account contact.
+   */
+  private async validateStakeholderInvariant(
     opportunity: Opportunity,
     data: { accountId?: string; contactId?: string | null }
   ): Promise<DomainError | null> {
     const effectiveAccountId = data.accountId ?? opportunity.accountId;
-    // The contact that will be attached after this update: an explicit change
-    // wins, otherwise the deal's current contact. Validating the EFFECTIVE pair
-    // also catches re-assigning the account while an incompatible contact stays
-    // attached (account-only change must not leave a stale cross-account contact).
     const effectiveContactId =
       data.contactId !== undefined ? data.contactId : (opportunity.contactId ?? null);
-    if (effectiveContactId) {
-      const contactIdResult = ContactId.create(effectiveContactId);
-      if (contactIdResult.isFailure) return contactIdResult.error;
-      const contact = await this.contactRepository.findById(contactIdResult.value);
-      if (contact && contact.accountId !== effectiveAccountId) {
-        return new ValidationError('Contact does not belong to the selected account');
-      }
+    if (!effectiveContactId) return null;
+    const contactIdResult = ContactId.create(effectiveContactId);
+    if (contactIdResult.isFailure) return contactIdResult.error;
+    const contact = await this.contactRepository.findById(contactIdResult.value);
+    if (contact && contact.accountId !== effectiveAccountId) {
+      return new ValidationError('Contact does not belong to the selected account');
     }
+    return null;
+  }
+
+  /**
+   * IFC-280: apply account/contact re-assignment. Non-fallible — the invariant is
+   * validated by validateStakeholderInvariant in the validation pass beforehand.
+   */
+  private applyStakeholderMutations(
+    opportunity: Opportunity,
+    data: { accountId?: string; contactId?: string | null }
+  ): void {
     if (data.accountId !== undefined) {
       opportunity.changeAccount(data.accountId);
     }
     if (data.contactId !== undefined) {
       opportunity.changeContact(data.contactId);
     }
-    return null;
   }
 
   /**
@@ -391,33 +406,35 @@ export class OpportunityService {
       return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
     }
 
+    // --- Validation pass (no mutation) -------------------------------------
     const fkError = await this.validateForeignKeys(data, tenantId);
     if (fkError) return Result.fail(fkError);
 
-    // IFC-282 B-04: apply the name change first (validate-then-mutate ordering)
-    // so an invalid name surfaces before any scalar mutation. Previously the name
-    // was silently dropped (the old TODO).
+    // IFC-280: validate the contact-belongs-to-account invariant BEFORE any
+    // mutation, so a stakeholder re-assignment cannot persist a mismatched pair.
+    const stakeholderError = await this.validateStakeholderInvariant(opportunity, data);
+    if (stakeholderError) return Result.fail(stakeholderError);
+
+    // --- Mutation pass -----------------------------------------------------
+    // IFC-282 B-04: name validates-then-mutates internally (kept first).
     if (data.name !== undefined) {
       const nameResult = opportunity.updateName(data.name, updatedBy);
       if (nameResult.isFailure) return Result.fail(nameResult.error);
     }
 
-    // IFC-280: description was silently dropped (omitted from the data param,
-    // like the IFC-282 B-04 name gap). Thread it through so the Edit dialog's
-    // description field actually persists instead of faking a save.
+    // IFC-280 (atomicity, the IFC-271 lesson): apply the fallible scalar updates
+    // (value/stage/probability/date — each closed-guarded) BEFORE the non-fallible
+    // stakeholder + description mutations, so a scalar validation failure cannot
+    // leave description/account/contact already mutated on the loaded aggregate.
+    const updateError = this.applyScalarUpdates(opportunity, data, updatedBy);
+    if (updateError) return Result.fail(updateError);
+
+    // Stakeholder mutation is non-fallible here (invariant validated above);
+    // description (updateDescription) cannot fail. Apply both last.
+    this.applyStakeholderMutations(opportunity, data);
     if (data.description !== undefined) {
       opportunity.updateDescription(data.description);
     }
-
-    // IFC-280: accountId/contactId were FK-validated but never applied — the
-    // Edit/Stakeholders dialog's stakeholder change was silently dropped. Apply
-    // them, enforcing the contact-belongs-to-account invariant (mirrors create)
-    // before mutating, so a re-assignment cannot persist a mismatched pair.
-    const stakeholderError = await this.applyStakeholderUpdates(opportunity, data);
-    if (stakeholderError) return Result.fail(stakeholderError);
-
-    const updateError = this.applyScalarUpdates(opportunity, data, updatedBy);
-    if (updateError) return Result.fail(updateError);
 
     try {
       await this.opportunityRepository.save(opportunity);

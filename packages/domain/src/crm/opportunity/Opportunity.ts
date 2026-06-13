@@ -381,6 +381,21 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return Result.ok(undefined);
   }
 
+  /**
+   * IFC-280: clear the expected close date. Closed-guarded like
+   * updateExpectedCloseDate. Emits no domain event (the close-date-changed event
+   * models a new Date; a clear is a metadata reset, consistent with how
+   * updateDescription emits none) — no subscriber consumes a clear.
+   */
+  clearExpectedCloseDate(_changedBy: string): Result<void, OpportunityAlreadyClosedError> {
+    if (this.isClosed) {
+      return Result.fail(new OpportunityAlreadyClosedError());
+    }
+    this.props.expectedCloseDate = undefined;
+    this.props.updatedAt = new Date();
+    return Result.ok(undefined);
+  }
+
   markAsWon(closedBy: string): Result<void, DomainError> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
