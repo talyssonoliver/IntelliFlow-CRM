@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-06-11
+last_updated: 2026-06-13
 maintainer: Tech Lead
 items:
   PRESHIP-385-lcov-absent-blind-spot:
@@ -5060,3 +5060,14 @@ alerts:
     remediation_sprint: 20
     remediation_plan: 'Define a dedicated opportunityListItemSchema matching the raw list row (numeric/string value + owner/account/contact relation shapes) and use it in opportunityListResponseSchema, OR wire a proper .output() with a mapper that preserves relations. Do NOT route list rows through mapOpportunityToResponse (it drops the relations the deals list renders). Out of IFC-282 B-07 scope (B-07 = response key name only).'
     notes: 'git issue #413. IFC-282 out-of-scope finding. Decorative-schema contract inaccuracy, pre-existing. Tracked per project Rule 8.'
+  CSV-EXPORT-FORMULA-INJECTION-001:
+    origin_task: PG-063
+    owner: CRM FE
+    severity: medium
+    description: 'apps/web/src/lib/export/csv.ts escapeCSVField (line 17) does RFC-4180 quoting (comma/quote/newline) but does NOT neutralise formula-injection cells (leading = + - @ TAB CR). CRM data exported via exportToCSV/objectsToCSV/arrayToCSV and opened in Excel/Sheets/LibreOffice executes attacker-controlled formulas (e.g. a lead/company/notes field = =HYPERLINK(...) / =WEBSERVICE(...) / DDE). OWASP CSV injection on the EXPORT path. Found during PG-063 (which guards the IMPORT path by rejecting formula-injection free-text cells with a surfaced row error).'
+    created_at: 2026-06-13
+    status: open
+    expiry_date: 2026-08-31
+    remediation_sprint: 19
+    remediation_plan: 'In escapeCSVField, before quoting, prefix a leading formula character (= + - @ TAB CR) with a single quote (OWASP-recommended) and force-quote; add a unit test in apps/web/src/lib/export/__tests__/csv.test.ts covering each lead char + a benign negative number per product preference. Out of PG-063 scope (export path vs import path) — rides its own PR per the co-dependent-changes rule.'
+    notes: 'git issue #417. PG-063 red-flag finding (brief: "File a red-flag issue for any unsafe parsing you find"). Pre-existing. Tracked per project Rule 8.'

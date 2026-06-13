@@ -20,6 +20,26 @@ const AUTH_FLOW_PATHS = [
   '/verify-email',
 ];
 
+/** Strip trailing slashes linearly (avoids a backtracking-prone trailing-slash regex — sonarjs S5852). */
+function stripTrailingSlash(value: string): string {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') end -= 1;
+  return value.slice(0, end);
+}
+
+/**
+ * Convert an APP_DIR-relative `page.tsx` path to its route, dropping
+ * `(route-group)` segments. Uses split/filter rather than `\(...\)` regexes so
+ * the route-group strip is linear (sonarjs S5852). `[param]` segments are kept.
+ */
+function fileToRoute(rel: string): string {
+  const withoutPage = rel.replace(/\/page\.tsx$/, '');
+  const segments = withoutPage
+    .split('/')
+    .filter((seg) => !(seg.startsWith('(') && seg.endsWith(')')));
+  return '/' + segments.join('/');
+}
+
 let sitemapEntries: Array<{ url: string; priority?: number }>;
 
 beforeAll(async () => {
@@ -29,15 +49,16 @@ beforeAll(async () => {
 
 describe('Sitemap Reconciliation', () => {
   // TC-25
-  it('total page.tsx count equals 208 (regression guard)', () => {
+  it('total page.tsx count equals 209 (regression guard)', () => {
     // Updated by PG-186: document-settings, document-types, storage-policies moved to (list)/.
     // Net count increased by 2 from PG-182/PG-183/PG-186 work (was 205 before sprint-17).
     // 208 = 207 baseline + 3 newly-tracked under agent-approvals/logs/*, governance/quality-reports/coverage/
     //       minus 2 previously double-counted route-group duplicates reconciled in same batch.
     // Newly tracked (were gitignored): agent-approvals/logs/page.tsx,
     //   agent-approvals/logs/[id]/page.tsx, governance/quality-reports/coverage/page.tsx
+    // PG-063: +1 for the new Import Leads route apps/web/src/app/leads/(list)/import/page.tsx → 209.
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(208);
+    expect(pageFiles.length).toBe(209);
   });
 
   // TC-26
@@ -130,33 +151,17 @@ describe('Sitemap Reconciliation', () => {
         )
       );
       const missingFromDoc = pageFiles
-        .map((f) => {
-          const rel = path.relative(APP_DIR, f).replace(/\\/g, '/');
-          // Convert file path to route: remove page.tsx, (list)/, [param] stays
-          return (
-            '/' +
-            rel
-              .replace(/\/page\.tsx$/, '')
-              .replace(/\(.*?\)\//g, '')
-              .replace(/\(.*?\)$/, '')
-          );
-        })
+        .map((f) => fileToRoute(path.relative(APP_DIR, f).replace(/\\/g, '/')))
         .filter((route) => {
-          const normalized = route.replace(/\/+$/, '') || '/';
+          const normalized = stripTrailingSlash(route) || '/';
           return !documentedRoutes.has(normalized);
         });
 
       const newFromDoc = [...documentedRoutes].filter(
         (route) =>
           !pageFiles.some((f) => {
-            const rel = path.relative(APP_DIR, f).replace(/\\/g, '/');
-            const fileRoute =
-              '/' +
-              rel
-                .replace(/\/page\.tsx$/, '')
-                .replace(/\(.*?\)\//g, '')
-                .replace(/\(.*?\)$/, '');
-            return fileRoute.replace(/\/+$/, '') === route.replace(/\/+$/, '');
+            const fileRoute = fileToRoute(path.relative(APP_DIR, f).replace(/\\/g, '/'));
+            return stripTrailingSlash(fileRoute) === stripTrailingSlash(route);
           })
       );
 

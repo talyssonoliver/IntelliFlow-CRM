@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-04-16 (as of Sprint 17)
-> **Total Pages**: 208
+> **Total Pages**: 209
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -726,6 +726,21 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                                               |
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                             |
 | **Components** | "use client", multi-step form, Card, ToastProvider, useFormUnsavedChanges |
+
+### Import Leads (`/leads/import`)
+
+| Field          | Value                                                                      |
+| -------------- | -------------------------------------------------------------------------- |
+| **Task ID**    | PG-063, IFC-004                                                            |
+| **File Path**  | `apps/web/src/app/leads/(list)/import/page.tsx`                            |
+| **Layout**     | `apps/web/src/app/leads/(list)/layout.tsx`                                 |
+| **API Router** | `apps/api/src/modules/lead/lead.router.ts` (`lead.create`, per row)        |
+| **E2E Test**   | None                                                                       |
+| **Unit Tests** | `csv-importer.test.tsx`, `field-mapper.test.ts`                            |
+| **KPI**        | Lighthouse >=90; Server <200ms; formula-injection guarded; row/size capped |
+| **Status**     | Implemented                                                                |
+| **RACI**       | R: Frontend / A: Product / C: Backend, Security / I: QA                    |
+| **Components** | "use client", CsvImporter, field-mapper (parse/sanitise/validate), Card    |
 
 ### Lead Detail (`/leads/[id]`)
 

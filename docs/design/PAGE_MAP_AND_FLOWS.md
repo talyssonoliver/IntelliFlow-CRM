@@ -35,7 +35,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category                                        | Count |
 | ----------------------------------------------- | ----- |
-| Total Pages                                     | 208   |
+| Total Pages                                     | 209   |
 | Public Pages                                    | 32    |
 | Developer Pages                                 | 14    |
 | Protected Pages                                 | 162   |
@@ -150,6 +150,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/leads?segment=hot`      | Hot Leads       | Leads with score >80                               | Segments        |
 | `/leads?segment=followup` | Needs Follow-up | Leads requiring action                             | Segments        |
 | `/leads/new`              | New Lead        | Create lead form                                   | -               |
+| `/leads/import`           | Import Leads    | CSV upload, column mapping, per-row validation     | -               |
 | `/leads/[id]`             | Lead Detail     | Lead 360° view with activities                     | -               |
 | `/leads/[id]/edit`        | Edit Lead       | Edit lead fields and metadata                      | -               |
 | `/leads/pipeline`         | Lead Pipeline   | Kanban-style pipeline view of leads by stage       | Pipeline Views  |
