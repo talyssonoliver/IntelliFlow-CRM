@@ -43,12 +43,13 @@ export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
 
 // IFC-270 B-10/11/12: dedicated single-field command schemas for the
 // updateRevenue / updateEmployeeCount / categorizeIndustry router procedures.
-// Bounds mirror the domain commands: revenue >= 0 (Account.updateRevenue rejects
-// only < 0, so nonnegative — NOT the base schema's positive(), which rejects 0),
-// employees > 0, industry 1..100 chars.
+// revenue: positive() — matches createAccountSchema/updateAccountSchema and
+// avoids feeding 0 to the persistence layer, which currently coerces 0 to null
+// via a truthiness check (PrismaAccountRepository.save — tracked follow-up).
+// employees > 0; industry 1..100 chars (trimmed before the non-empty check).
 export const updateAccountRevenueSchema = z.object({
   id: idSchema,
-  revenue: z.number().nonnegative(),
+  revenue: z.number().positive(),
 });
 export type UpdateAccountRevenueInput = z.infer<typeof updateAccountRevenueSchema>;
 
@@ -95,7 +96,11 @@ export type AccountQueryInput = z.infer<typeof accountQuerySchema>;
 export const accountResponseSchema = z.object({
   id: idSchema,
   name: nameSchema,
-  website: urlSchema, // Uses WebsiteUrl Value Object transformer
+  // IFC-270 B-13: responses serialize website as a plain string via
+  // mapAccountToResponse (WebsiteUrl.toValue()), so the response contract is
+  // string | null — NOT the urlSchema input transformer, which would coerce it
+  // back into a WebsiteUrl value object and misreport the AccountResponse type.
+  website: z.url().nullable(),
   industry: z.string().nullable(),
   employees: z.number().nullable(),
   revenue: z.string().nullable(), // Decimal as string (future: moneySchema)

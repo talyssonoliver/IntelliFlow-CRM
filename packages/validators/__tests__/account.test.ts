@@ -653,18 +653,20 @@ describe('Account Validators', () => {
 
   // IFC-270 B-10: updateRevenue procedure input
   describe('updateAccountRevenueSchema', () => {
-    it('accepts a valid id and non-negative revenue (incl. zero)', () => {
+    it('accepts a valid id and positive revenue', () => {
       expect(updateAccountRevenueSchema.safeParse({ id: VALID_ID, revenue: 5000000 }).success).toBe(
         true
       );
-      expect(updateAccountRevenueSchema.safeParse({ id: VALID_ID, revenue: 0 }).success).toBe(true);
     });
 
     it('rejects a missing id', () => {
       expect(updateAccountRevenueSchema.safeParse({ revenue: 1000 }).success).toBe(false);
     });
 
-    it('rejects negative revenue', () => {
+    it('rejects zero and negative revenue (matches create/update; 0 is dropped by persistence)', () => {
+      expect(updateAccountRevenueSchema.safeParse({ id: VALID_ID, revenue: 0 }).success).toBe(
+        false
+      );
       expect(updateAccountRevenueSchema.safeParse({ id: VALID_ID, revenue: -1 }).success).toBe(
         false
       );
