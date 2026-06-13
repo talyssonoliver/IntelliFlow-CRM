@@ -94,6 +94,15 @@ describe('Account Validators', () => {
       expect(result.success).toBe(false);
     });
 
+    it('should reject empty or whitespace-only industry (IFC-270 B-08)', () => {
+      expect(createAccountSchema.safeParse({ name: 'Test Corp', industry: '' }).success).toBe(
+        false
+      );
+      expect(createAccountSchema.safeParse({ name: 'Test Corp', industry: '   ' }).success).toBe(
+        false
+      );
+    });
+
     it('should reject non-integer employees', () => {
       const invalidData = {
         name: 'Test Corp',
@@ -254,6 +263,16 @@ describe('Account Validators', () => {
 
       const result = updateAccountSchema.safeParse(fullUpdate);
       expect(result.success).toBe(true);
+    });
+
+    it('should reject whitespace-only industry on update (IFC-270 B-08)', () => {
+      const invalidData = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        industry: '   ',
+      };
+
+      const result = updateAccountSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
     });
   });
 

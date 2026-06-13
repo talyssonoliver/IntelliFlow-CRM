@@ -12,11 +12,11 @@ const baseAccountFieldsSchema = z.object({
     .max(200)
     .transform((val) => val.trim()), // Company names can be longer
   website: urlSchema, // Uses WebsiteUrl Value Object transformer
-  industry: z
-    .string()
-    .max(100)
-    .transform((val) => val.trim())
-    .optional(),
+  // IFC-270 B-08: trim before min(1) so a whitespace-only industry is rejected
+  // rather than persisted as "" once the combined update forwards it to the
+  // domain (matches the dedicated updateAccountIndustrySchema). Omit the field
+  // entirely to leave industry unset.
+  industry: z.string().trim().min(1).max(100).optional(),
   employees: z.number().int().positive().optional(),
   revenue: z.number().positive().optional(), // Could use moneySchema in future
   description: z
