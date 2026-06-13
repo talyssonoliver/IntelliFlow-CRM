@@ -1,16 +1,12 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
+import { getAccountTier, type AccountTier } from '@intelliflow/domain';
 
-export type AccountTier = 'ENTERPRISE' | 'MID_MARKET' | 'SMB' | 'STARTUP' | 'UNKNOWN';
-
-export function getAccountTier(revenue: number | null | undefined): AccountTier {
-  if (revenue == null) return 'UNKNOWN';
-  if (revenue >= 10_000_000) return 'ENTERPRISE';
-  if (revenue >= 1_000_000) return 'MID_MARKET';
-  if (revenue >= 100_000) return 'SMB';
-  return 'STARTUP';
-}
+// Tier vocabulary lives in the domain layer (IFC-273, L-04). Re-export it so
+// existing consumers (AccountDetail, AccountHierarchy) keep importing from
+// './AccountCard' unchanged.
+export { getAccountTier, type AccountTier };
 
 export const TIER_CONFIG: Record<
   AccountTier,

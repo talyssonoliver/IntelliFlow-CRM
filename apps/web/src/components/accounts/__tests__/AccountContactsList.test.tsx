@@ -4,6 +4,7 @@
  */
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { CONTACT_STATUSES } from '@intelliflow/domain';
 import { AccountContactsList } from '../AccountContactsList';
 
 const mockPush = vi.fn();
@@ -215,4 +216,75 @@ describe('AccountContactsList', () => {
     fireEvent.click(addBtns[0]);
     expect(onAddContact).toHaveBeenCalledTimes(1);
   });
+
+  // IFC-273 (F-09): status filter options derived from the ContactStatus domain enum
+  it('renders a status filter option for every CONTACT_STATUS (no invalid LEAD)', () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        contacts: [{ id: 'c1', firstName: 'A', lastName: 'B', email: 'a@b.com', status: 'ACTIVE' }],
+        nextCursor: null,
+      },
+      isLoading: false,
+      error: null,
+    });
+    render(<AccountContactsList accountId="00000000-0000-4000-8000-000000000001" />);
+
+    const options = screen.getAllByRole('option');
+    // "All Statuses" + one option per CONTACT_STATUS
+    expect(options).toHaveLength(CONTACT_STATUSES.length + 1);
+    // every valid domain status is offered by value
+    for (const status of CONTACT_STATUSES) {
+      expect(screen.getByRole('option', { name: formatStatusLabel(status) })).toBeInTheDocument();
+    }
+    // the formerly-hardcoded invalid 'LEAD' option is gone
+    expect(screen.queryByRole('option', { name: 'Lead' })).not.toBeInTheDocument();
+    // newly-available statuses that the hardcoded list omitted
+    expect(screen.getByRole('option', { name: 'Former Customer' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Customer' })).toBeInTheDocument();
+  });
+
+  it('applies the selected status to the contacts query', () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        contacts: [{ id: 'c1', firstName: 'A', lastName: 'B', email: 'a@b.com', status: 'ACTIVE' }],
+        nextCursor: null,
+      },
+      isLoading: false,
+      error: null,
+    });
+    render(<AccountContactsList accountId="00000000-0000-4000-8000-000000000001" />);
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'PROSPECT' } });
+
+    const lastCall = useQueryMock.mock.calls.at(-1)?.[0] as { status?: string[] };
+    expect(lastCall.status).toEqual(['PROSPECT']);
+  });
+
+  it('clears the status filter when All Statuses is selected', () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        contacts: [{ id: 'c1', firstName: 'A', lastName: 'B', email: 'a@b.com', status: 'ACTIVE' }],
+        nextCursor: null,
+      },
+      isLoading: false,
+      error: null,
+    });
+    render(<AccountContactsList accountId="00000000-0000-4000-8000-000000000001" />);
+
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'PROSPECT' } });
+    fireEvent.change(select, { target: { value: '' } });
+
+    const lastCall = useQueryMock.mock.calls.at(-1)?.[0] as { status?: string[] };
+    expect(lastCall.status).toBeUndefined();
+  });
 });
+
+// Mirror of the shared formatLabel used by the component (SNAKE_CASE → Title Case)
+function formatStatusLabel(value: string): string {
+  return value
+    .toLowerCase()
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}

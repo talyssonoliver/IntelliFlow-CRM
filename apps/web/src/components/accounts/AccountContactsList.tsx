@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, EmptyState, Skeleton, Badge } from '@intelliflow/ui';
 import { api } from '@/lib/api';
-import type { ContactStatus } from '@intelliflow/domain';
+import { CONTACT_STATUSES, type ContactStatus } from '@intelliflow/domain';
+import { formatLabel } from '@/lib/shared/filter-utils';
 
 const CONTACTS_SKELETON_KEYS = [
   'contact-0',
@@ -83,14 +84,17 @@ export function AccountContactsList({
           className="text-sm border rounded-md px-2 py-1 bg-background text-foreground"
           value={statusFilter ?? ''}
           onChange={(e) => {
-            setStatusFilter((e.target.value || undefined) as ContactStatus | undefined);
+            const { value } = e.target;
+            setStatusFilter(CONTACT_STATUSES.find((status) => status === value));
             setCursor(undefined);
           }}
         >
           <option value="">All Statuses</option>
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-          <option value="LEAD">Lead</option>
+          {CONTACT_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {formatLabel(status)}
+            </option>
+          ))}
         </select>
         <Button variant="outline" size="sm" onClick={onAddContact} type="button">
           <span className="material-symbols-outlined text-base mr-1">person_add</span> Add Contact

@@ -7,14 +7,14 @@
   "sprint": "sprint-18",
   "phase": "",
   "stream": null,
-  "status": "BACKLOG",
+  "status": "In Progress",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.868Z"
   },
   "dependencies_resolved": [],
-  "started_at": null,
+  "started_at": "2026-06-13T09:00:05Z",
   "completed_at": null,
   "target_duration_minutes": 120,
   "actual_duration_minutes": null,
@@ -54,7 +54,10 @@
     {
       "status": "Backlog",
       "at": "2026-03-05T00:00:00Z"
-    }
+    },
+    { "status": "Specifying", "at": "2026-06-13T09:00:05Z" },
+    { "status": "Spec Complete", "at": "2026-06-13T09:00:05Z" },
+    { "status": "In Progress", "at": "2026-06-13T09:00:05Z" }
   ],
-  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md."
+  "notes": "Account domain wiring audit finding (L-01,L-02,L-04,F-09,F-12). See docs/audit/account-detail-wiring-audit.md. Spec (2026-06-13): L-01/L-02 frontend typing via RouterOutputs (stats already returns withOpportunities, no router change); L-04 move AccountTier/getAccountTier to domain (DRY-enum); F-09/F-12 derive filter options from CONTACT_STATUSES/OPPORTUNITY_STAGES (fixes invalid 'LEAD' + missing NEEDS_ANALYSIS). CSV status kept recognized (In Progress) to satisfy the current-state-report bucket invariant; phases in status_history."
 }

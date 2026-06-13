@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, EmptyState, Skeleton, Badge, Card } from '@intelliflow/ui';
 import { api } from '@/lib/api';
-import type { OpportunityStage } from '@intelliflow/domain';
+import { OPPORTUNITY_STAGES, type OpportunityStage } from '@intelliflow/domain';
+import { formatLabel } from '@/lib/shared/filter-utils';
 import { formatCurrency } from '@/lib/pricing/calculator';
 
 const OPP_GRID_SKELETON_KEYS = ['opp-grid-0', 'opp-grid-1', 'opp-grid-2'] as const;
@@ -112,17 +113,17 @@ export function AccountOpportunitiesList({
           className="text-sm border rounded-md px-2 py-1 bg-background text-foreground"
           value={stageFilter ?? ''}
           onChange={(e) => {
-            setStageFilter((e.target.value || undefined) as OpportunityStage | undefined);
+            const { value } = e.target;
+            setStageFilter(OPPORTUNITY_STAGES.find((stage) => stage === value));
             setCursor(undefined);
           }}
         >
           <option value="">All Stages</option>
-          <option value="PROSPECTING">Prospecting</option>
-          <option value="QUALIFICATION">Qualification</option>
-          <option value="PROPOSAL">Proposal</option>
-          <option value="NEGOTIATION">Negotiation</option>
-          <option value="CLOSED_WON">Closed Won</option>
-          <option value="CLOSED_LOST">Closed Lost</option>
+          {OPPORTUNITY_STAGES.map((stage) => (
+            <option key={stage} value={stage}>
+              {formatLabel(stage)}
+            </option>
+          ))}
         </select>
         <Button variant="outline" size="sm" onClick={onCreateOpportunity} type="button">
           <span className="material-symbols-outlined text-base mr-1">add</span> Create Opportunity
