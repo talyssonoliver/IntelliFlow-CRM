@@ -233,24 +233,20 @@ describe('opportunityRouter additional coverage', () => {
   });
 
   describe('moveStage - CLOSED_LOST without reason', () => {
-    it('should pass empty reason when not provided', async () => {
+    it('rejects CLOSED_LOST with no reason at the input boundary (IFC-282 B-12)', async () => {
       mockServices.closeDealLost.execute.mockResolvedValue({
         isFailure: false,
         value: { id: { value: OPP_ID }, name: 'Test Deal', stage: 'CLOSED_LOST' },
       });
       const caller = opportunityRouter.createCaller(ctx);
 
-      await caller.moveStage({
-        id: OPP_ID,
-        targetStage: 'CLOSED_LOST',
-      });
+      // moveStageSchema.superRefine now requires a reason (min 10) for CLOSED_LOST,
+      // so the request fails validation BEFORE the service is reached.
+      await expect(caller.moveStage({ id: OPP_ID, targetStage: 'CLOSED_LOST' })).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
 
-      expect(mockServices.closeDealLost.execute).toHaveBeenCalledWith({
-        opportunityId: OPP_ID,
-        reason: '',
-        closedBy: USER_ID,
-        tenantId: TENANT_ID,
-      });
+      expect(mockServices.closeDealLost.execute).not.toHaveBeenCalled();
     });
 
     it('should pass reason when provided', async () => {

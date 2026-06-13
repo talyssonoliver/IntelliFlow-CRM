@@ -12,6 +12,7 @@
  * Target: <100ms save operations
  */
 
+import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   updatePipelineStageConfigSchema,
@@ -24,6 +25,23 @@ import {
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { getTenantContext } from '../../security/tenant-context';
 import { getAuditLogger } from '../../security/audit-logger';
+
+/**
+ * IFC-282 B-10: `validateStageDeactivation` (in @intelliflow/validators, a pure
+ * zod+domain package) throws a plain Error on a protected-stage deactivation,
+ * which tRPC surfaces as 500. Map it to a 400 here — HTTP-status mapping belongs
+ * in the router, not the framework-free validators package.
+ */
+function assertStageDeactivationAllowed(stageKey: string, isActive: boolean): void {
+  try {
+    validateStageDeactivation(stageKey, isActive);
+  } catch (err) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: err instanceof Error ? err.message : `Cannot deactivate terminal stage: ${stageKey}`,
+    });
+  }
+}
 
 /**
  * Get default configuration for a stage
@@ -102,7 +120,7 @@ export const pipelineConfigRouter = createTRPCRouter({
 
       // Validate protected stage deactivation
       if (input.isActive === false) {
-        validateStageDeactivation(stageKey, input.isActive);
+        assertStageDeactivationAllowed(stageKey, input.isActive);
       }
 
       // Check if config exists for this stage
@@ -174,7 +192,7 @@ export const pipelineConfigRouter = createTRPCRouter({
     // Validate protected stage deactivation for all stages
     for (const stageInput of input.stages) {
       if (stageInput.isActive === false) {
-        validateStageDeactivation(stageInput.stage, stageInput.isActive);
+        assertStageDeactivationAllowed(stageInput.stage, stageInput.isActive);
       }
     }
 

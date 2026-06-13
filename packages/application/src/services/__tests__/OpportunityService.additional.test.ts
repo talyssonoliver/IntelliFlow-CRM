@@ -287,6 +287,40 @@ describe('OpportunityService (additional coverage)', () => {
       expect(result.value.value.amount).toBe(75000);
     });
 
+    // IFC-282 B-04: name updates were silently dropped (service TODO).
+    it('should persist a name update', async () => {
+      const opp = Opportunity.create({
+        name: 'Old Name',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(opp.id.value, { name: 'New Name' }, 'updater');
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.name).toBe('New Name');
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.name).toBe('New Name');
+    });
+
+    it('should fail an update with an empty name', async () => {
+      const opp = Opportunity.create({
+        name: 'Keep Name',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.updateOpportunity(opp.id.value, { name: '   ' }, 'updater');
+
+      expect(result.isFailure).toBe(true);
+      const reloaded = await opportunityRepository.findById(opp.id);
+      expect(reloaded?.name).toBe('Keep Name');
+    });
+
     it('should update probability successfully', async () => {
       const opp = Opportunity.create({
         name: 'Probability Update',

@@ -274,6 +274,26 @@ waivers:
       re-blocks if the conversion ever changes.
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '2c5eeef9ea56968efce04e77ddf41ca2e2d31c269bb518f64eb36a42c5eced24'
+    reason: >-
+      Accepted as out of scope + pre-existing (IFC-282). Codex notes that
+      opportunityListResponseSchema items (opportunityResponseSchema, value:
+      moneySchema {amount,currency}) do not match the router list path, which
+      returns raw Prisma rows (value is a Decimal) WITH owner/account/contact
+      relation includes the frontend consumes. This is correct BUT: (1) IFC-282
+      B-07's audited scope is the response KEY name only (data -> opportunities),
+      which is fixed; (2) the schema is NOT wired as a tRPC .output() on
+      opportunity.list — it is a decorative type, so there is no runtime
+      validation failure (the frontend gets types via tRPC inference from the
+      router's actual return, not this schema); (3) the two suggested fixes are
+      both out of scope and risky — mapping rows through mapOpportunityToResponse
+      would DROP the owner/account/contact relations the deals list renders, and a
+      new raw-row list-item schema is a separate modelling task. Pre-existing
+      (the item shape never matched raw rows, regardless of the key name). Tracked
+      in artifacts/metrics/debt-ledger.yaml (OPP-LIST-SCHEMA-SHAPE-001) + gh issue #413.
+      Re-blocks if the schema line changes.
+    author: talyssonoliver
+    date: '2026-06-13'
   - fingerprint: '39abddd36168a87f849868cae4e4e383732091ae3d933683fe19dd0a77987846'
     reason: >-
       Accepted out-of-scope (PG-062) — a pre-existing limitation needing a BACKEND

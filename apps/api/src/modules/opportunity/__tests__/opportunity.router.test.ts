@@ -61,6 +61,7 @@ const createMockDomainOpportunity = (overrides: Record<string, unknown> = {}) =>
   isClosed: false,
   isWon: false,
   isLost: false,
+  closedAt: undefined,
   createdAt: new Date(),
   updatedAt: new Date(),
   getDomainEvents: () => [],
@@ -122,7 +123,7 @@ describe('Opportunity Router', () => {
       expect(ctx.services!.opportunity!.createOpportunity).toHaveBeenCalled();
     });
 
-    it('should throw NOT_FOUND if account does not exist', async () => {
+    it('should throw BAD_REQUEST if account does not exist (B-09: VALIDATION_ERROR)', async () => {
       const input = {
         name: 'Deal',
         value: { amount: 50000 },
@@ -140,13 +141,13 @@ describe('Opportunity Router', () => {
 
       await expect(caller.create(input)).rejects.toThrow(
         expect.objectContaining({
-          code: 'NOT_FOUND',
+          code: 'BAD_REQUEST',
           message: expect.stringContaining('Account'),
         })
       );
     });
 
-    it('should throw NOT_FOUND if contact does not exist', async () => {
+    it('should throw BAD_REQUEST if contact does not exist (B-09: VALIDATION_ERROR)', async () => {
       const input = {
         name: 'Deal',
         value: { amount: 50000 },
@@ -165,9 +166,28 @@ describe('Opportunity Router', () => {
 
       await expect(caller.create(input)).rejects.toThrow(
         expect.objectContaining({
-          code: 'NOT_FOUND',
+          code: 'BAD_REQUEST',
           message: expect.stringContaining('Contact'),
         })
+      );
+    });
+
+    it('maps a generic VALIDATION_ERROR to BAD_REQUEST on create (B-09)', async () => {
+      const input = {
+        name: 'Deal',
+        value: { amount: 50000 },
+        stage: 'PROPOSAL' as const,
+        probability: 60,
+        accountId: TEST_UUIDS.account1,
+      };
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Some validation problem' },
+      });
+
+      await expect(caller.create(input)).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
       );
     });
   });
@@ -235,6 +255,53 @@ describe('Opportunity Router', () => {
           }),
         })
       );
+    });
+
+    it('includes closedAt on the detail response for a closed deal (B-11)', async () => {
+      const closedAt = new Date('2025-07-01T12:00:00Z');
+      prismaMock.opportunity.findFirst.mockResolvedValue({
+        ...mockOpportunity,
+        id: TEST_UUIDS.opportunity1,
+        name: 'Won Deal',
+        value: new Prisma.Decimal(50000),
+        probability: 100,
+        stage: 'CLOSED_WON',
+        expectedCloseDate: new Date('2025-06-30'),
+        description: null,
+        accountId: TEST_UUIDS.account1,
+        contactId: TEST_UUIDS.contact1,
+        ownerId: TEST_UUIDS.user1,
+        closedAt,
+        owner: null,
+        account: null,
+        contact: null,
+      } as any);
+
+      const result = await caller.getById({ id: TEST_UUIDS.opportunity1 });
+
+      expect(result.closedAt).toEqual(closedAt);
+      expect(result.isWon).toBe(true);
+    });
+
+    it('returns closedAt: null on the detail response for an open deal (B-11)', async () => {
+      prismaMock.opportunity.findFirst.mockResolvedValue({
+        ...mockOpportunity,
+        id: TEST_UUIDS.opportunity1,
+        value: new Prisma.Decimal(50000),
+        probability: 60,
+        stage: 'PROPOSAL',
+        accountId: TEST_UUIDS.account1,
+        contactId: null,
+        ownerId: TEST_UUIDS.user1,
+        closedAt: null,
+        owner: null,
+        account: null,
+        contact: null,
+      } as any);
+
+      const result = await caller.getById({ id: TEST_UUIDS.opportunity1 });
+
+      expect(result.closedAt).toBeNull();
     });
 
     it('should throw NOT_FOUND for non-existent opportunity', async () => {
@@ -355,6 +422,37 @@ describe('Opportunity Router', () => {
       expect(result.stage).toBe('NEGOTIATION');
       expect(result.probability).toBe(70);
       expect(ctx.services!.opportunity!.updateOpportunity).toHaveBeenCalled();
+    });
+
+    it('forwards probability to the service as a plain number, not a VO (B-05)', async () => {
+      const mockDomainOpp = createMockDomainOpportunity({ probability: { value: 75 } });
+      const spy = vi
+        .fn()
+        .mockResolvedValue({ isSuccess: true, isFailure: false, value: mockDomainOpp });
+      ctx.services!.opportunity!.updateOpportunity = spy;
+
+      await caller.update({ id: TEST_UUIDS.opportunity1, probability: 75 });
+
+      // percentageSchema parses to a Percentage VO; the router unwraps `.value`,
+      // so the service must receive the raw number 75 (B-05 verify).
+      expect(spy).toHaveBeenCalledWith(
+        TEST_UUIDS.opportunity1,
+        expect.objectContaining({ probability: 75 }),
+        expect.any(String),
+        expect.any(String)
+      );
+    });
+
+    it('maps a domain INVALID_OPPORTUNITY_NAME to BAD_REQUEST (B-04)', async () => {
+      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'INVALID_OPPORTUNITY_NAME', message: 'Opportunity name cannot be empty' },
+      });
+
+      await expect(caller.update({ id: TEST_UUIDS.opportunity1, name: 'x' })).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
     });
 
     it('should throw NOT_FOUND when updating non-existent opportunity', async () => {
@@ -572,6 +670,7 @@ describe('Opportunity Router', () => {
         ownerId: TEST_UUIDS.user1,
         tenantId: TEST_UUIDS.tenant,
         description: null,
+        closedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -586,6 +685,8 @@ describe('Opportunity Router', () => {
 
       expect(result.id).toBe(TEST_UUIDS.opportunity1);
       expect(ctx.services!.opportunity!.createOpportunity).not.toHaveBeenCalled();
+      // IFC-282 B-11: the merge read-back path emits closedAt (null for an open deal).
+      expect(result.closedAt).toBeNull();
     });
 
     it('create: emits deal_duplicate_suspected when notifyOnDuplicate and a suspect exists', async () => {
@@ -1047,18 +1148,14 @@ describe('Opportunity Router', () => {
       ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
     });
 
-    it('should throw BAD_REQUEST for CLOSED_LOST without reason', async () => {
-      ctx.services!.opportunity!.markAsLost = vi.fn().mockResolvedValue({
-        isSuccess: false,
-        isFailure: true,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Reason is required and must be at least 10 characters',
-        },
-      });
-
+    it('should throw BAD_REQUEST for CLOSED_LOST without a valid reason (B-12)', async () => {
+      // moveStageSchema.superRefine rejects CLOSED_LOST + missing/short reason at
+      // the input boundary (BAD_REQUEST), before any service call.
       await expect(
         caller.moveStage({ id: TEST_UUIDS.opportunity1, targetStage: 'CLOSED_LOST', reason: '' })
+      ).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
+      await expect(
+        caller.moveStage({ id: TEST_UUIDS.opportunity1, targetStage: 'CLOSED_LOST' })
       ).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
     });
   });

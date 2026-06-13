@@ -173,6 +173,37 @@ describe('Pipeline Config Router', () => {
       expect(prismaMock.pipelineStageConfig.create).toHaveBeenCalled();
     });
 
+    // IFC-282 B-10: deactivating a terminal stage maps to BAD_REQUEST (was a 500
+    // from validateStageDeactivation's plain Error).
+    it('rejects deactivating CLOSED_WON with BAD_REQUEST (B-10)', async () => {
+      await expect(caller.updateStage({ stage: 'CLOSED_WON', isActive: false })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'BAD_REQUEST',
+          message: expect.stringContaining('Cannot deactivate terminal stage'),
+        })
+      );
+    });
+
+    it('rejects deactivating CLOSED_LOST with BAD_REQUEST (B-10)', async () => {
+      await expect(caller.updateStage({ stage: 'CLOSED_LOST', isActive: false })).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
+    });
+
+    it('allows deactivating a non-protected stage (no throw path)', async () => {
+      const existingConfig = createMockPipelineConfig('PROSPECTING');
+      prismaMock.pipelineStageConfig.findUnique.mockResolvedValue(existingConfig as any);
+      prismaMock.pipelineStageConfig.update.mockResolvedValue({
+        ...existingConfig,
+        isActive: false,
+      } as any);
+
+      const result = await caller.updateStage({ stage: 'PROSPECTING', isActive: false });
+
+      expect(result).toBeDefined();
+      expect(prismaMock.pipelineStageConfig.update).toHaveBeenCalled();
+    });
+
     it('should use defaults for unspecified fields when creating', async () => {
       prismaMock.pipelineStageConfig.findUnique.mockResolvedValue(null);
       prismaMock.pipelineStageConfig.create.mockResolvedValue(
@@ -276,6 +307,21 @@ describe('Pipeline Config Router', () => {
       await caller.updateAll({ stages });
 
       expect(prismaMock.$transaction).toHaveBeenCalled();
+    });
+
+    // IFC-282 B-10: a batch update that deactivates a terminal stage → BAD_REQUEST.
+    it('rejects batch deactivation of a protected stage with BAD_REQUEST (B-10)', async () => {
+      const stages = [
+        { stage: 'PROSPECTING' as const, isActive: true },
+        { stage: 'CLOSED_WON' as const, isActive: false },
+      ];
+
+      await expect(caller.updateAll({ stages })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'BAD_REQUEST',
+          message: expect.stringContaining('Cannot deactivate terminal stage'),
+        })
+      );
     });
 
     it('should validate all stages in batch', async () => {

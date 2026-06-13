@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Lead, Account } from '@intelliflow/domain';
-import { mapLeadToResponse, mapAccountToResponse } from '../mappers';
+import { Lead, Account, Opportunity } from '@intelliflow/domain';
+import { mapLeadToResponse, mapAccountToResponse, mapOpportunityToResponse } from '../mappers';
 
 describe('mapLeadToResponse — Lead 360 fields (IFC-004)', () => {
   it('surfaces location, website, avatarUrl, estimatedValue, lastContactedAt and tags', () => {
@@ -83,5 +83,39 @@ describe('mapAccountToResponse — website serialization (IFC-270 B-13)', () => 
     const dto = mapAccountToResponse(account);
 
     expect(dto.website).toBeNull();
+  });
+});
+
+describe('mapOpportunityToResponse — closedAt (IFC-282 B-11)', () => {
+  const makeOpp = () =>
+    Opportunity.create({
+      name: 'Deal',
+      value: 50000,
+      accountId: '123e4567-e89b-12d3-a456-426614174000',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+    }).value;
+
+  it('returns closedAt: null for an open opportunity', () => {
+    const dto = mapOpportunityToResponse(makeOpp());
+    expect(dto.closedAt).toBeNull();
+  });
+
+  it('returns closedAt as a Date once the opportunity is won', () => {
+    const opp = makeOpp();
+    opp.markAsWon('closer-1');
+
+    const dto = mapOpportunityToResponse(opp);
+
+    expect(dto.closedAt).toBeInstanceOf(Date);
+  });
+
+  it('returns closedAt as a Date once the opportunity is lost', () => {
+    const opp = makeOpp();
+    opp.markAsLost('Lost on price to the incumbent', 'closer-1');
+
+    const dto = mapOpportunityToResponse(opp);
+
+    expect(dto.closedAt).toBeInstanceOf(Date);
   });
 });

@@ -12,6 +12,7 @@ import {
   Opportunity,
   OpportunityAlreadyClosedError,
   InvalidOpportunityValueError,
+  InvalidOpportunityNameError,
   InvalidProbabilityError,
 } from '../Opportunity';
 import { OpportunityId } from '../OpportunityId';
@@ -657,6 +658,55 @@ describe('Opportunity Aggregate', () => {
 
       const events = opportunity.getDomainEvents();
       expect(events).toHaveLength(0);
+    });
+  });
+
+  // IFC-282 B-04: name updates were silently dropped (no domain command existed).
+  describe('updateName()', () => {
+    let opportunity: Opportunity;
+
+    beforeEach(() => {
+      opportunity = Opportunity.create({
+        name: 'Original Name',
+        value: 100000,
+        accountId: 'account-123',
+        ownerId: 'owner-456',
+        tenantId: 'tenant-123',
+      }).value;
+      opportunity.clearDomainEvents();
+    });
+
+    it('should update the name (trimmed) and bump updatedAt', () => {
+      const before = opportunity.updatedAt.getTime();
+      const result = opportunity.updateName('  Renamed Deal  ', 'user-1');
+
+      expect(result.isSuccess).toBe(true);
+      expect(opportunity.name).toBe('Renamed Deal');
+      expect(opportunity.updatedAt.getTime()).toBeGreaterThanOrEqual(before);
+    });
+
+    it('should fail with an empty or whitespace-only name', () => {
+      expect(opportunity.updateName('', 'user-1').isFailure).toBe(true);
+      const result = opportunity.updateName('   ', 'user-1');
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(InvalidOpportunityNameError);
+      // unchanged
+      expect(opportunity.name).toBe('Original Name');
+    });
+
+    it('should allow renaming a closed deal (name is metadata, no closed-guard)', () => {
+      opportunity.markAsWon('closer-1');
+      const result = opportunity.updateName('Closed but renamed', 'user-1');
+
+      expect(result.isSuccess).toBe(true);
+      expect(opportunity.name).toBe('Closed but renamed');
+    });
+
+    it('should not emit a domain event for a name update', () => {
+      opportunity.clearDomainEvents();
+      opportunity.updateName('Event Check', 'user-1');
+
+      expect(opportunity.getDomainEvents()).toHaveLength(0);
     });
   });
 

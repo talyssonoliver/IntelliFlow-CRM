@@ -97,7 +97,12 @@ describe('Pipeline Config Router Integration', () => {
           stage: 'CLOSED_WON',
           isActive: false,
         })
-      ).rejects.toThrow(/Cannot deactivate terminal stage/);
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'BAD_REQUEST',
+          message: expect.stringContaining('Cannot deactivate terminal stage'),
+        })
+      );
     });
 
     it('rejects deactivation of protected stage CLOSED_LOST', async () => {
@@ -109,7 +114,12 @@ describe('Pipeline Config Router Integration', () => {
           stage: 'CLOSED_LOST',
           isActive: false,
         })
-      ).rejects.toThrow(/Cannot deactivate terminal stage/);
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: 'BAD_REQUEST',
+          message: expect.stringContaining('Cannot deactivate terminal stage'),
+        })
+      );
     });
   });
 
@@ -138,7 +148,10 @@ describe('Pipeline Config Router Integration', () => {
       ];
 
       await expect(caller.updateAll({ stages })).rejects.toThrow(
-        /Cannot deactivate terminal stage/
+        expect.objectContaining({
+          code: 'BAD_REQUEST',
+          message: expect.stringContaining('Cannot deactivate terminal stage'),
+        })
       );
     });
   });

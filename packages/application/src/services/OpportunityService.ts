@@ -356,12 +356,16 @@ export class OpportunityService {
     const fkError = await this.validateForeignKeys(data, tenantId);
     if (fkError) return Result.fail(fkError);
 
+    // IFC-282 B-04: apply the name change first (validate-then-mutate ordering)
+    // so an invalid name surfaces before any scalar mutation. Previously the name
+    // was silently dropped (the old TODO).
+    if (data.name !== undefined) {
+      const nameResult = opportunity.updateName(data.name, updatedBy);
+      if (nameResult.isFailure) return Result.fail(nameResult.error);
+    }
+
     const updateError = this.applyScalarUpdates(opportunity, data, updatedBy);
     if (updateError) return Result.fail(updateError);
-
-    // Name update - domain entity may need a method for this
-    // For now, we assume it's handled at persistence layer
-    // TODO: Add updateName method to Opportunity domain entity if needed
 
     try {
       await this.opportunityRepository.save(opportunity);

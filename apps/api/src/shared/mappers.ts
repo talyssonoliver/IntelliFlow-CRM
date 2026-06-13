@@ -137,6 +137,8 @@ export function mapOpportunityToResponse(opportunity: Opportunity) {
     isLost: opportunity.isLost,
     createdAt: opportunity.createdAt,
     updatedAt: opportunity.updatedAt,
+    // IFC-282 B-11: surface closedAt (previously dropped → always undefined).
+    closedAt: opportunity.closedAt ?? null,
   };
 }
 
