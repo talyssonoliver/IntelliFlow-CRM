@@ -32,8 +32,12 @@ export interface ContactLogCallInput {
 
 export interface ContactQuickActionsProps {
   contact: ContactQuickActionsContact;
-  /** Called with the validated payload when a call is logged. The page wires this to `contact.logActivity`. */
-  onLogCall: (input: ContactLogCallInput) => void;
+  /**
+   * Called with the validated payload when a call is logged. The page wires this
+   * to `contact.logActivity.mutateAsync`. Returning a promise lets the dialog stay
+   * open (preserving the user's input) when the mutation rejects.
+   */
+  onLogCall: (input: ContactLogCallInput) => void | Promise<unknown>;
   /** Reflects the parent mutation's pending state so the submit button can show progress. */
   isLoggingCall: boolean;
 }
@@ -62,18 +66,23 @@ export function ContactQuickActions({
     setLogCallDescription('');
   };
 
-  const submitLogCall = () => {
+  const submitLogCall = async () => {
     const title = logCallTitle.trim();
     if (!title) return;
-    // Dispatch the payload FIRST, then close + clear — clearing in the dialog's
-    // onOpenChange teardown would wipe the payload before it is read.
-    onLogCall({
-      contactId: contact.id,
-      type: 'CALL',
-      title,
-      description: logCallDescription.trim() || undefined,
-    });
-    resetLogCall();
+    try {
+      // Reset only AFTER the activity is recorded. A failed mutation keeps the
+      // dialog open with the user's title/notes intact (mirrors the page's
+      // addNote close-on-success behaviour).
+      await onLogCall({
+        contactId: contact.id,
+        type: 'CALL',
+        title,
+        description: logCallDescription.trim() || undefined,
+      });
+      resetLogCall();
+    } catch {
+      // Keep the dialog open and inputs preserved on failure.
+    }
   };
 
   return (

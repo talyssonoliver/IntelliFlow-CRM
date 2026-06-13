@@ -104,6 +104,7 @@ vi.mock('@/lib/api', () => ({
       logActivity: {
         useMutation: () => ({
           mutate: mockLogActivityMutate,
+          mutateAsync: mockLogActivityMutate,
           isPending: false,
         }),
       },

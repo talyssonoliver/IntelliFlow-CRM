@@ -1313,6 +1313,9 @@ export default function Contact360Page() {
       utils.activityFeed.getUnifiedFeed.invalidate();
       utils.activityFeed.getEntityFeed.invalidate();
     },
+    onError: (err) => {
+      toast({ title: 'Failed to log activity', description: err.message, variant: 'destructive' });
+    },
   });
   const addNoteMutation = api.contact.addNote.useMutation({
     onSuccess: () => {
@@ -1666,7 +1669,7 @@ export default function Contact360Page() {
               lastName: contact.lastName,
               email: contact.email,
             }}
-            onLogCall={(input) => logActivityMutation.mutate(input)}
+            onLogCall={(input) => logActivityMutation.mutateAsync(input)}
             isLoggingCall={logActivityMutation.isPending}
           />
           <PinButton
