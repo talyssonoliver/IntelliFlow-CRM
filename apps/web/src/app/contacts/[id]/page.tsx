@@ -878,18 +878,6 @@ function renderRichPreview(activity: Activity): React.ReactNode {
               </span>
               {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
             </div>
-            {meta.recordingUrl && (
-              <button
-                type="button"
-                onClick={() => window.open(meta.recordingUrl, '_blank', 'noopener,noreferrer')}
-                className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z" />
-                </svg>{' '}
-                Play Recording
-              </button>
-            )}
           </div>
         </div>
       );
@@ -2407,7 +2395,7 @@ export default function Contact360Page() {
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Deals</h3>
                 <button
                   type="button"
-                  onClick={() => router.push('/deals/new')}
+                  onClick={() => router.push(`/deals/new?contactId=${contactId}`)}
                   className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">

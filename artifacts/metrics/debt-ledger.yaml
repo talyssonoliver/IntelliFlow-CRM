@@ -5031,10 +5031,10 @@ alerts:
     origin_task: IFC-257
     owner: CRM FE
     severity: low
-    description: 'Contact detail "Add Deal" (apps/web/src/app/contacts/[id]/page.tsx) navigates to /deals/new but does NOT pre-associate the originating contact. The create-deal page (apps/web/src/app/deals/(list)/new/page.tsx) never reads a contactId search param, and DealForm couples contactId to accountId (validation DealForm.tsx:110-111, reset :208), so prefill needs the contact account context — beyond IFC-257 button-wiring scope. IFC-257 navigates to plain /deals/new to avoid a misleading unused param (flagged by the codex-review gate).'
+    description: 'BOTH contact "Add Deal" entry points navigate to /deals/new?contactId=<id> — the contact list (apps/web/src/app/contacts/(list)/ContactsPageClient.tsx:455, pre-existing) and now the contact detail page (apps/web/src/app/contacts/[id]/page.tsx, IFC-257, matching the list pattern). However the create-deal page (apps/web/src/app/deals/(list)/new/page.tsx) never reads the contactId search param, so the new deal is NOT pre-associated. DealForm couples contactId to accountId (validation DealForm.tsx:110-111, reset :208), so consuming it needs the contact account context — beyond IFC-257 button-wiring scope.'
     created_at: 2026-06-12
     status: open
     expiry_date: 2026-09-30
     remediation_sprint: 20
-    remediation_plan: 'Read contactId (and account context) in deals/(list)/new/page.tsx, pass initialData={{ contactId, accountId }} to DealForm, restore the ?contactId param on the contact Add Deal action, and assert prefill end-to-end.'
-    notes: 'git issue #405. Out of IFC-257 scope (button wiring). Found by codex-review gate.'
+    remediation_plan: 'In deals/(list)/new/page.tsx read contactId from search params, fetch/derive the contact account context, pass initialData={{ contactId, accountId }} to DealForm, and assert end-to-end prefill. Fixes both entry points at once.'
+    notes: 'git issue #405. Out of IFC-257 scope (button wiring). Pre-existing gap surfaced by the codex-review gate (which flip-flopped: flagged both passing AND dropping the param).'

@@ -2515,13 +2515,15 @@ inference), ADR-050 (duplicate-detection parallel).
 - `contacts/[id]/page.tsx → ContactQuickActions → { Sheet + EmailCompose (PG-141), Dialog }`
   — header "Email" opens an `EmailCompose` sheet; "Log Call" opens a dialog →
   `contact.logActivity({ type: 'CALL' })` (existing mutation).
-- `contacts/[id]/page.tsx → router.push('/deals/new')` — "Add Deal" opens the
-  new-deal flow. (Pre-associating the contact on the new deal needs account
-  context in `DealForm`; tracked as a follow-up — debt-ledger
-  `CONTACT-ADD-DEAL-PREFILL-001`, git issue #405.)
+- `contacts/[id]/page.tsx → router.push('/deals/new?contactId=…')` — "Add Deal",
+  matching the contact-list pattern (`ContactsPageClient.tsx:455`). The
+  create-deal page does not yet consume the param (it needs `DealForm` account
+  context); fixing consumption for both entry points is tracked — debt-ledger
+  `CONTACT-ADD-DEAL-PREFILL-001`, git issue #405.
 - `contacts/[id]/page.tsx → ContactMapPreview → buildContactMapsHref → Google Maps`
   — "View Map" (disabled until IFC-259 wires `contact.location`).
-- `contacts/[id]/page.tsx → renderRichPreview('call') → window.open(meta.recordingUrl)`
-  — "Play Recording" (rendered only when a recording URL exists); the
-  document-preview Download no-op was removed (no download URL in activity
-  metadata).
+- The call-preview "Play Recording" and document-preview "Download" no-op
+  buttons were **removed** — neither has a populated data source in the contact
+  activity feed (no call-recording integration; no download URL in activity
+  metadata), and opening an unvalidated `recordingUrl` was an unsafe-URL
+  surface.
