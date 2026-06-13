@@ -176,10 +176,12 @@ waivers:
       response schema.
     author: talyssonoliver
     date: '2026-06-12'
-  - fingerprint: '51e522fb5159252f3a82d4bc0c3bc2c2c176f40139841e0e81ab2c8cbab8f933'
+  - fingerprint: '45ab85669572a9528d7b8c51e350bcdf4c67fd22dd448707dca7c2cdcec22a0f'
     reason: >-
       Accepted out-of-scope, pre-existing gap — tracked, not a new defect. IFC-257's
-      contact-detail "Add Deal" navigates to /deals/new?contactId=<id>, matching the
+      contact-detail "Add Deal" (now in
+      apps/web/src/components/contacts/ContactAddDealButton.tsx) navigates to
+      /deals/new?contactId=<id>, matching the
       CANONICAL contact->deal pattern already shipped on the contact list
       (apps/web/src/app/contacts/(list)/ContactsPageClient.tsx:455 uses the identical
       `/deals/new?contactId=${contact.id}`). The contact context IS forwarded; the
