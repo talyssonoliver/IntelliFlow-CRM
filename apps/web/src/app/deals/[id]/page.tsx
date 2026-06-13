@@ -700,7 +700,12 @@ export default function DealDetailPage() {
           icon="delete"
           isLoading={deleteMutation.isPending}
           onConfirm={async () => {
-            await deleteMutation.mutateAsync({ id: dealId });
+            try {
+              await deleteMutation.mutateAsync({ id: dealId });
+            } catch {
+              // deleteMutation.onError shows the destructive toast; swallow the
+              // rejection so it doesn't surface as an unhandled promise rejection.
+            }
           }}
         />
 

@@ -334,6 +334,22 @@ export class OpportunityService {
   }
 
   /**
+   * IFC-280: validate the stage-independent scalar inputs without mutating, so
+   * the mutation pass cannot apply one scalar then reject a sibling. Mirrors the
+   * domain guards (updateValue requires > 0; updateProbability requires a valid
+   * 0..100 Percentage) — the domain methods remain authoritative and re-check.
+   */
+  private validateScalarInputs(data: { value?: number; probability?: number }): DomainError | null {
+    if (data.value !== undefined && data.value <= 0) {
+      return new ValidationError('Opportunity value must be greater than zero');
+    }
+    if (data.probability !== undefined && (data.probability < 0 || data.probability > 100)) {
+      return new ValidationError('Probability must be between 0 and 100');
+    }
+    return null;
+  }
+
+  /**
    * IFC-280: apply account/contact re-assignment. Non-fallible — the invariant is
    * validated by validateStakeholderInvariant in the validation pass beforehand.
    */
@@ -414,6 +430,13 @@ export class OpportunityService {
     // mutation, so a stakeholder re-assignment cannot persist a mismatched pair.
     const stakeholderError = await this.validateStakeholderInvariant(opportunity, data);
     if (stakeholderError) return Result.fail(stakeholderError);
+
+    // IFC-280 (atomicity): pre-validate the stage-independent scalar inputs
+    // (value > 0, probability in 0..100) BEFORE mutating, so an invalid value or
+    // probability cannot leave an earlier scalar (e.g. stage, which changeStage
+    // mutates while resetting probability) already applied on the loaded aggregate.
+    const scalarInputError = this.validateScalarInputs(data);
+    if (scalarInputError) return Result.fail(scalarInputError);
 
     // --- Mutation pass -----------------------------------------------------
     // IFC-282 B-04: name validates-then-mutates internally (kept first).
