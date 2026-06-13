@@ -364,3 +364,33 @@ waivers:
       one safe in-scope case and is fixed. Source-anchored.
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '47d836d1bd2913d419f08923fcfcb46aa816bb8046c607f39ca107f64b34536c'
+    reason: >-
+      Verified false positive — codex hallucinates the getById phone response shape.
+      getById (lead.router.ts:558) is a tenantProcedure with NO .output() schema, so
+      it returns the RAW Prisma row where phone is the String column (schema.prisma) —
+      a plain string, NOT a serialized PhoneNumber value object. The phoneSchema
+      'transformer' (validators/common.ts:25) is INPUT-only (createLead/updateLead map
+      a string -> PhoneNumber for the domain), never applied to getById output. The
+      existing edit/page.test.tsx seeds phone: '+1234567890' (a string) and passes,
+      confirming the real shape. LeadEditor's typeof lead.phone === 'string' branch
+      handles it; the { value } / { props.value } shapes codex cites do not occur for
+      getById. Any genuine API-mapper normalisation is a backend concern out of
+      PG-062's web-only scope. Source-anchored — re-blocks if the seeding changes.
+    author: talyssonoliver
+    date: '2026-06-13'
+  - fingerprint: '045b0a4bcefd743da071c451c5349108a58c7ed7e35d34bbaa000b53e3fb836f'
+    reason: >-
+      The handleSubmit-side manifestation of the same accepted out-of-scope
+      clear-semantics finding (see waivers 2f8a0b3d / 353d46e9 / 000a58dd for the
+      change-tracker side). Clearing a scalar lead field cannot be persisted without
+      a BACKEND change (updateLeadSchema.estimatedValue has no null; company
+      z.string().min(1) / name / phone schemas reject ''), so the payload-keys guard
+      (skip a {id}-only patch) is the correct frontend-only behaviour — it avoids the
+      WORSE bug codex first flagged here (falsely marking a no-op clear as saved).
+      The residual (Save enabled for a clear that no-ops) is inherent to the missing
+      backend clear-support and is tracked in #412 (incl. excluding unsupported clears
+      from dirty state once the API contract is decided). Out of PG-062's web-only,
+      zero-backend behaviour-preserving extraction scope. Source-anchored.
+    author: talyssonoliver
+    date: '2026-06-13'
