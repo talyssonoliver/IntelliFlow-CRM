@@ -176,3 +176,24 @@ waivers:
       response schema.
     author: talyssonoliver
     date: '2026-06-12'
+  - fingerprint: '00ce5862eea3e63b66af5c32022e52bdfe70265cf52d9278e73804fbb8739934'
+    reason: >-
+      Accepted deliberate design decision (IFC-270). updateAccountRevenueSchema
+      uses positive() to match the established API contract: createAccountSchema
+      and updateAccountSchema both reject 0 revenue (z.number().positive()), so
+      every account-revenue API path is uniformly positive-only. The domain
+      Account.updateRevenue intentionally allows the broader >=0 (internal
+      invariant), but the API layer is intentionally stricter — a pre-existing,
+      shipped pattern, not introduced here. Codex oscillates on this exact line
+      (one run flags nonnegative() as unsafe because the persistence layer drops
+      0, the next flags positive() as too strict), confirming a subjective
+      classification rather than a defect. The underlying real bug it points at —
+      PrismaAccountRepository.save coercing revenue 0 -> null via a truthiness
+      check (account.revenue ? new Decimal(...) : null) — is a genuine,
+      PRE-EXISTING adapter defect that no API path can reach (all reject 0) and is
+      outside IFC-270's audited scope (section 12 = router/validators/service). It
+      is tracked separately in artifacts/metrics/debt-ledger.yaml and the IFC-270
+      findings doc for a dedicated adapter fix. Re-blocks if the schema line
+      changes.
+    author: talyssonoliver
+    date: '2026-06-13'

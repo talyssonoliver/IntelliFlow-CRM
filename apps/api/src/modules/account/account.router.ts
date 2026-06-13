@@ -292,9 +292,16 @@ async function auditAndEnrichAccountUpdate(
     })
     .catch((err) => console.error('[account.router] Audit log failed:', err));
 
-  const flags = await loadAccountAutomation(typedCtx);
-  if (flags.aiEnrichment || flags.aiIndustryInference) {
-    await enqueueAccountAIEnrichment(accountId, typedCtx.tenant.tenantId);
+  // Best-effort: these run AFTER the mutation has already committed, so a
+  // failure here (e.g. the automation-settings read rejecting) must NOT turn a
+  // persisted update into an API error.
+  try {
+    const flags = await loadAccountAutomation(typedCtx);
+    if (flags.aiEnrichment || flags.aiIndustryInference) {
+      await enqueueAccountAIEnrichment(accountId, typedCtx.tenant.tenantId);
+    }
+  } catch (err) {
+    console.warn('[account.router] post-update enrichment skipped (non-fatal):', err);
   }
 }
 

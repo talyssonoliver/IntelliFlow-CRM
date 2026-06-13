@@ -451,6 +451,24 @@ describe('Account Router', () => {
         expect.objectContaining({ code: 'BAD_REQUEST' })
       );
     });
+
+    it('still succeeds when the post-commit enrichment read fails (best-effort)', async () => {
+      const mockDomainAccount = createMockDomainAccount({ revenue: 9000000 });
+      ctx.services!.account!.updateRevenue = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+      // The mutation already committed; a failing automation-settings read in
+      // auditAndEnrichAccountUpdate must not turn the request into an error.
+      (prismaMock.accountAutomationSetting.findUnique as any).mockRejectedValueOnce(
+        new Error('db unavailable')
+      );
+
+      const result = await caller.updateRevenue({ id: TEST_UUIDS.account1, revenue: 9000000 });
+
+      expect(result.revenue).toBe(9000000);
+    });
   });
 
   describe('updateEmployeeCount (B-11)', () => {
