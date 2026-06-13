@@ -79,17 +79,20 @@ export function LeadEditor({
 }: Readonly<LeadEditorProps>) {
   const [formData, setFormData] = useState<LeadEditFields>(EMPTY_FIELDS);
   const [seededSnapshot, setSeededSnapshot] = useState<LeadEditFields | null>(null);
-  const [seeded, setSeeded] = useState(false);
+  const [seededId, setSeededId] = useState<string | null>(null);
 
-  // Seed form from fetched lead data (once).
+  // Seed — and RE-seed — when the target lead changes, so a mounted editor that
+  // navigates to a different leadId adopts the new lead's values instead of
+  // keeping the previous lead's edits. Same leadId across re-renders does not
+  // re-seed (so in-progress edits are preserved).
   useEffect(() => {
-    if (lead && !seeded) {
+    if (lead && seededId !== leadId) {
       const seededData = seedFromLead(lead);
       setFormData(seededData);
       setSeededSnapshot(seededData);
-      setSeeded(true);
+      setSeededId(leadId);
     }
-  }, [lead, seeded]);
+  }, [lead, leadId, seededId]);
 
   // Track unsaved changes against the seeded snapshot.
   const isDirty = seededSnapshot !== null && computeLeadChangeset(seededSnapshot, formData).isDirty;

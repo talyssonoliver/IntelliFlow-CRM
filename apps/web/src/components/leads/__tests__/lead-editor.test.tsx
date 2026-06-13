@@ -95,6 +95,29 @@ describe('LeadEditor', () => {
     expect((screen.getByLabelText('Tags') as HTMLInputElement).value).toBe('');
   });
 
+  it('re-seeds the form when navigating to a different lead', () => {
+    const { rerender } = render(
+      <LeadEditor
+        leadId="lead-a"
+        lead={makeLead({ firstName: 'Alice' })}
+        isSaving={false}
+        onSave={vi.fn()}
+        onCancel={noop}
+      />
+    );
+    expect((screen.getByLabelText('First Name') as HTMLInputElement).value).toBe('Alice');
+    rerender(
+      <LeadEditor
+        leadId="lead-b"
+        lead={makeLead({ firstName: 'Bob' })}
+        isSaving={false}
+        onSave={vi.fn()}
+        onCancel={noop}
+      />
+    );
+    expect((screen.getByLabelText('First Name') as HTMLInputElement).value).toBe('Bob');
+  });
+
   it('updates every editable field on change', () => {
     renderEditor();
     const change = (label: string, value: string) =>

@@ -45,7 +45,7 @@
       },
       {
         "path": "apps/web/src/components/leads/lead-editor.tsx",
-        "sha256": "044a67d89c2588cb1b23b084ec91fd5f123d115a4fc0161e36734782c1bfed8c",
+        "sha256": "c1d3665dbaf651e6af359553bb9face1ca0f5b582e535b419c714f895c8733ff",
         "created_at": "2026-06-13T09:00:00Z"
       },
       {
@@ -55,7 +55,7 @@
       },
       {
         "path": "apps/web/src/components/leads/__tests__/lead-editor.test.tsx",
-        "sha256": "78b01b73df50856101da41afb674ee4ab286e2f3eaba90c7db79aab878218e33",
+        "sha256": "d34b1c25b96a10896480c4f2108dbb0943063acbe81b0df47307515804838baa",
         "created_at": "2026-06-13T09:20:00Z"
       }
     ],

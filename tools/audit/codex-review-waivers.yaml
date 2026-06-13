@@ -335,3 +335,32 @@ waivers:
       the no-op guard is removed.
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '2f8a0b3df3731de5167e003b740c4d8c0a706dbdc4bf21d72e2601357b6b7e4e'
+    reason: >-
+      Same accepted out-of-scope finding as waiver 39abddd3 (estimatedValue clear)
+      with a SHIFTED fingerprint — the Number() parse fix changed line 72, so codex
+      re-anchored the identical clear-dropped finding. Clearing estimatedValue needs
+      a BACKEND change: updateLeadSchema is z.number().int().min(0).optional() with
+      NO null (packages/validators/src/lead.ts:36), so there is no value to send for
+      a clear; the response column being nullable does not make the UPDATE INPUT
+      accept null. Supporting an explicit clear requires updateLeadSchema +
+      LeadService + domain to accept a null clear — outside PG-062's web-only,
+      zero-backend behaviour-preserving extraction scope. The original edit page
+      already omitted empty estimatedValue; PG-062 preserves that. Filed as #412.
+      Source-anchored — re-blocks if the clearing logic changes.
+    author: talyssonoliver
+    date: '2026-06-13'
+  - fingerprint: '000a58ddbe0a157863afc83ae51e1f49c5cf46fd051b97c927aeae5132d4aadd'
+    reason: >-
+      Same accepted out-of-scope clear-dropped finding as waivers 2f8a0b3d /
+      353d46e9 / 18fe4b21, re-anchored by codex to yet another span (lines 70-86)
+      — the documented codex non-determinism (it re-spans the identical finding
+      each run). Clearing scalar lead fields needs a BACKEND change:
+      updateLeadSchema.estimatedValue has no null (validators/src/lead.ts:36) and
+      sending '' to clear company (z.string().min(1)) / firstName/lastName/title
+      (nameSchema) / phone (phoneSchema) is a validation error, so the existing
+      toOptional/omit is correct. Out of PG-062's web-only, zero-backend
+      behaviour-preserving scope; filed as #412. tags clear (empty array) is the
+      one safe in-scope case and is fixed. Source-anchored.
+    author: talyssonoliver
+    date: '2026-06-13'
