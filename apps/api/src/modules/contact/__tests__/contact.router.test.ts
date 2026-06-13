@@ -263,6 +263,57 @@ describe('Contact Router', () => {
       expect(result.documentCount).toBe(50);
     });
 
+    // IFC-265 (T-07): activities + notes were always seeded as empty arrays in
+    // getById tests; assert they are surfaced with populated, ordered data.
+    it('surfaces populated activities and notes from the getById relations', async () => {
+      const sampleActivities = [
+        {
+          id: 'act-1',
+          type: 'EMAIL',
+          title: 'Sent proposal',
+          createdAt: new Date('2025-02-02T10:00:00Z'),
+        },
+        {
+          id: 'act-2',
+          type: 'CALL',
+          title: 'Intro call',
+          createdAt: new Date('2025-02-01T10:00:00Z'),
+        },
+      ];
+      const sampleNotes = [
+        {
+          id: 'note-1',
+          content: 'Prefers afternoon meetings',
+          author: 'rep@example.com',
+          createdAt: new Date('2025-02-03T10:00:00Z'),
+        },
+      ];
+      const contactWithRelations = baseRelations({
+        activities: sampleActivities,
+        notes: sampleNotes,
+      });
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations as any);
+      (mockServices.ticket.listByContact as any).mockResolvedValue([]);
+      (prismaMock.caseDocument.findMany as any).mockResolvedValue([]);
+
+      const result = await caller.getById({ id: TEST_UUIDS.contact1 });
+
+      expect(result.activities).toHaveLength(2);
+      expect(result.activities).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: 'act-1', title: 'Sent proposal' }),
+          expect.objectContaining({ id: 'act-2', title: 'Intro call' }),
+        ])
+      );
+      expect(result.notes).toHaveLength(1);
+      expect(result.notes[0]).toEqual(
+        expect.objectContaining({ id: 'note-1', content: 'Prefers afternoon meetings' })
+      );
+    });
+
     it('returns empty tickets and documents arrays when the contact has none', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);

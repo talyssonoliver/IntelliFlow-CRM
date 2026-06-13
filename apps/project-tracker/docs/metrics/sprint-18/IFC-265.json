@@ -7,14 +7,14 @@
   "sprint": "sprint-18",
   "phase": "",
   "stream": null,
-  "status": "BACKLOG",
+  "status": "In Progress",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.865Z"
   },
   "dependencies_resolved": [],
-  "started_at": null,
+  "started_at": "2026-06-13T12:45:00Z",
   "completed_at": null,
   "target_duration_minutes": 480,
   "actual_duration_minutes": null,
@@ -33,11 +33,13 @@
   "artifacts": {
     "expected": [
       "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx",
-      "apps/api/src/modules/contact/__tests__/contact.router.tenant.test.ts"
+      "apps/api/src/modules/contact/__tests__/contact.router.tenant.test.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-265/context_ack.json"
     ],
     "created": ["apps/web/src/app/contacts/[id]/__tests__/page.test.tsx"],
     "missing": [
-      "apps/api/src/modules/contact/__tests__/contact.router.tenant.test.ts"
+      "apps/api/src/modules/contact/__tests__/contact.router.tenant.test.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-265/context_ack.json"
     ]
   },
   "validations": [],
@@ -46,7 +48,8 @@
     {
       "status": "Backlog",
       "at": "2026-03-05T00:00:00Z"
-    }
+    },
+    { "status": "In Progress", "at": "2026-06-13T12:45:00Z" }
   ],
-  "notes": "Contact audit finding: T-01,T-04,T-06,T-07,T-08. See docs/audit/contact-detail-wiring-audit.md"
+  "notes": "Contact audit finding: T-01,T-04,T-06,T-07,T-08. Audit (2026-03-05) is STALE — page.test.tsx (~783 lines) + contact.router.security.test.ts (22 tenant tests) + EMAIL/CALL/MEETING + opportunities/aiInsight/tickets/documents already exist. Spec (2026-06-13) scopes ONLY the genuine gaps: page activity/notes/tasks/deals tab + loading/not-found + addNote (T-01/T-08); cross-tenant negatives for create/update/delete/addNote/bulkDelete/linkToAccount/unlinkFromAccount/updateEmail (T-04, new contact.router.tenant.test.ts); logActivity NOTE type (T-06); getById populated activities/notes (T-07). Test-only, no source change. CSV status kept In Progress (recognized bucket) for the report invariant; spec/plan phases tracked here + in notes."
 }
