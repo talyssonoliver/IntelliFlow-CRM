@@ -53,6 +53,13 @@ export class InvalidProbabilityError extends DomainError {
   }
 }
 
+export class InvalidOpportunityNameError extends DomainError {
+  readonly code = 'INVALID_OPPORTUNITY_NAME';
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 interface OpportunityProps {
   name: string;
   value: Money;
@@ -442,6 +449,23 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   updateDescription(description: string): void {
     this.props.description = description;
     this.props.updatedAt = new Date();
+  }
+
+  /**
+   * IFC-282 B-04: rename the opportunity. Name is display/metadata (like
+   * description) — intentionally NOT blocked when the deal is closed (renaming a
+   * closed deal is a legitimate clerical edit). Validates non-empty (defence in
+   * depth behind the Zod min(1) schema). No domain event — no subscriber consumes
+   * a name-change event; router-level audit logging records the update.
+   */
+  updateName(newName: string, _updatedBy: string): Result<void, DomainError> {
+    const trimmed = newName.trim();
+    if (trimmed.length === 0) {
+      return Result.fail(new InvalidOpportunityNameError('Opportunity name cannot be empty'));
+    }
+    this.props.name = trimmed;
+    this.props.updatedAt = new Date();
+    return Result.ok(undefined);
   }
 
   // Private helpers

@@ -165,7 +165,10 @@ function getOpportunityService(ctx: Context) {
 // ── Error-mapping helpers (reduce cognitive complexity in procedures) ──
 
 function throwOpportunityCreateError(error: { code: string; message: string }): never {
-  if (error.code === 'VALIDATION_ERROR' || error.code === 'NOT_FOUND_ERROR') {
+  // IFC-282 B-09: only a genuine NOT_FOUND_ERROR is a 404. VALIDATION_ERROR
+  // (createOpportunity returns it for a bad account/contact FK) + domain errors
+  // are client-input problems → BAD_REQUEST, not NOT_FOUND.
+  if (error.code === 'NOT_FOUND_ERROR') {
     throw new TRPCError({ code: 'NOT_FOUND', message: error.message });
   }
   throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
@@ -175,6 +178,9 @@ function throwOpportunityUpdateError(error: { code: string; message: string }): 
   const codeMap: Record<string, 'NOT_FOUND' | 'BAD_REQUEST' | 'INTERNAL_SERVER_ERROR'> = {
     NOT_FOUND_ERROR: 'NOT_FOUND',
     VALIDATION_ERROR: 'BAD_REQUEST',
+    // IFC-282 B-04: a domain name-validation failure is client input → 400, not 500
+    // (defence-in-depth; the Zod min(1) schema screens the empty-name API path).
+    INVALID_OPPORTUNITY_NAME: 'BAD_REQUEST',
   };
   throw new TRPCError({
     code: codeMap[error.code] ?? 'INTERNAL_SERVER_ERROR',
@@ -652,6 +658,7 @@ export const opportunityRouter = createTRPCRouter({
           isClosed: isWon || isLost,
           isWon,
           isLost,
+          closedAt: existing.closedAt,
           expectedCloseDate: existing.expectedCloseDate,
           accountId: existing.accountId,
           contactId: existing.contactId,

@@ -14,7 +14,10 @@ import {
   opportunityQuerySchema,
   opportunityResponseSchema,
   opportunityListResponseSchema,
+  moveStageSchema,
 } from '../src/opportunity';
+
+const VALID_UUID = '123e4567-e89b-12d3-a456-426614174000';
 
 describe('Opportunity Validators', () => {
   describe('opportunityStageSchema', () => {
@@ -697,7 +700,7 @@ describe('Opportunity Validators', () => {
   describe('opportunityListResponseSchema', () => {
     it('should validate valid opportunity list response', () => {
       const validList = {
-        data: [
+        opportunities: [
           {
             id: '123e4567-e89b-12d3-a456-426614174000',
             name: 'Enterprise Deal',
@@ -726,7 +729,7 @@ describe('Opportunity Validators', () => {
 
     it('should validate empty opportunity list', () => {
       const emptyList = {
-        data: [],
+        opportunities: [],
         total: 0,
         page: 1,
         limit: 20,
@@ -739,7 +742,7 @@ describe('Opportunity Validators', () => {
 
     it('should reject negative total', () => {
       const invalidList = {
-        data: [],
+        opportunities: [],
         total: -1,
         page: 1,
         limit: 20,
@@ -752,7 +755,7 @@ describe('Opportunity Validators', () => {
 
     it('should reject zero page', () => {
       const invalidList = {
-        data: [],
+        opportunities: [],
         total: 0,
         page: 0,
         limit: 20,
@@ -765,7 +768,7 @@ describe('Opportunity Validators', () => {
 
     it('should validate multiple opportunities', () => {
       const multipleOpportunities = {
-        data: [
+        opportunities: [
           {
             id: '123e4567-e89b-12d3-a456-426614174000',
             name: 'Deal 1',
@@ -805,6 +808,57 @@ describe('Opportunity Validators', () => {
 
       const result = opportunityListResponseSchema.safeParse(multipleOpportunities);
       expect(result.success).toBe(true);
+    });
+
+    // IFC-282 B-07: key is `opportunities`, matching the router + frontend.
+    it('rejects the legacy "data" key (renamed to "opportunities")', () => {
+      const legacy = { data: [], total: 0, page: 1, limit: 20, hasMore: false };
+      expect(opportunityListResponseSchema.safeParse(legacy).success).toBe(false);
+    });
+
+    it('accepts the canonical "opportunities" key', () => {
+      const canonical = { opportunities: [], total: 0, page: 1, limit: 20, hasMore: false };
+      expect(opportunityListResponseSchema.safeParse(canonical).success).toBe(true);
+    });
+  });
+
+  // IFC-282 B-12: CLOSED_LOST requires a loss reason (min 10) at the input boundary.
+  describe('moveStageSchema (B-12)', () => {
+    it('accepts CLOSED_LOST with a reason of >=10 chars', () => {
+      const r = moveStageSchema.safeParse({
+        id: VALID_UUID,
+        targetStage: 'CLOSED_LOST',
+        reason: 'Lost to incumbent vendor on price',
+      });
+      expect(r.success).toBe(true);
+    });
+
+    it('rejects CLOSED_LOST with NO reason (the field is otherwise optional)', () => {
+      const r = moveStageSchema.safeParse({ id: VALID_UUID, targetStage: 'CLOSED_LOST' });
+      expect(r.success).toBe(false);
+    });
+
+    it('rejects CLOSED_LOST with a short or empty reason', () => {
+      expect(
+        moveStageSchema.safeParse({
+          id: VALID_UUID,
+          targetStage: 'CLOSED_LOST',
+          reason: 'too short',
+        }).success
+      ).toBe(false);
+      expect(
+        moveStageSchema.safeParse({ id: VALID_UUID, targetStage: 'CLOSED_LOST', reason: '' })
+          .success
+      ).toBe(false);
+    });
+
+    it('accepts a non-CLOSED_LOST stage without a reason (superRefine does not fire)', () => {
+      expect(moveStageSchema.safeParse({ id: VALID_UUID, targetStage: 'CLOSED_WON' }).success).toBe(
+        true
+      );
+      expect(
+        moveStageSchema.safeParse({ id: VALID_UUID, targetStage: 'NEGOTIATION' }).success
+      ).toBe(true);
     });
   });
 });

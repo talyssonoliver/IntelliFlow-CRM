@@ -7,17 +7,22 @@
   "sprint": "sprint-18",
   "phase": "",
   "stream": null,
-  "status": "BACKLOG",
+  "status": "IN_PROGRESS",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.869Z"
   },
   "dependencies_resolved": [],
-  "started_at": null,
+  "started_at": "2026-06-13T02:40:00Z",
   "completed_at": null,
   "target_duration_minutes": 240,
   "actual_duration_minutes": null,
+  "execution": {
+    "started_at": "2026-06-13T02:40:00Z",
+    "executor": "Claude Code /exec",
+    "agents": ["stoa-domain"]
+  },
   "kpis": {
     "wiring_complete": {
       "target": "All 7 correctness issues resolved; zero silent data drops",
@@ -54,6 +59,11 @@
     {
       "status": "Backlog",
       "at": "2026-03-06T00:00:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-06-13T02:40:00Z",
+      "note": "Exec session start (STOA workflow Phase 3) — feat/ifc-282 worktree"
     }
   ],
   "notes": "Deal/opportunity domain wiring audit finding. See docs/audit/deal-detail-wiring-audit.md."

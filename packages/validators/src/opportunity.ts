@@ -85,7 +85,9 @@ export type OpportunityResponse = z.infer<typeof opportunityResponseSchema>;
 
 // Opportunity List Response Schema - consistent with pagination pattern
 export const opportunityListResponseSchema = z.object({
-  data: z.array(opportunityResponseSchema), // Renamed from 'opportunities' to 'data'
+  // IFC-282 B-07: key is `opportunities` to match the opportunity.list router
+  // response (`return { opportunities, … }`) and the frontend (`data?.opportunities`).
+  opportunities: z.array(opportunityResponseSchema),
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   limit: z.number().int().positive().max(100),
@@ -102,11 +104,24 @@ export type OpportunityListResponse = z.infer<typeof opportunityListResponseSche
  * Schema for moving an opportunity to a new pipeline stage
  * Routes to changeStage/markAsWon/markAsLost based on targetStage
  */
-export const moveStageSchema = z.object({
-  id: idSchema,
-  targetStage: opportunityStageSchema,
-  reason: z.string().min(10).max(1000).optional(),
-});
+export const moveStageSchema = z
+  .object({
+    id: idSchema,
+    targetStage: opportunityStageSchema,
+    reason: z.string().min(10).max(1000).optional(),
+  })
+  // IFC-282 B-12: a CLOSED_LOST transition requires a loss reason (min 10 chars).
+  // Without this, a no-reason CLOSED_LOST passed Zod (reason is optional) and only
+  // failed deep in the service. Fail fast at the input boundary (→ BAD_REQUEST).
+  .superRefine((val, ctx) => {
+    if (val.targetStage === 'CLOSED_LOST' && (!val.reason || val.reason.trim().length < 10)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['reason'],
+        message: 'Loss reason must be at least 10 characters when closing a deal as lost',
+      });
+    }
+  });
 
 export type MoveStageInput = z.infer<typeof moveStageSchema>;
 
