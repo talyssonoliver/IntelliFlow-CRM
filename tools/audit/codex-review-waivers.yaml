@@ -274,3 +274,34 @@ waivers:
       re-blocks if the conversion ever changes.
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '39abddd36168a87f849868cae4e4e383732091ae3d933683fe19dd0a77987846'
+    reason: >-
+      Accepted out-of-scope (PG-062) — a pre-existing limitation needing a BACKEND
+      change, not a defect in the extracted code. To CLEAR estimatedValue the patch
+      would send null, but updateLeadSchema defines
+      `estimatedValue: z.number().int().min(0).optional()` (no null —
+      packages/validators/src/lead.ts:36); null/empty fails that schema. Supporting
+      an explicit clear needs updateLeadSchema + LeadService + the domain to accept
+      a null clear — outside PG-062's web-only, zero-backend behaviour-preserving
+      extraction scope. The original edit page already omitted empty/cleared fields
+      (toOptional / conditional); PG-062 preserves that, and the minimal patch
+      correctly omits an UNCHANGED estimatedValue. Full lead-field clear-semantics is
+      filed as a follow-up. Source-anchored — re-blocks if the clearing logic changes.
+    author: talyssonoliver
+    date: '2026-06-13'
+  - fingerprint: '353d46e936cf309f3e8ff3858d12ea15a378d9b46624e01f69b497862a414eab'
+    reason: >-
+      Accepted out-of-scope (PG-062) — and codex's recommended fix is actively WRONG
+      for most fields. buildLeadUpdatePayload uses toOptional (empty -> undefined ->
+      omitted) for text fields; codex wants empty/null sent to "clear" them. But
+      updateLeadSchema REJECTS empty values for company (`z.string().min(1)`,
+      packages/validators/src/lead.ts:22-27), firstName / lastName / title
+      (nameSchema) and phone (phoneSchema), so sending '' would be a validation error
+      that BREAKS the save. Omitting empties is the correct, pre-existing behaviour
+      (the original page did the same). location/website accept '' but were also
+      omitted originally; making only those clearable is a minor edge case. True
+      clear-semantics (incl. null for scalar fields) is a backend feature out of
+      PG-062's web-only scope, filed as a follow-up. Source-anchored — re-blocks if
+      the logic changes.
+    author: talyssonoliver
+    date: '2026-06-13'
