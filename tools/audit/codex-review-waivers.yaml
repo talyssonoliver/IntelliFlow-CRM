@@ -305,3 +305,19 @@ waivers:
       the logic changes.
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '18fe4b21a0bff172ece9e2a7ce9eefc3bbe9fc54353e1f1d43ea9886bf830d70'
+    reason: >-
+      Same accepted out-of-scope finding as waivers 39abddd3 / 353d46e9 — codex
+      re-flagged the identical clear-dropped issue with a SHIFTED fingerprint
+      (whole transformField span lines 70-84 instead of the per-line 72 / 84),
+      the documented codex non-determinism. Clearing scalar lead fields (text /
+      phone / estimatedValue) needs a BACKEND change: updateLeadSchema.estimatedValue
+      is z.number().int().min(0).optional() (no null), and sending '' to clear
+      company (z.string().min(1)) / firstName/lastName/title (nameSchema) / phone
+      (phoneSchema) is a validation error — so the existing toOptional/omit is the
+      CORRECT behaviour and codex's empty/null-send fix would break saves. Out of
+      PG-062's web-only, zero-backend behaviour-preserving extraction scope; full
+      lead-field clear-semantics filed as #412. tags clear (empty array) is the one
+      safe in-scope case and is fixed. Source-anchored — re-blocks if the logic changes.
+    author: talyssonoliver
+    date: '2026-06-13'

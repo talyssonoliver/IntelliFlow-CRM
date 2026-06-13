@@ -45,7 +45,7 @@
       },
       {
         "path": "apps/web/src/components/leads/lead-editor.tsx",
-        "sha256": "e19e8ffa31ac3c8827d9928f54d96ad5489b6803bb6d1e25d24b8b59740cc108",
+        "sha256": "044a67d89c2588cb1b23b084ec91fd5f123d115a4fc0161e36734782c1bfed8c",
         "created_at": "2026-06-13T09:00:00Z"
       },
       {
@@ -55,7 +55,7 @@
       },
       {
         "path": "apps/web/src/components/leads/__tests__/lead-editor.test.tsx",
-        "sha256": "f0b84241d8dcb9994fc94f7cdbd14181281069a2d208ba4c677a040ef428a25b",
+        "sha256": "78b01b73df50856101da41afb674ee4ab286e2f3eaba90c7db79aab878218e33",
         "created_at": "2026-06-13T09:20:00Z"
       }
     ],
@@ -78,7 +78,7 @@
     },
     {
       "name": "Tests",
-      "command": "pnpm --filter @intelliflow/web test --run leads (24 files / 438 tests)",
+      "command": "pnpm --filter @intelliflow/web test --run leads (24 files / 441 tests)",
       "exit_code": 0,
       "passed": true,
       "executed_at": "2026-06-13T09:21:00Z"
@@ -125,7 +125,7 @@
     },
     "regression": {
       "target": "leads suites green",
-      "actual": "24 files / 438 tests passed, 0 failed (incl. the existing 7 edit/page.test.tsx cases)",
+      "actual": "24 files / 441 tests passed, 0 failed (incl. the existing 7 edit/page.test.tsx cases)",
       "met": true
     },
     "lighthouse_performance": {

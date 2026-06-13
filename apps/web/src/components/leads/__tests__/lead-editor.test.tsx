@@ -123,6 +123,21 @@ describe('LeadEditor', () => {
     });
   });
 
+  it('does not call onSave when nothing changed (no no-op update)', () => {
+    const onSave = vi.fn();
+    renderEditor({ onSave });
+    fireEvent.submit(screen.getByText('Save Changes').closest('form')!);
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('disables Save until the form is dirty', () => {
+    renderEditor();
+    const save = screen.getByText('Save Changes').closest('button') as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText('First Name'), { target: { value: 'Jane' } });
+    expect(save.disabled).toBe(false);
+  });
+
   it('calls onCancel when Cancel is clicked', () => {
     const onCancel = vi.fn();
     renderEditor({ onCancel });

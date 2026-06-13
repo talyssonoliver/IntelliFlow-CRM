@@ -102,6 +102,9 @@ export function LeadEditor({
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     const { changedFields } = computeLeadChangeset(seededSnapshot ?? EMPTY_FIELDS, formData);
+    // Nothing changed → skip the save entirely (avoid a no-op update that would
+    // still bump the lead's updatedAt).
+    if (changedFields.length === 0) return;
     const payload = buildLeadUpdatePayload(leadId, formData, changedFields);
     await onSave(payload);
   };
@@ -290,7 +293,7 @@ export function LeadEditor({
         </button>
         <button
           type="submit"
-          disabled={isSaving}
+          disabled={isSaving || !isDirty}
           className="px-6 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {isSaving ? (
