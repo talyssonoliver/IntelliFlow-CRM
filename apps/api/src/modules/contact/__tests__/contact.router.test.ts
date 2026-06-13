@@ -266,18 +266,24 @@ describe('Contact Router', () => {
     // IFC-265 (T-07): activities + notes were always seeded as empty arrays in
     // getById tests; assert they are surfaced with populated, ordered data.
     it('surfaces populated activities and notes from the getById relations', async () => {
+      // ContactActivity rows are ordered by `timestamp` desc in getById
+      // (contact.router.ts:696) — fixture mirrors the real model field.
       const sampleActivities = [
         {
           id: 'act-1',
           type: 'EMAIL',
           title: 'Sent proposal',
-          createdAt: new Date('2025-02-02T10:00:00Z'),
+          description: 'Proposal v2 emailed',
+          userName: 'rep@example.com',
+          timestamp: new Date('2025-02-02T10:00:00Z'),
         },
         {
           id: 'act-2',
           type: 'CALL',
           title: 'Intro call',
-          createdAt: new Date('2025-02-01T10:00:00Z'),
+          description: 'Discovery call',
+          userName: 'rep@example.com',
+          timestamp: new Date('2025-02-01T10:00:00Z'),
         },
       ];
       const sampleNotes = [
@@ -302,11 +308,10 @@ describe('Contact Router', () => {
       const result = await caller.getById({ id: TEST_UUIDS.contact1 });
 
       expect(result.activities).toHaveLength(2);
-      expect(result.activities).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ id: 'act-1', title: 'Sent proposal' }),
-          expect.objectContaining({ id: 'act-2', title: 'Intro call' }),
-        ])
+      // surfaced in the DB's timestamp-desc order (most recent first)
+      expect(result.activities.map((a: { id: string }) => a.id)).toEqual(['act-1', 'act-2']);
+      expect(result.activities[0]).toEqual(
+        expect.objectContaining({ id: 'act-1', title: 'Sent proposal' })
       );
       expect(result.notes).toHaveLength(1);
       expect(result.notes[0]).toEqual(

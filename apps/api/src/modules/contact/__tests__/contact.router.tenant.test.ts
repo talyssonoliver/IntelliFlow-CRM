@@ -1,26 +1,31 @@
 /**
  * Contact Router — Tenant Isolation (IFC-265, T-04)
  *
- * Cross-tenant negative/scoping tests for the procedures NOT already covered by
- * `contact.router.security.test.ts` (which covers search / logActivity /
- * bulkEmail / bulkExport / stats / getById / getByEmail — R-02..R-06).
+ * Cross-tenant tests for the contact mutation procedures whose tenant boundary
+ * is enforced AT THE ROUTER and is therefore genuinely unit-testable:
+ *   - create     — stamps the caller's ownerId + tenantId (client cannot target another tenant)
+ *   - delete     — ctx.prismaWithTenant.findUnique (RLS) → cross-tenant id → NOT_FOUND, no mutation
+ *   - addNote    — ctx.prismaWithTenant.findUnique (RLS) → cross-tenant id → NOT_FOUND, no note
+ *   - bulkDelete — ctx.prismaWithTenant.findMany  (RLS) → cross-tenant ids → all `failed`
  *
- * Covered here: create, update, delete, addNote, bulkDelete, linkToAccount,
- * unlinkFromAccount, updateEmail. Each asserts that a caller is confined to its
- * own tenant — either by the procedure stamping/forwarding the caller's
- * tenant/owner to the domain service, or by a cross-tenant id being filtered out
- * (RLS via prismaWithTenant) and surfacing as NOT_FOUND / failed.
+ * These complement contact.router.security.test.ts (R-02..R-06: search / logActivity /
+ * bulkEmail / bulkExport / stats / getById / getByEmail).
+ *
+ * NOT covered here on purpose: update / updateEmail / unlinkFromAccount / linkToAccount.
+ * Those delegate to the singleton ContactService, whose contactRepository.findById(id)
+ * takes no tenant argument and has NO router-level scoped preflight — their cross-tenant
+ * denial cannot be honestly unit-tested without a production change. A forwarding-only
+ * assertion would be a false isolation test. The gap (and the proposed router preflight)
+ * is tracked in gh issue #420 + debt-ledger CONTACT-MUTATION-TENANT-SCOPE-001.
  *
  * Mirrors the existing harness (createTestContext + prismaMock + service mocks).
  */
 import { describe, it, expect, vi } from 'vitest';
-import { TRPCError } from '@trpc/server';
 import { contactRouter } from '../contact.router';
 import { prismaMock, createTestContext, TEST_UUIDS, generateTestUUID } from '../../../test/setup';
 
 // A valid UUID that belongs to a DIFFERENT tenant (never visible to the caller).
 const FOREIGN_CONTACT_ID = generateTestUUID('foreign-tenant-contact');
-const FOREIGN_ACCOUNT_ID = generateTestUUID('foreign-tenant-account');
 
 /** Minimal domain-Contact shape consumed by mapContactToResponse. */
 const domainContact = (overrides: Record<string, unknown> = {}) => ({
@@ -47,7 +52,6 @@ const domainContact = (overrides: Record<string, unknown> = {}) => ({
 });
 
 const ok = (value: unknown) => ({ isSuccess: true, isFailure: false, value });
-const fail = (message: string) => ({ isSuccess: false, isFailure: true, error: { message } });
 
 describe('Contact Router — Tenant Isolation (IFC-265, T-04)', () => {
   // create: the owner/tenant are stamped from the caller's context — a client
@@ -66,29 +70,8 @@ describe('Contact Router — Tenant Isolation (IFC-265, T-04)', () => {
     });
   });
 
-  // update: the router's tenant responsibility is forwarding the authenticated
-  // caller's userId to the domain service. The DATA boundary for this path lives
-  // in the service/repository/RLS layer (NOT a router-level scoped lookup like
-  // delete/addNote) — see issue #420 for the hardening + a meaningful negative
-  // test. We deliberately do NOT assert "mocked service failure -> NOT_FOUND"
-  // here: that would only re-test the mock, not isolation.
-  describe('update', () => {
-    it('forwards the caller userId to the update service', async () => {
-      const ctx = createTestContext();
-      const caller = contactRouter.createCaller(ctx);
-      const updateSpy = vi.fn().mockResolvedValue(ok(domainContact()));
-      ctx.services!.contact!.updateContactInfo = updateSpy;
-      ctx.services!.contact!.getContactById = vi.fn().mockResolvedValue(ok(domainContact()));
-
-      await caller.update({ id: TEST_UUIDS.contact1, title: 'Renamed' });
-
-      expect(updateSpy).toHaveBeenCalled();
-      expect(updateSpy.mock.calls[0]).toContain(TEST_UUIDS.user1);
-    });
-  });
-
-  // delete: looks up via prismaWithTenant (RLS); a cross-tenant id is filtered
-  // out (findUnique → null) and yields NOT_FOUND before any mutation.
+  // delete: tenant-scoped findUnique (RLS); a cross-tenant id is filtered out
+  // (→ null) and yields NOT_FOUND before the delete service is ever called.
   describe('delete', () => {
     it('rejects a cross-tenant contact id with NOT_FOUND (RLS filters it out)', async () => {
       const ctx = createTestContext();
@@ -131,67 +114,6 @@ describe('Contact Router — Tenant Isolation (IFC-265, T-04)', () => {
       expect(result.failed).toHaveLength(2);
       expect(result.failed.every((f) => /not found/i.test(f.error))).toBe(true);
       expect(ctx.services!.contact!.deleteContact).not.toHaveBeenCalled();
-    });
-  });
-
-  // linkToAccount: forwards the caller userId + tenantId to the domain service.
-  describe('linkToAccount', () => {
-    it('forwards the caller userId + tenantId to associateWithAccount', async () => {
-      const ctx = createTestContext();
-      const caller = contactRouter.createCaller(ctx);
-      const linkSpy = vi.fn().mockResolvedValue(ok(domainContact()));
-      ctx.services!.contact!.associateWithAccount = linkSpy;
-
-      await caller.linkToAccount({
-        contactId: TEST_UUIDS.contact1,
-        accountId: TEST_UUIDS.account1,
-      });
-
-      const args = linkSpy.mock.calls[0];
-      expect(args).toContain(TEST_UUIDS.user1);
-      expect(args).toContain(TEST_UUIDS.tenant);
-    });
-
-    it('rejects linking a cross-tenant account', async () => {
-      const ctx = createTestContext();
-      const caller = contactRouter.createCaller(ctx);
-      ctx.services!.contact!.associateWithAccount = vi
-        .fn()
-        .mockResolvedValue(fail(`Account not found: ${FOREIGN_ACCOUNT_ID}`));
-
-      await expect(
-        caller.linkToAccount({ contactId: TEST_UUIDS.contact1, accountId: FOREIGN_ACCOUNT_ID })
-      ).rejects.toThrow(TRPCError);
-    });
-  });
-
-  // unlinkFromAccount: router forwards the caller userId. Data boundary is in the
-  // service/RLS layer — see #420 (no router-level scoped lookup on this path yet).
-  describe('unlinkFromAccount', () => {
-    it('forwards the caller userId to disassociateFromAccount', async () => {
-      const ctx = createTestContext();
-      const caller = contactRouter.createCaller(ctx);
-      const unlinkSpy = vi.fn().mockResolvedValue(ok(domainContact()));
-      ctx.services!.contact!.disassociateFromAccount = unlinkSpy;
-
-      await caller.unlinkFromAccount({ contactId: TEST_UUIDS.contact1 });
-
-      expect(unlinkSpy.mock.calls[0]).toContain(TEST_UUIDS.user1);
-    });
-  });
-
-  // updateEmail: router forwards the caller userId. Data boundary is in the
-  // service/RLS layer — see #420 (no router-level scoped lookup on this path yet).
-  describe('updateEmail', () => {
-    it('forwards the caller userId to updateContactEmail', async () => {
-      const ctx = createTestContext();
-      const caller = contactRouter.createCaller(ctx);
-      const emailSpy = vi.fn().mockResolvedValue(ok(domainContact()));
-      ctx.services!.contact!.updateContactEmail = emailSpy;
-
-      await caller.updateEmail({ id: TEST_UUIDS.contact1, email: 'updated@example.com' });
-
-      expect(emailSpy.mock.calls[0]).toContain(TEST_UUIDS.user1);
     });
   });
 });
