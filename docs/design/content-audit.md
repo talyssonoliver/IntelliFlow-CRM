@@ -24,10 +24,10 @@ tracks navigation ghost-link status. It does not implement fixes by itself.
 
 ### Current baseline
 
-- **Total Pages (filesystem total): 208** — `page.tsx` entries scanned from
+- **Total Pages (filesystem total): 209** — `page.tsx` entries scanned from
   `apps/web/src/app`
 - **32 public entries** under `(public)/`
-- **162 auth-gated entries** outside `(public)/` and `(developer)/`
+- **163 auth-gated entries** outside `(public)/` and `(developer)/`
 - **14 developer entries** under `(developer)/`
 - **0 unresolved ghost links** after route-group-aware reconciliation
 - **80 average SEO score** across public routes
@@ -41,8 +41,8 @@ URL patterns if duplicate collapsed routes are introduced in future.
 
 Current verified state:
 
-- **208 page entries**
-- **208 distinct collapsed route patterns**
+- **209 page entries**
+- **209 distinct collapsed route patterns**
 
 ## 2. Methodology
 
@@ -281,12 +281,12 @@ current verified baseline is **0 unresolved ghost links**.
 
 ```json
 {
-  "total_routes": 208,
+  "total_routes": 209,
   "public_routes": 32,
-  "auth_gated_routes": 162,
+  "auth_gated_routes": 163,
   "developer_routes": 14,
   "routes_with_seo_score": 32,
-  "routes_pending_runtime_measurement": 208,
+  "routes_pending_runtime_measurement": 209,
   "average_seo_score_public": 80,
   "legal_pages_missing": [],
   "ghost_link_count": 0

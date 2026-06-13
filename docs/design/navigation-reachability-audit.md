@@ -6,7 +6,7 @@
 > typing the URL directly.
 
 > **Canonical counts**: All "page.tsx" file-count references in this document
-> reflect the filesystem total (Total Pages: 208) emitted by
+> reflect the filesystem total (Total Pages: 209) emitted by
 > `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`
 > counts once; route groups stripped; `[id]` collapses; `app/api/` excluded. See
 > `docs/design/content-audit.md` for the full counting rule. Verified:
@@ -542,7 +542,7 @@ To prevent unreachable pages from shipping again:
 
 | Source             | Path                                                          | Used For                                                   |
 | ------------------ | ------------------------------------------------------------- | ---------------------------------------------------------- |
-| Page routes        | `apps/web/src/app/**/page.tsx` (208 files)                    | All existing pages                                         |
+| Page routes        | `apps/web/src/app/**/page.tsx` (209 files)                    | All existing pages                                         |
 | Sidebar configs    | `apps/web/src/components/sidebar/configs/*.ts` (17 files)     | Sidebar nav entries                                        |
 | Navigation         | `apps/web/src/components/navigation.tsx`                      | Active header — uses useEnabledModules()                   |
 | Module routes      | `packages/domain/src/platform/modules/ModuleRoutes.ts`        | Dynamic header route source                                |

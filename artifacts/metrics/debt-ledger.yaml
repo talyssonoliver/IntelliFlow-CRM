@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-06-11
+last_updated: 2026-06-13
 maintainer: Tech Lead
 items:
   PRESHIP-385-lcov-absent-blind-spot:
@@ -5082,6 +5082,17 @@ alerts:
     remediation_sprint: 20
     remediation_plan: 'Add aria-hidden to all material-symbols icon spans inside buttons in entity-header.tsx + entity-action-sheet.tsx; add aria-busy={loading} to the entity-header ActionButton; conditionally set role=alert on the destructive toast variant in packages/ui/src/components/toast.tsx; forward aria-expanded/aria-haspopup on MoreActionsButton. Add render tests per primitive.'
     notes: 'git issue #422. IFC-280 deferred (R-4) — fixing shared primitives is a cross-page change (blast radius + diff-coverage on heavily-used files) out of a deals-only wiring task. IFC-280 own new UI (Edit/Delete dialogs, LossReasonModal) is accessible (Radix + in-scope label/aria-live/autofocus). Tracked per project Rule 8.'
+  CSV-EXPORT-FORMULA-INJECTION-001:
+    origin_task: PG-063
+    owner: CRM FE
+    severity: medium
+    description: 'apps/web/src/lib/export/csv.ts escapeCSVField (line 17) does RFC-4180 quoting (comma/quote/newline) but does NOT neutralise formula-injection cells (leading = + - @ TAB CR). CRM data exported via exportToCSV/objectsToCSV/arrayToCSV and opened in Excel/Sheets/LibreOffice executes attacker-controlled formulas (e.g. a lead/company/notes field = =HYPERLINK(...) / =WEBSERVICE(...) / DDE). OWASP CSV injection on the EXPORT path. Found during PG-063 (which guards the IMPORT path by rejecting formula-injection free-text cells with a surfaced row error).'
+    created_at: 2026-06-13
+    status: open
+    expiry_date: 2026-08-31
+    remediation_sprint: 19
+    remediation_plan: 'In escapeCSVField, before quoting, prefix a leading formula character (= + - @ TAB CR) with a single quote (OWASP-recommended) and force-quote; add a unit test in apps/web/src/lib/export/__tests__/csv.test.ts covering each lead char + a benign negative number per product preference. Out of PG-063 scope (export path vs import path) — rides its own PR per the co-dependent-changes rule.'
+    notes: 'git issue #417. PG-063 red-flag finding (brief: "File a red-flag issue for any unsafe parsing you find"). Pre-existing. Tracked per project Rule 8.'
   CONTACT-MUTATION-TENANT-SCOPE-001:
     origin_task: IFC-265
     owner: Backend Dev

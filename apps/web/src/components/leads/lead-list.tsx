@@ -558,6 +558,12 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
         description={scope.description + (totalItems > 0 ? ` (${totalItems} total)` : '')}
         actions={[
           {
+            label: 'Import',
+            icon: 'upload',
+            variant: 'secondary',
+            href: '/leads/import',
+          },
+          {
             label: 'New Lead',
             icon: 'add',
             variant: 'primary',

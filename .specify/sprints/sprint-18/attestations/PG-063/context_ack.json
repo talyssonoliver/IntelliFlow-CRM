@@ -1,0 +1,40 @@
+{
+  "task_id": "PG-063",
+  "title": "Import Leads (CSV)",
+  "sprint": 18,
+  "acknowledged_by": "Claude Opus 4.8 (1M) — /full-pipeline PG-063",
+  "acknowledged_at": "2026-06-13T00:00:00Z",
+  "files_read": [
+    "packages/validators/src/lead.ts",
+    "packages/validators/src/common.ts",
+    "apps/api/src/modules/lead/lead.router.ts",
+    "apps/web/src/app/leads/(list)/new/NewLeadForm.tsx",
+    "apps/web/src/app/leads/(list)/new/page.tsx",
+    "apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx",
+    "apps/web/src/app/leads/(list)/layout.tsx",
+    "apps/web/src/components/leads/lead-list.tsx",
+    "apps/web/src/components/sidebar/configs/leads.ts",
+    "apps/web/src/components/shared/page-header.tsx",
+    "apps/web/src/lib/export/csv.ts",
+    "tools/scripts/a11y-route-reconcile.ts",
+    "docs/compliance-and-governance/compliance/wcag-conformance-statement.md",
+    "scripts/pre-ship.mjs"
+  ],
+  "invariants_acknowledged": [
+    "Never mock or simulate data — importer maps to the real lead.create path; no fabricated values.",
+    "No bulk-create endpoint exists; per-row api.lead.create is the create path (lead.router.ts:478).",
+    "createLeadSchema (validators/lead.ts:41) is the single validation source — client mirrors it, server re-validates.",
+    "Client sends RAW string payload; server runs the input-schema transforms (phone->PhoneNumber VO etc.).",
+    "CSV formula injection (cells starting = + - @ TAB CR) must be neutralised; free-text fields prefixed with quote.",
+    "email/phone are NOT blanket-sanitised (+ is valid in phones); malicious payloads fail schema validation and are surfaced.",
+    "Row cap (MAX_IMPORT_ROWS=1000) rejects whole file — never silently truncate.",
+    "Size cap (MAX_IMPORT_FILE_BYTES=2MiB) checked before read.",
+    "Every row validated; invalid rows surfaced with reasons, never silently dropped.",
+    "Static route /leads/import must be added to the WCAG conformance statement (a11y-routes runs VALIDATION_STRICT=1).",
+    "Reachability: (list) layout gives the sidebar; lead-list PageHeader gets an Import CTA.",
+    "App page.tsx is diff-coverage-excluded (PG-061 parity); the lib + component carry >=80% new coverage.",
+    "Export-path CSV injection in lib/export/csv.ts is a red flag — file an issue, fix rides its own PR (not PG-063).",
+    "No backend/domain/schema change — /stoa-domain trivially satisfied.",
+    "No Co-Authored-By trailer; no --no-verify; no destructive git; pre-ship is the gate."
+  ]
+}
