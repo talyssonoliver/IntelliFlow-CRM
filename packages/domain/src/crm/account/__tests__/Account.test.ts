@@ -285,6 +285,73 @@ describe('Account Aggregate', () => {
       expect(account.website?.value).toBe('https://original.com');
       expect(account.getDomainEvents()).toHaveLength(0);
     });
+
+    // IFC-270 B-08: updateAccountInfo also applies revenue / employees / industry.
+    it('should update revenue, employees and industry', () => {
+      const result = account.updateAccountInfo(
+        { revenue: 9_000_000, employees: 300, industry: 'Finance' },
+        'user-270'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      expect(account.revenue).toBe(9_000_000);
+      expect(account.employees).toBe(300);
+      expect(account.industry).toBe('Finance');
+    });
+
+    it('should emit a single AccountUpdatedEvent listing the changed new fields', () => {
+      account.updateAccountInfo(
+        { revenue: 1_000_000, employees: 50, industry: 'Retail' },
+        'user-270'
+      );
+
+      const events = account.getDomainEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0]).toBeInstanceOf(AccountUpdatedEvent);
+      const ev = events[0] as AccountUpdatedEvent;
+      expect(ev.updatedFields).toContain('revenue');
+      expect(ev.updatedFields).toContain('employees');
+      expect(ev.updatedFields).toContain('industry');
+      expect(ev.updatedBy).toBe('user-270');
+    });
+
+    it('should stay atomic when revenue is invalid (name not applied, no event)', () => {
+      const result = account.updateAccountInfo({ name: 'New Name', revenue: -1 }, 'user-270');
+
+      expect(result.isFailure).toBe(true);
+      expect(account.name).toBe('Original Corp');
+      expect(account.revenue).toBeUndefined();
+      expect(account.getDomainEvents()).toHaveLength(0);
+    });
+
+    it('should stay atomic when employees is invalid (name not applied, no event)', () => {
+      const result = account.updateAccountInfo({ name: 'New Name', employees: 0 }, 'user-270');
+
+      expect(result.isFailure).toBe(true);
+      expect(account.name).toBe('Original Corp');
+      expect(account.employees).toBeUndefined();
+      expect(account.getDomainEvents()).toHaveLength(0);
+    });
+
+    it('should emit no event when revenue/employees/industry are unchanged (idempotent)', () => {
+      const seeded = Account.create({
+        name: 'Seeded Corp',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+        revenue: 2_000_000,
+        employees: 120,
+        industry: 'Energy',
+      }).value;
+      seeded.clearDomainEvents();
+
+      const result = seeded.updateAccountInfo(
+        { revenue: 2_000_000, employees: 120, industry: 'Energy' },
+        'user-270'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      expect(seeded.getDomainEvents()).toHaveLength(0);
+    });
   });
 
   describe('updateRevenue()', () => {

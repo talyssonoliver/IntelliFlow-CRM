@@ -12,11 +12,11 @@ const baseAccountFieldsSchema = z.object({
     .max(200)
     .transform((val) => val.trim()), // Company names can be longer
   website: urlSchema, // Uses WebsiteUrl Value Object transformer
-  industry: z
-    .string()
-    .max(100)
-    .transform((val) => val.trim())
-    .optional(),
+  // IFC-270 B-08: trim before min(1) so a whitespace-only industry is rejected
+  // rather than persisted as "" once the combined update forwards it to the
+  // domain (matches the dedicated updateAccountIndustrySchema). Omit the field
+  // entirely to leave industry unset.
+  industry: z.string().trim().min(1).max(100).optional(),
   employees: z.number().int().positive().optional(),
   revenue: z.number().positive().optional(), // Could use moneySchema in future
   description: z
@@ -33,13 +33,42 @@ export const createAccountSchema = baseAccountFieldsSchema.extend({
 
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;
 
-// Update Account Schema - all fields optional except id
+// Update Account Schema - all fields optional except id.
+// IFC-270 B-08: parentAccountId is intentionally NOT accepted here — hierarchy
+// changes go through the dedicated account.setParent procedure (cycle detection,
+// max-depth and parent-existence are enforced there). Accepting it on update
+// would silently no-op (it cannot be applied safely via updateAccountInfo).
 export const updateAccountSchema = baseAccountFieldsSchema.partial().extend({
   id: idSchema,
-  parentAccountId: idSchema.nullable().optional(),
 });
 
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
+
+// IFC-270 B-10/11/12: dedicated single-field command schemas for the
+// updateRevenue / updateEmployeeCount / categorizeIndustry router procedures.
+// revenue: positive() — matches createAccountSchema/updateAccountSchema and
+// avoids feeding 0 to the persistence layer, which currently coerces 0 to null
+// via a truthiness check (PrismaAccountRepository.save — tracked follow-up).
+// employees > 0; industry 1..100 chars (trimmed before the non-empty check).
+export const updateAccountRevenueSchema = z.object({
+  id: idSchema,
+  revenue: z.number().positive(),
+});
+export type UpdateAccountRevenueInput = z.infer<typeof updateAccountRevenueSchema>;
+
+export const updateAccountEmployeeCountSchema = z.object({
+  id: idSchema,
+  employees: z.number().int().positive(),
+});
+export type UpdateAccountEmployeeCountInput = z.infer<typeof updateAccountEmployeeCountSchema>;
+
+export const updateAccountIndustrySchema = z.object({
+  id: idSchema,
+  // trim BEFORE min(1) so a whitespace-only industry ("   ") is rejected rather
+  // than being transformed into an empty string and persisted.
+  industry: z.string().trim().min(1).max(100),
+});
+export type UpdateAccountIndustryInput = z.infer<typeof updateAccountIndustrySchema>;
 
 // IFC-269 B-04: Whitelist of safe sortable Account columns
 export const ACCOUNT_SORT_FIELDS = [
@@ -70,7 +99,11 @@ export type AccountQueryInput = z.infer<typeof accountQuerySchema>;
 export const accountResponseSchema = z.object({
   id: idSchema,
   name: nameSchema,
-  website: urlSchema, // Uses WebsiteUrl Value Object transformer
+  // IFC-270 B-13: responses serialize website as a plain string via
+  // mapAccountToResponse (WebsiteUrl.toValue()), so the response contract is
+  // string | null — NOT the urlSchema input transformer, which would coerce it
+  // back into a WebsiteUrl value object and misreport the AccountResponse type.
+  website: z.url().nullable(),
   industry: z.string().nullable(),
   employees: z.number().nullable(),
   revenue: z.string().nullable(), // Decimal as string (future: moneySchema)
@@ -84,7 +117,9 @@ export type AccountResponse = z.infer<typeof accountResponseSchema>;
 
 // Account List Response Schema - consistent with pagination pattern
 export const accountListResponseSchema = z.object({
-  data: z.array(accountResponseSchema), // Renamed from 'accounts' to 'data'
+  // IFC-270 B-09: key is `accounts` to match the account.list router response
+  // (`return { accounts, … }`) and every frontend consumer (`data?.accounts`).
+  accounts: z.array(accountResponseSchema),
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   limit: z.number().int().positive().max(100),

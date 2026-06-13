@@ -5027,3 +5027,14 @@ alerts:
     remediation_sprint: 18
     remediation_plan: 'Owned by IFC-242 (Lead Create Form Fixes — revenue mapping). Map the banded select value to a numeric cents value (or switch to a numeric input). NOT fixed in PG-060 per scope boundary.'
     notes: 'git issue #380. Owned by IFC-242. Spec finding PG-060-F2.'
+  REVENUE-ZERO-PERSIST-001:
+    origin_task: IFC-270
+    owner: Backend Dev
+    severity: medium
+    description: 'PrismaAccountRepository.save (packages/adapters/src/repositories/PrismaAccountRepository.ts:63) serializes revenue with a truthiness check: account.revenue ? new Decimal(account.revenue.toString()) : null. A legitimate revenue of 0 is falsy, so it is silently persisted as NULL (reloads as undefined — data loss). Latent: no API path can currently feed 0 (createAccountSchema/updateAccountSchema/updateAccountRevenueSchema all use z.number().positive()). Found during IFC-270 via the codex semantic-review gate (waived fingerprint 00ce5862).'
+    created_at: 2026-06-13
+    status: open
+    expiry_date: 2026-08-31
+    remediation_sprint: 20
+    remediation_plan: 'Change the save serialization to a nullish check: account.revenue != null ? new Decimal(account.revenue.toString()) : null (the reconstitute path at :46 already maps a stored Decimal(0) correctly). Add a Prisma-backed revenue=0 round-trip regression test. If the product decides $0 revenue accounts are valid, also relax create/update/updateRevenue schemas from positive() to nonnegative() in the same change for end-to-end consistency. Out of IFC-270 scope (adapter layer; audit section 12 = router/validators/service).'
+    notes: 'git issue #406. IFC-270 out-of-scope finding. Adapter-layer defect, pre-existing. Tracked per project Rule 8 (file issues for out-of-scope findings).'

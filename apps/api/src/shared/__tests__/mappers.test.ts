@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Lead } from '@intelliflow/domain';
-import { mapLeadToResponse } from '../mappers';
+import { Lead, Account } from '@intelliflow/domain';
+import { mapLeadToResponse, mapAccountToResponse } from '../mappers';
 
 describe('mapLeadToResponse — Lead 360 fields (IFC-004)', () => {
   it('surfaces location, website, avatarUrl, estimatedValue, lastContactedAt and tags', () => {
@@ -42,5 +42,46 @@ describe('mapLeadToResponse — Lead 360 fields (IFC-004)', () => {
     expect(dto.estimatedValue).toBeNull();
     expect(dto.lastContactedAt).toBeNull();
     expect(dto.tags).toEqual([]);
+  });
+});
+
+describe('mapAccountToResponse — website serialization (IFC-270 B-13)', () => {
+  it('serializes the WebsiteUrl value object to a plain string', () => {
+    const account = Account.create({
+      name: 'Acme Corp',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+      website: 'https://acme.example.com',
+    }).value;
+
+    const dto = mapAccountToResponse(account);
+
+    expect(dto.website).toBe('https://acme.example.com');
+    expect(typeof dto.website).toBe('string');
+  });
+
+  it('never leaks a WebsiteUrl object (must be string or null, never an object)', () => {
+    const account = Account.create({
+      name: 'Acme Corp',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+      website: 'https://acme.example.com',
+    }).value;
+
+    const dto = mapAccountToResponse(account);
+
+    expect(typeof dto.website === 'string' || dto.website === null).toBe(true);
+  });
+
+  it('returns null when the account has no website', () => {
+    const account = Account.create({
+      name: 'No Site Inc',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+    }).value;
+
+    const dto = mapAccountToResponse(account);
+
+    expect(dto.website).toBeNull();
   });
 });
