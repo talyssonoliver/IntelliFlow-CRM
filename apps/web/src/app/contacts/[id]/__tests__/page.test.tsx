@@ -33,6 +33,9 @@ const mockContactQueryState = {
     createdAt: '2026-03-01T00:00:00.000Z',
     updatedAt: '2026-03-02T00:00:00.000Z',
     avatarUrl: null,
+    streetAddress: '123 Market St',
+    city: 'San Francisco',
+    zipCode: '94105',
     account: {
       id: 'account-1',
       name: 'Acme Corp',
@@ -104,6 +107,7 @@ vi.mock('@/lib/api', () => ({
       logActivity: {
         useMutation: () => ({
           mutate: mockLogActivityMutate,
+          mutateAsync: mockLogActivityMutate,
           isPending: false,
         }),
       },
@@ -239,6 +243,32 @@ vi.mock('@/components/shared/quick-log-composer', () => ({
 
 vi.mock('@/lib/shared/avatar-utils', () => ({
   normalizeAvatarSource: (value: string | null | undefined) => value ?? null,
+}));
+
+// IFC-257: the header actions, map preview and Add Deal action are extracted into
+// their own (separately unit-tested) components. Stub them here so the page render
+// stays light (no EmailCompose/trpc graph) and existing blocks stay green.
+vi.mock('@/components/contacts/ContactQuickActions', () => ({
+  ContactQuickActions: ({ contact }: { contact: { id: string } }) => (
+    <div data-testid="contact-quick-actions" data-contact-id={contact.id} />
+  ),
+}));
+
+vi.mock('@/components/contacts/ContactAddDealButton', () => ({
+  ContactAddDealButton: ({ contactId }: { contactId: string }) => (
+    <button type="button" data-testid="contact-add-deal" data-contact-id={contactId}>
+      Add Deal
+    </button>
+  ),
+}));
+
+// Stub the component but keep the real `buildContactLocation` re-export (page.tsx
+// imports it from this module to compose the contact location).
+vi.mock('@/components/contacts/ContactMapPreview', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
+  ContactMapPreview: ({ location }: { location: string | null | undefined }) => (
+    <div data-testid="contact-map-preview" data-location={location ?? ''} />
+  ),
 }));
 
 import Contact360Page from '../page';
@@ -716,5 +746,37 @@ describe('Contact360Page - Tickets & Documents tabs (IFC-256)', () => {
 
     const documentsTab = screen.getByRole('button', { name: /Documents/ });
     expect(documentsTab).toHaveTextContent('51');
+  });
+});
+
+describe('Contact360Page - IFC-257 action wiring', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockContactQueryState.error = null;
+    mockContactQueryState.isLoading = false;
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+  });
+
+  it('mounts the extracted ContactQuickActions and ContactMapPreview', () => {
+    render(<Contact360Page />);
+    expect(screen.getByTestId('contact-quick-actions')).toHaveAttribute(
+      'data-contact-id',
+      'contact-1'
+    );
+    expect(screen.getByTestId('contact-map-preview')).toBeInTheDocument();
+  });
+
+  it('composes the contact street/city/zip into the ContactMapPreview location', () => {
+    render(<Contact360Page />);
+    expect(screen.getByTestId('contact-map-preview')).toHaveAttribute(
+      'data-location',
+      '123 Market St, San Francisco, 94105'
+    );
+  });
+
+  it('mounts the Add Deal action with the contact context in the deals tab', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('tab=deals'));
+    render(<Contact360Page />);
+    expect(screen.getByTestId('contact-add-deal')).toHaveAttribute('data-contact-id', 'contact-1');
   });
 });

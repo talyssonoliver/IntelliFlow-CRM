@@ -176,6 +176,30 @@ waivers:
       response schema.
     author: talyssonoliver
     date: '2026-06-12'
+  - fingerprint: '45ab85669572a9528d7b8c51e350bcdf4c67fd22dd448707dca7c2cdcec22a0f'
+    reason: >-
+      Accepted out-of-scope, pre-existing gap — tracked, not a new defect. IFC-257's
+      contact-detail "Add Deal" (now in
+      apps/web/src/components/contacts/ContactAddDealButton.tsx) navigates to
+      /deals/new?contactId=<id>, matching the
+      CANONICAL contact->deal pattern already shipped on the contact list
+      (apps/web/src/app/contacts/(list)/ContactsPageClient.tsx:455 uses the identical
+      `/deals/new?contactId=${contact.id}`). The contact context IS forwarded; the
+      gap codex cites is solely that the create-deal page
+      (apps/web/src/app/deals/(list)/new/page.tsx) does not yet READ the param — a
+      PRE-EXISTING condition affecting BOTH entry points (it predates IFC-257).
+      Consuming the param is not a button-wiring change: DealForm couples contactId
+      to accountId (validation DealForm.tsx:110-111, reset :208), so prefill needs
+      the contact's account context — a deal-form feature owned by the follow-up
+      (git issue #405, debt-ledger CONTACT-ADD-DEAL-PREFILL-001) which fixes both
+      entry points at once. Codex flip-flopped on this exact action across runs
+      (1: "remove the unused param", 2: "don't drop contactId", 3: "param not
+      consumed"), confirming a subjective scope preference rather than a defect in
+      the changed code. Diverging from the list pattern (dropping the param) would
+      make the contact detail page the lone inconsistent entry point. The fingerprint
+      is source-anchored, so this re-blocks if the Add Deal navigation changes.
+    author: talyssonoliver
+    date: '2026-06-12'
   - fingerprint: '00ce5862eea3e63b66af5c32022e52bdfe70265cf52d9278e73804fbb8739934'
     reason: >-
       Accepted deliberate design decision (IFC-270). updateAccountRevenueSchema

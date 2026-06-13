@@ -273,6 +273,9 @@ artifacts/reports/sprint-runs/*.md
 # Sprint patches (intermediate build artifacts)
 artifacts/sprint*/codex-run/patches/
 
+# Codex review gate run outputs (ephemeral; regenerated each run)
+artifacts/codex-review/
+
 # Task context files - now use timestamped structure under artifacts/context/{timestamp}/
 # Legacy artifacts/contexts/ directory was removed (superseded by new structure)
 # Context files are tracked in git for audit trail

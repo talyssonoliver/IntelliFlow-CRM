@@ -5027,6 +5027,17 @@ alerts:
     remediation_sprint: 18
     remediation_plan: 'Owned by IFC-242 (Lead Create Form Fixes — revenue mapping). Map the banded select value to a numeric cents value (or switch to a numeric input). NOT fixed in PG-060 per scope boundary.'
     notes: 'git issue #380. Owned by IFC-242. Spec finding PG-060-F2.'
+  CONTACT-ADD-DEAL-PREFILL-001:
+    origin_task: IFC-257
+    owner: CRM FE
+    severity: low
+    description: 'BOTH contact "Add Deal" entry points navigate to /deals/new?contactId=<id> — the contact list (apps/web/src/app/contacts/(list)/ContactsPageClient.tsx:455, pre-existing) and now the contact detail page (apps/web/src/app/contacts/[id]/page.tsx, IFC-257, matching the list pattern). However the create-deal page (apps/web/src/app/deals/(list)/new/page.tsx) never reads the contactId search param, so the new deal is NOT pre-associated. DealForm couples contactId to accountId (validation DealForm.tsx:110-111, reset :208), so consuming it needs the contact account context — beyond IFC-257 button-wiring scope.'
+    created_at: 2026-06-12
+    status: open
+    expiry_date: 2026-09-30
+    remediation_sprint: 20
+    remediation_plan: 'In deals/(list)/new/page.tsx read contactId from search params, fetch/derive the contact account context, pass initialData={{ contactId, accountId }} to DealForm, and assert end-to-end prefill. Fixes both entry points at once.'
+    notes: 'git issue #405. Out of IFC-257 scope (button wiring). Pre-existing gap surfaced by the codex-review gate (which flip-flopped: flagged both passing AND dropping the param).'
   REVENUE-ZERO-PERSIST-001:
     origin_task: IFC-270
     owner: Backend Dev

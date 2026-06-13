@@ -43,6 +43,9 @@ import { QuickLogComposer } from '@/components/shared/quick-log-composer';
 import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
 import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
 import { ContactRelatedTabs } from '@/components/contacts/ContactRelatedTabs';
+import { ContactQuickActions } from '@/components/contacts/ContactQuickActions';
+import { ContactAddDealButton } from '@/components/contacts/ContactAddDealButton';
+import { ContactMapPreview, buildContactLocation } from '@/components/contacts/ContactMapPreview';
 import {
   formatContactDate,
   formatContactRelativeTime,
@@ -151,6 +154,9 @@ interface ContactWithRelations {
   createdAt: string | Date;
   updatedAt: string | Date;
   avatarUrl?: string | null;
+  streetAddress?: string | null;
+  city?: string | null;
+  zipCode?: string | null;
   account?: {
     id: string;
     name: string;
@@ -876,14 +882,6 @@ function renderRichPreview(activity: Activity): React.ReactNode {
               </span>
               {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
             </div>
-            {meta.recordingUrl && (
-              <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z" />
-                </svg>{' '}
-                Play Recording
-              </button>
-            )}
           </div>
         </div>
       );
@@ -947,11 +945,6 @@ function renderRichPreview(activity: Activity): React.ReactNode {
             <p className="text-sm font-medium text-slate-900 dark:text-white">{meta.fileName}</p>
             <p className="text-xs text-slate-500">{meta.fileSize}</p>
           </div>
-          <button className="p-2 text-slate-500 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z" />
-            </svg>
-          </button>
         </div>
       );
 
@@ -1186,7 +1179,7 @@ function transformContactForUI(apiContact: ContactWithRelations) {
     company: apiContact.account?.name || '',
     title: apiContact.title || '',
     department: apiContact.department || '',
-    location: '',
+    location: buildContactLocation(apiContact),
     timezone: '',
     status: (apiContact.status || 'ACTIVE') as ContactStatus,
     isOnline: false,
@@ -1670,18 +1663,7 @@ export default function Contact360Page() {
             </svg>{' '}
             Edit Profile
           </button>
-          <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M4 20q-.825 0-1.412-.587Q2 18.825 2 18V6q0-.825.588-1.412Q3.175 4 4 4h16q.825 0 1.413.588Q22 5.175 22 6v12q0 .825-.587 1.413Q20.825 20 20 20Zm8-7 8-5V6l-8 5-8-5v2Z" />
-            </svg>{' '}
-            Email
-          </button>
-          <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
-            <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19.95 21q-3.125 0-6.175-1.362-3.05-1.363-5.55-3.863-2.5-2.5-3.862-5.55Q3 7.175 3 4.05q0-.45.3-.75t.75-.3H8.1q.35 0 .625.238.275.237.325.562l.65 3.5q.05.4-.025.675-.075.275-.275.475L6.65 11.2q.7 1.3 1.65 2.475.95 1.175 2.1 2.175l2.65-2.65q.225-.225.525-.325.3-.1.625-.025l3.3.7q.35.1.563.363.212.262.212.587v4.05q0 .45-.3.75t-.75.3Z" />
-            </svg>{' '}
-            Log Call
-          </button>
+          <ContactQuickActions contact={contact} />
           <PinButton
             entityType="contact"
             entityId={contact.id}
@@ -1888,22 +1870,7 @@ export default function Contact360Page() {
                 </div>
               </div>
             </div>
-            <div className="h-32 w-full bg-cover bg-center border-t border-slate-200 dark:border-slate-800 relative">
-              <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
-                <div className="text-center">
-                  <svg
-                    className="w-8 h-8 text-[#137fec] mx-auto mb-1"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M12 12q.825 0 1.413-.587Q14 10.825 14 10t-.587-1.413Q12.825 8 12 8t-1.412.587Q10 9.175 10 10t.588 1.413Q11.175 12 12 12Zm0 9.625q-.2 0-.4-.075t-.35-.2Q7.6 18.125 5.8 15.362 4 12.6 4 10.2q0-3.75 2.413-5.975Q8.825 2 12 2t5.588 2.225Q20 6.45 20 10.2q0 2.4-1.8 5.163-1.8 2.762-5.45 5.987-.15.125-.35.2-.2.075-.4.075Z" />
-                  </svg>
-                  <button className="bg-white/90 text-slate-900 text-xs font-bold px-3 py-1.5 rounded shadow-sm hover:bg-white transition">
-                    View Map
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ContactMapPreview location={contact.location} />
           </Card>
           <Card className="p-5">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">
@@ -2421,12 +2388,7 @@ export default function Contact360Page() {
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Deals</h3>
-                <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
-                  </svg>{' '}
-                  Add Deal
-                </button>
+                <ContactAddDealButton contactId={contactId} />
               </div>
               <div className="space-y-3">
                 {deals.map((deal) => (
