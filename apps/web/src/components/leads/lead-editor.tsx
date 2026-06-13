@@ -110,6 +110,9 @@ export function LeadEditor({
     if (changedFields.length === 0) return;
     const payload = buildLeadUpdatePayload(leadId, formData, changedFields);
     await onSave(payload);
+    // A successful save makes the current values the new baseline, so the form is
+    // no longer dirty (clears the unsaved-changes registration before redirect).
+    setSeededSnapshot(formData);
   };
 
   return (

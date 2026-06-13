@@ -146,6 +146,18 @@ describe('LeadEditor', () => {
     });
   });
 
+  it('clears the dirty state after a successful save', async () => {
+    const onSave = vi.fn().mockResolvedValue({});
+    renderEditor({ onSave });
+    const firstName = screen.getByLabelText('First Name') as HTMLInputElement;
+    const save = screen.getByText('Save Changes').closest('button') as HTMLButtonElement;
+    fireEvent.change(firstName, { target: { value: 'Jane' } });
+    expect(save.disabled).toBe(false);
+    fireEvent.submit(firstName.closest('form')!);
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    await waitFor(() => expect(save.disabled).toBe(true));
+  });
+
   it('does not call onSave when nothing changed (no no-op update)', () => {
     const onSave = vi.fn();
     renderEditor({ onSave });
