@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-13T01:45:38.311Z",
+  "timestamp": "2026-06-13T15:08:25.805Z",
   "docRoutes": [
     "/",
     "/404",
@@ -119,6 +119,7 @@
     "/help-center/search",
     "/insights",
     "/leads",
+    "/leads/import",
     "/leads/lead-settings",
     "/leads/new",
     "/leads/pipeline",
@@ -300,6 +301,7 @@
     "/help-center/search",
     "/insights",
     "/leads",
+    "/leads/import",
     "/leads/lead-settings",
     "/leads/new",
     "/leads/pipeline",
@@ -481,6 +483,7 @@
     "/help-center/search",
     "/insights",
     "/leads",
+    "/leads/import",
     "/leads/lead-settings",
     "/leads/new",
     "/leads/pipeline",
@@ -549,12 +552,12 @@
     {
       "name": "PARSE_OK",
       "severity": "PASS",
-      "message": "Parsed 179 routes from conformance statement"
+      "message": "Parsed 180 routes from conformance statement"
     },
     {
       "name": "COUNT_MATCH",
       "severity": "PASS",
-      "message": "Doc routes: 179, FS routes: 179"
+      "message": "Doc routes: 180, FS routes: 180"
     },
     {
       "name": "STATEMENT_COVERS_DISK",
@@ -569,7 +572,7 @@
     {
       "name": "TOTAL_COUNT",
       "severity": "INFO",
-      "message": "Total: 179 matched, 0 doc-only, 0 fs-only"
+      "message": "Total: 180 matched, 0 doc-only, 0 fs-only"
     }
   ],
   "exitCode": 0

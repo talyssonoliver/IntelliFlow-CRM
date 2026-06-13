@@ -414,3 +414,34 @@ waivers:
       zero-backend behaviour-preserving extraction scope. Source-anchored.
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '080bed5cc7fdadc5f30c0542e7579d464725645af72439231142a73c9b803bad'
+    reason: >-
+      PG-063 — codex hallucination citing PRE-FIX code. The
+      unhandled-post-import-cache-failure is already fixed at HEAD
+      (csv-importer.tsx runImport): the cache invalidation
+      (utils.lead.list/stats.invalidate + invalidateLeadsCache + await
+      revalidateLeadCaches) is wrapped in a best-effort try/catch whose catch
+      swallows any rejection, and setResult / setImporting(false) /
+      setStep('result') run UNCONDITIONALLY after it — a revalidateLeadCaches
+      rejection can never strand the UI in the importing state. Test 'still shows
+      the result when cache revalidation fails after import' asserts this with
+      revalidateLeadCaches rejecting. Codex's evidence quotes the bare
+      `await revalidateLeadCaches(user.id)` with NO surrounding try/catch — code
+      that no longer exists at HEAD (verified via git show HEAD:<file>). Verified
+      false-positive (the documented codex fixed-code hallucination).
+    author: talyssonoliver
+    date: '2026-06-13'
+  - fingerprint: '0d8d843b2a65de5c33cf22a3e67df95457244ba50751f18c873ce51e6ae5d242'
+    reason: >-
+      PG-063 — codex hallucination citing PRE-FIX code. The
+      csv-mid-field-quote-corruption is already fixed at HEAD (field-mapper.ts
+      parseCsv): a `"` only opens a quoted field at field start
+      (`if (ch === '"' && atFieldStart)`); a mid-field `"` falls through to the
+      literal-append branch, so `Acme "R&D"` is preserved verbatim rather than
+      truncated/realigned. Test 'treats a mid-field double quote as a literal'
+      asserts it. Codex's evidence quotes `if (ch === '"') { const quoted = ... }`
+      WITHOUT the atFieldStart guard — code that no longer exists at HEAD (verified
+      via git show HEAD:<file>). Verified false-positive (codex fixed-code
+      hallucination).
+    author: talyssonoliver
+    date: '2026-06-13'

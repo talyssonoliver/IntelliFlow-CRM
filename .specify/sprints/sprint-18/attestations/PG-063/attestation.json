@@ -1,0 +1,84 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-063",
+  "attestor": "Claude Opus 4.8 (1M) — /full-pipeline PG-063",
+  "attestation_timestamp": "2026-06-13T14:30:00Z",
+  "verdict": "COMPLETE",
+  "run_id": "run-2026-06-13T13-55-00Z",
+  "context_acknowledgment": {
+    "context_ack_file": ".specify/sprints/sprint-18/attestations/PG-063/context_ack.json",
+    "files_read": 14,
+    "invariants_acknowledged": 15
+  },
+  "evidence_summary": "PG-063 delivers the Import Leads (CSV) feature as a web-layer-only vertical slice mapping to the existing lead.create path (no bulk endpoint added). Three named artifacts: lib/leads/field-mapper.ts (PURE RFC-4180 parser + formula-injection guard + header auto-detect + per-row createLeadSchema validation), components/leads/csv-importer.tsx (client component: select -> map -> import -> result state machine, sequential api.lead.create per valid row, row-level error surfacing), and app/leads/(list)/import/page.tsx (thin route shell). SECURITY (spec §4): formula-injection cells (leading = + - @ TAB CR) in FREE-TEXT fields are REJECTED as surfaced row errors (never stored/prefixed/altered) — resolved from the plan-reviewer's stored-corruption finding; email/phone excluded (a valid +phone is preserved, a =/@ payload fails emailSchema/phoneSchema). Caps: MAX_IMPORT_ROWS=1000 (over-cap file rejected WHOLE, never truncated), MAX_IMPORT_FILE_BYTES=2MiB (checked before read). Every row validated against createLeadSchema (single source of truth); invalid rows surfaced with reasons, never silently dropped; the RAW string record is sent so phoneSchema's PhoneNumber VO transform stays server-side (no VO serialised). REACHABILITY: the (list) layout gives the sidebar; an Import secondary CTA added to the lead-list PageHeader (lead-list.tsx). a11y: /leads/import added to the WCAG conformance statement (strict a11y-routes gate PASS, 180/180); route-count surfaces reconciled (sitemap-reconciliation TC-25 208->209, PAGE_MAP_AND_FLOWS.md + page-registry.md Total Pages 208->209). RED FLAG: export-path CSV injection in lib/export/csv.ts (escapeCSVField has no formula guard) filed as issue #417 + debt-ledger CSV-EXPORT-FORMULA-INJECTION-001 (out of import scope; own PR). Zero packages/ or apps/api/ change -> /stoa-domain PASS (subagent a5c95751139285a70).",
+  "artifact_hashes": {
+    "apps/web/src/lib/leads/field-mapper.ts": "270aa36ad5e77ac1d6be95766d5a4d03f0dd5cbd61b14f13079d9859c4d7e063",
+    "apps/web/src/components/leads/csv-importer.tsx": "7a58fa066ded3da5ac9286e7fa27a9274b4f79a336af7c36c76fc18b0c32aaf2",
+    "apps/web/src/app/leads/(list)/import/page.tsx": "42091b8a1826e03e278175f24f4eb02e228123074123473996440a2f2e133140",
+    "apps/web/src/lib/leads/__tests__/field-mapper.test.ts": "b5072d4f23bfde2d13f3305e5855684817094af52d72a74de3cf06c03a011a1a",
+    "apps/web/src/components/leads/__tests__/csv-importer.test.tsx": "a7f9a338c3259a258419665489f6518687bed4c1dcde9b0313397f3d92f14fc7"
+  },
+  "dependencies_verified": [
+    {
+      "task_id": "PG-059",
+      "claim": "Lead list delivered + reachable; PageHeader actions support an Import CTA",
+      "verified": true,
+      "method": "lead-list.tsx PageHeader actions array (New Lead primary); added Import secondary -> /leads/import. (list) layout sidebar wraps the route."
+    },
+    {
+      "task_id": "PG-060",
+      "claim": "lead.create path + createLeadSchema exist (the importer maps to them)",
+      "verified": true,
+      "method": "NewLeadForm.tsx:238/422 api.lead.create.useMutation/mutateAsync; lead.router.ts:478; createLeadSchema validators/lead.ts:41"
+    }
+  ],
+  "definition_of_done_items": [
+    { "item": "Artifact lib/leads/field-mapper.ts exists (parse + sanitise + map + validate, pure)", "met": true },
+    { "item": "Artifact components/leads/csv-importer.tsx exists (upload/map/preview/import UI)", "met": true },
+    { "item": "Artifact app/leads/(list)/import/page.tsx exists (route shell)", "met": true },
+    { "item": "Imports working — sequential api.lead.create per valid row", "met": true },
+    { "item": "Mapping functional — auto-detect + editable column->field selects", "met": true },
+    { "item": "Validation active — per-row createLeadSchema; row-level errors surfaced, never dropped", "met": true },
+    { "item": "Formula-injection guarded (free-text reject) + row cap 1000 (no truncation) + size cap 2MiB", "met": true },
+    { "item": "/leads/import reachable (list-layout sidebar + lead-list Import CTA)", "met": true },
+    { "item": "New-file coverage >=80% (field-mapper 100% lines/90.76% branch; csv-importer 98.83% lines/90.54% branch)", "met": true },
+    { "item": "WCAG 2.1 AA a11y-expert pass (PASS-WITH-NITS; 4 net-new nits fixed in-PR; pre-existing shared spinner filed #419)", "met": true },
+    { "item": "Red-flag issue filed for unsafe export parsing (#417 + debt-ledger)", "met": true },
+    { "item": "Lighthouse >= 90 / response < 200ms", "met": null, "note": "client-side import; no server-render change; LHCI deferred per PG-061/062" }
+  ],
+  "validation_results": [
+    { "name": "TypeScript", "command": "pnpm --filter @intelliflow/web typecheck", "exit_code": 0, "passed": true, "timestamp": "2026-06-13T14:19:00Z" },
+    { "name": "Tests (new)", "command": "pnpm --filter @intelliflow/web test --run field-mapper.test.ts csv-importer.test.tsx (57 tests)", "exit_code": 0, "passed": true, "timestamp": "2026-06-13T14:19:30Z" },
+    { "name": "Tests (count guard)", "command": "pnpm --filter @intelliflow/web test --run sitemap-reconciliation.test.ts (count 209)", "exit_code": 0, "passed": true, "timestamp": "2026-06-13T14:09:00Z" },
+    { "name": "Lint", "command": "eslint --max-warnings=0 <touched files> + prettier --check", "exit_code": 0, "passed": true, "timestamp": "2026-06-13T14:18:00Z" },
+    { "name": "a11y-routes (strict)", "command": "pnpm run validate:a11y-routes (VALIDATION_STRICT=1) — 180/180", "exit_code": 0, "passed": true, "timestamp": "2026-06-13T14:16:00Z" }
+  ],
+  "gate_results": [
+    { "gate_id": "context-ack", "passed": true },
+    { "gate_id": "plan-checkboxes", "passed": true, "score": 10 },
+    { "gate_id": "plan-reviewer-subagent", "passed": true, "reviewer": "a941eb6ab0ae8e81e", "note": "CHANGES_REQUIRED -> all 5 ERRORs + 6 WARNs resolved in plan rev 2 + exec" },
+    { "gate_id": "artifact-hashes", "passed": true },
+    { "gate_id": "import-reachability", "passed": true, "note": "page.tsx -> CsvImporter -> field-mapper; route reachable via (list) sidebar + lead-list Import CTA" },
+    { "gate_id": "runtime-wiring", "passed": true, "note": "no dead stub; lead-list CTA links /leads/import" },
+    { "gate_id": "build-validation-4", "passed": true },
+    { "gate_id": "scoped-coverage", "passed": true, "note": "field-mapper 100% lines; csv-importer 98.83% lines; page.tsx shell excluded (PG-061 parity)" },
+    { "gate_id": "a11y-review", "passed": true, "reviewer": "a95ed46d41f2efcb1", "note": "PASS-WITH-NITS; net-new nits fixed; #419 pre-existing shared filed" },
+    { "gate_id": "stoa-domain", "passed": true, "reviewer": "a5c95751139285a70", "note": "no domain/api/schema surface changed; goes through api.lead.create; no schema drift; no VO serialised" },
+    { "gate_id": "lighthouse-evidence", "passed": null, "note": "client import; deferred per PG-061/062" }
+  ],
+  "kpi_results": [
+    { "kpi": "New-file scoped coverage", "target": "Lines >=80% on changed lines", "actual": "field-mapper.ts 100% lines / 90.76% branch; csv-importer.tsx 98.83% lines / 90.54% branch (57 new tests)", "met": true },
+    { "kpi": "No regressions in leads vertical + route docs", "target": "leads + sitemap suites green", "actual": "57 new tests + sitemap-reconciliation (count 209) green; full suite via pre-ship", "met": true },
+    { "kpi": "Security — CSV formula injection + caps", "target": "guard + reject + caps + per-row validation", "actual": "free-text reject (surfaced), 1000-row reject-whole, 2MiB pre-read cap, createLeadSchema per row", "met": true },
+    { "kpi": "Lighthouse performance >= 0.90 on /leads/import", "target": "performance >= 0.90", "actual": "client-side; no SSR change; LHCI deferred per PG-061/062", "met": null }
+  ],
+  "environment": {
+    "node": "via pnpm 10.33.0",
+    "branch": "feat/pg-063",
+    "base": "origin/main cb974e527",
+    "package": "@intelliflow/web",
+    "test_db": "postgres-test 5433 / intelliflow_test"
+  },
+  "notes": "Web-layer-only feature (greenfield, not an extraction). Plan-reviewer subagent (a941eb6ab0ae8e81e) returned CHANGES_REQUIRED with 5 ERRORs — all resolved: (1) website/free-text formula injection switched from OWASP '-prefix-and-store to REJECT-as-row-error (prefix-and-store would write a corrupted value the unguarded export path replays); (2) VO-serialisation hazard — validateLeadRow returns ok/errors only, the importer sends the RAW LeadImportRecord so phoneSchema's PhoneNumber transform runs server-side (test asserts mutateAsync receives a string phone); (3) result-step controls tested (Back to Leads / Import another -> reset / skipped-invalid reasons); (4) mid-sequence server failure does NOT abort the loop (test: row 2 of 3 rejects, rows 1+3 imported, 1 failed shown); (5) a11y page.tsx-before-doc ordering + conformance 179->180 + the THREE page-count surfaces (TC-25 / PAGE_MAP / page-registry 208->209). WARNs resolved: partial-mapping/manual-email-map test, aria-live progress test, explicit coverage target, full alias table enumerated; Issue-10 (dependency-chains) deferred (existing web->validators edge). a11y-expert (a95ed46d41f2efcb1) PASS-WITH-NITS: 4 net-new nits FIXED in-PR (removed redundant select aria-label that overrode the <label>; conditional-render the progress <output> to avoid empty-string announcement; programmatic heading focus on select->map and map->result transitions; sr-friendly count separator); 1 pre-existing shared-component nit (PageHeader loading spinner missing aria-hidden, not exercised by PG-063) filed #419. stoa-domain (a5c95751139285a70) PASS: web->api.lead.create->domain boundary intact, no Prisma in web, createLeadSchema single source of truth, raw z.input on the wire, no API/DB/domain change. RED FLAG (brief requirement): lib/export/csv.ts escapeCSVField lacks a formula-injection guard on EXPORT — OWASP CSV injection — filed #417 + debt-ledger CSV-EXPORT-FORMULA-INJECTION-001 (export path, out of import scope, own PR per co-dependent-changes rule). Final gate is scripts/pre-ship.mjs (mirrors CI). CODEX ROUND: the codex-review gate caught 3 REAL bugs (all fixed, none waived): (1) MEDIUM missing-cache-invalidation — imports didn't refresh the leads list/stats caches (5-min staleTime + server cache tags) so imported rows weren't visible after 'Back to Leads' → runImport now invalidates utils.lead.list/stats + invalidateLeadsCache() + revalidateLeadCaches(user.id) after >=1 success (mirrors lead-list.tsx); (2) MEDIUM invalid-source-normalization — source.toUpperCase() turned 'Cold Call' into 'COLD CALL' (enum is COLD_CALL) so valid sources were rejected → added normaliseSource() (upper-case + collapse non-alphanumerics to '_'); (3) LOW wrong-import-row-number — dropping blank lines mis-numbered row errors → parseCsv now tracks physical line numbers (rowLines) and RowResult.line carries the true CSV line. +3 tests. A 2nd codex round caught 2 more REAL bugs (fixed): (4) MEDIUM unhandled-post-import-cache-failure — my cache-invalidation await could strand the UI in 'importing' if revalidateLeadCaches rejected → wrapped invalidation in best-effort try/catch so setResult/setImporting(false)/setStep('result') always run (+test: result shown even when revalidate rejects); (5) MEDIUM csv-mid-field-quote-corruption — a `\"` anywhere in a field opened quoted mode, silently truncating `Acme \"R&D\"` → parser now only opens a quoted field at field-start (atFieldStart flag); a mid-field quote is a literal (+test). 62 tests total. The whole-CSV gate also forced fixing pre-existing sonarjs/slow-regex in sitemap-reconciliation.test.ts (co-dependent, the file I had to touch for the count guard). A new STATIC page also tripped the canonical-page-count net (209) across 7 design docs + content-audit JSON beyond the 3 first found — all reconciled. NOTE: PG-060/061/062 specs/plans live in the gitignored .specify working dirs; the committed evidence is this attestation.json + context_ack.json (force-added past sprint-*/attestations/** ignore, matching PG-059..062)."
+}

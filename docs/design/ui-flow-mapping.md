@@ -2,7 +2,7 @@
 
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
-> Guide Components **Total Pages**: 208 implemented **Total Flows**: 42 **API
+> Guide Components **Total Pages**: 209 implemented **Total Flows**: 42 **API
 > Routers**: 61 (367 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
@@ -29,7 +29,7 @@ application.
 │   ┌──────────────────────┐     ┌──────────────────────┐                     │
 │   │  FLOWS (42 total)    │────▶│   SITEMAP            │                     │
 │   │  flows/FLOW-*.md     │     │   sitemap.md         │                     │
-│   │  FLOW-001 to 045     │     │   208 routes         │                     │
+│   │  FLOW-001 to 045     │     │   209 routes         │                     │
 │   └──────────┬───────────┘     └──────────┬───────────┘                     │
 │              │                            │                                  │
 │              │         ┌──────────────────┘                                  │
@@ -71,7 +71,7 @@ application.
 | ----------------------- | --------------------------------------------------------------- | -------------------------------------------- |
 | Flow Index              | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` | Master flow catalog (42 flows)               |
 | Individual Flows        | `apps/project-tracker/docs/metrics/_global/flows/FLOW-*.md`     | Detailed flow specs                          |
-| Sitemap                 | `docs/design/sitemap.md`                                        | Route structure (208 pages)                  |
+| Sitemap                 | `docs/design/sitemap.md`                                        | Route structure (209 pages)                  |
 | Page Map & Flows        | `docs/design/PAGE_MAP_AND_FLOWS.md`                             | Visual flow diagrams                         |
 | **Integration Backlog** | `docs/design/integration-backlog.md`                            | **Page specs + API requirements (23 tasks)** |
 | tRPC API Routes         | `docs/api/trpc-routes.md`                                       | API inventory (366 procedures)               |

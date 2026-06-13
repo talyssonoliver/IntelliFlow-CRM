@@ -1,6 +1,6 @@
 # IntelliFlow CRM - Sitemap
 
-**Total Pages**: 208 | **Flows**: 42 | **Layouts**: 37 | **API Routers**: 60
+**Total Pages**: 209 | **Flows**: 42 | **Layouts**: 37 | **API Routers**: 60
 
 _Location_: `docs/design/sitemap.md` · _Last Updated_: 2026-04-26 · _Procs_: 232
 
@@ -426,7 +426,7 @@ in the sitemap.
 
 ## Implementation Status
 
-### Implemented Pages (208 unique routes; 257 across category buckets)
+### Implemented Pages (209 unique routes; 257 across category buckets)
 
 | Category      | Route                                                                                                                                                                                                                                                            | Status      | Flow               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------ |

@@ -20,7 +20,7 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 179
+This statement covers the IntelliFlow CRM web application across all 180
 user-facing routes. Dynamic segment routes (e.g., `/contacts/[id]`) inherit
 conformance status from their parent static route and are not listed separately.
 
@@ -33,12 +33,12 @@ conformance status from their parent static route and are not listed separately.
   `/verify-email/callback`
 - **Dashboard (3):** `/dashboard`, `/dashboard/customize`, `/dashboard/new`
 - **Activity (1):** `/activity`
-- **CRM — Leads, Contacts & Accounts (14):** `/accounts`,
+- **CRM — Leads, Contacts & Accounts (15):** `/accounts`,
   `/accounts/account-settings`, `/accounts/account-tiers`,
   `/accounts/territory-mapping`, `/contacts`, `/contacts/contact-settings`,
   `/contacts/contact-types`, `/contacts/import-export`, `/contacts/new`,
-  `/leads`, `/leads/lead-settings`, `/leads/new`, `/leads/pipeline`,
-  `/leads/routing`
+  `/leads`, `/leads/import`, `/leads/lead-settings`, `/leads/new`,
+  `/leads/pipeline`, `/leads/routing`
 - **CRM — Deals (8):** `/deals`, `/deals/all/forecast`,
   `/deals/deal-automation`, `/deals/deal-settings`, `/deals/deal-stages`,
   `/deals/forecast`, `/deals/new`, `/deals/trash`
@@ -109,8 +109,8 @@ conformance status from their parent static route and are not listed separately.
 | Level A: Not Applicable          | 4                   |
 | Level AA: Supports               | 16                  |
 | Level AA: Not Applicable         | 4                   |
-| Routes fully conformant          | 178 of 179          |
-| Routes partially conformant      | 1 of 179 (`/deals`) |
+| Routes fully conformant          | 179 of 180          |
+| Routes partially conformant      | 1 of 180 (`/deals`) |
 
 ---
 
