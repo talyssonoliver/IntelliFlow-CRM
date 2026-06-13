@@ -105,10 +105,11 @@ export function LeadEditor({
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     const { changedFields } = computeLeadChangeset(seededSnapshot ?? EMPTY_FIELDS, formData);
-    // Nothing changed → skip the save entirely (avoid a no-op update that would
-    // still bump the lead's updatedAt).
-    if (changedFields.length === 0) return;
     const payload = buildLeadUpdatePayload(leadId, formData, changedFields);
+    // Only `{ id }` means there is nothing persistable — either nothing changed, or
+    // the only change was a clear the API can't apply (cleared scalar field). Don't
+    // run a no-op update (which would bump updatedAt) or falsely mark the form saved.
+    if (Object.keys(payload).length <= 1) return;
     await onSave(payload);
     // A successful save makes the current values the new baseline, so the form is
     // no longer dirty (clears the unsaved-changes registration before redirect).
