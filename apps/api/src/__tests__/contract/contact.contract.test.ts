@@ -415,7 +415,7 @@ describe('Contact Router Contract Tests', () => {
     // #420: same-tenant contact so the router tenant preflight passes; the
     // service mocks drive each contract assertion.
     beforeEach(() => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         tenantId: TEST_UUIDS.tenant,
       } as never);
@@ -519,7 +519,7 @@ describe('Contact Router Contract Tests', () => {
   describe('linkToAccount - Contract', () => {
     // #420: same-tenant contact so the router tenant preflight passes.
     beforeEach(() => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         tenantId: TEST_UUIDS.tenant,
       } as never);
@@ -555,7 +555,7 @@ describe('Contact Router Contract Tests', () => {
   describe('unlinkFromAccount - Contract', () => {
     // #420: same-tenant contact so the router tenant preflight passes.
     beforeEach(() => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         tenantId: TEST_UUIDS.tenant,
       } as never);

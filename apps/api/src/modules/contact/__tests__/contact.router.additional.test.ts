@@ -116,7 +116,7 @@ describe('Contact Router - Additional Coverage', () => {
   describe('update - disassociate from account (accountId null)', () => {
     // #420: same-tenant contact so the router tenant preflight passes.
     beforeEach(() => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         tenantId: TEST_UUIDS.tenant,
       } as never);
@@ -219,7 +219,7 @@ describe('Contact Router - Additional Coverage', () => {
   describe('update - associate with new account', () => {
     // #420: same-tenant contact so the router tenant preflight passes.
     beforeEach(() => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         tenantId: TEST_UUIDS.tenant,
       } as never);
@@ -356,7 +356,7 @@ describe('Contact Router - Additional Coverage', () => {
     // #420: same-tenant contact so the router tenant preflight passes; the
     // service mocks drive each assertion.
     beforeEach(() => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         tenantId: TEST_UUIDS.tenant,
       } as never);
@@ -405,7 +405,7 @@ describe('Contact Router - Additional Coverage', () => {
   describe('unlinkFromAccount - generic BAD_REQUEST path', () => {
     // #420: same-tenant contact so the router tenant preflight passes.
     beforeEach(() => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         tenantId: TEST_UUIDS.tenant,
       } as never);

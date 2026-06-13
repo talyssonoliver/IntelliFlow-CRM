@@ -177,25 +177,29 @@ function getContactService(ctx: Context) {
 }
 
 /**
- * #420: Router-level tenant preflight for contact mutations that delegate to the
+ * #420: Router-level access preflight for contact mutations that delegate to the
  * singleton ContactService. ContactService.{updateContactInfo,updateContactEmail,
- * disassociateFromAccount} load the contact via contactRepository.findById(id)
- * with NO tenant argument, and the container service prisma is not the
- * request-scoped (RLS) client — so a cross-tenant id could otherwise be mutated.
- * This loads the contact's tenantId via the request-scoped client and asserts it
- * matches the caller BEFORE any mutation. The explicit tenantId comparison does
- * not rely on RLS alone; a missing OR cross-tenant contact both yield NOT_FOUND
- * (no existence leak), matching the delete/addNote behaviour.
+ * disassociateFromAccount,associateWithAccount} load the contact via
+ * contactRepository.findById(id) with NO tenant/owner argument, on the global
+ * container prisma (not the request-scoped RLS client) — so a contact outside the
+ * caller's access scope could otherwise be mutated.
+ *
+ * This re-uses `createTenantWhereClause` — the SAME access predicate the read paths
+ * use (getById/getByEmail/search) — so a mutation is only allowed on a contact the
+ * caller can actually read: tenant-scoped for all, owner-scoped for regular users,
+ * team-scoped for managers, all-tenant for admins. The explicit WHERE does not rely
+ * on RLS alone. A contact outside scope (other tenant, other owner, or absent) yields
+ * NOT_FOUND — no existence leak, parity with delete/addNote.
  */
 async function assertContactInTenant(
   typedCtx: ReturnType<typeof getTenantContext>,
   contactId: string
 ): Promise<void> {
-  const existing = await typedCtx.prismaWithTenant.contact.findUnique({
-    where: { id: contactId },
-    select: { id: true, tenantId: true },
+  const existing = await typedCtx.prismaWithTenant.contact.findFirst({
+    where: createTenantWhereClause(typedCtx.tenant, { id: contactId }),
+    select: { id: true },
   });
-  if (!existing || existing.tenantId !== typedCtx.tenant.tenantId) {
+  if (!existing) {
     throw new TRPCError({
       code: 'NOT_FOUND',
       message: `Contact not found: ${contactId}`,

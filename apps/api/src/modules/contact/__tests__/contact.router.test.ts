@@ -559,7 +559,7 @@ describe('Contact Router', () => {
     // these service-behaviour tests pass the preflight; the service mocks drive
     // each assertion. (Cross-tenant denial is covered in contact.router.tenant.test.ts.)
     beforeEach(() => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         tenantId: TEST_UUIDS.tenant,
       } as never);
@@ -687,7 +687,7 @@ describe('Contact Router', () => {
     // #420: same-tenant contact so the router tenant preflight passes; the
     // service mocks drive each assertion.
     beforeEach(() => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         tenantId: TEST_UUIDS.tenant,
       } as never);
@@ -759,7 +759,7 @@ describe('Contact Router', () => {
     // #420: same-tenant contact so the router tenant preflight passes; the
     // service mocks drive each assertion.
     beforeEach(() => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         tenantId: TEST_UUIDS.tenant,
       } as never);

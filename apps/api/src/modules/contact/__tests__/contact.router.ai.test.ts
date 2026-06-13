@@ -343,7 +343,7 @@ describe('Contact Router AI Procedures (IFC-312)', () => {
         value: fakeDomainContact,
       });
       // #420: same-tenant contact so the router tenant preflight passes.
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         tenantId: TEST_UUIDS.tenant,
       } as never);
