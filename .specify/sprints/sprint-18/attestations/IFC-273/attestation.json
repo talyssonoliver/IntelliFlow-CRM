@@ -1,0 +1,148 @@
+{
+  "$schema": "../../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-273",
+  "run_id": "20260613-102000",
+  "attestor": "Claude Code - STOA Exec",
+  "attestation_timestamp": "2026-06-13T10:50:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-06-13T10:20:00Z",
+    "invariants_acknowledged": [
+      "L-01/L-02 frontend-only: account.stats returns withOpportunities (?? 0, no .output()).",
+      "AccountTier moved to domain (DRY-enum + pure fn); AccountCard re-exports; consumers unchanged.",
+      "F-09 removes invalid LEAD + adds 3 statuses; F-12 adds NEEDS_ANALYSIS.",
+      "Reused shared formatLabel (no new helper); trpc.ts untouched to keep diff-coverage clean.",
+      "No new route/page; surfaces reachable via existing accounts sidebar config."
+    ]
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/accounts/(list)/AccountsPageClient.tsx": "d3a6e8a31bcf254784a66202af8349eba1421d3a8378f4137b8285558e9b7fd2",
+    "apps/web/src/app/accounts/(list)/page.tsx": "762a860f9944e6cdf58a005021ef47f4d57bb09ccfbea72895abe7bfa905b75e",
+    "apps/web/src/lib/trpc.ts": "3ccae252f5297398201bce8841f7d3a99b79e5389fab521f71a2f8d88264b535",
+    "apps/web/src/components/accounts/AccountCard.tsx": "bd8bdf30f22edf4fb65afd427c007e1d4d2c77d2e7becd6d013517bd769773f0",
+    "apps/web/src/components/accounts/AccountContactsList.tsx": "b8e16624733134f97fc9fb48c8f82c57c1c05f2d4abb70b0678f26f9e1b7b2ce",
+    "apps/web/src/components/accounts/AccountOpportunitiesList.tsx": "3719c1514f1f915f315b8738c8d687371f11d4eebfe7995de94d2c4717671ebd",
+    "apps/web/src/components/accounts/__tests__/AccountContactsList.test.tsx": "98b987a6c29554ecdaec8920c6917c99dbdca2a3b987e88643a55fced6169035",
+    "apps/web/src/components/accounts/__tests__/AccountOpportunitiesList.test.tsx": "1f5b613a7220d17b7f5bfdf2776660f06966b20a66ceae605dd11f39514e2a54",
+    "packages/domain/src/crm/account/Account.ts": "9c23b7ad96bc117ac088129e11c0ea1db78ea817c847f126aecff40b2d0a9f16",
+    "packages/domain/src/crm/account/__tests__/AccountTier.test.ts": "aacf7e83ee88b6278f8ba91e842b85b5a8c8b6aa468a1b78df05a2749d809fb3"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web run typecheck && pnpm --filter @intelliflow/domain run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "node scripts/pre-ship.mjs [unit-tests + integration-tests]",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "node scripts/pre-ship.mjs [lint, eslint --max-warnings=0]",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "node scripts/pre-ship.mjs [build]",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-reviewer-subagent",
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "gate_id": "exec-readiness",
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "gate_id": "page-doc-cochange-NA",
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "gate_id": "nav-wiring-NA-no-new-route",
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "gate_id": "context-ack",
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "gate_id": "diff-coverage",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "gate_id": "coverage-floor",
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "gate_id": "build-validation-4",
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "gate_id": "codex-review",
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "gate_id": "pre-ship-full",
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    },
+    {
+      "gate_id": "stoa-domain",
+      "passed": true,
+      "timestamp": "2026-06-13T10:50:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "diff-coverage new_coverage",
+      "target": ">=80%",
+      "actual": "100.0% (13/13)",
+      "met": true
+    },
+    {
+      "kpi": "AC-001 forbidden casts in 4 account files",
+      "target": "0",
+      "actual": "0 (grep clean)",
+      "met": true
+    },
+    {
+      "kpi": "domain tier branch coverage",
+      "target": ">95%",
+      "actual": "100% (8-case test, all 5 branches)",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "IFC-270"
+  ],
+  "environment": {
+    "os": "win32",
+    "branch": "feat/ifc-273",
+    "git_commit": "0eccc846a"
+  },
+  "notes": "Compliance-check: PASS — no PII/secret/data-retention surface; pure type-safety + DRY-enum + UI filter change, no schema/migration/auth touch. Work is committed (95251e308, 0eccc846a) and pushed to origin/feat/ifc-273; Gate 4b substantive checks (clean commits, ahead of origin/main, pushed) satisfied. Branch name feat/ifc-273 is the orchestrator-provisioned name (deviates from the agent/ convention); not a runtime concern. Findings L-01/L-02/L-04/F-09/F-12 closed. pre-ship: PASS (30m27s) at 0eccc846a."
+}
