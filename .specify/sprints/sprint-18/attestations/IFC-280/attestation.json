@@ -7,20 +7,21 @@
   "attestation_timestamp": "2026-06-13T14:50:00Z",
   "verdict": "COMPLETE",
   "evidence_summary": {
-    "artifacts_verified": 9,
+    "artifacts_verified": 7,
     "validations_passed": 4,
     "validations_failed": 0,
-    "gates_passed": 6,
+    "gates_passed": 7,
     "gates_failed": 0,
     "kpis_met": 2,
     "kpis_missed": 0,
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/deals/[id]/page.tsx": "267cfa7baf8432592e2deb97453f74fba0db6b46f6d70ed25e360a73a63046ea",
-    "apps/web/src/components/deals/DealForm.tsx": "7dcd2e0b9ab068c72aa05404c5f5cc6c3d2954cb5275dc16a5dc95c0ec8d34ce",
-    "apps/web/src/components/deals/LossReasonModal.tsx": "dc30899c69662f7e063e1ad9f7ec5b1c6f1296be3a95e35e245845d28a21ab28",
-    "packages/application/src/services/OpportunityService.ts": "3580ec5c8edf6da8c150a3a290141ef3287c21b55aab0b2caaa767ee72b0bb37",
+    "apps/web/src/app/deals/[id]/page.tsx": "4f8b7d2bf357cf8d40d099b4383d684d1a6061cd1033cd823a13460d1582fcc2",
+    "apps/web/src/components/deals/DealForm.tsx": "0e4b2c0f7c8621600a26c695167b4bb5ddbf0e93abad0e7e38f8060ba2a8772c",
+    "apps/web/src/components/deals/LossReasonModal.tsx": "5881a34340194191a1e30460ddf16fc895b5fc5988aa41fc660168df5427e394",
+    "packages/domain/src/crm/opportunity/Opportunity.ts": "9b2e9ffeb3203342e368ea5b704adc2bc9ff4a5a321d1d3f1122318959b8808e",
+    "packages/application/src/services/OpportunityService.ts": "a59b3b3bb3b1e1ef13f15576f5ab5ca70b82d330fbdc5218bbe2dc3b317c8d9b",
     "tools/scripts/exec-preflight/check-exec-readiness.mjs": "f4c07e015106f1115e347d16c183de84fd0b4667f89eb7c3feadf83a2b1e2403",
     "docs/architecture/diagrams/complete-dependency-chains.md": "ca7d254ebac377f9154d6ab10ee6fce33fcc9cf1d3b313f2988b6c35b86b6608"
   },
@@ -86,6 +87,11 @@
       "gate_id": "tenant-isolation-intact",
       "passed": true,
       "log_path": "NF-002: all 3 wired mutations route through api.opportunity.moveStage/update/delete → tenantProcedure in opportunity.router.ts. No raw/un-tenant'd path introduced."
+    },
+    {
+      "gate_id": "codex-semantic-review",
+      "passed": true,
+      "log_path": "node scripts/codex-review.mjs → Verdict PASS, 0 unwaived. Across 5 passes codex caught 9 REAL bugs in the Edit-dialog wiring — all fixed: F1 description-clear; F2 stakeholder fake-save (added Opportunity.changeAccount/changeContact + applyStakeholderUpdates with the contact-account invariant); F3 already-closed message match; F-A stale-contact on account-only re-assignment (validate the effective pair); F-B closed-deal edit (page dirty-diff sends only changed fields); F-C stage/probability order; F-D date-clear (Opportunity.clearExpectedCloseDate); F-E non-atomic update (validate-then-mutate restructure); F-F pre-validate scalars (validateScalarInputs before mutation). Final run: 2 findings, both WAIVED as verified false-positives (codex re-flagged the now-fixed F-F/F-G code with shifted fingerprints — validateScalarInputs guards the order; the delete mutateAsync is try/caught) with evidence in tools/audit/codex-review-waivers.yaml (4139ed9c, 192bb0db)."
     }
   ],
   "kpi_results": [
