@@ -56,6 +56,7 @@ vi.mock('@/components/shared', () => ({
   PageHeader: ({ title }: { title: string }) => <h1>{title}</h1>,
 }));
 
+import { revalidateLeadCaches } from '@/app/leads/actions';
 import { CsvImporter } from '../csv-importer';
 
 // ---------------------------------------------------------------------------
@@ -221,6 +222,18 @@ describe('CsvImporter', () => {
     );
     resolveFirst?.({ id: 'r1' });
     await waitFor(() => expect(screen.getByText('Import complete')).toBeTruthy());
+  });
+
+  it('still shows the result when cache revalidation fails after import', async () => {
+    vi.mocked(revalidateLeadCaches).mockRejectedValueOnce(new Error('cache down'));
+    render(<CsvImporter />);
+    await uploadFile(makeFile('email,first\na@x.com,Ann'));
+    await waitFor(() => expect(screen.getByText('Map columns to lead fields')).toBeTruthy());
+    fireEvent.click(screen.getByRole('button', { name: /Import 1 valid lead/i }));
+    // The awaited cache action rejects, but the importer must not get stuck —
+    // it still reaches the result step (the lead was created).
+    await waitFor(() => expect(screen.getByText('Import complete')).toBeTruthy());
+    expect(mockMutateAsync).toHaveBeenCalledTimes(1);
   });
 
   it('result step links back to leads and resets on "Import another"', async () => {

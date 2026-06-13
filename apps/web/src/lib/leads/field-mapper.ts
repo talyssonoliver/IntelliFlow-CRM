@@ -198,12 +198,14 @@ export function parseCsv(text: string): ParsedCsv {
   let field = '';
   let row: string[] = [];
   let started = false; // a field or row is in progress (distinguishes "" from EOF)
+  let atFieldStart = true; // true only at the first char of a field (RFC-4180 quoting)
   let lineNo = 1; // 1-based physical line currently being read
   let recordStartLine = 1; // physical line the in-progress record started on
 
   const endField = () => {
     row.push(field);
     field = '';
+    atFieldStart = true;
   };
   const endRow = () => {
     endField();
@@ -215,12 +217,16 @@ export function parseCsv(text: string): ParsedCsv {
   let i = 0;
   while (i < input.length) {
     const ch = input[i];
-    if (ch === '"') {
+    // A `"` only opens a quoted field at the START of a field. A `"` mid-field is
+    // a literal char (handled by the else branch), so `Acme "R&D"` is preserved
+    // verbatim instead of being silently truncated/realigned.
+    if (ch === '"' && atFieldStart) {
       const quoted = readQuotedField(input, i + 1);
       field += quoted.value;
       lineNo += countNewlines(quoted.value); // embedded newlines inside the quoted field
       i = quoted.next;
       started = true;
+      atFieldStart = false;
     } else if (ch === ',') {
       endField();
       started = true;
@@ -238,6 +244,7 @@ export function parseCsv(text: string): ParsedCsv {
     } else {
       field += ch;
       started = true;
+      atFieldStart = false;
       i++;
     }
   }

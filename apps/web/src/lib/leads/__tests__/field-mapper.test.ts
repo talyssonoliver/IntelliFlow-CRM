@@ -65,6 +65,13 @@ describe('field-mapper: parseCsv (RFC-4180)', () => {
     expect(rows[0]).toEqual(['a@x.com', 'She said "hi"']);
   });
 
+  it('treats a mid-field double quote as a literal (no silent truncation)', () => {
+    // `"` is only special at the START of a field; a quote inside an unquoted
+    // field is preserved verbatim rather than opening a quoted segment.
+    const { rows } = parseCsv('email,company\na@x.com,Acme "R&D"');
+    expect(rows[0]).toEqual(['a@x.com', 'Acme "R&D"']);
+  });
+
   it('handles CRLF line endings', () => {
     const { headers, rows } = parseCsv('email,first\r\na@x.com,Ann\r\n');
     expect(headers).toEqual(['email', 'first']);

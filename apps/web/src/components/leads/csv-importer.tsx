@@ -464,11 +464,17 @@ export function CsvImporter() {
     // After at least one successful import, refresh the leads list + stats so the
     // imported rows are visible immediately (the list query has a 5-min staleTime
     // and the first page is server-cache-tagged). Mirrors lead-list.tsx's pattern.
+    // Best-effort: a cache-refresh failure must NOT strand the UI in the importing
+    // state — the leads are already created and a stale list self-heals on refetch.
     if (imported > 0) {
-      utils.lead.list.invalidate();
-      utils.lead.stats.invalidate();
-      invalidateLeadsCache();
-      if (user?.id) await revalidateLeadCaches(user.id);
+      try {
+        utils.lead.list.invalidate();
+        utils.lead.stats.invalidate();
+        invalidateLeadsCache();
+        if (user?.id) await revalidateLeadCaches(user.id);
+      } catch {
+        // ignore — imported rows exist; the list refetches on its own
+      }
     }
     setResult({ imported, failures, skipped });
     setImporting(false);
