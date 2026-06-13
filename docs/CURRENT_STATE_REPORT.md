@@ -1,13 +1,13 @@
 # Current State Report
-_Generated: 2026-05-23T14:16:07.458Z_
+_Generated: 2026-06-13T12:59:30.016Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 5 continuous tasks.
-- Overall progress: 393/590 tasks completed (66.61%), 197 backlog, 0 blocked, 0 in progress.
-- Numbered sprint progress alone: 388/585 tasks completed or attested inside numbered sprints.
+- Overall progress: 400/596 tasks completed (67.11%), 195 backlog, 0 blocked, 1 in progress.
+- Numbered sprint progress alone: 395/591 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
 - Ready-to-start work: DOC-015 (Sprint 18), IFC-032 (Sprint 18), IFC-211 (Sprint 18), IFC-212 (Sprint 18), IFC-214 (Sprint 18).
 - Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
@@ -15,7 +15,7 @@ _Generated: 2026-05-23T14:16:07.458Z_
 ## Source Health
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
-- Attested but not completed in CSV: IFC-212 (Backlog).
+- Attested but not completed in CSV: IFC-212 (Backlog), IFC-257 (In Progress), IFC-271 (Backlog), IFC-314 (Backlog).
 
 ## Continuous Work
 
@@ -263,9 +263,9 @@ _Generated: 2026-05-23T14:16:07.458Z_
 
 ## Sprint 18 - Sprint 18
 
-- Status: 11/60 completed, 49 backlog, 0 blocked.
-- Primary focus areas: Core CRM (27), Settings (19), AI/ML (3).
-- Evidence coverage: 11/11 completed tasks have canonical `attestation.json` evidence.
+- Status: 18/66 completed, 47 backlog, 0 blocked, 1 in progress.
+- Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).
+- Evidence coverage: 18/18 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
 - **IFC-070** — Data Migration from Legacy. IFC-070 Data Migration from Legacy completed via TDD. 13 steps across 4 phases (RED/GREEN/REFACTOR/VALIDATION). 66 tests, 98.88% statement coverage. All 6 completion gates PASS. Compliance check PASS. 100% data migrated, validation passed;...
@@ -275,11 +275,11 @@ _Generated: 2026-05-23T14:16:07.458Z_
 - **IFC-311** — Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.. IFC-311 wires the two notifyOnOwnerChange Cat-1 toggles that PG-182 + PG-183 shipped but left dormant.... contact.reassign + contact.bulkReassign mutations; account.reassign + account.bulkReassign mutations; All validate caller permission
 
 **Open Work**
+- **IFC-257** — Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.. Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation
 - **IFC-032** — PHASE-005: OpenTelemetry Monitoring. Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples
 - **PG-058** — Dashboard. response under 200ms, Lighthouse 90, real-time data
-- **PG-060** — New Lead. response under 200ms, Lighthouse 90, leads created
-- **PG-061** — Lead Detail. response under 200ms, Lighthouse 90, details complete
-- **PG-062** — Edit Lead. response under 200ms, Lighthouse 90, updates saved
+- **PG-063** — Import Leads. response under 200ms, Lighthouse 90, imports processed
+- **DOC-015** — Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth. All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...
 
 ## Sprint 19 - Sprint 19
 

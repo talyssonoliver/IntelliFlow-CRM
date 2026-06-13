@@ -1360,6 +1360,24 @@ describe('Contact Router - Additional Coverage', () => {
       expect(result.id).toBe(TEST_UUIDS.contact1);
     });
 
+    // IFC-265 (T-06): NOTE is the 4th CONTACT_INTERACTION_TYPES member and was
+    // the only activity type with no logActivity coverage.
+    it('should log NOTE activity and return the updated contact', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      setupLogActivityMocks(ctx);
+
+      const result = await caller.logActivity({
+        contactId: TEST_UUIDS.contact1,
+        type: 'NOTE',
+        title: 'Logged a note',
+        description: 'Customer prefers email contact',
+      });
+
+      expect(result.id).toBe(TEST_UUIDS.contact1);
+      expect(prismaMock.contactActivity.create).toHaveBeenCalled();
+    });
+
     it('should return NOT_FOUND for non-existent contact', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
