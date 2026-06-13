@@ -262,7 +262,10 @@ vi.mock('@/components/contacts/ContactAddDealButton', () => ({
   ),
 }));
 
-vi.mock('@/components/contacts/ContactMapPreview', () => ({
+// Stub the component but keep the real `buildContactLocation` re-export (page.tsx
+// imports it from this module to compose the contact location).
+vi.mock('@/components/contacts/ContactMapPreview', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   ContactMapPreview: ({ location }: { location: string | null | undefined }) => (
     <div data-testid="contact-map-preview" data-location={location ?? ''} />
   ),
