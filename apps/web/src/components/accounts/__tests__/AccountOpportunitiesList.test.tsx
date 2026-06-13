@@ -4,6 +4,7 @@
  */
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { AccountOpportunitiesList } from '../AccountOpportunitiesList';
 
 const mockPush = vi.fn();
@@ -219,4 +220,83 @@ describe('AccountOpportunitiesList', () => {
     fireEvent.click(createBtns[0]);
     expect(onCreateOpportunity).toHaveBeenCalledTimes(1);
   });
+
+  // IFC-273 (F-12): stage filter options derived from the OpportunityStage domain enum
+  it('renders a stage filter option for every OPPORTUNITY_STAGE (incl. NEEDS_ANALYSIS)', () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        opportunities: [
+          { id: 'o1', name: 'Deal', value: 10000, probability: 50, stage: 'PROPOSAL' },
+        ],
+        total: 1,
+        summary: { totalValue: 10000, weightedValue: 5000 },
+        nextCursor: null,
+      },
+      isLoading: false,
+      error: null,
+    });
+    render(<AccountOpportunitiesList accountId="00000000-0000-4000-8000-000000000001" />);
+
+    const options = screen.getAllByRole('option');
+    // "All Stages" + one option per OPPORTUNITY_STAGE
+    expect(options).toHaveLength(OPPORTUNITY_STAGES.length + 1);
+    for (const stage of OPPORTUNITY_STAGES) {
+      expect(screen.getByRole('option', { name: formatStageLabel(stage) })).toBeInTheDocument();
+    }
+    // the stage the hardcoded list omitted
+    expect(screen.getByRole('option', { name: 'Needs Analysis' })).toBeInTheDocument();
+  });
+
+  it('applies the selected stage to the opportunities query', () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        opportunities: [
+          { id: 'o1', name: 'Deal', value: 10000, probability: 50, stage: 'PROPOSAL' },
+        ],
+        total: 1,
+        summary: { totalValue: 10000, weightedValue: 5000 },
+        nextCursor: null,
+      },
+      isLoading: false,
+      error: null,
+    });
+    render(<AccountOpportunitiesList accountId="00000000-0000-4000-8000-000000000001" />);
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'NEEDS_ANALYSIS' } });
+
+    const lastCall = useQueryMock.mock.calls.at(-1)?.[0] as { stage?: string[] };
+    expect(lastCall.stage).toEqual(['NEEDS_ANALYSIS']);
+  });
+
+  it('clears the stage filter when All Stages is selected', () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        opportunities: [
+          { id: 'o1', name: 'Deal', value: 10000, probability: 50, stage: 'PROPOSAL' },
+        ],
+        total: 1,
+        summary: { totalValue: 10000, weightedValue: 5000 },
+        nextCursor: null,
+      },
+      isLoading: false,
+      error: null,
+    });
+    render(<AccountOpportunitiesList accountId="00000000-0000-4000-8000-000000000001" />);
+
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'NEEDS_ANALYSIS' } });
+    fireEvent.change(select, { target: { value: '' } });
+
+    const lastCall = useQueryMock.mock.calls.at(-1)?.[0] as { stage?: string[] };
+    expect(lastCall.stage).toBeUndefined();
+  });
 });
+
+// Mirror of the shared formatLabel used by the component (SNAKE_CASE → Title Case)
+function formatStageLabel(value: string): string {
+  return value
+    .toLowerCase()
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}

@@ -10,7 +10,12 @@ import {
   type AccountRowHandlers,
 } from '@/components/accounts/AccountCard';
 import { api } from '@/lib/api';
+import type { inferRouterOutputs } from '@trpc/server';
+import type { AppRouter } from '@intelliflow/api-client';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+
+/** Inferred output of the `account.stats` tRPC procedure (server-prefetched + client-fetched). */
+export type AccountStats = inferRouterOutputs<AppRouter>['account']['stats'];
 import { useAccountFilterOptions } from '@/hooks/use-dynamic-filters';
 import { invalidateAccountsCache } from './actions';
 import { revalidateAccountCaches } from '../actions';
@@ -197,7 +202,7 @@ function AccountsContent({
 // =============================================================================
 
 interface AccountsPageClientProps {
-  initialStats?: unknown;
+  initialStats?: AccountStats;
 }
 
 export default function AccountsPageClient({
@@ -235,13 +240,7 @@ export default function AccountsPageClient({
   // Stats query — hydrated with server-prefetched data when available
   const { data: stats, isLoading: statsLoading } = api.account.stats.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
-    ...(serverStats == null
-      ? {}
-      : {
-          initialData: serverStats as NonNullable<
-            Parameters<typeof api.account.stats.useQuery>[1]
-          >['initialData'],
-        }),
+    ...(serverStats == null ? {} : { initialData: serverStats }),
   });
 
   // Reset to page 1 when filters change
@@ -293,9 +292,7 @@ export default function AccountsPageClient({
   // Stat calculations
   const totalRevenue = stats ? Number(stats.totalRevenue) : 0;
   const avgRevenue = stats && stats.total > 0 ? totalRevenue / stats.total : 0;
-  const withOpportunities = (stats as Record<string, unknown>)?.withOpportunities as
-    | number
-    | undefined;
+  const withOpportunities = stats?.withOpportunities;
   const oppShare =
     stats && stats.total > 0 && withOpportunities != null
       ? Math.round((withOpportunities / stats.total) * 100)
