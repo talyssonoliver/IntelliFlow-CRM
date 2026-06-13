@@ -1,0 +1,141 @@
+{
+  "$schema": "../../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-265",
+  "run_id": "20260613-130000",
+  "attestor": "Claude Code - STOA Exec",
+  "attestation_timestamp": "2026-06-13T15:25:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-06-13T13:00:00Z",
+    "invariants_acknowledged": [
+      "Audit §19 stale — scoped to verified genuine gaps; no duplication; no dead-code tests.",
+      "T-06 NOTE is the only untested CONTACT_INTERACTION_TYPES; T-07 activities/notes were seeded empty.",
+      "T-04: router-enforced tenant isolation tested for create/delete/addNote/bulkDelete; service-delegated update/updateEmail/unlink/linkToAccount tracked in #420 (no honest unit test without the production preflight)."
+    ]
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx": "e956c836d4faf1c98cc9ea5e4858a8d360ca49d629793431d9895cede83b2787",
+    "apps/api/src/modules/contact/__tests__/contact.router.tenant.test.ts": "b754d4a52817199ff8fa691570ce299734036397175ebafea8a556aec08a94bf",
+    "apps/api/src/modules/contact/__tests__/contact.router.additional.test.ts": "d996160c87d42cdbff68e93b6619050db36fd2f0059ac82f6489be3d16c4a8c6",
+    "apps/api/src/modules/contact/__tests__/contact.router.test.ts": "c6f99c4ec99e9ccd9663c5905dc5740e31af0482d8b4dccbb6fdf3c6c48818d7"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/api run typecheck && pnpm --filter @intelliflow/web run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "node scripts/pre-ship.mjs [unit-tests + integration-tests]",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "node scripts/pre-ship.mjs [lint, eslint --max-warnings=0]",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "node scripts/pre-ship.mjs [build]",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-reviewer-subagent",
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "gate_id": "exec-readiness",
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "gate_id": "page-doc-cochange-NA",
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "gate_id": "nav-wiring-NA-no-new-route",
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "gate_id": "context-ack",
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "gate_id": "diff-coverage-test-only",
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "gate_id": "build-validation-4",
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "gate_id": "codex-review",
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "gate_id": "pre-ship-full",
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    },
+    {
+      "gate_id": "stoa-quality",
+      "passed": true,
+      "timestamp": "2026-06-13T15:25:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "contact detail page test count",
+      "target": ">=20",
+      "actual": "33",
+      "met": true
+    },
+    {
+      "kpi": "new tenant test (router-enforced procedures)",
+      "target": ">=1 per enforced proc",
+      "actual": "create/delete/addNote/bulkDelete (4)",
+      "met": true
+    },
+    {
+      "kpi": "logActivity NOTE type covered",
+      "target": "yes",
+      "actual": "yes",
+      "met": true
+    },
+    {
+      "kpi": "getById populated activities+notes asserted",
+      "target": "yes",
+      "actual": "yes (timestamp-ordered)",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "IFC-257",
+    "IFC-256"
+  ],
+  "environment": {
+    "os": "win32",
+    "branch": "feat/ifc-265",
+    "git_commit": "ea08b0a07"
+  },
+  "notes": "Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth surface. Findings L? no — test-gap findings T-01/T-04/T-06/T-07/T-08 closed (audit §19 was stale; scoped to genuine gaps). RED FLAG surfaced + tracked in 3 surfaces: gh #420 + debt-ledger CONTACT-MUTATION-TENANT-SCOPE-001 + delivery findings (update/updateEmail/unlinkFromAccount/linkToAccount lack router-level contact tenant scoping; rely on RLS; needs verification + hardening). Codex gate converged to PASS after removing false isolation tests. Merged origin/main (#418 IFC-273 reconcile). pre-ship: PASS (21m23s) at ea08b0a07. Work committed + (pending) pushed to origin/feat/ifc-265."
+}
