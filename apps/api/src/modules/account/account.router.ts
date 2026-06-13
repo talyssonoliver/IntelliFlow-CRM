@@ -369,16 +369,13 @@ async function handleAccountUpdate(ctx: Context, input: UpdateAccountInput) {
     }
   }
 
-  // IFC-270 B-08: parentAccountId is NOT forwarded to updateAccountInfo —
-  // hierarchy changes go through the dedicated setParent procedure, which
-  // enforces cycle detection, max-depth and parent-existence. revenue/employees/
-  // industry DO flow through (previously silently dropped).
-  const { parentAccountId: _excludedParent, ...serviceData } = updateData;
-
+  // IFC-270 B-08: revenue/employees/industry now flow through to the service
+  // (previously silently dropped). parentAccountId is not part of updateAccountSchema
+  // — hierarchy changes go through the dedicated setParent procedure.
   // IFC-269 B-05: Wrap in transaction to prevent TOCTOU
   const result = await accountService.updateAccountInfo(
     id,
-    serviceData,
+    updateData,
     typedCtx.tenant.userId,
     typedCtx.tenant.tenantId
   );

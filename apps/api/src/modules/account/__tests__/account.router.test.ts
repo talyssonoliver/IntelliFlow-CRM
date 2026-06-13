@@ -374,7 +374,7 @@ describe('Account Router', () => {
       );
     });
 
-    it('forwards revenue/employees/industry to the service but NOT parentAccountId (B-08)', async () => {
+    it('forwards revenue/employees/industry to the service (B-08)', async () => {
       const mockDomainAccount = createMockDomainAccount();
       ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
         isSuccess: true,
@@ -393,7 +393,6 @@ describe('Account Router', () => {
         revenue: 3000000,
         employees: 150,
         industry: 'Finance',
-        parentAccountId: TEST_UUIDS.account2,
       });
 
       expect(updateSpy).toHaveBeenCalledWith(
@@ -402,7 +401,8 @@ describe('Account Router', () => {
         expect.any(String),
         expect.any(String)
       );
-      // parentAccountId must be stripped — hierarchy goes through setParent.
+      // parentAccountId is not part of updateAccountSchema — hierarchy goes
+      // through the dedicated setParent procedure.
       expect(updateSpy.mock.calls[0][1]).not.toHaveProperty('parentAccountId');
     });
   });

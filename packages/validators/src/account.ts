@@ -33,10 +33,13 @@ export const createAccountSchema = baseAccountFieldsSchema.extend({
 
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;
 
-// Update Account Schema - all fields optional except id
+// Update Account Schema - all fields optional except id.
+// IFC-270 B-08: parentAccountId is intentionally NOT accepted here — hierarchy
+// changes go through the dedicated account.setParent procedure (cycle detection,
+// max-depth and parent-existence are enforced there). Accepting it on update
+// would silently no-op (it cannot be applied safely via updateAccountInfo).
 export const updateAccountSchema = baseAccountFieldsSchema.partial().extend({
   id: idSchema,
-  parentAccountId: idSchema.nullable().optional(),
 });
 
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;

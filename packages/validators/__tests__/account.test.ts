@@ -274,6 +274,17 @@ describe('Account Validators', () => {
       const result = updateAccountSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
     });
+
+    it('does not accept parentAccountId — hierarchy goes through setParent (IFC-270 B-08)', () => {
+      const result = updateAccountSchema.safeParse({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        parentAccountId: '456e4567-e89b-12d3-a456-426614174000',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).not.toHaveProperty('parentAccountId');
+      }
+    });
   });
 
   describe('accountQuerySchema', () => {
