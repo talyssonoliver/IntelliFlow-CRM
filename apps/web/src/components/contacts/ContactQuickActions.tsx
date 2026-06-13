@@ -18,6 +18,8 @@ import {
 import { api } from '@/lib/api';
 import { EmailCompose } from '@/components/email/EmailCompose';
 
+import { formatContactFullName } from './contact-detail-actions';
+
 export interface ContactQuickActionsContact {
   id: string;
   firstName: string;
@@ -56,7 +58,7 @@ export function ContactQuickActions({ contact }: Readonly<ContactQuickActionsPro
   const [logCallTitle, setLogCallTitle] = useState('');
   const [logCallDescription, setLogCallDescription] = useState('');
 
-  const fullName = `${contact.firstName} ${contact.lastName}`.trim();
+  const fullName = formatContactFullName(contact.firstName, contact.lastName);
 
   const resetLogCall = () => {
     setLogCallOpen(false);

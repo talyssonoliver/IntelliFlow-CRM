@@ -8,6 +8,20 @@
  */
 
 /**
+ * Compose a contact's display name from its first/last name parts, dropping
+ * empty/whitespace parts (e.g. a contact with only a first name).
+ */
+export function formatContactFullName(
+  firstName: string | null | undefined,
+  lastName: string | null | undefined
+): string {
+  return [firstName, lastName]
+    .map((part) => part?.trim())
+    .filter((part): part is string => Boolean(part))
+    .join(' ');
+}
+
+/**
  * Build the href for the "Add Deal" action, matching the contact-list pattern
  * (`ContactsPageClient.tsx`). The create-deal page does not yet read `contactId`
  * (it needs `DealForm` account context) — tracked in debt-ledger

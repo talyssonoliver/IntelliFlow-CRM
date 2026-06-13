@@ -45,8 +45,7 @@ import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
 import { ContactRelatedTabs } from '@/components/contacts/ContactRelatedTabs';
 import { ContactQuickActions } from '@/components/contacts/ContactQuickActions';
 import { ContactAddDealButton } from '@/components/contacts/ContactAddDealButton';
-import { ContactMapPreview } from '@/components/contacts/ContactMapPreview';
-import { buildContactLocation } from '@/components/contacts/contact-detail-actions';
+import { ContactMapPreview, buildContactLocation } from '@/components/contacts/ContactMapPreview';
 import {
   formatContactDate,
   formatContactRelativeTime,

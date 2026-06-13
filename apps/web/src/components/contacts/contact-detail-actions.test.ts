@@ -1,10 +1,23 @@
 import { describe, it, expect } from 'vitest';
 
 import {
+  formatContactFullName,
   buildDealNewHref,
   buildContactLocation,
   buildContactMapsHref,
 } from './contact-detail-actions';
+
+describe('formatContactFullName (IFC-257)', () => {
+  it('joins first and last name', () => {
+    expect(formatContactFullName('Jane', 'Smith')).toBe('Jane Smith');
+  });
+
+  it('drops empty/whitespace and null/undefined parts', () => {
+    expect(formatContactFullName('Jane', '  ')).toBe('Jane');
+    expect(formatContactFullName(null, 'Smith')).toBe('Smith');
+    expect(formatContactFullName(undefined, undefined)).toBe('');
+  });
+});
 
 describe('buildDealNewHref (IFC-257)', () => {
   it('builds the /deals/new href with an encoded contactId', () => {

@@ -2,6 +2,10 @@
 
 import { buildContactMapsHref } from './contact-detail-actions';
 
+// Re-export so the route page can import the location composer alongside this
+// component in one statement (keeps the lcov-excluded page.tsx diff minimal).
+export { buildContactLocation } from './contact-detail-actions';
+
 export interface ContactMapPreviewProps {
   /**
    * The contact's location string. Currently always empty (the contact
