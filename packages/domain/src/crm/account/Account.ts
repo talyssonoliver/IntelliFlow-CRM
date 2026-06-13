@@ -12,6 +12,25 @@ import {
   AccountDeletedEvent,
 } from './AccountEvents';
 
+// Canonical account-tier vocabulary - single source of truth (IFC-273, L-04).
+// Mirrors the CONTACT_STATUSES / OPPORTUNITY_STAGES DRY-enum pattern.
+export const ACCOUNT_TIERS = ['ENTERPRISE', 'MID_MARKET', 'SMB', 'STARTUP', 'UNKNOWN'] as const;
+
+// Derive type from const array
+export type AccountTier = (typeof ACCOUNT_TIERS)[number];
+
+/**
+ * Classify an account into a tier by annual revenue band.
+ * Pure function — no infra dependency. UNKNOWN when revenue is absent.
+ */
+export function getAccountTier(revenue: number | null | undefined): AccountTier {
+  if (revenue == null) return 'UNKNOWN';
+  if (revenue >= 10_000_000) return 'ENTERPRISE';
+  if (revenue >= 1_000_000) return 'MID_MARKET';
+  if (revenue >= 100_000) return 'SMB';
+  return 'STARTUP';
+}
+
 export class InvalidRevenueError extends DomainError {
   readonly code = 'INVALID_REVENUE';
   constructor(value: number) {
