@@ -85,10 +85,11 @@ describe('change-tracker · buildLeadUpdatePayload', () => {
     ]);
   });
 
-  it('omits tags when cleared to empty', () => {
-    expect(buildLeadUpdatePayload('lead-1', fields({ tags: '' }), ['tags'])).not.toHaveProperty(
-      'tags'
-    );
+  it('sends an empty array when changed tags are cleared (so they actually clear)', () => {
+    expect(buildLeadUpdatePayload('lead-1', fields({ tags: '' }), ['tags'])).toEqual({
+      id: 'lead-1',
+      tags: [],
+    });
   });
 
   it('omits a non-estimatedValue field cleared to empty (toOptional)', () => {

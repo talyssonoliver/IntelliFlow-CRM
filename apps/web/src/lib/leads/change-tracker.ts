@@ -74,11 +74,12 @@ function transformField(field: LeadEditField, current: Readonly<LeadEditFields>)
     return !Number.isNaN(cents) && cents >= 0 ? cents : undefined;
   }
   if (field === 'tags') {
-    const tags = current.tags
+    // A changed tags field always sends its array — including [] — so clearing
+    // every tag actually clears them (updateLeadSchema accepts an empty array).
+    return current.tags
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean);
-    return tags.length > 0 ? tags : undefined;
   }
   return toOptional(current[field]);
 }
