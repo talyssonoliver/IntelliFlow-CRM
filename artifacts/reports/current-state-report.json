@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-13T12:59:30.016Z",
+  "generatedAt": "2026-06-13T17:43:11.288Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -331,9 +331,11 @@
       ".specify/sprints/sprint-18/attestations/IFC-227/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-256/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-257/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-265/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-270/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-271/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-273/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-280/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-282/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-311/attestation.json",
@@ -342,6 +344,7 @@
       ".specify/sprints/sprint-18/attestations/PG-060/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-061/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-062/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-063/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-132/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-180/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-187/attestation.json",
@@ -480,10 +483,10 @@
     "totalTasks": 596,
     "totalNumberedSprintTasks": 591,
     "continuousTaskCount": 5,
-    "completedTasks": 400,
-    "backlogTasks": 195,
+    "completedTasks": 403,
+    "backlogTasks": 192,
     "blockedTasks": 0,
-    "completionPercentage": 67.11,
+    "completionPercentage": 67.62,
     "inProgressTasks": 1,
     "otherTasks": 0
   },
@@ -17467,11 +17470,11 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 66,
-      "completedTasks": 18,
-      "backlogTasks": 47,
+      "completedTasks": 21,
+      "backlogTasks": 44,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 18,
+      "attestedCompletedTasks": 21,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
       "notableCompleted": [
@@ -17508,24 +17511,21 @@
           }
         },
         {
-          "taskId": "IFC-310",
+          "taskId": "IFC-265",
           "sprint": 18,
           "status": "Completed",
           "section": "Core CRM",
-          "title": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
-          "description": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
-          "summary": "IFC-310 iteration-4 — residual concerns from the second audit round fully resolved. No items deferred. R1 (AC-007 AI branch unreachable at runtime): RESOLVED.... Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time;...",
-          "definitionOfDone": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate; auto-merge/auto-link operations are transactional and preserve the oldest record's id while folding in newer relations; new contact_duplicate and account_duplicate notification types added to NOTIFICATION_TYPES; aiDuplicateDetection uses pgvector similarity on the entity's embeddings; >=90% scoped coverage; all 4 validations pass",
-          "definitionOfDoneSnapshot": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate;...",
-          "dependencies": [
-            "PG-182",
-            "PG-183"
-          ],
+          "title": "Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
+          "description": "Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
+          "summary": "Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth surface. Findings L? no — test-gap findings T-01/T-04/T-06/T-07/T-08 closed (audit §19 was stale; scoped to genuine gaps).... Contact detail page test file with >=20 tests;...",
+          "definitionOfDone": "Contact detail page test file with >=20 tests; router tests for tenant isolation; logActivity type coverage; getById relation assertions; tab content verification; coverage >=90%",
+          "definitionOfDoneSnapshot": "Contact detail page test file with >=20 tests; router tests for tenant isolation; logActivity type coverage; getById relation assertions; tab content verification; coverage >=90%",
+          "dependencies": [],
           "attestation": {
             "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
+            "path": ".specify/sprints/sprint-18/attestations/IFC-265/attestation.json",
             "verdict": "COMPLETE",
-            "timestamp": "2026-04-21T22:00:00.000Z",
+            "timestamp": "2026-06-13T15:25:00Z",
             "sprintFolder": 18
           },
           "validationSummary": {
@@ -17535,9 +17535,9 @@
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 5,
+            "total": 4,
             "met": 4,
-            "missed": 1
+            "missed": 0
           }
         },
         {
@@ -17736,38 +17736,6 @@
           }
         },
         {
-          "taskId": "PG-063",
-          "sprint": 18,
-          "status": "Backlog",
-          "section": "Core CRM",
-          "title": "Import Leads",
-          "description": "Import Leads",
-          "summary": "response under 200ms, Lighthouse 90, imports processed",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports processed; artifacts: page.tsx, csv-importer.tsx, field-mapper.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports processed",
-          "dependencies": [
-            "PG-059"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
           "taskId": "DOC-015",
           "sprint": 18,
           "status": "Backlog",
@@ -17800,14 +17768,47 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "DOC-016",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Documentation",
+          "title": "Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement",
+          "description": "Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement",
+          "summary": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift;...",
+          "definitionOfDone": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift; tests cover mismatch scenarios and false-positive guardrails; verified by: npx tsx tools/scripts/docs-integrity-audit.ts && pnpm test",
+          "definitionOfDoneSnapshot": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift;...",
+          "dependencies": [
+            "DOC-014",
+            "DOC-015"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ],
       "sectionSummary": [
         {
           "section": "Core CRM",
           "total": 27,
-          "completed": 11,
-          "open": 16
+          "completed": 14,
+          "open": 13
         },
         {
           "section": "Settings",
@@ -18138,32 +18139,32 @@
         {
           "taskId": "PG-063",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Import Leads",
           "description": "Import Leads",
-          "summary": "response under 200ms, Lighthouse 90, imports processed",
+          "summary": "Web-layer-only feature (greenfield, not an extraction). Plan-reviewer subagent (a941eb6ab0ae8e81e) returned CHANGES_REQUIRED with 5 ERRORs — all resolved:... Artifact lib/leads/field-mapper.ts exists (parse + sanitise + map + validate, pure);...",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports processed; artifacts: page.tsx, csv-importer.tsx, field-mapper.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports processed",
+          "definitionOfDoneSnapshot": "Artifact lib/leads/field-mapper.ts exists (parse + sanitise + map + validate, pure); Artifact components/leads/csv-importer.tsx exists (upload/map/preview/import UI); Artifact app/leads/(list)/import/page.tsx exists (route shell)",
           "dependencies": [
             "PG-059"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-063/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-13T14:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 5,
+            "passed": 5,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 3,
             "missed": 0
           }
         },
@@ -18704,30 +18705,30 @@
         {
           "taskId": "IFC-265",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
           "description": "Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
-          "summary": "Contact detail page test file with >=20 tests; router tests for tenant isolation; logActivity type coverage; getById relation assertions; tab content verification; coverage >=90%",
+          "summary": "Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth surface. Findings L? no — test-gap findings T-01/T-04/T-06/T-07/T-08 closed (audit §19 was stale; scoped to genuine gaps).... Contact detail page test file with >=20 tests;...",
           "definitionOfDone": "Contact detail page test file with >=20 tests; router tests for tenant isolation; logActivity type coverage; getById relation assertions; tab content verification; coverage >=90%",
           "definitionOfDoneSnapshot": "Contact detail page test file with >=20 tests; router tests for tenant isolation; logActivity type coverage; getById relation assertions; tab content verification; coverage >=90%",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-265/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-13T15:25:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
@@ -18854,32 +18855,32 @@
         {
           "taskId": "IFC-280",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Deal Detail Action Buttons — Wire 14 No-Ops. (1) EntityHeader 6 no-ops all with onClick: () => {} (F-08): Won → moveStage CLOSED_WON with success dialog; Lost → moveStage CLOSED_LOST with LossReasonModal (reuse from list page); Edit → navigate to edit form or open inline edit; Clone → duplicate mutation; Archive → set archived status; Delete → AlertDialog confirmation + delete mutation. (2) Stakeholder/Product/File 8 no-ops (F-09): Edit stakeholders → open edit dialog; Account icons → navigate to /accounts/[id] and website; Contact icons → mailto: and tel: links; Add Product → product association dialog; File upload → upload mutation; File links → presigned URL download. Depends on IFC-278 (real data needed for mutations). Audit: docs/audit/deal-detail-wiring-audit.md section 2.",
           "description": "Deal Detail Action Buttons — Wire 14 No-Ops. (1) EntityHeader 6 no-ops all with onClick: () => {} (F-08): Won → moveStage CLOSED_WON with success dialog; Lost → moveStage CLOSED_LOST with LossReasonModal (reuse from list page); Edit → navigate to edit form or open inline edit; Clone → duplicate mutation; Archive → set archived status; Delete → AlertDialog confirmation + delete mutation. (2) Stakeholder/Product/File 8 no-ops (F-09): Edit stakeholders → open edit dialog; Account icons → navigate to /accounts/[id] and website; Contact icons → mailto: and tel: links; Add Product → product association dialog; File upload → upload mutation; File links → presigned URL download. Depends on IFC-278 (real data needed for mutations). Audit: docs/audit/deal-detail-wiring-audit.md section 2.",
-          "summary": "Won/Lost buttons trigger moveStage mutations with confirmation; Edit navigates to edit; Clone/Archive/Delete functional with confirmations; stakeholder/product/file buttons all wired; tests >=90%",
+          "summary": "IFC-280 Deal Detail Action Buttons — wires F-08/F-09 from docs/audit/deal-detail-wiring-audit.md section 2 on a worktree from origin/main@cb974e527. STALE-AUDIT CORRECTION:... Won/Lost buttons trigger moveStage mutations with confirmation;...",
           "definitionOfDone": "Won/Lost buttons trigger moveStage mutations with confirmation; Edit navigates to edit; Clone/Archive/Delete functional with confirmations; stakeholder/product/file buttons all wired; tests >=90%",
-          "definitionOfDoneSnapshot": "Won/Lost buttons trigger moveStage mutations with confirmation; Edit navigates to edit; Clone/Archive/Delete functional with confirmations; stakeholder/product/file buttons all wired; tests >=90%",
+          "definitionOfDoneSnapshot": "Won/Lost buttons trigger moveStage mutations with confirmation; Edit navigates to edit (inline dialog); Delete functional with confirmation",
           "dependencies": [
             "IFC-278"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-280/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-13T14:50:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
