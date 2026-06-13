@@ -13,7 +13,12 @@ import {
   accountQuerySchema,
   accountResponseSchema,
   accountListResponseSchema,
+  updateAccountRevenueSchema,
+  updateAccountEmployeeCountSchema,
+  updateAccountIndustrySchema,
 } from '../src/account';
+
+const VALID_ID = '123e4567-e89b-12d3-a456-426614174000';
 
 describe('Account Validators', () => {
   describe('createAccountSchema', () => {
@@ -87,6 +92,15 @@ describe('Account Validators', () => {
 
       const result = createAccountSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
+    });
+
+    it('should reject empty or whitespace-only industry (IFC-270 B-08)', () => {
+      expect(createAccountSchema.safeParse({ name: 'Test Corp', industry: '' }).success).toBe(
+        false
+      );
+      expect(createAccountSchema.safeParse({ name: 'Test Corp', industry: '   ' }).success).toBe(
+        false
+      );
     });
 
     it('should reject non-integer employees', () => {
@@ -249,6 +263,27 @@ describe('Account Validators', () => {
 
       const result = updateAccountSchema.safeParse(fullUpdate);
       expect(result.success).toBe(true);
+    });
+
+    it('should reject whitespace-only industry on update (IFC-270 B-08)', () => {
+      const invalidData = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        industry: '   ',
+      };
+
+      const result = updateAccountSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
+    });
+
+    it('does not accept parentAccountId — hierarchy goes through setParent (IFC-270 B-08)', () => {
+      const result = updateAccountSchema.safeParse({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        parentAccountId: '456e4567-e89b-12d3-a456-426614174000',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).not.toHaveProperty('parentAccountId');
+      }
     });
   });
 
@@ -491,7 +526,7 @@ describe('Account Validators', () => {
   describe('accountListResponseSchema', () => {
     it('should validate valid account list response', () => {
       const validList = {
-        data: [
+        accounts: [
           {
             id: '123e4567-e89b-12d3-a456-426614174000',
             name: 'Acme Corp',
@@ -517,7 +552,7 @@ describe('Account Validators', () => {
 
     it('should validate empty account list', () => {
       const emptyList = {
-        data: [],
+        accounts: [],
         total: 0,
         page: 1,
         limit: 20,
@@ -530,7 +565,7 @@ describe('Account Validators', () => {
 
     it('should reject negative total', () => {
       const invalidList = {
-        data: [],
+        accounts: [],
         total: -1,
         page: 1,
         limit: 20,
@@ -543,7 +578,7 @@ describe('Account Validators', () => {
 
     it('should reject zero page', () => {
       const invalidList = {
-        data: [],
+        accounts: [],
         total: 0,
         page: 0,
         limit: 20,
@@ -556,7 +591,7 @@ describe('Account Validators', () => {
 
     it('should reject negative page', () => {
       const invalidList = {
-        data: [],
+        accounts: [],
         total: 0,
         page: -1,
         limit: 20,
@@ -569,7 +604,7 @@ describe('Account Validators', () => {
 
     it('should reject zero limit', () => {
       const invalidList = {
-        data: [],
+        accounts: [],
         total: 0,
         page: 1,
         limit: 0,
@@ -582,7 +617,7 @@ describe('Account Validators', () => {
 
     it('should validate multiple accounts', () => {
       const multipleAccounts = {
-        data: [
+        accounts: [
           {
             id: '123e4567-e89b-12d3-a456-426614174000',
             name: 'Acme Corp',
@@ -616,6 +651,114 @@ describe('Account Validators', () => {
 
       const result = accountListResponseSchema.safeParse(multipleAccounts);
       expect(result.success).toBe(true);
+    });
+
+    // IFC-270 B-09: the schema key is `accounts`, matching the router + frontend.
+    it('rejects the legacy "data" key (renamed to "accounts")', () => {
+      const legacyShape = {
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        hasMore: false,
+      };
+
+      const result = accountListResponseSchema.safeParse(legacyShape);
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts the canonical "accounts" key', () => {
+      const canonical = {
+        accounts: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        hasMore: false,
+      };
+
+      const result = accountListResponseSchema.safeParse(canonical);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  // IFC-270 B-10: updateRevenue procedure input
+  describe('updateAccountRevenueSchema', () => {
+    it('accepts a valid id and positive revenue', () => {
+      expect(updateAccountRevenueSchema.safeParse({ id: VALID_ID, revenue: 5000000 }).success).toBe(
+        true
+      );
+    });
+
+    it('rejects a missing id', () => {
+      expect(updateAccountRevenueSchema.safeParse({ revenue: 1000 }).success).toBe(false);
+    });
+
+    it('rejects zero and negative revenue (matches create/update; 0 is dropped by persistence)', () => {
+      expect(updateAccountRevenueSchema.safeParse({ id: VALID_ID, revenue: 0 }).success).toBe(
+        false
+      );
+      expect(updateAccountRevenueSchema.safeParse({ id: VALID_ID, revenue: -1 }).success).toBe(
+        false
+      );
+    });
+  });
+
+  // IFC-270 B-11: updateEmployeeCount procedure input
+  describe('updateAccountEmployeeCountSchema', () => {
+    it('accepts a valid id and positive integer count', () => {
+      expect(
+        updateAccountEmployeeCountSchema.safeParse({ id: VALID_ID, employees: 500 }).success
+      ).toBe(true);
+    });
+
+    it('rejects zero, negative and non-integer counts', () => {
+      expect(
+        updateAccountEmployeeCountSchema.safeParse({ id: VALID_ID, employees: 0 }).success
+      ).toBe(false);
+      expect(
+        updateAccountEmployeeCountSchema.safeParse({ id: VALID_ID, employees: -5 }).success
+      ).toBe(false);
+      expect(
+        updateAccountEmployeeCountSchema.safeParse({ id: VALID_ID, employees: 1.5 }).success
+      ).toBe(false);
+    });
+
+    it('rejects a missing id', () => {
+      expect(updateAccountEmployeeCountSchema.safeParse({ employees: 10 }).success).toBe(false);
+    });
+  });
+
+  // IFC-270 B-12: categorizeIndustry procedure input
+  describe('updateAccountIndustrySchema', () => {
+    it('accepts a valid id and non-empty industry, trimming whitespace', () => {
+      const result = updateAccountIndustrySchema.safeParse({
+        id: VALID_ID,
+        industry: '  Healthcare  ',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.industry).toBe('Healthcare');
+    });
+
+    it('rejects an empty industry string', () => {
+      expect(updateAccountIndustrySchema.safeParse({ id: VALID_ID, industry: '' }).success).toBe(
+        false
+      );
+    });
+
+    it('rejects a whitespace-only industry (trim before non-empty check)', () => {
+      expect(updateAccountIndustrySchema.safeParse({ id: VALID_ID, industry: '   ' }).success).toBe(
+        false
+      );
+    });
+
+    it('rejects an industry exceeding 100 characters', () => {
+      expect(
+        updateAccountIndustrySchema.safeParse({ id: VALID_ID, industry: 'x'.repeat(101) }).success
+      ).toBe(false);
+    });
+
+    it('rejects a missing id', () => {
+      expect(updateAccountIndustrySchema.safeParse({ industry: 'Tech' }).success).toBe(false);
     });
   });
 });

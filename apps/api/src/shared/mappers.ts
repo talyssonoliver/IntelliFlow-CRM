@@ -93,7 +93,9 @@ export function mapAccountToResponse(account: Account, aiMeta?: AccountAiMeta) {
   return {
     id: account.id.value,
     name: account.name,
-    website: account.website ?? null,
+    // IFC-270 B-13: serialize the WebsiteUrl value object to a plain string so the
+    // API response is `"https://…"`, not a `{}` object after JSON serialization.
+    website: account.website?.toValue() ?? null,
     industry: account.industry ?? null,
     employees: account.employees ?? null,
     revenue: account.revenue ?? null,

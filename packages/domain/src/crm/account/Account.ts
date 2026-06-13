@@ -67,6 +67,20 @@ export interface CreateAccountProps {
 }
 
 /**
+ * IFC-270 B-08: fields accepted by the combined {@link Account.updateAccountInfo}
+ * command. parentAccountId is intentionally absent — hierarchy changes go through
+ * setParent (cycle/depth/existence checks live in AccountService).
+ */
+type AccountInfoUpdates = Partial<{
+  name: string;
+  website: string | WebsiteUrl;
+  description: string;
+  revenue: number;
+  employees: number;
+  industry: string;
+}>;
+
+/**
  * Account Aggregate Root
  * Represents a company/organization in the CRM
  */
@@ -186,18 +200,33 @@ export class Account extends AggregateRoot<AccountId> {
   }
 
   // Commands
-  updateAccountInfo(
-    updates: Partial<{
-      name: string;
-      website: string | WebsiteUrl;
-      description: string;
-    }>,
-    updatedBy: string
-  ): Result<void, DomainError> {
-    // Validate every fallible field BEFORE mutating any state, so a failed
-    // update leaves the aggregate unchanged (atomic command). Previously the
-    // name was applied before the website was validated, so an invalid website
-    // left a half-applied name change behind.
+  updateAccountInfo(updates: AccountInfoUpdates, updatedBy: string): Result<void, DomainError> {
+    // Validate every fallible field BEFORE mutating any state, so a failed update
+    // leaves the aggregate unchanged (atomic command — IFC-271/IFC-270).
+    const validated = this.validateAccountInfoUpdates(updates);
+    if (validated.isFailure) {
+      return Result.fail(validated.error);
+    }
+
+    const updatedFields = this.applyAccountInfoUpdates(updates, validated.value);
+
+    if (updatedFields.length > 0) {
+      this.props.updatedAt = new Date();
+      this.addDomainEvent(new AccountUpdatedEvent(this.id, updatedFields, updatedBy));
+    }
+
+    return Result.ok(undefined);
+  }
+
+  /**
+   * Validate the fallible fields of a combined update and resolve the website
+   * value object. Returns a failed Result on the first invalid field so the
+   * aggregate is never partially mutated. (Extracted to keep updateAccountInfo
+   * within the cognitive-complexity budget — behaviour is unchanged.)
+   */
+  private validateAccountInfoUpdates(
+    updates: AccountInfoUpdates
+  ): Result<WebsiteUrl | undefined, DomainError> {
     let newWebsite: WebsiteUrl | undefined;
     if (updates.website !== undefined) {
       if (typeof updates.website === 'string') {
@@ -211,31 +240,58 @@ export class Account extends AggregateRoot<AccountId> {
       }
     }
 
+    // IFC-270 B-08: revenue/employees carry the same invariants as the dedicated
+    // updateRevenue/updateEmployeeCount commands.
+    if (updates.revenue !== undefined && updates.revenue < 0) {
+      return Result.fail(new InvalidRevenueError(updates.revenue));
+    }
+    if (updates.employees !== undefined && updates.employees <= 0) {
+      return Result.fail(new InvalidEmployeeCountError(updates.employees));
+    }
+
+    return Result.ok(newWebsite);
+  }
+
+  /**
+   * Apply the (already validated) updates, mutating only fields that changed and
+   * returning the list of changed field names for the AccountUpdatedEvent.
+   * parentAccountId is intentionally NOT handled here — hierarchy changes go
+   * through setParent (cross-aggregate checks owned by AccountService).
+   */
+  private applyAccountInfoUpdates(
+    updates: AccountInfoUpdates,
+    newWebsite: WebsiteUrl | undefined
+  ): string[] {
     const updatedFields: string[] = [];
 
     if (updates.name !== undefined && updates.name !== this.props.name) {
       this.props.name = updates.name;
       updatedFields.push('name');
     }
-
-    // newWebsite is set iff a website was supplied (and validated above), so
-    // this narrows it to a defined WebsiteUrl for the equality check.
+    // newWebsite is set iff a website was supplied (and validated), narrowing it
+    // to a defined WebsiteUrl for the equality check.
     if (newWebsite !== undefined && !this.props.website?.equals(newWebsite)) {
       this.props.website = newWebsite;
       updatedFields.push('website');
     }
-
     if (updates.description !== undefined && updates.description !== this.props.description) {
       this.props.description = updates.description;
       updatedFields.push('description');
     }
-
-    if (updatedFields.length > 0) {
-      this.props.updatedAt = new Date();
-      this.addDomainEvent(new AccountUpdatedEvent(this.id, updatedFields, updatedBy));
+    if (updates.revenue !== undefined && updates.revenue !== this.props.revenue) {
+      this.props.revenue = updates.revenue;
+      updatedFields.push('revenue');
+    }
+    if (updates.employees !== undefined && updates.employees !== this.props.employees) {
+      this.props.employees = updates.employees;
+      updatedFields.push('employees');
+    }
+    if (updates.industry !== undefined && updates.industry !== this.props.industry) {
+      this.props.industry = updates.industry;
+      updatedFields.push('industry');
     }
 
-    return Result.ok(undefined);
+    return updatedFields;
   }
 
   updateRevenue(newRevenue: number, updatedBy: string): Result<void, InvalidRevenueError> {

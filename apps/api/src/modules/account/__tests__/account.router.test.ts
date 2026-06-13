@@ -11,6 +11,7 @@ import { TEST_UUIDS } from '../../../test/setup';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
+import { WebsiteUrl } from '@intelliflow/domain';
 import { accountRouter } from '../account.router';
 import {
   prismaMock,
@@ -24,23 +25,34 @@ import {
 /**
  * Create a mock domain account for service responses
  */
-const createMockDomainAccount = (overrides: Record<string, unknown> = {}) => ({
-  id: { value: TEST_UUIDS.account1 },
-  name: 'TechCorp Inc',
-  website: 'https://techcorp.example.com',
-  industry: 'Technology',
-  employees: 200,
-  revenue: 5000000,
-  description: 'A technology company',
-  ownerId: TEST_UUIDS.user1,
-  tenantId: TEST_UUIDS.tenant,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  getDomainEvents: () => [],
-  clearDomainEvents: () => {},
-  assignOwner: vi.fn().mockReturnValue({ isSuccess: true, isFailure: false }),
-  ...overrides,
-});
+const createMockDomainAccount = (overrides: Record<string, unknown> = {}) => {
+  // IFC-270 B-13: the real domain Account.website getter returns a WebsiteUrl
+  // value object, and mapAccountToResponse now serializes it via .toValue().
+  // Mirror that here — coerce a string website override into a real WebsiteUrl so
+  // the mock matches the entity shape the mapper consumes.
+  const rawWebsite = 'website' in overrides ? overrides.website : 'https://techcorp.example.com';
+  const website =
+    typeof rawWebsite === 'string' && rawWebsite.length > 0
+      ? WebsiteUrl.create(rawWebsite).value
+      : (rawWebsite ?? undefined);
+  return {
+    id: { value: TEST_UUIDS.account1 },
+    name: 'TechCorp Inc',
+    industry: 'Technology',
+    employees: 200,
+    revenue: 5000000,
+    description: 'A technology company',
+    ownerId: TEST_UUIDS.user1,
+    tenantId: TEST_UUIDS.tenant,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    getDomainEvents: () => [],
+    clearDomainEvents: () => {},
+    assignOwner: vi.fn().mockReturnValue({ isSuccess: true, isFailure: false }),
+    ...overrides,
+    website,
+  };
+};
 
 describe('Account Router', () => {
   const ctx = createTestContext();
@@ -360,6 +372,185 @@ describe('Account Router', () => {
           code: 'CONFLICT',
         })
       );
+    });
+
+    it('forwards revenue/employees/industry to the service (B-08)', async () => {
+      const mockDomainAccount = createMockDomainAccount();
+      ctx.services!.account!.getAccountById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+      const updateSpy = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+      ctx.services!.account!.updateAccountInfo = updateSpy;
+
+      await caller.update({
+        id: TEST_UUIDS.account1,
+        revenue: 3000000,
+        employees: 150,
+        industry: 'Finance',
+      });
+
+      expect(updateSpy).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        expect.objectContaining({ revenue: 3000000, employees: 150, industry: 'Finance' }),
+        expect.any(String),
+        expect.any(String)
+      );
+      // parentAccountId is not part of updateAccountSchema — hierarchy goes
+      // through the dedicated setParent procedure.
+      expect(updateSpy.mock.calls[0][1]).not.toHaveProperty('parentAccountId');
+    });
+  });
+
+  describe('updateRevenue (B-10)', () => {
+    it('updates revenue and returns the mapped account', async () => {
+      const mockDomainAccount = createMockDomainAccount({ revenue: 8000000 });
+      const spy = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+      ctx.services!.account!.updateRevenue = spy;
+
+      const result = await caller.updateRevenue({ id: TEST_UUIDS.account1, revenue: 8000000 });
+
+      expect(result.revenue).toBe(8000000);
+      expect(spy).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        8000000,
+        expect.any(String),
+        expect.any(String)
+      );
+    });
+
+    it('throws NOT_FOUND when the account does not exist', async () => {
+      ctx.services!.account!.updateRevenue = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.updateRevenue({ id: TEST_UUIDS.nonExistent, revenue: 1000 })
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
+    });
+
+    it('throws BAD_REQUEST for an invalid-revenue domain error', async () => {
+      ctx.services!.account!.updateRevenue = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'INVALID_REVENUE', message: 'Invalid revenue value' },
+      });
+
+      await expect(caller.updateRevenue({ id: TEST_UUIDS.account1, revenue: 5 })).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
+    });
+
+    it('still succeeds when the post-commit enrichment read fails (best-effort)', async () => {
+      const mockDomainAccount = createMockDomainAccount({ revenue: 9000000 });
+      ctx.services!.account!.updateRevenue = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+      // The mutation already committed; a failing automation-settings read in
+      // auditAndEnrichAccountUpdate must not turn the request into an error.
+      (prismaMock.accountAutomationSetting.findUnique as any).mockRejectedValueOnce(
+        new Error('db unavailable')
+      );
+
+      const result = await caller.updateRevenue({ id: TEST_UUIDS.account1, revenue: 9000000 });
+
+      expect(result.revenue).toBe(9000000);
+    });
+  });
+
+  describe('updateEmployeeCount (B-11)', () => {
+    it('updates employee count and returns the mapped account', async () => {
+      const mockDomainAccount = createMockDomainAccount({ employees: 320 });
+      const spy = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+      ctx.services!.account!.updateEmployeeCount = spy;
+
+      const result = await caller.updateEmployeeCount({ id: TEST_UUIDS.account1, employees: 320 });
+
+      expect(result.employees).toBe(320);
+      expect(spy).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        320,
+        expect.any(String),
+        expect.any(String)
+      );
+    });
+
+    it('throws NOT_FOUND when the account does not exist', async () => {
+      ctx.services!.account!.updateEmployeeCount = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.updateEmployeeCount({ id: TEST_UUIDS.nonExistent, employees: 10 })
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
+    });
+
+    it('throws BAD_REQUEST for an invalid-employee-count domain error', async () => {
+      ctx.services!.account!.updateEmployeeCount = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'INVALID_EMPLOYEE_COUNT', message: 'Invalid employee count' },
+      });
+
+      await expect(
+        caller.updateEmployeeCount({ id: TEST_UUIDS.account1, employees: 7 })
+      ).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
+    });
+  });
+
+  describe('categorizeIndustry (B-12)', () => {
+    it('categorizes industry and returns the mapped account', async () => {
+      const mockDomainAccount = createMockDomainAccount({ industry: 'Healthcare' });
+      const spy = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainAccount,
+      });
+      ctx.services!.account!.categorizeIndustry = spy;
+
+      const result = await caller.categorizeIndustry({
+        id: TEST_UUIDS.account1,
+        industry: 'Healthcare',
+      });
+
+      expect(result.industry).toBe('Healthcare');
+      expect(spy).toHaveBeenCalledWith(
+        TEST_UUIDS.account1,
+        'Healthcare',
+        expect.any(String),
+        expect.any(String)
+      );
+    });
+
+    it('throws NOT_FOUND when the account does not exist', async () => {
+      ctx.services!.account!.categorizeIndustry = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
+      });
+
+      await expect(
+        caller.categorizeIndustry({ id: TEST_UUIDS.nonExistent, industry: 'Tech' })
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
     });
   });
 

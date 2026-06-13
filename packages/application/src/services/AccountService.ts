@@ -143,7 +143,13 @@ export class AccountService {
     updates: {
       name?: string;
       website?: string;
+      // IFC-270 B-08: revenue/employees/industry now flow through to the domain
+      // command and persist on update (previously silently dropped). parentAccountId
+      // is intentionally absent — hierarchy changes go through setParent().
       description?: string;
+      revenue?: number;
+      employees?: number;
+      industry?: string;
     },
     updatedBy: string,
     tenantId: string
@@ -203,7 +209,9 @@ export class AccountService {
 
     const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
-      return Result.fail(new ValidationError(`Account not found: ${accountId}`));
+      // IFC-270 B-10: use NotFoundError (code NOT_FOUND_ERROR) for not-found, matching
+      // updateAccountInfo/getAccountById/setParent so the router maps it to HTTP 404.
+      return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
     }
 
     const updateResult = account.updateRevenue(newRevenue, updatedBy);
@@ -238,7 +246,8 @@ export class AccountService {
 
     const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
-      return Result.fail(new ValidationError(`Account not found: ${accountId}`));
+      // IFC-270 B-11: NotFoundError (NOT_FOUND_ERROR) for not-found → router maps to 404.
+      return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
     }
 
     const updateResult = account.updateEmployeeCount(newCount, updatedBy);
@@ -273,7 +282,8 @@ export class AccountService {
 
     const account = await this.accountRepository.findById(accountIdResult.value, tenantId);
     if (!account) {
-      return Result.fail(new ValidationError(`Account not found: ${accountId}`));
+      // IFC-270 B-12: NotFoundError (NOT_FOUND_ERROR) for not-found → router maps to 404.
+      return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
     }
 
     account.categorizeIndustry(industry, categorizedBy);

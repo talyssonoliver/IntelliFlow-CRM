@@ -15,6 +15,9 @@ import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   createAccountSchema,
   updateAccountSchema,
+  updateAccountRevenueSchema,
+  updateAccountEmployeeCountSchema,
+  updateAccountIndustrySchema,
   accountQuerySchema,
   idSchema,
   getAccountContactsInputSchema,
@@ -252,6 +255,56 @@ function throwAccountUpdateError(
   throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
 }
 
+/**
+ * IFC-270 B-10/11/12: map a failed single-field account command Result to the
+ * right TRPCError. Distinct from throwAccountUpdateError (which maps
+ * VALIDATION_ERROR→CONFLICT for the name-uniqueness path); here a not-found is a
+ * 404 and a bad value (negative revenue / non-positive employees / invalid id)
+ * is a 400.
+ */
+function throwAccountCommandError(errorCode: string, message: string): never {
+  if (errorCode === 'NOT_FOUND_ERROR') throw new TRPCError({ code: 'NOT_FOUND', message });
+  if (
+    errorCode === 'INVALID_REVENUE' ||
+    errorCode === 'INVALID_EMPLOYEE_COUNT' ||
+    errorCode === 'VALIDATION_ERROR'
+  ) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message });
+  }
+  throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
+}
+
+/**
+ * IFC-270 B-10/11/12: shared post-success side-effects for the single-field
+ * account command procedures — audit log (B-07 pattern) + flag-gated AI
+ * enrichment, mirroring the create/update handlers.
+ */
+async function auditAndEnrichAccountUpdate(
+  ctx: Context,
+  typedCtx: ReturnType<typeof getTenantContext>,
+  accountId: string,
+  afterState: Record<string, unknown>
+): Promise<void> {
+  getAuditLogger(ctx.prisma)
+    .logAction('UPDATE', 'account', accountId, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      afterState,
+    })
+    .catch((err) => console.error('[account.router] Audit log failed:', err));
+
+  // Best-effort: these run AFTER the mutation has already committed, so a
+  // failure here (e.g. the automation-settings read rejecting) must NOT turn a
+  // persisted update into an API error.
+  try {
+    const flags = await loadAccountAutomation(typedCtx);
+    if (flags.aiEnrichment || flags.aiIndustryInference) {
+      await enqueueAccountAIEnrichment(accountId, typedCtx.tenant.tenantId);
+    }
+  } catch (err) {
+    console.warn('[account.router] post-update enrichment skipped (non-fatal):', err);
+  }
+}
+
 /** Build the required-fields check payload for partial account updates. */
 function buildUpdateRequiredFieldsPayload(
   data: Record<string, unknown>,
@@ -316,6 +369,9 @@ async function handleAccountUpdate(ctx: Context, input: UpdateAccountInput) {
     }
   }
 
+  // IFC-270 B-08: revenue/employees/industry now flow through to the service
+  // (previously silently dropped). parentAccountId is not part of updateAccountSchema
+  // — hierarchy changes go through the dedicated setParent procedure.
   // IFC-269 B-05: Wrap in transaction to prevent TOCTOU
   const result = await accountService.updateAccountInfo(
     id,
@@ -635,6 +691,75 @@ export const accountRouter = createTRPCRouter({
   update: tenantProcedure
     .input(updateAccountSchema)
     .mutation(({ ctx, input }) => handleAccountUpdate(ctx, input)),
+
+  /**
+   * IFC-270 B-10: Update account revenue (exposes Account.updateRevenue()).
+   * Revenue >= 0 (the schema + domain reject negatives → BAD_REQUEST).
+   */
+  updateRevenue: tenantProcedure
+    .input(updateAccountRevenueSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const accountService = getAccountService(ctx);
+
+      const result = await accountService.updateRevenue(
+        input.id,
+        input.revenue,
+        typedCtx.tenant.userId,
+        typedCtx.tenant.tenantId
+      );
+
+      if (result.isFailure) throwAccountCommandError(result.error.code, result.error.message);
+
+      await auditAndEnrichAccountUpdate(ctx, typedCtx, input.id, { revenue: input.revenue });
+      return mapAccountToResponse(result.value);
+    }),
+
+  /**
+   * IFC-270 B-11: Update account employee count (exposes
+   * Account.updateEmployeeCount()). Count must be a positive integer.
+   */
+  updateEmployeeCount: tenantProcedure
+    .input(updateAccountEmployeeCountSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const accountService = getAccountService(ctx);
+
+      const result = await accountService.updateEmployeeCount(
+        input.id,
+        input.employees,
+        typedCtx.tenant.userId,
+        typedCtx.tenant.tenantId
+      );
+
+      if (result.isFailure) throwAccountCommandError(result.error.code, result.error.message);
+
+      await auditAndEnrichAccountUpdate(ctx, typedCtx, input.id, { employees: input.employees });
+      return mapAccountToResponse(result.value);
+    }),
+
+  /**
+   * IFC-270 B-12: Categorize account industry (exposes
+   * Account.categorizeIndustry()).
+   */
+  categorizeIndustry: tenantProcedure
+    .input(updateAccountIndustrySchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const accountService = getAccountService(ctx);
+
+      const result = await accountService.categorizeIndustry(
+        input.id,
+        input.industry,
+        typedCtx.tenant.userId,
+        typedCtx.tenant.tenantId
+      );
+
+      if (result.isFailure) throwAccountCommandError(result.error.code, result.error.message);
+
+      await auditAndEnrichAccountUpdate(ctx, typedCtx, input.id, { industry: input.industry });
+      return mapAccountToResponse(result.value);
+    }),
 
   /**
    * Delete an account
