@@ -42,7 +42,7 @@
     "created": [
       {
         "path": "apps/web/src/components/leads/lead-detail.tsx",
-        "sha256": "d915537b9b45659e17f04c95cce4ae3e6ef3d7ee20e72b4073c66c59f668f737",
+        "sha256": "cb066afa58fce4cfaffc337d30c56fbb095ba96aed7f574d80f93409300511b3",
         "created_at": "2026-06-13T00:00:00Z"
       },
       {
@@ -57,7 +57,7 @@
       },
       {
         "path": "apps/web/src/components/leads/__tests__/lead-detail.test.tsx",
-        "sha256": "153dc80c5ff088adff45ae9d091db2674cd65705dad0f7a576a8336aa1593645",
+        "sha256": "e5dede058eae7e36597b8d4bf9f7a40fe2b9e5e7fe1000278b7bd4f5944f0cbf",
         "created_at": "2026-06-13T00:25:00Z"
       },
       {

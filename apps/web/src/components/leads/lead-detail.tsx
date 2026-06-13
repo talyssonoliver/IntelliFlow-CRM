@@ -14,14 +14,19 @@ import { formatEstimatedValue } from '@/lib/leads/lead-format';
  */
 
 // ─── Lead enums (UI-facing) ────────────────────────────────────────────────
+// Mirrors the Prisma `LeadStatus` enum (packages/db/prisma/schema.prisma) — the
+// lead.getById endpoint returns the raw row without response-schema narrowing,
+// so every persisted status must have a badge (incl. DISQUALIFIED / ARCHIVED).
 export type LeadStatus =
   | 'NEW'
   | 'CONTACTED'
   | 'QUALIFIED'
   | 'NEGOTIATING'
   | 'UNQUALIFIED'
+  | 'DISQUALIFIED'
   | 'CONVERTED'
-  | 'LOST';
+  | 'LOST'
+  | 'ARCHIVED';
 export type LeadSource =
   | 'WEBSITE'
   | 'REFERRAL'
@@ -62,6 +67,11 @@ export function LeadStatusBadge({ status }: Readonly<{ status: LeadStatus }>) {
       className:
         'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
     },
+    DISQUALIFIED: {
+      label: 'Disqualified',
+      className:
+        'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800',
+    },
     CONVERTED: {
       label: 'Converted',
       className:
@@ -71,6 +81,11 @@ export function LeadStatusBadge({ status }: Readonly<{ status: LeadStatus }>) {
       label: 'Lost',
       className:
         'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800',
+    },
+    ARCHIVED: {
+      label: 'Archived',
+      className:
+        'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
     },
   };
 

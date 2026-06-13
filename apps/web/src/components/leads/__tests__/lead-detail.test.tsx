@@ -133,6 +133,13 @@ describe('Lead badges', () => {
     expect(screen.getByText('Negotiating')).toBeInTheDocument();
   });
 
+  it('LeadStatusBadge renders DB-only statuses without crashing (DISQUALIFIED / ARCHIVED)', () => {
+    const { rerender } = render(<LeadStatusBadge status="DISQUALIFIED" />);
+    expect(screen.getByText('Disqualified')).toBeInTheDocument();
+    rerender(<LeadStatusBadge status="ARCHIVED" />);
+    expect(screen.getByText('Archived')).toBeInTheDocument();
+  });
+
   it('SourceBadge renders the human label for a source', () => {
     render(<SourceBadge source="COLD_CALL" />);
     expect(screen.getByText('Cold Call')).toBeInTheDocument();
