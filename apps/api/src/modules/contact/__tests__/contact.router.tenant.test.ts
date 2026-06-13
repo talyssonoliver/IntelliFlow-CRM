@@ -8,15 +8,16 @@
  *   - addNote    — ctx.prismaWithTenant.findUnique (RLS) → cross-tenant id → NOT_FOUND, no note
  *   - bulkDelete — ctx.prismaWithTenant.findMany  (RLS) → cross-tenant ids → all `failed`
  *
+ * #420 (this fix): update / updateEmail / unlinkFromAccount / linkToAccount now run a router-level
+ * tenant preflight (`assertContactInTenant`) — an explicit tenantId comparison via the
+ * request-scoped client, BEFORE delegating to the singleton ContactService (whose
+ * repository findById is not tenant-scoped). The tests below exercise the REAL preflight:
+ * a cross-tenant row (RLS bypass) OR a null (RLS-filtered) lookup must yield NOT_FOUND and
+ * the mutation service must never be invoked. NOT the IFC-265 false-isolation trap (which
+ * mocked the service to fail and proved nothing).
+ *
  * These complement contact.router.security.test.ts (R-02..R-06: search / logActivity /
  * bulkEmail / bulkExport / stats / getById / getByEmail).
- *
- * NOT covered here on purpose: update / updateEmail / unlinkFromAccount / linkToAccount.
- * Those delegate to the singleton ContactService, whose contactRepository.findById(id)
- * takes no tenant argument and has NO router-level scoped preflight — their cross-tenant
- * denial cannot be honestly unit-tested without a production change. A forwarding-only
- * assertion would be a false isolation test. The gap (and the proposed router preflight)
- * is tracked in gh issue #420 + debt-ledger CONTACT-MUTATION-TENANT-SCOPE-001.
  *
  * Mirrors the existing harness (createTestContext + prismaMock + service mocks).
  */
@@ -26,6 +27,7 @@ import { prismaMock, createTestContext, TEST_UUIDS, generateTestUUID } from '../
 
 // A valid UUID that belongs to a DIFFERENT tenant (never visible to the caller).
 const FOREIGN_CONTACT_ID = generateTestUUID('foreign-tenant-contact');
+const FOREIGN_TENANT_ID = generateTestUUID('foreign-tenant');
 
 /** Minimal domain-Contact shape consumed by mapContactToResponse. */
 const domainContact = (overrides: Record<string, unknown> = {}) => ({
@@ -114,6 +116,140 @@ describe('Contact Router — Tenant Isolation (IFC-265, T-04)', () => {
       expect(result.failed).toHaveLength(2);
       expect(result.failed.every((f) => /not found/i.test(f.error))).toBe(true);
       expect(ctx.services!.contact!.deleteContact).not.toHaveBeenCalled();
+    });
+  });
+
+  // #420: update — router preflight (assertContactInTenant) denies cross-tenant
+  // BEFORE the (non-tenant-scoped) service mutation. Exercises the real preflight,
+  // not a mocked service failure.
+  describe('update (tenant preflight, #420)', () => {
+    it('rejects a contact whose tenantId differs from the caller (RLS bypass) with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const updateSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.updateContactInfo = updateSpy;
+      // Simulate a foreign-tenant row reaching the lookup (e.g. RLS not applied):
+      // the explicit tenantId comparison must still reject it.
+      prismaMock.contact.findUnique.mockResolvedValue({
+        id: FOREIGN_CONTACT_ID,
+        tenantId: FOREIGN_TENANT_ID,
+      } as never);
+
+      await expect(caller.update({ id: FOREIGN_CONTACT_ID, title: 'Hijack' })).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+      expect(updateSpy).not.toHaveBeenCalled();
+    });
+
+    it('rejects a contact filtered out by RLS (null lookup) with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const updateSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.updateContactInfo = updateSpy;
+      prismaMock.contact.findUnique.mockResolvedValue(null);
+
+      await expect(caller.update({ id: FOREIGN_CONTACT_ID, title: 'Hijack' })).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+      expect(updateSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  // #420: updateEmail — same router preflight before the service email change.
+  describe('updateEmail (tenant preflight, #420)', () => {
+    it('rejects a cross-tenant contact (tenantId mismatch) with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const emailSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.updateContactEmail = emailSpy;
+      prismaMock.contact.findUnique.mockResolvedValue({
+        id: FOREIGN_CONTACT_ID,
+        tenantId: FOREIGN_TENANT_ID,
+      } as never);
+
+      await expect(
+        caller.updateEmail({ id: FOREIGN_CONTACT_ID, email: 'hijack@example.com' })
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
+      expect(emailSpy).not.toHaveBeenCalled();
+    });
+
+    it('rejects a contact filtered out by RLS (null lookup) with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const emailSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.updateContactEmail = emailSpy;
+      prismaMock.contact.findUnique.mockResolvedValue(null);
+
+      await expect(
+        caller.updateEmail({ id: FOREIGN_CONTACT_ID, email: 'hijack@example.com' })
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
+      expect(emailSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  // #420: unlinkFromAccount — same router preflight before the service disassociation.
+  describe('unlinkFromAccount (tenant preflight, #420)', () => {
+    it('rejects a cross-tenant contact (tenantId mismatch) with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const unlinkSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.disassociateFromAccount = unlinkSpy;
+      prismaMock.contact.findUnique.mockResolvedValue({
+        id: FOREIGN_CONTACT_ID,
+        tenantId: FOREIGN_TENANT_ID,
+      } as never);
+
+      await expect(caller.unlinkFromAccount({ contactId: FOREIGN_CONTACT_ID })).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+      expect(unlinkSpy).not.toHaveBeenCalled();
+    });
+
+    it('rejects a contact filtered out by RLS (null lookup) with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const unlinkSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.disassociateFromAccount = unlinkSpy;
+      prismaMock.contact.findUnique.mockResolvedValue(null);
+
+      await expect(caller.unlinkFromAccount({ contactId: FOREIGN_CONTACT_ID })).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+      expect(unlinkSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  // #420: linkToAccount — associateWithAccount tenant-scopes the account but loads
+  // the contact via the non-tenant-scoped service findById; the router preflight
+  // denies a cross-tenant contactId before the association.
+  describe('linkToAccount (tenant preflight, #420)', () => {
+    it('rejects a cross-tenant contact (tenantId mismatch) with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const linkSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.associateWithAccount = linkSpy;
+      prismaMock.contact.findUnique.mockResolvedValue({
+        id: FOREIGN_CONTACT_ID,
+        tenantId: FOREIGN_TENANT_ID,
+      } as never);
+
+      await expect(
+        caller.linkToAccount({ contactId: FOREIGN_CONTACT_ID, accountId: TEST_UUIDS.account1 })
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
+      expect(linkSpy).not.toHaveBeenCalled();
+    });
+
+    it('rejects a contact filtered out by RLS (null lookup) with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const linkSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.associateWithAccount = linkSpy;
+      prismaMock.contact.findUnique.mockResolvedValue(null);
+
+      await expect(
+        caller.linkToAccount({ contactId: FOREIGN_CONTACT_ID, accountId: TEST_UUIDS.account1 })
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
+      expect(linkSpy).not.toHaveBeenCalled();
     });
   });
 });

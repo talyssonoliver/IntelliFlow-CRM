@@ -176,6 +176,33 @@ function getContactService(ctx: Context) {
   return ctx.services.contact;
 }
 
+/**
+ * #420: Router-level tenant preflight for contact mutations that delegate to the
+ * singleton ContactService. ContactService.{updateContactInfo,updateContactEmail,
+ * disassociateFromAccount} load the contact via contactRepository.findById(id)
+ * with NO tenant argument, and the container service prisma is not the
+ * request-scoped (RLS) client — so a cross-tenant id could otherwise be mutated.
+ * This loads the contact's tenantId via the request-scoped client and asserts it
+ * matches the caller BEFORE any mutation. The explicit tenantId comparison does
+ * not rely on RLS alone; a missing OR cross-tenant contact both yield NOT_FOUND
+ * (no existence leak), matching the delete/addNote behaviour.
+ */
+async function assertContactInTenant(
+  typedCtx: ReturnType<typeof getTenantContext>,
+  contactId: string
+): Promise<void> {
+  const existing = await typedCtx.prismaWithTenant.contact.findUnique({
+    where: { id: contactId },
+    select: { id: true, tenantId: true },
+  });
+  if (!existing || existing.tenantId !== typedCtx.tenant.tenantId) {
+    throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: `Contact not found: ${contactId}`,
+    });
+  }
+}
+
 // ── Error-mapping helpers (reduce cognitive complexity in procedures) ──
 
 function throwContactCreateError(message: string): never {
@@ -456,6 +483,9 @@ async function handleContactUpdate(ctx: Context, input: UpdateContactInput) {
   const typedCtx = getTenantContext(ctx);
   const { id, accountId, ...data } = input;
   const contactService = getContactService(ctx);
+
+  // #420: deny cross-tenant access before any mutation (service findById is not tenant-scoped).
+  await assertContactInTenant(typedCtx, id);
 
   // PG-182: apply hygiene + required-field policy before building the update.
   const [flags, requiredFields] = await Promise.all([
@@ -983,6 +1013,10 @@ export const contactRouter = createTRPCRouter({
   updateEmail: tenantProcedure.input(updateContactEmailSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const contactService = getContactService(ctx);
+
+    // #420: deny cross-tenant access before any mutation (service findById is not tenant-scoped).
+    await assertContactInTenant(typedCtx, input.id);
+
     const flags = await loadContactAutomation(typedCtx);
 
     const duplicateService = ctx.services?.contactDuplicateDetection;
@@ -1108,6 +1142,11 @@ export const contactRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const contactService = getContactService(ctx);
 
+      // #420: deny cross-tenant access before associating. associateWithAccount
+      // tenant-scopes the account but loads the contact via the non-tenant-scoped
+      // service findById, so a foreign contactId could otherwise be linked.
+      await assertContactInTenant(typedCtx, input.contactId);
+
       const result = await contactService.associateWithAccount(
         input.contactId,
         input.accountId,
@@ -1130,6 +1169,9 @@ export const contactRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const contactService = getContactService(ctx);
+
+      // #420: deny cross-tenant access before any mutation (service findById is not tenant-scoped).
+      await assertContactInTenant(typedCtx, input.contactId);
 
       const result = await contactService.disassociateFromAccount(
         input.contactId,
