@@ -126,6 +126,8 @@ export type ColumnMapping = Partial<Record<LeadImportField, number>>;
 export interface ParsedCsv {
   headers: string[];
   rows: string[][];
+  /** 1-based physical CSV line each data row starts on (parallel to `rows`). */
+  rowLines: number[];
 }
 
 /** Raw-string payload sent to `api.lead.create` (never the parsed Zod output). */
@@ -145,6 +147,8 @@ export type RowValidation = { ok: true } | { ok: false; errors: string[] };
 export interface RowResult {
   /** 0-based index into `ParsedCsv.rows`. */
   index: number;
+  /** 1-based physical CSV line (header = line 1), for accurate row-error reporting. */
+  line: number;
   record: LeadImportRecord;
   validation: RowValidation;
 }
@@ -177,6 +181,11 @@ function readQuotedField(input: string, start: number): { value: string; next: n
   return { value, next: i };
 }
 
+/** Count line terminators in a string (for keeping physical line numbers accurate). */
+function countNewlines(value: string): number {
+  return value.split('\n').length - 1;
+}
+
 /**
  * Parse CSV text into headers + data rows. Handles quoted fields with embedded
  * commas/newlines, doubled-quote escapes (`""`), CRLF/LF line endings, and a
@@ -185,10 +194,12 @@ function readQuotedField(input: string, start: number): { value: string; next: n
  */
 export function parseCsv(text: string): ParsedCsv {
   const input = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
-  const records: string[][] = [];
+  const records: Array<{ cells: string[]; line: number }> = [];
   let field = '';
   let row: string[] = [];
   let started = false; // a field or row is in progress (distinguishes "" from EOF)
+  let lineNo = 1; // 1-based physical line currently being read
+  let recordStartLine = 1; // physical line the in-progress record started on
 
   const endField = () => {
     row.push(field);
@@ -196,7 +207,7 @@ export function parseCsv(text: string): ParsedCsv {
   };
   const endRow = () => {
     endField();
-    records.push(row);
+    records.push({ cells: row, line: recordStartLine });
     row = [];
     started = false;
   };
@@ -207,6 +218,7 @@ export function parseCsv(text: string): ParsedCsv {
     if (ch === '"') {
       const quoted = readQuotedField(input, i + 1);
       field += quoted.value;
+      lineNo += countNewlines(quoted.value); // embedded newlines inside the quoted field
       i = quoted.next;
       started = true;
     } else if (ch === ',') {
@@ -216,9 +228,13 @@ export function parseCsv(text: string): ParsedCsv {
     } else if (ch === '\n') {
       endRow();
       i++;
+      lineNo++;
+      recordStartLine = lineNo;
     } else if (ch === '\r') {
       endRow();
       i += input[i + 1] === '\n' ? 2 : 1;
+      lineNo++;
+      recordStartLine = lineNo;
     } else {
       field += ch;
       started = true;
@@ -229,10 +245,14 @@ export function parseCsv(text: string): ParsedCsv {
     endRow();
   }
 
-  const nonEmpty = records.filter((r) => !(r.length === 1 && r[0].trim() === ''));
-  if (nonEmpty.length === 0) return { headers: [], rows: [] };
-  const [headers, ...rows] = nonEmpty;
-  return { headers: headers.map((h) => h.trim()), rows };
+  const nonEmpty = records.filter((r) => !(r.cells.length === 1 && r.cells[0].trim() === ''));
+  if (nonEmpty.length === 0) return { headers: [], rows: [], rowLines: [] };
+  const [header, ...data] = nonEmpty;
+  return {
+    headers: header.cells.map((h) => h.trim()),
+    rows: data.map((d) => d.cells),
+    rowLines: data.map((d) => d.line),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -270,10 +290,26 @@ function cellAt(row: string[], idx: number | undefined): string {
 }
 
 /**
+ * Normalise a CSV source label to the `LEAD_SOURCES` enum shape: upper-case and
+ * collapse every run of non-alphanumerics to a single `_` so "Cold Call",
+ * "cold-call" and "COLD_CALL" all map to `COLD_CALL` (rather than the invalid
+ * `COLD CALL` a bare upper-case would produce). Truly unknown values stay
+ * non-matching and are surfaced as a row error by {@link validateLeadRow}.
+ */
+function normaliseSource(raw: string): string {
+  return raw
+    .trim()
+    .toUpperCase()
+    .split(/[^A-Z0-9]/)
+    .filter(Boolean)
+    .join('_');
+}
+
+/**
  * Build the raw create payload from a CSV row + mapping. Values are trimmed;
- * `source` is upper-cased to match the `LEAD_SOURCES` enum; empty optionals are
- * omitted (so the server default applies). No value is mutated/prefixed — the
- * formula-injection guard lives in {@link validateLeadRow}.
+ * `source` is normalised to the enum shape; empty optionals are omitted (so the
+ * server default applies). No value is mutated/prefixed — the formula-injection
+ * guard lives in {@link validateLeadRow}.
  */
 export function mapRowToLeadInput(row: string[], mapping: ColumnMapping): LeadImportRecord {
   const get = (field: LeadImportField) => cellAt(row, mapping[field]);
@@ -292,7 +328,10 @@ export function mapRowToLeadInput(row: string[], mapping: ColumnMapping): LeadIm
   const website = get('website');
   if (website) record.website = website;
   const source = get('source');
-  if (source) record.source = source.toUpperCase();
+  if (source) {
+    const normalised = normaliseSource(source);
+    if (normalised) record.source = normalised;
+  }
 
   return record;
 }
@@ -334,6 +373,11 @@ export function validateLeadRow(record: LeadImportRecord): RowValidation {
 export function buildRowResults(parsed: ParsedCsv, mapping: ColumnMapping): RowResult[] {
   return parsed.rows.map((row, index) => {
     const record = mapRowToLeadInput(row, mapping);
-    return { index, record, validation: validateLeadRow(record) };
+    return {
+      index,
+      line: parsed.rowLines[index] ?? index + 2,
+      record,
+      validation: validateLeadRow(record),
+    };
   });
 }

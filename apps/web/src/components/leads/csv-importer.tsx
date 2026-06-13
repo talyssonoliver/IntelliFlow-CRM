@@ -6,6 +6,8 @@ import { Card, Skeleton } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { PageHeader } from '@/components/shared';
+import { invalidateLeadsCache } from '@/app/leads/(list)/actions';
+import { revalidateLeadCaches } from '@/app/leads/actions';
 import {
   LEAD_IMPORT_FIELDS,
   MAX_IMPORT_FILE_BYTES,
@@ -40,11 +42,6 @@ interface ImportResult {
   failures: Array<{ row: number; reason: string }>;
   /** Rows excluded by client validation, with the row number + reasons. */
   skipped: Array<{ row: number; errors: string[] }>;
-}
-
-/** Spreadsheet row number a user sees: data index 0 → row 2 (header is row 1). */
-function displayRow(index: number): number {
-  return index + 2;
 }
 
 function errorMessage(error: unknown): string {
@@ -148,7 +145,7 @@ function PreviewRow({ result }: Readonly<{ result: RowResult }>) {
   const { record, validation } = result;
   return (
     <tr className="border-t border-slate-100 dark:border-slate-800 align-top">
-      <td className="py-2 pr-3 text-slate-500">{displayRow(result.index)}</td>
+      <td className="py-2 pr-3 text-slate-500">{result.line}</td>
       <td className="py-2 pr-3 text-slate-900 dark:text-white">{record.email || '—'}</td>
       <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">
         {[record.firstName, record.lastName].filter(Boolean).join(' ') || '—'}
@@ -384,7 +381,8 @@ function ResultStep({ result, onReset }: Readonly<{ result: ImportResult; onRese
 // ---------------------------------------------------------------------------
 
 export function CsvImporter() {
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
+  const utils = api.useUtils();
   const createLead = api.lead.create.useMutation();
 
   const [step, setStep] = useState<ImporterStep>('select');
@@ -453,16 +451,25 @@ export function CsvImporter() {
         );
         imported++;
       } catch (error) {
-        failures.push({ row: displayRow(current.index), reason: errorMessage(error) });
+        failures.push({ row: current.line, reason: errorMessage(error) });
       }
       setProgress({ done: i + 1, total: toImport.length });
     }
     const skipped = rowResults
       .filter((r) => !r.validation.ok)
       .map((r) => ({
-        row: displayRow(r.index),
+        row: r.line,
         errors: r.validation.ok ? [] : r.validation.errors,
       }));
+    // After at least one successful import, refresh the leads list + stats so the
+    // imported rows are visible immediately (the list query has a 5-min staleTime
+    // and the first page is server-cache-tagged). Mirrors lead-list.tsx's pattern.
+    if (imported > 0) {
+      utils.lead.list.invalidate();
+      utils.lead.stats.invalidate();
+      invalidateLeadsCache();
+      if (user?.id) await revalidateLeadCaches(user.id);
+    }
     setResult({ imported, failures, skipped });
     setImporting(false);
     setStep('result');

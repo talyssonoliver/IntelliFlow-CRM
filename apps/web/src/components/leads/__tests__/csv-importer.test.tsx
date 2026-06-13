@@ -24,7 +24,18 @@ vi.mock('@/lib/auth/AuthContext', () => ({ useRequireAuth: mockUseRequireAuth })
 vi.mock('@/lib/api', () => ({
   api: {
     lead: { create: { useMutation: () => ({ mutateAsync: mockMutateAsync, isPending: false }) } },
+    useUtils: () => ({
+      lead: {
+        list: { invalidate: vi.fn() },
+        stats: { invalidate: vi.fn() },
+      },
+    }),
   },
+}));
+
+vi.mock('@/app/leads/(list)/actions', () => ({ invalidateLeadsCache: vi.fn() }));
+vi.mock('@/app/leads/actions', () => ({
+  revalidateLeadCaches: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('next/link', () => ({

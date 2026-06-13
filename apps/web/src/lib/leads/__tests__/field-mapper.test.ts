@@ -92,8 +92,25 @@ describe('field-mapper: parseCsv (RFC-4180)', () => {
   });
 
   it('returns empty headers/rows for empty input', () => {
-    expect(parseCsv('')).toEqual({ headers: [], rows: [] });
-    expect(parseCsv('﻿')).toEqual({ headers: [], rows: [] });
+    expect(parseCsv('')).toEqual({ headers: [], rows: [], rowLines: [] });
+    expect(parseCsv('﻿')).toEqual({ headers: [], rows: [], rowLines: [] });
+  });
+
+  it('tracks physical line numbers, skipping blank lines (accurate row errors)', () => {
+    // header(1), a@x.com(2), blank(3 dropped), missing-email(4)
+    const { rows, rowLines } = parseCsv('email\na@x.com\n\nmissing-email-row');
+    expect(rows).toEqual([['a@x.com'], ['missing-email-row']]);
+    expect(rowLines).toEqual([2, 4]);
+  });
+
+  it('keeps line numbers correct across a quoted embedded newline', () => {
+    // header(1), row spanning lines 2-3, next row on line 4
+    const { rows, rowLines } = parseCsv('email,note\na@x.com,"l1\nl2"\nb@x.com,n');
+    expect(rows).toEqual([
+      ['a@x.com', 'l1\nl2'],
+      ['b@x.com', 'n'],
+    ]);
+    expect(rowLines).toEqual([2, 4]);
   });
 });
 
@@ -153,6 +170,17 @@ describe('field-mapper: mapRowToLeadInput', () => {
   it('uppercases the source cell to match the LEAD_SOURCES enum', () => {
     const rec = mapRowToLeadInput(['a@x.com', '', '', '', 'website', ''], mapping);
     expect(rec.source).toBe('WEBSITE');
+  });
+
+  it('normalises a spaced/hyphenated source label to the enum shape (Cold Call → COLD_CALL)', () => {
+    expect(mapRowToLeadInput(['a@x.com', '', '', '', 'Cold Call', ''], mapping).source).toBe(
+      'COLD_CALL'
+    );
+    expect(mapRowToLeadInput(['a@x.com', '', '', '', 'cold-call', ''], mapping).source).toBe(
+      'COLD_CALL'
+    );
+    // and the normalised value is accepted by the schema (not rejected as invalid)
+    expect(validateLeadRow({ email: 'a@x.com', source: 'COLD_CALL' })).toEqual({ ok: true });
   });
 
   it('does not mutate or prefix free-text values', () => {
