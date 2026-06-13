@@ -114,6 +114,14 @@ describe('Contact Router - Additional Coverage', () => {
   });
 
   describe('update - disassociate from account (accountId null)', () => {
+    // #420: same-tenant contact so the router tenant preflight passes.
+    beforeEach(() => {
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+      } as never);
+    });
+
     it('should disassociate contact from account when accountId is null', async () => {
       const updatedContact = createMockDomainContact({
         accountId: null,
@@ -209,6 +217,14 @@ describe('Contact Router - Additional Coverage', () => {
   });
 
   describe('update - associate with new account', () => {
+    // #420: same-tenant contact so the router tenant preflight passes.
+    beforeEach(() => {
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+      } as never);
+    });
+
     it('should associate contact with new account', async () => {
       const updatedContact = createMockDomainContact({
         accountId: TEST_UUIDS.account2,
@@ -337,6 +353,15 @@ describe('Contact Router - Additional Coverage', () => {
   });
 
   describe('linkToAccount - CONFLICT and BAD_REQUEST paths', () => {
+    // #420: same-tenant contact so the router tenant preflight passes; the
+    // service mocks drive each assertion.
+    beforeEach(() => {
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+      } as never);
+    });
+
     it('should throw CONFLICT when contact is already associated', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
@@ -378,6 +403,14 @@ describe('Contact Router - Additional Coverage', () => {
   });
 
   describe('unlinkFromAccount - generic BAD_REQUEST path', () => {
+    // #420: same-tenant contact so the router tenant preflight passes.
+    beforeEach(() => {
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+      } as never);
+    });
+
     it('should throw BAD_REQUEST for generic unlinkFromAccount error', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);

@@ -412,6 +412,15 @@ describe('Contact Router Contract Tests', () => {
   });
 
   describe('update - Contract', () => {
+    // #420: same-tenant contact so the router tenant preflight passes; the
+    // service mocks drive each contract assertion.
+    beforeEach(() => {
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+      } as never);
+    });
+
     it('should require id for update', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
@@ -508,6 +517,14 @@ describe('Contact Router Contract Tests', () => {
   });
 
   describe('linkToAccount - Contract', () => {
+    // #420: same-tenant contact so the router tenant preflight passes.
+    beforeEach(() => {
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+      } as never);
+    });
+
     it('should require contactId and accountId', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
@@ -536,6 +553,14 @@ describe('Contact Router Contract Tests', () => {
   });
 
   describe('unlinkFromAccount - Contract', () => {
+    // #420: same-tenant contact so the router tenant preflight passes.
+    beforeEach(() => {
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+      } as never);
+    });
+
     it('should return contact with null accountId', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);

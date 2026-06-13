@@ -554,6 +554,17 @@ describe('Contact Router', () => {
   });
 
   describe('update', () => {
+    // #420: the router now tenant-preflights via prismaWithTenant.findUnique
+    // before delegating to the service. Default it to a same-tenant contact so
+    // these service-behaviour tests pass the preflight; the service mocks drive
+    // each assertion. (Cross-tenant denial is covered in contact.router.tenant.test.ts.)
+    beforeEach(() => {
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+      } as never);
+    });
+
     it('should update contact with valid data', async () => {
       const updatedContact = createMockDomainContact({
         title: 'Senior Engineer',
@@ -673,6 +684,15 @@ describe('Contact Router', () => {
   });
 
   describe('linkToAccount', () => {
+    // #420: same-tenant contact so the router tenant preflight passes; the
+    // service mocks drive each assertion.
+    beforeEach(() => {
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+      } as never);
+    });
+
     it('should link contact to account', async () => {
       const linkedContact = createMockDomainContact({
         accountId: TEST_UUIDS.account1,
@@ -736,6 +756,15 @@ describe('Contact Router', () => {
   });
 
   describe('unlinkFromAccount', () => {
+    // #420: same-tenant contact so the router tenant preflight passes; the
+    // service mocks drive each assertion.
+    beforeEach(() => {
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+      } as never);
+    });
+
     it('should unlink contact from account', async () => {
       const unlinkedContact = createMockDomainContact({
         accountId: undefined,

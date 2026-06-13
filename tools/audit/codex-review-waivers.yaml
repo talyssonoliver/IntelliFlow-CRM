@@ -477,3 +477,40 @@ waivers:
       hallucination).
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '4eb8fc76b53f3ca175b0bc66b347b8ecb0160b6a38ef5386c1212d0c62e2042d'
+    reason: >-
+      #420 — REAL but OUT-OF-SCOPE + pre-existing, tracked in gh #427. Codex flags
+      that updateEmail's duplicate-email check (ContactService.updateContactEmail ->
+      contactRepository.findByEmail(email), PrismaContactRepository.ts:170) is
+      email-only, not tenant-scoped, so a cross-tenant contact with the same email
+      yields a false "already in use" conflict + reveals another tenant uses that
+      email (Contact uses @@unique([tenantId,email])). This is genuine but is a
+      SERVICE/ADAPTER-layer duplicate-detection defect, distinct from #420's scope
+      (the router-level ACCESS preflight for which contact you may mutate — done via
+      assertContactInTenant + createTenantWhereClause). It is pre-existing (this PR
+      did not touch findByEmail) and the fix has cross-package blast radius (signature
+      + all findByEmail callers), so it is tracked for a dedicated task (gh #427 +
+      debt-ledger CONTACT-EMAIL-UNIQ-TENANT-SCOPE-001), not fixed here. Waived per the
+      project convention for out-of-scope findings with a filed follow-up (PG-062 #412
+      precedent).
+    author: talyssonoliver
+    date: '2026-06-13'
+  - fingerprint: '6aec58a0d443d42e05f0fbbcd04d68dd07605abf39e87dcde60771586963f261'
+    reason: >-
+      #420 — my code is CORRECT (consistent with reads); the finding is a pre-existing,
+      app-wide observation tracked in gh #428. Codex flags that the mutation preflight
+      `createTenantWhereClause(typedCtx.tenant, { id })` denies MANAGER callers team
+      access because the manager team branch requires tenant.teamMemberIds, which
+      tenantProcedure/extractTenantContext never populates (returns only tenantId,
+      userId, role, canAccessAllTenantData — verified in
+      apps/api/src/security/tenant-context.ts). But this is the SAME predicate ALL
+      contact reads use (getById/getByEmail/search/list/stats/bulkDelete — 14 call
+      sites); the dead manager branch affects every one of them identically. The #420
+      preflight deliberately MIRRORS the read access model — a manager who cannot READ
+      a team contact (current behaviour) correctly cannot MUTATE it; making mutation
+      more permissive than read would itself be the vulnerability. The teamMemberIds
+      enrichment gap is pre-existing and app-wide (not introduced or fixable in #420);
+      tracked in gh #428 for an app-level decision (enrich context vs remove dead
+      branch). Waived per the out-of-scope-with-follow-up convention.
+    author: talyssonoliver
+    date: '2026-06-13'

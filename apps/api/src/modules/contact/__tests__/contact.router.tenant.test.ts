@@ -8,15 +8,17 @@
  *   - addNote    — ctx.prismaWithTenant.findUnique (RLS) → cross-tenant id → NOT_FOUND, no note
  *   - bulkDelete — ctx.prismaWithTenant.findMany  (RLS) → cross-tenant ids → all `failed`
  *
+ * #420 (this fix): update / updateEmail / unlinkFromAccount / linkToAccount now run a router-level
+ * access preflight (`assertContactInTenant`) — a findFirst with `createTenantWhereClause` (the SAME
+ * tenant+owner/team/admin predicate the reads use), BEFORE delegating to the singleton ContactService
+ * (whose repository findById is not tenant/owner-scoped, on the global container prisma). A contact
+ * outside the caller's access scope is filtered by that WHERE → findFirst returns null → NOT_FOUND,
+ * and the mutation service is never invoked. The tests below exercise the REAL preflight (the actual
+ * prismaWithTenant lookup + its WHERE), NOT the IFC-265 false-isolation trap (which mocked the service
+ * to fail and proved nothing).
+ *
  * These complement contact.router.security.test.ts (R-02..R-06: search / logActivity /
  * bulkEmail / bulkExport / stats / getById / getByEmail).
- *
- * NOT covered here on purpose: update / updateEmail / unlinkFromAccount / linkToAccount.
- * Those delegate to the singleton ContactService, whose contactRepository.findById(id)
- * takes no tenant argument and has NO router-level scoped preflight — their cross-tenant
- * denial cannot be honestly unit-tested without a production change. A forwarding-only
- * assertion would be a false isolation test. The gap (and the proposed router preflight)
- * is tracked in gh issue #420 + debt-ledger CONTACT-MUTATION-TENANT-SCOPE-001.
  *
  * Mirrors the existing harness (createTestContext + prismaMock + service mocks).
  */
@@ -24,7 +26,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { contactRouter } from '../contact.router';
 import { prismaMock, createTestContext, TEST_UUIDS, generateTestUUID } from '../../../test/setup';
 
-// A valid UUID that belongs to a DIFFERENT tenant (never visible to the caller).
+// A valid UUID outside the caller's access scope (other tenant/owner).
 const FOREIGN_CONTACT_ID = generateTestUUID('foreign-tenant-contact');
 
 /** Minimal domain-Contact shape consumed by mapContactToResponse. */
@@ -114,6 +116,94 @@ describe('Contact Router — Tenant Isolation (IFC-265, T-04)', () => {
       expect(result.failed).toHaveLength(2);
       expect(result.failed.every((f) => /not found/i.test(f.error))).toBe(true);
       expect(ctx.services!.contact!.deleteContact).not.toHaveBeenCalled();
+    });
+  });
+
+  // #420: the four service-delegated mutations now run assertContactInTenant —
+  // a findFirst with createTenantWhereClause (the SAME predicate the reads use),
+  // BEFORE delegating to the non-tenant-scoped service. A contact outside the
+  // caller's access scope (other tenant, other owner, or absent) is filtered out
+  // by that WHERE → findFirst returns null → NOT_FOUND, and the mutation service
+  // is never invoked. These exercise the REAL preflight (the actual prismaWithTenant
+  // lookup), not a mocked-to-fail service (the IFC-265 false-isolation trap).
+  describe('update (access preflight, #420)', () => {
+    it('denies a contact outside the caller access scope with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const updateSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.updateContactInfo = updateSpy;
+      prismaMock.contact.findFirst.mockResolvedValue(null);
+
+      await expect(caller.update({ id: FOREIGN_CONTACT_ID, title: 'Hijack' })).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+      expect(updateSpy).not.toHaveBeenCalled();
+    });
+
+    it('scopes the preflight lookup by tenant AND owner for a non-admin caller', async () => {
+      const ctx = createTestContext(); // default role USER → owner-scoped
+      const caller = contactRouter.createCaller(ctx);
+      ctx.services!.contact!.updateContactInfo = vi.fn().mockResolvedValue(ok(domainContact()));
+      prismaMock.contact.findFirst.mockResolvedValue(null);
+
+      await caller.update({ id: FOREIGN_CONTACT_ID, title: 'x' }).catch(() => {});
+
+      const where = prismaMock.contact.findFirst.mock.calls[0]?.[0]?.where as Record<
+        string,
+        unknown
+      >;
+      expect(where).toMatchObject({ id: FOREIGN_CONTACT_ID, tenantId: TEST_UUIDS.tenant });
+      // regular user: lookup is restricted to their own contacts (cannot reach a
+      // same-tenant contact owned by another user)
+      expect(where.ownerId).toBe(TEST_UUIDS.user1);
+    });
+  });
+
+  describe('updateEmail (access preflight, #420)', () => {
+    it('denies a contact outside the caller access scope with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const emailSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.updateContactEmail = emailSpy;
+      prismaMock.contact.findFirst.mockResolvedValue(null);
+
+      await expect(
+        caller.updateEmail({ id: FOREIGN_CONTACT_ID, email: 'hijack@example.com' })
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
+      expect(emailSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('unlinkFromAccount (access preflight, #420)', () => {
+    it('denies a contact outside the caller access scope with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const unlinkSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.disassociateFromAccount = unlinkSpy;
+      prismaMock.contact.findFirst.mockResolvedValue(null);
+
+      await expect(caller.unlinkFromAccount({ contactId: FOREIGN_CONTACT_ID })).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+      expect(unlinkSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  // linkToAccount: associateWithAccount tenant-scopes the account but loads the
+  // contact via the non-tenant-scoped service findById; the preflight denies a
+  // contact outside the caller's access scope before the association.
+  describe('linkToAccount (access preflight, #420)', () => {
+    it('denies a contact outside the caller access scope with NOT_FOUND', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const linkSpy = vi.fn().mockResolvedValue(ok(domainContact()));
+      ctx.services!.contact!.associateWithAccount = linkSpy;
+      prismaMock.contact.findFirst.mockResolvedValue(null);
+
+      await expect(
+        caller.linkToAccount({ contactId: FOREIGN_CONTACT_ID, accountId: TEST_UUIDS.account1 })
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
+      expect(linkSpy).not.toHaveBeenCalled();
     });
   });
 });

@@ -342,6 +342,11 @@ describe('Contact Router AI Procedures (IFC-312)', () => {
         isFailure: false,
         value: fakeDomainContact,
       });
+      // #420: same-tenant contact so the router tenant preflight passes.
+      prismaMock.contact.findFirst.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        tenantId: TEST_UUIDS.tenant,
+      } as never);
       return contactRouter.createCaller(ctx as any);
     }
 
