@@ -35,6 +35,14 @@ const baseLeadFieldsSchema = z.object({
   lastContactedAt: z.coerce.date().optional(),
   estimatedValue: z.number().int().min(0).optional(), // In cents
   tags: z.array(z.string().max(50)).max(20).optional(),
+  // BANT qualification fields (IFC-242). budget/authority/need are free text;
+  // timeline + annualRevenue are constrained bands. annualRevenue is the company
+  // revenue band and is DISTINCT from estimatedValue (the deal value, in cents).
+  budget: z.string().max(1000).optional(),
+  authority: z.string().max(1000).optional(),
+  need: z.string().max(2000).optional(),
+  timeline: z.enum(['immediate', 'short', 'medium', 'long', 'unknown']).optional(),
+  annualRevenue: z.enum(['<1M', '1M-10M', '10M-50M', '50M-100M', '100M+']).optional(),
 });
 
 // Create Lead Schema - uses base fields with source default
@@ -183,6 +191,13 @@ export const leadResponseSchema = z.object({
   estimatedValue: z.number().int().nullable().optional(),
   lastContactedAt: z.coerce.date().nullable().optional(),
   tags: z.array(z.string()).optional().default([]),
+  // BANT fields (IFC-242) — defensive nullable strings on the response so a future
+  // non-enum value can't break parsing; distinct from estimatedValue above.
+  budget: z.string().nullable().optional(),
+  authority: z.string().nullable().optional(),
+  need: z.string().nullable().optional(),
+  timeline: z.string().nullable().optional(),
+  annualRevenue: z.string().nullable().optional(),
   ownerId: idSchema,
   tenantId: idSchema,
   createdAt: z.coerce.date(),

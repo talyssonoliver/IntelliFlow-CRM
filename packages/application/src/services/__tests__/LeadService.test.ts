@@ -285,6 +285,51 @@ describe('LeadService', () => {
     });
   });
 
+  describe('BANT fields (IFC-242)', () => {
+    it('should persist BANT + annualRevenue on createLead and round-trip via the repository', async () => {
+      const result = await leadService.createLead({
+        email: 'bant-create@example.com',
+        source: 'WEBSITE',
+        ownerId: 'owner-123',
+        budget: '$50k-$100k',
+        authority: 'Decision maker',
+        need: 'CRM solution',
+        timeline: 'immediate',
+        annualRevenue: '1M-10M',
+      });
+
+      expect(result.isSuccess).toBe(true);
+      const persisted = await leadRepository.findById(result.value.id);
+      expect(persisted?.budget).toBe('$50k-$100k');
+      expect(persisted?.authority).toBe('Decision maker');
+      expect(persisted?.need).toBe('CRM solution');
+      expect(persisted?.timeline).toBe('immediate');
+      expect(persisted?.annualRevenue).toBe('1M-10M');
+      // annualRevenue must NOT be conflated with estimatedValue
+      expect(persisted?.estimatedValue).toBeUndefined();
+    });
+
+    it('should apply BANT fields via updateLead', async () => {
+      const lead = Lead.create({
+        email: 'bant-update@example.com',
+        source: 'WEBSITE',
+        ownerId: 'owner-123',
+      }).value;
+      leadRepository.add(lead);
+
+      const result = await leadService.updateLead(lead.id.value, {
+        budget: 'Q3 approved',
+        timeline: 'short',
+        annualRevenue: '10M-50M',
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.budget).toBe('Q3 approved');
+      expect(result.value.timeline).toBe('short');
+      expect(result.value.annualRevenue).toBe('10M-50M');
+    });
+  });
+
   describe('scoreLead()', () => {
     it('should score a lead successfully', async () => {
       const lead = Lead.create({

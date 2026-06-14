@@ -5,9 +5,11 @@ import { Card } from '@intelliflow/ui';
 import { useFormUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import {
   type LeadEditFields,
+  type LeadUpdatePayload,
   computeLeadChangeset,
   buildLeadUpdatePayload,
 } from '@/lib/leads/change-tracker';
+import { updateLeadSchema } from '@intelliflow/validators';
 
 /**
  * Lead edit form (PG-062). Extracted from `app/leads/[id]/edit/page.tsx` — pure
@@ -36,7 +38,7 @@ export interface LeadEditorProps {
   leadId: string;
   lead: LeadEditorLead;
   isSaving: boolean;
-  onSave: (payload: Record<string, unknown>) => Promise<unknown> | void;
+  onSave: (payload: LeadUpdatePayload) => Promise<unknown> | void;
   onCancel: () => void;
 }
 
@@ -80,6 +82,8 @@ export function LeadEditor({
   const [formData, setFormData] = useState<LeadEditFields>(EMPTY_FIELDS);
   const [seededSnapshot, setSeededSnapshot] = useState<LeadEditFields | null>(null);
   const [seededId, setSeededId] = useState<string | null>(null);
+  // F9 (IFC-242): client-side Zod validation errors, keyed by edit-form field.
+  const [errors, setErrors] = useState<Partial<Record<keyof LeadEditFields, string>>>({});
 
   // Seed — and RE-seed — when the target lead changes, so a mounted editor that
   // navigates to a different leadId adopts the new lead's values instead of
@@ -100,6 +104,8 @@ export function LeadEditor({
 
   const updateField = (field: keyof LeadEditFields, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear the field's validation error as the user corrects it.
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
   };
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
@@ -110,11 +116,44 @@ export function LeadEditor({
     // the only change was a clear the API can't apply (cleared scalar field). Don't
     // run a no-op update (which would bump updatedAt) or falsely mark the form saved.
     if (Object.keys(payload).length <= 1) return;
+
+    // F9 (IFC-242): validate the editable fields client-side with the same Zod
+    // schema the API uses, surfacing per-field inline errors instead of relying on a
+    // server round-trip. `id` is a trusted route param (not a user field), so it is
+    // omitted from validation. We only READ .success/.error here — the raw `payload`
+    // (already typed as the tRPC input) is what is sent, so transformed values
+    // (e.g. the phone value object) never leak onto the wire and no cast is needed.
+    const parsed = updateLeadSchema.omit({ id: true }).safeParse(payload);
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      const next: Partial<Record<keyof LeadEditFields, string>> = {};
+      for (const key of Object.keys(fieldErrors) as Array<keyof typeof fieldErrors>) {
+        const message = fieldErrors[key]?.[0];
+        if (message && key in EMPTY_FIELDS) {
+          next[key as keyof LeadEditFields] = message;
+        }
+      }
+      setErrors(next);
+      return;
+    }
+
+    setErrors({});
     await onSave(payload);
     // A successful save makes the current values the new baseline, so the form is
     // no longer dirty (clears the unsaved-changes registration before redirect).
     setSeededSnapshot(formData);
   };
+
+  // F9 (IFC-242): per-field aria wiring + inline error paragraph (mirrors the
+  // create form's pattern), so validation failures are announced and associated.
+  const fieldAria = (field: keyof LeadEditFields) =>
+    errors[field] ? { 'aria-invalid': true, 'aria-describedby': `${field}-error` } : {};
+  const renderError = (field: keyof LeadEditFields) =>
+    errors[field] ? (
+      <p id={`${field}-error`} role="alert" className="text-xs text-red-500 mt-1">
+        {errors[field]}
+      </p>
+    ) : null;
 
   return (
     <form onSubmit={handleSubmit}>
@@ -171,7 +210,9 @@ export function LeadEditor({
               value={formData.firstName}
               onChange={(e) => updateField('firstName', e.target.value)}
               className={INPUT_CLASS}
+              {...fieldAria('firstName')}
             />
+            {renderError('firstName')}
           </div>
           <div>
             <label htmlFor="lastName" className={LABEL_CLASS}>
@@ -183,7 +224,9 @@ export function LeadEditor({
               value={formData.lastName}
               onChange={(e) => updateField('lastName', e.target.value)}
               className={INPUT_CLASS}
+              {...fieldAria('lastName')}
             />
+            {renderError('lastName')}
           </div>
           <div>
             <label htmlFor="phone" className={LABEL_CLASS}>
@@ -196,7 +239,9 @@ export function LeadEditor({
               onChange={(e) => updateField('phone', e.target.value)}
               placeholder="+1234567890"
               className={INPUT_CLASS}
+              {...fieldAria('phone')}
             />
+            {renderError('phone')}
           </div>
           <div>
             <label htmlFor="title" className={LABEL_CLASS}>
@@ -208,7 +253,9 @@ export function LeadEditor({
               value={formData.title}
               onChange={(e) => updateField('title', e.target.value)}
               className={INPUT_CLASS}
+              {...fieldAria('title')}
             />
+            {renderError('title')}
           </div>
           <div className="sm:col-span-2">
             <label htmlFor="company" className={LABEL_CLASS}>
@@ -220,7 +267,9 @@ export function LeadEditor({
               value={formData.company}
               onChange={(e) => updateField('company', e.target.value)}
               className={INPUT_CLASS}
+              {...fieldAria('company')}
             />
+            {renderError('company')}
           </div>
         </div>
       </Card>
@@ -242,7 +291,9 @@ export function LeadEditor({
               onChange={(e) => updateField('location', e.target.value)}
               placeholder="City, State"
               className={INPUT_CLASS}
+              {...fieldAria('location')}
             />
+            {renderError('location')}
           </div>
           <div>
             <label htmlFor="website" className={LABEL_CLASS}>
@@ -255,7 +306,9 @@ export function LeadEditor({
               onChange={(e) => updateField('website', e.target.value)}
               placeholder="https://example.com"
               className={INPUT_CLASS}
+              {...fieldAria('website')}
             />
+            {renderError('website')}
           </div>
           <div>
             <label htmlFor="estimatedValue" className={LABEL_CLASS}>
@@ -270,7 +323,9 @@ export function LeadEditor({
               onChange={(e) => updateField('estimatedValue', e.target.value)}
               placeholder="0.00"
               className={INPUT_CLASS}
+              {...fieldAria('estimatedValue')}
             />
+            {renderError('estimatedValue')}
           </div>
           <div>
             <label htmlFor="tags" className={LABEL_CLASS}>
@@ -283,7 +338,9 @@ export function LeadEditor({
               onChange={(e) => updateField('tags', e.target.value)}
               placeholder="tag1, tag2, tag3"
               className={INPUT_CLASS}
+              {...fieldAria('tags')}
             />
+            {renderError('tags')}
             <p className="text-xs text-slate-400 mt-1">Separate tags with commas</p>
           </div>
         </div>

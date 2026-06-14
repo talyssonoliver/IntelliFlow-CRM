@@ -105,6 +105,12 @@ const SONAR_COVERAGE_EXCLUDE = [
   // sonar.coverage.exclusions — so wiring-only route-shell edits are not counted as
   // 0% new_coverage (PG-061). Real new components/libs are still enforced.
   /^apps\/web\/src\/app\/.*\/page\.tsx$/,
+  // apps/api/src/shared/** (e.g. mappers.ts) is absent from the merged lcov — the api
+  // coverage project does not instrument this subtree, so it never appears in lcov and
+  // changed lines there score 0% new_coverage (the #382 / IFC-282 pattern). Mirror this
+  // in sonar.coverage.exclusions. Coverage of mapper output is asserted via router-level
+  // tests under apps/api/src/modules/** (which ARE in lcov). (IFC-242)
+  /^apps\/api\/src\/shared\//,
 ];
 const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
 const isCoverableFile = (f) =>

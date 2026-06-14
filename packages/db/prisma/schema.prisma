@@ -445,6 +445,13 @@ model Lead {
   estimatedValue  Int?        @default(0)
   tags            String[]    @default([])
   isStarred       Boolean     @default(false)  // PG-059: sidebar "Starred" view
+  // BANT qualification fields (IFC-242) — first-class, distinct from estimatedValue
+  // (deal value, Int cents). Constraint on timeline/annualRevenue enforced by Zod.
+  budget          String?
+  authority       String?
+  need            String?
+  timeline        String?
+  annualRevenue   String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 

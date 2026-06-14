@@ -470,6 +470,64 @@ describe('Lead Aggregate', () => {
     });
   });
 
+  describe('BANT qualification fields (IFC-242)', () => {
+    it('should carry BANT + annualRevenue from create() and expose them via getters', () => {
+      const result = Lead.create({
+        email: 'bant@example.com',
+        ownerId: 'owner-123',
+        budget: '$50k-$100k',
+        authority: 'Decision maker',
+        need: 'CRM solution',
+        timeline: 'immediate',
+        annualRevenue: '1M-10M',
+      });
+
+      expect(result.isSuccess).toBe(true);
+      const lead = result.value;
+      expect(lead.budget).toBe('$50k-$100k');
+      expect(lead.authority).toBe('Decision maker');
+      expect(lead.need).toBe('CRM solution');
+      expect(lead.timeline).toBe('immediate');
+      expect(lead.annualRevenue).toBe('1M-10M');
+    });
+
+    it('should leave BANT fields undefined when not provided', () => {
+      const lead = Lead.create({ email: 'nobant@example.com', ownerId: 'owner-123' }).value;
+      expect(lead.budget).toBeUndefined();
+      expect(lead.authority).toBeUndefined();
+      expect(lead.need).toBeUndefined();
+      expect(lead.timeline).toBeUndefined();
+      expect(lead.annualRevenue).toBeUndefined();
+    });
+
+    it('should keep annualRevenue distinct from estimatedValue', () => {
+      const lead = Lead.create({
+        email: 'distinct@example.com',
+        ownerId: 'owner-123',
+        annualRevenue: '10M-50M',
+        estimatedValue: 250000,
+      }).value;
+      expect(lead.annualRevenue).toBe('10M-50M');
+      expect(lead.estimatedValue).toBe(250000);
+    });
+
+    it('should update BANT fields via updateContactInfo and not clear unprovided ones', () => {
+      const lead = Lead.create({
+        email: 'updbant@example.com',
+        ownerId: 'owner-123',
+        budget: 'old',
+        authority: 'keep',
+      }).value;
+
+      lead.updateContactInfo({ budget: 'new', need: 'added', timeline: 'short' });
+
+      expect(lead.budget).toBe('new');
+      expect(lead.authority).toBe('keep'); // unprovided -> unchanged
+      expect(lead.need).toBe('added');
+      expect(lead.timeline).toBe('short');
+    });
+  });
+
   describe('reconstitute()', () => {
     it('should reconstitute lead from persistence', () => {
       const id = LeadId.generate();

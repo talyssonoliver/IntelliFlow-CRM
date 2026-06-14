@@ -483,12 +483,13 @@ describe('CreateNewLeadPage', () => {
   });
 
   // -------------------------------------------------------------------------
-  // PG-060: fields with no schema home (the required "Other" source detail +
-  // BANT/company profile) ride along on create as `qualificationNote`, which the
-  // server persists atomically with the lead (Codex review — no longer a
-  // best-effort second write that could silently drop required data).
+  // IFC-242: BANT (budget/authority/need/timeline) + annualRevenue are now
+  // first-class Lead columns, sent as STRUCTURED payload fields (not packed into
+  // the note). Only the "Other" source detail, company size/industry and free-text
+  // notes — which still have no column — ride along as `qualificationNote`, which
+  // the server persists atomically with the lead (never silently dropped).
   // -------------------------------------------------------------------------
-  it('sends source detail + BANT/company fields as qualificationNote in the create payload', () => {
+  it('sends BANT/annualRevenue as structured fields and source detail/industry/notes in qualificationNote', () => {
     render(<CreateNewLeadPage />);
     fillBasicStep();
     fireEvent.change(screen.getByLabelText(/lead source/i), { target: { value: 'other' } });
@@ -498,7 +499,9 @@ describe('CreateNewLeadPage', () => {
     fireEvent.change(screen.getByLabelText(/annual revenue/i), { target: { value: '1M-10M' } });
     fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
     fireEvent.change(screen.getByLabelText(/^budget/i), { target: { value: '$50k-$100k' } });
+    fireEvent.change(screen.getByLabelText(/^authority/i), { target: { value: 'Decision maker' } });
     fireEvent.change(screen.getByLabelText(/^need/i), { target: { value: 'CRM solution' } });
+    fireEvent.change(screen.getByLabelText(/^timeline/i), { target: { value: 'immediate' } });
     fireEvent.change(screen.getByLabelText(/qualification notes/i), {
       target: { value: 'Hot lead' },
     });
@@ -506,12 +509,22 @@ describe('CreateNewLeadPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
 
     const payload = mockMutateAsync.mock.calls[0]?.[0];
+    // BANT + annualRevenue as structured fields (raw select values, not labels)
+    expect(payload.budget).toBe('$50k-$100k');
+    expect(payload.authority).toBe('Decision maker');
+    expect(payload.need).toBe('CRM solution');
+    expect(payload.timeline).toBe('immediate');
+    expect(payload.annualRevenue).toBe('1M-10M');
+    // annualRevenue (company revenue band) is NOT conflated with estimatedValue
+    expect(payload.estimatedValue).toBeUndefined();
+    // note carries only the column-less fields
     expect(payload.qualificationNote).toContain('Source detail: Podcast ad');
-    expect(payload.qualificationNote).toContain('Budget: $50k-$100k');
-    expect(payload.qualificationNote).toContain('Need: CRM solution');
-    expect(payload.qualificationNote).toContain('Annual revenue: $1M - $10M');
     expect(payload.qualificationNote).toContain('Industry: Technology');
     expect(payload.qualificationNote).toContain('Notes: Hot lead');
+    // BANT/revenue must no longer be packed into the note (no double-persistence)
+    expect(payload.qualificationNote).not.toContain('Budget:');
+    expect(payload.qualificationNote).not.toContain('Need:');
+    expect(payload.qualificationNote).not.toContain('Annual revenue:');
   });
 
   it('omits qualificationNote from the payload when no schema-less fields are filled', () => {
