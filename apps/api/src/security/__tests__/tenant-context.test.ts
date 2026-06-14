@@ -34,6 +34,12 @@ const createMockPrisma = () => {
       findUnique: vi.fn(),
       findMany: vi.fn(),
     },
+    team: {
+      findMany: vi.fn(),
+    },
+    teamMember: {
+      findMany: vi.fn(),
+    },
     $executeRawUnsafe: vi.fn(),
     $extends: vi.fn(),
   };
@@ -58,6 +64,8 @@ describe('Tenant Context', () => {
     mockPrisma = createMockPrisma();
     mockPrisma.user.findUnique.mockResolvedValue(null);
     mockPrisma.user.findMany.mockResolvedValue([]);
+    mockPrisma.team.findMany.mockResolvedValue([]);
+    mockPrisma.teamMember.findMany.mockResolvedValue([]);
   });
 
   describe('extractTenantContext', () => {
@@ -544,51 +552,62 @@ describe('Tenant Context', () => {
     });
   });
 
-  describe('getTeamMemberIds', () => {
-    it('should return team member IDs for MANAGER', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ role: 'MANAGER' });
-      mockPrisma.user.findMany.mockResolvedValue([{ id: 'member-1' }, { id: 'member-2' }]);
+  describe('getTeamMemberIds (#428)', () => {
+    it('returns members of the teams the manager leads, tenant-scoped, excluding self', async () => {
+      mockPrisma.team.findMany.mockResolvedValue([{ id: 'team-1' }]);
+      mockPrisma.teamMember.findMany.mockResolvedValue([
+        { userId: TEST_USER_ID }, // the manager themselves — excluded
+        { userId: 'member-1' },
+        { userId: 'member-2' },
+      ]);
 
-      const result = await getTeamMemberIds(mockPrisma as any /* test-only mock */, TEST_USER_ID);
+      const result = await getTeamMemberIds(
+        mockPrisma as any /* test-only mock */,
+        TEST_USER_ID,
+        TEST_TENANT_ID
+      );
 
       expect(result).toEqual(['member-1', 'member-2']);
-      expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
-        where: { role: { in: ['USER', 'SALES_REP'] } },
-        select: { id: true },
-      });
+      expect(mockPrisma.team.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ tenantId: TEST_TENANT_ID }) })
+      );
+      expect(mockPrisma.teamMember.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ tenantId: TEST_TENANT_ID, teamId: { in: ['team-1'] } }),
+        })
+      );
     });
 
-    it('should return team member IDs for ADMIN', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ role: 'ADMIN' });
-      mockPrisma.user.findMany.mockResolvedValue([{ id: 'member-1' }]);
+    it('dedupes members across multiple led teams', async () => {
+      mockPrisma.team.findMany.mockResolvedValue([{ id: 'team-1' }, { id: 'team-2' }]);
+      mockPrisma.teamMember.findMany.mockResolvedValue([
+        { userId: 'member-1' },
+        { userId: 'member-1' },
+        { userId: 'member-2' },
+      ]);
 
-      const result = await getTeamMemberIds(mockPrisma as any /* test-only mock */, TEST_USER_ID);
+      const result = await getTeamMemberIds(mockPrisma as any, TEST_USER_ID, TEST_TENANT_ID);
 
-      expect(result).toEqual(['member-1']);
+      expect(result).toEqual(['member-1', 'member-2']);
     });
 
-    it('should return empty array for non-manager', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ role: 'USER' });
+    it('returns [] (and never queries members) when the manager leads no team', async () => {
+      mockPrisma.team.findMany.mockResolvedValue([]);
 
-      const result = await getTeamMemberIds(mockPrisma as any /* test-only mock */, TEST_USER_ID);
+      const result = await getTeamMemberIds(mockPrisma as any, TEST_USER_ID, TEST_TENANT_ID);
 
       expect(result).toEqual([]);
-      expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
-    });
-
-    it('should return empty array when user not found', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
-
-      const result = await getTeamMemberIds(mockPrisma as any /* test-only mock */, TEST_USER_ID);
-
-      expect(result).toEqual([]);
+      expect(mockPrisma.teamMember.findMany).not.toHaveBeenCalled();
     });
   });
 
-  describe('enrichTenantContext', () => {
-    it('should add team member IDs for MANAGER', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ role: 'MANAGER' });
-      mockPrisma.user.findMany.mockResolvedValue([{ id: 'member-1' }, { id: 'member-2' }]);
+  describe('enrichTenantContext (#428)', () => {
+    it('adds team-member IDs for a MANAGER', async () => {
+      mockPrisma.team.findMany.mockResolvedValue([{ id: 'team-1' }]);
+      mockPrisma.teamMember.findMany.mockResolvedValue([
+        { userId: 'member-1' },
+        { userId: 'member-2' },
+      ]);
 
       const tenant: TenantContext = {
         tenantId: TEST_TENANT_ID,
@@ -603,10 +622,7 @@ describe('Tenant Context', () => {
       expect(result.teamMemberIds).toEqual(['member-1', 'member-2']);
     });
 
-    it('should add team member IDs for ADMIN', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ role: 'ADMIN' });
-      mockPrisma.user.findMany.mockResolvedValue([{ id: 'member-1' }]);
-
+    it('does NOT enrich ADMIN (sees all tenant data via the ADMIN branch)', async () => {
       const tenant: TenantContext = {
         tenantId: TEST_TENANT_ID,
         tenantType: 'user',
@@ -617,10 +633,11 @@ describe('Tenant Context', () => {
 
       const result = await enrichTenantContext(mockPrisma as any /* test-only mock */, tenant);
 
-      expect(result.teamMemberIds).toEqual(['member-1']);
+      expect(result.teamMemberIds).toBeUndefined();
+      expect(mockPrisma.team.findMany).not.toHaveBeenCalled();
     });
 
-    it('should return unchanged context for regular USER', async () => {
+    it('returns unchanged context for a regular USER', async () => {
       const tenant: TenantContext = {
         tenantId: TEST_TENANT_ID,
         tenantType: 'user',
@@ -632,6 +649,22 @@ describe('Tenant Context', () => {
       const result = await enrichTenantContext(mockPrisma as any /* test-only mock */, tenant);
 
       expect(result).toEqual(tenant);
+      expect(result.teamMemberIds).toBeUndefined();
+    });
+
+    it('fails closed: a team-lookup error leaves the manager owner-scoped', async () => {
+      mockPrisma.team.findMany.mockRejectedValue(new Error('db down'));
+
+      const tenant: TenantContext = {
+        tenantId: TEST_TENANT_ID,
+        tenantType: 'user',
+        userId: TEST_USER_ID,
+        role: 'MANAGER',
+        canAccessAllTenantData: true,
+      };
+
+      const result = await enrichTenantContext(mockPrisma as any /* test-only mock */, tenant);
+
       expect(result.teamMemberIds).toBeUndefined();
     });
   });
