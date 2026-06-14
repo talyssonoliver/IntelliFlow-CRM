@@ -400,6 +400,65 @@ describe('Opportunity Router', () => {
     });
   });
 
+  describe('filterOptions (IFC-287 F-12)', () => {
+    it('returns real owners with deal counts', async () => {
+      (prismaMock.opportunity.groupBy as any).mockResolvedValue([
+        { ownerId: TEST_UUIDS.user1, _count: 3 },
+        { ownerId: TEST_UUIDS.user2, _count: 1 },
+      ]);
+      prismaMock.user.findMany.mockResolvedValue([
+        { id: TEST_UUIDS.user1, name: 'Jane Smith', email: 'jane@x.com' },
+        { id: TEST_UUIDS.user2, name: null, email: 'bob@x.com' },
+      ] as any);
+
+      const result = await caller.filterOptions({});
+
+      expect(result.owners).toEqual([
+        { value: TEST_UUIDS.user1, label: 'Jane Smith', count: 3 },
+        { value: TEST_UUIDS.user2, label: 'bob@x.com', count: 1 },
+      ]);
+    });
+
+    it('excludes soft-deleted deals via deletedAt: null', async () => {
+      (prismaMock.opportunity.groupBy as any).mockResolvedValue([]);
+
+      await caller.filterOptions({});
+
+      expect(prismaMock.opportunity.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          by: ['ownerId'],
+          where: expect.objectContaining({ deletedAt: null }),
+        })
+      );
+    });
+
+    it('returns an empty owners list when there are no deals (no user lookup)', async () => {
+      (prismaMock.opportunity.groupBy as any).mockResolvedValue([]);
+
+      const result = await caller.filterOptions(undefined);
+
+      expect(result.owners).toEqual([]);
+      expect(prismaMock.user.findMany).not.toHaveBeenCalled();
+    });
+
+    it('applies a search filter to the where clause', async () => {
+      (prismaMock.opportunity.groupBy as any).mockResolvedValue([]);
+
+      await caller.filterOptions({ search: 'acme' });
+
+      expect(prismaMock.opportunity.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [
+              { name: { contains: 'acme', mode: 'insensitive' } },
+              { description: { contains: 'acme', mode: 'insensitive' } },
+            ],
+          }),
+        })
+      );
+    });
+  });
+
   describe('update', () => {
     it('should update opportunity with valid data', async () => {
       const mockDomainOpp = createMockDomainOpportunity({

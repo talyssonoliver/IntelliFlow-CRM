@@ -852,6 +852,65 @@ export const opportunityRouter = createTRPCRouter({
   }),
 
   /**
+   * Dynamic filter options for the deals list/pipeline (IFC-287 F-12).
+   *
+   * Returns the real tenant owners (with deal counts) so the owner filter is no
+   * longer two hardcoded options. Mirrors `account.filterOptions` — tenant-scoped
+   * via createTenantWhereClause + prismaWithTenant; soft-deleted deals excluded.
+   */
+  filterOptions: tenantProcedure
+    .input(
+      z
+        .object({
+          search: z.string().optional(),
+          ownerId: z.string().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+
+      const baseWhere: Record<string, unknown> = { deletedAt: null };
+      if (input?.search) {
+        baseWhere.OR = [
+          { name: { contains: input.search, mode: 'insensitive' } },
+          { description: { contains: input.search, mode: 'insensitive' } },
+        ];
+      }
+      if (input?.ownerId) {
+        baseWhere.ownerId = input.ownerId;
+      }
+
+      const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
+
+      const ownerCounts = await typedCtx.prismaWithTenant.opportunity.groupBy({
+        by: ['ownerId'],
+        where,
+        _count: true,
+      });
+
+      const ownerIds = (ownerCounts ?? []).map((o) => o.ownerId).filter(Boolean);
+      const owners =
+        ownerIds.length > 0
+          ? await typedCtx.prismaWithTenant.user.findMany({
+              where: { id: { in: ownerIds } },
+              select: { id: true, name: true, email: true },
+            })
+          : [];
+      const ownerMap = new Map(owners.map((o) => [o.id, o.name || o.email]));
+
+      return {
+        owners: (ownerCounts ?? [])
+          .filter((o) => o.ownerId)
+          .map((o) => ({
+            value: o.ownerId,
+            label: ownerMap.get(o.ownerId) ?? o.ownerId,
+            count: o._count,
+          })),
+      };
+    }),
+
+  /**
    * Update an opportunity
    */
   update: tenantProcedure.input(updateOpportunitySchema).mutation(async ({ ctx, input }) => {
