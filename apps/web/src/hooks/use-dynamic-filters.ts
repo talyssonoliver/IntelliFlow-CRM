@@ -62,6 +62,12 @@ interface AccountFilterState {
   ownerId?: string;
 }
 
+/** Deal/opportunity-specific filter state (IFC-287) */
+interface DealFilterState {
+  search?: string;
+  ownerId?: string;
+}
+
 /** Ticket-specific filter state */
 interface TicketFilterState {
   search?: string;
@@ -232,6 +238,35 @@ export function useAccountFilterOptions(
 
   return {
     industryOptions,
+    ownerOptions,
+    isLoading,
+    error,
+  };
+}
+
+/**
+ * Hook to fetch dynamic filter options for deals/opportunities (IFC-287).
+ * Surfaces the real tenant owners for the deals pipeline owner filter.
+ */
+export function useDealFilterOptions(
+  currentFilters?: DealFilterState,
+  config: UseFilterOptionsConfig = DEFAULT_CONFIG
+) {
+  const queryInput = currentFilters
+    ? {
+        search: currentFilters.search || undefined,
+        ownerId: currentFilters.ownerId || undefined,
+      }
+    : undefined;
+
+  const { data, isLoading, error } = api.opportunity.filterOptions.useQuery(queryInput, {
+    staleTime: config.staleTime,
+    refetchOnWindowFocus: config.refetchOnWindowFocus,
+  });
+
+  const ownerOptions = useMemo(() => transformOptions(data?.owners), [data?.owners]);
+
+  return {
     ownerOptions,
     isLoading,
     error,

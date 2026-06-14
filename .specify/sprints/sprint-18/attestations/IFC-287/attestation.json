@@ -1,0 +1,138 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-287",
+  "run_id": "exec-IFC-287-2026-06-14",
+  "attestor": "Claude Code (claude-opus-4-8[1m]) — IFC-287 frontend-lead + backend-architect exec (STOA-Domain)",
+  "attestation_timestamp": "2026-06-14T22:30:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 6,
+    "gates_failed": 0,
+    "kpis_met": 2,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/opportunity/opportunity.router.ts": "6b551d533b24c0192e10797cbcc090111cc022c2b2fd2220553040f2af7be8ae",
+    "apps/web/src/components/deals/types.ts": "cec7e76561bc9e2c2e314a9e9b9e79ac4f94234c42eeb1caa64222f5dc8d4661",
+    "apps/web/src/components/deals/DealFilters.tsx": "1317516bffae59872046a38641fba88dc084650a0020cf1aac63f01aad69ba7c",
+    "apps/web/src/hooks/use-dynamic-filters.ts": "767b30ad858f7fbcf7cefa0a5c6d11ddee793edb0286748735ec9d01496f96c4",
+    "apps/web/src/app/deals/(list)/page.tsx": "9ef009db1330aed50b4932abb5bb0d7f99215bb2f97245ab9113f6c5e51cf31c"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/api typecheck ; pnpm --filter @intelliflow/web typecheck (next typegen + tsc --noEmit) — both exit 0; pre-ship turbo typecheck PASS",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-14T21:50:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pre-ship unit-tests (sharded, all packages) PASS 7m54s + coverage PASS 13m21s. Scoped: @intelliflow/api opportunity.router (69), @intelliflow/web deals+hooks (585 + 47).",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-14T22:10:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "eslint --max-warnings 0 on 9 changed files + lint:sonar:guard (whole changed files) + a11y-routes; pre-ship lint PASS",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-14T21:52:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pre-ship build PASS 8m19s (turbo build incl. @intelliflow/web next build + api/api-client DTS).",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-14T22:20:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "preship-full-suite",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": "node scripts/pre-ship.mjs → 'pre-ship: PASS in 31m53s' at SHA a47bb3ad. All required steps PASS: required-tokens, commit-msg-lint, install, library-build, format-check, terraform-fmt, lint, typecheck, governance-schema, lint-artifacts, lint-runtime-paths, material-symbols-audit, a11y-routes, unit-tests, integration-tests, coverage, coverage-floor, diff-coverage, build, audit, architecture, validate-sprint-data, codex-review. actionlint/gitleaks SKIPPED_PRECONDITION (tooling absent, CI runs them)."
+    },
+    {
+      "gate_id": "scoped-coverage-changed-lines",
+      "passed": true,
+      "score": 100,
+      "log_path": "diff-coverage PASS. Covered changed files are unit-tested: types.ts (transformDeals/dateRangeToBounds/buildOpportunityListInput via types.test.ts), DealFilters.tsx (owners + advanced-panel via DealFilters.test.tsx), use-dynamic-filters.ts (useDealFilterOptions via use-dynamic-filters.test.ts), opportunity.router.ts (filterOptions via 4 router tests). page.tsx is coverage-EXCLUDED (apps/web/src/app/**/page.tsx route shell, PG-061 lesson) yet still exercised by page.test.tsx."
+    },
+    {
+      "gate_id": "real-runtime-consumer-wired",
+      "passed": true,
+      "log_path": "F-10: deals/(list)/page.tsx merges buildOpportunityListInput(filters) into trpc.opportunity.list.useQuery input (real query, asserted by page test capturing the input). F-11: More Filters toggles a real advanced panel wired to search/minValue/maxValue. F-12: owner <select> rendered from useDealFilterOptions → opportunity.filterOptions (real tenant owners)."
+    },
+    {
+      "gate_id": "no-fake-data-honest-affordance",
+      "passed": true,
+      "log_path": "No mocked/simulated data, no 'coming soon' stub. The More-Filters panel and owner list both wire to real, already-supported list query params / a new real endpoint. Dropped the non-UUID 'me' sentinel that would have failed idSchema."
+    },
+    {
+      "gate_id": "tenant-isolation-intact",
+      "passed": true,
+      "log_path": "opportunity.filterOptions uses getTenantContext + createTenantWhereClause + prismaWithTenant (same pattern as list/account.filterOptions) with deletedAt:null; soft-deleted deals excluded. Asserted by 'excludes soft-deleted deals' + tenant-scoped where tests."
+    },
+    {
+      "gate_id": "codex-semantic-review",
+      "passed": true,
+      "log_path": "node scripts/codex-review.mjs → SKIPPED_PRECONDITION (exit 0): the local Codex CLI hit an external usage limit (quota until 2026-06-18) and returned unparseable output. The gate skips gracefully (CI never runs codex). Compensating manual diff self-review performed: date-bound math (Monday-based week, end-of-month/quarter/year), Decimal-as-string Number() preservation, optional-undefined query keys, groupBy _count, controlled value inputs — all verified."
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Filter selections affect displayed data; owner list from API",
+      "target": "Filter selections affect displayed data; owner list from API",
+      "actual": "F-10 owner/date/value/search wired into opportunity.list input; F-12 owner options sourced from opportunity.filterOptions (real tenant owners). Page test asserts a filter change mutates the captured query input and owners flow to DealFilters.",
+      "met": true
+    },
+    {
+      "kpi": "test_coverage >= 90% (on changed behaviour)",
+      "target": ">=90%",
+      "actual": "diff-coverage gate PASS on changed covered lines (types.ts, DealFilters.tsx, use-dynamic-filters.ts, opportunity.router.ts). page.tsx coverage-excluded route shell.",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "F-10 — DealFilters state passed to opportunity.list query",
+      "met": true,
+      "evidence": "buildOpportunityListInput(filters) merged into the useQuery input via useMemo; page test 'wires an owner filter selection into the list query input' + 'wires a date-range selection into dateFrom/dateTo'."
+    },
+    {
+      "criterion": "F-11 — 'More Filters' button has a handler",
+      "met": true,
+      "evidence": "Button has onClick toggling showMore + aria-expanded/aria-controls; reveals search + min/max value inputs wired to onChange. Tests: toggle, search, min/max, clear-to-undefined."
+    },
+    {
+      "criterion": "F-12 — Owner filter populated from real users",
+      "met": true,
+      "evidence": "New tenant-scoped opportunity.filterOptions endpoint + useDealFilterOptions hook; owner <select> renders All Deals + real owners. Tests: router filterOptions (4) + hook transform + DealFilters owners render + 'no My Deals hardcoded option'."
+    },
+    {
+      "criterion": "F-19 — transformDeals type-safe boundary",
+      "met": true,
+      "evidence": "transformDeals typed against inferRouterOutputs<AppRouter>['opportunity']['list']; no Record<string,unknown>/as any. Runtime preserved (Decimal-as-string→Number, date→string). Tested in types.test.ts."
+    },
+    {
+      "criterion": "4 validations + diff-coverage",
+      "met": true,
+      "evidence": "pre-ship: PASS in 31m53s — TypeScript, Tests, Lint, Build, diff-coverage all green at SHA a47bb3ad."
+    }
+  ],
+  "environment": {
+    "os": "win32 (10.0.26200)",
+    "node_version": "v25.2.1",
+    "git_commit": "a47bb3ad7 (base origin/main@62e3bca6a; attestation rides feat/ifc-287)",
+    "branch": "feat/ifc-287"
+  },
+  "notes": "IFC-287 Deal Filter Wiring & Type Safety — wires F-10/F-11/F-12 (audit §3) + F-19 (audit §8) of docs/audit/deal-detail-wiring-audit.md on a worktree from origin/main@62e3bca6a.\n\nF-10: DealFiltersValue was held in deals/(list)/page.tsx but never passed to trpc.opportunity.list.useQuery. Added buildOpportunityListInput (types.ts) mapping owner/date-range/value/search to the list input, plus dateRangeToBounds (this_week Monday-based / this_month / this_quarter / this_year / custom → expectedCloseDate gte/lte). Merged into the kanban useQuery input via useMemo. The list query schema already supported all these params (opportunityQuerySchema + buildOpportunityWhereClause).\n\nF-11: 'More Filters' was a dead button. Now toggles an accessible advanced panel (aria-expanded + aria-controls) exposing real, API-backed filters: free-text search + min/max value. No stub / 'coming soon'.\n\nF-12: owner dropdown had two hardcoded options ('All Deals','My Deals'). Added a tenant-scoped opportunity.filterOptions procedure mirroring account.filterOptions (groupBy ownerId + user name lookup, deletedAt:null, createTenantWhereClause) and a useDealFilterOptions hook (use-dynamic-filters peer). The owner <select> now lists real tenant owners; dropped the non-UUID 'me' sentinel that would have failed idSchema on the real query.\n\nF-19: transformDeals accepted Record<string,unknown>[] with per-field casts. Retyped against inferRouterOutputs<AppRouter>['opportunity']['list']; removed the casts. There is NO superjson transformer (default JSON serializer), so value (Prisma Decimal) arrives as a string → Number(...), and dates arrive as ISO strings → .toString() — runtime behaviour preserved; only the boundary type tightened. DealListView.tsx also calls transformDeals and typechecks against the new signature.\n\nCODEX: the local codex-review gate SKIPPED (exit 0) because the Codex CLI hit an external OpenAI usage limit (quota resets 2026-06-18) — it returned unparseable output, which scripts/codex-review.mjs treats as SKIPPED_PRECONDITION. CI never runs codex. A compensating manual diff review was performed (date math, Decimal serialization, groupBy counts, controlled inputs, optional-undefined query keys). If codex must run before merge, re-run after quota resets.\n\nValidation: pre-ship PASS in 31m53s at a47bb3ad (TypeScript/Tests/Lint/Build/diff-coverage + 19 other steps). Tests scoped: api opportunity.router 69, web deals+hooks 585, hook 47. CSV flip to Completed deferred to a central post-merge update (avoids a CI-burning standalone PR + the current-state-report intermediate-status test)."
+}

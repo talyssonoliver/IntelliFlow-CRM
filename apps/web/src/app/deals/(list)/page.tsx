@@ -19,6 +19,7 @@ import { OPPORTUNITY_STAGES, type OpportunityStage } from '@intelliflow/domain';
 import { PageHeader } from '@/components/shared';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { useDealFilterOptions } from '@/hooks/use-dynamic-filters';
 import { revalidateDealCaches } from '@/app/deals/actions';
 
 import {
@@ -49,6 +50,7 @@ import {
   STAGE_PROBABILITIES,
   transformDeals,
   calculateStats,
+  buildOpportunityListInput,
 } from '@/components/deals/types';
 
 // =============================================================================
@@ -227,6 +229,20 @@ function DealsPageContent() {
   // Require authentication
   const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
 
+  // Real tenant owners for the owner filter (IFC-287 F-12)
+  const { ownerOptions } = useDealFilterOptions();
+
+  // Translate the filter bar state into list query params (IFC-287 F-10)
+  const queryInput = useMemo(
+    () => ({
+      limit: 100,
+      sortBy: 'createdAt' as const,
+      sortOrder: 'desc' as const,
+      ...buildOpportunityListInput(filters),
+    }),
+    [filters]
+  );
+
   // Fetch opportunities from API (only for pipeline view — list view fetches its own data)
   const {
     data: opportunitiesData,
@@ -234,14 +250,9 @@ function DealsPageContent() {
     isError,
     error,
     refetch,
-  } = trpc.opportunity.list.useQuery(
-    {
-      limit: 100,
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-    },
-    { enabled: isAuthenticated && !authLoading && viewMode === 'kanban' }
-  );
+  } = trpc.opportunity.list.useQuery(queryInput, {
+    enabled: isAuthenticated && !authLoading && viewMode === 'kanban',
+  });
 
   // Auth error detection
   const isAuthError =
@@ -515,6 +526,7 @@ function DealsPageContent() {
         onChange={setFilters}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        owners={ownerOptions}
       />
 
       {/* Stats Cards (AC-7, AC-24) */}

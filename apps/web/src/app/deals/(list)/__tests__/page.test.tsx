@@ -48,6 +48,15 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => mockAuthState,
 }));
 
+// Mock the dynamic owner-filter hook (IFC-287 F-12)
+const mockOwnerOptions = [
+  { value: '11111111-1111-4111-8111-111111111111', label: 'Jane Smith (3)' },
+  { value: '22222222-2222-4222-8222-222222222222', label: 'Bob Wilson (1)' },
+];
+vi.mock('@/hooks/use-dynamic-filters', () => ({
+  useDealFilterOptions: () => ({ ownerOptions: mockOwnerOptions, isLoading: false, error: null }),
+}));
+
 // Mock trpc with configurable state
 const mockRefetch = vi.fn();
 const mockMutate = vi.fn();
@@ -104,6 +113,10 @@ const mockQueryState = {
   error: null as { message: string; data?: { code: string } } | null,
 };
 
+// Captures the input passed to opportunity.list.useQuery so tests can assert
+// that filter selections are wired into the query (IFC-287 F-10).
+let capturedListInput: Record<string, unknown> | undefined;
+
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     useUtils: () => ({
@@ -114,13 +127,16 @@ vi.mock('@/lib/trpc', () => ({
     }),
     opportunity: {
       list: {
-        useQuery: () => ({
-          data: mockQueryState.data,
-          isLoading: mockQueryState.isLoading,
-          isError: mockQueryState.isError,
-          error: mockQueryState.error,
-          refetch: mockRefetch,
-        }),
+        useQuery: (input: Record<string, unknown>) => {
+          capturedListInput = input;
+          return {
+            data: mockQueryState.data,
+            isLoading: mockQueryState.isLoading,
+            isError: mockQueryState.isError,
+            error: mockQueryState.error,
+            refetch: mockRefetch,
+          };
+        },
       },
       update: {
         useMutation: () => ({
@@ -269,13 +285,24 @@ vi.mock('@/components/deals', () => ({
   DealFilters: ({
     value,
     onChange,
+    owners,
   }: Readonly<{
     value: Record<string, unknown>;
     onChange: (v: Record<string, unknown>) => void;
+    owners?: ReadonlyArray<{ value: string; label: string }>;
   }>) => (
-    <div data-testid="deal-filters">
-      <button data-testid="set-filter" onClick={() => onChange({ ...value, ownerId: 'me' })}>
+    <div data-testid="deal-filters" data-owner-count={owners?.length ?? 0}>
+      <button
+        data-testid="set-filter"
+        onClick={() => onChange({ ...value, ownerId: '11111111-1111-4111-8111-111111111111' })}
+      >
         Set Filter
+      </button>
+      <button
+        data-testid="set-date-filter"
+        onClick={() => onChange({ ...value, dateRange: 'this_month' })}
+      >
+        Set Date Filter
       </button>
     </div>
   ),
@@ -334,6 +361,7 @@ describe('DealsPage', { timeout: 10000 }, () => {
     mockAuthState.isLoading = false;
     mockAuthState.isAuthenticated = true;
     capturedMoveStageConfig = {};
+    capturedListInput = undefined;
   });
 
   afterEach(() => {
@@ -425,6 +453,56 @@ describe('DealsPage', { timeout: 10000 }, () => {
 
       expect(screen.getByTestId('total-deals')).toHaveTextContent('0');
       expect(screen.getByTestId('total-value')).toHaveTextContent('0');
+    });
+
+    it('passes base query params (limit/sort) to opportunity.list (IFC-287)', async () => {
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      expect(capturedListInput).toMatchObject({
+        limit: 100,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+    });
+
+    it('wires an owner filter selection into the list query input (IFC-287 F-10)', async () => {
+      const user = userEvent.setup();
+
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      // Initially no owner filter
+      expect(capturedListInput?.ownerId).toBeUndefined();
+
+      await user.click(screen.getByTestId('set-filter'));
+
+      expect(capturedListInput?.ownerId).toBe('11111111-1111-4111-8111-111111111111');
+    });
+
+    it('wires a date-range selection into dateFrom/dateTo (IFC-287 F-10)', async () => {
+      const user = userEvent.setup();
+
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      expect(capturedListInput?.dateFrom).toBeUndefined();
+
+      await user.click(screen.getByTestId('set-date-filter'));
+
+      expect(capturedListInput?.dateFrom).toBeInstanceOf(Date);
+      expect(capturedListInput?.dateTo).toBeInstanceOf(Date);
+    });
+
+    it('passes real owner options to DealFilters (IFC-287 F-12)', async () => {
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      expect(screen.getByTestId('deal-filters')).toHaveAttribute('data-owner-count', '2');
     });
 
     it('navigates to deal detail on PipelineBoard deal click', async () => {
