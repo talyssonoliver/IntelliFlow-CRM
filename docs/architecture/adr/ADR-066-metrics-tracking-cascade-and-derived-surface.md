@@ -89,15 +89,36 @@ next, Option 3 deferred behind a consumer-refactor spike.**
   reports) instead of hundreds — the cascade and the merge-conflict
   amplification both go away. This also fixes the anti-fabrication smell: stable
   fields stop being recomputed with `new Date()` on every unrelated sync.
-- **Phase 2 (next, this ADR): Option 2.** Once Phase 1 proves the derived JSONs
-  are clean-by-default, gitignore them, generate at build/CI, and flip Gate 5 to
-  generate-and-assert-consistency. This removes ~480 files from the tracked
-  surface and makes "the tracker rewrote 500 files" structurally impossible.
-  Requires a build step that generates the JSONs before dashboard/matop run (or
-  repoints those consumers at the source) — scoped as part of the Phase 2 PR.
-- **Phase 3 (deferred): Option 3.** Highest payoff, highest consumer-refactor
-  cost (the matop pipeline is the heavy reader). Not started until a spike
-  scopes the read-model migration. Tracked as a follow-up, not rushed.
+- **Phase 2 (proposed Option 2) — BLOCKED BY DESIGN, do NOT attempt as a
+  gitignore (investigated 2026-06-14).** The premise that the derived JSONs are
+  cleanly gitignorable is false on inspection:
+  1. The ~414 per-task `sprint-*/<TASK>.json` carry **canonical** hand-authored
+     content (`notes`, `kpis.actual`, `status_history`, `blockers`, validation
+     evidence) that is **not** in the CSV or `.specify/`. Example: `IFC-265` has
+     no `.specify` attestation (its own JSON lists `context_ack.json` as
+     missing) yet carries a rich `notes` / `kpis.actual` / `status_history` —
+     the metrics JSON is the **sole** copy. Gitignoring + regenerating would
+     silently drop it.
+  2. Even the 3 genuinely CSV-derived aggregates (`_global/Sprint_plan.json`,
+     `task-registry.json`, `dependency-graph.json`) are **locked tracked by a
+     FAIL-always gate**: `validation-utils.ts:562-564` declares them canonical
+     source-of-truth and **Gate 6 (Canonical Uniqueness)** asserts they exist
+     "exactly once in **tracked** files." Gitignoring them ⇒ 0 tracked ⇒ Gate 6
+     fails. Gate 3 (Evidence Integrity) likewise requires the per-task JSONs
+     tracked.
+  3. **This was already tried and reverted.** `.gitignore:183-199` documents a
+     2026-04-10 attempt to ignore these "runtime cache" files, undone because
+     Gates 3 + 6 require them tracked. So surface-reduction is **not** a
+     gitignore + a gate tweak — it means dismantling a deliberately-built
+     governance invariant for ~zero benefit now that Phase 1 has removed the
+     churn. **Leave the tree tracked.**
+- **Phase 3 (the only real path to surface-reduction, deferred).** Highest
+  payoff, highest cost: it must **co-redesign** (a) a single canonical home for
+  per-task content (consolidate into `.specify/` attestations or a SQLite/JSON
+  read-model), (b) the generators (reconstruct the derived layer from that
+  home), AND (c) the Gate 3 / Gate 5 / Gate 6 governance checks together — plus
+  rewrite the matop + dashboard consumers. This is its own project with its own
+  ADR, not a follow-on to Phase 1. Not started until a spike scopes it.
 
 ### Positive Consequences
 
@@ -110,11 +131,11 @@ next, Option 3 deferred behind a consumer-refactor spike.**
 
 ### Negative Consequences
 
-- Phase 2 adds a generate step to the build/CI and dashboard/matop dev flows; a
-  forgotten regenerate would surface stale data locally (mitigated by the
-  consistency gate in CI).
-- Phase 3 is a real migration (read-model + consumer rewrite) — deferred, not
-  free.
+- Phase 2 (gitignore) is **withdrawn** — the per-task tree stays tracked because
+  Gates 3/6 treat it as canonical (see Decision Outcome). No tracked-surface
+  reduction lands without Phase 3.
+- Phase 3 is a real migration (canonical-store + generators + governance gates +
+  consumer rewrite) — deferred, not free.
 - Volatile fields stop changing on every sync; any (unlikely) consumer that
   depended on a freshly-stamped `verified_at` per run must read the attestation
   instead.
@@ -200,15 +221,20 @@ a `last_updated` / "Last synced" / `calculated_at` freshness stamp.
    `writeJsonFileStable` carry-forward, task-updater idempotency).
 9. No `.gitignore`, gate, or consumer change in Phase 1.
 
-### Phase 2 (authorized here; separate PR)
+### Phase 2 — WITHDRAWN (investigated 2026-06-14, not implemented)
 
-1. `.gitignore` `apps/project-tracker/docs/metrics/sprint-*/**/*.json` (keep
-   `schemas/`, `_global/`, `validation.yaml` tracked).
-2. Add a generate step (build/CI + a local `pnpm` script) that materializes the
-   JSONs from CSV + `.specify/` before dashboard/matop run.
-3. Rewrite Gate 5 in `sprint-validation.ts` from "no untracked files under
-   docs/metrics" to "regenerate, then assert the working tree is unchanged"
-   (drift = FAIL); the security-style strictness stays in CI.
+The original sketch below does **not** survive contact with the codebase — see
+the BLOCKED note under Decision Outcome. A naive
+`.gitignore apps/project-tracker/docs/metrics/sprint-*/**/*.json` would (a) drop
+canonical per-task content not stored anywhere else, and (b) fail Gate 6
+(Canonical Uniqueness) + Gate 3 (Evidence Integrity), which require these files
+git-tracked — the same wall a 2026-04-10 attempt hit and reverted
+(`.gitignore:183-199`). Do not re-attempt as a standalone gitignore. Surface
+reduction now belongs entirely to Phase 3 (canonical-store + generators + Gates
+3/5/6 + consumers redesigned together, with its own ADR).
+
+~~Original sketch (superseded): gitignore the per-task JSONs; add a generate
+step; rewrite Gate 5 to generate-and-assert-consistency.~~
 
 ### Validation Criteria
 
@@ -216,12 +242,12 @@ a `last_updated` / "Last synced" / `calculated_at` freshness stamp.
       diffs — measured ~480 → 0 no-op churn on a temp copy of the real tree.
 - [x] Phase 1: a single-task CSV flip now touches only that task's JSON plus the
       roll-ups whose counts actually changed (no blanket per-task rewrite).
-- [ ] Phase 2: with the JSONs gitignored, `validate:sprint --strict` passes via
-      the generate-and-assert-consistency gate.
-- [ ] Phase 2: dashboard + matop routes render from generated JSONs in a clean
-      checkout (build step proven).
-- [ ] Docs updated (`apps/project-tracker/CLAUDE.md`, this ADR status →
-      Accepted).
+- [x] Phase 2: investigated 2026-06-14 — **withdrawn**; gitignoring the derived
+      JSONs is blocked by canonical per-task content + Gate 6 / Gate 3 (which
+      require them tracked) + a prior 2026-04-10 revert. Surface reduction
+      folded into Phase 3.
+- [ ] Phase 3 (if pursued): spike the canonical-store consolidation + generator
+      rewrite + Gate 3/5/6 redesign + consumer migration, behind its own ADR.
 
 ### Rollback Plan
 
