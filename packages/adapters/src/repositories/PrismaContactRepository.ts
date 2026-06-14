@@ -167,9 +167,9 @@ export class PrismaContactRepository implements ContactRepository {
     );
   }
 
-  async findByEmail(email: Email): Promise<Contact | null> {
+  async findByEmailInTenant(email: Email, tenantId: string): Promise<Contact | null> {
     const record = await this.prisma.contact.findFirst({
-      where: { email: email.value },
+      where: { tenantId, email: email.value },
     });
 
     if (!record) return null;
@@ -206,9 +206,9 @@ export class PrismaContactRepository implements ContactRepository {
     });
   }
 
-  async existsByEmail(email: Email): Promise<boolean> {
+  async existsByEmailInTenant(email: Email, tenantId: string): Promise<boolean> {
     const count = await this.prisma.contact.count({
-      where: { email: email.value },
+      where: { tenantId, email: email.value },
     });
     return count > 0;
   }

@@ -72,7 +72,10 @@ export class ContactService {
       return Result.fail(emailResult.error);
     }
 
-    const existingContact = await this.contactRepository.existsByEmail(emailResult.value);
+    const existingContact = await this.contactRepository.existsByEmailInTenant(
+      emailResult.value,
+      props.tenantId
+    );
     if (existingContact) {
       return Result.fail(new ValidationError(`Contact with email ${props.email} already exists`));
     }
@@ -163,7 +166,8 @@ export class ContactService {
   async updateContactEmail(
     contactId: string,
     newEmail: string,
-    updatedBy: string
+    updatedBy: string,
+    tenantId: string
   ): Promise<Result<Contact, DomainError>> {
     const contactIdResult = ContactId.create(contactId);
     if (contactIdResult.isFailure) {
@@ -175,13 +179,18 @@ export class ContactService {
       return Result.fail(new ValidationError(`Contact not found: ${contactId}`));
     }
 
-    // Check for email uniqueness
+    // Check for email uniqueness within the tenant (#427): the DB constraint is
+    // @@unique([tenantId, email]); an email-only check false-conflicts and leaks
+    // across tenants.
     const emailResult = Email.create(newEmail);
     if (emailResult.isFailure) {
       return Result.fail(emailResult.error);
     }
 
-    const existingContact = await this.contactRepository.findByEmail(emailResult.value);
+    const existingContact = await this.contactRepository.findByEmailInTenant(
+      emailResult.value,
+      tenantId
+    );
     if (existingContact && existingContact.id.value !== contactId) {
       return Result.fail(
         new ValidationError(`Email ${newEmail} is already in use by another contact`)
@@ -448,6 +457,26 @@ export class ContactService {
   }
 
   /**
+   * Scalar merge fields for a contact merge (primary-wins: secondary fills
+   * null/empty only). Extracted to keep `mergeContacts` within the cognitive
+   * complexity budget.
+   */
+  private static buildMergeFields(
+    primary: Contact,
+    secondary: Contact
+  ): { title?: string; phone?: string; department?: string; accountId?: string } {
+    const mergeFields: { title?: string; phone?: string; department?: string; accountId?: string } =
+      {};
+    if (!primary.title && secondary.title) mergeFields.title = secondary.title;
+    if (!primary.phone && secondary.phone) mergeFields.phone = secondary.phone.toValue();
+    if (!primary.department && secondary.department) mergeFields.department = secondary.department;
+    if (!primary.hasAccount && secondary.hasAccount && secondary.accountId) {
+      mergeFields.accountId = secondary.accountId;
+    }
+    return mergeFields;
+  }
+
+  /**
    * Merge two contacts (keeping the primary one).
    *
    * IFC-310: Atomic transactional merge with child re-parenting.
@@ -498,18 +527,7 @@ export class ContactService {
 
     // Prepare scalar merge fields (primary-wins policy: secondary fills
     // null/empty only).
-    const mergeFields: {
-      title?: string;
-      phone?: string;
-      department?: string;
-      accountId?: string;
-    } = {};
-    if (!primary.title && secondary.title) mergeFields.title = secondary.title;
-    if (!primary.phone && secondary.phone) mergeFields.phone = secondary.phone.toValue();
-    if (!primary.department && secondary.department) mergeFields.department = secondary.department;
-    if (!primary.hasAccount && secondary.hasAccount && secondary.accountId) {
-      mergeFields.accountId = secondary.accountId;
-    }
+    const mergeFields = ContactService.buildMergeFields(primary, secondary);
 
     // Delegate the atomic merge to the repository port. The Prisma adapter
     // wraps everything (child re-parenting + field merge + secondary delete)
@@ -589,13 +607,13 @@ export class ContactService {
   /**
    * Get a contact by email
    */
-  async getContactByEmail(email: string): Promise<Result<Contact, DomainError>> {
+  async getContactByEmail(email: string, tenantId: string): Promise<Result<Contact, DomainError>> {
     const emailResult = Email.create(email);
     if (emailResult.isFailure) {
       return Result.fail(emailResult.error);
     }
 
-    const contact = await this.contactRepository.findByEmail(emailResult.value);
+    const contact = await this.contactRepository.findByEmailInTenant(emailResult.value, tenantId);
     if (!contact) {
       return Result.fail(new NotFoundError(`Contact with email ${email} not found`));
     }

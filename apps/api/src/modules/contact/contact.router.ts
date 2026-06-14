@@ -1073,7 +1073,8 @@ export const contactRouter = createTRPCRouter({
     const result = await contactService.updateContactEmail(
       input.id,
       input.email,
-      typedCtx.tenant.userId
+      typedCtx.tenant.userId,
+      typedCtx.tenant.tenantId
     );
     if (result.isFailure) {
       throw new TRPCError({

@@ -76,6 +76,30 @@ describe('ContactService', () => {
       expect(result.error.message).toContain('already exists');
     });
 
+    // #427: the create uniqueness check is tenant-scoped — the same email may be
+    // created in a different tenant without a false "already exists" conflict.
+    it('allows the same email in a different tenant', async () => {
+      const first = await service.createContact({
+        email: 'shared@example.com',
+        firstName: 'A',
+        lastName: 'One',
+        ownerId: 'owner-a',
+        tenantId: 'tenant-a',
+      });
+      expect(first.isSuccess).toBe(true);
+
+      const second = await service.createContact({
+        email: 'shared@example.com',
+        firstName: 'B',
+        lastName: 'Two',
+        ownerId: 'owner-b',
+        tenantId: 'tenant-b',
+      });
+
+      expect(second.isSuccess).toBe(true);
+      expect(second.value.tenantId).toBe('tenant-b');
+    });
+
     it('should create contact with account association', async () => {
       const account = Account.create({
         name: 'Test Company',
@@ -185,6 +209,37 @@ describe('ContactService', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.email.value).toBe('new@example.com');
+    });
+
+    // #427: the duplicate check is tenant-scoped — a contact with the same email
+    // in ANOTHER tenant must not block the update or leak across tenants.
+    it('allows updating to an email that exists only in another tenant', async () => {
+      const mine = Contact.create({
+        email: 'mine@example.com',
+        firstName: 'Mine',
+        lastName: 'A',
+        ownerId: 'owner-a',
+        tenantId: 'tenant-a',
+      }).value;
+      const otherTenant = Contact.create({
+        email: 'shared@example.com',
+        firstName: 'Other',
+        lastName: 'B',
+        ownerId: 'owner-b',
+        tenantId: 'tenant-b',
+      }).value;
+      await contactRepository.save(mine);
+      await contactRepository.save(otherTenant);
+
+      const result = await service.updateContactEmail(
+        mine.id.value,
+        'shared@example.com',
+        'updater',
+        'tenant-a'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.email.value).toBe('shared@example.com');
     });
 
     it('should fail if new email already exists', async () => {
