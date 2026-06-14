@@ -59,12 +59,44 @@ const { mockIndexBatch, mockIndexNotesBatch, mockReindexAll, mockReindexAllNotes
     mockIndexNotesBatch: vi
       .fn()
       .mockResolvedValue({ total: 3, successful: 3, failed: 0, results: [], totalTimeMs: 100 }),
-    mockReindexAll: vi
-      .fn()
-      .mockResolvedValue({ total: 50, successful: 48, failed: 2, results: [], totalTimeMs: 5000 }),
-    mockReindexAllNotes: vi
-      .fn()
-      .mockResolvedValue({ total: 30, successful: 30, failed: 0, results: [], totalTimeMs: 3000 }),
+    // Invoke the onProgress callback so the worker's progress-reporting closures
+    // are exercised (covers the reindexAll/reindexAllNotes branch bodies).
+    mockReindexAll: vi.fn().mockImplementation((_tenantId?: string, onProgress?: any) => {
+      onProgress?.({
+        total: 10,
+        processed: 5,
+        successful: 5,
+        failed: 0,
+        currentBatch: 1,
+        totalBatches: 1,
+        estimatedRemainingMs: 0,
+      });
+      return Promise.resolve({
+        total: 50,
+        successful: 48,
+        failed: 2,
+        results: [],
+        totalTimeMs: 5000,
+      });
+    }),
+    mockReindexAllNotes: vi.fn().mockImplementation((_tenantId?: string, onProgress?: any) => {
+      onProgress?.({
+        total: 10,
+        processed: 5,
+        successful: 5,
+        failed: 0,
+        currentBatch: 1,
+        totalBatches: 1,
+        estimatedRemainingMs: 0,
+      });
+      return Promise.resolve({
+        total: 30,
+        successful: 30,
+        failed: 0,
+        results: [],
+        totalTimeMs: 3000,
+      });
+    }),
   })
 );
 

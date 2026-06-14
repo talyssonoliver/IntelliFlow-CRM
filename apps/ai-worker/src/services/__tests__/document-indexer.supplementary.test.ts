@@ -27,7 +27,7 @@ import { EmbeddingChain } from '../../chains/embedding.chain';
 
 const mp = {
   caseDocument: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn() },
-  contactNote: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn() },
+  contactNote: { findFirst: vi.fn(), findMany: vi.fn(), count: vi.fn() },
   $executeRaw: vi.fn(),
   $queryRaw: vi.fn(),
 };
@@ -115,7 +115,7 @@ describe('DocumentIndexer supplementary', () => {
     expect(r.failed).toBe(1);
   });
   it('indexNotesBatch works', async () => {
-    mp.contactNote.findUnique
+    mp.contactNote.findFirst
       .mockResolvedValueOnce({ id: 'n1', content: 'N1' })
       .mockResolvedValueOnce({ id: 'n2', content: 'N2' });
     mp.$executeRaw.mockResolvedValue(1);
