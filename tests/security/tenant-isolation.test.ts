@@ -45,6 +45,12 @@ const mockPrisma = {
     findUnique: vi.fn(),
     findMany: vi.fn(),
   },
+  team: {
+    findMany: vi.fn(),
+  },
+  teamMember: {
+    findMany: vi.fn(),
+  },
   lead: {
     count: vi.fn(),
     findMany: vi.fn(),
@@ -321,19 +327,22 @@ describe('Tenant Context', () => {
   });
 
   describe('getTeamMemberIds', () => {
-    it('should return empty for non-manager', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ role: 'USER' });
+    it('should return empty for a user who leads no team', async () => {
+      mockPrisma.team.findMany.mockResolvedValue([]);
 
-      const result = await getTeamMemberIds(mockPrisma as any, 'user-123');
+      const result = await getTeamMemberIds(mockPrisma as any, 'user-123', 'tenant-1');
 
       expect(result).toEqual([]);
     });
 
-    it('should return team member IDs for manager', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ role: 'MANAGER' });
-      mockPrisma.user.findMany.mockResolvedValue([{ id: 'user-1' }, { id: 'user-2' }]);
+    it('should return members of teams the manager leads', async () => {
+      mockPrisma.team.findMany.mockResolvedValue([{ id: 'team-1' }]);
+      mockPrisma.teamMember.findMany.mockResolvedValue([
+        { userId: 'user-1' },
+        { userId: 'user-2' },
+      ]);
 
-      const result = await getTeamMemberIds(mockPrisma as any, 'manager-456');
+      const result = await getTeamMemberIds(mockPrisma as any, 'manager-456', 'tenant-1');
 
       expect(result).toEqual(['user-1', 'user-2']);
     });
@@ -341,8 +350,11 @@ describe('Tenant Context', () => {
 
   describe('enrichTenantContext', () => {
     it('should add team member IDs for manager', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ role: 'MANAGER' });
-      mockPrisma.user.findMany.mockResolvedValue([{ id: 'user-1' }, { id: 'user-2' }]);
+      mockPrisma.team.findMany.mockResolvedValue([{ id: 'team-1' }]);
+      mockPrisma.teamMember.findMany.mockResolvedValue([
+        { userId: 'user-1' },
+        { userId: 'user-2' },
+      ]);
 
       const tenant: TenantContext = {
         tenantId: 'manager-456',
@@ -661,10 +673,10 @@ describe('Edge Cases', () => {
 
   describe('Empty Team Members', () => {
     it('should handle manager with no team members', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ role: 'MANAGER' });
-      mockPrisma.user.findMany.mockResolvedValue([]);
+      mockPrisma.team.findMany.mockResolvedValue([{ id: 'team-1' }]);
+      mockPrisma.teamMember.findMany.mockResolvedValue([]);
 
-      const result = await getTeamMemberIds(mockPrisma as any, 'manager-456');
+      const result = await getTeamMemberIds(mockPrisma as any, 'manager-456', 'tenant-1');
 
       expect(result).toEqual([]);
     });

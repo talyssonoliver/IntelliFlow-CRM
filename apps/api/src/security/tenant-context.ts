@@ -227,8 +227,11 @@ export function tenantContextMiddleware(options: TenantContextMiddlewareOptions 
       return next();
     }
 
-    // Extract tenant context
-    const tenant = extractTenantContext(ctx.user);
+    // Extract tenant context, then enrich a MANAGER with their team-member IDs
+    // so the team-scope branch of createTenantWhereClause / validateTenantOperation
+    // is reachable (#428). Uses the unscoped ctx.prisma, but enrichTenantContext's
+    // team queries filter by tenantId explicitly and fail closed.
+    const tenant = await enrichTenantContext(ctx.prisma, extractTenantContext(ctx.user));
 
     // Create tenant-scoped Prisma client
     const prismaWithTenant = createTenantScopedPrisma(ctx.prisma, tenant);
@@ -372,48 +375,59 @@ export function validateTenantOperation(
 }
 
 /**
- * Get team member IDs for a manager
+ * Resolve the user IDs a manager may access: the members of every active team
+ * the manager LEADS, within the manager's tenant. "Leads" means either the
+ * team's `leaderId` or a `TeamMember` row with role `lead`. Returns `[]` for a
+ * manager who leads no team — so non-leading managers stay owner-scoped.
  *
- * Current implementation: managers can access all non-admin users
- * Future: implement proper team hierarchy
+ * Tenant-scoped on both queries (Team.tenantId + TeamMember.tenantId) so a
+ * manager can never reach another tenant's team. The manager's own id is
+ * excluded (already covered by `tenant.userId`). (#428)
  */
-export async function getTeamMemberIds(prisma: PrismaClient, managerId: string): Promise<string[]> {
-  // Check if user is a manager
-  const manager = await prisma.user.findUnique({
-    where: { id: managerId },
-    select: { role: true },
-  });
-
-  if (!manager || !['MANAGER', 'ADMIN'].includes(manager.role)) {
-    return [];
-  }
-
-  // Get all team members (currently all non-admin users)
-  const teamMembers = await prisma.user.findMany({
+export async function getTeamMemberIds(
+  prisma: PrismaClient,
+  managerId: string,
+  tenantId: string
+): Promise<string[]> {
+  const ledTeams = await prisma.team.findMany({
     where: {
-      role: { in: ['USER', 'SALES_REP'] },
+      tenantId,
+      isActive: true,
+      OR: [{ leaderId: managerId }, { members: { some: { userId: managerId, role: 'lead' } } }],
     },
     select: { id: true },
   });
+  if (ledTeams.length === 0) return [];
 
-  return teamMembers.map((m) => m.id);
+  const members = await prisma.teamMember.findMany({
+    where: { tenantId, teamId: { in: ledTeams.map((t) => t.id) } },
+    select: { userId: true },
+  });
+
+  return [...new Set(members.map((m) => m.userId))].filter((id) => id !== managerId);
 }
 
 /**
- * Enrich tenant context with team member IDs
+ * Enrich tenant context with the manager's team-member IDs so the MANAGER
+ * branch of `createTenantWhereClause` / `validateTenantOperation` becomes
+ * reachable. Only MANAGER is enriched — ADMIN already sees all tenant data via
+ * the ADMIN branch and never needs `teamMemberIds`.
+ *
+ * Fail-closed: if team resolution throws, the manager is returned unenriched
+ * (owner-scoped). Widening access on a lookup error would be a vulnerability;
+ * narrowing it is safe. (#428)
  */
 export async function enrichTenantContext(
   prisma: PrismaClient,
   tenant: TenantContext
 ): Promise<TenantContext> {
-  if (['MANAGER', 'ADMIN'].includes(tenant.role)) {
-    const teamMemberIds = await getTeamMemberIds(prisma, tenant.userId);
-    return {
-      ...tenant,
-      teamMemberIds,
-    };
+  if (tenant.role !== 'MANAGER') return tenant;
+  try {
+    const teamMemberIds = await getTeamMemberIds(prisma, tenant.userId, tenant.tenantId);
+    return { ...tenant, teamMemberIds };
+  } catch {
+    return tenant;
   }
-  return tenant;
 }
 
 /**
