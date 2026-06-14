@@ -7,9 +7,10 @@
  * - Individual task files with schedule data
  */
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { TaskRecord } from './types';
+import { writeJsonFile } from './file-io';
 import {
   calculateSchedule,
   csvRowToTaskInput,
@@ -132,9 +133,10 @@ function updateSprintSummaryWithSchedule(
 
   try {
     const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
+    const prevSchedule = summary.schedule ?? {};
 
     // Add/update schedule data
-    summary.schedule = {
+    const nextSchedule: Record<string, unknown> = {
       ...summary.schedule,
       sprint_start_date: summary.schedule?.sprint_start_date || null,
       sprint_end_date: summary.schedule?.sprint_end_date || summary.target_date || null,
@@ -154,7 +156,19 @@ function updateSprintSummaryWithSchedule(
       calculated_at: scheduleResult.calculatedAt.toISOString(),
     };
 
-    writeFileSync(summaryPath, JSON.stringify(summary, null, 2) + '\n', 'utf-8');
+    // calculated_at is a freshness stamp — only refresh it when the computed
+    // schedule actually changed; otherwise carry the prior stamp forward so a
+    // no-op sync leaves the summary untouched (ADR-066).
+    const withoutStamp = (s: Record<string, unknown>): string => {
+      const { calculated_at: _drop, ...rest } = s;
+      return JSON.stringify(rest);
+    };
+    if (prevSchedule.calculated_at && withoutStamp(prevSchedule) === withoutStamp(nextSchedule)) {
+      nextSchedule.calculated_at = prevSchedule.calculated_at;
+    }
+    summary.schedule = nextSchedule;
+
+    writeJsonFile(summaryPath, summary, 2);
   } catch (err) {
     console.error(`Failed to update sprint ${sprintNum} summary:`, err);
   }

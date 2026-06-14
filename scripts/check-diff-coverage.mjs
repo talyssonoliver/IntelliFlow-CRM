@@ -85,6 +85,11 @@ const SONAR_COVERAGE_EXCLUDE = [
   /^apps\/project-tracker\/app\/api\//,
   /^apps\/project-tracker\/components\//,
   /^apps\/project-tracker\/lib\/data-sync\.ts$/,
+  // The data-sync monolith was split into lib/data-sync/*.ts; the whole
+  // apps/project-tracker/** tree is excluded from vitest coverage instrumentation
+  // ("temporary tooling"), so these never appear in lcov. Mirror the same
+  // exclusion in sonar.coverage.exclusions (ADR-066 / same pattern as PG-061).
+  /^apps\/project-tracker\/lib\/data-sync\//,
   /^apps\/ai-worker\/src\/index\.ts$/,
   // Mock adapters in packages/adapters/src/external/ are test-infrastructure with
   // no coverage expectation (same exclusion applied in the root vitest coverage config

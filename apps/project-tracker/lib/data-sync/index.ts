@@ -28,6 +28,7 @@ export { validateMetricsConsistency } from './validation';
 export {
   readJsonTolerant,
   writeJsonFile,
+  writeJsonFileStable,
   findRepoRoot,
   findTaskFile,
   findAllTaskJsons,
