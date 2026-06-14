@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { TaskRecord } from './types';
 import { mapCsvStatusToRegistry, parseDependencies, parseArtifacts } from './csv-mapping';
-import { readJsonTolerant, writeJsonFile } from './file-io';
+import { readJsonTolerant, writeJsonFile, writeJsonFileStable } from './file-io';
 
 /**
  * Update Sprint_plan.json grouped by section
@@ -43,6 +43,52 @@ export function updateSprintPlanJson(tasks: TaskRecord[], metricsDir: string): v
   writeJsonFile(jsonPath, tasksBySection, 2);
 }
 
+/** Sprint number from the CSV "Target Sprint" cell ("Continuous" → -1). */
+function parseSprintNumber(task: TaskRecord): number {
+  if (task['Target Sprint'] === 'Continuous') return -1;
+  return Number.parseInt(task['Target Sprint'] || '0', 10) || 0;
+}
+
+/** Build a task-registry detail, merging over any existing entry. */
+function buildTaskDetail(
+  task: TaskRecord,
+  status: string,
+  dependencies: string[],
+  artifacts: string[],
+  existingDetails: Record<string, unknown> | undefined
+): Record<string, unknown> {
+  const derived = {
+    section: task.Section,
+    description: task.Description,
+    owner: task.Owner,
+    status,
+    sprint: parseSprintNumber(task),
+    dependencies,
+    artifacts,
+    kpis: task.KPIs || '',
+    definition_of_done: task['Definition of Done'] || '',
+    validation: task['Validation Method'] || '',
+    prerequisites: task['Pre-requisites'] || '',
+    cadence: task.Cadence || '',
+  };
+  return existingDetails ? { ...existingDetails, ...derived } : derived;
+}
+
+/** Lowest sprint with a non-DONE task; falls back to the highest known sprint. */
+function deriveActiveSprint(
+  taskDetails: Record<string, { status: string; sprint: number }>
+): number {
+  const nonDoneSprints = new Set<number>();
+  let highestSprint = 0;
+  for (const detail of Object.values(taskDetails)) {
+    if (typeof detail.sprint === 'number' && detail.sprint >= 0) {
+      if (detail.sprint > highestSprint) highestSprint = detail.sprint;
+      if (detail.status !== 'DONE') nonDoneSprints.add(detail.sprint);
+    }
+  }
+  return nonDoneSprints.size > 0 ? Math.min(...nonDoneSprints) : highestSprint;
+}
+
 /**
  * Update task-registry.json
  */
@@ -77,43 +123,13 @@ export function updateTaskRegistry(tasks: TaskRecord[], metricsDir: string): voi
     const dependencies = parseDependencies(task.CleanDependencies || task.Dependencies || '');
     const artifacts = parseArtifacts(task['Artifacts To Track'] || '');
 
-    const existingDetails = registry.task_details?.[taskId];
-    taskDetails[taskId] = existingDetails
-      ? {
-          ...existingDetails,
-          section: task.Section,
-          description: task.Description,
-          owner: task.Owner,
-          status,
-          sprint:
-            task['Target Sprint'] === 'Continuous'
-              ? -1
-              : Number.parseInt(task['Target Sprint'] || '0', 10) || 0,
-          dependencies,
-          artifacts,
-          kpis: task.KPIs || '',
-          definition_of_done: task['Definition of Done'] || '',
-          validation: task['Validation Method'] || '',
-          prerequisites: task['Pre-requisites'] || '',
-          cadence: task.Cadence || '',
-        }
-      : {
-          section: task.Section,
-          description: task.Description,
-          owner: task.Owner,
-          status,
-          sprint:
-            task['Target Sprint'] === 'Continuous'
-              ? -1
-              : Number.parseInt(task['Target Sprint'] || '0', 10) || 0,
-          dependencies,
-          artifacts,
-          kpis: task.KPIs || '',
-          definition_of_done: task['Definition of Done'] || '',
-          validation: task['Validation Method'] || '',
-          prerequisites: task['Pre-requisites'] || '',
-          cadence: task.Cadence || '',
-        };
+    taskDetails[taskId] = buildTaskDetail(
+      task,
+      status,
+      dependencies,
+      artifacts,
+      registry.task_details?.[taskId]
+    );
   }
 
   // Update sprint stats for sprint 0
@@ -131,17 +147,7 @@ export function updateTaskRegistry(tasks: TaskRecord[], metricsDir: string): voi
     in_review: sprint0Tasks.filter((t) => t.Status === 'In Review').length,
   };
 
-  // Derive active_sprint: lowest sprint number with at least one non-DONE task.
-  // Falls back to the highest known sprint when everything is DONE.
-  const nonDoneSprints = new Set<number>();
-  let highestSprint = 0;
-  for (const detail of Object.values(taskDetails) as Array<{ status: string; sprint: number }>) {
-    if (typeof detail.sprint === 'number' && detail.sprint >= 0) {
-      if (detail.sprint > highestSprint) highestSprint = detail.sprint;
-      if (detail.status !== 'DONE') nonDoneSprints.add(detail.sprint);
-    }
-  }
-  const activeSprint = nonDoneSprints.size > 0 ? Math.min(...nonDoneSprints) : highestSprint;
+  const activeSprint = deriveActiveSprint(taskDetails);
 
   registry.last_updated = new Date().toISOString();
   registry.total_tasks = tasks.length;
@@ -153,5 +159,7 @@ export function updateTaskRegistry(tasks: TaskRecord[], metricsDir: string): voi
   if (!registry.sprints) registry.sprints = {};
   registry.sprints['sprint-0'] = sprint0Stats;
 
-  writeJsonFile(registryPath, registry, 2);
+  // last_updated is a freshness stamp only — carry it forward when nothing else
+  // changed so a no-op sync leaves the registry untouched (ADR-066).
+  writeJsonFileStable(registryPath, registry, ['last_updated'], 2);
 }

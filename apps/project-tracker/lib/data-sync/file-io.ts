@@ -21,10 +21,62 @@ export function readJsonTolerant(path: string): any {
 }
 
 /**
- * Write JSON file with consistent formatting
+ * Write JSON file with consistent formatting.
+ *
+ * Skip-if-unchanged: if the serialized bytes are byte-identical to the file
+ * already on disk, return without writing. A sync over hundreds of task JSONs
+ * used to rewrite every file (new mtime + a git diff) even when nothing changed;
+ * this collapses the write cascade to only the files that actually changed.
+ * See ADR-066.
  */
 export function writeJsonFile(path: string, data: unknown, space = 2): void {
-  writeFileSync(path, `${JSON.stringify(data, null, space)}\n`, 'utf-8');
+  const next = `${JSON.stringify(data, null, space)}\n`;
+  // Read-and-compare without a preceding existsSync() check: a missing/unreadable
+  // file just throws and falls through to the write. Avoiding the check-then-write
+  // shape keeps this free of a file-system TOCTOU race (CodeQL js/file-system-race).
+  try {
+    if (readFileSync(path, 'utf-8') === next) return;
+  } catch {
+    // missing or unreadable existing file — (re)write it below
+  }
+  writeFileSync(path, next, 'utf-8');
+}
+
+/**
+ * Write JSON, treating the given top-level `volatileKeys` (freshness stamps such
+ * as `last_updated`) as non-significant. If every OTHER field is byte-identical
+ * to what is already on disk, the prior volatile values are carried forward so
+ * the file is left untouched — a no-op sync stops churning roll-up files purely
+ * because of a refreshed timestamp. Falls back to writeJsonFile (which is itself
+ * skip-if-unchanged) for the actual write. See ADR-066.
+ */
+export function writeJsonFileStable(
+  path: string,
+  data: Record<string, unknown>,
+  volatileKeys: string[],
+  space = 2
+): void {
+  if (volatileKeys.length > 0) {
+    // readJsonTolerant throws for a missing/unreadable file (caught below) — no
+    // existsSync() pre-check, so there is no check-then-use race window.
+    try {
+      const prev = readJsonTolerant(path) as Record<string, unknown>;
+      const withoutVolatile = (o: Record<string, unknown>): string => {
+        const clone: Record<string, unknown> = { ...o };
+        for (const key of volatileKeys) delete clone[key];
+        return JSON.stringify(clone);
+      };
+      if (withoutVolatile(prev) === withoutVolatile(data)) {
+        for (const key of volatileKeys) {
+          if (Object.prototype.hasOwnProperty.call(prev, key)) data[key] = prev[key];
+          else delete data[key];
+        }
+      }
+    } catch {
+      // missing/unreadable/non-JSON existing file — fall through to a normal write
+    }
+  }
+  writeJsonFile(path, data, space);
 }
 
 /**

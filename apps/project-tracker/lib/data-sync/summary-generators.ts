@@ -76,7 +76,8 @@ export function updatePhaseSummaries(tasks: TaskRecord[], metricsDir: string): v
       not_started,
     };
 
-    if (done === phaseTasks.length && phaseTasks.length > 0) {
+    // Stamp completion once; re-deriving it every sync churned the file (ADR-066).
+    if (done === phaseTasks.length && phaseTasks.length > 0 && !summary.completed_at) {
       summary.completed_at = new Date().toISOString();
     }
 
@@ -140,6 +141,20 @@ export function updateSprintSummaryGeneric(
     failed,
   };
 
+  // Prior completed_tasks, so CSV-only entries (no task JSON) can carry their
+  // completed_at forward instead of fabricating a fresh timestamp each sync (ADR-066).
+  const prevCompleted = new Map<string, { completed_at: string; duration_minutes: number }>();
+  if (Array.isArray(summary.completed_tasks)) {
+    for (const c of summary.completed_tasks) {
+      if (c && typeof c.task_id === 'string') {
+        prevCompleted.set(c.task_id, {
+          completed_at: c.completed_at,
+          duration_minutes: c.duration_minutes,
+        });
+      }
+    }
+  }
+
   // Build completed_tasks from task JSON files and CSV
   const completedTasksMap = new Map<
     string,
@@ -180,10 +195,11 @@ export function updateSprintSummaryGeneric(
   for (const csvTask of csvCompletedTasks) {
     const taskId = csvTask['Task ID'];
     if (taskId && !completedTasksMap.has(taskId)) {
+      const carried = prevCompleted.get(taskId);
       completedTasksMap.set(taskId, {
         task_id: taskId,
-        completed_at: new Date().toISOString(),
-        duration_minutes: 15,
+        completed_at: carried?.completed_at ?? new Date().toISOString(),
+        duration_minutes: carried?.duration_minutes ?? 15,
       });
     }
   }
@@ -195,7 +211,14 @@ export function updateSprintSummaryGeneric(
   summary.completed_tasks = completedTasks;
 
   const pct = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;
-  summary.notes = `${done}/${tasks.length} tasks DONE (${pct}%). Last synced: ${new Date().toISOString()}`;
+  // Only refresh the "Last synced" stamp when the meaningful counts changed;
+  // otherwise keep the prior note verbatim so a no-op sync leaves the file
+  // untouched (the embedded timestamp was a per-sprint churn source — ADR-066).
+  const stablePrefix = `${done}/${tasks.length} tasks DONE (${pct}%).`;
+  const prevNotes = typeof summary.notes === 'string' ? summary.notes : '';
+  summary.notes = prevNotes.startsWith(stablePrefix)
+    ? prevNotes
+    : `${stablePrefix} Last synced: ${new Date().toISOString()}`;
 
   writeJsonFile(summaryPath, summary, 2);
 }

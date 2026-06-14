@@ -5,7 +5,7 @@
 import { join } from 'node:path';
 import type { DependencyNode, CrossSprintDep, CriticalPath, TaskRecord } from './types';
 import { mapCsvStatusToGraph, parseDependencies } from './csv-mapping';
-import { writeJsonFile } from './file-io';
+import { writeJsonFileStable } from './file-io';
 
 function buildGraphNodes(tasks: TaskRecord[]): {
   nodes: Record<string, DependencyNode>;
@@ -93,7 +93,9 @@ export function updateDependencyGraph(tasks: TaskRecord[], metricsDir: string): 
     parallel_execution_groups,
   };
 
-  writeJsonFile(graphPath, graph, 2);
+  // last_updated is a freshness stamp only — carry it forward when nothing else
+  // changed so a no-op sync leaves the graph file untouched (ADR-066).
+  writeJsonFileStable(graphPath, graph, ['last_updated'], 2);
 }
 
 /**

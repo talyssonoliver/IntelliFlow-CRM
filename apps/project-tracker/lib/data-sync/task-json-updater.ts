@@ -42,9 +42,25 @@ function applyDependencySatisfied(taskData: any, task: TaskRecord, allTasks: Tas
     const depTask = allTasks.find((t: TaskRecord) => t['Task ID'] === depId);
     return depTask && (depTask.Status === 'Done' || depTask.Status === 'Completed');
   });
+
+  const prevSatisfied = taskData.dependencies.all_satisfied;
+  const prevRequired: string[] = Array.isArray(taskData.dependencies.required)
+    ? taskData.dependencies.required
+    : [];
+  const requiredChanged =
+    prevRequired.length !== requiredDeps.length ||
+    requiredDeps.some((dep: string, i: number) => dep !== prevRequired[i]);
+
   taskData.dependencies.all_satisfied = allSatisfied;
-  taskData.dependencies.verified_at = new Date().toISOString();
   taskData.dependencies.required = requiredDeps;
+
+  // Only re-stamp verified_at when the satisfied-state or required set actually
+  // changed (or it was never stamped). Re-deriving `new Date()` on every sync made
+  // every task JSON diff on every run — the core write-cascade cause. See ADR-066.
+  if (prevSatisfied !== allSatisfied || requiredChanged || !taskData.dependencies.verified_at) {
+    taskData.dependencies.verified_at = new Date().toISOString();
+  }
+
   if (allSatisfied && requiredDeps.length > 0) {
     taskData.dependencies_resolved = requiredDeps;
   }
