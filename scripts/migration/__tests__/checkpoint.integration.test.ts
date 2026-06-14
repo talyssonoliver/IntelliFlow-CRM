@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 describe('checkpoint/resume mechanism', () => {
   it('checkpoint save: creates JSON file with tableName, lastProcessedId, idMap, timestamp', async () => {
@@ -15,7 +17,7 @@ describe('checkpoint/resume mechanism', () => {
     }
 
     const { readFileSync, unlinkSync } = await import('node:fs');
-    const path = '/tmp/test-checkpoint-integration.json';
+    const path = join(tmpdir(), 'test-checkpoint-integration.json');
 
     const state = {
       tableName: 'users',
@@ -48,7 +50,7 @@ describe('checkpoint/resume mechanism', () => {
     }
 
     const { writeFileSync, unlinkSync } = await import('node:fs');
-    const path = '/tmp/test-checkpoint-load.json';
+    const path = join(tmpdir(), 'test-checkpoint-load.json');
 
     const state = {
       tableName: 'leads',

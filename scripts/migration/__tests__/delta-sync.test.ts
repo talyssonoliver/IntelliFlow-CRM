@@ -6,6 +6,8 @@ import {
   ENUM_MAPPINGS,
   type TransformationRule,
 } from '../delta-sync';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 // ============================================
 // Helper: create a rule for testing
@@ -248,7 +250,7 @@ describe('checkpoint/resume (RED — not yet implemented)', () => {
       idMap: { '1': 'c123' },
       timestamp: new Date().toISOString(),
     };
-    const path = '/tmp/test-checkpoint.json';
+    const path = join(tmpdir(), 'test-checkpoint.json');
     await (
       mod as Record<string, unknown> as { saveCheckpoint: (s: unknown, p: string) => Promise<void> }
     ).saveCheckpoint(state, path);
@@ -382,7 +384,7 @@ describe('checkpoint error handling', () => {
       path: string
     ) => Promise<unknown>;
 
-    const result = await loadCheckpoint('/tmp/nonexistent-checkpoint-12345.json');
+    const result = await loadCheckpoint(join(tmpdir(), 'nonexistent-checkpoint-12345.json'));
     expect(result).toBeNull();
   });
 });
