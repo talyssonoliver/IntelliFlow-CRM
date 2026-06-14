@@ -198,13 +198,14 @@ export class ReindexWorker {
     const data = ReindexJobDataSchema.parse(job.data);
 
     // Track as "embedding" agent on the Active Agents dashboard
+    const docCountSuffix = data.documentIds ? ` (${data.documentIds.length} docs)` : '';
     const statusCtx: AgentStatusContext | null =
       data.tenantId && data.requestedBy
         ? {
             tenantId: data.tenantId,
             userId: data.requestedBy,
             agentType: 'embedding',
-            taskDescription: `Re-indexing ${data.indexType} embeddings${data.documentIds ? ` (${data.documentIds.length} docs)` : ''}`,
+            taskDescription: `Re-indexing ${data.indexType} embeddings${docCountSuffix}`,
           }
         : null;
 
@@ -222,56 +223,12 @@ export class ReindexWorker {
     let documentsResult: BatchIndexResult | null = null;
     let notesResult: BatchIndexResult | null = null;
 
-    // Index documents
     if (data.indexType === 'documents' || data.indexType === 'all') {
-      await job.updateProgress({
-        stage: 'documents',
-        overallProgress: 0,
-      } as ReindexJobProgress);
-
-      if (data.documentIds && data.documentIds.length > 0) {
-        // Index specific documents
-        documentsResult = await this.indexer.indexBatch(data.documentIds);
-      } else {
-        // Reindex all documents for tenant
-        documentsResult = await this.indexer.reindexAll(data.tenantId, (progress) => {
-          const overallProgress =
-            data.indexType === 'all'
-              ? (progress.processed / progress.total) * 50
-              : (progress.processed / progress.total) * 100;
-
-          job.updateProgress({
-            stage: 'documents',
-            documents: progress,
-            overallProgress,
-          } as ReindexJobProgress);
-        });
-      }
+      documentsResult = await this.indexDocumentsForJob(job, data);
     }
 
-    // Index notes
     if (data.indexType === 'notes' || data.indexType === 'all') {
-      await job.updateProgress({
-        stage: 'notes',
-        overallProgress: data.indexType === 'all' ? 50 : 0,
-      } as ReindexJobProgress);
-
-      if (data.noteIds && data.noteIds.length > 0) {
-        // Index specific notes
-        notesResult = await this.indexer.indexNotesBatch(data.noteIds);
-      } else {
-        // Reindex all notes for tenant
-        notesResult = await this.indexer.reindexAllNotes(data.tenantId, (progress) => {
-          const baseProgress = data.indexType === 'all' ? 50 : 0;
-          const overallProgress = baseProgress + (progress.processed / progress.total) * 50;
-
-          job.updateProgress({
-            stage: 'notes',
-            notes: progress,
-            overallProgress,
-          } as ReindexJobProgress);
-        });
-      }
+      notesResult = await this.indexNotesForJob(job, data);
     }
 
     // Final progress update
@@ -303,6 +260,66 @@ export class ReindexWorker {
     await this.logReindexCompletion(data, result);
 
     return result;
+  }
+
+  /**
+   * Index the document side of a reindex job. Specific ids are tenant-scoped so
+   * a job cannot index another tenant's documents via a known id (IFC-156).
+   */
+  private async indexDocumentsForJob(
+    job: Job<ReindexJobData, ReindexJobResult>,
+    data: ReindexJobData
+  ): Promise<BatchIndexResult> {
+    await job.updateProgress({
+      stage: 'documents',
+      overallProgress: 0,
+    } as ReindexJobProgress);
+
+    if (data.documentIds && data.documentIds.length > 0) {
+      return this.indexer.indexBatch(data.documentIds, data.tenantId);
+    }
+
+    return this.indexer.reindexAll(data.tenantId, (progress) => {
+      const overallProgress =
+        data.indexType === 'all'
+          ? (progress.processed / progress.total) * 50
+          : (progress.processed / progress.total) * 100;
+
+      job.updateProgress({
+        stage: 'documents',
+        documents: progress,
+        overallProgress,
+      } as ReindexJobProgress);
+    });
+  }
+
+  /**
+   * Index the note side of a reindex job. Specific ids are tenant-scoped so a
+   * job cannot index another tenant's notes via a known id (IFC-156).
+   */
+  private async indexNotesForJob(
+    job: Job<ReindexJobData, ReindexJobResult>,
+    data: ReindexJobData
+  ): Promise<BatchIndexResult> {
+    await job.updateProgress({
+      stage: 'notes',
+      overallProgress: data.indexType === 'all' ? 50 : 0,
+    } as ReindexJobProgress);
+
+    if (data.noteIds && data.noteIds.length > 0) {
+      return this.indexer.indexNotesBatch(data.noteIds, data.tenantId);
+    }
+
+    return this.indexer.reindexAllNotes(data.tenantId, (progress) => {
+      const baseProgress = data.indexType === 'all' ? 50 : 0;
+      const overallProgress = baseProgress + (progress.processed / progress.total) * 50;
+
+      job.updateProgress({
+        stage: 'notes',
+        notes: progress,
+        overallProgress,
+      } as ReindexJobProgress);
+    });
   }
 
   /**
