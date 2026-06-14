@@ -220,15 +220,19 @@ export class DocumentIndexer {
   /**
    * Index a single document - generate embedding and update record
    */
-  async indexDocument(documentId: string): Promise<IndexResult> {
+  async indexDocument(documentId: string, tenantId?: string): Promise<IndexResult> {
     const startTime = Date.now();
 
     try {
-      // Fetch document using raw query to include extracted_text (IFC-155 field)
+      // Fetch document using raw query to include extracted_text (IFC-155 field).
+      // Tenant-scope the read (IFC-156): when a tenantId is supplied, a document
+      // belonging to another tenant must not resolve — even if its id is known.
+      const tenantScope = tenantId ?? null;
       const documents = await this.prisma.$queryRaw<DocumentToIndex[]>`
         SELECT id, title, description, extracted_text, tags
         FROM case_documents
         WHERE id = ${documentId}
+          AND (${tenantScope}::text IS NULL OR tenant_id = ${tenantScope})
         LIMIT 1
       `;
       const document = documents[0] ?? null;
@@ -287,13 +291,14 @@ export class DocumentIndexer {
   /**
    * Index a single contact note
    */
-  async indexNote(noteId: string): Promise<IndexResult> {
+  async indexNote(noteId: string, tenantId?: string): Promise<IndexResult> {
     const startTime = Date.now();
 
     try {
-      // Fetch note
-      const note = await this.prisma.contactNote.findUnique({
-        where: { id: noteId },
+      // Fetch note, tenant-scoped when a tenantId is supplied (IFC-156): a note
+      // owned by another tenant must not resolve even if its id is known.
+      const note = await this.prisma.contactNote.findFirst({
+        where: tenantId ? { id: noteId, tenantId } : { id: noteId },
         select: {
           id: true,
           content: true,
@@ -352,14 +357,14 @@ export class DocumentIndexer {
   /**
    * Index multiple documents in batch
    */
-  async indexBatch(documentIds: string[]): Promise<BatchIndexResult> {
+  async indexBatch(documentIds: string[], tenantId?: string): Promise<BatchIndexResult> {
     const startTime = Date.now();
     const results: IndexResult[] = [];
 
     // Process in chunks to respect rate limits
     for (let i = 0; i < documentIds.length; i += this.config.maxConcurrent) {
       const chunk = documentIds.slice(i, i + this.config.maxConcurrent);
-      const chunkResults = await Promise.all(chunk.map((id) => this.indexDocument(id)));
+      const chunkResults = await Promise.all(chunk.map((id) => this.indexDocument(id, tenantId)));
       results.push(...chunkResults);
 
       // Small delay between chunks to avoid rate limiting
@@ -383,13 +388,13 @@ export class DocumentIndexer {
   /**
    * Index multiple notes in batch
    */
-  async indexNotesBatch(noteIds: string[]): Promise<BatchIndexResult> {
+  async indexNotesBatch(noteIds: string[], tenantId?: string): Promise<BatchIndexResult> {
     const startTime = Date.now();
     const results: IndexResult[] = [];
 
     for (let i = 0; i < noteIds.length; i += this.config.maxConcurrent) {
       const chunk = noteIds.slice(i, i + this.config.maxConcurrent);
-      const chunkResults = await Promise.all(chunk.map((id) => this.indexNote(id)));
+      const chunkResults = await Promise.all(chunk.map((id) => this.indexNote(id, tenantId)));
       results.push(...chunkResults);
 
       if (i + this.config.maxConcurrent < noteIds.length) {

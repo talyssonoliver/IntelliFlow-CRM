@@ -29,7 +29,7 @@ const mockPrismaClient = {
     count: vi.fn(),
   },
   contactNote: {
-    findUnique: vi.fn(),
+    findFirst: vi.fn(),
     findMany: vi.fn(),
     count: vi.fn(),
   },
@@ -127,7 +127,7 @@ describe('DocumentIndexer', () => {
         content: 'This is a test note with important information.',
       };
 
-      mockPrismaClient.contactNote.findUnique.mockResolvedValue(mockNote);
+      mockPrismaClient.contactNote.findFirst.mockResolvedValue(mockNote);
       mockPrismaClient.$executeRaw.mockResolvedValue(1);
 
       const result = await indexer.indexNote(mockNote.id);
@@ -138,7 +138,7 @@ describe('DocumentIndexer', () => {
     });
 
     it('should handle note not found', async () => {
-      mockPrismaClient.contactNote.findUnique.mockResolvedValue(null);
+      mockPrismaClient.contactNote.findFirst.mockResolvedValue(null);
 
       const result = await indexer.indexNote('non-existent-note');
 
@@ -236,7 +236,7 @@ describe('DocumentIndexer', () => {
     it('should index multiple notes in batch', async () => {
       const noteIds = ['note-1', 'note-2', 'note-3'];
       noteIds.forEach((id) => {
-        mockPrismaClient.contactNote.findUnique.mockResolvedValueOnce({
+        mockPrismaClient.contactNote.findFirst.mockResolvedValueOnce({
           id,
           content: `Content for ${id}`,
         });
@@ -298,7 +298,7 @@ describe('DocumentIndexer', () => {
         { id: 'note-2' },
         { id: 'note-3' },
       ]);
-      mockPrismaClient.contactNote.findUnique.mockImplementation(({ where }) => {
+      mockPrismaClient.contactNote.findFirst.mockImplementation(({ where }) => {
         return Promise.resolve({
           id: where.id,
           content: `Content for ${where.id}`,
