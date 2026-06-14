@@ -68,7 +68,7 @@ class MockContactRepository implements Partial<ContactRepository> {
     return this.contacts.get(id.value) ?? null;
   }
 
-  async findByEmail(): Promise<Contact | null> {
+  async findByEmailInTenant(): Promise<Contact | null> {
     return null;
   }
 }
@@ -703,9 +703,9 @@ describe('ConvertLeadToContactUseCase', () => {
       const existingContact = existingContactResult.value;
       contactRepository.savedContact = existingContact;
 
-      // Override findByEmail to return existing contact
-      const originalFindByEmail = contactRepository.findByEmail.bind(contactRepository);
-      contactRepository.findByEmail = async () => existingContact;
+      // Override findByEmailInTenant to return existing contact
+      const originalFindByEmail = contactRepository.findByEmailInTenant.bind(contactRepository);
+      contactRepository.findByEmailInTenant = async () => existingContact;
 
       const input: ConvertLeadToContactInput = {
         leadId: lead.id.value,
@@ -719,7 +719,7 @@ describe('ConvertLeadToContactUseCase', () => {
       expect(result.error.code).toBe('CONTACT_EMAIL_EXISTS');
 
       // Restore original
-      contactRepository.findByEmail = originalFindByEmail;
+      contactRepository.findByEmailInTenant = originalFindByEmail;
     });
   });
 

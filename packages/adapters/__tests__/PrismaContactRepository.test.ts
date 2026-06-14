@@ -323,7 +323,7 @@ describe('PrismaContactRepository', () => {
     });
   });
 
-  describe('findByEmail()', () => {
+  describe('findByEmailInTenant()', () => {
     it('should return contact when found', async () => {
       const mockRecord = {
         id: testContactId.value,
@@ -345,10 +345,11 @@ describe('PrismaContactRepository', () => {
       findFirstMock.mockResolvedValue(mockRecord);
 
       const emailResult = Email.create('john.doe@example.com');
-      const result = await repository.findByEmail(emailResult.value);
+      const result = await repository.findByEmailInTenant(emailResult.value, 'tenant-123');
 
+      // #427: the query MUST be tenant-scoped (matches @@unique([tenantId, email])).
       expect(findFirstMock).toHaveBeenCalledWith({
-        where: { email: 'john.doe@example.com' },
+        where: { tenantId: 'tenant-123', email: 'john.doe@example.com' },
       });
 
       expect(result).not.toBeNull();
@@ -360,10 +361,10 @@ describe('PrismaContactRepository', () => {
       findFirstMock.mockResolvedValue(null);
 
       const emailResult = Email.create('nonexistent@example.com');
-      const result = await repository.findByEmail(emailResult.value);
+      const result = await repository.findByEmailInTenant(emailResult.value, 'tenant-123');
 
       expect(findFirstMock).toHaveBeenCalledWith({
-        where: { email: 'nonexistent@example.com' },
+        where: { tenantId: 'tenant-123', email: 'nonexistent@example.com' },
       });
       expect(result).toBeNull();
     });
@@ -389,16 +390,17 @@ describe('PrismaContactRepository', () => {
     });
   });
 
-  describe('existsByEmail()', () => {
+  describe('existsByEmailInTenant()', () => {
     it('should return true when email exists', async () => {
       const countMock = mockPrisma.contact.count;
       countMock.mockResolvedValue(1);
 
       const emailResult = Email.create('john.doe@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, 'tenant-123');
 
+      // #427: existence check MUST be tenant-scoped.
       expect(countMock).toHaveBeenCalledWith({
-        where: { email: 'john.doe@example.com' },
+        where: { tenantId: 'tenant-123', email: 'john.doe@example.com' },
       });
 
       expect(exists).toBe(true);
@@ -409,7 +411,7 @@ describe('PrismaContactRepository', () => {
       countMock.mockResolvedValue(0);
 
       const emailResult = Email.create('nonexistent@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, 'tenant-123');
 
       expect(exists).toBe(false);
     });

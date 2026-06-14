@@ -95,6 +95,10 @@ const SONAR_COVERAGE_EXCLUDE = [
   // no coverage expectation (same exclusion applied in the root vitest coverage config
   // for packages/adapters/src/external/OpenAIService.ts).
   /^packages\/adapters\/src\/external\/Mock[A-Za-z]+\.ts$/,
+  // Domain repository port — a pure TypeScript interface (no executable code), so it
+  // never appears in lcov; counting its signature/JSDoc lines as "uncovered" is a
+  // false negative (same nature as a .d.ts). (#427)
+  /^packages\/domain\/src\/crm\/contact\/ContactRepository\.ts$/,
   // Next.js App Router page.tsx files are thin route shells (their logic lives in
   // tested components). vitest.config.ts excludes apps/web/src/app/**/page.tsx from
   // coverage instrumentation, so they never appear in lcov; mirror that here — and in
