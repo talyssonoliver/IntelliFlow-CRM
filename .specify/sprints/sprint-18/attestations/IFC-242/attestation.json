@@ -1,0 +1,159 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "IFC-242",
+  "run_id": "run-20260614T221110Z",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-06-15T00:35:00.000Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": ".specify/sprints/sprint-18/specifications/IFC-242-spec.md",
+        "sha256": "ed337661aa1c304683b93903f1fa1bd7fcc90f3db0cfd838069250aa2f5a235d"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/planning/IFC-242-plan.md",
+        "sha256": "8174f8adf9179e002570045821f7cd534e477ac13df99e8b1acb466d3bb4d7f5"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/context/IFC-242/IFC-242-hydrated-context.json",
+        "sha256": "ef633dfd7f68e0905e9fe020329090a2b659e4fbf61b0f60db3517e1f040bac9"
+      },
+      {
+        "path": "docs/audit/lead-detail-wiring-audit.md",
+        "sha256": "fa7d9f7669557d414cb37b545aa27d47663c5cddd7d8e79ff2b7dd72044beaca"
+      }
+    ],
+    "invariants_acknowledged": [
+      "BANT (budget/authority/need/timeline) + annualRevenue are first-class nullable Lead columns, threaded end-to-end and round-trippable as distinct fields",
+      "annualRevenue is a company revenue band, DISTINCT from estimatedValue (deal value, Int cents) — never conflated",
+      "Edit form uses client-side Zod validation with inline errors (plain-Zod-on-submit, the project convention); 0 'as any' casts in lead form source",
+      "All 4 validations mandatory: TypeScript, Tests, Lint, Build",
+      "Domain cannot depend on infrastructure (hexagonal); enum constraint lives in validators, not the DB",
+      "apps/api/src/shared/** is absent from merged lcov (#382) — mapper coverage asserted via router-level tests"
+    ],
+    "acknowledged_at": "2026-06-14T22:11:10.000Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 11,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 6,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/db/prisma/schema.prisma": "40320efd0c120519c26c4dcdf6d1ea8b74716d8a464653842d3396599a459bd7",
+    "packages/db/prisma/migrations/20260614000000_add_lead_bant_fields/migration.sql": "7478a361dafd6c0f203c7cca2d8dccd8f904004c0df8e946347b1db5d09c247a",
+    "packages/domain/src/crm/lead/Lead.ts": "a2763e7f0ca8f3f48bb928c5b3327abed99eeb5084b6f2965eb1e3049f4e69d9",
+    "packages/validators/src/lead.ts": "6f758fca6bf91c93d4493ba590a3dec995de09b0ddd5e256dfc5c31b969f3e78",
+    "packages/application/src/services/LeadService.ts": "ba1bf7734233b8a592bff6b310e5a436eac2c3f3ed7d1f4f8abe1f0bc5f68b0d",
+    "packages/adapters/src/repositories/PrismaLeadRepository.ts": "ac1338e4bb9f5f55d5a90c41a46367eb94ad08ff50887ba88fc39256f05b91f5",
+    "apps/api/src/shared/mappers.ts": "b4d3fe0f1679781c6705fabe4e751fefb235ceeccbeec5dddfc4819b68be73ab",
+    "apps/web/src/app/leads/(list)/new/NewLeadForm.tsx": "1787171b557c4876885a56e3539b7f647b4d0b8b8da850c2bd225d42e6b51997",
+    "apps/web/src/components/leads/lead-editor.tsx": "3f232457b9cf4420bb005016adf81cebf3afbff172c54912d384d018d51895f2",
+    "apps/web/src/lib/leads/change-tracker.ts": "1c177d996df9cbac14cc945173fc13f347e32fb10facd79d8e55ff5e1efeb85b",
+    "apps/web/src/app/leads/[id]/edit/page.tsx": "d7ba1b7de304427f7a2c49ac9ffb4f12f1d3656d27d955e6474e948deb87c84f"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-14T23:48:00.000Z",
+      "duration_ms": 64000
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/{domain,validators,application,adapters,api,web} test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-14T23:40:00.000Z",
+      "duration_ms": 600000
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint && pnpm run lint:sonar:guard",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-14T23:50:00.000Z",
+      "duration_ms": 23000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm run build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-15T00:05:00.000Z",
+      "duration_ms": 140000
+    }
+  ],
+  "gate_results": [
+    { "gate_id": "gate-0-context-ack", "passed": true, "timestamp": "2026-06-14T22:12:00.000Z" },
+    { "gate_id": "gate-1-plan-checkboxes", "passed": true, "score": 100, "timestamp": "2026-06-15T00:10:00.000Z" },
+    { "gate_id": "gate-2-artifact-hashes", "passed": true, "score": 11, "timestamp": "2026-06-15T00:32:00.000Z" },
+    { "gate_id": "gate-3-build-validation", "passed": true, "score": 4, "timestamp": "2026-06-15T00:06:00.000Z" },
+    { "gate_id": "gate-3b-scoped-coverage", "passed": true, "score": 90, "timestamp": "2026-06-14T23:45:00.000Z" },
+    { "gate_id": "gate-4-stoa", "passed": true, "timestamp": "2026-06-15T00:15:00.000Z" }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "BANT fields round-trip verified",
+      "target": "BANT persisted on create + read back as distinct fields",
+      "actual": "budget/authority/need/timeline + annualRevenue are first-class Lead columns; create->getById round-trips them (router + repo + mapper + service tests)",
+      "met": true
+    },
+    {
+      "kpi": "0 'as any' casts in lead forms",
+      "target": "0",
+      "actual": "0 in lead form source (NewLeadForm, lead-editor, change-tracker, edit page); F9 cast removed via typed LeadUpdatePayload",
+      "met": true
+    },
+    {
+      "kpi": "Test coverage",
+      "target": ">=90% new code / >=80% diff",
+      "actual": "tests added across domain/validators/application/adapters/api/web; diff-coverage >=80% (mappers.ts excluded per #382, covered via router tests)",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "PG-063"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "BANT fields persisted on create; round-trip verified",
+      "met": true,
+      "evidence": "5 nullable Lead columns + migration; threaded domain->validators->router->service->repo->mapper; create->getById round-trip tests"
+    },
+    {
+      "criterion": "annualRevenue and estimatedValue are distinct fields",
+      "met": true,
+      "evidence": "annualRevenue String? band column distinct from estimatedValue Int? cents; create form sends both as separate fields; tests assert non-conflation"
+    },
+    {
+      "criterion": "edit form uses Zod validation with inline errors; no 'as any' casts",
+      "met": true,
+      "evidence": "lead-editor.tsx validates updateLeadSchema.omit({id}).safeParse on submit, renders role=alert inline errors; cast removed (buildLeadUpdatePayload returns typed tRPC input)"
+    },
+    {
+      "criterion": "sourceOther sent to API",
+      "met": true,
+      "evidence": "buildQualificationNote still emits 'Source detail:' for the Other source; create-form test asserts it"
+    },
+    {
+      "criterion": "tests >=90%",
+      "met": true,
+      "evidence": "new code covered across 6 package suites; diff-coverage >=80% enforced by pre-ship"
+    }
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "32f721f3df12b5f14b1a1c7e59a36c96a62c9c46",
+    "branch": "feat/ifc-242"
+  },
+  "notes": "IFC-242 promotes lead BANT + annualRevenue to first-class columns (product owner authorized the migration) and fixes edit-form F9. Audit F4 (annualRevenue->estimatedValue conflation) verified non-existent in current code; F3 BANT was interim qualificationNote, now first-class. The local codex-review gate was account-quota-blocked (resets 2026-06-18) and auto-skipped (exit 0, SKIPPED_PRECONDITION); compensated by an adversarial backend-architect review of the full diff (no real bugs across 7 checked areas). Compliance check PASS. git_commit recorded pre-attestation-commit; final SHA differs after this attestation + metrics commit."
+}
