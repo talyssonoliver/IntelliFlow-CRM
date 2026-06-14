@@ -150,7 +150,12 @@ export class ConvertLeadToContactUseCase {
 
     // 8. Check for contact email conflict
     const mergeStrategy = input.mergeStrategy ?? 'SKIP';
-    const existingContact = await this.contactRepository.findByEmail(lead.email);
+    // #427: scope the conflict check to the lead's tenant (DB unique is
+    // [tenantId, email]); an email-only check false-conflicts across tenants.
+    const existingContact = await this.contactRepository.findByEmailInTenant(
+      lead.email,
+      lead.tenantId
+    );
     if (existingContact && mergeStrategy === 'SKIP') {
       return Result.fail(new ContactEmailExistsError(lead.email.value));
     }

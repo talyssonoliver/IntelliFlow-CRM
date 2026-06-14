@@ -25,9 +25,9 @@ export class InMemoryContactRepository implements ContactRepository {
     return this.contacts.get(id.value) ?? null;
   }
 
-  async findByEmail(email: Email): Promise<Contact | null> {
+  async findByEmailInTenant(email: Email, tenantId: string): Promise<Contact | null> {
     for (const contact of this.contacts.values()) {
-      if (contact.email.equals(email)) {
+      if (contact.tenantId === tenantId && contact.email.equals(email)) {
         return contact;
       }
     }
@@ -59,9 +59,9 @@ export class InMemoryContactRepository implements ContactRepository {
     this.contacts.delete(id.value);
   }
 
-  async existsByEmail(email: Email): Promise<boolean> {
+  async existsByEmailInTenant(email: Email, tenantId: string): Promise<boolean> {
     for (const contact of this.contacts.values()) {
-      if (contact.email.equals(email)) {
+      if (contact.tenantId === tenantId && contact.email.equals(email)) {
         return true;
       }
     }

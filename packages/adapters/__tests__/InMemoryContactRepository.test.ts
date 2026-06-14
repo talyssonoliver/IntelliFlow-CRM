@@ -29,6 +29,7 @@ describe('InMemoryContactRepository', () => {
       department: 'Engineering',
       accountId: 'account-123',
       ownerId: 'owner-123',
+      tenantId: 'tenant-a',
     });
 
     testContact = contactResult.value;
@@ -140,12 +141,12 @@ describe('InMemoryContactRepository', () => {
     });
   });
 
-  describe('findByEmail()', () => {
+  describe('findByEmailInTenant()', () => {
     it('should return contact when email exists', async () => {
       await repository.save(testContact);
 
       const emailResult = Email.create('john.doe@example.com');
-      const found = await repository.findByEmail(emailResult.value);
+      const found = await repository.findByEmailInTenant(emailResult.value, testContact.tenantId);
 
       expect(found).not.toBeNull();
       expect(found?.id).toBe(testContactId);
@@ -156,7 +157,7 @@ describe('InMemoryContactRepository', () => {
       await repository.save(testContact);
 
       const emailResult = Email.create('nonexistent@example.com');
-      const found = await repository.findByEmail(emailResult.value);
+      const found = await repository.findByEmailInTenant(emailResult.value, testContact.tenantId);
 
       expect(found).toBeNull();
     });
@@ -165,7 +166,7 @@ describe('InMemoryContactRepository', () => {
       await repository.save(testContact);
 
       const emailResult = Email.create('JOHN.DOE@EXAMPLE.COM');
-      const found = await repository.findByEmail(emailResult.value);
+      const found = await repository.findByEmailInTenant(emailResult.value, testContact.tenantId);
 
       expect(found).not.toBeNull();
       expect(found?.id).toBe(testContactId);
@@ -177,7 +178,7 @@ describe('InMemoryContactRepository', () => {
       await repository.save(testContact);
 
       const emailResult = Email.create('john.doe@example.com');
-      const found = await repository.findByEmail(emailResult.value);
+      const found = await repository.findByEmailInTenant(emailResult.value, testContact.tenantId);
 
       expect(found).not.toBeNull();
       expect(found?.email.value).toBe('john.doe@example.com');
@@ -185,9 +186,31 @@ describe('InMemoryContactRepository', () => {
 
     it('should return null for empty repository', async () => {
       const emailResult = Email.create('john.doe@example.com');
-      const found = await repository.findByEmail(emailResult.value);
+      const found = await repository.findByEmailInTenant(emailResult.value, testContact.tenantId);
 
       expect(found).toBeNull();
+    });
+
+    // #427: tenant scoping — the same email may exist in multiple tenants
+    // (DB unique is [tenantId, email]); the lookup must not cross tenants.
+    it('does not return a contact with the same email from another tenant', async () => {
+      await repository.save(testContact); // tenant-a / john.doe@example.com
+      const otherTenant = Contact.create({
+        email: 'john.doe@example.com',
+        firstName: 'Jane',
+        lastName: 'Roe',
+        ownerId: 'owner-b',
+        tenantId: 'tenant-b',
+      }).value;
+      await repository.save(otherTenant);
+
+      const email = Email.create('john.doe@example.com').value;
+      const foundInA = await repository.findByEmailInTenant(email, 'tenant-a');
+      const foundInB = await repository.findByEmailInTenant(email, 'tenant-b');
+
+      expect(foundInA?.id).toBe(testContactId); // tenant-a's own contact
+      expect(foundInB?.id).toBe(otherTenant.id); // tenant-b's, not leaked into A
+      expect(foundInA?.id).not.toBe(foundInB?.id);
     });
   });
 
@@ -483,19 +506,25 @@ describe('InMemoryContactRepository', () => {
     });
   });
 
-  describe('existsByEmail()', () => {
+  describe('existsByEmailInTenant()', () => {
     it('should return true when email exists', async () => {
       await repository.save(testContact);
 
       const emailResult = Email.create('john.doe@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(
+        emailResult.value,
+        testContact.tenantId
+      );
 
       expect(exists).toBe(true);
     });
 
     it('should return false when email does not exist', async () => {
       const emailResult = Email.create('nonexistent@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(
+        emailResult.value,
+        testContact.tenantId
+      );
 
       expect(exists).toBe(false);
     });
@@ -504,7 +533,10 @@ describe('InMemoryContactRepository', () => {
       await repository.save(testContact);
 
       const emailResult = Email.create('JOHN.DOE@EXAMPLE.COM');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(
+        emailResult.value,
+        testContact.tenantId
+      );
 
       expect(exists).toBe(true);
     });
@@ -514,16 +546,39 @@ describe('InMemoryContactRepository', () => {
       await repository.delete(testContactId);
 
       const emailResult = Email.create('john.doe@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(
+        emailResult.value,
+        testContact.tenantId
+      );
 
       expect(exists).toBe(false);
     });
 
     it('should return false for empty repository', async () => {
       const emailResult = Email.create('john.doe@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(
+        emailResult.value,
+        testContact.tenantId
+      );
 
       expect(exists).toBe(false);
+    });
+
+    // #427: an email present only in another tenant must NOT count as existing
+    // for this tenant (else create false-conflicts + leaks across tenants).
+    it('is false when the email exists only in another tenant', async () => {
+      const otherTenant = Contact.create({
+        email: 'john.doe@example.com',
+        firstName: 'Jane',
+        lastName: 'Roe',
+        ownerId: 'owner-b',
+        tenantId: 'tenant-b',
+      }).value;
+      await repository.save(otherTenant);
+
+      const email = Email.create('john.doe@example.com').value;
+      expect(await repository.existsByEmailInTenant(email, 'tenant-a')).toBe(false);
+      expect(await repository.existsByEmailInTenant(email, 'tenant-b')).toBe(true);
     });
   });
 
@@ -665,7 +720,10 @@ describe('InMemoryContactRepository', () => {
 
       // Find by email
       const emailResult = Email.create('john.doe@example.com');
-      const foundByEmail = await repository.findByEmail(emailResult.value);
+      const foundByEmail = await repository.findByEmailInTenant(
+        emailResult.value,
+        testContact.tenantId
+      );
       expect(foundByEmail).not.toBeNull();
 
       // Update contact info

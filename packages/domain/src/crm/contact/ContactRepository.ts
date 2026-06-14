@@ -22,9 +22,14 @@ export interface ContactRepository {
   findById(id: ContactId): Promise<Contact | null>;
 
   /**
-   * Find a contact by email
+   * Find a contact by email WITHIN a tenant.
+   *
+   * The Contact table is uniquely keyed on `@@unique([tenantId, email])`, so an
+   * email-only lookup spans tenants and (a) raises false "already in use"
+   * conflicts and (b) leaks that another tenant holds the email. Always scope
+   * uniqueness/lookup checks by tenant. (#427)
    */
-  findByEmail(email: Email): Promise<Contact | null>;
+  findByEmailInTenant(email: Email, tenantId: string): Promise<Contact | null>;
 
   /**
    * Find all contacts for an owner
@@ -47,9 +52,11 @@ export interface ContactRepository {
   delete(id: ContactId): Promise<void>;
 
   /**
-   * Check if email exists
+   * Check if a contact with this email exists WITHIN a tenant.
+   * Tenant-scoped to match `@@unique([tenantId, email])` — an email-only check
+   * leaks/false-conflicts across tenants. (#427)
    */
-  existsByEmail(email: Email): Promise<boolean>;
+  existsByEmailInTenant(email: Email, tenantId: string): Promise<boolean>;
 
   /**
    * Count contacts by account
