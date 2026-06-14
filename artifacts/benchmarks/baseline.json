@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-06-13T09:34:27.232Z",
+  "timestamp": "2026-06-14T20:55:51.966Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,8 +1016,8 @@
   },
   "api_inventory": {
     "total_routers": 61,
-    "total_endpoints": 531,
-    "total_queries": 239,
+    "total_endpoints": 532,
+    "total_queries": 240,
     "total_mutations": 292,
     "routers": [
       {
@@ -1039,16 +1039,16 @@
         "mutations": 15
       },
       {
+        "name": "opportunity",
+        "endpoints": 20,
+        "queries": 10,
+        "mutations": 10
+      },
+      {
         "name": "appointments",
         "endpoints": 19,
         "queries": 7,
         "mutations": 12
-      },
-      {
-        "name": "opportunity",
-        "endpoints": 19,
-        "queries": 9,
-        "mutations": 10
       },
       {
         "name": "auth",
@@ -5525,6 +5525,11 @@
         "method": "GET",
         "description": "List opportunitys with pagination",
         "critical": true
+      },
+      {
+        "name": "opportunity.filterOptions",
+        "method": "GET",
+        "description": "Get filter options"
       },
       {
         "name": "opportunity.update",
