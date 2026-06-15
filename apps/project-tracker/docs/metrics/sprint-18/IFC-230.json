@@ -54,8 +54,16 @@
   },
   "validations": [
     { "type": "TypeScript", "command": "pnpm run typecheck", "result": "PASS" },
-    { "type": "Tests", "command": "pnpm --filter @intelliflow/web test (10821) + lead suites (130)", "result": "PASS" },
-    { "type": "Lint", "command": "pnpm run lint + lint:sonar:guard", "result": "PASS" },
+    {
+      "type": "Tests",
+      "command": "pnpm --filter @intelliflow/web test (10821) + lead suites (130)",
+      "result": "PASS"
+    },
+    {
+      "type": "Lint",
+      "command": "pnpm run lint + lint:sonar:guard",
+      "result": "PASS"
+    },
     { "type": "Build", "command": "pnpm run build", "result": "PASS" }
   ],
   "blockers": [],

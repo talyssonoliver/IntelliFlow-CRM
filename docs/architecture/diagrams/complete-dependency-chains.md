@@ -2297,11 +2297,13 @@ apps/web/src/lib/leads/change-tracker.ts    (pure: dirty-detect + minimal-patch 
           └─ apps/web/src/app/leads/[id]/edit/page.tsx      (data fetch + api.lead.update)
 ```
 
-Status: ✅ IFC-230 (sprint 18). Both `/leads/new` and `/leads/[id]/edit` now render the
-single shared `LeadForm.tsx` (one validation path, consistent styling, BANT parity in both).
-The create wizard UX is preserved (NewLeadForm shell owns step nav/auth/enrichment); edit gains
-BANT inputs that round-trip via `change-tracker`. Logic lives in the instrumented
-LeadForm/change-tracker/lead-form-utils (page shells excluded by the app-page convention).
+Status: ✅ IFC-230 (sprint 18). Both `/leads/new` and `/leads/[id]/edit` now
+render the single shared `LeadForm.tsx` (one validation path, consistent
+styling, BANT parity in both). The create wizard UX is preserved (NewLeadForm
+shell owns step nav/auth/enrichment); edit gains BANT inputs that round-trip via
+`change-tracker`. Logic lives in the instrumented
+LeadForm/change-tracker/lead-form-utils (page shells excluded by the app-page
+convention).
 
 ## Lead Settings Dependency Chain
 
