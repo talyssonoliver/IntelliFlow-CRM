@@ -160,6 +160,18 @@ describe('buildOpportunityListInput (F-10)', () => {
     expect(result.stage).toBeUndefined();
   });
 
+  it('drops a zero or negative value bound (server requires positive) (#451)', () => {
+    const result = buildOpportunityListInput({ minValue: 0, maxValue: -5 }, now);
+    expect(result.minValue).toBeUndefined();
+    expect(result.maxValue).toBeUndefined();
+  });
+
+  it('keeps a positive value bound', () => {
+    const result = buildOpportunityListInput({ minValue: 1, maxValue: 100 }, now);
+    expect(result.minValue).toBe(1);
+    expect(result.maxValue).toBe(100);
+  });
+
   it('expands a dateRange into dateFrom/dateTo', () => {
     const result = buildOpportunityListInput({ dateRange: 'this_month' }, now);
     expect(result.dateFrom).toEqual(new Date(2026, 5, 1));
