@@ -148,38 +148,41 @@ function labelFor(options: { value: string; label: string }[], value: string): s
   return options.find((option) => option.value === value)?.label ?? value;
 }
 
+// IFC-242: the createLeadSchema enum values for the BANT timeline + annualRevenue
+// bands. `.find()` narrows the form's raw string to the literal union (or undefined)
+// with no cast — only a value that is actually one of the enum members is sent.
+const TIMELINE_VALUES = ['immediate', 'short', 'medium', 'long', 'unknown'] as const;
+const REVENUE_BAND_VALUES = ['<1M', '1M-10M', '10M-50M', '50M-100M', '100M+'] as const;
+const toTimeline = (value: string) => TIMELINE_VALUES.find((v) => v === value.trim());
+const toRevenueBand = (value: string) => REVENUE_BAND_VALUES.find((v) => v === value.trim());
+
 // Mirrors the lead.addNote contract (`content: z.string().max(5000)`). The note
 // is truncated to this budget client-side so an oversized free-text qualification
 // note is persisted (truncated) rather than rejected by the API and lost.
 const NOTE_MAX_LENGTH = 5000;
 
 /**
- * Build a human-readable note from the qualification / company-detail fields the
- * `lead.create` schema cannot persist yet (BANT + company profile + the required
- * "Other" source detail). Returns '' when the user filled none of them.
+ * Build a human-readable note from the company-detail / free-text fields that
+ * have no first-class `lead.create` column yet (the required "Other" source
+ * detail, company size, industry, and free-text qualification notes). Returns ''
+ * when the user filled none of them.
  *
- * This is interim persistence until IFC-242 / IFC-004 add first-class Lead
- * fields: without it these user-entered values would be silently dropped on
- * create. Kept pure (no hooks) so it is unit-testable.
+ * IFC-242 promoted BANT (budget/authority/need/timeline) and annualRevenue to
+ * first-class Lead columns — they are now sent as structured fields in the create
+ * payload (see handleSubmit), NOT serialized here, to avoid double-persistence.
+ * companySize/industry remain note-only pending dedicated columns (IFC-004/246).
+ * Kept pure (no hooks) so it is unit-testable.
  */
 function buildQualificationNote(formData: LeadFormData): string {
   const lines: string[] = [];
   if (formData.source === 'other' && formData.sourceOther.trim()) {
     lines.push(`Source detail: ${formData.sourceOther.trim()}`);
   }
-  if (formData.budget.trim()) lines.push(`Budget: ${formData.budget.trim()}`);
-  if (formData.authority.trim()) lines.push(`Authority: ${formData.authority.trim()}`);
-  if (formData.need.trim()) lines.push(`Need: ${formData.need.trim()}`);
-  if (formData.timeline.trim())
-    lines.push(`Timeline: ${labelFor(timelineOptions, formData.timeline)}`);
   if (formData.companySize.trim()) {
     lines.push(`Company size: ${labelFor(companySizeOptions, formData.companySize)}`);
   }
   if (formData.industry.trim())
     lines.push(`Industry: ${labelFor(industryOptions, formData.industry)}`);
-  if (formData.annualRevenue.trim()) {
-    lines.push(`Annual revenue: ${labelFor(revenueOptions, formData.annualRevenue)}`);
-  }
   if (formData.qualificationNotes.trim())
     lines.push(`Notes: ${formData.qualificationNotes.trim()}`);
   if (lines.length === 0) return '';
@@ -385,22 +388,20 @@ export default function NewLeadForm() {
     try {
       // Map form data to API schema (createLeadSchema from @intelliflow/validators)
       // Schema-supported fields: email, firstName, lastName, company, title, phone, source,
-      //   location, website, avatarUrl, lastContactedAt, estimatedValue, tags.
+      //   location, website, avatarUrl, lastContactedAt, estimatedValue, tags,
+      //   budget, authority, need, timeline, annualRevenue (IFC-242 — first-class BANT).
       //
-      // BANT fields NOT yet in schema (tracked for schema extension in IFC-004):
-      //   budget, authority, need, timeline, companySize, industry, annualRevenue,
-      //   qualificationNotes — these are collected in the form UI but not sent to the API.
-      //   Schema extension task: add a `metadata` JSON column or dedicated BANT fields to Lead.
+      // Still note-only (no column yet, tracked for IFC-004/246): companySize, industry,
+      //   the "Other" source detail, and free-text qualificationNotes.
 
       // Helper to convert empty strings to undefined
       const toOptional = (value: string): string | undefined =>
         value.trim() ? value.trim() : undefined;
 
-      // The qualification / company-detail + required "Other" source fields have
-      // no first-class column yet (IFC-242 / IFC-004). They ride along on create
-      // as `qualificationNote`, which the server persists atomically with the
-      // lead (rolling the lead back if the note write fails) — so the user's
-      // input is never silently dropped by a best-effort second write.
+      // The remaining company-detail + required "Other" source + free-text notes
+      // have no first-class column yet. They ride along on create as
+      // `qualificationNote`, which the server persists atomically with the lead
+      // (rolling the lead back if the note write fails) — never silently dropped.
       const qualificationNote = buildQualificationNote(formData);
 
       const leadData = {
@@ -413,9 +414,16 @@ export default function NewLeadForm() {
         source: mapSourceToEnum(formData.source),
         // Lead 360 fields (schema-supported)
         website: toOptional(formData.website),
-        // estimatedValue (the lead's deal value, in cents) is left unset: this form
-        // has no deal-value input. The company revenue band, company size, industry
-        // and BANT inputs are UI-only pending dedicated schema fields (see IFC-242).
+        // BANT qualification fields (IFC-242) — first-class structured columns.
+        // timeline + annualRevenue send the raw select VALUE (not the human label),
+        // matching the createLeadSchema enums. annualRevenue (company revenue band)
+        // is DISTINCT from estimatedValue (the deal value, in cents), which this
+        // form has no input for and deliberately leaves unset.
+        budget: toOptional(formData.budget),
+        authority: toOptional(formData.authority),
+        need: toOptional(formData.need),
+        timeline: toTimeline(formData.timeline),
+        annualRevenue: toRevenueBand(formData.annualRevenue),
         ...(qualificationNote ? { qualificationNote } : {}),
       };
 

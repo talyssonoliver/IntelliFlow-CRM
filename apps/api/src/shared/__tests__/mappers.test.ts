@@ -43,6 +43,45 @@ describe('mapLeadToResponse — Lead 360 fields (IFC-004)', () => {
     expect(dto.lastContactedAt).toBeNull();
     expect(dto.tags).toEqual([]);
   });
+
+  it('surfaces BANT + annualRevenue distinct from estimatedValue (IFC-242)', () => {
+    const lead = Lead.create({
+      email: 'bant@example.com',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+      budget: '$50k-$100k',
+      authority: 'Decision maker',
+      need: 'CRM solution',
+      timeline: 'immediate',
+      annualRevenue: '1M-10M',
+    }).value;
+
+    const dto = mapLeadToResponse(lead);
+
+    expect(dto.budget).toBe('$50k-$100k');
+    expect(dto.authority).toBe('Decision maker');
+    expect(dto.need).toBe('CRM solution');
+    expect(dto.timeline).toBe('immediate');
+    expect(dto.annualRevenue).toBe('1M-10M');
+    // company revenue band is NOT the deal value
+    expect(dto.estimatedValue).toBeNull();
+  });
+
+  it('defaults missing BANT fields to null (IFC-242)', () => {
+    const lead = Lead.create({
+      email: 'nobant@example.com',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+    }).value;
+
+    const dto = mapLeadToResponse(lead);
+
+    expect(dto.budget).toBeNull();
+    expect(dto.authority).toBeNull();
+    expect(dto.need).toBeNull();
+    expect(dto.timeline).toBeNull();
+    expect(dto.annualRevenue).toBeNull();
+  });
 });
 
 describe('mapAccountToResponse — website serialization (IFC-270 B-13)', () => {

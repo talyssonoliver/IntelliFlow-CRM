@@ -49,6 +49,12 @@ function demonstratePrismaTypes() {
     estimatedValue: 0,
     tags: [],
     isStarred: false, // PG-059
+    // BANT qualification fields (IFC-242)
+    budget: null,
+    authority: null,
+    need: null,
+    timeline: null,
+    annualRevenue: null,
     accountId: null, // IFC-227
   };
 

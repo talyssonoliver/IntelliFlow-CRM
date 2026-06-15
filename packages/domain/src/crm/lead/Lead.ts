@@ -72,6 +72,12 @@ interface LeadProps {
   lastContactedAt?: Date;
   estimatedValue?: number; // In cents
   tags?: string[];
+  // BANT qualification fields (IFC-242) — first-class, distinct from estimatedValue
+  budget?: string;
+  authority?: string;
+  need?: string;
+  timeline?: string;
+  annualRevenue?: string; // company revenue band, NOT a deal value
 }
 
 export interface CreateLeadProps {
@@ -91,6 +97,12 @@ export interface CreateLeadProps {
   lastContactedAt?: Date;
   estimatedValue?: number; // In cents
   tags?: string[];
+  // BANT qualification fields (IFC-242)
+  budget?: string;
+  authority?: string;
+  need?: string;
+  timeline?: string;
+  annualRevenue?: string; // company revenue band, NOT a deal value
 }
 
 /**
@@ -187,6 +199,27 @@ export class Lead extends AggregateRoot<LeadId> {
     return this.props.tags;
   }
 
+  // BANT qualification fields (IFC-242)
+  get budget(): string | undefined {
+    return this.props.budget;
+  }
+
+  get authority(): string | undefined {
+    return this.props.authority;
+  }
+
+  get need(): string | undefined {
+    return this.props.need;
+  }
+
+  get timeline(): string | undefined {
+    return this.props.timeline;
+  }
+
+  get annualRevenue(): string | undefined {
+    return this.props.annualRevenue;
+  }
+
   get isConverted(): boolean {
     return this.props.status === 'CONVERTED';
   }
@@ -241,6 +274,12 @@ export class Lead extends AggregateRoot<LeadId> {
       lastContactedAt: props.lastContactedAt,
       estimatedValue: props.estimatedValue,
       tags: props.tags,
+      // BANT qualification fields (IFC-242)
+      budget: props.budget,
+      authority: props.authority,
+      need: props.need,
+      timeline: props.timeline,
+      annualRevenue: props.annualRevenue,
     });
 
     lead.addDomainEvent(new LeadCreatedEvent(leadId, emailResult.value, lead.source, lead.ownerId));
@@ -341,6 +380,11 @@ export class Lead extends AggregateRoot<LeadId> {
         | 'lastContactedAt'
         | 'estimatedValue'
         | 'tags'
+        | 'budget'
+        | 'authority'
+        | 'need'
+        | 'timeline'
+        | 'annualRevenue'
       >
     >
   ): void {

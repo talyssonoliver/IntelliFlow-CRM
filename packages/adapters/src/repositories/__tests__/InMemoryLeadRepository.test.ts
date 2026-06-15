@@ -42,6 +42,28 @@ describe('InMemoryLeadRepository', () => {
       expect(retrieved?.email.value).toBe('john@example.com');
     });
 
+    it('should round-trip BANT + annualRevenue fields (IFC-242)', async () => {
+      const lead = Lead.create({
+        email: 'bant@example.com',
+        source: 'WEBSITE',
+        ownerId: 'owner-123',
+        budget: '$50k-$100k',
+        authority: 'Decision maker',
+        need: 'CRM solution',
+        timeline: 'immediate',
+        annualRevenue: '1M-10M',
+      }).value;
+
+      await repository.save(lead);
+
+      const retrieved = await repository.findById(lead.id);
+      expect(retrieved?.budget).toBe('$50k-$100k');
+      expect(retrieved?.authority).toBe('Decision maker');
+      expect(retrieved?.need).toBe('CRM solution');
+      expect(retrieved?.timeline).toBe('immediate');
+      expect(retrieved?.annualRevenue).toBe('1M-10M');
+    });
+
     it('should update an existing lead', async () => {
       const leadResult = createTestLead('john@example.com');
       const lead = leadResult.value;

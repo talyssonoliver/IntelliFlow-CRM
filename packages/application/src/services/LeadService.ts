@@ -541,6 +541,12 @@ export class LeadService {
       lastContactedAt?: Date;
       estimatedValue?: number;
       tags?: string[];
+      // BANT qualification fields (IFC-242)
+      budget?: string;
+      authority?: string;
+      need?: string;
+      timeline?: string;
+      annualRevenue?: string;
     }
   ): Promise<Result<Lead, DomainError>> {
     const leadIdResult = LeadId.create(leadId);
@@ -571,6 +577,11 @@ export class LeadService {
       'lastContactedAt',
       'estimatedValue',
       'tags',
+      'budget',
+      'authority',
+      'need',
+      'timeline',
+      'annualRevenue',
     ] as const;
     for (const field of simpleFields) {
       if (updates[field] !== undefined) {

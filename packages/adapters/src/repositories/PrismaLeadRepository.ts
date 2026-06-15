@@ -60,6 +60,12 @@ function recordToLeadProps(record: LeadRecord) {
     estimatedValue: record.estimatedValue ?? undefined,
     lastContactedAt: record.lastContactedAt ?? undefined,
     tags: record.tags,
+    // BANT qualification fields (IFC-242)
+    budget: record.budget ?? undefined,
+    authority: record.authority ?? undefined,
+    need: record.need ?? undefined,
+    timeline: record.timeline ?? undefined,
+    annualRevenue: record.annualRevenue ?? undefined,
     score: {
       value: record.score,
       confidence: 1, // Prisma stores only the score value; default confidence
@@ -103,6 +109,12 @@ export class PrismaLeadRepository implements LeadRepository {
       estimatedValue: lead.estimatedValue ?? null,
       lastContactedAt: lead.lastContactedAt ?? null,
       tags: lead.tags ?? [],
+      // BANT qualification fields (IFC-242) — distinct from estimatedValue
+      budget: lead.budget ?? null,
+      authority: lead.authority ?? null,
+      need: lead.need ?? null,
+      timeline: lead.timeline ?? null,
+      annualRevenue: lead.annualRevenue ?? null,
       ownerId: lead.ownerId,
       tenantId: lead.tenantId,
       createdAt: lead.createdAt,

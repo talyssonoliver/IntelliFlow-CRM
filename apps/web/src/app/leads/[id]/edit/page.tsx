@@ -17,6 +17,7 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { invalidateLeadsCache } from '@/app/leads/(list)/actions';
 import { LeadEditor } from '@/components/leads/lead-editor';
+import type { LeadUpdatePayload } from '@/lib/leads/change-tracker';
 
 const LEAD_EDIT_SKELETON_KEYS = [
   'le-skel-0',
@@ -89,10 +90,10 @@ export default function EditLeadPage() {
     },
   });
 
-  // LeadEditor builds a minimal patch (Record<string, unknown>); the lead.update
-  // input type is narrower, so cast at this boundary.
-  const handleSave = (payload: Record<string, unknown>) =>
-    updateLead.mutateAsync(payload as Parameters<typeof updateLead.mutateAsync>[0]);
+  // F9 (IFC-242): LeadEditor validates the patch with updateLeadSchema and hands
+  // back a fully-typed LeadUpdatePayload (the tRPC input shape), so this boundary
+  // needs no cast.
+  const handleSave = (payload: LeadUpdatePayload) => updateLead.mutateAsync(payload);
 
   // Loading states
   if (authLoading || isLoading) {

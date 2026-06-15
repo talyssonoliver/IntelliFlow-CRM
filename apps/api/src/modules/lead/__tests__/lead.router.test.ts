@@ -108,6 +108,76 @@ describe('Lead Router', () => {
       });
     });
 
+    it('forwards structured BANT + annualRevenue to the service and surfaces them on the response (IFC-242)', async () => {
+      const input = {
+        email: 'bant@example.com',
+        source: 'WEBSITE' as const,
+        budget: '$50k-$100k',
+        authority: 'Decision maker',
+        need: 'CRM solution',
+        timeline: 'immediate' as const,
+        annualRevenue: '1M-10M' as const,
+      };
+      // Domain-lead-shaped mock so the router's mapLeadToResponse runs inline.
+      const mockDomainLead = {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: input.email },
+        firstName: null,
+        lastName: null,
+        company: null,
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 0, confidence: 0, tier: 'cold' as const },
+        location: null,
+        website: null,
+        avatarUrl: null,
+        estimatedValue: undefined,
+        lastContactedAt: null,
+        tags: [],
+        budget: input.budget,
+        authority: input.authority,
+        need: input.need,
+        timeline: input.timeline,
+        annualRevenue: input.annualRevenue,
+        ownerId: TEST_UUIDS.user1,
+        tenantId: TEST_UUIDS.tenant,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+      const createLeadSpy = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockDomainLead,
+      });
+      ctx.services!.lead!.createLead = createLeadSpy;
+
+      const result = await callerWithService.create(input);
+
+      // Router forwards the structured fields to the service (not packed in a note).
+      expect(createLeadSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          budget: '$50k-$100k',
+          authority: 'Decision maker',
+          need: 'CRM solution',
+          timeline: 'immediate',
+          annualRevenue: '1M-10M',
+        }),
+        undefined
+      );
+      // Response surfaces them, distinct from estimatedValue (the deal value).
+      expect(result.budget).toBe('$50k-$100k');
+      expect(result.authority).toBe('Decision maker');
+      expect(result.need).toBe('CRM solution');
+      expect(result.timeline).toBe('immediate');
+      expect(result.annualRevenue).toBe('1M-10M');
+      expect(result.estimatedValue).toBeNull();
+    });
+
     it('should throw for invalid email', async () => {
       const input = {
         email: 'invalid-email',
@@ -148,6 +218,45 @@ describe('Lead Router', () => {
       expect(result.id).toBe(TEST_UUIDS.lead1);
       expect(result.email).toBe(mockLead.email);
       expect(prismaMock.lead.findUnique).toHaveBeenCalled();
+    });
+
+    it('round-trips BANT + annualRevenue distinct from estimatedValue (IFC-242)', async () => {
+      const mockLeadWithBant = {
+        ...mockLead,
+        budget: '$50k-$100k',
+        authority: 'Decision maker',
+        need: 'CRM solution',
+        timeline: 'immediate',
+        annualRevenue: '1M-10M',
+        estimatedValue: null,
+        owner: {
+          id: TEST_UUIDS.user1,
+          email: 'user@example.com',
+          name: 'Test User',
+          avatarUrl: null,
+        },
+        activities: [],
+        notes: [],
+        files: [],
+        aiInsight: null,
+        aiInsights: [],
+        tasks: [],
+      };
+
+      prismaMock.lead.findUnique.mockResolvedValue(mockLeadWithBant as any);
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      const result = await callerWithService.getById({ id: TEST_UUIDS.lead1 });
+
+      expect(result.budget).toBe('$50k-$100k');
+      expect(result.authority).toBe('Decision maker');
+      expect(result.need).toBe('CRM solution');
+      expect(result.timeline).toBe('immediate');
+      expect(result.annualRevenue).toBe('1M-10M');
+      // company revenue band must not be conflated with the deal value
+      expect(result.estimatedValue).toBeNull();
     });
 
     it('should throw NOT_FOUND for non-existent lead', async () => {

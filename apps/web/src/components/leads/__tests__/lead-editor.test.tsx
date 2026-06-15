@@ -186,4 +186,41 @@ describe('LeadEditor', () => {
     const save = screen.getByText('Saving...').closest('button') as HTMLButtonElement;
     expect(save.disabled).toBe(true);
   });
+
+  // F9 (IFC-242): client-side Zod validation with inline errors.
+  it('shows an inline error and does not call onSave when a field is invalid', async () => {
+    const onSave = vi.fn();
+    renderEditor({ onSave });
+    const website = screen.getByLabelText('Website') as HTMLInputElement;
+    // website is z.string().max(200) — 201 chars must fail validation.
+    fireEvent.change(website, { target: { value: 'a'.repeat(201) } });
+    fireEvent.submit(website.closest('form')!);
+
+    const error = await screen.findByRole('alert');
+    expect(error.id).toBe('website-error');
+    expect(website.getAttribute('aria-invalid')).toBe('true');
+    expect(website.getAttribute('aria-describedby')).toBe('website-error');
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('clears the inline error once the field is corrected and then saves', async () => {
+    const onSave = vi.fn().mockResolvedValue({});
+    renderEditor({ onSave });
+    const website = screen.getByLabelText('Website') as HTMLInputElement;
+    fireEvent.change(website, { target: { value: 'a'.repeat(201) } });
+    fireEvent.submit(website.closest('form')!);
+    await screen.findByRole('alert');
+
+    // Correct the field — the error clears on change.
+    fireEvent.change(website, { target: { value: 'https://valid.example.com' } });
+    expect(screen.queryByRole('alert')).toBeNull();
+
+    fireEvent.submit(website.closest('form')!);
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith({
+        id: 'test-lead-id',
+        website: 'https://valid.example.com',
+      })
+    );
+  });
 });

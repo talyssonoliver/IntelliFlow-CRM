@@ -32,6 +32,12 @@ export function mapLeadToResponse(lead: Lead) {
     estimatedValue: lead.estimatedValue ?? null,
     lastContactedAt: lead.lastContactedAt ?? null,
     tags: lead.tags ?? [],
+    // BANT qualification fields (IFC-242) — first-class, distinct from estimatedValue
+    budget: lead.budget ?? null,
+    authority: lead.authority ?? null,
+    need: lead.need ?? null,
+    timeline: lead.timeline ?? null,
+    annualRevenue: lead.annualRevenue ?? null,
     ownerId: lead.ownerId,
     tenantId: lead.tenantId,
     createdAt: lead.createdAt,
