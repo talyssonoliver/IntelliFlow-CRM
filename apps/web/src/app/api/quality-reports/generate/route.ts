@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'node:child_process';
+import { exec, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
+import { buildLighthouseArgs } from './lighthouse-args';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 interface GenerateResult {
   report: string;
@@ -258,9 +260,11 @@ async function generateLighthouseReport(
       };
     }
 
-    // Run Lighthouse
-    const { stdout: lighthouseOutput } = await execAsync(
-      `npx lighthouse ${url} --output json --output html --output-path "${path.join(lighthouseDir, 'lighthouse-report')}" --chrome-flags="--headless --no-sandbox --disable-gpu"`,
+    // Run Lighthouse. The URL is passed as a discrete argv element via execFile
+    // (no shell), so it cannot inject shell commands (CodeQL #2257).
+    const { stdout: lighthouseOutput } = await execFileAsync(
+      'npx',
+      buildLighthouseArgs(url, path.join(lighthouseDir, 'lighthouse-report')),
       {
         cwd: projectRoot,
         timeout: 120000, // 2 minute timeout

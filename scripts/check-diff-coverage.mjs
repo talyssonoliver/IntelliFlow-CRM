@@ -99,6 +99,12 @@ const SONAR_COVERAGE_EXCLUDE = [
   // never appears in lcov; counting its signature/JSDoc lines as "uncovered" is a
   // false negative (same nature as a .d.ts). (#427)
   /^packages\/domain\/src\/crm\/contact\/ContactRepository\.ts$/,
+  // The Supabase client module is vi.mock()'d by 7+ api test files, so the real
+  // module is shadowed across the merged api coverage run and never appears in
+  // lcov (true on origin/main too). Its own supabase.test.ts covers it in
+  // isolation, but the merge cannot — counting changed lines as 0% is the same
+  // false negative as a mock-shadowed/absent file. Mirror sonar.coverage.exclusions.
+  /^apps\/api\/src\/lib\/supabase\.ts$/,
   // Next.js App Router page.tsx files are thin route shells (their logic lives in
   // tested components). vitest.config.ts excludes apps/web/src/app/**/page.tsx from
   // coverage instrumentation, so they never appear in lcov; mirror that here — and in
