@@ -61,9 +61,18 @@ describe('EmailMessage DOMPurify sanitization', () => {
     expect(container.innerHTML).not.toContain('onclick');
   });
 
-  it('strips javascript: URLs from anchors', () => {
-    const { container } = renderMessage('<a href="javascript:window.__pwned=1">click</a>');
-    const anchor = container.querySelector('a');
-    expect(anchor?.getAttribute('href') ?? '').not.toContain('javascript:');
+  it('strips javascript: URLs from anchors regardless of scheme case', () => {
+    // A mixed-case scheme (JaVaScRiPt:) executes identically in the browser, so
+    // the assertion must be case-insensitive — a substring check for the literal
+    // lowercase token would let a regression of the dompurify override through.
+    const { container } = renderMessage(
+      '<a href="javascript:window.__pwned=1">lower</a>' +
+        '<a href="JaVaScRiPt:window.__pwned=1">mixed</a>'
+    );
+    const anchors = container.querySelectorAll('a');
+    expect(anchors.length).toBeGreaterThan(0);
+    for (const anchor of anchors) {
+      expect((anchor.getAttribute('href') ?? '').toLowerCase()).not.toContain('javascript:');
+    }
   });
 });
