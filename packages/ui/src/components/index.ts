@@ -81,5 +81,8 @@ export * from './metric-card';
 // Search
 export * from './search-input';
 
+// Rich Text Editor (Tiptap) — IFC-301
+export * from './rich-text-editor';
+
 // Icon Mapping (Material Symbols reference)
 export { ICON_MAPPING } from '../lib/icon-mapping';
