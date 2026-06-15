@@ -1488,11 +1488,20 @@ export const contactRouter = createTRPCRouter({
     const failed: Array<{ id: string; error: string }> = [];
 
     // NP-012 fix: ONE batched fetch of all requested contacts (with opportunity
-    // counts) instead of a findUnique per id. Tenant scoping is preserved via
-    // prismaWithTenant (RLS). The per-id deleteContact stays — it runs through
-    // the domain service (validation/events), not raw read amplification.
+    // counts) instead of a findUnique per id. The per-id deleteContact stays — it
+    // runs through the domain service (validation/events), not raw read amplification.
+    //
+    // #420-class fix: the preflight WHERE applies createTenantWhereClause — the SAME
+    // access predicate the reads (and bulkEmail/bulkExport) use — as an explicit belt
+    // on top of prismaWithTenant RLS. deleteContact is delegated to the singleton
+    // ContactService which is NOT tenant-scoped, so a contact outside the caller's
+    // access scope (other tenant, or another user's contact for a non-admin) must be
+    // filtered out HERE → it lands in `failed` and deleteContact is never invoked.
     const foundContacts = await typedCtx.prismaWithTenant.contact.findMany({
-      where: { id: { in: ids } },
+      where: {
+        ...createTenantWhereClause(typedCtx.tenant, { id: { in: ids } }),
+        tenantId: typedCtx.tenant.tenantId,
+      },
       include: { _count: { select: { opportunities: true } } },
     });
     const contactsById = new Map(foundContacts.map((c) => [c.id, c]));

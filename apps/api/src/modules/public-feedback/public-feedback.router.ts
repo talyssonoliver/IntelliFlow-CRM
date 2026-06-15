@@ -15,6 +15,7 @@ import { createTRPCRouter, publicProcedure } from '../../trpc';
 import { publicFeedbackInputSchema } from '@intelliflow/validators';
 import type { Context } from '../../context';
 import { publicFeedbackLimiter, PublicRateLimiter } from '../../security/public-rate-limiter';
+import { pickTrustedForwardedIp } from '../../security/client-ip';
 
 /**
  * Best-effort client IP extraction from a fetch-style Request. Falls back to
@@ -32,19 +33,12 @@ import { publicFeedbackLimiter, PublicRateLimiter } from '../../security/public-
  */
 export function extractClientIp(req: Request | undefined): string {
   if (!req) return 'unknown';
-  const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) {
-    // Split and trim all entries; take the last (rightmost = edge-set, trusted).
-    const parts = forwarded
-      .split(',')
-      .map((p) => p.trim())
-      .filter(Boolean);
-    const last = parts[parts.length - 1];
-    if (last) return last;
-  }
-  const realIp = req.headers.get('x-real-ip');
-  if (realIp) return realIp;
-  return 'unknown';
+  // Take the rightmost (edge-set, trusted) x-forwarded-for hop, then x-real-ip.
+  return (
+    pickTrustedForwardedIp(req.headers.get('x-forwarded-for')) ??
+    req.headers.get('x-real-ip') ??
+    'unknown'
+  );
 }
 
 function getPublicFeedbackService(ctx: Context) {

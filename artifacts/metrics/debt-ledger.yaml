@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-06-13
+last_updated: 2026-06-15
 maintainer: Tech Lead
 items:
   PRESHIP-385-lcov-absent-blind-spot:
@@ -5117,3 +5117,49 @@ alerts:
     remediation_sprint: 20
     remediation_plan: 'Thread tenantId into updateContactEmail(id, email, userId, tenantId) and add a tenant-scoped duplicate lookup (findByEmailInTenant(email, tenantId) or where: { tenantId, email }) matching @@unique([tenantId,email]). Audit other findByEmail callers (getContactByEmail) for the same scoping. Add a test: same email in two tenants -> same-tenant update succeeds, no cross-tenant conflict/leak.'
     notes: 'git issue #427. Out of #420 scope (router-preflight). Pre-existing; cross-package blast radius (findByEmail signature + callers). Waived in tools/audit/codex-review-waivers.yaml (fingerprint 4eb8fc76) with this follow-up, per the out-of-scope-with-follow-up convention (PG-062 #412 precedent). Tracked per project Rule 8.'
+  CONTACT-BULKDELETE-TENANT-SCOPE-001:
+    origin_task: IFC-266
+    owner: Backend Dev
+    severity: high
+    description: 'contact.router.ts bulkDelete preflight findMany used where: { id: { in: ids } } with NO createTenantWhereClause — relying solely on prismaWithTenant RLS — while siblings bulkEmail/bulkExport add explicit ownerId+tenantId scoping. bulkDelete delegates per-id to the singleton ContactService.deleteContact (NOT tenant-scoped), so the preflight WHERE is the real access gate (the #420 read-predicate-mirrors-mutation principle; the #420 review explicitly NOTED delete/addNote/bulkDelete lacked the explicit comparison). The only tenant test was false-isolation (mocked findMany empty — the IFC-265 trap). Surfaced by post-merge review of IFC-266 (#444).'
+    created_at: 2026-06-15
+    status: resolved
+    resolved_at: 2026-06-15
+    expiry_date: 2026-08-31
+    remediation_sprint: 18
+    remediation_plan: 'Add createTenantWhereClause(typedCtx.tenant, { id: { in: ids } }) + tenantId to the bulkDelete preflight WHERE (mirror bulkEmail/bulkExport). Add genuine R-04b contract tests asserting the WHERE includes ownerId+tenantId; de-fang the false-isolation test with a real WHERE assertion.'
+    resolution: 'FIXED in fix/contact-bulkdelete-tenant-scope (PR closing #453). bulkDelete preflight now applies createTenantWhereClause + tenantId. Genuine R-04b tests (contact.router.security.test.ts) assert WHERE has ownerId+tenantId; tenant.test.ts bulkDelete test now asserts WHERE.tenantId (not just a mocked-empty result).'
+    notes: 'git issue #453. IFC-266 post-merge review finding. Tracked per project Rule 8.'
+  CONTACT-E2E-AUTH-FIXTURE-001:
+    origin_task: IFC-266
+    owner: Test Engineer
+    severity: low
+    description: 'tests/e2e/contact-crud.spec.ts (T-10) is a route/reachability SMOKE only — no Playwright auth/storageState fixture exists, so it cannot perform real authenticated create->view->edit->delete data CRUD (conditional if(count>0) guards, fake UUID). Honest smoke, but not full CRUD coverage.'
+    created_at: 2026-06-15
+    status: open
+    expiry_date: 2026-08-31
+    remediation_sprint: 19
+    remediation_plan: 'Add a Playwright authenticated-session fixture (global-setup storageState) + seeded tenant, then a real data-backed contact CRUD E2E asserting persistence across create/view/edit/delete.'
+    notes: 'git issue #454. IFC-266 post-merge review finding (E2E overstated as full CRUD). Tracked per project Rule 8.'
+  DEP-CVE-PICOMATCH-NPM-BUNDLED-001:
+    origin_task: '#452'
+    owner: DevOps Lead
+    severity: medium
+    description: 'CodeQL/Trivy alerts #2259 (CVE-2026-33671 HIGH) and #2260 (CVE-2026-33672 MED) flag picomatch 4.0.3 at usr/local/lib/node_modules/npm/node_modules/picomatch — the copy BUNDLED inside the npm CLI shipped with the node:22-alpine base image, NOT a workspace dependency. Our pnpm deps already force picomatch >=4.0.4 via the existing root override, so application code is patched; only the base-image npm bundles the vulnerable copy.'
+    created_at: 2026-06-15
+    status: open
+    expiry_date: 2026-09-15
+    remediation_sprint: 19
+    remediation_plan: 'Resolved when the node:22-alpine base image ships an npm whose bundled picomatch is >=4.0.4 (rebuild picks it up), or by running npm i -g npm@latest in the image build. Low impact: the bundled copy is only exercised by npm CLI globbing at build/admin time, not at runtime.'
+    notes: 'git issue #452. Track B residual — base-image / global-npm bundled dep, not fixable via pnpm.overrides. Tracked per project Rule 8.'
+  DEP-CVE-HIGHLIGHTJS-BULLBOARD-001:
+    origin_task: '#452'
+    owner: DevOps Lead
+    severity: medium
+    description: 'CodeQL/Trivy alert #2269 (CVE-2020-26237, prototype pollution in highlight.js <9.18.2/<10.1.2) flags a vendored highlight.*.js asset inside @bull-board/ui dist (node_modules/.pnpm/@bull-board+ui@7.2.1/.../static/js/async/highlight.*.js). It is a pre-bundled UI asset, so a pnpm override on highlight.js does not replace it — the version is frozen inside @bull-board/ui published build.'
+    created_at: 2026-06-15
+    status: open
+    expiry_date: 2026-09-15
+    remediation_sprint: 19
+    remediation_plan: 'Bump @bull-board/ui to a release whose vendored highlight.js is >=10.1.2 (track upstream), or drop the Bull Board UI from the deployed image. Low impact: Bull Board UI is an internal admin/ops dashboard, not user-facing; the pollution vector requires attacker-controlled code-block language names rendered through highlight.js, which this dashboard does not expose.'
+    notes: 'git issue #452. Track B residual — vendored/pre-bundled asset, not fixable via pnpm.overrides. Tracked per project Rule 8.'

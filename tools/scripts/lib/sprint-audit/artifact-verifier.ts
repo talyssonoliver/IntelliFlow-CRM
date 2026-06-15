@@ -81,11 +81,6 @@ const CHECK_STUB_CONTENT_EXTENSIONS = [
 /**
  * Calculate SHA256 hash of a file
  */
-function sha256File(filePath: string): string {
-  const content = fs.readFileSync(filePath);
-  return createHash('sha256').update(content).digest('hex');
-}
-
 // =============================================================================
 // File Resolution
 // =============================================================================
@@ -364,25 +359,29 @@ export async function verifyArtifact(
   const resolvedAbsolutePath = path.join(repoRoot, resolvedPath);
 
   try {
-    // statSync is called inside resolveArtifactPath above for the primary path;
-    // when the path was redirected (sprint mismatch) we re-stat the resolved
-    // path here.  Both cases use a single stat-then-read group with no separate
-    // existence pre-check, keeping the operation atomic.
-    const stats = fs.statSync(resolvedAbsolutePath);
-
-    if (stats.isDirectory()) {
-      return {
-        path: artifactPath,
-        expectedBy: taskId,
-        status: 'found',
-        size: null,
-        sha256: null,
-        issues: ['Path is a directory, not a file'],
-      };
+    // Read the artifact in a single operation and derive size, content, and hash
+    // from the one buffer.  Reading directly — rather than statSync-then-read —
+    // closes the TOCTOU / js/file-system-race window (CodeQL #2310): a directory
+    // surfaces as an EISDIR error and a vanished file as ENOENT, both handled here.
+    let buffer: Buffer;
+    try {
+      buffer = fs.readFileSync(resolvedAbsolutePath);
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code === 'EISDIR') {
+        return {
+          path: artifactPath,
+          expectedBy: taskId,
+          status: 'found',
+          size: null,
+          sha256: null,
+          issues: ['Path is a directory, not a file'],
+        };
+      }
+      throw err;
     }
 
     const extension = path.extname(resolvedPath).toLowerCase();
-    const sizeCheck = checkFileSize(stats.size, extension);
+    const sizeCheck = checkFileSize(buffer.length, extension);
 
     if (sizeCheck.status === 'empty') {
       return {
@@ -399,7 +398,7 @@ export async function verifyArtifact(
       issues.push(sizeCheck.issue);
     }
 
-    const content = fs.readFileSync(resolvedAbsolutePath, 'utf-8');
+    const content = buffer.toString('utf-8');
     let status: ArtifactStatus = 'found';
 
     if (isStubContent(content, extension)) {
@@ -407,7 +406,7 @@ export async function verifyArtifact(
       issues.push('File appears to contain placeholder/stub content');
     }
 
-    const sha256 = sha256File(resolvedAbsolutePath);
+    const sha256 = createHash('sha256').update(buffer).digest('hex');
 
     if (extension === '.json') {
       const jsonStatus = analyseJsonContent(content, issues);
@@ -424,7 +423,7 @@ export async function verifyArtifact(
       path: artifactPath,
       expectedBy: taskId,
       status,
-      size: stats.size,
+      size: buffer.length,
       sha256,
       issues,
     };
