@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { exec, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
+import { buildLighthouseArgs } from './lighthouse-args';
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -11,36 +12,6 @@ interface GenerateResult {
   success: boolean;
   message: string;
   duration: number;
-}
-
-/**
- * Builds the argv for the Lighthouse CLI from a user-supplied URL. The URL is
- * validated (well-formed http/https only) and passed as a discrete argv element
- * to `execFile` — never interpolated into a shell string — which closes the
- * command-injection vector (CodeQL js/indirect-command-line-injection #2257):
- * shell metacharacters in the URL can no longer be parsed by a shell.
- */
-export function buildLighthouseArgs(url: string, outputPathBase: string): string[] {
-  let protocol: string;
-  try {
-    protocol = new URL(url).protocol;
-  } catch {
-    throw new Error(`Invalid Lighthouse URL: "${url}"`);
-  }
-  if (protocol !== 'http:' && protocol !== 'https:') {
-    throw new Error(`Unsupported Lighthouse URL protocol: "${protocol}"`);
-  }
-  return [
-    'lighthouse',
-    url,
-    '--output',
-    'json',
-    '--output',
-    'html',
-    '--output-path',
-    outputPathBase,
-    '--chrome-flags=--headless --no-sandbox --disable-gpu',
-  ];
 }
 
 async function getProjectRoot(): Promise<string> {

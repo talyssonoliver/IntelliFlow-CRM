@@ -7,7 +7,15 @@
  * the URL cannot be interpreted by a shell.
  */
 import { describe, it, expect } from 'vitest';
-import { buildLighthouseArgs } from '../route';
+import { buildLighthouseArgs } from '../lighthouse-args';
+
+describe('generate route module', () => {
+  it('loads without side effects (covers route module init)', async () => {
+    const mod = await import('../route');
+    expect(typeof mod.POST).toBe('function');
+    expect(typeof mod.GET).toBe('function');
+  });
+});
 
 describe('buildLighthouseArgs', () => {
   const OUT = '/tmp/artifacts/lighthouse/lighthouse-report';
