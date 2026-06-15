@@ -10,6 +10,17 @@ An independent LLM-powered code-review pass that runs on every diff locally via
 pre-push. The codex CLI is installed globally and authenticated via OAuth
 (ChatGPT/Codex login) on the developer's machine. No API key is required.
 
+> **Claude fallback (added 2026-06-15).** When codex is unavailable, unauthed,
+> or hits its **OpenAI usage/tier cap** (which returns an error instead of
+> findings), the gate now FALLS BACK to the Claude Code CLI (`claude -p`) on the
+> **same** review prompt, schema, fingerprint and waiver logic — so a fallback
+> review blocks/passes exactly as codex would. Previously a capped codex
+> degraded to `SKIPPED_PRECONDITION` (a silent pass), which let unreviewed code
+> merge during the cap window (e.g. IFC-287/IFC-266 on 2026-06-14). The gate now
+> skips only when **neither** codex nor `claude` is usable. Force the fallback
+> with `CODEX_REVIEW_FORCE_FALLBACK=1`. A Claude review costs ~$0.25–0.30 and
+> runs once per committed SHA (pre-ship caches the step).
+
 Unlike TypeScript, ESLint, and SonarQube — which all operate on the code the
 author wrote and tests the author provided — this gate drives an **independent**
 Codex review that is not anchored to the author's assumptions. Its target: the
