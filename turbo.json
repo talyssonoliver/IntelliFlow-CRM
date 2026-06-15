@@ -244,6 +244,6 @@
     }
   },
   "remoteCache": {
-    "signature": true
+    "signature": false
   }
 }
