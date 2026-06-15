@@ -42,7 +42,7 @@
     "@tanstack/react-table": "^8.11.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
-    "react-hook-form": "^7.78.0",
+    "react-hook-form": "^7.79.0",
     "tailwind-merge": "^3.6.0"
   },
   "peerDependencies": {
