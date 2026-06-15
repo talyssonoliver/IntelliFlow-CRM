@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "IFC-230",
+  "run_id": "run-20260615T131620Z",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-06-15T16:35:00.000Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": ".specify/sprints/sprint-18/specifications/IFC-230-spec.md",
+        "sha256": "f9a6b1145377d906889a9eb168b5195fb95dfcfe31ba32196cf9c71c713639d7"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/planning/IFC-230-plan.md",
+        "sha256": "655fe148d1b7314d821a93577c8d8a97ca695b31f9d323330416cb02d331d7a3"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/attestations/IFC-230/context_ack.json",
+        "sha256": "557a97042ee68914b6ae762d7d7fd17d295e6c6e9d70eee2c75955f2c1a5a4fb"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Audit divergences (trpc-vs-api, no-auth-guard, edit-validation) PREDATE IFC-242 and were verified ALREADY unified — fixed only the genuine gaps (no shared component, edit lacked BANT, styling).",
+      "Shared LeadForm + single validateLeadFormValues path; createLeadSchema/updateLeadSchema are the single validation source; server re-validates.",
+      "Edit sends RAW tRPC input (z.input) — no transformed value objects on the wire (IFC-242 F9).",
+      "qualificationNote is create-only; estimatedValue cents<->dollars edit-only; BANT first-class preserved.",
+      "Page.tsx shells coverage-excluded; logic in LeadForm/change-tracker/lead-form-utils, tested same commit (#382).",
+      "ADR-046: Material Symbols, no inline decorative SVGs.",
+      "Create wizard kept (approved spec); >=30% LOC KPI recorded honestly as 18.7% (owner approved wizard-preserving ship).",
+      "All 4 validations mandatory: TypeScript, Tests, Lint, Build."
+    ],
+    "acknowledged_at": "2026-06-15T13:16:20.000Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 6,
+    "gates_failed": 0,
+    "kpis_met": 2,
+    "kpis_missed": 1,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/components/leads/LeadForm.tsx": "d773c228465e4f6b22f2a6f4df35f7fbcaff634054da7a0dd8a32daf3f00f178",
+    "apps/web/src/app/leads/(list)/new/NewLeadForm.tsx": "e1a593b19b8c596fd9e08baf4ab22de3c94e06e9c5d87a2073223a616a6bfd25",
+    "apps/web/src/components/leads/lead-editor.tsx": "bc201baf53402b2f3513ae885beb7af20cad40310c3c96809ee767ead60e08a0",
+    "apps/web/src/lib/leads/change-tracker.ts": "788c44d20573db6362b4bfd6ead16937541203fa4a35d79fcf52412bff97327b",
+    "apps/web/src/lib/leads/lead-form-utils.ts": "9227cd94b38f14ec07e72c1fda698fc5f35c587c30257c17759aa60b448767de"
+  },
+  "validation_results": [
+    { "name": "TypeScript", "command": "pnpm run typecheck", "exit_code": 0, "passed": true, "timestamp": "2026-06-15T15:50:00.000Z", "duration_ms": 70000 },
+    { "name": "Tests", "command": "pnpm --filter @intelliflow/web test", "exit_code": 0, "passed": true, "timestamp": "2026-06-15T15:20:00.000Z", "duration_ms": 240000 },
+    { "name": "Lint", "command": "pnpm run lint && pnpm run lint:sonar:guard", "exit_code": 0, "passed": true, "timestamp": "2026-06-15T15:55:00.000Z", "duration_ms": 23000 },
+    { "name": "Build", "command": "pnpm run build", "exit_code": 0, "passed": true, "timestamp": "2026-06-15T16:20:00.000Z", "duration_ms": 200000 }
+  ],
+  "gate_results": [
+    { "gate_id": "gate-0-context-ack", "passed": true, "timestamp": "2026-06-15T13:17:00.000Z" },
+    { "gate_id": "gate-1-plan-checkboxes", "passed": true, "score": 100, "timestamp": "2026-06-15T16:25:00.000Z" },
+    { "gate_id": "gate-2-artifact-hashes", "passed": true, "score": 5, "timestamp": "2026-06-15T16:33:00.000Z" },
+    { "gate_id": "gate-3-build-validation", "passed": true, "score": 4, "timestamp": "2026-06-15T16:21:00.000Z" },
+    { "gate_id": "gate-3b-scoped-coverage", "passed": true, "score": 90, "timestamp": "2026-06-15T15:25:00.000Z" },
+    { "gate_id": "gate-4-stoa", "passed": true, "timestamp": "2026-06-15T16:00:00.000Z" }
+  ],
+  "kpi_results": [
+    { "kpi": "Code reduction", "target": ">=30% LOC", "actual": "18.7% (1980->1609 clean prettier-compliant); full duplication eliminated; 30% would require dropping the create wizard (owner approved deferring)", "met": false },
+    { "kpi": "No dropped fields (BANT)", "target": "BANT persisted in both", "actual": "BANT + annualRevenue round-trip in create AND edit", "met": true },
+    { "kpi": "Test coverage", "target": ">=90%", "actual": "130 lead tests + full web suite green; diff-coverage >=80%", "met": true }
+  ],
+  "dependencies_verified": [],
+  "definition_of_done_items": [
+    { "criterion": "Shared LeadForm component", "met": true, "evidence": "apps/web/src/components/leads/LeadForm.tsx — used by both create (wizard shell) and edit (wrapper)" },
+    { "criterion": "Unified API client", "met": true, "evidence": "both already use api/@/lib/api (tRPC) — verified, IFC-242" },
+    { "criterion": "All fields incl. BANT in both views", "met": true, "evidence": "edit form now renders + round-trips budget/authority/need/timeline/annualRevenue" },
+    { "criterion": "Consistent styling + validation", "met": true, "evidence": "single INPUT_CLASS/LABEL_CLASS + validateLeadFormValues path" },
+    { "criterion": "Auth guard on create", "met": true, "evidence": "NewLeadForm shell useRequireAuth (already present, preserved)" },
+    { "criterion": ">=30% LOC reduction", "met": false, "evidence": "18.7% clean; 30% deferred (wizard kept) — owner approved" }
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "c77b0de7a7e695a344c2777d474d9708e49a51db",
+    "branch": "feat/ifc-230"
+  },
+  "notes": "IFC-230 unifies the lead create + edit forms on a shared data-driven LeadForm.tsx, adds BANT parity to the edit form, unifies validation/styling, and preserves the create wizard. The audit's API-client/auth/validation divergences were verified already-fixed by IFC-242. The >=30% LOC KPI is recorded honestly as 18.7% (clean, prettier-compliant, readable): a subagent only reached <=1386 via prettier-ignore + cryptic-name golf, which was REJECTED for quality; hitting 30% genuinely requires dropping the 3-step create wizard (UX change + test rewrites), which the owner approved deferring. 130 lead tests + full web suite (10821) green; typecheck/lint/sonar-guard clean; 0 'as any'; ADR-046 compliant. Compliance check PASS. git_commit recorded pre-attestation-commit."
+}
