@@ -46,9 +46,13 @@ export default defineConfig({
     // Disable caching to prevent stale state accumulation
     cache: false,
 
-    // Timeouts to prevent hung tests
-    testTimeout: 30000,
-    hookTimeout: 30000,
+    // Timeouts to prevent hung tests. Under COVERAGE_RUN the whole project runs in a
+    // single instrumented (Istanbul) pass with 4 parallel forks, which makes heavy
+    // appRouter / module-graph imports 2-3x slower — so 30s spuriously times out
+    // (flaky, passes in isolation/sharded CI). Raise the budget when instrumented so
+    // coverage measures real failures, not instrumentation overhead. (IFC-242)
+    testTimeout: process.env['COVERAGE_RUN'] === '1' ? 120000 : 30000,
+    hookTimeout: process.env['COVERAGE_RUN'] === '1' ? 120000 : 30000,
     teardownTimeout: 10000,
 
     // Handle worker exit errors gracefully
