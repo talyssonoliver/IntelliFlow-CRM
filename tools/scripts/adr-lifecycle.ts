@@ -59,7 +59,6 @@ interface ValidationResult {
 function parseADR(filePath: string): ADRMetadata | null {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
-    const lines = content.split('\n');
 
     // Extract title from first heading
     const titleMatch = content.match(/^#[ \t]+([^\n]{1,200})$/m);

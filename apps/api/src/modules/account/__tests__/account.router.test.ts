@@ -9,7 +9,6 @@ import { TEST_UUIDS } from '../../../test/setup';
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
 import { WebsiteUrl } from '@intelliflow/domain';
 import { accountRouter } from '../account.router';
