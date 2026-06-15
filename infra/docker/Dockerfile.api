@@ -73,6 +73,11 @@ RUN pnpm --filter api build
 # Stage 3: Runner
 FROM node:22-alpine AS runner
 
+# Patch OS packages flagged by image scanning in the final (scanned) image:
+# libssl3/libcrypto3 3.5.6-r0 -> 3.5.7-r0 (CVE-2026-45447 and related OpenSSL CVEs).
+# Runs as root, before the USER switch below.
+RUN apk add --no-cache --upgrade libssl3 libcrypto3
+
 # Set environment
 ENV NODE_ENV=production
 ENV PORT=4000
