@@ -42,6 +42,9 @@ const nextConfig = {
 
   // Experimental features
   experimental: {
+    // Reduce webpack build-time peak memory (Next 15+). The production build runs
+    // `next build --webpack` in a memory-constrained Vercel container (#473).
+    webpackMemoryOptimizations: true,
     // Server actions configuration
     serverActions: {
       bodySizeLimit: '2mb',
@@ -182,8 +185,17 @@ const nextConfig = {
 
   // TypeScript configuration
   typescript: {
-    // Only run type checking in CI
-    ignoreBuildErrors: false,
+    // Type-checking is enforced by the dedicated CI `typecheck` job (ci.yml) and
+    // pre-ship. Re-running tsc over the whole web + @intelliflow/api import graph
+    // inside `next build` OOM-killed the 8 GB Vercel build container (#473), so
+    // skip it here. This finally honours the "only run type checking in CI" intent.
+    ignoreBuildErrors: true,
+  },
+
+  // ESLint is enforced by the dedicated CI `lint` job; don't re-run it during the
+  // memory-constrained production build (#473).
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 
   // Power features
