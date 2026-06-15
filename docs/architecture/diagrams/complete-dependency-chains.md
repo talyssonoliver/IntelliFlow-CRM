@@ -2285,6 +2285,24 @@ Enrichment is non-destructive (only fills blank website/company) and adds zero
 submission latency (no network/LLM). "assignment automated" satisfied by the
 existing `ownerId = creator` behavior in `lead.router.ts`.
 
+### Unified Lead Form (IFC-230 — shared LeadForm)
+
+```
+apps/web/src/lib/leads/lead-form-utils.ts   (pure: option arrays, buildQualificationNote, source/enum mappers)
+apps/web/src/lib/leads/change-tracker.ts    (pure: dirty-detect + minimal-patch builder incl. BANT)
+  └─ apps/web/src/components/leads/LeadForm.tsx   (SHARED body: 3 data-driven sections + validateLeadFormValues)
+      ├─ apps/web/src/app/leads/(list)/new/NewLeadForm.tsx  (create wizard shell → <LeadForm mode="create" visibleSections={[step]}/>)
+      │   └─ apps/web/src/app/leads/(list)/new/page.tsx     (thin route shell)
+      └─ apps/web/src/components/leads/lead-editor.tsx      (edit wrapper → <LeadForm mode="edit"/>; BANT now editable)
+          └─ apps/web/src/app/leads/[id]/edit/page.tsx      (data fetch + api.lead.update)
+```
+
+Status: ✅ IFC-230 (sprint 18). Both `/leads/new` and `/leads/[id]/edit` now render the
+single shared `LeadForm.tsx` (one validation path, consistent styling, BANT parity in both).
+The create wizard UX is preserved (NewLeadForm shell owns step nav/auth/enrichment); edit gains
+BANT inputs that round-trip via `change-tracker`. Logic lives in the instrumented
+LeadForm/change-tracker/lead-form-utils (page shells excluded by the app-page convention).
+
 ## Lead Settings Dependency Chain
 
 ### Lead Settings (PG-178)
