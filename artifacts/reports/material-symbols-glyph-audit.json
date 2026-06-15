@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-02T00:26:26.565Z",
+  "generated_at": "2026-06-15T13:21:25.603Z",
   "upstream_font_sha256": "b9a28e5c5328940ee287c3d7f6b626e32a9afa92f86b055295cdf6fd5d1c004b",
   "subsetter_version": "subset-font@^2.5.0",
   "variation_axes": {
@@ -144,8 +144,12 @@
     "folder_zip",
     "format_bold",
     "format_clear",
+    "format_h1",
+    "format_h2",
+    "format_h3",
     "format_italic",
     "format_list_bulleted",
+    "format_list_numbered",
     "format_underlined",
     "forum",
     "forward",
@@ -372,14 +376,14 @@
     "zoom_in",
     "zoom_out"
   ],
-  "icons_count": 362,
-  "scanned_files_count": 1129,
+  "icons_count": 366,
+  "scanned_files_count": 1155,
   "source_scan_patterns": [
     "apps/web/src",
     "packages/ui/src"
   ],
   "explicit_allow_list": [],
   "unresolved_dynamic_icons": [],
-  "subsetted_bytes": 234496,
-  "subsetted_sha256": "e93d44af04377a5edc08a98654eae109b6c56703122c32ad3d80d6574bd9cfeb"
+  "subsetted_bytes": 237456,
+  "subsetted_sha256": "38609b72ccad726dc3148681f8b24c4399eba5c9370a2ec0a23b3e1b2f7428cc"
 }
