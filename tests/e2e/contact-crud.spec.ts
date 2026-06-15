@@ -1,12 +1,18 @@
 /**
- * Contact CRUD Flow E2E Tests (IFC-266, finding T-10)
+ * Contact CRUD route/reachability E2E smoke (IFC-266, finding T-10)
  *
- * Exercises the create → view → edit → delete contact flow surface. The suite has
- * NO authenticated session fixture (the repo's global-setup leaves login optional),
- * so — consistent with navigation.spec.ts / auth-flow.spec.ts — each test uses the
- * resilient pattern: navigate, assert the route resolves (page or login redirect),
- * then conditionally interact with elements that depend on auth/seeded data. This is
- * honest smoke-level CRUD coverage, not a faked logged-in session.
+ * SCOPE — read this before extending. This suite is a REACHABILITY SMOKE over the
+ * create → view → edit → delete route surface. It does NOT perform real authenticated
+ * data CRUD: there is no authenticated session / storageState fixture (the repo's
+ * global-setup leaves login optional), so — consistent with navigation.spec.ts and
+ * auth-flow.spec.ts — each test navigates, asserts the route resolves (page OR login
+ * redirect), then only conditionally interacts with elements (`if (count > 0)`) since
+ * data-backed UI may be absent without auth. It deliberately does not fake a logged-in
+ * session or assert end-to-end persistence.
+ *
+ * A full authenticated create→view→edit→delete data flow needs a Playwright auth
+ * fixture + seeded tenant — tracked as a follow-up (see issue referenced in the
+ * sprint findings doc), NOT covered here.
  *
  * @see docs/audit/contact-detail-wiring-audit.md §19 (T-10)
  */

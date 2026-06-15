@@ -55,6 +55,7 @@ import {
 import { ensureAppUserSession, type Context, type UserSession } from '../../context';
 import { getLoginLimiter } from '../../security/login-limiter';
 import { getAuditLogger } from '../../security/audit-logger';
+import { pickTrustedForwardedIp } from '../../security/client-ip';
 import { getMfaService } from '../../services/mfa.service';
 import { getSessionService } from '../../services/session.service';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
@@ -315,10 +316,11 @@ export const authRouter = createTRPCRouter({
     const mfaService = getMfaService(ctx.prisma);
     const sessionService = getSessionService(ctx.prisma);
 
-    // Extract IP and user agent from context
+    // Extract IP and user agent from context. Use the rightmost (trusted
+    // edge-set) x-forwarded-for hop so a spoofed leftmost entry can't forge it.
     const headers = ctx.req?.headers;
     const ipAddress =
-      getHeaderFromContext(headers, 'x-forwarded-for') ||
+      pickTrustedForwardedIp(getHeaderFromContext(headers, 'x-forwarded-for')) ||
       getHeaderFromContext(headers, 'x-real-ip');
     const userAgent = getHeaderFromContext(headers, 'user-agent');
 
@@ -469,7 +471,7 @@ export const authRouter = createTRPCRouter({
     // Rate limit OAuth initiation by IP (PG-124 SF-003)
     const oauthHeaders = ctx.req?.headers;
     const ipAddress =
-      getHeaderFromContext(oauthHeaders, 'x-forwarded-for') ||
+      pickTrustedForwardedIp(getHeaderFromContext(oauthHeaders, 'x-forwarded-for')) ||
       getHeaderFromContext(oauthHeaders, 'x-real-ip') ||
       'unknown';
     const rateCheck = oauthInitLimiter.check(ipAddress);
@@ -598,7 +600,7 @@ export const authRouter = createTRPCRouter({
 
     const oauthHeaders = ctx.req?.headers;
     const ipAddress =
-      getHeaderFromContext(oauthHeaders, 'x-forwarded-for') ||
+      pickTrustedForwardedIp(getHeaderFromContext(oauthHeaders, 'x-forwarded-for')) ||
       getHeaderFromContext(oauthHeaders, 'x-real-ip');
     const userAgent = getHeaderFromContext(oauthHeaders, 'user-agent');
     const appUser = await resolveAuthenticatedAppUser(ctx.prisma, user);
@@ -647,7 +649,7 @@ export const authRouter = createTRPCRouter({
 
     const mfaHeaders = ctx.req?.headers;
     const ipAddress =
-      getHeaderFromContext(mfaHeaders, 'x-forwarded-for') ||
+      pickTrustedForwardedIp(getHeaderFromContext(mfaHeaders, 'x-forwarded-for')) ||
       getHeaderFromContext(mfaHeaders, 'x-real-ip');
     const userAgent = getHeaderFromContext(mfaHeaders, 'user-agent');
 
