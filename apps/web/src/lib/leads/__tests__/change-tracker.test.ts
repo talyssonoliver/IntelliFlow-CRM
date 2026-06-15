@@ -16,9 +16,62 @@ function fields(overrides: Partial<LeadEditFields> = {}): LeadEditFields {
     website: 'https://acme.com',
     estimatedValue: '50',
     tags: 'enterprise, saas',
+    budget: '',
+    authority: '',
+    need: '',
+    timeline: '',
+    annualRevenue: '',
     ...overrides,
   };
 }
+
+describe('change-tracker · BANT fields (IFC-230)', () => {
+  it('sends changed budget/authority/need as trimmed strings', () => {
+    const payload = buildLeadUpdatePayload(
+      'lead-1',
+      fields({ budget: ' $50k-$100k ', authority: 'Decision maker', need: 'CRM' }),
+      ['budget', 'authority', 'need']
+    );
+    expect(payload).toMatchObject({
+      id: 'lead-1',
+      budget: '$50k-$100k',
+      authority: 'Decision maker',
+      need: 'CRM',
+    });
+  });
+
+  it('omits a BANT text field cleared to empty', () => {
+    expect(
+      buildLeadUpdatePayload('lead-1', fields({ budget: '' }), ['budget'])
+    ).not.toHaveProperty('budget');
+  });
+
+  it('sends timeline/annualRevenue as narrowed enum values', () => {
+    const payload = buildLeadUpdatePayload(
+      'lead-1',
+      fields({ timeline: 'immediate', annualRevenue: '1M-10M' }),
+      ['timeline', 'annualRevenue']
+    );
+    expect(payload.timeline).toBe('immediate');
+    expect(payload.annualRevenue).toBe('1M-10M');
+  });
+
+  it('omits an invalid/cleared timeline or annualRevenue (never sends a bad enum)', () => {
+    const payload = buildLeadUpdatePayload(
+      'lead-1',
+      fields({ timeline: 'someday', annualRevenue: '' }),
+      ['timeline', 'annualRevenue']
+    );
+    expect(payload).not.toHaveProperty('timeline');
+    expect(payload).not.toHaveProperty('annualRevenue');
+  });
+
+  it('detects BANT changes in computeLeadChangeset', () => {
+    const r = computeLeadChangeset(fields(), fields({ budget: 'X', timeline: 'short' }));
+    expect(r.isDirty).toBe(true);
+    expect(r.changedFields).toEqual(expect.arrayContaining(['budget', 'timeline']));
+  });
+});
 
 describe('change-tracker · computeLeadChangeset', () => {
   it('returns not-dirty + empty when nothing changed', () => {

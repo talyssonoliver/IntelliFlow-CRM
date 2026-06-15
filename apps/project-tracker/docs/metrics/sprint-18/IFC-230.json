@@ -7,14 +7,14 @@
   "sprint": "sprint-18",
   "phase": "",
   "stream": null,
-  "status": "BACKLOG",
+  "status": "IN_PROGRESS",
   "dependencies": {
     "required": [],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.859Z"
   },
   "dependencies_resolved": [],
-  "started_at": null,
+  "started_at": "2026-06-15T13:16:20.000Z",
   "completed_at": null,
   "target_duration_minutes": 120,
   "actual_duration_minutes": null,
@@ -57,6 +57,10 @@
     {
       "status": "Backlog",
       "at": "2026-03-05T00:00:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-06-15T13:16:20.000Z"
     }
   ],
   "notes": "Wiring debt: Create and Edit lead pages share no components, have inconsistent behavior."
