@@ -13,12 +13,20 @@
  *
  * Structured JSON output: { findings: [...] } (schema below).
  *
+ * Reviewer selection (primary → fallback):
+ *   - Codex (OAuth) is the PRIMARY reviewer.
+ *   - When codex is absent/unauthed OR returns no parseable findings (e.g. the
+ *     OpenAI usage/tier cap returns an error instead of JSON), the gate FALLS
+ *     BACK to the Claude Code CLI (`claude -p`) on the SAME prompt/schema, so a
+ *     fallback review blocks/passes exactly as codex would. It never silently
+ *     passes while a reviewer is available.
+ *   - SKIPPED_PRECONDITION (exit 0) only when NEITHER codex nor claude is usable.
+ *
  * Policy:
  *   - Any finding whose fingerprint is NOT in the waiver list → exit 1 (BLOCK)
  *   - Zero unwaived findings → exit 0
- *   - Codex CLI absent or not logged in (OAuth) → print SKIPPED_PRECONDITION,
- *     exit 0.  This gate runs LOCAL-ONLY where codex is OAuth-authenticated;
- *     there is NO CI enforcement and NO API key is required.
+ *   This gate runs LOCAL-ONLY (codex OAuth / Claude CLI session); there is NO CI
+ *   enforcement and NO API key is required.
  *
  * Waiver file: tools/audit/codex-review-waivers.yaml
  *
@@ -32,12 +40,14 @@
  *   node scripts/codex-review.mjs --base=HEAD~3     # last 3 commits
  *
  * Env:
- *   CODEX_REVIEW_VERBOSE=1  — print full Codex stdout to stderr
+ *   CODEX_REVIEW_VERBOSE=1         — print full reviewer stdout to stderr
+ *   CODEX_REVIEW_FORCE_FALLBACK=1  — skip codex, use the Claude fallback directly
+ *                                    (handy during a codex usage/tier outage)
  *
  * Auth:
- *   Uses the local codex CLI's OAuth session (ChatGPT/Codex login).
- *   Run `codex login` if not yet authenticated.
- *   Confirm auth with: codex login status
+ *   Codex uses its local OAuth session (`codex login`; confirm `codex login
+ *   status`). The Claude fallback uses the local Claude Code CLI session.
+ *   Neither requires an API key.
  */
 
 import fs from 'node:fs';
@@ -99,6 +109,52 @@ function codexLoggedIn() {
   // Check both streams for forward-compatibility.
   const combined = ((r.stdout || '') + (r.stderr || '')).toLowerCase();
   return combined.includes('logged in');
+}
+
+/**
+ * Whether the local Claude Code CLI is available as a FALLBACK reviewer.
+ * Used when codex is missing/unauthed or hits its usage/tier cap. Like codex,
+ * this is a LOCAL-ONLY gate that relies on the developer's authenticated CLI
+ * session (no API key); CI never runs this step.
+ */
+function claudeAvailable() {
+  return commandAvailable('claude');
+}
+
+/**
+ * Run the SAME review prompt through the Claude Code CLI headlessly and return
+ * the raw model text (the `result` field of `--output-format json`). Acting as
+ * codex would: the caller applies the identical extractFindings + fingerprint +
+ * waiver + exit logic, so a Claude pass blocks/passes exactly like a codex pass.
+ * Returns '' on failure (the caller then degrades to SKIPPED_PRECONDITION).
+ */
+function runClaudeReview(fullPrompt) {
+  // `claude -p` reads the prompt from stdin in print/headless mode and emits a
+  // single-turn result. `--output-format json` wraps it as { result: "<text>" }.
+  const r = spawnSync('claude', ['-p', '--output-format', 'json'], {
+    encoding: 'utf8',
+    input: fullPrompt,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    env: { ...process.env },
+    cwd: REPO_ROOT,
+    shell: process.platform === 'win32',
+    maxBuffer: 32 * 1024 * 1024,
+    timeout: 5 * 60 * 1000, // 5-minute wall clock
+  });
+  if (VERBOSE) {
+    process.stderr.write('--- claude stdout ---\n' + (r.stdout || '') + '\n');
+    process.stderr.write('--- claude stderr ---\n' + (r.stderr || '') + '\n');
+  }
+  const out = r.stdout || '';
+  // Prefer the structured envelope's `result` field; fall back to raw stdout
+  // (the findings JSON is recoverable from either by extractFindings).
+  try {
+    const env = JSON.parse(out);
+    if (env && typeof env.result === 'string') return env.result;
+  } catch {
+    // not a JSON envelope — return raw (extractFindings scans for {findings:[...]})
+  }
+  return out || r.stderr || '';
 }
 
 function gitDiffFiles(base) {
@@ -449,27 +505,27 @@ function writeSchema() {
 function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
-  // 1. Precondition: codex CLI available on PATH
-  if (!commandAvailable('codex')) {
+  // 1+2. Pick a semantic reviewer. Codex (OAuth) is primary; Claude Code is the
+  //      FALLBACK when codex is absent/unauthed OR hits its usage/tier cap. The
+  //      step degrades to SKIPPED_PRECONDITION only when NEITHER is usable — it
+  //      must never silently pass while a reviewer is available.
+  // CODEX_REVIEW_FORCE_FALLBACK=1 forces the Claude path (skip codex) — useful
+  // during a codex usage/tier outage and for testing the fallback.
+  const forceFallback = process.env.CODEX_REVIEW_FORCE_FALLBACK === '1';
+  const codexUsable = !forceFallback && commandAvailable('codex') && codexLoggedIn();
+  const claudeUsable = claudeAvailable();
+  if (!codexUsable && !claudeUsable) {
     process.stdout.write(
-      'SKIPPED_PRECONDITION: codex CLI not found on PATH.\n' +
-        '  Install with: npm install -g @openai/codex\n' +
-        '  Then authenticate: codex login\n'
+      'SKIPPED_PRECONDITION: no semantic reviewer available.\n' +
+        '  Install + authenticate codex (`npm i -g @openai/codex` then `codex login`),\n' +
+        '  or have the Claude Code CLI (`claude`) available as a fallback.\n'
     );
     process.exit(0);
   }
-
-  // 2. Precondition: codex is authenticated via OAuth
-  //    Probe: `codex login status` → "Logged in using ChatGPT" (exit 0)
-  //    No API key required — authentication is local OAuth session only.
-  if (!codexLoggedIn()) {
+  if (!codexUsable) {
     process.stdout.write(
-      'SKIPPED_PRECONDITION: codex CLI is not logged in.\n' +
-        '  Run: codex login\n' +
-        '  Confirm with: codex login status\n' +
-        '  This gate uses local OAuth (ChatGPT/Codex login), not an API key.\n'
+      '[codex-review] codex unavailable/unauthed — using Claude fallback reviewer.\n'
     );
-    process.exit(0);
   }
 
   // 3. Collect changed files in sonar scope
@@ -542,7 +598,7 @@ If no real bugs are found, return { "findings": [] }.`;
   // NOTE on codex 0.133.x: `codex exec review --base <ref>` and `[PROMPT]`
   // are mutually exclusive, so we use plain `codex exec` instead and provide
   // the diff context in the prompt ourselves.
-  process.stdout.write('[codex-review] Running Codex review (headless, OAuth) ...\n');
+  process.stdout.write('[codex-review] Preparing diff + review prompt ...\n');
 
   const lastMsgPath = path.join(OUT_DIR, 'codex-last-message.txt');
   const promptPath = path.join(OUT_DIR, 'codex-prompt.txt');
@@ -584,58 +640,72 @@ ${diffText || '(no diff output — check base ref)'}
 
   fs.writeFileSync(promptPath, fullPrompt, 'utf8');
 
-  // Pass the prompt via stdin ('-') so no shell word-splitting occurs.
-  const codexArgs = [
-    'exec',
-    '-', // read prompt from stdin
-    '--ephemeral',
-    '-o',
-    lastMsgPath,
-  ];
+  // 6/7. Run the reviewer: Codex first (primary), Claude as FALLBACK when codex
+  //      is unusable OR returns no parseable findings (the OpenAI usage/tier cap
+  //      returns an error, not JSON). Same prompt/schema/waivers either way — so
+  //      the fallback blocks/passes exactly as codex would and NEVER silently
+  //      passes while a reviewer is available.
+  const rawPath = path.join(OUT_DIR, 'codex-raw.txt');
+  let rawOutput;
+  let parsed = null;
+  let reviewerUsed = null;
 
-  const r = spawnSync('codex', codexArgs, {
-    encoding: 'utf8',
-    input: fullPrompt,
-    stdio: ['pipe', 'pipe', 'pipe'],
-    env: { ...process.env },
-    cwd: REPO_ROOT,
-    shell: process.platform === 'win32',
-    maxBuffer: 32 * 1024 * 1024,
-    timeout: 5 * 60 * 1000, // 5-minute wall clock
-  });
-
-  if (VERBOSE) {
-    process.stderr.write('--- codex stdout ---\n' + (r.stdout || '') + '\n');
-    process.stderr.write('--- codex stderr ---\n' + (r.stderr || '') + '\n');
+  if (codexUsable) {
+    process.stdout.write('[codex-review] Running Codex review (headless, OAuth) ...\n');
+    const r = spawnSync('codex', ['exec', '-', '--ephemeral', '-o', lastMsgPath], {
+      encoding: 'utf8',
+      input: fullPrompt,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env },
+      cwd: REPO_ROOT,
+      shell: process.platform === 'win32',
+      maxBuffer: 32 * 1024 * 1024,
+      timeout: 5 * 60 * 1000, // 5-minute wall clock
+    });
+    if (VERBOSE) {
+      process.stderr.write('--- codex stdout ---\n' + (r.stdout || '') + '\n');
+      process.stderr.write('--- codex stderr ---\n' + (r.stderr || '') + '\n');
+    }
+    rawOutput =
+      (fs.existsSync(lastMsgPath) && fs.readFileSync(lastMsgPath, 'utf8')) ||
+      r.stdout ||
+      r.stderr ||
+      '';
+    fs.writeFileSync(rawPath, rawOutput);
+    parsed = extractFindings(rawOutput);
+    if (parsed) {
+      reviewerUsed = 'codex';
+    } else {
+      process.stderr.write(
+        `[codex-review] WARN: Codex produced no parseable findings (exit ${r.status ?? -1}) — ` +
+          `likely the OpenAI usage/tier cap or a transient error. ` +
+          `Raw: artifacts/codex-review/codex-raw.txt\n`
+      );
+      if (r.stderr) process.stderr.write(r.stderr.slice(0, 1000) + '\n');
+    }
   }
 
-  // 7. Parse output — prefer -o file (structured last message), fall back stdout
-  let rawOutput = '';
-  if (fs.existsSync(lastMsgPath)) {
-    rawOutput = fs.readFileSync(lastMsgPath, 'utf8');
+  // FALLBACK: Claude review (acts as codex would — identical prompt/schema/waivers).
+  if (!parsed && claudeUsable) {
+    process.stdout.write('[codex-review] Falling back to Claude review (claude -p, local) ...\n');
+    rawOutput = runClaudeReview(fullPrompt);
+    fs.writeFileSync(rawPath, rawOutput);
+    parsed = extractFindings(rawOutput);
+    if (parsed) reviewerUsed = 'claude';
   }
-  if (!rawOutput) rawOutput = r.stdout || r.stderr || '';
 
-  // Save raw for debugging
-  fs.writeFileSync(path.join(OUT_DIR, 'codex-raw.txt'), rawOutput);
-
-  let parsed = extractFindings(rawOutput);
   if (!parsed) {
-    // Codex may have failed or returned non-JSON.
-    // Locally (OAuth gate): degrade rather than block the developer.
-    const exitCode = r.status ?? -1;
-    process.stderr.write(
-      `[codex-review] WARN: Could not parse Codex output (exit ${exitCode}). ` +
-        `Raw saved to artifacts/codex-review/codex-raw.txt\n`
-    );
-    if (r.stderr) process.stderr.write(r.stderr.slice(0, 2000) + '\n');
-
+    // Neither reviewer produced parseable output. This is the ONLY non-enforcing
+    // path (local OAuth gate; CI never runs codex/claude). Degrade, don't block.
     process.stdout.write(
-      'SKIPPED_PRECONDITION: Codex returned unparseable output. ' +
+      'SKIPPED_PRECONDITION: no semantic reviewer produced parseable output ' +
+        '(codex unavailable/capped AND claude unavailable/failed). ' +
         'Review artifacts/codex-review/codex-raw.txt.\n'
     );
     process.exit(0);
   }
+
+  process.stdout.write(`[codex-review] reviewer : ${reviewerUsed}\n`);
 
   // 8. Stamp fingerprints (Codex computes them too, but we recompute for
   //    consistency — our normalisation is the contract, not the model's).
@@ -662,7 +732,7 @@ ${diffText || '(no diff output — check base ref)'}
   fs.writeFileSync(FINDINGS_PATH, JSON.stringify(artifactData, null, 2));
 
   const lines = [];
-  lines.push(`Codex Semantic Review — ${new Date().toISOString()}`);
+  lines.push(`Semantic Review (${reviewerUsed}) — ${new Date().toISOString()}`);
   lines.push(`Base ref  : ${baseRef}`);
   lines.push(`Files in scope : ${scopedFiles.length}`);
   lines.push(`Total findings : ${findings.length}`);

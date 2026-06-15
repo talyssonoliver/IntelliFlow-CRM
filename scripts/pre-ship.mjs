@@ -418,6 +418,11 @@ const STEPS = [
       'Codex semantic review (OAuth, local-only): correctness/data-integrity/security bugs in diff',
     cmd: ['node', 'scripts/codex-review.mjs'],
     skip_if: () => {
+      // The gate falls back to the Claude Code CLI when codex is missing/unauthed
+      // or hits its usage/tier cap, so whenever `claude` is present the step MUST
+      // run (codex-review.mjs handles the codex→claude selection internally).
+      if (!commandMissing('claude')) return false;
+      // No claude fallback available — require an authed codex, else skip.
       if (commandMissing('codex')) return true;
       // Auth probe: codex login status exits 0 and prints "Logged in" when authed.
       // No OPENAI_API_KEY check — gate uses local OAuth session only.
@@ -434,8 +439,9 @@ const STEPS = [
       return !combined.includes('logged in');
     },
     skip_remediation:
-      'Install codex CLI (`npm i -g @openai/codex`) and authenticate: `codex login`. ' +
-      'Confirm with: `codex login status`. No API key required — uses local OAuth.',
+      'Install codex CLI (`npm i -g @openai/codex`) and authenticate: `codex login`, ' +
+      'OR have the Claude Code CLI (`claude`) on PATH as a fallback reviewer. ' +
+      'Confirm codex with `codex login status` (uses local OAuth, no API key).',
     required: true,
   },
 ];
