@@ -299,6 +299,52 @@ describe('Contact Router Security — Tenant Isolation (IFC-252)', () => {
   });
 
   // ====================================================================
+  // R-04b: bulkDelete tenant isolation (#420-class — data-destroying mutation)
+  // bulkDelete delegates per-id to the singleton ContactService.deleteContact,
+  // which is NOT tenant-scoped, so the preflight findMany WHERE is the access
+  // gate. P1 verifies that WHERE genuinely scopes by ownerId + tenantId (the
+  // real contract — not a mocked-empty result); N1 documents the consequence.
+  // ====================================================================
+  describe('R-04b: bulkDelete tenant isolation', () => {
+    it('R04b-P1: bulkDelete preflight WHERE includes ownerId + tenantId', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findMany.mockResolvedValue([
+        { ...mockContact, id: TEST_UUIDS.contact1, _count: { opportunities: 0 } } as any,
+      ]);
+      ctx.services!.contact!.deleteContact = vi
+        .fn()
+        .mockResolvedValue({ isSuccess: true, isFailure: false, value: undefined });
+
+      await caller.bulkDelete({ ids: [TEST_UUIDS.contact1] });
+
+      const where = prismaMock.contact.findMany.mock.calls[0][0]?.where as Record<string, unknown>;
+      expect(where).toHaveProperty('ownerId', TENANT_A_USER_ID);
+      expect(where).toHaveProperty('tenantId', TENANT_A_TENANT_ID);
+    });
+
+    it('R04b-N1: a contact outside the access scope is never deleted', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      // The tenant-scoped preflight WHERE (verified in P1) excludes the foreign
+      // contact, so findMany yields nothing for it.
+      prismaMock.contact.findMany.mockResolvedValue([]);
+      const deleteSpy = vi
+        .fn()
+        .mockResolvedValue({ isSuccess: true, isFailure: false, value: undefined });
+      ctx.services!.contact!.deleteContact = deleteSpy;
+
+      const result = await caller.bulkDelete({ ids: [FOREIGN_CONTACT_ID] });
+
+      expect(result.successful).toEqual([]);
+      expect(result.failed).toEqual([{ id: FOREIGN_CONTACT_ID, error: 'Contact not found' }]);
+      expect(deleteSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  // ====================================================================
   // R-05: stats tenant isolation
   // ====================================================================
   describe('R-05: stats tenant isolation', () => {

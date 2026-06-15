@@ -45,8 +45,9 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+const mockUseRequireAuth = vi.fn(() => mockAuthState);
 vi.mock('@/lib/auth/AuthContext', () => ({
-  useRequireAuth: () => mockAuthState,
+  useRequireAuth: () => mockUseRequireAuth(),
 }));
 
 vi.mock('@/lib/trpc', () => ({
@@ -111,21 +112,27 @@ describe('CreateNewContactPage - Auth Guard (IFC-253 F-07)', () => {
     };
   });
 
-  it('calls useRequireAuth on mount', () => {
+  // F-07: the create page must invoke the useRequireAuth guard. The page delegates
+  // the unauthenticated redirect to that hook (no bespoke guard in the page itself),
+  // so the meaningful assertions are: the guard IS wired (called), and the form is
+  // gated behind the hook's loading state. The redirect behaviour is the hook's own
+  // contract, covered by AuthContext's tests — asserting "form still renders when
+  // isAuthenticated:false" here would prove nothing (the hook is mocked).
+  it('wires the useRequireAuth guard on mount (F-07)', () => {
     render(<CreateNewContactPage />);
-    expect(screen.getByText('Personal Details')).toBeInTheDocument();
+    expect(mockUseRequireAuth).toHaveBeenCalled();
   });
 
-  it('shows loading skeleton while auth resolves', () => {
+  it('blocks the form behind a skeleton while auth is loading (F-07-NEG-01)', () => {
     mockAuthState = { isLoading: true, isAuthenticated: false, user: null as any };
     render(<CreateNewContactPage />);
     expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0);
     expect(screen.queryByText('Personal Details')).not.toBeInTheDocument();
   });
 
-  it('does not render form when unauthenticated (F-07-NEG-01)', () => {
-    mockAuthState = { isLoading: false, isAuthenticated: false, user: null as any };
+  it('renders the form once auth resolves (authenticated)', () => {
     render(<CreateNewContactPage />);
+    expect(mockUseRequireAuth).toHaveBeenCalled();
     expect(screen.getByText('Personal Details')).toBeInTheDocument();
   });
 });
