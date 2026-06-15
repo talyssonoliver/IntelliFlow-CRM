@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-06-13
+last_updated: 2026-06-15
 maintainer: Tech Lead
 items:
   PRESHIP-385-lcov-absent-blind-spot:
@@ -5117,3 +5117,27 @@ alerts:
     remediation_sprint: 20
     remediation_plan: 'Thread tenantId into updateContactEmail(id, email, userId, tenantId) and add a tenant-scoped duplicate lookup (findByEmailInTenant(email, tenantId) or where: { tenantId, email }) matching @@unique([tenantId,email]). Audit other findByEmail callers (getContactByEmail) for the same scoping. Add a test: same email in two tenants -> same-tenant update succeeds, no cross-tenant conflict/leak.'
     notes: 'git issue #427. Out of #420 scope (router-preflight). Pre-existing; cross-package blast radius (findByEmail signature + callers). Waived in tools/audit/codex-review-waivers.yaml (fingerprint 4eb8fc76) with this follow-up, per the out-of-scope-with-follow-up convention (PG-062 #412 precedent). Tracked per project Rule 8.'
+  CONTACT-BULKDELETE-TENANT-SCOPE-001:
+    origin_task: IFC-266
+    owner: Backend Dev
+    severity: high
+    description: 'contact.router.ts bulkDelete preflight findMany used where: { id: { in: ids } } with NO createTenantWhereClause — relying solely on prismaWithTenant RLS — while siblings bulkEmail/bulkExport add explicit ownerId+tenantId scoping. bulkDelete delegates per-id to the singleton ContactService.deleteContact (NOT tenant-scoped), so the preflight WHERE is the real access gate (the #420 read-predicate-mirrors-mutation principle; the #420 review explicitly NOTED delete/addNote/bulkDelete lacked the explicit comparison). The only tenant test was false-isolation (mocked findMany empty — the IFC-265 trap). Surfaced by post-merge review of IFC-266 (#444).'
+    created_at: 2026-06-15
+    status: resolved
+    resolved_at: 2026-06-15
+    expiry_date: 2026-08-31
+    remediation_sprint: 18
+    remediation_plan: 'Add createTenantWhereClause(typedCtx.tenant, { id: { in: ids } }) + tenantId to the bulkDelete preflight WHERE (mirror bulkEmail/bulkExport). Add genuine R-04b contract tests asserting the WHERE includes ownerId+tenantId; de-fang the false-isolation test with a real WHERE assertion.'
+    resolution: 'FIXED in fix/contact-bulkdelete-tenant-scope (PR closing #453). bulkDelete preflight now applies createTenantWhereClause + tenantId. Genuine R-04b tests (contact.router.security.test.ts) assert WHERE has ownerId+tenantId; tenant.test.ts bulkDelete test now asserts WHERE.tenantId (not just a mocked-empty result).'
+    notes: 'git issue #453. IFC-266 post-merge review finding. Tracked per project Rule 8.'
+  CONTACT-E2E-AUTH-FIXTURE-001:
+    origin_task: IFC-266
+    owner: Test Engineer
+    severity: low
+    description: 'tests/e2e/contact-crud.spec.ts (T-10) is a route/reachability SMOKE only — no Playwright auth/storageState fixture exists, so it cannot perform real authenticated create->view->edit->delete data CRUD (conditional if(count>0) guards, fake UUID). Honest smoke, but not full CRUD coverage.'
+    created_at: 2026-06-15
+    status: open
+    expiry_date: 2026-08-31
+    remediation_sprint: 19
+    remediation_plan: 'Add a Playwright authenticated-session fixture (global-setup storageState) + seeded tenant, then a real data-backed contact CRUD E2E asserting persistence across create/view/edit/delete.'
+    notes: 'git issue #454. IFC-266 post-merge review finding (E2E overstated as full CRUD). Tracked per project Rule 8.'
