@@ -9,6 +9,7 @@
 
 import type { z } from 'zod';
 import { updateLeadSchema } from '@intelliflow/validators';
+import { toTimeline, toRevenueBand } from './lead-form-utils';
 
 /**
  * The tRPC `lead.update` INPUT type (pre-transform): phone and dates stay as raw
@@ -29,6 +30,13 @@ export interface LeadEditFields {
   estimatedValue: string;
   /** Comma-separated tags as typed in the form. */
   tags: string;
+  // BANT qualification fields (IFC-230 — editable in the unified form).
+  // budget/authority/need are free text; timeline/annualRevenue are enum select values.
+  budget: string;
+  authority: string;
+  need: string;
+  timeline: string;
+  annualRevenue: string;
 }
 
 export type LeadEditField = keyof LeadEditFields;
@@ -48,6 +56,11 @@ const LEAD_EDIT_FIELDS: readonly LeadEditField[] = [
   'website',
   'estimatedValue',
   'tags',
+  'budget',
+  'authority',
+  'need',
+  'timeline',
+  'annualRevenue',
 ];
 
 /** Empty/whitespace string → undefined; otherwise the trimmed value. */
@@ -81,6 +94,9 @@ const TEXT_FIELDS = [
   'company',
   'location',
   'website',
+  'budget',
+  'authority',
+  'need',
 ] as const satisfies readonly (keyof LeadUpdatePayload & LeadEditField)[];
 
 export function buildLeadUpdatePayload(
@@ -114,6 +130,18 @@ export function buildLeadUpdatePayload(
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean);
+  }
+
+  // BANT enum bands (IFC-230): narrow to the schema enum; a cleared or non-enum
+  // value is omitted (updateLeadSchema has no way to null an optional enum, and an
+  // invalid legacy value must not be sent).
+  if (changed.has('timeline')) {
+    const tv = toTimeline(current.timeline);
+    if (tv) payload.timeline = tv;
+  }
+  if (changed.has('annualRevenue')) {
+    const rb = toRevenueBand(current.annualRevenue);
+    if (rb) payload.annualRevenue = rb;
   }
 
   return payload;

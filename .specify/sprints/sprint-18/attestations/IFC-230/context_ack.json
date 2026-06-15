@@ -1,0 +1,32 @@
+{
+  "task_id": "IFC-230",
+  "title": "Unify Lead Create/Edit Form",
+  "sprint": 18,
+  "acknowledged_by": "Claude Opus 4.8 (1M) — /full-pipeline IFC-230",
+  "acknowledged_at": "2026-06-15T13:16:20Z",
+  "files_read": [
+    "apps/web/src/app/leads/(list)/new/NewLeadForm.tsx",
+    "apps/web/src/app/leads/(list)/new/page.tsx",
+    "apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx",
+    "apps/web/src/app/leads/[id]/edit/page.tsx",
+    "apps/web/src/components/leads/lead-editor.tsx",
+    "apps/web/src/components/leads/__tests__/lead-editor.test.tsx",
+    "apps/web/src/lib/leads/change-tracker.ts",
+    "apps/web/src/lib/leads/lead-form-utils.ts",
+    "packages/validators/src/lead.ts",
+    ".specify/sprints/sprint-18/specifications/IFC-230-spec.md",
+    ".specify/sprints/sprint-18/planning/IFC-230-plan.md"
+  ],
+  "invariants_acknowledged": [
+    "Audit notes PREDATE IFC-242: API client (api/tRPC), create auth guard, and edit zod validation were ALREADY unified — verified against current code, not the stale audit.",
+    "Do NOT regress IFC-242 BANT first-class behaviour: budget/authority/need/timeline + annualRevenue are dedicated Lead columns; create sends them structured; edit now round-trips them via change-tracker.",
+    "createLeadSchema/updateLeadSchema (@intelliflow/validators) are the single validation source; the shared LeadForm's validateLeadFormValues mirrors them; the server re-validates.",
+    "Edit sends the RAW tRPC input payload (z.input) — phone stays a string; never send transformed value objects (the IFC-242 F9 lesson).",
+    "qualificationNote is CREATE-ONLY (sourceOther/companySize/industry/notes have no column); the edit wrapper must never call buildQualificationNote.",
+    "estimatedValue cents<->dollars conversion is EDIT-ONLY (create has no deal-value input).",
+    "Page.tsx route shells are coverage-excluded; all form logic lives in LeadForm.tsx + change-tracker.ts + lead-form-utils.ts (instrumented), well-tested in the same commit (#382 lcov-absent trap).",
+    "ADR-046/PG-195: icons render as Material Symbols spans, NOT inline decorative SVGs.",
+    "The 3-step create wizard is KEPT (per the approved spec) to preserve its UX + ~26 tests; the >=30% LOC KPI is recorded honestly as 18.7% (clean prettier-compliant) — 30% would require dropping the wizard (a UX change, owner-approved to defer).",
+    "No false-isolation tests (IFC-265 lesson): page tests mock only the LeadForm body and still exercise the shell's real mutation/auth/onSubmit logic."
+  ]
+}
