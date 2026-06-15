@@ -101,16 +101,23 @@ describe('Contact Router — Tenant Isolation (IFC-265, T-04)', () => {
     });
   });
 
-  // bulkDelete: batched fetch via prismaWithTenant (RLS) — cross-tenant ids never
-  // come back, so they land in `failed` and are never deleted.
+  // bulkDelete: the preflight findMany applies createTenantWhereClause (#420-class)
+  // BEFORE delegating to the non-tenant-scoped ContactService.deleteContact, so the
+  // WHERE is the real access gate. We assert that WHERE is tenant-scoped (genuine —
+  // not just a mocked-empty result), then that cross-tenant ids consequently fail.
+  // See R-04b in contact.router.security.test.ts for the ownerId/tenantId assertions.
   describe('bulkDelete', () => {
-    it('reports cross-tenant ids as failed and deletes none of them', async () => {
+    it('scopes the preflight WHERE by tenant and never deletes cross-tenant ids', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
-      // RLS returns no rows for foreign-tenant ids.
+      // The tenant-scoped WHERE excludes foreign ids → findMany returns nothing.
       prismaMock.contact.findMany.mockResolvedValue([]);
 
       const result = await caller.bulkDelete({ ids: [FOREIGN_CONTACT_ID, generateTestUUID('f2')] });
+
+      // Genuine contract: the preflight WHERE carries the caller's tenantId.
+      const where = prismaMock.contact.findMany.mock.calls[0][0]?.where as Record<string, unknown>;
+      expect(where).toHaveProperty('tenantId', TEST_UUIDS.tenant);
 
       expect(result.successful).toEqual([]);
       expect(result.failed).toHaveLength(2);
