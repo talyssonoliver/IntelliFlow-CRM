@@ -106,9 +106,14 @@ export function validateLeadFormValues(
     if (!sections || sections.includes('basic')) validateCreateBasic(values, errs);
     return errs;
   }
+  // estimatedValue (dollar string) and tags (comma string) are DISPLAY strings that the
+  // change-tracker transforms to the schema's number/array on submit (with its own guards),
+  // so they must not be validated here as raw strings — that produced spurious
+  // estimatedValue/tags errors for any populated lead. Validate only the string-typed fields.
+  const SKIP_DISPLAY_FIELDS = new Set(['estimatedValue', 'tags']);
   const nonBlank: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(values))
-    if (typeof v === 'string' && v.trim() !== '') nonBlank[k] = v;
+    if (typeof v === 'string' && v.trim() !== '' && !SKIP_DISPLAY_FIELDS.has(k)) nonBlank[k] = v;
   const parsed = updateLeadSchema.omit({ id: true }).partial().safeParse(nonBlank);
   if (!parsed.success) {
     const fe = parsed.error.flatten().fieldErrors as Record<string, string[] | undefined>;

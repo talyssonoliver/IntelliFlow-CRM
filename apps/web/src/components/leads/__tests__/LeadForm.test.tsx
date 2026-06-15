@@ -523,4 +523,16 @@ describe('validateLeadFormValues', () => {
     const errs = validateLeadFormValues({ ...blank(), website: 'a'.repeat(201) }, 'edit');
     expect(errs.website).toBeTruthy();
   });
+
+  it('does NOT spuriously error on a populated estimatedValue (dollar string) or tags (comma string) in edit mode', () => {
+    // Regression: estimatedValue/tags are display strings transformed on submit; they must
+    // not be validated as raw strings against the number/array schema types.
+    const errs = validateLeadFormValues(
+      { ...blank(), estimatedValue: '50', tags: 'enterprise, saas' },
+      'edit'
+    );
+    expect(errs.estimatedValue).toBeUndefined();
+    expect(errs.tags).toBeUndefined();
+    expect(Object.keys(errs)).toHaveLength(0);
+  });
 });
