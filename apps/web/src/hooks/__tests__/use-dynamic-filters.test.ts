@@ -32,6 +32,7 @@ vi.mock('@/lib/api', () => ({
     contact: { filterOptions: { useQuery: (...args: unknown[]) => mockUseQuery(...args) } },
     lead: { filterOptions: { useQuery: (...args: unknown[]) => mockUseQuery(...args) } },
     ticket: { filterOptions: { useQuery: (...args: unknown[]) => mockUseQuery(...args) } },
+    opportunity: { filterOptions: { useQuery: (...args: unknown[]) => mockUseQuery(...args) } },
   },
 }));
 
@@ -60,6 +61,7 @@ import {
   useContactFilterOptions,
   useLeadFilterOptions,
   useTicketFilterOptions,
+  useDealFilterOptions,
   useFilterValidation,
 } from '../use-dynamic-filters';
 
@@ -450,6 +452,77 @@ describe('useTicketFilterOptions', () => {
 
     const result = useTicketFilterOptions();
     expect(result.slaStatusOptions).toEqual([{ value: 'AT_RISK', label: 'At Risk (2)' }]);
+  });
+});
+
+// ============================================================================
+// useDealFilterOptions (IFC-287)
+// ============================================================================
+describe('useDealFilterOptions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    });
+  });
+
+  it('returns empty owner options when no data', () => {
+    const result = useDealFilterOptions();
+    expect(result.ownerOptions).toEqual([]);
+    expect(result.isLoading).toBe(false);
+    expect(result.error).toBeNull();
+  });
+
+  it('calls useQuery with undefined when no filters provided', () => {
+    useDealFilterOptions();
+    const [input] = mockUseQuery.mock.calls[0];
+    expect(input).toBeUndefined();
+  });
+
+  it('passes filter state to query', () => {
+    useDealFilterOptions({ search: 'acme', ownerId: 'user-1' });
+
+    expect(mockUseQuery).toHaveBeenCalledWith(
+      { search: 'acme', ownerId: 'user-1' },
+      expect.any(Object)
+    );
+  });
+
+  it('passes undefined for empty search and ownerId', () => {
+    useDealFilterOptions({ search: '', ownerId: '' });
+    const [input] = mockUseQuery.mock.calls[0];
+    expect(input.search).toBeUndefined();
+    expect(input.ownerId).toBeUndefined();
+  });
+
+  it('transforms owner options with counts', () => {
+    mockUseQuery.mockReturnValue({
+      data: {
+        owners: [
+          { value: 'user-1', label: 'Jane Smith', count: 3 },
+          { value: 'user-2', label: 'Bob Wilson', count: 1 },
+        ],
+      },
+      isLoading: false,
+      error: null,
+    });
+
+    const result = useDealFilterOptions();
+    expect(result.ownerOptions).toEqual([
+      { value: 'user-1', label: 'Jane Smith (3)' },
+      { value: 'user-2', label: 'Bob Wilson (1)' },
+    ]);
+  });
+
+  it('reflects loading and error state', () => {
+    const error = new Error('boom');
+    mockUseQuery.mockReturnValue({ data: undefined, isLoading: true, error });
+
+    const result = useDealFilterOptions();
+    expect(result.isLoading).toBe(true);
+    expect(result.error).toBe(error);
   });
 });
 
