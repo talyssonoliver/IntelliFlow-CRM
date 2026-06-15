@@ -60,7 +60,11 @@ export class PrismaAccountRepository implements AccountRepository {
       website: account.website?.toValue() ?? null,
       industry: account.industry ?? null,
       employees: account.employees ?? null,
-      revenue: account.revenue ? new Decimal(account.revenue.toString()) : null,
+      // Compare against null explicitly (not truthiness): revenue 0 is a
+      // legitimate value the domain allows (Account.updateRevenue permits >= 0).
+      // A truthiness check silently persisted 0 as NULL — data loss for
+      // zero-revenue accounts (#406).
+      revenue: account.revenue == null ? null : new Decimal(account.revenue.toString()),
       description: account.description ?? null,
       parentAccountId: account.parentAccountId ?? null,
       ownerId: account.ownerId,

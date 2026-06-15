@@ -188,6 +188,24 @@ describe('PrismaAccountRepository', () => {
       expect(callArgs.data.revenue.toString()).toBe('50000000');
     });
 
+    it('persists a revenue of 0 as Decimal(0), not NULL (#406)', async () => {
+      // The domain allows revenue 0 (Account.create only rejects < 0). A
+      // truthiness check previously coerced 0 -> NULL, losing zero-revenue data.
+      const zeroRevenueResult = Account.create({
+        name: 'Zero Revenue Corp',
+        ownerId: 'owner-789',
+        tenantId: 'tenant-123',
+        revenue: 0,
+      });
+      mockPrisma.account.updateMany.mockResolvedValue({ count: 1 });
+
+      await repository.save(zeroRevenueResult.value);
+
+      const callArgs = mockPrisma.account.updateMany.mock.calls[0][0];
+      expect(callArgs.data.revenue).not.toBeNull();
+      expect(callArgs.data.revenue.toString()).toBe('0');
+    });
+
     it('should handle prisma errors', async () => {
       mockPrisma.account.updateMany.mockRejectedValue(new Error('Database error'));
 
