@@ -24,10 +24,27 @@ let capturedLeadFormProps: {
 
 vi.mock('@/components/leads/LeadForm', () => ({
   EMPTY_FORM_VALUES: {
-    firstName: '', lastName: '', email: '', phone: '', title: '',
-    source: '', sourceOther: '', company: '', website: '', industry: '',
-    companySize: '', annualRevenue: '', location: '', estimatedValue: '',
-    tags: '', status: '', qualificationNotes: '', budget: '', authority: '', need: '', timeline: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    title: '',
+    source: '',
+    sourceOther: '',
+    company: '',
+    website: '',
+    industry: '',
+    companySize: '',
+    annualRevenue: '',
+    location: '',
+    estimatedValue: '',
+    tags: '',
+    status: '',
+    qualificationNotes: '',
+    budget: '',
+    authority: '',
+    need: '',
+    timeline: '',
   },
   LeadForm: (props: typeof capturedLeadFormProps) => {
     capturedLeadFormProps = props;
@@ -275,7 +292,9 @@ describe('LeadEditor', () => {
     await act(async () => {
       capturedLeadFormProps?.onChange('firstName', 'Jane');
     });
-    await act(async () => { submitForm(); });
+    await act(async () => {
+      submitForm();
+    });
     await waitFor(() => {
       expect(onSave).toHaveBeenCalledWith({ id: 'test-lead-id', firstName: 'Jane' });
     });
@@ -287,9 +306,13 @@ describe('LeadEditor', () => {
     await act(async () => {
       capturedLeadFormProps?.onChange('budget', '$100k');
     });
-    await act(async () => { submitForm(); });
+    await act(async () => {
+      submitForm();
+    });
     await waitFor(() => {
-      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ id: 'test-lead-id', budget: '$100k' }));
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'test-lead-id', budget: '$100k' })
+      );
     });
   });
 
@@ -301,7 +324,9 @@ describe('LeadEditor', () => {
     });
     // Dirty: disabled=false
     expect(capturedLeadFormProps?.disabled).toBe(false);
-    await act(async () => { submitForm(); });
+    await act(async () => {
+      submitForm();
+    });
     await waitFor(() => expect(onSave).toHaveBeenCalled());
     // After save, seededSnapshot updated → isDirty=false → disabled=true
     await waitFor(() => expect(capturedLeadFormProps?.disabled).toBe(true));
@@ -310,7 +335,9 @@ describe('LeadEditor', () => {
   it('does not call onSave when nothing changed (no no-op update)', async () => {
     const onSave = vi.fn();
     renderEditor({ onSave });
-    await act(async () => { submitForm(); });
+    await act(async () => {
+      submitForm();
+    });
     expect(onSave).not.toHaveBeenCalled();
   });
 
@@ -351,7 +378,9 @@ describe('LeadEditor', () => {
     await act(async () => {
       capturedLeadFormProps?.onChange('website', 'a'.repeat(201));
     });
-    await act(async () => { submitForm(); });
+    await act(async () => {
+      submitForm();
+    });
 
     await waitFor(() => {
       // Validation error surfaced in capturedLeadFormProps.errors
@@ -366,7 +395,9 @@ describe('LeadEditor', () => {
     await act(async () => {
       capturedLeadFormProps?.onChange('website', 'a'.repeat(201));
     });
-    await act(async () => { submitForm(); });
+    await act(async () => {
+      submitForm();
+    });
     await waitFor(() => expect(capturedLeadFormProps?.errors.website).toBeTruthy());
 
     // Correct the field — error is cleared on change
@@ -375,7 +406,9 @@ describe('LeadEditor', () => {
     });
     expect(capturedLeadFormProps?.errors.website).toBeUndefined();
 
-    await act(async () => { submitForm(); });
+    await act(async () => {
+      submitForm();
+    });
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith({
         id: 'test-lead-id',

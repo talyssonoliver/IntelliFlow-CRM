@@ -41,9 +41,9 @@ describe('change-tracker · BANT fields (IFC-230)', () => {
   });
 
   it('omits a BANT text field cleared to empty', () => {
-    expect(
-      buildLeadUpdatePayload('lead-1', fields({ budget: '' }), ['budget'])
-    ).not.toHaveProperty('budget');
+    expect(buildLeadUpdatePayload('lead-1', fields({ budget: '' }), ['budget'])).not.toHaveProperty(
+      'budget'
+    );
   });
 
   it('sends timeline/annualRevenue as narrowed enum values', () => {

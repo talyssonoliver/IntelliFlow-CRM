@@ -68,10 +68,27 @@ const { mockValidateLeadFormValues } = vi.hoisted(() => ({
 
 vi.mock('@/components/leads/LeadForm', () => ({
   EMPTY_FORM_VALUES: {
-    firstName: '', lastName: '', email: '', phone: '', title: '',
-    source: '', sourceOther: '', company: '', website: '', industry: '',
-    companySize: '', annualRevenue: '', location: '', estimatedValue: '',
-    tags: '', status: '', qualificationNotes: '', budget: '', authority: '', need: '', timeline: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    title: '',
+    source: '',
+    sourceOther: '',
+    company: '',
+    website: '',
+    industry: '',
+    companySize: '',
+    annualRevenue: '',
+    location: '',
+    estimatedValue: '',
+    tags: '',
+    status: '',
+    qualificationNotes: '',
+    budget: '',
+    authority: '',
+    need: '',
+    timeline: '',
   },
   LeadForm: (props: {
     onChange: (field: string, value: string) => void;
@@ -88,7 +105,11 @@ vi.mock('@/components/leads/LeadForm', () => ({
       { 'data-testid': 'lead-form' },
       // Expose enrichment notice so enrichment tests can see it
       props.enrichmentNotice
-        ? React.createElement('span', { 'data-testid': 'enrichment-notice' }, props.enrichmentNotice)
+        ? React.createElement(
+            'span',
+            { 'data-testid': 'enrichment-notice' },
+            props.enrichmentNotice
+          )
         : null
     );
   },
@@ -103,26 +124,34 @@ vi.mock('@/lib/leads/lead-enrichment', () => ({
 }));
 
 vi.mock('@/lib/leads/lead-form-utils', () => ({
-  buildQualificationNote: vi.fn((data: { source: string; sourceOther: string; companySize: string; industry: string; qualificationNotes: string }) => {
-    // Real implementation — mirror what the util does so payload tests pass
-    const lines: string[] = [];
-    if (data.source === 'other' && data.sourceOther?.trim()) {
-      lines.push(`Source detail: ${data.sourceOther.trim()}`);
+  buildQualificationNote: vi.fn(
+    (data: {
+      source: string;
+      sourceOther: string;
+      companySize: string;
+      industry: string;
+      qualificationNotes: string;
+    }) => {
+      // Real implementation — mirror what the util does so payload tests pass
+      const lines: string[] = [];
+      if (data.source === 'other' && data.sourceOther?.trim()) {
+        lines.push(`Source detail: ${data.sourceOther.trim()}`);
+      }
+      if (data.companySize?.trim()) {
+        lines.push(`Company size: ${data.companySize}`);
+      }
+      if (data.industry?.trim()) {
+        const industryLabels: Record<string, string> = { technology: 'Technology' };
+        lines.push(`Industry: ${industryLabels[data.industry] ?? data.industry}`);
+      }
+      if (data.qualificationNotes?.trim()) {
+        lines.push(`Notes: ${data.qualificationNotes.trim()}`);
+      }
+      if (lines.length === 0) return '';
+      const body = `Lead qualification details (captured on the New Lead form):\n${lines.join('\n')}`;
+      return body.length > 5000 ? `${body.slice(0, 4999)}…` : body;
     }
-    if (data.companySize?.trim()) {
-      lines.push(`Company size: ${data.companySize}`);
-    }
-    if (data.industry?.trim()) {
-      const industryLabels: Record<string, string> = { technology: 'Technology' };
-      lines.push(`Industry: ${industryLabels[data.industry] ?? data.industry}`);
-    }
-    if (data.qualificationNotes?.trim()) {
-      lines.push(`Notes: ${data.qualificationNotes.trim()}`);
-    }
-    if (lines.length === 0) return '';
-    const body = `Lead qualification details (captured on the New Lead form):\n${lines.join('\n')}`;
-    return body.length > 5000 ? `${body.slice(0, 4999)}…` : body;
-  }),
+  ),
   mapSourceToEnum: vi.fn((source: string) => {
     const map: Record<string, string> = {
       website: 'WEBSITE',
@@ -145,8 +174,15 @@ vi.mock('@/lib/leads/lead-form-utils', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [k: string]: unknown }) =>
-    React.createElement('a', { href, ...props }, children),
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [k: string]: unknown;
+  }) => React.createElement('a', { href, ...props }, children),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -182,10 +218,13 @@ vi.mock('@intelliflow/ui', async () => {
       R.createElement('div', { 'data-testid': 'card', className }, children),
     Skeleton: ({ className }: { className?: string }) =>
       R.createElement('div', { 'data-testid': 'skeleton', className }),
-    ToastProvider: ({ children }: { children: React.ReactNode }) => R.createElement('div', null, children),
+    ToastProvider: ({ children }: { children: React.ReactNode }) =>
+      R.createElement('div', null, children),
     Toast: () => null,
-    ToastTitle: ({ children }: { children: React.ReactNode }) => R.createElement('span', null, children),
-    ToastDescription: ({ children }: { children: React.ReactNode }) => R.createElement('span', null, children),
+    ToastTitle: ({ children }: { children: React.ReactNode }) =>
+      R.createElement('span', null, children),
+    ToastDescription: ({ children }: { children: React.ReactNode }) =>
+      R.createElement('span', null, children),
     ToastClose: () => null,
     ToastViewport: () => null,
   };
@@ -409,12 +448,16 @@ describe('CreateNewLeadPage', () => {
     render(<CreateNewLeadPage />);
 
     fillBasicStep(); // email sarah@acme.com
-    act(() => { capturedProps?.onEmailBlur?.(); }); // auto-fills Acme
+    act(() => {
+      capturedProps?.onEmailBlur?.();
+    }); // auto-fills Acme
 
     act(() => {
       capturedProps?.onChange('email', 'sarah@globex.com');
     });
-    act(() => { capturedProps?.onEmailBlur?.(); }); // should refresh to Globex
+    act(() => {
+      capturedProps?.onEmailBlur?.();
+    }); // should refresh to Globex
 
     expect(capturedProps?.values.company).toBe('Globex');
   });
@@ -435,7 +478,9 @@ describe('CreateNewLeadPage', () => {
     act(() => {
       capturedProps?.onChange('company', 'Manual Co');
     });
-    act(() => { capturedProps?.onEmailBlur?.(); });
+    act(() => {
+      capturedProps?.onEmailBlur?.();
+    });
 
     expect(capturedProps?.values.company).toBe('Manual Co');
   });
@@ -468,7 +513,9 @@ describe('CreateNewLeadPage', () => {
     async (band) => {
       render(<CreateNewLeadPage />);
       fillBasicStep();
-      act(() => { capturedProps?.onChange('annualRevenue', band); });
+      act(() => {
+        capturedProps?.onChange('annualRevenue', band);
+      });
       fireEvent.click(screen.getByRole('button', { name: /next step/i }));
       fireEvent.click(screen.getByRole('button', { name: /next step/i }));
       await act(async () => {
@@ -499,7 +546,9 @@ describe('CreateNewLeadPage', () => {
   it('sends the selected Lead Source enum when one is chosen', async () => {
     render(<CreateNewLeadPage />);
     fillBasicStep();
-    act(() => { capturedProps?.onChange('source', 'referral'); });
+    act(() => {
+      capturedProps?.onChange('source', 'referral');
+    });
     fireEvent.click(screen.getByRole('button', { name: /next step/i }));
     fireEvent.click(screen.getByRole('button', { name: /next step/i }));
     await act(async () => {
@@ -657,7 +706,9 @@ describe('CreateNewLeadPage', () => {
 
   it('resets the form to pristine on successful create (clears the dirty registry)', () => {
     render(<CreateNewLeadPage />);
-    act(() => { capturedProps?.onChange('firstName', 'Sarah'); });
+    act(() => {
+      capturedProps?.onChange('firstName', 'Sarah');
+    });
     expect(capturedProps?.values.firstName).toBe('Sarah');
 
     // Trigger onSuccess

@@ -81,9 +81,7 @@ function makeValues(overrides: Partial<LeadFormValues> = {}): LeadFormValues {
   };
 }
 
-function renderCreateForm(
-  overrides: Partial<React.ComponentProps<typeof LeadForm>> = {}
-) {
+function renderCreateForm(overrides: Partial<React.ComponentProps<typeof LeadForm>> = {}) {
   const onChange = vi.fn();
   const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
   const onCancel = vi.fn();
@@ -102,9 +100,7 @@ function renderCreateForm(
   return { onChange, onSubmit, onCancel };
 }
 
-function renderEditForm(
-  overrides: Partial<React.ComponentProps<typeof LeadForm>> = {}
-) {
+function renderEditForm(overrides: Partial<React.ComponentProps<typeof LeadForm>> = {}) {
   const onChange = vi.fn();
   const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
   const onCancel = vi.fn();
