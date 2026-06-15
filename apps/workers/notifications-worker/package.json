@@ -20,7 +20,7 @@
     "@intelliflow/domain": "workspace:*",
     "@intelliflow/platform": "workspace:*",
     "@intelliflow/worker-shared": "workspace:*",
-    "bullmq": "^5.78.0",
+    "bullmq": "^5.78.1",
     "messagebird": "^4.0.1",
     "nodemailer": "^8.0.10",
     "pino": "^10.3.1",

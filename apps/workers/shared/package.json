@@ -22,7 +22,7 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "bullmq": "^5.78.0",
+    "bullmq": "^5.78.1",
     "ioredis": "^5.11.1",
     "mammoth": "^1.12.0",
     "pdf-parse": "^2.4.5",
