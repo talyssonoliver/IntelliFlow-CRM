@@ -1,0 +1,37 @@
+{
+  "task_id": "IFC-301",
+  "title": "Rich Text Editor Integration — Tiptap",
+  "sprint": 18,
+  "acknowledged_by": "Claude Opus 4.8 (1M) — /full-pipeline IFC-301",
+  "acknowledged_at": "2026-06-15T14:00:00Z",
+  "files_read": [
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+    "apps/project-tracker/docs/metrics/sprint-18/IFC-301.json",
+    "packages/ui/package.json",
+    "packages/ui/vitest.config.ts",
+    "packages/ui/__tests__/setup.ts",
+    "packages/ui/src/components/index.ts",
+    "packages/ui/src/index.ts",
+    "packages/ui/src/lib/utils.ts",
+    "packages/ui/src/components/accordion.tsx",
+    "packages/ui/src/components/confirmation-dialog.tsx",
+    "docs/operations/sprint-18-orchestrator-prompt.md",
+    "scripts/pre-ship.mjs"
+  ],
+  "invariants_acknowledged": [
+    "The editor is a reusable @intelliflow/ui component (packages/ui/src/components/rich-text-editor.tsx), exported via the components barrel so it is re-exported from packages/ui/src/index.ts (the task's required FILE).",
+    "Built on Tiptap v3.26.1: StarterKit (headings/bold/italic/bullet+numbered lists/code blocks/link) + @tiptap/extension-image. StarterKit v3 bundles Link, so no separate extension-link dep — the redundant direct dep was removed.",
+    "Required capabilities all present: headings (H1-H3), bold, italic, bullet & numbered lists, links, images, code blocks (+ undo/redo).",
+    "Structured output: extractSections() is a PURE function that splits editor.getJSON() into ordered sections at heading boundaries (intro block = level 0); onSectionsChange emits it on every change. onChange emits the raw Tiptap JSON.",
+    "Tiptap v3's useEditor no longer re-renders on every transaction — the toolbar uses useEditorState so active/disabled state stays in sync.",
+    "Icons are Material Symbols Outlined ligatures ONLY (<span className=\"material-symbols-outlined\">) — no lucide/heroicons (ESLint-blocked); verified by lint.",
+    "Coverage >= 90 (package GATE): the component is 100% statements/functions/lines and 94.54% branches (v8); the package aggregate stays above 90/80/90/90. The 3 uncovered branches are unreachable `typeof window` SSR fallbacks.",
+    "Tests live in packages/ui/__tests__/ (the vitest include glob) per repo convention, not src/components/__tests__/; the CSV artifact path is reconciled to the real location in Phase 5.",
+    "ProseMirror needs Range.getClientRects/getBoundingClientRect + elementFromPoint polyfills in jsdom — added in the test file, not the shared setup, to avoid affecting other suites.",
+    "value is INITIAL content (uncontrolled after mount, the standard Tiptap pattern) — documented; consumers remount via key to reset. immediatelyRender:false for SSR safety (PG-181 consumes it in a Next.js page).",
+    "Public API kept clean + documented for PG-181: value, onChange, onSectionsChange, onCreate (editor access), editable, ariaLabel, className, promptForLink/promptForImage overrides; RICH_TEXT_TOOLBAR_ITEMS exported for custom toolbars.",
+    "L11: Tiptap is a client-only dep; RichTextEditor is 'use client' and only pulled where imported. apps/web prod build verified green with the barrel export.",
+    "No backend/domain/schema/migration change — STOA-Domain is trivially satisfied (pure UI package).",
+    "No Co-Authored-By trailer; no --no-verify; no destructive git; pre-ship is the gate."
+  ]
+}

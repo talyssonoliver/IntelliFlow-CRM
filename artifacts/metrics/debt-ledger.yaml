@@ -5163,3 +5163,14 @@ alerts:
     remediation_sprint: 19
     remediation_plan: 'Bump @bull-board/ui to a release whose vendored highlight.js is >=10.1.2 (track upstream), or drop the Bull Board UI from the deployed image. Low impact: Bull Board UI is an internal admin/ops dashboard, not user-facing; the pollution vector requires attacker-controlled code-block language names rendered through highlight.js, which this dashboard does not expose.'
     notes: 'git issue #452. Track B residual — vendored/pre-bundled asset, not fixable via pnpm.overrides. Tracked per project Rule 8.'
+  MERGED-COVERAGE-UI-PROJECTS-EMPTY-001:
+    origin_task: IFC-301
+    owner: DevOps Lead
+    severity: medium
+    description: 'scripts/run-coverage.js runs `vitest run --coverage --project=<name>` from the root vitest.config.ts, but for packages/ui, packages/observability, packages/platform and packages/api-client the per-project coverage-final.json comes out EMPTY ({}), so those packages are ABSENT from the merged artifacts/coverage/lcov.info (confirmed on origin/main). Reproduce: COVERAGE_RUN=1 node node_modules/vitest/vitest.mjs run --coverage --coverage.reportsDirectory=/tmp/uicov --project=ui => Statements 0/0 (Unknown%). Yet `pnpm --filter @intelliflow/ui test:coverage` reports correct coverage. Because packages/ui/src is in sonar.sources + the root coverage include, CI Sonar new_coverage AND local check-diff-coverage count every NEW ui line as 0% — a pure-ui PR (e.g. IFC-301) fails both gates. Likely a vitest v4 project-coverage composition nuance when filtered by --project.'
+    created_at: 2026-06-15
+    status: open
+    expiry_date: 2026-09-15
+    remediation_sprint: 19
+    remediation_plan: 'Fix the root<->project coverage composition so ui/observability/platform/api-client are instrumented in the merged run (they appear in the merged lcov and Sonar measures them), then DROP the per-file exclusions added for IFC-301. Until then, ui coverage is enforced only by the ui package own vitest thresholds (90/80/90/90).'
+    notes: 'git issue #482. Workaround: IFC-301 added packages/ui/src/components/rich-text-editor.tsx + components/index.ts to sonar.coverage.exclusions AND check-diff-coverage SONAR_COVERAGE_EXCLUDE (same pattern as supabase.ts #427 / page.tsx #382). The component is 100% covered by its 21 tests via the ui gate. Tracked per project Rule 8.'
