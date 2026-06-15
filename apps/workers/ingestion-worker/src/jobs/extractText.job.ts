@@ -170,9 +170,9 @@ export class TextExtractionProcessor {
         // Remove control characters
         // eslint-disable-next-line no-control-regex
         .replaceAll(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
-        // Normalize quotes
-        .replaceAll(/[""]/g, '"')
-        .replaceAll(/['']/g, "'")
+        // Normalize curly/smart quotes to ASCII
+        .replaceAll(/[“”]/g, '"')
+        .replaceAll(/[‘’]/g, "'")
         // Normalize dashes
         .replaceAll(/[–—]/g, '-')
         // Trim
