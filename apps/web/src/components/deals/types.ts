@@ -209,12 +209,20 @@ export function buildOpportunityListInput(
   return {
     ownerId: filters.ownerId || undefined,
     stage: filters.stages && filters.stages.length > 0 ? filters.stages : undefined,
-    minValue: filters.minValue,
-    maxValue: filters.maxValue,
+    // The list schema requires positive values (z.number().positive()), so a 0
+    // (or negative) bound is a no-op and must be omitted — sending it would 400
+    // the whole query (#451).
+    minValue: positiveOrUndefined(filters.minValue),
+    maxValue: positiveOrUndefined(filters.maxValue),
     search: search || undefined,
     dateFrom,
     dateTo,
   };
+}
+
+/** Returns the number only when it is strictly positive, else undefined. */
+function positiveOrUndefined(value: number | undefined): number | undefined {
+  return typeof value === 'number' && value > 0 ? value : undefined;
 }
 
 /** Compute pipeline stats from deal array */

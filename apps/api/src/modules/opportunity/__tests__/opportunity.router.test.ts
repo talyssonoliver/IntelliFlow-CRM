@@ -457,6 +457,21 @@ describe('Opportunity Router', () => {
         })
       );
     });
+
+    it('scopes the groupBy to the tenant (and owner for a regular user)', async () => {
+      (prismaMock.opportunity.groupBy as any).mockResolvedValue([]);
+
+      await caller.filterOptions({});
+
+      expect(prismaMock.opportunity.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            tenantId: TEST_UUIDS.tenant,
+            ownerId: TEST_UUIDS.user1,
+          }),
+        })
+      );
+    });
   });
 
   describe('update', () => {
