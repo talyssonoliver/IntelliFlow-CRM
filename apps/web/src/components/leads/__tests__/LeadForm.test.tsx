@@ -353,6 +353,27 @@ describe('LeadForm', () => {
     renderEditForm({ visibleSections: ['basic'] });
     expect(screen.queryByLabelText(/lead source/i)).toBeNull();
   });
+
+  // -------------------------------------------------------------------------
+  // Bug fix: Industry + Company Size must NOT render in edit mode (Bug 2 — MEDIUM)
+  // They have no Lead column; persisting them in edit is impossible.
+  // -------------------------------------------------------------------------
+  it('does not render Industry or Company Size selects in edit mode (Bug 2)', () => {
+    renderEditForm({ visibleSections: ['company'] });
+    expect(screen.queryByLabelText(/industry/i)).toBeNull();
+    expect(screen.queryByLabelText(/company size/i)).toBeNull();
+  });
+
+  it('does render Annual Revenue select in edit mode (stays in both modes — Bug 2)', () => {
+    renderEditForm({ visibleSections: ['company'] });
+    expect(screen.getByLabelText(/annual revenue/i)).toBeTruthy();
+  });
+
+  it('renders Industry and Company Size selects in create mode (Bug 2)', () => {
+    renderCreateForm({ visibleSections: ['company'] });
+    expect(screen.getByLabelText(/industry/i)).toBeTruthy();
+    expect(screen.getByLabelText(/company size/i)).toBeTruthy();
+  });
 });
 
 // ---------------------------------------------------------------------------

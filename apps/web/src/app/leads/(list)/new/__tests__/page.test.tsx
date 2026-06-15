@@ -738,4 +738,67 @@ describe('CreateNewLeadPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
     expect(mockPush).toHaveBeenCalledWith('/leads');
   });
+
+  // -------------------------------------------------------------------------
+  // Bug fix: location + tags must reach the create payload (Bug 1 — HIGH)
+  // -------------------------------------------------------------------------
+  it('includes location and tags in the create payload when filled (Bug 1)', async () => {
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Company
+    act(() => {
+      capturedProps?.onChange('location', 'San Francisco, CA');
+      capturedProps?.onChange('tags', 'enterprise, saas, hot-lead');
+    });
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> Qualification
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+    });
+
+    const payload = mockMutateAsync.mock.calls[0]?.[0];
+    expect(payload?.location).toBe('San Francisco, CA');
+    expect(payload?.tags).toEqual(['enterprise', 'saas', 'hot-lead']);
+  });
+
+  it('omits tags from the payload when the tags field is blank (Bug 1)', async () => {
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+    fireEvent.click(screen.getByRole('button', { name: /next step/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+    });
+
+    const payload = mockMutateAsync.mock.calls[0]?.[0];
+    expect(payload?.tags).toBeUndefined();
+  });
+
+  // -------------------------------------------------------------------------
+  // Bug fix: Enter / form submit on non-final step must NOT call mutateAsync (Bug 3)
+  // -------------------------------------------------------------------------
+  it('advancing via form onSubmit on step 1 does NOT call createLead.mutateAsync (Bug 3)', async () => {
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+
+    // Trigger the form's native submit (e.g. Enter key) while on step 1
+    await act(async () => {
+      capturedProps?.onSubmit({ preventDefault: () => undefined });
+    });
+
+    // Should have advanced to step 2 (Next Step button still visible), NOT submitted
+    expect(mockMutateAsync).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /next step/i })).toBeTruthy();
+  });
+
+  it('form onSubmit on the final step DOES call createLead.mutateAsync (Bug 3)', async () => {
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> step 2
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> step 3
+    await act(async () => {
+      capturedProps?.onSubmit({ preventDefault: () => undefined });
+    });
+
+    expect(mockMutateAsync).toHaveBeenCalledOnce();
+  });
 });

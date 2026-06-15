@@ -394,8 +394,20 @@ function BasicSection({ values, errors, onChange, mode, onEmailBlur }: Readonly<
   );
 }
 
-function CompanySection({ values, errors, onChange }: Readonly<SectionProps>) {
+/**
+ * Industry and Company Size are create-only: in create mode they feed into the
+ * qualificationNote prose; there is no corresponding Lead column, so edit mode
+ * would render them but never be able to persist or seed them. annualRevenue IS
+ * a real column and therefore shown in both modes.
+ */
+const CREATE_ONLY_SELECTS = new Set<keyof LeadFormValues>(['industry', 'companySize']);
+
+function CompanySection({ values, errors, onChange, mode }: Readonly<SectionProps>) {
   const fieldBag = { values, errors, onChange };
+  const visibleSelects =
+    mode === 'create'
+      ? COMPANY_SELECTS
+      : COMPANY_SELECTS.filter((f) => !CREATE_ONLY_SELECTS.has(f.id));
   return (
     <div className="flex flex-col gap-6">
       <SectionHeader title="Company Information" subtitle="Optional fields" />
@@ -403,7 +415,7 @@ function CompanySection({ values, errors, onChange }: Readonly<SectionProps>) {
         {COMPANY_FIELDS.map((f) => (
           <TextField key={f.id} {...f} {...fieldBag} />
         ))}
-        {COMPANY_SELECTS.map((f) => (
+        {visibleSelects.map((f) => (
           <SelectField key={f.id} {...f} {...fieldBag} />
         ))}
       </div>

@@ -236,6 +236,10 @@ export default function NewLeadForm() {
         industry: form.industry,
         qualificationNotes: form.qualificationNotes,
       });
+      const parsedTags = form.tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
       await createLead.mutateAsync({
         email: form.email.trim(),
         firstName: optional(form.firstName),
@@ -245,6 +249,8 @@ export default function NewLeadForm() {
         phone: optional(form.phone),
         source: mapSourceToEnum(form.source),
         website: optional(form.website),
+        location: optional(form.location),
+        ...(parsedTags.length > 0 ? { tags: parsedTags } : {}),
         budget: optional(form.budget),
         authority: optional(form.authority),
         need: optional(form.need),
@@ -318,7 +324,11 @@ export default function NewLeadForm() {
               onChange={update}
               onSubmit={(e) => {
                 e.preventDefault();
-                void submit();
+                if (stepIndex < STEPS.length - 1) {
+                  nextStep();
+                } else {
+                  void submit();
+                }
               }}
               onEmailBlur={onEmailBlur}
               enrichmentNotice={notice}
