@@ -27,7 +27,6 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 
 function detectRepoRoot() {
@@ -94,9 +93,6 @@ export function getTopN<T>(items: T[], n: number): T[] {
   return items.slice(0, n - 1); // off-by-one: should be slice(0, n)
 }
 `;
-
-// Must match FP_DRIFT in scripts/codex-review.mjs exactly.
-const FP_DRIFT = 2;
 
 /**
  * Given the findings.json artifact, find all fingerprints from unwaived findings
