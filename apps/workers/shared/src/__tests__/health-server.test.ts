@@ -70,9 +70,16 @@ describe('HealthServer', () => {
       '# HELP worker_uptime_seconds Worker uptime\nworker_uptime_seconds 1000\n',
   });
 
+  // Bind to port 0 so the OS assigns a free ephemeral port, eliminating the
+  // EADDRINUSE collisions a random port only reduces (#400). The real port is
+  // read back from the listening server via startServer().
+  const startServer = async () => {
+    await server.start();
+    testPort = server.getAddress()?.port ?? testPort;
+  };
+
   beforeEach(() => {
-    // Use random port to avoid conflicts
-    testPort = 14000 + Math.floor(Math.random() * 1000);
+    testPort = 0;
 
     server = new HealthServer({
       config: getTestConfig(testPort),
@@ -94,7 +101,7 @@ describe('HealthServer', () => {
 
   describe('start()', () => {
     it('should start HTTP server on specified port', async () => {
-      await server.start();
+      await startServer();
 
       const response = await fetchEndpoint(`http://localhost:${testPort}/health`);
       expect(response.status).toBe(200);
@@ -103,7 +110,7 @@ describe('HealthServer', () => {
 
   describe('stop()', () => {
     it('should stop HTTP server', async () => {
-      await server.start();
+      await startServer();
       await server.stop();
 
       // Server should no longer be listening
@@ -111,7 +118,7 @@ describe('HealthServer', () => {
     });
 
     it('should be idempotent', async () => {
-      await server.start();
+      await startServer();
       await server.stop();
       await server.stop(); // Should not throw
     });
@@ -119,7 +126,7 @@ describe('HealthServer', () => {
 
   describe('GET /health', () => {
     it('should return 200 for healthy status', async () => {
-      await server.start();
+      await startServer();
       const response = await fetchEndpoint(`http://localhost:${testPort}/health`);
       expect(response.status).toBe(200);
 
@@ -130,7 +137,7 @@ describe('HealthServer', () => {
 
   describe('GET /health/ready', () => {
     it('should return readiness status', async () => {
-      await server.start();
+      await startServer();
       const response = await fetchEndpoint(`http://localhost:${testPort}/health/ready`);
       expect(response.status).toBe(200);
 
@@ -142,7 +149,7 @@ describe('HealthServer', () => {
 
   describe('GET /health/live', () => {
     it('should always return 200', async () => {
-      await server.start();
+      await startServer();
       const response = await fetchEndpoint(`http://localhost:${testPort}/health/live`);
       expect(response.status).toBe(200);
 
@@ -153,7 +160,7 @@ describe('HealthServer', () => {
 
   describe('GET /health/detailed', () => {
     it('should return detailed health', async () => {
-      await server.start();
+      await startServer();
       const response = await fetchEndpoint(`http://localhost:${testPort}/health/detailed`);
       expect(response.status).toBe(200);
 
@@ -166,7 +173,7 @@ describe('HealthServer', () => {
 
   describe('GET /metrics', () => {
     it('should return Prometheus format', async () => {
-      await server.start();
+      await startServer();
       const response = await fetchEndpoint(`http://localhost:${testPort}/metrics`);
       expect(response.status).toBe(200);
 
@@ -177,7 +184,7 @@ describe('HealthServer', () => {
 
   describe('404 handling', () => {
     it('should return 404 for unknown paths', async () => {
-      await server.start();
+      await startServer();
       const response = await fetchEndpoint(`http://localhost:${testPort}/unknown`);
       expect(response.status).toBe(404);
     });
