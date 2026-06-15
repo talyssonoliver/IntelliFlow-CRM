@@ -27,6 +27,7 @@
 import { TRPCError } from '@trpc/server';
 import { Context } from '../context';
 import { AuditLogger, getAuditLogger } from './audit-logger';
+import { pickTrustedForwardedIp } from './client-ip';
 import { RBACService, getRBACService } from './rbac';
 import { AuditAction, ResourceType, RoleName, PermissionAction, DataClassification } from './types';
 
@@ -376,11 +377,12 @@ function generateRequestId(): string {
 function extractIpAddress(req?: Request): string | undefined {
   if (!req) return undefined;
 
-  // Check common headers for client IP
+  // Check common headers for client IP. Use the rightmost (trusted edge-set)
+  // x-forwarded-for hop so a spoofed leftmost entry can't forge the audit IP.
   const headers = req.headers;
-  const forwardedFor = headers.get?.('x-forwarded-for');
+  const forwardedFor = pickTrustedForwardedIp(headers.get?.('x-forwarded-for'));
   if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
+    return forwardedFor;
   }
 
   const realIp = headers.get?.('x-real-ip');
