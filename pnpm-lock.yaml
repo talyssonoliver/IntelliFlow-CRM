@@ -889,8 +889,8 @@ importers:
         specifier: ^4.0.1
         version: 4.0.1
       nodemailer:
-        specifier: ^8.0.10
-        version: 8.0.10
+        specifier: ^9.0.0
+        version: 9.0.0
       pino:
         specifier: ^10.3.1
         version: 10.3.1
@@ -9663,8 +9663,8 @@ packages:
     resolution: {integrity: sha512-3VW/8JpPqPvnJvseXowjZcirPisssnBuDikk6JIZ8jQzF7KJQX52iPFX4RYYxLycYH7IbMRSPUOga/esVjy5Yg==}
     engines: {node: '>=18'}
 
-  nodemailer@8.0.10:
-    resolution: {integrity: sha512-BLFuSth7QtHOkBzyqTehWWyub0NTRDuK2Q2SQfnGLsrJnzyU+Yeh4WpV1eZGuARFj1xQJHIdnTuJZLP+b9R1GQ==}
+  nodemailer@9.0.0:
+    resolution: {integrity: sha512-tbPTid7d/p9jAA8CRZ3iomvrMaST0o6NYuY7v6JQZHpPRZ61mLFSPKYd7342NtOFuej9/+L48SOIxwfu2uDvtw==}
     engines: {node: '>=6.0.0'}
 
   nopt@4.0.3:
@@ -21075,7 +21075,7 @@ snapshots:
     dependencies:
       '@babel/parser': 7.29.7
 
-  nodemailer@8.0.10: {}
+  nodemailer@9.0.0: {}
 
   nopt@4.0.3:
     dependencies:
