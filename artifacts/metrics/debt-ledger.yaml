@@ -5163,6 +5163,28 @@ alerts:
     remediation_sprint: 19
     remediation_plan: 'Bump @bull-board/ui to a release whose vendored highlight.js is >=10.1.2 (track upstream), or drop the Bull Board UI from the deployed image. Low impact: Bull Board UI is an internal admin/ops dashboard, not user-facing; the pollution vector requires attacker-controlled code-block language names rendered through highlight.js, which this dashboard does not expose.'
     notes: 'git issue #452. Track B residual — vendored/pre-bundled asset, not fixable via pnpm.overrides. Tracked per project Rule 8.'
+  DEP-CVE-JSYAML-V3-GRAYMATTER-DOCS-001:
+    origin_task: '#485'
+    owner: DevOps Lead
+    severity: low
+    description: 'Trivy alert #2339 (CVE-2026-53550 / GHSA-h67p-54hq-rp68, js-yaml merge-key quadratic DoS) flags js-yaml 3.14.2 in docs/pnpm-lock.yaml. It is pulled by gray-matter@4.0.3 (the markdown front-matter parser core to the Docusaurus docs site), which depends on js-yaml ^3 and calls the removed-in-v4 safeLoad/safeDump APIs. The docs override is therefore SCOPED to js-yaml@4 (>=4.2.0) — it patches the 4.1.1 copy (alert #2340, cleared) but leaves gray-matter on v3; forcing v4 would break the docs build. The DoS vector needs an attacker-controlled YAML front-matter block fed to a build-time docs generator, which does not occur for our authored docs.'
+    created_at: 2026-06-16
+    status: open
+    expiry_date: 2026-09-16
+    remediation_sprint: 19
+    remediation_plan: 'Drop to a single docs js-yaml >=4.2.0 once gray-matter ships a release on js-yaml 4 (or migrate the docs front-matter parser). Low impact: build-time docs-site tooling only, not in the runtime CRM app or any shipped artifact.'
+    notes: 'git issue #485. Standalone docs/ workspace (pnpm install --ignore-workspace), separate from the root remediation in PR #488. Scoped-override decision, not a missed patch. Tracked per project Rule 8.'
+  DEP-CVE-TAR-NPM-BUNDLED-001:
+    origin_task: '#485'
+    owner: DevOps Lead
+    severity: medium
+    description: 'Trivy alert #2346 (CVE-2026-53655, node-tar PAX/GNU long-name parser interpretation differential) flags tar 7.5.11 at usr/local/lib/node_modules/npm/node_modules/tar — the copy BUNDLED inside the npm CLI shipped with the node base image, NOT a workspace dependency (tar does not resolve in any of our lockfiles). Same class as the picomatch base-image residual (DEP-CVE-PICOMATCH-NPM-BUNDLED-001). A root pnpm override for tar (>=7.5.16) is present defensively but cannot replace the base-image npm bundle.'
+    created_at: 2026-06-16
+    status: open
+    expiry_date: 2026-09-16
+    remediation_sprint: 19
+    remediation_plan: 'Resolved when the node base image ships an npm whose bundled tar is >=7.5.16 (rebuild picks it up), or by running npm i -g npm@latest in the image build. Low impact: the bundled copy is only exercised by npm CLI tarball handling at build/admin time, not at runtime.'
+    notes: 'git issue #485. Track B residual — base-image / global-npm bundled dep, not fixable via pnpm.overrides. Tracked per project Rule 8.'
   MERGED-COVERAGE-UI-PROJECTS-EMPTY-001:
     origin_task: IFC-301
     owner: DevOps Lead
