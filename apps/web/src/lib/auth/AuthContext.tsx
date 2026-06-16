@@ -205,12 +205,14 @@ function resolveQueryStateUpdate(statusQuery: {
           ? { accessToken: '', expiresAt: new Date(data['expiresAt'] as string) }
           : null;
       // `emailVerified` is added by the backend in the 2026-06-16 onboarding
-      // redesign. When the api-client types lag behind (pre-rebuild), the field
-      // is simply absent from the response object — we treat that as null
-      // (unknown) rather than false so the banner doesn't show prematurely.
+      // redesign, NESTED inside the getStatus `user` object (not at the top level).
+      // When the api-client types lag behind (pre-rebuild), the field is simply
+      // absent — we treat that as null (unknown) rather than false so the banner
+      // doesn't show prematurely.
+      const userData = data['user'] as Record<string, unknown>;
       const emailVerified =
-        'emailVerified' in data && typeof data['emailVerified'] === 'boolean'
-          ? data['emailVerified']
+        userData && 'emailVerified' in userData && typeof userData['emailVerified'] === 'boolean'
+          ? (userData['emailVerified'] as boolean)
           : null;
       return {
         handled: true,
