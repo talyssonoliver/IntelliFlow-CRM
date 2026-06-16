@@ -15,7 +15,7 @@ import {
   getPingHealth,
   getReadinessHealth,
 } from './modules/misc/health.service';
-import { container, containerReady } from './container';
+import { container } from './container';
 import { processStripeWebhook } from './webhooks/stripe-webhook';
 import { handlePmEventsRoute } from './modules/pm-events/handle-pm-events-route';
 
@@ -533,19 +533,9 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
   const port = options.port ?? API_PORT;
   const server = createApiServer(options);
 
-  // Await container initialization (lazy dynamic imports for heavy AI providers)
-  // before opening the port. This guarantees _resolved is populated before any
-  // request hits the container Proxy (perf/container-lazy-wiring).
-  void containerReady
-    .then(() => {
-      server.listen(port, () => {
-        console.log(`[API] HTTP server listening on http://localhost:${port}`);
-      });
-    })
-    .catch((err) => {
-      console.error('[API] Container initialization failed — server will not start:', err);
-      process.exit(1);
-    });
+  server.listen(port, () => {
+    console.log(`[API] HTTP server listening on http://localhost:${port}`);
+  });
 
   return server;
 }
