@@ -334,7 +334,11 @@ async function maybePromoteBootstrapAdmin(
     stripeCustomerId: updated.stripeCustomerId ?? undefined,
     timezone: updated.timezone ?? 'Europe/London',
     avatarUrl: updated.avatarUrl ?? undefined,
-    emailVerified: updated.emailVerified,
+    // Monotonic: preserve an emailVerified upgrade already applied in-memory by the
+    // caller. The caller's verification write is fire-and-forget and may not have landed
+    // before this promotion read, so trust the in-memory `session.emailVerified` too
+    // (never demote a just-verified user when they're also promoted to bootstrap admin).
+    emailVerified: session.emailVerified || updated.emailVerified,
   };
 }
 

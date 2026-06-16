@@ -306,4 +306,47 @@ describe('ensureAppUserSession — avatar backfill from provider metadata', () =
     expect(session.emailVerified).toBe(true);
     expect((update.mock.calls[0][0] as any).data.emailVerified).toBe(true);
   });
+
+  it('SECURITY: a just-verified user keeps emailVerified=true when also promoted to bootstrap admin', async () => {
+    // Edge case: an unverified bootstrap-admin owner signs in with a confirming token.
+    // The verification upgrade is applied in-memory, but the promotion read can race the
+    // fire-and-forget write and return a STALE emailVerified=false — which must NOT
+    // demote the session (monotonic OR in maybePromoteBootstrapAdmin).
+    const BOOTSTRAP_EMAIL = 'talyssondasilvaoliveira@gmail.com';
+    const prisma = makePrismaStub({
+      findUnique: vi.fn().mockResolvedValue({
+        id: EXISTING_USER_ID,
+        email: BOOTSTRAP_EMAIL,
+        name: 'Owner',
+        role: 'USER',
+        tenantId: 'default-tenant-id',
+        stripeCustomerId: null,
+        timezone: 'Europe/London',
+        avatarUrl: null,
+        emailVerified: false,
+      }),
+    });
+    // Promotion update returns ADMIN but with the stale (pre-upgrade) emailVerified=false.
+    (prisma.user as any).update = vi.fn().mockResolvedValue({
+      id: EXISTING_USER_ID,
+      email: BOOTSTRAP_EMAIL,
+      name: 'Owner',
+      role: 'ADMIN',
+      tenantId: 'default-tenant-id',
+      stripeCustomerId: null,
+      timezone: 'Europe/London',
+      avatarUrl: null,
+      emailVerified: false,
+    });
+
+    const session = await ensureAppUserSession(prisma as any, {
+      id: EXISTING_USER_ID,
+      email: BOOTSTRAP_EMAIL,
+      email_confirmed_at: '2026-06-16T00:00:00.000Z', // token confirms verification
+      user_metadata: {},
+    });
+
+    expect(session.role).toBe('ADMIN');
+    expect(session.emailVerified).toBe(true);
+  });
 });
