@@ -76,6 +76,62 @@ describe('HomeCacheService.getWelcomeSummary', () => {
     expect(service.getMetrics().hits).toBe(1);
   });
 
+  it("no cross-tenant cache leak: distinct users never read each other's summary (#263)", async () => {
+    // #263 trust model: the key is the userId alone. User IDs are globally
+    // unique CUIDs and each User has exactly one tenant (User.tenantId scalar
+    // FK; session tenantId is derived from the user record, not selectable),
+    // so a key cannot collide across tenants. This locks that invariant: two
+    // users in different tenants must get their OWN computed summary, never a
+    // cache hit on the other's entry.
+    const computeA = vi.fn<() => Promise<{ greeting: string }>>().mockResolvedValue({
+      greeting: 'tenant-A-data',
+    });
+    const computeB = vi.fn<() => Promise<{ greeting: string }>>().mockResolvedValue({
+      greeting: 'tenant-B-data',
+    });
+
+    // Tenant A's user warms the cache.
+    const a1 = await service.getWelcomeSummary(
+      'tenant-A',
+      'user-aaaaaaaaaaaaaaaaaaaaaaaa',
+      computeA
+    );
+    // Tenant B's user (different userId) must miss and compute its own data.
+    const b1 = await service.getWelcomeSummary(
+      'tenant-B',
+      'user-bbbbbbbbbbbbbbbbbbbbbbbb',
+      computeB
+    );
+    // Tenant A's user again — hits its own entry, not B's.
+    const a2 = await service.getWelcomeSummary(
+      'tenant-A',
+      'user-aaaaaaaaaaaaaaaaaaaaaaaa',
+      computeA
+    );
+
+    expect(a1).toEqual({ greeting: 'tenant-A-data' });
+    expect(b1).toEqual({ greeting: 'tenant-B-data' });
+    expect(a2).toEqual({ greeting: 'tenant-A-data' });
+    expect(computeA).toHaveBeenCalledTimes(1);
+    expect(computeB).toHaveBeenCalledTimes(1);
+    expect(buildHomeSummaryKey('user-aaaaaaaaaaaaaaaaaaaaaaaa')).not.toBe(
+      buildHomeSummaryKey('user-bbbbbbbbbbbbbbbbbbbbbbbb')
+    );
+  });
+
+  it('invalidation is per-user (#263): dropping one user does not evict another', async () => {
+    await service.getWelcomeSummary('tenant-A', 'user-a', compute);
+    await service.getWelcomeSummary('tenant-B', 'user-b', compute);
+    compute.mockClear();
+
+    // Event for user-a invalidates only user-a's entry.
+    await service.invalidate('user-a');
+
+    await service.getWelcomeSummary('tenant-A', 'user-a', compute); // miss → recompute
+    await service.getWelcomeSummary('tenant-B', 'user-b', compute); // still cached
+    expect(compute).toHaveBeenCalledTimes(1);
+  });
+
   it('cache.get throws: compute still called, metrics.errors incremented', async () => {
     const brokenCache = {
       get: vi.fn().mockRejectedValue(new Error('redis down')),

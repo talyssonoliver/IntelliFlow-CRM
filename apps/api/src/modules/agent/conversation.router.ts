@@ -18,6 +18,7 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure, adminProcedure } from '../../trpc';
+import { pickTrustedForwardedIp } from '../../security/client-ip';
 
 // ============================================
 // Input Schemas
@@ -140,8 +141,15 @@ export const conversationRouter = createTRPCRouter({
     const sessionId =
       input.sessionId || `conv_${Date.now()}_${randomUUID().replaceAll('-', '').slice(0, 8)}`;
 
-    // Extract IP address and user agent from request headers
-    const ipAddress = ctx.req?.headers?.get('x-forwarded-for') || undefined;
+    // Extract IP address and user agent from request headers. Record the
+    // rightmost, edge-set x-forwarded-for hop (the trusted client IP) rather
+    // than the raw header — the leftmost portion is client-spoofable, so
+    // storing the whole string would poison the conversation audit trail with
+    // attacker-controlled data (same class as #445/#261).
+    const ipAddress =
+      pickTrustedForwardedIp(ctx.req?.headers?.get('x-forwarded-for')) ??
+      ctx.req?.headers?.get('x-real-ip') ??
+      undefined;
     const userAgent = ctx.req?.headers?.get('user-agent') || undefined;
 
     const conversation = await ctx.prismaWithTenant.conversationRecord.create({

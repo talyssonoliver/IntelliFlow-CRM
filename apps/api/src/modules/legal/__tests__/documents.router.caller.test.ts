@@ -573,6 +573,53 @@ describe('Documents Router - Caller Tests', () => {
       expect(mockDocumentInstance.sign).toHaveBeenCalled();
     });
 
+    it('records the rightmost (trusted, edge-set) x-forwarded-for hop, not the spoofable leftmost (#445)', async () => {
+      const ctx = createTestContext({
+        req: {
+          headers: {
+            // An attacker prepends an arbitrary IP; the edge proxy appends the
+            // real client IP as the rightmost hop.
+            'x-forwarded-for': '1.2.3.4, 203.0.113.7',
+            'user-agent': 'SignAgent/1.0',
+            'x-csrf-token': 'test-csrf-token',
+          },
+        } as never,
+      });
+      const caller = documentsRouter.createCaller(ctx);
+
+      await caller.sign({ documentId: TEST_UUIDS.task1 });
+
+      expect(mockDocumentInstance.sign).toHaveBeenCalledTimes(1);
+      const [, ipAddress, userAgent] = mockDocumentInstance.sign.mock.calls[0];
+      expect(ipAddress).toBe('203.0.113.7');
+      expect(ipAddress).not.toBe('1.2.3.4');
+      expect(userAgent).toBe('SignAgent/1.0');
+    });
+
+    it('falls back to x-real-ip then "unknown" when x-forwarded-for is absent (#445)', async () => {
+      const ctx = createTestContext({
+        req: {
+          headers: { 'x-real-ip': '198.51.100.9', 'x-csrf-token': 'test-csrf-token' },
+        } as never,
+      });
+      const caller = documentsRouter.createCaller(ctx);
+
+      await caller.sign({ documentId: TEST_UUIDS.task1 });
+
+      const [, ipAddress] = mockDocumentInstance.sign.mock.calls[0];
+      expect(ipAddress).toBe('198.51.100.9');
+    });
+
+    it('records "unknown" when no client-IP headers are present (#445)', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      await caller.sign({ documentId: TEST_UUIDS.task1 });
+
+      const [, ipAddress] = mockDocumentInstance.sign.mock.calls[0];
+      expect(ipAddress).toBe('unknown');
+    });
+
     it('should throw NOT_FOUND when document does not exist', async () => {
       const ctx = createTestContext();
       const caller = documentsRouter.createCaller(ctx);
