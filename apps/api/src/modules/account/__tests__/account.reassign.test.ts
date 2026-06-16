@@ -196,6 +196,7 @@ describe('account.reassign (IFC-311)', () => {
         email: 'other@example.com',
         role: 'SALES_REP',
         tenantId: TEST_UUIDS.tenant,
+        emailVerified: true,
       },
       tenant: {
         tenantId: TEST_UUIDS.tenant,
@@ -241,6 +242,7 @@ describe('account.reassign (IFC-311)', () => {
         email: 'owner@example.com',
         role: 'SALES_REP',
         tenantId: TEST_UUIDS.tenant,
+        emailVerified: true,
       },
     });
     const caller = accountRouter.createCaller(ctx);
@@ -441,6 +443,7 @@ describe('account.bulkReassign (IFC-311)', () => {
         email: 'other@example.com',
         role: 'SALES_REP',
         tenantId: TEST_UUIDS.tenant,
+        emailVerified: true,
       },
       tenant: {
         tenantId: TEST_UUIDS.tenant,

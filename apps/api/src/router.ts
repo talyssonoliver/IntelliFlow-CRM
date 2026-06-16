@@ -67,6 +67,7 @@ import { helpArticleRouter } from './modules/help-article/help-article.router';
 import { customNodeTypeRouter } from './modules/custom-node-type/custom-node-type.router';
 import { customActionHandlerRouter } from './modules/custom-action-handler/custom-action-handler.router';
 import { inboundRouter } from './modules/inbound/inbound.router';
+import { onboardingRouter } from './modules/onboarding/onboarding.router';
 
 /**
  * Main application router
@@ -117,6 +118,9 @@ import { inboundRouter } from './modules/inbound/inbound.router';
 export const appRouter = createTRPCRouter({
   // Authentication & Authorization
   auth: authRouter,
+
+  // Onboarding (incident 2026-06-16 onboarding redesign)
+  onboarding: onboardingRouter,
 
   // Billing & Subscriptions
   billing: billingRouter,

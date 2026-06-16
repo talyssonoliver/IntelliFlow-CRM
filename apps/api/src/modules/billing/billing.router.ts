@@ -16,7 +16,12 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure, publicProcedure } from '../../trpc';
+import {
+  createTRPCRouter,
+  tenantProcedure,
+  verifiedTenantProcedure,
+  publicProcedure,
+} from '../../trpc';
 import {
   listInvoicesInputSchema,
   getInvoiceInputSchema,
@@ -39,6 +44,34 @@ import {
   SubscriptionPausedEvent,
 } from '@intelliflow/domain';
 import { formatDateTimeInTimezone } from '../../lib/timezone-utils';
+
+// ============================================
+// Price ID Resolution (incident 2026-06-16 onboarding redesign)
+// ============================================
+
+/**
+ * Map (planId, billingCycle) to the real Stripe price ID from environment
+ * variables. Throws clearly if the required env var is missing so a mis-config
+ * surfaces at request time rather than silently passing a synthetic ID to Stripe.
+ *
+ * planId  must be one of: starter | professional | enterprise | custom (case-insensitive)
+ * billingCycle must be: monthly | annual
+ *
+ * Env var pattern: STRIPE_PRICE_<TIER>_<CYCLE> e.g. STRIPE_PRICE_STARTER_MONTHLY
+ */
+export function resolvePriceId(planId: string, billingCycle: 'monthly' | 'annual'): string {
+  const tier = planId.toUpperCase();
+  const cycle = billingCycle.toUpperCase();
+  const envKey = `STRIPE_PRICE_${tier}_${cycle}`;
+  const priceId = process.env[envKey];
+  if (!priceId) {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: `Stripe price not configured. Missing environment variable: ${envKey}`,
+    });
+  }
+  return priceId;
+}
 
 // ============================================
 // Local Type Definitions (from StripeAdapter)
@@ -436,58 +469,61 @@ export const billingRouter = createTRPCRouter({
    *
    * @implements PG-028 (Invoice Detail)
    */
-  payInvoice: tenantProcedure.input(payInvoiceInputSchema).mutation(async ({ ctx, input }) => {
-    const user = ctx.user;
+  // SECURITY (2026-06-16): all billing mutations require a verified email.
+  payInvoice: verifiedTenantProcedure
+    .input(payInvoiceInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
 
-    if (!user?.stripeCustomerId) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'No billing account found.',
-      });
-    }
+      if (!user?.stripeCustomerId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No billing account found.',
+        });
+      }
 
-    const stripe = await getStripeAdapter();
+      const stripe = await getStripeAdapter();
 
-    // Fetch invoice first for ownership + status verification
-    const getResult = await stripe.getInvoice(input.invoiceId);
+      // Fetch invoice first for ownership + status verification
+      const getResult = await stripe.getInvoice(input.invoiceId);
 
-    if (getResult.isFailure || !getResult.value) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Invoice not found.',
-      });
-    }
+      if (getResult.isFailure || !getResult.value) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invoice not found.',
+        });
+      }
 
-    const invoice = getResult.value;
+      const invoice = getResult.value;
 
-    // Ownership check
-    if (invoice.customerId !== user.stripeCustomerId) {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'You do not have permission to pay this invoice.',
-      });
-    }
+      // Ownership check
+      if (invoice.customerId !== user.stripeCustomerId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to pay this invoice.',
+        });
+      }
 
-    // Only open invoices can be paid
-    if (invoice.status !== 'open') {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: `Invoice cannot be paid. Current status: ${invoice.status}`,
-      });
-    }
+      // Only open invoices can be paid
+      if (invoice.status !== 'open') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Invoice cannot be paid. Current status: ${invoice.status}`,
+        });
+      }
 
-    const payResult = await stripe.payInvoice(input.invoiceId);
+      const payResult = await stripe.payInvoice(input.invoiceId);
 
-    if (payResult.isFailure) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: payResult.error.message,
-      });
-    }
+      if (payResult.isFailure) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: payResult.error.message,
+        });
+      }
 
-    invalidateBillingCache(user.stripeCustomerId);
-    return payResult.value;
-  }),
+      invalidateBillingCache(user.stripeCustomerId);
+      return payResult.value;
+    }),
 
   /**
    * Get payment methods for the user
@@ -534,7 +570,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Attach a new payment method to the customer
    */
-  updatePaymentMethod: tenantProcedure
+  updatePaymentMethod: verifiedTenantProcedure
     .input(updatePaymentMethodInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -583,7 +619,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Detach a payment method from the customer
    */
-  removePaymentMethod: tenantProcedure
+  removePaymentMethod: verifiedTenantProcedure
     .input(updatePaymentMethodInputSchema.pick({ paymentMethodId: true }))
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -649,7 +685,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Update subscription (change plan or quantity)
    */
-  updateSubscription: tenantProcedure
+  updateSubscription: verifiedTenantProcedure
     .input(updateSubscriptionInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -725,7 +761,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Cancel subscription
    */
-  cancelSubscription: tenantProcedure
+  cancelSubscription: verifiedTenantProcedure
     .input(cancelSubscriptionInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -791,7 +827,7 @@ export const billingRouter = createTRPCRouter({
    * Uses Stripe's pause_collection to temporarily suspend billing.
    * CRM data and AI training progress are preserved during pause.
    */
-  pauseSubscription: tenantProcedure
+  pauseSubscription: verifiedTenantProcedure
     .input(pauseSubscriptionInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -890,7 +926,7 @@ export const billingRouter = createTRPCRouter({
    * Creates a Stripe customer if user doesn't have one,
    * and updates the user record with the customer ID.
    */
-  ensureCustomer: tenantProcedure.mutation(async ({ ctx }) => {
+  ensureCustomer: verifiedTenantProcedure.mutation(async ({ ctx }) => {
     const stripe = await getStripeAdapter();
     const user = ctx.user;
 
@@ -1247,7 +1283,7 @@ export const billingRouter = createTRPCRouter({
    * Creates a new subscription for the authenticated user.
    * In production, this would create a Stripe checkout session.
    */
-  createCheckoutSubscription: tenantProcedure
+  createCheckoutSubscription: verifiedTenantProcedure
     .input(
       z.object({
         planId: z.string(),
@@ -1304,8 +1340,8 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
-      // Map planId + billingCycle to Stripe price ID
-      const priceId = `price_${input.planId}_${input.billingCycle}`;
+      // Map planId + billingCycle to the real Stripe price ID (env-sourced)
+      const priceId = resolvePriceId(input.planId, input.billingCycle);
 
       // Create real Stripe subscription
       const subscriptionResult = await stripe.createSubscription({
@@ -1352,7 +1388,7 @@ export const billingRouter = createTRPCRouter({
    *
    * @implements PG-031 (Receipts)
    */
-  sendReceiptEmail: tenantProcedure
+  sendReceiptEmail: verifiedTenantProcedure
     .input(
       z.object({
         receiptId: z.string().min(1, 'Receipt ID is required'),
@@ -1581,4 +1617,79 @@ export const billingRouter = createTRPCRouter({
 
       return { handled: false };
     }),
+
+  /**
+   * Get the current plan state for the authenticated tenant.
+   *
+   * Readable by unverified users (tenantProcedure, no email-verification gate)
+   * so the onboarding UI can show trial state without requiring a verified email.
+   *
+   * Logic:
+   *   1. Look for an ACTIVE or PAST_DUE StripeSubscription row for this tenant.
+   *      These are the only statuses where the org has a live paid sub.
+   *   2. If found: return {tier, status, currentPeriodEnd, source:'stripe'}.
+   *      The tier is derived by reverse-matching the subscription's Stripe price ID
+   *      against the STRIPE_PRICE_<TIER>_<CYCLE> env vars. Falls back to 'UNKNOWN'
+   *      if the price ID is not in the env (e.g. manually-created sub).
+   *   3. If not found: derive a 14-day trial from Tenant.createdAt and return
+   *      {tier:'PROFESSIONAL', status:'TRIALING', trialEndsAt, daysLeft, source:'trial'}.
+   *
+   * No DB writes, no Stripe calls, no migration.
+   *
+   * @implements incident 2026-06-16 onboarding redesign
+   */
+  getPlanState: tenantProcedure.query(async ({ ctx }) => {
+    const { tenantId } = ctx.tenant;
+    const db = ctx.prismaWithTenant;
+
+    // 1. Look for a live paid subscription persisted from webhook
+    const activeSub = await db.stripeSubscription.findFirst({
+      where: {
+        tenantId,
+        status: { in: ['ACTIVE', 'PAST_DUE'] },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (activeSub) {
+      // The StripeSubscription DB row persists stripeCustomerId / status / period but
+      // NOT the price id or plan tier (no migration in this change), so the paid tier
+      // cannot be derived here — report 'UNKNOWN'. (A reverse-match against the
+      // STRIPE_PRICE_* env table is impossible without the row's price id; comparing
+      // them to stripeCustomerId would never match.) The trial path below is unaffected
+      // (it always reports PROFESSIONAL). Persisting planTier on the row — the webhook
+      // already has subscription.metadata.planTier — is tracked as follow-up debt; it
+      // only affects post-payment tier display, not onboarding.
+      return {
+        source: 'stripe' as const,
+        tier: 'UNKNOWN' as const,
+        status: activeSub.status as 'ACTIVE' | 'PAST_DUE',
+        currentPeriodEnd: activeSub.currentPeriodEnd?.toISOString() ?? null,
+        trialEndsAt: null,
+        daysLeft: null,
+      };
+    }
+
+    // 2. Derive trial from Tenant.createdAt (no DB write, no migration)
+    const tenant = await db.tenant.findUnique({
+      where: { id: tenantId },
+      select: { createdAt: true },
+    });
+
+    const TRIAL_DAYS = 14;
+    const trialStart = tenant?.createdAt ?? new Date();
+    const trialEndsAt = new Date(trialStart.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const msLeft = trialEndsAt.getTime() - now.getTime();
+    const daysLeft = Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
+
+    return {
+      source: 'trial' as const,
+      tier: 'PROFESSIONAL' as const,
+      status: 'TRIALING' as const,
+      currentPeriodEnd: null,
+      trialEndsAt: trialEndsAt.toISOString(),
+      daysLeft,
+    };
+  }),
 });

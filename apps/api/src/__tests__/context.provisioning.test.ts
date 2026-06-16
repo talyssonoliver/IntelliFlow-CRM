@@ -211,7 +211,7 @@ describe('ensureAppUserSession — JIT provisioning failure (L5)', () => {
 describe('ensureAppUserSession — avatar backfill from provider metadata', () => {
   const EXISTING_USER_ID = '22222222-2222-4222-8222-222222222222';
 
-  function existingUserRow(avatarUrl: string | null) {
+  function existingUserRow(avatarUrl: string | null, emailVerified = true) {
     return {
       id: EXISTING_USER_ID,
       email: 'existing@example.com',
@@ -221,6 +221,7 @@ describe('ensureAppUserSession — avatar backfill from provider metadata', () =
       stripeCustomerId: null,
       timezone: 'Europe/London',
       avatarUrl,
+      emailVerified,
     };
   }
 
@@ -263,5 +264,89 @@ describe('ensureAppUserSession — avatar backfill from provider metadata', () =
     expect(session.avatarUrl).toBe('https://db.example.com/existing.png');
     // sign-in update must NOT include an avatarUrl write
     expect((update.mock.calls[0][0] as any).data.avatarUrl).toBeUndefined();
+  });
+
+  it('SECURITY: a token without email_confirmed_at must NOT demote an already-verified user', async () => {
+    // Production fast-path: lib/supabase verifyToken builds the user from JWT claims
+    // with NO email_confirmed_at and NO user_metadata.email_verified. Recomputing and
+    // writing that back would persist false and lock verified users (incl. OAuth) out of
+    // every verifiedTenantProcedure. emailVerified must be MONOTONIC (never demote).
+    const prisma = makePrismaStub({
+      findUnique: vi.fn().mockResolvedValue(existingUserRow(null, /* emailVerified */ true)),
+    });
+    const update = vi.fn().mockResolvedValue({});
+    (prisma.user as any).update = update;
+
+    const session = await ensureAppUserSession(prisma as any, {
+      id: EXISTING_USER_ID,
+      email: 'existing@example.com',
+      user_metadata: {}, // no email_verified; object has no email_confirmed_at
+    });
+
+    // Verified account stays verified on THIS request...
+    expect(session.emailVerified).toBe(true);
+    // ...and the fire-and-forget update must NEVER write emailVerified:false.
+    expect((update.mock.calls[0][0] as any).data.emailVerified).toBeUndefined();
+  });
+
+  it('upgrades emailVerified false -> true when the token confirms verification', async () => {
+    const prisma = makePrismaStub({
+      findUnique: vi.fn().mockResolvedValue(existingUserRow(null, /* emailVerified */ false)),
+    });
+    const update = vi.fn().mockResolvedValue({});
+    (prisma.user as any).update = update;
+
+    const session = await ensureAppUserSession(prisma as any, {
+      id: EXISTING_USER_ID,
+      email: 'existing@example.com',
+      email_confirmed_at: '2026-06-16T00:00:00.000Z',
+      user_metadata: {},
+    });
+
+    expect(session.emailVerified).toBe(true);
+    expect((update.mock.calls[0][0] as any).data.emailVerified).toBe(true);
+  });
+
+  it('SECURITY: a just-verified user keeps emailVerified=true when also promoted to bootstrap admin', async () => {
+    // Edge case: an unverified bootstrap-admin owner signs in with a confirming token.
+    // The verification upgrade is applied in-memory, but the promotion read can race the
+    // fire-and-forget write and return a STALE emailVerified=false — which must NOT
+    // demote the session (monotonic OR in maybePromoteBootstrapAdmin).
+    const BOOTSTRAP_EMAIL = 'talyssondasilvaoliveira@gmail.com';
+    const prisma = makePrismaStub({
+      findUnique: vi.fn().mockResolvedValue({
+        id: EXISTING_USER_ID,
+        email: BOOTSTRAP_EMAIL,
+        name: 'Owner',
+        role: 'USER',
+        tenantId: 'default-tenant-id',
+        stripeCustomerId: null,
+        timezone: 'Europe/London',
+        avatarUrl: null,
+        emailVerified: false,
+      }),
+    });
+    // Promotion update returns ADMIN but with the stale (pre-upgrade) emailVerified=false.
+    (prisma.user as any).update = vi.fn().mockResolvedValue({
+      id: EXISTING_USER_ID,
+      email: BOOTSTRAP_EMAIL,
+      name: 'Owner',
+      role: 'ADMIN',
+      tenantId: 'default-tenant-id',
+      stripeCustomerId: null,
+      timezone: 'Europe/London',
+      avatarUrl: null,
+      emailVerified: false,
+    });
+
+    const session = await ensureAppUserSession(prisma as any, {
+      id: EXISTING_USER_ID,
+      email: BOOTSTRAP_EMAIL,
+      email_confirmed_at: '2026-06-16T00:00:00.000Z', // token confirms verification
+      user_metadata: {},
+    });
+
+    expect(session.role).toBe('ADMIN');
+    expect(session.emailVerified).toBe(true);
   });
 });

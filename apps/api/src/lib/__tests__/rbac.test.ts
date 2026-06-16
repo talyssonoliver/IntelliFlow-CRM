@@ -39,6 +39,7 @@ function makeCtx(overrides?: {
       email: 'test@example.com',
       role: overrides?.role ?? 'SALES_REP',
       tenantId: overrides?.tenantId ?? 'tenant-1',
+      emailVerified: true,
     },
     prisma: prisma as any,
   };

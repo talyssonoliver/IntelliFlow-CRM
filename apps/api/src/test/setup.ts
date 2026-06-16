@@ -348,6 +348,8 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
       role: 'USER',
       tenantId,
       timezone: 'UTC',
+      // Default to verified in tests; override with emailVerified: false to test the guard.
+      emailVerified: true,
     },
     // Tenant context required by tenantContextMiddleware
     tenant: {
@@ -388,6 +390,7 @@ export function createAdminContext(overrides?: Partial<BaseContext>): BaseContex
       email: 'admin@example.com',
       role: 'ADMIN',
       tenantId,
+      emailVerified: true,
     },
     tenant: {
       tenantId,
@@ -423,6 +426,7 @@ export function createManagerContext(overrides?: Partial<BaseContext>): BaseCont
       email: 'manager@example.com',
       role: 'MANAGER',
       tenantId,
+      emailVerified: true,
     },
     tenant: {
       tenantId,

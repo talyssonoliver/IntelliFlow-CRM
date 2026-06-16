@@ -450,6 +450,7 @@ describe('caseSettings router', () => {
             role: 'ADMIN',
             tenantId,
             timezone: 'UTC',
+            emailVerified: true,
           },
         })
       );

@@ -736,6 +736,7 @@ describe('Conversation Router', () => {
           email: 'admin@example.com',
           role: 'ADMIN',
           tenantId: TEST_TENANT_ID,
+          emailVerified: true,
         },
       });
       const adminCaller = conversationRouter.createCaller(adminCtx);
@@ -771,6 +772,7 @@ describe('Conversation Router', () => {
           email: 'admin@example.com',
           role: 'ADMIN',
           tenantId: TEST_TENANT_ID,
+          emailVerified: true,
         },
       });
       const adminCaller = conversationRouter.createCaller(adminCtx);

@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-06-15T00:06:49.494Z",
+  "timestamp": "2026-06-16T15:34:26.045Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 61,
-    "total_endpoints": 532,
-    "total_queries": 240,
-    "total_mutations": 292,
+    "total_routers": 62,
+    "total_endpoints": 526,
+    "total_queries": 239,
+    "total_mutations": 287,
     "routers": [
       {
         "name": "contact",
@@ -1055,12 +1055,6 @@
         "endpoints": 18,
         "queries": 3,
         "mutations": 15
-      },
-      {
-        "name": "billing",
-        "endpoints": 18,
-        "queries": 7,
-        "mutations": 11
       },
       {
         "name": "documents",
@@ -1133,6 +1127,12 @@
         "endpoints": 11,
         "queries": 5,
         "mutations": 6
+      },
+      {
+        "name": "billing",
+        "endpoints": 10,
+        "queries": 5,
+        "mutations": 5
       },
       {
         "name": "intelligence",
@@ -1337,6 +1337,12 @@
         "endpoints": 2,
         "queries": 0,
         "mutations": 2
+      },
+      {
+        "name": "onboarding",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
       },
       {
         "name": "dsar",
@@ -3997,53 +4003,18 @@
       },
       {
         "name": "billing.getInvoice",
-        "method": "GET",
+        "method": "POST",
         "description": "Get invoice"
       },
       {
-        "name": "billing.payInvoice",
-        "method": "POST",
-        "description": "Pay invoice"
-      },
-      {
         "name": "billing.getPaymentMethods",
-        "method": "GET",
+        "method": "POST",
         "description": "Get payment methods"
       },
       {
-        "name": "billing.updatePaymentMethod",
-        "method": "POST",
-        "description": "Update payment method"
-      },
-      {
-        "name": "billing.removePaymentMethod",
-        "method": "POST",
-        "description": "Remove payment method"
-      },
-      {
-        "name": "billing.updateSubscription",
-        "method": "POST",
-        "description": "Update subscription"
-      },
-      {
-        "name": "billing.cancelSubscription",
-        "method": "POST",
-        "description": "Cancel subscription"
-      },
-      {
-        "name": "billing.pauseSubscription",
-        "method": "POST",
-        "description": "Pause subscription"
-      },
-      {
         "name": "billing.getUpcomingInvoice",
-        "method": "GET",
-        "description": "Get upcoming invoice"
-      },
-      {
-        "name": "billing.ensureCustomer",
         "method": "POST",
-        "description": "Ensure customer"
+        "description": "Get upcoming invoice"
       },
       {
         "name": "billing.getUsageMetrics",
@@ -4061,19 +4032,14 @@
         "description": "Update billing information"
       },
       {
-        "name": "billing.createCheckoutSubscription",
-        "method": "POST",
-        "description": "Create checkout subscription"
-      },
-      {
-        "name": "billing.sendReceiptEmail",
-        "method": "POST",
-        "description": "Send receipt email"
-      },
-      {
         "name": "billing.handleSubscriptionWebhook",
         "method": "POST",
         "description": "Handle subscription webhook"
+      },
+      {
+        "name": "billing.getPlanState",
+        "method": "GET",
+        "description": "Get plan state"
       }
     ],
     "calendarWebhook": [
@@ -5463,6 +5429,18 @@
         "name": "notifications.batchAction",
         "method": "POST",
         "description": "Batch action"
+      }
+    ],
+    "onboarding": [
+      {
+        "name": "onboarding.getState",
+        "method": "GET",
+        "description": "Get state"
+      },
+      {
+        "name": "onboarding.complete",
+        "method": "POST",
+        "description": "Complete"
       }
     ],
     "dealSettings": [

@@ -32,6 +32,11 @@ export interface UserSession {
   // lets `auth.getStatus` reuse `ctx.user` instead of issuing its own
   // `prisma.user.findUnique` per request (N+1 elimination).
   avatarUrl?: string;
+  // Email verification status. Always a boolean (never undefined).
+  // Google-OAuth users arrive with emailVerified=true from Supabase.
+  // Email/password sign-up users start false until they confirm.
+  // Used by assertEmailVerified() to gate sensitive mutations.
+  emailVerified: boolean;
 }
 
 /**
@@ -147,6 +152,8 @@ const FALLBACK_USER: UserSession = {
   name: 'Sarah Johnson',
   role: 'SALES_REP',
   tenantId: '00000000-0000-4000-8000-000000000001', // Default tenant from database
+  // Dev fallback is always considered verified to avoid blocking local diagnostics.
+  emailVerified: true,
 };
 
 /**
@@ -269,6 +276,7 @@ async function resolveDbUserWith(
       stripeCustomerId: true,
       timezone: true,
       avatarUrl: true,
+      emailVerified: true,
     },
   });
 
@@ -283,6 +291,8 @@ async function resolveDbUserWith(
     stripeCustomerId: dbUser.stripeCustomerId ?? undefined,
     timezone: dbUser.timezone ?? 'Europe/London',
     avatarUrl: dbUser.avatarUrl ?? undefined,
+    // Prefer the DB value (updated on each sign-in); guaranteed boolean via schema default.
+    emailVerified: dbUser.emailVerified,
   };
 }
 
@@ -309,6 +319,7 @@ async function maybePromoteBootstrapAdmin(
       stripeCustomerId: true,
       timezone: true,
       avatarUrl: true,
+      emailVerified: true,
     },
   });
 
@@ -323,6 +334,11 @@ async function maybePromoteBootstrapAdmin(
     stripeCustomerId: updated.stripeCustomerId ?? undefined,
     timezone: updated.timezone ?? 'Europe/London',
     avatarUrl: updated.avatarUrl ?? undefined,
+    // Monotonic: preserve an emailVerified upgrade already applied in-memory by the
+    // caller. The caller's verification write is fire-and-forget and may not have landed
+    // before this promotion read, so trust the in-memory `session.emailVerified` too
+    // (never demote a just-verified user when they're also promoted to bootstrap admin).
+    emailVerified: session.emailVerified || updated.emailVerified,
   };
 }
 
@@ -470,6 +486,10 @@ async function provisionNewUserWith(
       role: newUser.role,
       tenantId: newUser.tenantId,
       avatarUrl: newUser.avatarUrl ?? undefined,
+      // emailVerified was persisted to the DB row above; read it back from there
+      // (not from the local variable) so the value is authoritative and consistent
+      // with what resolveDbUserWith would return on subsequent requests.
+      emailVerified: newUser.emailVerified,
     };
   } catch (provisionError) {
     console.error('[Auth] Failed to auto-provision user:', provisionError);
@@ -500,6 +520,17 @@ export async function ensureAppUserSession(
     const metaAvatar = extractAvatarUrl(supabaseUser.user_metadata ?? {});
     const shouldBackfillAvatar = !existing.avatarUrl && Boolean(metaAvatar);
 
+    // emailVerified is MONOTONIC: a token can CONFIRM verification (false -> true)
+    // but must never DEMOTE a persisted true. The fast-path JWT verifier
+    // (lib/supabase verifyToken) builds the user object from JWT claims WITHOUT an
+    // `email_confirmed_at` field, so extractEmailVerified falls back to
+    // user_metadata.email_verified and can return false for an already-verified user
+    // (including OAuth). Unconditionally writing that back would persist false and lock
+    // the user out of every verifiedTenantProcedure (billing, sendEmail). So we only
+    // upgrade — never overwrite the persisted value with a token-derived false.
+    const tokenSaysVerified = extractEmailVerified(supabaseUser);
+    const shouldUpgradeVerified = tokenSaysVerified && !existing.emailVerified;
+
     // Track sign-in for existing user (fire-and-forget — no need to await)
     void prisma.user
       .update({
@@ -507,14 +538,16 @@ export async function ensureAppUserSession(
         data: {
           lastSignInAt: new Date(),
           signInCount: { increment: 1 },
-          emailVerified: extractEmailVerified(supabaseUser),
+          ...(shouldUpgradeVerified ? { emailVerified: true } : {}),
           ...(shouldBackfillAvatar ? { avatarUrl: metaAvatar } : {}),
         },
       })
       .catch((err) => console.warn('[Auth] Failed to update sign-in metadata:', err));
 
-    // Reflect the backfill in-memory so the avatar is correct on THIS request too.
+    // Reflect backfills in-memory so values are correct on THIS request too. Only an
+    // upgrade is applied; a stale/partial token can never demote a verified account.
     if (shouldBackfillAvatar) existing.avatarUrl = metaAvatar ?? undefined;
+    if (tokenSaysVerified) existing.emailVerified = true;
 
     return maybePromoteBootstrapAdmin(prisma, existing, supabaseUser);
   }

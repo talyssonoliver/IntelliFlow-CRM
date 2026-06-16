@@ -149,6 +149,7 @@ describe('contact.reassign (IFC-311)', () => {
         email: 'other@example.com',
         role: 'SALES_REP',
         tenantId: TEST_UUIDS.tenant,
+        emailVerified: true,
       },
       tenant: {
         tenantId: TEST_UUIDS.tenant,
@@ -174,6 +175,7 @@ describe('contact.reassign (IFC-311)', () => {
         email: 'owner@example.com',
         role: 'SALES_REP',
         tenantId: TEST_UUIDS.tenant,
+        emailVerified: true,
       },
     });
     const caller = contactRouter.createCaller(ctx);
@@ -352,6 +354,7 @@ describe('contact.bulkReassign (IFC-311)', () => {
         email: 'other@example.com',
         role: 'SALES_REP',
         tenantId: TEST_UUIDS.tenant,
+        emailVerified: true,
       },
       tenant: {
         tenantId: TEST_UUIDS.tenant,

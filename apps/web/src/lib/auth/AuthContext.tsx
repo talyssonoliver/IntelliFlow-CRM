@@ -104,6 +104,7 @@ export interface AuthState {
   session: AuthSession | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  emailVerified: boolean | null;
   mfa: MfaState;
   error: string | null;
 }
@@ -136,6 +137,7 @@ const initialState: AuthState = {
   session: null,
   isAuthenticated: false,
   isLoading: true,
+  emailVerified: null,
   mfa: initialMfaState,
   error: null,
 };
@@ -202,6 +204,16 @@ function resolveQueryStateUpdate(statusQuery: {
         'expiresAt' in data && data['expiresAt']
           ? { accessToken: '', expiresAt: new Date(data['expiresAt'] as string) }
           : null;
+      // `emailVerified` is added by the backend in the 2026-06-16 onboarding
+      // redesign, NESTED inside the getStatus `user` object (not at the top level).
+      // When the api-client types lag behind (pre-rebuild), the field is simply
+      // absent — we treat that as null (unknown) rather than false so the banner
+      // doesn't show prematurely.
+      const userData = data['user'] as Record<string, unknown>;
+      const emailVerified =
+        userData && 'emailVerified' in userData && typeof userData['emailVerified'] === 'boolean'
+          ? (userData['emailVerified'] as boolean)
+          : null;
       return {
         handled: true,
         update: {
@@ -209,12 +221,13 @@ function resolveQueryStateUpdate(statusQuery: {
           isAuthenticated: true,
           isLoading: false,
           session: expiresAt,
+          emailVerified,
         },
       };
     }
     return {
       handled: true,
-      update: { user: null, isAuthenticated: false, isLoading: false },
+      update: { user: null, isAuthenticated: false, isLoading: false, emailVerified: null },
     };
   }
   if (statusQuery.isError) {

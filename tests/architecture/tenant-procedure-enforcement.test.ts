@@ -19,6 +19,9 @@ const ROUTER_DIR = path.resolve(__dirname, '../../apps/api/src/modules');
  */
 const ALLOWLISTED_ROUTERS = new Set([
   'auth.router.ts',
+  // onboarding reads/writes Supabase user_metadata (onboarding_completed /
+  // selected_plan), not tenant-scoped DB tables — protectedProcedure is correct.
+  'onboarding.router.ts',
   'health.router.ts',
   'system.router.ts',
   'billing.router.ts',

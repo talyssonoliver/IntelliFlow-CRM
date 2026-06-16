@@ -184,6 +184,7 @@ function createAgentTestContext(authenticated = true, admin = false): BaseContex
           email: 'test@example.com',
           role,
           tenantId: TEST_UUIDS.tenant,
+          emailVerified: true,
         }
       : undefined,
     tenant: {

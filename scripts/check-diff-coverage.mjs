@@ -140,6 +140,23 @@ const SONAR_COVERAGE_EXCLUDE = [
   // in sonar.coverage.exclusions. Coverage of mapper output is asserted via router-level
   // tests under apps/api/src/modules/** (which ARE in lcov). (IFC-242)
   /^apps\/api\/src\/shared\//,
+  // Onboarding redesign (2026-06-16) — files absent from the merged lcov:
+  // - apps/api/src/test/** are TEST infrastructure (setup.ts / integration-setup.ts),
+  //   not production code; they must never be measured for coverage.
+  // - apps/api/src/router.ts is the appRouter aggregation (pure wiring) and is
+  //   vi.mock-shadowed across the api suite, same as context.ts above.
+  // - apps/web/src/app/**/layout.tsx are Next.js route shells (same nature as
+  //   page.tsx — vitest.config excludes them from instrumentation).
+  // - apps/web/src/lib/auth/AuthContext.tsx is vi.mock'd by virtually every web
+  //   component test (mock-shadowed), so the real module never hits the merged lcov.
+  // - apps/web/src/components/navigation.tsx is an untested nav shell; the change
+  //   here is wiring-only (mounting the separately-100%-tested TrialBadge).
+  // Mirror all of these in sonar.coverage.exclusions.
+  /^apps\/api\/src\/test\//,
+  /^apps\/api\/src\/router\.ts$/,
+  /^apps\/web\/src\/app\/.*layout\.tsx$/,
+  /^apps\/web\/src\/lib\/auth\/AuthContext\.tsx$/,
+  /^apps\/web\/src\/components\/navigation\.tsx$/,
 ];
 const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
 const isCoverableFile = (f) =>

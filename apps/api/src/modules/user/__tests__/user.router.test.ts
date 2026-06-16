@@ -70,7 +70,7 @@ describe('User Router', () => {
 
     it('throws UNAUTHORIZED when user context has no userId', async () => {
       const noUserIdCtx = createTestContext({
-        user: { userId: '', email: 'a@b.com', role: 'USER', tenantId: 'tid' },
+        user: { userId: '', email: 'a@b.com', role: 'USER', tenantId: 'tid', emailVerified: true },
       });
       const noUserIdCaller = userRouter.createCaller(noUserIdCtx);
 
@@ -120,7 +120,7 @@ describe('User Router', () => {
 
     it('throws UNAUTHORIZED when user context has no userId', async () => {
       const noUserIdCtx = createTestContext({
-        user: { userId: '', email: 'a@b.com', role: 'USER', tenantId: 'tid' },
+        user: { userId: '', email: 'a@b.com', role: 'USER', tenantId: 'tid', emailVerified: true },
       });
       const noUserIdCaller = userRouter.createCaller(noUserIdCtx);
 
