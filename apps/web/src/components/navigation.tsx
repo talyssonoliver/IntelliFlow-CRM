@@ -13,6 +13,7 @@ import {
 } from './header';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useEnabledModules } from '@/hooks/useEnabledModules';
+import { TrialBadge } from '@/components/onboarding/TrialBadge';
 
 const NAV_SKELETON_KEYS = ['nav-0', 'nav-1', 'nav-2', 'nav-3', 'nav-4', 'nav-5'] as const;
 
@@ -85,6 +86,9 @@ export function Navigation() {
         <div className="hidden md:flex items-center mr-4">
           <SearchBar className="w-64" />
         </div>
+
+        {/* Trial indicator — only visible when on a trial plan */}
+        <TrialBadge className="mr-2 hidden sm:inline-flex" />
 
         {/* Notifications - count is managed via RemindersContext */}
         <Notifications />

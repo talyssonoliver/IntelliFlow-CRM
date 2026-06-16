@@ -9,6 +9,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Navigation } from '@/components/navigation';
 import { RouteAccessGate } from '@/components/auth/RouteAccessGate';
 import { VerifyEmailBanner } from '@/components/auth/VerifyEmailBanner';
+import { OnboardingWelcome } from '@/components/onboarding/OnboardingWelcome';
 import { Toaster } from '@intelliflow/ui';
 import { getPrivacyPolicy } from '@/lib/legal/consent-tracker';
 
@@ -123,6 +124,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               </a>
               <Navigation />
               <VerifyEmailBanner />
+              <OnboardingWelcome />
               <RouteAccessGate>
                 <div id="main-content">{children}</div>
               </RouteAccessGate>
