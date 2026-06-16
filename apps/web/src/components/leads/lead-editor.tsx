@@ -46,8 +46,9 @@ export interface LeadEditorProps {
 }
 
 function toEF(v: LeadFormValues): LeadEditFields {
-  // Omit create-only fields; remainder exactly matches LeadEditFields.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // Omit create-only fields; remainder exactly matches LeadEditFields. The
+  // renamed `_`-prefixed bindings match the no-unused-vars ignore pattern, so no
+  // lint suppression is needed here (a redundant directive fails max-warnings=0).
   const {
     email: _a,
     status: _b,

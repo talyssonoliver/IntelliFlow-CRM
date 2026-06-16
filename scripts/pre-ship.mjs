@@ -124,7 +124,44 @@ function resolvePython() {
 }
 const PYTHON_BIN = resolvePython();
 
-// Step plan — fail-first token gate + 17 steps from audit doc §8. Each step has:
+// Resolve a dependency-CVE scanner for the OSV parity gate (#485). CI runs both
+// osv-scanner (google/osv-scanner-action, against pnpm-lock.yaml) and Trivy
+// (aquasecurity/trivy-action, `fs` scan) in .github/workflows/dependency-scan.yml
+// + security.yml and uploads SARIF to the Security tab. Those scanners were NOT
+// mirrored locally, so a newly-published transitive CVE produced a "green
+// pre-ship, red CI" code-scanning alert that the orchestrator had to remediate
+// after the fact. This resolver lets pre-ship surface the same finding on the
+// laptop. Prefer osv-scanner (lockfile-native, the H0 dependency gate); fall
+// back to Trivy's filesystem scanner against the lockfile (dependency-focused +
+// fast vs a full repo scan). Returns the argv to run, or null when neither
+// binary is installed (the step SKIPs locally; CI still enforces it).
+function resolveDepScanner() {
+  if (!commandMissing('osv-scanner')) {
+    // osv-scanner reads pnpm-lock.yaml directly and exits non-zero on a finding.
+    return ['osv-scanner', '--lockfile=pnpm-lock.yaml'];
+  }
+  if (!commandMissing('trivy')) {
+    // Mirror CI's Trivy severity filter (CRITICAL,HIGH). Scan the lockfile (not
+    // the whole tree) so the run stays dependency-focused and quick.
+    return [
+      'trivy',
+      'fs',
+      '--scanners',
+      'vuln',
+      '--severity',
+      'HIGH,CRITICAL',
+      '--exit-code',
+      '1',
+      '--no-progress',
+      'pnpm-lock.yaml',
+    ];
+  }
+  return null;
+}
+const DEP_SCANNER = resolveDepScanner();
+
+// Step plan — fail-first token gate + steps from audit doc §8, plus the
+// OSV/Trivy dependency-scan parity gate (#485). Each step has:
 //   id          : kebab-case identifier (also used as log filename)
 //   description : human-readable label printed during the run
 //   cmd         : argv to spawn (no shell, never a single string)
@@ -367,6 +404,30 @@ const STEPS = [
     // Mirroring the required-check graph honestly: this step must be
     // non-required locally too, otherwise developers cannot push until
     // every existing high vuln rides through the Dependabot queue.
+    required: false,
+  },
+  {
+    // OSV / TRIVY PARITY GATE (2026-06-15, #485): mirror CI's dependency-scan +
+    // security workflows (osv-scanner + Trivy `fs`) LOCALLY so a newly-published
+    // transitive CVE surfaces here instead of as a post-merge code-scanning alert
+    // the orchestrator has to chase ("green pre-ship, red CI"). `pnpm audit`
+    // above queries npm's advisory DB; this adds the OSV.dev / Trivy DB the CI
+    // SARIF scanners use, which can diverge (different advisory sources/timing).
+    //
+    // Advisory (required:false) to mirror CI honestly: the dependency-scan jobs
+    // upload SARIF but do NOT block the merge (continue-on-error / report-only),
+    // so a HIGH/CRITICAL finding here REPORTS loudly without wedging every push
+    // behind the Dependabot queue. SKIPs (not blocks) when no scanner binary is
+    // installed; CI still enforces it.
+    id: 'osv-scan',
+    description:
+      'OSV/Trivy dependency CVE scan vs pnpm-lock.yaml — advisory, mirrors CI dependency-scan (#485)',
+    cmd: DEP_SCANNER || ['node', '-e', 'process.exit(0)'],
+    skip_if: () => DEP_SCANNER === null,
+    skip_remediation:
+      'Install a dependency CVE scanner so new transitive CVEs surface locally: ' +
+      'osv-scanner (https://github.com/google/osv-scanner) or Trivy ' +
+      '(https://github.com/aquasecurity/trivy). CI still enforces this scan.',
     required: false,
   },
   {
