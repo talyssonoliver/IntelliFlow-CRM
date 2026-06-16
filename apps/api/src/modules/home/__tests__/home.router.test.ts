@@ -1566,6 +1566,7 @@ describe('Home Router', () => {
           role: 'USER',
           tenantId: TEST_UUIDS.tenant,
           timezone: 'Asia/Tokyo',
+          emailVerified: true,
         },
       });
       const tokyoCaller = homeRouter.createCaller(tokyoCtx);
@@ -1588,6 +1589,7 @@ describe('Home Router', () => {
           role: 'USER',
           tenantId: TEST_UUIDS.tenant,
           timezone: 'America/New_York',
+          emailVerified: true,
         },
       });
       const nyCaller = homeRouter.createCaller(nyCtx);
@@ -1610,6 +1612,7 @@ describe('Home Router', () => {
           email: 'test@example.com',
           role: 'USER',
           tenantId: TEST_UUIDS.tenant,
+          emailVerified: true,
         },
       });
       const noTzCaller = homeRouter.createCaller(noTzCtx);

@@ -128,6 +128,7 @@ function createFeedbackTestContext(
           email: 'test@example.com',
           role: 'USER',
           tenantId: TEST_UUIDS.tenant,
+          emailVerified: true,
         }
       : undefined,
     tenant: {

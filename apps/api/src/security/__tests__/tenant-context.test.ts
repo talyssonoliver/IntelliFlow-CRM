@@ -75,6 +75,7 @@ describe('Tenant Context', () => {
         tenantId: TEST_TENANT_ID,
         role: 'SALES_REP',
         email: 'test@example.com',
+        emailVerified: true,
       };
 
       const context = extractTenantContext(user);
@@ -92,6 +93,7 @@ describe('Tenant Context', () => {
         tenantId: TEST_TENANT_ID,
         role: 'ADMIN',
         email: 'admin@example.com',
+        emailVerified: true,
       };
 
       const context = extractTenantContext(user);
@@ -105,6 +107,7 @@ describe('Tenant Context', () => {
         tenantId: TEST_TENANT_ID,
         role: 'MANAGER',
         email: 'manager@example.com',
+        emailVerified: true,
       };
 
       const context = extractTenantContext(user);
@@ -312,6 +315,7 @@ describe('Tenant Context', () => {
         tenantId: TEST_TENANT_ID,
         role: 'SALES_REP',
         email: 'test@example.com',
+        emailVerified: true,
       };
       const ctx = createMockContext(user);
       const next = vi.fn().mockResolvedValue({ result: 'success' });

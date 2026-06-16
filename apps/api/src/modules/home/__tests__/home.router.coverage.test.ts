@@ -269,6 +269,7 @@ describe('Home Router Coverage Tests (PG-163)', () => {
           role: 'USER',
           tenantId: TEST_UUIDS.tenant,
           timezone: 'Invalid/Timezone',
+          emailVerified: true,
         },
       });
       const tzCaller = homeRouter.createCaller(tzCtx);
@@ -457,6 +458,7 @@ describe('Home Router Coverage Tests (PG-163)', () => {
           role: 'USER',
           tenantId: TEST_UUIDS.tenant,
           timezone: 'UTC',
+          emailVerified: true,
         },
         tenant: {
           tenantId: TEST_UUIDS.tenant,
@@ -498,6 +500,7 @@ describe('Home Router Coverage Tests (PG-163)', () => {
           role: 'USER',
           tenantId: TEST_UUIDS.tenant,
           timezone: 'UTC',
+          emailVerified: true,
         },
         tenant: {
           tenantId: TEST_UUIDS.tenant,

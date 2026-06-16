@@ -1199,7 +1199,7 @@ describe('notificationsRouter', () => {
 
     it('should throw when userId is empty', async () => {
       const badUserCtx = createTestContext({
-        user: { userId: '', email: 'x', role: 'USER', tenantId: TENANT_ID },
+        user: { userId: '', email: 'x', role: 'USER', tenantId: TENANT_ID, emailVerified: true },
       });
       const badUserCaller = notificationsRouter.createCaller(badUserCtx);
 

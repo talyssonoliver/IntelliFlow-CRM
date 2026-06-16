@@ -310,6 +310,68 @@ const tenantMiddleware = t.middleware(async ({ ctx, next }) => {
 
 export const tenantProcedure = protectedProcedure.use(tenantMiddleware);
 
+// ============================================
+// Email-Verification Guard (incident 2026-06-16 onboarding redesign)
+// ============================================
+
+/**
+ * Assert that the authenticated user has a verified email address.
+ *
+ * Policy: login is NEVER blocked by email verification status.
+ * However, specific SENSITIVE actions (outbound email, billing mutations,
+ * team invitations) are gated until the user verifies.
+ *
+ * This function is exported for inline use inside procedure handlers that
+ * cannot use verifiedProcedure (e.g. because they are already on tenantProcedure
+ * and only some branches need the gate).
+ *
+ * Throws FORBIDDEN (not UNAUTHORIZED) because the user IS authenticated —
+ * they simply lack a verified email.
+ *
+ * FAIL-CLOSED: any falsy emailVerified value (false, undefined, null) is
+ * treated as unverified. Only an explicit `true` passes.
+ */
+export function assertEmailVerified(ctx: { user?: { emailVerified?: boolean } | null }): void {
+  if (ctx.user?.emailVerified !== true) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Please verify your email to continue.',
+    });
+  }
+}
+
+/**
+ * Middleware that enforces email verification for sensitive mutations.
+ * Applied on top of protectedProcedure (auth is already guaranteed).
+ */
+const isEmailVerified = t.middleware(({ ctx, next }) => {
+  assertEmailVerified(ctx);
+  return next();
+});
+
+/**
+ * Verified procedure — requires authentication AND a verified email.
+ *
+ * Use this for sensitive mutations that must not be accessible to
+ * unverified accounts (outbound email, billing, teammate invitations).
+ *
+ * Chain: csrfMiddleware → isAuthed → logContext → tracing → rateLimit → isEmailVerified
+ *
+ * @example
+ * verifiedProcedure
+ *   .input(sendEmailSchema)
+ *   .mutation(({ ctx, input }) => { ... })
+ */
+export const verifiedProcedure = protectedProcedure.use(isEmailVerified);
+
+/**
+ * Verified tenant procedure — tenant isolation + verified email.
+ *
+ * Use this for sensitive tenant-scoped mutations that additionally require
+ * an email-verified account (billing mutations, sending receipts, etc.).
+ */
+export const verifiedTenantProcedure = tenantProcedure.use(isEmailVerified);
+
 /**
  * Admin-gated tenant procedure — authenticated + admin role + tenant isolation.
  *

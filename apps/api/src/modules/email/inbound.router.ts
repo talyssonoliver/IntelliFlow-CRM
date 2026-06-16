@@ -14,7 +14,12 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, publicProcedure, tenantProcedure } from '../../trpc';
+import {
+  createTRPCRouter,
+  publicProcedure,
+  tenantProcedure,
+  verifiedTenantProcedure,
+} from '../../trpc';
 import { MarkAsReadInputSchema, GetUnreadCountsInputSchema } from '@intelliflow/validators';
 // Import from adapters - using any cast for module resolution compatibility
 import * as adapters from '@intelliflow/adapters';
@@ -585,7 +590,9 @@ export const inboundEmailRouter = createTRPCRouter({
    * Requires OAuth email provider integration (PG-084). Will delegate to GmailAdapter.sendMessage()
    * or OutlookAdapter once OAuth credentials are provisioned. Currently persists as PENDING record.
    */
-  sendEmail: tenantProcedure
+  // SECURITY (2026-06-16): gated to email-verified users only — prevents
+  // unverified accounts from using IntelliFlow as a spam relay.
+  sendEmail: verifiedTenantProcedure
     .input(
       z.object({
         to: z.array(z.email()),

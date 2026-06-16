@@ -535,6 +535,7 @@ describe('helpArticleRouter', () => {
             email: 'mgr@test.com',
             role: 'MANAGER',
             tenantId: TEST_UUIDS.tenant,
+            emailVerified: true,
           },
           tenant: {
             tenantId: TEST_UUIDS.tenant,

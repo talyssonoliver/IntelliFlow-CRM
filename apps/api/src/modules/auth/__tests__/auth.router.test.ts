@@ -797,6 +797,7 @@ describe('authRouter', () => {
           role: 'USER',
           tenantId: TEST_UUIDS.tenant,
           avatarUrl: 'https://cdn.example.com/avatar.png',
+          emailVerified: true,
         },
       });
       const caller = authRouter.createCaller(mockContext);
@@ -818,6 +819,7 @@ describe('authRouter', () => {
           email: 'test@example.com',
           role: 'USER',
           tenantId: TEST_UUIDS.tenant,
+          emailVerified: true,
         },
       });
       const caller = authRouter.createCaller(mockContext);
@@ -838,6 +840,7 @@ describe('authRouter', () => {
           email: 'noavatar@example.com',
           role: 'USER',
           tenantId: TEST_UUIDS.tenant,
+          emailVerified: true,
         },
       });
       const caller = authRouter.createCaller(mockContext);

@@ -16,7 +16,12 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure, publicProcedure } from '../../trpc';
+import {
+  createTRPCRouter,
+  tenantProcedure,
+  verifiedTenantProcedure,
+  publicProcedure,
+} from '../../trpc';
 import {
   listInvoicesInputSchema,
   getInvoiceInputSchema,
@@ -436,58 +441,61 @@ export const billingRouter = createTRPCRouter({
    *
    * @implements PG-028 (Invoice Detail)
    */
-  payInvoice: tenantProcedure.input(payInvoiceInputSchema).mutation(async ({ ctx, input }) => {
-    const user = ctx.user;
+  // SECURITY (2026-06-16): all billing mutations require a verified email.
+  payInvoice: verifiedTenantProcedure
+    .input(payInvoiceInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
 
-    if (!user?.stripeCustomerId) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'No billing account found.',
-      });
-    }
+      if (!user?.stripeCustomerId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No billing account found.',
+        });
+      }
 
-    const stripe = await getStripeAdapter();
+      const stripe = await getStripeAdapter();
 
-    // Fetch invoice first for ownership + status verification
-    const getResult = await stripe.getInvoice(input.invoiceId);
+      // Fetch invoice first for ownership + status verification
+      const getResult = await stripe.getInvoice(input.invoiceId);
 
-    if (getResult.isFailure || !getResult.value) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Invoice not found.',
-      });
-    }
+      if (getResult.isFailure || !getResult.value) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invoice not found.',
+        });
+      }
 
-    const invoice = getResult.value;
+      const invoice = getResult.value;
 
-    // Ownership check
-    if (invoice.customerId !== user.stripeCustomerId) {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'You do not have permission to pay this invoice.',
-      });
-    }
+      // Ownership check
+      if (invoice.customerId !== user.stripeCustomerId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to pay this invoice.',
+        });
+      }
 
-    // Only open invoices can be paid
-    if (invoice.status !== 'open') {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: `Invoice cannot be paid. Current status: ${invoice.status}`,
-      });
-    }
+      // Only open invoices can be paid
+      if (invoice.status !== 'open') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Invoice cannot be paid. Current status: ${invoice.status}`,
+        });
+      }
 
-    const payResult = await stripe.payInvoice(input.invoiceId);
+      const payResult = await stripe.payInvoice(input.invoiceId);
 
-    if (payResult.isFailure) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: payResult.error.message,
-      });
-    }
+      if (payResult.isFailure) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: payResult.error.message,
+        });
+      }
 
-    invalidateBillingCache(user.stripeCustomerId);
-    return payResult.value;
-  }),
+      invalidateBillingCache(user.stripeCustomerId);
+      return payResult.value;
+    }),
 
   /**
    * Get payment methods for the user
@@ -534,7 +542,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Attach a new payment method to the customer
    */
-  updatePaymentMethod: tenantProcedure
+  updatePaymentMethod: verifiedTenantProcedure
     .input(updatePaymentMethodInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -583,7 +591,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Detach a payment method from the customer
    */
-  removePaymentMethod: tenantProcedure
+  removePaymentMethod: verifiedTenantProcedure
     .input(updatePaymentMethodInputSchema.pick({ paymentMethodId: true }))
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -649,7 +657,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Update subscription (change plan or quantity)
    */
-  updateSubscription: tenantProcedure
+  updateSubscription: verifiedTenantProcedure
     .input(updateSubscriptionInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -725,7 +733,7 @@ export const billingRouter = createTRPCRouter({
   /**
    * Cancel subscription
    */
-  cancelSubscription: tenantProcedure
+  cancelSubscription: verifiedTenantProcedure
     .input(cancelSubscriptionInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -791,7 +799,7 @@ export const billingRouter = createTRPCRouter({
    * Uses Stripe's pause_collection to temporarily suspend billing.
    * CRM data and AI training progress are preserved during pause.
    */
-  pauseSubscription: tenantProcedure
+  pauseSubscription: verifiedTenantProcedure
     .input(pauseSubscriptionInputSchema)
     .mutation(async ({ ctx, input }) => {
       const user = ctx.user;
@@ -890,7 +898,7 @@ export const billingRouter = createTRPCRouter({
    * Creates a Stripe customer if user doesn't have one,
    * and updates the user record with the customer ID.
    */
-  ensureCustomer: tenantProcedure.mutation(async ({ ctx }) => {
+  ensureCustomer: verifiedTenantProcedure.mutation(async ({ ctx }) => {
     const stripe = await getStripeAdapter();
     const user = ctx.user;
 
@@ -1247,7 +1255,7 @@ export const billingRouter = createTRPCRouter({
    * Creates a new subscription for the authenticated user.
    * In production, this would create a Stripe checkout session.
    */
-  createCheckoutSubscription: tenantProcedure
+  createCheckoutSubscription: verifiedTenantProcedure
     .input(
       z.object({
         planId: z.string(),
@@ -1352,7 +1360,7 @@ export const billingRouter = createTRPCRouter({
    *
    * @implements PG-031 (Receipts)
    */
-  sendReceiptEmail: tenantProcedure
+  sendReceiptEmail: verifiedTenantProcedure
     .input(
       z.object({
         receiptId: z.string().min(1, 'Receipt ID is required'),

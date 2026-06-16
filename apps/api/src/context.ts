@@ -32,6 +32,11 @@ export interface UserSession {
   // lets `auth.getStatus` reuse `ctx.user` instead of issuing its own
   // `prisma.user.findUnique` per request (N+1 elimination).
   avatarUrl?: string;
+  // Email verification status. Always a boolean (never undefined).
+  // Google-OAuth users arrive with emailVerified=true from Supabase.
+  // Email/password sign-up users start false until they confirm.
+  // Used by assertEmailVerified() to gate sensitive mutations.
+  emailVerified: boolean;
 }
 
 /**
@@ -147,6 +152,8 @@ const FALLBACK_USER: UserSession = {
   name: 'Sarah Johnson',
   role: 'SALES_REP',
   tenantId: '00000000-0000-4000-8000-000000000001', // Default tenant from database
+  // Dev fallback is always considered verified to avoid blocking local diagnostics.
+  emailVerified: true,
 };
 
 /**
@@ -269,6 +276,7 @@ async function resolveDbUserWith(
       stripeCustomerId: true,
       timezone: true,
       avatarUrl: true,
+      emailVerified: true,
     },
   });
 
@@ -283,6 +291,8 @@ async function resolveDbUserWith(
     stripeCustomerId: dbUser.stripeCustomerId ?? undefined,
     timezone: dbUser.timezone ?? 'Europe/London',
     avatarUrl: dbUser.avatarUrl ?? undefined,
+    // Prefer the DB value (updated on each sign-in); guaranteed boolean via schema default.
+    emailVerified: dbUser.emailVerified,
   };
 }
 
@@ -309,6 +319,7 @@ async function maybePromoteBootstrapAdmin(
       stripeCustomerId: true,
       timezone: true,
       avatarUrl: true,
+      emailVerified: true,
     },
   });
 
@@ -323,6 +334,7 @@ async function maybePromoteBootstrapAdmin(
     stripeCustomerId: updated.stripeCustomerId ?? undefined,
     timezone: updated.timezone ?? 'Europe/London',
     avatarUrl: updated.avatarUrl ?? undefined,
+    emailVerified: updated.emailVerified,
   };
 }
 
@@ -470,6 +482,10 @@ async function provisionNewUserWith(
       role: newUser.role,
       tenantId: newUser.tenantId,
       avatarUrl: newUser.avatarUrl ?? undefined,
+      // emailVerified was persisted to the DB row above; read it back from there
+      // (not from the local variable) so the value is authoritative and consistent
+      // with what resolveDbUserWith would return on subsequent requests.
+      emailVerified: newUser.emailVerified,
     };
   } catch (provisionError) {
     console.error('[Auth] Failed to auto-provision user:', provisionError);
@@ -500,6 +516,11 @@ export async function ensureAppUserSession(
     const metaAvatar = extractAvatarUrl(supabaseUser.user_metadata ?? {});
     const shouldBackfillAvatar = !existing.avatarUrl && Boolean(metaAvatar);
 
+    // Derive the authoritative emailVerified value from the current Supabase token.
+    // The token reflects the current state (e.g. the user just clicked the link),
+    // so it is always at least as fresh as the stale DB value we read a moment ago.
+    const freshEmailVerified = extractEmailVerified(supabaseUser);
+
     // Track sign-in for existing user (fire-and-forget — no need to await)
     void prisma.user
       .update({
@@ -507,14 +528,15 @@ export async function ensureAppUserSession(
         data: {
           lastSignInAt: new Date(),
           signInCount: { increment: 1 },
-          emailVerified: extractEmailVerified(supabaseUser),
+          emailVerified: freshEmailVerified,
           ...(shouldBackfillAvatar ? { avatarUrl: metaAvatar } : {}),
         },
       })
       .catch((err) => console.warn('[Auth] Failed to update sign-in metadata:', err));
 
-    // Reflect the backfill in-memory so the avatar is correct on THIS request too.
+    // Reflect both backfills in-memory so values are correct on THIS request too.
     if (shouldBackfillAvatar) existing.avatarUrl = metaAvatar ?? undefined;
+    existing.emailVerified = freshEmailVerified;
 
     return maybePromoteBootstrapAdmin(prisma, existing, supabaseUser);
   }

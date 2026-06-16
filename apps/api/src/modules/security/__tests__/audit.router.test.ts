@@ -24,6 +24,7 @@ describe('Audit Router', () => {
         email: 'manager@example.com',
         role: 'MANAGER',
         tenantId: TEST_UUIDS.tenant,
+        emailVerified: true,
       },
       ...overrides,
     });

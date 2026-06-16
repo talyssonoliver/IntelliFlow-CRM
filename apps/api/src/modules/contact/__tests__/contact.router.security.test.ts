@@ -37,6 +37,7 @@ function createSalesRepContext(): BaseContext {
       email: 'salesrep@example.com',
       role: 'SALES_REP',
       tenantId: TENANT_A_TENANT_ID,
+      emailVerified: true,
     },
     tenant: {
       tenantId: TENANT_A_TENANT_ID,
@@ -414,6 +415,7 @@ describe('Contact Router Security — Tenant Isolation (IFC-252)', () => {
           email: 'manager@example.com',
           role: 'MANAGER',
           tenantId: TENANT_A_TENANT_ID,
+          emailVerified: true,
         },
         tenant: {
           tenantId: TENANT_A_TENANT_ID,

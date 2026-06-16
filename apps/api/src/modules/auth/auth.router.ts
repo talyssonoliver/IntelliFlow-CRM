@@ -1154,6 +1154,7 @@ export const authRouter = createTRPCRouter({
         name: ctx.user.name ?? null,
         role: ctx.user.role,
         avatar: ctx.user.avatarUrl ?? null,
+        emailVerified: ctx.user.emailVerified,
       },
       expiresAt: new Date(Date.now() + 3600 * 1000),
     };

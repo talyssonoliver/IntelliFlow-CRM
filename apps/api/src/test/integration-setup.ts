@@ -234,6 +234,7 @@ export async function createIntegrationTestContext(
       email: 'sarah.johnson@intelliflow.dev',
       role: 'SALES_REP',
       tenantId,
+      emailVerified: true,
     },
     req: undefined,
     res: undefined,

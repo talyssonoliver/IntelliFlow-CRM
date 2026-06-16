@@ -883,6 +883,7 @@ describe('Lead Router', () => {
           email: 'test@example.com',
           role: 'USER' as const,
           tenantId: undefined as any,
+          emailVerified: true,
         },
       };
       const callerWithoutTenant = leadRouter.createCaller(ctxWithoutTenant);

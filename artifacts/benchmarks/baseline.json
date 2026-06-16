@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-06-15T00:06:49.494Z",
+  "timestamp": "2026-06-16T15:14:27.904Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 61,
-    "total_endpoints": 532,
-    "total_queries": 240,
-    "total_mutations": 292,
+    "total_endpoints": 523,
+    "total_queries": 237,
+    "total_mutations": 286,
     "routers": [
       {
         "name": "contact",
@@ -1055,12 +1055,6 @@
         "endpoints": 18,
         "queries": 3,
         "mutations": 15
-      },
-      {
-        "name": "billing",
-        "endpoints": 18,
-        "queries": 7,
-        "mutations": 11
       },
       {
         "name": "documents",
@@ -1145,6 +1139,12 @@
         "endpoints": 9,
         "queries": 8,
         "mutations": 1
+      },
+      {
+        "name": "billing",
+        "endpoints": 9,
+        "queries": 4,
+        "mutations": 5
       },
       {
         "name": "webhooks",
@@ -3997,53 +3997,18 @@
       },
       {
         "name": "billing.getInvoice",
-        "method": "GET",
+        "method": "POST",
         "description": "Get invoice"
       },
       {
-        "name": "billing.payInvoice",
-        "method": "POST",
-        "description": "Pay invoice"
-      },
-      {
         "name": "billing.getPaymentMethods",
-        "method": "GET",
+        "method": "POST",
         "description": "Get payment methods"
       },
       {
-        "name": "billing.updatePaymentMethod",
-        "method": "POST",
-        "description": "Update payment method"
-      },
-      {
-        "name": "billing.removePaymentMethod",
-        "method": "POST",
-        "description": "Remove payment method"
-      },
-      {
-        "name": "billing.updateSubscription",
-        "method": "POST",
-        "description": "Update subscription"
-      },
-      {
-        "name": "billing.cancelSubscription",
-        "method": "POST",
-        "description": "Cancel subscription"
-      },
-      {
-        "name": "billing.pauseSubscription",
-        "method": "POST",
-        "description": "Pause subscription"
-      },
-      {
         "name": "billing.getUpcomingInvoice",
-        "method": "GET",
-        "description": "Get upcoming invoice"
-      },
-      {
-        "name": "billing.ensureCustomer",
         "method": "POST",
-        "description": "Ensure customer"
+        "description": "Get upcoming invoice"
       },
       {
         "name": "billing.getUsageMetrics",
@@ -4059,16 +4024,6 @@
         "name": "billing.updateBillingInformation",
         "method": "POST",
         "description": "Update billing information"
-      },
-      {
-        "name": "billing.createCheckoutSubscription",
-        "method": "POST",
-        "description": "Create checkout subscription"
-      },
-      {
-        "name": "billing.sendReceiptEmail",
-        "method": "POST",
-        "description": "Send receipt email"
       },
       {
         "name": "billing.handleSubscriptionWebhook",

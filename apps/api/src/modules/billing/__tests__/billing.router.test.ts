@@ -153,6 +153,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -180,6 +181,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -206,6 +208,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -232,6 +235,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -259,6 +263,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -287,6 +292,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -319,6 +325,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -346,6 +353,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -382,6 +390,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -420,6 +429,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: createUsageMetricsPrismaMock() as unknown,
       };
@@ -446,6 +456,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: createUsageMetricsPrismaMock() as unknown,
       };
@@ -476,6 +487,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -515,6 +527,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -546,6 +559,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -573,6 +587,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -605,6 +620,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -637,6 +653,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -664,6 +681,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -691,6 +709,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -729,6 +748,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -770,6 +790,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -802,6 +823,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -829,6 +851,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -856,6 +879,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -889,6 +913,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -926,6 +951,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {
           user: {
@@ -965,6 +991,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {
           user: {
@@ -1033,6 +1060,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_deleted',
+          emailVerified: true,
         } as UserSession,
         prisma: {
           user: {
@@ -1065,6 +1093,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {
           user: {
@@ -1129,6 +1158,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {
           user: {
@@ -1196,6 +1226,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {
           user: {
@@ -1246,6 +1277,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {
           user: {
@@ -1282,6 +1314,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1319,6 +1352,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1344,6 +1378,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1371,6 +1406,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1396,6 +1432,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1429,6 +1466,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1456,6 +1494,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1494,6 +1533,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1527,6 +1567,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1560,6 +1601,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1591,6 +1633,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1641,6 +1684,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1673,6 +1717,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1708,6 +1753,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {
           user: {
@@ -1762,6 +1808,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1816,6 +1863,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1839,6 +1887,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1867,6 +1916,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1895,6 +1945,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1949,6 +2000,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -1977,6 +2029,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -2005,6 +2058,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -2047,6 +2101,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -2085,6 +2140,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -2137,6 +2193,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -2177,6 +2234,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -2216,6 +2274,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };
@@ -2263,6 +2322,7 @@ describe('billingRouter', () => {
           role: 'USER',
           tenantId: 'tenant_123',
           stripeCustomerId: 'cus_123',
+          emailVerified: true,
         } as UserSession,
         prisma: {} as unknown,
       };

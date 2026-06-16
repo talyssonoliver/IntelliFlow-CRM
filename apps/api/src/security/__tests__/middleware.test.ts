@@ -78,10 +78,11 @@ describe('Security Middleware', () => {
     email: string;
     role: string;
     tenantId: string;
+    emailVerified?: boolean;
   }): Context {
     return {
       prisma: mockPrisma,
-      user,
+      user: user ? { emailVerified: true, ...user } : user,
       req: {
         headers: {
           get: vi.fn((name: string) => {
@@ -105,6 +106,7 @@ describe('Security Middleware', () => {
       email: 'user@example.com',
       role: 'ADMIN',
       tenantId: 'test-tenant-123',
+      emailVerified: true,
     });
   });
 
