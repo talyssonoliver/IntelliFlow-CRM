@@ -194,7 +194,12 @@ describe('AI provider base URL lazy container wiring', () => {
     vi.stubEnv('AI_PROVIDER', 'ollama');
     vi.stubEnv('OLLAMA_BASE_URL', '');
 
-    await expect(import('../container.js')).resolves.toHaveProperty('container');
+    // Import the module and await containerReady so the async createServices()
+    // (which dynamically imports OllamaAIService) has fully resolved before we
+    // assert on adapterState (perf/container-lazy-wiring).
+    const mod = await import('../container.js');
+    await expect(mod.containerReady).resolves.toBeUndefined();
+    expect(mod).toHaveProperty('container');
 
     expect(adapterState.ollama).not.toBeNull();
     if (!adapterState.ollama) throw new Error('OllamaAIService was not constructed');
@@ -207,7 +212,12 @@ describe('AI provider base URL lazy container wiring', () => {
     vi.stubEnv('AI_PROVIDER', 'litellm');
     vi.stubEnv('LITELLM_BASE_URL', '');
 
-    await expect(import('../container.js')).resolves.toHaveProperty('container');
+    // Import the module and await containerReady so the async createServices()
+    // (which dynamically imports LiteLLMAIService) has fully resolved before we
+    // assert on adapterState (perf/container-lazy-wiring).
+    const mod = await import('../container.js');
+    await expect(mod.containerReady).resolves.toBeUndefined();
+    expect(mod).toHaveProperty('container');
 
     expect(adapterState.litellm).not.toBeNull();
     if (!adapterState.litellm) throw new Error('LiteLLMAIService was not constructed');

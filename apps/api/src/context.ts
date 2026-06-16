@@ -13,7 +13,7 @@
 
 import type { PrismaClient } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
-import { container, type Container, apiPrisma } from './container';
+import { container, containerReady, type Container, apiPrisma } from './container';
 import { supabaseAdmin, verifyToken } from './lib/supabase';
 
 /**
@@ -674,6 +674,15 @@ export const createContext = async (opts?: {
   req?: Request;
   res?: Response;
 }): Promise<BaseContext> => {
+  // The container is now lazily/asynchronously initialised (heavy AI SDKs are
+  // dynamic-imported only when used). On serverless (the Next.js /api/trpc route
+  // calls createContext directly and does NOT await containerReady at startup the
+  // way http-server.ts does), the FIRST cold request could otherwise access the
+  // container Proxy before `_resolved` is populated. Awaiting here makes every
+  // entrypoint safe — it's instant once resolved, and the first cold request pays
+  // the init cost it would pay anyway.
+  await containerReady;
+
   let user: UserSession | null = null;
   const hadBearerToken = Boolean(opts?.req && extractBearerToken(opts?.req));
 
