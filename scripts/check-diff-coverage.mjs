@@ -105,6 +105,13 @@ const SONAR_COVERAGE_EXCLUDE = [
   // isolation, but the merge cannot — counting changed lines as 0% is the same
   // false negative as a mock-shadowed/absent file. Mirror sonar.coverage.exclusions.
   /^apps\/api\/src\/lib\/supabase\.ts$/,
+  // apps/api/src/context.ts (tRPC context: Supabase token verification + container
+  // wiring + JIT user/org provisioning) is shadowed across the merged api coverage run —
+  // many suites vi.mock('../context' / '../container' / '../lib/supabase'), so the real
+  // module is absent from the merged lcov (the same mock-shadow as supabase.ts above).
+  // Its provisioning logic is covered in isolation by context.provisioning.test.ts.
+  // Mirror sonar.coverage.exclusions.
+  /^apps\/api\/src\/context\.ts$/,
   // The legal module is a merged-lcov dead-zone: the api coverage project runs
   // Istanbul over 4 forks and breaches thresholds, dropping the entire legal
   // subtree (and most of api) from the merged lcov — pre-existing on origin/main
