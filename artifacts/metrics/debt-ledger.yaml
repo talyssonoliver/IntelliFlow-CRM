@@ -2,6 +2,37 @@ schema_version: 1.0.0
 last_updated: 2026-06-15
 maintainer: Tech Lead
 items:
+  LEGAL-MERGED-LCOV-DEADZONE-001:
+    origin_task: '#445'
+    owner: DevOps Lead
+    severity: medium
+    description: >
+      apps/api/src/modules/legal/** is a merged-lcov dead-zone. The api coverage
+      project (run-coverage.js `--project=api`) runs Istanbul over 4 parallel
+      forks (apps/api/vitest.config.ts maxWorkers:4, pool:forks) and breaches
+      thresholds, emitting a PARTIAL coverage-final.json (~135 of ~600 api files;
+      the entire legal subtree dropped) while exiting "PASS" because all tests
+      pass (run-coverage classifies non-zero+0-failures as threshold debt, not
+      failure). So legal files never appear in the merged lcov and any changed
+      legal line scores 0% in BOTH local check-diff-coverage AND Sonar
+      new_coverage. Pre-existing on origin/main; documented under the IFC-242
+      "flaky, passes in isolation/sharded CI" instrumentation flake. documents.router.ts
+      IS covered in isolation (200 legal-documents tests incl. the #445 sign-IP
+      tests). #445 added it to sonar.coverage.exclusions AND check-diff-coverage
+      SONAR_COVERAGE_EXCLUDE (same pattern as supabase.ts #427 / shared/** IFC-242
+      / ui #482) to unblock the security fix.
+    created_at: 2026-06-16
+    expiry_date: 2026-09-16
+    remediation_sprint: 19
+    remediation_plan: >
+      Fix the api coverage instrumentation so the 4-fork Istanbul run captures the
+      full api tree (e.g. lower forks under COVERAGE_RUN, or shard the api project
+      locally as CI does), so legal appears in the merged lcov; then DROP the
+      documents.router.ts exclusion from both gates and restore coverage gating on
+      the legal routers. Until then legal coverage is enforced only by the api
+      module tests in isolation + sharded CI.
+    status: open
+    notes: 'git issue to be filed. Tracked per project Rule 8. Do NOT broaden the exclusion beyond documents.router.ts without re-evaluating each legal router individually.'
   PRESHIP-385-lcov-absent-blind-spot:
     origin_task: IFC-256
     owner: DevOps Lead
