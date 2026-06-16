@@ -350,4 +350,351 @@ describe('OnboardingWelcome', () => {
     const dialog = screen.getByTestId('onboarding-dialog');
     expect((dialog as HTMLDialogElement).open).toBe(false);
   });
+
+  // ------------------------------------------------------------------
+  // Step navigation
+  // ------------------------------------------------------------------
+
+  it('greets with "there" when user.name is null', () => {
+    mockUseAuth.mockReturnValue(
+      authedUser({ user: { id: 'u2', email: 'x@y.com', name: null, role: 'USER' } })
+    );
+    render(<OnboardingWelcome />);
+    expect(screen.getByText(/welcome, there/i)).toBeDefined();
+  });
+
+  it('typing in company and role fields updates their values', () => {
+    render(<OnboardingWelcome />);
+    const companyInput = screen.getByPlaceholderText(/acme corp/i) as HTMLInputElement;
+    const roleInput = screen.getByPlaceholderText(/sales manager/i) as HTMLInputElement;
+    fireEvent.change(companyInput, { target: { value: 'FlowCo' } });
+    fireEvent.change(roleInput, { target: { value: 'CTO' } });
+    expect(companyInput.value).toBe('FlowCo');
+    expect(roleInput.value).toBe('CTO');
+  });
+
+  it('switching billing cycle to annual updates the toggle state', () => {
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const annualBtn = screen.getByRole('button', { name: /annual/i });
+    fireEvent.click(annualBtn);
+    expect(annualBtn.getAttribute('aria-pressed')).toBe('true');
+
+    // Toggling back to monthly
+    const monthlyBtn = screen.getByRole('button', { name: /monthly/i });
+    fireEvent.click(monthlyBtn);
+    expect(monthlyBtn.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('"Back" button in checkout step returns to plan step', async () => {
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    // Select professional tier to go to checkout
+    const tierBtns = screen.getAllByRole('button', { name: /professional/i });
+    const professionalBtn = tierBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!professionalBtn) throw new Error('Professional tier button not found');
+    fireEvent.click(professionalBtn);
+
+    await waitFor(() => expect(screen.getByTestId('stripe-elements')).toBeDefined());
+
+    fireEvent.click(screen.getByRole('button', { name: /back/i }));
+
+    await waitFor(() => expect(screen.getByText(/choose your plan/i)).toBeDefined());
+    expect(screen.queryByTestId('stripe-elements')).toBeNull();
+  });
+
+  it('"Continue on trial instead" link in checkout step calls handleSkipAll', async () => {
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const tierBtns = screen.getAllByRole('button', { name: /professional/i });
+    const professionalBtn = tierBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!professionalBtn) throw new Error('Professional tier button not found');
+    fireEvent.click(professionalBtn);
+
+    await waitFor(() => expect(screen.getByTestId('stripe-elements')).toBeDefined());
+
+    fireEvent.click(screen.getByRole('button', { name: /continue on trial instead/i }));
+
+    await waitFor(() => expect(mockMutate).toHaveBeenCalledWith({}));
+    expect(sessionStorage.getItem('intelliflow_onboarding_session_dismissed')).toBe('1');
+  });
+
+  it('"Skip plan selection" X button on plan step calls handleSkipAll', async () => {
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+    fireEvent.click(screen.getByRole('button', { name: /skip plan selection/i }));
+    await waitFor(() => expect(mockMutate).toHaveBeenCalledWith({}));
+    expect(sessionStorage.getItem('intelliflow_onboarding_session_dismissed')).toBe('1');
+  });
+
+  // ------------------------------------------------------------------
+  // Stripe card form — happy path (active subscription, no 3DS)
+  // ------------------------------------------------------------------
+
+  it('successful card submission with status=active calls onSuccess and shows success step', async () => {
+    // Default mockCreateCheckout returns { status:'active', clientSecret:null }
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const tierBtns = screen.getAllByRole('button', { name: /professional/i });
+    const professionalBtn = tierBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!professionalBtn) throw new Error('Professional tier button not found');
+    fireEvent.click(professionalBtn);
+
+    await waitFor(() => expect(screen.getByTestId('card-number-element')).toBeDefined());
+
+    // Fill cardholder name
+    const nameInput = screen.getByPlaceholderText(/jane smith/i) as HTMLInputElement;
+    fireEvent.change(nameInput, { target: { value: 'Alice Smith' } });
+
+    // Submit the form
+    fireEvent.submit(screen.getByRole('form', { name: /card payment form/i }));
+
+    await waitFor(() => {
+      expect(mockCreatePaymentMethod).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'card',
+          billing_details: { name: 'Alice Smith' },
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(mockCreateCheckout).toHaveBeenCalledWith(
+        expect.objectContaining({
+          planId: 'PROFESSIONAL',
+          billingCycle: 'monthly',
+          paymentMethodId: 'pm_test_123',
+        })
+      );
+    });
+
+    // Success step
+    await waitFor(() => expect(screen.getByText(/you're all set/i)).toBeDefined());
+    // confirmCardPayment must NOT have been called (status was 'active')
+    expect(mockConfirmCardPayment).not.toHaveBeenCalled();
+    // onboarding.complete should be called with the selectedPlan
+    await waitFor(() => expect(mockMutate).toHaveBeenCalledWith({ selectedPlan: 'professional' }));
+  });
+
+  it('"Get started" on success step sets session dismissed flag', async () => {
+    // Drive to success step the fast way: re-use default mocks
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const tierBtns = screen.getAllByRole('button', { name: /professional/i });
+    const professionalBtn = tierBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!professionalBtn) throw new Error('Professional tier button not found');
+    fireEvent.click(professionalBtn);
+
+    await waitFor(() => expect(screen.getByTestId('card-number-element')).toBeDefined());
+    const nameInput = screen.getByPlaceholderText(/jane smith/i);
+    fireEvent.change(nameInput, { target: { value: 'Alice' } });
+    fireEvent.submit(screen.getByRole('form', { name: /card payment form/i }));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /get started/i })).toBeDefined());
+    fireEvent.click(screen.getByRole('button', { name: /get started/i }));
+
+    expect(sessionStorage.getItem('intelliflow_onboarding_session_dismissed')).toBe('1');
+  });
+
+  // ------------------------------------------------------------------
+  // Stripe card form — 3DS branch
+  // ------------------------------------------------------------------
+
+  it('3DS branch: confirmCardPayment is called when status=incomplete + clientSecret', async () => {
+    mockCreateCheckout.mockResolvedValueOnce({
+      subscriptionId: 'sub_3ds',
+      status: 'incomplete',
+      clientSecret: 'cs_test_secret',
+      currentPeriodEnd: new Date().toISOString(),
+    });
+
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const tierBtns = screen.getAllByRole('button', { name: /professional/i });
+    const professionalBtn = tierBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!professionalBtn) throw new Error('Professional tier button not found');
+    fireEvent.click(professionalBtn);
+
+    await waitFor(() => expect(screen.getByTestId('card-number-element')).toBeDefined());
+    fireEvent.change(screen.getByPlaceholderText(/jane smith/i), { target: { value: 'Alice' } });
+    fireEvent.submit(screen.getByRole('form', { name: /card payment form/i }));
+
+    await waitFor(() => expect(mockConfirmCardPayment).toHaveBeenCalledWith('cs_test_secret'));
+    // No error → success step
+    await waitFor(() => expect(screen.getByText(/you're all set/i)).toBeDefined());
+  });
+
+  it('3DS failure: confirmCardPayment returns error → form error shown', async () => {
+    mockCreateCheckout.mockResolvedValueOnce({
+      subscriptionId: 'sub_3ds_fail',
+      status: 'incomplete',
+      clientSecret: 'cs_fail',
+      currentPeriodEnd: new Date().toISOString(),
+    });
+    mockConfirmCardPayment.mockResolvedValueOnce({
+      error: { message: '3D Secure authentication failed' },
+    });
+
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const tierBtns = screen.getAllByRole('button', { name: /professional/i });
+    const professionalBtn = tierBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!professionalBtn) throw new Error('Professional tier button not found');
+    fireEvent.click(professionalBtn);
+
+    await waitFor(() => expect(screen.getByTestId('card-number-element')).toBeDefined());
+    fireEvent.change(screen.getByPlaceholderText(/jane smith/i), { target: { value: 'Alice' } });
+    fireEvent.submit(screen.getByRole('form', { name: /card payment form/i }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeDefined());
+    expect(screen.getByRole('alert').textContent).toContain('3D Secure authentication failed');
+  });
+
+  // ------------------------------------------------------------------
+  // Stripe card form — error branches
+  // ------------------------------------------------------------------
+
+  it('createPaymentMethod error → shows form error, no checkout call', async () => {
+    mockCreatePaymentMethod.mockResolvedValueOnce({
+      paymentMethod: null,
+      error: { message: 'Your card number is incomplete.' },
+    });
+
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const tierBtns = screen.getAllByRole('button', { name: /professional/i });
+    const professionalBtn = tierBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!professionalBtn) throw new Error('Professional tier button not found');
+    fireEvent.click(professionalBtn);
+
+    await waitFor(() => expect(screen.getByTestId('card-number-element')).toBeDefined());
+    fireEvent.change(screen.getByPlaceholderText(/jane smith/i), { target: { value: 'Alice' } });
+    fireEvent.submit(screen.getByRole('form', { name: /card payment form/i }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toContain('Your card number is incomplete.')
+    );
+    expect(mockCreateCheckout).not.toHaveBeenCalled();
+  });
+
+  it('createCheckoutSubscription rejection → shows generic error message', async () => {
+    mockCreateCheckout.mockRejectedValueOnce(new Error('Backend subscription error'));
+
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const tierBtns = screen.getAllByRole('button', { name: /professional/i });
+    const professionalBtn = tierBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!professionalBtn) throw new Error('Professional tier button not found');
+    fireEvent.click(professionalBtn);
+
+    await waitFor(() => expect(screen.getByTestId('card-number-element')).toBeDefined());
+    fireEvent.change(screen.getByPlaceholderText(/jane smith/i), { target: { value: 'Alice' } });
+    fireEvent.submit(screen.getByRole('form', { name: /card payment form/i }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toContain('Backend subscription error')
+    );
+  });
+
+  it('submitting with empty name shows validation error without calling stripe', async () => {
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const tierBtns = screen.getAllByRole('button', { name: /professional/i });
+    const professionalBtn = tierBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!professionalBtn) throw new Error('Professional tier button not found');
+    fireEvent.click(professionalBtn);
+
+    await waitFor(() => expect(screen.getByTestId('card-number-element')).toBeDefined());
+    // Do NOT fill cardholder name — submit immediately
+    fireEvent.submit(screen.getByRole('form', { name: /card payment form/i }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toContain('Cardholder name is required')
+    );
+    expect(mockCreatePaymentMethod).not.toHaveBeenCalled();
+  });
+
+  it('cardholder name error clears when user starts typing', async () => {
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const tierBtns = screen.getAllByRole('button', { name: /professional/i });
+    const professionalBtn = tierBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!professionalBtn) throw new Error('Professional tier button not found');
+    fireEvent.click(professionalBtn);
+
+    await waitFor(() => expect(screen.getByTestId('card-number-element')).toBeDefined());
+
+    // Trigger validation error via blur with empty name
+    const nameInput = screen.getByPlaceholderText(/jane smith/i);
+    fireEvent.blur(nameInput);
+    await waitFor(() =>
+      expect(
+        screen
+          .getAllByRole('alert')
+          .some((el) => el.textContent?.includes('Cardholder name is required'))
+      ).toBe(true)
+    );
+
+    // Typing clears the error
+    fireEvent.change(nameInput, { target: { value: 'B' } });
+    await waitFor(() =>
+      expect(
+        screen
+          .queryAllByRole('alert')
+          .some((el) => el.textContent?.includes('Cardholder name is required'))
+      ).toBe(false)
+    );
+  });
+
+  // ------------------------------------------------------------------
+  // emailVerified === null (unknown) — same as unverified: no checkout
+  // ------------------------------------------------------------------
+
+  it('emailVerified=null: selecting a tier shows unverified notice, no card form', async () => {
+    mockUseAuth.mockReturnValue(authedUser({ emailVerified: null }));
+
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const starterBtns = screen.getAllByRole('button', { name: /starter/i });
+    const starterBtn = starterBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!starterBtn) throw new Error('Starter tier button not found');
+    fireEvent.click(starterBtn);
+
+    await waitFor(() => expect(screen.getByTestId('unverified-notice')).toBeDefined());
+    expect(screen.queryByTestId('card-number-element')).toBeNull();
+  });
+
+  // ------------------------------------------------------------------
+  // Annual billing cycle in checkout
+  // ------------------------------------------------------------------
+
+  it('annual billing cycle flows to checkout form showing annual price', async () => {
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    // Switch to annual
+    fireEvent.click(screen.getByRole('button', { name: /annual/i }));
+
+    const tierBtns = screen.getAllByRole('button', { name: /starter/i });
+    const starterBtn = tierBtns.find((b) => b.hasAttribute('aria-pressed'));
+    if (!starterBtn) throw new Error('Starter tier button not found');
+    fireEvent.click(starterBtn);
+
+    await waitFor(() => expect(screen.getByTestId('stripe-elements')).toBeDefined());
+    // Annual pricing label for starter (£24/yr) appears in the order summary
+    // and also inside the subscribe button — use getAllByText
+    expect(screen.getAllByText(/£24\/yr/i).length).toBeGreaterThan(0);
+  });
 });
