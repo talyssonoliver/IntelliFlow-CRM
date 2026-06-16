@@ -99,28 +99,66 @@ describe('ensureAppUserSession — JIT provisioning failure (L5)', () => {
     expect(result).toBe('threw');
   });
 
-  it('returns a valid UserSession when provisioning succeeds', async () => {
-    const newUser = {
-      id: SUPABASE_USER.id,
-      email: SUPABASE_USER.email,
-      name: 'New User',
-      role: 'USER',
-      tenantId: 'default-tenant-id',
-      stripeCustomerId: null,
-      timezone: 'Europe/London',
-    };
-
+  it('provisions a NEW org for the sign-up (own tenant, never a shared default)', async () => {
     const prisma = makePrismaStub({
       findUnique: vi.fn().mockResolvedValue(null),
-      tenantFindUnique: vi.fn().mockResolvedValue({ id: 'default-tenant-id', slug: 'default' }),
-      userCreate: vi.fn().mockResolvedValue(newUser),
+      // Reflect the create input so we can assert the user is bound to the new tenant.
+      userCreate: vi.fn().mockImplementation(({ data }: any) =>
+        Promise.resolve({
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          role: data.role,
+          tenantId: data.tenantId,
+        })
+      ),
     });
 
     const session = await ensureAppUserSession(prisma as any, SUPABASE_USER);
 
-    expect(session.tenantId).toBe('default-tenant-id');
+    // A brand-new org tenant is created — the shared 'default' lookup is GONE.
+    expect(prisma.tenant.create).toHaveBeenCalledTimes(1);
+    expect(prisma.tenant.findUnique).not.toHaveBeenCalled();
+    // The user is bound to THAT new tenant, and is its admin/owner.
+    expect(session.tenantId).toBe('new-tenant-id');
     expect(session.userId).toBe(SUPABASE_USER.id);
     expect(session.tenantId).not.toBe('');
+    expect(session.role).toBe('ADMIN');
+  });
+
+  it('SECURITY: two different sign-ups create SEPARATE org tenants (no co-mingling)', async () => {
+    const capturedSlugs: string[] = [];
+    function stub() {
+      return {
+        user: {
+          findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockImplementation(({ data }: any) => Promise.resolve({ ...data })),
+          update: vi.fn(),
+        },
+        tenant: {
+          findUnique: vi.fn(),
+          create: vi.fn().mockImplementation(({ data }: any) => {
+            capturedSlugs.push(data.slug);
+            return Promise.resolve({ id: `tenant-${data.slug}`, slug: data.slug });
+          }),
+        },
+      };
+    }
+
+    const a = await ensureAppUserSession(stub() as any, {
+      id: 'aaaaaaaa-1111-4111-8111-111111111111',
+      email: 'a@acme.com',
+      user_metadata: {},
+    });
+    const b = await ensureAppUserSession(stub() as any, {
+      id: 'bbbbbbbb-2222-4222-8222-222222222222',
+      email: 'b@globex.com',
+      user_metadata: {},
+    });
+
+    // Distinct sign-ups MUST land in distinct tenants — the whole point of the fix.
+    expect(capturedSlugs[0]).not.toBe(capturedSlugs[1]);
+    expect(a.tenantId).not.toBe(b.tenantId);
   });
 });
 

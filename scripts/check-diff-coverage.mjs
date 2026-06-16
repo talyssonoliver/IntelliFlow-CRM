@@ -105,6 +105,13 @@ const SONAR_COVERAGE_EXCLUDE = [
   // isolation, but the merge cannot — counting changed lines as 0% is the same
   // false negative as a mock-shadowed/absent file. Mirror sonar.coverage.exclusions.
   /^apps\/api\/src\/lib\/supabase\.ts$/,
+  // apps/api/src/context.ts (tRPC context: Supabase token verification + container
+  // wiring + JIT user/org provisioning) is shadowed across the merged api coverage run —
+  // many suites vi.mock('../context' / '../container' / '../lib/supabase'), so the real
+  // module is absent from the merged lcov (the same mock-shadow as supabase.ts above).
+  // Its provisioning logic is covered in isolation by context.provisioning.test.ts.
+  // Mirror sonar.coverage.exclusions.
+  /^apps\/api\/src\/context\.ts$/,
   // Next.js App Router page.tsx files are thin route shells (their logic lives in
   // tested components). vitest.config.ts excludes apps/web/src/app/**/page.tsx from
   // coverage instrumentation, so they never appear in lcov; mirror that here — and in

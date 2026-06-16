@@ -390,15 +390,6 @@ async function provisionNewUserWith(
   }
 ): Promise<UserSession> {
   try {
-    let defaultTenant = await prisma.tenant.findUnique({ where: { slug: 'default' } });
-
-    if (!defaultTenant) {
-      console.log('[Auth] Creating default tenant...');
-      defaultTenant = await prisma.tenant.create({
-        data: { name: 'Default Organization', slug: 'default', status: 'ACTIVE' },
-      });
-    }
-
     const meta = supabaseUser.user_metadata ?? {};
     const userName = extractUserName(meta, supabaseUser.email);
     const avatarUrl = extractAvatarUrl(meta);
@@ -407,7 +398,34 @@ async function provisionNewUserWith(
     const locale = extractLocale(meta);
     const provider = extractProvider(supabaseUser);
     const emailVerified = extractEmailVerified(supabaseUser);
-    const role = resolveProvisionedRole(supabaseUser.email);
+
+    // SECURITY — tenant isolation (incident 2026-06-16): every JIT sign-up gets its
+    // OWN organization. Assigning new users to a shared/'default' tenant co-mingles
+    // unrelated companies in one tenant — a cross-tenant data exposure (the prior bug
+    // sent every sign-up into the seed tenant, so each user saw the others + demo data).
+    // Joining an EXISTING org is invite-only (handled by invite acceptance), never by
+    // auto-provisioning.
+    const orgName =
+      (typeof meta.organization === 'string' && meta.organization.trim()) ||
+      (typeof meta.company === 'string' && meta.company.trim()) ||
+      `${userName}'s Organization`;
+    // Collapse non-alphanumerics to single hyphens, then trim edge hyphens with
+    // string ops (avoids a backtracking-prone regex / sonarjs slow-regex).
+    let baseSlug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    if (baseSlug.startsWith('-')) baseSlug = baseSlug.slice(1);
+    if (baseSlug.endsWith('-')) baseSlug = baseSlug.slice(0, -1);
+    if (!baseSlug) baseSlug = 'org';
+    // Suffix with the FULL globally-unique Supabase user id (a UUID — already
+    // slug-safe) so the slug can never collide. A truncated prefix would reintroduce
+    // collision risk that the unique `slug` column would reject at insert time.
+    const tenantSlug = `${baseSlug}-${supabaseUser.id}`;
+
+    const newTenant = await prisma.tenant.create({
+      data: { name: orgName, slug: tenantSlug, status: 'ACTIVE' },
+    });
+
+    // The creator of a brand-new organization is its admin/owner.
+    const role = 'ADMIN' as const;
 
     const newUser = await prisma.user.create({
       data: {
@@ -423,7 +441,7 @@ async function provisionNewUserWith(
         lastSignInAt: new Date(),
         signInCount: 1,
         role,
-        tenantId: defaultTenant.id,
+        tenantId: newTenant.id,
       },
     });
 
