@@ -416,12 +416,20 @@ async function provisionNewUserWith(
     if (baseSlug.endsWith('-')) baseSlug = baseSlug.slice(0, -1);
     if (!baseSlug) baseSlug = 'org';
     // Suffix with the FULL globally-unique Supabase user id (a UUID — already
-    // slug-safe) so the slug can never collide. A truncated prefix would reintroduce
-    // collision risk that the unique `slug` column would reject at insert time.
+    // slug-safe) so the slug is deterministic and unique per user. A truncated
+    // prefix would reintroduce collision risk across DIFFERENT users.
     const tenantSlug = `${baseSlug}-${supabaseUser.id}`;
 
-    const newTenant = await prisma.tenant.create({
-      data: { name: orgName, slug: tenantSlug, status: 'ACTIVE' },
+    // Upsert (not create) keeps provisioning idempotent. tenant + user are two
+    // separate, non-transactional writes; if user.create below fails AFTER the
+    // tenant row exists, the deterministic slug would collide on every retry and
+    // lock the user out permanently. Upserting by that slug makes a retry reuse
+    // the user's OWN org instead of colliding. The slug embeds this user's id, so
+    // it can never reuse another user's tenant (the cross-tenant guarantee holds).
+    const newTenant = await prisma.tenant.upsert({
+      where: { slug: tenantSlug },
+      create: { name: orgName, slug: tenantSlug, status: 'ACTIVE' },
+      update: {},
     });
 
     // The creator of a brand-new organization is its admin/owner.
