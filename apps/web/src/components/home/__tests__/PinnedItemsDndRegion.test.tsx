@@ -46,7 +46,8 @@ vi.mock('../DraggablePinnedItem', () => ({
   ),
 }));
 
-import { PinnedSection, PinnedSkeleton } from '../PinnedItemsDndRegion';
+import { PinnedSection } from '../PinnedItemsDndRegion';
+import { PinnedSkeleton } from '../PinnedSkeleton';
 
 const items = [
   {

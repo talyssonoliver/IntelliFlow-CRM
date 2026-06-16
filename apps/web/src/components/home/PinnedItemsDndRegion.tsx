@@ -18,30 +18,11 @@ import {
 } from '@dnd-kit/sortable';
 import { EmptyState } from '@intelliflow/ui';
 import { DraggablePinnedItem } from './DraggablePinnedItem';
+// PinnedSkeleton lives in its OWN @dnd-kit-free module so AuthenticatedHomePage
+// can import it statically (for the dynamic() loading fallback) WITHOUT pulling
+// @dnd-kit into the initial chunk. See PinnedSkeleton.tsx for the full rationale.
+import { PinnedSkeleton } from './PinnedSkeleton';
 import type { SerializedPinnedItem } from './AuthenticatedHomePage';
-
-// =============================================================================
-// PinnedSkeleton
-// Exported so AuthenticatedHomePage can reference it in the dynamic() loading
-// callback (phase 1: chunk download), and also used internally by PinnedSection
-// (phase 2: data re-fetch after chunk is loaded).
-// =============================================================================
-
-export function PinnedSkeleton() {
-  return (
-    <>
-      {[1, 2].map((i) => (
-        <div key={i} className="flex items-center gap-3 p-2 animate-pulse">
-          <div className="size-8 rounded bg-slate-200 dark:bg-slate-700" />
-          <div className="flex-1">
-            <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded mb-1" />
-            <div className="h-3 w-20 bg-slate-200 dark:bg-slate-700 rounded" />
-          </div>
-        </div>
-      ))}
-    </>
-  );
-}
 
 // =============================================================================
 // PinnedSection

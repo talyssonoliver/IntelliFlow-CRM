@@ -5,7 +5,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { PinnedSkeleton } from './PinnedItemsDndRegion';
+import { PinnedSkeleton } from './PinnedSkeleton';
 import {
   ActivityFeed,
   ActivityFeedTypeFilter,
