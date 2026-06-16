@@ -418,10 +418,14 @@ export function OnboardingWelcome() {
   const handleSelectTier = useCallback(
     (tierId: string) => {
       setSelectedTierId(tierId);
-      if (emailVerified === true) {
+      // Advance to Stripe checkout only when the user is verified AND Stripe is actually
+      // configured (publishable key present → getStripePromise() non-null). Otherwise we
+      // stay on the 'plan' step (with the inline notice + trial CTA) so the user is never
+      // stranded in an empty checkout step when payments are unavailable.
+      if (emailVerified === true && getStripePromise() !== null) {
         setStep('checkout');
       }
-      // If not verified, we stay on 'plan' step but show the inline notice.
+      // If not verified (or payments unavailable), stay on 'plan' and show the notice.
     },
     [emailVerified]
   );

@@ -310,6 +310,26 @@ describe('OnboardingWelcome', () => {
     });
   });
 
+  it('does NOT advance to an empty checkout when Stripe is not configured', async () => {
+    // Payments unavailable: getStripePromise() returns null with no publishable key,
+    // so a verified user selecting a paid tier must stay on 'plan' (skip/trial CTA
+    // visible) rather than land in a blank checkout step.
+    vi.stubEnv('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', '');
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    const tierBtns = screen.getAllByRole('button', { name: /professional/i });
+    const professionalBtn = tierBtns.find(
+      (b) => b.hasAttribute('aria-pressed') && b.getAttribute('aria-pressed') !== null
+    );
+    if (!professionalBtn) throw new Error('Professional tier button not found');
+    fireEvent.click(professionalBtn);
+
+    // No card form rendered; the skip-plan control is still available — not stranded.
+    expect(screen.queryByTestId('card-number-element')).toBeNull();
+    expect(screen.getByTestId('skip-plan-btn')).toBeDefined();
+  });
+
   it('shows verify-email notice and NO card form when email is NOT verified', async () => {
     mockUseAuth.mockReturnValue(authedUser({ emailVerified: false }));
 

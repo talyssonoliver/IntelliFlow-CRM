@@ -1652,31 +1652,17 @@ export const billingRouter = createTRPCRouter({
     });
 
     if (activeSub) {
-      // Derive tier by reverse-matching the env var table
-      let tier: string = 'UNKNOWN';
-      const tiers = ['STARTER', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'];
-      const cycles = ['MONTHLY', 'ANNUAL'];
-      for (const t of tiers) {
-        for (const c of cycles) {
-          const envKey = `STRIPE_PRICE_${t}_${c}`;
-          if (process.env[envKey] && process.env[envKey] === activeSub.stripeCustomerId) {
-            tier = t;
-            break;
-          }
-        }
-        if (tier !== 'UNKNOWN') break;
-      }
-      // stripeCustomerId is not the price id — we don't have priceId on the DB model.
-      // Fall back: extract tier from subscription metadata stored at webhook time.
-      // The subscription-sync handler stamps tenantSlug but not planTier on the DB row.
-      // Best-effort: leave tier as 'UNKNOWN' for existing rows; new webhook events
-      // should be updated to stamp planTier (tracked as follow-up debt).
-      // For the onboarding use-case this is acceptable — only matters post-payment.
-      tier = 'UNKNOWN';
-
+      // The StripeSubscription DB row persists stripeCustomerId / status / period but
+      // NOT the price id or plan tier (no migration in this change), so the paid tier
+      // cannot be derived here — report 'UNKNOWN'. (A reverse-match against the
+      // STRIPE_PRICE_* env table is impossible without the row's price id; comparing
+      // them to stripeCustomerId would never match.) The trial path below is unaffected
+      // (it always reports PROFESSIONAL). Persisting planTier on the row — the webhook
+      // already has subscription.metadata.planTier — is tracked as follow-up debt; it
+      // only affects post-payment tier display, not onboarding.
       return {
         source: 'stripe' as const,
-        tier,
+        tier: 'UNKNOWN' as const,
         status: activeSub.status as 'ACTIVE' | 'PAST_DUE',
         currentPeriodEnd: activeSub.currentPeriodEnd?.toISOString() ?? null,
         trialEndsAt: null,

@@ -516,10 +516,16 @@ export async function ensureAppUserSession(
     const metaAvatar = extractAvatarUrl(supabaseUser.user_metadata ?? {});
     const shouldBackfillAvatar = !existing.avatarUrl && Boolean(metaAvatar);
 
-    // Derive the authoritative emailVerified value from the current Supabase token.
-    // The token reflects the current state (e.g. the user just clicked the link),
-    // so it is always at least as fresh as the stale DB value we read a moment ago.
-    const freshEmailVerified = extractEmailVerified(supabaseUser);
+    // emailVerified is MONOTONIC: a token can CONFIRM verification (false -> true)
+    // but must never DEMOTE a persisted true. The fast-path JWT verifier
+    // (lib/supabase verifyToken) builds the user object from JWT claims WITHOUT an
+    // `email_confirmed_at` field, so extractEmailVerified falls back to
+    // user_metadata.email_verified and can return false for an already-verified user
+    // (including OAuth). Unconditionally writing that back would persist false and lock
+    // the user out of every verifiedTenantProcedure (billing, sendEmail). So we only
+    // upgrade — never overwrite the persisted value with a token-derived false.
+    const tokenSaysVerified = extractEmailVerified(supabaseUser);
+    const shouldUpgradeVerified = tokenSaysVerified && !existing.emailVerified;
 
     // Track sign-in for existing user (fire-and-forget — no need to await)
     void prisma.user
@@ -528,15 +534,16 @@ export async function ensureAppUserSession(
         data: {
           lastSignInAt: new Date(),
           signInCount: { increment: 1 },
-          emailVerified: freshEmailVerified,
+          ...(shouldUpgradeVerified ? { emailVerified: true } : {}),
           ...(shouldBackfillAvatar ? { avatarUrl: metaAvatar } : {}),
         },
       })
       .catch((err) => console.warn('[Auth] Failed to update sign-in metadata:', err));
 
-    // Reflect both backfills in-memory so values are correct on THIS request too.
+    // Reflect backfills in-memory so values are correct on THIS request too. Only an
+    // upgrade is applied; a stale/partial token can never demote a verified account.
     if (shouldBackfillAvatar) existing.avatarUrl = metaAvatar ?? undefined;
-    existing.emailVerified = freshEmailVerified;
+    if (tokenSaysVerified) existing.emailVerified = true;
 
     return maybePromoteBootstrapAdmin(prisma, existing, supabaseUser);
   }

@@ -163,6 +163,10 @@ describe('billing.getPlanState — active subscription branch', () => {
 
     expect(result.source).toBe('stripe');
     expect(result.status).toBe('ACTIVE');
+    // Contract: the StripeSubscription row persists no price id / plan tier (no
+    // migration), so the paid tier is honestly reported as 'UNKNOWN' (tracked
+    // follow-up). The trial branch is unaffected (always PROFESSIONAL).
+    expect(result.tier).toBe('UNKNOWN');
     expect(result.currentPeriodEnd).toBe(periodEnd.toISOString());
     expect(result.trialEndsAt).toBeNull();
     expect(result.daysLeft).toBeNull();

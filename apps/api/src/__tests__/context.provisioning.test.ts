@@ -211,7 +211,7 @@ describe('ensureAppUserSession — JIT provisioning failure (L5)', () => {
 describe('ensureAppUserSession — avatar backfill from provider metadata', () => {
   const EXISTING_USER_ID = '22222222-2222-4222-8222-222222222222';
 
-  function existingUserRow(avatarUrl: string | null) {
+  function existingUserRow(avatarUrl: string | null, emailVerified = true) {
     return {
       id: EXISTING_USER_ID,
       email: 'existing@example.com',
@@ -221,6 +221,7 @@ describe('ensureAppUserSession — avatar backfill from provider metadata', () =
       stripeCustomerId: null,
       timezone: 'Europe/London',
       avatarUrl,
+      emailVerified,
     };
   }
 
@@ -263,5 +264,46 @@ describe('ensureAppUserSession — avatar backfill from provider metadata', () =
     expect(session.avatarUrl).toBe('https://db.example.com/existing.png');
     // sign-in update must NOT include an avatarUrl write
     expect((update.mock.calls[0][0] as any).data.avatarUrl).toBeUndefined();
+  });
+
+  it('SECURITY: a token without email_confirmed_at must NOT demote an already-verified user', async () => {
+    // Production fast-path: lib/supabase verifyToken builds the user from JWT claims
+    // with NO email_confirmed_at and NO user_metadata.email_verified. Recomputing and
+    // writing that back would persist false and lock verified users (incl. OAuth) out of
+    // every verifiedTenantProcedure. emailVerified must be MONOTONIC (never demote).
+    const prisma = makePrismaStub({
+      findUnique: vi.fn().mockResolvedValue(existingUserRow(null, /* emailVerified */ true)),
+    });
+    const update = vi.fn().mockResolvedValue({});
+    (prisma.user as any).update = update;
+
+    const session = await ensureAppUserSession(prisma as any, {
+      id: EXISTING_USER_ID,
+      email: 'existing@example.com',
+      user_metadata: {}, // no email_verified; object has no email_confirmed_at
+    });
+
+    // Verified account stays verified on THIS request...
+    expect(session.emailVerified).toBe(true);
+    // ...and the fire-and-forget update must NEVER write emailVerified:false.
+    expect((update.mock.calls[0][0] as any).data.emailVerified).toBeUndefined();
+  });
+
+  it('upgrades emailVerified false -> true when the token confirms verification', async () => {
+    const prisma = makePrismaStub({
+      findUnique: vi.fn().mockResolvedValue(existingUserRow(null, /* emailVerified */ false)),
+    });
+    const update = vi.fn().mockResolvedValue({});
+    (prisma.user as any).update = update;
+
+    const session = await ensureAppUserSession(prisma as any, {
+      id: EXISTING_USER_ID,
+      email: 'existing@example.com',
+      email_confirmed_at: '2026-06-16T00:00:00.000Z',
+      user_metadata: {},
+    });
+
+    expect(session.emailVerified).toBe(true);
+    expect((update.mock.calls[0][0] as any).data.emailVerified).toBe(true);
   });
 });
