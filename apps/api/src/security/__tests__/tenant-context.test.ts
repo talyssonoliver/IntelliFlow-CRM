@@ -242,6 +242,56 @@ describe('Tenant Context', () => {
         else process.env.NODE_ENV = prevNodeEnv;
       }
     });
+
+    it('accepts a Prisma cuid tenantId (JIT-provisioned orgs) and issues SET with it', async () => {
+      // Regression for incident 2026-06-16: Tenant.id is @default(cuid()), so a
+      // per-user provisioned org has a cuid id. The prior UUID-only guard rejected
+      // it and broke every tenant-scoped query ("invalid tenantId format").
+      const prevVitest = process.env.VITEST;
+      const prevNodeEnv = process.env.NODE_ENV;
+      delete process.env.VITEST;
+      process.env.NODE_ENV = 'production';
+      try {
+        const CUID = 'cmqgpih4e000004jyh6mmv87m'; // real shape from the incident
+        const tenant: TenantContext = {
+          tenantId: CUID,
+          tenantType: 'user',
+          userId: TEST_USER_ID,
+          role: 'ADMIN',
+          canAccessAllTenantData: true,
+        };
+
+        let capturedQueryConfig: Record<string, unknown> | null = null;
+        mockPrisma.$extends.mockImplementation((config: unknown) => {
+          capturedQueryConfig = (config as { query: Record<string, unknown> }).query;
+          return mockPrisma;
+        });
+
+        // A cuid must NOT throw (it did under the old UUID-only check).
+        expect(() => createTenantScopedPrisma(mockPrisma as any, tenant)).not.toThrow();
+
+        const allModels = (capturedQueryConfig as unknown as Record<string, unknown>)[
+          '$allModels'
+        ] as Record<string, unknown>;
+        const allOperations = allModels['$allOperations'] as (opts: {
+          args: unknown;
+          query: (a: unknown) => Promise<unknown>;
+        }) => Promise<unknown>;
+        const mockQuery = vi.fn().mockResolvedValue('result');
+        mockPrisma.$executeRawUnsafe.mockResolvedValue(undefined);
+
+        await allOperations({ args: {}, query: mockQuery });
+
+        expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledWith(
+          `SET app.current_tenant_id = '${CUID}'`
+        );
+      } finally {
+        if (prevVitest === undefined) delete process.env.VITEST;
+        else process.env.VITEST = prevVitest;
+        if (prevNodeEnv === undefined) delete process.env.NODE_ENV;
+        else process.env.NODE_ENV = prevNodeEnv;
+      }
+    });
   });
 
   describe('tenantContextMiddleware', () => {

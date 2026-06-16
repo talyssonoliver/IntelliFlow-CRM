@@ -130,12 +130,20 @@ export function createTenantScopedPrisma(
     return prisma;
   }
 
-  // Validate tenantId is a UUID — prevents SQL injection via the SET command
-  // since we embed it directly in a raw SQL string (no parameterised SET syntax).
-  if (!/^[0-9a-f-]{36}$/i.test(tenantContext.tenantId)) {
-    throw new Error(
-      `createTenantScopedPrisma: invalid tenantId format: "${tenantContext.tenantId}"`
-    );
+  // Validate tenantId is a known-safe id format before embedding it directly in
+  // the raw `SET app.current_tenant_id = '<id>'` statement (no parameterised SET
+  // syntax). Accept BOTH a UUID and a Prisma cuid — both are injection-safe (only
+  // [0-9a-f-] / [a-z0-9], so no quotes, semicolons or whitespace can break out of
+  // the literal). The `tenants.id` column is text and every RLS policy compares it
+  // as text (`"tenantId" = current_setting('app.current_tenant_id', true)`, no
+  // ::uuid cast), so a cuid is a fully valid tenant id. `Tenant.id @default(cuid())`
+  // means JIT-provisioned orgs get cuid ids; the prior UUID-only check rejected
+  // them and broke every tenant-scoped query (incident 2026-06-16).
+  const tid = tenantContext.tenantId;
+  const isUuid = /^[0-9a-f-]{36}$/i.test(tid);
+  const isCuid = /^c[a-z0-9]{20,32}$/.test(tid);
+  if (!isUuid && !isCuid) {
+    throw new Error(`createTenantScopedPrisma: invalid tenantId format: "${tid}"`);
   }
 
   // Request-scoped flag: tracks whether SET has been issued on this client
