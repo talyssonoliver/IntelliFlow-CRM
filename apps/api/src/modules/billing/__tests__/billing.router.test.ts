@@ -1135,6 +1135,9 @@ describe('billingRouter', () => {
     });
 
     it('creates subscription with existing customer', async () => {
+      // Stub the real env var so resolvePriceId succeeds
+      vi.stubEnv('STRIPE_PRICE_PROFESSIONAL_MONTHLY', 'price_real_professional_monthly');
+
       mockStripeAdapterMethods.attachPaymentMethod.mockResolvedValue({
         isSuccess: true,
         isFailure: false,
@@ -1172,7 +1175,7 @@ describe('billingRouter', () => {
       );
 
       const result = await caller.createCheckoutSubscription({
-        planId: 'plan_pro',
+        planId: 'professional',
         billingCycle: 'monthly',
         paymentMethodId: 'pm_123',
       });
@@ -1189,6 +1192,9 @@ describe('billingRouter', () => {
     });
 
     it('creates new customer when user has no stripeCustomerId', async () => {
+      // Stub the real env var so resolvePriceId succeeds
+      vi.stubEnv('STRIPE_PRICE_ENTERPRISE_ANNUAL', 'price_real_enterprise_annual');
+
       const newCustomer = {
         ...mockCustomer,
         id: 'cus_new_456',
@@ -1240,7 +1246,7 @@ describe('billingRouter', () => {
       );
 
       const result = await caller.createCheckoutSubscription({
-        planId: 'plan_enterprise',
+        planId: 'enterprise',
         billingCycle: 'annual',
         paymentMethodId: 'pm_456',
       });
