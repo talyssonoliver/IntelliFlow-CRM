@@ -820,6 +820,36 @@ describe('Conversation Router', () => {
       );
     });
 
+    it('stores the rightmost (trusted) x-forwarded-for hop, not the spoofable leftmost', async () => {
+      const ctxWithHeaders = createTestContext({
+        req: {
+          headers: {
+            get: (name: string) => {
+              // Attacker prepends 9.9.9.9; the edge proxy appends the real IP.
+              if (name === 'x-forwarded-for') return '9.9.9.9, 203.0.113.7';
+              if (name === 'user-agent') return 'TestAgent/1.0';
+              if (name === 'x-csrf-token') return 'test-csrf-token';
+              return null;
+            },
+          },
+        } as any,
+      });
+      const callerWithHeaders = conversationRouter.createCaller(ctxWithHeaders);
+
+      prismaMock.conversationRecord.create.mockResolvedValue({
+        ...mockConversation,
+        ipAddress: '203.0.113.7',
+      });
+
+      await callerWithHeaders.create({});
+
+      expect(prismaMock.conversationRecord.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ ipAddress: '203.0.113.7' }),
+        })
+      );
+    });
+
     it('should not return conversations from other tenants', async () => {
       // Mock returns empty because tenant filter excludes other tenant's data
       prismaMock.conversationRecord.findFirst.mockResolvedValue(null);

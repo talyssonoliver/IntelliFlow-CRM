@@ -20,6 +20,7 @@ import { loadBullMQ } from '../../lib/load-bullmq';
 import { loadDocumentAutomation, assertNotDeleteGuarded } from './document-automation';
 import { enforceDocumentPolicies } from './document-policies';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
+import { pickTrustedForwardedIp } from '../../security/client-ip';
 // PG-186 Cat-2 helpers (notifyDocumentReassignment, notifyOnDuplicate consumer)
 // are exported from document-automation.ts and will be consumed by:
 //   IFC-310 — duplicate-detection runtime (notifyOnDuplicate firing on collision)
@@ -474,13 +475,17 @@ export const documentsRouter = createTRPCRouter({
       throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
     }
 
-    // Extract IP and User-Agent from request headers server-side (AC-003)
-    const req = ctx.req as any;
+    // Extract IP and User-Agent from request headers server-side (AC-003).
+    // ctx.req is a Fetch Request (headers is a Headers object). Use the
+    // rightmost, edge-set x-forwarded-for hop via pickTrustedForwardedIp —
+    // the leftmost hop is client-spoofable and would let an attacker forge
+    // the signature audit IP (#445; the #261/#447 trusted-hop fix, applied to
+    // the legal dead-zone). Mirrors security/middleware.ts extractIpAddress.
+    const req = ctx.req;
+    const forwardedFor = req?.headers?.get?.('x-forwarded-for');
     const ipAddress =
-      req?.headers?.['x-forwarded-for']?.toString().split(',')[0]?.trim() ??
-      req?.socket?.remoteAddress ??
-      'unknown';
-    const userAgent = req?.headers?.['user-agent'] ?? 'unknown';
+      pickTrustedForwardedIp(forwardedFor) ?? req?.headers?.get?.('x-real-ip') ?? 'unknown';
+    const userAgent = req?.headers?.get?.('user-agent') ?? 'unknown';
 
     // Compute signature hash via SignatureProvider (AC-002)
     const signatureHash = await container.signatureProvider.computeSignatureHash(
