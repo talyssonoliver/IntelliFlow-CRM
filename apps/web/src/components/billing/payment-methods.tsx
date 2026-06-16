@@ -52,7 +52,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { stripePromise } from '@/lib/billing/stripe-client';
+import { getStripePromise } from '@/lib/billing/stripe-client';
 import {
   getCardDisplayInfo,
   sortPaymentMethods,
@@ -412,12 +412,12 @@ function AddCardDialog({
             Enter your card details below. Your information is encrypted and secure.
           </DialogDescription>
         </DialogHeader>
-        {stripePromise === null ? (
+        {getStripePromise() === null ? (
           <div className="py-4 text-center text-muted-foreground text-sm">
             <p>Payment processing is not configured. Please contact support.</p>
           </div>
         ) : (
-          <Elements stripe={stripePromise}>
+          <Elements stripe={getStripePromise()}>
             <AddCardForm
               onSuccess={onAddSuccess}
               onClose={handleClose}

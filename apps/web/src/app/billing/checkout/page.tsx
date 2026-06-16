@@ -15,7 +15,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Elements } from '@stripe/react-stripe-js';
 import { PageHeader } from '@/components/shared/page-header';
 import { CheckoutForm } from '@/components/billing/checkout-form';
-import { stripePromise } from '@/lib/billing/stripe-client';
+import { getStripePromise } from '@/lib/billing/stripe-client';
 import { getPlanById, getAnnualSavingsPercent } from '@/lib/billing/stripe-portal';
 import type { BillingCycle } from '@intelliflow/validators';
 
@@ -143,7 +143,7 @@ function CheckoutContent() {
       <div className="order-2 lg:order-1">
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <h2 className="mb-6 text-lg font-semibold">Payment Details</h2>
-          {stripePromise === null ? (
+          {getStripePromise() === null ? (
             <div
               className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive"
               role="alert"
@@ -151,7 +151,7 @@ function CheckoutContent() {
               Payment processing is temporarily unavailable. Please try again later.
             </div>
           ) : (
-            <Elements stripe={stripePromise}>
+            <Elements stripe={getStripePromise()}>
               <CheckoutForm
                 planId={plan.id}
                 planName={plan.name}

@@ -11,9 +11,16 @@ import { loadStripe, type Stripe } from '@stripe/stripe-js';
 
 const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
+let _stripePromise: Promise<Stripe | null> | null | undefined;
+
 /**
- * Stripe promise singleton.
+ * Stripe promise lazy getter.
  * - Returns null if the publishable key env var is missing
- * - Calls loadStripe exactly once and caches the result
+ * - Calls loadStripe exactly once and caches the result (lazy singleton)
  */
-export const stripePromise: Promise<Stripe | null> | null = key ? loadStripe(key) : null;
+export function getStripePromise(): Promise<Stripe | null> | null {
+  if (_stripePromise === undefined) {
+    _stripePromise = key ? loadStripe(key) : null;
+  }
+  return _stripePromise;
+}

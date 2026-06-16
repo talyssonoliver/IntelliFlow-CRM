@@ -1,6 +1,8 @@
 # ADR-046: Material Symbols Font Subsetting Strategy
 
-**Status:** Proposed
+**Status:** Accepted — Phase 1 live (tools/scripts/subset-material-symbols.mjs;
+font reduced from 3.55 MB to ~229 KB). Phase 2 (per-route subset) tracked as
+PERF-11.
 
 **Date:** 2026-04-13
 

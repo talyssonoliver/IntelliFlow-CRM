@@ -301,6 +301,65 @@ jobs:
               });
             }
 
+  # PERF-01: throttled-mobile measurement lane. The desktop `lighthouse` job
+  # above runs unthrottled against the preview and scores ~100, hiding a ~16pt
+  # mobile gap (LCP/TTI 2.4-8x over target on a real mid-tier phone). This lane
+  # reproduces mobile conditions (4x CPU, ~1.6Mbps, 150ms RTT) so that number is
+  # visible on every PR. Every assertion in lighthouserc.mobile.js is `warn`, so
+  # this job NEVER blocks a PR — it surfaces the score, it does not gate it.
+  # Unlike the desktop job it is NOT label-gated; it still requires a preview URL
+  # + Vercel bypass to reach the deployment (skips cleanly when absent / forks).
+  lighthouse-mobile:
+    name: Lighthouse Performance (throttled mobile, warn-only)
+    runs-on: ubuntu-latest
+    needs: [deploy-preview]
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.deploy-preview.outputs.preview-url != '' &&
+      vars.VERCEL_BYPASS_CONFIGURED == 'true'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Compose bypass-enabled Lighthouse URLs (public pages only)
+        id: urls
+        env:
+          PREVIEW_URL: ${{ needs.deploy-preview.outputs.preview-url }}
+          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          # Vercel Deployment Protection bypass (same mechanism as the desktop
+          # lighthouse job): the query-param form sets a samesitenone cookie so
+          # subresources Lighthouse loads after the document also bypass the wall.
+          if [ -z "$BYPASS" ]; then
+            echo "::error::VERCEL_BYPASS_CONFIGURED=true but VERCEL_AUTOMATION_BYPASS_SECRET is empty. Set both in repo settings."
+            exit 1
+          fi
+          Q="x-vercel-protection-bypass=${BYPASS}&x-vercel-set-bypass-cookie=samesitenone"
+          {
+            echo "urls<<URLS_EOF"
+            echo "${PREVIEW_URL}?${Q}"
+            echo "${PREVIEW_URL}/login?${Q}"
+            echo "${PREVIEW_URL}/pricing?${Q}"
+            echo "URLS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run Lighthouse CI (throttled mobile)
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: './lighthouserc.mobile.js'
+          urls: ${{ steps.urls.outputs.urls }}
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          runs: 1
+
+      - name: Upload mobile Lighthouse JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-mobile
+          path: artifacts/lighthouse/mobile/
+          if-no-files-found: warn
+
   # D6 fix (incident-forensics-2026-06-04): boot `next start` in production mode
   # on EVERY pull request so module-load crashes (D1/D2/D4) are caught before
   # merge. Previously the only `next start` job was ci.yml's `e2e` job, gated

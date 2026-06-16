@@ -198,7 +198,7 @@ vi.mock('@stripe/react-stripe-js', () => ({
 }));
 
 vi.mock('@/lib/billing/stripe-client', () => ({
-  stripePromise: Promise.resolve(null),
+  getStripePromise: () => Promise.resolve(null),
 }));
 
 import { PaymentMethods } from '../payment-methods';
