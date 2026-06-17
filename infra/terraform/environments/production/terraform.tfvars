@@ -39,6 +39,13 @@ supabase_plan   = "free"
 # supabase_organization_id + supabase_project_ref injected via TF_VAR_* secrets
 # (SUPABASE_ORG_ID, SUPABASE_PROJECT_REF_PROD). Both required before apply.
 
+# Managed Redis (BullMQ/cache) — non-secret config matching the live Railway
+# Redis service. host + password are injected via TF_VAR_* secrets (REDIS_HOST /
+# REDIS_PASSWORD); port + tls are plain config here because they are
+# non-sensitive and GitHub's 100-secret cap left no room for them as secrets.
+redis_port = "6379"
+redis_tls  = "false"
+
 vercel_project_name = "intelli-flow-crm-web"
 vercel_framework    = "nextjs"
 vercel_git_repo = {
