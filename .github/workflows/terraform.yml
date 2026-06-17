@@ -286,6 +286,18 @@ jobs:
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
+          # PERF-07 drift reconcile: the railway module injects these into
+          # shared_env_vars (root main.tf). Without them the prod plan sees empty
+          # values and wants to wipe the live worker env vars. Secrets must exist
+          # AND match the live values for the plan to come back clean.
+          TF_VAR_prisma_field_encryption_key: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY }}
+          TF_VAR_ai_audit_signing_key: ${{ secrets.AI_AUDIT_SIGNING_KEY }}
+          TF_VAR_redis_host: ${{ secrets.REDIS_HOST }}
+          TF_VAR_redis_port: ${{ secrets.REDIS_PORT }}
+          TF_VAR_redis_password: ${{ secrets.REDIS_PASSWORD }}
+          TF_VAR_redis_tls: ${{ secrets.REDIS_TLS }}
+          TF_VAR_gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          TF_VAR_openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
           TF_VAR_environment: production
         run: |
           set -o pipefail
@@ -342,6 +354,17 @@ jobs:
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
+          # PERF-07 drift reconcile: same env-var wiring as the production plan
+          # job above, so apply uses the real values instead of wiping live
+          # worker env vars to empty.
+          TF_VAR_prisma_field_encryption_key: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY }}
+          TF_VAR_ai_audit_signing_key: ${{ secrets.AI_AUDIT_SIGNING_KEY }}
+          TF_VAR_redis_host: ${{ secrets.REDIS_HOST }}
+          TF_VAR_redis_port: ${{ secrets.REDIS_PORT }}
+          TF_VAR_redis_password: ${{ secrets.REDIS_PASSWORD }}
+          TF_VAR_redis_tls: ${{ secrets.REDIS_TLS }}
+          TF_VAR_gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          TF_VAR_openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
         run: terraform apply -auto-approve plan.tfplan
 
       - name: Terraform Output
