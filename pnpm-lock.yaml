@@ -244,8 +244,8 @@ importers:
   apps/ai-worker:
     dependencies:
       '@bull-board/api':
-        specifier: ^7.2.1
-        version: 7.2.1(@bull-board/ui@7.2.1)
+        specifier: ^8.0.0
+        version: 8.0.0(@bull-board/ui@8.0.0)
       '@bull-board/express':
         specifier: ^7.2.1
         version: 7.2.1
@@ -1285,8 +1285,8 @@ importers:
   packages/platform:
     dependencies:
       '@bull-board/api':
-        specifier: ^7.2.1
-        version: 7.2.1(@bull-board/ui@7.2.1)
+        specifier: ^8.0.0
+        version: 8.0.0(@bull-board/ui@7.2.1)
       '@bull-board/ui':
         specifier: ^7.2.1
         version: 7.2.1
@@ -1771,11 +1771,19 @@ packages:
     peerDependencies:
       '@bull-board/ui': 7.2.1
 
+  '@bull-board/api@8.0.0':
+    resolution: {integrity: sha512-GYXJNJclgm9H5Tt/tmuNWfjyF2BuygMwl8xrRIfxxOTgcK4SB8zNUPveTcHGAOoKKtPDVotHNZCBRrFCcOAXMA==}
+    peerDependencies:
+      '@bull-board/ui': 8.0.0
+
   '@bull-board/express@7.2.1':
     resolution: {integrity: sha512-tBr/xV5letzKYPRGRkilTQZmfoCoy3mCuUo4M2dDoDKOhbrF360mK5v9/rIcSgYSyI9c7BgEgrve80LhmexNxQ==}
 
   '@bull-board/ui@7.2.1':
     resolution: {integrity: sha512-O4ykrXrl2UJNHnhJrCvJxrw1ar+DlUBgyZUeZ8Ci+Ne5Wbq6rBv1gfpQH54/eu3IFbLso0S/kjc6WUGb2HPqZw==}
+
+  '@bull-board/ui@8.0.0':
+    resolution: {integrity: sha512-X/F256CmpBj9oj+fK2wOzjygkhTtjgWnc3f/SxPiUs3rQFvgYCplJLEaURh13J+Tpq46/1drAxq4Ukt4e5LelA==}
 
   '@cfworker/json-schema@4.1.1':
     resolution: {integrity: sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==}
@@ -3955,8 +3963,8 @@ packages:
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
 
-  '@preact/signals-core@1.14.2':
-    resolution: {integrity: sha512-RZHdBj9ZF4n40Rp4jS052EHHjBWf96P9oNdXPfhQTovCuWY9iQn3Gq+gOTJSgBO9A/JBuPfMOWsSX/lIU9Pc/A==}
+  '@preact/signals-core@1.14.3':
+    resolution: {integrity: sha512-m0K3vnbSLC5rHs2ZVfeAMvBtT1zIyq4mxx5OlNncSgMj5Iz6W5Rn3kPrDxAC+iIKmiVe0lSl6U37t5ZkEWoVAw==}
 
   '@preact/signals@2.8.1':
     resolution: {integrity: sha512-wX6U0SpcCukZTJBs5ChljvBZb3XmYzA5gd4vKHgX8wZZKaQCo2WHtmThdLx+mcVvlBa5u3XShC7ffbETJD4BiQ==}
@@ -12465,6 +12473,16 @@ snapshots:
       '@bull-board/ui': 7.2.1
       redis-info: 3.1.0
 
+  '@bull-board/api@8.0.0(@bull-board/ui@7.2.1)':
+    dependencies:
+      '@bull-board/ui': 7.2.1
+      redis-info: 3.1.0
+
+  '@bull-board/api@8.0.0(@bull-board/ui@8.0.0)':
+    dependencies:
+      '@bull-board/ui': 8.0.0
+      redis-info: 3.1.0
+
   '@bull-board/express@7.2.1':
     dependencies:
       '@bull-board/api': 7.2.1(@bull-board/ui@7.2.1)
@@ -12477,6 +12495,10 @@ snapshots:
   '@bull-board/ui@7.2.1':
     dependencies:
       '@bull-board/api': 7.2.1(@bull-board/ui@7.2.1)
+
+  '@bull-board/ui@8.0.0':
+    dependencies:
+      '@bull-board/api': 8.0.0(@bull-board/ui@8.0.0)
 
   '@cfworker/json-schema@4.1.1': {}
 
@@ -14675,11 +14697,11 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@preact/signals-core@1.14.2': {}
+  '@preact/signals-core@1.14.3': {}
 
   '@preact/signals@2.8.1(preact@10.28.4)':
     dependencies:
-      '@preact/signals-core': 1.14.2
+      '@preact/signals-core': 1.14.3
       preact: 10.28.4
 
   '@prisma/adapter-pg@7.8.0':
