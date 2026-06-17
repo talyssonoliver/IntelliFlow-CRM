@@ -47,7 +47,7 @@ export async function fetchAnalyticsOverview(
   }
 
   const caller = await createCallerFromToken(token);
-  return caller.analytics.getOverview({ startDate, endDate });
+  return caller.analytics.getOverview.query({ startDate, endDate });
 }
 
 /**
@@ -86,5 +86,5 @@ export async function fetchConversionFunnel(
   }
 
   const caller = await createCallerFromToken(token);
-  return caller.analytics.getConversionFunnel({ startDate, endDate, includeLeads });
+  return caller.analytics.getConversionFunnel.query({ startDate, endDate, includeLeads });
 }

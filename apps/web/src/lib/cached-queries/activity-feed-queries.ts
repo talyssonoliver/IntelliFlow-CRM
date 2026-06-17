@@ -46,5 +46,5 @@ export async function fetchUnifiedFeed(
   }
 
   const caller = await createCallerFromToken(token);
-  return caller.activityFeed.getUnifiedFeed({ limit, cursor });
+  return caller.activityFeed.getUnifiedFeed.query({ limit, cursor });
 }

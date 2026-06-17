@@ -42,5 +42,5 @@ export async function fetchEnabledModules(token: string | null, userId: string |
   }
 
   const caller = await createCallerFromToken(token);
-  return caller.moduleAccess.getEnabledModules();
+  return caller.moduleAccess.getEnabledModules.query();
 }

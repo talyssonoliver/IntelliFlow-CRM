@@ -21,7 +21,7 @@ export default async function HelpArticleAdminListPage() {
   let role: string | undefined;
   try {
     const caller = await createCallerFromToken(token);
-    const profile = await caller.user.getProfile();
+    const profile = await caller.user.getProfile.query();
     role = profile.role;
   } catch {
     return <ForbiddenSurface />;

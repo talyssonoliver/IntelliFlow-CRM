@@ -15,8 +15,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Vite's import-analysis plugin resolves imports at transform time, before
 // vi.mock hoisting runs. Stub these so the transform doesn't fail.
 vi.mock('next/headers', () => ({ cookies: vi.fn() }));
-vi.mock('@intelliflow/api/context', () => ({ createContext: vi.fn() }));
-vi.mock('@intelliflow/api/router', () => ({ appRouter: { createCaller: vi.fn() } }));
 
 // ── Mock next/cache ──────────────────────────────────────────────────────────
 const mockCacheLife = vi.fn();
@@ -39,7 +37,7 @@ describe('module-access-queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreateCallerFromToken.mockResolvedValue({
-      moduleAccess: { getEnabledModules: mockGetEnabledModules },
+      moduleAccess: { getEnabledModules: { query: mockGetEnabledModules } },
     });
   });
 

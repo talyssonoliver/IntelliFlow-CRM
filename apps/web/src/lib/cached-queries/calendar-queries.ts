@@ -46,7 +46,7 @@ export async function fetchAppointmentsList(
   }
 
   const caller = await createCallerFromToken(token);
-  return caller.appointments.list({ limit, page, sortBy: 'startTime', sortOrder: 'asc' });
+  return caller.appointments.list.query({ limit, page, sortBy: 'startTime', sortOrder: 'asc' });
 }
 
 /**
@@ -69,5 +69,5 @@ export async function fetchAppointmentStats(token: string | null, userId: string
   }
 
   const caller = await createCallerFromToken(token);
-  return caller.appointments.stats();
+  return caller.appointments.stats.query();
 }

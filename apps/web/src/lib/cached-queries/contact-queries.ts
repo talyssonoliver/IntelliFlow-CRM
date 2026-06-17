@@ -11,7 +11,7 @@ export async function fetchContactStats(token: string | null, userId?: string | 
   if (userId) cacheTag(userTag(userId));
 
   const caller = await createCallerFromToken(token);
-  return caller.contact.stats();
+  return caller.contact.stats.query();
 }
 
 export async function fetchContactsFirstPage(token: string | null, userId?: string | null) {
@@ -20,7 +20,7 @@ export async function fetchContactsFirstPage(token: string | null, userId?: stri
   if (userId) cacheTag(userTag(userId));
 
   const caller = await createCallerFromToken(token);
-  return caller.contact.list({
+  return caller.contact.list.query({
     page: 1,
     limit: 10,
     sortBy: 'createdAt',

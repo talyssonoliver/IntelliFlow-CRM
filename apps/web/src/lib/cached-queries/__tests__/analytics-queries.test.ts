@@ -26,8 +26,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Stub transitive deps of trpc-server.ts ───────────────────────────────────
 vi.mock('next/headers', () => ({ cookies: vi.fn() }));
-vi.mock('@intelliflow/api/context', () => ({ createContext: vi.fn() }));
-vi.mock('@intelliflow/api/router', () => ({ appRouter: { createCaller: vi.fn() } }));
 
 // ── Mock next/cache ──────────────────────────────────────────────────────────
 const mockCacheLife = vi.fn();
@@ -79,8 +77,8 @@ describe('analytics-queries', () => {
     vi.clearAllMocks();
     mockCreateCallerFromToken.mockResolvedValue({
       analytics: {
-        getOverview: mockGetOverview,
-        getConversionFunnel: mockGetConversionFunnel,
+        getOverview: { query: mockGetOverview },
+        getConversionFunnel: { query: mockGetConversionFunnel },
       },
     });
   });

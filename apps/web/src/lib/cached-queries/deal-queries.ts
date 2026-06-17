@@ -38,7 +38,7 @@ export async function fetchDeals(
   }
 
   const caller = await createCallerFromToken(token);
-  return caller.opportunity.list({
+  return caller.opportunity.list.query({
     limit,
     page,
     sortBy: 'createdAt',
@@ -68,5 +68,5 @@ export async function fetchDealForecast(token: string | null, userId: string | n
   }
 
   const caller = await createCallerFromToken(token);
-  return caller.opportunity.forecast();
+  return caller.opportunity.forecast.query();
 }

@@ -27,8 +27,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Stub transitive deps of trpc-server.ts that Vite transform resolves ──────
 vi.mock('next/headers', () => ({ cookies: vi.fn() }));
-vi.mock('@intelliflow/api/context', () => ({ createContext: vi.fn() }));
-vi.mock('@intelliflow/api/router', () => ({ appRouter: { createCaller: vi.fn() } }));
 
 // ── Mock next/cache ──────────────────────────────────────────────────────────
 const mockCacheLife = vi.fn();
@@ -105,8 +103,8 @@ describe('fetchDeals', () => {
     vi.clearAllMocks();
     mockCreateCallerFromToken.mockResolvedValue({
       opportunity: {
-        list: mockOpportunityList,
-        forecast: mockOpportunityForecast,
+        list: { query: mockOpportunityList },
+        forecast: { query: mockOpportunityForecast },
       },
     });
   });
@@ -205,8 +203,8 @@ describe('fetchDealForecast', () => {
     vi.clearAllMocks();
     mockCreateCallerFromToken.mockResolvedValue({
       opportunity: {
-        list: mockOpportunityList,
-        forecast: mockOpportunityForecast,
+        list: { query: mockOpportunityList },
+        forecast: { query: mockOpportunityForecast },
       },
     });
   });

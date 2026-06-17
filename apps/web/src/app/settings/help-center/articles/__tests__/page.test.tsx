@@ -33,13 +33,15 @@ vi.mock('@/components/support/article-admin-list', () => ({
 function makeCaller(role: string) {
   return {
     user: {
-      getProfile: vi.fn().mockResolvedValue({
-        role,
-        email: 'x@test.com',
-        name: 'x',
-        timezone: 'UTC',
-        locale: 'en-GB',
-      }),
+      getProfile: {
+        query: vi.fn().mockResolvedValue({
+          role,
+          email: 'x@test.com',
+          name: 'x',
+          timezone: 'UTC',
+          locale: 'en-GB',
+        }),
+      },
     },
   };
 }
@@ -121,7 +123,9 @@ describe('HelpArticleAdminListPage', () => {
     getAccessTokenMock.mockResolvedValue('tok-bad');
     createCallerFromTokenMock.mockResolvedValue({
       user: {
-        getProfile: vi.fn().mockRejectedValue(new Error('UNAUTHORIZED')),
+        getProfile: {
+          query: vi.fn().mockRejectedValue(new Error('UNAUTHORIZED')),
+        },
       },
     });
 

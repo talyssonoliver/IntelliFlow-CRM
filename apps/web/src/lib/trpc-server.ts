@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers';
-import { createContext } from '@intelliflow/api/context';
-import { appRouter } from '@intelliflow/api/router';
+import { createTRPCClient } from '@intelliflow/api-client';
 import { isTokenUsable } from '@/lib/auth/jwt';
 
 /**
@@ -16,18 +15,18 @@ export async function getAccessToken(): Promise<string | null> {
 }
 
 /**
- * Build a tRPC caller using a pre-read token string.
+ * Build a tRPC HTTP client pointed at the Railway API (ADR-063 Option 3).
  *
- * Because the token is passed as a plain argument (no dynamic APIs),
- * this function is safe to call **inside** `'use cache'` blocks.
+ * Replaces the previous in-process `appRouter.createCaller` (which forced
+ * @intelliflow/api's container to load on every Vercel SSR render — the
+ * ~4s cold-start). The client talks to `${NEXT_PUBLIC_API_URL}/api/trpc`
+ * (Railway in prod). Because the token is a plain argument (no dynamic
+ * APIs), this is safe inside `'use cache'` blocks.
  */
 export async function createCallerFromToken(token: string | null) {
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const req = new Request('http://localhost', { headers });
-  const ctx = await createContext({ req });
-  return appRouter.createCaller(ctx);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? '';
+  return createTRPCClient({
+    url: `${apiUrl}/api/trpc`,
+    headers: token ? () => ({ Authorization: `Bearer ${token}` }) : undefined,
+  });
 }

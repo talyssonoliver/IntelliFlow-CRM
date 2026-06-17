@@ -11,7 +11,7 @@ export async function fetchLeadStats(token: string | null, userId?: string | nul
   if (userId) cacheTag(userTag(userId));
 
   const caller = await createCallerFromToken(token);
-  return caller.lead.stats();
+  return caller.lead.stats.query();
 }
 
 export async function fetchLeadsFirstPage(token: string | null, userId?: string | null) {
@@ -20,7 +20,7 @@ export async function fetchLeadsFirstPage(token: string | null, userId?: string 
   if (userId) cacheTag(userTag(userId));
 
   const caller = await createCallerFromToken(token);
-  return caller.lead.list({
+  return caller.lead.list.query({
     page: 1,
     limit: 10,
     sortBy: 'createdAt',
