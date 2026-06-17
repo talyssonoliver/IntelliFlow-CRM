@@ -121,6 +121,13 @@ jobs:
         run: |
           npm install -g vercel@latest
           vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          # PERF-08/09 (ADR-063): `vercel build` reads only the pulled env file
+          # (see the prod-deploy note for the full rationale), so inject
+          # NEXT_PUBLIC_API_URL. Preview targets the live Railway API
+          # (STAGING_API_URL when set, otherwise PRODUCTION_API_URL).
+          mkdir -p .vercel && touch .vercel/.env.preview.local
+          sed -i '/^NEXT_PUBLIC_API_URL=/d' .vercel/.env.preview.local
+          echo "NEXT_PUBLIC_API_URL=${{ vars.STAGING_API_URL || vars.PRODUCTION_API_URL }}" >> .vercel/.env.preview.local
           vercel build --token=${{ secrets.VERCEL_TOKEN }}
           vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }}
 
@@ -190,6 +197,16 @@ jobs:
         run: |
           npm install -g vercel@latest
           vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          # PERF-08/09 (ADR-063): bake the Railway API URL into the prod bundle.
+          # `vercel build` warns "Build not running on Vercel. System environment
+          # variables will not be available" — it reads ONLY the pulled env file,
+          # so the GH Actions step env above never reaches the deployed artifact.
+          # Inject NEXT_PUBLIC_API_URL (sourced from the PRODUCTION_API_URL repo
+          # var) into that file, stripping any stale value first. Without this,
+          # SSR (trpc-server.ts) + client tRPC resolve an empty base URL and break.
+          mkdir -p .vercel && touch .vercel/.env.production.local
+          sed -i '/^NEXT_PUBLIC_API_URL=/d' .vercel/.env.production.local
+          echo "NEXT_PUBLIC_API_URL=${{ vars.PRODUCTION_API_URL }}" >> .vercel/.env.production.local
           vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
           vercel deploy --prebuilt --prod --archive=tgz --token=${{ secrets.VERCEL_TOKEN }}
 
