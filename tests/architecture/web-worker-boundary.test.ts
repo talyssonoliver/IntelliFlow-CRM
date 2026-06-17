@@ -104,22 +104,21 @@ function isTestFile(filePath: string): boolean {
  *
  * What is allowed:
  *   - apps/web importing @intelliflow/api for TypeScript type inference
- *   - apps/web importing @intelliflow/api/context and @intelliflow/api/router
- *     in the existing tRPC route handler (acknowledged architectural debt,
- *     tracked in ADR-063; see note below)
  *
  * What is FORBIDDEN (this describe block catches violations):
  *   - Any NEW direct import of apps/api/src/container from apps/web source
  *   - Direct imports of API-internal worker-service modules
  *     (AIMonitoringService, ai-monitoring.redis-store, home.cache)
+ *   - Runtime imports of @intelliflow/api/context or @intelliflow/api/router
+ *     from apps/web (ADR-063 debt retired by PERF-08/PERF-09)
  *
- * Note on the existing coupling: apps/web/src/app/api/trpc/[trpc]/route.ts
- * and apps/web/src/lib/trpc-server.ts currently import @intelliflow/api/context
- * and @intelliflow/api/router. This is the acknowledged tRPC route-handler
- * pattern and is NOT forbidden by these tests. The approved long-term fix
- * (HTTP-only tRPC client, splitting @intelliflow/api into type-only vs runtime
- * entrypoints) is tracked in ADR-063. These tests enforce that no NEW direct
- * container imports are introduced in the meantime.
+ * ADR-063 debt RETIRED by PERF-08/PERF-09:
+ *   - apps/web/src/app/api/trpc/[trpc]/route.ts has been deleted (PERF-09).
+ *   - apps/web/src/lib/trpc-server.ts no longer imports @intelliflow/api/context
+ *     or @intelliflow/api/router; it uses createTRPCClient from @intelliflow/api-client
+ *     pointed at the Railway API instead (PERF-08).
+ *   The test 'trpc-server.ts must not import @intelliflow/api context/router at runtime'
+ *   below permanently enforces the retired debt.
  */
 
 describe('Web Tier Boundary — no direct api container imports', () => {
@@ -202,6 +201,22 @@ describe('Web Tier Boundary — no direct api container imports', () => {
       }
     }
 
+    expect(violations).toHaveLength(0);
+  });
+
+  test('trpc-server.ts must not import @intelliflow/api context/router at runtime (ADR-063 retired by PERF-08/09)', () => {
+    const p = path.join(projectRoot, 'apps/web/src/lib/trpc-server.ts');
+    const content = fs.readFileSync(p, 'utf-8');
+    // ReDoS-safe: scan line-by-line with linear regexes (no overlapping
+    // quantifiers). A runtime import is `... from '@intelliflow/api/context'`
+    // (or /router) that is NOT an `import type`.
+    const violations = content
+      .split('\n')
+      .filter(
+        (line) =>
+          /from\s+['"]@intelliflow\/api\/(context|router)['"]/.test(line) &&
+          !/^\s*import\s+type\b/.test(line)
+      );
     expect(violations).toHaveLength(0);
   });
 });

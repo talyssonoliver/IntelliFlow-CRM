@@ -39,5 +39,5 @@ export async function fetchUnreadCount(token: string | null, userId: string | nu
   }
 
   const caller = await createCallerFromToken(token);
-  return caller.notifications.getUnreadCount();
+  return caller.notifications.getUnreadCount.query();
 }

@@ -11,5 +11,5 @@ export async function fetchAccountStats(token: string | null, userId?: string | 
   if (userId) cacheTag(userTag(userId));
 
   const caller = await createCallerFromToken(token);
-  return caller.account.stats();
+  return caller.account.stats.query();
 }

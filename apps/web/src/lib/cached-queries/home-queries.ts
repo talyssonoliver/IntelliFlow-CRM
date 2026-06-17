@@ -18,5 +18,5 @@ export async function fetchWelcomeSummary(token: string | null, userId?: string 
   if (userId) cacheTag(userTag(userId));
 
   const caller = await createCallerFromToken(token);
-  return caller.home.getWelcomeSummary();
+  return caller.home.getWelcomeSummary.query();
 }

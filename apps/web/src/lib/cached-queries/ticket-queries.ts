@@ -24,7 +24,7 @@ export async function fetchTicketsFirstPage(token: string | null, userId?: strin
   if (userId) cacheTag(userTag(userId));
 
   const caller = await createCallerFromToken(token);
-  return caller.ticket.list({
+  return caller.ticket.list.query({
     page: 1,
     limit: 25,
     sortBy: 'createdAt',
@@ -50,5 +50,5 @@ export async function fetchTicketStats(token: string | null, userId?: string | n
   if (userId) cacheTag(userTag(userId));
 
   const caller = await createCallerFromToken(token);
-  return caller.ticket.stats({} as never);
+  return caller.ticket.stats.query({} as never);
 }

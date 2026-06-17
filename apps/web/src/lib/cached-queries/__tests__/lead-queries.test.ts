@@ -25,8 +25,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Stub transitive deps of trpc-server.ts that Vite transform resolves ──────
 vi.mock('next/headers', () => ({ cookies: vi.fn() }));
-vi.mock('@intelliflow/api/context', () => ({ createContext: vi.fn() }));
-vi.mock('@intelliflow/api/router', () => ({ appRouter: { createCaller: vi.fn() } }));
 
 // ── Mock next/cache ──────────────────────────────────────────────────────────
 const mockCacheLife = vi.fn();
@@ -66,7 +64,7 @@ describe('lead-queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreateCallerFromToken.mockResolvedValue({
-      lead: { stats: mockLeadStats, list: mockLeadList },
+      lead: { stats: { query: mockLeadStats }, list: { query: mockLeadList } },
     });
   });
 

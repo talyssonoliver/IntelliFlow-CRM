@@ -13,8 +13,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Stub transitive deps of trpc-server.ts ────────────────────────────────────
 vi.mock('next/headers', () => ({ cookies: vi.fn() }));
-vi.mock('@intelliflow/api/context', () => ({ createContext: vi.fn() }));
-vi.mock('@intelliflow/api/router', () => ({ appRouter: { createCaller: vi.fn() } }));
 
 // ── mock next/cache (wrapper pattern avoids hoisting TDZ issue) ───────────────
 const mockCacheLife = vi.fn();
@@ -40,7 +38,7 @@ describe('fetchTicketsFirstPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreateCallerFromToken.mockResolvedValue({
-      ticket: { list: mockTicketList, stats: mockTicketStats },
+      ticket: { list: { query: mockTicketList }, stats: { query: mockTicketStats } },
     });
     mockTicketList.mockResolvedValue({ tickets: [], total: 0 });
   });
@@ -103,7 +101,7 @@ describe('fetchTicketStats', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreateCallerFromToken.mockResolvedValue({
-      ticket: { list: mockTicketList, stats: mockTicketStats },
+      ticket: { list: { query: mockTicketList }, stats: { query: mockTicketStats } },
     });
     mockTicketStats.mockResolvedValue({ open: 0, inProgress: 0 });
   });

@@ -25,7 +25,7 @@ export async function fetchTasksFirstPage(token: string | null, userId?: string 
   if (userId) cacheTag(userTag(userId));
 
   const caller = await createCallerFromToken(token);
-  return caller.task.list({
+  return caller.task.list.query({
     page: 1,
     sortBy: 'createdAt',
     sortOrder: 'desc',
@@ -51,5 +51,5 @@ export async function fetchTaskStats(token: string | null, userId?: string | nul
   if (userId) cacheTag(userTag(userId));
 
   const caller = await createCallerFromToken(token);
-  return caller.task.stats();
+  return caller.task.stats.query();
 }

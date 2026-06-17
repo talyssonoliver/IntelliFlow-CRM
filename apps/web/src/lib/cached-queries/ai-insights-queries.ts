@@ -40,5 +40,5 @@ export async function fetchAIInsights(token: string | null, userId: string | nul
   }
 
   const caller = await createCallerFromToken(token);
-  return caller.home.getAIInsights();
+  return caller.home.getAIInsights.query();
 }

@@ -121,6 +121,16 @@ module.exports = {
         ],
       },
     },
+    {
+      name: 'no-web-imports-api-context-router',
+      severity: 'error',
+      comment:
+        'apps/web must not import @intelliflow/api/context or @intelliflow/api/router at runtime. ' +
+        'Acknowledged ADR-063 debt retired by PERF-08/PERF-09. Type-only imports (import type) are allowed. ' +
+        'Use createTRPCClient from @intelliflow/api-client for all tRPC calls from web.',
+      from: { path: '^apps/web', pathNot: ['\\.(test|spec)\\.(ts|tsx)$', '__tests__', '__mocks__'] },
+      to: { path: ['^@intelliflow/api/context', '^@intelliflow/api/router'] },
+    },
   ],
   options: {
     doNotFollow: {

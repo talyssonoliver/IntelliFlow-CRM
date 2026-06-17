@@ -82,7 +82,7 @@ function getValidAccessToken(): string | null {
 }
 
 function getBaseUrl() {
-  if (typeof globalThis.window !== 'undefined') return '';
+  if (typeof globalThis.window !== 'undefined') return process.env.NEXT_PUBLIC_API_URL ?? '';
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return requiredProdEnv(
     'NEXT_PUBLIC_APP_URL',

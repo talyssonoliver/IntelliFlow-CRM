@@ -16,7 +16,7 @@ export async function fetchHelpArticlesFirstPage(token: string | null) {
   cacheTag(HELP_ARTICLES_LIST);
 
   const caller = await createCallerFromToken(token);
-  return caller.helpArticle.list({
+  return caller.helpArticle.list.query({
     page: 1,
     limit: 20,
     orderBy: 'order',
