@@ -21,29 +21,26 @@ describe('stripe-client', () => {
     mockLoadStripe.mockImplementation(() => Promise.resolve({ elements: vi.fn() }));
   });
 
-  it('returns null when NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is undefined', async () => {
+  it('getStripePromise() when key is undefined returns null', async () => {
     delete process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
     const mod = await import('../stripe-client');
-    expect(mod.stripePromise).toBeNull();
+    expect(mod.getStripePromise()).toBeNull();
   });
 
-  it('returns a Stripe promise when key is set', async () => {
+  it('getStripePromise() when key is set returns a Promise and calls loadStripe with the key value', async () => {
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = 'pk_test_abc123';
     const mod = await import('../stripe-client');
-    expect(mod.stripePromise).not.toBeNull();
-    expect(mod.stripePromise).toBeInstanceOf(Promise);
+    const result = mod.getStripePromise();
+    expect(result).not.toBeNull();
+    expect(result).toBeInstanceOf(Promise);
+    expect(mockLoadStripe).toHaveBeenCalledWith('pk_test_abc123');
   });
 
-  it('calls loadStripe with the publishable key', async () => {
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = 'pk_test_xyz789';
-    await import('../stripe-client');
-    expect(mockLoadStripe).toHaveBeenCalledWith('pk_test_xyz789');
-  });
-
-  it('does not call loadStripe more than once per module load', async () => {
+  it('Lazy-singleton: calling getStripePromise() twice in the same module instance calls the loadStripe mock exactly once', async () => {
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = 'pk_test_once';
-    await import('../stripe-client');
-    // Module is loaded once, loadStripe called once
+    const mod = await import('../stripe-client');
+    mod.getStripePromise();
+    mod.getStripePromise();
     expect(mockLoadStripe).toHaveBeenCalledTimes(1);
   });
 });

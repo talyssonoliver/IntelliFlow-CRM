@@ -441,6 +441,10 @@ function resetQueryMocks() {
 // ---------------------------------------------------------------------------
 
 import { AuthenticatedHomePage } from '../AuthenticatedHomePage';
+// PERF-05: preload the lazy pinned-section module so its wiring renders within
+// RTL's act() flush for these synchronous assertions (test-only; production still
+// defers @dnd-kit into the dynamic chunk). See AuthenticatedHomePage.test.tsx.
+import '../PinnedItemsDndRegion';
 
 // ---------------------------------------------------------------------------
 // Tests

@@ -14,6 +14,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
 
 // ============================================
@@ -38,29 +39,24 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
-vi.mock('@stripe/react-stripe-js', () => {
-  const React = require('react');
-  return {
-    Elements: ({ children }: Readonly<{ children: React.ReactNode }>) =>
-      React.createElement('div', { 'data-testid': 'stripe-elements-provider' }, children),
-    CardNumberElement: (_props: any) =>
-      React.createElement('div', { 'data-testid': 'card-number-element' }),
-    CardExpiryElement: (_props: any) =>
-      React.createElement('div', { 'data-testid': 'card-expiry-element' }),
-    CardCvcElement: (_props: any) =>
-      React.createElement('div', { 'data-testid': 'card-cvc-element' }),
-    useStripe: () => ({
-      createPaymentMethod: vi.fn(),
-      confirmCardPayment: vi.fn(),
-    }),
-    useElements: () => ({
-      getElement: vi.fn(),
-    }),
-  };
-});
+vi.mock('@stripe/react-stripe-js', () => ({
+  Elements: ({ children }: Readonly<{ children: ReactNode }>) => (
+    <div data-testid="stripe-elements-provider">{children}</div>
+  ),
+  CardNumberElement: (_props: any) => <div data-testid="card-number-element" />,
+  CardExpiryElement: (_props: any) => <div data-testid="card-expiry-element" />,
+  CardCvcElement: (_props: any) => <div data-testid="card-cvc-element" />,
+  useStripe: () => ({
+    createPaymentMethod: vi.fn(),
+    confirmCardPayment: vi.fn(),
+  }),
+  useElements: () => ({
+    getElement: vi.fn(),
+  }),
+}));
 
 vi.mock('@/lib/billing/stripe-client', () => ({
-  stripePromise: Promise.resolve({}), // non-null to render Elements
+  getStripePromise: () => Promise.resolve({}), // non-null to render Elements
 }));
 
 vi.mock('@/lib/billing/stripe-portal', () => ({
@@ -118,10 +114,9 @@ vi.mock('@/lib/billing/payment-processor', () => ({
 }));
 
 vi.mock('@/components/shared/page-header', () => ({
-  PageHeader: ({ title }: Readonly<{ title: string }>) => {
-    const React = require('react');
-    return React.createElement('div', { 'data-testid': 'page-header' }, title);
-  },
+  PageHeader: ({ title }: Readonly<{ title: string }>) => (
+    <div data-testid="page-header">{title}</div>
+  ),
 }));
 
 // Import after mocks

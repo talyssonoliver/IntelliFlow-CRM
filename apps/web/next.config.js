@@ -137,6 +137,21 @@ const nextConfig = {
           // swap scripts — leaving streamed pages stuck on their fallback HTML.
         ],
       },
+      // PERF-06: bfcache / repeat-visit caching for the two confirmed
+      // non-personalized public pages. `/login` and `/pricing` bake NO per-user
+      // data into their SSR HTML, so a shared (edge) cache is safe. The root `/`
+      // is deliberately excluded — home-queries.ts bakes per-user greeting,
+      // stats, and pinned items into the document, which a public cache would
+      // leak across users. Auth-gated routes are likewise excluded.
+      {
+        source: '/(login|pricing)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=60, stale-while-revalidate=3600',
+          },
+        ],
+      },
     ];
   },
 
@@ -214,4 +229,11 @@ const nextConfig = {
   trailingSlash: false,
 };
 
-module.exports = nextConfig;
+// PERF-02: opt-in bundle analyzer. Webpack-only; the build script already forces
+// `next build --webpack`, so `ANALYZE=true pnpm --filter @intelliflow/web build`
+// emits .next/analyze/{client,server}.html. No effect on normal builds.
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+module.exports = withBundleAnalyzer(nextConfig);

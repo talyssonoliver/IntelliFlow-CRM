@@ -502,6 +502,13 @@ function resetQueryMocks() {
 // ---------------------------------------------------------------------------
 
 import { AuthenticatedHomePage } from '../AuthenticatedHomePage';
+// PERF-05: the pinned section is lazy-loaded via next/dynamic(ssr:false). These
+// integration tests assert its wiring synchronously, so eagerly preload the
+// region module here — once it is in the module cache the dynamic import()
+// resolves within RTL's act() flush and the section renders on first paint. This
+// is test-only; production still defers @dnd-kit into the dynamic chunk because
+// AuthenticatedHomePage itself no longer statically imports this module.
+import '../PinnedItemsDndRegion';
 
 // ---------------------------------------------------------------------------
 // Tests
