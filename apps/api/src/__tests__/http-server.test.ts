@@ -1,12 +1,42 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AddressInfo } from 'node:net';
-import type { Server } from 'node:http';
+import http, { type Server } from 'node:http';
 import { createApiServer } from '../http-server';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import { createPublicContext, prismaMock } from '../test/setup';
 
 async function readJson<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
+}
+
+/**
+ * Raw HTTP request helper. `fetch`/undici silently drops the forbidden `Origin`
+ * request header, so CORS preflight behaviour can only be exercised with the
+ * low-level client where we control every header (including `Origin` and the
+ * `Access-Control-Request-*` preflight headers).
+ */
+function rawRequest(
+  baseUrl: string,
+  opts: { method: string; path: string; headers?: Record<string, string> }
+): Promise<{ status: number; headers: http.IncomingHttpHeaders }> {
+  const url = new URL(opts.path, baseUrl);
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname + url.search,
+        method: opts.method,
+        headers: opts.headers,
+      },
+      (res) => {
+        res.resume(); // drain the body so the socket can close
+        res.on('end', () => resolve({ status: res.statusCode ?? 0, headers: res.headers }));
+      }
+    );
+    req.on('error', reject);
+    req.end();
+  });
 }
 
 async function startTestServer(overrides?: {
@@ -309,5 +339,92 @@ describe('HTTP API Server', () => {
 
     expect(response.status).toBe(404);
     expect(response.status).not.toBe(405);
+  });
+
+  // Regression (PERF-08/09): the web became a CROSS-ORIGIN tRPC client. Every
+  // authenticated request triggers a CORS preflight (OPTIONS). Before the fix
+  // the preflight fell through to a 404 and the browser blocked the real
+  // request — surfacing as a phantom "not authenticated" redirect loop. None of
+  // the mocked client tests caught this because they never make a real
+  // cross-origin request. These exercise the real HTTP server.
+  describe('CORS preflight + headers (PERF-08/09)', () => {
+    const ALLOWED = 'http://localhost:3000';
+
+    it('answers the /api/trpc preflight from an allowed origin with 204 + CORS headers', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const res = await rawRequest(baseUrl, {
+        method: 'OPTIONS',
+        path: '/api/trpc/auth.getStatus',
+        headers: {
+          Origin: ALLOWED,
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'authorization,content-type',
+        },
+      });
+
+      // The exact regression: this preflight previously 404'd.
+      expect(res.status).toBe(204);
+      expect(res.status).not.toBe(404);
+      expect(res.headers['access-control-allow-origin']).toBe(ALLOWED);
+      expect(res.headers['access-control-allow-methods']).toContain('POST');
+      expect(res.headers['access-control-allow-headers']).toContain('authorization');
+      expect(res.headers['access-control-allow-headers']).toContain('x-trpc-source');
+    });
+
+    it('omits Access-Control-Allow-Origin for a disallowed origin', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const res = await rawRequest(baseUrl, {
+        method: 'OPTIONS',
+        path: '/api/trpc/auth.getStatus',
+        headers: { Origin: 'https://evil.example.com', 'Access-Control-Request-Method': 'POST' },
+      });
+
+      // No allow-origin header → the browser blocks the cross-origin call.
+      expect(res.headers['access-control-allow-origin']).toBeUndefined();
+    });
+
+    it('echoes Access-Control-Allow-Origin on the actual tRPC response', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const res = await rawRequest(baseUrl, {
+        method: 'GET',
+        path: '/api/trpc/hello',
+        headers: { Origin: ALLOWED },
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers['access-control-allow-origin']).toBe(ALLOWED);
+      // Security headers must still be present alongside CORS.
+      expect(res.headers['x-frame-options']).toBe('DENY');
+    });
+
+    it('echoes Access-Control-Allow-Origin on health responses for allowed origins', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const res = await rawRequest(baseUrl, {
+        method: 'GET',
+        path: '/api/health',
+        headers: { Origin: ALLOWED },
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers['access-control-allow-origin']).toBe(ALLOWED);
+    });
+
+    it('sets no CORS header for same-origin / server-to-server calls (no Origin)', async () => {
+      const { server, baseUrl } = await startTestServer();
+      servers.push(server);
+
+      const res = await rawRequest(baseUrl, { method: 'GET', path: '/api/health' });
+
+      expect(res.status).toBe(200);
+      expect(res.headers['access-control-allow-origin']).toBeUndefined();
+    });
   });
 });
