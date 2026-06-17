@@ -163,15 +163,29 @@ function buildAllowedOrigins(): Set<string> {
   return new Set([...defaults, ...fromEnv]);
 }
 
-const ALLOWED_ORIGINS = buildAllowedOrigins();
-const CORS_REFLECT_ANY = ALLOWED_ORIGINS.has('*');
+// Resolve the allow-list from env, memoised by the env values so prod (env set
+// once at boot) parses only once, while tests that mutate CORS_ALLOWED_ORIGINS /
+// API_CORS_ORIGIN see the change take effect (the set is NOT frozen at import).
+let cachedEnvKey: string | null = null;
+let cachedOrigins = new Set<string>();
+let cachedReflectAny = false;
+function getAllowedOrigins(): { set: Set<string>; reflectAny: boolean } {
+  const key = `${process.env.CORS_ALLOWED_ORIGINS ?? ''}|${process.env.API_CORS_ORIGIN ?? ''}`;
+  if (key !== cachedEnvKey) {
+    cachedEnvKey = key;
+    cachedOrigins = buildAllowedOrigins();
+    cachedReflectAny = cachedOrigins.has('*');
+  }
+  return { set: cachedOrigins, reflectAny: cachedReflectAny };
+}
 
 /** Resolve the echo-back origin for this request, or null when not allowed. */
 function resolveAllowedOrigin(req: IncomingMessage): string | null {
   const origin = req.headers.origin;
   if (!origin) return null;
-  if (CORS_REFLECT_ANY) return origin;
-  return ALLOWED_ORIGINS.has(origin) ? origin : null;
+  const { set, reflectAny } = getAllowedOrigins();
+  if (reflectAny) return origin;
+  return set.has(origin) ? origin : null;
 }
 
 function applyCorsHeaders(res: ServerResponse, allowedOrigin: string): void {

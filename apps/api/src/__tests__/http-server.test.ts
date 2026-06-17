@@ -374,17 +374,30 @@ describe('HTTP API Server', () => {
     });
 
     it('omits Access-Control-Allow-Origin for a disallowed origin', async () => {
-      const { server, baseUrl } = await startTestServer();
-      servers.push(server);
+      // Pin a restrictive allow-list for this case: the test env may set
+      // CORS_ALLOWED_ORIGINS=* (reflect-any, which legitimately echoes every
+      // origin). With an explicit list, a foreign origin must NOT be echoed.
+      const prevList = process.env.CORS_ALLOWED_ORIGINS;
+      const prevSingle = process.env.API_CORS_ORIGIN;
+      process.env.CORS_ALLOWED_ORIGINS = ALLOWED;
+      delete process.env.API_CORS_ORIGIN;
+      try {
+        const { server, baseUrl } = await startTestServer();
+        servers.push(server);
 
-      const res = await rawRequest(baseUrl, {
-        method: 'OPTIONS',
-        path: '/api/trpc/auth.getStatus',
-        headers: { Origin: 'https://evil.example.com', 'Access-Control-Request-Method': 'POST' },
-      });
+        const res = await rawRequest(baseUrl, {
+          method: 'OPTIONS',
+          path: '/api/trpc/auth.getStatus',
+          headers: { Origin: 'https://evil.example.com', 'Access-Control-Request-Method': 'POST' },
+        });
 
-      // No allow-origin header → the browser blocks the cross-origin call.
-      expect(res.headers['access-control-allow-origin']).toBeUndefined();
+        // No allow-origin header → the browser blocks the cross-origin call.
+        expect(res.headers['access-control-allow-origin']).toBeUndefined();
+      } finally {
+        if (prevList === undefined) delete process.env.CORS_ALLOWED_ORIGINS;
+        else process.env.CORS_ALLOWED_ORIGINS = prevList;
+        if (prevSingle !== undefined) process.env.API_CORS_ORIGIN = prevSingle;
+      }
     });
 
     it('echoes Access-Control-Allow-Origin on the actual tRPC response', async () => {
