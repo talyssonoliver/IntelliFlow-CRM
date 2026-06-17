@@ -311,6 +311,60 @@ const tenantMiddleware = t.middleware(async ({ ctx, next }) => {
 export const tenantProcedure = protectedProcedure.use(tenantMiddleware);
 
 // ============================================
+// Module-Entitlement Guard (closes the frontend-only gating gap)
+// ============================================
+
+/**
+ * Enforce — server-side — that the tenant's plan includes a given add-on module.
+ *
+ * Backend routers for add-on modules (LEGAL, COMMERCE, …) previously relied on
+ * the frontend `<ModuleGate>`/`<ModulePaywall>` to hide UI, so a tenant on a
+ * lower plan could call the endpoints directly and still receive data. This
+ * resolves the tenant's entitlement via the `moduleAccess` port and throws
+ * FORBIDDEN when the module is not included.
+ *
+ * Deny policy: only an EXPLICIT `false` denies (ADMINs always pass). The real
+ * adapter returns a strict boolean so production enforcement is exact; test
+ * doubles (`mockDeep`) never return a literal `false`, so unit tests that don't
+ * wire `moduleAccess` are unaffected. Resolution errors fail OPEN — this is a
+ * revenue/access gate layered on top of the UI gate, NOT the tenant-isolation
+ * boundary, so a transient error must not take the app down.
+ */
+export function requireModule(moduleId: import('@intelliflow/domain').ModuleId) {
+  return t.middleware(async ({ ctx, next }) => {
+    const tenantId = ctx.user?.tenantId;
+    if (!tenantId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context required' });
+    }
+    if (ctx.user?.role === 'ADMIN') return next();
+
+    let denied = false;
+    try {
+      const moduleAccess =
+        ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+      if (moduleAccess && typeof moduleAccess.isModuleEnabled === 'function') {
+        denied = (await moduleAccess.isModuleEnabled(tenantId, moduleId)) === false;
+      }
+    } catch {
+      denied = false; // fail OPEN — see the note above
+    }
+
+    if (denied) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: `Your plan does not include the ${moduleId} module.`,
+      });
+    }
+    return next();
+  });
+}
+
+/** `tenantProcedure` additionally gated on a plan module being enabled. */
+export function moduleTenantProcedure(moduleId: import('@intelliflow/domain').ModuleId) {
+  return tenantProcedure.use(requireModule(moduleId));
+}
+
+// ============================================
 // Email-Verification Guard (incident 2026-06-16 onboarding redesign)
 // ============================================
 

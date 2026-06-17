@@ -52,14 +52,25 @@ async function main() {
     r.note('resolved tier (inferred)', modules.includes('COMMERCE') ? 'ENTERPRISE/CUSTOM' : modules.includes('LEGAL') ? 'PROFESSIONAL' : 'STARTER');
   }
 
-  // The gap is not something the API will report — it's the ABSENCE of a server
-  // check. We assert it as a standing reminder so it shows up in every run.
-  r.note(
-    'KNOWN GAP (code-verified, not auto-tested here)',
-    'module gating is FRONTEND-ONLY — legal/support/commerce routers (tenantProcedure) ' +
-      'do not enforce entitlements, so a STARTER tenant calling those endpoints directly ' +
-      'still receives data. Add a requireModule middleware to close this. See FINDINGS.md.'
-  );
+  // Backend ENFORCEMENT probe: the seeded dev-fallback tenant resolves to
+  // STARTER, which does NOT include LEGAL. Calling a LEGAL endpoint directly must
+  // now be FORBIDDEN (tRPC maps FORBIDDEN -> HTTP 403). Before the requireModule
+  // middleware this returned data — gating was frontend-only.
+  const starterHasLegal = Array.isArray(modules) && modules.includes('LEGAL');
+  const legal = await request(trpcQueryUrl(API_URL, 'documents.list', {}), {
+    method: 'GET',
+    headers: { Origin: WEB_ORIGIN },
+  });
+  const forbidden = legal.status === 403 || /FORBIDDEN/i.test(legal.body);
+  if (starterHasLegal) {
+    r.note('tenant already has LEGAL', 'skipping the FORBIDDEN probe (tenant is entitled)');
+  } else {
+    r.check(
+      'STARTER tenant is FORBIDDEN from the LEGAL router (gating enforced server-side)',
+      forbidden,
+      `status=${legal.status}`
+    );
+  }
 
   const summary = r.finish();
   return summary.ok;

@@ -14,8 +14,16 @@ import {
 import { PrismaCaseDocumentRepository } from '@intelliflow/adapters';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import { container } from '../../container';
+
+// Every legal-documents procedure requires the LEGAL add-on module (PROFESSIONAL+
+// plans). `moduleTenantProcedure('LEGAL')` = tenantProcedure + server-side
+// entitlement enforcement, so a STARTER tenant calling these endpoints directly
+// now gets FORBIDDEN instead of data — the frontend ModuleGate is no longer the
+// only thing between a lower tier and the LEGAL module. Aliased to the original
+// name so every procedure below is gated with a one-line change.
+const tenantProcedure = moduleTenantProcedure('LEGAL');
 import { loadBullMQ } from '../../lib/load-bullmq';
 import { loadDocumentAutomation, assertNotDeleteGuarded } from './document-automation';
 import { enforceDocumentPolicies } from './document-policies';
