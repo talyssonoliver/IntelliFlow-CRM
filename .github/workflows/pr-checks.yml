@@ -478,37 +478,13 @@ jobs:
             console.log('ok — status:', b.status, 'service:', b.service);
           "
 
-      - name: Assert tRPC container mounts (/api/trpc/health.ping not 5xx)
-        # /api/health is dependency-free and does NOT construct the API DI
-        # container. The D1/D2/D4 outages were the container throwing at
-        # module-load in apps/api (mounted by app/api/trpc/[trpc]/route.ts).
-        # health.ping is a publicProcedure with no ctx/DB, so hitting it forces
-        # full container construction without needing real infra — a boot-time
-        # throw surfaces here as a 5xx. THIS is the assertion that catches the
-        # class /api/health misses (defects D1/D2/D4/D6).
-        run: |
-          URL='http://localhost:3000/api/trpc/health.ping?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%7D%7D'
-          BODY=$(curl -s "$URL")
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
-          echo "HTTP status : $STATUS"
-          echo "Response    : $BODY"
-          if [ "$STATUS" -ge 500 ]; then
-            echo "::error::tRPC container mount returned $STATUS — the API DI container crashed at boot (D1/D2/D4 class)"
-            echo "--- next start log ---"
-            cat /tmp/next-start.log || true
-            exit 1
-          fi
-          echo "$BODY" | node -e "
-            const txt = require('fs').readFileSync('/dev/stdin','utf8');
-            const j = JSON.parse(txt);
-            const data = Array.isArray(j) ? j[0] && j[0].result && j[0].result.data : j && j.result && j.result.data;
-            const status = (data && data.status) || (data && data.json && data.json.status);
-            if (status !== 'healthy') {
-              console.error('health.ping did not return status=healthy:', txt);
-              process.exit(1);
-            }
-            console.log('ok — API container mounted; health.ping:', status);
-          "
+      # NOTE: the former "Assert tRPC container mounts (/api/trpc/health.ping)"
+      # step was removed by PERF-09 (ADR-063 Option 3). The web tier no longer
+      # mounts the @intelliflow/api DI container — `app/api/trpc/[trpc]/route.ts`
+      # was deleted and SSR/client tRPC now proxy over HTTP to the Railway API.
+      # There is therefore no in-process container to boot-probe here; the
+      # D1/D2/D4 module-load class is now owned by the Railway API service's own
+      # health check, and /api/health above still guards the web boot itself.
 
       - name: Print server log on failure
         if: failure()
