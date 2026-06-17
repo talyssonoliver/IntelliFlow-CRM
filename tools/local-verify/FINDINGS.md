@@ -49,14 +49,39 @@ tenant isolation rests **entirely** on the application-layer
 a cross-tenant leak that RLS will **not** catch (cf. the prior leak incident,
 which RLS did not catch — consistent with this).
 
-**Recommended fix:** connect Prisma as a dedicated non-superuser role without
-`BYPASSRLS`, **or** add `FORCE ROW LEVEL SECURITY` to tenant tables — then the
-~80 policies become a real second line of defence. Until then, treat the
-app-layer where-clauses as the _only_ isolation and test them accordingly.
+**Mechanism proven (2026-06-17):** creating a dedicated non-superuser role
+(`NOSUPERUSER NOBYPASSRLS`) with DML grants and connecting as it makes RLS
+enforce immediately — with the tenant session var set, a bogus tenant saw **0**
+leads, the correct tenant saw **14**, no var set saw **0**. So the fix is
+"connect as a non-superuser role" (a non-owner non-superuser is subject to RLS
+automatically; `FORCE ROW LEVEL SECURITY` additionally covers the owner case).
+
+**But this is a scoped hardening PROJECT, not a one-line change — do NOT flip
+the prod connection role naively:**
+
+1. **Raw `ctx.prisma` paths would break.** Only `prismaWithTenant`
+   (`createTenantScopedPrisma`) issues `SET app.current_tenant_id`. Every query
+   that uses the raw `ctx.prisma` on an RLS table would, under a non-superuser
+   role, return **0 rows** (no tenant var set). All such call sites must first
+   be routed through the tenant-scoped client.
+2. **Connection-pool `SET` drift can _leak across tenants_.** A session-level
+   `SET` on a pooled connection can outlive the request and be read by a later
+   query on the same connection — the very reason the app-layer
+   `createTenantWhereClause` exists. RLS via session var must therefore use
+   `SET LOCAL` inside a transaction (pooler-safe), not a bare `SET`.
+3. Complete the DML/sequence/function grants for the app role, add
+   `FORCE ROW LEVEL SECURITY` to tenant tables (via migration), and cut the
+   production Supabase connection string over to the new role with a rollback
+   plan.
+
+**Until that lands, the app-layer where-clauses are the _only_ real isolation —
+test them as such.** `verify-db-rls.mjs` will flip from FINDING to OK once the
+app connects as a role where RLS actually enforces.
 
 > Note: `createTenantScopedPrisma` also short-circuits (skips the `SET`)
 > entirely under `NODE_ENV=test` / `VITEST=true`, so the test suite never
-> exercises the DB-layer path even where it would matter.
+> exercises the DB-layer path even where it would matter — wire a non-superuser
+> integration lane to close that blind spot.
 
 ---
 
