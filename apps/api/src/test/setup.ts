@@ -336,9 +336,27 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
   const userId = TEST_UUIDS.user1;
   const tenantId = TEST_UUIDS.tenant;
 
+  // Mock container. The module-entitlement guard (`requireModule`) resolves
+  // `container.get('moduleAccess')` and fails CLOSED if it is unavailable, so
+  // default that key to a GRANTING stub — gated-module routers (LEGAL, …) are
+  // exercised here for an entitled tenant. mockDeep's `get()` returns undefined
+  // for every key, so this only ADDS the entitlement stub (other keys unchanged).
+  const container = mockDeep<any>();
+  (
+    container.get as unknown as { mockImplementation: (fn: (n: string) => unknown) => void }
+  ).mockImplementation((name: string) =>
+    name === 'moduleAccess'
+      ? {
+          isModuleEnabled: async () => true,
+          getEnabledModules: async () => [],
+          getTenantPlan: async () => 'ENTERPRISE',
+        }
+      : undefined
+  );
+
   const defaultContext: BaseContext = {
     prisma: prismaMock as PrismaClient, // NOSONAR
-    container: mockDeep<any>(), // Mock container for testing
+    container, // Mock container for testing (moduleAccess stubbed to grant)
     services: mockServices,
     security: mockSecurityServices,
     adapters: mockAdapters,

@@ -323,12 +323,18 @@ export const tenantProcedure = protectedProcedure.use(tenantMiddleware);
  * resolves the tenant's entitlement via the `moduleAccess` port and throws
  * FORBIDDEN when the module is not included.
  *
- * Deny policy: only an EXPLICIT `false` denies (ADMINs always pass). The real
- * adapter returns a strict boolean so production enforcement is exact; test
- * doubles (`mockDeep`) never return a literal `false`, so unit tests that don't
- * wire `moduleAccess` are unaffected. Resolution errors fail OPEN — this is a
- * revenue/access gate layered on top of the UI gate, NOT the tenant-isolation
- * boundary, so a transient error must not take the app down.
+ * Policy:
+ * - **Plan-based, NOT role-based.** There is deliberately no tenant-role bypass:
+ *   a tenant's own `ADMIN` is still bound by the tenant's plan, so a STARTER
+ *   tenant admin must not reach a LEGAL endpoint. (Cross-tenant/platform
+ *   super-admin is a separate concept this codebase does not currently model.)
+ * - **Fail CLOSED.** If the entitlement service is unavailable or the lookup
+ *   throws, deny — never grant a gated module on error.
+ * - Only an explicit `false` from the port denies. The real adapter returns a
+ *   strict boolean, so production enforcement is exact; test doubles (`mockDeep`)
+ *   expose `isModuleEnabled` as a function that returns a non-boolean, so unit
+ *   tests that don't stub it are allowed through (the fail-closed branch is not
+ *   taken because the mock IS callable).
  */
 export function requireModule(moduleId: import('@intelliflow/domain').ModuleId) {
   return t.middleware(async ({ ctx, next }) => {
@@ -336,20 +342,24 @@ export function requireModule(moduleId: import('@intelliflow/domain').ModuleId) 
     if (!tenantId) {
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context required' });
     }
-    if (ctx.user?.role === 'ADMIN') return next();
 
-    let denied = false;
-    try {
-      const moduleAccess =
-        ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
-      if (moduleAccess && typeof moduleAccess.isModuleEnabled === 'function') {
-        denied = (await moduleAccess.isModuleEnabled(tenantId, moduleId)) === false;
-      }
-    } catch {
-      denied = false; // fail OPEN — see the note above
+    const moduleAccess =
+      ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+    if (!moduleAccess || typeof moduleAccess.isModuleEnabled !== 'function') {
+      throw new TRPCError({ code: 'FORBIDDEN', message: `The ${moduleId} module is unavailable.` });
     }
 
-    if (denied) {
+    let enabled: unknown;
+    try {
+      enabled = await moduleAccess.isModuleEnabled(tenantId, moduleId);
+    } catch {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Could not verify entitlement for the ${moduleId} module.`,
+      });
+    }
+
+    if (enabled === false) {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: `Your plan does not include the ${moduleId} module.`,

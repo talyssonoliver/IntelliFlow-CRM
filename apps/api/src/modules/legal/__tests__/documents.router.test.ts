@@ -126,6 +126,14 @@ const mockContext = {
       findMany: vi.fn().mockResolvedValue([]),
     },
   },
+  // The LEGAL router is now gated by moduleTenantProcedure('LEGAL'); these tests
+  // exercise document logic for an ENTITLED tenant, so stub the moduleAccess port
+  // to grant. (The enforcement itself — STARTER tenant -> FORBIDDEN — is covered
+  // by tools/local-verify/verify-tier-modules.mjs against the real adapter.)
+  container: {
+    get: (name: string) =>
+      name === 'moduleAccess' ? { isModuleEnabled: async () => true } : undefined,
+  },
 };
 
 describe('Documents Router - IFC-152', () => {
