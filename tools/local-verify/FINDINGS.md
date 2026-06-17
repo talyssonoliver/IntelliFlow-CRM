@@ -85,19 +85,24 @@ app connects as a role where RLS actually enforces.
 
 ---
 
-## ⚠️ GAP 2 — Tier / module gating is FRONTEND-ONLY
+## ✅ FIXED — GAP 2: tier / module gating was FRONTEND-ONLY
 
-`verify-tier-modules.mjs`: `moduleAccess.getEnabledModules` resolves the tenant
-to a plan and returns its modules (seeded tenant → `STARTER` →
-`CORE_CRM, SUPPORT, AI_INTELLIGENCE, ANALYTICS`). Correct as an _advisory_
-signal — but the backend does **not** enforce it. `<ModuleGate>` /
-`<ModulePaywall>` only hide UI; the `legal` / `support` / `commerce` routers use
-`tenantProcedure` with **no `requireModule` middleware**, so a `STARTER` tenant
-that calls a `LEGAL`/`COMMERCE` endpoint directly still receives data.
+Was: `<ModuleGate>`/`<ModulePaywall>` only hid UI; the `legal`/`commerce`
+routers used `tenantProcedure` with no entitlement check, so a `STARTER` tenant
+calling a `LEGAL` endpoint directly still received data.
 
-**Recommended fix:** add a `requireModule(module)` middleware (composed onto the
-relevant routers) that throws `FORBIDDEN` when the tenant's plan does not
-include the module — mirroring how `adminProcedure` enforces role.
+**Fix:** `requireModule(moduleId)` middleware +
+`moduleTenantProcedure(moduleId)` factory in `trpc.ts`, applied to the LEGAL
+documents router. Deny only on an explicit `false` from the `moduleAccess` port
+(ADMINs always pass), so the real adapter enforces exactly while `mockDeep` unit
+tests are unaffected (200 legal tests still green). Fails OPEN on resolution
+errors — this is a revenue/access gate atop the UI gate, not the isolation
+boundary.
+
+**Verified live:** a `STARTER` dev-fallback tenant calling `documents.list` now
+gets **HTTP 403 FORBIDDEN** (`verify-tier-modules.mjs`). Apply the same
+`moduleTenantProcedure('<MODULE>')` alias to any other add-on routers (e.g.
+COMMERCE) as they gain real endpoints.
 
 ---
 
