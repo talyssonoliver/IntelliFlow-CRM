@@ -12,6 +12,8 @@ describe('isPublicAuthRoute (OnboardingWelcome gate)', () => {
     '/reset-password',
     '/verify-email',
     '/verify-email/callback',
+    '/mfa',
+    '/mfa/verify',
     '/auth/callback',
     '/sso',
   ])('treats %s as a public auth route (modal suppressed)', (path) => {

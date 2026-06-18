@@ -51,6 +51,10 @@ export const PUBLIC_AUTH_ROUTE_PREFIXES = [
   '/forgot-password',
   '/reset-password',
   '/verify-email',
+  // MFA verification (e.g. /mfa/verify) is an auth-flow page used for login AND
+  // mid-session re-verification; the onboarding modal must not interrupt it.
+  // Keep this list in sync with AUTH_PAGES_NO_CHROME in PublicLayoutShell.tsx.
+  '/mfa',
   '/auth/callback',
   '/sso',
 ] as const;
