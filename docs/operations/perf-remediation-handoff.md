@@ -1,14 +1,71 @@
 # IntelliFlow CRM — Performance Remediation Handoff
 
-**Status:** Active  
-**Measured:** 2026-06-16, throttled-mobile Lighthouse against prod  
+**Status:** Core plan COMPLETE — PERF-01..09 shipped, PERF-10 dropped, only
+PERF-11 (optional) + PERF-12 (deferred) remain. See §0 (2026-06-17 PM).  
+**Measured:** 2026-06-16, throttled-mobile Lighthouse against prod; cold-start
+re-measured live 2026-06-17 (3.41 s → ~0.2 s warm)  
 **Author:** Backend Architect  
 **Plan revision:** PERF-05 PinnedSkeleton contradiction resolved (Option A); all
 other content QA-approved
 
 ---
 
-## 0. UPDATE — 2026-06-17: PERF-07 verified hands-on; infra is LIVE; drift reconciled
+## 0. UPDATE — 2026-06-17 (PM): PERF-08/09 SHIPPED — cold-start fixed, verified live
+
+PERF-08/09 are **complete and live on production**. Web SSR + client tRPC now go
+over HTTP to the live Railway API (ADR-063 Option 3); the in-process
+`@intelliflow/api` container no longer loads on Vercel SSR.
+
+**Measured on prod** (`https://intelli-flow-crm-web.vercel.app/`): homepage TTFB
+**3.41 s → 0.17–0.36 s warm** (1.19 s cold) — a ~10–20× drop; the in-process
+container cold-start is gone. Homepage renders HTTP 200 with correct markup;
+prod `/api/health` smoke 200.
+
+**Shipped:**
+
+- **PR #498** (`7bfcee7e3`) — `trpc-server.ts` → `createTRPCClient` at
+  `${NEXT_PUBLIC_API_URL}/api/trpc`; 22 SSR call sites + 1 settings page gain
+  `.query()`; deleted `apps/web/src/app/api/trpc/[trpc]/route.ts`;
+  `providers.tsx getBaseUrl()` browser branch → `NEXT_PUBLIC_API_URL`;
+  `.dependency-cruiser.cjs` adds error rule `no-web-imports-api-context-router`
+  and `web-worker-boundary.test.ts` retires the ADR-063 debt note. Also removed
+  the obsolete `/api/trpc/health.ping` container-mount probe from
+  `web-boot-smoke` (that route no longer exists post-PERF-09).
+- **PR #499** (`e43b7681`) — **the real unlock.** `cd.yml`'s prod + preview
+  deploy steps now inject `NEXT_PUBLIC_API_URL` into the pulled
+  `.vercel/.env.<target>.local` _after_ `vercel pull`, _before_ `vercel build`
+  (stale value stripped first; value sourced from `vars.PRODUCTION_API_URL`).
+- Prod deployed via `CD Pipeline` `workflow_dispatch`
+  (`environment=production`); alias `intelli-flow-crm-web.vercel.app` repointed;
+  blocking smoke passed.
+
+**KEY DISCOVERY — why setting `vars.PRODUCTION_API_URL` alone was NOT enough:**
+the deployed bundle is built by `vercel build`, which logs _"Build not running
+on Vercel. System environment variables will not be available."_ It reads
+**only** `.vercel/.env.<target>.local` pulled from Vercel's **dashboard** env —
+the GH Actions step env (`NEXT_PUBLIC_API_URL` from the repo var) and the prior
+`pnpm run build` `.next` are both discarded. Vercel's dashboard never had
+`NEXT_PUBLIC_API_URL` (the old in-process caller never needed it), so #498 alone
+would have baked an **empty** base URL and broken SSR — and the
+`/api/health`-only smoke would not have caught it. #499 writes the value into
+the exact file `vercel build` consumes, keeping the repo var as the single
+source of truth (no dashboard/secret dependency).
+
+**Known wart (pre-existing, out of scope):** the CD `Notify deployment` step
+uses `slackapi/slack-github-action@v3` with an empty `SLACK_WEBHOOK_URL`, so it
+errors ("Missing input!") and marks the otherwise-successful prod-deploy **job**
+as failed. The deploy/build/smoke all pass — only the notify fails. Fix later
+with `continue-on-error: true` or by wiring the webhook secret.
+
+**PERF plan status after this pass:** PERF-01..06 shipped (#493); PERF-07 done
+(§0.1); **PERF-08/09 done (this section)**; PERF-10 dropped (charts already lazy
+via parents). Remaining are optional/deferred only: **PERF-11** (swap
+`@scalar/api-reference-react` for a lighter OpenAPI renderer — build-artifact
+size) and **PERF-12** (Supabase auth boundary split — explicitly DEFERRED).
+
+---
+
+## 0.1 UPDATE — 2026-06-17 (AM): PERF-07 verified hands-on; infra is LIVE; drift reconciled
 
 A hands-on PERF-07 pass **with real Terraform + Railway access** disproved this
 handoff's central premise. Corrected, verified facts (these supersede §1's
