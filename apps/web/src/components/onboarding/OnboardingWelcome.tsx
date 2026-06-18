@@ -44,7 +44,7 @@ import {
 import { cn } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { isPublicAuthRoute } from '@/lib/auth/route-protection';
+import { isPublicAuthRoute, isProtectedAppRoute } from '@/lib/auth/route-protection';
 import pricingData from '@/data/pricing-data.json';
 
 // ============================================
@@ -338,13 +338,18 @@ export function OnboardingWelcome() {
   const { isAuthenticated, isLoading: authLoading, user, emailVerified } = useAuth();
   const pathname = usePathname() ?? '/';
 
+  // Only surface onboarding on the app's own pages: the marketing home `/`
+  // (where OAuth / signup auto-login land) and the protected app routes. This
+  // deliberately EXCLUDES public marketing/legal pages (`/pricing`, `/about`,
+  // `/terms`, `/privacy`, …) so the dialog never interrupts an authenticated
+  // user merely browsing those, and the auth-flow pages (handled below).
+  const isOnboardingSurface = pathname === '/' || isProtectedAppRoute(pathname);
+
   // tRPC
   const { data: onboardingState, isLoading: onboardingLoading } = trpc.onboarding.getState.useQuery(
     undefined,
     {
-      // Fire for ANY authenticated app page (including the marketing home `/`,
-      // where OAuth users land), but not on the public auth-flow pages.
-      enabled: isAuthenticated && !isPublicAuthRoute(pathname),
+      enabled: isAuthenticated && isOnboardingSurface && !isPublicAuthRoute(pathname),
       staleTime: Infinity,
     }
   );
@@ -408,6 +413,7 @@ export function OnboardingWelcome() {
     // Require a resolved getState payload — never open on an errored/empty query.
     Boolean(onboardingState) &&
     isAuthenticated &&
+    isOnboardingSurface &&
     !isPublicAuthRoute(pathname) &&
     !sessionDismissed &&
     !onboardingComplete &&

@@ -270,6 +270,22 @@ describe('OnboardingWelcome', () => {
     expect((dialog as HTMLDialogElement).open).toBe(false);
   });
 
+  it('does NOT open on a public marketing/legal route (e.g. /pricing)', () => {
+    // The modal is scoped to "/" + protected app routes; it must not interrupt an
+    // authenticated user merely browsing marketing/legal pages.
+    mockUsePathname.mockReturnValue('/pricing');
+    render(<OnboardingWelcome />);
+    const dialog = screen.getByTestId('onboarding-dialog');
+    expect((dialog as HTMLDialogElement).open).toBe(false);
+  });
+
+  it('opens on the home route "/" (OAuth/signup landing) for an incomplete user', () => {
+    mockUsePathname.mockReturnValue('/');
+    render(<OnboardingWelcome />);
+    // Default: flowDone false + emailVerified true → welcome flow renders.
+    expect(screen.getByText(/welcome, alice/i)).toBeDefined();
+  });
+
   it('does NOT open when getState resolved with no data (unknown state)', () => {
     // A transient getState error/undefined must not flash the welcome modal at an
     // already-onboarded user — an unknown state defaults to NOT showing.
