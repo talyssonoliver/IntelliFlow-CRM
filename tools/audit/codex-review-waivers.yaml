@@ -514,3 +514,32 @@ waivers:
       branch). Waived per the out-of-scope-with-follow-up convention.
     author: talyssonoliver
     date: '2026-06-13'
+  - fingerprint: '12084e5f6f498142d24b5fca83e2aa45af4023d28554eecdcdb5d32b08ea7784'
+    reason: >-
+      Verified false positive — the fix is at the provider layer, not in this
+      file. signup/page.tsx's auto-login branch intentionally delegates session-
+      refresh registration to AuthContext: it dispatches AUTH_TOKEN_CHANGED via
+      syncTokenToCookie, and AuthContext's refresh effect now listens for that
+      event and re-runs syncTokensToSupabase() + setupRefreshTimer() (commit
+      2572f6eb3), so the newly written tokens ARE registered with Supabase for
+      auto-refresh. The same listener also closes a pre-existing identical gap in
+      the OAuth callback. Calling setSession() directly in signup too would be a
+      redundant double-registration. Verified live (mock signup -> authenticated
+      session that persists across navigation). The fingerprint is source-anchored,
+      so this re-blocks if the signup auto-login block changes.
+    author: talyssonoliver
+    date: '2026-06-18'
+  - fingerprint: '05b18deb9cd6817d65ecf30c6632a59b2a1fbcb67b03e75fb09bb6d6c06ee347'
+    reason: >-
+      Verified false positive (codex cites stale/removed code). Codex's evidence
+      quotes `needsEmailVerify = flowDone && emailVerified === false` and
+      `onboardingComplete = flowDone && emailVerified === true`, but those lines no
+      longer exist. The committed code (commit 2572f6eb3) already implements
+      codex's own recommended fix: emailConfirmed is derived from BOTH sources
+      (onboardingState?.emailConfirmed === true || emailVerified === true) and
+      completion from (onboardingState?.completed === true || (flowDone &&
+      emailConfirmed)), with a regression test asserting a stale emailVerified=false
+      does not strand a getState-confirmed user on the verify step. The fingerprint
+      is source-anchored, so this re-blocks if that logic regresses.
+    author: talyssonoliver
+    date: '2026-06-18'
