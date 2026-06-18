@@ -814,4 +814,18 @@ describe('OnboardingWelcome', () => {
     const dialog = screen.getByTestId('onboarding-dialog');
     expect((dialog as HTMLDialogElement).open).toBe(false);
   });
+
+  it('completes via getState.emailConfirmed even when AuthContext.emailVerified lags (false)', () => {
+    // getState's admin lookup is authoritative; the cached auth session can lag.
+    // The modal must not strand a verified user on the verify step.
+    mockGetState.mockReturnValue({
+      data: { completed: false, flowDone: true, emailConfirmed: true, selectedPlan: null },
+      isLoading: false,
+    });
+    mockUseAuth.mockReturnValue(authedUser({ emailVerified: false }));
+    render(<OnboardingWelcome />);
+    expect(screen.queryByText(/confirm your email/i)).toBeNull();
+    const dialog = screen.getByTestId('onboarding-dialog');
+    expect((dialog as HTMLDialogElement).open).toBe(false);
+  });
 });

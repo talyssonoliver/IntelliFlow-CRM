@@ -415,8 +415,21 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
     setupRefreshTimer();
 
+    // Tokens written AFTER this effect's initial run — signup auto-login, the
+    // OAuth callback, email login — land via client navigation and do NOT remount
+    // the provider, so without this the fresh session is never handed to Supabase
+    // for auto-refresh (it would silently expire ~1h later). AUTH_TOKEN_CHANGED is
+    // idempotent (fires only on an actual token change), so this re-syncs the
+    // session and reschedules the refresh timer exactly once per real token write.
+    const onTokenChanged = () => {
+      void syncTokensToSupabase();
+      setupRefreshTimer();
+    };
+    globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
+
     return () => {
       subscription.unsubscribe();
+      globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
       if (refreshTimerRef.current) {
         clearTimeout(refreshTimerRef.current);
       }

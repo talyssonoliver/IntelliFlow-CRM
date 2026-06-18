@@ -376,17 +376,22 @@ export function OnboardingWelcome() {
     }
   }, []);
 
-  // Completion is a composite (server contract): the user finished the welcome
-  // flow (profile + plan/trial → `flowDone`) AND confirmed their email. We
-  // recompute it client-side from `flowDone` + the live `emailVerified` so the
-  // modal reactively closes the moment the email is confirmed (getState is
-  // staleTime:Infinity and won't refetch on its own).
+  // Completion is a composite: the user finished the welcome flow (profile +
+  // plan/trial → `flowDone`) AND confirmed their email. Email-confirmed is read
+  // from BOTH sources because each can lag the other: `onboardingState` comes
+  // from the authoritative admin lookup (supabaseAdmin.auth.admin.getUserById)
+  // but has staleTime:Infinity, while `emailVerified` comes from the live auth
+  // session (refreshed via getStatus invalidation). Treat confirmed if EITHER
+  // says so, and complete if the server already marked it complete OR the client
+  // computes it — so neither stale source can strand the user.
   const flowDone = onboardingState?.flowDone === true;
-  // `emailVerified` is true | false | null (null = still resolving). Only treat
-  // an explicit `false` as "needs verification" so we never flash the verify
-  // step while auth is still loading.
-  const needsEmailVerify = flowDone && emailVerified === false;
-  const onboardingComplete = flowDone && emailVerified === true;
+  const emailConfirmed = onboardingState?.emailConfirmed === true || emailVerified === true;
+  const onboardingComplete = onboardingState?.completed === true || (flowDone && emailConfirmed);
+  // Only prompt for verification when the flow is done AND both sources explicitly
+  // report the email as unconfirmed (a `false`, not a still-resolving `null`), so
+  // we never flash the verify step while auth is loading or a source disagrees.
+  const needsEmailVerify =
+    flowDone && onboardingState?.emailConfirmed === false && emailVerified === false;
 
   // Show the dialog while onboarding is incomplete: either the flow isn't done
   // (profile/plan steps), or the flow is done but email is still unconfirmed
