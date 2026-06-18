@@ -543,3 +543,22 @@ waivers:
       is source-anchored, so this re-blocks if that logic regresses.
     author: talyssonoliver
     date: '2026-06-18'
+  - fingerprint: '06fbd0a0bbf09a1e57b01fcaafcf74522de56258c52fa71fb8b96c9be86c4f68'
+    reason: >-
+      Verified false positive — the app user is already provisioned with the
+      correct verification state. signup auto-login returns Supabase tokens; the
+      first authed request provisions the app user via context.ts
+      provisionNewUserWith, which sets emailVerified from extractEmailVerified():
+      true when email_confirmed_at OR user_metadata.email_verified is set. The JWT
+      verifier omits email_confirmed_at (as codex notes), but Supabase includes
+      user_metadata.email_verified=true in the access token for auto-confirmed
+      sign-ups, so extractEmailVerified returns true and the row is created
+      emailVerified=true. Provisioning is also MONOTONIC (a later token upgrades
+      false -> true, never demotes). Verified live on a real-Supabase stack: a
+      mock email/password signup -> auto-login -> user.getProfile returned
+      emailVerified=true in the app DB — the predicted failure does not occur.
+      Calling ensureAppUserSession(data.user) inside the signup mutation would be
+      redundant. The fingerprint is source-anchored, so this re-blocks if the
+      signup return shape changes.
+    author: talyssonoliver
+    date: '2026-06-18'
