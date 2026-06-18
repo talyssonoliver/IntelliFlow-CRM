@@ -562,3 +562,18 @@ waivers:
       signup return shape changes.
     author: talyssonoliver
     date: '2026-06-18'
+  - fingerprint: '3bd29c3c79642747722f68c506a54a0e3116ea31b1bc89cc9c2d4e53c8b80a12'
+    reason: >-
+      Verified false positive — codex re-flags a fix it itself recommended. The
+      overbroad-route-gate finding was FIXED in commit a0e32e470: shouldShow and
+      the getState `enabled` now both require
+      isOnboardingSurface = (pathname === '/' || isProtectedAppRoute(pathname)),
+      so the dialog is scoped to the home redirect target plus protected app
+      routes and no longer opens on /pricing, /about, /terms, /privacy. A
+      regression test asserts the modal stays closed on /pricing and open on '/'.
+      Codex's evidence merely cites the presence of !isPublicAuthRoute(pathname),
+      which its own recommended fix (isAuthenticated && isOnboardingRoute &&
+      !isPublicAuthRoute(pathname)) also includes. The fingerprint is
+      source-anchored, so this re-blocks if the route gate regresses.
+    author: talyssonoliver
+    date: '2026-06-18'
