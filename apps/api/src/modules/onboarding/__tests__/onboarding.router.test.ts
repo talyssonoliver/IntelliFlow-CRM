@@ -55,12 +55,17 @@ import { createTestContext } from '../../../test/setup';
 // Helpers
 // ============================================================
 
-function makeGetUserByIdResponse(metadata: Record<string, unknown> = {}) {
+function makeGetUserByIdResponse(
+  metadata: Record<string, unknown> = {},
+  opts: { emailConfirmed?: boolean } = {}
+) {
   return {
     data: {
       user: {
         id: 'auth-user-id',
         user_metadata: metadata,
+        // Supabase sets email_confirmed_at once the address is verified.
+        email_confirmed_at: opts.emailConfirmed ? '2026-06-18T00:00:00.000Z' : null,
       },
     },
     error: null,
@@ -80,34 +85,72 @@ describe('onboarding.getState', () => {
     vi.clearAllMocks();
   });
 
-  it('returns completed=false and selectedPlan=null for a brand-new user (no metadata)', async () => {
+  it('returns all-false state for a brand-new user (no metadata, email unconfirmed)', async () => {
     mockSupabaseAdmin.auth.admin.getUserById.mockResolvedValue(makeGetUserByIdResponse({}));
 
     const ctx = createTestContext();
     const caller = onboardingRouter.createCaller(ctx as any);
     const result = await caller.getState();
 
-    expect(result).toEqual({ completed: false, selectedPlan: null });
+    expect(result).toEqual({
+      completed: false,
+      flowDone: false,
+      emailConfirmed: false,
+      selectedPlan: null,
+    });
   });
 
-  it('returns completed=true when onboarding_completed is set in metadata', async () => {
+  it('flowDone but email NOT confirmed → completed=false (completion is gated on email)', async () => {
     mockSupabaseAdmin.auth.admin.getUserById.mockResolvedValue(
-      makeGetUserByIdResponse({ onboarding_completed: true })
+      makeGetUserByIdResponse({ onboarding_completed: true }, { emailConfirmed: false })
     );
 
     const ctx = createTestContext();
     const caller = onboardingRouter.createCaller(ctx as any);
     const result = await caller.getState();
 
+    expect(result.flowDone).toBe(true);
+    expect(result.emailConfirmed).toBe(false);
+    expect(result.completed).toBe(false);
+  });
+
+  it('flowDone AND email confirmed → completed=true', async () => {
+    mockSupabaseAdmin.auth.admin.getUserById.mockResolvedValue(
+      makeGetUserByIdResponse({ onboarding_completed: true }, { emailConfirmed: true })
+    );
+
+    const ctx = createTestContext();
+    const caller = onboardingRouter.createCaller(ctx as any);
+    const result = await caller.getState();
+
+    expect(result.flowDone).toBe(true);
+    expect(result.emailConfirmed).toBe(true);
     expect(result.completed).toBe(true);
+  });
+
+  it('email confirmed but flow NOT done → completed=false', async () => {
+    mockSupabaseAdmin.auth.admin.getUserById.mockResolvedValue(
+      makeGetUserByIdResponse({}, { emailConfirmed: true })
+    );
+
+    const ctx = createTestContext();
+    const caller = onboardingRouter.createCaller(ctx as any);
+    const result = await caller.getState();
+
+    expect(result.emailConfirmed).toBe(true);
+    expect(result.flowDone).toBe(false);
+    expect(result.completed).toBe(false);
   });
 
   it('returns selectedPlan from metadata', async () => {
     mockSupabaseAdmin.auth.admin.getUserById.mockResolvedValue(
-      makeGetUserByIdResponse({
-        onboarding_completed: true,
-        onboarding_selected_plan: 'PROFESSIONAL',
-      })
+      makeGetUserByIdResponse(
+        {
+          onboarding_completed: true,
+          onboarding_selected_plan: 'PROFESSIONAL',
+        },
+        { emailConfirmed: true }
+      )
     );
 
     const ctx = createTestContext();

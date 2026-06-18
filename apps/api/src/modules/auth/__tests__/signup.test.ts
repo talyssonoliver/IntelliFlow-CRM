@@ -113,16 +113,47 @@ describe('Signup Procedure (IFC-120)', () => {
     });
   });
 
-  it('calls supabaseAdmin.auth.signUp and returns needsEmailVerification (AC-003)', async () => {
+  it('returns needsEmailVerification + null session when Supabase issues no session (AC-003)', async () => {
     const caller = authRouter.createCaller(createMockContext() as any);
 
     const result = await caller.signup(validSignup);
 
-    expect(result).toEqual({ success: true, needsEmailVerification: true });
+    // No session (email confirmation required) → client falls back to verify-first.
+    expect(result).toEqual({ success: true, needsEmailVerification: true, session: null });
     expect(mockSupabaseAdmin.auth.signUp).toHaveBeenCalledWith({
       email: 'newuser@example.com',
       password: 'StrongP@ssword1', // pragma: allowlist secret
       options: { data: { name: 'New User' } },
+    });
+  });
+
+  it('returns session tokens for auto-login when Supabase issues a session (email auto-confirm)', async () => {
+    const expiresAt = 1781785911; // unix seconds
+    mockSupabaseAdmin.auth.signUp.mockResolvedValue({
+      data: {
+        user: {
+          id: 'user-123',
+          email: 'newuser@example.com',
+          identities: [{ id: 'identity-1' }],
+        },
+        session: {
+          access_token: 'access-tok',
+          refresh_token: 'refresh-tok',
+          expires_at: expiresAt,
+        },
+      },
+      error: null,
+    });
+
+    const caller = authRouter.createCaller(createMockContext() as any);
+    const result = await caller.signup(validSignup);
+
+    expect(result.success).toBe(true);
+    expect(result.needsEmailVerification).toBe(false);
+    expect(result.session).toEqual({
+      accessToken: 'access-tok',
+      refreshToken: 'refresh-tok',
+      expiresAt: new Date(expiresAt * 1000),
     });
   });
 

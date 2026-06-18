@@ -33,6 +33,7 @@ import type { OAuthProvider } from '@intelliflow/domain';
 import { getSupabaseProviderName } from './sso-handler';
 import { isTokenUsable } from './jwt';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
+import { AUTH_TOKEN_CHANGED_EVENT } from '@/lib/shared/session-cleanup';
 
 export type AuthMfaMethod = 'totp' | 'sms' | 'email' | 'backup';
 
@@ -271,6 +272,23 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     staleTime: Infinity,
   });
 
+  // Re-validate auth status whenever a token is (re)written by ANY flow — OAuth
+  // callback, email login, signup verification, MFA — since `syncTokenToCookie`
+  // dispatches AUTH_TOKEN_CHANGED on every write. getStatus has staleTime:
+  // Infinity, and Supabase's `onAuthStateChange` TOKEN_REFRESHED event does NOT
+  // fire when a token is merely SET (only when rotated), so without this the
+  // query can stay stuck at the pre-login `authenticated: false` snapshot it
+  // cached on the /login or /auth/callback page, and useRequireAuth then bounces
+  // every subsequent navigation back to /login.
+  useEffect(() => {
+    if (typeof globalThis.window === 'undefined') return;
+    const onTokenChanged = () => {
+      void queryClient.invalidateQueries({ queryKey: [['auth', 'getStatus']] });
+    };
+    globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
+    return () => globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
+  }, [queryClient]);
+
   // tRPC mutation for token refresh
   const _refreshTokenMutation = trpc.auth.refreshSession.useMutation();
 
@@ -397,8 +415,21 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
     setupRefreshTimer();
 
+    // Tokens written AFTER this effect's initial run — signup auto-login, the
+    // OAuth callback, email login — land via client navigation and do NOT remount
+    // the provider, so without this the fresh session is never handed to Supabase
+    // for auto-refresh (it would silently expire ~1h later). AUTH_TOKEN_CHANGED is
+    // idempotent (fires only on an actual token change), so this re-syncs the
+    // session and reschedules the refresh timer exactly once per real token write.
+    const onTokenChanged = () => {
+      void syncTokensToSupabase();
+      setupRefreshTimer();
+    };
+    globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
+
     return () => {
       subscription.unsubscribe();
+      globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
       if (refreshTimerRef.current) {
         clearTimeout(refreshTimerRef.current);
       }

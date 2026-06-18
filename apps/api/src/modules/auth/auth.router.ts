@@ -1254,7 +1254,24 @@ export const authRouter = createTRPCRouter({
       });
     }
 
-    return { success: true, needsEmailVerification: true };
+    // Supabase returns a session on sign-up when email auto-confirm is enabled
+    // (mailer_autoconfirm). In that case we hand the tokens back so the client
+    // can log the user straight in (→ lands on the onboarding modal) instead of
+    // bouncing them to a "check your email" page they can't act on. When email
+    // confirmation is required, no session is issued and the client falls back
+    // to the verify-first flow.
+    const session = data.session;
+    return {
+      success: true as const,
+      needsEmailVerification: !session,
+      session: session
+        ? {
+            accessToken: session.access_token,
+            refreshToken: session.refresh_token,
+            expiresAt: new Date(session.expires_at! * 1000),
+          }
+        : null,
+    };
   }),
 
   /**

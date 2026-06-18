@@ -60,6 +60,29 @@ vi.mock('@/lib/trpc', () => ({
   },
 }));
 
+// Mock session-establishment helpers used by the auto-login path. Preserve the
+// modules' other exports (the shared component tree imports from them too).
+const mockStoreSessionTokens = vi.fn();
+const mockSyncTokenToCookie = vi.fn();
+const mockStoreSessionFingerprint = vi.fn();
+const mockClearSupabaseLocalStorage = vi.fn();
+vi.mock('@/lib/shared/token-exchange', async (orig) => ({
+  ...(await orig<Record<string, unknown>>()),
+  storeSessionTokens: (...a: unknown[]) => mockStoreSessionTokens(...a),
+}));
+vi.mock('@/lib/shared/session-cleanup', async (orig) => ({
+  ...(await orig<Record<string, unknown>>()),
+  syncTokenToCookie: (...a: unknown[]) => mockSyncTokenToCookie(...a),
+}));
+vi.mock('@/lib/shared/login-security', async (orig) => ({
+  ...(await orig<Record<string, unknown>>()),
+  storeSessionFingerprint: (...a: unknown[]) => mockStoreSessionFingerprint(...a),
+}));
+vi.mock('@/lib/supabase-browser', async (orig) => ({
+  ...(await orig<Record<string, unknown>>()),
+  clearSupabaseLocalStorage: (...a: unknown[]) => mockClearSupabaseLocalStorage(...a),
+}));
+
 // Import after mocks
 import SignUpPage from '../page';
 
@@ -191,6 +214,35 @@ describe('SignUpPage', () => {
         },
         { timeout: 3000 }
       );
+    });
+
+    it('auto-logs-in and redirects to "/" when signup returns a session', async () => {
+      mockSignupMutateAsync.mockResolvedValue({
+        success: true,
+        needsEmailVerification: false,
+        session: {
+          accessToken: 'a-tok',
+          refreshToken: 'r-tok',
+          expiresAt: new Date('2026-06-18T12:00:00.000Z'),
+        },
+      });
+      const user = userEvent.setup();
+      render(<SignUpPage />);
+
+      await user.type(screen.getByLabelText(/full name/i), 'Test User');
+      await user.type(screen.getByLabelText(/email address/i), 'test@example.com');
+      await user.type(screen.getByPlaceholderText(/create a password/i), 'SecurePass123!');
+      await user.type(screen.getByPlaceholderText(/confirm your password/i), 'SecurePass123!');
+      await user.click(screen.getByRole('checkbox'));
+      await user.click(screen.getByRole('button', { name: /create account/i }));
+
+      // Session is established client-side and the user lands on "/" (onboarding),
+      // NOT the verify-first /signup/success page.
+      await waitFor(() => expect(mockStoreSessionTokens).toHaveBeenCalledWith('a-tok', 'r-tok'));
+      expect(mockSyncTokenToCookie).toHaveBeenCalledWith('a-tok');
+      expect(mockStoreSessionFingerprint).toHaveBeenCalled();
+      // Lands on "/" (onboarding), not the verify-first /signup/success page.
+      expect(mockPush).toHaveBeenCalledWith('/');
     });
 
     it('is configured to redirect to success page', () => {

@@ -32,6 +32,8 @@ const mockCreatePaymentMethod = vi.hoisted(() => vi.fn());
 const mockConfirmCardPayment = vi.hoisted(() => vi.fn());
 const mockMutate = vi.hoisted(() => vi.fn());
 const mockMutateAsync = vi.hoisted(() => vi.fn());
+const mockUpdateProfile = vi.hoisted(() => vi.fn());
+const mockResendVerification = vi.hoisted(() => vi.fn());
 const mockShowModal = vi.hoisted(() => vi.fn());
 const mockClose = vi.hoisted(() => vi.fn());
 
@@ -59,6 +61,22 @@ vi.mock('@/lib/trpc', () => ({
       createCheckoutSubscription: {
         useMutation: () => ({
           mutateAsync: mockCreateCheckout,
+        }),
+      },
+    },
+    user: {
+      updateProfile: {
+        useMutation: () => ({
+          mutate: mockUpdateProfile,
+          mutateAsync: vi.fn(),
+        }),
+      },
+    },
+    auth: {
+      resendVerification: {
+        useMutation: () => ({
+          mutate: vi.fn(),
+          mutateAsync: mockResendVerification,
         }),
       },
     },
@@ -175,11 +193,15 @@ beforeEach(() => {
   // Default auth: authenticated, email verified
   mockUseAuth.mockReturnValue(authedUser());
 
-  // Default onboarding: not completed
+  // Default onboarding: brand-new user — flow not done, email not yet a factor.
+  // (authedUser() defaults emailVerified:true, so flowDone:false → welcome flow shows.)
   mockGetState.mockReturnValue({
-    data: { completed: false, selectedPlan: null },
+    data: { completed: false, flowDone: false, emailConfirmed: false, selectedPlan: null },
     isLoading: false,
   });
+
+  // Resend verification resolves OK by default
+  mockResendVerification.mockResolvedValue({ success: true });
 
   // Default billing plan: trial
   mockGetPlanState.mockReturnValue({
@@ -230,9 +252,9 @@ describe('OnboardingWelcome', () => {
     expect(screen.getByText(/welcome, alice/i)).toBeDefined();
   });
 
-  it('does NOT render when onboarding completed === true', () => {
+  it('does NOT render when onboarding fully completed (flowDone + email confirmed)', () => {
     mockGetState.mockReturnValue({
-      data: { completed: true, selectedPlan: 'PROFESSIONAL' },
+      data: { completed: true, flowDone: true, emailConfirmed: true, selectedPlan: 'PROFESSIONAL' },
       isLoading: false,
     });
     render(<OnboardingWelcome />);
@@ -243,6 +265,31 @@ describe('OnboardingWelcome', () => {
 
   it('does NOT open on a public route (e.g. /login)', () => {
     mockUsePathname.mockReturnValue('/login');
+    render(<OnboardingWelcome />);
+    const dialog = screen.getByTestId('onboarding-dialog');
+    expect((dialog as HTMLDialogElement).open).toBe(false);
+  });
+
+  it('does NOT open on a public marketing/legal route (e.g. /pricing)', () => {
+    // The modal is scoped to "/" + protected app routes; it must not interrupt an
+    // authenticated user merely browsing marketing/legal pages.
+    mockUsePathname.mockReturnValue('/pricing');
+    render(<OnboardingWelcome />);
+    const dialog = screen.getByTestId('onboarding-dialog');
+    expect((dialog as HTMLDialogElement).open).toBe(false);
+  });
+
+  it('opens on the home route "/" (OAuth/signup landing) for an incomplete user', () => {
+    mockUsePathname.mockReturnValue('/');
+    render(<OnboardingWelcome />);
+    // Default: flowDone false + emailVerified true → welcome flow renders.
+    expect(screen.getByText(/welcome, alice/i)).toBeDefined();
+  });
+
+  it('does NOT open when getState resolved with no data (unknown state)', () => {
+    // A transient getState error/undefined must not flash the welcome modal at an
+    // already-onboarded user — an unknown state defaults to NOT showing.
+    mockGetState.mockReturnValue({ data: undefined, isLoading: false });
     render(<OnboardingWelcome />);
     const dialog = screen.getByTestId('onboarding-dialog');
     expect((dialog as HTMLDialogElement).open).toBe(false);
@@ -268,13 +315,17 @@ describe('OnboardingWelcome', () => {
     expect(screen.getByText(/step 2 of 2/i)).toBeDefined();
   });
 
-  it('"Skip for now" on welcome step calls onboarding.complete and closes', async () => {
+  it('"Skip for now" on welcome step dismisses for the session WITHOUT marking onboarding complete', async () => {
     render(<OnboardingWelcome />);
     fireEvent.click(screen.getByRole('button', { name: /skip for now/i }));
+    // Session-only suppression flag is set...
     await waitFor(() => {
-      expect(mockMutate).toHaveBeenCalledWith({});
+      expect(sessionStorage.getItem('intelliflow_onboarding_session_dismissed')).toBe('1');
     });
-    expect(sessionStorage.getItem('intelliflow_onboarding_session_dismissed')).toBe('1');
+    // ...but onboarding.complete must NOT fire — a mere dismissal is not completion.
+    // Regression: dismiss used to permanently set onboarding_completed=true, so a
+    // user who closed the welcome once never saw it again despite never onboarding.
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 
   it('"Continue on trial" on plan step calls onboarding.complete and closes', async () => {
@@ -383,14 +434,14 @@ describe('OnboardingWelcome', () => {
     expect(screen.getByText(/welcome, there/i)).toBeDefined();
   });
 
-  it('typing in company and role fields updates their values', () => {
+  it('typing in company and department fields updates their values', () => {
     render(<OnboardingWelcome />);
     const companyInput = screen.getByPlaceholderText(/acme corp/i) as HTMLInputElement;
-    const roleInput = screen.getByPlaceholderText(/sales manager/i) as HTMLInputElement;
+    const departmentInput = screen.getByPlaceholderText(/e\.g\. sales/i) as HTMLInputElement;
     fireEvent.change(companyInput, { target: { value: 'FlowCo' } });
-    fireEvent.change(roleInput, { target: { value: 'CTO' } });
+    fireEvent.change(departmentInput, { target: { value: 'Revenue' } });
     expect(companyInput.value).toBe('FlowCo');
-    expect(roleInput.value).toBe('CTO');
+    expect(departmentInput.value).toBe('Revenue');
   });
 
   it('switching billing cycle to annual updates the toggle state', () => {
@@ -425,7 +476,7 @@ describe('OnboardingWelcome', () => {
     expect(screen.queryByTestId('stripe-elements')).toBeNull();
   });
 
-  it('"Continue on trial instead" link in checkout step calls handleSkipAll', async () => {
+  it('"Continue on trial instead" link in checkout step completes onboarding on the trial', async () => {
     render(<OnboardingWelcome />);
     fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 
@@ -442,12 +493,15 @@ describe('OnboardingWelcome', () => {
     expect(sessionStorage.getItem('intelliflow_onboarding_session_dismissed')).toBe('1');
   });
 
-  it('"Skip plan selection" X button on plan step calls handleSkipAll', async () => {
+  it('"Skip plan selection" X button on plan step dismisses for the session without completing', async () => {
     render(<OnboardingWelcome />);
     fireEvent.click(screen.getByRole('button', { name: /continue/i }));
     fireEvent.click(screen.getByRole('button', { name: /skip plan selection/i }));
-    await waitFor(() => expect(mockMutate).toHaveBeenCalledWith({}));
-    expect(sessionStorage.getItem('intelliflow_onboarding_session_dismissed')).toBe('1');
+    await waitFor(() =>
+      expect(sessionStorage.getItem('intelliflow_onboarding_session_dismissed')).toBe('1')
+    );
+    // X / dismiss is session-only — onboarding stays incomplete server-side.
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 
   // ------------------------------------------------------------------
@@ -716,5 +770,87 @@ describe('OnboardingWelcome', () => {
     // Annual pricing label for starter (£24/yr) appears in the order summary
     // and also inside the subscribe button — use getAllByText
     expect(screen.getAllByText(/£24\/yr/i).length).toBeGreaterThan(0);
+  });
+
+  // ------------------------------------------------------------------
+  // Profile persistence (company + jobTitle) — previously discarded
+  // ------------------------------------------------------------------
+
+  it('persists company + department when advancing from the welcome step', () => {
+    render(<OnboardingWelcome />);
+    fireEvent.change(screen.getByPlaceholderText(/acme corp/i), { target: { value: 'FlowCo' } });
+    fireEvent.change(screen.getByPlaceholderText(/e\.g\. sales/i), {
+      target: { value: 'Revenue' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+    expect(mockUpdateProfile).toHaveBeenCalledWith({
+      company: 'FlowCo',
+      department: 'Revenue',
+    });
+  });
+
+  it('does NOT call updateProfile when both profile fields are left blank', () => {
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+    expect(mockUpdateProfile).not.toHaveBeenCalled();
+  });
+
+  // ------------------------------------------------------------------
+  // Verify-email gate: flowDone but email unconfirmed → verify step
+  // ------------------------------------------------------------------
+
+  it('shows the verify-email step when flow is done but email is NOT confirmed', () => {
+    mockGetState.mockReturnValue({
+      data: { completed: false, flowDone: true, emailConfirmed: false, selectedPlan: null },
+      isLoading: false,
+    });
+    mockUseAuth.mockReturnValue(authedUser({ emailVerified: false }));
+    render(<OnboardingWelcome />);
+    // Verify step is shown; welcome step is NOT.
+    expect(screen.getByText(/confirm your email/i)).toBeDefined();
+    expect(screen.queryByText(/welcome, alice/i)).toBeNull();
+    const dialog = screen.getByTestId('onboarding-dialog');
+    expect((dialog as HTMLDialogElement).open).toBe(true);
+  });
+
+  it('verify-email step "Resend email" calls auth.resendVerification with the user email', async () => {
+    mockGetState.mockReturnValue({
+      data: { completed: false, flowDone: true, emailConfirmed: false, selectedPlan: null },
+      isLoading: false,
+    });
+    mockUseAuth.mockReturnValue(authedUser({ emailVerified: false }));
+    render(<OnboardingWelcome />);
+    fireEvent.click(screen.getByTestId('onboarding-resend-verification'));
+    await waitFor(() =>
+      expect(mockResendVerification).toHaveBeenCalledWith({ email: 'alice@example.com' })
+    );
+    // Sent confirmation surfaces
+    await waitFor(() => expect(screen.getByText(/verification email sent/i)).toBeDefined());
+  });
+
+  it('does NOT show verify-email step once email is confirmed (fully complete)', () => {
+    mockGetState.mockReturnValue({
+      data: { completed: true, flowDone: true, emailConfirmed: true, selectedPlan: null },
+      isLoading: false,
+    });
+    // emailVerified true (default authedUser)
+    render(<OnboardingWelcome />);
+    expect(screen.queryByText(/confirm your email/i)).toBeNull();
+    const dialog = screen.getByTestId('onboarding-dialog');
+    expect((dialog as HTMLDialogElement).open).toBe(false);
+  });
+
+  it('completes via getState.emailConfirmed even when AuthContext.emailVerified lags (false)', () => {
+    // getState's admin lookup is authoritative; the cached auth session can lag.
+    // The modal must not strand a verified user on the verify step.
+    mockGetState.mockReturnValue({
+      data: { completed: false, flowDone: true, emailConfirmed: true, selectedPlan: null },
+      isLoading: false,
+    });
+    mockUseAuth.mockReturnValue(authedUser({ emailVerified: false }));
+    render(<OnboardingWelcome />);
+    expect(screen.queryByText(/confirm your email/i)).toBeNull();
+    const dialog = screen.getByTestId('onboarding-dialog');
+    expect((dialog as HTMLDialogElement).open).toBe(false);
   });
 });

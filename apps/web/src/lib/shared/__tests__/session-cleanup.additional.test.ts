@@ -92,6 +92,22 @@ describe('session-cleanup (additional coverage)', () => {
       expect(handler).toHaveBeenCalledTimes(1);
       window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
     });
+
+    it('is idempotent: re-syncing the SAME token does not re-dispatch the event', () => {
+      // Regression for the getStatus refetch storm: the auth-state effect re-syncs
+      // the token on every getStatus fetch. Re-firing AUTH_TOKEN_CHANGED on an
+      // unchanged token fed an invalidate → refetch → re-sync loop (~700 req/nav).
+      const token = createTestJwt(Math.floor(Date.now() / 1000) + 3600);
+      const handler = vi.fn();
+      window.addEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
+
+      syncTokenToCookie(token); // first write → event
+      syncTokenToCookie(token); // same token → no-op, no event
+      syncTokenToCookie(token); // same token → no-op, no event
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
+    });
   });
 
   // =========================================================================
@@ -151,13 +167,27 @@ describe('session-cleanup (additional coverage)', () => {
       expect(() => clearTokenCookie()).not.toThrow();
     });
 
-    it('dispatches auth token changed event when token is cleared', () => {
+    it('dispatches auth token changed event when an existing token is cleared', () => {
+      // Idempotent: the event fires only when there was actually a token to clear.
+      document.cookie = 'accessToken=token123; path=/';
       const handler = vi.fn();
       window.addEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
 
       clearTokenCookie();
 
       expect(handler).toHaveBeenCalledTimes(1);
+      window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
+    });
+
+    it('does NOT dispatch the event when there was no token to clear (idempotent)', () => {
+      // Regression: clearing an already-empty cookie must not emit AUTH_TOKEN_CHANGED,
+      // which (via the getStatus-invalidation listener) caused a refetch storm.
+      const handler = vi.fn();
+      window.addEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
+
+      clearTokenCookie();
+
+      expect(handler).not.toHaveBeenCalled();
       window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, handler);
     });
   });
