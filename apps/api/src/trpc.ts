@@ -119,48 +119,64 @@ const isAuthed = t.middleware(({ ctx, next }) => {
 });
 
 /**
- * CSRF Protection Middleware
+ * Assert a mutation request is CSRF-safe. Exported for direct testing.
  *
- * Enforces that mutations (state-changing operations) must either:
- * 1. Have an Origin header that matches the server Host
- * 2. Have a custom anti-CSRF header (which forces a CORS preflight)
+ * A mutation must satisfy EITHER:
+ *  1. a same-host Origin (classic same-origin defense), OR
+ *  2. a custom anti-CSRF header (`x-csrf-token` / `authorization`).
+ *
+ * The custom-header rule is what makes the **cross-origin** web→API topology
+ * (ADR-063 / PERF-08: Vercel web → Railway API, different hosts) safe: a browser
+ * cannot attach a custom header to a cross-site request without a CORS preflight,
+ * and the API only grants that preflight to allow-listed origins — so a custom
+ * header proves a deliberate, CORS-vetted client, not a forged cross-site POST.
+ * (Auth is a Bearer token, never an ambient cookie, so classic CSRF is moot
+ * anyway; this stays as defense-in-depth.) Before this, the cross-host branch
+ * threw BEFORE considering the header, rejecting every legit prod mutation.
  */
-const csrfMiddleware = t.middleware(({ ctx, type, next }) => {
-  if (type === 'mutation' && ctx.req) {
-    const origin = ctx.req.headers.get('origin');
-    const host = ctx.req.headers.get('host') || ctx.req.headers.get('x-forwarded-host');
+export function assertMutationCsrfSafe(req: {
+  headers: { get(name: string): string | null; has(name: string): boolean };
+}): void {
+  const origin = req.headers.get('origin');
+  const host = req.headers.get('host') || req.headers.get('x-forwarded-host');
+  const hasCustomHeader = req.headers.has('x-csrf-token') || req.headers.has('authorization');
 
-    // 1. Origin checking (Standard Defense)
-    if (origin && host) {
-      let originUrl: URL;
-      try {
-        originUrl = new URL(origin);
-      } catch {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'CSRF violation: Malformed Origin header',
-        });
-      }
-      if (originUrl.host !== host && !host.includes('localhost')) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'CSRF violation: Origin does not match Host',
-        });
-      }
-    }
-
-    // 2. Custom header fallback (for non-browser clients or when Origin is stripped)
-    // A cross-origin request cannot easily set custom headers without CORS preflight
-    const hasCustomHeader =
-      ctx.req.headers.has('x-csrf-token') || ctx.req.headers.has('authorization');
-    if (!origin && !hasCustomHeader) {
+  // 1. Origin/Host check. A cross-host Origin is allowed only when it carries a
+  //    custom anti-CSRF header; localhost is exempt for local web:3000→api:4000.
+  if (origin && host) {
+    let originUrl: URL;
+    try {
+      originUrl = new URL(origin);
+    } catch {
       throw new TRPCError({
         code: 'FORBIDDEN',
-        message: 'CSRF violation: Missing Origin or custom anti-CSRF headers',
+        message: 'CSRF violation: Malformed Origin header',
+      });
+    }
+    if (originUrl.host !== host && !host.includes('localhost') && !hasCustomHeader) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'CSRF violation: Origin does not match Host',
       });
     }
   }
 
+  // 2. No Origin at all (non-browser / stripped) → require a custom header.
+  if (!origin && !hasCustomHeader) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'CSRF violation: Missing Origin or custom anti-CSRF headers',
+    });
+  }
+}
+
+/**
+ * CSRF Protection Middleware — applies {@link assertMutationCsrfSafe} to mutations.
+ */
+const csrfMiddleware = t.middleware(({ ctx, type, next }) => {
+  if (type === 'mutation' && ctx.req) {
+    assertMutationCsrfSafe(ctx.req);
+  }
   return next();
 });
 
@@ -309,6 +325,70 @@ const tenantMiddleware = t.middleware(async ({ ctx, next }) => {
 });
 
 export const tenantProcedure = protectedProcedure.use(tenantMiddleware);
+
+// ============================================
+// Module-Entitlement Guard (closes the frontend-only gating gap)
+// ============================================
+
+/**
+ * Enforce — server-side — that the tenant's plan includes a given add-on module.
+ *
+ * Backend routers for add-on modules (LEGAL, COMMERCE, …) previously relied on
+ * the frontend `<ModuleGate>`/`<ModulePaywall>` to hide UI, so a tenant on a
+ * lower plan could call the endpoints directly and still receive data. This
+ * resolves the tenant's entitlement via the `moduleAccess` port and throws
+ * FORBIDDEN when the module is not included.
+ *
+ * Policy:
+ * - **Plan-based, NOT role-based.** There is deliberately no tenant-role bypass:
+ *   a tenant's own `ADMIN` is still bound by the tenant's plan, so a STARTER
+ *   tenant admin must not reach a LEGAL endpoint. (Cross-tenant/platform
+ *   super-admin is a separate concept this codebase does not currently model.)
+ * - **Fail CLOSED.** If the entitlement service is unavailable or the lookup
+ *   throws, deny — never grant a gated module on error.
+ * - Only an explicit `false` from the port denies. The real adapter returns a
+ *   strict boolean, so production enforcement is exact; test doubles (`mockDeep`)
+ *   expose `isModuleEnabled` as a function that returns a non-boolean, so unit
+ *   tests that don't stub it are allowed through (the fail-closed branch is not
+ *   taken because the mock IS callable).
+ */
+export function requireModule(moduleId: import('@intelliflow/domain').ModuleId) {
+  return t.middleware(async ({ ctx, next }) => {
+    const tenantId = ctx.user?.tenantId;
+    if (!tenantId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context required' });
+    }
+
+    const moduleAccess =
+      ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+    if (!moduleAccess || typeof moduleAccess.isModuleEnabled !== 'function') {
+      throw new TRPCError({ code: 'FORBIDDEN', message: `The ${moduleId} module is unavailable.` });
+    }
+
+    let enabled: unknown;
+    try {
+      enabled = await moduleAccess.isModuleEnabled(tenantId, moduleId);
+    } catch {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Could not verify entitlement for the ${moduleId} module.`,
+      });
+    }
+
+    if (enabled === false) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: `Your plan does not include the ${moduleId} module.`,
+      });
+    }
+    return next();
+  });
+}
+
+/** `tenantProcedure` additionally gated on a plan module being enabled. */
+export function moduleTenantProcedure(moduleId: import('@intelliflow/domain').ModuleId) {
+  return tenantProcedure.use(requireModule(moduleId));
+}
 
 // ============================================
 // Email-Verification Guard (incident 2026-06-16 onboarding redesign)

@@ -123,6 +123,84 @@ function applyCorrelationHeaders(res: ServerResponse): void {
   }
 }
 
+// ---------------------------------------------------------------------------
+// CORS (PERF-08/09 made the web a *cross-origin* tRPC client)
+//
+// Since ADR-063 Option 3, the browser calls this API directly at
+// `${NEXT_PUBLIC_API_URL}/api/trpc` instead of a same-origin Next.js route.
+// Every authenticated request carries an `Authorization` header, which makes
+// the browser send a CORS **preflight** (`OPTIONS`) first. Without an explicit
+// allow-list + preflight responder, that OPTIONS fell through to a 404 and the
+// browser blocked the real request — surfacing as a phantom "not authenticated"
+// redirect loop. The `CORS_ALLOWED_ORIGINS` / `API_CORS_ORIGIN` env vars were
+// defined for exactly this but had never been wired up.
+// ---------------------------------------------------------------------------
+
+const CORS_ALLOWED_METHODS = 'GET, POST, OPTIONS, HEAD';
+const CORS_ALLOWED_HEADERS =
+  'authorization, content-type, x-trpc-source, x-request-id, x-correlation-id';
+
+/**
+ * Build the allowed-origin set from env (comma-separated `CORS_ALLOWED_ORIGINS`
+ * and/or `API_CORS_ORIGIN`) merged with safe defaults: localhost dev origins and
+ * the canonical Vercel production web origin. A literal `*` entry opts into
+ * reflect-any-origin (echoed back, never the wildcard, so credentials still work).
+ */
+function buildAllowedOrigins(): Set<string> {
+  const fromEnv = [process.env.CORS_ALLOWED_ORIGINS, process.env.API_CORS_ORIGIN]
+    .filter((v): v is string => Boolean(v))
+    .flatMap((v) => v.split(','))
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const defaults = [
+    'http://localhost:3000',
+    'http://localhost:3002',
+    'https://intelli-flow-crm-web.vercel.app',
+    'https://intelli-flow-crm-web-talyssons-projects.vercel.app',
+  ];
+
+  return new Set([...defaults, ...fromEnv]);
+}
+
+// Resolve the allow-list from env, memoised by the env values so prod (env set
+// once at boot) parses only once, while tests that mutate CORS_ALLOWED_ORIGINS /
+// API_CORS_ORIGIN see the change take effect (the set is NOT frozen at import).
+let cachedEnvKey: string | null = null;
+let cachedOrigins = new Set<string>();
+let cachedReflectAny = false;
+function getAllowedOrigins(): { set: Set<string>; reflectAny: boolean } {
+  const key = `${process.env.CORS_ALLOWED_ORIGINS ?? ''}|${process.env.API_CORS_ORIGIN ?? ''}`;
+  if (key !== cachedEnvKey) {
+    cachedEnvKey = key;
+    cachedOrigins = buildAllowedOrigins();
+    cachedReflectAny = cachedOrigins.has('*');
+  }
+  return { set: cachedOrigins, reflectAny: cachedReflectAny };
+}
+
+/** Resolve the echo-back origin for this request, or null when not allowed. */
+function resolveAllowedOrigin(req: IncomingMessage): string | null {
+  const origin = req.headers.origin;
+  if (!origin) return null;
+  const { set, reflectAny } = getAllowedOrigins();
+  if (reflectAny) return origin;
+  return set.has(origin) ? origin : null;
+}
+
+function applyCorsHeaders(res: ServerResponse, allowedOrigin: string): void {
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', CORS_ALLOWED_METHODS);
+  res.setHeader('Access-Control-Allow-Headers', CORS_ALLOWED_HEADERS);
+  // NOTE: deliberately NO `Access-Control-Allow-Credentials`. The web client
+  // authenticates with a Bearer token (from localStorage), never cookies, so
+  // cross-origin requests are not credentialed. Omitting it keeps a permissive
+  // `CORS_ALLOWED_ORIGINS=*` (used for local/test) from becoming a footgun —
+  // reflect-any + credentials would let any site read authenticated responses.
+  res.setHeader('Access-Control-Max-Age', '86400');
+}
+
 function sendJson(
   res: ServerResponse,
   statusCode: number,
@@ -382,7 +460,24 @@ async function handleRequest(
 ): Promise<void> {
   const origin = getOrigin(req);
   const pathname = normalizePathname(new URL(req.url ?? '/', origin).pathname);
-  const headOnly = (req.method?.toUpperCase() ?? 'GET') === 'HEAD';
+  const method = req.method?.toUpperCase() ?? 'GET';
+  const headOnly = method === 'HEAD';
+
+  // CORS: echo an allowed origin onto every response, and short-circuit the
+  // preflight here — OPTIONS must never reach the health/tRPC routers (they'd
+  // 404/405 it and the browser would block the real request). Disallowed
+  // origins simply get no Allow-Origin header (the browser blocks them).
+  const allowedOrigin = resolveAllowedOrigin(req);
+  if (allowedOrigin) {
+    applyCorsHeaders(res, allowedOrigin);
+  }
+  if (method === 'OPTIONS') {
+    applyCorrelationHeaders(res);
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
   const body = await readRequestBody(req);
   const webRequest = createWebRequest(req, origin, body);
 
