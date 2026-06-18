@@ -405,6 +405,8 @@ export function OnboardingWelcome() {
   const shouldShow =
     !authLoading &&
     !onboardingLoading &&
+    // Require a resolved getState payload — never open on an errored/empty query.
+    Boolean(onboardingState) &&
     isAuthenticated &&
     !isPublicAuthRoute(pathname) &&
     !sessionDismissed &&
