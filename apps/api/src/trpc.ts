@@ -119,48 +119,64 @@ const isAuthed = t.middleware(({ ctx, next }) => {
 });
 
 /**
- * CSRF Protection Middleware
+ * Assert a mutation request is CSRF-safe. Exported for direct testing.
  *
- * Enforces that mutations (state-changing operations) must either:
- * 1. Have an Origin header that matches the server Host
- * 2. Have a custom anti-CSRF header (which forces a CORS preflight)
+ * A mutation must satisfy EITHER:
+ *  1. a same-host Origin (classic same-origin defense), OR
+ *  2. a custom anti-CSRF header (`x-csrf-token` / `authorization`).
+ *
+ * The custom-header rule is what makes the **cross-origin** web→API topology
+ * (ADR-063 / PERF-08: Vercel web → Railway API, different hosts) safe: a browser
+ * cannot attach a custom header to a cross-site request without a CORS preflight,
+ * and the API only grants that preflight to allow-listed origins — so a custom
+ * header proves a deliberate, CORS-vetted client, not a forged cross-site POST.
+ * (Auth is a Bearer token, never an ambient cookie, so classic CSRF is moot
+ * anyway; this stays as defense-in-depth.) Before this, the cross-host branch
+ * threw BEFORE considering the header, rejecting every legit prod mutation.
  */
-const csrfMiddleware = t.middleware(({ ctx, type, next }) => {
-  if (type === 'mutation' && ctx.req) {
-    const origin = ctx.req.headers.get('origin');
-    const host = ctx.req.headers.get('host') || ctx.req.headers.get('x-forwarded-host');
+export function assertMutationCsrfSafe(req: {
+  headers: { get(name: string): string | null; has(name: string): boolean };
+}): void {
+  const origin = req.headers.get('origin');
+  const host = req.headers.get('host') || req.headers.get('x-forwarded-host');
+  const hasCustomHeader = req.headers.has('x-csrf-token') || req.headers.has('authorization');
 
-    // 1. Origin checking (Standard Defense)
-    if (origin && host) {
-      let originUrl: URL;
-      try {
-        originUrl = new URL(origin);
-      } catch {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'CSRF violation: Malformed Origin header',
-        });
-      }
-      if (originUrl.host !== host && !host.includes('localhost')) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'CSRF violation: Origin does not match Host',
-        });
-      }
-    }
-
-    // 2. Custom header fallback (for non-browser clients or when Origin is stripped)
-    // A cross-origin request cannot easily set custom headers without CORS preflight
-    const hasCustomHeader =
-      ctx.req.headers.has('x-csrf-token') || ctx.req.headers.has('authorization');
-    if (!origin && !hasCustomHeader) {
+  // 1. Origin/Host check. A cross-host Origin is allowed only when it carries a
+  //    custom anti-CSRF header; localhost is exempt for local web:3000→api:4000.
+  if (origin && host) {
+    let originUrl: URL;
+    try {
+      originUrl = new URL(origin);
+    } catch {
       throw new TRPCError({
         code: 'FORBIDDEN',
-        message: 'CSRF violation: Missing Origin or custom anti-CSRF headers',
+        message: 'CSRF violation: Malformed Origin header',
+      });
+    }
+    if (originUrl.host !== host && !host.includes('localhost') && !hasCustomHeader) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'CSRF violation: Origin does not match Host',
       });
     }
   }
 
+  // 2. No Origin at all (non-browser / stripped) → require a custom header.
+  if (!origin && !hasCustomHeader) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'CSRF violation: Missing Origin or custom anti-CSRF headers',
+    });
+  }
+}
+
+/**
+ * CSRF Protection Middleware — applies {@link assertMutationCsrfSafe} to mutations.
+ */
+const csrfMiddleware = t.middleware(({ ctx, type, next }) => {
+  if (type === 'mutation' && ctx.req) {
+    assertMutationCsrfSafe(ctx.req);
+  }
   return next();
 });
 
