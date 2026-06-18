@@ -270,6 +270,15 @@ describe('OnboardingWelcome', () => {
     expect((dialog as HTMLDialogElement).open).toBe(false);
   });
 
+  it('does NOT open when getState resolved with no data (unknown state)', () => {
+    // A transient getState error/undefined must not flash the welcome modal at an
+    // already-onboarded user — an unknown state defaults to NOT showing.
+    mockGetState.mockReturnValue({ data: undefined, isLoading: false });
+    render(<OnboardingWelcome />);
+    const dialog = screen.getByTestId('onboarding-dialog');
+    expect((dialog as HTMLDialogElement).open).toBe(false);
+  });
+
   it('does NOT open when user is not authenticated', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,

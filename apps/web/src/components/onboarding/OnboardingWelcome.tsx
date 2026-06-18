@@ -396,6 +396,12 @@ export function OnboardingWelcome() {
   // Show the dialog while onboarding is incomplete: either the flow isn't done
   // (profile/plan steps), or the flow is done but email is still unconfirmed
   // (verify-email step). It keeps returning each session until email confirmed.
+  //
+  // Both branches require an EXPLICIT onboarding state — `flowDone === false`
+  // (profile/plan) and `needsEmailVerify` (which itself needs explicit `false`s).
+  // When getState is undefined (errored, or resolved with no data) we therefore
+  // do NOT open: a bare `!flowDone` would default an unknown state to "show",
+  // flashing the welcome at already-onboarded users on a transient getState error.
   const shouldShow =
     !authLoading &&
     !onboardingLoading &&
@@ -403,7 +409,7 @@ export function OnboardingWelcome() {
     !isPublicAuthRoute(pathname) &&
     !sessionDismissed &&
     !onboardingComplete &&
-    (!flowDone || needsEmailVerify);
+    (onboardingState?.flowDone === false || needsEmailVerify);
 
   useEffect(() => {
     const el = dialogRef.current;
