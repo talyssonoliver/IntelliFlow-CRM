@@ -44,7 +44,7 @@ import {
 import { cn } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { isProtectedAppRoute } from '@/lib/auth/route-protection';
+import { isPublicAuthRoute } from '@/lib/auth/route-protection';
 import pricingData from '@/data/pricing-data.json';
 
 // ============================================
@@ -341,7 +341,9 @@ export function OnboardingWelcome() {
   const { data: onboardingState, isLoading: onboardingLoading } = trpc.onboarding.getState.useQuery(
     undefined,
     {
-      enabled: isAuthenticated && isProtectedAppRoute(pathname),
+      // Fire for ANY authenticated app page (including the marketing home `/`,
+      // where OAuth users land), but not on the public auth-flow pages.
+      enabled: isAuthenticated && !isPublicAuthRoute(pathname),
       staleTime: Infinity,
     }
   );
@@ -370,7 +372,7 @@ export function OnboardingWelcome() {
     !authLoading &&
     !onboardingLoading &&
     isAuthenticated &&
-    isProtectedAppRoute(pathname) &&
+    !isPublicAuthRoute(pathname) &&
     onboardingState?.completed === false &&
     !sessionDismissed;
 

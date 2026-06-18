@@ -33,6 +33,7 @@ import type { OAuthProvider } from '@intelliflow/domain';
 import { getSupabaseProviderName } from './sso-handler';
 import { isTokenUsable } from './jwt';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
+import { AUTH_TOKEN_CHANGED_EVENT } from '@/lib/shared/session-cleanup';
 
 export type AuthMfaMethod = 'totp' | 'sms' | 'email' | 'backup';
 
@@ -270,6 +271,23 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     // page navigation when React Query's gcTime evicts and re-fetches the cache.
     staleTime: Infinity,
   });
+
+  // Re-validate auth status whenever a token is (re)written by ANY flow — OAuth
+  // callback, email login, signup verification, MFA — since `syncTokenToCookie`
+  // dispatches AUTH_TOKEN_CHANGED on every write. getStatus has staleTime:
+  // Infinity, and Supabase's `onAuthStateChange` TOKEN_REFRESHED event does NOT
+  // fire when a token is merely SET (only when rotated), so without this the
+  // query can stay stuck at the pre-login `authenticated: false` snapshot it
+  // cached on the /login or /auth/callback page, and useRequireAuth then bounces
+  // every subsequent navigation back to /login.
+  useEffect(() => {
+    if (typeof globalThis.window === 'undefined') return;
+    const onTokenChanged = () => {
+      void queryClient.invalidateQueries({ queryKey: [['auth', 'getStatus']] });
+    };
+    globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
+    return () => globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
+  }, [queryClient]);
 
   // tRPC mutation for token refresh
   const _refreshTokenMutation = trpc.auth.refreshSession.useMutation();
