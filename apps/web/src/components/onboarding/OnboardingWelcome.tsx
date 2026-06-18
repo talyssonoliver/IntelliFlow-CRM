@@ -495,16 +495,18 @@ export function OnboardingWelcome() {
   const handleSelectTier = useCallback(
     (tierId: string) => {
       setSelectedTierId(tierId);
-      // Advance to Stripe checkout only when the user is verified AND Stripe is actually
-      // configured (publishable key present → getStripePromise() non-null). Otherwise we
-      // stay on the 'plan' step (with the inline notice + trial CTA) so the user is never
-      // stranded in an empty checkout step when payments are unavailable.
-      if (emailVerified === true && getStripePromise() !== null) {
+      // Advance to Stripe checkout only when the email is confirmed AND Stripe is
+      // actually configured (publishable key present → getStripePromise() non-null).
+      // Use the composite `emailConfirmed` (getState OR auth session) so a verified
+      // user whose cached auth status lags isn't wrongly blocked. Otherwise we stay
+      // on the 'plan' step (inline notice + trial CTA) so the user is never stranded
+      // in an empty checkout step when payments are unavailable.
+      if (emailConfirmed && getStripePromise() !== null) {
         setStep('checkout');
       }
-      // If not verified (or payments unavailable), stay on 'plan' and show the notice.
+      // If not confirmed (or payments unavailable), stay on 'plan' and show the notice.
     },
-    [emailVerified]
+    [emailConfirmed]
   );
 
   const handleSkipPlan = useCallback(() => {
@@ -540,7 +542,7 @@ export function OnboardingWelcome() {
   // ==========================================
 
   const selectedTier = ONBOARDING_TIERS.find((t) => t.id === selectedTierId);
-  const showUnverifiedNotice = step === 'plan' && selectedTierId !== null && emailVerified !== true;
+  const showUnverifiedNotice = step === 'plan' && selectedTierId !== null && !emailConfirmed;
 
   const firstName = user?.name ? user.name.split(' ')[0] : 'there';
 
