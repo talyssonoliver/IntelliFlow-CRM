@@ -41,10 +41,21 @@ export const onboardingRouter = createTRPCRouter({
    * Read the current user's onboarding state.
    *
    * Returns:
-   *   { completed: boolean, selectedPlan: string | null }
+   *   {
+   *     completed: boolean,      // fully onboarded — flowDone AND emailConfirmed
+   *     flowDone: boolean,       // finished the welcome flow (profile + plan/trial)
+   *     emailConfirmed: boolean, // Supabase email_confirmed_at is set
+   *     selectedPlan: string | null,
+   *   }
    *
-   * Reads from Supabase Auth user_metadata.
+   * Reads from Supabase Auth user_metadata + the auth user record.
    * Absent keys are treated as false / null (new users start un-onboarded).
+   *
+   * Completion is a composite: a user is only "completed" once they have BOTH
+   * finished the welcome flow (`onboarding_completed` metadata, set by the
+   * `complete` mutation) AND confirmed their email. `flowDone`/`emailConfirmed`
+   * are returned individually so the welcome modal can show the right step
+   * (profile/plan vs. verify-email) and keep returning until email is confirmed.
    */
   getState: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.user!.userId;
@@ -66,9 +77,13 @@ export const onboardingRouter = createTRPCRouter({
     }
 
     const meta = (data.user.user_metadata ?? {}) as OnboardingMetadata;
+    const flowDone = meta.onboarding_completed === true;
+    const emailConfirmed = Boolean(data.user.email_confirmed_at);
 
     return {
-      completed: meta.onboarding_completed === true,
+      completed: flowDone && emailConfirmed,
+      flowDone,
+      emailConfirmed,
       selectedPlan: meta.onboarding_selected_plan ?? null,
     };
   }),

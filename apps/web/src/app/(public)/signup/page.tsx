@@ -32,6 +32,10 @@ import { useAuth, useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
 import { SocialLoginGrid, OAuthDivider, AuthBackground, AuthCard } from '@/components/shared';
 import { RegistrationForm, type RegistrationFormData } from '@/components/shared/registration-form';
 import { trpc } from '@/lib/trpc';
+import { clearSupabaseLocalStorage } from '@/lib/supabase-browser';
+import { storeSessionFingerprint } from '@/lib/shared/login-security';
+import { storeSessionTokens } from '@/lib/shared/token-exchange';
+import { syncTokenToCookie } from '@/lib/shared/session-cleanup';
 
 // ============================================
 // Types
@@ -172,8 +176,10 @@ function SignUpPageContent() {
           console.info('[SignUp] Registration with UTM:', utmData);
         }
 
-        // Call tRPC signup — Supabase handles email verification
-        await signupMutation.mutateAsync({
+        // Call tRPC signup. Supabase returns a session when email auto-confirm
+        // is enabled (the default for this project); when confirmation is
+        // required, no session is returned and we fall back to verify-first.
+        const result = await signupMutation.mutateAsync({
           email: data.email,
           password: data.password,
           confirmPassword: data.password,
@@ -181,10 +187,32 @@ function SignUpPageContent() {
           acceptTerms: true as const,
         });
 
-        // Show success and redirect
-        showToast('success', 'Account created!', 'Please check your email to verify your account.');
+        if (result.session) {
+          // Auto-login: establish the session client-side exactly like the OAuth
+          // callback so the user lands authenticated on "/" (where the onboarding
+          // modal fires) instead of bouncing to a "check your email" page and then
+          // back to /login when they try to navigate.
+          storeSessionTokens(result.session.accessToken, result.session.refreshToken);
+          // Sync to the cookie (SSR) AND fire AUTH_TOKEN_CHANGED so AuthContext
+          // re-validates getStatus immediately — otherwise the staleTime:Infinity
+          // cache stays unauthenticated and useRequireAuth redirects to /login.
+          syncTokenToCookie(result.session.accessToken);
+          storeSessionFingerprint();
+          // 10s grace window: suppresses premature redirect while getStatus settles.
+          sessionStorage.setItem('oauth_login_success', Date.now().toString());
+          clearSupabaseLocalStorage();
 
-        // Redirect to success page after a short delay
+          showToast(
+            'success',
+            'Account created!',
+            'Welcome to IntelliFlow — setting up your workspace…'
+          );
+          router.push('/');
+          return;
+        }
+
+        // Email confirmation required (no session) — verify-first flow.
+        showToast('success', 'Account created!', 'Please check your email to verify your account.');
         setTimeout(() => {
           router.push('/signup/success?email=' + encodeURIComponent(data.email));
         }, 1500);

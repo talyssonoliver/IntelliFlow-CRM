@@ -51,9 +51,10 @@ import pricingData from '@/data/pricing-data.json';
 // Constants
 // ============================================
 
-// sessionStorage flag: prevents re-open within a session if user dismissed
-// without completing.  A permanent "don't show again" is handled server-side
-// via onboarding.complete (getState returns completed:true on next load).
+// sessionStorage flag: suppresses the modal for the current browser session
+// after a dismiss (X / "Skip for now" / Escape). Dismiss is NOT completion —
+// onboarding stays incomplete server-side, so the modal returns next session
+// until the user finishes the flow (profile + plan/trial) AND confirms email.
 const ONBOARDING_DISMISSED_SESSION_FLAG = 'intelliflow_onboarding_session_dismissed';
 
 // Lazy-initialise the Stripe promise once (not on every render).
@@ -349,15 +350,23 @@ export function OnboardingWelcome() {
   );
 
   const completeMutation = trpc.onboarding.complete.useMutation();
+  // Persists the optional profile fields (company / job title) the welcome step
+  // collects — previously these were captured then thrown away.
+  const updateProfileMutation = trpc.user.updateProfile.useMutation();
+  // Resend the verification email from the modal's verify-email step.
+  const resendVerificationMutation = trpc.auth.resendVerification.useMutation();
 
   // Local UI state
   const [step, setStep] = useState<OnboardingStep>('welcome');
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
   const [company, setCompany] = useState('');
-  const [role, setRole] = useState('');
+  const [department, setDepartment] = useState('');
   const [sessionDismissed, setSessionDismissed] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent' | 'rate-limited'>(
+    'idle'
+  );
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   // Read session-dismiss flag (once, client-side)
@@ -367,14 +376,29 @@ export function OnboardingWelcome() {
     }
   }, []);
 
-  // Show / hide the native <dialog>
+  // Completion is a composite (server contract): the user finished the welcome
+  // flow (profile + plan/trial → `flowDone`) AND confirmed their email. We
+  // recompute it client-side from `flowDone` + the live `emailVerified` so the
+  // modal reactively closes the moment the email is confirmed (getState is
+  // staleTime:Infinity and won't refetch on its own).
+  const flowDone = onboardingState?.flowDone === true;
+  // `emailVerified` is true | false | null (null = still resolving). Only treat
+  // an explicit `false` as "needs verification" so we never flash the verify
+  // step while auth is still loading.
+  const needsEmailVerify = flowDone && emailVerified === false;
+  const onboardingComplete = flowDone && emailVerified === true;
+
+  // Show the dialog while onboarding is incomplete: either the flow isn't done
+  // (profile/plan steps), or the flow is done but email is still unconfirmed
+  // (verify-email step). It keeps returning each session until email confirmed.
   const shouldShow =
     !authLoading &&
     !onboardingLoading &&
     isAuthenticated &&
     !isPublicAuthRoute(pathname) &&
-    onboardingState?.completed === false &&
-    !sessionDismissed;
+    !sessionDismissed &&
+    !onboardingComplete &&
+    (!flowDone || needsEmailVerify);
 
   useEffect(() => {
     const el = dialogRef.current;
@@ -402,20 +426,58 @@ export function OnboardingWelcome() {
   // Handlers
   // ==========================================
 
+  // Persist the optional profile fields if the user typed anything. Fire-and-
+  // forget: this is best-effort enrichment, must never block the flow, and is
+  // swallowed on error (e.g. tenant not yet provisioned). These map to the same
+  // `company` / `department` columns the Account Settings profile form uses.
+  const persistProfile = useCallback(() => {
+    const trimmedCompany = company.trim();
+    const trimmedDepartment = department.trim();
+    if (!trimmedCompany && !trimmedDepartment) return;
+    updateProfileMutation.mutate({
+      ...(trimmedCompany ? { company: trimmedCompany } : {}),
+      ...(trimmedDepartment ? { department: trimmedDepartment } : {}),
+    });
+  }, [company, department, updateProfileMutation]);
+
   const handleSkipAll = useCallback(() => {
-    // Persist skip for this browser session — modal will not reappear until
-    // the user reloads in a new session (or until onboarding.complete fires).
+    // Dismiss is NOT completion. The X button, "Skip for now", and Escape
+    // suppress the modal for THIS browser session only (sessionStorage).
+    // Onboarding stays *incomplete* server-side, so the welcome returns on the
+    // next session until the user genuinely finishes (subscribes, or chooses
+    // "Continue on trial" from the plan step).
+    //
+    // Previously this also called onboarding.complete, which permanently marked
+    // a mere dismissal as "completed" — semantically wrong, and the reason a
+    // user who closed the welcome once (X / Escape / Skip) never saw it again
+    // despite never having gone through onboarding.
+    //
+    // We still persist any profile fields the user typed so the input isn't lost.
+    persistProfile();
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(ONBOARDING_DISMISSED_SESSION_FLAG, '1');
     }
     setSessionDismissed(true);
-    // Fire complete without a plan so the server marks onboarding done.
-    completeMutation.mutate({});
-  }, [completeMutation]);
+  }, [persistProfile]);
 
   const handleContinueWelcome = useCallback(() => {
+    // Save the profile fields before advancing to the plan step.
+    persistProfile();
     setStep('plan');
-  }, []);
+  }, [persistProfile]);
+
+  const handleResendVerification = useCallback(async () => {
+    if (resendState === 'sending' || resendState === 'sent') return;
+    if (!user?.email) return;
+    setResendState('sending');
+    try {
+      await resendVerificationMutation.mutateAsync({ email: user.email });
+      setResendState('sent');
+    } catch (err: unknown) {
+      const trpcError = err as { data?: { code?: string } };
+      setResendState(trpcError.data?.code === 'TOO_MANY_REQUESTS' ? 'rate-limited' : 'idle');
+    }
+  }, [resendState, resendVerificationMutation, user]);
 
   const handleSelectTier = useCallback(
     (tierId: string) => {
@@ -488,8 +550,97 @@ export function OnboardingWelcome() {
         'z-[200]'
       )}
     >
+      {/* ---- Step: Verify email ----
+          Shown when the welcome flow is done but the email is still unconfirmed.
+          Onboarding stays incomplete until the user confirms, so this returns
+          each session (session-dismissible). The global VerifyEmailBanner also
+          nudges; this is the modal-level gate the owner asked for. */}
+      {needsEmailVerify && (
+        <section
+          aria-label="Verify your email step"
+          className="flex flex-col items-center gap-6 p-8 text-center"
+        >
+          <button
+            type="button"
+            onClick={handleSkipAll}
+            aria-label="Dismiss email verification"
+            className="absolute right-4 top-4 rounded-sm p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="material-symbols-outlined text-xl" aria-hidden="true">
+              close
+            </span>
+          </button>
+
+          <span className="material-symbols-outlined text-5xl text-primary" aria-hidden="true">
+            mark_email_unread
+          </span>
+          <div>
+            <h1 className="text-2xl font-bold">Confirm your email</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              We sent a verification link to{' '}
+              <strong className="text-foreground">{user?.email ?? 'your email'}</strong>. Confirm it
+              to finish setting up your account and unlock sending, invites and billing.
+            </p>
+          </div>
+
+          {(resendState === 'sent' || resendState === 'rate-limited') && (
+            <output
+              aria-live="polite"
+              className={cn(
+                'text-sm',
+                resendState === 'sent'
+                  ? 'text-green-700 dark:text-green-400'
+                  : 'text-red-700 dark:text-red-400'
+              )}
+            >
+              {resendState === 'sent'
+                ? 'Verification email sent — check your inbox.'
+                : 'Too many requests. Please try again in a few minutes.'}
+            </output>
+          )}
+
+          <div className="flex w-full flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={handleSkipAll}
+              className={cn(
+                'flex-1 rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium',
+                'hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              )}
+            >
+              I&apos;ll do it later
+            </button>
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resendState === 'sending' || resendState === 'sent'}
+              data-testid="onboarding-resend-verification"
+              className={cn(
+                'flex-1 flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground',
+                'hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                'disabled:opacity-50 disabled:cursor-not-allowed'
+              )}
+            >
+              {resendState === 'sending' ? (
+                <>
+                  <span
+                    className="material-symbols-outlined animate-spin text-lg"
+                    aria-hidden="true"
+                  >
+                    progress_activity
+                  </span>{' '}
+                  Sending&hellip;
+                </>
+              ) : (
+                'Resend email'
+              )}
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* ---- Step: Welcome ---- */}
-      {step === 'welcome' && (
+      {!needsEmailVerify && step === 'welcome' && (
         <section aria-label="Welcome step" className="flex flex-col gap-6 p-8">
           {/* Dismiss */}
           <button
@@ -538,15 +689,15 @@ export function OnboardingWelcome() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="ob-role" className="text-sm font-medium">
-                Your Role
+              <label htmlFor="ob-department" className="text-sm font-medium">
+                Department
               </label>
               <input
-                id="ob-role"
+                id="ob-department"
                 type="text"
-                placeholder="e.g. Sales Manager"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
+                placeholder="e.g. Sales"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
                 className={cn(
                   'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
                   'placeholder:text-muted-foreground',
@@ -761,7 +912,7 @@ export function OnboardingWelcome() {
             You can cancel at any time.{' '}
             <button
               type="button"
-              onClick={handleSkipAll}
+              onClick={handleSkipPlan}
               className="underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
             >
               Continue on trial instead

@@ -68,6 +68,13 @@ function notifyAuthTokenChanged(hasToken: boolean): void {
   );
 }
 
+/** Read the current `accessToken` cookie value (or null). */
+function readAccessTokenCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)accessToken=([^;]*)/);
+  return match ? match[1] : null;
+}
+
 // ============================================
 // Token Sync to Cookie (for middleware access)
 // ============================================
@@ -79,12 +86,22 @@ function notifyAuthTokenChanged(hasToken: boolean): void {
 export function syncTokenToCookie(token: string | null): void {
   if (typeof document === 'undefined') return;
 
+  const current = readAccessTokenCookie();
+
   if (token) {
     const maxAgeSeconds = getTokenMaxAgeSeconds(token);
     if (!maxAgeSeconds) {
       clearTokenCookie();
       return;
     }
+
+    // Idempotent: if the cookie already holds this exact token, do nothing and
+    // do NOT re-dispatch AUTH_TOKEN_CHANGED. This sync runs on every auth-state
+    // effect (which re-runs on every getStatus fetch); re-firing the event each
+    // time caused an invalidate → refetch → re-render → re-sync feedback loop
+    // (~700 getStatus requests per navigation). The cookie's max-age is already
+    // pinned to the JWT expiry, so there is nothing to refresh for the same token.
+    if (current === token) return;
 
     // Set cookie with the token
     // HttpOnly is false so JavaScript can read/write it
@@ -95,6 +112,8 @@ export function syncTokenToCookie(token: string | null): void {
     document.cookie = cookieValue;
     notifyAuthTokenChanged(true);
   } else {
+    // Already cleared — nothing to do, and no spurious event.
+    if (!current) return;
     // Clear the cookie
     document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     notifyAuthTokenChanged(false);
@@ -106,8 +125,10 @@ export function syncTokenToCookie(token: string | null): void {
  */
 export function clearTokenCookie(): void {
   if (typeof document === 'undefined') return;
+  // Idempotent: only emit AUTH_TOKEN_CHANGED when there was actually a token.
+  const hadToken = readAccessTokenCookie();
   document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-  notifyAuthTokenChanged(false);
+  if (hadToken) notifyAuthTokenChanged(false);
 }
 
 // ============================================
