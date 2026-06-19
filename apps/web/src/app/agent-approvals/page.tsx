@@ -20,6 +20,7 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { AssignSheet } from '@/components/shared/assign-sheet';
 import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import type { AgentAction, ActionStatus } from '@/lib/agent';
+import { getConfidenceBadge } from '@/lib/lead-scoring/confidence-badge';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 // Material Symbols icon helper component
@@ -218,25 +219,6 @@ function getStatusBadge(status: ActionStatus): {
     label: status,
     className: 'bg-slate-100 text-slate-800',
     icon: null,
-  };
-}
-
-function getConfidenceBadge(score: number): { label: string; className: string } {
-  if (score >= 80) {
-    return {
-      label: 'High Confidence',
-      className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    };
-  }
-  if (score >= 60) {
-    return {
-      label: 'Medium Confidence',
-      className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-    };
-  }
-  return {
-    label: 'Low Confidence',
-    className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
   };
 }
 

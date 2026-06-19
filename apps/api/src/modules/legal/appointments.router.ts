@@ -19,7 +19,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure as baseTenantProcedure } from '../../trpc';
 import { AppointmentDomainService } from '../../services';
 import {
   AppointmentCreatedEvent,
@@ -33,6 +33,12 @@ import { container } from '../../container';
 import { createNotification } from '../notifications/notifications.router';
 import { mapDomainErrorToTRPC } from './helpers';
 import { safeTimezone } from '../../lib/timezone-utils';
+
+// NOTE: appointments are NOT LEGAL-gated. This router is SHARED with the core
+// Calendar feature (CORE_CRM, all tiers): apps/web/.../calendar/(list)/page.tsx
+// calls `appointments.list`. Gating it behind the LEGAL add-on would break the
+// calendar for every non-Professional tenant. Legal case-appointments reuse the
+// same tenant-scoped endpoints.
 
 // Zod schemas for appointment operations
 const appointmentTypeSchema = z.enum([
@@ -184,6 +190,123 @@ function userScopeFilter(user: { userId: string; role: string }) {
  */
 const BUSINESS_HOURS_START = 7;
 const BUSINESS_HOURS_END = 19;
+
+type ModuleAccessLike = {
+  isModuleEnabled: (tenantId: string, moduleId: string) => Promise<boolean> | boolean;
+};
+
+/**
+ * Assert the tenant's plan includes the LEGAL module.
+ *
+ * The appointments router is SHARED with the core calendar (so the router itself
+ * stays on plain `tenantProcedure`), but linking appointments to legal CASES is a
+ * LEGAL feature. A tenant downgraded out of LEGAL can still hold orphan cases, so
+ * the case-linking surface (linkToCase/unlinkFromCase, create-with-linkedCaseIds,
+ * list-by-caseId) must re-check entitlement. Mirrors trpc.ts `requireModule` and
+ * fails CLOSED (deny if the entitlement service is unavailable or errors).
+ */
+async function assertLegalEntitlement(ctx: {
+  user?: { tenantId?: string | null };
+  container?: { get: (name: string) => unknown };
+}): Promise<void> {
+  const tenantId = ctx.user?.tenantId;
+  if (!tenantId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context required' });
+  }
+  const moduleAccess = ctx.container?.get('moduleAccess') as ModuleAccessLike | undefined;
+  if (!moduleAccess || typeof moduleAccess.isModuleEnabled !== 'function') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'The LEGAL module is unavailable.' });
+  }
+  let enabled: unknown;
+  try {
+    enabled = await moduleAccess.isModuleEnabled(tenantId, 'LEGAL');
+  } catch {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Could not verify entitlement for the LEGAL module.',
+    });
+  }
+  if (enabled === false) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Your plan does not include the LEGAL module.',
+    });
+  }
+}
+
+type EntitlementCtx = {
+  user?: { tenantId?: string | null };
+  container?: { get: (name: string) => unknown };
+};
+
+/** Non-throwing LEGAL entitlement check (fails CLOSED to `false`). */
+async function hasLegalEntitlement(ctx: EntitlementCtx): Promise<boolean> {
+  const tenantId = ctx.user?.tenantId;
+  if (!tenantId) return false;
+  const moduleAccess = ctx.container?.get('moduleAccess') as ModuleAccessLike | undefined;
+  if (!moduleAccess || typeof moduleAccess.isModuleEnabled !== 'function') return false;
+  try {
+    return (await moduleAccess.isModuleEnabled(tenantId, 'LEGAL')) !== false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Hide legal case-link data (`linkedCases`) from callers without the LEGAL
+ * module. Appointments are a shared calendar resource, but a tenant downgraded
+ * out of LEGAL can still hold orphan AppointmentCase rows; those must not surface
+ * in any appointment read/response. Mutates in place to `[]`. Only consults
+ * entitlement when there is actually link data to hide, so the core-calendar
+ * hot path (no links) pays nothing.
+ */
+async function cloakLinkedCases<T extends { linkedCases?: unknown }>(
+  ctx: EntitlementCtx,
+  appointments: T[]
+): Promise<void> {
+  const hasLinks = appointments.some(
+    (a) => Array.isArray(a.linkedCases) && a.linkedCases.length > 0
+  );
+  if (!hasLinks) return;
+  if (await hasLegalEntitlement(ctx)) return;
+  for (const a of appointments) {
+    if (Array.isArray(a.linkedCases)) {
+      (a as { linkedCases: unknown[] }).linkedCases = [];
+    }
+  }
+}
+
+/** Pull appointment-shaped objects (carrying `linkedCases`) out of any result. */
+function collectAppointmentLike(data: unknown): { linkedCases?: unknown }[] {
+  if (Array.isArray(data)) {
+    return data.filter((x) => x && typeof x === 'object') as { linkedCases?: unknown }[];
+  }
+  if (!data || typeof data !== 'object') return [];
+  const d = data as Record<string, unknown>;
+  if (Array.isArray(d.linkedCases)) return [d as { linkedCases?: unknown }];
+  if (Array.isArray(d.appointments)) return d.appointments as { linkedCases?: unknown }[];
+  // Nested single appointment, e.g. reschedule returns `{ appointment, previousTime }`.
+  if (d.appointment && typeof d.appointment === 'object') {
+    return [d.appointment as { linkedCases?: unknown }];
+  }
+  return [];
+}
+
+/**
+ * Router-local `tenantProcedure` = the core tenant procedure + a response cloak
+ * that strips legal `linkedCases` from any appointment read/response for callers
+ * without the LEGAL module. Applied once here so all 9 appointment endpoints are
+ * covered with no per-procedure plumbing; non-appointment results (e.g.
+ * `{ success }`) pass through untouched.
+ */
+const tenantProcedure = baseTenantProcedure.use(async ({ ctx, next }) => {
+  const result = await next();
+  if (result.ok) {
+    const appts = collectAppointmentLike(result.data);
+    if (appts.length) await cloakLinkedCases(ctx as EntitlementCtx, appts);
+  }
+  return result;
+});
 
 function getLocalHour(date: Date, timezone?: string): number {
   const tz = timezone ?? 'UTC';
@@ -355,6 +478,12 @@ export const appointmentsRouter = createTRPCRouter({
     // Reject appointments outside business hours (07:00 – 19:00).
     assertWithinBusinessHours(input.startTime, input.endTime, input.timezone);
 
+    // Linking the new appointment to legal cases is a LEGAL feature, even on this
+    // shared calendar router — require entitlement when caseIds are supplied.
+    if (input.linkedCaseIds?.length) {
+      await assertLegalEntitlement(ctx);
+    }
+
     const result = await container.scheduleAppointmentUseCase.execute({
       title: input.title,
       description: input.description,
@@ -498,6 +627,11 @@ export const appointmentsRouter = createTRPCRouter({
       sortOrder,
     } = input;
     const skip = (page - 1) * limit;
+
+    // Filtering appointments by a legal case is a LEGAL feature — require it.
+    if (caseId) {
+      await assertLegalEntitlement(ctx);
+    }
 
     // Admins see all appointments; regular users only see their own
     const where: any = { ...userScopeFilter(ctx.user) };
@@ -1012,6 +1146,7 @@ export const appointmentsRouter = createTRPCRouter({
   linkToCase: tenantProcedure
     .input(z.object({ appointmentId: z.string(), caseId: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      await assertLegalEntitlement(ctx); // case-linking requires the LEGAL module
       const existing = await ctx.prismaWithTenant.appointment.findUnique({
         where: { id: input.appointmentId },
       });
@@ -1054,6 +1189,7 @@ export const appointmentsRouter = createTRPCRouter({
   unlinkFromCase: tenantProcedure
     .input(z.object({ appointmentId: z.string(), caseId: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      await assertLegalEntitlement(ctx); // case-linking requires the LEGAL module
       const existing = await ctx.prismaWithTenant.appointmentCase.findUnique({
         where: {
           appointmentId_caseId: {

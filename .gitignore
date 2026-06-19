@@ -369,3 +369,6 @@ scripts/railway-provision-dev.ps1
 
 # Codex semantic-review run artifacts (regenerated each run, not source)
 artifacts/codex-review/
+
+# Playwright QA persona auth state (real tokens — never commit)
+tests/e2e/.auth/

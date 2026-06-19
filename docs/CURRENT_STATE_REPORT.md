@@ -1,15 +1,15 @@
 # Current State Report
-_Generated: 2026-06-13T17:43:11.288Z_
+_Generated: 2026-06-18T23:02:03.757Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 5 continuous tasks.
-- Overall progress: 403/596 tasks completed (67.62%), 192 backlog, 0 blocked, 1 in progress.
-- Numbered sprint progress alone: 398/591 tasks completed or attested inside numbered sprints.
+- Overall progress: 409/596 tasks completed (68.62%), 186 backlog, 0 blocked, 1 in progress.
+- Numbered sprint progress alone: 404/591 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
-- Ready-to-start work: DOC-015 (Sprint 18), IFC-032 (Sprint 18), IFC-211 (Sprint 18), IFC-212 (Sprint 18), IFC-214 (Sprint 18).
+- Ready-to-start work: DOC-015 (Sprint 18), IFC-032 (Sprint 18), IFC-211 (Sprint 18), IFC-212 (Sprint 18), IFC-215 (Sprint 18).
 - Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
 
 ## Source Health
@@ -263,16 +263,16 @@ _Generated: 2026-06-13T17:43:11.288Z_
 
 ## Sprint 18 - Sprint 18
 
-- Status: 21/66 completed, 44 backlog, 0 blocked, 1 in progress.
+- Status: 27/66 completed, 38 backlog, 0 blocked, 1 in progress.
 - Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).
-- Evidence coverage: 21/21 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 27/27 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
 - **IFC-070** — Data Migration from Legacy. IFC-070 Data Migration from Legacy completed via TDD. 13 steps across 4 phases (RED/GREEN/REFACTOR/VALIDATION). 66 tests, 98.88% statement coverage. All 6 completion gates PASS. Compliance check PASS. 100% data migrated, validation passed;...
 - **IFC-265** — Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.. Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth surface. Findings L? no — test-gap findings T-01/T-04/T-06/T-07/T-08 closed (audit §19 was stale; scoped to genuine gaps).... Contact detail page test file with >=20 tests;...
+- **IFC-301** — Rich Text Editor Integration — Tiptap. Pure UI package (STOA-Domain trivially satisfied — no backend/domain/schema/migration).... Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%
+- **IFC-310** — Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.. IFC-310 iteration-4 — residual concerns from the second audit round fully resolved. No items deferred. R1 (AC-007 AI branch unreachable at runtime): RESOLVED.... Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time;...
 - **PG-180** — Help Article Admin List Page. Compliance-check invoked inline: all 4 mandatory validations PASS (typecheck, tests, lint, build), scoped Istanbul coverage 97.26/95.06/91.66/96.96 (aggregate) exceeds 90/80/90/90 thresholds, icon policy PASS (Material Symbols only, zero fo... Articles listed;...
-- **PG-187** — Module Settings - Reports (/analytics/report-settings). Honest record of deviations from plan: (a) Frontend test count 44 vs. plan target 54... Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90
-- **IFC-311** — Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.. IFC-311 wires the two notifyOnOwnerChange Cat-1 toggles that PG-182 + PG-183 shipped but left dormant.... contact.reassign + contact.bulkReassign mutations; account.reassign + account.bulkReassign mutations; All validate caller permission
 
 **Open Work**
 - **IFC-257** — Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.. Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation

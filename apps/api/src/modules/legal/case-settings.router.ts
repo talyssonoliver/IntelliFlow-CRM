@@ -10,7 +10,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import {
   updateCaseSettingsSchema,
   updateCaseDuplicateRulesSchema,
@@ -25,6 +25,12 @@ import {
 } from '@intelliflow/validators';
 import { assertTenantContext } from '../../security/tenant-context';
 import { loadCaseAutomation, assertCanCreateTag } from './case-automation';
+
+// LEGAL is a Professional+ paid add-on (MODULE_PLAN_MAP). Gate every procedure on
+// the tenant's plan including the module — same pattern as documents.router.ts.
+// Without this a lower-tier tenant could call these endpoints directly and bypass
+// the paywall (the frontend <ModuleGate> only hides the UI, not the API).
+const tenantProcedure = moduleTenantProcedure('LEGAL');
 
 // ─── General ────────────────────────────────────────────────────────────────
 

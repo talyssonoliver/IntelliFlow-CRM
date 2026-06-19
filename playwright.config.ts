@@ -2,6 +2,38 @@ import { defineConfig, devices } from '@playwright/test';
 import path from 'node:path';
 
 /**
+ * Authenticated "Journey" specs — these require a logged-in session, so they run
+ * under the `authenticated` project (default ENTERPRISE storageState) instead of
+ * the unauthenticated `chromium` project. Unauthenticated flows (auth-flow,
+ * signup, mfa login, smoke, icons, inbound webhook) deliberately stay on chromium.
+ */
+const AUTHED_SPECS = [
+  '**/agent-approvals.spec.ts',
+  '**/ai-features/**/*.spec.ts',
+  '**/case-timeline.spec.ts',
+  '**/contact-crud.spec.ts',
+  '**/forms.spec.ts',
+  '**/home/**/*.spec.ts',
+  '**/navigation.spec.ts',
+  '**/pipeline-settings.spec.ts',
+  '**/tasks.spec.ts',
+  '**/workflow-builder.spec.ts',
+];
+
+/**
+ * The auth fixture (setup) + authenticated project need Supabase-admin + a test
+ * DB. When that env is absent (e.g. a CI job without the QA secrets) we omit both
+ * projects entirely: the authed specs are already excluded from `chromium`, so
+ * they simply don't run there instead of failing the setup dependency. Wire the
+ * env (see e2e-auth-fixture-and-qa-matrix.md) to enable the authenticated suite.
+ */
+const HAS_QA_ENV = Boolean(
+  process.env.SUPABASE_URL &&
+  process.env.SUPABASE_SERVICE_ROLE_KEY &&
+  (process.env.DATABASE_URL ?? process.env.TEST_DATABASE_URL)
+);
+
+/**
  * Playwright E2E Testing Configuration for IntelliFlow CRM
  *
  * This configuration enables comprehensive end-to-end testing with:
@@ -80,6 +112,34 @@ export default defineConfig({
   // Configure projects for different browsers and devices
   // Following Testing Pyramid: Project-level filtering reduces test bloat
   projects: [
+    // Auth + seed SETUP project + the authenticated QA suite. Only present when
+    // the QA env is wired (HAS_QA_ENV) — otherwise omitted so CI without the
+    // secrets stays green (the authed specs are excluded from chromium below).
+    ...(HAS_QA_ENV
+      ? [
+          // Provisions the QA persona matrix (tiers × tenants × industries) and
+          // writes an authenticated storageState per persona. Run with:
+          //   npx dotenv -e $TEMP/api-localb.env -- playwright test --project=setup
+          {
+            name: 'setup',
+            testMatch: /auth\.setup\.ts/,
+          },
+          // Authenticated QA matrix + migrated Journey specs. Each matrix spec
+          // picks its persona via test.use({ storageState }); the default below is
+          // the all-modules ENTERPRISE user.
+          {
+            name: 'authenticated',
+            testMatch: ['**/matrix/**/*.spec.ts', ...AUTHED_SPECS],
+            dependencies: ['setup'],
+            use: {
+              ...devices['Desktop Chrome'],
+              storageState: 'tests/e2e/.auth/enterprise.json',
+              launchOptions: { args: ['--disable-dev-shm-usage'] },
+            },
+          },
+        ]
+      : []),
+
     // Desktop Browsers - Full suite on Chromium (baseline)
     {
       name: 'chromium',
@@ -89,7 +149,10 @@ export default defineConfig({
           args: ['--disable-dev-shm-usage'],
         },
       },
-      // Chromium runs ALL tests including VRT (baseline browser)
+      // Chromium runs the UNAUTHENTICATED specs (auth-flow, signup, mfa, smoke,
+      // icons, inbound webhook). The auth setup, matrix, and authenticated Journey
+      // specs run under their own projects above.
+      testIgnore: ['**/auth.setup.ts', '**/matrix/**', ...AUTHED_SPECS],
     },
 
     {
