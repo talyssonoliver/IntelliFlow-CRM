@@ -55,12 +55,6 @@ export default defineConfig({
   // Maximum time one test can run
   timeout: 30 * 1000,
 
-  // Default assertion timeout. Bumped from 5s because heavy SSR pages under
-  // `next dev` (notably /leads, which prefetches server-side) can take >10s to
-  // paint their content on a cold compile — the markup is correct, just slow.
-  // Prod (`next build`/`start`) renders these fast; this only pads the local dev run.
-  expect: { timeout: 15 * 1000 },
-
   // Test execution settings
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -262,8 +256,11 @@ export default defineConfig({
 
   // Expect configuration
   expect: {
-    // Maximum time expect() should wait for the condition to be met
-    timeout: 5 * 1000,
+    // Default assertion timeout. Bumped from 5s because heavy SSR pages under
+    // `next dev` (notably /leads, which prefetches server-side) can take >10s to
+    // paint on a cold compile — the markup is correct, just slow. Prod
+    // (`next build`/`start`) renders these fast; this only pads the local dev run.
+    timeout: 15 * 1000,
 
     toHaveScreenshot: {
       // Maximum time to wait for screenshot to be taken
