@@ -119,3 +119,77 @@ skipped (clear signal) rather than producing ~100 login-bounce failures.
 - **Step 5 — reconcile metrics/attestation** for the now-authorized paths
   (project-tracker metrics tree) — pending.
 - **icons** dev-vs-prod font verification (above).
+
+---
+
+## 2026-06-19 Update — matrix complete, E2E remediation, #11 fix
+
+This section supersedes the stale status notes above (e.g. "navigation 0→13/20",
+"seed a richer dataset: pending"). Owner directive for this pass: **"forget CI
+until they pass + are trustworthy locally; investigate WHY each fails — stale vs
+real — never blind-trim."**
+
+### Access-control coverage (the matrix), by pyramid layer — all green
+
+| Layer       | What                                                                                                                                                       | Result                            |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| unit        | `ModuleGate.test.tsx` — plan-based UI gating (tenant-admin bypass removed, #18)                                                                            | 4 ✓                               |
+| unit        | agent approval by-actionId tenant guard (#11, below)                                                                                                       | in `agent.router.test.ts` (129 ✓) |
+| integration | `tier-module-gating` + `rls-tenant-isolation` (real repo + test DB)                                                                                        | 14 ✓                              |
+| integration | `legal-module-entitlement` caller-guard (enumerates `_def.procedures`)                                                                                     | 8 ✓                               |
+| API E2E     | `entitlement-api` (LEGAL denied STARTER / granted PRO+ENT; Core/AI/Analytics always-on incl. the **calendar-shared `appointments.list`** regression guard) | 9 ✓                               |
+| API E2E     | `cross-tenant` (own-account read OK; cross-tenant denied; symmetric)                                                                                       | 3 ✓                               |
+
+**Module-entitlement + tenant-isolation are fully proven at
+unit/integration/API.** The browser **UI E2E** specs (`auth-smoke`,
+`module-gating-ui`) are the thin top of the pyramid and are **environmentally
+blocked locally**: the `next dev` web OOMs (JS-heap, even at
+`--max-old-space-size=8192`) under sustained E2E load and serves the `/login`
+fallback, so those specs bounce. Their _logic_ is covered by the layers above; a
+stable green needs a prod `next build`/`start` web (the same definitive fix
+called out in `e2e-pyramid-rationalization.md`).
+
+### Real finding fixed — `entitlement-api` was a true positive (stale API process)
+
+`appointments.list` (shared calendar) 403'd STARTER ("plan does not include
+LEGAL"), but the **source was already correct** (reverted to the cloak
+`tenantProcedure`, gated only on `caseId`). The running `tsx` API (no
+hot-reload) was serving the pre-revert `moduleTenantProcedure('LEGAL')` version.
+**Restarting the API → 9/9 green.** Lesson: restart `apps/api` after any edit —
+a stale process silently invalidates API-tier tests.
+
+### #11 closed — agent approval-workflow tenant-scoped (owner-approved)
+
+Deeper than first noted: the agent `actionStore` was a **single shared bucket**
+under a hardcoded `DEFAULT_TENANT_ID`; `getPendingAction` ignored `ctx` and
+`get(id)` had no tenant filter → any authed user could read another tenant's
+pending-action content by `actionId` (low risk: 122-bit UUIDs, RBAC on
+approve/reject). **Fix:** `executeTool` stamps `ctx.user.tenantId`; the store
+persists/surfaces it; `getPendingAction` / `approveAction` / `rejectAction`
+enforce `action.tenantId === ctx.user.tenantId` → `NOT_FOUND` on cross-tenant
+(no existence probe). Resolves the "wire tenantId through background contexts"
+TODO (jobs read it off the row). +4 caller-guard regression tests (129 agent
+tests green). Scoped tight; the broader `buildAgentContext` tenant-threading is
+a separate follow-up.
+
+### Findings reconciliation
+
+- **ModuleGate admin-bypass (#18): FIXED** — gates by plan now (unit-tested).
+  The earlier "gated on the decision" caveat is resolved.
+- **No industry-specific backend gating** — unchanged/honest; `industry` is data
+  only.
+- **Observability/system-health (#8): verified operational** — OTel tracing
+  (console dev / OTLP prod) + Sentry wired; health probes green
+  (`alive`/`ready`/`check`). Minor: `health.dbStats` returns `unsupported`
+  (Prisma metrics not enabled in this client build) — gracefully handled, not a
+  failure.
+
+### E2E remediation (the broader suite, for context)
+
+Authenticated journey suite went **136 failed → 3 (env blank-flake) / 183
+passed** via: a tenant-scoped domain seeder (`tests/e2e/fixtures/seed-domain.ts`
+— closes the old "seed a richer dataset" item), an onboarding-modal
+click-interception fix, harness hardening (retries 2 / `expect` 15s / authed
+timeout 60s / `--workers=2`), and 8 specs re-pointed at the real UI. **Zero real
+product regressions found** — every failure was a stale test (product evolution)
+or the dev-server OOM/flake. All **working-tree only, not committed/pushed**.

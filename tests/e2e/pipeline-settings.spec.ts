@@ -184,7 +184,9 @@ test.describe('Pipeline Settings (IFC-063)', () => {
       await page.goto('/settings/pipeline');
       await waitForStagesLoaded(page);
 
-      const colorGroups = page.locator('[role="group"][aria-label^="Color selection"]');
+      // The color picker is a <fieldset> (implicit ARIA group via its <legend>),
+      // not an element with an explicit role="group" attribute — match the tag.
+      const colorGroups = page.locator('fieldset[aria-label^="Color selection"]');
       const count = await colorGroups.count();
       expect(count).toBeGreaterThan(0);
     });
@@ -214,7 +216,9 @@ test.describe('Pipeline Settings (IFC-063)', () => {
       expect(await toggles.count()).toBeGreaterThan(0);
 
       // Color groups
-      const colorGroups = page.locator('[role="group"][aria-label^="Color selection"]');
+      // The color picker is a <fieldset> (implicit ARIA group via its <legend>),
+      // not an element with an explicit role="group" attribute — match the tag.
+      const colorGroups = page.locator('fieldset[aria-label^="Color selection"]');
       expect(await colorGroups.count()).toBeGreaterThan(0);
 
       // Name inputs

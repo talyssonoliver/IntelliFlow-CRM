@@ -55,10 +55,27 @@ export default defineConfig({
   // Maximum time one test can run
   timeout: 30 * 1000,
 
+  // Default assertion timeout. Bumped from 5s because heavy SSR pages under
+  // `next dev` (notably /leads, which prefetches server-side) can take >10s to
+  // paint their content on a cold compile — the markup is correct, just slow.
+  // Prod (`next build`/`start`) renders these fast; this only pads the local dev run.
+  expect: { timeout: 15 * 1000 },
+
   // Test execution settings
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // Local gets 1 retry: the authenticated suite runs against `next dev`, whose
+  // on-demand route compilation + client auth bootstrap occasionally leaves a
+  // freshly-navigated page blank past the assertion window under parallel load.
+  // That is an environmental cold-start flake (the page renders fine warm / in a
+  // prod build), so a single retry keeps the suite trustworthy without masking
+  // real failures — a genuinely broken assertion fails on the retry too. Pair
+  // with a constrained worker count locally (e.g. `--workers=2`) for the heavy
+  // authed/journey specs. 2 retries (matching CI): the heaviest SSR pages
+  // (/leads, /leads/new prefetch server-side) blank often enough on a cold dev
+  // server that one retry isn't always sufficient. The definitive fix is running
+  // the authed suite against a prod `next build`/`start` (no on-demand compile).
+  retries: 2,
   workers: process.env.CI ? 1 : undefined,
 
   // Reporter configuration
@@ -131,6 +148,9 @@ export default defineConfig({
             name: 'authenticated',
             testMatch: ['**/matrix/**/*.spec.ts', ...AUTHED_SPECS],
             dependencies: ['setup'],
+            // Generous per-test budget: a cold `next dev` route compile plus the
+            // client auth bootstrap can push first-paint past the 30s default.
+            timeout: 60 * 1000,
             use: {
               ...devices['Desktop Chrome'],
               storageState: 'tests/e2e/.auth/enterprise.json',

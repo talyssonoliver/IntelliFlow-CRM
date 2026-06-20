@@ -27,11 +27,13 @@ const { PrismaClient } = nodeRequire('@intelliflow/db') as {
 };
 import {
   QA_PERSONAS,
+  DEFAULT_PERSONA_KEY,
   personaEmail,
   personaTenantSlug,
   personaWorkspaceSlug,
   type QaPersona,
 } from './qa-personas';
+import { seedEnterpriseDomain } from './seed-domain';
 
 export interface ProvisionedSession {
   key: string;
@@ -70,11 +72,18 @@ async function findAuthUserByEmail(admin: SupabaseClient, email: string) {
 }
 
 async function ensureAuthUser(admin: SupabaseClient, email: string, password: string) {
+  // Established QA personas are NOT first-run users — mark onboarding done so the
+  // first-run Welcome modal (onboarding.getState → flowDone, shipped 33fcb241a)
+  // never opens over authed journey specs and intercepts their clicks. Combined
+  // with `email_confirm: true`, getState resolves completed=true (flowDone &&
+  // emailConfirmed), so the modal stays closed.
+  const onboardingMeta = { onboarding_completed: true };
   const existing = await findAuthUserByEmail(admin, email);
   if (existing) {
     const { error } = await admin.auth.admin.updateUserById(existing.id, {
       password,
       email_confirm: true,
+      user_metadata: onboardingMeta,
     });
     if (error) throw error;
     return existing.id;
@@ -83,6 +92,7 @@ async function ensureAuthUser(admin: SupabaseClient, email: string, password: st
     email,
     password,
     email_confirm: true,
+    user_metadata: onboardingMeta,
   });
   if (error || !data.user) throw error ?? new Error('createUser returned no user');
   return data.user.id;
@@ -163,6 +173,13 @@ export async function provisionAllPersonas(): Promise<ProvisionedSession[]> {
 
       const userId = await ensureAuthUser(admin, email, pw);
       const { tenantId, accountId } = await seedTenant(prisma, persona, userId, email);
+
+      // Only the default ENTERPRISE persona gets a full domain dataset — the authed
+      // journey specs run as this user. The gating/isolation personas stay minimal
+      // (just the marker account) so cross-tenant checks see distinct, sparse tenants.
+      if (persona.key === DEFAULT_PERSONA_KEY) {
+        await seedEnterpriseDomain(prisma, { tenantId, ownerId: userId, userId });
+      }
 
       const { data, error } = await anon.auth.signInWithPassword({ email, password: pw });
       if (error || !data.session) throw error ?? new Error(`sign-in failed for ${email}`);
