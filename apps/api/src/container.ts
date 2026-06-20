@@ -32,14 +32,6 @@ import {
   PrismaConversationSearchRepository,
   InMemoryEventBus,
   MockAIService,
-  // OllamaAIService and LiteLLMAIService are NOT statically imported here.
-  // They pull in @langchain/ollama and @langchain/openai respectively, which are
-  // among the heaviest modules in the cold-start import graph (~600ms+ each).
-  // They are dynamically imported inside createAdapters() only in the branch
-  // that actually needs them (controlled by AI_PROVIDER env var).
-  // Type-only imports keep the TypeScript types available without runtime cost.
-  type OllamaAIService,
-  type LiteLLMAIService,
   InMemoryCache,
   RedisCacheAdapter,
   type RedisLike,
@@ -55,6 +47,13 @@ import {
   IcsGenerationService,
   CalendarSyncServiceAdapter,
 } from '@intelliflow/adapters';
+// OllamaAIService / LiteLLMAIService are deliberately NOT exported from the
+// adapters barrel — each statically pulls a heavy @langchain SDK that would load
+// at cold start for every deployment. They are built as separate entry points and
+// imported on demand in createAdapters() (see below). These TYPE-ONLY imports are
+// erased at compile time (zero runtime cost) and keep the baseAIService union exact.
+import type { OllamaAIService } from '@intelliflow/adapters/external/OllamaAIService';
+import type { LiteLLMAIService } from '@intelliflow/adapters/external/LiteLLMAIService';
 import { InMemoryFeatureFlagProvider } from '@intelliflow/platform/feature-flags';
 import { TicketService } from './services/TicketService';
 import { TicketRoutingService } from './services/TicketRoutingService';
@@ -382,7 +381,7 @@ const createAdapters = async (prismaClient: PrismaClient) => {
     // use of the ollama provider. Deployments that never set AI_PROVIDER=ollama pay zero
     // module-load cost for this provider (perf/container-lazy-wiring).
     const { OllamaAIService: OllamaAIServiceCtor } = await import(
-      /* webpackIgnore: true */ '@intelliflow/adapters'
+      /* webpackIgnore: true */ '@intelliflow/adapters/external/OllamaAIService'
     ).then((m) => ({ OllamaAIService: m.OllamaAIService }));
     baseAIService = new OllamaAIServiceCtor({
       baseUrl: () =>
@@ -402,7 +401,7 @@ const createAdapters = async (prismaClient: PrismaClient) => {
     // use of the litellm provider. Only loaded when AI_PROVIDER=litellm is explicitly
     // set (perf/container-lazy-wiring).
     const { LiteLLMAIService: LiteLLMAIServiceCtor } = await import(
-      /* webpackIgnore: true */ '@intelliflow/adapters'
+      /* webpackIgnore: true */ '@intelliflow/adapters/external/LiteLLMAIService'
     ).then((m) => ({ LiteLLMAIService: m.LiteLLMAIService }));
     // Explicit opt-in for the legacy in-process LLM path (LiteLLM proxy).
     baseAIService = new LiteLLMAIServiceCtor({

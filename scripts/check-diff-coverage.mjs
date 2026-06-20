@@ -159,6 +159,12 @@ const SONAR_COVERAGE_EXCLUDE = [
   /^apps\/web\/src\/app\/.*layout\.tsx$/,
   /^apps\/web\/src\/lib\/auth\/AuthContext\.tsx$/,
   /^apps\/web\/src\/components\/navigation\.tsx$/,
+  // packages/adapters/src/external/index.ts is a pure re-export barrel (no
+  // executable logic). After splitting Ollama/LiteLLM into their own entry points
+  // to keep @langchain out of the cold-start import graph (perf/container-lazy-wiring),
+  // its only change is removing two re-exports + a comment; barrels have no lcov, so
+  // the changed lines false-negative at 0%. Mirror sonar.coverage.exclusions.
+  /^packages\/adapters\/src\/external\/index\.ts$/,
 ];
 const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
 const isCoverableFile = (f) =>

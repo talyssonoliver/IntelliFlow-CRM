@@ -29,8 +29,8 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --experimental-dts",
-    "dev": "tsup src/index.ts --format cjs,esm --experimental-dts --watch",
+    "build": "tsup src/index.ts src/external/OllamaAIService.ts src/external/LiteLLMAIService.ts --format cjs,esm --experimental-dts",
+    "dev": "tsup src/index.ts src/external/OllamaAIService.ts src/external/LiteLLMAIService.ts --format cjs,esm --experimental-dts --watch",
     "clean": "rm -rf dist .turbo",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",

@@ -97,6 +97,39 @@ vi.mock('@intelliflow/adapters', () => {
   };
 });
 
+// container.ts now imports the AI providers from their dedicated entry points
+// (so the @intelliflow/adapters barrel no longer pulls @langchain at cold start),
+// so the lazy `await import(...)` resolves these deep paths — mock them here too.
+vi.mock('@intelliflow/adapters/external/OllamaAIService', () => {
+  const resolveBaseUrl = (config: LazyConfig): string =>
+    typeof config.baseUrl === 'function' ? config.baseUrl() : config.baseUrl;
+  return {
+    OllamaAIService: class {
+      constructor(public readonly config: LazyConfig) {
+        adapterState.ollama = this;
+      }
+      async scoreLead(): Promise<string> {
+        return resolveBaseUrl(this.config);
+      }
+    },
+  };
+});
+
+vi.mock('@intelliflow/adapters/external/LiteLLMAIService', () => {
+  const resolveBaseUrl = (config: LazyConfig): string =>
+    typeof config.baseUrl === 'function' ? config.baseUrl() : config.baseUrl;
+  return {
+    LiteLLMAIService: class {
+      constructor(public readonly config: LazyConfig) {
+        adapterState.litellm = this;
+      }
+      async scoreLead(): Promise<string> {
+        return resolveBaseUrl(this.config);
+      }
+    },
+  };
+});
+
 vi.mock('@intelliflow/platform/feature-flags', () => ({
   InMemoryFeatureFlagProvider: {
     fromConfig: vi.fn().mockReturnValue({ isEnabled: vi.fn(), getDecision: vi.fn() }),
