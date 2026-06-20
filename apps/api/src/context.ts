@@ -643,6 +643,12 @@ async function resolveWsUser(token: string): Promise<UserSession | null> {
  * avoiding the need to convert IncomingMessage to Request.
  */
 export const createWSContext = async (authHeader?: string): Promise<BaseContext> => {
+  // Mirror createContext: the container is lazily/async-initialised, so a cold
+  // WebSocket connection must await readiness before touching the container Proxy
+  // below (container/services/security/adapters), or it can throw while the
+  // proxy's `_resolved` is still null. Instant once resolved.
+  await containerReady;
+
   let user: UserSession | null = null;
   const hadBearerToken = Boolean(authHeader?.startsWith('Bearer '));
   const token = extractWsBearerToken(authHeader);
