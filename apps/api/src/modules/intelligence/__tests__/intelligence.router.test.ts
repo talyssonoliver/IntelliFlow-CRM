@@ -749,4 +749,162 @@ describe('intelligenceRouter', () => {
       ).rejects.toThrow();
     });
   });
+
+  // ===========================================================================
+  // Dashboard endpoints — resource-bounded fetch (no per-row lead/contact join)
+  //
+  // Stats + trends are aggregated over the FULL date window, but display names
+  // are resolved only for the paginated page via id-IN lookups. These tests pin
+  // both the aggregate correctness and the absence of the bulk join.
+  // ===========================================================================
+  describe('getSentimentDashboard', () => {
+    it('aggregates stats over the full window and resolves names per page', async () => {
+      prismaMock.leadAIInsight.findMany.mockResolvedValue([
+        createMockLeadAIInsight({
+          id: 'li-1',
+          leadId: TEST_UUIDS.lead1,
+          sentiment: 'positive',
+          churnRisk: 'HIGH',
+          engagementScore: 80,
+          updatedAt: new Date('2025-12-20'),
+        }),
+      ] as any);
+      prismaMock.contactAIInsight.findMany.mockResolvedValue([
+        createMockContactAIInsight({
+          id: 'ci-1',
+          contactId: TEST_UUIDS.contact1,
+          sentiment: 'negative',
+          churnRisk: 'LOW',
+          engagementScore: 40,
+          updatedAt: new Date('2025-12-19'),
+        }),
+      ] as any);
+      // Per-page name resolution (replaces the old per-row join)
+      prismaMock.lead.findMany.mockResolvedValue([
+        { id: TEST_UUIDS.lead1, firstName: 'Ada', lastName: 'Lovelace', company: 'Analytical' },
+      ] as any);
+      prismaMock.contact.findMany.mockResolvedValue([
+        { id: TEST_UUIDS.contact1, firstName: 'Grace', lastName: 'Hopper', company: 'Navy' },
+      ] as any);
+
+      const result = await caller.getSentimentDashboard({
+        entityType: 'all',
+        dateRange: '30d',
+        page: 1,
+        limit: 20,
+      });
+
+      expect(result.stats.total).toBe(2);
+      expect(result.stats.positive).toBe(1);
+      expect(result.stats.negative).toBe(1);
+      expect(result.stats.urgentCount).toBe(1); // the HIGH-churn lead row
+      const names = result.recentAnalyses.map((r) => r.entityName);
+      expect(names).toContain('Ada Lovelace');
+      expect(names).toContain('Grace Hopper');
+    });
+
+    it('does NOT join lead/contact in the bulk insight fetch', async () => {
+      prismaMock.leadAIInsight.findMany.mockResolvedValue([] as any);
+      prismaMock.contactAIInsight.findMany.mockResolvedValue([] as any);
+
+      await caller.getSentimentDashboard({
+        entityType: 'all',
+        dateRange: '30d',
+        page: 1,
+        limit: 20,
+      });
+
+      const leadCall = (prismaMock.leadAIInsight.findMany as any).mock.calls[0][0];
+      expect(leadCall.include).toBeUndefined();
+      expect(leadCall.select.leadId).toBe(true);
+    });
+
+    it('resolves page names via id-IN lookups, not a per-row join', async () => {
+      prismaMock.leadAIInsight.findMany.mockResolvedValue([
+        createMockLeadAIInsight({ id: 'li-1', leadId: TEST_UUIDS.lead1 }),
+      ] as any);
+      prismaMock.contactAIInsight.findMany.mockResolvedValue([] as any);
+      prismaMock.lead.findMany.mockResolvedValue([
+        { id: TEST_UUIDS.lead1, firstName: 'Ada', lastName: 'Lovelace', company: null },
+      ] as any);
+
+      await caller.getSentimentDashboard({
+        entityType: 'all',
+        dateRange: '30d',
+        page: 1,
+        limit: 20,
+      });
+
+      const nameCall = (prismaMock.lead.findMany as any).mock.calls[0][0];
+      expect(nameCall.where.id.in).toContain(TEST_UUIDS.lead1);
+      // Tenant-scoped (defence-in-depth alongside RLS): a cross-tenant/stale id
+      // must never resolve to another tenant's entity name.
+      expect(nameCall.where.tenantId).toBe(TEST_UUIDS.tenant);
+      expect(nameCall.select).toEqual({
+        id: true,
+        firstName: true,
+        lastName: true,
+        company: true,
+      });
+    });
+  });
+
+  describe('getChurnDashboard', () => {
+    it('aggregates churn distribution over the full window and resolves page names', async () => {
+      prismaMock.leadAIInsight.findMany.mockResolvedValue([
+        createMockLeadAIInsight({
+          id: 'li-1',
+          leadId: TEST_UUIDS.lead1,
+          churnRisk: 'CRITICAL',
+          engagementScore: 30,
+        }),
+      ] as any);
+      prismaMock.contactAIInsight.findMany.mockResolvedValue([
+        createMockContactAIInsight({
+          id: 'ci-1',
+          contactId: TEST_UUIDS.contact1,
+          churnRisk: 'LOW',
+          engagementScore: 90,
+        }),
+      ] as any);
+      prismaMock.lead.findMany.mockResolvedValue([
+        { id: TEST_UUIDS.lead1, firstName: 'Ada', lastName: 'Lovelace', company: null },
+      ] as any);
+      prismaMock.contact.findMany.mockResolvedValue([
+        { id: TEST_UUIDS.contact1, firstName: 'Grace', lastName: 'Hopper', company: null },
+      ] as any);
+
+      const result = await caller.getChurnDashboard({
+        entityType: 'all',
+        dateRange: '30d',
+        page: 1,
+        limit: 20,
+      });
+
+      expect(result.stats.total).toBe(2);
+      expect(result.stats.critical).toBe(1);
+      expect(result.stats.low).toBe(1);
+      expect(result.stats.avgEngagement).toBe(60); // (30 + 90) / 2
+      // CRITICAL sorts first; its name comes from the per-page lookup
+      expect(result.atRiskCustomers[0].entityName).toBe('Ada Lovelace');
+    });
+
+    it('falls back to "Unknown" when a page entity name is missing', async () => {
+      prismaMock.leadAIInsight.findMany.mockResolvedValue([
+        createMockLeadAIInsight({ id: 'li-1', leadId: TEST_UUIDS.lead1, churnRisk: 'HIGH' }),
+      ] as any);
+      prismaMock.contactAIInsight.findMany.mockResolvedValue([] as any);
+      // Name lookup returns nothing for the referenced lead
+      prismaMock.lead.findMany.mockResolvedValue([] as any);
+
+      const result = await caller.getChurnDashboard({
+        entityType: 'all',
+        dateRange: '30d',
+        page: 1,
+        limit: 20,
+      });
+
+      expect(result.atRiskCustomers[0].entityName).toBe('Unknown Lead');
+    });
+  });
 });

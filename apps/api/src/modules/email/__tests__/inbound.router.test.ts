@@ -407,10 +407,32 @@ describe('getUnreadCounts', () => {
     vi.clearAllMocks();
   });
 
+  // Inbox is now computed as two DB counts (total unread − flagged unread)
+  // instead of loading every unread row and filtering in-app. Route each
+  // count() call to a value by inspecting its `where`, so assertions don't
+  // depend on Promise.all execution order.
+  function mockCounts(values: {
+    inboxTotal?: number;
+    inboxFlagged?: number;
+    sent?: number;
+    drafts?: number;
+    trash?: number;
+    spam?: number;
+  }) {
+    (prismaMock.emailRecord.count as any).mockImplementation((args: any) => {
+      const where = args?.where ?? {};
+      if (Array.isArray(where.OR)) return Promise.resolve(values.inboxFlagged ?? 0);
+      const path = where.metadata?.path?.[0];
+      if (path === 'isDraft') return Promise.resolve(values.drafts ?? 0);
+      if (path === 'isSpam') return Promise.resolve(values.spam ?? 0);
+      if (path === 'isTrashed') return Promise.resolve(values.trash ?? 0);
+      if (where.status) return Promise.resolve(values.sent ?? 0);
+      return Promise.resolve(values.inboxTotal ?? 0); // plain {tenantId, isRead:false}
+    });
+  }
+
   it('returns zero counts for all folders when no unread emails', async () => {
-    // inbox uses findMany + app-layer filter; others use count
-    (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
-    (prismaMock.emailRecord.count as any).mockResolvedValue(0);
+    mockCounts({});
 
     const result = await caller.getUnreadCounts({});
 
@@ -421,18 +443,13 @@ describe('getUnreadCounts', () => {
       trash: 0,
       spam: 0,
     });
+    // Inbox must no longer load rows into memory.
+    expect(prismaMock.emailRecord.findMany).not.toHaveBeenCalled();
   });
 
   it('returns actual counts for each folder', async () => {
-    // inbox uses findMany — return 5 emails with no archive/trash/spam/draft flags
-    (prismaMock.emailRecord.findMany as any).mockResolvedValueOnce(
-      Array.from({ length: 5 }, () => ({ metadata: {} }))
-    );
-    (prismaMock.emailRecord.count as any)
-      .mockResolvedValueOnce(2) // sent
-      .mockResolvedValueOnce(1) // drafts
-      .mockResolvedValueOnce(0) // trash
-      .mockResolvedValueOnce(0); // spam
+    // inbox = 5 unread total − 0 flagged = 5
+    mockCounts({ inboxTotal: 5, inboxFlagged: 0, sent: 2, drafts: 1, trash: 0, spam: 0 });
 
     const result = await caller.getUnreadCounts({
       folders: ['inbox', 'sent', 'drafts', 'trash', 'spam'],
@@ -445,16 +462,30 @@ describe('getUnreadCounts', () => {
     expect(result.spam).toBe(0);
   });
 
-  it('uses custom folder list when provided', async () => {
-    // inbox uses findMany + app-layer filter
-    (prismaMock.emailRecord.findMany as any).mockResolvedValue(
-      Array.from({ length: 3 }, () => ({ metadata: {} }))
-    );
+  it('subtracts flagged (archived/trashed/spam/draft) unread from the inbox total', async () => {
+    // 10 unread, 3 of them flagged archived/trashed/spam/draft → inbox shows 7
+    mockCounts({ inboxTotal: 10, inboxFlagged: 3 });
 
     const result = await caller.getUnreadCounts({ folders: ['inbox'] });
 
-    expect(result).toHaveProperty('inbox');
-    expect(result.inbox).toBe(3);
+    expect(result.inbox).toBe(7);
+    expect(prismaMock.emailRecord.findMany).not.toHaveBeenCalled();
+  });
+
+  it('inbox flagged subtraction uses positive equals:true JSON filters (missing-key safe)', async () => {
+    mockCounts({ inboxTotal: 0, inboxFlagged: 0 });
+
+    await caller.getUnreadCounts({ folders: ['inbox'] });
+
+    const flaggedCall = (prismaMock.emailRecord.count as any).mock.calls.find((c: any[]) =>
+      Array.isArray(c[0]?.where?.OR)
+    );
+    expect(flaggedCall?.[0].where.OR).toEqual([
+      { metadata: { path: ['isArchived'], equals: true } },
+      { metadata: { path: ['isTrashed'], equals: true } },
+      { metadata: { path: ['isSpam'], equals: true } },
+      { metadata: { path: ['isDraft'], equals: true } },
+    ]);
   });
 });
 

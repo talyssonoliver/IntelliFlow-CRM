@@ -9,7 +9,9 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Navigation } from '@/components/navigation';
 import { RouteAccessGate } from '@/components/auth/RouteAccessGate';
 import { VerifyEmailBanner } from '@/components/auth/VerifyEmailBanner';
-import { OnboardingWelcome } from '@/components/onboarding/OnboardingWelcome';
+// Client-only lazy wrapper — keeps OnboardingWelcome's @stripe/* imports out of
+// the universal layout compile graph (every route). See the wrapper's JSDoc.
+import { OnboardingWelcome } from '@/components/onboarding/OnboardingWelcomeClient';
 import { Toaster } from '@intelliflow/ui';
 import { getPrivacyPolicy } from '@/lib/legal/consent-tracker';
 

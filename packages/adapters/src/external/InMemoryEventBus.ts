@@ -9,10 +9,24 @@ import { EventBusPort } from '@intelliflow/application';
 export class InMemoryEventBus implements EventBusPort {
   private handlers: Map<string, Array<(event: DomainEvent) => Promise<void>>> = new Map();
   private publishedEvents: DomainEvent[] = [];
+  private readonly record: boolean;
+
+  /**
+   * @param opts.record  Keep an in-memory buffer of every published event for
+   *   test inspection (`getPublishedEvents`). Defaults to `true` so tests work
+   *   unchanged. The **production** container must pass `record: false` — the bus
+   *   is a process-lifetime singleton, so buffering every domain event there was
+   *   an unbounded memory leak (grew with traffic forever).
+   */
+  constructor(opts: { record?: boolean } = {}) {
+    this.record = opts.record ?? true;
+  }
 
   async publish(event: DomainEvent): Promise<void> {
-    // Store for inspection in tests
-    this.publishedEvents.push(event);
+    // Buffer for test inspection only (see constructor `record`).
+    if (this.record) {
+      this.publishedEvents.push(event);
+    }
 
     // Call all handlers for this event type
     const handlers = this.handlers.get(event.eventType) ?? [];

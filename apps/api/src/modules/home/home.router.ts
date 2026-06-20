@@ -56,23 +56,44 @@ const ENTITY_MODEL_MAP: Record<string, string> = {
   report: 'reportDefinition',
 };
 
-async function checkEntityExists(
+/**
+ * Batched existence check for pinned items — returns a boolean per input item,
+ * in order. Replaces the previous N+1 (one `findFirst` per pinned item) with one
+ * `findMany({ id: { in } })` per distinct model (≤ the number of entity types,
+ * typically 2–3). Entity types without a backing model (e.g. 'list') are always
+ * considered available, matching the prior behaviour.
+ */
+async function checkEntitiesExist(
   prisma: Context['prisma'],
-  entityType: string,
-  entityId: string,
+  items: Array<{ entityType: string; entityId: string }>,
   tenantId: string
-): Promise<boolean> {
-  const modelName = ENTITY_MODEL_MAP[entityType];
-  if (!modelName) {
-    // Entity types without a model (e.g., 'list') are always considered available
-    return true;
+): Promise<boolean[]> {
+  const idsByModel = new Map<string, Set<string>>();
+  for (const item of items) {
+    const modelName = ENTITY_MODEL_MAP[item.entityType];
+    if (!modelName) continue;
+    if (!idsByModel.has(modelName)) idsByModel.set(modelName, new Set());
+    idsByModel.get(modelName)!.add(item.entityId);
   }
-  const model = (prisma as any)[modelName];
-  const result = await model.findFirst({
-    where: { id: entityId, tenantId },
-    select: { id: true },
+
+  const existingByModel = new Map<string, Set<string>>();
+  await Promise.all(
+    [...idsByModel.entries()].map(async ([modelName, ids]) => {
+      const model = (prisma as any)[modelName];
+      const rows: Array<{ id: string }> =
+        (await model.findMany({
+          where: { id: { in: [...ids] }, tenantId },
+          select: { id: true },
+        })) ?? [];
+      existingByModel.set(modelName, new Set(rows.map((r) => r.id)));
+    })
+  );
+
+  return items.map((item) => {
+    const modelName = ENTITY_MODEL_MAP[item.entityType];
+    if (!modelName) return true;
+    return existingByModel.get(modelName)?.has(item.entityId) ?? false;
   });
-  return !!result;
 }
 
 function getGreeting(timezone: string = 'Europe/London'): string {
@@ -1817,11 +1838,12 @@ export const homeRouter = createTRPCRouter({
     const prefs = (user?.preferences as any) || {};
     const pinnedItems = prefs.pinnedItems || [];
 
-    // PG-159: Check entity existence in parallel for stale pin detection
-    const existenceResults = await Promise.all(
-      pinnedItems.map((item: any) =>
-        checkEntityExists(ctx.prismaWithTenant, item.entityType, item.entityId, tenantId)
-      )
+    // PG-159: Check entity existence for stale-pin detection — batched into one
+    // query per model (was an N+1: one findFirst per pinned item).
+    const existenceResults = await checkEntitiesExist(
+      ctx.prismaWithTenant,
+      pinnedItems as Array<{ entityType: string; entityId: string }>,
+      tenantId
     );
 
     return {

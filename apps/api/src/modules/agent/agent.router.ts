@@ -32,7 +32,25 @@ import { agentAuthorizationService, buildAuthContext } from '../../agent/authori
 import { agentLogger } from '../../agent/logger';
 import { hasPermission } from '../../lib/rbac';
 import type { Context } from '../../context';
-import type { AgentAuthContext } from '../../agent/types';
+import type { AgentAuthContext, PendingAction } from '../../agent/types';
+
+/**
+ * Fetch a pending action and assert it belongs to the caller's tenant.
+ *
+ * Returns NOT_FOUND (never FORBIDDEN) for a missing OR cross-tenant action so the
+ * response can't be used to probe whether an `actionId` exists in another tenant.
+ * The action's `tenantId` is stamped at creation (executeTool) and persisted on
+ * the row, so this holds for the tRPC request path. Background processors call the
+ * approval service directly (no tRPC ctx) and are intentionally unaffected.
+ */
+async function requireTenantOwnedAction(ctx: Context, actionId: string): Promise<PendingAction> {
+  const callerTenant = ctx.user?.tenantId;
+  const action = await approvalWorkflowService.getPendingAction(actionId);
+  if (!action || !callerTenant || action.tenantId !== callerTenant) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: `Pending action not found: ${actionId}` });
+  }
+  return action;
+}
 
 /**
  * Helper to build agent auth context from tRPC context
@@ -203,6 +221,9 @@ export const agentRouter = createTRPCRouter({
 
         const pendingAction = {
           id: crypto.randomUUID(),
+          // Stamp the requesting tenant so reads/approvals can enforce ownership
+          // (and so background processors can read the real tenant back off the row).
+          tenantId: ctx.user.tenantId,
           toolName: tool.name,
           actionType: tool.actionType,
           entityType: tool.entityTypes[0],
@@ -269,7 +290,10 @@ export const agentRouter = createTRPCRouter({
    */
   getPendingApprovals: protectedProcedure.query(async ({ ctx }) => {
     const agentContext = buildAgentContext(ctx);
-    const pendingActions = await approvalWorkflowService.getPendingActions(agentContext.userId);
+    const pendingActions = await approvalWorkflowService.getPendingActions(
+      agentContext.userId,
+      ctx.user?.tenantId
+    );
 
     return pendingActions.map((action) => ({
       id: action.id,
@@ -288,15 +312,9 @@ export const agentRouter = createTRPCRouter({
    */
   getPendingAction: protectedProcedure
     .input(z.object({ actionId: z.string() }))
-    .query(async ({ input }) => {
-      const action = await approvalWorkflowService.getPendingAction(input.actionId);
-
-      if (!action) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Pending action not found: ${input.actionId}`,
-        });
-      }
+    .query(async ({ ctx, input }) => {
+      // Tenant ownership guard: only the owning tenant may read an action by id.
+      const action = await requireTenantOwnedAction(ctx, input.actionId);
 
       return {
         id: action.id,
@@ -336,6 +354,9 @@ export const agentRouter = createTRPCRouter({
           message: 'You do not have permission to approve agent actions.',
         });
       }
+
+      // Tenant ownership guard: an approver can only act on their own tenant's actions.
+      await requireTenantOwnedAction(ctx, input.actionId);
 
       const agentContext = buildAgentContext(ctx);
 
@@ -384,6 +405,9 @@ export const agentRouter = createTRPCRouter({
         });
       }
 
+      // Tenant ownership guard: a reviewer can only act on their own tenant's actions.
+      await requireTenantOwnedAction(ctx, input.actionId);
+
       const agentContext = buildAgentContext(ctx);
 
       const decision = {
@@ -412,7 +436,10 @@ export const agentRouter = createTRPCRouter({
    */
   getPendingCount: protectedProcedure.query(async ({ ctx }) => {
     const agentContext = buildAgentContext(ctx);
-    const pendingActions = await approvalWorkflowService.getPendingActions(agentContext.userId);
+    const pendingActions = await approvalWorkflowService.getPendingActions(
+      agentContext.userId,
+      ctx.user?.tenantId
+    );
 
     return {
       count: pendingActions.length,

@@ -49,10 +49,10 @@ export const pendingActionsStore = {
   get: (id: string) => actionStore.get(id),
   update: (a: PendingAction) => actionStore.update(a),
   delete: (id: string) => actionStore.delete(id),
-  findByUser: (userId: string) => actionStore.findByUser(userId),
+  findByUser: (userId: string, tenantId?: string) => actionStore.findByUser(userId, tenantId),
   findBySession: (sessionId: string) => actionStore.findBySession(sessionId),
   findPending: () => actionStore.findPending(),
-  expireOld: () => actionStore.expireOld(),
+  expireOld: (tenantId?: string) => actionStore.expireOld(tenantId),
 };
 
 export const executedActionsStore = {
@@ -168,10 +168,13 @@ export class ApprovalWorkflowService {
   /**
    * Get all pending actions for a user
    */
-  async getPendingActions(userId: string): Promise<PendingAction[]> {
-    // Clean up expired actions first
-    await pendingActionsStore.expireOld();
-    return pendingActionsStore.findByUser(userId);
+  async getPendingActions(userId: string, tenantId?: string): Promise<PendingAction[]> {
+    // Clean up expired actions first (scoped to the caller's tenant, matching the
+    // findByUser filter below).
+    await pendingActionsStore.expireOld(tenantId);
+    // Pass the caller's tenant so list/count match the tenant stamped at creation;
+    // omitted (background callers) falls back to the store's default tenant.
+    return pendingActionsStore.findByUser(userId, tenantId);
   }
 
   /**

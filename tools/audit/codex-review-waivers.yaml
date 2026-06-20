@@ -577,3 +577,63 @@ waivers:
       source-anchored, so this re-blocks if the route gate regresses.
     author: talyssonoliver
     date: '2026-06-18'
+  - fingerprint: '3f633932aa06b6758ef5517afa953639fc49344ef9042e07f0621516b8070c59'
+    reason: >-
+      Verified false positive after fix. Codex anchors this finding to the
+      create line (prisma-action-store.ts:75 `tenantId: action.tenantId ??
+      this.tenantId`), which is CORRECT — pending actions must be stamped with
+      the caller's real tenant. The reported bug was the mismatch with the read
+      paths, and that is now fixed: findByUser takes an optional tenantId
+      (defaulting to the store tenant for background callers), getPendingActions
+      forwards it, and both getPendingApprovals and getPendingCount pass
+      ctx.user.tenantId — so list/count filter by the same tenant written at
+      creation. Proven by tests: prisma-action-store E1b (findByUser honours the
+      caller-supplied tenant) and the agent.router "scopes the list to the
+      caller's tenant" test asserting getPendingActions is called with
+      (userId, ctx.user.tenantId). findPending remains default-tenant but is only
+      reachable via getActionStatistics(no userId), which has no request-path
+      caller. The fingerprint is source-anchored to line 75 (unchanged), so this
+      re-blocks automatically if the create stamping regresses.
+    author: talyssonoliver
+    date: '2026-06-20'
+  - fingerprint: '207827c10d10b6684aa8648b092bd2fe8a6f033ff1b6583052fc217aac7aaaeb'
+    reason: >-
+      Verified false positive after fix. Codex anchors to expireOld
+      (prisma-action-store.ts) whose tenantId param defaults to the store tenant,
+      and claims the cleanup "still filters only the store default tenant." That is
+      not true on the reachable path: getPendingApprovals/getPendingCount ->
+      getPendingActions(userId, tenantId) now call expireOld(tenantId) with the
+      caller's real tenant (commit threading expireOld through the wrapper), so a
+      non-default tenant's expired actions ARE marked EXPIRED. Proven by test
+      prisma-action-store F1b (expireOld('tenant-other') issues updateMany with
+      where.tenantId === 'tenant-other'). The only other expireOld() callers
+      (getPendingActionsForSession, getActionStatistics) use the default tenant but
+      were verified to have NO router/request-path callers (grep of
+      apps/api/src/modules/agent), so there is no reachable tenant-cleanup gap.
+      List correctness is independent of expireOld regardless: findByUser filters
+      expiresAt > now, so expired rows never appear in a list even if their status
+      were not flipped. The fingerprint is source-anchored to the expireOld filter,
+      so this re-blocks if that scoping regresses.
+    author: talyssonoliver
+    date: '2026-06-21'
+  - fingerprint: '01b9fe2514f70c6e77fc3263f3fc8cafcb6ca770b25460b18810d808b02dede8'
+    reason: >-
+      Verified false positive — codex is quoting pre-fix source. The finding
+      claims resolveEntityNames (intelligence.router.ts:342-350) queries lead/
+      contact "only by id" (`where: { id: { in: leadIds } }`) with no tenant
+      filter. That code no longer exists: the committed lookups are
+      `where: { id: { in: leadIds }, tenantId }` and
+      `where: { id: { in: contactIds }, tenantId }`, and both call sites
+      (getSentimentDashboard, getChurnDashboard) pass the caller's real tenant
+      (`resolveEntityNames(ctx.prismaWithTenant, pageRows, tenantId)` where
+      tenantId = typedCtx.tenant.tenantId). Codex's own suggested fix ("query with
+      `where: { id: { in: leadIds }, tenantId }`") is byte-for-byte what is already
+      committed — proof it reviewed stale code. A cross-tenant/stale insight id
+      therefore cannot resolve to another tenant's name (defence-in-depth on top of
+      the RLS-scoped prismaWithTenant client). Proven by test
+      intelligence.router "resolves page names via id-IN lookups" which now asserts
+      `nameCall.where.tenantId === TEST_UUIDS.tenant`. The fingerprint is
+      source-anchored to the fixed filter, so this re-blocks if the tenant scoping
+      regresses.
+    author: talyssonoliver
+    date: '2026-06-21'

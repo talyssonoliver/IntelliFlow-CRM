@@ -920,7 +920,7 @@ describe('Home Router', () => {
         },
       ];
       prismaMock.user.findUnique.mockResolvedValue({ preferences: { pinnedItems } } as any);
-      (prismaMock.lead.findFirst as any).mockResolvedValue({ id: 'lead-1' });
+      (prismaMock.lead.findMany as any).mockResolvedValue([{ id: 'lead-1' }]);
 
       const result = await caller.getPinnedItems();
 
@@ -938,7 +938,7 @@ describe('Home Router', () => {
         },
       ];
       prismaMock.user.findUnique.mockResolvedValue({ preferences: { pinnedItems } } as any);
-      (prismaMock.contact.findFirst as any).mockResolvedValue(null);
+      (prismaMock.contact.findMany as any).mockResolvedValue([]);
 
       const result = await caller.getPinnedItems();
 
@@ -973,14 +973,15 @@ describe('Home Router', () => {
         },
       ];
       prismaMock.user.findUnique.mockResolvedValue({ preferences: { pinnedItems } } as any);
-      (prismaMock.reportDefinition.findFirst as any).mockResolvedValue({ id: 'report-1' });
+      (prismaMock.reportDefinition.findMany as any).mockResolvedValue([{ id: 'report-1' }]);
 
       const result = await caller.getPinnedItems();
 
       expect(result.items[0].isAvailable).toBe(true);
-      expect(prismaMock.reportDefinition.findFirst).toHaveBeenCalledWith(
+      expect(prismaMock.reportDefinition.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ id: 'report-1', tenantId: TEST_UUIDS.tenant }),
+          where: expect.objectContaining({ id: { in: ['report-1'] }, tenantId: TEST_UUIDS.tenant }),
+          select: { id: true },
         })
       );
     });
@@ -1010,8 +1011,8 @@ describe('Home Router', () => {
         },
       ];
       prismaMock.user.findUnique.mockResolvedValue({ preferences: { pinnedItems } } as any);
-      (prismaMock.lead.findFirst as any).mockResolvedValue({ id: 'lead-1' });
-      (prismaMock.contact.findFirst as any).mockResolvedValue(null);
+      (prismaMock.lead.findMany as any).mockResolvedValue([{ id: 'lead-1' }]);
+      (prismaMock.contact.findMany as any).mockResolvedValue([]);
 
       const result = await caller.getPinnedItems();
 
@@ -1031,13 +1032,13 @@ describe('Home Router', () => {
         },
       ];
       prismaMock.user.findUnique.mockResolvedValue({ preferences: { pinnedItems } } as any);
-      (prismaMock.opportunity.findFirst as any).mockResolvedValue({ id: 'opp-1' });
+      (prismaMock.opportunity.findMany as any).mockResolvedValue([{ id: 'opp-1' }]);
 
       await caller.getPinnedItems();
 
-      expect(prismaMock.opportunity.findFirst).toHaveBeenCalledWith(
+      expect(prismaMock.opportunity.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ id: 'opp-1', tenantId: TEST_UUIDS.tenant }),
+          where: expect.objectContaining({ id: { in: ['opp-1'] }, tenantId: TEST_UUIDS.tenant }),
           select: { id: true },
         })
       );
@@ -1049,9 +1050,9 @@ describe('Home Router', () => {
       const result = await caller.getPinnedItems();
 
       expect(result.items).toEqual([]);
-      // No entity model findFirst should have been called
-      expect(prismaMock.lead.findFirst).not.toHaveBeenCalled();
-      expect(prismaMock.contact.findFirst).not.toHaveBeenCalled();
+      // No entity model existence query should have been issued
+      expect(prismaMock.lead.findMany).not.toHaveBeenCalled();
+      expect(prismaMock.contact.findMany).not.toHaveBeenCalled();
     });
   });
 

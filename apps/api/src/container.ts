@@ -348,8 +348,11 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const featureFlagProvider = InMemoryFeatureFlagProvider.fromConfig(featureFlagsConfig);
   const featureFlagAdapter = new FeatureFlagAdapter(featureFlagProvider, featureFlagsConfig);
 
-  // External services
-  const eventBus = new InMemoryEventBus();
+  // External services.
+  // record:false — this bus is a process-lifetime singleton; buffering every
+  // published domain event (test-inspection feature) would leak memory unbounded
+  // under production traffic. Handlers still fire; only the inspection buffer is off.
+  const eventBus = new InMemoryEventBus({ record: false });
 
   // AI provider selection (IFC-212):
   //   AI_PROVIDER=ollama                       → OllamaAIService (offline / local dev escape hatch)

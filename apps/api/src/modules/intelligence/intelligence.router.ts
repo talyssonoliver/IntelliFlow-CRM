@@ -209,7 +209,6 @@ type BaseInsightRow = {
   id: string;
   entityType: 'lead' | 'contact';
   entityId: string;
-  entityName: string;
   sentiment: string;
   churnRisk: string;
   engagementScore: number;
@@ -238,7 +237,16 @@ function dateRangeSince(dateRange: '7d' | '30d' | '90d'): Date {
   return since;
 }
 
-/** Fetch insight rows from both LeadAIInsight and ContactAIInsight tables */
+/**
+ * Fetch insight rows from both LeadAIInsight and ContactAIInsight tables.
+ *
+ * Dashboard stats and trends are computed over the FULL date window, so every
+ * row in range is still read — but WITHOUT joining lead/contact. Display names
+ * are only needed for the paginated page, so they're resolved separately by
+ * `resolveEntityNames`. Previously each row carried a relational join + name
+ * fields across the entire window even though only `limit` rows display them.
+ * The two table reads are independent, so they run in parallel.
+ */
 async function fetchAllInsightRows(
   prisma: {
     leadAIInsight: { findMany: (...args: any[]) => any };
@@ -248,71 +256,128 @@ async function fetchAllInsightRows(
   since: Date,
   entityType: 'all' | 'lead' | 'contact'
 ): Promise<BaseInsightRow[]> {
+  const insightSelect = {
+    id: true,
+    sentiment: true,
+    churnRisk: true,
+    engagementScore: true,
+    sentimentTrend: true,
+    nextBestAction: true,
+    recommendations: true,
+    lastEngagementDays: true,
+    updatedAt: true,
+  };
+
+  const [leadInsights, contactInsights] = await Promise.all([
+    entityType === 'all' || entityType === 'lead'
+      ? prisma.leadAIInsight.findMany({
+          where: { tenantId, updatedAt: { gte: since } },
+          select: { ...insightSelect, leadId: true },
+          orderBy: { updatedAt: 'desc' },
+        })
+      : Promise.resolve([] as Array<any>),
+    entityType === 'all' || entityType === 'contact'
+      ? prisma.contactAIInsight.findMany({
+          where: { tenantId, updatedAt: { gte: since } },
+          select: { ...insightSelect, contactId: true },
+          orderBy: { updatedAt: 'desc' },
+        })
+      : Promise.resolve([] as Array<any>),
+  ]);
+
   const rows: BaseInsightRow[] = [];
-
-  if (entityType === 'all' || entityType === 'lead') {
-    const leadInsights = await prisma.leadAIInsight.findMany({
-      where: { tenantId, updatedAt: { gte: since } },
-      include: {
-        lead: { select: { id: true, firstName: true, lastName: true, company: true } },
-      },
-      orderBy: { updatedAt: 'desc' },
+  for (const li of leadInsights) {
+    rows.push({
+      id: li.id,
+      entityType: 'lead',
+      entityId: li.leadId,
+      sentiment: (li.sentiment ?? 'NEUTRAL').toUpperCase(),
+      churnRisk: li.churnRisk,
+      engagementScore: li.engagementScore,
+      sentimentTrend: li.sentimentTrend,
+      nextBestAction: li.nextBestAction,
+      recommendations: li.recommendations,
+      lastEngagementDays: li.lastEngagementDays,
+      updatedAt: li.updatedAt,
     });
-    for (const li of leadInsights) {
-      rows.push({
-        id: li.id,
-        entityType: 'lead',
-        entityId: li.leadId,
-        entityName: buildEntityName(
-          li.lead.firstName,
-          li.lead.lastName,
-          li.lead.company,
-          'Unknown Lead'
-        ),
-        sentiment: (li.sentiment ?? 'NEUTRAL').toUpperCase(),
-        churnRisk: li.churnRisk,
-        engagementScore: li.engagementScore,
-        sentimentTrend: li.sentimentTrend,
-        nextBestAction: li.nextBestAction,
-        recommendations: li.recommendations,
-        lastEngagementDays: li.lastEngagementDays,
-        updatedAt: li.updatedAt,
-      });
-    }
   }
-
-  if (entityType === 'all' || entityType === 'contact') {
-    const contactInsights = await prisma.contactAIInsight.findMany({
-      where: { tenantId, updatedAt: { gte: since } },
-      include: {
-        contact: { select: { id: true, firstName: true, lastName: true, company: true } },
-      },
-      orderBy: { updatedAt: 'desc' },
+  for (const ci of contactInsights) {
+    rows.push({
+      id: ci.id,
+      entityType: 'contact',
+      entityId: ci.contactId,
+      sentiment: (ci.sentiment ?? 'NEUTRAL').toUpperCase(),
+      churnRisk: ci.churnRisk,
+      engagementScore: ci.engagementScore,
+      sentimentTrend: ci.sentimentTrend,
+      nextBestAction: ci.nextBestAction,
+      recommendations: ci.recommendations,
+      lastEngagementDays: ci.lastEngagementDays,
+      updatedAt: ci.updatedAt,
     });
-    for (const ci of contactInsights) {
-      rows.push({
-        id: ci.id,
-        entityType: 'contact',
-        entityId: ci.contactId,
-        entityName: buildEntityName(
-          ci.contact.firstName,
-          ci.contact.lastName,
-          ci.contact.company,
-          'Unknown Contact'
-        ),
-        sentiment: (ci.sentiment ?? 'NEUTRAL').toUpperCase(),
-        churnRisk: ci.churnRisk,
-        engagementScore: ci.engagementScore,
-        sentimentTrend: ci.sentimentTrend,
-        nextBestAction: ci.nextBestAction,
-        recommendations: ci.recommendations,
-        lastEngagementDays: ci.lastEngagementDays,
-        updatedAt: ci.updatedAt,
-      });
-    }
   }
-
   return rows;
+}
+
+/**
+ * Batch-resolve display names for a page of insight rows. Names are only needed
+ * for the rows actually shown, so we fetch them by id here (one query per entity
+ * type) instead of joining lead/contact across the entire window. Queries are
+ * tenant-scoped (defence-in-depth alongside RLS) so a cross-tenant/stale id can
+ * never resolve to another tenant's entity name. Returns a map keyed by
+ * `"<entityType>:<entityId>"`.
+ */
+async function resolveEntityNames(
+  prisma: {
+    lead: { findMany: (...args: any[]) => any };
+    contact: { findMany: (...args: any[]) => any };
+  },
+  rows: Array<{ entityType: 'lead' | 'contact'; entityId: string }>,
+  tenantId: string
+): Promise<Map<string, string>> {
+  const leadIds = [...new Set(rows.filter((r) => r.entityType === 'lead').map((r) => r.entityId))];
+  const contactIds = [
+    ...new Set(rows.filter((r) => r.entityType === 'contact').map((r) => r.entityId)),
+  ];
+
+  const [leads, contacts] = await Promise.all([
+    leadIds.length
+      ? prisma.lead.findMany({
+          where: { id: { in: leadIds }, tenantId },
+          select: { id: true, firstName: true, lastName: true, company: true },
+        })
+      : Promise.resolve([] as Array<any>),
+    contactIds.length
+      ? prisma.contact.findMany({
+          where: { id: { in: contactIds }, tenantId },
+          select: { id: true, firstName: true, lastName: true, company: true },
+        })
+      : Promise.resolve([] as Array<any>),
+  ]);
+
+  const names = new Map<string, string>();
+  for (const l of leads) {
+    names.set(`lead:${l.id}`, buildEntityName(l.firstName, l.lastName, l.company, 'Unknown Lead'));
+  }
+  for (const c of contacts) {
+    names.set(
+      `contact:${c.id}`,
+      buildEntityName(c.firstName, c.lastName, c.company, 'Unknown Contact')
+    );
+  }
+  return names;
+}
+
+/** Look up a resolved name, falling back to the per-type 'Unknown …' default */
+function entityNameFor(
+  names: Map<string, string>,
+  entityType: 'lead' | 'contact',
+  entityId: string
+): string {
+  return (
+    names.get(`${entityType}:${entityId}`) ??
+    (entityType === 'lead' ? 'Unknown Lead' : 'Unknown Contact')
+  );
 }
 
 /** Map churn risk to urgency level */
@@ -599,13 +664,15 @@ export const intelligenceRouter = createTRPCRouter({
         NEGATIVE: 0.3,
         VERY_NEGATIVE: 0.1,
       };
-      const recentAnalyses = paginateRows(allInsights, input.page, input.limit).map((row) => {
+      const pageRows = paginateRows(allInsights, input.page, input.limit);
+      const nameMap = await resolveEntityNames(ctx.prismaWithTenant, pageRows, tenantId);
+      const recentAnalyses = pageRows.map((row) => {
         const recs = parseRecommendations(row.recommendations);
         return {
           id: row.id,
           entityType: row.entityType,
           entityId: row.entityId,
-          entityName: row.entityName,
+          entityName: entityNameFor(nameMap, row.entityType, row.entityId),
           sentiment: row.sentiment,
           sentimentScore: sentimentScoreMap[row.sentiment] ?? 0.5,
           emotions: recs.emotions,
@@ -1173,7 +1240,9 @@ export const intelligenceRouter = createTRPCRouter({
       const avgEngagement = total > 0 ? Math.round(totalEngagement / total) : 0;
 
       // Paginated at-risk customers
-      const atRiskCustomers = paginateRows(allInsights, input.page, input.limit).map((row) => {
+      const pageRows = paginateRows(allInsights, input.page, input.limit);
+      const nameMap = await resolveEntityNames(ctx.prismaWithTenant, pageRows, tenantId);
+      const atRiskCustomers = pageRows.map((row) => {
         const slaHours = slaHoursMap[row.churnRisk] ?? 720;
         const slaDeadline = new Date(row.updatedAt.getTime() + slaHours * 3600000);
         const parsedRisk = churnRiskLevelSchema.safeParse(row.churnRisk);
@@ -1181,7 +1250,7 @@ export const intelligenceRouter = createTRPCRouter({
           id: row.id,
           entityType: row.entityType,
           entityId: row.entityId,
-          entityName: row.entityName,
+          entityName: entityNameFor(nameMap, row.entityType, row.entityId),
           riskLevel: parsedRisk.success ? parsedRisk.data : 'LOW',
           engagementScore: row.engagementScore,
           slaHours,
