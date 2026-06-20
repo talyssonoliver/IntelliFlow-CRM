@@ -637,3 +637,23 @@ waivers:
       regresses.
     author: talyssonoliver
     date: '2026-06-21'
+  - fingerprint: '0ee6a6708196daf9b74186d6ba79248301c4b55096bb9d44771108327160cb2f'
+    reason: >-
+      Verified false positive after fix. Codex anchors this finding to the
+      container Proxy's fail-safe (container.ts:887-893, `if (_resolved === null)
+      throw`), which is CORRECT and must stay — accessing the container before
+      initialisation SHOULD throw. The reported vulnerability (a cold Stripe
+      webhook 500ing mid-init) is fixed: every container-accessing entry point now
+      awaits `containerReady` first — createContext (pre-existing), createWSContext
+      (commit bb1ea85cc), and the direct Stripe webhook route in http-server.ts
+      (`await containerReady` before `container.get`). startApiServer starts
+      listening immediately, but that is harmless because each handler awaits, so a
+      request arriving mid-init simply waits inside its handler rather than
+      touching the Proxy. Proven by a regression test
+      (http-server.stripe-webhook "awaits containerReady before touching the
+      container during a cold init"): with containerReady left pending, the webhook
+      does not call container.get until it resolves. The fingerprint is
+      source-anchored to the unchanged Proxy fail-safe, so this re-blocks if that
+      guard regresses.
+    author: talyssonoliver
+    date: '2026-06-20'
