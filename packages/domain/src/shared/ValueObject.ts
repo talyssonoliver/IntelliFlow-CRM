@@ -32,38 +32,27 @@ export abstract class ValueObject<T> {
  * JSON.stringify a value with object keys emitted in sorted order, so two structurally
  * equal values produce the same string regardless of key insertion order.
  *
- * Step 1 normalizes the value through JSON's own rules — `JSON.parse(JSON.stringify(v))`
- * applies custom `toJSON()`, keeps only own enumerable properties, renders `Date` as its
- * ISO string (invalid Date → `null`), drops `undefined`-valued keys, and resolves all
- * primitive/type handling. The result is plain JSON data (objects, arrays, primitives).
- * Step 2 sorts the keys of that plain data recursively, then serializes. Because step 1
- * already stripped everything exotic (Dates, toJSON, inherited/non-enumerable props),
- * step 2 only ever reorders keys — it does not change which data is included.
+ * 1. `JSON.stringify(value)` applies every JSON rule — custom `toJSON()`, own-enumerable
+ *    keys only, `Date`→ISO (invalid→`null`), dropping `undefined` values, and type
+ *    handling. A top-level value it cannot represent (undefined / function / symbol /
+ *    `toJSON()`→undefined) yields `undefined`; keep that distinct from JSON `null`.
+ * 2. Re-parse to plain JSON data (no `Date`/`toJSON`/inherited/non-enumerable members
+ *    remain), then re-serialize with the collected keys, sorted, as JSON.stringify's
+ *    array replacer — which forces every object to emit its keys in that order. Running
+ *    the sort through native JSON.stringify (rather than a hand-rolled recursion) keeps
+ *    deep structures within the same engine limits the first pass already cleared, and on
+ *    plain data the array replacer only sees own enumerable keys.
  */
 function stableStringify(value: unknown): string {
   const json = JSON.stringify(value);
-  // A value JSON.stringify cannot represent at the top level (undefined, a function, a
-  // symbol, or an object whose toJSON() returns undefined) yields `undefined`. Keep that
-  // distinct from JSON `null` ("null"), as the prior raw-JSON.stringify comparison did.
   if (json === undefined) {
     return 'undefined';
   }
-  return JSON.stringify(sortKeysDeep(JSON.parse(json)));
-}
-
-function sortKeysDeep(value: unknown): unknown {
-  if (value === null || typeof value !== 'object') {
-    return value;
-  }
-  if (Array.isArray(value)) {
-    return value.map(sortKeysDeep);
-  }
-  const obj = value as Record<string, unknown>;
-  // Object.fromEntries creates own data properties, so an own `__proto__` key (which
-  // JSON.parse can produce) is preserved rather than routed through the prototype setter.
-  return Object.fromEntries(
-    Object.keys(obj)
-      .sort()
-      .map((key) => [key, sortKeysDeep(obj[key])])
-  );
+  const normalized = JSON.parse(json);
+  const keys = new Set<string>();
+  JSON.stringify(normalized, (key, val) => {
+    keys.add(key);
+    return val;
+  });
+  return JSON.stringify(normalized, [...keys].sort());
 }
