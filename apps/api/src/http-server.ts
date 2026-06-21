@@ -15,7 +15,7 @@ import {
   getPingHealth,
   getReadinessHealth,
 } from './modules/misc/health.service';
-import { container } from './container';
+import { container, containerReady } from './container';
 import { processStripeWebhook } from './webhooks/stripe-webhook';
 import { handlePmEventsRoute } from './modules/pm-events/handle-pm-events-route';
 
@@ -416,6 +416,12 @@ async function handleStripeWebhookRoute(
     return true;
   }
 
+  // This is a direct route that does NOT pass through createContext, so it must
+  // await the lazily/async-initialised container itself — otherwise a cold Stripe
+  // webhook could touch the container Proxy (adapters/moduleAccess below) before
+  // `_resolved` is populated and 500 mid-init. Instant once resolved.
+  await containerReady;
+
   const rawBody = body?.toString('utf8') ?? '';
   const headers: Record<string, string> = {};
   for (const [key, value] of Object.entries(req.headers)) {
@@ -533,6 +539,10 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
   const port = options.port ?? API_PORT;
   const server = createApiServer(options);
 
+  // Note: every request handler awaits `containerReady` itself before touching
+  // the lazily-initialised container (createContext for tRPC, the Stripe webhook
+  // route directly), so it is safe to start listening immediately — a request
+  // that arrives mid-init simply waits inside its handler.
   server.listen(port, () => {
     console.log(`[API] HTTP server listening on http://localhost:${port}`);
   });

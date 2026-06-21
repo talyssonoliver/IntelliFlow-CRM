@@ -7,13 +7,19 @@ import type { Server } from 'node:http';
 // it end-to-end through `createApiServer` over a real socket and stub its two
 // collaborators — the DI container and `processStripeWebhook` — so the test stays
 // a unit of the *routing/glue*, not of signature verification (covered elsewhere).
-const { containerGet, processStripeWebhookMock } = vi.hoisted(() => ({
+const { containerGet, processStripeWebhookMock, readyControl } = vi.hoisted(() => ({
   containerGet: vi.fn(),
   processStripeWebhookMock: vi.fn(),
+  // Controllable stand-in for the lazily-resolved `containerReady` promise so a
+  // test can simulate a still-initialising container.
+  readyControl: { promise: Promise.resolve() as Promise<void> },
 }));
 
 vi.mock('../container', () => ({
   container: { get: containerGet },
+  get containerReady() {
+    return readyControl.promise;
+  },
 }));
 
 vi.mock('../webhooks/stripe-webhook', () => ({
@@ -55,6 +61,7 @@ describe('HTTP Stripe webhook route (IFC-314)', () => {
   beforeEach(() => {
     containerGet.mockReset();
     processStripeWebhookMock.mockReset();
+    readyControl.promise = Promise.resolve();
   });
 
   afterEach(async () => {
@@ -188,5 +195,41 @@ describe('HTTP Stripe webhook route (IFC-314)', () => {
 
     expect(response.status).toBe(200);
     expect(processStripeWebhookMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('awaits containerReady before touching the container during a cold init', async () => {
+    // Simulate the container still initialising: containerReady stays pending.
+    let resolveReady!: () => void;
+    readyControl.promise = new Promise<void>((r) => {
+      resolveReady = r;
+    });
+    containerGet.mockImplementation((key: string) => (key === 'adapters' ? adapters : null));
+    processStripeWebhookMock.mockResolvedValue({
+      success: true,
+      statusCode: 200,
+      message: 'ok',
+      eventId: 'evt_cold',
+    });
+
+    const { server, baseUrl } = await startTestServer();
+    servers.push(server);
+
+    const responsePromise = fetch(`${baseUrl}/webhooks/stripe`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: 'evt_cold' }),
+    });
+
+    // While the container is still resolving, the handler must NOT have read the
+    // container Proxy (which would throw mid-init) nor invoked the processor.
+    await new Promise((r) => setTimeout(r, 50));
+    expect(containerGet).not.toHaveBeenCalled();
+    expect(processStripeWebhookMock).not.toHaveBeenCalled();
+
+    // Container finishes initialising → the request proceeds normally.
+    resolveReady();
+    const response = await responsePromise;
+    expect(response.status).toBe(200);
+    expect(containerGet).toHaveBeenCalledWith('adapters');
   });
 });
