@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-13T17:43:11.288Z",
+  "generatedAt": "2026-06-18T23:02:03.757Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -328,15 +328,21 @@
       ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-078/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-214/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-227/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-230/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-242/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-256/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-257/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-265/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-266/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-270/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-271/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-273/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-280/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-282/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-287/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-301/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-311/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json",
@@ -483,10 +489,10 @@
     "totalTasks": 596,
     "totalNumberedSprintTasks": 591,
     "continuousTaskCount": 5,
-    "completedTasks": 403,
-    "backlogTasks": 192,
+    "completedTasks": 409,
+    "backlogTasks": 186,
     "blockedTasks": 0,
-    "completionPercentage": 67.62,
+    "completionPercentage": 68.62,
     "inProgressTasks": 1,
     "otherTasks": 0
   },
@@ -812,50 +818,20 @@
         }
       },
       {
-        "taskId": "IFC-214",
+        "taskId": "IFC-215",
         "sprint": 18,
         "status": "Backlog",
         "section": "AI/ML",
-        "title": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
-        "description": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
-        "summary": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons;...",
-        "definitionOfDone": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons; cache-poisoning mitigations enforced (key namespacing, schema validation, TTL/versioning); Redis outage fallback returns safe empty payloads; cross-process integration test verifies worker writes are visible to API; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
-        "definitionOfDoneSnapshot": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons;...",
+        "title": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
+        "description": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
+        "summary": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics;...",
+        "definitionOfDone": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics; unit and integration tests cover populated and fallback scenarios; verified by: pnpm test --filter ai-worker;pnpm test --filter api",
+        "definitionOfDoneSnapshot": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics;...",
         "dependencies": [
-          "IFC-015",
-          "IFC-168",
-          "IFC-197"
+          "IFC-117",
+          "IFC-197",
+          "IFC-214"
         ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "IFC-230",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Core CRM",
-        "title": "Unify Lead Create/Edit Form - Create page (leads/(list)/new/page.tsx, 1029 lines) and Edit page (leads/[id]/edit/page.tsx, 464 lines) share no components. Issues: different API clients (trpc vs api), different field sets (BANT only in create but silently dropped), different styling, different validation, no auth guard on create. Fix: extract shared LeadForm component, unify API client, include all fields in both views, consistent styling.",
-        "description": "Unify Lead Create/Edit Form - Create page (leads/(list)/new/page.tsx, 1029 lines) and Edit page (leads/[id]/edit/page.tsx, 464 lines) share no components. Issues: different API clients (trpc vs api), different field sets (BANT only in create but silently dropped), different styling, different validation, no auth guard on create. Fix: extract shared LeadForm component, unify API client, include all fields in both views, consistent styling.",
-        "summary": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
-        "definitionOfDone": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
-        "definitionOfDoneSnapshot": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
-        "dependencies": [],
         "attestation": {
           "exists": false,
           "path": null,
@@ -936,15 +912,15 @@
         }
       },
       {
-        "taskId": "IFC-242",
+        "taskId": "IFC-247",
         "sprint": 18,
         "status": "Backlog",
         "section": "Core CRM",
-        "title": "Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validation. Fix 3 HIGH issues: (1) BANT fields (Budget, Authority, Need, Timeline) collected in create form but silently dropped on submit - never sent to API [F3]. (2) annualRevenue mapped to estimatedValue - semantic mismatch between company annual revenue and deal estimated value [F4]. (3) Edit form uses 'as any' cast with no client-side Zod validation - no inline field errors [F9]. Fix: Send BANT to API (add to createLeadSchema if needed), map annualRevenue correctly, add Zod resolver to edit form, remove as any.",
-        "description": "Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validation. Fix 3 HIGH issues: (1) BANT fields (Budget, Authority, Need, Timeline) collected in create form but silently dropped on submit - never sent to API [F3]. (2) annualRevenue mapped to estimatedValue - semantic mismatch between company annual revenue and deal estimated value [F4]. (3) Edit form uses 'as any' cast with no client-side Zod validation - no inline field errors [F9]. Fix: Send BANT to API (add to createLeadSchema if needed), map annualRevenue correctly, add Zod resolver to edit form, remove as any.",
-        "summary": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
-        "definitionOfDone": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
-        "definitionOfDoneSnapshot": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
+        "title": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
+        "description": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
+        "summary": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
+        "definitionOfDone": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
+        "definitionOfDoneSnapshot": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
         "dependencies": [],
         "attestation": {
           "exists": false,
@@ -966,15 +942,45 @@
         }
       },
       {
-        "taskId": "IFC-247",
+        "taskId": "IFC-248",
         "sprint": 18,
         "status": "Backlog",
         "section": "Core CRM",
-        "title": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
-        "description": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
-        "summary": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
-        "definitionOfDone": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
-        "definitionOfDoneSnapshot": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
+        "title": "Lead List & Create Page Tests. Two major pages with ZERO tests: (1) Lead list page with filtering, sorting, bulk operations, saved views [T2]. (2) Lead create page (1029 lines) with BANT fields, source handling, validation [T3]. Also test: (3) Role-based filtering (ADMIN sees all, others see own) [T7]. (4) Bulk operations UI (score, convert, archive, delete) [T8]. Write component tests covering happy path, error states, and edge cases.",
+        "description": "Lead List & Create Page Tests. Two major pages with ZERO tests: (1) Lead list page with filtering, sorting, bulk operations, saved views [T2]. (2) Lead create page (1029 lines) with BANT fields, source handling, validation [T3]. Also test: (3) Role-based filtering (ADMIN sees all, others see own) [T7]. (4) Bulk operations UI (score, convert, archive, delete) [T8]. Write component tests covering happy path, error states, and edge cases.",
+        "summary": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
+        "definitionOfDone": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
+        "definitionOfDoneSnapshot": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
+        "dependencies": [],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-255",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Core CRM",
+        "title": "Contact Audit Logging. (1) Zero audit logging in all 14 contact router procedures — no ctx.security.auditLogger calls (R-07). (2) Audit event handler PascalCase keys (ContactCreated/Updated/Deleted) don't match domain dot-notation (contact.created/updated) — 5 event types unmapped (D-06). Violates IFC-098 audit requirement. Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
+        "description": "Contact Audit Logging. (1) Zero audit logging in all 14 contact router procedures — no ctx.security.auditLogger calls (R-07). (2) Audit event handler PascalCase keys (ContactCreated/Updated/Deleted) don't match domain dot-notation (contact.created/updated) — 5 event types unmapped (D-06). Violates IFC-098 audit requirement. Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
+        "summary": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
+        "definitionOfDone": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
+        "definitionOfDoneSnapshot": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
         "dependencies": [],
         "attestation": {
           "exists": false,
@@ -17470,11 +17476,11 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 66,
-      "completedTasks": 21,
-      "backlogTasks": 44,
+      "completedTasks": 27,
+      "backlogTasks": 38,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 21,
+      "attestedCompletedTasks": 27,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
       "notableCompleted": [
@@ -17541,6 +17547,71 @@
           }
         },
         {
+          "taskId": "IFC-301",
+          "sprint": 18,
+          "status": "Completed",
+          "section": "Infrastructure",
+          "title": "Rich Text Editor Integration — Tiptap",
+          "description": "Rich Text Editor Integration — Tiptap",
+          "summary": "Pure UI package (STOA-Domain trivially satisfied — no backend/domain/schema/migration).... Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%",
+          "definitionOfDone": "Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%",
+          "dependencies": [
+            "PG-180"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-301/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-15T14:40:00Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 4,
+            "met": 4,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-310",
+          "sprint": 18,
+          "status": "Completed",
+          "section": "Core CRM",
+          "title": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
+          "description": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
+          "summary": "IFC-310 iteration-4 — residual concerns from the second audit round fully resolved. No items deferred. R1 (AC-007 AI branch unreachable at runtime): RESOLVED.... Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time;...",
+          "definitionOfDone": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate; auto-merge/auto-link operations are transactional and preserve the oldest record's id while folding in newer relations; new contact_duplicate and account_duplicate notification types added to NOTIFICATION_TYPES; aiDuplicateDetection uses pgvector similarity on the entity's embeddings; >=90% scoped coverage; all 4 validations pass",
+          "definitionOfDoneSnapshot": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate;...",
+          "dependencies": [
+            "PG-182",
+            "PG-183"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-21T22:00:00.000Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 5,
+            "met": 4,
+            "missed": 1
+          }
+        },
+        {
           "taskId": "PG-180",
           "sprint": 18,
           "status": "Completed",
@@ -17570,71 +17641,6 @@
             "total": 5,
             "met": 4,
             "missed": 1
-          }
-        },
-        {
-          "taskId": "PG-187",
-          "sprint": 18,
-          "status": "Completed",
-          "section": "Settings",
-          "title": "Module Settings - Reports (/analytics/report-settings)",
-          "description": "Module Settings - Reports (/analytics/report-settings)",
-          "summary": "Honest record of deviations from plan: (a) Frontend test count 44 vs. plan target 54... Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90",
-          "definitionOfDone": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90",
-          "dependencies": [
-            "PG-178"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/PG-187/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-04-19T23:45:00Z",
-            "sprintFolder": 18
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 4,
-            "met": 4,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "IFC-311",
-          "sprint": 18,
-          "status": "Completed",
-          "section": "Core CRM",
-          "title": "Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.",
-          "description": "Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.",
-          "summary": "IFC-311 wires the two notifyOnOwnerChange Cat-1 toggles that PG-182 + PG-183 shipped but left dormant.... contact.reassign + contact.bulkReassign mutations; account.reassign + account.bulkReassign mutations; All validate caller permission",
-          "definitionOfDone": "contact.reassign + contact.bulkReassign and account.reassign + account.bulkReassign mutations; all validate caller permission; each reads the matching AutomationSetting.notifyOnOwnerChange flag and invokes the notify*Reassignment helper when true; emit contact_reassigned + account_reassigned notifications to both old and new owner; idempotent when new owner == current owner; >=90% scoped coverage",
-          "definitionOfDoneSnapshot": "contact.reassign + contact.bulkReassign mutations; account.reassign + account.bulkReassign mutations; All validate caller permission",
-          "dependencies": [
-            "PG-182",
-            "PG-183"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/IFC-311/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-04-20T23:55:00Z",
-            "sprintFolder": 18
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 4,
-            "met": 4,
-            "missed": 0
           }
         }
       ],
@@ -17807,8 +17813,8 @@
         {
           "section": "Core CRM",
           "total": 27,
-          "completed": 14,
-          "open": 13
+          "completed": 18,
+          "open": 9
         },
         {
           "section": "Settings",
@@ -17819,14 +17825,14 @@
         {
           "section": "Infrastructure",
           "total": 6,
-          "completed": 0,
-          "open": 6
+          "completed": 1,
+          "open": 5
         },
         {
           "section": "AI/ML",
           "total": 3,
-          "completed": 0,
-          "open": 3
+          "completed": 1,
+          "open": 2
         },
         {
           "section": "Automation",
@@ -18337,34 +18343,34 @@
         {
           "taskId": "IFC-214",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "AI/ML",
           "title": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
           "description": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
-          "summary": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons;...",
+          "summary": "IFC-214 (Redis-backed AI Monitoring State Bridge) verify-and-attest RECONCILE — NOT a fresh implementation. DISCOVERY: the entire IFC-214 scope was already implemented, tested, and merged by 'feat(IFC-212):......",
           "definitionOfDone": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons; cache-poisoning mitigations enforced (key namespacing, schema validation, TTL/versioning); Redis outage fallback returns safe empty payloads; cross-process integration test verifies worker writes are visible to API; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
-          "definitionOfDoneSnapshot": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons;...",
+          "definitionOfDoneSnapshot": "ai-worker publishes tenant-scoped monitoring snapshots to Redis; aiMonitoring router reads Redis-backed metrics instead of in-process singletons; Cache-poisoning mitigations (key namespacing, schema validation, TTL/versioning)",
           "dependencies": [
             "IFC-015",
             "IFC-168",
             "IFC-197"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-214/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-15T13:05:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
@@ -18435,31 +18441,31 @@
         {
           "taskId": "IFC-230",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Unify Lead Create/Edit Form - Create page (leads/(list)/new/page.tsx, 1029 lines) and Edit page (leads/[id]/edit/page.tsx, 464 lines) share no components. Issues: different API clients (trpc vs api), different field sets (BANT only in create but silently dropped), different styling, different validation, no auth guard on create. Fix: extract shared LeadForm component, unify API client, include all fields in both views, consistent styling.",
           "description": "Unify Lead Create/Edit Form - Create page (leads/(list)/new/page.tsx, 1029 lines) and Edit page (leads/[id]/edit/page.tsx, 464 lines) share no components. Issues: different API clients (trpc vs api), different field sets (BANT only in create but silently dropped), different styling, different validation, no auth guard on create. Fix: extract shared LeadForm component, unify API client, include all fields in both views, consistent styling.",
-          "summary": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
+          "summary": "IFC-230 unifies the lead create + edit forms on a shared data-driven LeadForm.tsx, adds BANT parity to the edit form, unifies validation/styling, and preserves the create wizard.... Shared LeadForm component; Unified API client; All fields incl....",
           "definitionOfDone": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
-          "definitionOfDoneSnapshot": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
+          "definitionOfDoneSnapshot": "Shared LeadForm component; Unified API client; All fields incl. BANT in both views",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-230/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-15T16:35:00.000Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 3,
+            "met": 2,
+            "missed": 1
           }
         },
         {
@@ -18525,30 +18531,30 @@
         {
           "taskId": "IFC-242",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validation. Fix 3 HIGH issues: (1) BANT fields (Budget, Authority, Need, Timeline) collected in create form but silently dropped on submit - never sent to API [F3]. (2) annualRevenue mapped to estimatedValue - semantic mismatch between company annual revenue and deal estimated value [F4]. (3) Edit form uses 'as any' cast with no client-side Zod validation - no inline field errors [F9]. Fix: Send BANT to API (add to createLeadSchema if needed), map annualRevenue correctly, add Zod resolver to edit form, remove as any.",
           "description": "Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validation. Fix 3 HIGH issues: (1) BANT fields (Budget, Authority, Need, Timeline) collected in create form but silently dropped on submit - never sent to API [F3]. (2) annualRevenue mapped to estimatedValue - semantic mismatch between company annual revenue and deal estimated value [F4]. (3) Edit form uses 'as any' cast with no client-side Zod validation - no inline field errors [F9]. Fix: Send BANT to API (add to createLeadSchema if needed), map annualRevenue correctly, add Zod resolver to edit form, remove as any.",
-          "summary": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
+          "summary": "IFC-242 promotes lead BANT + annualRevenue to first-class columns (product owner authorized the migration) and fixes edit-form F9. Audit F4 (annualRevenue->estimatedValue conflation) verified non-existent in current code;... BANT fields persisted on create;...",
           "definitionOfDone": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
-          "definitionOfDoneSnapshot": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
+          "definitionOfDoneSnapshot": "BANT fields persisted on create; round-trip verified; annualRevenue and estimatedValue are distinct fields; edit form uses Zod validation with inline errors; no 'as any' casts",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-242/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-15T00:35:00.000Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 3,
+            "met": 3,
             "missed": 0
           }
         },
@@ -18735,30 +18741,30 @@
         {
           "taskId": "IFC-266",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Contact List/Create Page Tests + E2E. (1) Contact list page has ZERO page tests (T-02). (2) Contact create page has ZERO page tests — auth guard gap F-07 would be caught (T-03). (3) Bulk selection (select all, bulk email, bulk export) untested (T-05). (4) Contract tests missing for bulkEmail, bulkExport, bulkDelete (T-09). (5) No E2E Playwright tests for contact CRUD flow (T-10). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
           "description": "Contact List/Create Page Tests + E2E. (1) Contact list page has ZERO page tests (T-02). (2) Contact create page has ZERO page tests — auth guard gap F-07 would be caught (T-03). (3) Bulk selection (select all, bulk email, bulk export) untested (T-05). (4) Contract tests missing for bulkEmail, bulkExport, bulkDelete (T-09). (5) No E2E Playwright tests for contact CRUD flow (T-10). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
-          "summary": "List page test file with >=10 tests; create page test file with auth guard test; bulk operation tests; contract tests for bulk procedures; E2E create-view-edit-delete flow; coverage >=90%",
+          "summary": "Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth-surface change. Findings: audit §19 stale for T-03 (auth already fixed IFC-253) and T-09 (bulk contract tests already present)... List page test file with >=10 tests;...",
           "definitionOfDone": "List page test file with >=10 tests; create page test file with auth guard test; bulk operation tests; contract tests for bulk procedures; E2E create-view-edit-delete flow; coverage >=90%",
           "definitionOfDoneSnapshot": "List page test file with >=10 tests; create page test file with auth guard test; bulk operation tests; contract tests for bulk procedures; E2E create-view-edit-delete flow; coverage >=90%",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-266/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-14T00:00:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
@@ -18917,30 +18923,30 @@
         {
           "taskId": "IFC-287",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Deal Filter Wiring & Type Safety. (1) DealFilters state (filters) captured in page but NEVER passed to trpc.opportunity.list.useQuery — ownerId and dateRange selections have no effect on kanban view data (F-10, deals/(list)/page.tsx:214,226). (2) 'More Filters' button has no onClick handler (F-11, DealFilters.tsx). (3) Owner filter only has 2 hardcoded options: 'All Deals' and 'My Deals' — no dynamic user list (F-12). (4) transformDeals uses loose Record<string,unknown> casting at API boundary instead of typed response (F-19, types.ts:102-119). Wire filters to API query params; add server-side owner filter with user list; type-safe API response handling. Audit: docs/audit/deal-detail-wiring-audit.md sections 3, 8.",
           "description": "Deal Filter Wiring & Type Safety. (1) DealFilters state (filters) captured in page but NEVER passed to trpc.opportunity.list.useQuery — ownerId and dateRange selections have no effect on kanban view data (F-10, deals/(list)/page.tsx:214,226). (2) 'More Filters' button has no onClick handler (F-11, DealFilters.tsx). (3) Owner filter only has 2 hardcoded options: 'All Deals' and 'My Deals' — no dynamic user list (F-12). (4) transformDeals uses loose Record<string,unknown> casting at API boundary instead of typed response (F-19, types.ts:102-119). Wire filters to API query params; add server-side owner filter with user list; type-safe API response handling. Audit: docs/audit/deal-detail-wiring-audit.md sections 3, 8.",
-          "summary": "DealFilters ownerId/dateRange passed to API query; More Filters opens filter panel; owner dropdown shows team members from API; transformDeals properly typed; tests >=90%",
+          "summary": "IFC-287 Deal Filter Wiring & Type Safety — wires F-10/F-11/F-12 (audit §3) + F-19 (audit §8) of docs/audit/deal-detail-wiring-audit.md on a worktree from origin/main@62e3bca6a. F-10:... F-10 — DealFilters state passed to opportunity.list query; F-11...",
           "definitionOfDone": "DealFilters ownerId/dateRange passed to API query; More Filters opens filter panel; owner dropdown shows team members from API; transformDeals properly typed; tests >=90%",
-          "definitionOfDoneSnapshot": "DealFilters ownerId/dateRange passed to API query; More Filters opens filter panel; owner dropdown shows team members from API; transformDeals properly typed; tests >=90%",
+          "definitionOfDoneSnapshot": "F-10 — DealFilters state passed to opportunity.list query; F-11 — 'More Filters' button has a handler; F-12 — Owner filter populated from real users",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-287/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-14T22:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
@@ -18979,32 +18985,32 @@
         {
           "taskId": "IFC-301",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Infrastructure",
           "title": "Rich Text Editor Integration — Tiptap",
           "description": "Rich Text Editor Integration — Tiptap",
-          "summary": "Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%",
+          "summary": "Pure UI package (STOA-Domain trivially satisfied — no backend/domain/schema/migration).... Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%",
           "definitionOfDone": "Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%; verified by: pnpm test",
           "definitionOfDoneSnapshot": "Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%",
           "dependencies": [
             "PG-180"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-301/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-15T14:40:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },

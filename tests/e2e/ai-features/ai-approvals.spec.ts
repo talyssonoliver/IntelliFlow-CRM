@@ -49,16 +49,19 @@ test.describe('Agent Approval Workflow - Extended', () => {
     });
 
     test('should display all metrics cards on load', async ({ page }) => {
+      // Real MetricsCard labels (the page moved from mock data to the autoResponse
+      // API; "Total Actions"/"Rolled Back"/"Avg Review Time" were stale mock labels).
+      const dash = page.locator('[data-testid="metrics-dashboard"]');
       const metricsCards = [
-        'Total Actions',
-        'Approved',
+        'Total Drafts',
+        'Pending Review',
+        'Approved/Sent',
         'Rejected',
-        'Rolled Back',
-        'Avg Review Time',
+        'Escalated',
       ];
 
       for (const metric of metricsCards) {
-        await expect(page.locator(`text=${metric}`).first()).toBeVisible();
+        await expect(dash.locator(`text=${metric}`)).toBeVisible();
       }
     });
   });
@@ -463,13 +466,13 @@ test.describe('Agent Approval Workflow - Extended', () => {
       const filterButtons = page.locator('[data-testid="filter-buttons"]');
       await filterButtons.locator('button:has-text("Rejected")').click();
 
+      // Either only rejected cards remain, or the list is empty (real EmptyState,
+      // not the stale "No actions found" copy). Poll to absorb the filter re-render.
       const rejectedCards = page.locator('[data-status="rejected"]');
-      const emptyMessage = page.locator('text=No actions found');
-
-      const hasRejected = (await rejectedCards.count()) > 0;
-      const hasEmpty = (await emptyMessage.count()) > 0;
-
-      expect(hasRejected || hasEmpty).toBeTruthy();
+      const allCards = page.locator('[data-testid^="action-card-"]');
+      await expect
+        .poll(async () => (await rejectedCards.count()) > 0 || (await allCards.count()) === 0)
+        .toBeTruthy();
     });
 
     test('should filter by Expired status', async ({ page }) => {
@@ -477,12 +480,10 @@ test.describe('Agent Approval Workflow - Extended', () => {
       await filterButtons.locator('button:has-text("Expired")').click();
 
       const expiredCards = page.locator('[data-status="expired"]');
-      const emptyMessage = page.locator('text=No actions found');
-
-      const hasExpired = (await expiredCards.count()) > 0;
-      const hasEmpty = (await emptyMessage.count()) > 0;
-
-      expect(hasExpired || hasEmpty).toBeTruthy();
+      const allCards = page.locator('[data-testid^="action-card-"]');
+      await expect
+        .poll(async () => (await expiredCards.count()) > 0 || (await allCards.count()) === 0)
+        .toBeTruthy();
     });
   });
 

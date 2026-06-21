@@ -11,7 +11,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import { startOfMonthInTimezone, safeTimezone } from '../../lib/timezone-utils';
 import {
   createCaseSchema,
@@ -26,6 +26,12 @@ import {
 } from '@intelliflow/validators/case';
 import { assertTenantContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
+
+// LEGAL is a Professional+ paid add-on (MODULE_PLAN_MAP). Gate every procedure on
+// the tenant's plan including the module — same pattern as documents.router.ts.
+// Without this a lower-tier tenant could call these endpoints directly and bypass
+// the paywall (the frontend <ModuleGate> only hides the UI, not the API).
+const tenantProcedure = moduleTenantProcedure('LEGAL');
 
 function getAssigneeTitle(role?: string | null): string {
   switch (role) {

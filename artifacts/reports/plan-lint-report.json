@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-06-11T10:16:46.969Z",
+    "generated_at": "2026-06-19T09:52:33.093Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -202,12 +202,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task AI-SETUP-003 waiver expires in 18 days (2026-06-30)",
+      "message": "Task AI-SETUP-003 waiver expires in 10 days (2026-06-30)",
       "tasks": [
         "AI-SETUP-003"
       ],
       "priority": "high",
-      "days_until_expiry": 18
+      "days_until_expiry": 10
     },
     {
       "rule": "WAIVER_USED",
@@ -222,12 +222,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-010-AI waiver expires in 18 days (2026-06-30)",
+      "message": "Task ENV-010-AI waiver expires in 10 days (2026-06-30)",
       "tasks": [
         "ENV-010-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 18
+      "days_until_expiry": 10
     },
     {
       "rule": "WAIVER_USED",
@@ -242,12 +242,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-014-AI waiver expires in 18 days (2026-06-30)",
+      "message": "Task ENV-014-AI waiver expires in 10 days (2026-06-30)",
       "tasks": [
         "ENV-014-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 18
+      "days_until_expiry": 10
     }
   ],
   "review_queue": [

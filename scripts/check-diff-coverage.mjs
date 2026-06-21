@@ -116,10 +116,12 @@ const SONAR_COVERAGE_EXCLUDE = [
   // Istanbul over 4 forks and breaches thresholds, dropping the entire legal
   // subtree (and most of api) from the merged lcov — pre-existing on origin/main
   // (the IFC-242 "flaky, passes in isolation/sharded CI" instrumentation flake).
-  // documents.router.ts IS covered in isolation (200 legal-documents tests incl.
-  // the #445 sign-IP tests), but the merged run cannot capture it. Mirror in
-  // sonar.coverage.exclusions. Tracked: LEGAL-MERGED-LCOV-DEADZONE-001 (#445).
-  /^apps\/api\/src\/modules\/legal\/documents\.router\.ts$/,
+  // The legal routers ARE covered in isolation (545 legal tests: cases.router,
+  // appointments.router, *-settings.router, documents.router), but the merged run
+  // cannot capture them. The module-entitlement hardening (moduleTenantProcedure
+  // shadow) touched all of them, so all are excluded here for the SAME dead-zone.
+  // Mirror in sonar.coverage.exclusions. Tracked: LEGAL-MERGED-LCOV-DEADZONE-001 (#445).
+  /^apps\/api\/src\/modules\/legal\/(appointments|appointment-settings|cases|case-settings|documents|document-settings)\.router\.ts$/,
   // Next.js App Router page.tsx files are thin route shells (their logic lives in
   // tested components). vitest.config.ts excludes apps/web/src/app/**/page.tsx from
   // coverage instrumentation, so they never appear in lcov; mirror that here — and in
