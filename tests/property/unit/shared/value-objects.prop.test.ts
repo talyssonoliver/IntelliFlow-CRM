@@ -187,6 +187,45 @@ describe('ValueObject — RACE-PURE-12: structural equality of props (#223)', ()
     });
     expect(a.equals(b)).toBe(true);
   });
+
+  it('does not throw on an invalid Date prop (treated as a null marker)', () => {
+    const invalid1 = new TestValueObject({ when: new Date('not-a-date') });
+    const invalid2 = new TestValueObject({ when: new Date('also-invalid') });
+    const valid = new TestValueObject({ when: new Date('2026-01-01T00:00:00.000Z') });
+    expect(() => invalid1.equals(valid)).not.toThrow();
+    expect(invalid1.equals(invalid2)).toBe(true); // both invalid → both the null marker
+    expect(invalid1.equals(valid)).toBe(false);
+  });
+
+  it('distinguishes a string value from the same-shaped undefined (no sentinel collision)', () => {
+    expect(
+      new TestValueObject({ a: undefined }).equals(new TestValueObject({ a: '__vo_undefined__' }))
+    ).toBe(false);
+  });
+
+  it('distinguishes types that would otherwise serialize alike (1 vs "1", null vs "null")', () => {
+    expect(new TestValueObject({ a: 1 }).equals(new TestValueObject({ a: '1' }))).toBe(false);
+    expect(new TestValueObject({ a: null }).equals(new TestValueObject({ a: 'null' }))).toBe(false);
+    expect(new TestValueObject({ a: null }).equals(new TestValueObject({ a: null }))).toBe(true);
+  });
+
+  it('compares array props structurally and order-sensitively', () => {
+    expect(new TestValueObject({ a: [1, 2] }).equals(new TestValueObject({ a: [1, 2] }))).toBe(
+      true
+    );
+    expect(new TestValueObject({ a: [1, 2] }).equals(new TestValueObject({ a: [2, 1] }))).toBe(
+      false
+    );
+  });
+
+  it('preserves an own __proto__ key instead of dropping it', () => {
+    // JSON.parse creates __proto__ as an own enumerable data property.
+    const withProtoA = new TestValueObject(JSON.parse('{"__proto__": 1, "a": 2}'));
+    const withProtoB = new TestValueObject(JSON.parse('{"__proto__": 9, "a": 2}'));
+    const withoutProto = new TestValueObject({ a: 2 });
+    expect(withProtoA.equals(withProtoB)).toBe(false); // differ only by __proto__ value
+    expect(withProtoA.equals(withoutProto)).toBe(false); // present vs absent __proto__
+  });
 });
 
 // ---------------------------------------------------------------------------
