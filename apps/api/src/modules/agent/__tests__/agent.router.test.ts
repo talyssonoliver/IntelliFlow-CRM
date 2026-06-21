@@ -118,7 +118,8 @@ vi.mock('../../../agent/tools', () => ({
 // Mock the approval workflow module
 vi.mock('../../../agent/approval-workflow', () => ({
   approvalWorkflowService: {
-    getPendingActions: (userId: string) => mockApprovalGetPendingActions(userId),
+    getPendingActions: (userId: string, tenantId?: string) =>
+      mockApprovalGetPendingActions(userId, tenantId),
     getPendingAction: (actionId: string) => mockApprovalGetPendingAction(actionId),
     approveAction: (decision: unknown, context: unknown) =>
       mockApprovalApproveAction(decision, context),
@@ -206,6 +207,13 @@ describe('agentRouter', () => {
     // Reset default mock behavior
     mockAuthorizeToolExecution.mockResolvedValue({ authorized: true, reason: null });
     mockApprovalGetPendingActions.mockResolvedValue([]);
+    // Default: a SAME-tenant pending action so the tenant-ownership guard on
+    // getPendingAction / approveAction / rejectAction passes. Individual tests
+    // override this for the not-found and cross-tenant cases.
+    mockApprovalGetPendingAction.mockResolvedValue({
+      id: 'action_123',
+      tenantId: TEST_UUIDS.tenant,
+    });
   });
 
   afterEach(() => {
@@ -485,6 +493,21 @@ describe('agentRouter', () => {
 
       expect(result).toEqual([]);
     });
+
+    it("scopes the list to the caller's tenant (no cross-tenant leak)", async () => {
+      // Regression: actions are stamped with the caller's tenant at creation, so
+      // the list/count must query by that same tenant — not the store default.
+      mockApprovalGetPendingActions.mockResolvedValue([]);
+
+      const ctx = createAgentTestContext();
+      const caller = agentRouter.createCaller(ctx);
+      await caller.getPendingApprovals();
+
+      expect(mockApprovalGetPendingActions).toHaveBeenCalledWith(
+        TEST_UUIDS.user1,
+        TEST_UUIDS.tenant
+      );
+    });
   });
 
   // ============================================
@@ -495,6 +518,7 @@ describe('agentRouter', () => {
     it('should return specific pending action by ID', async () => {
       const mockAction = {
         id: 'action_123',
+        tenantId: TEST_UUIDS.tenant,
         toolName: 'create_case',
         actionType: 'CREATE',
         entityType: 'Case',
@@ -665,6 +689,64 @@ describe('agentRouter', () => {
       await expect(
         caller.rejectAction({ actionId: 'action_123', reason: 'Not needed' })
       ).rejects.toThrow(expect.objectContaining({ code: 'FORBIDDEN' }));
+    });
+  });
+
+  // ============================================
+  // Tenant Isolation Tests (by-actionId guard) — IFC QA #11
+  // ============================================
+
+  describe('tenant isolation (by-actionId guard)', () => {
+    const OTHER_TENANT = '99999999-0000-4000-8000-000099999999';
+
+    const crossTenantAction = {
+      id: 'action_xt',
+      tenantId: OTHER_TENANT,
+      toolName: 'create_case',
+      actionType: 'CREATE',
+      entityType: 'Case',
+      input: { subject: 'another tenant secret' },
+      preview: { summary: 'Create case' },
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 60_000),
+      status: 'PENDING',
+    };
+
+    it('getPendingAction returns NOT_FOUND for a cross-tenant actionId (no content leak)', async () => {
+      mockApprovalGetPendingAction.mockResolvedValue(crossTenantAction);
+      const caller = agentRouter.createCaller(createAgentTestContext()); // tenant = TEST_UUIDS.tenant
+      await expect(caller.getPendingAction({ actionId: 'action_xt' })).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    it('approveAction returns NOT_FOUND for a cross-tenant actionId and never executes', async () => {
+      mockApprovalGetPendingAction.mockResolvedValue(crossTenantAction);
+      const caller = agentRouter.createCaller(createAgentTestContext(true, true)); // ADMIN, own tenant
+      await expect(caller.approveAction({ actionId: 'action_xt' })).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+      expect(mockApprovalApproveAction).not.toHaveBeenCalled();
+    });
+
+    it('rejectAction returns NOT_FOUND for a cross-tenant actionId and never rejects', async () => {
+      mockApprovalGetPendingAction.mockResolvedValue(crossTenantAction);
+      const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+      await expect(caller.rejectAction({ actionId: 'action_xt', reason: 'no' })).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+      expect(mockApprovalRejectAction).not.toHaveBeenCalled();
+    });
+
+    it('same-tenant action remains readable', async () => {
+      mockApprovalGetPendingAction.mockResolvedValue({
+        ...crossTenantAction,
+        id: 'action_ok',
+        tenantId: TEST_UUIDS.tenant,
+      });
+      const caller = agentRouter.createCaller(createAgentTestContext());
+      const result = await caller.getPendingAction({ actionId: 'action_ok' });
+      expect(result.id).toBe('action_ok');
     });
   });
 

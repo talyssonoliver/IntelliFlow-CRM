@@ -1,8 +1,18 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { PublicHomePage } from './PublicHomePage';
-import { AuthenticatedHomePage } from './AuthenticatedHomePage';
+
+// Load the authenticated home (PinnedItemsSheet, ActivityFeed, @tanstack/react-virtual,
+// InsightCard…) ONLY on the client when the login-race fallback actually fires.
+// A static import here forced that entire heavy subtree into the public homepage's
+// compile graph for every logged-out visitor (a PERF-05 static-import-defeats-lazy
+// trap). It's a transient post-login fallback, so ssr:false is correct.
+const AuthenticatedHomePage = dynamic(
+  () => import('./AuthenticatedHomePage').then((m) => ({ default: m.AuthenticatedHomePage })),
+  { ssr: false }
+);
 
 /**
  * Client wrapper used when the server-side cookie check returned `null`

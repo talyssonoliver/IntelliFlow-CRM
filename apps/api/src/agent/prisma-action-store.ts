@@ -68,7 +68,11 @@ export class PrismaAgentActionStore {
         agentId: action.createdBy,
         agentName: action.agentSessionId,
         expiresAt: action.expiresAt,
-        tenantId: this.tenantId,
+        // Stamp the action's OWN tenant when the caller supplied it (the tRPC
+        // request path now does), so reads/approvals can enforce tenant ownership.
+        // Falls back to the store's default only for legacy/background callers
+        // that don't yet thread a tenant — see getPendingAction guard in the router.
+        tenantId: action.tenantId ?? this.tenantId,
       },
     });
   }
@@ -110,13 +114,20 @@ export class PrismaAgentActionStore {
     }
   }
 
-  async findByUser(userId: string): Promise<PendingAction[]> {
+  /**
+   * List a user's pending actions. `tenantId` defaults to the store's default
+   * tenant (background/process callers), but request paths pass the caller's real
+   * tenant so the filter matches the tenant stamped at creation (see `add`).
+   * Without this, actions created for a non-default tenant would be invisible
+   * to the list/count endpoints.
+   */
+  async findByUser(userId: string, tenantId: string = this.tenantId): Promise<PendingAction[]> {
     const rows = await this.prisma.agentAction.findMany({
       where: {
         agentId: userId,
         status: 'PENDING_APPROVAL' as any,
         expiresAt: { gt: new Date() },
-        tenantId: this.tenantId,
+        tenantId,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -148,12 +159,19 @@ export class PrismaAgentActionStore {
     return rows.map((r) => this.toPendingAction(r));
   }
 
-  async expireOld(): Promise<number> {
+  /**
+   * Mark a tenant's expired pending actions as EXPIRED. `tenantId` defaults to the
+   * store's default tenant (background/process callers); request paths pass the
+   * caller's real tenant so their own expired actions are also cleaned up — without
+   * this, a non-default tenant's expired actions are never flipped to EXPIRED (they
+   * stay PENDING_APPROVAL, only hidden from lists by the expiresAt filter).
+   */
+  async expireOld(tenantId: string = this.tenantId): Promise<number> {
     const result = await this.prisma.agentAction.updateMany({
       where: {
         status: 'PENDING_APPROVAL' as any,
         expiresAt: { lt: new Date() },
-        tenantId: this.tenantId,
+        tenantId,
       },
       data: { status: 'EXPIRED' as any },
     });
@@ -251,6 +269,7 @@ export class PrismaAgentActionStore {
 
     return {
       id: row.id,
+      tenantId: row.tenantId,
       toolName: row.actionType,
       actionType: this.inferActionType(row.actionType),
       entityType: row.entityType.toUpperCase() as any,

@@ -62,6 +62,13 @@ export interface PendingAction {
   createdBy: string;
   agentSessionId: string;
   metadata?: Record<string, unknown>;
+  /**
+   * Tenant that owns this action. Threaded from the tRPC request path so
+   * reads/approvals can enforce tenant ownership (see requireTenantOwnedAction).
+   * Optional: legacy/background callers that don't yet supply a tenant fall back
+   * to the store's default tenant.
+   */
+  tenantId?: string;
 }
 
 /**

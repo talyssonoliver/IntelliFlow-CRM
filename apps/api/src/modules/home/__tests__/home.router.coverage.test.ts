@@ -754,7 +754,7 @@ describe('Home Router Coverage Tests (PG-163)', () => {
           ],
         },
       } as any);
-      (prismaMock as any).lead.findFirst.mockResolvedValue({ id: 'lead-123' });
+      (prismaMock as any).lead.findMany.mockResolvedValue([{ id: 'lead-123' }]);
 
       const result = await caller.getPinnedItems();
 
@@ -776,7 +776,7 @@ describe('Home Router Coverage Tests (PG-163)', () => {
           ],
         },
       } as any);
-      (prismaMock as any).lead.findFirst.mockResolvedValue(null);
+      (prismaMock as any).lead.findMany.mockResolvedValue([]);
 
       const result = await caller.getPinnedItems();
 
@@ -820,14 +820,14 @@ describe('Home Router Coverage Tests (PG-163)', () => {
         },
       } as any);
       (prismaMock as any).reportDefinition = {
-        findFirst: vi.fn().mockResolvedValue({ id: 'report-1' }),
+        findMany: vi.fn().mockResolvedValue([{ id: 'report-1' }]),
       };
 
       const result = await caller.getPinnedItems();
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].isAvailable).toBe(true);
-      expect((prismaMock as any).reportDefinition.findFirst).toHaveBeenCalled();
+      expect((prismaMock as any).reportDefinition.findMany).toHaveBeenCalled();
     });
   });
 

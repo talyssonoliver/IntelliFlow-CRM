@@ -308,6 +308,32 @@ vi.mock('@/components/deals', () => ({
   ),
 }));
 
+// The page imports its deal components from their own modules (NOT the barrel) so
+// @dnd-kit stays out of the deals route's initial compile graph (PERF-05). The
+// barrel stub above defines all the component stubs in one place; mirror each
+// direct module path here so the page's direct imports resolve to those same stubs
+// instead of the real components.
+vi.mock('@/components/deals/PipelineBoard', async () => {
+  const barrel = (await import('@/components/deals')) as { PipelineBoard: unknown };
+  return { PipelineBoard: barrel.PipelineBoard };
+});
+vi.mock('@/components/deals/ValueSummary', async () => {
+  const barrel = (await import('@/components/deals')) as { ValueSummary: unknown };
+  return { ValueSummary: barrel.ValueSummary };
+});
+vi.mock('@/components/deals/DealFilters', async () => {
+  const barrel = (await import('@/components/deals')) as { DealFilters: unknown };
+  return { DealFilters: barrel.DealFilters };
+});
+vi.mock('@/components/deals/DealListView', async () => {
+  const barrel = (await import('@/components/deals')) as { DealListView: unknown };
+  return { DealListView: barrel.DealListView };
+});
+vi.mock('@/components/deals/LossReasonModal', async () => {
+  const barrel = (await import('@/components/deals')) as { LossReasonModal: unknown };
+  return { LossReasonModal: barrel.LossReasonModal };
+});
+
 // Mock next/dynamic — prevent stale mock leak from other test files
 vi.mock('next/dynamic', () => ({
   __esModule: true,
@@ -409,7 +435,7 @@ describe('DealsPage', { timeout: 10000 }, () => {
         render(<DealsPage />);
       });
 
-      const board = screen.getByTestId('pipeline-board');
+      const board = await screen.findByTestId('pipeline-board');
       expect(board).toBeInTheDocument();
       expect(board).toHaveAttribute('data-deal-count', '3');
     });
@@ -512,7 +538,7 @@ describe('DealsPage', { timeout: 10000 }, () => {
         render(<DealsPage />);
       });
 
-      const dealBtn = screen.getByTestId('deal-1');
+      const dealBtn = await screen.findByTestId('deal-1');
       await user.click(dealBtn);
 
       expect(mockPush).toHaveBeenCalledWith('/deals/1');
@@ -525,7 +551,7 @@ describe('DealsPage', { timeout: 10000 }, () => {
         render(<DealsPage />);
       });
 
-      const triggerBtn = screen.getByTestId('trigger-stage-change');
+      const triggerBtn = await screen.findByTestId('trigger-stage-change');
       await user.click(triggerBtn);
 
       expect(mockMoveStage).toHaveBeenCalledWith(
@@ -540,6 +566,8 @@ describe('DealsPage', { timeout: 10000 }, () => {
       await act(async () => {
         render(<DealsPage />);
       });
+
+      await screen.findByTestId('pipeline-board');
 
       // Trigger optimistic update via onMutate callback
       expect(capturedMoveStageConfig.onMutate).toBeDefined();
@@ -556,6 +584,8 @@ describe('DealsPage', { timeout: 10000 }, () => {
       await act(async () => {
         render(<DealsPage />);
       });
+
+      await screen.findByTestId('pipeline-board');
 
       // Trigger optimistic update
       let rollbackContext: unknown;
@@ -594,7 +624,7 @@ describe('DealsPage', { timeout: 10000 }, () => {
       expect(screen.queryByTestId('loss-reason-modal')).not.toBeInTheDocument();
 
       // Trigger CLOSED_LOST stage change
-      const closedLostBtn = screen.getByTestId('trigger-closed-lost');
+      const closedLostBtn = await screen.findByTestId('trigger-closed-lost');
       await user.click(closedLostBtn);
 
       // Modal should now be visible

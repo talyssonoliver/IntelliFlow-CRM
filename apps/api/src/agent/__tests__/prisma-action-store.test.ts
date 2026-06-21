@@ -468,6 +468,18 @@ describe('findByUser()', () => {
     expect(args.orderBy).toEqual({ createdAt: 'desc' });
   });
 
+  it('E1b: filters by the caller-supplied tenantId (overrides the store default)', async () => {
+    // Request paths pass the caller's real tenant so the list matches the tenant
+    // stamped at creation (add). Without this the row would be filtered out.
+    (prismaMock.agentAction.findMany as any).mockResolvedValue([makeAgentActionRow()]);
+
+    await store.findByUser(USER_ID, 'tenant-other');
+
+    const args = (prismaMock.agentAction.findMany as any).mock.calls[0][0];
+    expect(args.where.tenantId).toBe('tenant-other');
+    expect(args.where.tenantId).not.toBe(TENANT_ID);
+  });
+
   it('E2: returns empty array when no rows found', async () => {
     (prismaMock.agentAction.findMany as any).mockResolvedValue([]);
 
@@ -547,6 +559,18 @@ describe('expireOld()', () => {
 
     const count = await store.expireOld();
     expect(count).toBe(0);
+  });
+
+  it('F1b: scopes to a caller-supplied tenantId when provided', async () => {
+    // Request paths pass the caller's tenant so their expired actions are cleaned
+    // up too (matching the findByUser filter), not just the store-default tenant's.
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 2 });
+
+    await store.expireOld('tenant-other');
+
+    const args = (prismaMock.agentAction.updateMany as any).mock.calls[0][0];
+    expect(args.where.tenantId).toBe('tenant-other');
+    expect(args.where.tenantId).not.toBe(TENANT_ID);
   });
 });
 

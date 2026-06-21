@@ -22,13 +22,21 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useDealFilterOptions } from '@/hooks/use-dynamic-filters';
 import { revalidateDealCaches } from '@/app/deals/actions';
 
-import {
-  PipelineBoard,
-  ValueSummary,
-  DealFilters,
-  DealListView,
-  LossReasonModal,
-} from '@/components/deals';
+// Import from direct module paths (NOT the '@/components/deals' barrel): the barrel
+// re-exports PipelineBoard, so a static barrel edge would pull @dnd-kit back into this
+// route's initial graph and defeat the dynamic PipelineBoard import below (PERF-05).
+import { ValueSummary } from '@/components/deals/ValueSummary';
+import { DealFilters } from '@/components/deals/DealFilters';
+import { DealListView } from '@/components/deals/DealListView';
+import { LossReasonModal } from '@/components/deals/LossReasonModal';
+
+// PipelineBoard statically pulls in @dnd-kit (core/sortable/sensors). The default
+// view is the list, so load the kanban board (and @dnd-kit) on demand instead of
+// compiling/bundling it into every deals-page visit (PERF-05 static-import trap).
+const PipelineBoard = dynamic(
+  () => import('@/components/deals/PipelineBoard').then((m) => ({ default: m.PipelineBoard })),
+  { ssr: false, loading: () => <Skeleton className="h-96 w-full" /> }
+);
 
 const DealsCharts = dynamic(() => import('@/components/deals/DealsCharts'), {
   ssr: false,

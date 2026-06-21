@@ -932,18 +932,31 @@ export const inboundEmailRouter = createTRPCRouter({
           where.metadata = { path: ['isTrashed'], equals: true };
         }
 
-        // Inbox: exclude archived/trashed/spam/draft via app-layer filtering
-        // (Prisma JSON path NOT filters have SQL NULL issues with missing keys)
+        // Inbox: exclude archived/trashed/spam/draft. Computed as two DB-side
+        // counts instead of loading every unread row into memory and filtering
+        // in-app:
+        //   inbox unread = (all unread) − (unread flagged archived/trashed/spam/draft)
+        // We use POSITIVE `equals: true` filters (not `not: true`) because Prisma's
+        // JSON-path negation treats a MISSING key as SQL NULL and would wrongly drop
+        // rows. The flags are always written as booleans (see folder mutations
+        // above), so `equals: true` is an exact mirror of the previous
+        // `!meta.isArchived && …` truthiness test.
         if (folderLower === 'inbox') {
-          const emails = await prisma.emailRecord.findMany({
-            where,
-            select: { metadata: true },
-          });
-          const filtered = emails.filter((e: any) => {
-            const meta = (e.metadata as Record<string, any>) ?? {};
-            return !meta.isArchived && !meta.isTrashed && !meta.isSpam && !meta.isDraft;
-          });
-          return { folder, count: filtered.length };
+          const [totalUnread, flaggedUnread] = await Promise.all([
+            prisma.emailRecord.count({ where }),
+            prisma.emailRecord.count({
+              where: {
+                ...where,
+                OR: [
+                  { metadata: { path: ['isArchived'], equals: true } },
+                  { metadata: { path: ['isTrashed'], equals: true } },
+                  { metadata: { path: ['isSpam'], equals: true } },
+                  { metadata: { path: ['isDraft'], equals: true } },
+                ],
+              },
+            }),
+          ]);
+          return { folder, count: totalUnread - flaggedUnread };
         }
 
         return { folder, count: await prisma.emailRecord.count({ where }) };
@@ -1243,7 +1256,9 @@ function reconstructSendGridEmail(input: z.infer<typeof InboundEmailWebhookSchem
  *  3. Fall back to 'system' when no matching tenant is found (e.g. catch-all
  *     inbound addresses, forwarded test emails, or misconfigured webhooks).
  */
-async function resolveTenantForInboundEmail(toAddresses: string[], prisma: any): Promise<string> {
+/** Extract recipient domains in order, deduped, keeping first-seen order. */
+function extractRecipientDomains(toAddresses: string[]): string[] {
+  const domains: string[] = [];
   for (const address of toAddresses) {
     const atIndex = address.indexOf('@');
     if (atIndex === -1) continue;
@@ -1251,19 +1266,48 @@ async function resolveTenantForInboundEmail(toAddresses: string[], prisma: any):
       .slice(atIndex + 1)
       .toLowerCase()
       .trim();
-    if (!domain) continue;
+    if (domain && !domains.includes(domain)) domains.push(domain);
+  }
+  return domains;
+}
 
-    try {
-      const user = await prisma.user.findFirst({
-        where: { email: { endsWith: `@${domain}` } },
-        select: { tenantId: true },
-      });
-      if (user?.tenantId) {
-        return user.tenantId;
-      }
-    } catch {
-      // Non-fatal — continue trying other addresses
+/** Index the first tenant seen per email domain (skips tenant-less users). */
+function indexTenantsByDomain(
+  users: Array<{ email: string; tenantId: string | null }>
+): Map<string, string> {
+  const tenantByDomain = new Map<string, string>();
+  for (const u of users) {
+    if (!u.tenantId) continue;
+    const at = u.email.lastIndexOf('@');
+    if (at === -1) continue;
+    const d = u.email.slice(at + 1).toLowerCase();
+    if (!tenantByDomain.has(d)) tenantByDomain.set(d, u.tenantId);
+  }
+  return tenantByDomain;
+}
+
+export async function resolveTenantForInboundEmail(
+  toAddresses: string[],
+  prisma: any
+): Promise<string> {
+  const domains = extractRecipientDomains(toAddresses);
+  if (domains.length === 0) return 'system';
+
+  try {
+    // Single query for ALL candidate domains — was a `findFirst` per recipient
+    // (an N+1 over an unindexed `endsWith`, run on every inbound webhook). We then
+    // resolve in domain order so the original first-recipient-wins behaviour holds.
+    const users: Array<{ email: string; tenantId: string | null }> = await prisma.user.findMany({
+      where: { OR: domains.map((d) => ({ email: { endsWith: `@${d}` } })) },
+      select: { email: true, tenantId: true },
+    });
+    const tenantByDomain = indexTenantsByDomain(users);
+    for (const d of domains) {
+      const tenantId = tenantByDomain.get(d);
+      if (tenantId) return tenantId;
     }
+  } catch {
+    // Non-fatal — fall through to the system/fallback bucket.
   }
 
   // No matching tenant found — route to the system/fallback bucket
