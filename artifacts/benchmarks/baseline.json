@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-06-16T15:34:26.045Z",
+  "timestamp": "2026-06-21T14:44:42.037Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1395,9 +1395,9 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 173,
-    "total_fields": 2553,
-    "total_indexes": 812,
+    "total_tables": 174,
+    "total_fields": 2564,
+    "total_indexes": 816,
     "total_relations": 245,
     "tables_with_embeddings": 4,
     "enums": 74,
@@ -2156,6 +2156,13 @@
         "fields": 11,
         "indexes": 2,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "PortalPmDelivery",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 0,
         "hasEmbedding": false
       },
       {

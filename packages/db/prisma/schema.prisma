@@ -5744,3 +5744,27 @@ model PublicFeedback {
   @@index([rating])
   @@map("public_feedback")
 }
+
+/// CRM-PR-A: inbound ledger for leangency-portal PM-event deliveries (ADR-022).
+/// One row per delivery, keyed by the deterministic Idempotency-Key
+/// `pm-outbox:<event_id>:crm`. Ingestion-only — stores the minimal envelope + a
+/// payload hash, NOT the full governed payload. Written only by the PM-event
+/// receiver route in apps/api (see docs/pm/crm-pm-event-receiver-contract.md in the
+/// portal repo). No relation to Tenant (loose tenant_id) to keep this purely additive.
+model PortalPmDelivery {
+  id               String   @id @default(cuid())
+  idempotencyKey   String   @unique @map("idempotency_key")
+  eventId          String   @map("event_id")
+  category         String
+  type             String
+  occurredAt       DateTime @map("occurred_at")
+  receivedAt       DateTime @default(now()) @map("received_at")
+  processingStatus String   @default("received") @map("processing_status")
+  safeErrorCode    String?  @map("safe_error_code")
+  payloadHash      String   @map("payload_hash")
+  tenantId         String?  @map("tenant_id")
+
+  @@index([eventId])
+  @@index([processingStatus])
+  @@map("portal_pm_deliveries")
+}
