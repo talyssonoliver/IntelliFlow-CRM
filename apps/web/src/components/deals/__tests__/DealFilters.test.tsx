@@ -153,6 +153,29 @@ describe('DealFilters', () => {
     expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ maxValue: 50000 }));
   });
 
+  it('treats a 0 min/max value as no filter — never sends 0 (#450)', () => {
+    // opportunityQuerySchema.min/maxValue is z.number().positive(); sending 0 fails
+    // server validation -> "Failed to load deals". 0 must map to undefined.
+    render(<DealFilters value={createMockDealFilters()} onChange={mockOnChange} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'More filters' }));
+
+    fireEvent.change(screen.getByLabelText('Min Value'), { target: { value: '0' } });
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ minValue: undefined }));
+
+    fireEvent.change(screen.getByLabelText('Max Value'), { target: { value: '0' } });
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ maxValue: undefined }));
+  });
+
+  it('treats a negative value as no filter — never sends a negative (#450)', () => {
+    render(<DealFilters value={createMockDealFilters()} onChange={mockOnChange} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'More filters' }));
+
+    fireEvent.change(screen.getByLabelText('Min Value'), { target: { value: '-5' } });
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ minValue: undefined }));
+  });
+
   it('clearing a value input sends undefined (F-11)', () => {
     render(
       <DealFilters value={createMockDealFilters({ minValue: 1000 })} onChange={mockOnChange} />
