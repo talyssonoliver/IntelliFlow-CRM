@@ -17,6 +17,7 @@ import {
 } from './modules/misc/health.service';
 import { container } from './container';
 import { processStripeWebhook } from './webhooks/stripe-webhook';
+import { handlePmEventsRoute } from './modules/pm-events/handle-pm-events-route';
 
 export const API_PORT = Number(process.env.PORT ?? 4000);
 
@@ -486,6 +487,20 @@ async function handleRequest(
   }
 
   if (await handleStripeWebhookRoute(pathname, req, body, res, headOnly)) {
+    return;
+  }
+
+  // CRM-PR-A: PM-event receiver for the leangency-portal outbox drain (ADR-022).
+  // Plain-JSON POST verified by the shared PORTAL_INTERNAL_SECRET bearer + a
+  // deterministic Idempotency-Key; ingestion-only (idempotent ledger, no workflow).
+  const pmEventsResult = await handlePmEventsRoute(
+    pathname,
+    req.method,
+    req.headers,
+    body?.toString('utf8') ?? ''
+  );
+  if (pmEventsResult) {
+    sendJson(res, pmEventsResult.statusCode, pmEventsResult.body, headOnly);
     return;
   }
 
