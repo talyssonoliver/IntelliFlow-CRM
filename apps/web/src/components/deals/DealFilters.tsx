@@ -63,7 +63,11 @@ export const DealFilters = React.memo(function DealFilters({
   const parseMoney = (raw: string): number | undefined => {
     if (raw === '') return undefined;
     const n = Number(raw);
-    return Number.isFinite(n) ? n : undefined;
+    // The server schema (opportunityQuerySchema.min/maxValue) is z.number().positive(),
+    // so 0 and negatives are not valid filter bounds — sending them yields a BAD_INPUT
+    // ("Failed to load deals"). A 0 lower bound is meaningless anyway. Treat any
+    // non-positive (or non-finite) entry as "no filter". (#450)
+    return Number.isFinite(n) && n > 0 ? n : undefined;
   };
 
   const handleMinValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
