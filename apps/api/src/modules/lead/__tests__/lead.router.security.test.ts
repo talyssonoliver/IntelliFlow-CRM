@@ -355,18 +355,26 @@ describe('Lead Router Security — Tenant Isolation (IFC-237)', () => {
     });
   });
 
-  describe('T-011: Static analysis — no ctx.prisma in lead.router.ts except user lookup', () => {
-    it('should have zero ctx.prisma usages apart from the allowed user lookup', () => {
+  describe('T-011: Static analysis — only tenant-safe ctx.prisma in lead.router.ts', () => {
+    it('uses ctx.prisma only for the singleton audit logger (tenant-safe: explicit tenantId per entry)', () => {
       const routerSource = readFileSync(resolve(__dirname, '../lead.router.ts'), 'utf-8');
 
-      // Find all ctx.prisma occurrences. The router has since been refactored
-      // to use prismaWithTenant everywhere, including the cross-tenant user
-      // lookup, so the allowed count is now 0.
-      const matches = routerSource.match(/ctx\.prisma\b/g) ?? [];
-      const allowedPatternCount = (routerSource.match(/ctx\.prisma\.user\.findMany/g) ?? []).length;
+      // Every raw ctx.prisma occurrence must be an explicitly-allowed,
+      // tenant-safe consumer. Business-data access must go through
+      // prismaWithTenant (tenant-scoped) — a raw ctx.prisma.lead.* would fail.
+      const allCtxPrisma = (routerSource.match(/ctx\.prisma\b/g) ?? []).length;
 
-      expect(matches.length).toBe(allowedPatternCount);
-      expect(allowedPatternCount).toBeLessThanOrEqual(1);
+      // Allowed consumers of the base (non-tenant-scoped) client:
+      //  - getAuditLogger(ctx.prisma) — IFC-240 audit logging. The audit logger
+      //    is a singleton that requires a base PrismaClient and writes the
+      //    tenantId explicitly into every audit entry, so it does NOT bypass
+      //    tenant isolation of business data (matches opportunity router IFC-281).
+      //  - ctx.prisma.user.findMany — legacy cross-tenant owner lookup (now 0).
+      const auditLoggerUsages = (routerSource.match(/getAuditLogger\(ctx\.prisma\)/g) ?? []).length;
+      const userLookupUsages = (routerSource.match(/ctx\.prisma\.user\.findMany/g) ?? []).length;
+
+      expect(allCtxPrisma).toBe(auditLoggerUsages + userLookupUsages);
+      expect(userLookupUsages).toBeLessThanOrEqual(1);
     });
   });
 });

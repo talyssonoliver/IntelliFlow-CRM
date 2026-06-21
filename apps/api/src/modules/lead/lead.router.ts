@@ -39,6 +39,8 @@ import {
   createTenantWhereClause,
   type TenantAwareContext,
 } from '../../security/tenant-context';
+// IFC-240: fire-and-forget audit logging for lead mutations + single-record reads
+import { getAuditLogger } from '../../security/audit-logger';
 import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapters';
 import { createNotification } from '../notifications/notifications.router';
 import { deriveLeadInsights } from '../../shared/lead-insight-deriver';
@@ -52,6 +54,15 @@ import {
 } from '@intelliflow/domain';
 import { LEAD_SCORE_THRESHOLDS } from '@intelliflow/application';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
+
+/**
+ * IFC-240: shared fire-and-forget audit-failure handler. Audit logging must
+ * never alter or block a procedure's result, so every audit call routes its
+ * rejection here instead of propagating into the request path.
+ */
+function logLeadAuditFailure(err: unknown): void {
+  console.error('[lead.router] Audit log failed:', err);
+}
 
 function buildNumberRange(
   min: number | undefined,
@@ -547,6 +558,19 @@ export const leadRouter = createTRPCRouter({
       await queue.close();
     })().catch(() => {});
 
+    // IFC-240: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logAction('CREATE', 'lead', result.value.id.value, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        afterState: {
+          email: result.value.email.value,
+          source: result.value.source,
+          status: result.value.status,
+          company: result.value.company ?? null,
+        },
+      })
+      .catch(logLeadAuditFailure);
+
     return mapLeadToResponse(result.value);
   }),
 
@@ -599,6 +623,13 @@ export const leadRouter = createTRPCRouter({
         message: `Lead with ID ${input.id} not found`,
       });
     }
+
+    // IFC-240: GDPR single-record access logging (fire-and-forget)
+    getAuditLogger(ctx.prisma)
+      .logAction('READ', 'lead', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+      })
+      .catch(logLeadAuditFailure);
 
     const aiInsightRow = lead.aiInsights?.[0] ?? null;
 
@@ -785,6 +816,18 @@ export const leadRouter = createTRPCRouter({
       await queue.close();
     })().catch(() => {});
 
+    // IFC-240: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logAction('UPDATE', 'lead', id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        afterState: {
+          email: result.value.email.value,
+          status: result.value.status,
+          company: result.value.company ?? null,
+        },
+      })
+      .catch(logLeadAuditFailure);
+
     return mapLeadToResponse(result.value);
   }),
 
@@ -820,6 +863,14 @@ export const leadRouter = createTRPCRouter({
       });
     }
 
+    // IFC-240: fire-and-forget audit logging (GDPR erasure)
+    const typedCtx = getTenantContext(ctx);
+    getAuditLogger(ctx.prisma)
+      .logAction('DELETE', 'lead', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+      })
+      .catch(logLeadAuditFailure);
+
     return { success: true, id: input.id };
   }),
 
@@ -839,6 +890,14 @@ export const leadRouter = createTRPCRouter({
       where: { id: input.id },
       data: { isStarred: input.starred },
     });
+    // IFC-240: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logAction('UPDATE', 'lead', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { isStarred: input.starred },
+      })
+      .catch(logLeadAuditFailure);
+
     return { id: updated.id, isStarred: updated.isStarred };
   }),
 
@@ -906,6 +965,14 @@ export const leadRouter = createTRPCRouter({
       userName: ctx.user?.email ?? 'System',
     });
 
+    // IFC-240: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logAction('QUALIFY', 'lead', input.leadId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { reason: input.reason ?? 'Manual qualification' },
+      })
+      .catch(logLeadAuditFailure);
+
     return mapLeadToResponse(result.value);
   }),
 
@@ -959,6 +1026,17 @@ export const leadRouter = createTRPCRouter({
       userId: typedCtx.tenant.userId,
       userName: ctx.user?.email ?? 'System',
     });
+
+    // IFC-240: fire-and-forget audit logging (GDPR — lead converted to contact)
+    getAuditLogger(ctx.prisma)
+      .logAction('CONVERT', 'lead', input.leadId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: {
+          createAccount: input.createAccount,
+          accountName: input.accountName ?? null,
+        },
+      })
+      .catch(logLeadAuditFailure);
 
     return result.value;
   }),
@@ -1027,6 +1105,17 @@ export const leadRouter = createTRPCRouter({
       userId: typedCtx.tenant.userId,
       userName: ctx.user?.email ?? 'System',
     });
+
+    // IFC-240: fire-and-forget audit logging (GDPR — lead converted to deal)
+    getAuditLogger(ctx.prisma)
+      .logAction('CONVERT', 'lead', input.leadId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: {
+          opportunityId: result.value.opportunityId,
+          dealName: input.dealName ?? null,
+        },
+      })
+      .catch(logLeadAuditFailure);
 
     return result.value;
   }),
@@ -1139,6 +1228,19 @@ export const leadRouter = createTRPCRouter({
           console.warn('Failed to populate LeadAIInsight after scoring:', err);
         }
       })();
+
+      // IFC-240: fire-and-forget audit logging
+      getAuditLogger(ctx.prisma)
+        .logAction('AI_SCORE', 'lead', result.value.leadId, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          metadata: {
+            previousScore: result.value.previousScore,
+            newScore: result.value.newScore,
+            tier: result.value.tier,
+            confidence: result.value.confidence,
+          },
+        })
+        .catch(logLeadAuditFailure);
 
       return {
         leadId: result.value.leadId,
@@ -1257,6 +1359,16 @@ export const leadRouter = createTRPCRouter({
       // IFC-125: run bias detection on scored leads in active request flow.
       await runBiasDetectionForScoredLeads(typedCtx, result.successful);
 
+      // IFC-240: fire-and-forget audit logging
+      getAuditLogger(ctx.prisma)
+        .logBulkOperation('BULK_UPDATE', 'lead', result.successful, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          successCount: result.successful.length,
+          failureCount: result.failed.length,
+          metadata: { operation: 'score' },
+        })
+        .catch(logLeadAuditFailure);
+
       return result;
     }),
 
@@ -1367,7 +1479,7 @@ export const leadRouter = createTRPCRouter({
 
     // IFC-007: Use batch operation via transaction
     // Replaces O(n) sequential calls with O(1) batch queries
-    return await typedCtx.prismaWithTenant.$transaction(async (tx) => {
+    const txResult = await typedCtx.prismaWithTenant.$transaction(async (tx) => {
       const successful: string[] = [];
       const failed: Array<{ id: string; error: string }> = [];
 
@@ -1412,6 +1524,18 @@ export const leadRouter = createTRPCRouter({
       successful.push(...validLeads.map((l) => l.id));
       return { successful, failed, totalProcessed: ids.length };
     });
+
+    // IFC-240: fire-and-forget audit logging (GDPR — bulk lead conversion)
+    getAuditLogger(ctx.prisma)
+      .logBulkOperation('BULK_UPDATE', 'lead', txResult.successful, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        successCount: txResult.successful.length,
+        failureCount: txResult.failed.length,
+        metadata: { operation: 'convert', createAccounts },
+      })
+      .catch(logLeadAuditFailure);
+
+    return txResult;
   }),
 
   /**
@@ -1520,6 +1644,16 @@ export const leadRouter = createTRPCRouter({
         collectBulkFailures(ids, failed, successful, error);
       }
 
+      // IFC-240: fire-and-forget audit logging
+      getAuditLogger(ctx.prisma)
+        .logBulkOperation('BULK_UPDATE', 'lead', successful, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          successCount: successful.length,
+          failureCount: failed.length,
+          metadata: { operation: 'updateStatus', status },
+        })
+        .catch(logLeadAuditFailure);
+
       return { successful, failed, totalProcessed: ids.length };
     }),
 
@@ -1584,6 +1718,16 @@ export const leadRouter = createTRPCRouter({
       collectBulkFailures(ids, failed, successful, error);
     }
 
+    // IFC-240: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logBulkOperation('BULK_UPDATE', 'lead', successful, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        successCount: successful.length,
+        failureCount: failed.length,
+        metadata: { operation: 'archive', status: 'LOST' },
+      })
+      .catch(logLeadAuditFailure);
+
     return { successful, failed, totalProcessed: ids.length };
   }),
 
@@ -1619,6 +1763,14 @@ export const leadRouter = createTRPCRouter({
           tenantId: typedCtx.tenant.tenantId,
         },
       });
+
+      // IFC-240: fire-and-forget audit logging
+      getAuditLogger(ctx.prisma)
+        .logAction('UPDATE', 'lead', input.leadId, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          metadata: { operation: 'add_note', noteId: note.id },
+        })
+        .catch(logLeadAuditFailure);
 
       return note;
     }),
@@ -1685,6 +1837,14 @@ export const leadRouter = createTRPCRouter({
         return created;
       });
 
+      // IFC-240: fire-and-forget audit logging
+      getAuditLogger(ctx.prisma)
+        .logAction('UPDATE', 'lead', input.leadId, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          metadata: { operation: 'log_activity', activityType: input.type },
+        })
+        .catch(logLeadAuditFailure);
+
       return activity;
     }),
 
@@ -1733,6 +1893,15 @@ export const leadRouter = createTRPCRouter({
         }
       }
     }
+
+    // IFC-240: fire-and-forget audit logging (GDPR erasure)
+    getAuditLogger(ctx.prisma)
+      .logBulkOperation('BULK_DELETE', 'lead', successful, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        successCount: successful.length,
+        failureCount: failed.length,
+      })
+      .catch(logLeadAuditFailure);
 
     return { successful, failed, totalProcessed: ids.length };
   }),
