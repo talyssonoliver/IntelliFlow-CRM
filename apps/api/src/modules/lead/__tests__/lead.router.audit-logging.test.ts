@@ -329,16 +329,14 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
       .mockImplementation(async (fn: (tx: unknown) => unknown) =>
         fn({
           lead: {
-            findMany: vi
-              .fn()
-              .mockResolvedValue([
-                {
-                  ...mockLead,
-                  id: TEST_UUIDS.lead1,
-                  status: 'QUALIFIED',
-                  tenantId: TEST_UUIDS.tenant,
-                },
-              ]),
+            findMany: vi.fn().mockResolvedValue([
+              {
+                ...mockLead,
+                id: TEST_UUIDS.lead1,
+                status: 'QUALIFIED',
+                tenantId: TEST_UUIDS.tenant,
+              },
+            ]),
             updateMany: vi.fn().mockResolvedValue({ count: 1 }),
           },
           leadActivity: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
