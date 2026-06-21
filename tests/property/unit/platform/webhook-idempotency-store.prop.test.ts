@@ -226,11 +226,9 @@ describe('IdempotencyStore.cleanup — removes only expired entries', () => {
       const body = JSON.stringify({ id: eventId, type: 'ev' });
       await fw.handle('src', body, {});
 
-      // Spin until at least 2 ms have passed so the 1 ms TTL is reliably elapsed.
-      const deadline = Date.now() + 50;
-      while (Date.now() < deadline) {
-        /* busy-wait is safe here — this is a synchronous check */
-      }
+      // Let the 1 ms TTL elapse without burning CPU (a tight busy-wait skews
+      // scheduling across property runs). 5 ms gives a comfortable margin.
+      await new Promise((resolve) => setTimeout(resolve, 5));
 
       const { idempotencyRemoved } = fw.cleanup();
       // The entry was written (it was once processed), so it should be cleaned up now.

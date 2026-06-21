@@ -220,18 +220,19 @@ describe('calculateBackoffDelay — with jitter', () => {
     ],
     propertyParams()
   )(
-    '3c. jitter + maxDelay: result never exceeds maxDelay',
+    '3c. jitter + maxDelay: result stays within the jittered cap [0, maxDelay*(1+jitter)]',
     ({ delay, maxDelay, jitter, attempt }) => {
-      // Jitter can only REDUCE the delay (applied after max cap in code).
-      // Actually: jitter is applied BEFORE max cap check? Let's see the code:
-      // maxDelay cap is applied first, THEN jitter is applied.
-      // So with negative jitter random result could go below maxDelay — fine.
-      // With positive jitter random result could go ABOVE maxDelay! That IS a potential issue.
-      // The code clamps to Math.max(0, ...) but NOT to Math.min(maxDelay, ...).
-      // We test: if jitter=0 (no jitter), result <= maxDelay strictly.
-      const config: RetryBackoffConfig = { type: 'exponential', delay, maxDelay, jitter: 0 };
+      // calculateBackoffDelay caps the exponential delay at maxDelay, THEN applies
+      // jitter as randomJitter ∈ [-d*jitter, +d*jitter] (d = the capped delay),
+      // clamped at 0. So a positive jitter can push the result above maxDelay, but
+      // only by at most the jitter fraction of the capped delay. The honest
+      // invariant — exercising the generated jitter, not hard-coding 0 — is:
+      //   0 <= result <= maxDelay * (1 + jitter).
+      const config: RetryBackoffConfig = { type: 'exponential', delay, maxDelay, jitter };
       const result = calculateBackoffDelay(attempt, config);
-      expect(result).toBeLessThanOrEqual(maxDelay);
+      expect(result).toBeGreaterThanOrEqual(0);
+      // +1 absorbs Math.round() at the boundary.
+      expect(result).toBeLessThanOrEqual(maxDelay * (1 + jitter) + 1);
     }
   );
 });
