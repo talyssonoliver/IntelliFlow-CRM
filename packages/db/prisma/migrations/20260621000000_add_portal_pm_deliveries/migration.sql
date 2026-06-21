@@ -28,3 +28,10 @@ CREATE INDEX "portal_pm_deliveries_event_id_idx" ON "portal_pm_deliveries"("even
 
 -- CreateIndex
 CREATE INDEX "portal_pm_deliveries_processing_status_idx" ON "portal_pm_deliveries"("processing_status");
+
+-- Enable Row Level Security: the repo-wide RLS-coverage contract requires every
+-- public table to ENABLE RLS (db/__tests__/rls-migrations.test.ts). The CRM connects
+-- with a privileged role that bypasses RLS, and this is an internal integration
+-- ledger written only by the apps/api receiver — so ENABLE-only is the established
+-- pattern (mirrors IFC-314's setup_instalments / stripe_subscriptions).
+ALTER TABLE "portal_pm_deliveries" ENABLE ROW LEVEL SECURITY;
