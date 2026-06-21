@@ -19,6 +19,11 @@ test.describe('Home Page E2E', () => {
   // Scenario 1: Public Home Page (AC-001)
   // =========================================================================
   test.describe('Scenario 1: Public Home Page', () => {
+    // This suite asserts the UNauthenticated marketing home. Under the
+    // `authenticated` project the persona storageState would keep the user signed
+    // in — and auth tokens now live in localStorage, so clearing cookies alone no
+    // longer logs out. Drop the whole storageState to get a truly clean context.
+    test.use({ storageState: { cookies: [], origins: [] } });
     test.beforeEach(async ({ context }) => {
       await context.clearCookies();
     });
@@ -74,6 +79,9 @@ test.describe('Home Page E2E', () => {
   // Scenario 2: Auth Redirect (AC-002)
   // =========================================================================
   test.describe('Scenario 2: Auth Redirect', () => {
+    // Same as Scenario 1 — must be genuinely unauthenticated for the protected-route
+    // redirect to fire (localStorage token would otherwise keep the session alive).
+    test.use({ storageState: { cookies: [], origins: [] } });
     test.beforeEach(async ({ context }) => {
       await context.clearCookies();
     });

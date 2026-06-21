@@ -27,8 +27,10 @@ async function waitForStagesLoaded(page: import('@playwright/test').Page) {
   await page
     .locator('h1:has-text("Pipeline Stages")')
     .waitFor({ state: 'visible', timeout: 15000 });
-  // Then wait for stage data to load (past skeleton state)
-  await page.locator('text=PROSPECTING').waitFor({ state: 'visible', timeout: 15000 });
+  // Then wait for stage data to load (past skeleton state). PROSPECTING renders in
+  // more than one place (stage row + key badge), so scope to the first match to
+  // avoid a strict-mode violation.
+  await page.locator('text=PROSPECTING').first().waitFor({ state: 'visible', timeout: 15000 });
 }
 
 test.describe('Pipeline Settings (IFC-063)', () => {
@@ -62,8 +64,9 @@ test.describe('Pipeline Settings (IFC-063)', () => {
       await page.goto('/settings/pipeline');
       await waitForStagesLoaded(page);
 
-      // Should have stage entries with stage key badges
-      const stageKeys = page.locator('text=PROSPECTING');
+      // Should have stage entries with stage key badges (PROSPECTING appears more
+      // than once on the page — assert the first is visible).
+      const stageKeys = page.locator('text=PROSPECTING').first();
       await expect(stageKeys).toBeVisible();
     });
 
@@ -181,7 +184,9 @@ test.describe('Pipeline Settings (IFC-063)', () => {
       await page.goto('/settings/pipeline');
       await waitForStagesLoaded(page);
 
-      const colorGroups = page.locator('[role="group"][aria-label^="Color selection"]');
+      // The color picker is a <fieldset> (implicit ARIA group via its <legend>),
+      // not an element with an explicit role="group" attribute — match the tag.
+      const colorGroups = page.locator('fieldset[aria-label^="Color selection"]');
       const count = await colorGroups.count();
       expect(count).toBeGreaterThan(0);
     });
@@ -211,7 +216,9 @@ test.describe('Pipeline Settings (IFC-063)', () => {
       expect(await toggles.count()).toBeGreaterThan(0);
 
       // Color groups
-      const colorGroups = page.locator('[role="group"][aria-label^="Color selection"]');
+      // The color picker is a <fieldset> (implicit ARIA group via its <legend>),
+      // not an element with an explicit role="group" attribute — match the tag.
+      const colorGroups = page.locator('fieldset[aria-label^="Color selection"]');
       expect(await colorGroups.count()).toBeGreaterThan(0);
 
       // Name inputs

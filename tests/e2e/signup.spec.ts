@@ -17,22 +17,30 @@ test.describe('Sign Up Flow', () => {
   });
 
   test('completes full registration flow', async ({ page }) => {
+    // Hydration gate: a cold App-Router page can NATIVE-submit before React
+    // attaches onSubmit (the form fields then leak into the URL as a GET). An
+    // empty submit that yields React inline errors proves the handler is live
+    // before we drive the real registration.
+    await page.click('button[type="submit"]');
+    await expect(page.locator('text=Full name is required')).toBeVisible();
+
     // Fill form with valid data
     await page.fill('input[name="fullName"]', 'Test User');
     await page.fill('input[name="email"]', `test-${Date.now()}@example.com`);
-
-    // Fill password fields using placeholder since they may not have name attributes
+    // Password fields use React-generated names — target them by placeholder.
     await page.fill('input[placeholder*="Create a password"]', 'SecurePass123!');
     await page.fill('input[placeholder*="Confirm your password"]', 'SecurePass123!');
+    // Real click so React's controlled `acceptTerms` state updates (a synthetic
+    // .checked set does not).
+    await page.locator('input[name="acceptTerms"]').click();
 
-    // Accept terms
-    await page.check('input[type="checkbox"]');
-
-    // Submit
     await page.click('button[type="submit"]');
 
-    // Verify redirect to success page
-    await expect(page).toHaveURL(/\/signup\/success/);
+    // Auto-login: signup returns a session (Supabase autoconfirm) and lands the
+    // user authenticated on the app root — not a "check your email" success page.
+    await page.waitForLoadState('networkidle');
+    await expect(page).not.toHaveURL(/\/signup/);
+    await expect(page).not.toHaveURL(/\/login/);
   });
 
   test('shows validation errors for invalid input', async ({ page }) => {
@@ -179,8 +187,10 @@ test.describe('Error Recovery', () => {
     // Resubmit
     await page.click('button[type="submit"]');
 
-    // Verify success
-    await expect(page).toHaveURL(/\/signup\/success/);
+    // Auto-login lands the user authenticated on the app root (see above).
+    await page.waitForLoadState('networkidle');
+    await expect(page).not.toHaveURL(/\/signup/);
+    await expect(page).not.toHaveURL(/\/login/);
   });
 });
 

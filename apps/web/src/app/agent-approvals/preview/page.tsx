@@ -17,6 +17,7 @@ import { Card, Button, EmptyState } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import type { AgentAction, ActionStatus } from '@/lib/agent';
+import { getConfidenceBadge } from '@/lib/lead-scoring/confidence-badge';
 
 // Material Symbols icon helper component
 const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: string }>) => (
@@ -233,34 +234,6 @@ function getStatusBadge(status: ActionStatus): {
   }
 }
 
-function getConfidenceBadge(score: number): {
-  label: string;
-  className: string;
-} {
-  if (score >= 80) {
-    return {
-      label: 'High Confidence',
-      className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    };
-  }
-  if (score >= 60) {
-    return {
-      label: 'Medium Confidence',
-      className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-    };
-  }
-  if (score > 0) {
-    return {
-      label: 'Low Confidence',
-      className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    };
-  }
-  return {
-    label: '',
-    className: '',
-  };
-}
-
 // =============================================================================
 // Components
 // =============================================================================
@@ -338,7 +311,7 @@ function ActionCard({
   const [showRejectForm, setShowRejectForm] = useState(false);
 
   const statusBadge = getStatusBadge(action.status);
-  const confidenceBadge = getConfidenceBadge(action.confidenceScore);
+  const confidenceBadge = getConfidenceBadge(action.confidenceScore, { hideWhenZero: true });
   const isPending = action.status === 'pending';
 
   const handleReject = () => {

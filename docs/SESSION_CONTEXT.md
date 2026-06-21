@@ -1,15 +1,15 @@
 # Session Context Snapshot
-_Generated: 2026-06-13T17:43:11.509Z • Branch: chore/sprint18-reconcile-w3_
+_Generated: 2026-06-18T23:02:04.105Z • Branch: chore/system-qa-validation_
 
 > Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 18** (sprint-18) — 17% complete (10/60 tasks). 0 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 5d ago; 596 total tasks across the project.
+Active sprint: **Sprint 18** (sprint-18) — 17% complete (10/60 tasks). 0 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 11d ago; 596 total tasks across the project.
 
 ## Project Health
 
-- **Progress:** 403/596 tasks completed (67.62%) — 192 backlog, 0 blocked, 1 in progress.
+- **Progress:** 409/596 tasks completed (68.62%) — 186 backlog, 0 blocked, 1 in progress.
 - **Focus band:** Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
 - **Evidence issues:** 4 attested but CSV not updated.
 - _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
@@ -34,19 +34,19 @@ _None. The active sprint has no tasks currently in progress._
 
 ## Git Activity
 
-- **Branch:** `chore/sprint18-reconcile-w3` (5 dirty file(s))
-- **Dirty preview:** `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`, `apps/project-tracker/docs/metrics/_global/Sprint_plan_H.csv`, `apps/project-tracker/docs/metrics/sprint-18/IFC-265.json`, `artifacts/reports/current-state-report.json`, `docs/CURRENT_STATE_REPORT.md`
+- **Branch:** `chore/system-qa-validation` (7 dirty file(s))
+- **Dirty preview:** `artifacts/benchmarks/IFC-310-merge.json`, `artifacts/coverage/coverage-final.json`, `artifacts/coverage/coverage-summary.json`, `artifacts/coverage/lcov.info`, `artifacts/reports/a11y-route-reconcile.json` …
 - **Last 10 commits:**
-  - `37e7a6e2a` feat(deals): wire deal-detail action buttons + harden Edit update (IFC-280) (#425) — Talysson Da Silva Oliveira, 48 minutes ago
-  - `f9db72a02` feat(PG-063): add CSV lead import (map, validate, formula-injection guard) (#424) — Talysson Da Silva Oliveira, 2 hours ago
-  - `834ae252d` test(contacts): contact detail page + router test coverage (IFC-265) (#423) — Talysson Da Silva Oliveira, 2 hours ago
-  - `c9cd60868` chore(metrics): mark IFC-273 Completed + refresh SESSION_CONTEXT (wave-2 reconcile) (#418) — Talysson Da Silva Oliveira, 4 hours ago
-  - `cb974e527` fix(deals): deal router correctness fixes B-04/B-07/B-09/B-10/B-11/B-12 (IFC-282) (#416) — Talysson Da Silva Oliveira, 5 hours ago
-  - `bc8b1afac` feat(accounts): type-safe account list stats + domain-derived filter enums (IFC-273) (#415) — Talysson Da Silva Oliveira, 6 hours ago
-  - `3e739e52a` feat(PG-062): extract Edit Lead form into lead-editor + change-tracker (#414) — Talysson Da Silva Oliveira, 7 hours ago
-  - `9c438badc` feat(contacts): wire IFC-257 contact-detail action buttons (#410) — Talysson Da Silva Oliveira, 14 hours ago
-  - `6e7b4884c` fix(account): account update fields + revenue/employees/industry procedures (IFC-270) (#409) — Talysson Da Silva Oliveira, 15 hours ago
-  - `80100ee02` feat(PG-061): extract Lead Detail into lead-detail + lead-timeline components (#408) — Talysson Da Silva Oliveira, 16 hours ago
+  - `74cfe0a5b` fix(web): gate modules by plan, not tenant-admin role — talyssonoliver, 2 minutes ago
+  - `0fd4bc0b7` docs(e2e): record the unlock + step 3-5 status in the QA-matrix runbook — talyssonoliver, 20 minutes ago
+  - `e2cf0a05d` test(e2e): keep features-tour on the unauthenticated project — talyssonoliver, 21 minutes ago
+  - `194c5e44c` test(e2e): signup specs assert auto-login + hydration gate — talyssonoliver, 27 minutes ago
+  - `f1aeff798` test(e2e): route authenticated Journey specs to the authenticated project — talyssonoliver, 34 minutes ago
+  - `45d8a925b` docs(e2e): auth-fixture + QA-matrix runbook, with matrix findings — talyssonoliver, 41 minutes ago
+  - `128c54be8` test(e2e): cross-tenant isolation matrix (≥2 tenants) + seed marker accounts — talyssonoliver, 43 minutes ago
+  - `062d54fcc` test(e2e): authenticated module-entitlement matrix (API tier) — talyssonoliver, 47 minutes ago
+  - `b9e779695` feat(e2e): auth + seed fixture — QA personas across tiers × tenants × industries — talyssonoliver, 51 minutes ago
+  - `5a179ece6` docs(e2e): mark all Relocate specs as covered-below (trim now safe) — talyssonoliver, 3 hours ago
 
 ## Key File References
 

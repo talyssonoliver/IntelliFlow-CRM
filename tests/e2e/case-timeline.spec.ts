@@ -49,10 +49,12 @@ test.describe('Case Timeline (IFC-159)', () => {
       const statsSection = page.locator('[aria-label="Timeline statistics"]');
       await expect(statsSection).toBeVisible();
 
-      // Check for expected stat labels
-      await expect(page.locator('text=Total Events')).toBeVisible();
-      await expect(page.locator('text=Active Deadlines')).toBeVisible();
-      await expect(page.locator('text=Overdue')).toBeVisible();
+      // Scope stat labels to the statistics region — "Overdue" also appears as a
+      // status badge on every overdue event row, so an unscoped text= match is a
+      // strict-mode violation.
+      await expect(statsSection.getByText('Total Events')).toBeVisible();
+      await expect(statsSection.getByText('Active Deadlines')).toBeVisible();
+      await expect(statsSection.getByText('Overdue', { exact: true })).toBeVisible();
     });
 
     test('should load timeline within 1 second', async ({ page }) => {
@@ -93,7 +95,9 @@ test.describe('Case Timeline (IFC-159)', () => {
       await page.goto('/cases/timeline');
       await page.waitForLoadState('networkidle');
       expect(responses.every((s) => s < 500)).toBe(true);
-      await expect(page.locator('main')).toBeVisible();
+      // Assert the page's own landmark heading (the layout uses #main-content, not
+      // a bare <main> element).
+      await expect(page.locator('h2:has-text("Case Timeline")')).toBeVisible();
     });
 
     test('should display agent action events with approval links', async ({ page }) => {
@@ -217,15 +221,20 @@ test.describe('Case Timeline (IFC-159)', () => {
       await page.goto('/cases/timeline');
       await page.waitForLoadState('networkidle');
 
-      // Find and click expand button
-      const expandButton = page.locator('[aria-label="Expand details"]').first();
-      if ((await expandButton.count()) > 0) {
-        await expandButton.click();
-        await expandButton.click();
+      // Scope to the first timeline item. The toggle's aria-label flips between
+      // "Expand details" and "Collapse details", so select it by the stable suffix
+      // (not by a label that changes after the first click — otherwise the second
+      // `.first()` resolves to a *different* card and never collapses this one).
+      const firstItem = page.locator('[aria-label="Timeline events"] > li').first();
+      if ((await firstItem.count()) > 0) {
+        const toggle = firstItem.locator('button[aria-label$="details"]');
+        const root = firstItem.locator('button[aria-expanded]');
 
-        // Verify content is collapsed
-        const expandedContent = page.locator('[aria-label="Event details"]').first();
-        await expect(expandedContent).not.toBeVisible();
+        await toggle.click();
+        await expect(root).toHaveAttribute('aria-expanded', 'true');
+
+        await toggle.click();
+        await expect(root).toHaveAttribute('aria-expanded', 'false');
       }
     });
   });
@@ -349,19 +358,18 @@ test.describe('Case Timeline (IFC-159)', () => {
     });
   });
 
-  test.describe('Quick Actions', () => {
-    test('should display quick action buttons', async ({ page }) => {
+  test.describe('Header Controls', () => {
+    test('should display the timeline header action controls', async ({ page }) => {
       await page.goto('/cases/timeline');
       await page.waitForLoadState('networkidle');
 
-      // Check for quick action buttons
-      const addDeadline = page.locator('button:has-text("Add Deadline")');
-      const addTask = page.locator('button:has-text("Add Task")');
-      const addAppointment = page.locator('button:has-text("Schedule Appointment")');
-
-      await expect(addDeadline).toBeVisible();
-      await expect(addTask).toBeVisible();
-      await expect(addAppointment).toBeVisible();
+      // The timeline header exposes Filters + Sort controls (the page has no
+      // "Add Deadline/Task/Appointment" quick-action buttons — that was a stale
+      // assertion against a feature this view never shipped).
+      await expect(page.locator('button:has-text("Filters")')).toBeVisible();
+      await expect(
+        page.locator('button:has-text("Earliest First"), button:has-text("Latest First")')
+      ).toBeVisible();
     });
   });
 });

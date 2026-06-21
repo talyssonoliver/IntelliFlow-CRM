@@ -65,6 +65,61 @@ describe('Lead BANT validators (IFC-242)', () => {
     });
   });
 
+  // Lead-form field contract — relocated from tests/e2e/forms.spec.ts.
+  // These were asserted through a browser ("email field marked as required",
+  // "validation error for invalid email", "source dropdown with all options");
+  // they are pure schema rules and belong at the unit layer.
+  describe('createLeadSchema — form-field contract', () => {
+    it('requires email (the only mandatory field)', () => {
+      const result = createLeadSchema.safeParse({});
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((i) => i.path.includes('email'))).toBe(true);
+      }
+    });
+
+    it('rejects a malformed email', () => {
+      const result = createLeadSchema.safeParse({ email: 'not-an-email' });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((i) => i.path.includes('email'))).toBe(true);
+      }
+    });
+
+    it('accepts a valid email and lowercases it', () => {
+      const result = createLeadSchema.safeParse({ email: 'Lead@Example.COM' });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.email).toBe('lead@example.com');
+      }
+    });
+
+    it('defaults source to WEBSITE when omitted', () => {
+      const result = createLeadSchema.safeParse({ email: 'x@y.com' });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.source).toBe('WEBSITE');
+      }
+    });
+
+    it('accepts every documented lead source and rejects unknown ones', () => {
+      for (const source of [
+        'WEBSITE',
+        'REFERRAL',
+        'SOCIAL',
+        'EMAIL',
+        'COLD_CALL',
+        'EVENT',
+        'OTHER',
+      ]) {
+        expect(createLeadSchema.safeParse({ email: 's@y.com', source }).success).toBe(true);
+      }
+      expect(
+        createLeadSchema.safeParse({ email: 's@y.com', source: 'CARRIER_PIGEON' }).success
+      ).toBe(false);
+    });
+  });
+
   describe('updateLeadSchema', () => {
     it('accepts a partial BANT update', () => {
       const result = updateLeadSchema.safeParse({

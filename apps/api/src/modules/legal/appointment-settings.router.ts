@@ -1,6 +1,12 @@
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { updateAppointmentSettingsSchema } from '@intelliflow/validators';
 
+// NOTE: appointment settings are NOT LEGAL-gated. This router is SHARED with the
+// core Calendar feature (CORE_CRM, all tiers): apps/web/.../calendar/calendar-
+// settings/CalendarSettingsContent.tsx calls `appointmentSettings.get/update/
+// resetToDefaults`. Gating it behind the LEGAL add-on would break calendar
+// settings for every non-Professional tenant.
+
 const DEFAULT_APPOINTMENT_SETTINGS = {
   defaultDurationMinutes: 30,
   minDurationMinutes: 5,

@@ -9,16 +9,16 @@
  * when access is denied, allowing users to see the upgrade CTA
  * without leaving the current context.
  *
- * Admin roles bypass gating entirely (always have full access).
+ * Gating is PLAN-based, matching the backend `requireModule` guard: a tenant's
+ * own ADMIN/owner is still bound by the tenant's plan (this codebase has no
+ * platform super-admin concept). A previous tenant-admin bypass here let a
+ * lower-tier admin see the paid UI while every data call returned FORBIDDEN —
+ * the paywall must show instead.
  */
 
 import type { ModuleId } from '@intelliflow/domain';
 import { useEnabledModules } from '@/hooks/useEnabledModules';
-import { useAuth } from '@/lib/auth/AuthContext';
 import { ModulePaywall } from './ModulePaywall';
-
-/** Roles that bypass module gating entirely */
-const ADMIN_ROLES = new Set(['ADMIN', 'admin', 'SUPER_ADMIN', 'owner']);
 
 interface ModuleGateProps {
   moduleId: ModuleId;
@@ -27,9 +27,6 @@ interface ModuleGateProps {
 
 export function ModuleGate({ moduleId, children }: Readonly<ModuleGateProps>) {
   const { isModuleEnabled, isLoading, isError } = useEnabledModules();
-  const { user } = useAuth();
-
-  const isAdmin = !!user?.role && ADMIN_ROLES.has(user.role);
 
   // While the access query is in-flight, show a loading spinner.
   // This avoids a flash-of-paywall for users who do have access.
@@ -39,11 +36,6 @@ export function ModuleGate({ moduleId, children }: Readonly<ModuleGateProps>) {
         <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
       </div>
     );
-  }
-
-  // Admins always bypass the gate.
-  if (isAdmin) {
-    return <>{children}</>;
   }
 
   // Module not enabled for this tenant — show inline upgrade paywall.
