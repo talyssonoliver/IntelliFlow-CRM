@@ -16,10 +16,9 @@ export abstract class ValueObject<T> {
     // Compare a key-order-independent serialization of the props. A raw
     // JSON.stringify(props) is order-sensitive — {a:1,b:2} and {b:2,a:1} stringify
     // differently yet are structurally equal (RACE-PURE-12 / #223). stableStringify
-    // delegates ALL serialization to JSON.stringify (so toJSON(), Date→ISO, invalid
-    // Date→null, undefined-key drop, and type distinctions like 1 vs "1" are preserved
-    // exactly), and only forces object keys into a canonical (sorted) order — so the
-    // sole behavioural change versus the previous comparison is key-order independence.
+    // produces JSON.stringify's exact output but with object keys in sorted order, so
+    // the only behavioural change versus the previous comparison is key-order
+    // independence.
     return stableStringify(this.props) === stableStringify(other.props);
   }
 
@@ -30,20 +29,35 @@ export abstract class ValueObject<T> {
 }
 
 /**
- * JSON.stringify a value with object keys emitted in a canonical (sorted) order, so two
- * structurally-equal values produce the same string regardless of key insertion order.
+ * JSON.stringify a value with object keys emitted in sorted order, so two structurally
+ * equal values produce the same string regardless of key insertion order.
  *
- * Uses the standard two-pass array-replacer technique: the first pass collects every
- * property key that appears anywhere in the structure; the second pass passes those keys
- * (sorted) as JSON.stringify's array replacer, which forces every object to emit its keys
- * in that order. All other serialization semantics (custom toJSON, Date, dropping
- * undefined values, primitive/type handling) are JSON.stringify's own.
+ * Step 1 normalizes the value through JSON's own rules — `JSON.parse(JSON.stringify(v))`
+ * applies custom `toJSON()`, keeps only own enumerable properties, renders `Date` as its
+ * ISO string (invalid Date → `null`), drops `undefined`-valued keys, and resolves all
+ * primitive/type handling. The result is plain JSON data (objects, arrays, primitives).
+ * Step 2 sorts the keys of that plain data recursively, then serializes. Because step 1
+ * already stripped everything exotic (Dates, toJSON, inherited/non-enumerable props),
+ * step 2 only ever reorders keys — it does not change which data is included.
  */
 function stableStringify(value: unknown): string {
-  const keys = new Set<string>();
-  JSON.stringify(value, (key, val) => {
-    keys.add(key);
-    return val;
-  });
-  return JSON.stringify(value, [...keys].sort());
+  const normalized = JSON.parse(JSON.stringify(value) ?? 'null');
+  return JSON.stringify(sortKeysDeep(normalized));
+}
+
+function sortKeysDeep(value: unknown): unknown {
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map(sortKeysDeep);
+  }
+  const obj = value as Record<string, unknown>;
+  // Object.fromEntries creates own data properties, so an own `__proto__` key (which
+  // JSON.parse can produce) is preserved rather than routed through the prototype setter.
+  return Object.fromEntries(
+    Object.keys(obj)
+      .sort()
+      .map((key) => [key, sortKeysDeep(obj[key])])
+  );
 }
