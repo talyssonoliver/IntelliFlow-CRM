@@ -41,8 +41,14 @@ export abstract class ValueObject<T> {
  * step 2 only ever reorders keys — it does not change which data is included.
  */
 function stableStringify(value: unknown): string {
-  const normalized = JSON.parse(JSON.stringify(value) ?? 'null');
-  return JSON.stringify(sortKeysDeep(normalized));
+  const json = JSON.stringify(value);
+  // A value JSON.stringify cannot represent at the top level (undefined, a function, a
+  // symbol, or an object whose toJSON() returns undefined) yields `undefined`. Keep that
+  // distinct from JSON `null` ("null"), as the prior raw-JSON.stringify comparison did.
+  if (json === undefined) {
+    return 'undefined';
+  }
+  return JSON.stringify(sortKeysDeep(JSON.parse(json)));
 }
 
 function sortKeysDeep(value: unknown): unknown {
