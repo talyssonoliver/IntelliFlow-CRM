@@ -13,16 +13,17 @@ export abstract class ValueObject<T> {
     if (other === null || other === undefined) {
       return false;
     }
-    // Compare a canonical, type-tagged serialization of the props rather than a raw
-    // JSON.stringify, which has structural-equality gaps (RACE-PURE-12 / #223):
-    //   1. Key order is significant — {a:1,b:2} and {b:2,a:1} stringify differently
-    //      yet are structurally equal.
-    //   2. undefined-valued keys are silently dropped — {a:1,b:undefined} and {a:1}
-    //      stringify identically yet differ in shape (key present vs absent).
-    // canonicalize() sorts keys at every depth and emits a type tag for every value, so
-    // a present-but-undefined key, and values that would otherwise serialize alike (e.g.
-    // the string "1" vs the number 1), stay distinct. Existing concrete VOs
-    // (Email/PhoneNumber/DateRange) — defined, fixed-order props — are unaffected.
+    // Compare a canonical serialization of the props. A raw JSON.stringify(props) is
+    // key-order sensitive — {a:1,b:2} and {b:2,a:1} stringify differently yet are
+    // structurally equal (RACE-PURE-12 / #223). canonicalize() sorts object keys at
+    // every depth to remove that fragility.
+    //
+    // It deliberately PRESERVES the other JSON.stringify semantics, in particular that
+    // an `undefined`-valued key is dropped: many VO factories materialise optional
+    // props as `x: options?.x` (i.e. present-but-undefined) while other shapes omit
+    // them, and those must stay equal (e.g. Recurrence.createDaily without options).
+    // Date (incl. invalid → null) and primitive/type distinctions are left to
+    // JSON.stringify, so existing concrete VOs are unaffected.
     return JSON.stringify(canonicalize(this.props)) === JSON.stringify(canonicalize(other.props));
   }
 
@@ -33,41 +34,32 @@ export abstract class ValueObject<T> {
 }
 
 /**
- * Produce a structurally-canonical, type-tagged representation of a value for equality.
- *
- * Every value becomes a `[tag, ...]` tuple so distinct types never collide and special
- * object keys cannot be lost:
- * - `undefined` / `null` → `['undefined']` / `['null']` (distinguishes a present
- *   undefined key from an absent one without an ambiguous sentinel string),
- * - primitives → `[typeof, value]` (so `"1"` ≠ `1`),
- * - `Date` → `['date', iso | null]` — an *invalid* Date renders as `null` (matching the
- *   prior JSON.stringify behaviour) instead of throwing from `toISOString()`,
- * - arrays → `['array', items.map(canonicalize)]`,
- * - plain objects → `['object', sortedEntries]` built as `[key, value]` tuples (not by
- *   assigning to an object literal, which would trigger the `__proto__` setter and drop
- *   an own `__proto__` key), key-order independent.
+ * Rebuild a value with object keys sorted at every depth, so structural equality is
+ * independent of key insertion order. Everything else is left exactly as JSON.stringify
+ * would render it:
+ * - primitives and `null` pass through (JSON already distinguishes e.g. `1` from `"1"`),
+ * - `Date` passes through (JSON renders its ISO string, or `null` for an invalid Date —
+ *   no `toISOString()` throw),
+ * - arrays are recursed element-wise (order is significant),
+ * - plain objects are rebuilt via `Object.fromEntries` over sorted, non-`undefined`
+ *   entries — dropping `undefined` matches JSON.stringify, and `Object.fromEntries`
+ *   creates own data properties (so an own `__proto__` key is preserved, not routed
+ *   through the prototype setter).
  */
 function canonicalize(value: unknown): unknown {
-  if (value === undefined) {
-    return ['undefined'];
-  }
-  if (value === null) {
-    return ['null'];
-  }
-  const valueType = typeof value;
-  if (valueType !== 'object') {
-    return [valueType, value];
+  if (value === null || typeof value !== 'object') {
+    return value;
   }
   if (value instanceof Date) {
-    const time = value.getTime();
-    return ['date', Number.isNaN(time) ? null : value.toISOString()];
+    return value;
   }
   if (Array.isArray(value)) {
-    return ['array', value.map(canonicalize)];
+    return value.map(canonicalize);
   }
   const obj = value as Record<string, unknown>;
   const entries = Object.keys(obj)
     .sort()
-    .map((key) => [key, canonicalize(obj[key])]);
-  return ['object', entries];
+    .filter((key) => obj[key] !== undefined)
+    .map((key) => [key, canonicalize(obj[key])] as const);
+  return Object.fromEntries(entries);
 }
