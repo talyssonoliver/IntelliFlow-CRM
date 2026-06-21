@@ -32,6 +32,9 @@ vi.mock('../container', () => ({
       contact: { list: vi.fn() },
     },
   },
+  // createContext now awaits containerReady (lazy async container) — provide a
+  // resolved promise so the mocked container is treated as already initialised.
+  containerReady: Promise.resolve(),
   apiPrisma: {
     lead: { findMany: vi.fn() },
     $disconnect: vi.fn(),

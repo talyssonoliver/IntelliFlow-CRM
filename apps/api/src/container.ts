@@ -32,8 +32,6 @@ import {
   PrismaConversationSearchRepository,
   InMemoryEventBus,
   MockAIService,
-  OllamaAIService,
-  LiteLLMAIService,
   InMemoryCache,
   RedisCacheAdapter,
   type RedisLike,
@@ -49,6 +47,13 @@ import {
   IcsGenerationService,
   CalendarSyncServiceAdapter,
 } from '@intelliflow/adapters';
+// OllamaAIService / LiteLLMAIService are deliberately NOT exported from the
+// adapters barrel — each statically pulls a heavy @langchain SDK that would load
+// at cold start for every deployment. They are built as separate entry points and
+// imported on demand in createAdapters() (see below). These TYPE-ONLY imports are
+// erased at compile time (zero runtime cost) and keep the baseAIService union exact.
+import type { OllamaAIService } from '@intelliflow/adapters/external/OllamaAIService';
+import type { LiteLLMAIService } from '@intelliflow/adapters/external/LiteLLMAIService';
 import { InMemoryFeatureFlagProvider } from '@intelliflow/platform/feature-flags';
 import { TicketService } from './services/TicketService';
 import { TicketRoutingService } from './services/TicketRoutingService';
@@ -289,9 +294,14 @@ function createNotificationServiceAdapter():
 
 /**
  * Create singleton instances of adapters
+ *
+ * Async because the AI provider branch (ollama/litellm) uses dynamic import to
+ * avoid loading @langchain/ollama or @langchain/openai on cold-start for
+ * deployments that never use those providers (perf/container-lazy-wiring).
+ *
  * @param prismaClient - Prisma client instance to use for repositories
  */
-const createAdapters = (prismaClient: PrismaClient) => {
+const createAdapters = async (prismaClient: PrismaClient) => {
   // Repositories (Prisma implementations)
   const leadRepository = new PrismaLeadRepository(prismaClient);
   const contactRepository = new PrismaContactRepository(prismaClient);
@@ -367,7 +377,13 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const aiProvider = process.env.AI_PROVIDER;
   let baseAIService: MockAIService | OllamaAIService | LiteLLMAIService | QueueAIService;
   if (aiProvider === 'ollama') {
-    baseAIService = new OllamaAIService({
+    // Dynamic import: defers loading @langchain/ollama (~300ms+ module eval) to first
+    // use of the ollama provider. Deployments that never set AI_PROVIDER=ollama pay zero
+    // module-load cost for this provider (perf/container-lazy-wiring).
+    const { OllamaAIService: OllamaAIServiceCtor } = await import(
+      /* webpackIgnore: true */ '@intelliflow/adapters/external/OllamaAIService'
+    ).then((m) => ({ OllamaAIService: m.OllamaAIService }));
+    baseAIService = new OllamaAIServiceCtor({
       baseUrl: () =>
         requiredProdEnv('OLLAMA_BASE_URL', process.env.OLLAMA_BASE_URL, 'http://localhost:11434'),
       model: process.env.OLLAMA_MODEL || 'mistral',
@@ -381,8 +397,14 @@ const createAdapters = (prismaClient: PrismaClient) => {
   } else if (aiProvider === 'mock' || (!aiProvider && process.env.NODE_ENV === 'test')) {
     baseAIService = new MockAIService();
   } else if (aiProvider === 'litellm') {
+    // Dynamic import: defers loading @langchain/openai (~500ms+ module eval) to first
+    // use of the litellm provider. Only loaded when AI_PROVIDER=litellm is explicitly
+    // set (perf/container-lazy-wiring).
+    const { LiteLLMAIService: LiteLLMAIServiceCtor } = await import(
+      /* webpackIgnore: true */ '@intelliflow/adapters/external/LiteLLMAIService'
+    ).then((m) => ({ LiteLLMAIService: m.LiteLLMAIService }));
     // Explicit opt-in for the legacy in-process LLM path (LiteLLM proxy).
-    baseAIService = new LiteLLMAIService({
+    baseAIService = new LiteLLMAIServiceCtor({
       baseUrl: () =>
         requiredProdEnv(
           'LITELLM_BASE_URL',
@@ -493,10 +515,13 @@ const createSecurityServices = (prismaClient: PrismaClient) => {
 
 /**
  * Create application services with injected dependencies
+ *
+ * Async because createAdapters() is async (dynamic AI provider imports).
+ *
  * @param prismaClient - Prisma client instance to use for all services
  */
-const createServices = (prismaClient: PrismaClient) => {
-  const adapters = createAdapters(prismaClient);
+const createServices = async (prismaClient: PrismaClient) => {
+  const adapters = await createAdapters(prismaClient);
   const security = createSecurityServices(prismaClient);
 
   const leadService = new LeadService(
@@ -794,38 +819,101 @@ const createServices = (prismaClient: PrismaClient) => {
   };
 };
 
-/**
- * Singleton container instance
- * Services are created once with the shared Prisma client and reused across all requests
- */
-const containerBase = createServices(apiPrisma);
+// ============================================================================
+// Lazy-init container (perf/container-lazy-wiring)
+//
+// Problem: createServices() is now async (dynamic import of heavy AI providers)
+// and must not run synchronously at module-load time. But callers access
+// `container.leadService` synchronously in context.ts / routers.
+//
+// Solution: A Proxy that transparently forwards property access to the resolved
+// instance. The async init runs as a module-level fire-and-forget; by the time
+// any request is processed the server startup has awaited _initPromise, so
+// _resolved is always populated before the Proxy is actually accessed in prod.
+//
+// In tests: vi.mock() replaces all heavy deps with sync stubs, so the dynamic
+// import in createAdapters() resolves in the same microtask tick, and
+// `await import('../container.js')` in each test awaits the module settling —
+// meaning _resolved is populated before any test assertion runs.
+// ============================================================================
 
-/**
- * Container with get() method for dynamic service lookup
- */
-export const container = {
-  ...containerBase,
-  /**
-   * Get a service by name (for services not yet in the container)
-   * @param serviceName - Name of the service to retrieve
-   * @returns The service instance or throws if not found
-   */
-  get<T = any>(serviceName: string): T {
-    // Check if service exists in container
-    const service = (containerBase as any)[serviceName];
-    if (service) {
-      return service as T;
-    }
-
-    // Service not found - throw error with helpful message
-    throw new Error(
-      `Service '${serviceName}' not found in container. ` +
-        `Available services: ${Object.keys(containerBase).join(', ')}`
-    );
-  },
+type ResolvedContainer = Awaited<ReturnType<typeof createServices>> & {
+  get<T = any>(serviceName: string): T;
 };
+
+let _resolved: ResolvedContainer | null = null;
+
+/**
+ * Promise that resolves once the container has been fully initialized.
+ *
+ * Await this in server startup (apps/api/src/main.ts) before accepting
+ * connections. This ensures the cold-start dynamic imports complete before
+ * the first request arrives — avoiding "container not yet initialized" errors.
+ */
+export const containerReady: Promise<void> = createServices(apiPrisma).then((services) => {
+  const base = services;
+
+  _resolved = {
+    ...base,
+    /**
+     * Get a service by name (for services not yet in the container)
+     * @param serviceName - Name of the service to retrieve
+     * @returns The service instance or throws if not found
+     */
+    get<T = any>(serviceName: string): T {
+      const service = (base as Record<string, unknown>)[serviceName];
+      if (service !== undefined) {
+        return service as T;
+      }
+      throw new Error(
+        `Service '${serviceName}' not found in container. ` +
+          `Available services: ${Object.keys(base).join(', ')}`
+      );
+    },
+  } satisfies ResolvedContainer;
+});
+
+/**
+ * Dependency-injection container.
+ *
+ * Property access is synchronous (Proxy forwards to the resolved instance).
+ * The instance is populated by the module-level async init above; all
+ * runtime callers (context.ts, routers) only access `container` after the
+ * server has awaited `containerReady`, so `_resolved` is always set.
+ *
+ * In tests, `await import('../container.js')` waits for the module to settle
+ * (including the containerReady promise chain), ensuring _resolved is populated
+ * before any test assertion.
+ */
+export const container = new Proxy({} as ResolvedContainer, {
+  get(_target, prop: string | symbol) {
+    if (_resolved === null) {
+      throw new Error(
+        `[container] Property '${String(prop)}' accessed before container initialization completed. ` +
+          `Ensure server startup awaits 'containerReady' before accepting requests.`
+      );
+    }
+    const value = (_resolved as Record<string | symbol, unknown>)[prop];
+    if (typeof value === 'function') {
+      return (value as (...args: unknown[]) => unknown).bind(_resolved);
+    }
+    return value;
+  },
+  has(_target, prop: string | symbol) {
+    if (_resolved === null) return false;
+    return prop in (_resolved as object);
+  },
+  ownKeys(_target) {
+    if (_resolved === null) return [];
+    return Reflect.ownKeys(_resolved as object);
+  },
+  getOwnPropertyDescriptor(_target, prop: string | symbol) {
+    if (_resolved === null) return undefined;
+    return Object.getOwnPropertyDescriptor(_resolved as object, prop);
+  },
+});
 
 /**
  * Type for the container
  */
-export type Container = typeof container;
+export type Container = ResolvedContainer;

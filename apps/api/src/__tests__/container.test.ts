@@ -10,7 +10,8 @@
  * - Security services initialization
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
+import type { Container } from '../container.js';
 
 // Mock PrismaClient as a class constructor
 const mockPrismaInstance = {
@@ -107,6 +108,11 @@ vi.mock('@intelliflow/adapters', () => ({
   OllamaAIService: class {
     constructor() {
       return { name: 'ollamaAIService' };
+    }
+  },
+  LiteLLMAIService: class {
+    constructor() {
+      return { name: 'litellmAIService' };
     }
   },
   GuardrailsAIService: class {
@@ -441,13 +447,25 @@ vi.mock('../security', () => ({
 }));
 
 describe('Container', () => {
+  // The container is now async-initialized (createServices is async due to
+  // dynamic AI provider imports). `containerReady` is the module-level promise
+  // that resolves once _resolved is populated. All tests must await it before
+  // accessing the Proxy (perf/container-lazy-wiring).
+  let container: Container;
+  let containerReady: Promise<void>;
+
+  beforeAll(async () => {
+    const mod = await import('../container.js');
+    containerReady = mod.containerReady;
+    container = mod.container;
+    await containerReady;
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should export container with required services', async () => {
-    const { container } = await import('../container.js');
-
+  it('should export container with required services', () => {
     expect(container).toBeDefined();
     expect(container.leadService).toBeDefined();
     expect(container.contactService).toBeDefined();
@@ -458,9 +476,7 @@ describe('Container', () => {
     expect(container.analyticsService).toBeDefined();
   });
 
-  it('should export container with security services', async () => {
-    const { container } = await import('../container.js');
-
+  it('should export container with security services', () => {
     expect(container.security).toBeDefined();
     expect(container.security.auditLogger).toBeDefined();
     expect(container.security.rbacService).toBeDefined();
@@ -469,9 +485,7 @@ describe('Container', () => {
     expect(container.security.auditEventHandler).toBeDefined();
   });
 
-  it('should export container with adapters', async () => {
-    const { container } = await import('../container.js');
-
+  it('should export container with adapters', () => {
     expect(container.adapters).toBeDefined();
     expect(container.adapters.leadRepository).toBeDefined();
     expect(container.adapters.contactRepository).toBeDefined();
@@ -485,66 +499,50 @@ describe('Container', () => {
     expect(container.adapters.featureFlagAdapter).toBeDefined();
   });
 
-  it('should export container with IFC-094 document services', async () => {
-    const { container } = await import('../container.js');
-
+  it('should export container with IFC-094 document services', () => {
     expect(container.signatureProvider).toBeDefined();
     expect(container.ingestionOrchestrator).toBeDefined();
   });
 
-  it('should export container with IFC-158 appointment scheduling services', async () => {
-    const { container } = await import('../container.js');
-
+  it('should export container with IFC-158 appointment scheduling services', () => {
     expect(container.appointmentIcsHandler).toBeDefined();
     expect(container.reminderScheduler).toBeDefined();
     expect(container.adapters.notificationService).toBeDefined();
     expect(container.adapters.icsGenerationService).toBeDefined();
   });
 
-  it('should expose caseDocumentRepository via adapters', async () => {
-    const { container } = await import('../container.js');
-
+  it('should expose caseDocumentRepository via adapters', () => {
     expect(container.adapters.caseDocumentRepository).toBeDefined();
     expect(container.adapters.storageService).toBeDefined();
     expect(container.adapters.avScanner).toBeDefined();
   });
 
   describe('container.get()', () => {
-    it('should return a service by name', async () => {
-      const { container } = await import('../container.js');
-
+    it('should return a service by name', () => {
       const leadService = container.get('leadService');
       expect(leadService).toBeDefined();
       expect(leadService).toBe(container.leadService);
     });
 
-    it('should return security services by name', async () => {
-      const { container } = await import('../container.js');
-
+    it('should return security services by name', () => {
       const security = container.get('security');
       expect(security).toBeDefined();
       expect(security).toBe(container.security);
     });
 
-    it('should return adapters by name', async () => {
-      const { container } = await import('../container.js');
-
+    it('should return adapters by name', () => {
       const adapters = container.get('adapters');
       expect(adapters).toBeDefined();
       expect(adapters).toBe(container.adapters);
     });
 
-    it('should throw an error for non-existent service', async () => {
-      const { container } = await import('../container.js');
-
+    it('should throw an error for non-existent service', () => {
       expect(() => container.get('nonExistentService')).toThrow(
         "Service 'nonExistentService' not found in container"
       );
     });
 
-    it('should include available services in error message', async () => {
-      const { container } = await import('../container.js');
-
+    it('should include available services in error message', () => {
       try {
         container.get('missing');
         expect.fail('Should have thrown');
@@ -555,9 +553,7 @@ describe('Container', () => {
       }
     });
 
-    it('should support generic type parameter', async () => {
-      const { container } = await import('../container.js');
-
+    it('should support generic type parameter', () => {
       const service = container.get<{ name: string }>('leadService');
       expect(service).toBeDefined();
     });
@@ -585,6 +581,119 @@ describe('Container', () => {
       const { apiPrisma } = await import('../container.js');
 
       expect(apiPrisma).toBeDefined();
+    });
+  });
+
+  describe('containerReady export', () => {
+    it('should export containerReady as a Promise', async () => {
+      const { containerReady: ready } = await import('../container.js');
+      expect(ready).toBeInstanceOf(Promise);
+    });
+
+    it('should resolve without error (container already initialized)', async () => {
+      // By the time this runs, beforeAll has awaited containerReady, so this
+      // is a no-op re-await of an already-resolved Promise — it must not throw.
+      await expect(containerReady).resolves.toBeUndefined();
+    });
+  });
+
+  describe('runtime wiring — every container key resolves to a defined value', () => {
+    // This is the mandatory wiring check called out in apps/api/CLAUDE.md:
+    // "a service not wired is silently dead". We enumerate every key on the
+    // resolved container and assert it is neither null nor undefined.
+    // Catches the class of bug found in IFC-086 (4 services never instantiated).
+    const EXPECTED_TOP_LEVEL_KEYS = [
+      'leadService',
+      'contactService',
+      'accountService',
+      'opportunityService',
+      'taskService',
+      'ticketService',
+      'ticketRoutingService',
+      'leadRoutingService',
+      'analyticsService',
+      'feedbackSurveyService',
+      'publicFeedbackService',
+      'chainVersionService',
+      'activityFeedService',
+      'appointmentIcsHandler',
+      'reminderScheduler',
+      'scheduleAppointmentUseCase',
+      'rescheduleAppointmentUseCase',
+      'cancelAppointmentUseCase',
+      'completeAppointmentUseCase',
+      'checkConflictsUseCase',
+      'convertLeadToDealUseCase',
+      'closeDealWonUseCase',
+      'closeDealLostUseCase',
+      'calendarSyncService',
+      'calendarWebhookService',
+      'signatureProvider',
+      'ingestionOrchestrator',
+      'experimentService',
+      'notificationOrchestrator',
+      'moduleAccess',
+      'security',
+      'adapters',
+      'aiMonitoringService',
+      'aiMonitoringStore',
+      'conversationSearchService',
+      'homeCacheService',
+      'contactDuplicateDetectionService',
+      'accountDuplicateDetectionService',
+    ] as const;
+
+    it('should have every expected top-level key defined (not null/undefined)', () => {
+      for (const key of EXPECTED_TOP_LEVEL_KEYS) {
+        expect(
+          container[key as keyof typeof container],
+          `container.${key} must be defined — service not wired`
+        ).toBeDefined();
+      }
+    });
+
+    it('should have all core adapter repositories defined', () => {
+      const { adapters } = container;
+      const expectedAdapters = [
+        'leadRepository',
+        'contactRepository',
+        'accountRepository',
+        'opportunityRepository',
+        'taskRepository',
+        'chainVersionRepository',
+        'activityFeedRepository',
+        'analyticsRepository',
+        'feedbackSurveyRepository',
+        'caseDocumentRepository',
+        'notificationRepository',
+        'notificationPreferenceRepository',
+        'experimentRepository',
+        'appointmentRepository',
+        'eventBus',
+        'aiService',
+        'cache',
+        'featureFlagProvider',
+        'featureFlagAdapter',
+        'storageService',
+        'avScanner',
+        'notificationService',
+        'icsGenerationService',
+      ] as const;
+      for (const key of expectedAdapters) {
+        expect(
+          adapters[key as keyof typeof adapters],
+          `container.adapters.${key} must be defined`
+        ).toBeDefined();
+      }
+    });
+
+    it('should have all security services defined', () => {
+      const { security } = container;
+      expect(security.auditLogger).toBeDefined();
+      expect(security.rbacService).toBeDefined();
+      expect(security.encryptionService).toBeDefined();
+      expect(security.keyRotationService).toBeDefined();
+      expect(security.auditEventHandler).toBeDefined();
     });
   });
 });

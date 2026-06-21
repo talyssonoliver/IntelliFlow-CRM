@@ -668,3 +668,41 @@ waivers:
       the prior raw-JSON.stringify equality lacked. Source-anchored; re-blocks on change.
     author: talyssonoliver
     date: '2026-06-21'
+  - fingerprint: '0ee6a6708196daf9b74186d6ba79248301c4b55096bb9d44771108327160cb2f'
+    reason: >-
+      Verified false positive after fix. Codex anchors this finding to the
+      container Proxy's fail-safe (container.ts:887-893, `if (_resolved === null)
+      throw`), which is CORRECT and must stay — accessing the container before
+      initialisation SHOULD throw. The reported vulnerability (a cold Stripe
+      webhook 500ing mid-init) is fixed: every container-accessing entry point now
+      awaits `containerReady` first — createContext (pre-existing), createWSContext
+      (commit bb1ea85cc), and the direct Stripe webhook route in http-server.ts
+      (`await containerReady` before `container.get`). startApiServer starts
+      listening immediately, but that is harmless because each handler awaits, so a
+      request arriving mid-init simply waits inside its handler rather than
+      touching the Proxy. Proven by a regression test
+      (http-server.stripe-webhook "awaits containerReady before touching the
+      container during a cold init"): with containerReady left pending, the webhook
+      does not call container.get until it resolves. The fingerprint is
+      source-anchored to the unchanged Proxy fail-safe, so this re-blocks if that
+      guard regresses.
+    author: talyssonoliver
+    date: '2026-06-20'
+  - fingerprint: '07c76c360e9aaefaf33b6254cf2bfd4475b76dc1cd9c1c859448246427eff68a'
+    reason: >-
+      Verified false positive — the concern is already addressed in the same PR.
+      Codex worries the deep dynamic imports
+      (`@intelliflow/adapters/external/OllamaAIService` / `…/LiteLLMAIService`) won't
+      be emitted by a normal adapters build. They ARE: the same commit adds both as
+      tsup entry points in packages/adapters/package.json
+      (`tsup src/index.ts src/external/OllamaAIService.ts src/external/LiteLLMAIService.ts`),
+      and the package's `exports` map already routes `./external/*` to
+      `./dist/external/*.{js,mjs,d.ts}`. Verified the build emits
+      dist/external/OllamaAIService.{js,mjs,d.ts} and LiteLLMAIService.{...}, and that
+      `dist/index.js` now contains ZERO `@langchain` references (the whole point — the
+      barrel no longer eager-loads the heavy SDKs). pre-ship's library-build + build
+      steps pass on this commit, so the entry points resolve at runtime for
+      AI_PROVIDER=ollama/litellm. The fingerprint is source-anchored to the dynamic
+      import block, so this re-blocks if those imports change.
+    author: talyssonoliver
+    date: '2026-06-20'
