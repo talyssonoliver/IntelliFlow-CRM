@@ -277,9 +277,40 @@ Everything else MUST pass an explicit `eventType`.
 | `INTERNAL`     | Derived/non-PII signals: AI scores, tiers, confidence.                                                                            |
 | `RESTRICTED`   | Legal/financial documents (legal module only).                                                                                    |
 
-When in doubt, look at how the same event type is already classified in
-`EVENT_AUDIT_MAPPINGS` and match it. `ContactCreated` / `Updated` / `Deleted`
-are CONFIDENTIAL; `LeadScored` / `ContactScored` are INTERNAL.
+When in doubt, look at how the same resource is already classified in
+`EVENT_AUDIT_MAPPINGS` and match it. Contact/lead/account events are
+CONFIDENTIAL; AI scores are INTERNAL.
+
+---
+
+## 4b. Two eventType namespaces — do NOT conflate them (IFC-255 / D-06)
+
+There are **two** audit paths, and they use **different eventType vocabularies
+on purpose**. Conflating them produces the "`ContactCreated` and
+`contact.created` is clear duplication" smell — keep them separate and each
+internally consistent:
+
+|                   | Direct-write (router `logAction`)                                                            | Event-bus (`EVENT_AUDIT_MAPPINGS`)                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Trigger           | a tRPC mutation/read in the router                                                           | a domain event off the bus → `AuditEventHandler`                                                           |
+| `eventType` value | **PascalCase label** (`ContactCreated`, `ContactRead`, `ContactScored`) — IFC-240 convention | **dot-notation domain key** (`contact.created`, `contact.interacted`) — MUST equal `DomainEvent.eventType` |
+| Where it lives    | passed to `logAction(...)` / auto-derived by `createCrudEntry`                               | a key in the `EVENT_AUDIT_MAPPINGS` record                                                                 |
+
+The registry is keyed by what `getMapping` looks up — `event.eventType` — which
+is dot-notation (see `packages/domain/src/crm/**/!(*.test).ts` →
+`readonly eventType = 'contact.created'`). A PascalCase key there is **dead**:
+it can never match a real event, so it silently falls through to
+`handleUnknownEvent`. **D-06 fix:** the contact block in `EVENT_AUDIT_MAPPINGS`
+is keyed by all 8 dot-notation contact events; the old PascalCase
+`ContactCreated/Updated/Deleted` keys were removed (they were dead duplication,
+and `contact.deleted` isn't even a domain event — see audit doc D-04).
+
+Within each namespace there is exactly one style, so there is no duplication.
+The PascalCase audit **label** and the dot-notation domain **key** are different
+layers of a hybrid audit architecture (ADR-008), not two copies of one thing. If
+you add audit logging to another router (lead/account/…), expect its registry
+block to have the **same latent PascalCase-key bug** D-06 fixed for contacts —
+fix it in that task by re-keying to the entity's dot-notation domain events.
 
 ---
 
@@ -316,12 +347,39 @@ are CONFIDENTIAL; `LeadScored` / `ContactScored` are INTERNAL.
    needs the `beforeRow` snapshot taken _before_ the write but the `logAction`
    call placed _after_ the write succeeds.
 
-5. **Don't double-log.** A procedure that delegates to a service which itself
-   audits, or a path that branches (e.g. `updateEmail`'s auto-merge vs normal
-   path), gets exactly one audit call per branch — verify by reading the whole
-   procedure, not just the happy path. (Contact `updateEmail` legitimately has
-   **two** call sites because it has two terminal branches; that is the only
-   procedure in the contact router with >1 site.)
+5. **Don't double-log — check shared helpers first.** Before adding an audit
+   call, grep the helpers a procedure already calls (`emitXSideEffects`,
+   reassign/merge/notify helpers) for an existing `getAuditLogger(...)`. On
+   IFC-255 codex caught a **duplicate reassign audit**: the router logged
+   `ContactReassigned` right after `emitContactReassignSideEffects`, which
+   already audited the same owner change — two entries per reassign. Fix: keep a
+   single audit point (enrich the helper's call with the canonical `eventType`,
+   remove the router duplicate). A path that branches (e.g. `updateEmail`'s
+   auto-merge vs normal) gets exactly one call **per branch** — read the whole
+   procedure, not just the happy path.
+
+6. **afterState must be the PERSISTED value, not the raw input.** codex caught
+   three accuracy bugs on IFC-255, all from auditing what was _requested_
+   instead of what was _written_:
+   - **Update** built `afterState` from the raw partial input — it omitted
+     `accountId` (destructured out) and recorded pre-hygiene values. Fix: build
+     from the hygiened/normalised data + the account change (the persisted
+     values), or from the returned updated row.
+   - **Auto-merge** logged `ContactEmailUpdated` although the surviving
+     contact's email never changed (it was a merge). Fix: log the real operation
+     (`ContactMerged`, both ids in metadata) — never a misleading event name.
+   - **AI score** diffed `beforeState` against the linked lead's `score`, but
+     the field overwritten is `ContactAIInsight.engagementScore`. Fix: pre-read
+     the prior `engagementScore` and diff over the field you actually change.
+
+   Rule: the before/after must describe the exact field(s) the write changed,
+   read from the persisted source — not a convenient nearby value.
+
+   > These are the class of bug a grep-based self-review (count the calls, check
+   > the verbs) cannot see — they need cross-function reading (what does
+   > `applyAutoMerge` / the reassign helper / the upsert actually change?). Run
+   > `node scripts/codex-review.mjs` and read each finding against the real code
+   > before gating; on IFC-255 all four were real.
 
 ---
 

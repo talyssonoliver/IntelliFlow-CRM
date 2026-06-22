@@ -573,9 +573,12 @@ async function handleContactUpdate(ctx: Context, input: UpdateContactInput) {
   }
 
   // IFC-255: fire-and-forget audit logging with a real before/after diff over
-  // exactly the fields this update changed.
-  const auditAfter: Record<string, unknown> = { ...data };
-  if (rawPhone !== undefined) auditAfter.phone = rawPhone ?? null;
+  // exactly the fields this update changed. afterState is built from the
+  // PERSISTED values — `hygienedData` (capitalised name, normalised phone) plus
+  // the account association change — not the raw partial input, so the audit
+  // reflects what was actually written.
+  const auditAfter: Record<string, unknown> = { ...hygienedData };
+  if (accountId !== undefined) auditAfter.accountId = accountId;
   const auditBefore = beforeContact
     ? Object.fromEntries(
         Object.keys(auditAfter).map((k) => [
@@ -1122,15 +1125,21 @@ export const contactRouter = createTRPCRouter({
             message: primaryResult.error.message,
           });
         }
-        // IFC-255: fire-and-forget audit logging — auto-merge path. The contact
-        // was merged into the primary; log the email update against the surviving id.
+        // IFC-255: fire-and-forget audit logging — auto-merge path. The email
+        // collided with an existing contact, so this contact was folded into the
+        // primary and then deleted. The primary's email did NOT change, so record
+        // a merge (with both ids), not a misleading "email updated" event.
         getAuditLogger(ctx.prisma)
           .logAction('UPDATE', 'contact', emailDupeResult.primaryId, typedCtx.tenant.tenantId, {
             actorId: typedCtx.tenant.userId,
-            eventType: 'ContactEmailUpdated',
+            eventType: 'ContactMerged',
             dataClassification: 'CONFIDENTIAL',
-            afterState: { email: input.email },
-            metadata: { mergedContactId: input.id },
+            metadata: {
+              reason: 'email-collision-auto-merge',
+              survivingContactId: emailDupeResult.primaryId,
+              mergedContactId: input.id,
+              attemptedEmail: input.email,
+            },
           })
           .catch(logContactAuditFailure);
         return mapContactToResponse(primaryResult.value);
@@ -2082,6 +2091,14 @@ export const contactRouter = createTRPCRouter({
         })),
       });
 
+      // IFC-255: snapshot the prior engagement score BEFORE the upsert overwrites
+      // it, so the AI_SCORE audit diff is over the field scoreWithAI actually
+      // changes (ContactAIInsight.engagementScore) — not the linked lead's score.
+      const priorInsight = await ctx.prismaWithTenant.contactAIInsight.findUnique({
+        where: { contactId: input.contactId },
+        select: { engagementScore: true },
+      });
+
       const insight = await ctx.prismaWithTenant.contactAIInsight.upsert({
         where: { contactId: input.contactId },
         create: {
@@ -2127,9 +2144,10 @@ export const contactRouter = createTRPCRouter({
           actorType: 'AI_AGENT',
           eventType: 'ContactScored',
           dataClassification: 'INTERNAL',
-          beforeState: { score: contact.lead?.score ?? null },
+          beforeState: { engagementScore: priorInsight?.engagementScore ?? null },
           afterState: {
-            score: (derived as unknown as Record<string, unknown>).engagementScore ?? null,
+            engagementScore:
+              (derived as unknown as Record<string, unknown>).engagementScore ?? null,
             status: contact.status,
           },
         })
@@ -2177,6 +2195,9 @@ export const contactRouter = createTRPCRouter({
       };
     }
 
+    // IFC-255: the owner-change audit is emitted by emitContactReassignSideEffects
+    // (the single audit point for both single and bulk reassign) — do NOT log a
+    // second UPDATE here or every reassign produces a duplicate audit entry.
     const sideEffects = await emitContactReassignSideEffects(ctx, {
       id: input.id,
       contactName: verdict.contactName,
@@ -2184,17 +2205,6 @@ export const contactRouter = createTRPCRouter({
       newOwnerId: verdict.newOwnerId,
       flags,
     });
-
-    // IFC-255: fire-and-forget audit logging
-    getAuditLogger(ctx.prisma)
-      .logAction('UPDATE', 'contact', input.id, typedCtx.tenant.tenantId, {
-        actorId: typedCtx.tenant.userId,
-        eventType: 'ContactReassigned',
-        dataClassification: 'CONFIDENTIAL',
-        beforeState: { ownerId: verdict.previousOwnerId },
-        afterState: { ownerId: verdict.newOwnerId },
-      })
-      .catch(logContactAuditFailure);
 
     return {
       id: input.id,

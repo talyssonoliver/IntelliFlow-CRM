@@ -115,11 +115,11 @@ describe('AuditEventHandler - Additional Coverage', () => {
         },
         {
           eventId: 'batch-fail',
-          eventType: 'ContactCreated',
+          eventType: 'contact.created',
           aggregateType: 'Contact',
           aggregateId: 'contact-1',
           occurredAt: new Date(),
-          payload: { contact: {} },
+          payload: { email: 'a@test.com', firstName: 'A', lastName: 'B', ownerId: 'u1' },
           metadata: { tenantId: 't1' },
         },
         {
@@ -147,17 +147,17 @@ describe('AuditEventHandler - Additional Coverage', () => {
   // Specific event mappings - uncovered events
   // ===========================================================================
   describe('Specific event mappings - additional coverage', () => {
-    it('should handle ContactUpdated with changedFields', async () => {
+    it('should handle contact.updated with changedFields (IFC-255/D-06)', async () => {
+      // Real ContactUpdatedEvent.toPayload() carries `updatedFields`, not before/after.
       const event: DomainEventPayload = {
         eventId: 'cu-1',
-        eventType: 'ContactUpdated',
+        eventType: 'contact.updated',
         aggregateType: 'Contact',
         aggregateId: 'contact-1',
         occurredAt: new Date(),
         payload: {
-          before: { firstName: 'Jane' },
-          after: { firstName: 'Janet' },
-          changedFields: ['firstName'],
+          updatedFields: ['firstName'],
+          updatedBy: 'u1',
         },
         metadata: { tenantId: 't1', userId: 'u1' },
       };
@@ -165,36 +165,57 @@ describe('AuditEventHandler - Additional Coverage', () => {
       const result = await handler.handle(event);
       expect(result.success).toBe(true);
 
-      // Verify the log was called with correct extracted states
       expect(mockLogFn).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'UPDATE',
           resourceType: 'contact',
-          beforeState: { firstName: 'Jane' },
-          afterState: { firstName: 'Janet' },
           changedFields: ['firstName'],
         })
       );
     });
 
-    it('should handle ContactDeleted event', async () => {
+    it('should handle contact.account_associated event (IFC-255/D-06)', async () => {
       const result = await handler.handle({
-        eventId: 'cd-1',
-        eventType: 'ContactDeleted',
+        eventId: 'ca-1',
+        eventType: 'contact.account_associated',
         aggregateType: 'Contact',
-        aggregateId: 'c-del',
+        aggregateId: 'c-assoc',
         occurredAt: new Date(),
-        payload: {},
+        payload: { contactId: 'c-assoc', accountId: 'acc-9', associatedBy: 'u1' },
         metadata: { tenantId: 't1' },
       });
 
       expect(result.success).toBe(true);
       expect(mockLogFn).toHaveBeenCalledWith(
         expect.objectContaining({
-          action: 'DELETE',
+          action: 'UPDATE',
           resourceType: 'contact',
+          afterState: { accountId: 'acc-9' },
+          changedFields: ['accountId'],
         })
       );
+    });
+
+    it('maps all 8 contact domain event types (IFC-255/D-06)', () => {
+      // DoD: the audit event handler maps every contact domain event, keyed by
+      // the dot-notation eventType the domain actually emits (ContactEvents.ts).
+      for (const eventType of [
+        'contact.created',
+        'contact.updated',
+        'contact.account_associated',
+        'contact.account_disassociated',
+        'contact.converted_from_lead',
+        'contact.linked_to_lead',
+        'contact.unlinked_from_lead',
+        'contact.interacted',
+      ]) {
+        expect(handler.hasMapping(eventType)).toBe(true);
+      }
+      // The pre-D-06 PascalCase keys must NOT linger (they never matched a real
+      // event and would be dead duplication).
+      expect(handler.hasMapping('ContactCreated')).toBe(false);
+      expect(handler.hasMapping('ContactUpdated')).toBe(false);
+      expect(handler.hasMapping('ContactDeleted')).toBe(false);
     });
 
     it('should handle AccountUpdated event', async () => {

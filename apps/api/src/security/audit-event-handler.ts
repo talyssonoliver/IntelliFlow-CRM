@@ -126,29 +126,75 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
     extractBeforeState: (p) => p.lead as Record<string, unknown>,
   },
 
-  // Contact events
-  ContactCreated: {
+  // Contact events (IFC-255 / D-06)
+  // Domain events are dot-notation (`ContactEvents.ts` → `contact.created`, …).
+  // Keys here MUST match `event.eventType` verbatim — `getMapping` does a direct
+  // lookup, so a PascalCase key (e.g. `ContactCreated`) would never match a real
+  // domain event and the entry would silently fall through to handleUnknownEvent.
+  // All 8 contact domain events are mapped; extractors read the event `toPayload()`.
+  'contact.created': {
     action: 'CREATE',
     resourceType: 'contact',
     dataClassification: 'CONFIDENTIAL',
-    extractAfterState: (p) => p.contact as Record<string, unknown>,
-    extractResourceName: (p) => {
-      const contact = p.contact as Record<string, unknown>;
-      return `${contact?.firstName} ${contact?.lastName}`;
-    },
+    extractAfterState: (p) => ({
+      email: p.email,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      ownerId: p.ownerId,
+    }),
+    extractResourceName: (p) => `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim(),
   },
-  ContactUpdated: {
+  'contact.updated': {
     action: 'UPDATE',
     resourceType: 'contact',
     dataClassification: 'CONFIDENTIAL',
-    extractBeforeState: (p) => p.before as Record<string, unknown>,
-    extractAfterState: (p) => p.after as Record<string, unknown>,
-    extractChangedFields: (p) => (p.changedFields as string[]) ?? [],
+    extractChangedFields: (p) => (p.updatedFields as string[]) ?? [],
   },
-  ContactDeleted: {
-    action: 'DELETE',
+  'contact.account_associated': {
+    action: 'UPDATE',
     resourceType: 'contact',
     dataClassification: 'CONFIDENTIAL',
+    extractAfterState: (p) => ({ accountId: p.accountId }),
+    extractChangedFields: () => ['accountId'],
+  },
+  'contact.account_disassociated': {
+    action: 'UPDATE',
+    resourceType: 'contact',
+    dataClassification: 'CONFIDENTIAL',
+    extractBeforeState: (p) => ({ accountId: p.previousAccountId }),
+    extractAfterState: () => ({ accountId: null }),
+    extractChangedFields: () => ['accountId'],
+  },
+  'contact.converted_from_lead': {
+    action: 'CONVERT',
+    resourceType: 'contact',
+    dataClassification: 'CONFIDENTIAL',
+    extractAfterState: (p) => ({ leadId: p.leadId, convertedBy: p.convertedBy }),
+  },
+  'contact.linked_to_lead': {
+    action: 'UPDATE',
+    resourceType: 'contact',
+    dataClassification: 'CONFIDENTIAL',
+    extractAfterState: (p) => ({ leadId: p.leadId }),
+    extractChangedFields: () => ['leadId'],
+  },
+  'contact.unlinked_from_lead': {
+    action: 'UPDATE',
+    resourceType: 'contact',
+    dataClassification: 'CONFIDENTIAL',
+    extractBeforeState: (p) => ({ leadId: p.previousLeadId }),
+    extractAfterState: () => ({ leadId: null }),
+    extractChangedFields: () => ['leadId'],
+  },
+  'contact.interacted': {
+    action: 'UPDATE',
+    resourceType: 'contact',
+    dataClassification: 'CONFIDENTIAL',
+    extractAfterState: (p) => ({
+      interactionType: p.interactionType,
+      interactedAt: p.interactedAt,
+    }),
+    extractChangedFields: () => ['lastContactedAt'],
   },
 
   // Account events

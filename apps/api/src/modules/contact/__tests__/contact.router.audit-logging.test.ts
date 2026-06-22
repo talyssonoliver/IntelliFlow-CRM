@@ -394,7 +394,7 @@ describe('Contact Router — Audit Logging (IFC-255)', () => {
     );
   });
 
-  it('scoreWithAI logs an AI_SCORE action with ContactScored event (INTERNAL)', async () => {
+  it('scoreWithAI logs an AI_SCORE diff over the prior ContactAIInsight engagementScore (INTERNAL)', async () => {
     const ctx = createTestContext();
     prismaMock.contact.findUnique.mockResolvedValue({
       id: TEST_UUIDS.contact1,
@@ -406,6 +406,8 @@ describe('Contact Router — Audit Logging (IFC-255)', () => {
       lead: { score: 50 },
       opportunities: [],
     } as any);
+    // Prior insight drives beforeState (the field scoreWithAI overwrites).
+    prismaMock.contactAIInsight.findUnique.mockResolvedValue({ engagementScore: 42 } as any);
     prismaMock.contactAIInsight.upsert.mockResolvedValue({ id: 'insight-1' } as any);
 
     await contactRouter.createCaller(ctx).scoreWithAI({ contactId: TEST_UUIDS.contact1 });
@@ -420,12 +422,13 @@ describe('Contact Router — Audit Logging (IFC-255)', () => {
         actorId: TEST_UUIDS.user1,
         eventType: 'ContactScored',
         dataClassification: 'INTERNAL',
-        beforeState: expect.objectContaining({ score: 50 }),
+        beforeState: expect.objectContaining({ engagementScore: 42 }),
+        afterState: expect.objectContaining({ engagementScore: expect.anything() }),
       })
     );
   });
 
-  it('reassign logs a ContactReassigned action with before/after ownerId', async () => {
+  it('reassign delegates owner-change auditing to the side-effects helper (no duplicate)', async () => {
     const ctx = createTestContext();
     prismaMock.contactAutomationSetting.findUnique.mockResolvedValue(null);
 
@@ -444,19 +447,18 @@ describe('Contact Router — Audit Logging (IFC-255)', () => {
     });
     await flush();
 
-    expect(mockLogAction).toHaveBeenCalledWith(
-      'UPDATE',
-      'contact',
-      TEST_UUIDS.contact1,
-      TEST_UUIDS.tenant,
+    // The owner-change audit is owned by emitContactReassignSideEffects (the single
+    // audit point for single + bulk reassign); the procedure must delegate to it…
+    expect(emitContactReassignSideEffects).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({
-        actorId: TEST_UUIDS.user1,
-        eventType: 'ContactReassigned',
-        dataClassification: 'CONFIDENTIAL',
-        beforeState: expect.objectContaining({ ownerId: TEST_UUIDS.user1 }),
-        afterState: expect.objectContaining({ ownerId: TEST_UUIDS.user2 }),
+        id: TEST_UUIDS.contact1,
+        previousOwnerId: TEST_UUIDS.user1,
+        newOwnerId: TEST_UUIDS.user2,
       })
     );
+    // …and must NOT emit its own second audit entry for the same change.
+    expect(mockLogAction).not.toHaveBeenCalled();
   });
 
   it('addTags logs a ContactTagsAdded action with before/after tags', async () => {
