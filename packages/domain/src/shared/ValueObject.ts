@@ -44,7 +44,12 @@ export abstract class ValueObject<T> {
  * exotic, step 2 only ever reorders keys.
  */
 function stableStringify(value: unknown): string {
-  const json = JSON.stringify(value);
+  // `JSON.stringify` is typed to return `string`, but at runtime it returns
+  // `undefined` for a top-level value JSON cannot represent (undefined / function
+  // / symbol / `toJSON()`→undefined). Type `json` honestly as `string | undefined`
+  // so the undefined branch is a real, reachable path — without this annotation a
+  // type-flow analyzer treats `json === undefined` as always-false dead code.
+  const json: string | undefined = JSON.stringify(value);
   if (json === undefined) {
     return 'undefined';
   }
