@@ -66,7 +66,15 @@ function sortKeysDeep(value: unknown): unknown {
   const obj = value as Record<string, unknown>;
   return Object.fromEntries(
     Object.keys(obj)
-      .sort()
+      // Deterministic, locale-INDEPENDENT key ordering (UTF-16 code-unit order,
+      // identical to the default `.sort()` behaviour). A canonical serialization
+      // must NOT use `localeCompare` — it is locale-dependent, so the same props
+      // could canonicalize differently across environments and break equality.
+      .sort((a, b) => {
+        if (a < b) return -1;
+        if (a > b) return 1;
+        return 0;
+      })
       .map((key) => [key, sortKeysDeep(obj[key])])
   );
 }
