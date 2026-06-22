@@ -147,54 +147,112 @@ describe('AuditEventHandler - Additional Coverage', () => {
   // Specific event mappings - uncovered events
   // ===========================================================================
   describe('Specific event mappings - additional coverage', () => {
-    it('should handle contact.updated with changedFields (IFC-255/D-06)', async () => {
-      // Real ContactUpdatedEvent.toPayload() carries `updatedFields`, not before/after.
-      const event: DomainEventPayload = {
-        eventId: 'cu-1',
-        eventType: 'contact.updated',
-        aggregateType: 'Contact',
-        aggregateId: 'contact-1',
-        occurredAt: new Date(),
-        payload: {
-          updatedFields: ['firstName'],
-          updatedBy: 'u1',
+    // IFC-255/D-06: handle() each contact domain event with its real toPayload()
+    // shape and assert the mapped action + extracted before/after/changedFields.
+    // This exercises every contact mapping extractor (diff-coverage on the new
+    // EVENT_AUDIT_MAPPINGS entries), not just key existence.
+    const CONTACT_EVENT_CASES: Array<{
+      eventType: string;
+      payload: Record<string, unknown>;
+      action: string;
+      expected: Record<string, unknown>;
+    }> = [
+      {
+        eventType: 'contact.created',
+        payload: { email: 'a@x.com', firstName: 'A', lastName: 'B', ownerId: 'u1' },
+        action: 'CREATE',
+        expected: {
+          afterState: { email: 'a@x.com', firstName: 'A', lastName: 'B', ownerId: 'u1' },
         },
-        metadata: { tenantId: 't1', userId: 'u1' },
-      };
-
-      const result = await handler.handle(event);
-      expect(result.success).toBe(true);
-
-      expect(mockLogFn).toHaveBeenCalledWith(
-        expect.objectContaining({
-          action: 'UPDATE',
-          resourceType: 'contact',
-          changedFields: ['firstName'],
-        })
-      );
-    });
-
-    it('should handle contact.account_associated event (IFC-255/D-06)', async () => {
-      const result = await handler.handle({
-        eventId: 'ca-1',
+      },
+      {
+        eventType: 'contact.updated',
+        payload: { updatedFields: ['firstName'], updatedBy: 'u1' },
+        action: 'UPDATE',
+        expected: { changedFields: ['firstName'] },
+      },
+      {
         eventType: 'contact.account_associated',
-        aggregateType: 'Contact',
-        aggregateId: 'c-assoc',
-        occurredAt: new Date(),
-        payload: { contactId: 'c-assoc', accountId: 'acc-9', associatedBy: 'u1' },
-        metadata: { tenantId: 't1' },
-      });
-
-      expect(result.success).toBe(true);
-      expect(mockLogFn).toHaveBeenCalledWith(
-        expect.objectContaining({
-          action: 'UPDATE',
-          resourceType: 'contact',
-          afterState: { accountId: 'acc-9' },
+        payload: { accountId: 'acc-9', associatedBy: 'u1' },
+        action: 'UPDATE',
+        expected: { afterState: { accountId: 'acc-9' }, changedFields: ['accountId'] },
+      },
+      {
+        eventType: 'contact.account_disassociated',
+        payload: { previousAccountId: 'acc-7', disassociatedBy: 'u1' },
+        action: 'UPDATE',
+        expected: {
+          beforeState: { accountId: 'acc-7' },
+          afterState: { accountId: null },
           changedFields: ['accountId'],
-        })
-      );
-    });
+        },
+      },
+      {
+        eventType: 'contact.converted_from_lead',
+        payload: { leadId: 'lead-3', convertedBy: 'u1' },
+        action: 'CONVERT',
+        expected: { afterState: { leadId: 'lead-3', convertedBy: 'u1' } },
+      },
+      {
+        eventType: 'contact.linked_to_lead',
+        payload: { leadId: 'lead-4', linkedBy: 'u1' },
+        action: 'UPDATE',
+        expected: { afterState: { leadId: 'lead-4' }, changedFields: ['leadId'] },
+      },
+      {
+        eventType: 'contact.unlinked_from_lead',
+        payload: { previousLeadId: 'lead-5', unlinkedBy: 'u1' },
+        action: 'UPDATE',
+        expected: {
+          beforeState: { leadId: 'lead-5' },
+          afterState: { leadId: null },
+          changedFields: ['leadId'],
+        },
+      },
+      {
+        eventType: 'contact.interacted',
+        payload: { interactionType: 'CALL', interactedAt: '2026-06-22T00:00:00.000Z' },
+        action: 'UPDATE',
+        expected: {
+          afterState: { interactionType: 'CALL', interactedAt: '2026-06-22T00:00:00.000Z' },
+          changedFields: ['lastContactedAt'],
+        },
+      },
+      {
+        eventType: 'contact.merged',
+        payload: { primaryId: 'c-1', mergedContactId: 'c-2', fieldsUpdated: ['phone', 'title'] },
+        action: 'UPDATE',
+        expected: {
+          afterState: { primaryId: 'c-1', mergedContactId: 'c-2' },
+          changedFields: ['phone', 'title'],
+        },
+      },
+    ];
+
+    it.each(CONTACT_EVENT_CASES)(
+      'handle() maps $eventType → $action with extracted states (IFC-255/D-06)',
+      async ({ eventType, payload, action, expected }) => {
+        const result = await handler.handle({
+          eventId: `${eventType}-1`,
+          eventType,
+          aggregateType: 'Contact',
+          aggregateId: 'contact-x',
+          occurredAt: new Date(),
+          payload,
+          metadata: { tenantId: 't1', userId: 'u1' },
+        });
+
+        expect(result.success).toBe(true);
+        expect(mockLogFn).toHaveBeenCalledWith(
+          expect.objectContaining({
+            action,
+            resourceType: 'contact',
+            dataClassification: 'CONFIDENTIAL',
+            ...expected,
+          })
+        );
+      }
+    );
 
     it('maps every contact domain event type by its dot-notation key (IFC-255/D-06)', () => {
       // DoD: the audit event handler maps every contact domain event, keyed by
