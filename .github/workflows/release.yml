@@ -40,7 +40,7 @@ jobs:
       should_release: ${{ steps.check.outputs.should_release }}
       new_version: ${{ steps.check.outputs.new_version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -121,7 +121,7 @@ jobs:
     outputs:
       changelog: ${{ steps.changelog.outputs.changelog }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -191,7 +191,7 @@ jobs:
     needs: [check-release, generate-changelog]
     if: needs.check-release.outputs.should_release == 'true'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v6
 
@@ -251,7 +251,7 @@ jobs:
     needs: [check-release, generate-changelog, build-release]
     if: needs.check-release.outputs.should_release == 'true'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -303,7 +303,7 @@ jobs:
     needs: [check-release, generate-changelog, create-release]
     if: needs.check-release.outputs.should_release == 'true'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}

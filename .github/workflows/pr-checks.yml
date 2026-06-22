@@ -35,7 +35,7 @@ jobs:
     # when the trigger is merge_group.
     if: github.event_name == 'merge_group' || github.event.pull_request.draft == false
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -242,7 +242,7 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Compose bypass-enabled Lighthouse URLs
         id: urls
@@ -319,7 +319,7 @@ jobs:
       needs.deploy-preview.outputs.preview-url != '' &&
       vars.VERCEL_BYPASS_CONFIGURED == 'true'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Compose bypass-enabled Lighthouse URLs (public pages only)
         id: urls
@@ -354,7 +354,7 @@ jobs:
 
       - name: Upload mobile Lighthouse JSON
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lighthouse-mobile
           path: artifacts/lighthouse/mobile/
@@ -407,7 +407,7 @@ jobs:
       VAULT_ADDR: http://localhost:8200
       TEMPORAL_ADDRESS: localhost:7233
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: ./.github/actions/setup-monorepo
         with:

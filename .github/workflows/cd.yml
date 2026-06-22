@@ -65,7 +65,7 @@ jobs:
       name: staging
       url: https://staging.intelliflow-crm.dev
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.sha }}
 
@@ -148,7 +148,7 @@ jobs:
       name: production
       url: https://intelliflow-crm.dev
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.sha }}
 
