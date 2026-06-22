@@ -766,7 +766,12 @@ export const leadRouter = createTRPCRouter({
    */
   update: tenantProcedure.input(updateLeadSchema).mutation(async ({ ctx, input }) => {
     const leadService = getLeadService(ctx);
+    const typedCtx = getTenantContext(ctx);
     const { id, phone, ...rest } = input;
+
+    // IFC-240: capture the pre-update snapshot so the audit entry records a real
+    // before/after diff (not a misleading partial afterState).
+    const beforeLead = await typedCtx.prismaWithTenant.lead.findUnique({ where: { id } });
 
     const result = await leadService.updateLead(id, {
       ...rest,
@@ -785,7 +790,6 @@ export const leadRouter = createTRPCRouter({
     }
 
     // Fire-and-forget: re-score lead after update (best-effort)
-    const typedCtx = getTenantContext(ctx);
     (async () => {
       const { Queue } = await loadBullMQ();
       const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
@@ -816,14 +820,27 @@ export const leadRouter = createTRPCRouter({
       await queue.close();
     })().catch(() => {});
 
-    // IFC-240: fire-and-forget audit logging
+    // IFC-240: fire-and-forget audit logging with a real before/after diff
     getAuditLogger(ctx.prisma)
       .logAction('UPDATE', 'lead', id, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        beforeState: beforeLead
+          ? {
+              firstName: beforeLead.firstName,
+              lastName: beforeLead.lastName,
+              company: beforeLead.company,
+              title: beforeLead.title,
+              email: beforeLead.email,
+              status: beforeLead.status,
+            }
+          : undefined,
         afterState: {
+          firstName: result.value.firstName ?? null,
+          lastName: result.value.lastName ?? null,
+          company: result.value.company ?? null,
+          title: result.value.title ?? null,
           email: result.value.email.value,
           status: result.value.status,
-          company: result.value.company ?? null,
         },
       })
       .catch(logLeadAuditFailure);
@@ -836,6 +853,13 @@ export const leadRouter = createTRPCRouter({
    */
   delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
     const leadService = getLeadService(ctx);
+    const typedCtx = getTenantContext(ctx);
+
+    // IFC-240: snapshot the lead BEFORE erasure so the GDPR audit entry records
+    // what was deleted (the row is gone afterwards).
+    const beforeLead = await typedCtx.prismaWithTenant.lead.findUnique({
+      where: { id: input.id },
+    });
 
     const result = await leadService.deleteLead(input.id);
 
@@ -863,11 +887,18 @@ export const leadRouter = createTRPCRouter({
       });
     }
 
-    // IFC-240: fire-and-forget audit logging (GDPR erasure)
-    const typedCtx = getTenantContext(ctx);
+    // IFC-240: fire-and-forget audit logging (GDPR erasure) with before snapshot
     getAuditLogger(ctx.prisma)
       .logAction('DELETE', 'lead', input.id, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        beforeState: beforeLead
+          ? {
+              email: beforeLead.email,
+              status: beforeLead.status,
+              company: beforeLead.company,
+              ownerId: beforeLead.ownerId,
+            }
+          : undefined,
       })
       .catch(logLeadAuditFailure);
 
@@ -890,11 +921,12 @@ export const leadRouter = createTRPCRouter({
       where: { id: input.id },
       data: { isStarred: input.starred },
     });
-    // IFC-240: fire-and-forget audit logging
+    // IFC-240: fire-and-forget audit logging with a real before/after diff
     getAuditLogger(ctx.prisma)
       .logAction('UPDATE', 'lead', input.id, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
-        metadata: { isStarred: input.starred },
+        beforeState: { isStarred: existing.isStarred },
+        afterState: { isStarred: updated.isStarred },
       })
       .catch(logLeadAuditFailure);
 
@@ -1031,6 +1063,11 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logAction('CONVERT', 'lead', input.leadId, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        afterState: {
+          status: 'CONVERTED',
+          contactId: result.value.contactId,
+          accountId: result.value.accountId,
+        },
         metadata: {
           createAccount: input.createAccount,
           accountName: input.accountName ?? null,
@@ -1229,13 +1266,13 @@ export const leadRouter = createTRPCRouter({
         }
       })();
 
-      // IFC-240: fire-and-forget audit logging
+      // IFC-240: fire-and-forget audit logging with a real before/after diff
       getAuditLogger(ctx.prisma)
         .logAction('AI_SCORE', 'lead', result.value.leadId, typedCtx.tenant.tenantId, {
           actorId: typedCtx.tenant.userId,
-          metadata: {
-            previousScore: result.value.previousScore,
-            newScore: result.value.newScore,
+          beforeState: { score: result.value.previousScore },
+          afterState: {
+            score: result.value.newScore,
             tier: result.value.tier,
             confidence: result.value.confidence,
           },

@@ -102,11 +102,16 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
     );
   });
 
-  it('update logs an UPDATE action', async () => {
+  it('update logs an UPDATE action with a before/after diff', async () => {
     const ctx = createTestContext();
+    prismaMock.lead.findUnique.mockResolvedValue({
+      id: TEST_UUIDS.lead1,
+      firstName: 'Old',
+      status: 'NEW',
+    } as any);
     ctx.services!.lead!.updateLead = vi
       .fn()
-      .mockResolvedValue(success(makeDomainLead({ status: 'CONTACTED' })));
+      .mockResolvedValue(success(makeDomainLead({ firstName: 'Edited', status: 'CONTACTED' })));
 
     await leadRouter.createCaller(ctx).update({ id: TEST_UUIDS.lead1, firstName: 'Edited' });
     await flush();
@@ -116,12 +121,23 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
       'lead',
       TEST_UUIDS.lead1,
       TEST_UUIDS.tenant,
-      expect.objectContaining({ actorId: TEST_UUIDS.user1 })
+      expect.objectContaining({
+        actorId: TEST_UUIDS.user1,
+        beforeState: expect.objectContaining({ firstName: 'Old', status: 'NEW' }),
+        afterState: expect.objectContaining({ firstName: 'Edited', status: 'CONTACTED' }),
+      })
     );
   });
 
-  it('delete logs a DELETE action (GDPR erasure)', async () => {
+  it('delete logs a DELETE action with a before snapshot (GDPR erasure)', async () => {
     const ctx = createTestContext();
+    prismaMock.lead.findUnique.mockResolvedValue({
+      id: TEST_UUIDS.lead1,
+      email: 'erased@example.com',
+      status: 'NEW',
+      company: 'GoneCo',
+      ownerId: TEST_UUIDS.user1,
+    } as any);
     ctx.services!.lead!.deleteLead = vi.fn().mockResolvedValue(success(undefined));
 
     await leadRouter.createCaller(ctx).delete({ id: TEST_UUIDS.lead1 });
@@ -132,13 +148,16 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
       'lead',
       TEST_UUIDS.lead1,
       TEST_UUIDS.tenant,
-      expect.objectContaining({ actorId: TEST_UUIDS.user1 })
+      expect.objectContaining({
+        actorId: TEST_UUIDS.user1,
+        beforeState: expect.objectContaining({ email: 'erased@example.com', company: 'GoneCo' }),
+      })
     );
   });
 
-  it('setStarred logs an UPDATE action with isStarred metadata', async () => {
+  it('setStarred logs an UPDATE action with a before/after isStarred diff', async () => {
     const ctx = createTestContext();
-    prismaMock.lead.findUnique.mockResolvedValue({ id: TEST_UUIDS.lead1 } as any);
+    prismaMock.lead.findUnique.mockResolvedValue({ id: TEST_UUIDS.lead1, isStarred: false } as any);
     prismaMock.lead.update.mockResolvedValue({ id: TEST_UUIDS.lead1, isStarred: true } as any);
 
     await leadRouter.createCaller(ctx).setStarred({ id: TEST_UUIDS.lead1, starred: true });
@@ -151,7 +170,8 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
       TEST_UUIDS.tenant,
       expect.objectContaining({
         actorId: TEST_UUIDS.user1,
-        metadata: expect.objectContaining({ isStarred: true }),
+        beforeState: { isStarred: false },
+        afterState: { isStarred: true },
       })
     );
   });
@@ -177,9 +197,13 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
 
   it('convert logs a CONVERT action (GDPR)', async () => {
     const ctx = createTestContext();
-    ctx.services!.lead!.convertLead = vi
-      .fn()
-      .mockResolvedValue(success({ leadId: TEST_UUIDS.lead1, contactId: TEST_UUIDS.contact1 }));
+    ctx.services!.lead!.convertLead = vi.fn().mockResolvedValue(
+      success({
+        leadId: TEST_UUIDS.lead1,
+        contactId: TEST_UUIDS.contact1,
+        accountId: TEST_UUIDS.account1,
+      })
+    );
 
     await leadRouter.createCaller(ctx).convert({ leadId: TEST_UUIDS.lead1, createAccount: false });
     await flush();
@@ -189,7 +213,13 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
       'lead',
       TEST_UUIDS.lead1,
       TEST_UUIDS.tenant,
-      expect.objectContaining({ actorId: TEST_UUIDS.user1 })
+      expect.objectContaining({
+        actorId: TEST_UUIDS.user1,
+        afterState: expect.objectContaining({
+          status: 'CONVERTED',
+          contactId: TEST_UUIDS.contact1,
+        }),
+      })
     );
   });
 
@@ -242,7 +272,8 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
       TEST_UUIDS.tenant,
       expect.objectContaining({
         actorId: TEST_UUIDS.user1,
-        metadata: expect.objectContaining({ newScore: 80, tier: 'hot' }),
+        beforeState: { score: 10 },
+        afterState: expect.objectContaining({ score: 80, tier: 'hot' }),
       })
     );
   });
