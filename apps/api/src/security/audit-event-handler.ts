@@ -196,6 +196,19 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
     }),
     extractChangedFields: () => ['lastContactedAt'],
   },
+  // ContactService.mergeContacts publishes ContactMergedEvent (application layer)
+  // with this eventType — without a mapping a merge falls through to
+  // handleUnknownEvent (generic UPDATE/INTERNAL, no merge fields).
+  'contact.merged': {
+    action: 'UPDATE',
+    resourceType: 'contact',
+    dataClassification: 'CONFIDENTIAL',
+    extractAfterState: (p) => ({
+      primaryId: p.primaryId,
+      mergedContactId: p.mergedContactId,
+    }),
+    extractChangedFields: (p) => (p.fieldsUpdated as string[]) ?? [],
+  },
 
   // Account events
   AccountCreated: {

@@ -196,9 +196,10 @@ describe('AuditEventHandler - Additional Coverage', () => {
       );
     });
 
-    it('maps all 8 contact domain event types (IFC-255/D-06)', () => {
+    it('maps every contact domain event type by its dot-notation key (IFC-255/D-06)', () => {
       // DoD: the audit event handler maps every contact domain event, keyed by
-      // the dot-notation eventType the domain actually emits (ContactEvents.ts).
+      // the dot-notation eventType the domain actually emits (ContactEvents.ts +
+      // the application-layer ContactMergedEvent → 'contact.merged').
       for (const eventType of [
         'contact.created',
         'contact.updated',
@@ -208,6 +209,7 @@ describe('AuditEventHandler - Additional Coverage', () => {
         'contact.linked_to_lead',
         'contact.unlinked_from_lead',
         'contact.interacted',
+        'contact.merged',
       ]) {
         expect(handler.hasMapping(eventType)).toBe(true);
       }

@@ -683,6 +683,8 @@ export const contactRouter = createTRPCRouter({
     }
 
     // IFC-310: When autoMergeOnExactEmail triggered, apply the merge post-create.
+    // Capture the survivor id inside the narrowed branch for the audit below.
+    let autoMergedIntoId: string | undefined;
     if (dupeCheck.action === 'auto-merge' && duplicateService) {
       try {
         await duplicateService.applyAutoMerge(
@@ -691,6 +693,7 @@ export const contactRouter = createTRPCRouter({
           result.value.id.value,
           typedCtx.tenant.userId
         );
+        autoMergedIntoId = dupeCheck.primaryId;
       } catch (error) {
         console.warn('[contact.router] auto-merge post-commit failed:', error);
       }
@@ -724,18 +727,37 @@ export const contactRouter = createTRPCRouter({
       }
     }
 
-    // IFC-255: fire-and-forget audit logging
-    getAuditLogger(ctx.prisma)
-      .logAction('CREATE', 'contact', result.value.id.value, typedCtx.tenant.tenantId, {
-        actorId: typedCtx.tenant.userId,
-        dataClassification: 'CONFIDENTIAL',
-        afterState: {
-          email: result.value.email,
-          status: result.value.status,
-          company: (result.value as unknown as Record<string, unknown>).company ?? null,
-        },
-      })
-      .catch(logContactAuditFailure);
+    // IFC-255: fire-and-forget audit logging. If the just-created contact was
+    // auto-merged into an existing primary (and then deleted), the CREATE
+    // resource no longer exists — record the merge against the survivor instead
+    // of a transient CREATE of the merged-away id.
+    if (autoMergedIntoId) {
+      getAuditLogger(ctx.prisma)
+        .logAction('UPDATE', 'contact', autoMergedIntoId, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          eventType: 'ContactMerged',
+          dataClassification: 'CONFIDENTIAL',
+          metadata: {
+            reason: 'email-collision-auto-merge-on-create',
+            survivingContactId: autoMergedIntoId,
+            mergedContactId: result.value.id.value,
+            attemptedEmail: result.value.email.value,
+          },
+        })
+        .catch(logContactAuditFailure);
+    } else {
+      getAuditLogger(ctx.prisma)
+        .logAction('CREATE', 'contact', result.value.id.value, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          dataClassification: 'CONFIDENTIAL',
+          afterState: {
+            email: result.value.email.value,
+            status: result.value.status,
+            company: (result.value as unknown as Record<string, unknown>).company ?? null,
+          },
+        })
+        .catch(logContactAuditFailure);
+    }
 
     return mapContactToResponse(result.value);
   }),
@@ -1160,13 +1182,14 @@ export const contactRouter = createTRPCRouter({
         message: result.error.message,
       });
     }
-    // IFC-255: fire-and-forget audit logging for standard email update
+    // IFC-255: fire-and-forget audit logging for standard email update. Log the
+    // PERSISTED normalized email (Email.create lowercases/trims), not the raw input.
     getAuditLogger(ctx.prisma)
       .logAction('UPDATE', 'contact', input.id, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
         eventType: 'ContactEmailUpdated',
         dataClassification: 'CONFIDENTIAL',
-        afterState: { email: input.email },
+        afterState: { email: result.value.email.value },
       })
       .catch(logContactAuditFailure);
     return mapContactToResponse(result.value);

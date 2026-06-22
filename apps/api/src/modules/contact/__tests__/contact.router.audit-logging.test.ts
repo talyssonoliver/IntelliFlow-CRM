@@ -17,7 +17,13 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { TEST_UUIDS, createTestContext, prismaMock, mockContact } from '../../../test/setup';
+import {
+  TEST_UUIDS,
+  createTestContext,
+  prismaMock,
+  mockContact,
+  mockServices,
+} from '../../../test/setup';
 
 // ─── Audit logger mock ─────────────────────────────────────────────────────
 // setup.ts runs vi.clearAllMocks() in its (earlier-registered) beforeEach, so
@@ -43,7 +49,8 @@ const success = <T>(value: T) => ({ isSuccess: true, isFailure: false, value });
 
 const makeDomainContact = (overrides: Record<string, unknown> = {}) => ({
   id: { value: TEST_UUIDS.contact1 },
-  email: 'audit@example.com',
+  // Domain Contact exposes email as an Email value object (mapper + audit read .value)
+  email: { value: 'audit@example.com' },
   firstName: 'Audit',
   lastName: 'Contact',
   company: 'AuditCo',
@@ -98,6 +105,55 @@ describe('Contact Router — Audit Logging (IFC-255)', () => {
         actorId: TEST_UUIDS.user1,
         dataClassification: 'CONFIDENTIAL',
       })
+    );
+  });
+
+  it('create auto-merge logs ContactMerged against the survivor, not a CREATE of the merged-away id', async () => {
+    const applyAutoMerge = vi.fn().mockResolvedValue(undefined);
+    const checkForCreate = vi.fn().mockResolvedValue({
+      action: 'auto-merge',
+      primaryId: TEST_UUIDS.contact2,
+      matches: [],
+    });
+    const ctx = createTestContext({
+      services: {
+        ...mockServices,
+        contactDuplicateDetection: { checkForCreate, applyAutoMerge },
+      } as any,
+    });
+    ctx.services!.contact!.createContact = vi.fn().mockResolvedValue(success(makeDomainContact()));
+    prismaMock.contactAutomationSetting.findUnique.mockResolvedValue(null);
+
+    await contactRouter.createCaller(ctx).create({
+      email: 'audit@example.com',
+      firstName: 'Audit',
+      lastName: 'Contact',
+    });
+    await flush();
+
+    expect(applyAutoMerge).toHaveBeenCalled();
+    // The just-created contact (contact1) was folded into the primary (contact2)
+    // and deleted — audit the merge against the survivor, never a CREATE of contact1.
+    expect(mockLogAction).toHaveBeenCalledWith(
+      'UPDATE',
+      'contact',
+      TEST_UUIDS.contact2,
+      TEST_UUIDS.tenant,
+      expect.objectContaining({
+        eventType: 'ContactMerged',
+        dataClassification: 'CONFIDENTIAL',
+        metadata: expect.objectContaining({
+          survivingContactId: TEST_UUIDS.contact2,
+          mergedContactId: TEST_UUIDS.contact1,
+        }),
+      })
+    );
+    expect(mockLogAction).not.toHaveBeenCalledWith(
+      'CREATE',
+      'contact',
+      TEST_UUIDS.contact1,
+      TEST_UUIDS.tenant,
+      expect.anything()
     );
   });
 
@@ -181,7 +237,7 @@ describe('Contact Router — Audit Logging (IFC-255)', () => {
     prismaMock.contactAutomationSetting.findUnique.mockResolvedValue(null);
     ctx.services!.contact!.updateContactEmail = vi
       .fn()
-      .mockResolvedValue(success(makeDomainContact({ email: 'new@example.com' })));
+      .mockResolvedValue(success(makeDomainContact({ email: { value: 'new@example.com' } })));
 
     await contactRouter.createCaller(ctx).updateEmail({
       id: TEST_UUIDS.contact1,
@@ -198,6 +254,7 @@ describe('Contact Router — Audit Logging (IFC-255)', () => {
         actorId: TEST_UUIDS.user1,
         eventType: 'ContactEmailUpdated',
         dataClassification: 'CONFIDENTIAL',
+        // PERSISTED normalized email (result.value.email.value), not raw input
         afterState: expect.objectContaining({ email: 'new@example.com' }),
       })
     );
