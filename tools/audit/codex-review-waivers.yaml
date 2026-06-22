@@ -637,6 +637,37 @@ waivers:
       regresses.
     author: talyssonoliver
     date: '2026-06-21'
+  - fingerprint: '07459061b125214c39aabea5ce38bcd7c82f862477a88256bd1e433e365a5732'
+    reason: >-
+      Accepted, unreachable edge — not a real defect for value objects. Codex flags
+      that sortKeysDeep (ValueObject.stableStringify) is recursive and could RangeError
+      on a ~5000-level-deep props object that native JSON.stringify might still
+      serialize. Value-object props are intentionally shallow (Email/PhoneNumber are
+      one level; DateRange/Recurrence two), so such depth never occurs. The function
+      also runs ONLY after step 1's `JSON.stringify(value)` (which itself recurses to
+      the same depth and throws first on pathological nesting), so sortKeysDeep adds no
+      new failure mode the prior raw-JSON.stringify equality did not already have. The
+      recursion (over Object.keys + Object.fromEntries) was chosen specifically because
+      it touches own-enumerable keys only and preserves an own `__proto__` key — the
+      array-replacer alternative reads inherited props via the prototype, a worse edge.
+      Source-anchored: this re-blocks if the recursion body changes.
+    author: talyssonoliver
+    date: '2026-06-21'
+  - fingerprint: '10332020610fc5ad7c116e05b9640d99ce88e28489d9d78f6c939fd7abe8f14a'
+    reason: >-
+      Same accepted/unreachable sortKeysDeep edge as the sibling 07459061 waiver,
+      at the line range codex anchors on some runs. The codex gate is non-deterministic
+      and rotates the rule name across runs (recursive-stack-overflow,
+      deep-valueobject-equals-throws, inherited-property-serialization,
+      array-replacer-inherited-props) while pointing at the same sortKeysDeep recursion
+      — note the "array-replacer" labels are hallucinations, the committed code uses
+      Object.keys (own-enumerable only) + Object.fromEntries, with NO array replacer.
+      The one substantive concern (deep recursion RangeError) is unreachable: VO props
+      are shallow, and step 1's JSON.stringify(value) already recurses to the same depth
+      and throws first on pathological nesting, so sortKeysDeep adds no new failure mode
+      the prior raw-JSON.stringify equality lacked. Source-anchored; re-blocks on change.
+    author: talyssonoliver
+    date: '2026-06-21'
   - fingerprint: '0ee6a6708196daf9b74186d6ba79248301c4b55096bb9d44771108327160cb2f'
     reason: >-
       Verified false positive after fix. Codex anchors this finding to the

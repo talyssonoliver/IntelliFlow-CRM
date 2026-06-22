@@ -11,8 +11,20 @@
 
 import { describe, it, expect } from 'vitest';
 import { test, fc } from '@fast-check/vitest';
-import { DateRange, PhoneNumber, Email } from '@intelliflow/domain';
+import { DateRange, PhoneNumber, Email, ValueObject } from '@intelliflow/domain';
 import { propertyParams } from '../../support';
+
+// Test-local concrete ValueObject so the base-class equality semantics can be
+// exercised directly (concrete domain VOs only ever store defined, fixed-order
+// props, so they cannot reach the key-order / undefined-key paths).
+class TestValueObject extends ValueObject<Record<string, unknown>> {
+  constructor(props: Record<string, unknown>) {
+    super(props);
+  }
+  toValue(): Record<string, unknown> {
+    return this.props;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Local helpers
@@ -135,34 +147,74 @@ describe('ValueObject — RACE-PURE-12: equality laws', () => {
 });
 
 // ---------------------------------------------------------------------------
-// RACE-PURE-12 — JSON.stringify limitation: undefined props fields
+// RACE-PURE-12 — ValueObject.equals structural semantics (#223)
 //
-// The finding notes that JSON.stringify silently drops `undefined` values,
-// so two structurally different props objects could compare as equal if one
-// has an extra key set to `undefined`.  We expose this with a concrete test
-// using a test-local ValueObject subclass.
+// #223 asked whether ValueObject.equals "mishandles" undefined-valued keys. The honest
+// finding: the only real fragility is key-order sensitivity in the old raw
+// JSON.stringify(props) comparison. Treating a present-but-undefined key the same as an
+// absent one is CORRECT here, not a bug — VO factories materialise optional props as
+// `x: options?.x` (present-but-undefined) while other shapes omit them, and those must
+// stay equal (e.g. Recurrence.createDaily with vs without options). So the base class now
+// canonicalizes props by sorting keys at every depth (fixing key order) while preserving
+// JSON.stringify's drop-undefined / type-distinction / Date semantics. These tests
+// exercise the real equals() via a test-local VO instead of tautologically asserting
+// JSON.stringify behaviour.
 // ---------------------------------------------------------------------------
 
-describe('ValueObject — RACE-PURE-12: JSON.stringify undefined-field gap', () => {
-  // BUG(RACE-PURE-12): ValueObject.equals uses JSON.stringify, which silently
-  // omits undefined-valued keys. Two instances with props {a:1, b:undefined}
-  // and {a:1} (missing b) produce identical JSON strings and incorrectly compare
-  // as equal, even though their props shapes differ.
-  //
-  // This is a latent risk: current domain value objects do not expose the bug
-  // in practice because no domain VO stores undefined props fields.  The skip
-  // marks the gap for future remediation (replace JSON.stringify with a
-  // structural deep-equal that treats {a:1,b:undefined} !== {a:1}).
-  it.skip(// BUG(RACE-PURE-12): JSON.stringify({a:1,b:undefined}) === JSON.stringify({a:1})
-  // so two structurally different props objects compare as equal.
-  // Fix: replace JSON.stringify comparison in ValueObject.equals with a
-  // structural deep-equal that handles undefined fields consistently.
-  'equals() should distinguish {a:1,b:undefined} from {a:1} (BUG RACE-PURE-12)', () => {
-    // We cannot easily construct this scenario through the public API of any
-    // current domain VO because all concrete VOs store only defined values.
-    // The property is documented here so the fix can be verified once the
-    // base class is patched.
-    expect(JSON.stringify({ a: 1, b: undefined })).not.toBe(JSON.stringify({ a: 1 }));
+describe('ValueObject — RACE-PURE-12: structural equality of props (#223)', () => {
+  it('treats key order as irrelevant: {a:1,b:2} equals {b:2,a:1}', () => {
+    expect(new TestValueObject({ a: 1, b: 2 }).equals(new TestValueObject({ b: 2, a: 1 }))).toBe(
+      true
+    );
+  });
+
+  it('treats a present-but-undefined optional key as equal to an absent one', () => {
+    // Intentional: VO factories often materialise optionals as `x: options?.x`
+    // (present-undefined) while other paths omit them; both mean "no value".
+    const withUndefinedKey = new TestValueObject({ a: 1, b: undefined });
+    const withoutKey = new TestValueObject({ a: 1 });
+    expect(withUndefinedKey.equals(withoutKey)).toBe(true);
+    expect(withoutKey.equals(withUndefinedKey)).toBe(true);
+  });
+
+  it('remains reflexive and value-sensitive for defined props', () => {
+    expect(new TestValueObject({ a: 1 }).equals(new TestValueObject({ a: 1 }))).toBe(true);
+    expect(new TestValueObject({ a: 1 }).equals(new TestValueObject({ a: 2 }))).toBe(false);
+  });
+
+  it('compares nested objects and Dates structurally (order-independent)', () => {
+    const a = new TestValueObject({
+      when: new Date('2026-01-01T00:00:00.000Z'),
+      meta: { x: 1, y: 2 },
+    });
+    const b = new TestValueObject({
+      meta: { y: 2, x: 1 },
+      when: new Date('2026-01-01T00:00:00.000Z'),
+    });
+    expect(a.equals(b)).toBe(true);
+  });
+
+  it('does not throw on an invalid Date prop (rendered as null, like JSON.stringify)', () => {
+    const invalid1 = new TestValueObject({ when: new Date('not-a-date') });
+    const invalid2 = new TestValueObject({ when: new Date('also-invalid') });
+    const valid = new TestValueObject({ when: new Date('2026-01-01T00:00:00.000Z') });
+    expect(() => invalid1.equals(valid)).not.toThrow();
+    expect(invalid1.equals(invalid2)).toBe(true); // both invalid → both null
+    expect(invalid1.equals(valid)).toBe(false);
+  });
+
+  it('distinguishes types that would otherwise look alike (1 vs "1")', () => {
+    expect(new TestValueObject({ a: 1 }).equals(new TestValueObject({ a: '1' }))).toBe(false);
+    expect(new TestValueObject({ a: null }).equals(new TestValueObject({ a: null }))).toBe(true);
+  });
+
+  it('compares array props structurally and order-sensitively', () => {
+    expect(new TestValueObject({ a: [1, 2] }).equals(new TestValueObject({ a: [1, 2] }))).toBe(
+      true
+    );
+    expect(new TestValueObject({ a: [1, 2] }).equals(new TestValueObject({ a: [2, 1] }))).toBe(
+      false
+    );
   });
 });
 
