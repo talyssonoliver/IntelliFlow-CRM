@@ -823,29 +823,25 @@ export const leadRouter = createTRPCRouter({
       await queue.close();
     })().catch(() => {});
 
-    // IFC-240: fire-and-forget audit logging with a real before/after diff
+    // IFC-240: fire-and-forget audit logging with a real before/after diff over
+    // exactly the fields this update changed — covers every editable field in
+    // updateLeadSchema (BANT, location, tags, …), not just a fixed subset.
+    const auditAfter: Record<string, unknown> = { ...rest };
+    if (phone !== undefined) auditAfter.phone = phone?.value ?? null;
+    const auditBefore = beforeLead
+      ? Object.fromEntries(
+          Object.keys(auditAfter).map((k) => [
+            k,
+            (beforeLead as Record<string, unknown>)[k] ?? null,
+          ])
+        )
+      : undefined;
     getAuditLogger(ctx.prisma)
       .logAction('UPDATE', 'lead', id, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
         dataClassification: 'CONFIDENTIAL',
-        beforeState: beforeLead
-          ? {
-              firstName: beforeLead.firstName,
-              lastName: beforeLead.lastName,
-              company: beforeLead.company,
-              title: beforeLead.title,
-              email: beforeLead.email,
-              status: beforeLead.status,
-            }
-          : undefined,
-        afterState: {
-          firstName: result.value.firstName ?? null,
-          lastName: result.value.lastName ?? null,
-          company: result.value.company ?? null,
-          title: result.value.title ?? null,
-          email: result.value.email.value,
-          status: result.value.status,
-        },
+        beforeState: auditBefore,
+        afterState: auditAfter,
       })
       .catch(logLeadAuditFailure);
 
@@ -1414,12 +1410,12 @@ export const leadRouter = createTRPCRouter({
 
       // IFC-240: fire-and-forget audit logging
       getAuditLogger(ctx.prisma)
-        .logBulkOperation('BULK_UPDATE', 'lead', result.successful, typedCtx.tenant.tenantId, {
+        .logBulkOperation('BULK_UPDATE', 'lead', input.leadIds, typedCtx.tenant.tenantId, {
           actorId: typedCtx.tenant.userId,
           dataClassification: 'INTERNAL',
           successCount: result.successful.length,
           failureCount: result.failed.length,
-          metadata: { operation: 'score' },
+          metadata: { operation: 'score', successfulIds: result.successful },
         })
         .catch(logLeadAuditFailure);
 
@@ -1581,12 +1577,12 @@ export const leadRouter = createTRPCRouter({
 
     // IFC-240: fire-and-forget audit logging (GDPR — bulk lead conversion)
     getAuditLogger(ctx.prisma)
-      .logBulkOperation('BULK_UPDATE', 'lead', txResult.successful, typedCtx.tenant.tenantId, {
+      .logBulkOperation('BULK_UPDATE', 'lead', ids, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
         dataClassification: 'CONFIDENTIAL',
         successCount: txResult.successful.length,
         failureCount: txResult.failed.length,
-        metadata: { operation: 'convert', createAccounts },
+        metadata: { operation: 'convert', createAccounts, successfulIds: txResult.successful },
       })
       .catch(logLeadAuditFailure);
 
@@ -1701,12 +1697,12 @@ export const leadRouter = createTRPCRouter({
 
       // IFC-240: fire-and-forget audit logging
       getAuditLogger(ctx.prisma)
-        .logBulkOperation('BULK_UPDATE', 'lead', successful, typedCtx.tenant.tenantId, {
+        .logBulkOperation('BULK_UPDATE', 'lead', ids, typedCtx.tenant.tenantId, {
           actorId: typedCtx.tenant.userId,
           dataClassification: 'CONFIDENTIAL',
           successCount: successful.length,
           failureCount: failed.length,
-          metadata: { operation: 'updateStatus', status },
+          metadata: { operation: 'updateStatus', status, successfulIds: successful },
         })
         .catch(logLeadAuditFailure);
 
@@ -1776,12 +1772,12 @@ export const leadRouter = createTRPCRouter({
 
     // IFC-240: fire-and-forget audit logging
     getAuditLogger(ctx.prisma)
-      .logBulkOperation('BULK_UPDATE', 'lead', successful, typedCtx.tenant.tenantId, {
+      .logBulkOperation('BULK_UPDATE', 'lead', ids, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
         dataClassification: 'CONFIDENTIAL',
         successCount: successful.length,
         failureCount: failed.length,
-        metadata: { operation: 'archive', status: 'LOST' },
+        metadata: { operation: 'archive', status: 'LOST', successfulIds: successful },
       })
       .catch(logLeadAuditFailure);
 
@@ -1955,11 +1951,12 @@ export const leadRouter = createTRPCRouter({
 
     // IFC-240: fire-and-forget audit logging (GDPR erasure)
     getAuditLogger(ctx.prisma)
-      .logBulkOperation('BULK_DELETE', 'lead', successful, typedCtx.tenant.tenantId, {
+      .logBulkOperation('BULK_DELETE', 'lead', ids, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
         dataClassification: 'CONFIDENTIAL',
         successCount: successful.length,
         failureCount: failed.length,
+        metadata: { successfulIds: successful },
       })
       .catch(logLeadAuditFailure);
 

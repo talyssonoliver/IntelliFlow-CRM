@@ -105,18 +105,20 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
     );
   });
 
-  it('update logs an UPDATE action with a before/after diff', async () => {
+  it('update logs an UPDATE action with a before/after diff over the changed fields', async () => {
     const ctx = createTestContext();
+    // Pre-read snapshot drives beforeState; the diff must cover any editable
+    // field (here a BANT field, budget), not just a fixed subset.
     prismaMock.lead.findUnique.mockResolvedValue({
       id: TEST_UUIDS.lead1,
       firstName: 'Old',
-      status: 'NEW',
+      budget: 'none',
     } as any);
-    ctx.services!.lead!.updateLead = vi
-      .fn()
-      .mockResolvedValue(success(makeDomainLead({ firstName: 'Edited', status: 'CONTACTED' })));
+    ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue(success(makeDomainLead()));
 
-    await leadRouter.createCaller(ctx).update({ id: TEST_UUIDS.lead1, firstName: 'Edited' });
+    await leadRouter
+      .createCaller(ctx)
+      .update({ id: TEST_UUIDS.lead1, firstName: 'Edited', budget: '$50k-$100k' });
     await flush();
 
     expect(mockLogAction).toHaveBeenCalledWith(
@@ -126,8 +128,9 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
       TEST_UUIDS.tenant,
       expect.objectContaining({
         actorId: TEST_UUIDS.user1,
-        beforeState: expect.objectContaining({ firstName: 'Old', status: 'NEW' }),
-        afterState: expect.objectContaining({ firstName: 'Edited', status: 'CONTACTED' }),
+        dataClassification: 'CONFIDENTIAL',
+        beforeState: expect.objectContaining({ firstName: 'Old', budget: 'none' }),
+        afterState: expect.objectContaining({ firstName: 'Edited', budget: '$50k-$100k' }),
       })
     );
   });
@@ -458,9 +461,14 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
     expect(mockLogBulkOperation).toHaveBeenCalledWith(
       'BULK_DELETE',
       'lead',
-      expect.arrayContaining([TEST_UUIDS.lead1]),
+      [TEST_UUIDS.lead1], // attempted ids, not just successful
       TEST_UUIDS.tenant,
-      expect.objectContaining({ actorId: TEST_UUIDS.user1 })
+      expect.objectContaining({
+        actorId: TEST_UUIDS.user1,
+        dataClassification: 'CONFIDENTIAL',
+        successCount: 1,
+        metadata: expect.objectContaining({ successfulIds: [TEST_UUIDS.lead1] }),
+      })
     );
   });
 
