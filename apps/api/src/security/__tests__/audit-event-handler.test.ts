@@ -124,21 +124,22 @@ describe('AuditEventHandler', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should handle ContactCreated event', async () => {
+    it('should handle contact.created event', async () => {
       const handler = new AuditEventHandler(mockPrismaClient as any);
 
+      // Dot-notation matches the domain event (ContactCreatedEvent.eventType);
+      // payload is the flat toPayload() shape, not a nested { contact }.
       const event: DomainEventPayload = {
         eventId: 'event-126',
-        eventType: 'ContactCreated',
+        eventType: 'contact.created',
         aggregateType: 'Contact',
         aggregateId: 'contact-789',
         occurredAt: new Date(),
         payload: {
-          contact: {
-            firstName: 'Jane',
-            lastName: 'Smith',
-            email: 'jane@example.com',
-          },
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+          ownerId: 'user-789',
         },
         metadata: {
           tenantId: 'tenant-123',
@@ -340,11 +341,11 @@ describe('AuditEventHandler', () => {
         },
         {
           eventId: 'batch-2',
-          eventType: 'ContactCreated',
+          eventType: 'contact.created',
           aggregateType: 'Contact',
           aggregateId: 'contact-b2',
           occurredAt: new Date(),
-          payload: { contact: { firstName: 'Test' } },
+          payload: { firstName: 'Test', email: 'test@test.com', ownerId: 'user-1' },
           metadata: { tenantId: 'tenant-123' },
         },
       ];
@@ -409,7 +410,7 @@ describe('AuditEventHandler', () => {
       const handler = new AuditEventHandler(mockPrismaClient as any);
 
       expect(handler.hasMapping('LeadCreated')).toBe(true);
-      expect(handler.hasMapping('ContactCreated')).toBe(true);
+      expect(handler.hasMapping('contact.created')).toBe(true);
       expect(handler.hasMapping('AccountCreated')).toBe(true);
       expect(handler.hasMapping('OpportunityCreated')).toBe(true);
       expect(handler.hasMapping('TaskCreated')).toBe(true);
@@ -442,7 +443,7 @@ describe('AuditEventHandler', () => {
       expect(types).toContain('LeadCreated');
       expect(types).toContain('LeadUpdated');
       expect(types).toContain('LeadScored');
-      expect(types).toContain('ContactCreated');
+      expect(types).toContain('contact.created');
       expect(types).toContain('AccountCreated');
       expect(types).toContain('OpportunityCreated');
       expect(types).toContain('TaskCreated');
@@ -922,11 +923,11 @@ describe('Singleton Functions', () => {
 
       const event2: DomainEventPayload = {
         eventId: 'audit-domain-3',
-        eventType: 'ContactCreated',
+        eventType: 'contact.created',
         aggregateType: 'Contact',
         aggregateId: 'contact-b',
         occurredAt: new Date(),
-        payload: { contact: {} },
+        payload: { email: 'b@test.com', firstName: 'B', lastName: 'C', ownerId: 'user-1' },
         metadata: { tenantId: 'tenant-123' },
       };
 

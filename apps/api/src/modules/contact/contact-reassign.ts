@@ -102,9 +102,13 @@ export async function emitContactReassignSideEffects(
   const tenantId = typedCtx.tenant.tenantId;
   const actorId = typedCtx.tenant.userId;
 
+  // IFC-255: single audit point for owner reassignment (single + bulk). Canonical
+  // eventType so the audit trail distinguishes a reassign from a generic update.
   getAuditLogger(ctx.prisma)
     .logAction('UPDATE', 'contact', args.id, tenantId, {
       actorId,
+      eventType: 'ContactReassigned',
+      dataClassification: 'CONFIDENTIAL',
       beforeState: { ownerId: args.previousOwnerId },
       afterState: { ownerId: args.newOwnerId },
     })
