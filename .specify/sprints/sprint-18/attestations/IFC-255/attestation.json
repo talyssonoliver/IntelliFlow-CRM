@@ -1,0 +1,161 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-255",
+  "run_id": "exec-IFC-255-2026-06-22",
+  "attestor": "Claude Code (claude-opus-4-8[1m]) — IFC-255 backend-architect exec (STOA-Domain)",
+  "attestation_timestamp": "2026-06-22T18:30:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 8,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 6,
+    "gates_failed": 1,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/contact/contact.router.ts": "60c85ee73f81b6022ee7296f13dfda12fc4cfe02b2d5f9ce3f9ac9395658f967",
+    "apps/api/src/modules/contact/contact-reassign.ts": "87e1caca18efdb8c22ce6f84be2c089dada8456506f788be141818a07b231a6c",
+    "apps/api/src/security/audit-event-handler.ts": "cbbd47245ee6d122dfe95394e54215a62dbc12cf29c9654546c4bef0ad4b2660",
+    "apps/api/src/modules/contact/__tests__/contact.router.audit-logging.test.ts": "b36c8f1004fd3c4c158bc5433ab9ea425f3b3e15cd3ae0135ba19398f173dd13",
+    "apps/api/src/modules/contact/__tests__/contact.router.security.test.ts": "c07b55cbf366700c9dd0c6f0e9e752494c8c328e0487c3bdca9267aedd7c055e",
+    "apps/api/src/security/__tests__/audit-event-handler.test.ts": "50cf9e3531771b0f9ba43f8b099e9c38259e1754fccc276e140fd70dcbbe496b",
+    "apps/api/src/security/__tests__/audit-event-handler.additional.test.ts": "21e5d8a6b6aa622f24449a545698cd47f5348483cb2848b3b4bba2f0864e3521",
+    "docs/operations/router-audit-logging-playbook.md": "0490e71989ce91d78129db276e1652896856fc5558ad5ca938c595558127f10c"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/api typecheck (tsc --noEmit) + CI Type Check",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-22T17:31:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/api test (1080 contact+security incl. 20 new audit-logging + 99 handler) + CI Unit Tests (sharded) + Integration Tests",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-22T17:31:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "eslint src/**/*.ts (0 warnings) + prettier --check (format-check) + CI Lint & Format",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-22T17:31:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm run build (full prod build) — pre-ship build step PASS (2m44s) + CI Build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-22T18:00:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "build-validation-4-commands",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": "TypeScript / Tests / Lint / Build all exit 0 locally (full pre-ship) and on CI (PR #516: 50 checks SUCCESS, 10 SKIPPED, 1 NEUTRAL after re-running a known AI-chain flake — Vercel cache 429 + LLM timeout, files untouched by this task)."
+    },
+    {
+      "gate_id": "scoped-coverage-changed-lines",
+      "passed": true,
+      "score": 98.2,
+      "log_path": "diff-coverage (mirrors Sonar new_coverage, 80% floor): 98.2% (55/56 changed lines). audit-event-handler.ts 100% (18/18), contact.router.ts 97.4% (37/38). A table-driven handle() test exercises all 9 contact mapping extractors; 20 router audit-logging tests + 2 resilience tests cover the instrumentation. No istanbul-ignore."
+    },
+    {
+      "gate_id": "codex-semantic-review",
+      "passed": false,
+      "log_path": "codex did its job: across rounds R1-R2 it surfaced 7 REAL cross-function bugs, ALL fixed in-branch (not waived) — duplicate reassign audit (emitContactReassignSideEffects already audited); auto-merge (create + updateEmail paths) mislabeled as CREATE/email-update instead of ContactMerged; AI_SCORE diffing the linked lead score instead of ContactAIInsight.engagementScore; update afterState built from raw input instead of persisted hygiened data; un-normalized email in afterState; a missing 'contact.merged' mapping. On the FINAL code (R3) codex produced 3 REPRODUCIBLE HALLUCINATIONS — it was fed the fixed code (artifacts/codex-review/codex-prompt.txt contains autoMergedIntoId, result.value.email.value, 'contact.merged' — 9 fix-markers) yet cited removed code (the old `afterState: { email: input.email }` is absent from the prompt). Same endgame as IFC-240. Fingerprints drifted across rounds (min-hash) so a waiver is unsafe. The FINAL SHA was pushed via OWNER-APPROVED `git push --no-verify` (approval recorded via AskUserQuestion, 2026-06-22). codex-review is LOCAL-ONLY — every gate CI enforces ran and passed."
+    },
+    {
+      "gate_id": "tenant-isolation-intact",
+      "passed": true,
+      "log_path": "Audit logging uses the base ctx.prisma singleton (getAuditLogger) with an explicit tenantId per entry — it does NOT bypass tenant isolation of business data (matches lead router IFC-240). The T-011 static guard in contact.router.security.test.ts pins every raw ctx.prisma occurrence to an allow-list (getAuditLogger singleton + one bounded user.findMany); a raw ctx.prisma.contact.* would fail it."
+    },
+    {
+      "gate_id": "fire-and-forget-resilience",
+      "passed": true,
+      "log_path": "A rejected audit write never alters or blocks a procedure result. Proven by 2 tests (delete + bulkDelete) that reject logAction/logBulkOperation and assert the normal response is still returned. All 19 call sites route rejections to logContactAuditFailure; reassign delegates to emitContactReassignSideEffects (single audit point)."
+    },
+    {
+      "gate_id": "event-handler-maps-all-contact-events",
+      "passed": true,
+      "log_path": "D-06 closed: EVENT_AUDIT_MAPPINGS re-keyed from dead PascalCase (ContactCreated/Updated/Deleted — never matched the dot-notation event.eventType, fell through to handleUnknownEvent) to all 9 real contact domain events (created, updated, account_associated, account_disassociated, converted_from_lead, linked_to_lead, unlinked_from_lead, interacted, merged). The 9th (contact.merged) is published by ContactService.mergeContacts. A table-driven handle() test asserts each mapping's action + extracted before/after/changedFields; hasMapping test confirms all 9 present and the PascalCase keys gone."
+    },
+    {
+      "gate_id": "no-fabricated-data",
+      "passed": true,
+      "log_path": "No mocked/simulated runtime data. Audit entries carry real actorId/tenantId/resourceId from the request context and real before/after/metadata from the operation result (persisted hygiened values, not raw input)."
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Contact procedures with audit logging",
+      "target": "14/14 contact procedures emit audit events",
+      "actual": "18/28 procedures instrumented (15 logAction + 4 logBulkOperation = 19 call sites; updateEmail has two branch paths). Covers all mutations (create, update, updateEmail, delete, link/unlink account & lead, reassign, note, tag, activity, scoreWithAI) + getById single-record READ + 4 bulk ops (email, export, delete, reassign). The 10 skipped are list/search/count/filter-option/settings reads (high-volume, no single data subject) — exceeds the CSV's stale '14' baseline.",
+      "met": true
+    },
+    {
+      "kpi": "Event handler maps all contact event types",
+      "target": "event handler maps all 8 contact event types",
+      "actual": "9/9 mapped (the CSV's 8 ContactEvents.ts events + the application-layer contact.merged, which codex correctly flagged as missing). All keyed by dot-notation to match the domain; dead PascalCase keys removed.",
+      "met": true
+    },
+    {
+      "kpi": "Test coverage on changed lines",
+      "target": ">=90% / >=80% diff-coverage on changed lines",
+      "actual": "diff-coverage 98.2% (55/56). 20 new router audit-logging tests + a 9-event handler table + T-011 static guard; 1080 contact+security + 99 handler tests green.",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "All contact CRUD procedures emit audit events",
+      "met": true,
+      "evidence": "18 procedures instrumented (all mutations + getById READ + 4 bulk ops). 19 fire-and-forget call sites, each routing rejection to logContactAuditFailure."
+    },
+    {
+      "criterion": "Event handler maps all contact event types",
+      "met": true,
+      "evidence": "EVENT_AUDIT_MAPPINGS now maps all 9 dot-notation contact domain events (D-06). The pre-existing PascalCase keys never matched a real event and were removed."
+    },
+    {
+      "criterion": "Audit trail for create/update/delete/bulk ops",
+      "met": true,
+      "evidence": "create=afterState (or ContactMerged on auto-merge); update=before/after diff over persisted hygiened fields; delete=pre-read before snapshot; bulk email/export/delete/reassign=attempted ids + success/failure counts + successfulIds."
+    },
+    {
+      "criterion": "tests >= 90%",
+      "met": true,
+      "evidence": "diff-coverage 98.2% on changed lines; 20 new audit-logging tests (incl. 2 resilience + create-auto-merge) + 9-event handler table; full contact+security suite (1080) green."
+    }
+  ],
+  "dependencies_verified": [],
+  "manual_verification": {
+    "performed_by": "Claude Code (claude-opus-4-8[1m]) — IFC-255 exec",
+    "performed_at": "2026-06-22T18:25:00Z",
+    "review_notes": "codex round 3 hallucinated on the final code (fed the fixed diff per codex-prompt.txt, cited removed code) — verified by grep that the cited code does not exist and the current code addresses every concern. The 7 round-1/2 findings were real and fixed. CI re-run cleared a known AI-chain flake (Vercel cache 429 + LLM timeout) in shard 4, files untouched by this task.",
+    "items_checked": [
+      "19 audit call sites use getAuditLogger(ctx.prisma).logAction/logBulkOperation with correct action, 'contact' resourceType, resourceId(s), tenantId, actorId (grep + T-011 guard)",
+      "Round-3 codex-cited code (afterState: { email: input.email }, CREATE-only auto-merge, missing contact.merged) does NOT exist in the committed diff (grep verified)",
+      "afterState reads persisted values (hygienedData + accountId, result.value.email.value), not raw input; AI_SCORE diffs prior ContactAIInsight.engagementScore",
+      "reassign emits a single audit (helper enriched with ContactReassigned eventType; router duplicate removed)",
+      "EVENT_AUDIT_MAPPINGS maps all 9 contact dot-notation events; PascalCase keys removed; extractors exercised by a handle() table test",
+      "1080 contact+security + 99 handler tests pass; TypeScript / Lint / Build / coverage / diff-coverage (98.2%) green"
+    ]
+  },
+  "environment": {
+    "os": "win32 (10.0.26200)",
+    "node_version": "v25.2.1",
+    "git_commit": "feat/ifc-255 (base origin/main@fb3bafe79), final SHA pushed via owner-approved git push --no-verify (codex round-3 hallucination); PR #516",
+    "branch": "feat/ifc-255"
+  },
+  "notes": "IFC-255 Contact Audit Logging — two halves. R-07: instruments apps/api/src/modules/contact/contact.router.ts with the existing audit infrastructure (getAuditLogger facade), replicating the merged IFC-240 lead-router pattern to close the GDPR Art. 30 / forensic-trail gap on contacts. 18/28 procedures emit fire-and-forget audit entries (15 logAction + 4 logBulkOperation = 19 sites); CONFIDENTIAL PII (INTERNAL for AI scoring); non-CRUD verbs use explicit canonical eventTypes; update logs a before/after diff over the PERSISTED hygiened fields; bulk ops log attempted ids + successfulIds + counts. D-06: re-keyed the contact block of EVENT_AUDIT_MAPPINGS from dead PascalCase to all 9 dot-notation domain events (the handler does a direct event.eventType lookup, so PascalCase never matched — every contact event fell through to handleUnknownEvent). Removed the ContactCreated/contact.created duplication per owner direction; added the application-layer contact.merged mapping codex flagged.\n\nCODEX GATE: codex found+drove fixes for 7 REAL cross-function bugs across R1 (4) + R2 (3) — duplicate reassign audit, create+updateEmail auto-merge mislabels, AI_SCORE wrong before-field, update raw-input afterState, un-normalized email, missing contact.merged. ALL fixed (not waived). On R3 codex emitted 3 REPRODUCIBLE HALLUCINATIONS (fed fixed code per codex-prompt.txt, cited removed code; same as IFC-240). Fingerprints drifted across rounds so a waiver is unsafe. Pushed via OWNER-APPROVED git push --no-verify (approval via AskUserQuestion 2026-06-22). codex-review is LOCAL-ONLY; every CI-enforced gate ran and passed.\n\nCO-DEPENDENT (ride this branch): contact-reassign.ts helper enriched with the canonical ContactReassigned eventType + CONFIDENTIAL classification (single audit point for single + bulk reassign). New docs/operations/router-audit-logging-playbook.md captures the proven pattern + every codex/Sonar lesson for the next router.\n\nVALIDATION: 4/4 (TypeScript, Tests, Lint, Build) + coverage/diff-coverage (98.2%) green locally and on CI (PR #516). 1080 contact+security + 99 handler tests."
+}
