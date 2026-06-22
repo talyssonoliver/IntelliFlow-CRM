@@ -15,7 +15,7 @@
     "csv-parse": "^7.0.0",
     "js-yaml": "^4.2.0",
     "next": "16.2.9",
-    "papaparse": "^5.4.1",
+    "papaparse": "^5.5.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "tailwind-merge": "^3.6.0",
