@@ -80,7 +80,7 @@ jobs:
     name: Project Drift Guard
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-monorepo
         with:
           pnpm-version: ${{ env.PNPM_VERSION }}
@@ -110,7 +110,7 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-monorepo
         with:
           pnpm-version: ${{ env.PNPM_VERSION }}
@@ -174,7 +174,7 @@ jobs:
     needs: [unit-shards, project-guard]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-monorepo
         with:
           pnpm-version: ${{ env.PNPM_VERSION }}
@@ -255,7 +255,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Download merged coverage
         uses: actions/download-artifact@v8
         with:
@@ -298,7 +298,7 @@ jobs:
         github.event.pull_request.user.login != 'dependabot[bot]'
       )
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # full history for SonarCloud blame analysis
 
@@ -408,7 +408,7 @@ jobs:
       # `next start` refuses to boot in production without an explicit app URL.
       NEXT_PUBLIC_APP_URL: http://localhost:3000
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-monorepo
         with:
           pnpm-version: ${{ env.PNPM_VERSION }}
