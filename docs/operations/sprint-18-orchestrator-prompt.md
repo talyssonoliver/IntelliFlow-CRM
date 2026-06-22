@@ -1,8 +1,65 @@
 # Sprint 18 Orchestrator Prompt
 
-> Hand this entire document to the orchestrating agent as its prompt. Generated
-> 2026-06-10 from `Sprint_plan.csv` (source of truth). Sprint 18 has 66 tasks:
-> 11 Completed, 55 remaining (54 schedulable + 1 human-blocked).
+> Hand this entire document to the orchestrating agent as its prompt. Originally
+> generated 2026-06-10 from `Sprint_plan.csv`; **State section refreshed
+> 2026-06-22 against `origin/main`.** The CSV `Status` column is badly stale
+> (many tasks shipped but never flipped to Completed), so the authoritative
+> remaining-work list is the **"Current State (2026-06-22)"** section below,
+> derived from `git log origin/main` — trust it over the older lane graph
+> further down. Verify any task's real status with
+> `git log origin/main --grep=<ID>` (ignore metrics/chore-only commits) before
+> dispatching.
+
+## Current State (refreshed 2026-06-22 against origin/main)
+
+**Just landed (verified merged on main):** IFC-240 Lead audit logging (#514) —
+the template for IFC-255. Earlier verticals already merged: leads
+(PG-060/061/062/063, IFC-242, IFC-230), contacts (IFC-256/257/265/266), accounts
+(IFC-270/271/273), deals (IFC-280/282/287), help (IFC-301), AI monitoring bridge
+(IFC-214), plus the non-sprint-18 ValueObject fix #509.
+
+**Verify-and-attest backlog (code on main, attestation/PR is the only gap — NOT
+a build):**
+
+- **IFC-032** OTel — ✅ attested + flipped via this PR (attestation-only; prod
+  wiring remains a HARD STOP, OTEL_ENABLED=false by design / #314).
+- **DOC-015** route-total reconcile — docs + consistency test on main; needs
+  only `attestation.json` + CSV flip. **Must close before DOC-016.**
+- **IFC-211** Goal Settings RBAC — `/exec` evidence exists but the feature PR (3
+  tRPC procedures, `goal` ResourceType, `home-rbac.test.ts`) + attestation were
+  never landed. Needs a real PR, not just an attestation.
+
+**Genuinely remaining + unblocked (full pipelines):**
+
+- **IFC-255** Contact audit logging — _next pick_; 1:1 replica of IFC-240. 17
+  procedures + a contact T-011 guard. security-lead / 30.
+- **IFC-247** + **IFC-248** Lead page tests — test-engineer / 30 each (IFC-248
+  first; IFC-247 = the 3,287-line detail page, aggressive 90% coverage gate).
+- **IFC-215** AI monitoring payload fidelity — wire real tokenCost +
+  hallucination flags into `chain-monitor.ts` (stubs `tokenCost:0`/`[]`).
+  ai-specialist / 40.
+- **PG-181** Help article editor → **IFC-302** Help article page → DB. frontend
+  / 20.
+- **Lane G module settings** (14 ready): batch ≤2 PRs, re-merge main between
+  (all append to the shared `settings-search.ts` + root tRPC router). Batch 0:
+  PG-191 + PG-188; then accounts (PG-196/197/205), analytics (PG-200/201/207),
+  calendar/cases (PG-202/203/204/206). PG-208/209 are blocked on PG-191.
+- **IFC-234** settings wiring (team + integrations pages are the real work),
+  **PG-058** dashboard (needs `kpi-calculator.ts` + a Lighthouse run).
+
+**Needs a human/product/architecture decision before dispatch:**
+
+- **IFC-309** server-side terms acceptance — `termsVersion` format + immutable +
+  tenantId rules + compliance/security sign-off.
+- **PG-198 / PG-199** AI-governance settings — the `agent-approval` API module
+  does not exist (create new vs extend `agent/`?) + the Never-Downgrade rule.
+- **PG-204** — task-JSON path (`cases/case-types`) mismatches the actual stub
+  (`cases/(list)/case-types`); reconcile first.
+
+**Recommended next 3-slot dispatch (file-disjoint, safe in parallel):** Slot 1
+IFC-255 (contact router) · Slot 2 IFC-215 (ai-worker) · Slot 3 PG-181 then
+IFC-302 (web help) — backfill with IFC-248/247, Lane G batches, IFC-234, PG-058,
+and the DOC-015→DOC-016 + IFC-211 closes.
 
 ---
 
