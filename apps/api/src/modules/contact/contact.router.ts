@@ -72,6 +72,17 @@ import {
 } from '../../security/tenant-context';
 import { deriveContactInsights } from '../../shared/contact-insight-deriver';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
+// IFC-255: fire-and-forget audit logging for contact mutations + single-record reads
+import { getAuditLogger } from '../../security/audit-logger';
+
+/**
+ * IFC-255: shared fire-and-forget audit-failure handler. Audit logging must
+ * never alter or block a procedure's result, so every audit call routes its
+ * rejection here instead of propagating into the request path.
+ */
+function logContactAuditFailure(err: unknown): void {
+  console.error('[contact.router] Audit log failed:', err);
+}
 
 /**
  * Search schema optimized for performance
@@ -491,6 +502,10 @@ async function handleContactUpdate(ctx: Context, input: UpdateContactInput) {
   // #420: deny cross-tenant access before any mutation (service findById is not tenant-scoped).
   await assertContactInTenant(typedCtx, id);
 
+  // IFC-255: capture the pre-update snapshot so the audit entry records a real
+  // before/after diff (not a misleading partial afterState).
+  const beforeContact = await typedCtx.prismaWithTenant.contact.findUnique({ where: { id } });
+
   // PG-182: apply hygiene + required-field policy before building the update.
   const [flags, requiredFields] = await Promise.all([
     loadContactAutomation(typedCtx),
@@ -556,6 +571,27 @@ async function handleContactUpdate(ctx: Context, input: UpdateContactInput) {
   if (flags.aiEnrichment) {
     await enqueueContactAIEnrichment(id, typedCtx.tenant.tenantId);
   }
+
+  // IFC-255: fire-and-forget audit logging with a real before/after diff over
+  // exactly the fields this update changed.
+  const auditAfter: Record<string, unknown> = { ...data };
+  if (rawPhone !== undefined) auditAfter.phone = rawPhone ?? null;
+  const auditBefore = beforeContact
+    ? Object.fromEntries(
+        Object.keys(auditAfter).map((k) => [
+          k,
+          (beforeContact as Record<string, unknown>)[k] ?? null,
+        ])
+      )
+    : undefined;
+  getAuditLogger(ctx.prisma)
+    .logAction('UPDATE', 'contact', id, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      dataClassification: 'CONFIDENTIAL',
+      beforeState: auditBefore,
+      afterState: auditAfter,
+    })
+    .catch(logContactAuditFailure);
 
   return mapContactToResponse(updatedResult.value);
 }
@@ -685,6 +721,19 @@ export const contactRouter = createTRPCRouter({
       }
     }
 
+    // IFC-255: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logAction('CREATE', 'contact', result.value.id.value, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        dataClassification: 'CONFIDENTIAL',
+        afterState: {
+          email: result.value.email,
+          status: result.value.status,
+          company: (result.value as unknown as Record<string, unknown>).company ?? null,
+        },
+      })
+      .catch(logContactAuditFailure);
+
     return mapContactToResponse(result.value);
   }),
 
@@ -771,6 +820,15 @@ export const contactRouter = createTRPCRouter({
         message: `Contact with ID ${input.id} not found`,
       });
     }
+
+    // IFC-255: GDPR single-record access logging (fire-and-forget)
+    getAuditLogger(ctx.prisma)
+      .logAction('READ', 'contact', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        eventType: 'ContactRead',
+        dataClassification: 'CONFIDENTIAL',
+      })
+      .catch(logContactAuditFailure);
 
     // IFC-256: Contact 360 — tickets (via TicketService) + documents. Tickets are
     // scoped by `{ tenantId, contactId }` (Ticket has no `ownerId`, so
@@ -1064,6 +1122,17 @@ export const contactRouter = createTRPCRouter({
             message: primaryResult.error.message,
           });
         }
+        // IFC-255: fire-and-forget audit logging — auto-merge path. The contact
+        // was merged into the primary; log the email update against the surviving id.
+        getAuditLogger(ctx.prisma)
+          .logAction('UPDATE', 'contact', emailDupeResult.primaryId, typedCtx.tenant.tenantId, {
+            actorId: typedCtx.tenant.userId,
+            eventType: 'ContactEmailUpdated',
+            dataClassification: 'CONFIDENTIAL',
+            afterState: { email: input.email },
+            metadata: { mergedContactId: input.id },
+          })
+          .catch(logContactAuditFailure);
         return mapContactToResponse(primaryResult.value);
       } catch (error) {
         console.warn('[contact.router] auto-merge on email change failed:', error);
@@ -1082,6 +1151,15 @@ export const contactRouter = createTRPCRouter({
         message: result.error.message,
       });
     }
+    // IFC-255: fire-and-forget audit logging for standard email update
+    getAuditLogger(ctx.prisma)
+      .logAction('UPDATE', 'contact', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        eventType: 'ContactEmailUpdated',
+        dataClassification: 'CONFIDENTIAL',
+        afterState: { email: input.email },
+      })
+      .catch(logContactAuditFailure);
     return mapContactToResponse(result.value);
   }),
 
@@ -1130,6 +1208,20 @@ export const contactRouter = createTRPCRouter({
       });
     }
 
+    // IFC-255: fire-and-forget audit logging (GDPR erasure) with before snapshot
+    getAuditLogger(ctx.prisma)
+      .logAction('DELETE', 'contact', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        dataClassification: 'CONFIDENTIAL',
+        beforeState: {
+          email: existingContact.email,
+          status: existingContact.status,
+          company: existingContact.company,
+          ownerId: existingContact.ownerId,
+        },
+      })
+      .catch(logContactAuditFailure);
+
     return { success: true, id: input.id };
   }),
 
@@ -1162,6 +1254,16 @@ export const contactRouter = createTRPCRouter({
       if (result.isFailure) {
         throwContactAssociationError(result.error.message);
       }
+
+      // IFC-255: fire-and-forget audit logging
+      getAuditLogger(ctx.prisma)
+        .logAction('UPDATE', 'contact', input.contactId, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          eventType: 'ContactLinkedToAccount',
+          dataClassification: 'CONFIDENTIAL',
+          afterState: { accountId: input.accountId },
+        })
+        .catch(logContactAuditFailure);
 
       return mapContactToResponse(result.value);
     }),
@@ -1196,6 +1298,16 @@ export const contactRouter = createTRPCRouter({
         }
         throw new TRPCError({ code: 'BAD_REQUEST', message: errorMessage });
       }
+
+      // IFC-255: fire-and-forget audit logging
+      getAuditLogger(ctx.prisma)
+        .logAction('UPDATE', 'contact', input.contactId, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          eventType: 'ContactUnlinkedFromAccount',
+          dataClassification: 'CONFIDENTIAL',
+          afterState: { accountId: null },
+        })
+        .catch(logContactAuditFailure);
 
       return mapContactToResponse(result.value);
     }),
@@ -1416,14 +1528,25 @@ export const contactRouter = createTRPCRouter({
     const emails = contacts.map((c) => c.email);
     const mailtoUrl = `mailto:${emails.join(',')}`;
 
+    const bulkEmailSuccessful = contacts.map((c) => c.id);
+    const bulkEmailFailed = ids
+      .filter((id: string) => !contacts.some((c) => c.id === id))
+      .map((id: string) => ({ id, error: 'Contact not found' }));
+
+    // IFC-255: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logBulkOperation('BULK_UPDATE', 'contact', ids, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        dataClassification: 'CONFIDENTIAL',
+        successCount: bulkEmailSuccessful.length,
+        failureCount: bulkEmailFailed.length,
+        metadata: { operation: 'email', successfulIds: bulkEmailSuccessful },
+      })
+      .catch(logContactAuditFailure);
+
     return {
-      successful: contacts.map((c) => c.id),
-      failed: ids
-        .filter((id: string) => !contacts.some((c) => c.id === id))
-        .map((id: string) => ({
-          id,
-          error: 'Contact not found',
-        })),
+      successful: bulkEmailSuccessful,
+      failed: bulkEmailFailed,
       totalProcessed: ids.length,
       emails,
       mailtoUrl,
@@ -1462,14 +1585,25 @@ export const contactRouter = createTRPCRouter({
       data = JSON.stringify(contacts, null, 2);
     }
 
+    const bulkExportSuccessful = contacts.map((c) => c.id);
+    const bulkExportFailed = ids
+      .filter((id: string) => !contacts.some((c) => c.id === id))
+      .map((id: string) => ({ id, error: 'Contact not found' }));
+
+    // IFC-255: fire-and-forget audit logging (EXPORT uses EXPORT BulkAction)
+    getAuditLogger(ctx.prisma)
+      .logBulkOperation('EXPORT', 'contact', ids, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        dataClassification: 'CONFIDENTIAL',
+        successCount: bulkExportSuccessful.length,
+        failureCount: bulkExportFailed.length,
+        metadata: { format, successfulIds: bulkExportSuccessful },
+      })
+      .catch(logContactAuditFailure);
+
     return {
-      successful: contacts.map((c) => c.id),
-      failed: ids
-        .filter((id: string) => !contacts.some((c) => c.id === id))
-        .map((id: string) => ({
-          id,
-          error: 'Contact not found',
-        })),
+      successful: bulkExportSuccessful,
+      failed: bulkExportFailed,
       totalProcessed: ids.length,
       data,
       count: contacts.length,
@@ -1537,6 +1671,17 @@ export const contactRouter = createTRPCRouter({
       }
     }
 
+    // IFC-255: fire-and-forget audit logging (GDPR erasure)
+    getAuditLogger(ctx.prisma)
+      .logBulkOperation('BULK_DELETE', 'contact', ids, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        dataClassification: 'CONFIDENTIAL',
+        successCount: successful.length,
+        failureCount: failed.length,
+        metadata: { successfulIds: successful },
+      })
+      .catch(logContactAuditFailure);
+
     return { successful, failed, totalProcessed: ids.length };
   }),
 
@@ -1557,6 +1702,16 @@ export const contactRouter = createTRPCRouter({
     if (result.isFailure) {
       throwContactLinkLeadError(result.error.message);
     }
+
+    // IFC-255: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logAction('UPDATE', 'contact', input.contactId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        eventType: 'ContactLinkedToLead',
+        dataClassification: 'CONFIDENTIAL',
+        afterState: { leadId: input.leadId },
+      })
+      .catch(logContactAuditFailure);
 
     return mapContactToResponse(result.value);
   }),
@@ -1583,6 +1738,16 @@ export const contactRouter = createTRPCRouter({
         message: errorMessage,
       });
     }
+
+    // IFC-255: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logAction('UPDATE', 'contact', input.contactId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        eventType: 'ContactUnlinkedFromLead',
+        dataClassification: 'CONFIDENTIAL',
+        afterState: { leadId: null },
+      })
+      .catch(logContactAuditFailure);
 
     return mapContactToResponse(result.value);
   }),
@@ -1796,6 +1961,16 @@ export const contactRouter = createTRPCRouter({
     const contactService = getContactService(ctx);
     await contactService.recordInteraction(input.contactId, input.type, userId);
 
+    // IFC-255: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logAction('UPDATE', 'contact', input.contactId, tenantId, {
+        actorId: userId,
+        eventType: 'ContactActivityLogged',
+        dataClassification: 'CONFIDENTIAL',
+        metadata: { operation: 'log_activity', activityType: input.type },
+      })
+      .catch(logContactAuditFailure);
+
     // Return the tx-committed Prisma record (authoritative)
     return {
       id: updatedContact.id,
@@ -1849,6 +2024,16 @@ export const contactRouter = createTRPCRouter({
         tenantId: typedCtx.tenant.tenantId,
       },
     });
+
+    // IFC-255: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logAction('UPDATE', 'contact', input.contactId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        eventType: 'ContactNoteAdded',
+        dataClassification: 'CONFIDENTIAL',
+        metadata: { operation: 'add_note', noteId: note.id },
+      })
+      .catch(logContactAuditFailure);
 
     return note;
   }),
@@ -1935,6 +2120,21 @@ export const contactRouter = createTRPCRouter({
         // Redis/BullMQ unavailable — silently skip background enrichment
       }
 
+      // IFC-255: fire-and-forget audit logging (AI scoring — INTERNAL classification)
+      getAuditLogger(ctx.prisma)
+        .logAction('AI_SCORE', 'contact', input.contactId, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          actorType: 'AI_AGENT',
+          eventType: 'ContactScored',
+          dataClassification: 'INTERNAL',
+          beforeState: { score: contact.lead?.score ?? null },
+          afterState: {
+            score: (derived as unknown as Record<string, unknown>).engagementScore ?? null,
+            status: contact.status,
+          },
+        })
+        .catch(logContactAuditFailure);
+
       return insight;
     }),
 
@@ -1984,6 +2184,17 @@ export const contactRouter = createTRPCRouter({
       newOwnerId: verdict.newOwnerId,
       flags,
     });
+
+    // IFC-255: fire-and-forget audit logging
+    getAuditLogger(ctx.prisma)
+      .logAction('UPDATE', 'contact', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        eventType: 'ContactReassigned',
+        dataClassification: 'CONFIDENTIAL',
+        beforeState: { ownerId: verdict.previousOwnerId },
+        afterState: { ownerId: verdict.newOwnerId },
+      })
+      .catch(logContactAuditFailure);
 
     return {
       id: input.id,
@@ -2066,6 +2277,18 @@ export const contactRouter = createTRPCRouter({
           notified: sideEffects.notified,
         });
       }
+
+      // IFC-255: fire-and-forget audit logging for the bulk reassign
+      const successfulIds = successful.map((s) => s.id);
+      getAuditLogger(ctx.prisma)
+        .logBulkOperation('BULK_UPDATE', 'contact', input.ids, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          dataClassification: 'CONFIDENTIAL',
+          successCount: successful.length,
+          failureCount: failed.length,
+          metadata: { operation: 'reassign', newOwnerId: input.ownerId, successfulIds },
+        })
+        .catch(logContactAuditFailure);
 
       return { successful, failed, totalProcessed: input.ids.length };
     }),
@@ -2281,6 +2504,7 @@ export const contactRouter = createTRPCRouter({
     .input(contactAddTagsInputSchema)
     .output(contactAddTagsOutputSchema)
     .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
       const current = await ctx.prismaWithTenant.contact.findUnique({
         where: { id: input.contactId },
         select: { tags: true },
@@ -2293,6 +2517,18 @@ export const contactRouter = createTRPCRouter({
         where: { id: input.contactId },
         data: { tags: merged },
       });
+
+      // IFC-255: fire-and-forget audit logging
+      getAuditLogger(ctx.prisma)
+        .logAction('UPDATE', 'contact', input.contactId, typedCtx.tenant.tenantId, {
+          actorId: typedCtx.tenant.userId,
+          eventType: 'ContactTagsAdded',
+          dataClassification: 'CONFIDENTIAL',
+          beforeState: { tags: current.tags ?? [] },
+          afterState: { tags: merged },
+        })
+        .catch(logContactAuditFailure);
+
       return { tags: merged };
     }),
 
