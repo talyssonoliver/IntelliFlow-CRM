@@ -78,7 +78,10 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
       'lead',
       TEST_UUIDS.lead1,
       TEST_UUIDS.tenant,
-      expect.objectContaining({ actorId: TEST_UUIDS.user1 })
+      expect.objectContaining({
+        actorId: TEST_UUIDS.user1,
+        dataClassification: 'CONFIDENTIAL',
+      })
     );
   });
 
@@ -190,6 +193,8 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
       TEST_UUIDS.tenant,
       expect.objectContaining({
         actorId: TEST_UUIDS.user1,
+        eventType: 'LeadQualified',
+        dataClassification: 'CONFIDENTIAL',
         metadata: expect.objectContaining({ reason: 'Strong BANT' }),
       })
     );
@@ -272,6 +277,8 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
       TEST_UUIDS.tenant,
       expect.objectContaining({
         actorId: TEST_UUIDS.user1,
+        eventType: 'LeadScored',
+        dataClassification: 'INTERNAL',
         beforeState: { score: 10 },
         afterState: expect.objectContaining({ score: 80, tier: 'hot' }),
       })

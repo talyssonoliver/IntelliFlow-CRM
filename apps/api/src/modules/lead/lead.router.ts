@@ -562,6 +562,7 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logAction('CREATE', 'lead', result.value.id.value, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        dataClassification: 'CONFIDENTIAL',
         afterState: {
           email: result.value.email.value,
           source: result.value.source,
@@ -628,6 +629,8 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logAction('READ', 'lead', input.id, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        eventType: 'LeadRead',
+        dataClassification: 'CONFIDENTIAL',
       })
       .catch(logLeadAuditFailure);
 
@@ -824,6 +827,7 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logAction('UPDATE', 'lead', id, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        dataClassification: 'CONFIDENTIAL',
         beforeState: beforeLead
           ? {
               firstName: beforeLead.firstName,
@@ -891,6 +895,7 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logAction('DELETE', 'lead', input.id, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        dataClassification: 'CONFIDENTIAL',
         beforeState: beforeLead
           ? {
               email: beforeLead.email,
@@ -925,6 +930,7 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logAction('UPDATE', 'lead', input.id, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        dataClassification: 'INTERNAL',
         beforeState: { isStarred: existing.isStarred },
         afterState: { isStarred: updated.isStarred },
       })
@@ -1001,6 +1007,8 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logAction('QUALIFY', 'lead', input.leadId, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        eventType: 'LeadQualified',
+        dataClassification: 'CONFIDENTIAL',
         metadata: { reason: input.reason ?? 'Manual qualification' },
       })
       .catch(logLeadAuditFailure);
@@ -1063,6 +1071,8 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logAction('CONVERT', 'lead', input.leadId, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        eventType: 'LeadConverted',
+        dataClassification: 'CONFIDENTIAL',
         afterState: {
           status: 'CONVERTED',
           contactId: result.value.contactId,
@@ -1147,6 +1157,9 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logAction('CONVERT', 'lead', input.leadId, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        eventType: 'LeadConverted',
+        dataClassification: 'CONFIDENTIAL',
+        afterState: { status: 'CONVERTED', opportunityId: result.value.opportunityId },
         metadata: {
           opportunityId: result.value.opportunityId,
           dealName: input.dealName ?? null,
@@ -1270,6 +1283,9 @@ export const leadRouter = createTRPCRouter({
       getAuditLogger(ctx.prisma)
         .logAction('AI_SCORE', 'lead', result.value.leadId, typedCtx.tenant.tenantId, {
           actorId: typedCtx.tenant.userId,
+          actorType: 'AI_AGENT',
+          eventType: 'LeadScored',
+          dataClassification: 'INTERNAL',
           beforeState: { score: result.value.previousScore },
           afterState: {
             score: result.value.newScore,
@@ -1400,6 +1416,7 @@ export const leadRouter = createTRPCRouter({
       getAuditLogger(ctx.prisma)
         .logBulkOperation('BULK_UPDATE', 'lead', result.successful, typedCtx.tenant.tenantId, {
           actorId: typedCtx.tenant.userId,
+          dataClassification: 'INTERNAL',
           successCount: result.successful.length,
           failureCount: result.failed.length,
           metadata: { operation: 'score' },
@@ -1566,6 +1583,7 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logBulkOperation('BULK_UPDATE', 'lead', txResult.successful, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        dataClassification: 'CONFIDENTIAL',
         successCount: txResult.successful.length,
         failureCount: txResult.failed.length,
         metadata: { operation: 'convert', createAccounts },
@@ -1685,6 +1703,7 @@ export const leadRouter = createTRPCRouter({
       getAuditLogger(ctx.prisma)
         .logBulkOperation('BULK_UPDATE', 'lead', successful, typedCtx.tenant.tenantId, {
           actorId: typedCtx.tenant.userId,
+          dataClassification: 'CONFIDENTIAL',
           successCount: successful.length,
           failureCount: failed.length,
           metadata: { operation: 'updateStatus', status },
@@ -1759,6 +1778,7 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logBulkOperation('BULK_UPDATE', 'lead', successful, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        dataClassification: 'CONFIDENTIAL',
         successCount: successful.length,
         failureCount: failed.length,
         metadata: { operation: 'archive', status: 'LOST' },
@@ -1805,6 +1825,7 @@ export const leadRouter = createTRPCRouter({
       getAuditLogger(ctx.prisma)
         .logAction('UPDATE', 'lead', input.leadId, typedCtx.tenant.tenantId, {
           actorId: typedCtx.tenant.userId,
+          dataClassification: 'CONFIDENTIAL',
           metadata: { operation: 'add_note', noteId: note.id },
         })
         .catch(logLeadAuditFailure);
@@ -1878,6 +1899,7 @@ export const leadRouter = createTRPCRouter({
       getAuditLogger(ctx.prisma)
         .logAction('UPDATE', 'lead', input.leadId, typedCtx.tenant.tenantId, {
           actorId: typedCtx.tenant.userId,
+          dataClassification: 'INTERNAL',
           metadata: { operation: 'log_activity', activityType: input.type },
         })
         .catch(logLeadAuditFailure);
@@ -1935,6 +1957,7 @@ export const leadRouter = createTRPCRouter({
     getAuditLogger(ctx.prisma)
       .logBulkOperation('BULK_DELETE', 'lead', successful, typedCtx.tenant.tenantId, {
         actorId: typedCtx.tenant.userId,
+        dataClassification: 'CONFIDENTIAL',
         successCount: successful.length,
         failureCount: failed.length,
       })

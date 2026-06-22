@@ -1,4 +1,4 @@
-import type { AuditLogInput, ResourceType } from '../types';
+import type { AuditLogInput, ResourceType, DataClassification } from '../types';
 
 export type BulkAction = 'BULK_UPDATE' | 'BULK_DELETE' | 'IMPORT' | 'EXPORT';
 
@@ -8,6 +8,8 @@ export interface BulkLogOptions {
   successCount?: number;
   failureCount?: number;
   metadata?: Record<string, unknown>;
+  /** Override the default data classification (e.g. 'CONFIDENTIAL' for PII). */
+  dataClassification?: DataClassification;
 }
 
 /**
@@ -29,6 +31,7 @@ export function createBulkOperationEntry(
     resourceId: resourceIds.join(','),
     actorId: options.actorId,
     actorEmail: options.actorEmail,
+    dataClassification: options.dataClassification,
     metadata: {
       count: resourceIds.length,
       successCount: options.successCount,

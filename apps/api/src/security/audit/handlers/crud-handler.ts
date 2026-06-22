@@ -1,4 +1,10 @@
-import type { AuditLogInput, AuditAction, ActorType, ResourceType } from '../types';
+import type {
+  AuditLogInput,
+  AuditAction,
+  ActorType,
+  ResourceType,
+  DataClassification,
+} from '../types';
 import { calculateChangedFields } from '../utils';
 
 export interface CrudLogOptions {
@@ -18,6 +24,15 @@ export interface CrudLogOptions {
     userAgent?: string;
   };
   metadata?: Record<string, unknown>;
+  /**
+   * Override the derived eventType with a canonical name (e.g. 'LeadQualified').
+   * The default derivation only yields valid names for CRUD verbs ending in 'e'
+   * (Created/Updated/Deleted); non-CRUD actions (QUALIFY/CONVERT/READ/AI_SCORE)
+   * must pass an explicit canonical eventType.
+   */
+  eventType?: string;
+  /** Override the default data classification (e.g. 'CONFIDENTIAL' for PII). */
+  dataClassification?: DataClassification;
 }
 
 /**
@@ -32,8 +47,12 @@ export function createCrudEntry(
 ): AuditLogInput {
   const changedFields = calculateChangedFields(options.beforeState, options.afterState);
 
-  // Generate event type like "LeadCreated", "ContactUpdated"
-  const eventType = `${resourceType.charAt(0).toUpperCase() + resourceType.slice(1)}${action.charAt(0) + action.slice(1).toLowerCase()}d`;
+  // Generate event type like "LeadCreated", "ContactUpdated". The derivation
+  // only yields valid past-tense names for CRUD verbs ending in 'e'; callers
+  // using non-CRUD actions pass an explicit canonical `eventType`.
+  const eventType =
+    options.eventType ??
+    `${resourceType.charAt(0).toUpperCase() + resourceType.slice(1)}${action.charAt(0) + action.slice(1).toLowerCase()}d`;
 
   return {
     tenantId,
@@ -50,6 +69,7 @@ export function createCrudEntry(
     afterState: options.afterState,
     changedFields,
     actionReason: options.actionReason,
+    dataClassification: options.dataClassification,
     ipAddress: options.requestContext?.ipAddress,
     userAgent: options.requestContext?.userAgent,
     requestId: options.requestContext?.requestId,
