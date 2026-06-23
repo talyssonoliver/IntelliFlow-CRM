@@ -18,6 +18,7 @@ import {
   parseSprintCsv,
   checkSprintCompletion,
   evaluateCanonicalUniqueness,
+  evaluateGeneratedNotTracked,
   isAllowedByHygieneAllowlist,
   matchForbiddenDocsRuntimeArtifacts,
   findIgnoredRuntimeArtifacts,
@@ -290,28 +291,22 @@ describe('isAllowedByHygieneAllowlist', () => {
 // Uniqueness Evaluation Tests
 // ============================================================================
 
-describe('evaluateCanonicalUniqueness', () => {
-  it('passes when exactly one tracked copy exists for each canonical artifact', () => {
+describe('evaluateCanonicalUniqueness (ADR-067: only Sprint_plan.csv must be tracked)', () => {
+  it('passes when Sprint_plan.csv is tracked exactly once', () => {
     const trackedFiles = [
       'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv',
-      'apps/project-tracker/docs/metrics/_global/Sprint_plan.json',
-      'apps/project-tracker/docs/metrics/_global/task-registry.json',
-      'apps/project-tracker/docs/metrics/_global/dependency-graph.json',
       'apps/web/src/app.tsx',
     ];
 
     const results = evaluateCanonicalUniqueness(trackedFiles);
-    expect(results).toHaveLength(4);
+    expect(results).toHaveLength(1);
     expect(results.every((r) => r.severity === 'PASS')).toBe(true);
   });
 
-  it('fails when a canonical artifact is duplicated', () => {
+  it('fails when Sprint_plan.csv is duplicated', () => {
     const trackedFiles = [
       'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv',
       'Sprint_plan.csv',
-      'apps/project-tracker/docs/metrics/_global/Sprint_plan.json',
-      'apps/project-tracker/docs/metrics/_global/task-registry.json',
-      'apps/project-tracker/docs/metrics/_global/dependency-graph.json',
     ];
 
     const results = evaluateCanonicalUniqueness(trackedFiles);
@@ -319,17 +314,33 @@ describe('evaluateCanonicalUniqueness', () => {
     expect(sprintCsv?.severity).toBe('FAIL');
   });
 
-  it('fails when a canonical artifact is missing', () => {
+  it('fails when Sprint_plan.csv is missing', () => {
+    const results = evaluateCanonicalUniqueness(['apps/web/src/app.tsx']);
+    expect(results[0].severity).toBe('FAIL');
+  });
+});
+
+describe('evaluateGeneratedNotTracked (ADR-067: aggregates must be gitignored)', () => {
+  it('passes when the generated aggregates are NOT tracked', () => {
     const trackedFiles = [
       'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv',
-      'apps/project-tracker/docs/metrics/_global/Sprint_plan.json',
-      'apps/project-tracker/docs/metrics/_global/task-registry.json',
-      // dependency-graph.json missing
+      'apps/web/src/app.tsx',
     ];
 
-    const results = evaluateCanonicalUniqueness(trackedFiles);
-    const graph = results.find((r) => r.name.includes('dependency-graph.json'));
-    expect(graph?.severity).toBe('FAIL');
+    const results = evaluateGeneratedNotTracked(trackedFiles);
+    expect(results).toHaveLength(3);
+    expect(results.every((r) => r.severity === 'PASS')).toBe(true);
+  });
+
+  it('fails when a generated aggregate is accidentally committed', () => {
+    const trackedFiles = [
+      'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv',
+      'apps/project-tracker/docs/metrics/_global/task-registry.json',
+    ];
+
+    const results = evaluateGeneratedNotTracked(trackedFiles);
+    const registry = results.find((r) => r.name.includes('task-registry.json'));
+    expect(registry?.severity).toBe('FAIL');
   });
 });
 

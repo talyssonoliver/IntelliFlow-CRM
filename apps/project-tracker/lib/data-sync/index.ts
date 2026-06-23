@@ -47,7 +47,7 @@ export {
 export { updateSprintPlanJson, updateTaskRegistry } from './json-generators';
 
 // Task JSON operations
-export { updateIndividualTaskFile, generateDefaultValidations } from './task-json-updater';
+export { updateIndividualTaskFile } from './task-json-updater';
 
 // Summary generators
 export { updatePhaseSummaries, updateSprintSummaryGeneric } from './summary-generators';

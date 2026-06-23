@@ -35,9 +35,19 @@ export function writeJsonFile(path: string, data: unknown, space = 2): void {
   // file just throws and falls through to the write. Avoiding the check-then-write
   // shape keeps this free of a file-system TOCTOU race (CodeQL js/file-system-race).
   try {
-    if (readFileSync(path, 'utf-8') === next) return;
+    const current = readFileSync(path, 'utf-8');
+    // Fast path: byte-identical to what we'd write.
+    if (current === next) return;
+    // Format-insensitive path (ADR-067): the on-disk file may have been reformatted
+    // by prettier (e.g. the pre-commit hook inlines short arrays) while this writer
+    // always emits JSON.stringify multiline. A byte compare then ALWAYS misses and
+    // rewrites every file on every sync — the cascade ADR-066's skip-if-unchanged
+    // was meant to kill, defeated in practice by the formatter mismatch. Compare the
+    // PARSED content instead: if the value is unchanged, skip the write regardless of
+    // whitespace/array formatting. Only a real content change triggers a write.
+    if (JSON.stringify(JSON.parse(current)) === JSON.stringify(data)) return;
   } catch {
-    // missing or unreadable existing file — (re)write it below
+    // missing / unreadable / non-JSON existing file — (re)write it below
   }
   writeFileSync(path, next, 'utf-8');
 }

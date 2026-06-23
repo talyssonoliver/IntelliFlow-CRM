@@ -26,14 +26,12 @@ function classifyArtifacts(
   return { created, missing };
 }
 
-function applyCompletionTimestamps(taskData: any): void {
-  if (taskData.completed_at) return;
-  taskData.completed_at = new Date().toISOString();
-  if (!taskData.started_at) {
-    taskData.started_at = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-  }
-  taskData.actual_duration_minutes = taskData.target_duration_minutes || 15;
-}
+// applyCompletionTimestamps was REMOVED (ADR-067, anti-fabrication). It stamped
+// completed_at = now, started_at = now - 15min, and actual_duration_minutes =
+// target || 15 for any task flipped to DONE in the CSV — sync-time values
+// masquerading as measured execution facts. Real timing is written by
+// exec-metrics at actual execution start/end; sync must NEVER fabricate it.
+// A CSV-only status flip leaves timing fields absent (honest "unknown").
 
 function applyDependencySatisfied(taskData: any, task: TaskRecord, allTasks: TaskRecord[]): void {
   if (!taskData.dependencies) return;
@@ -98,10 +96,6 @@ export function updateIndividualTaskFile(
   const newStatus = mapCsvStatusToIndividual(task.Status || '');
   taskData.status = newStatus;
 
-  if (newStatus === 'DONE') {
-    applyCompletionTimestamps(taskData);
-  }
-
   if (task.Description) {
     taskData.description = task.Description;
   }
@@ -112,28 +106,12 @@ export function updateIndividualTaskFile(
 
   applyArtifactClassification(taskData, metricsDir);
 
-  if (newStatus === 'DONE' && (!taskData.validations || taskData.validations.length === 0)) {
-    taskData.validations = generateDefaultValidations(taskId);
-  }
+  // NOTE (ADR-067): we do NOT synthesize a placeholder validation for DONE tasks.
+  // generateDefaultValidations previously injected a fake `echo "Task X completed"`
+  // run (exit_code 0, passed: true) — schema-shaped but meaningless provenance.
+  // Real validation records (with actual exit codes + stdout hashes) are written
+  // by exec-metrics at execution time. A DONE task with no validations stays empty
+  // and is surfaced as a WARN by the Evidence-Integrity gate, not silently passed.
 
   writeJsonFile(taskFile, taskData, 2);
-}
-
-/**
- * Generate default validations for a completed task
- */
-export function generateDefaultValidations(taskId: string): any[] {
-  const now = new Date().toISOString();
-  return [
-    {
-      name: 'Task completion verification',
-      command: `echo "Task ${taskId} completed"`,
-      type: 'auto',
-      required: true,
-      executed_at: now,
-      exit_code: 0,
-      passed: true,
-      notes: 'Task marked as completed in Sprint_plan.csv',
-    },
-  ];
 }

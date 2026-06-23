@@ -40,9 +40,29 @@ export async function syncAllMetrics(): Promise<SyncResult> {
 }
 
 /**
+ * Options for syncMetricsFromCSV.
+ *
+ * `aggregatesOnly` (ADR-067 Phase 1): regenerate ONLY the purely-derived
+ * aggregates (Sprint_plan.json, task-registry.json, dependency-graph.json,
+ * sprint-N/_summary.json, split CSVs, spec-tracker.json, schedule-data) and
+ * SKIP the per-task `{TASK_ID}.json` write loop. The per-task JSONs are MIXED
+ * canonical/derived (they carry sole-copy evidence — see apps/project-tracker/
+ * CLAUDE.md), so a consistency check / aggregate refresh must never rewrite
+ * them. Gate 5 (Metrics Tracked State) uses this mode to regenerate aggregates
+ * into a temp dir and diff for drift.
+ */
+export interface SyncOptions {
+  aggregatesOnly?: boolean;
+}
+
+/**
  * Sync all metrics files from CSV (Single Source of Truth)
  */
-export function syncMetricsFromCSV(csvPath: string, metricsDir: string): SyncResult {
+export function syncMetricsFromCSV(
+  csvPath: string,
+  metricsDir: string,
+  options: SyncOptions = {}
+): SyncResult {
   const startTime = Date.now();
   const filesUpdated: string[] = [];
   const errors: string[] = [];
@@ -52,7 +72,7 @@ export function syncMetricsFromCSV(csvPath: string, metricsDir: string): SyncRes
     const { data } = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
     const tasks = data as TaskRecord[];
 
-    updateAllMetricsFiles(tasks, metricsDir, filesUpdated, errors);
+    updateAllMetricsFiles(tasks, metricsDir, filesUpdated, errors, options);
     tryFormatMetricsJson(metricsDir);
 
     // Auto-regenerate split files
@@ -137,20 +157,26 @@ function processSprintTasks(
   tasks: TaskRecord[],
   metricsDir: string,
   filesUpdated: string[],
-  errors: string[]
+  errors: string[],
+  options: SyncOptions = {}
 ): void {
   const sprintDir = join(metricsDir, `sprint-${sprintNum}`);
   if (!existsSync(sprintDir)) return;
 
-  for (const task of sprintTasks) {
-    const taskResult = safeUpdate(
-      () => updateIndividualTaskFile(task, metricsDir, tasks, sprintNum),
-      `sprint-${sprintNum}/${task['Task ID']}.json`
-    );
-    if (taskResult.success) {
-      filesUpdated.push(taskResult.file);
-    } else if (!taskResult.error?.includes('not found')) {
-      errors.push(`${taskResult.file}: ${taskResult.error}`);
+  // ADR-067 Phase 1: in aggregates-only mode, never touch the per-task JSONs
+  // (they carry sole-copy canonical content). Still regenerate the sprint
+  // _summary.json below from the existing per-task files + CSV.
+  if (!options.aggregatesOnly) {
+    for (const task of sprintTasks) {
+      const taskResult = safeUpdate(
+        () => updateIndividualTaskFile(task, metricsDir, tasks, sprintNum),
+        `sprint-${sprintNum}/${task['Task ID']}.json`
+      );
+      if (taskResult.success) {
+        filesUpdated.push(taskResult.file);
+      } else if (!taskResult.error?.includes('not found')) {
+        errors.push(`${taskResult.file}: ${taskResult.error}`);
+      }
     }
   }
 
@@ -179,7 +205,8 @@ function updateAllMetricsFiles(
   tasks: TaskRecord[],
   metricsDir: string,
   filesUpdated: string[],
-  errors: string[]
+  errors: string[],
+  options: SyncOptions = {}
 ): void {
   applyResult(
     safeUpdate(() => updateSprintPlanJson(tasks, metricsDir), 'Sprint_plan.json'),
@@ -195,7 +222,7 @@ function updateAllMetricsFiles(
 
   const tasksBySprint = groupTasksBySprint(tasks);
   for (const [sprintNum, sprintTasks] of tasksBySprint) {
-    processSprintTasks(sprintNum, sprintTasks, tasks, metricsDir, filesUpdated, errors);
+    processSprintTasks(sprintNum, sprintTasks, tasks, metricsDir, filesUpdated, errors, options);
   }
 
   applyResult(
