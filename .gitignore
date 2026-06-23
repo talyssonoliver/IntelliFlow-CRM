@@ -195,8 +195,16 @@ apps/project-tracker/docs/metrics/_global/*.tmp
 apps/project-tracker/docs/metrics/sprint-*/_phase-summary.json
 apps/project-tracker/docs/metrics/sprint-*/**/_phase-summary.json
 
-# Global derived cache files - tracked (CI canonical uniqueness gate requires exactly 1 copy)
-# task-registry.json and dependency-graph.json are now tracked (un-ignored)
+# Global derived aggregates — GITIGNORED + generated (ADR-067 Phase 1).
+# Sprint_plan.json / task-registry.json / dependency-graph.json are 100%
+# CSV-derived (no canonical content). They are regenerated from Sprint_plan.csv
+# by `pnpm generate:metrics` at dev-start + in CI, so committing them only
+# re-introduced the write-cascade + merge-conflict class. Gate 6 now ASSERTS
+# they are NOT tracked. The per-task sprint-N/<TASK>.json files stay tracked
+# (they carry sole-copy canonical content — see ADR-067).
+apps/project-tracker/docs/metrics/_global/Sprint_plan.json
+apps/project-tracker/docs/metrics/_global/task-registry.json
+apps/project-tracker/docs/metrics/_global/dependency-graph.json
 
 # Runtime review queue (generated_at timestamp only)
 apps/project-tracker/docs/metrics/review-queue.json

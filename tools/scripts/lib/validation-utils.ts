@@ -557,16 +557,16 @@ export function isAllowedByHygieneAllowlist(
 // Uniqueness Checks
 // ============================================================================
 
-const CANONICAL_ARTIFACTS = [
-  'Sprint_plan.csv',
-  'Sprint_plan.json',
-  'task-registry.json',
-  'dependency-graph.json',
-];
+// ADR-067 Phase 1: Sprint_plan.csv is the ONLY canonical file that must be
+// tracked exactly once. Sprint_plan.json / task-registry.json /
+// dependency-graph.json are now GENERATED aggregates (gitignored, regenerated
+// by `pnpm generate:metrics` at dev-start + CI) — they must NOT be tracked.
+const TRACKED_CANONICAL = ['Sprint_plan.csv'];
+const GENERATED_AGGREGATES = ['Sprint_plan.json', 'task-registry.json', 'dependency-graph.json'];
 
 export function evaluateCanonicalUniqueness(
   trackedFiles: string[],
-  artifacts: string[] = CANONICAL_ARTIFACTS
+  artifacts: string[] = TRACKED_CANONICAL
 ): GateResult[] {
   const normalized = trackedFiles.map(normalizeRepoPath);
 
@@ -593,7 +593,39 @@ export function evaluateCanonicalUniqueness(
 }
 
 /**
- * Check that canonical source-of-truth files exist exactly once in tracked files.
+ * ADR-067: assert the generated aggregates are NOT git-tracked. A tracked copy
+ * means an agent accidentally committed a file that should be gitignored and
+ * regenerated — that would re-introduce the write-cascade / merge-conflict class.
+ */
+export function evaluateGeneratedNotTracked(
+  trackedFiles: string[],
+  artifacts: string[] = GENERATED_AGGREGATES
+): GateResult[] {
+  const normalized = trackedFiles.map(normalizeRepoPath);
+
+  return artifacts.map((artifact) => {
+    const matches = normalized.filter((f) => f.endsWith(`/${artifact}`) || f === artifact);
+
+    if (matches.length === 0) {
+      return {
+        name: `Generated-not-tracked: ${artifact}`,
+        severity: 'PASS',
+        message: 'Correctly gitignored (0 tracked copies)',
+      };
+    }
+
+    return {
+      name: `Generated-not-tracked: ${artifact}`,
+      severity: 'FAIL',
+      message: `Found ${matches.length} tracked copy/copies of a GENERATED aggregate — it must be gitignored and regenerated (ADR-067). Run: git rm --cached <path>`,
+      details: matches,
+    };
+  });
+}
+
+/**
+ * Check canonical source-of-truth invariants: Sprint_plan.csv tracked exactly
+ * once, and the generated aggregates NOT tracked (ADR-067 Phase 1).
  */
 export function checkCanonicalUniqueness(repoRoot: string): GateResult[] {
   const tracked = listGitTrackedFiles(repoRoot);
@@ -608,7 +640,10 @@ export function checkCanonicalUniqueness(repoRoot: string): GateResult[] {
     ];
   }
 
-  return evaluateCanonicalUniqueness(tracked.files);
+  return [
+    ...evaluateCanonicalUniqueness(tracked.files),
+    ...evaluateGeneratedNotTracked(tracked.files),
+  ];
 }
 
 // ============================================================================
