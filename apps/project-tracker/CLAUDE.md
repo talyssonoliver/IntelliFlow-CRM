@@ -17,11 +17,25 @@ Evidence and tracking are split across two trees. Know which is which:
 | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | `.specify/sprints/sprint-{N}/` (repo root)                  | **Source of truth for evidence** — attestations, context packs, plans, specs, execution runs, STOA verdicts, follow-ups, reports | Yes (by `/exec`, `/plan-session`, `/spec-session`, etc.) |
 | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` | **Source of truth for the task list** — statuses, KPIs, dependencies, dates                                                      | Yes                                                      |
-| `apps/project-tracker/docs/metrics/sprint-{N}/*.json`       | **Derived** — per-task tracking JSON built from CSV + `.specify/` evidence; powers the dashboard                                 | **Never — sync overwrites**                              |
+| `apps/project-tracker/docs/metrics/sprint-{N}/*.json`       | **MIXED (canonical + derived)** — CSV-derived fields (status, description, deps) PLUS sole-copy canonical fields. See warning.   | Derived fields: no. Canonical fields: yes (by `/exec`)   |
 | `apps/project-tracker/docs/metrics/schemas/`                | JSON schemas referenced by both trees                                                                                            | Schema changes only                                      |
 
 Pipeline: CSV + `.specify/**` ─(sync)→ `docs/metrics/sprint-*/*.json` ─→
 dashboard APIs.
+
+> ⚠️ **The per-task JSON is NOT purely derived — do not regenerate it from the
+> CSV alone.** A 2026-06-23 audit found **~233 of ~418 task JSONs carry
+> sole-copy canonical content** that exists in neither the CSV nor `.specify/`:
+> `status_history`, `blockers`, real `validations` (exit codes + stdout hashes),
+> `kpis.actual`/`met`, `execution.*` (executor, agents, retry_count, log_path,
+> timings), `actual_duration_minutes`, plus 27 tasks with extra-schema fields
+> (`waivers`, `stoa_verdicts`, `implements`, `spec_sessions`,
+> `context_verification`). `sync` only **merges CSV-derived fields over** the
+> existing file (it preserves the canonical fields it doesn't own) — it does NOT
+> rebuild the file from scratch. **Deleting or `git restore`-from-CSV a per-task
+> JSON destroys canonical evidence.** Only the `_global/*.json` aggregates,
+> `sprint-N/_summary.json`, and the split CSVs are safe to regenerate wholesale.
+> See ADR-067.
 
 ## Sprint Plan CSV
 
