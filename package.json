@@ -95,6 +95,7 @@
     "validate:sprint-data": "tsx tools/scripts/validate-sprint-data.ts",
     "report:current-state": "npx tsx apps/project-tracker/scripts/generate-current-state-report.ts",
     "sync:metrics": "cd apps/project-tracker && npx tsx scripts/sync-metrics.ts",
+    "generate:metrics": "cd apps/project-tracker && npx tsx scripts/generate-metrics.ts",
     "sync:api-inventory": "npx tsx tools/scripts/sync-api-inventory.ts",
     "sync:codebase-inventory": "npx tsx tools/scripts/sync-codebase-inventory.ts",
     "sync:all-inventory": "pnpm run sync:api-inventory && pnpm run sync:codebase-inventory",
