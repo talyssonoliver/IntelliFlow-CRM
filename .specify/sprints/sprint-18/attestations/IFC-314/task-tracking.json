@@ -67,6 +67,7 @@
     }
   ],
   "stream": null,
+  "target_duration_minutes": 960,
   "task_id": "IFC-314",
   "validations": []
 }

@@ -10,7 +10,7 @@ import { generateSpecTracker } from '../../../../tools/scripts/generate-spec-tra
 import type { SyncResult, SafeUpdateResult, TaskRecord } from './types';
 import { tryFormatMetricsJson, findRepoRoot } from './file-io';
 import { updateSprintPlanJson, updateTaskRegistry } from './json-generators';
-import { updateIndividualTaskFile } from './task-json-updater';
+import { updateIndividualTaskFile, buildIndividualTaskFile } from './task-json-updater';
 import { updatePhaseSummaries, updateSprintSummaryGeneric } from './summary-generators';
 import { updateDependencyGraph } from './dependency-graph';
 import { syncScheduleData } from './schedule-sync';
@@ -53,6 +53,13 @@ export async function syncAllMetrics(): Promise<SyncResult> {
  */
 export interface SyncOptions {
   aggregatesOnly?: boolean;
+  /**
+   * `rebuildPerTask` (ADR-067 Phase 2): regenerate each per-task `{TASK_ID}.json` from
+   * CSV + its canonical `.specify/.../task-tracking.json` (the new generated-cache model),
+   * instead of mutating the existing per-task file in place. Mutually exclusive with
+   * `aggregatesOnly` (which skips per-task writes entirely). `pnpm generate:metrics` uses this.
+   */
+  rebuildPerTask?: boolean;
 }
 
 /**
@@ -163,13 +170,18 @@ function processSprintTasks(
   const sprintDir = join(metricsDir, `sprint-${sprintNum}`);
   if (!existsSync(sprintDir)) return;
 
-  // ADR-067 Phase 1: in aggregates-only mode, never touch the per-task JSONs
-  // (they carry sole-copy canonical content). Still regenerate the sprint
-  // _summary.json below from the existing per-task files + CSV.
+  // ADR-067: per-task JSON write modes.
+  //  - aggregatesOnly: skip per-task writes entirely (Phase 1 — aggregate refresh / drift check).
+  //  - rebuildPerTask:  REGENERATE each per-task JSON from CSV + task-tracking.json (Phase 2 —
+  //                     the generated-cache model; the canonical content lives in .specify).
+  //  - neither (legacy): mutate the existing per-task file in place.
   if (!options.aggregatesOnly) {
     for (const task of sprintTasks) {
       const taskResult = safeUpdate(
-        () => updateIndividualTaskFile(task, metricsDir, tasks, sprintNum),
+        () =>
+          options.rebuildPerTask
+            ? buildIndividualTaskFile(task, metricsDir, tasks, sprintNum)
+            : updateIndividualTaskFile(task, metricsDir, tasks, sprintNum),
         `sprint-${sprintNum}/${task['Task ID']}.json`
       );
       if (taskResult.success) {

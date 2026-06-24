@@ -39,7 +39,14 @@ const APPLY = process.argv.includes('--apply');
 const METRICS_ROOT = 'apps/project-tracker/docs/metrics';
 const SPECIFY_ROOT = '.specify/sprints';
 
-/** Fields the generator re-derives from Sprint_plan.csv — NOT stored in task-tracking.json. */
+/**
+ * Fields the generator re-derives from Sprint_plan.csv — NOT stored in task-tracking.json.
+ * NOTE: `target_duration_minutes` is deliberately NOT here. The existing sync
+ * (task-json-updater.ts) never writes it — it is sole-copy operational data (a planned
+ * estimate set at task creation, not mechanically derivable from the CSV "Estimate (O/M/P)"
+ * column), so it is preserved in task-tracking. The Step-3 round-trip proof flagged it as
+ * operational drift when it was wrongly stripped — that is exactly the guard working.
+ */
 const CSV_OWNED = new Set([
   '$schema',
   'section',
@@ -48,7 +55,6 @@ const CSV_OWNED = new Set([
   'sprint',
   'status',
   'dependencies_resolved',
-  'target_duration_minutes',
 ]);
 /** Sole-copy parts of the `dependencies` block kept under `dependencies_meta`. */
 const DEP_META_KEYS = ['verified_at', 'notes'];

@@ -42,6 +42,7 @@
   "phase": "",
   "started_at": null,
   "stream": null,
+  "target_duration_minutes": 480,
   "task_id": "IFC-307",
   "validation_results": []
 }

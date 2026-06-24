@@ -1,15 +1,15 @@
 #!/usr/bin/env tsx
 /**
- * Generate the PURELY-DERIVED metrics aggregates from Sprint_plan.csv.
+ * Generate the DERIVED metrics tree from Sprint_plan.csv + the canonical .specify records.
  *
- * ADR-067 Phase 1: regenerates ONLY the derived aggregate files
- * (Sprint_plan.json, task-registry.json, dependency-graph.json,
- * sprint-N/_summary.json, the split CSVs, spec-tracker.json, schedule-data) and
- * never touches the per-task `{TASK_ID}.json` files (which carry sole-copy
- * canonical content). These aggregates are gitignored and regenerated at
- * dev-start, in CI before the sprint-data gate, and on demand.
+ * ADR-067 Phase 2: regenerates the derived aggregates (Sprint_plan.json,
+ * task-registry.json, dependency-graph.json, sprint-N/_summary.json, the split CSVs,
+ * spec-tracker.json, schedule-data) AND each per-task `{TASK_ID}.json`, rebuilt from
+ * CSV + `.specify/.../task-tracking.json` (the canonical home for sole-copy operational +
+ * evidence content). The whole metrics tree is a generated cache; canonical state lives in
+ * Sprint_plan.csv + .specify. Run at dev-start, in CI before the sprint-data gate, and on demand.
  *
- * For a full sync that also (re)writes per-task JSONs, use scripts/sync-metrics.ts.
+ * No-loss is proven by tools/scripts/prove-metrics-roundtrip.mjs.
  */
 import { syncMetricsFromCSV, formatSyncResult } from '../lib/data-sync';
 import { join, dirname } from 'node:path';
@@ -26,7 +26,9 @@ if (!existsSync(csvPath)) {
   process.exit(1);
 }
 
-console.log('Generating derived metrics aggregates (ADR-067, aggregates-only)...\n');
-const result = syncMetricsFromCSV(csvPath, metricsDir, { aggregatesOnly: true });
+console.log(
+  'Generating derived metrics tree (ADR-067 Phase 2: aggregates + per-task rebuild)...\n'
+);
+const result = syncMetricsFromCSV(csvPath, metricsDir, { rebuildPerTask: true });
 console.log(formatSyncResult(result));
 process.exit(result.success ? 0 : 1);

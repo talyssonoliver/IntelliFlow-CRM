@@ -48,6 +48,7 @@
     }
   ],
   "stream": null,
+  "target_duration_minutes": 15,
   "task_id": "ENV-017-AI",
   "validations": [
     {

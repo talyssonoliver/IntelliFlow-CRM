@@ -296,6 +296,7 @@
     }
   ],
   "stream": null,
+  "target_duration_minutes": 60,
   "task_id": "IFC-027",
   "validations": [
     {

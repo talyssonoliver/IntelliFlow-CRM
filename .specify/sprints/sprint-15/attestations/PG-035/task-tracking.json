@@ -102,6 +102,7 @@
     }
   ],
   "stream": null,
+  "target_duration_minutes": 120,
   "task_id": "PG-035",
   "validations": [
     {

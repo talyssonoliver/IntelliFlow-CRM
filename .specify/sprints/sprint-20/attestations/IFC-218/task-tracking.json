@@ -49,6 +49,7 @@
     }
   ],
   "stream": null,
+  "target_duration_minutes": 180,
   "task_id": "IFC-218",
   "validations": []
 }

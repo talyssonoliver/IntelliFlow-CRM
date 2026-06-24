@@ -71,6 +71,7 @@
       "status": "Completed"
     }
   ],
+  "target_duration_minutes": 195,
   "task_id": "IFC-180",
   "validations": [
     {

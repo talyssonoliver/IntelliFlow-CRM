@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import type { TaskRecord } from './types';
 import { mapCsvStatusToIndividual, parseDependencies } from './csv-mapping';
 import { readJsonTolerant, writeJsonFile, findTaskFile, findRepoRoot } from './file-io';
+import { buildTaskJson, readTaskTracking, indexTasksById } from './task-json-builder';
 
 function classifyArtifacts(
   expectedArtifacts: string[],
@@ -114,4 +115,33 @@ export function updateIndividualTaskFile(
   // and is surfaced as a WARN by the Evidence-Integrity gate, not silently passed.
 
   writeJsonFile(taskFile, taskData, 2);
+}
+
+/**
+ * Build (regenerate) an individual task JSON from CSV + its canonical task-tracking.json
+ * (ADR-067 Phase 2). Unlike updateIndividualTaskFile, this does NOT read/mutate the existing
+ * per-task file as a source — that file is now a pure derived read-model. It writes to the
+ * file's current location if one exists, otherwise to `sprint-N/<TASK>.json`.
+ */
+export function buildIndividualTaskFile(
+  task: TaskRecord,
+  metricsDir: string,
+  allTasks: TaskRecord[],
+  sprintNum: number
+): void {
+  const taskId = task['Task ID'];
+  const sprintDir = join(metricsDir, `sprint-${sprintNum}`);
+  // Regenerate an EXISTING per-task read-model in place. We do NOT mint a file for every CSV
+  // row: backlog/never-started tasks live in the aggregate (Sprint_plan.json), not the per-task
+  // tree, so a missing file is expected — surfaced as "not found" (the orchestrator swallows it).
+  // The fresh-checkout / full-tree generation strategy (which tasks get a file once the tree is
+  // gitignored) is decided in the Step 6 cutover, not here.
+  const target = findTaskFile(taskId, sprintDir);
+  if (!target) {
+    throw new Error(`Task file not found for ${taskId}`);
+  }
+  const repoRoot = findRepoRoot(metricsDir) || metricsDir;
+  const taskTracking = readTaskTracking(repoRoot, sprintNum, taskId);
+  const built = buildTaskJson(task, taskTracking, sprintNum, indexTasksById(allTasks));
+  writeJsonFile(target, built, 2);
 }

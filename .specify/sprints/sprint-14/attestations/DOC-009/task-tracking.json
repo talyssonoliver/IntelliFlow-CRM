@@ -40,6 +40,7 @@
     }
   ],
   "stream": null,
+  "target_duration_minutes": null,
   "task_id": "DOC-009",
   "validations": [
     {

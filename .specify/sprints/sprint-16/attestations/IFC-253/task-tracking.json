@@ -41,6 +41,7 @@
     }
   ],
   "stream": null,
+  "target_duration_minutes": 120,
   "task_id": "IFC-253",
   "validations": [
     {

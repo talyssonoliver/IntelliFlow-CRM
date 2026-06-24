@@ -41,6 +41,7 @@
     }
   ],
   "stream": null,
+  "target_duration_minutes": 600,
   "task_id": "INFRA-TF-004",
   "validations": []
 }

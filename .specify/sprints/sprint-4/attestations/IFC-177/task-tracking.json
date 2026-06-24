@@ -135,6 +135,7 @@
       "status": "Completed"
     }
   ],
+  "target_duration_minutes": 260,
   "task_id": "IFC-177",
   "technical_decisions": [
     {

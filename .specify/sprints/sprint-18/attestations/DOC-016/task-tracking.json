@@ -62,6 +62,7 @@
     }
   ],
   "stream": null,
+  "target_duration_minutes": 120,
   "task_id": "DOC-016",
   "validations": []
 }
