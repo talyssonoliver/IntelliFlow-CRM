@@ -155,6 +155,54 @@ describe('processStripeWebhook', () => {
     );
   });
 
+  it('invokes findByOpportunity bound to its repository (preserves `this`)', async () => {
+    // Regression guard: rePushPaidToPortal must call findByOpportunity as a
+    // method, not an extracted bare reference. A class-based reader that reads
+    // `this` throws if called unbound — which the try/catch would silently
+    // swallow, killing the paid re-push in production.
+    const pushDelivery = vi.fn().mockResolvedValue({ isFailure: false });
+    class Reader {
+      private readonly rows = [
+        {
+          n: 1,
+          amountCents: 16700,
+          currency: 'GBP',
+          status: 'paid' as const,
+          dueAt: null,
+          paidAt: new Date(1_780_000_000 * 1000),
+          hostedInvoiceUrl: 'https://invoice.stripe.com/i/in_42',
+        },
+      ];
+      markPaidByStripeInvoiceId() {
+        return Promise.resolve({ opportunityId: 'opp_1', tenantId: 'ten_1', tenantSlug: 'acme' });
+      }
+      findByOpportunity() {
+        // Touch `this`: throws "Cannot read properties of undefined" if unbound.
+        return Promise.resolve(this.rows);
+      }
+    }
+    const { deps } = makeDeps({
+      portalSync: { pushDelivery } as any,
+      setupInstalments: new Reader() as any,
+    });
+    const body = invoiceEvent({ id: 'in_42', status_transitions: { paid_at: 1_780_000_000 } });
+    const res = await processStripeWebhook(
+      body,
+      { 'stripe-signature': stripeSignature(body) },
+      deps
+    );
+    expect(res.statusCode).toBe(200);
+    // The re-push actually ran (would be skipped/swallowed if `this` were lost).
+    expect(pushDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slug: 'acme',
+        setupInstalments: expect.arrayContaining([
+          expect.objectContaining({ n: 1, status: 'paid', paymentUrl: null }),
+        ]),
+      })
+    );
+  });
+
   it('skips the paid re-push when the portal slug is unknown', async () => {
     const pushDelivery = vi.fn().mockResolvedValue({ isFailure: false });
     const markPaidByStripeInvoiceId = vi

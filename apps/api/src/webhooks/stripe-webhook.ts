@@ -228,10 +228,13 @@ async function rePushPaidToPortal(
   eventId: string,
   logger: Logger
 ): Promise<void> {
-  const reader = deps.setupInstalments?.findByOpportunity;
-  if (!ctx?.tenantSlug || !deps.portalSync || !reader) return;
+  const setup = deps.setupInstalments;
+  if (!ctx?.tenantSlug || !deps.portalSync || !setup?.findByOpportunity) return;
   try {
-    const rows = await reader(ctx.opportunityId, ctx.tenantId);
+    // Call as a method (not an extracted bare reference) so the repository's
+    // `this` is preserved — PrismaSetupInstalmentRepository.findByOpportunity
+    // reads `this.prisma`, which would be undefined if invoked unbound.
+    const rows = await setup.findByOpportunity(ctx.opportunityId, ctx.tenantId);
     const res = await deps.portalSync.pushDelivery({
       slug: ctx.tenantSlug,
       setupInstalments: rows.map((r) => ({
