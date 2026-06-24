@@ -41,6 +41,8 @@ export interface SetupInstalmentRecord {
   dueAt: Date | null;
   paidAt: Date | null;
   stripeInvoiceId: string | null;
+  /** Stripe-hosted payment page URL (invoice hosted_invoice_url); null until finalized. */
+  hostedInvoiceUrl: string | null;
 }
 
 /** Per-tier plan shape: the instalment amounts (minor units) and their day offsets. */
@@ -123,12 +125,16 @@ export interface SetupInstalmentRepository {
   /** Load an opportunity's instalments ordered by `n` (tenant-scoped). */
   findByOpportunity(opportunityId: string, tenantId: string): Promise<SetupInstalmentRecord[]>;
 
-  /** Attach a Stripe invoice id to one instalment (after the invoice finalises). */
+  /**
+   * Attach a Stripe invoice id (and its hosted payment URL) to one instalment,
+   * after the invoice finalises. The URL is pushed to the portal's Pay button.
+   */
   setStripeInvoiceId(args: {
     opportunityId: string;
     tenantId: string;
     n: number;
     stripeInvoiceId: string;
+    hostedInvoiceUrl?: string | null;
   }): Promise<void>;
 
   /**

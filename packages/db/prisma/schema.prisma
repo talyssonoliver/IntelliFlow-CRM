@@ -999,6 +999,9 @@ model SetupInstalment {
   dueAt           DateTime?
   paidAt          DateTime?
   stripeInvoiceId String?               @unique
+  // Stripe-hosted payment page URL (invoice hosted_invoice_url), pushed to the
+  // portal so the client can pay a due/overdue instalment. Null until finalized.
+  hostedInvoiceUrl String?
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
 
