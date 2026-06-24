@@ -87,7 +87,7 @@ describe('InMemorySetupInstalmentRepository', () => {
     await repo.createForOpportunity({ opportunityId: OPP, tenantId: TENANT, instalments: plan() });
     await expect(
       repo.markPaidByStripeInvoiceId({ stripeInvoiceId: 'in_missing', paidAt: new Date() })
-    ).resolves.toBeUndefined();
+    ).resolves.toBeNull();
     const rows = await repo.findByOpportunity(OPP, TENANT);
     expect(rows.every((r) => r.status === 'due')).toBe(true);
   });

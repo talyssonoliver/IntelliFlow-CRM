@@ -42,6 +42,7 @@ export class InMemorySetupInstalmentRepository implements SetupInstalmentReposit
         dueAt: inst.dueAt,
         paidAt: null,
         stripeInvoiceId: null,
+        hostedInvoiceUrl: null,
       });
     }
   }
@@ -61,19 +62,27 @@ export class InMemorySetupInstalmentRepository implements SetupInstalmentReposit
     tenantId: string;
     n: number;
     stripeInvoiceId: string;
+    hostedInvoiceUrl?: string | null;
   }): Promise<void> {
     const row = this.store.find(
       (r) =>
         r.opportunityId === args.opportunityId && r.tenantId === args.tenantId && r.n === args.n
     );
-    if (row) row.stripeInvoiceId = args.stripeInvoiceId;
+    if (row) {
+      row.stripeInvoiceId = args.stripeInvoiceId;
+      if (args.hostedInvoiceUrl !== undefined) row.hostedInvoiceUrl = args.hostedInvoiceUrl;
+    }
   }
 
-  async markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void> {
+  async markPaidByStripeInvoiceId(args: {
+    stripeInvoiceId: string;
+    paidAt: Date;
+  }): Promise<{ opportunityId: string; tenantId: string; tenantSlug: string | null } | null> {
     const row = this.store.find((r) => r.stripeInvoiceId === args.stripeInvoiceId);
-    if (row) {
-      row.status = 'paid';
-      row.paidAt = args.paidAt;
-    }
+    if (!row) return null;
+    row.status = 'paid';
+    row.paidAt = args.paidAt;
+    // The in-memory store has no Opportunity join, so the portal slug is unknown.
+    return { opportunityId: row.opportunityId, tenantId: row.tenantId, tenantSlug: null };
   }
 }

@@ -33,9 +33,29 @@ const SUBSCRIPTION_EVENTS = [
 const INVOICE_EVENTS = ['invoice.paid'];
 const ALLOWED_EVENTS = [...SUBSCRIPTION_EVENTS, ...INVOICE_EVENTS];
 
+/** One persisted instalment row (the subset the paid re-push needs). */
+interface InstalmentRow {
+  n: number;
+  amountCents: number;
+  currency: string;
+  status: 'due' | 'paid' | 'overdue';
+  dueAt: Date | null;
+  paidAt: Date | null;
+  hostedInvoiceUrl: string | null;
+}
+
 /** Mark a setup-fee instalment paid by its (unique) Stripe invoice id. */
 interface SetupInstalmentPaidWriter {
-  markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void>;
+  /**
+   * Returns the row's ids + portal slug on a match (null otherwise) so the caller
+   * can re-push the now-paid set to the portal.
+   */
+  markPaidByStripeInvoiceId(args: {
+    stripeInvoiceId: string;
+    paidAt: Date;
+  }): Promise<{ opportunityId: string; tenantId: string; tenantSlug: string | null } | null>;
+  /** Optional: re-read the whole set so the paid status reflects on the portal. */
+  findByOpportunity?(opportunityId: string, tenantId: string): Promise<InstalmentRow[]>;
 }
 
 interface PortalSyncClient {
@@ -43,6 +63,15 @@ interface PortalSyncClient {
     slug: string;
     subscriptionStatus?: PortalSubscriptionStatus;
     subscriptionRenewsAt?: string | null;
+    setupInstalments?: Array<{
+      n: number;
+      amountCents: number;
+      currency: string;
+      status: 'due' | 'paid' | 'overdue';
+      dueAt?: string | null;
+      paidAt?: string | null;
+      paymentUrl?: string | null;
+    }>;
   }): Promise<{ isFailure: boolean; error?: { message: string } }>;
 }
 
@@ -104,27 +133,7 @@ export function buildStripeWebhookHandler(deps: StripeWebhookDeps): WebhookHandl
   handler.getRouter().onAll(async (event) => {
     // IFC-314 step 8: a paid setup-fee invoice → mark its instalment PAID.
     if (INVOICE_EVENTS.includes(event.type)) {
-      const invoice = (
-        event.payload as {
-          object?: { id?: string; status_transitions?: { paid_at?: number | null } };
-        }
-      ).object;
-      if (!invoice?.id) {
-        logger.warn({ eventId: event.id }, '[stripe-webhook] invoice event without object.id');
-        return;
-      }
-      if (deps.setupInstalments) {
-        const paidUnix = invoice.status_transitions?.paid_at;
-        const paidAt = typeof paidUnix === 'number' ? new Date(paidUnix * 1000) : new Date();
-        await deps.setupInstalments.markPaidByStripeInvoiceId({
-          stripeInvoiceId: invoice.id,
-          paidAt,
-        });
-        logger.info(
-          { eventId: event.id, invoiceId: invoice.id },
-          '[stripe-webhook] setup-fee instalment marked paid'
-        );
-      }
+      await handleInvoicePaid(deps, event, logger);
       return;
     }
 
@@ -161,6 +170,102 @@ export function buildStripeWebhookHandler(deps: StripeWebhookDeps): WebhookHandl
   });
 
   return handler;
+}
+
+type Logger = NonNullable<StripeWebhookDeps['logger']>;
+
+/**
+ * Handle an `invoice.paid` event: mark the matching setup-fee instalment paid
+ * (no-op when {@link StripeWebhookDeps.setupInstalments} is absent) and re-push
+ * the set so the portal reflects the payment immediately. `invoice.paid` also
+ * fires for subscription-renewal invoices, which match no instalment — the
+ * writer returns null then and nothing is logged/pushed.
+ */
+async function handleInvoicePaid(
+  deps: Pick<StripeWebhookDeps, 'setupInstalments' | 'portalSync'>,
+  event: { id: string; payload: unknown },
+  logger: Logger
+): Promise<void> {
+  const invoice = (
+    event.payload as {
+      object?: { id?: string; status_transitions?: { paid_at?: number | null } };
+    }
+  ).object;
+  if (!invoice?.id) {
+    logger.warn({ eventId: event.id }, '[stripe-webhook] invoice event without object.id');
+    return;
+  }
+  if (!deps.setupInstalments) return;
+
+  const paidUnix = invoice.status_transitions?.paid_at;
+  const paidAt = typeof paidUnix === 'number' ? new Date(paidUnix * 1000) : new Date();
+  const ctx = await deps.setupInstalments.markPaidByStripeInvoiceId({
+    stripeInvoiceId: invoice.id,
+    paidAt,
+  });
+  // Only log a "marked paid" line when a row was actually updated (ctx !== null),
+  // so a renewal invoice does not produce a misleading log.
+  if (ctx) {
+    logger.info(
+      { eventId: event.id, invoiceId: invoice.id },
+      '[stripe-webhook] setup-fee instalment marked paid'
+    );
+  }
+  // Re-push so the portal reflects the payment immediately. No-op when ctx is
+  // null (rePushPaidToPortal guards on it internally).
+  await rePushPaidToPortal(deps, ctx, event.id, logger);
+}
+
+/**
+ * After an instalment is marked paid, re-push the whole instalment set to the
+ * portal so it reflects the payment immediately (instead of showing it as still
+ * due until the next deal sync). Best-effort: needs the slug (resolved by the
+ * repo) + a reader + a portal client; any failure is logged, never thrown.
+ */
+async function rePushPaidToPortal(
+  deps: Pick<StripeWebhookDeps, 'portalSync' | 'setupInstalments'>,
+  ctx: { opportunityId: string; tenantId: string; tenantSlug: string | null } | null,
+  eventId: string,
+  logger: Logger
+): Promise<void> {
+  const setup = deps.setupInstalments;
+  if (!ctx?.tenantSlug || !deps.portalSync || !setup?.findByOpportunity) return;
+  try {
+    // Call as a method (not an extracted bare reference) so the repository's
+    // `this` is preserved — PrismaSetupInstalmentRepository.findByOpportunity
+    // reads `this.prisma`, which would be undefined if invoked unbound.
+    const rows = await setup.findByOpportunity(ctx.opportunityId, ctx.tenantId);
+    const res = await deps.portalSync.pushDelivery({
+      slug: ctx.tenantSlug,
+      setupInstalments: rows.map((r) => ({
+        n: r.n,
+        amountCents: r.amountCents,
+        currency: r.currency,
+        status: r.status,
+        dueAt: r.dueAt ? r.dueAt.toISOString() : null,
+        paidAt: r.paidAt ? r.paidAt.toISOString() : null,
+        // Contract: paymentUrl is null once paid (nothing left to pay). Only a
+        // still-due/overdue instalment carries its hosted invoice URL.
+        paymentUrl: r.status === 'paid' ? null : r.hostedInvoiceUrl,
+      })),
+    });
+    if (res.isFailure) {
+      logger.warn(
+        { eventId, slug: ctx.tenantSlug, error: res.error?.message },
+        '[stripe-webhook] paid re-push failed (non-fatal)'
+      );
+      return;
+    }
+    logger.info(
+      { eventId, slug: ctx.tenantSlug },
+      '[stripe-webhook] re-pushed paid instalment set to portal'
+    );
+  } catch (err) {
+    logger.warn(
+      { eventId, slug: ctx.tenantSlug, error: err instanceof Error ? err.message : String(err) },
+      '[stripe-webhook] paid re-push threw (non-fatal)'
+    );
+  }
 }
 
 /**

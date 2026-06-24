@@ -52,6 +52,13 @@ export interface PortalSetupInstalmentInput {
   dueAt?: string | null;
   /** ISO timestamp the instalment was paid; null until paid. */
   paidAt?: string | null;
+  /**
+   * The Stripe-hosted payment page URL for this instalment (the invoice's
+   * `hostedInvoiceUrl`). The portal renders a "Pay" button that redirects here
+   * for a due/overdue instalment — it never collects card details itself. Null
+   * until the invoice is finalized (or once paid).
+   */
+  paymentUrl?: string | null;
 }
 
 export interface PortalDeliveryPushInput {

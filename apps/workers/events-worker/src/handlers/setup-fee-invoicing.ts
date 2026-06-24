@@ -61,6 +61,8 @@ export interface SetupFeeInvoicingDeps {
       tenantId: string;
       n: number;
       stripeInvoiceId: string;
+      /** Stripe-hosted payment page URL (hosted_invoice_url), pushed to the portal. */
+      hostedInvoiceUrl?: string | null;
     }): Promise<void>;
   };
   customers: {
@@ -86,7 +88,9 @@ export interface SetupFeeInvoicingDeps {
       autoAdvance?: boolean;
       description?: string;
     }): Promise<BillingResult<{ id: string }>>;
-    finalizeInvoice(invoiceId: string): Promise<BillingResult<{ id: string }>>;
+    finalizeInvoice(
+      invoiceId: string
+    ): Promise<BillingResult<{ id: string; hostedInvoiceUrl?: string | null }>>;
   };
   logger: LoggerLike;
   /** Injectable clock for deterministic `days_until_due` in tests. */
@@ -206,6 +210,9 @@ export async function invoiceSetupInstalments(
         tenantId,
         n: inst.n,
         stripeInvoiceId: invoice.value.id,
+        // The finalized invoice carries the Stripe-hosted payment page URL; persist
+        // it so the deal-won handler can push it to the portal's Pay button.
+        hostedInvoiceUrl: finalized.value?.hostedInvoiceUrl ?? null,
       });
       invoiced++;
     }

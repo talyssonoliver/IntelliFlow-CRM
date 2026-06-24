@@ -41,6 +41,8 @@ export interface SetupInstalmentRecord {
   dueAt: Date | null;
   paidAt: Date | null;
   stripeInvoiceId: string | null;
+  /** Stripe-hosted payment page URL (invoice hosted_invoice_url); null until finalized. */
+  hostedInvoiceUrl: string | null;
 }
 
 /** Per-tier plan shape: the instalment amounts (minor units) and their day offsets. */
@@ -123,19 +125,28 @@ export interface SetupInstalmentRepository {
   /** Load an opportunity's instalments ordered by `n` (tenant-scoped). */
   findByOpportunity(opportunityId: string, tenantId: string): Promise<SetupInstalmentRecord[]>;
 
-  /** Attach a Stripe invoice id to one instalment (after the invoice finalises). */
+  /**
+   * Attach a Stripe invoice id (and its hosted payment URL) to one instalment,
+   * after the invoice finalises. The URL is pushed to the portal's Pay button.
+   */
   setStripeInvoiceId(args: {
     opportunityId: string;
     tenantId: string;
     n: number;
     stripeInvoiceId: string;
+    hostedInvoiceUrl?: string | null;
   }): Promise<void>;
 
   /**
    * Mark the instalment carrying this Stripe invoice as PAID. Looked up by the
    * unique `stripeInvoiceId` because the `invoice.paid` webhook only knows the
-   * invoice — not the opportunity/tenant. Idempotent: a no-op when no row
-   * matches (e.g. an invoice unrelated to a setup-fee instalment).
+   * invoice — not the opportunity/tenant. Idempotent: returns null when no row
+   * matches (e.g. an invoice unrelated to a setup-fee instalment). On a match it
+   * returns the row's identifiers + the portal `tenantSlug`, so the caller can
+   * re-push the now-paid instalment set to the portal.
    */
-  markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void>;
+  markPaidByStripeInvoiceId(args: {
+    stripeInvoiceId: string;
+    paidAt: Date;
+  }): Promise<{ opportunityId: string; tenantId: string; tenantSlug: string | null } | null>;
 }

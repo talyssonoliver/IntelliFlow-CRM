@@ -105,6 +105,24 @@ describe('invoiceSetupInstalments', () => {
     );
   });
 
+  it('captures the finalized invoice hosted URL and stores it for the portal Pay button', async () => {
+    const deps = makeDeps({
+      instalmentRows: [makeInstalment({ n: 1 })],
+      billing: {
+        finalizeInvoice: vi.fn(async (id: string) =>
+          ok({ id, hostedInvoiceUrl: `https://invoice.stripe.com/i/${id}` })
+        ),
+      },
+    });
+    await invoiceSetupInstalments(deps, ARGS);
+    expect(deps._setInvoice).toHaveBeenCalledWith(
+      expect.objectContaining({
+        n: 1,
+        hostedInvoiceUrl: expect.stringContaining('invoice.stripe.com'),
+      })
+    );
+  });
+
   it('uses Opportunity.stripeCustomerId directly (no create, no owner)', async () => {
     const deps = makeDeps();
     await invoiceSetupInstalments(deps, ARGS);

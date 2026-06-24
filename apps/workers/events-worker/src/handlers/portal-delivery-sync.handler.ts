@@ -58,6 +58,7 @@ interface InstalmentRow {
   status: 'due' | 'paid' | 'overdue';
   dueAt: Date | null;
   paidAt: Date | null;
+  hostedInvoiceUrl: string | null;
 }
 
 /** Minimal SetupInstalment reader surface. */
@@ -91,6 +92,7 @@ export interface PortalSyncClient {
       status: 'due' | 'paid' | 'overdue';
       dueAt?: string | null;
       paidAt?: string | null;
+      paymentUrl?: string | null;
     }>;
   }): Promise<SyncResult>;
 }
@@ -184,14 +186,7 @@ export function createPortalDeliverySyncHandler(deps: PortalDeliverySyncHandlerD
 
     // 2. Read the persisted instalment plan → portal payload (whole set, not deltas).
     const rows = await deps.setupInstalments.findByOpportunity(opportunityId, tenantId);
-    const setupInstalments = rows.map((r) => ({
-      n: r.n,
-      amountCents: r.amountCents,
-      currency: r.currency,
-      status: r.status,
-      dueAt: r.dueAt ? r.dueAt.toISOString() : null,
-      paidAt: r.paidAt ? r.paidAt.toISOString() : null,
-    }));
+    const setupInstalments = toPortalInstalments(rows);
 
     // 3. Push the CRM-owned delivery/billing facts. CRM sets phase only once.
     const push = await deps.portalSync.pushDelivery({
@@ -217,6 +212,7 @@ export function createPortalDeliverySyncHandler(deps: PortalDeliverySyncHandlerD
     if (deps.invoiceSetupFee) {
       try {
         await deps.invoiceSetupFee({ opportunityId, tenantId });
+        await rePushPaymentUrls(deps, { opportunityId, tenantId, slug });
       } catch (err) {
         deps.logger.error(
           { opportunityId, slug, error: err instanceof Error ? err.message : String(err) },
@@ -225,4 +221,56 @@ export function createPortalDeliverySyncHandler(deps: PortalDeliverySyncHandlerD
       }
     }
   };
+}
+
+/** Map persisted instalment rows to the portal push payload (whole set, not deltas). */
+function toPortalInstalments(xs: InstalmentRow[]) {
+  return xs.map((r) => ({
+    n: r.n,
+    amountCents: r.amountCents,
+    currency: r.currency,
+    status: r.status,
+    dueAt: r.dueAt ? r.dueAt.toISOString() : null,
+    paidAt: r.paidAt ? r.paidAt.toISOString() : null,
+    // The portal renders a Pay button that redirects here; null until invoiced,
+    // and null again once paid (the contract retains no payment URL for a paid
+    // instalment — there is nothing left to pay).
+    paymentUrl: r.status === 'paid' ? null : r.hostedInvoiceUrl,
+  }));
+}
+
+/**
+ * The deal-won push happens BEFORE invoicing, so it carries no payment URLs.
+ * After invoicing, re-read (the rows now hold each finalized invoice's hosted
+ * URL) and re-push so the portal's Pay buttons light up immediately. Best-effort:
+ * a failure here never undoes the provision/push or the billing that already
+ * succeeded (the next sync would carry the URLs anyway).
+ */
+async function rePushPaymentUrls(
+  deps: PortalDeliverySyncHandlerDeps,
+  ctx: { opportunityId: string; tenantId: string; slug: string }
+): Promise<void> {
+  const { opportunityId, tenantId, slug } = ctx;
+  try {
+    const rows = await deps.setupInstalments.findByOpportunity(opportunityId, tenantId);
+    const withUrls = toPortalInstalments(rows);
+    if (!withUrls.some((i) => i.paymentUrl)) return;
+    const rePush = await deps.portalSync.pushDelivery({ slug, setupInstalments: withUrls });
+    if (rePush.isFailure) {
+      deps.logger.warn(
+        { opportunityId, slug, error: rePush.error?.message },
+        '[portal-sync] payment-URL re-push failed (non-fatal)'
+      );
+      return;
+    }
+    deps.logger.info(
+      { opportunityId, slug },
+      '[portal-sync] re-pushed instalments with payment URLs'
+    );
+  } catch (err) {
+    deps.logger.warn(
+      { opportunityId, slug, error: err instanceof Error ? err.message : String(err) },
+      '[portal-sync] payment-URL re-push threw (non-fatal)'
+    );
+  }
 }

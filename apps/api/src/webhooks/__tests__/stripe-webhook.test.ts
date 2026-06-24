@@ -101,6 +101,145 @@ describe('processStripeWebhook', () => {
     expect(h.upsertFromWebhook).not.toHaveBeenCalled();
   });
 
+  it('re-pushes the paid instalment set to the portal so it reflects immediately', async () => {
+    const pushDelivery = vi.fn().mockResolvedValue({ isFailure: false });
+    const markPaidByStripeInvoiceId = vi
+      .fn()
+      .mockResolvedValue({ opportunityId: 'opp_1', tenantId: 'ten_1', tenantSlug: 'acme' });
+    const findByOpportunity = vi.fn().mockResolvedValue([
+      {
+        n: 1,
+        amountCents: 16700,
+        currency: 'GBP',
+        status: 'paid',
+        dueAt: null,
+        paidAt: new Date(1_780_000_000 * 1000),
+        hostedInvoiceUrl: 'https://invoice.stripe.com/i/in_42',
+      },
+      {
+        n: 2,
+        amountCents: 16700,
+        currency: 'GBP',
+        status: 'due',
+        dueAt: null,
+        paidAt: null,
+        hostedInvoiceUrl: 'https://invoice.stripe.com/i/in_43',
+      },
+    ]);
+    const { deps } = makeDeps({
+      portalSync: { pushDelivery } as any,
+      setupInstalments: { markPaidByStripeInvoiceId, findByOpportunity } as any,
+    });
+    const body = invoiceEvent({ id: 'in_42', status_transitions: { paid_at: 1_780_000_000 } });
+    const res = await processStripeWebhook(
+      body,
+      { 'stripe-signature': stripeSignature(body) },
+      deps
+    );
+    expect(res.statusCode).toBe(200);
+    expect(findByOpportunity).toHaveBeenCalledWith('opp_1', 'ten_1');
+    // The paid instalment carries NO payment URL (contract: null once paid);
+    // a still-due instalment keeps its hosted invoice URL.
+    expect(pushDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slug: 'acme',
+        setupInstalments: expect.arrayContaining([
+          expect.objectContaining({ n: 1, status: 'paid', paymentUrl: null }),
+          expect.objectContaining({
+            n: 2,
+            status: 'due',
+            paymentUrl: expect.stringContaining('invoice.stripe.com'),
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('invokes findByOpportunity bound to its repository (preserves `this`)', async () => {
+    // Regression guard: rePushPaidToPortal must call findByOpportunity as a
+    // method, not an extracted bare reference. A class-based reader that reads
+    // `this` throws if called unbound — which the try/catch would silently
+    // swallow, killing the paid re-push in production.
+    const pushDelivery = vi.fn().mockResolvedValue({ isFailure: false });
+    class Reader {
+      private readonly rows = [
+        {
+          n: 1,
+          amountCents: 16700,
+          currency: 'GBP',
+          status: 'paid' as const,
+          dueAt: null,
+          paidAt: new Date(1_780_000_000 * 1000),
+          hostedInvoiceUrl: 'https://invoice.stripe.com/i/in_42',
+        },
+      ];
+      markPaidByStripeInvoiceId() {
+        return Promise.resolve({ opportunityId: 'opp_1', tenantId: 'ten_1', tenantSlug: 'acme' });
+      }
+      findByOpportunity() {
+        // Touch `this`: throws "Cannot read properties of undefined" if unbound.
+        return Promise.resolve(this.rows);
+      }
+    }
+    const { deps } = makeDeps({
+      portalSync: { pushDelivery } as any,
+      setupInstalments: new Reader() as any,
+    });
+    const body = invoiceEvent({ id: 'in_42', status_transitions: { paid_at: 1_780_000_000 } });
+    const res = await processStripeWebhook(
+      body,
+      { 'stripe-signature': stripeSignature(body) },
+      deps
+    );
+    expect(res.statusCode).toBe(200);
+    // The re-push actually ran (would be skipped/swallowed if `this` were lost).
+    expect(pushDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slug: 'acme',
+        setupInstalments: expect.arrayContaining([
+          expect.objectContaining({ n: 1, status: 'paid', paymentUrl: null }),
+        ]),
+      })
+    );
+  });
+
+  it('skips the paid re-push when the portal slug is unknown', async () => {
+    const pushDelivery = vi.fn().mockResolvedValue({ isFailure: false });
+    const markPaidByStripeInvoiceId = vi
+      .fn()
+      .mockResolvedValue({ opportunityId: 'opp_1', tenantId: 'ten_1', tenantSlug: null });
+    const findByOpportunity = vi.fn();
+    const { deps } = makeDeps({
+      portalSync: { pushDelivery } as any,
+      setupInstalments: { markPaidByStripeInvoiceId, findByOpportunity } as any,
+    });
+    const body = invoiceEvent({ id: 'in_42', status_transitions: { paid_at: 1_780_000_000 } });
+    await processStripeWebhook(body, { 'stripe-signature': stripeSignature(body) }, deps);
+    expect(findByOpportunity).not.toHaveBeenCalled();
+    expect(pushDelivery).not.toHaveBeenCalled();
+  });
+
+  it('does not log "marked paid" when the invoice matches no setup-fee instalment', async () => {
+    // invoice.paid also fires for subscription-renewal invoices (ctx === null).
+    const markPaidByStripeInvoiceId = vi.fn().mockResolvedValue(null);
+    const info = vi.fn();
+    const { deps } = makeDeps({
+      setupInstalments: { markPaidByStripeInvoiceId } as any,
+      logger: { info, warn: vi.fn(), error: vi.fn() },
+    });
+    const body = invoiceEvent({ id: 'in_renewal', status_transitions: { paid_at: 1_780_000_000 } });
+    const res = await processStripeWebhook(
+      body,
+      { 'stripe-signature': stripeSignature(body) },
+      deps
+    );
+    expect(res.statusCode).toBe(200);
+    expect(markPaidByStripeInvoiceId).toHaveBeenCalled();
+    expect(info.mock.calls.some((c) => String(c[1]).includes('instalment marked paid'))).toBe(
+      false
+    );
+  });
+
   it('invoice.paid without setupInstalments dep is a safe no-op', async () => {
     const { deps } = makeDeps({ setupInstalments: null });
     const body = invoiceEvent({ id: 'in_99', status_transitions: { paid_at: 1_780_000_000 } });

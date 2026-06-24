@@ -73,6 +73,7 @@ export class PrismaSetupInstalmentRepository implements SetupInstalmentRepositor
       dueAt: row.dueAt,
       paidAt: row.paidAt,
       stripeInvoiceId: row.stripeInvoiceId,
+      hostedInvoiceUrl: row.hostedInvoiceUrl,
     }));
   }
 
@@ -81,21 +82,44 @@ export class PrismaSetupInstalmentRepository implements SetupInstalmentRepositor
     tenantId: string;
     n: number;
     stripeInvoiceId: string;
+    hostedInvoiceUrl?: string | null;
   }): Promise<void> {
     // Scope the write by tenant too: updateMany lets us add the tenantId guard
-    // that the (opportunityId, n) unique key alone would not enforce.
+    // that the (opportunityId, n) unique key alone would not enforce. Only stamp
+    // the hosted URL when the caller supplies it (undefined = leave untouched).
     await this.prisma.setupInstalment.updateMany({
       where: { opportunityId: args.opportunityId, tenantId: args.tenantId, n: args.n },
-      data: { stripeInvoiceId: args.stripeInvoiceId },
+      data: {
+        stripeInvoiceId: args.stripeInvoiceId,
+        ...(args.hostedInvoiceUrl !== undefined ? { hostedInvoiceUrl: args.hostedInvoiceUrl } : {}),
+      },
     });
   }
 
-  async markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void> {
-    // The invoice id is globally unique (@unique); updateMany keeps this a no-op
-    // when the invoice is not a setup-fee instalment, instead of throwing.
+  async markPaidByStripeInvoiceId(args: {
+    stripeInvoiceId: string;
+    paidAt: Date;
+  }): Promise<{ opportunityId: string; tenantId: string; tenantSlug: string | null } | null> {
+    // Resolve the row first (the invoice id is globally @unique) to return the
+    // identifiers + portal slug the caller needs to re-push the paid set. Null
+    // when the invoice is not a setup-fee instalment (no throw).
+    const row = await this.prisma.setupInstalment.findFirst({
+      where: { stripeInvoiceId: args.stripeInvoiceId },
+      select: {
+        opportunityId: true,
+        tenantId: true,
+        opportunity: { select: { tenantSlug: true } },
+      },
+    });
+    if (!row) return null;
     await this.prisma.setupInstalment.updateMany({
       where: { stripeInvoiceId: args.stripeInvoiceId },
       data: { status: TO_DB.paid, paidAt: args.paidAt },
     });
+    return {
+      opportunityId: row.opportunityId,
+      tenantId: row.tenantId,
+      tenantSlug: row.opportunity?.tenantSlug ?? null,
+    };
   }
 }
