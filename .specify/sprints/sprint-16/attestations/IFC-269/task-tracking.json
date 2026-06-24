@@ -1,0 +1,58 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 240,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/account/account.router.ts",
+      "packages/adapters/src/repositories/PrismaAccountRepository.ts"
+    ],
+    "expected": [
+      "apps/api/src/modules/account/account.router.ts",
+      "packages/adapters/src/repositories/PrismaAccountRepository.ts",
+      ".specify/sprints/sprint-16/attestations/IFC-269/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-16/attestations/IFC-269/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": "2026-04-09T19:46:41.424Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.827Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "Zero cross-tenant data leaks; audit log entries for all mutations"
+    }
+  },
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": "2026-04-09T19:31:41.424Z",
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-269",
+  "validations": [
+    {
+      "command": "echo \"Task IFC-269 completed\"",
+      "executed_at": "2026-04-09T19:46:41.424Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

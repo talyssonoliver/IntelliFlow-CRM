@@ -1,0 +1,80 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 160,
+  "artifacts": {
+    "created": [
+      "docs/design/information-architecture.md"
+    ],
+    "expected": [
+      "docs/design/information-architecture.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-24T21:22:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.786Z"
+  },
+  "kpis": {},
+  "notes": "Unified IA reference created with 103 routes across 20 module sections, 28 ghost links, 5 conflict resolutions. 4 reconciliation tests pass (TC-IA-01/03/04/05). Shared test helper extracted from 2 existing test files.",
+  "phase": "phase-1",
+  "started_at": "2026-02-24T12:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-23T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-24T12:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-24T12:30:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-24T21:13:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-24T21:22:00Z",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "DOC-006",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "duration_ms": 8000,
+      "executed_at": "2026-02-24T21:21:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run src/app/__tests__/",
+      "duration_ms": 1790,
+      "executed_at": "2026-02-24T21:21:30Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web lint",
+      "duration_ms": 5000,
+      "executed_at": "2026-02-24T21:21:45Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "duration_ms": 30000,
+      "executed_at": "2026-02-24T21:22:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

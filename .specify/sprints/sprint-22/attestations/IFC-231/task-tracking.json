@@ -1,0 +1,50 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/leads/(list)/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/leads/(list)/page.tsx",
+      ".specify/sprints/sprint-22/attestations/IFC-231/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-22/attestations/IFC-231/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.921Z"
+  },
+  "kpis": {
+    "filter_persistence": {
+      "actual": "",
+      "met": false,
+      "target": "Persists across navigation"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "view_switch_latency": {
+      "actual": "",
+      "met": false,
+      "target": "<300ms"
+    }
+  },
+  "notes": "Wiring debt: Sidebar view params completely ignored by LeadsPageClient.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-231",
+  "validations": []
+}

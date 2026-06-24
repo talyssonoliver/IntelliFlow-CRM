@@ -1,0 +1,124 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "actual_finish": "2026-04-14",
+  "actual_start": "2026-04-13",
+  "artifacts": {
+    "created": [
+      {
+        "created_at": "2026-04-13T23:27:00Z",
+        "path": "apps/web/src/app/maintenance/page.tsx",
+        "sha256": "738b57e024fca19da923af098f26ccded9c08c72369578a56ec50f07f8b609f7"
+      },
+      {
+        "created_at": "2026-04-13T23:17:00Z",
+        "path": "apps/web/src/lib/status/maintenance-mode.ts",
+        "sha256": "70b515cb280a8f161bab0020cbaef40932e8b44f4fbeb01383c6276882bfdf04"
+      },
+      {
+        "created_at": "2026-04-13T23:19:00Z",
+        "path": "apps/web/src/lib/status/status-updater.ts",
+        "sha256": "8cbaa9e01f5f29c4beaad5bafeb886269be9574d2465b6a7a0cbb39054616fdd"
+      },
+      {
+        "created_at": "2026-04-13T23:23:00Z",
+        "path": "apps/web/src/components/status/maintenance-content.tsx",
+        "sha256": "94948adb2dc0725d1c506a5b832f3de0e300bc38fde3eceb5e062cf93f504557"
+      },
+      {
+        "created_at": "2026-04-13T23:24:00Z",
+        "path": "apps/web/src/components/status/maintenance-live-updates.tsx",
+        "sha256": "dc0c289fb65cc2b0806b26fff498c8df727b863c75a3f5b08ff2516eb3a5486c"
+      }
+    ]
+  },
+  "completed_at": "2026-04-14T18:10:58.495Z",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": ".specify/sprints/sprint-17/specifications/PG-057-spec.md",
+        "sha256": "7f61df976e206de34de215753454bb8936b2f71158258af075db469da4ac2937"
+      },
+      {
+        "path": ".specify/sprints/sprint-17/specifications/PG-055-spec.md",
+        "sha256": "5f19703b5647bca62a8cb8a3cdb2b5a89906c4e5654ba8aa4272d5f4fc0ac409"
+      },
+      {
+        "path": ".specify/sprints/sprint-17/specifications/PG-056-spec.md",
+        "sha256": "97cf824e66d8088ec69aeaee0c5641cf87d29d72e48b69db5f9e8409a49021ac"
+      }
+    ]
+  },
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.837Z"
+  },
+  "estimate_h": "60/120/240",
+  "gate_results": [
+    {
+      "gate_id": "lighthouse-gte-90",
+      "log_path": "artifacts/lighthouse/PG-057/pg-057-maintenance-r1.json",
+      "passed": true,
+      "score": 1
+    }
+  ],
+  "kpis": [
+    {
+      "actual": "63ms",
+      "met": true,
+      "target": "<200ms",
+      "unit": "ms (server-response-time)"
+    },
+    {
+      "actual": "100",
+      "met": true,
+      "target": ">=90",
+      "unit": "lighthouse-performance"
+    },
+    {
+      "actual": "true",
+      "met": true,
+      "target": "status shown"
+    }
+  ],
+  "percent_complete": 100,
+  "phase": "phase-17-system-pages",
+  "planned_finish": "2026-08-20",
+  "planned_start": "2026-04-13",
+  "started_at": "2026-04-14T17:55:58.495Z",
+  "task_id": "PG-057",
+  "title": "Maintenance Page",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "duration_ms": 65000,
+      "executed_at": "2026-04-14T00:40:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web test -- src/app/maintenance src/components/status src/lib/status --run",
+      "duration_ms": 19730,
+      "executed_at": "2026-04-14T00:15:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "npx eslint src/app/maintenance src/components/status/maintenance-*.tsx src/lib/status/maintenance-mode.ts src/lib/status/status-updater.ts",
+      "duration_ms": 3500,
+      "executed_at": "2026-04-14T00:10:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "duration_ms": 138000,
+      "executed_at": "2026-04-14T00:22:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

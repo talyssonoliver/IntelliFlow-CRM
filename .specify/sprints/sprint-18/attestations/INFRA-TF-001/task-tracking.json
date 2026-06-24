@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [],
+    "expected": [
+      "infra/terraform/modules/railway/main.tf",
+      "infra/terraform/modules/vercel/main.tf"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-06-05T12:00:00.000Z"
+  },
+  "kpis": {
+    "fmt_check": {
+      "actual": "",
+      "met": false,
+      "target": "pass"
+    },
+    "terraform_validate": {
+      "actual": "",
+      "met": false,
+      "target": "pass"
+    }
+  },
+  "notes": "Governed by ADR-064 (Terraform = single source of truth). Phase 2/3 of docs/planning/infra-terraform-iac-plan.md.",
+  "phase": "phase-0-context",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-06-05T12:00:00.000Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "INFRA-TF-001",
+  "validations": []
+}

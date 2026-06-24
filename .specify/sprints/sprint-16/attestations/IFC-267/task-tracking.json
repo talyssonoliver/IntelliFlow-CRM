@@ -1,0 +1,75 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 120,
+  "artifacts": {
+    "created": [
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "apps/web/src/components/accounts/AccountContactsList.tsx",
+      "apps/web/src/components/accounts/AccountOpportunitiesList.tsx",
+      ".specify/sprints/sprint-16/attestations/IFC-267/context_ack.json"
+    ],
+    "expected": [
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "apps/web/src/components/accounts/AccountContactsList.tsx",
+      "apps/web/src/components/accounts/AccountOpportunitiesList.tsx",
+      ".specify/sprints/sprint-16/attestations/IFC-267/context_ack.json"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-12T22:58:51.182Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.826Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "6/6 buttons functional; create forms pre-fill accountId"
+    }
+  },
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": "2026-03-12T00:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-03-12T00:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-12T00:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-12T00:00:00Z",
+      "status": "Planned"
+    },
+    {
+      "at": "2026-03-12T00:00:00Z",
+      "status": "Planned"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-267",
+  "validations": [
+    {
+      "command": "echo \"Task IFC-267 completed\"",
+      "executed_at": "2026-03-12T22:58:51.182Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

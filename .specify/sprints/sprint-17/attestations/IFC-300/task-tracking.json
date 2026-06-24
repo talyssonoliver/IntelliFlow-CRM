@@ -1,0 +1,89 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "actual_finish": "2026-04-14",
+  "artifacts": {
+    "created": [
+      "packages/db/prisma/seed-help-articles.ts"
+    ],
+    "expected": [
+      "packages/db/prisma/seed-help-articles.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-04-14T18:10:58.501Z",
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-04-13T00:00:00Z",
+    "files_read": [
+      {
+        "path": ".specify/sprints/sprint-17/specifications/IFC-300-spec.md",
+        "sha256": "a815393e7cc4bd1c0da30d243b8d003fce5c410677f42029a120bb19b21fc532"
+      },
+      {
+        "path": ".specify/sprints/sprint-17/planning/IFC-300-plan.md",
+        "sha256": "367830b62acd2c7ea00f289ee6bfd6ee921f72b4f9be573515a493139c6124c2"
+      },
+      {
+        "path": ".specify/sprints/sprint-17/context/IFC-300/IFC-300-hydrated-context.md",
+        "sha256": "dc9ae2ff02fb995ace5bdb1a3f10256fbc55ea43d989b8d803b2fa37a46320bc"
+      }
+    ]
+  },
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.840Z"
+  },
+  "execution": {
+    "last_error": null,
+    "retry_count": 0
+  },
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 36
+    },
+    {
+      "gate_id": "build",
+      "passed": true
+    },
+    {
+      "gate_id": "coverage-measurement",
+      "passed": true,
+      "score": 100
+    },
+    {
+      "gate_id": "stoa-foundation",
+      "passed": true
+    }
+  ],
+  "kpis": {},
+  "notes": "Seed script reads DEFAULT_HELP_ARTICLES from help-articles.ts and inserts into HelpArticle table. Idempotent: skips existing slugs. Validates count post-seed.",
+  "percent_complete": 100,
+  "phase": "",
+  "planned_finish": "2026-04-13",
+  "planned_start": "2026-04-13",
+  "started_at": "2026-04-14T17:55:58.501Z",
+  "status_history": [
+    {
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Idempotent seed script migrating 17 static articles to DB",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-300",
+  "title": "Help Article Seed Script — Static to DB Migration",
+  "validations": [
+    {
+      "command": "echo \"Task IFC-300 completed\"",
+      "executed_at": "2026-04-14T18:10:58.501Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

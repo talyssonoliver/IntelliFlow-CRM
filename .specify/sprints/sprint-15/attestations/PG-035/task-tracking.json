@@ -1,0 +1,140 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 45,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/(developer)/docs/changelog/page.tsx",
+      "apps/web/src/components/developer/changelog-display.tsx",
+      "apps/web/src/lib/developer/rss-feed.ts",
+      "apps/web/src/app/api/developer/changelog-rss/route.ts",
+      "apps/web/src/app/(developer)/docs/changelog/__tests__/page.test.tsx",
+      "apps/web/src/app/(developer)/docs/changelog/__tests__/integration.test.tsx",
+      "apps/web/src/components/developer/__tests__/changelog-display.test.tsx",
+      "apps/web/src/lib/developer/__tests__/rss-feed.test.ts"
+    ],
+    "expected": [
+      "apps/web/src/app/(developer)/docs/changelog/page.tsx",
+      "apps/web/src/components/developer/changelog-display.tsx",
+      "apps/web/src/lib/developer/rss-feed.ts",
+      "apps/web/src/app/api/developer/changelog-rss/route.ts",
+      "apps/web/src/app/(developer)/docs/changelog/__tests__/page.test.tsx",
+      "apps/web/src/app/(developer)/docs/changelog/__tests__/integration.test.tsx",
+      "apps/web/src/components/developer/__tests__/changelog-display.test.tsx",
+      "apps/web/src/lib/developer/__tests__/rss-feed.test.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-25T21:31:45Z",
+  "dependencies_meta": {
+    "notes": "PG-032 verified complete — docs index page, search, navigation components all exist. Attestation checked.",
+    "verified_at": "2026-04-29T21:54:51.797Z"
+  },
+  "execution": {
+    "agents": [
+      "stoa-foundation"
+    ],
+    "completed_at": "2026-02-25T21:31:45Z",
+    "duration_minutes": 45,
+    "executor": "Claude Code /exec",
+    "last_error": null,
+    "retry_count": 0,
+    "started_at": "2026-02-24T21:56:00Z"
+  },
+  "kpis": {
+    "response_time": {
+      "actual": "Static Server Component with pre-formatted data, no API calls",
+      "met": true,
+      "target": "<200ms",
+      "unit": "ms"
+    },
+    "test_count": {
+      "actual": 60,
+      "met": true,
+      "target": 55,
+      "unit": "tests"
+    },
+    "test_coverage": {
+      "actual": "Statements 100%, Branches 100%, Functions 100%, Lines 100% (60 tests)",
+      "met": true,
+      "target": 90,
+      "unit": "percent"
+    }
+  },
+  "notes": "PG-035 completed. 8 files created, 10 modified (18 total). Changelog page at /docs/changelog with 7 version entries (v0.1.0-v0.7.0), 6 badge types (feature/fix/breaking/deprecation/security/performance), RSS 2.0 feed at /api/developer/changelog-rss with XML escaping and RFC 822 dates, breaking change callout, sidebar navigation entry. 100% scoped coverage. All 4 validations pass.",
+  "phase": "phase-1",
+  "started_at": "2026-02-24T21:56:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-24T12:00:00Z",
+      "note": "Ralph loop started for /full-pipeline PG-035",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-24T12:10:00Z",
+      "note": "Spec session started with 3 agents: Frontend-Lead, Domain-Expert, Test-Engineer",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-24T14:00:00Z",
+      "note": "Spec session completed — combined ANALYSIS/PROPOSAL/CHALLENGE round, 3/3 agents approved. PRD updated.",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-24T15:00:00Z",
+      "note": "Plan session started — decomposing spec into TDD phases with dependency verification",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-24T16:00:00Z",
+      "note": "Plan session completed — 4 TDD phases, 14 steps (1-12b+13), 8 files to create, 10 to modify. Plan Reviewer: REVISE then APPROVE after 5 fixes.",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-24T21:56:00Z",
+      "note": "Exec session started — TDD implementation, run ID 20260224215646-eb0e0ec9",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-25T21:31:45Z",
+      "note": "Exec completed — MATOP PASS (Foundation). All completion gates PASS. 60 tests, 100% scoped coverage.",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-035",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "duration_ms": 8580,
+      "executed_at": "2026-02-25T21:30:09Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run [5 PG-035 test files including modified docs/integration.test.tsx]",
+      "duration_ms": 6770,
+      "executed_at": "2026-02-25T21:30:22Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "npx eslint [5 PG-035 source files]",
+      "duration_ms": 1993,
+      "executed_at": "2026-02-25T21:30:33Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "duration_ms": 66440,
+      "executed_at": "2026-02-25T21:30:39Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

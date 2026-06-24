@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts_to_track": [
+    "ARTIFACT:packages/adapters/src/messaging/email/outbound.ts",
+    "EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-223/context_ack.json",
+    "SPEC:.specify/sprints/sprint-14/specifications/IFC-223-spec.md",
+    "PLAN:.specify/sprints/sprint-14/planning/IFC-223-plan.md",
+    "ATTESTATION:.specify/sprints/sprint-14/attestations/IFC-223/attestation.json"
+  ],
+  "completed_at": "2026-03-07T00:33:31.202Z",
+  "created_at": "2026-03-04T23:51:20.000Z",
+  "definition_of_done": "Email outbound connects to real SMTP/API provider; verified by: pnpm test",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.789Z"
+  },
+  "estimate": "60/120/240",
+  "kpis": {},
+  "percent_complete": 100,
+  "prerequisites": [
+    "FILE:packages/adapters/src/messaging/email/outbound.ts"
+  ],
+  "started_at": "2026-03-07T00:18:31.202Z",
+  "target_sprint": 14,
+  "task_id": "IFC-223",
+  "updated_at": "2026-03-04T23:51:20.000Z",
+  "validation_method": [
+    "VALIDATE:pnpm test"
+  ],
+  "validations": [
+    {
+      "command": "npx tsc --noEmit --project packages/adapters/tsconfig.json",
+      "executed_at": "2026-03-07T00:30:00.000Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run packages/adapters/src/external/__tests__/RealNotificationServiceAdapter.test.ts packages/adapters/src/messaging/email/__tests__/outbound.test.ts",
+      "executed_at": "2026-03-07T00:33:00.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/adapters lint",
+      "executed_at": "2026-03-07T00:30:30.000Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/adapters build && pnpm --filter @intelliflow/api build",
+      "executed_at": "2026-03-07T00:29:00.000Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "docs/security/dpia.md",
+      "docs/security/data-flows.md",
+      "docs/compliance-and-governance/compliance/gdpr-checklist.md"
+    ],
+    "expected": [
+      "docs/security/dpia.md",
+      "docs/security/data-flows.md",
+      "docs/compliance-and-governance/compliance/gdpr-checklist.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-27T11:33:39.467Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.716Z"
+  },
+  "execution": {
+    "completed_at": "2025-12-21T16:00:00Z",
+    "duration_minutes": 120,
+    "execution_log": "logs/sprint-1/IFC-073.log",
+    "executor": "claude-opus-4.5",
+    "started_at": "2025-12-21T14:00:00Z"
+  },
+  "kpis": {
+    "controls_documented": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    },
+    "risks_mitigated": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    }
+  },
+  "notes": "DPIA complete for AI processing and data storage with GDPR compliance checklist.",
+  "started_at": "2025-12-27T11:18:39.467Z",
+  "status_history": [
+    {
+      "at": "2025-12-20T00:00:00Z",
+      "status": "PLANNED"
+    },
+    {
+      "at": "2025-12-21T14:00:00Z",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-21T16:00:00Z",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-073",
+  "validations": [
+    {
+      "command": "test -f docs/security/dpia.md",
+      "executed_at": "2025-12-21T16:00:00Z",
+      "exit_code": 0,
+      "name": "dpia_exists",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.467Z"
+    }
+  ]
+}

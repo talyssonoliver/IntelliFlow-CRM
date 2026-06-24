@@ -1,0 +1,70 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "docs/architecture/adr/ADR-038-accessibility-architecture.md"
+    ],
+    "expected": [
+      "docs/architecture/adr/ADR-038-accessibility-architecture.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-02T23:18:31.581Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.805Z"
+  },
+  "kpis": {
+    "enforcement_links": {
+      "actual": "DOC-010, DOC-011, DOC-012",
+      "met": true,
+      "target": "DOC-010, DOC-011, DOC-012"
+    },
+    "trigger_categories": {
+      "actual": 4,
+      "met": true,
+      "target": 4
+    }
+  },
+  "notes": "Amends ADR-038 to define update triggers (new routes, component changes, WCAG scope changes, AT findings), responsible party, review frequency, and links to DOC-010/011/012 as enforcement mechanisms.",
+  "phase": "phase-1",
+  "started_at": "2026-03-02T22:48:13Z",
+  "status_history": [
+    {
+      "at": "2026-02-24T01:30:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-03-02T22:48:13Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-02T22:55:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-02T23:11:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-02T23:12:00Z",
+      "status": "Validating"
+    },
+    {
+      "at": "2026-03-02T23:17:00Z",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "DOC-013",
+  "validations": [
+    {
+      "command": "pnpm lint",
+      "executed_at": "2026-03-02T23:12:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    }
+  ]
+}

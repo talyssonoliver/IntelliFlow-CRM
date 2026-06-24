@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [],
+    "required": [
+      "apps/ai-worker/src/jobs/report-generation.job.ts",
+      "apps/api/src/modules/analytics/report-templates.ts",
+      "apps/api/src/modules/analytics/report-scheduler.ts"
+    ],
+    "verified_at": null
+  },
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:52.024Z"
+  },
+  "gate_results": [],
+  "kpis": {
+    "delivery_reliability": {
+      "actual": "",
+      "met": false,
+      "target": ">=99% scheduled reports delivered on time"
+    },
+    "generation_time": {
+      "actual": "",
+      "met": false,
+      "target": "p95 <30s per report"
+    },
+    "report_types": {
+      "actual": "",
+      "met": false,
+      "target": ">=4 report templates (pipeline, leads, revenue, SLA)"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Depends on analytics router (IFC-024) for data queries and ai-worker queue infrastructure (IFC-168) for job processing. Reports delivered via existing notifications-worker email channel. Consider tenant-configurable schedules (daily/weekly/monthly).",
+  "phase": "",
+  "started_at": null,
+  "stream": null,
+  "task_id": "IFC-308",
+  "validation_results": []
+}

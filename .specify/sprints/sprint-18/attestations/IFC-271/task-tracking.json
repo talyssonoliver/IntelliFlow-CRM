@@ -1,0 +1,49 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "packages/domain/src/crm/account/Account.ts",
+      "packages/domain/src/crm/account/AccountEvents.ts",
+      "packages/application/src/services/AccountService.ts"
+    ],
+    "expected": [
+      "packages/domain/src/crm/account/Account.ts",
+      "packages/domain/src/crm/account/AccountEvents.ts",
+      "packages/application/src/services/AccountService.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-271/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-18/attestations/IFC-271/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.867Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "Delete emits event; zero silent failures"
+    }
+  },
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-271",
+  "validations": []
+}

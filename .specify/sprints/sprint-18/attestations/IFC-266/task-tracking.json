@@ -1,0 +1,70 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 240,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/contacts/(list)/__tests__/page.test.tsx",
+      "apps/web/src/app/contacts/(list)/new/__tests__/page.test.tsx",
+      "tests/e2e/contact-crud.spec.ts"
+    ],
+    "expected": [
+      "apps/web/src/app/contacts/(list)/__tests__/page.test.tsx",
+      "tests/e2e/contact-crud.spec.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-06-14T00:00:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.866Z"
+  },
+  "kpis": {
+    "audit_findings_resolved": {
+      "actual": "T-02 (new list test), T-03 (create wizard tests), T-05 (bulk handlers at page level); T-09 verified already-covered (audit §19 stale); T-10 (new E2E)",
+      "met": true,
+      "target": "Resolve findings: T-02,T-03,T-05,T-09,T-10"
+    },
+    "test_coverage": {
+      "actual": "ContactsPageClient: 29 tests; create page: 14 tests; E2E: 24 (8x3 browsers). Test-only diff → diff-coverage-test-only.",
+      "met": true,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Test-only task. Audit §19 reconciled (stale, same pattern as IFC-265): T-03 auth guard already fixed/tested + T-09 bulk contract tests already covered in contact.router.additional.test.ts (+security/tenant/coverage). Scoped to genuine gaps: new ContactsPageClient test (T-02/T-05) and new E2E (T-10); strengthened create-wizard test (T-03). No production code changed. bulkEmail email:null router test dropped — Contact.email is non-nullable String (impossible state).",
+  "phase": "",
+  "started_at": "2026-06-14T00:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-06-14T00:00:00Z",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-266",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web --filter @intelliflow/api run typecheck",
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web test (605 files, 10718) && pnpm --filter @intelliflow/api test (229 files, 6182)",
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "node scripts/pre-ship.mjs [lint]",
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "node scripts/pre-ship.mjs [build]",
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

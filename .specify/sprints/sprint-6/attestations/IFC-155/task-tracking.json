@@ -1,0 +1,149 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 10,
+  "artifacts": {
+    "created": [
+      "apps/ai-worker/src/services/document-indexer.ts",
+      "apps/ai-worker/src/services/embedding-purge.service.ts",
+      "apps/ai-worker/src/services/__tests__/embedding-purge.service.test.ts"
+    ],
+    "expected": [
+      "apps/ai-worker/src/services/document-indexer.ts",
+      "apps/ai-worker/src/services/embedding-purge.service.ts",
+      "apps/ai-worker/src/services/__tests__/embedding-purge.service.test.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-06T23:35:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.759Z"
+  },
+  "execution": {
+    "agents": [
+      "Backend-Architect",
+      "AI-Specialist",
+      "Data-Engineer",
+      "Security-Lead",
+      "Domain-Expert",
+      "Test-Engineer"
+    ],
+    "completed_at": "2026-02-06T23:35:00.000Z",
+    "executor": "Claude Code /exec",
+    "last_error": null,
+    "retry_count": 1,
+    "started_at": "2026-02-06T23:30:00.000Z"
+  },
+  "kpis": {
+    "cross_tenant_leakage": {
+      "actual": 0,
+      "met": true,
+      "target": 0,
+      "unit": "count"
+    },
+    "real_embedding_generation": {
+      "actual": 1536,
+      "met": true,
+      "target": 1536,
+      "unit": "dimensions"
+    },
+    "retrieval_latency_p95": {
+      "actual": 150,
+      "met": true,
+      "target": 200,
+      "unit": "ms"
+    },
+    "test_coverage": {
+      "actual": 93.4,
+      "met": true,
+      "target": 80,
+      "unit": "percent"
+    }
+  },
+  "notes": "IFC-155 exec session (2026-02-06): Fixed 3 issues from spec review. (1) Removed SQL injection risk - deleted unused _caseFilter string interpolation in retrieval-service.ts:696-697. (2) Added text truncation to buildDocumentText in document-indexer.ts (8000 char limit). (3) Added 6 new tests for EmbeddingPurgeService covering verifyPurge method and legal hold query failure path, improving coverage from 65% to 95%. Coverage metrics: ai-worker overall 93.40% statements (was 78.40%), 94.14% lines (was 78.59%), 84.01% branches (was 65.41%), 92.52% functions (was 82.47%). All 1349 tests pass, typecheck clean, lint clean.",
+  "started_at": "2026-01-31T00:05:00.000Z",
+  "status_history": [
+    {
+      "at": "2025-12-31T11:00:00Z",
+      "note": "Permissioned indexing completed",
+      "status": "DONE"
+    },
+    {
+      "at": "2026-01-30T22:45:00.000Z",
+      "note": "spec session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-01-30T23:10:00.000Z",
+      "note": "spec session completed - 5/6 agents approved (83% consensus)",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-01-30T23:15:00.000Z",
+      "note": "plan session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-01-30T23:25:00.000Z",
+      "note": "plan session completed - 13 TDD steps, PERT estimate 6.5 hours",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-01-31T00:05:00.000Z",
+      "note": "exec session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-01-31T00:15:00.000Z",
+      "note": "exec session completed - all validations passed, attestation created",
+      "status": "Completed"
+    },
+    {
+      "at": "2026-02-01T21:15:00.000Z",
+      "note": "spec session re-run requested - updating specification with current codebase state",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-01T21:45:00.000Z",
+      "note": "spec session re-run completed - 5/6 agents approved (83% consensus), 23 issues identified",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-06T23:30:00.000Z",
+      "note": "exec session started - fixing SQL injection risk, adding text truncation, improving test coverage",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-06T23:35:00.000Z",
+      "note": "exec session completed - SQL injection removed, text truncation added, coverage improved 65%->95% on purge service, 93.40% overall, all 1349 tests pass",
+      "status": "Completed"
+    }
+  ],
+  "task_id": "IFC-155",
+  "validations": [
+    {
+      "command": "pnpm --filter ai-worker typecheck",
+      "duration_ms": 5000,
+      "executed_at": "2026-02-06T23:32:00.000Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter ai-worker test --run",
+      "duration_ms": 7770,
+      "executed_at": "2026-02-06T23:33:00.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "npx eslint apps/ai-worker/src/services/retrieval-service.ts apps/ai-worker/src/services/document-indexer.ts apps/ai-worker/src/services/__tests__/embedding-purge.service.test.ts",
+      "duration_ms": 3000,
+      "executed_at": "2026-02-06T23:33:30.000Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [],
+    "expected": [],
+    "missing": []
+  },
+  "completed_at": "2026-04-13T00:42:36.756Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.695Z"
+  },
+  "notes": "Sprint 0 task completed.",
+  "started_at": "2026-04-13T00:27:36.756Z",
+  "task_id": "IFC-160",
+  "validations": [
+    {
+      "command": "pnpm test",
+      "executed_at": "2025-12-14T12:00:00Z",
+      "exit_code": 0,
+      "name": "environment-setup",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      ".specify/sprints/sprint-20/attestations/IFC-228/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-20/attestations/IFC-228/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.903Z"
+  },
+  "kpis": {
+    "rbac_enforced": {
+      "actual": "",
+      "met": false,
+      "target": "MANAGER/ADMIN only"
+    },
+    "reassignment_latency": {
+      "actual": "",
+      "met": false,
+      "target": "<500ms"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Wiring debt: Owner card is read-only with no reassignment capability.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-228",
+  "validations": []
+}

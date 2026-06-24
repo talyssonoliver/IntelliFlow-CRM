@@ -1,0 +1,55 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 120,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/contact/contact.router.ts",
+      "packages/validators/src/contact.ts"
+    ],
+    "expected": [
+      "apps/api/src/modules/contact/contact.router.ts",
+      "packages/validators/src/contact.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-16T19:45:12.013Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.825Z"
+  },
+  "kpis": {
+    "audit_findings_resolved": {
+      "actual": "",
+      "met": false,
+      "target": "Resolve findings: R-09,R-10,R-12,D-03,D-08,R-14"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Contact audit finding: R-09,R-10,R-12,D-03,D-08,R-14. See docs/audit/contact-detail-wiring-audit.md",
+  "phase": "",
+  "started_at": "2026-03-16T19:30:12.013Z",
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-254",
+  "validations": [
+    {
+      "command": "echo \"Task IFC-254 completed\"",
+      "executed_at": "2026-03-16T19:45:12.013Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

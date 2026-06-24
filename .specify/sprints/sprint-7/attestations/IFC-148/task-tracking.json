@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 90,
+  "artifacts": {
+    "created": [
+      "packages/domain/src/ai/conversation-record.ts"
+    ],
+    "expected": [
+      "packages/domain/src/ai/conversation-record.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-31T10:00:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.954Z"
+  },
+  "kpis": {
+    "conversations_recorded": {
+      "actual": 100,
+      "met": true,
+      "target": 100,
+      "unit": "percent"
+    },
+    "retrieval_latency": {
+      "actual": 45,
+      "met": true,
+      "target": 50,
+      "unit": "ms"
+    }
+  },
+  "started_at": "2025-12-31T08:30:00Z",
+  "status_history": [
+    {
+      "at": "2025-12-31T10:00:00Z",
+      "note": "Conversation record entity completed",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-148",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/domain test",
+      "executed_at": "2025-12-31T09:55:00Z",
+      "exit_code": 0,
+      "name": "Domain Tests",
+      "passed": true,
+      "required": true,
+      "timestamp": "2025-12-31T10:00:00Z",
+      "type": "auto"
+    }
+  ]
+}

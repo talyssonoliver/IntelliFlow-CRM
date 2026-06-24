@@ -1,0 +1,54 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/components/shared/"
+    ],
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/components/shared/"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.906Z"
+  },
+  "kpis": {
+    "kpi_2": {
+      "actual": "",
+      "met": false,
+      "target": "1 StatusBadge implementation"
+    },
+    "kpi_3": {
+      "actual": "",
+      "met": false,
+      "target": "1 Toast pattern"
+    },
+    "primary_kpi": {
+      "actual": "",
+      "met": false,
+      "target": "0 window.prompt() calls"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Comprehensive flow analysis findings: F5,F6,F7",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-243",
+  "validations": []
+}

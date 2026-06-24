@@ -1,0 +1,136 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "artifacts": {
+    "created": [
+      "apps/api/src/shared/duplicate-rule-evaluator.ts",
+      "apps/api/src/modules/contact/contact-duplicate-detection.service.ts",
+      "apps/api/src/modules/account/account-duplicate-detection.service.ts",
+      "apps/api/src/modules/contact/__tests__/contact-duplicate-detection.service.test.ts",
+      "apps/api/src/modules/account/__tests__/account-duplicate-detection.service.test.ts",
+      "apps/api/src/shared/__tests__/duplicate-rule-evaluator.test.ts",
+      "apps/ai-worker/src/workers/contact-embed-worker.ts",
+      "apps/ai-worker/src/workers/__tests__/contact-embed-worker.test.ts",
+      "packages/application/src/services/events/ContactMergedEvent.ts",
+      "packages/validators/src/notifications.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-310/context_ack.json",
+      ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json"
+    ],
+    "expected": [
+      "apps/api/src/shared/duplicate-rule-evaluator.ts",
+      "apps/api/src/modules/contact/contact-duplicate-detection.service.ts",
+      "apps/api/src/modules/account/account-duplicate-detection.service.ts",
+      "apps/api/src/modules/contact/__tests__/contact-duplicate-detection.service.test.ts",
+      "apps/api/src/modules/account/__tests__/account-duplicate-detection.service.test.ts",
+      "apps/api/src/shared/__tests__/duplicate-rule-evaluator.test.ts",
+      "apps/ai-worker/src/workers/contact-embed-worker.ts",
+      "apps/ai-worker/src/workers/__tests__/contact-embed-worker.test.ts",
+      "packages/application/src/services/events/ContactMergedEvent.ts",
+      "packages/validators/src/notifications.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-310/context_ack.json",
+      ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json"
+    ],
+    "missing": []
+  },
+  "attempt": 2,
+  "blockers": [],
+  "completed_at": "2026-04-20T22:50:00.000Z",
+  "current_phase": "DONE",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.877Z"
+  },
+  "execution": {
+    "completed_at": "2026-04-20T22:50:00.000Z",
+    "duration_minutes": 165,
+    "executor": "claude-opus-4-7",
+    "last_error": null,
+    "retry_count": 1,
+    "started_at": "2026-04-20T00:00:00.000Z"
+  },
+  "kpis": {
+    "cross_tenant_merges": {
+      "actual": null,
+      "met": false,
+      "target": 0,
+      "unit": "count"
+    },
+    "merge_p95_ms": {
+      "actual": null,
+      "met": false,
+      "target": 500,
+      "unit": "ms"
+    },
+    "scoped_coverage": {
+      "actual": null,
+      "met": false,
+      "target": 90,
+      "unit": "percent"
+    }
+  },
+  "phase": "",
+  "started_at": "2026-04-20T00:00:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-04-14T00:00:00Z",
+      "note": "Task created via /create-task as PG-182/PG-183 duplicate-detection runtime follow-up.",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-04-20T00:00:00Z",
+      "note": "Spec session complete — 5/5 agent consensus.",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-04-20T00:00:00Z",
+      "note": "Plan session complete — 32 files, 10 RED/GREEN/REFACTOR steps, plan-reviewer subagent signed off.",
+      "status": "Plan Complete"
+    },
+    {
+      "at": "2026-04-20T00:00:00Z",
+      "note": "Ralph iteration 1 exec started.",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-04-20T22:28:37Z",
+      "note": "Ralph iteration 2 — added ContactRepository.mergeInTransaction port + Prisma + InMemory impls; ContactService.mergeContacts hardened with atomic child re-parenting + ContactMergedEvent publish.",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-04-20T22:50:00Z",
+      "note": "All 4 validations green. 290+ tests pass. Runtime wired end-to-end. Attestation COMPLETE.",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-310",
+  "updated_at": "2026-04-20T22:50:00Z",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/validators --filter @intelliflow/application --filter @intelliflow/domain --filter @intelliflow/api --filter @intelliflow/ai-worker --filter @intelliflow/adapters typecheck",
+      "executed_at": "2026-04-20T22:45:00.000Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/api test --run duplicate-rule-evaluator contact-duplicate-detection.service account-duplicate-detection.service contact.router account.router; pnpm --filter @intelliflow/application test --run ContactService ContactMergedEvent; pnpm --filter @intelliflow/ai-worker test --run contact-embed-worker; pnpm --filter @intelliflow/validators test --run notifications",
+      "executed_at": "2026-04-20T22:46:00.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/validators --filter @intelliflow/application --filter @intelliflow/api --filter @intelliflow/ai-worker --filter @intelliflow/adapters lint",
+      "executed_at": "2026-04-20T22:47:00.000Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/application --filter @intelliflow/adapters --filter @intelliflow/api --filter @intelliflow/ai-worker --filter @intelliflow/validators --filter @intelliflow/domain build",
+      "executed_at": "2026-04-20T22:48:00.000Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/app/contacts/[id]/page.tsx",
+      "apps/web/src/app/deals/[id]/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/app/contacts/[id]/page.tsx",
+      "apps/web/src/app/deals/[id]/page.tsx",
+      ".specify/sprints/sprint-23/attestations/IFC-216/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-23/attestations/IFC-216/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.942Z"
+  },
+  "kpis": {
+    "download_url_generation": {
+      "actual": "",
+      "met": false,
+      "target": "<200ms"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "upload_latency": {
+      "actual": "",
+      "met": false,
+      "target": "<2s for <10MB"
+    }
+  },
+  "notes": "Follow-up to IFC-094 (Pattern 1 - infra-only). Resolves WIRE-IFC-094-001.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-04T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-216",
+  "validations": []
+}

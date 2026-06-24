@@ -1,0 +1,51 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/lead/lead.router.ts",
+      "packages/domain/src/crm/lead/LeadEvents.ts",
+      "apps/workers/notifications-worker/"
+    ],
+    "expected": [
+      "apps/api/src/modules/lead/lead.router.ts",
+      "packages/domain/src/crm/lead/LeadEvents.ts",
+      "apps/workers/notifications-worker/"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.905Z"
+  },
+  "kpis": {
+    "kpi_2": {
+      "actual": "",
+      "met": false,
+      "target": ">=8/10 events with notification handlers"
+    },
+    "primary_kpi": {
+      "actual": "",
+      "met": false,
+      "target": "0 dead code blocks"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Comprehensive flow analysis findings: S10,S11,W10,W11",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-241",
+  "validations": []
+}

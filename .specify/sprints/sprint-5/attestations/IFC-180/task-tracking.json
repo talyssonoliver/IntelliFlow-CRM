@@ -1,0 +1,109 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 57,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/ai-review/ai-review.router.ts",
+      "apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts"
+    ],
+    "expected": [
+      "apps/api/src/modules/ai-review/ai-review.router.ts",
+      "apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-05T22:57:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.999Z"
+  },
+  "execution": {
+    "agents": [
+      "Foundation",
+      "Security",
+      "Quality",
+      "Domain"
+    ],
+    "completed_at": "2026-02-05T22:57:00.000Z",
+    "duration_minutes": 27,
+    "executor": "Claude Code /exec",
+    "last_error": null,
+    "retry_count": 0,
+    "started_at": "2026-02-05T22:30:00.000Z"
+  },
+  "kpis": {
+    "auth_enforced": {
+      "actual": true,
+      "met": true,
+      "target": true
+    },
+    "endpoints_working": {
+      "actual": 7,
+      "met": true,
+      "target": 7
+    },
+    "response_time_ms": {
+      "actual": 1,
+      "met": true,
+      "target": 200
+    }
+  },
+  "started_at": "2026-02-05T14:00:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-01-01T00:00:00.000Z",
+      "note": "Initial status",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-05T14:00:00.000Z",
+      "note": "spec session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-05T22:30:00.000Z",
+      "note": "exec session started - TDD implementation",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-05T22:57:00.000Z",
+      "note": "exec completed - 76 tests pass, 7 endpoints, all 4 gates PASS",
+      "status": "Completed"
+    }
+  ],
+  "task_id": "IFC-180",
+  "validations": [
+    {
+      "command": "pnpm --filter api typecheck",
+      "duration_ms": 3000,
+      "executed_at": "2026-02-05T22:56:20.000Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run src/modules/ai-review/__tests__/ai-review.router.test.ts",
+      "duration_ms": 666,
+      "executed_at": "2026-02-05T22:56:36.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "npx eslint src/modules/ai-review/",
+      "duration_ms": 2000,
+      "executed_at": "2026-02-05T22:57:10.000Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter api build",
+      "duration_ms": 5000,
+      "executed_at": "2026-02-05T22:56:50.000Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

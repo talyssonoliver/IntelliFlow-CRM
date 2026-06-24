@@ -1,0 +1,156 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "artifacts": {
+    "created": [
+      "docs/sales/sales-motion-playbook.md",
+      "docs/sales/discovery-script.md",
+      "docs/sales/demo-script.md",
+      "docs/sales/outreach-sequences.md"
+    ],
+    "expected": [
+      "docs/sales/sales-motion-playbook.md",
+      "docs/sales/discovery-script.md",
+      "docs/sales/demo-script.md",
+      "docs/sales/outreach-sequences.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-22T21:15:00Z",
+  "dependencies_meta": {
+    "notes": "Commercial narrative established, qualification framework (BANT) documented",
+    "verified_at": "2026-04-29T21:54:51.718Z"
+  },
+  "execution": {
+    "completed_at": "2025-12-22T21:15:00Z",
+    "duration_minutes": 10,
+    "execution_log": "artifacts/reports/system-audit/20251222-210500-sales002/gates/",
+    "executor": "claude-opus-4.5-matop",
+    "run_id": "20251222-210500-sales002",
+    "started_at": "2025-12-22T21:05:00Z"
+  },
+  "kpis": {
+    "demo_script_complete": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    },
+    "discovery_script_complete": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    },
+    "pilot_documented": {
+      "actual": true,
+      "met": true,
+      "notes": "Metrics and tracking section included",
+      "target": true,
+      "unit": "boolean"
+    },
+    "sequences_ready": {
+      "actual": "3 (Email, LinkedIn, Fast Track)",
+      "met": true,
+      "target": ">=2",
+      "unit": "count"
+    }
+  },
+  "notes": "Complete sales motion playbook with BANT qualification framework. Three outreach sequences defined: Email (6-touch cold prospect), LinkedIn (warm prospect nurture), Demo Fast Track (inbound high-intent). Discovery and demo scripts provide end-to-end coverage. Handoff policies for Marketing-to-Sales and Sales-to-Implementation. Compliance notes for CAN-SPAM, GDPR, and platform limits included.",
+  "started_at": "2025-12-22T21:05:00Z",
+  "status_history": [
+    {
+      "at": "2025-12-14T00:00:00Z",
+      "status": "PLANNED"
+    },
+    {
+      "at": "2025-12-22T21:05:00Z",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-22T21:15:00Z",
+      "status": "DONE"
+    }
+  ],
+  "stoa_verdicts": {
+    "consensus": "PASS",
+    "domain_verdict": "PASS",
+    "lead": "Domain",
+    "quality_verdict": "PASS",
+    "supporting": [
+      "Quality"
+    ]
+  },
+  "task_id": "SALES-002",
+  "validations": [
+    {
+      "command": "ls docs/sales/sales-motion-playbook.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "name": "playbook_exists",
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
+    },
+    {
+      "command": "grep 'BANT' docs/sales/sales-motion-playbook.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "name": "playbook_has_qualification",
+      "notes": "BANT qualification framework documented",
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
+    },
+    {
+      "command": "ls docs/sales/discovery-script.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "name": "discovery_script_exists",
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
+    },
+    {
+      "command": "ls docs/sales/demo-script.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "name": "demo_script_exists",
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
+    },
+    {
+      "command": "ls docs/sales/outreach-sequences.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "name": "outreach_sequences_exist",
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
+    },
+    {
+      "command": "grep 'Email Outreach' docs/sales/outreach-sequences.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "name": "email_sequence_defined",
+      "notes": "Email outreach sequence with 6 touches documented",
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
+    },
+    {
+      "command": "grep 'LinkedIn Outreach' docs/sales/outreach-sequences.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "name": "linkedin_sequence_defined",
+      "notes": "LinkedIn outreach sequence documented",
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
+    },
+    {
+      "command": "grep 'Handoff Policy' docs/sales/outreach-sequences.md",
+      "executed_at": "2025-12-22T21:10:00Z",
+      "exit_code": 0,
+      "name": "handoff_policy_defined",
+      "notes": "Marketing-to-Sales and Sales-to-Implementation handoff documented",
+      "passed": true,
+      "timestamp": "2025-12-22T21:15:00Z"
+    }
+  ],
+  "waivers": []
+}

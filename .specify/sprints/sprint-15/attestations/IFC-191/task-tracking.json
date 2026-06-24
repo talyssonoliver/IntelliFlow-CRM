@@ -1,0 +1,110 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      {
+        "created_at": "2026-02-25T12:30:00+00:00",
+        "path": ".specify/sprints/sprint-15/specifications/IFC-191-spec.md",
+        "sha256": "b5591eabd24c59f69715a9ea0cc2c2343a0c0cf830357ce8cf681af758e430d5"
+      },
+      {
+        "created_at": "2026-02-25T22:00:00+00:00",
+        "path": "packages/db/prisma/migrations/20260225000000_add_user_timezone/migration.sql",
+        "sha256": "ee009e2d711849c98cb2052af869ceb0539f9b4aea31c042c631ee96a593366a"
+      },
+      {
+        "created_at": "2026-02-25T22:10:00+00:00",
+        "path": "apps/api/src/modules/user/user.router.ts",
+        "sha256": "4cb044479b4429e533bf2c758053ec2749e7a73df061a01c8b8cf3058bad881a"
+      },
+      {
+        "created_at": "2026-02-25T22:05:00+00:00",
+        "path": "packages/validators/src/user.ts",
+        "sha256": "360deb1fde96ef14b0c786cb121a99cdcd48485a7bec4d962a4ca5d98c1a745f"
+      },
+      {
+        "created_at": "2026-02-25T22:15:00+00:00",
+        "path": "apps/web/src/components/settings/TimezoneSelector.tsx",
+        "sha256": "43ad39cda72a7341ba40d6f51b167327d2cdb6ec6b4f34ec2c5103ec84efa3b2"
+      }
+    ],
+    "expected": [],
+    "missing": []
+  },
+  "attempt": 1,
+  "blockers": [],
+  "completed_at": "2026-02-27T19:20:00Z",
+  "current_phase": "DONE",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.799Z"
+  },
+  "execution": {
+    "executor": "exec",
+    "last_error": null,
+    "log_path": "",
+    "retry_count": 0
+  },
+  "kpis": {},
+  "phase": "phase-1",
+  "started_at": "2026-02-25T12:00:00+00:00",
+  "status_history": [
+    {
+      "at": "2026-02-13T23:23:55+00:00",
+      "note": "Task execution started (previous loop — no artifacts produced)",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-25T12:00:00+00:00",
+      "note": "Spec session started — 5 agents",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-25T12:30:00+00:00",
+      "note": "Spec complete — IFC-191-spec.md generated with 9 acceptance criteria",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-27T19:20:00Z",
+      "note": "All 4 validations pass. 86 tests across 5 files. Code review fixes applied.",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-191",
+  "updated_at": "2026-02-27T19:20:00Z",
+  "validations": [
+    {
+      "command": "pnpm run typecheck",
+      "duration_ms": 15193,
+      "executed_at": "2026-02-27T19:17:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run <IFC-191 test files>",
+      "duration_ms": 1670,
+      "executed_at": "2026-02-27T19:18:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm run lint",
+      "duration_ms": 4089,
+      "executed_at": "2026-02-27T19:18:10Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter web build",
+      "duration_ms": 75940,
+      "executed_at": "2026-02-27T19:16:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

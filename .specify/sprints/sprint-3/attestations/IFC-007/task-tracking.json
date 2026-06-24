@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "expected": [],
+    "missing": []
+  },
+  "completed_at": "2026-03-08T21:59:04.128Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.725Z"
+  },
+  "notes": "Evidence stub — the k6 load test was NEVER executed; 'DONE' reflects artifact existence only (attestation: 'verified by artifact existence'). The Sprint_plan acceptance '1,000 concurrent users, p99<100ms' is aspirational and infra-unrealistic at MVP (DB pooler pool_size 15, Supabase Realtime ~200, Hobby plans). The REAL perf budget + a local-runnable test are ADR-018 (5k leads/hour, p95<200ms, error<0.1%) and docs/operations/runbooks/load-testing-local.md; the real load-test implementation is tracked as IFC-047 (Sprint 22). '1,000 concurrent' is retained only as a future scale target gated on plan upgrades. Issue #318.",
+  "started_at": "2026-03-08T21:44:04.128Z",
+  "task_id": "IFC-007",
+  "validations": [
+    {
+      "command": "# Task marked Completed in Sprint_plan.csv",
+      "executed_at": "2026-03-08T00:00:00Z",
+      "exit_code": 0,
+      "name": "completion-evidence",
+      "passed": true
+    }
+  ]
+}

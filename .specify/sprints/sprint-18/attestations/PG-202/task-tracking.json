@@ -1,0 +1,44 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/calendar/availability/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/calendar/availability/page.tsx",
+      "apps/web/src/app/calendar/availability/AvailabilityContent.tsx",
+      "apps/api/src/modules/calendar/availability.router.ts",
+      "packages/validators/src/availability.ts",
+      ".specify/sprints/sprint-18/attestations/PG-202/context_ack.json"
+    ],
+    "missing": [
+      "apps/web/src/app/calendar/availability/AvailabilityContent.tsx",
+      "apps/api/src/modules/calendar/availability.router.ts",
+      "packages/validators/src/availability.ts",
+      ".specify/sprints/sprint-18/attestations/PG-202/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.884Z"
+  },
+  "execution": {
+    "last_error": null,
+    "retry_count": 0
+  },
+  "kpis": {},
+  "notes": "Availability at /calendar/availability: working hours per weekday, timezones, buffers before/after, max daily bookings, unavailable date ranges. TIMEZONE-REFACTOR-AWARE: store UTC in DB, display via useTimezoneContext() (see memory/project_timezone_refactor.md + apps/web/src/lib/shared/timezone-utils.ts). MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-04-18T00:00:00Z",
+      "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-202",
+  "validations": []
+}

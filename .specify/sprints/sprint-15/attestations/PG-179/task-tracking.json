@@ -1,0 +1,104 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 116,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/(public)/press/[id]/page.tsx",
+      "apps/web/src/components/press/PressReleaseDetail.tsx",
+      "apps/web/src/components/press/__tests__/PressReleaseDetail.test.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/(public)/press/[id]/page.tsx",
+      "apps/web/src/components/press/PressReleaseDetail.tsx",
+      "apps/web/src/components/press/__tests__/PressReleaseDetail.test.tsx"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-01T20:52:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.805Z"
+  },
+  "kpis": {
+    "lighthouse_score": {
+      "actual": "SSG page — static HTML generation confirmed by build",
+      "met": true,
+      "target": ">=90"
+    },
+    "response_time": {
+      "actual": "0ms (SSG static generation)",
+      "met": true,
+      "target": "<200ms"
+    },
+    "seo_score": {
+      "actual": "generateMetadata with OG + Twitter tags for all 4 releases",
+      "met": true,
+      "target": ">=80"
+    }
+  },
+  "notes": "Content audit finding F-004: /press page links to /press/[id] but no detail route exists, causing 404 errors. PG-007 built the press index page but not the detail route. Implemented via TDD: 44 tests, 100/90/100/100 coverage, SSG with 4 static pages.",
+  "phase": "",
+  "started_at": "2026-03-01T18:56:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-25T23:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-03-01T18:56:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-01T19:30:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-01T20:00:00Z",
+      "status": "Planned"
+    },
+    {
+      "at": "2026-03-01T20:30:00Z",
+      "status": "Planned"
+    },
+    {
+      "at": "2026-03-01T20:52:00Z",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-179",
+  "validations": [
+    {
+      "command": "pnpm typecheck",
+      "duration_ms": 13050,
+      "executed_at": "2026-03-01T20:51:20Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/components/press/__tests__/PressReleaseDetail.test",
+      "duration_ms": 1530,
+      "executed_at": "2026-03-01T20:51:05Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web lint",
+      "duration_ms": 8000,
+      "executed_at": "2026-03-01T20:51:10Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "duration_ms": 45000,
+      "executed_at": "2026-03-01T20:48:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

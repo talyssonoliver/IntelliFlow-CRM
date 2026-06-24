@@ -1,0 +1,112 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 30,
+  "artifacts": {
+    "created": [
+      "apps/api/src/lib/supabase.ts",
+      "docs/operations/env-requirements.md",
+      ".specify/sprints/sprint-12/attestations/IFC-169/attestation.json"
+    ],
+    "expected": [
+      "apps/api/src/lib/supabase.ts",
+      "docs/operations/env-requirements.md",
+      ".specify/sprints/sprint-12/attestations/IFC-169/attestation.json"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-09T14:29:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.937Z"
+  },
+  "execution": {
+    "agents": [
+      "Foundation",
+      "Security"
+    ],
+    "completed_at": "2026-02-09T14:29:00.000Z",
+    "duration_minutes": 29,
+    "executor": "Claude Code /exec (validation + remediation)",
+    "last_error": null,
+    "retry_count": 0,
+    "started_at": "2026-02-09T14:00:00.000Z"
+  },
+  "kpis": {
+    "auth_validates_real_tokens": {
+      "actual": true,
+      "met": true,
+      "target": true
+    },
+    "startup_fails_without_config": {
+      "actual": true,
+      "met": true,
+      "target": true
+    },
+    "zero_mock_keys_in_production": {
+      "actual": true,
+      "met": true,
+      "target": true
+    }
+  },
+  "notes": "Validation + remediation of IFC-169. Added 7 tests: 5 production-mode throw tests, 1 dev-mode warn test, 1 verifyToken mock-key rejection test. Removed 2 stale eslint-disable directives. 37/37 tests pass, 0 lint errors/warnings, typecheck clean, build clean.",
+  "phase": "phase-1",
+  "started_at": "2026-01-28T12:00:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-01-28T12:00:00.000Z",
+      "note": "Initially completed — mock attestation only",
+      "status": "Completed"
+    },
+    {
+      "at": "2026-02-09T14:00:00.000Z",
+      "note": "exec validation session — validating existing implementation",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-09T14:20:00.000Z",
+      "note": "Remediation — adding 7 missing tests, fixing 2 lint warnings",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-09T14:29:00.000Z",
+      "note": "All gaps fixed — 37/37 tests pass, 0 lint errors, attestation updated",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-169",
+  "validations": [
+    {
+      "command": "pnpm --filter api typecheck",
+      "duration_ms": 8000,
+      "executed_at": "2026-02-09T14:28:00.000Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run apps/api/src/lib/__tests__/supabase.test.ts",
+      "duration_ms": 612,
+      "executed_at": "2026-02-09T14:28:30.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "npx eslint apps/api/src/lib/supabase.ts",
+      "duration_ms": 3000,
+      "executed_at": "2026-02-09T14:29:00.000Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter api build",
+      "duration_ms": 5700,
+      "executed_at": "2026-02-09T14:29:10.000Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

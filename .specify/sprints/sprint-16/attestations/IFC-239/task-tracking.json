@@ -1,0 +1,67 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 240,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/lead/lead.router.ts",
+      "packages/validators/src/lead.ts",
+      "packages/domain/src/crm/lead/LeadScore.ts"
+    ],
+    "expected": [
+      "apps/api/src/modules/lead/lead.router.ts",
+      "packages/validators/src/lead.ts",
+      "packages/domain/src/crm/lead/LeadScore.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-04-09T19:46:41.418Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.823Z"
+  },
+  "kpis": {
+    "kpi_2": {
+      "actual": "",
+      "met": false,
+      "target": "sortBy restricted to enum values"
+    },
+    "kpi_3": {
+      "actual": "",
+      "met": false,
+      "target": "single threshold source"
+    },
+    "primary_kpi": {
+      "actual": "",
+      "met": false,
+      "target": "0 schema mismatches"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Comprehensive flow analysis findings: S5,S6,S7,W4,D5",
+  "phase": "",
+  "started_at": "2026-04-09T19:31:41.418Z",
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-239",
+  "validations": [
+    {
+      "command": "echo \"Task IFC-239 completed\"",
+      "executed_at": "2026-04-09T19:46:41.419Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

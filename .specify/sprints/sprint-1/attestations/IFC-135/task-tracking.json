@@ -1,0 +1,58 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [],
+    "expected": [
+      "docs/architecture/adr/*"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-27T11:33:39.135Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.711Z"
+  },
+  "execution": {
+    "completed_at": "2025-12-21T14:00:00Z",
+    "duration_minutes": 120,
+    "execution_log": "logs/sprint-1/IFC-135.log",
+    "executor": "claude-opus-4.5",
+    "started_at": "2025-12-21T12:00:00Z"
+  },
+  "kpis": {
+    "adrs_created": {
+      "actual": 6,
+      "met": true,
+      "target": 6,
+      "unit": "count"
+    }
+  },
+  "notes": "Complete ADR pack with architecture decisions for multi-tenancy, workflow engine, agent tools, data governance, and audit logging.",
+  "started_at": "2025-12-27T11:18:39.135Z",
+  "status_history": [
+    {
+      "at": "2025-12-20T00:00:00Z",
+      "status": "PLANNED"
+    },
+    {
+      "at": "2025-12-21T12:00:00Z",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-21T14:00:00Z",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-135",
+  "validations": [
+    {
+      "command": "test -f docs/architecture/adr/ADR-004-multi-tenancy.md",
+      "executed_at": "2025-12-21T14:00:00Z",
+      "exit_code": 0,
+      "name": "adr_multi_tenancy",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.135Z"
+    }
+  ]
+}

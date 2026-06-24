@@ -1,0 +1,56 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/settings/team/page.tsx",
+      "apps/web/src/app/settings/integrations/page.tsx",
+      "apps/web/src/app/settings/notifications/page.tsx",
+      "apps/web/src/app/settings/account/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/settings/team/page.tsx",
+      "apps/web/src/app/settings/integrations/page.tsx",
+      "apps/web/src/app/settings/notifications/page.tsx",
+      "apps/web/src/app/settings/account/page.tsx",
+      ".specify/sprints/sprint-18/attestations/IFC-234/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-18/attestations/IFC-234/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.859Z"
+  },
+  "kpis": {
+    "all_settings_functional": {
+      "actual": "",
+      "met": false,
+      "target": "All 4 settings pages load real data"
+    },
+    "mutation_latency": {
+      "actual": "",
+      "met": false,
+      "target": "<500ms"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Wiring debt: 4 settings pages have hardcoded data and inert buttons.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-234",
+  "validations": []
+}

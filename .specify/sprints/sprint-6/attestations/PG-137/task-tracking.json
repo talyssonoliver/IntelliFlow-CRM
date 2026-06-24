@@ -1,0 +1,147 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 1462,
+  "agents": [
+    "Domain",
+    "Quality"
+  ],
+  "artifacts": {
+    "created": [
+      "apps/web/src/components/tickets/types.ts",
+      "apps/web/src/components/tickets/index.ts",
+      "apps/web/src/components/tickets/SLAIndicator.tsx",
+      "apps/web/src/components/tickets/EscalationAlert.tsx",
+      "apps/web/src/components/tickets/TicketCard.tsx",
+      "apps/web/src/components/tickets/TicketList.tsx",
+      "apps/web/src/components/tickets/TicketDetail.tsx",
+      "apps/web/src/components/tickets/TicketForm.tsx",
+      "apps/web/src/components/tickets/CustomerPortalView.tsx",
+      "apps/web/src/hooks/useTicketFilters.ts",
+      "apps/web/src/lib/tickets/ticket-utils.ts",
+      "apps/web/src/app/tickets/(list)/page.tsx",
+      "apps/web/src/app/tickets/[id]/page.tsx",
+      "apps/web/src/app/tickets/new/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/components/tickets/types.ts",
+      "apps/web/src/components/tickets/index.ts",
+      "apps/web/src/components/tickets/SLAIndicator.tsx",
+      "apps/web/src/components/tickets/EscalationAlert.tsx",
+      "apps/web/src/components/tickets/TicketCard.tsx",
+      "apps/web/src/components/tickets/TicketList.tsx",
+      "apps/web/src/components/tickets/TicketDetail.tsx",
+      "apps/web/src/components/tickets/TicketForm.tsx",
+      "apps/web/src/components/tickets/CustomerPortalView.tsx",
+      "apps/web/src/hooks/useTicketFilters.ts",
+      "apps/web/src/lib/tickets/ticket-utils.ts",
+      "apps/web/src/app/tickets/(list)/page.tsx",
+      "apps/web/src/app/tickets/[id]/page.tsx",
+      "apps/web/src/app/tickets/new/page.tsx"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-10T22:22:00.000Z",
+  "dependencies_meta": {
+    "notes": "IFC-189 (Ticket tRPC Router) verified: router exists, registered in appRouter, container wired, 131 tests pass.",
+    "verified_at": "2026-04-29T21:54:51.763Z"
+  },
+  "execution": {
+    "agents": [
+      "Domain",
+      "Quality"
+    ],
+    "completed_at": "2026-02-10T22:22:00.000Z",
+    "duration_minutes": 142,
+    "executor": "Claude Code /exec",
+    "last_error": null,
+    "retry_count": 0,
+    "started_at": "2026-02-10T20:00:00.000Z"
+  },
+  "executor": "claude-opus-4-6",
+  "kpis": {
+    "components_extracted": {
+      "actual": 7,
+      "met": true,
+      "target": 7,
+      "unit": "components"
+    },
+    "lint_errors": {
+      "actual": 0,
+      "met": true,
+      "target": 0,
+      "unit": "errors"
+    },
+    "test_count": {
+      "actual": 79,
+      "met": true,
+      "target": 70,
+      "unit": "tests"
+    },
+    "test_files": {
+      "actual": 7,
+      "met": true,
+      "target": 7,
+      "unit": "files"
+    },
+    "typescript_errors": {
+      "actual": 0,
+      "met": true,
+      "target": 0,
+      "unit": "errors"
+    }
+  },
+  "notes": "Ticket Management Page completed. Extract+Integrate pattern: 7 components extracted from monolithic pages (917-line list, 1067-line detail) into reusable components. 3 thin tRPC page wrappers created. All 79 tests passing, TypeScript clean, lint clean. Coverage: TicketCard 100%, EscalationAlert 100%, CustomerPortalView 95%, SLAIndicator 82%. Uses api.ticket.update (generic) for status/priority/assign changes, api.ticket.addResponse for replies.",
+  "phase": "phase-1",
+  "started_at": "2026-02-09T22:00:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-02-01T00:00:00.000Z",
+      "note": "Task created in Sprint 6 planning",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-09T22:00:00.000Z",
+      "note": "Spec session started with 4 agents",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-10T20:00:00.000Z",
+      "note": "Plan session completed. Exec session started.",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-10T22:22:00.000Z",
+      "note": "Exec completed. 7 components extracted, 7 test files (79 tests), 3 page wrappers. TypeScript clean, lint clean, all tests pass.",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-137",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "duration_ms": 15000,
+      "executed_at": "2026-02-10T22:18:00.000Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/components/tickets/__tests__/",
+      "duration_ms": 2780,
+      "executed_at": "2026-02-10T22:19:00.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web exec eslint src/components/tickets/**/*.{ts,tsx} src/app/tickets/**/*.tsx src/hooks/useTicketFilters.ts",
+      "duration_ms": 5000,
+      "executed_at": "2026-02-10T22:19:30.000Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    }
+  ]
+}

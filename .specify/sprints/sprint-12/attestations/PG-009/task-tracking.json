@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 60,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/(public)/blog/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/(public)/blog/page.tsx"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-31T07:00:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.932Z"
+  },
+  "kpis": {
+    "page_live": {
+      "actual": true,
+      "met": true,
+      "target": true
+    }
+  },
+  "started_at": "2025-12-31T06:00:00Z",
+  "status_history": [
+    {
+      "at": "2025-12-31T07:00:00Z",
+      "note": "Blog index page completed",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "PG-009",
+  "validations": [
+    {
+      "command": "pnpm --filter web build",
+      "executed_at": "2025-12-31T06:55:00Z",
+      "exit_code": 0,
+      "name": "Web Build",
+      "passed": true,
+      "required": true,
+      "timestamp": "2025-12-31T07:00:00Z",
+      "type": "auto"
+    }
+  ]
+}

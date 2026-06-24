@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "packages/domain/src/crm/contact/Contact.ts",
+      "packages/domain/src/crm/contact/ContactEvents.ts",
+      "packages/application/src/services/ContactService.ts"
+    ],
+    "expected": [
+      "packages/domain/src/crm/contact/Contact.ts",
+      "packages/domain/src/crm/contact/ContactEvents.ts",
+      "packages/application/src/services/ContactService.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.911Z"
+  },
+  "kpis": {
+    "audit_findings_resolved": {
+      "actual": "",
+      "met": false,
+      "target": "Resolve findings: D-01,D-02,D-04,D-05,D-07"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Contact audit finding: D-01,D-02,D-04,D-05,D-07. See docs/audit/contact-detail-wiring-audit.md",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-260",
+  "validations": []
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [],
+    "expected": [
+      "packages/application/src/ports/*",
+      "packages/application/src/usecases/*",
+      "packages/adapters/src/*",
+      "tests/architecture/*"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-27T11:33:39.130Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.708Z"
+  },
+  "execution": {
+    "completed_at": "2025-12-21T16:00:00Z",
+    "duration_minutes": 120,
+    "execution_log": "logs/sprint-1/IFC-106.log",
+    "executor": "claude-opus-4.5",
+    "started_at": "2025-12-21T14:00:00Z"
+  },
+  "kpis": {
+    "adapters_tested": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    },
+    "domain_no_infra_deps": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    }
+  },
+  "notes": "Hexagonal architecture with ports, use cases, and adapters properly separated.\n\n**DRY Enum Pattern - Architecture Enforcement**:\nAll domain enum types follow the Single Source of Truth pattern to prevent drift:\n\n1. Domain Layer (canonical source):\n   - Define const arrays: export const ENTITY_STATUSES = ['VALUE1', 'VALUE2'] as const;\n   - Derive types: export type EntityStatus = (typeof ENTITY_STATUSES)[number];\n\n2. Validators Layer (derives from domain):\n   - Import domain constants: import { ENTITY_STATUSES } from '@intelliflow/domain';\n   - Create Zod schemas: export const entityStatusSchema = z.enum(ENTITY_STATUSES);\n\n3. Application/Adapters Layer:\n   - Import types from domain (NOT validators) for internal use\n   - Use validator schemas only at API boundaries\n\n4. API Layer:\n   - Use validator schemas for request/response validation\n   - Import from @intelliflow/validators\n\n**Entities following this pattern**: Lead, Contact, Opportunity, Task, Case, Appointment, Ticket\n\n**Enforcement**: Architecture tests in packages/validators/__tests__/enum-consistency.test.ts verify all domain enums have corresponding validator schemas.",
+  "started_at": "2025-12-27T11:18:39.130Z",
+  "status_history": [
+    {
+      "at": "2025-12-20T00:00:00Z",
+      "status": "PLANNED"
+    },
+    {
+      "at": "2025-12-21T14:00:00Z",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-21T16:00:00Z",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-106",
+  "validations": [
+    {
+      "command": "test -d packages/application/src/ports",
+      "executed_at": "2025-12-21T16:00:00Z",
+      "exit_code": 0,
+      "name": "ports_exist",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.130Z"
+    },
+    {
+      "command": "test -d packages/application/src/usecases",
+      "executed_at": "2025-12-21T16:00:00Z",
+      "exit_code": 0,
+      "name": "usecases_exist",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.130Z"
+    }
+  ]
+}

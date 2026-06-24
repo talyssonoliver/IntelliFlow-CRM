@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/api/src/router.ts"
+    ],
+    "expected": [
+      "apps/web/src/components/leads/LeadChatPanel.tsx",
+      "apps/api/src/router.ts",
+      ".specify/sprints/sprint-22/attestations/IFC-235/context_ack.json"
+    ],
+    "missing": [
+      "apps/web/src/components/leads/LeadChatPanel.tsx",
+      ".specify/sprints/sprint-22/attestations/IFC-235/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.922Z"
+  },
+  "kpis": {
+    "chat_history_load": {
+      "actual": "",
+      "met": false,
+      "target": "<1s"
+    },
+    "message_send_latency": {
+      "actual": "",
+      "met": false,
+      "target": "<500ms"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Wiring debt: conversation.router.ts fully built but not registered in router.ts.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-235",
+  "validations": []
+}

@@ -1,0 +1,67 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "docs/design/content-audit.md"
+    ],
+    "expected": [
+      "tools/scripts/docs-integrity-audit.ts",
+      "tools/scripts/__tests__/docs-integrity-audit.test.ts",
+      ".github/workflows/docs-integrity.yml",
+      "docs/design/content-audit.md",
+      ".specify/sprints/sprint-18/attestations/DOC-016/context_ack.json"
+    ],
+    "missing": [
+      "tools/scripts/docs-integrity-audit.ts",
+      "tools/scripts/__tests__/docs-integrity-audit.test.ts",
+      ".github/workflows/docs-integrity.yml",
+      ".specify/sprints/sprint-18/attestations/DOC-016/context_ack.json"
+    ]
+  },
+  "blockers": [
+    {
+      "description": "Depends on DOC-015 canonical reconciliation output to lock CI assertions and expected totals.",
+      "raised_at": "2026-03-04T23:58:00Z",
+      "resolved_at": null
+    }
+  ],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.854Z"
+  },
+  "kpis": {
+    "drift_detection_rate": {
+      "actual": "",
+      "met": false,
+      "target": "100%"
+    },
+    "false_positive_rate": {
+      "actual": "",
+      "met": false,
+      "target": "<=1%"
+    },
+    "script_runtime": {
+      "actual": "",
+      "met": false,
+      "target": "<30s"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Hardens R-023 mitigation by preventing future design-doc total drift. Extends DOC-014 automation with a dedicated cross-document integrity gate.",
+  "phase": "phase-1-validation",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-04T23:58:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "DOC-016",
+  "validations": []
+}

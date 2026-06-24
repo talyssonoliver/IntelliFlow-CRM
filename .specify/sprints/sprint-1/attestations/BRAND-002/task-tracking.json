@@ -1,0 +1,68 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "docs/design/token-mapping.md",
+      "docs/design/token-naming.md"
+    ],
+    "expected": [
+      "docs/design/token-mapping.md",
+      "docs/design/token-naming.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-27T11:33:39.043Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.706Z"
+  },
+  "execution": {
+    "completed_at": "2025-12-21T14:00:00Z",
+    "duration_minutes": 120,
+    "execution_log": "logs/sprint-1/BRAND-002.log",
+    "executor": "claude-opus-4.5",
+    "started_at": "2025-12-21T12:00:00Z"
+  },
+  "kpis": {
+    "theme_spec_created": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    },
+    "tokens_documented": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    }
+  },
+  "notes": "Design tokens with token mapping, naming conventions, and theme reference specification.",
+  "started_at": "2025-12-27T11:18:39.043Z",
+  "status_history": [
+    {
+      "at": "2025-12-20T00:00:00Z",
+      "status": "PLANNED"
+    },
+    {
+      "at": "2025-12-21T12:00:00Z",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-21T14:00:00Z",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "BRAND-002",
+  "validations": [
+    {
+      "command": "test -f docs/design-system/token-mapping.md",
+      "executed_at": "2025-12-21T14:00:00Z",
+      "exit_code": 0,
+      "name": "token_mapping_exists",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.043Z"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      ".claude/skills/compliance-check/references/accessibility-doc-gate.md",
+      ".claude/skills/compliance-check/SKILL.md"
+    ],
+    "expected": [
+      ".claude/skills/compliance-check/references/accessibility-doc-gate.md",
+      ".claude/skills/compliance-check/SKILL.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-01T19:22:11.564Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.803Z"
+  },
+  "kpis": {
+    "false_negatives": {
+      "actual": "pending",
+      "met": false,
+      "target": 0
+    },
+    "gate_trigger_rate": {
+      "actual": "pending",
+      "met": false,
+      "target": "100%"
+    }
+  },
+  "notes": "Adds a blocking gate to the compliance-check workflow that requires VPAT/conformance statement review when UI tasks add or modify routes.",
+  "phase": "phase-1",
+  "started_at": "2026-03-01T19:07:11.564Z",
+  "status_history": [
+    {
+      "at": "2026-02-24T01:30:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "DOC-011",
+  "validations": [
+    {
+      "command": "echo \"Task DOC-011 completed\"",
+      "executed_at": "2026-03-01T19:22:11.564Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

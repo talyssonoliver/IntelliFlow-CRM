@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "docs/compliance-and-governance/compliance/quarterly-a11y-review-template.md"
+    ],
+    "expected": [
+      "docs/compliance-and-governance/compliance/quarterly-a11y-review-template.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-02T22:05:25.111Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.804Z"
+  },
+  "kpis": {
+    "doc_areas_covered": {
+      "actual": "pending",
+      "met": false,
+      "target": 5
+    },
+    "review_cadence": {
+      "actual": "pending",
+      "met": false,
+      "target": "every 4 sprints"
+    }
+  },
+  "notes": "Creates a reusable quarterly review template covering VPAT accuracy, conformance scope, route coverage, known limitations, and AT testing schedule.",
+  "phase": "phase-1",
+  "started_at": "2026-03-02T21:50:25.111Z",
+  "status_history": [
+    {
+      "at": "2026-02-24T01:30:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "DOC-012",
+  "validations": [
+    {
+      "command": "echo \"Task DOC-012 completed\"",
+      "executed_at": "2026-03-02T22:05:25.111Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

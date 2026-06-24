@@ -1,0 +1,126 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 86,
+  "artifacts": {
+    "created": [
+      "tools/scripts/a11y-route-reconcile.ts",
+      "tools/scripts/a11y-route-reconcile.test.ts"
+    ],
+    "expected": [
+      "tools/scripts/a11y-route-reconcile.ts",
+      "tools/scripts/a11y-route-reconcile.test.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-28T01:01:04Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.803Z"
+  },
+  "execution": {
+    "agents": [
+      "Foundation STOA"
+    ],
+    "completed_at": "2026-02-28T01:01:04Z",
+    "duration_minutes": 16,
+    "execution_log": ".specify/sprints/sprint-15/execution/DOC-010/20260228004513-7a2b1591/DOC-010-delivery.md",
+    "executor": "Claude Code",
+    "last_error": null,
+    "retry_count": 0,
+    "started_at": "2026-02-28T00:45:00Z"
+  },
+  "kpis": {
+    "branch_coverage": {
+      "actual": "89.47%",
+      "met": true,
+      "target": ">=80%"
+    },
+    "false_positives": {
+      "actual": 0,
+      "met": true,
+      "target": 0
+    },
+    "function_coverage": {
+      "actual": "92.85%",
+      "met": true,
+      "target": ">=90%"
+    },
+    "line_coverage": {
+      "actual": "94.56%",
+      "met": true,
+      "target": ">=90%"
+    },
+    "route_drift_detection": {
+      "actual": "pr-checks.yml step added with VALIDATION_STRICT=1",
+      "met": true,
+      "target": "1 CI run"
+    },
+    "statement_coverage": {
+      "actual": "93.20%",
+      "met": true,
+      "target": ">=90%"
+    },
+    "test_count": {
+      "actual": "41",
+      "met": true,
+      "target": ">=38"
+    }
+  },
+  "notes": "Route reconciliation script to prevent accessibility documentation staleness. Compares routes listed in wcag-conformance-statement.md against actual app router directories. 41 tests, 93%+ coverage, CI wired in pr-checks.yml.",
+  "phase": "phase-1",
+  "started_at": "2026-02-27T23:35:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-24T01:30:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-27T23:35:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-27T23:52:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-28T00:30:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-28T01:01:04Z",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "DOC-010",
+  "validations": [
+    {
+      "command": "pnpm run typecheck",
+      "executed_at": "2026-02-28T00:50:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run tools/scripts/a11y-route-reconcile.test.ts",
+      "executed_at": "2026-02-28T00:51:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm run lint",
+      "executed_at": "2026-02-28T00:52:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm run build",
+      "executed_at": "2026-02-28T00:53:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [],
+    "expected": [
+      "infra/terraform/environments",
+      "infra/terraform/modules/monitoring/main.tf"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-06-05T12:00:00.000Z"
+  },
+  "kpis": {
+    "ai_worker_otel": {
+      "actual": "",
+      "met": false,
+      "target": "emitting"
+    },
+    "env_tfvars": {
+      "actual": "",
+      "met": false,
+      "target": "3"
+    },
+    "remote_state": {
+      "actual": "",
+      "met": false,
+      "target": "active"
+    }
+  },
+  "notes": "Governed by ADR-064 (Terraform = single source of truth). Phase 2/3 of docs/planning/infra-terraform-iac-plan.md.",
+  "phase": "phase-0-context",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-06-05T12:00:00.000Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "INFRA-TF-004",
+  "validations": []
+}

@@ -1,0 +1,167 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 45,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/account/account.router.ts",
+      "apps/api/src/modules/account/__tests__/account.router.test.ts",
+      "packages/validators/src/account.ts",
+      "docs/api/trpc-routes.md"
+    ],
+    "expected": [
+      "apps/api/src/modules/account/account.router.ts",
+      "apps/api/src/modules/account/__tests__/account.router.test.ts",
+      "packages/validators/src/account.ts",
+      "docs/api/trpc-routes.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-05T21:25:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.737Z"
+  },
+  "execution": {
+    "agents": [
+      "Foundation",
+      "Security",
+      "Quality",
+      "Domain"
+    ],
+    "completed_at": "2026-02-05T21:25:00.000Z",
+    "duration_minutes": 45,
+    "execution_log": ".specify/sprints/sprint-4/execution/IFC-185/20260205-212300-revalidation/summary.json",
+    "executor": "Claude Code /exec",
+    "last_error": null,
+    "retry_count": 0,
+    "started_at": "2026-02-05T12:00:00.000Z"
+  },
+  "kpis": {
+    "coverage_functions": {
+      "actual": 100,
+      "met": true,
+      "target": 90,
+      "unit": "percent"
+    },
+    "coverage_lines": {
+      "actual": 95.08,
+      "met": true,
+      "target": 90,
+      "unit": "percent"
+    },
+    "latency_p95": {
+      "actual": "<50ms",
+      "met": true,
+      "target": "<200ms",
+      "unit": "milliseconds"
+    },
+    "test_count": {
+      "actual": "70",
+      "met": true,
+      "target": ">=55",
+      "unit": "count"
+    }
+  },
+  "notes": "Account tRPC Router implementation complete. 3 new endpoints (getContacts, getOpportunities, getActivity) with cursor-based pagination, filtering, tenant isolation, and 30+ new tests. Fixed 11 pre-existing test failures. getHierarchy deferred to IFC-186. Re-validated 2026-02-05 with full exec protocol compliance.",
+  "started_at": "2026-02-05T12:00:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-01-01T00:00:00.000Z",
+      "note": "Initial status",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-04T00:00:00.000Z",
+      "note": "spec session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-04T01:00:00.000Z",
+      "note": "spec session completed",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-05T00:00:00.000Z",
+      "note": "plan session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-05T01:00:00.000Z",
+      "note": "plan session completed",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-05T12:00:00.000Z",
+      "note": "exec session started - TDD implementation",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-05T12:45:00.000Z",
+      "note": "exec session completed - 70 tests passing, 3 endpoints implemented",
+      "status": "Completed"
+    },
+    {
+      "at": "2026-02-05T21:20:00.000Z",
+      "note": "exec protocol re-validation - missing execution artifacts, delivery report, dependency chain updates",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-05T21:25:00.000Z",
+      "note": "exec protocol fully completed - all phases verified including execution directory, MATOP verdicts, delivery report, SHA256 hashes",
+      "status": "Completed"
+    }
+  ],
+  "task_id": "IFC-185",
+  "technical_decisions": [
+    {
+      "decision": "Delegate to AccountService via application layer",
+      "rationale": "Maintains hexagonal architecture boundaries - router has no direct Prisma calls"
+    },
+    {
+      "decision": "Cursor-based pagination for all list endpoints",
+      "rationale": "Consistent with existing lead router pattern, better performance than offset"
+    },
+    {
+      "decision": "Defer getHierarchy to IFC-186",
+      "rationale": "Requires parentId field in Account schema - schema migration out of scope for IFC-185"
+    },
+    {
+      "decision": "Parallel queries with Promise.all for getActivity",
+      "rationale": "Merges leads, contacts, opportunities activity streams with chronological ordering"
+    }
+  ],
+  "validations": [
+    {
+      "command": "npx eslint apps/api/src/modules/account/account.router.ts apps/api/src/modules/account/__tests__/account.router.test.ts",
+      "duration_ms": 3000,
+      "executed_at": "2026-02-05T21:22:00.000Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run --project api apps/api/src/modules/account/__tests__/account.router.test.ts",
+      "duration_ms": 454,
+      "executed_at": "2026-02-05T21:22:36.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/validators build",
+      "duration_ms": 2770,
+      "executed_at": "2026-02-05T21:22:40.000Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run --project api --coverage apps/api/src/modules/account/__tests__/account.router.test.ts",
+      "duration_ms": 563,
+      "executed_at": "2026-02-05T21:22:43.000Z",
+      "exit_code": 0,
+      "name": "Coverage",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 22,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/(public)/privacy/page.tsx",
+      "docs/shared/privacy-content.md",
+      "apps/web/src/lib/legal/consent-tracker.ts",
+      ".specify/sprints/sprint-17/attestations/PG-050/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-050/attestation.json"
+    ],
+    "expected": [
+      "apps/web/src/app/(public)/privacy/page.tsx",
+      "docs/shared/privacy-content.md",
+      "apps/web/src/lib/legal/consent-tracker.ts",
+      ".specify/sprints/sprint-17/attestations/PG-050/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-050/attestation.json"
+    ],
+    "missing": []
+  },
+  "attempt": 1,
+  "blockers": [],
+  "completed_at": "2026-03-10T20:54:00Z",
+  "current_phase": "DONE",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.835Z"
+  },
+  "execution": {
+    "executor": "claude-code",
+    "last_error": null,
+    "log_path": "/c/Users/talys/projects/intelliFlow-CRM/.specify/sprints/sprint-17/execution/PG-050/run-20260308T172912Z/PG-050-delivery.md",
+    "retry_count": 1
+  },
+  "kpis": {
+    "public_route_count": {
+      "actual": 28,
+      "met": true,
+      "target": 28,
+      "unit": "count"
+    },
+    "route_reachability_surfaces": {
+      "actual": 4,
+      "met": true,
+      "target": 4,
+      "unit": "count"
+    },
+    "scoped_coverage_branches": {
+      "actual": 82.6,
+      "met": true,
+      "target": 80,
+      "unit": "percent"
+    }
+  },
+  "phase": "phase-3-exec",
+  "started_at": "2026-03-08T17:17:11Z",
+  "status_history": [
+    {
+      "at": "2026-03-08T17:17:11Z",
+      "note": "Spec and plan phases completed before exec",
+      "status": "Planned"
+    },
+    {
+      "at": "2026-03-08T17:38:34Z",
+      "note": "Exec attempted; implementation landed but completion gates are blocked",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-10T20:54:00Z",
+      "note": "Task completion repair: fixed content-audit route count, branch coverage, lint errors. All 4 validations pass.",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-050",
+  "updated_at": "2026-03-10T20:54:00Z",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-03-10T20:53:10Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web exec vitest run \"src/app/(public)/privacy/__tests__/page.test.tsx\" \"src/app/(public)/signup/__tests__/page.test.tsx\" \"src/components/shared/__tests__/registration-form.test.tsx\" \"src/components/home/__tests__/AuthenticatedHomePage.test.tsx\" \"src/app/__tests__/sitemap-reconciliation.test.ts\" \"src/__tests__/content-audit-schema.test.ts\"",
+      "executed_at": "2026-03-10T20:54:17Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web lint",
+      "executed_at": "2026-03-10T20:53:15Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "executed_at": "2026-03-10T20:54:30Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

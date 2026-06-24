@@ -1,0 +1,47 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/workers/events-worker/src/main.ts",
+      "packages/domain/src/crm/opportunity/OpportunityEvents.ts"
+    ],
+    "expected": [
+      "apps/workers/events-worker/src/main.ts",
+      "packages/domain/src/crm/opportunity/OpportunityEvents.ts",
+      ".specify/sprints/sprint-22/attestations/IFC-283/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-22/attestations/IFC-283/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.926Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "5/5 opportunity event types handled in worker"
+    }
+  },
+  "notes": "Deal/opportunity domain wiring audit finding. See docs/audit/deal-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-06T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-283",
+  "validations": []
+}

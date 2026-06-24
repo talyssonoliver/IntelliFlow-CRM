@@ -1,0 +1,199 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 120,
+  "artifacts": {
+    "created": [
+      "packages/domain/src/ai/review/AIOutputReviewRepository.ts",
+      "packages/application/src/ports/repositories/AIOutputReviewRepositoryPort.ts",
+      "packages/application/src/usecases/ai-review/CreateReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/ClaimReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/ApproveReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/RejectReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/ReleaseReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/EscalateReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/lock-token-utils.ts",
+      "packages/application/src/usecases/ai-review/index.ts",
+      "packages/application/src/usecases/ai-review/__tests__/CreateReviewUseCase.test.ts",
+      "packages/application/src/usecases/ai-review/__tests__/ClaimReviewUseCase.test.ts",
+      "packages/application/src/usecases/ai-review/__tests__/ApproveReviewUseCase.test.ts",
+      "packages/application/src/usecases/ai-review/__tests__/RejectReviewUseCase.test.ts",
+      "packages/application/src/usecases/ai-review/__tests__/ReleaseReviewUseCase.test.ts",
+      "packages/application/src/usecases/ai-review/__tests__/EscalateReviewUseCase.test.ts"
+    ],
+    "expected": [
+      "packages/domain/src/ai/review/AIOutputReviewRepository.ts",
+      "packages/application/src/ports/repositories/AIOutputReviewRepositoryPort.ts",
+      "packages/application/src/usecases/ai-review/CreateReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/ClaimReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/ApproveReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/RejectReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/ReleaseReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/EscalateReviewUseCase.ts",
+      "packages/application/src/usecases/ai-review/lock-token-utils.ts",
+      "packages/application/src/usecases/ai-review/index.ts",
+      "packages/application/src/usecases/ai-review/__tests__/CreateReviewUseCase.test.ts",
+      "packages/application/src/usecases/ai-review/__tests__/ClaimReviewUseCase.test.ts",
+      "packages/application/src/usecases/ai-review/__tests__/ApproveReviewUseCase.test.ts",
+      "packages/application/src/usecases/ai-review/__tests__/RejectReviewUseCase.test.ts",
+      "packages/application/src/usecases/ai-review/__tests__/ReleaseReviewUseCase.test.ts",
+      "packages/application/src/usecases/ai-review/__tests__/EscalateReviewUseCase.test.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-05T21:00:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.735Z"
+  },
+  "execution": {
+    "agents": [
+      "Foundation",
+      "Security",
+      "Quality",
+      "Domain"
+    ],
+    "completed_at": "2026-02-05T21:00:00.000Z",
+    "duration_minutes": 120,
+    "execution_log": ".specify/sprints/sprint-4/execution/IFC-177/20260205-205700-revalidation/summary.json",
+    "executor": "Claude Code /exec",
+    "last_error": null,
+    "retry_count": 0,
+    "started_at": "2026-02-04T00:00:00.000Z"
+  },
+  "kpis": {
+    "coverage_functions": {
+      "actual": 100,
+      "met": true,
+      "target": 90,
+      "unit": "percent"
+    },
+    "coverage_lines": {
+      "actual": 90,
+      "met": true,
+      "target": 90,
+      "unit": "percent"
+    },
+    "test_count": {
+      "actual": "54",
+      "met": true,
+      "target": ">50",
+      "unit": "count"
+    },
+    "type_safety": {
+      "actual": "100%",
+      "met": true,
+      "target": "100%",
+      "unit": "percent"
+    }
+  },
+  "notes": "Complete TDD implementation of AI Output Review Application Layer. 6 use cases created following hexagonal architecture with proper port/adapter separation. Lock token utilities extracted during REFACTOR phase for DRY compliance. Re-validated 2026-02-05 with full exec protocol compliance.",
+  "started_at": "2026-02-04T00:00:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-01-01T00:00:00.000Z",
+      "note": "Initial status",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-03T00:00:00.000Z",
+      "note": "spec session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-03T01:00:00.000Z",
+      "note": "spec session completed",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-03T01:30:00.000Z",
+      "note": "plan session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-03T02:30:00.000Z",
+      "note": "plan session completed",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-04T00:00:00.000Z",
+      "note": "exec session started - TDD implementation",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-04T19:10:00.000Z",
+      "note": "exec session completed - 54 tests passing, all gates PASS",
+      "status": "Completed"
+    },
+    {
+      "at": "2026-02-05T20:54:00.000Z",
+      "note": "exec protocol re-validation - missing execution artifacts, delivery report, dependency chain updates",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-05T21:00:00.000Z",
+      "note": "exec protocol fully completed - all phases verified including execution directory, MATOP verdicts, delivery report, dependency chain updates, SHA256 hashes",
+      "status": "Completed"
+    }
+  ],
+  "task_id": "IFC-177",
+  "technical_decisions": [
+    {
+      "decision": "HMAC-SHA256 lock tokens with timing-safe comparison",
+      "rationale": "Prevents timing attacks and ensures token integrity"
+    },
+    {
+      "decision": "Optimistic locking via version field",
+      "rationale": "Prevents race conditions in concurrent review operations"
+    },
+    {
+      "decision": "Tenant isolation via auth context only",
+      "rationale": "Ensures multi-tenant security at application layer"
+    },
+    {
+      "decision": "Release lock before escalate for domain compatibility",
+      "rationale": "Domain model only allows escalation from PENDING/ESCALATED, not IN_REVIEW"
+    }
+  ],
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/application typecheck",
+      "duration_ms": 5000,
+      "executed_at": "2026-02-05T20:58:10.000Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run --project root packages/application/src/usecases/ai-review",
+      "duration_ms": 772,
+      "executed_at": "2026-02-05T20:57:56.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/application lint",
+      "duration_ms": 3000,
+      "executed_at": "2026-02-05T20:58:20.000Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/application build",
+      "duration_ms": 1286,
+      "executed_at": "2026-02-05T20:58:30.000Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run --project root --coverage packages/application/src/usecases/ai-review",
+      "duration_ms": 4160,
+      "executed_at": "2026-02-05T20:58:00.000Z",
+      "exit_code": 0,
+      "name": "Coverage",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "docs/design/ui-flow-mapping.md",
+      "apps/web/src/app/__tests__/ui-flow-mapping-reconciliation.test.ts"
+    ],
+    "expected": [
+      "docs/design/ui-flow-mapping.md",
+      "apps/web/src/app/__tests__/ui-flow-mapping-reconciliation.test.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-24T01:15:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.785Z"
+  },
+  "kpis": {},
+  "notes": "Exec completed. ui-flow-mapping.md updated v2.0.0→v3.0.0: 68→103 routes, 25→39 routers, 232→366 procedures. 12/12 AC passed, 3/3 NF passed. STOA Foundation AUDIT:manual-review PASS. Compliance check PASS. Attestation at .specify/sprints/sprint-14/attestations/DOC-004/attestation.json.",
+  "phase": "phase-1",
+  "started_at": "2026-02-23T12:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-23T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-23T12:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-23T12:30:00Z",
+      "status": "In Progress"
+    }
+  ],
+  "stream": null,
+  "task_id": "DOC-004",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-02-24T21:09:30.000Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "cd apps/web && npx vitest run ui-flow-mapping-reconciliation",
+      "duration_ms": 825,
+      "executed_at": "2026-02-24T21:09:47.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web lint",
+      "executed_at": "2026-02-24T21:09:50.000Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "executed_at": "2026-02-24T21:09:55.000Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

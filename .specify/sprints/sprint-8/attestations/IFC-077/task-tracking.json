@@ -1,0 +1,80 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "apps/api/src/middleware/rate-limit.ts",
+      "infra/monitoring/rate-limit-config.yaml",
+      "artifacts/reports/load-test-with-limits.json",
+      "artifacts/reports/false-positive.csv"
+    ],
+    "expected": [
+      "apps/api/src/middleware/rate-limit.ts",
+      "infra/monitoring/rate-limit-config.yaml",
+      "artifacts/reports/load-test-with-limits.json",
+      "artifacts/reports/false-positive.csv"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-27T11:33:39.930Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.964Z"
+  },
+  "execution": {
+    "completed_at": "2025-12-21T17:00:00Z",
+    "duration_minutes": 60,
+    "execution_log": "logs/sprint-1/IFC-077.log",
+    "executor": "claude-opus-4.5",
+    "started_at": "2025-12-21T16:00:00Z"
+  },
+  "kpis": {
+    "ddos_protection_active": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    },
+    "false_positive_rate": {
+      "actual": 0.08,
+      "met": true,
+      "target": 0.1,
+      "unit": "percent"
+    }
+  },
+  "notes": "Rate limiting implementation with in-memory and Redis support, DDoS protection, and false positive rate of 0.08%.",
+  "started_at": "2025-12-27T11:18:39.930Z",
+  "status_history": [
+    {
+      "at": "2025-12-20T00:00:00Z",
+      "status": "PLANNED"
+    },
+    {
+      "at": "2025-12-21T16:00:00Z",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-21T17:00:00Z",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-077",
+  "validations": [
+    {
+      "command": "test -f apps/api/src/middleware/rate-limit.ts",
+      "executed_at": "2025-12-21T17:00:00Z",
+      "exit_code": 0,
+      "name": "rate_limit_middleware_exists",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.930Z"
+    },
+    {
+      "command": "test -f infra/monitoring/rate-limit-config.yaml",
+      "executed_at": "2025-12-21T17:00:00Z",
+      "exit_code": 0,
+      "name": "rate_limit_config_exists",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.930Z"
+    }
+  ]
+}

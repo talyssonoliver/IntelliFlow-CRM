@@ -1,0 +1,78 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "agents": [
+    "Frontend-Lead",
+    "Domain-Expert",
+    "Test-Engineer",
+    "Data-Engineer"
+  ],
+  "artifacts": {
+    "created": [
+      {
+        "created_at": "2026-02-13T00:01:00Z",
+        "path": ".specify/sprints/sprint-7/specifications/PG-138-spec.md",
+        "sha256": "5ca42bc3a2f1c5bac18603c436e9da255517f3652b5db8ed066b1e71bc690870"
+      },
+      {
+        "created_at": "2026-02-13T22:10:00Z",
+        "path": ".specify/sprints/sprint-7/planning/PG-138-plan.md",
+        "sha256": "097231cb228fc51a499017764507f638984f415bfd5a4c70d140f436d33cc278"
+      }
+    ]
+  },
+  "completed_at": "2026-02-13T22:23:59.971Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.955Z"
+  },
+  "kpis": {
+    "lighthouse_score": {
+      "actual": "Deferred to integration testing (no running server)",
+      "met": false,
+      "target": "Lighthouse >=90"
+    },
+    "list_load_time": {
+      "actual": "43 tests pass in 2.63s",
+      "met": true,
+      "target": "List loads <500ms"
+    }
+  },
+  "started_at": "2026-02-13T00:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-13T00:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-13T00:01:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-13T21:54:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-13T22:10:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-15T21:30:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-15T21:34:00Z",
+      "status": "Completed"
+    }
+  ],
+  "task_id": "PG-138",
+  "validations": [
+    {
+      "command": "npx vitest run apps/web/src/components/cases",
+      "duration_ms": 2630,
+      "executed_at": "2026-02-15T21:33:30Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 120,
+  "artifacts": {
+    "created": [
+      "docs/design/sitemap.md",
+      "apps/web/src/app/sitemap.ts",
+      "apps/web/src/app/robots.ts"
+    ],
+    "expected": [
+      "docs/design/sitemap.md",
+      "apps/web/src/app/sitemap.ts",
+      "apps/web/src/app/robots.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-23T21:00:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.783Z"
+  },
+  "kpis": {
+    "coverage_branches": {
+      "actual": "100",
+      "met": true,
+      "target": "80",
+      "unit": "%"
+    },
+    "coverage_functions": {
+      "actual": "100",
+      "met": true,
+      "target": "90",
+      "unit": "%"
+    },
+    "coverage_lines": {
+      "actual": "100",
+      "met": true,
+      "target": "90",
+      "unit": "%"
+    },
+    "coverage_statements": {
+      "actual": "100",
+      "met": true,
+      "target": "90",
+      "unit": "%"
+    },
+    "test_count": {
+      "actual": "32",
+      "met": true,
+      "target": "30"
+    }
+  },
+  "notes": "32 tests (15 sitemap + 11 robots + 6 reconciliation). 100% coverage on all metrics. Foundation STOA: PASS (6/6 gates). Quality STOA: PASS (5/5 gates). sitemap.md updated 68→102 pages (v3.0). /sitemap.xml and /robots.txt confirmed in build output.",
+  "phase": "phase-1",
+  "started_at": "2026-02-23T00:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-23T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-23T18:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-23T19:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-23T19:30:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-23T20:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-23T20:15:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-23T21:00:00Z",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "DOC-002",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-02-23T20:57:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run apps/web/src/app/__tests__/sitemap.test.ts apps/web/src/app/__tests__/robots.test.ts apps/web/src/app/__tests__/sitemap-reconciliation.test.ts",
+      "executed_at": "2026-02-23T20:58:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web lint",
+      "executed_at": "2026-02-23T20:57:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "executed_at": "2026-02-23T20:58:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 110,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/accounts/(list)/AccountsPageClient.tsx",
+      "apps/web/src/components/accounts/AccountCard.tsx",
+      "apps/web/src/components/accounts/AccountContactsList.tsx",
+      "apps/web/src/components/accounts/AccountOpportunitiesList.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/accounts/(list)/AccountsPageClient.tsx",
+      "apps/web/src/components/accounts/AccountCard.tsx",
+      "apps/web/src/components/accounts/AccountContactsList.tsx",
+      "apps/web/src/components/accounts/AccountOpportunitiesList.tsx",
+      ".specify/sprints/sprint-18/attestations/IFC-273/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-18/attestations/IFC-273/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": "2026-06-13T10:50:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.868Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "diff-coverage 100% (13/13) on changed lines; domain tier 100% (all 5 branches)",
+      "met": true,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "AC-001 grep clean (0 as any/as unknown/as Record< in the 4 files); filters derive from CONTACT_STATUSES/OPPORTUNITY_STAGES",
+      "met": true,
+      "target": "Zero any casts in account pages; filter options from domain enums"
+    }
+  },
+  "notes": "Account domain wiring audit finding (L-01,L-02,L-04,F-09,F-12). See docs/audit/account-detail-wiring-audit.md. Spec (2026-06-13): L-01/L-02 frontend typing via RouterOutputs (stats already returns withOpportunities, no router change); L-04 move AccountTier/getAccountTier to domain (DRY-enum); F-09/F-12 derive filter options from CONTACT_STATUSES/OPPORTUNITY_STAGES (fixes invalid 'LEAD' + missing NEEDS_ANALYSIS). CSV status kept recognized (In Progress) to satisfy the current-state-report bucket invariant; phases in status_history.",
+  "phase": "",
+  "started_at": "2026-06-13T09:00:05Z",
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-06-13T09:00:05Z",
+      "status": "In Progress"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-273",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web run typecheck && pnpm --filter @intelliflow/domain run typecheck",
+      "executed_at": "2026-06-13T10:50:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "node scripts/pre-ship.mjs [unit-tests + integration-tests]",
+      "executed_at": "2026-06-13T10:50:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "node scripts/pre-ship.mjs [lint, eslint --max-warnings=0]",
+      "executed_at": "2026-06-13T10:50:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "node scripts/pre-ship.mjs [build]",
+      "executed_at": "2026-06-13T10:50:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

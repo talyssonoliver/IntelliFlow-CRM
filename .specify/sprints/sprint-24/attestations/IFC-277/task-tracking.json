@@ -1,0 +1,49 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "packages/application/src/services/AccountService.ts",
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "packages/adapters/src/repositories/PrismaAccountRepository.ts"
+    ],
+    "expected": [
+      "packages/application/src/services/AccountService.ts",
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "packages/adapters/src/repositories/PrismaAccountRepository.ts",
+      ".specify/sprints/sprint-24/attestations/IFC-277/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-24/attestations/IFC-277/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:52.022Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "Zero dead code methods; zero NaN renders; hierarchy query O(1)"
+    }
+  },
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-277",
+  "validations": []
+}

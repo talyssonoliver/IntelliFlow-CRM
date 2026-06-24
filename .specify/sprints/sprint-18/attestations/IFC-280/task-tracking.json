@@ -1,0 +1,90 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 25,
+  "agents": [
+    "Frontend-Lead",
+    "A11y-Expert",
+    "Backend-Architect",
+    "Test-Engineer"
+  ],
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/deals/[id]/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/deals/[id]/page.tsx",
+      ".specify/sprints/sprint-18/attestations/IFC-280/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-18/attestations/IFC-280/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": "2026-06-13T14:50:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-06-13T14:25:00.000Z"
+  },
+  "executor": "claude-opus-4-8",
+  "kpis": {
+    "test_coverage": {
+      "actual": "92 web + 75 application tests green; page.tsx coverage-excluded (no diff-coverage burden); covered changed files unit-tested.",
+      "met": true,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "9 genuine no-ops (audit stale, pre-IFC-278): 5 wired to existing procedures (Won/Lost/Delete/Edit/Stakeholders), 4 deferred to honest 'Coming soon' toasts + Rule-8 tracking (no backing procedure: Clone/Archive/AddProduct/Upload).",
+      "met": true,
+      "target": "14/14 buttons functional; confirmation dialogs for destructive actions"
+    }
+  },
+  "notes": "Deal/opportunity domain wiring audit finding. See docs/audit/deal-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": "2026-06-13T14:25:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-03-06T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-06-13T14:25:00.000Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-06-13T14:50:00.000Z",
+      "note": "5 buttons wired to existing procedures; 4 deferred (no backend) with Coming-soon toasts + Rule-8 tracking; D-2 description-persistence fix.",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-280",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck; @intelliflow/application build",
+      "executed_at": "2026-06-13T14:36:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --dir apps/web exec vitest run deals/[id]+LossReasonModal+DealForm+(list) (92); @intelliflow/application OpportunityService.additional (75)",
+      "executed_at": "2026-06-13T14:45:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "eslint --max-warnings 0 (6 touched web files + application changes)",
+      "executed_at": "2026-06-13T14:46:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build (next build --webpack, CI env stubs); @intelliflow/application build",
+      "executed_at": "2026-06-13T14:48:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

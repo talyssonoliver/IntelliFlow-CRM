@@ -1,0 +1,112 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 45,
+  "artifacts": {
+    "created": [
+      "apps/web/src/components/home/PinButton.tsx",
+      "apps/web/src/components/home/__tests__/PinButton.test.tsx"
+    ],
+    "expected": [
+      "apps/web/src/components/home/PinButton.tsx",
+      "apps/web/src/components/home/__tests__/PinButton.test.tsx"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-28T00:55:00Z",
+  "dependencies_meta": {
+    "notes": "PG-129 verified complete — useEntityPin hook, PinnedItemsSheet, AuthenticatedHomePage all exist.",
+    "verified_at": "2026-04-29T21:54:51.801Z"
+  },
+  "execution": {
+    "agents": [
+      "stoa-foundation"
+    ],
+    "completed_at": "2026-02-28T00:55:00Z",
+    "duration_minutes": 22,
+    "executor": "Claude Code /exec",
+    "last_error": null,
+    "retry_count": 0,
+    "started_at": "2026-02-28T00:33:00Z"
+  },
+  "kpis": {
+    "test_count": {
+      "actual": 23,
+      "met": true,
+      "target": 23,
+      "unit": "tests"
+    },
+    "test_coverage": {
+      "actual": "Statements 100%, Branches 100%, Functions 100%, Lines 100% (23 tests)",
+      "met": true,
+      "target": 90,
+      "unit": "percent"
+    }
+  },
+  "notes": "PG-157 completed. PinButton component created and integrated into 5 entity detail pages (deals, contacts, leads, tickets, accounts). Uses existing useEntityPin hook. WCAG AA compliant (aria-pressed, aria-label, aria-hidden, 40px touch target). Filled amber icon when pinned, outline muted when unpinned. Tooltip on hover. TicketDetail and AccountDetail regression tests needed PinButton mock added. 100% scoped coverage.",
+  "phase": "",
+  "started_at": "2026-02-28T00:10:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-28T00:00:00Z",
+      "note": "Ralph loop started for /full-pipeline PG-157",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-28T00:10:00Z",
+      "note": "Spec session started with 3 agents",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-28T00:20:00Z",
+      "note": "Plan session completed — 4 TDD phases, 10 steps, 2 files to create, 7 to modify. Plan Reviewer: APPROVE after 3 error fixes.",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-28T00:33:00Z",
+      "note": "Exec session started — TDD implementation, run ID 20260228003304-a580f33d",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-28T00:55:00Z",
+      "note": "Exec completed — MATOP PASS (Foundation). All completion gates PASS. 23 tests, 100% scoped coverage.",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-157",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "duration_ms": 8500,
+      "executed_at": "2026-02-28T00:40:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --dir apps/web exec vitest run src/components/home/__tests__/PinButton.test.tsx",
+      "duration_ms": 5200,
+      "executed_at": "2026-02-28T00:42:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web lint",
+      "duration_ms": 3500,
+      "executed_at": "2026-02-28T00:44:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "duration_ms": 95000,
+      "executed_at": "2026-02-28T00:48:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

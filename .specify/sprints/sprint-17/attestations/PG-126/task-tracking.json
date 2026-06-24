@@ -1,0 +1,140 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "apps/web/src/components/public/tour-components.tsx",
+      "apps/web/src/components/public/feedback-widget-public.tsx",
+      "apps/web/src/lib/public/feedback-service.ts",
+      "apps/web/src/lib/public/tour-storage.ts",
+      "artifacts/misc/onboarding-config.json",
+      "packages/validators/src/public-onboarding.ts",
+      "apps/api/src/modules/public-feedback/public-feedback.router.ts",
+      "apps/api/src/modules/public-feedback/public-feedback.service.ts",
+      "apps/api/src/security/public-rate-limiter.ts",
+      "packages/application/src/ports/repositories/PublicFeedbackRepositoryPort.ts",
+      "packages/db/prisma/schema.prisma",
+      ".specify/sprints/sprint-17/attestations/PG-126/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-126/attestation.json"
+    ],
+    "expected": [
+      "apps/web/src/components/public/tour-components.tsx",
+      "apps/web/src/components/public/feedback-widget-public.tsx",
+      "apps/web/src/lib/public/feedback-service.ts",
+      "apps/web/src/lib/public/tour-storage.ts",
+      "artifacts/misc/onboarding-config.json",
+      "packages/validators/src/public-onboarding.ts",
+      "apps/api/src/modules/public-feedback/public-feedback.router.ts",
+      "apps/api/src/modules/public-feedback/public-feedback.service.ts",
+      "apps/api/src/security/public-rate-limiter.ts",
+      "packages/application/src/ports/repositories/PublicFeedbackRepositoryPort.ts",
+      "packages/adapters/src/public-feedback/prisma-public-feedback-repository.ts",
+      "packages/db/prisma/schema.prisma",
+      ".specify/sprints/sprint-17/attestations/PG-126/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-126/attestation.json"
+    ],
+    "missing": [
+      "packages/adapters/src/public-feedback/prisma-public-feedback-repository.ts"
+    ]
+  },
+  "completed_at": "2026-04-24T20:00:52.505Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.837Z"
+  },
+  "execution": {
+    "agents": [
+      "Frontend-Lead",
+      "A11y-Expert",
+      "Backend-Architect",
+      "Test-Engineer",
+      "Domain-Expert"
+    ],
+    "executor": "claude-code",
+    "last_error": null,
+    "log_path": null,
+    "retry_count": 0,
+    "started_at": "2026-04-24T19:50:00Z"
+  },
+  "kpis": [
+    {
+      "actual": "pending",
+      "met": false,
+      "target": "Onboarding completion >70%"
+    },
+    {
+      "actual": "pending",
+      "met": false,
+      "target": "NPS score improvement"
+    }
+  ],
+  "phase": "phase-3-exec",
+  "started_at": "2026-04-24T19:50:00Z",
+  "status_history": [
+    {
+      "at": "2026-04-24T19:16:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-04-24T19:18:00Z",
+      "note": "Spec session started",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-04-24T19:30:00Z",
+      "note": "Spec session complete",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-04-24T19:32:00Z",
+      "note": "Plan session started",
+      "status": "Planning"
+    },
+    {
+      "at": "2026-04-24T19:45:00Z",
+      "note": "Plan session complete",
+      "status": "Plan Complete"
+    },
+    {
+      "at": "2026-04-24T19:50:00Z",
+      "note": "Exec session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-04-24T20:58:00Z",
+      "note": "Exec session complete; attestation verdict COMPLETE",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-126",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-04-24T20:28:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/validators exec vitest run \"src/__tests__/public-onboarding.test.ts\"; pnpm --filter @intelliflow/adapters exec vitest run \"src/public-feedback\"; pnpm --filter @intelliflow/api exec vitest run \"src/security/__tests__/public-rate-limiter.test.ts\" \"src/modules/public-feedback\"; pnpm --filter @intelliflow/web exec vitest run \"src/lib/public\" \"src/components/public\" \"src/lib/shared/__tests__/tracking-pixel.test.ts\"",
+      "executed_at": "2026-04-24T20:39:49Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/validators lint; pnpm --filter @intelliflow/application lint; pnpm --filter @intelliflow/adapters lint; pnpm --filter @intelliflow/api lint; pnpm --filter @intelliflow/web lint",
+      "executed_at": "2026-04-24T20:44:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/db build && pnpm --filter @intelliflow/validators build && pnpm --filter @intelliflow/application build && pnpm --filter @intelliflow/adapters build && pnpm --filter @intelliflow/api build && pnpm --filter @intelliflow/web build",
+      "executed_at": "2026-04-24T20:52:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

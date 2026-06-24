@@ -1,0 +1,59 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/help-article/help-article.router.ts",
+      "packages/validators/src/help-article.ts"
+    ],
+    "expected": [
+      "apps/api/src/modules/help-article/help-article.router.ts",
+      "packages/validators/src/help-article.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-19T00:22:57.642Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.840Z"
+  },
+  "execution": {
+    "last_error": null,
+    "retry_count": 0
+  },
+  "kpis": {},
+  "notes": "Tenant-scoped tRPC router with list/getBySlug/getByCategory/getRelated/create/update/delete/publish/unpublish procedures.",
+  "phase": "",
+  "started_at": "2026-03-18T12:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — helpArticle tRPC router with full CRUD + publish workflow",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-03-18T12:00:00Z",
+      "note": "Spec session started with 3 agents (Backend-Architect, Test-Engineer, Data-Engineer)",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-18T12:30:00Z",
+      "note": "Specification complete — 9 procedures, ~50 test cases, 3/3 agents approved",
+      "status": "In Progress"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-299",
+  "validations": [
+    {
+      "command": "echo \"Task IFC-299 completed\"",
+      "executed_at": "2026-03-19T00:22:57.643Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

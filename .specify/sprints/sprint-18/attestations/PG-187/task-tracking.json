@@ -1,0 +1,137 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/analytics/(list)/report-settings/page.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/loading.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/ReportSettingsContent.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/DefaultRangeSection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/CurrencySection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/ScheduledDeliverySection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/currencies.ts",
+      "packages/validators/src/__tests__/report-settings.test.ts"
+    ],
+    "expected": [
+      "apps/web/src/app/analytics/(list)/report-settings/page.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/loading.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/ReportSettingsContent.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/DefaultRangeSection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/CurrencySection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/ScheduledDeliverySection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/currencies.ts",
+      "packages/validators/src/__tests__/report-settings.test.ts"
+    ],
+    "missing": []
+  },
+  "completed_at": "2026-04-19T23:45:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.873Z"
+  },
+  "execution": {
+    "executor": "claude-opus-4-7 via /full-pipeline ralph loop",
+    "last_error": null,
+    "retry_count": 1
+  },
+  "kpis": [
+    {
+      "actual": "18",
+      "kpi": "Acceptance Criteria Coverage",
+      "met": true,
+      "target": "18",
+      "unit": "criteria"
+    },
+    {
+      "actual": "100% (79/79)",
+      "kpi": "PG-187 Test Pass Rate",
+      "met": true,
+      "target": "100%",
+      "unit": "percent"
+    },
+    {
+      "actual": "0",
+      "kpi": "PG-187 Lint Issues",
+      "met": true,
+      "target": "0",
+      "unit": "issues"
+    },
+    {
+      "actual": "yes",
+      "kpi": "Lighthouse URL Wired",
+      "met": true,
+      "target": "yes",
+      "unit": "url-present"
+    }
+  ],
+  "phase": "",
+  "started_at": "2026-04-19T12:00:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-04-19T00:00:00.000Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-04-19T11:00:00.000Z",
+      "note": "Re-execution iteration 1: spec-session",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-04-19T11:30:00.000Z",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-04-19T11:45:00.000Z",
+      "note": "Re-execution iteration 2: plan-session",
+      "status": "Planning"
+    },
+    {
+      "at": "2026-04-19T12:00:00.000Z",
+      "status": "Plan Complete"
+    },
+    {
+      "at": "2026-04-19T12:05:00.000Z",
+      "note": "Re-execution iteration 3: /exec session start",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-04-19T23:45:00.000Z",
+      "note": "All 4 validations passed; attestation written with verdict=COMPLETE",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-187",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/validators exec tsc --noEmit && pnpm --filter @intelliflow/web exec tsc --noEmit && pnpm --filter @intelliflow/api exec tsc --noEmit (PG-187 scope)",
+      "duration_ms": 120000,
+      "executed_at": "2026-04-19T23:40:00.000Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/validators exec vitest run src/__tests__/report-settings.test.ts && pnpm --filter @intelliflow/api exec vitest run src/modules/analytics/__tests__/report-settings.router.test.ts && pnpm --filter @intelliflow/web exec vitest run 'src/app/analytics/(list)/report-settings/__tests__/'",
+      "duration_ms": 4500,
+      "executed_at": "2026-04-19T23:43:45.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web exec eslint 'src/app/analytics/(list)/report-settings/**/*.{ts,tsx}' && pnpm --filter @intelliflow/api exec eslint src/modules/analytics/report-settings.router.ts src/modules/analytics/__tests__/report-settings.router.test.ts src/modules/analytics/analytics.router.ts && pnpm --filter @intelliflow/validators exec eslint src/report-settings.ts src/__tests__/report-settings.test.ts",
+      "duration_ms": 15000,
+      "executed_at": "2026-04-19T23:40:30.000Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build (clean .next)",
+      "duration_ms": 88000,
+      "executed_at": "2026-04-19T23:42:00.000Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

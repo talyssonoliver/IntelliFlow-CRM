@@ -1,0 +1,146 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 95,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/tasks/(list)/page.tsx",
+      "apps/web/src/app/tasks/(list)/layout.tsx",
+      "apps/web/src/app/tasks/[id]/page.tsx",
+      "apps/web/src/components/tasks/TaskList.tsx",
+      "apps/web/src/components/tasks/TaskCard.tsx",
+      "apps/web/src/components/tasks/TaskCalendar.tsx",
+      "apps/web/src/components/tasks/TaskForm.tsx",
+      "apps/web/src/components/tasks/TaskDetail.tsx",
+      "apps/web/src/components/tasks/ReminderConfig.tsx",
+      "apps/web/src/components/sidebar/configs/tasks.ts"
+    ],
+    "expected": [
+      "apps/web/src/app/tasks/(list)/page.tsx",
+      "apps/web/src/app/tasks/(list)/layout.tsx",
+      "apps/web/src/app/tasks/[id]/page.tsx",
+      "apps/web/src/components/tasks/TaskList.tsx",
+      "apps/web/src/components/tasks/TaskCard.tsx",
+      "apps/web/src/components/tasks/TaskCalendar.tsx",
+      "apps/web/src/components/tasks/TaskForm.tsx",
+      "apps/web/src/components/tasks/TaskDetail.tsx",
+      "apps/web/src/components/tasks/ReminderConfig.tsx",
+      "apps/web/src/components/sidebar/configs/tasks.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-10T23:35:00.000Z",
+  "dependencies_meta": {
+    "notes": "IFC-187 (Task tRPC Router) marked Completed. All 10 endpoints available in router (create, getById, list, update, delete, complete, assign, reschedule, getReminders, getByEntity).",
+    "verified_at": "2026-04-29T21:54:51.762Z"
+  },
+  "execution": {
+    "agents": [
+      "Foundation",
+      "Quality",
+      "Domain"
+    ],
+    "completed_at": "2026-02-10T23:35:00.000Z",
+    "duration_minutes": 35,
+    "executor": "Claude Code /exec",
+    "last_error": null,
+    "retry_count": 0,
+    "started_at": "2026-02-10T23:00:00.000Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": 95.08,
+      "met": true,
+      "target": 90,
+      "unit": "percent"
+    },
+    "tests_passing": {
+      "actual": 148,
+      "met": true,
+      "target": 50,
+      "unit": "count"
+    },
+    "typecheck": {
+      "actual": 0,
+      "met": true,
+      "target": 0,
+      "unit": "errors"
+    }
+  },
+  "notes": "Task Management Page fully implemented. 13 artifacts created (9 components + 3 pages/layouts + 1 sidebar config), 9 test files with 148 tests. Scoped coverage: Stmts 91.21%, Branches 82.11%, Functions 90.14%, Lines 95.08%. All 4 validations passed (TypeScript, Tests, Lint, Build). Custom month-view calendar (no external library). All tRPC endpoints wired. Views: list (DataTable) + calendar toggle. Features: search, status/priority filters, sort, overdue/due-today reminders, entity linking, CRUD forms, bulk actions, task creation sheet, related tasks card.",
+  "phase": "phase-1",
+  "started_at": "2026-02-09T22:00:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-02-03T00:00:00.000Z",
+      "note": "Task created during sprint planning",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-09T22:00:00.000Z",
+      "note": "Spec session started. Agents: Frontend-Lead, Domain-Expert, Test-Engineer, A11y-Expert",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-09T23:00:00.000Z",
+      "note": "Spec session completed. 4/4 agents approved.",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-10T23:00:00.000Z",
+      "note": "exec session started — Phase 2 TDD implementation",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-10T23:35:00.000Z",
+      "note": "exec completed — 19 files (10 created, 6 test files, 3 modified), 73 tests passing, typecheck PASS, lint PASS (0 new errors)",
+      "status": "Completed"
+    },
+    {
+      "at": "2026-02-12T22:00:00.000Z",
+      "note": "Re-validated — 13 artifacts (3 new: EntitySearchField, TaskCreateSheet, RelatedTasksCard), 104 tests across 9 test files, all 6 completion gates passed, build succeeds",
+      "status": "Completed"
+    },
+    {
+      "at": "2026-02-16T23:05:00.000Z",
+      "note": "Final exec session — lint errors fixed (11 unused imports/variables), context_ack.json created, attestation refreshed with current hashes, all 7 gates PASS",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-136",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "duration_ms": 15000,
+      "executed_at": "2026-02-10T23:35:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run src/components/tasks/__tests__/",
+      "duration_ms": 2010,
+      "executed_at": "2026-02-10T23:35:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web lint (task files)",
+      "duration_ms": 8000,
+      "executed_at": "2026-02-10T23:35:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "duration_ms": 63124,
+      "executed_at": "2026-02-10T23:35:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}
