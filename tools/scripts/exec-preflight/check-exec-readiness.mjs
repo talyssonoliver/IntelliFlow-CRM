@@ -168,13 +168,31 @@ function check1SchemaPath(taskJsonPath) {
   return { verdict: 'PASS', detail: `$schema resolves (${schemaRef})` };
 }
 
-function check2SessionStartRecorded(taskJsonPath) {
-  const json = JSON.parse(readFileSync(taskJsonPath, 'utf8'));
+/**
+ * Path to the canonical task-tracking.json (ADR-067 Phase 2: started_at + status_history
+ * now live here, not in the derived per-task metrics JSON which is a generated cache).
+ */
+function taskTrackingPath(sprint, taskId) {
+  return join(SPECIFY_ROOT, `sprint-${sprint}`, 'attestations', taskId, 'task-tracking.json');
+}
+
+function check2SessionStartRecorded(sprint, taskId, taskJsonPath) {
+  // Prefer the canonical task-tracking.json; fall back to the (legacy/derived) per-task JSON
+  // so this still passes during the transition before agents write to .specify.
+  const ttPath = taskTrackingPath(sprint, taskId);
+  const sourcePath = existsSync(ttPath) ? ttPath : taskJsonPath;
+  if (!sourcePath || !existsSync(sourcePath)) {
+    return {
+      verdict: 'BLOCK',
+      detail: `No session-start record found. Write started_at + a status_history entry to ${ttPath}.`,
+    };
+  }
+  const json = JSON.parse(readFileSync(sourcePath, 'utf8'));
 
   if (!json.started_at) {
     return {
       verdict: 'BLOCK',
-      detail: `Task JSON missing started_at. Invoke /exec-metrics session-start OR set this field directly.`,
+      detail: `${sourcePath} missing started_at. Record session start (started_at + status_history) in task-tracking.json.`,
     };
   }
   const history = Array.isArray(json.status_history) ? json.status_history : [];
@@ -184,7 +202,7 @@ function check2SessionStartRecorded(taskJsonPath) {
   if (!hasStarted) {
     return {
       verdict: 'BLOCK',
-      detail: `Task JSON status_history has no entry showing session start (expected Specifying / Planning / Plan Complete / In Progress). Invoke /exec-metrics.`,
+      detail: `${sourcePath} status_history has no session-start entry (expected Specifying / Planning / Plan Complete / In Progress).`,
     };
   }
   return { verdict: 'PASS', detail: `started_at=${json.started_at}; ${history.length} status transitions recorded` };
@@ -289,9 +307,9 @@ function main() {
   results.push({
     id: 2,
     name: 'Exec session-start metrics recorded',
-    ...(taskJsonPath
-      ? check2SessionStartRecorded(taskJsonPath)
-      : { verdict: 'BLOCK', detail: 'Task JSON missing — cannot check session start.' }),
+    // ADR-067 Phase 2: reads task-tracking.json (canonical) with per-task-JSON fallback, so it
+    // does not depend on the derived per-task file existing (it is a generated cache).
+    ...check2SessionStartRecorded(sprint, taskId, taskJsonPath),
   });
   results.push({
     id: 3,
