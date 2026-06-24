@@ -624,8 +624,39 @@ export function evaluateGeneratedNotTracked(
 }
 
 /**
+ * ADR-067 Phase 2: the per-task metrics tree (apps/project-tracker/docs/metrics/sprint-*\/...json,
+ * including per-sprint _summary.json) is a GENERATED cache rebuilt from Sprint_plan.csv + the
+ * canonical .specify task-tracking/attestation records. It must not be git-tracked.
+ */
+export function evaluatePerTaskTreeNotTracked(trackedFiles: string[]): GateResult[] {
+  const tracked = trackedFiles
+    .map(normalizeRepoPath)
+    .filter(
+      (f) => /^apps\/project-tracker\/docs\/metrics\/sprint-\d+\//.test(f) && f.endsWith('.json')
+    );
+  if (tracked.length === 0) {
+    return [
+      {
+        name: 'Generated-not-tracked: per-task metrics tree',
+        severity: 'PASS',
+        message: 'Per-task metrics tree correctly gitignored (0 tracked copies)',
+      },
+    ];
+  }
+  return [
+    {
+      name: 'Generated-not-tracked: per-task metrics tree',
+      severity: 'FAIL',
+      message: `Found ${tracked.length} tracked file(s) under the generated per-task metrics tree — it must be gitignored and regenerated (ADR-067 Phase 2). Run: git rm -r --cached apps/project-tracker/docs/metrics/sprint-*`,
+      details: tracked.slice(0, 10),
+    },
+  ];
+}
+
+/**
  * Check canonical source-of-truth invariants: Sprint_plan.csv tracked exactly
- * once, and the generated aggregates NOT tracked (ADR-067 Phase 1).
+ * once, the generated aggregates NOT tracked (ADR-067 Phase 1), and the per-task
+ * metrics tree NOT tracked (ADR-067 Phase 2).
  */
 export function checkCanonicalUniqueness(repoRoot: string): GateResult[] {
   const tracked = listGitTrackedFiles(repoRoot);
@@ -643,6 +674,7 @@ export function checkCanonicalUniqueness(repoRoot: string): GateResult[] {
   return [
     ...evaluateCanonicalUniqueness(tracked.files),
     ...evaluateGeneratedNotTracked(tracked.files),
+    ...evaluatePerTaskTreeNotTracked(tracked.files),
   ];
 }
 

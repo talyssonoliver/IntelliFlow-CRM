@@ -44,6 +44,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # ADR-067 Phase 2: the per-task metrics tree is a generated cache (gitignored), so
+      # regenerate it from Sprint_plan.csv + .specify before the gate reads it.
+      - name: Generate metrics tree
+        run: pnpm run generate:metrics
+
       - name: Validate Sprint ${{ matrix.sprint }} (baseline + completion + hygiene + uniqueness)
         run: pnpm run validate:sprint -- --sprint ${{ matrix.sprint }} --strict
 

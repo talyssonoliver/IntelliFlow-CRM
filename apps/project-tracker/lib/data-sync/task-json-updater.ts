@@ -2,12 +2,12 @@
  * Individual Task JSON File Operations
  */
 
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import type { TaskRecord } from './types';
 import { mapCsvStatusToIndividual, parseDependencies } from './csv-mapping';
 import { readJsonTolerant, writeJsonFile, findTaskFile, findRepoRoot } from './file-io';
-import { buildTaskJson, readTaskTracking, indexTasksById } from './task-json-builder';
+import { buildTaskJson, findTaskTracking, indexTasksById } from './task-json-builder';
 
 function classifyArtifacts(
   expectedArtifacts: string[],
@@ -127,21 +127,23 @@ export function buildIndividualTaskFile(
   task: TaskRecord,
   metricsDir: string,
   allTasks: TaskRecord[],
-  sprintNum: number
+  _sprintNum: number
 ): void {
   const taskId = task['Task ID'];
-  const sprintDir = join(metricsDir, `sprint-${sprintNum}`);
-  // Regenerate an EXISTING per-task read-model in place. We do NOT mint a file for every CSV
-  // row: backlog/never-started tasks live in the aggregate (Sprint_plan.json), not the per-task
-  // tree, so a missing file is expected — surfaced as "not found" (the orchestrator swallows it).
-  // The fresh-checkout / full-tree generation strategy (which tasks get a file once the tree is
-  // gitignored) is decided in the Step 6 cutover, not here.
-  const target = findTaskFile(taskId, sprintDir);
-  if (!target) {
+  const repoRoot = findRepoRoot(metricsDir) || metricsDir;
+  // Generate a per-task read-model IFF the task has a canonical operational record under
+  // .specify (task-tracking.json). Backlog/never-started tasks have none and live only in the
+  // aggregate (Sprint_plan.json) — surfaced as "not found" (the orchestrator swallows it).
+  // The output path is a deterministic FLAT sprint-{N}/<TASK>.json at the record's own sprint, so
+  // the gitignored tree reproduces identically from .specify alone (no dependence on any existing
+  // file's phase-* location, which does not exist on a fresh checkout).
+  const tt = findTaskTracking(repoRoot, taskId);
+  if (!tt) {
     throw new Error(`Task file not found for ${taskId}`);
   }
-  const repoRoot = findRepoRoot(metricsDir) || metricsDir;
-  const taskTracking = readTaskTracking(repoRoot, sprintNum, taskId);
-  const built = buildTaskJson(task, taskTracking, sprintNum, indexTasksById(allTasks));
+  const built = buildTaskJson(task, tt.data, tt.sprintNum, indexTasksById(allTasks));
+  const target = join(metricsDir, `sprint-${tt.sprintNum}`, `${taskId}.json`);
+  // The sprint-{N} dir may not exist yet on a fresh checkout (the whole tree is gitignored).
+  mkdirSync(dirname(target), { recursive: true });
   writeJsonFile(target, built, 2);
 }

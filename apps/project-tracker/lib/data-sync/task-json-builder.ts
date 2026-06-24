@@ -14,7 +14,7 @@
  * proven by tools/scripts/prove-metrics-roundtrip.mjs (regenerate == committed on every
  * operational field; CSV-derived fields are authoritatively re-derived).
  */
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { TaskRecord } from './types';
 import { mapCsvStatusToIndividual, parseDependencies } from './csv-mapping';
@@ -29,8 +29,7 @@ export function indexTasksById(tasks: TaskRecord[]): Record<string, TaskRecord> 
 }
 
 /**
- * Read the canonical task-tracking.json for a task, or `{}` if none exists (cohort C — an
- * attestation-only task with no historical operational record).
+ * Read the canonical task-tracking.json for a task at a specific sprint, or `{}` if none exists.
  */
 export function readTaskTracking(repoRoot: string, sprintNum: number, taskId: string): any {
   const p = join(
@@ -48,6 +47,34 @@ export function readTaskTracking(repoRoot: string, sprintNum: number, taskId: st
   } catch {
     return {};
   }
+}
+
+/**
+ * Locate a task's canonical task-tracking.json across ALL sprint dirs and return its sprint
+ * number + parsed data, or null if the task has no canonical operational record (a backlog task
+ * that should NOT get a generated per-task file). Searching every sprint (rather than only the
+ * CSV Target Sprint) keeps generation correct for the handful of tasks whose record sprint and
+ * CSV sprint disagree, and makes the generated tree reproducible from .specify alone on a fresh
+ * checkout (the per-task tree is gitignored — there is no existing file to locate).
+ */
+export function findTaskTracking(
+  repoRoot: string,
+  taskId: string
+): { sprintNum: number; data: any } | null {
+  const sprintsRoot = join(repoRoot, '.specify', 'sprints');
+  if (!existsSync(sprintsRoot)) return null;
+  for (const entry of readdirSync(sprintsRoot)) {
+    const m = /^sprint-(\d+)$/.exec(entry);
+    if (!m) continue;
+    const p = join(sprintsRoot, entry, 'attestations', taskId, 'task-tracking.json');
+    if (!existsSync(p)) continue;
+    try {
+      return { sprintNum: Number(m[1]), data: JSON.parse(readFileSync(p, 'utf8')) };
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 /**
