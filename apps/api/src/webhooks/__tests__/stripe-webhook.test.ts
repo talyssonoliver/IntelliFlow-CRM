@@ -171,6 +171,27 @@ describe('processStripeWebhook', () => {
     expect(pushDelivery).not.toHaveBeenCalled();
   });
 
+  it('does not log "marked paid" when the invoice matches no setup-fee instalment', async () => {
+    // invoice.paid also fires for subscription-renewal invoices (ctx === null).
+    const markPaidByStripeInvoiceId = vi.fn().mockResolvedValue(null);
+    const info = vi.fn();
+    const { deps } = makeDeps({
+      setupInstalments: { markPaidByStripeInvoiceId } as any,
+      logger: { info, warn: vi.fn(), error: vi.fn() },
+    });
+    const body = invoiceEvent({ id: 'in_renewal', status_transitions: { paid_at: 1_780_000_000 } });
+    const res = await processStripeWebhook(
+      body,
+      { 'stripe-signature': stripeSignature(body) },
+      deps
+    );
+    expect(res.statusCode).toBe(200);
+    expect(markPaidByStripeInvoiceId).toHaveBeenCalled();
+    expect(info.mock.calls.some((c) => String(c[1]).includes('instalment marked paid'))).toBe(
+      false
+    );
+  });
+
   it('invoice.paid without setupInstalments dep is a safe no-op', async () => {
     const { deps } = makeDeps({ setupInstalments: null });
     const body = invoiceEvent({ id: 'in_99', status_transitions: { paid_at: 1_780_000_000 } });

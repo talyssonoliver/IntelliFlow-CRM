@@ -133,30 +133,7 @@ export function buildStripeWebhookHandler(deps: StripeWebhookDeps): WebhookHandl
   handler.getRouter().onAll(async (event) => {
     // IFC-314 step 8: a paid setup-fee invoice → mark its instalment PAID.
     if (INVOICE_EVENTS.includes(event.type)) {
-      const invoice = (
-        event.payload as {
-          object?: { id?: string; status_transitions?: { paid_at?: number | null } };
-        }
-      ).object;
-      if (!invoice?.id) {
-        logger.warn({ eventId: event.id }, '[stripe-webhook] invoice event without object.id');
-        return;
-      }
-      if (deps.setupInstalments) {
-        const paidUnix = invoice.status_transitions?.paid_at;
-        const paidAt = typeof paidUnix === 'number' ? new Date(paidUnix * 1000) : new Date();
-        const ctx = await deps.setupInstalments.markPaidByStripeInvoiceId({
-          stripeInvoiceId: invoice.id,
-          paidAt,
-        });
-        logger.info(
-          { eventId: event.id, invoiceId: invoice.id },
-          '[stripe-webhook] setup-fee instalment marked paid'
-        );
-        // Re-push so the portal reflects the payment immediately (otherwise it
-        // would show the instalment as still due until the next deal sync).
-        await rePushPaidToPortal(deps, ctx, event.id, logger);
-      }
+      await handleInvoicePaid(deps, event, logger);
       return;
     }
 
@@ -196,6 +173,48 @@ export function buildStripeWebhookHandler(deps: StripeWebhookDeps): WebhookHandl
 }
 
 type Logger = NonNullable<StripeWebhookDeps['logger']>;
+
+/**
+ * Handle an `invoice.paid` event: mark the matching setup-fee instalment paid
+ * (no-op when {@link StripeWebhookDeps.setupInstalments} is absent) and re-push
+ * the set so the portal reflects the payment immediately. `invoice.paid` also
+ * fires for subscription-renewal invoices, which match no instalment — the
+ * writer returns null then and nothing is logged/pushed.
+ */
+async function handleInvoicePaid(
+  deps: Pick<StripeWebhookDeps, 'setupInstalments' | 'portalSync'>,
+  event: { id: string; payload: unknown },
+  logger: Logger
+): Promise<void> {
+  const invoice = (
+    event.payload as {
+      object?: { id?: string; status_transitions?: { paid_at?: number | null } };
+    }
+  ).object;
+  if (!invoice?.id) {
+    logger.warn({ eventId: event.id }, '[stripe-webhook] invoice event without object.id');
+    return;
+  }
+  if (!deps.setupInstalments) return;
+
+  const paidUnix = invoice.status_transitions?.paid_at;
+  const paidAt = typeof paidUnix === 'number' ? new Date(paidUnix * 1000) : new Date();
+  const ctx = await deps.setupInstalments.markPaidByStripeInvoiceId({
+    stripeInvoiceId: invoice.id,
+    paidAt,
+  });
+  // Only log a "marked paid" line when a row was actually updated (ctx !== null),
+  // so a renewal invoice does not produce a misleading log.
+  if (ctx) {
+    logger.info(
+      { eventId: event.id, invoiceId: invoice.id },
+      '[stripe-webhook] setup-fee instalment marked paid'
+    );
+  }
+  // Re-push so the portal reflects the payment immediately. No-op when ctx is
+  // null (rePushPaidToPortal guards on it internally).
+  await rePushPaidToPortal(deps, ctx, event.id, logger);
+}
 
 /**
  * After an instalment is marked paid, re-push the whole instalment set to the
