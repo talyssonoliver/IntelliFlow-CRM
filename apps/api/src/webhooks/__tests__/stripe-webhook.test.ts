@@ -101,6 +101,73 @@ describe('processStripeWebhook', () => {
     expect(h.upsertFromWebhook).not.toHaveBeenCalled();
   });
 
+  it('re-pushes the paid instalment set to the portal so it reflects immediately', async () => {
+    const pushDelivery = vi.fn().mockResolvedValue({ isFailure: false });
+    const markPaidByStripeInvoiceId = vi
+      .fn()
+      .mockResolvedValue({ opportunityId: 'opp_1', tenantId: 'ten_1', tenantSlug: 'acme' });
+    const findByOpportunity = vi.fn().mockResolvedValue([
+      {
+        n: 1,
+        amountCents: 16700,
+        currency: 'GBP',
+        status: 'paid',
+        dueAt: null,
+        paidAt: new Date(1_780_000_000 * 1000),
+        hostedInvoiceUrl: 'https://invoice.stripe.com/i/in_42',
+      },
+      {
+        n: 2,
+        amountCents: 16700,
+        currency: 'GBP',
+        status: 'due',
+        dueAt: null,
+        paidAt: null,
+        hostedInvoiceUrl: 'https://invoice.stripe.com/i/in_43',
+      },
+    ]);
+    const { deps } = makeDeps({
+      portalSync: { pushDelivery } as any,
+      setupInstalments: { markPaidByStripeInvoiceId, findByOpportunity } as any,
+    });
+    const body = invoiceEvent({ id: 'in_42', status_transitions: { paid_at: 1_780_000_000 } });
+    const res = await processStripeWebhook(
+      body,
+      { 'stripe-signature': stripeSignature(body) },
+      deps
+    );
+    expect(res.statusCode).toBe(200);
+    expect(findByOpportunity).toHaveBeenCalledWith('opp_1', 'ten_1');
+    expect(pushDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slug: 'acme',
+        setupInstalments: expect.arrayContaining([
+          expect.objectContaining({
+            n: 1,
+            status: 'paid',
+            paymentUrl: expect.stringContaining('invoice.stripe.com'),
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('skips the paid re-push when the portal slug is unknown', async () => {
+    const pushDelivery = vi.fn().mockResolvedValue({ isFailure: false });
+    const markPaidByStripeInvoiceId = vi
+      .fn()
+      .mockResolvedValue({ opportunityId: 'opp_1', tenantId: 'ten_1', tenantSlug: null });
+    const findByOpportunity = vi.fn();
+    const { deps } = makeDeps({
+      portalSync: { pushDelivery } as any,
+      setupInstalments: { markPaidByStripeInvoiceId, findByOpportunity } as any,
+    });
+    const body = invoiceEvent({ id: 'in_42', status_transitions: { paid_at: 1_780_000_000 } });
+    await processStripeWebhook(body, { 'stripe-signature': stripeSignature(body) }, deps);
+    expect(findByOpportunity).not.toHaveBeenCalled();
+    expect(pushDelivery).not.toHaveBeenCalled();
+  });
+
   it('invoice.paid without setupInstalments dep is a safe no-op', async () => {
     const { deps } = makeDeps({ setupInstalments: null });
     const body = invoiceEvent({ id: 'in_99', status_transitions: { paid_at: 1_780_000_000 } });

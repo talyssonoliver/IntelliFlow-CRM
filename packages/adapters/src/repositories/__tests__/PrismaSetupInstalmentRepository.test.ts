@@ -10,6 +10,7 @@ const mockPrisma = {
   setupInstalment: {
     createMany: vi.fn(),
     findMany: vi.fn(),
+    findFirst: vi.fn(),
     updateMany: vi.fn(),
   },
 } as unknown as PrismaClient;
@@ -131,14 +132,30 @@ describe('PrismaSetupInstalmentRepository', () => {
   });
 
   describe('markPaidByStripeInvoiceId', () => {
-    it('updateMany by the unique invoice id → status PAID + paidAt', async () => {
+    it('updateMany by the unique invoice id → status PAID + paidAt, returns the portal context', async () => {
+      (mockPrisma.setupInstalment.findFirst as any).mockResolvedValue({
+        opportunityId: 'opp_1',
+        tenantId: 'ten_1',
+        opportunity: { tenantSlug: 'acme' },
+      });
       (mockPrisma.setupInstalment.updateMany as any).mockResolvedValue({ count: 1 });
       const paidAt = new Date('2026-06-09T10:00:00.000Z');
-      await repo.markPaidByStripeInvoiceId({ stripeInvoiceId: 'in_xyz', paidAt });
+      const ctx = await repo.markPaidByStripeInvoiceId({ stripeInvoiceId: 'in_xyz', paidAt });
       expect((mockPrisma.setupInstalment.updateMany as any).mock.calls[0][0]).toEqual({
         where: { stripeInvoiceId: 'in_xyz' },
         data: { status: 'PAID', paidAt },
       });
+      expect(ctx).toEqual({ opportunityId: 'opp_1', tenantId: 'ten_1', tenantSlug: 'acme' });
+    });
+
+    it('returns null and does not update when no instalment carries the invoice', async () => {
+      (mockPrisma.setupInstalment.findFirst as any).mockResolvedValue(null);
+      const ctx = await repo.markPaidByStripeInvoiceId({
+        stripeInvoiceId: 'in_none',
+        paidAt: new Date(),
+      });
+      expect(ctx).toBeNull();
+      expect(mockPrisma.setupInstalment.updateMany as any).not.toHaveBeenCalled();
     });
   });
 });

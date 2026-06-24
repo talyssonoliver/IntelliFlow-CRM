@@ -33,9 +33,29 @@ const SUBSCRIPTION_EVENTS = [
 const INVOICE_EVENTS = ['invoice.paid'];
 const ALLOWED_EVENTS = [...SUBSCRIPTION_EVENTS, ...INVOICE_EVENTS];
 
+/** One persisted instalment row (the subset the paid re-push needs). */
+interface InstalmentRow {
+  n: number;
+  amountCents: number;
+  currency: string;
+  status: 'due' | 'paid' | 'overdue';
+  dueAt: Date | null;
+  paidAt: Date | null;
+  hostedInvoiceUrl: string | null;
+}
+
 /** Mark a setup-fee instalment paid by its (unique) Stripe invoice id. */
 interface SetupInstalmentPaidWriter {
-  markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void>;
+  /**
+   * Returns the row's ids + portal slug on a match (null otherwise) so the caller
+   * can re-push the now-paid set to the portal.
+   */
+  markPaidByStripeInvoiceId(args: {
+    stripeInvoiceId: string;
+    paidAt: Date;
+  }): Promise<{ opportunityId: string; tenantId: string; tenantSlug: string | null } | null>;
+  /** Optional: re-read the whole set so the paid status reflects on the portal. */
+  findByOpportunity?(opportunityId: string, tenantId: string): Promise<InstalmentRow[]>;
 }
 
 interface PortalSyncClient {
@@ -43,6 +63,15 @@ interface PortalSyncClient {
     slug: string;
     subscriptionStatus?: PortalSubscriptionStatus;
     subscriptionRenewsAt?: string | null;
+    setupInstalments?: Array<{
+      n: number;
+      amountCents: number;
+      currency: string;
+      status: 'due' | 'paid' | 'overdue';
+      dueAt?: string | null;
+      paidAt?: string | null;
+      paymentUrl?: string | null;
+    }>;
   }): Promise<{ isFailure: boolean; error?: { message: string } }>;
 }
 
@@ -116,7 +145,7 @@ export function buildStripeWebhookHandler(deps: StripeWebhookDeps): WebhookHandl
       if (deps.setupInstalments) {
         const paidUnix = invoice.status_transitions?.paid_at;
         const paidAt = typeof paidUnix === 'number' ? new Date(paidUnix * 1000) : new Date();
-        await deps.setupInstalments.markPaidByStripeInvoiceId({
+        const ctx = await deps.setupInstalments.markPaidByStripeInvoiceId({
           stripeInvoiceId: invoice.id,
           paidAt,
         });
@@ -124,6 +153,9 @@ export function buildStripeWebhookHandler(deps: StripeWebhookDeps): WebhookHandl
           { eventId: event.id, invoiceId: invoice.id },
           '[stripe-webhook] setup-fee instalment marked paid'
         );
+        // Re-push so the portal reflects the payment immediately (otherwise it
+        // would show the instalment as still due until the next deal sync).
+        await rePushPaidToPortal(deps, ctx, event.id, logger);
       }
       return;
     }
@@ -161,6 +193,55 @@ export function buildStripeWebhookHandler(deps: StripeWebhookDeps): WebhookHandl
   });
 
   return handler;
+}
+
+type Logger = NonNullable<StripeWebhookDeps['logger']>;
+
+/**
+ * After an instalment is marked paid, re-push the whole instalment set to the
+ * portal so it reflects the payment immediately (instead of showing it as still
+ * due until the next deal sync). Best-effort: needs the slug (resolved by the
+ * repo) + a reader + a portal client; any failure is logged, never thrown.
+ */
+async function rePushPaidToPortal(
+  deps: Pick<StripeWebhookDeps, 'portalSync' | 'setupInstalments'>,
+  ctx: { opportunityId: string; tenantId: string; tenantSlug: string | null } | null,
+  eventId: string,
+  logger: Logger
+): Promise<void> {
+  const reader = deps.setupInstalments?.findByOpportunity;
+  if (!ctx?.tenantSlug || !deps.portalSync || !reader) return;
+  try {
+    const rows = await reader(ctx.opportunityId, ctx.tenantId);
+    const res = await deps.portalSync.pushDelivery({
+      slug: ctx.tenantSlug,
+      setupInstalments: rows.map((r) => ({
+        n: r.n,
+        amountCents: r.amountCents,
+        currency: r.currency,
+        status: r.status,
+        dueAt: r.dueAt ? r.dueAt.toISOString() : null,
+        paidAt: r.paidAt ? r.paidAt.toISOString() : null,
+        paymentUrl: r.hostedInvoiceUrl,
+      })),
+    });
+    if (res.isFailure) {
+      logger.warn(
+        { eventId, slug: ctx.tenantSlug, error: res.error?.message },
+        '[stripe-webhook] paid re-push failed (non-fatal)'
+      );
+      return;
+    }
+    logger.info(
+      { eventId, slug: ctx.tenantSlug },
+      '[stripe-webhook] re-pushed paid instalment set to portal'
+    );
+  } catch (err) {
+    logger.warn(
+      { eventId, slug: ctx.tenantSlug, error: err instanceof Error ? err.message : String(err) },
+      '[stripe-webhook] paid re-push threw (non-fatal)'
+    );
+  }
 }
 
 /**

@@ -140,8 +140,13 @@ export interface SetupInstalmentRepository {
   /**
    * Mark the instalment carrying this Stripe invoice as PAID. Looked up by the
    * unique `stripeInvoiceId` because the `invoice.paid` webhook only knows the
-   * invoice — not the opportunity/tenant. Idempotent: a no-op when no row
-   * matches (e.g. an invoice unrelated to a setup-fee instalment).
+   * invoice — not the opportunity/tenant. Idempotent: returns null when no row
+   * matches (e.g. an invoice unrelated to a setup-fee instalment). On a match it
+   * returns the row's identifiers + the portal `tenantSlug`, so the caller can
+   * re-push the now-paid instalment set to the portal.
    */
-  markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void>;
+  markPaidByStripeInvoiceId(args: {
+    stripeInvoiceId: string;
+    paidAt: Date;
+  }): Promise<{ opportunityId: string; tenantId: string; tenantSlug: string | null } | null>;
 }

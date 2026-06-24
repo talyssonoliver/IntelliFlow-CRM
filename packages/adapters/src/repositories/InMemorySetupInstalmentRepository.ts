@@ -74,11 +74,15 @@ export class InMemorySetupInstalmentRepository implements SetupInstalmentReposit
     }
   }
 
-  async markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void> {
+  async markPaidByStripeInvoiceId(args: {
+    stripeInvoiceId: string;
+    paidAt: Date;
+  }): Promise<{ opportunityId: string; tenantId: string; tenantSlug: string | null } | null> {
     const row = this.store.find((r) => r.stripeInvoiceId === args.stripeInvoiceId);
-    if (row) {
-      row.status = 'paid';
-      row.paidAt = args.paidAt;
-    }
+    if (!row) return null;
+    row.status = 'paid';
+    row.paidAt = args.paidAt;
+    // The in-memory store has no Opportunity join, so the portal slug is unknown.
+    return { opportunityId: row.opportunityId, tenantId: row.tenantId, tenantSlug: null };
   }
 }

@@ -96,12 +96,30 @@ export class PrismaSetupInstalmentRepository implements SetupInstalmentRepositor
     });
   }
 
-  async markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void> {
-    // The invoice id is globally unique (@unique); updateMany keeps this a no-op
-    // when the invoice is not a setup-fee instalment, instead of throwing.
+  async markPaidByStripeInvoiceId(args: {
+    stripeInvoiceId: string;
+    paidAt: Date;
+  }): Promise<{ opportunityId: string; tenantId: string; tenantSlug: string | null } | null> {
+    // Resolve the row first (the invoice id is globally @unique) to return the
+    // identifiers + portal slug the caller needs to re-push the paid set. Null
+    // when the invoice is not a setup-fee instalment (no throw).
+    const row = await this.prisma.setupInstalment.findFirst({
+      where: { stripeInvoiceId: args.stripeInvoiceId },
+      select: {
+        opportunityId: true,
+        tenantId: true,
+        opportunity: { select: { tenantSlug: true } },
+      },
+    });
+    if (!row) return null;
     await this.prisma.setupInstalment.updateMany({
       where: { stripeInvoiceId: args.stripeInvoiceId },
       data: { status: TO_DB.paid, paidAt: args.paidAt },
     });
+    return {
+      opportunityId: row.opportunityId,
+      tenantId: row.tenantId,
+      tenantSlug: row.opportunity?.tenantSlug ?? null,
+    };
   }
 }
