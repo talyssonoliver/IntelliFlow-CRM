@@ -49,40 +49,66 @@ export function readTaskTracking(repoRoot: string, sprintNum: number, taskId: st
   }
 }
 
+/** Read one task-tracking.json at a known sprint; throws (never returns null) if it is corrupt. */
+function readTaskTrackingAt(
+  sprintsRoot: string,
+  sprintNum: number,
+  taskId: string
+): { sprintNum: number; data: any } | null {
+  const p = join(sprintsRoot, `sprint-${sprintNum}`, 'attestations', taskId, 'task-tracking.json');
+  if (!existsSync(p)) return null;
+  try {
+    return { sprintNum, data: JSON.parse(readFileSync(p, 'utf8')) };
+  } catch (err) {
+    // A PRESENT-but-corrupt record must SURFACE, never be misread as "no record". Returning null
+    // would make buildIndividualTaskFile throw "not found" (swallowed by the orchestrator) and
+    // silently DROP a task that has canonical evidence. Throw with context so the sync reports it
+    // (orchestrator collects it in errors[]; the message does not contain "not found", so it is
+    // not treated as an absent/backlog task).
+    throw new Error(
+      `task-tracking.json for ${taskId} at ${p} exists but is unparseable: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+      { cause: err }
+    );
+  }
+}
+
 /**
- * Locate a task's canonical task-tracking.json across ALL sprint dirs and return its sprint
- * number + parsed data, or null if the task has no canonical operational record (a backlog task
- * that should NOT get a generated per-task file). Searching every sprint (rather than only the
- * CSV Target Sprint) keeps generation correct for the handful of tasks whose record sprint and
- * CSV sprint disagree, and makes the generated tree reproducible from .specify alone on a fresh
- * checkout (the per-task tree is gitignored — there is no existing file to locate).
+ * Locate a task's canonical task-tracking.json and return its sprint number + parsed data, or
+ * null if the task has no canonical operational record (a backlog task that should NOT get a
+ * generated per-task file).
+ *
+ * Resolution is DETERMINISTIC and authoritative: the CSV Target Sprint (`preferredSprint`) is
+ * checked first, so a task whose record exists in two sprint dirs (real data: IFC-025 in sprint-6
+ * AND sprint-14, IFC-198 in sprint-13 AND sprint-29) always resolves to its CSV sprint rather than
+ * whatever order `readdirSync` happens to yield (which differs across filesystems). Only if the
+ * CSV sprint has no record do we scan the remaining sprints in numeric order (covers the handful
+ * of historically misfiled tasks whose record sprint ≠ CSV sprint). This makes the generated tree
+ * reproducible from .specify alone on a fresh checkout (the per-task tree is gitignored).
  */
 export function findTaskTracking(
   repoRoot: string,
-  taskId: string
+  taskId: string,
+  preferredSprint?: number
 ): { sprintNum: number; data: any } | null {
   const sprintsRoot = join(repoRoot, '.specify', 'sprints');
   if (!existsSync(sprintsRoot)) return null;
-  for (const entry of readdirSync(sprintsRoot)) {
-    const m = /^sprint-(\d+)$/.exec(entry);
-    if (!m) continue;
-    const p = join(sprintsRoot, entry, 'attestations', taskId, 'task-tracking.json');
-    if (!existsSync(p)) continue;
-    try {
-      return { sprintNum: Number(m[1]), data: JSON.parse(readFileSync(p, 'utf8')) };
-    } catch (err) {
-      // A PRESENT-but-corrupt record must SURFACE, never be misread as "no record". Returning
-      // null here would make buildIndividualTaskFile throw "not found" (swallowed by the
-      // orchestrator) and silently DROP a task that has canonical evidence. Throw with context
-      // so the sync reports it (orchestrator collects it in errors[]; the error does not contain
-      // "not found", so it is not treated as an absent/backlog task).
-      throw new Error(
-        `task-tracking.json for ${taskId} at ${p} exists but is unparseable: ${
-          err instanceof Error ? err.message : String(err)
-        }`,
-        { cause: err }
-      );
-    }
+
+  if (preferredSprint !== undefined) {
+    const hit = readTaskTrackingAt(sprintsRoot, preferredSprint, taskId);
+    if (hit) return hit;
+  }
+
+  const otherSprints = readdirSync(sprintsRoot)
+    .map((e) => /^sprint-(\d+)$/.exec(e))
+    .filter((m): m is RegExpExecArray => m !== null)
+    .map((m) => Number(m[1]))
+    .filter((n) => n !== preferredSprint)
+    .sort((a, b) => a - b);
+  for (const sprintNum of otherSprints) {
+    const hit = readTaskTrackingAt(sprintsRoot, sprintNum, taskId);
+    if (hit) return hit;
   }
   return null;
 }

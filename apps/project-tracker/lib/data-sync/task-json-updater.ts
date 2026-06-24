@@ -127,17 +127,18 @@ export function buildIndividualTaskFile(
   task: TaskRecord,
   metricsDir: string,
   allTasks: TaskRecord[],
-  _sprintNum: number
+  sprintNum: number
 ): void {
   const taskId = task['Task ID'];
   const repoRoot = findRepoRoot(metricsDir) || metricsDir;
   // Generate a per-task read-model IFF the task has a canonical operational record under
   // .specify (task-tracking.json). Backlog/never-started tasks have none and live only in the
   // aggregate (Sprint_plan.json) — surfaced as "not found" (the orchestrator swallows it).
-  // The output path is a deterministic FLAT sprint-{N}/<TASK>.json at the record's own sprint, so
-  // the gitignored tree reproduces identically from .specify alone (no dependence on any existing
-  // file's phase-* location, which does not exist on a fresh checkout).
-  const tt = findTaskTracking(repoRoot, taskId);
+  // Resolution prefers the CSV Target Sprint (sprintNum) so a task with records in two sprints
+  // resolves deterministically; the output is a FLAT sprint-{N}/<TASK>.json at the resolved
+  // record's sprint, reproducible from .specify alone on a fresh checkout (no dependence on any
+  // existing file's phase-* location, which does not exist on a fresh checkout).
+  const tt = findTaskTracking(repoRoot, taskId, sprintNum);
   if (!tt) {
     throw new Error(`Task file not found for ${taskId}`);
   }

@@ -247,11 +247,42 @@ describe('buildIndividualTaskFile — rebuild from CSV + task-tracking (ADR-067 
     expect(json.dependencies.verified_at).toBe('2026-01-01T00:00:00.000Z');
   });
 
-  it('writes the file at the task-tracking record sprint, not the CSV-passed sprint', () => {
-    const out = seedTaskTracking(7); // record lives under sprint-7
-    // pass a different sprintNum (5) — output must follow the record's sprint (7)
+  it('falls back to the record sprint when the CSV sprint has no record (misfiled task)', () => {
+    const out = seedTaskTracking(7); // record lives under sprint-7 only
+    // pass a different sprintNum (5) with no record there — must fall back to the record's sprint (7)
     buildIndividualTaskFile(task, join(workDir, 'metrics'), [task, depDone], 5);
     expect(JSON.parse(readFileSync(out, 'utf-8')).sprint).toBe('sprint-7');
+  });
+
+  it('prefers the CSV Target Sprint record when the task exists in two sprint dirs', () => {
+    mkdirSync(join(workDir, '.git'), { recursive: true });
+    // Same task_id with records in BOTH sprint-6 (CSV) and sprint-14 (stale dup) — distinguishable.
+    for (const [sprint, marker] of [
+      [6, 'csv-sprint-record'],
+      [14, 'other-sprint-record'],
+    ] as const) {
+      const d = join(
+        workDir,
+        '.specify',
+        'sprints',
+        `sprint-${sprint}`,
+        'attestations',
+        'SAMPLE-002'
+      );
+      mkdirSync(d, { recursive: true });
+      writeJsonFile(join(d, 'task-tracking.json'), {
+        task_id: 'SAMPLE-002',
+        notes: marker,
+        status_history: [],
+      });
+    }
+    // CSV Target Sprint = 6 must win regardless of readdirSync order ('sprint-14' < 'sprint-6').
+    buildIndividualTaskFile(task, join(workDir, 'metrics'), [task, depDone], 6);
+    const out = JSON.parse(
+      readFileSync(join(workDir, 'metrics', 'sprint-6', 'SAMPLE-002.json'), 'utf-8')
+    );
+    expect(out.sprint).toBe('sprint-6');
+    expect(out.notes).toBe('csv-sprint-record');
   });
 
   it('throws "not found" for a backlog task with no task-tracking record', () => {
