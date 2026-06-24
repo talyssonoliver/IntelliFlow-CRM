@@ -222,7 +222,9 @@ async function rePushPaidToPortal(
         status: r.status,
         dueAt: r.dueAt ? r.dueAt.toISOString() : null,
         paidAt: r.paidAt ? r.paidAt.toISOString() : null,
-        paymentUrl: r.hostedInvoiceUrl,
+        // Contract: paymentUrl is null once paid (nothing left to pay). Only a
+        // still-due/overdue instalment carries its hosted invoice URL.
+        paymentUrl: r.status === 'paid' ? null : r.hostedInvoiceUrl,
       })),
     });
     if (res.isFailure) {

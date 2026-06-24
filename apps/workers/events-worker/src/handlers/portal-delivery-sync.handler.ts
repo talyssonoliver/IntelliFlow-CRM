@@ -232,8 +232,10 @@ function toPortalInstalments(xs: InstalmentRow[]) {
     status: r.status,
     dueAt: r.dueAt ? r.dueAt.toISOString() : null,
     paidAt: r.paidAt ? r.paidAt.toISOString() : null,
-    // The portal renders a Pay button that redirects here; null until invoiced.
-    paymentUrl: r.hostedInvoiceUrl,
+    // The portal renders a Pay button that redirects here; null until invoiced,
+    // and null again once paid (the contract retains no payment URL for a paid
+    // instalment — there is nothing left to pay).
+    paymentUrl: r.status === 'paid' ? null : r.hostedInvoiceUrl,
   }));
 }
 

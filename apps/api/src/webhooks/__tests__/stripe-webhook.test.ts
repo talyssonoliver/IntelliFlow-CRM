@@ -138,13 +138,16 @@ describe('processStripeWebhook', () => {
     );
     expect(res.statusCode).toBe(200);
     expect(findByOpportunity).toHaveBeenCalledWith('opp_1', 'ten_1');
+    // The paid instalment carries NO payment URL (contract: null once paid);
+    // a still-due instalment keeps its hosted invoice URL.
     expect(pushDelivery).toHaveBeenCalledWith(
       expect.objectContaining({
         slug: 'acme',
         setupInstalments: expect.arrayContaining([
+          expect.objectContaining({ n: 1, status: 'paid', paymentUrl: null }),
           expect.objectContaining({
-            n: 1,
-            status: 'paid',
+            n: 2,
+            status: 'due',
             paymentUrl: expect.stringContaining('invoice.stripe.com'),
           }),
         ]),
