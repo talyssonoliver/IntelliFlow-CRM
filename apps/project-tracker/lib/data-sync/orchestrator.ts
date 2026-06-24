@@ -2,7 +2,7 @@
  * Data Sync Orchestrator
  */
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import Papa from 'papaparse';
 import { splitSprintPlan } from '../../../../tools/scripts/split-sprint-plan';
@@ -168,7 +168,15 @@ function processSprintTasks(
   options: SyncOptions = {}
 ): void {
   const sprintDir = join(metricsDir, `sprint-${sprintNum}`);
-  if (!existsSync(sprintDir)) return;
+  if (!existsSync(sprintDir)) {
+    // ADR-067 Phase 2: on a fresh checkout the gitignored per-task tree — including its
+    // `sprint-{N}` directories (git does not track empty dirs) — is absent. In rebuild mode we
+    // must CREATE it and generate; skipping here would make the whole regeneration a silent
+    // no-op on a clean clone / CI / post-`git clean` (codex-review HIGH). The legacy
+    // mutate-in-place and aggregates-only paths still skip an absent sprint.
+    if (!options.rebuildPerTask) return;
+    mkdirSync(sprintDir, { recursive: true });
+  }
 
   // ADR-067: per-task JSON write modes.
   //  - aggregatesOnly: skip per-task writes entirely (Phase 1 — aggregate refresh / drift check).
