@@ -11,7 +11,15 @@
  *      yet still re-stamps verified_at when the dependency state actually changes.
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, statSync, utimesSync } from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  rmSync,
+  statSync,
+  utimesSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { writeJsonFile, writeJsonFileStable } from '../../lib/data-sync/file-io';
@@ -252,5 +260,24 @@ describe('buildIndividualTaskFile — rebuild from CSV + task-tracking (ADR-067 
     expect(() => buildIndividualTaskFile(backlog, join(workDir, 'metrics'), [backlog], 0)).toThrow(
       /not found/
     );
+  });
+
+  it('SURFACES a corrupt task-tracking record instead of silently dropping the task', () => {
+    // A present-but-unparseable record must not be misread as "no record" (which the orchestrator
+    // would swallow as a backlog task, dropping a task that has canonical evidence).
+    mkdirSync(join(workDir, '.git'), { recursive: true });
+    const ttDir = join(workDir, '.specify', 'sprints', 'sprint-0', 'attestations', 'SAMPLE-002');
+    mkdirSync(ttDir, { recursive: true });
+    writeFileSync(join(ttDir, 'task-tracking.json'), '{ this is : not valid json ');
+
+    let thrown: Error | undefined;
+    try {
+      buildIndividualTaskFile(task, join(workDir, 'metrics'), [task, depDone], 0);
+    } catch (e) {
+      thrown = e as Error;
+    }
+    expect(thrown).toBeDefined();
+    expect(thrown!.message).toMatch(/unparseable/);
+    expect(thrown!.message).not.toMatch(/not found/); // must NOT be misclassified as absent
   });
 });

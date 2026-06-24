@@ -70,8 +70,18 @@ export function findTaskTracking(
     if (!existsSync(p)) continue;
     try {
       return { sprintNum: Number(m[1]), data: JSON.parse(readFileSync(p, 'utf8')) };
-    } catch {
-      return null;
+    } catch (err) {
+      // A PRESENT-but-corrupt record must SURFACE, never be misread as "no record". Returning
+      // null here would make buildIndividualTaskFile throw "not found" (swallowed by the
+      // orchestrator) and silently DROP a task that has canonical evidence. Throw with context
+      // so the sync reports it (orchestrator collects it in errors[]; the error does not contain
+      // "not found", so it is not treated as an absent/backlog task).
+      throw new Error(
+        `task-tracking.json for ${taskId} at ${p} exists but is unparseable: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+        { cause: err }
+      );
     }
   }
   return null;
