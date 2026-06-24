@@ -293,6 +293,36 @@ describe('buildIndividualTaskFile — rebuild from CSV + task-tracking (ADR-067 
     );
   });
 
+  it('never lets a stale CSV-derived key in task-tracking clobber the CSV source of truth', () => {
+    mkdirSync(join(workDir, '.git'), { recursive: true });
+    const ttDir = join(workDir, '.specify', 'sprints', 'sprint-0', 'attestations', 'SAMPLE-002');
+    mkdirSync(ttDir, { recursive: true });
+    // A task-tracking.json that wrongly retained CSV-derived fields (stale / hand-edited).
+    writeJsonFile(join(ttDir, 'task-tracking.json'), {
+      task_id: 'SAMPLE-002',
+      status: 'BLOCKED', // stale — CSV says Completed
+      section: 'WrongSection', // stale — CSV says Core
+      owner: 'WrongOwner',
+      dependencies: { required: ['STALE'], all_satisfied: false }, // stale
+      dependencies_resolved: ['STALE'],
+      notes: 'keep me', // operational — must survive
+    });
+
+    buildIndividualTaskFile(task, join(workDir, 'metrics'), [task, depDone], 0);
+    const json = JSON.parse(
+      readFileSync(join(workDir, 'metrics', 'sprint-0', 'SAMPLE-002.json'), 'utf-8')
+    );
+    // CSV wins for every authoritative field
+    expect(json.status).toBe('DONE');
+    expect(json.section).toBe('Core');
+    expect(json.owner).toBe('Backend');
+    expect(json.dependencies.required).toEqual(['DEP-1']);
+    expect(json.dependencies.all_satisfied).toBe(true);
+    expect(json.dependencies_resolved).toEqual(['DEP-1']);
+    // operational field still overlaid
+    expect(json.notes).toBe('keep me');
+  });
+
   it('SURFACES a corrupt task-tracking record instead of silently dropping the task', () => {
     // A present-but-unparseable record must not be misread as "no record" (which the orchestrator
     // would swallow as a backlog task, dropping a task that has canonical evidence).

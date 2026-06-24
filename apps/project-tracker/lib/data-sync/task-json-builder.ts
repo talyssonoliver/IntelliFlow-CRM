@@ -19,7 +19,24 @@ import { join } from 'node:path';
 import type { TaskRecord } from './types';
 import { mapCsvStatusToIndividual, parseDependencies } from './csv-mapping';
 
-const META_KEYS = new Set(['task_id', 'dependencies_meta', '$schema']);
+// Keys the task-tracking overlay must NEVER write onto the output. `task_id`/`$schema` are identity,
+// `dependencies_meta` is transformed into `dependencies`, and the rest are CSV-DERIVED authoritative
+// fields (Sprint_plan.csv is the single source of truth). Excluding the CSV-derived keys defends the
+// SSoT contract: even if a task-tracking.json retains a `status`/`section`/… (not fully stripped by
+// the migration, agent-written, or hand-edited), the freshly CSV-derived value always wins. Today's
+// migrated files carry none of these, so this changes no current output — it is a latent-bug guard.
+const OVERLAY_EXCLUDED_KEYS = new Set([
+  'task_id',
+  '$schema',
+  'dependencies_meta',
+  'section',
+  'description',
+  'owner',
+  'sprint',
+  'status',
+  'dependencies',
+  'dependencies_resolved',
+]);
 
 /** Build the index the builder needs (dependency satisfaction is computed across all tasks). */
 export function indexTasksById(tasks: TaskRecord[]): Record<string, TaskRecord> {
@@ -146,9 +163,10 @@ export function buildTaskJson(
 
   out.dependencies_resolved = allSatisfied && required.length > 0 ? required : [];
 
-  // Overlay every operational/evidence field verbatim from the canonical task-tracking record.
+  // Overlay every operational/evidence field verbatim from the canonical task-tracking record,
+  // but NEVER a CSV-derived authoritative field (see OVERLAY_EXCLUDED_KEYS) — CSV stays the SSoT.
   for (const [k, v] of Object.entries(taskTracking)) {
-    if (META_KEYS.has(k)) continue;
+    if (OVERLAY_EXCLUDED_KEYS.has(k)) continue;
     out[k] = v;
   }
   return out;
