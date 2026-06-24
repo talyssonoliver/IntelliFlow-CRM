@@ -757,6 +757,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
             dueAt: Date | null;
             paidAt: Date | null;
             stripeInvoiceId: string | null;
+            hostedInvoiceUrl: string | null;
           }>
         >;
         setStripeInvoiceId(args: {
@@ -764,6 +765,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           tenantId: string;
           n: number;
           stripeInvoiceId: string;
+          hostedInvoiceUrl?: string | null;
         }): Promise<void>;
       };
       HttpPortalDeliverySyncAdapter: new (cfg: {
@@ -793,7 +795,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           autoAdvance?: boolean;
           description?: string;
         }): BillingCall<{ id: string }>;
-        finalizeInvoice(id: string): BillingCall<{ id: string }>;
+        finalizeInvoice(id: string): BillingCall<{ id: string; hostedInvoiceUrl?: string | null }>;
       };
     };
     const { PrismaSetupInstalmentRepository, HttpPortalDeliverySyncAdapter, StripeAdapter } =

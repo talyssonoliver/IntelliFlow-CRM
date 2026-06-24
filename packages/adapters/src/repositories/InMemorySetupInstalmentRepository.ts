@@ -42,6 +42,7 @@ export class InMemorySetupInstalmentRepository implements SetupInstalmentReposit
         dueAt: inst.dueAt,
         paidAt: null,
         stripeInvoiceId: null,
+        hostedInvoiceUrl: null,
       });
     }
   }
@@ -61,12 +62,16 @@ export class InMemorySetupInstalmentRepository implements SetupInstalmentReposit
     tenantId: string;
     n: number;
     stripeInvoiceId: string;
+    hostedInvoiceUrl?: string | null;
   }): Promise<void> {
     const row = this.store.find(
       (r) =>
         r.opportunityId === args.opportunityId && r.tenantId === args.tenantId && r.n === args.n
     );
-    if (row) row.stripeInvoiceId = args.stripeInvoiceId;
+    if (row) {
+      row.stripeInvoiceId = args.stripeInvoiceId;
+      if (args.hostedInvoiceUrl !== undefined) row.hostedInvoiceUrl = args.hostedInvoiceUrl;
+    }
   }
 
   async markPaidByStripeInvoiceId(args: { stripeInvoiceId: string; paidAt: Date }): Promise<void> {

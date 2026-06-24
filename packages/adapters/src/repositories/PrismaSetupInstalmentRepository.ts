@@ -73,6 +73,7 @@ export class PrismaSetupInstalmentRepository implements SetupInstalmentRepositor
       dueAt: row.dueAt,
       paidAt: row.paidAt,
       stripeInvoiceId: row.stripeInvoiceId,
+      hostedInvoiceUrl: row.hostedInvoiceUrl,
     }));
   }
 
@@ -81,12 +82,17 @@ export class PrismaSetupInstalmentRepository implements SetupInstalmentRepositor
     tenantId: string;
     n: number;
     stripeInvoiceId: string;
+    hostedInvoiceUrl?: string | null;
   }): Promise<void> {
     // Scope the write by tenant too: updateMany lets us add the tenantId guard
-    // that the (opportunityId, n) unique key alone would not enforce.
+    // that the (opportunityId, n) unique key alone would not enforce. Only stamp
+    // the hosted URL when the caller supplies it (undefined = leave untouched).
     await this.prisma.setupInstalment.updateMany({
       where: { opportunityId: args.opportunityId, tenantId: args.tenantId, n: args.n },
-      data: { stripeInvoiceId: args.stripeInvoiceId },
+      data: {
+        stripeInvoiceId: args.stripeInvoiceId,
+        ...(args.hostedInvoiceUrl !== undefined ? { hostedInvoiceUrl: args.hostedInvoiceUrl } : {}),
+      },
     });
   }
 
