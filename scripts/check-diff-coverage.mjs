@@ -99,6 +99,12 @@ const SONAR_COVERAGE_EXCLUDE = [
   // never appears in lcov; counting its signature/JSDoc lines as "uncovered" is a
   // false negative (same nature as a .d.ts). (#427)
   /^packages\/domain\/src\/crm\/contact\/ContactRepository\.ts$/,
+  // PortalDeliverySyncPort — a pure TypeScript interface (the CRM→portal sync
+  // contract: provision + delivery push input shapes, no executable code), same
+  // nature as ContactRepository above / a .d.ts. Its signature/JSDoc lines never
+  // appear in lcov, so counting the added paymentUrl field as "uncovered" is a
+  // false negative. Mirror in sonar.coverage.exclusions.
+  /^packages\/application\/src\/ports\/external\/PortalDeliverySyncPort\.ts$/,
   // The Supabase client module is vi.mock()'d by 7+ api test files, so the real
   // module is shadowed across the merged api coverage run and never appears in
   // lcov (true on origin/main too). Its own supabase.test.ts covers it in
