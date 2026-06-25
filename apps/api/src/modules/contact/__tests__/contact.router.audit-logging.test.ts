@@ -39,6 +39,27 @@ vi.mock('../contact-reassign', () => ({
   logContactReassignPermissionDenied: vi.fn(),
 }));
 
+// ─── BullMQ mock ────────────────────────────────────────────────────────────
+// Several procedures (create, scoreWithAI, suggestTags) fire-and-forget an enqueue via
+// loadBullMQ(). This is a UNIT test with NO Redis service; a real Queue opens an ioredis client
+// that retries the unreachable Redis forever (real setTimeout backoff) and is never closed on the
+// add()-failure path — leaking a handle that hangs the vitest shard (the pre-existing Shard 4/20
+// failure). Mock the loader so the procedures get a no-op Queue and never touch Redis.
+vi.mock('../../../lib/load-bullmq', () => {
+  class MockQueue {
+    add = vi.fn().mockResolvedValue({
+      waitUntilFinished: vi.fn().mockResolvedValue({ suggestions: [] }),
+    });
+    close = vi.fn().mockResolvedValue(undefined);
+  }
+  class MockQueueEvents {
+    close = vi.fn().mockResolvedValue(undefined);
+  }
+  return {
+    loadBullMQ: vi.fn().mockResolvedValue({ Queue: MockQueue, QueueEvents: MockQueueEvents }),
+  };
+});
+
 import { contactRouter } from '../contact.router';
 import { getAuditLogger } from '../../../security/audit-logger';
 import { performContactReassign, emitContactReassignSideEffects } from '../contact-reassign';
