@@ -5,8 +5,12 @@ describe('enqueueBestEffort — Redis resilience', () => {
   const origHost = process.env.REDIS_HOST;
   const origPort = process.env.REDIS_PORT;
   afterEach(() => {
-    process.env.REDIS_HOST = origHost;
-    process.env.REDIS_PORT = origPort;
+    // Restore-or-delete: assigning `undefined` would coerce to the string "undefined" and
+    // pollute later tests in the same worker with a bogus Redis host/port.
+    if (origHost === undefined) delete process.env.REDIS_HOST;
+    else process.env.REDIS_HOST = origHost;
+    if (origPort === undefined) delete process.env.REDIS_PORT;
+    else process.env.REDIS_PORT = origPort;
   });
 
   it('returns false promptly (no 30s close() hang) when Redis is unreachable', async () => {
