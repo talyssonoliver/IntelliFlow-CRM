@@ -6,7 +6,13 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import type { TaskRecord } from './types';
 import { mapCsvStatusToIndividual, parseDependencies } from './csv-mapping';
-import { readJsonTolerant, writeJsonFile, findTaskFile, findRepoRoot } from './file-io';
+import {
+  readJsonTolerant,
+  writeJsonFile,
+  findTaskFile,
+  findRepoRoot,
+  removeOtherTaskFileCopies,
+} from './file-io';
 import { buildTaskJson, findTaskTracking, indexTasksById } from './task-json-builder';
 
 function classifyArtifacts(
@@ -146,5 +152,8 @@ export function buildIndividualTaskFile(
   const target = join(metricsDir, `sprint-${tt.sprintNum}`, `${taskId}.json`);
   // The sprint-{N} dir may not exist yet on a fresh checkout (the whole tree is gitignored).
   mkdirSync(dirname(target), { recursive: true });
+  // Collapse any pre-existing legacy/relocated copy of this task (e.g. a phase-* file from the old
+  // tracked tree) to exactly one flat file, so the recursive _summary walk never double-counts it.
+  removeOtherTaskFileCopies(metricsDir, taskId, target);
   writeJsonFile(target, built, 2);
 }

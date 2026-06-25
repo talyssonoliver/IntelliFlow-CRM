@@ -16,6 +16,7 @@ import {
   mkdirSync,
   readFileSync,
   writeFileSync,
+  existsSync,
   rmSync,
   statSync,
   utimesSync,
@@ -283,6 +284,43 @@ describe('buildIndividualTaskFile — rebuild from CSV + task-tracking (ADR-067 
     );
     expect(out.sprint).toBe('sprint-6');
     expect(out.notes).toBe('csv-sprint-record');
+  });
+
+  it('lets a VALID record win over a corrupt sibling in another sprint (fallback scan)', () => {
+    mkdirSync(join(workDir, '.git'), { recursive: true });
+    // CSV sprint (0) has no record; a corrupt copy sits at sprint-3 (scanned first), valid at sprint-9.
+    const corruptDir = join(
+      workDir,
+      '.specify',
+      'sprints',
+      'sprint-3',
+      'attestations',
+      'SAMPLE-002'
+    );
+    const validDir = join(workDir, '.specify', 'sprints', 'sprint-9', 'attestations', 'SAMPLE-002');
+    mkdirSync(corruptDir, { recursive: true });
+    mkdirSync(validDir, { recursive: true });
+    writeFileSync(join(corruptDir, 'task-tracking.json'), '{ broken json ');
+    writeJsonFile(join(validDir, 'task-tracking.json'), { task_id: 'SAMPLE-002', notes: 'valid' });
+
+    buildIndividualTaskFile(task, join(workDir, 'metrics'), [task, depDone], 0);
+    const json = JSON.parse(
+      readFileSync(join(workDir, 'metrics', 'sprint-9', 'SAMPLE-002.json'), 'utf-8')
+    );
+    expect(json.notes).toBe('valid'); // the corrupt sibling did not mask the valid record
+  });
+
+  it('collapses a pre-existing legacy phase-* duplicate to exactly one flat file', () => {
+    const out = seedTaskTracking(0);
+    // simulate a leftover legacy copy from the old tracked tree
+    const phaseDir = join(workDir, 'metrics', 'sprint-0', 'phase-1');
+    mkdirSync(phaseDir, { recursive: true });
+    writeJsonFile(join(phaseDir, 'SAMPLE-002.json'), { task_id: 'SAMPLE-002', stale: true });
+
+    buildIndividualTaskFile(task, join(workDir, 'metrics'), [task, depDone], 0);
+
+    expect(existsSync(out)).toBe(true); // flat file written
+    expect(existsSync(join(phaseDir, 'SAMPLE-002.json'))).toBe(false); // legacy duplicate removed
   });
 
   it('throws "not found" for a backlog task with no task-tracking record', () => {

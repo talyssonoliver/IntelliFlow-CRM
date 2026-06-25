@@ -20,11 +20,14 @@ import type { TaskRecord } from './types';
 import { mapCsvStatusToIndividual, parseDependencies } from './csv-mapping';
 
 // Keys the task-tracking overlay must NEVER write onto the output. `task_id`/`$schema` are identity,
-// `dependencies_meta` is transformed into `dependencies`, and the rest are CSV-DERIVED authoritative
-// fields (Sprint_plan.csv is the single source of truth). Excluding the CSV-derived keys defends the
-// SSoT contract: even if a task-tracking.json retains a `status`/`section`/… (not fully stripped by
-// the migration, agent-written, or hand-edited), the freshly CSV-derived value always wins. Today's
-// migrated files carry none of these, so this changes no current output — it is a latent-bug guard.
+// `dependencies_meta` is transformed into `dependencies`, and the rest are computed by the builder
+// from authoritative sources (Sprint_plan.csv for section/description/owner/status/dependencies/
+// dependencies_resolved; the resolved record's own sprint for `sprint`, which equals the CSV Target
+// Sprint except for a few historically-misfiled tasks whose file is colocated with their record).
+// Excluding these defends the SSoT contract: even if a task-tracking.json retains a `status`/
+// `section`/… (not fully stripped by the migration, agent-written, or hand-edited), the builder's
+// computed value always wins. Today's migrated files carry none of these keys, so this changes no
+// current output — it is a latent-bug guard.
 const OVERLAY_EXCLUDED_KEYS = new Set([
   'task_id',
   '$schema',
@@ -112,21 +115,33 @@ export function findTaskTracking(
   const sprintsRoot = join(repoRoot, '.specify', 'sprints');
   if (!existsSync(sprintsRoot)) return null;
 
+  // The CSV Target Sprint is authoritative: a corrupt record there IS the task's record, so let
+  // readTaskTrackingAt throw (surface the corruption).
   if (preferredSprint !== undefined) {
     const hit = readTaskTrackingAt(sprintsRoot, preferredSprint, taskId);
     if (hit) return hit;
   }
 
+  // Fallback scan (only the handful of misfiled tasks): a VALID record must win over a corrupt
+  // sibling at a different sprint — a misfiled corrupt copy must not suppress a fully-valid task.
+  // Tolerate per-sprint parse errors, remember the first, and surface it ONLY if no sprint yields
+  // a valid record (so genuine corruption with no valid copy still fails loudly, not silently).
   const otherSprints = readdirSync(sprintsRoot)
     .map((e) => /^sprint-(\d+)$/.exec(e))
     .filter((m): m is RegExpExecArray => m !== null)
     .map((m) => Number(m[1]))
     .filter((n) => n !== preferredSprint)
     .sort((a, b) => a - b);
+  let corruptError: unknown;
   for (const sprintNum of otherSprints) {
-    const hit = readTaskTrackingAt(sprintsRoot, sprintNum, taskId);
-    if (hit) return hit;
+    try {
+      const hit = readTaskTrackingAt(sprintsRoot, sprintNum, taskId);
+      if (hit) return hit;
+    } catch (err) {
+      if (corruptError === undefined) corruptError = err;
+    }
   }
+  if (corruptError !== undefined) throw corruptError;
   return null;
 }
 

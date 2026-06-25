@@ -2,9 +2,9 @@
  * File I/O Utilities
  */
 
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, unlinkSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const nodeRequire = createRequire(import.meta.url);
 
@@ -178,6 +178,30 @@ export function findAllTaskJsons(dir: string): string[] {
   }
 
   return results;
+}
+
+/**
+ * Remove every `${taskId}.json` under `searchDir` EXCEPT `keepPath` (ADR-067 Phase 2). The
+ * generator writes a single FLAT `sprint-{N}/<TASK>.json`; a dev machine that still has the
+ * now-gitignored legacy tree (e.g. a `sprint-{N}/phase-X/<TASK>.json`, or a copy under a
+ * different sprint from a prior run) would otherwise be left with two files for one task, which
+ * the recursive `_summary` walk double-counts. This collapses to exactly one file per task.
+ */
+export function removeOtherTaskFileCopies(
+  searchDir: string,
+  taskId: string,
+  keepPath: string
+): void {
+  if (!existsSync(searchDir)) return;
+  const keep = resolve(keepPath);
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name === `${taskId}.json` && resolve(full) !== keep) unlinkSync(full);
+    }
+  };
+  walk(searchDir);
 }
 
 /**
