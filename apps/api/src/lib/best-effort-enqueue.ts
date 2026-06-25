@@ -16,6 +16,10 @@
  * out a transient blip, then no reconnection) and always closes the queue in a `finally`, so the
  * call returns promptly and never leaks — whether Redis is up, blipping, or down. A
  * Redis-unavailable enqueue is treated as a no-op (the job is best-effort).
+ *
+ * @returns `true` if the job was actually enqueued, `false` if Redis/BullMQ was unavailable and the
+ *   enqueue was skipped. Pure fire-and-forget callers can ignore it; callers that report enqueue
+ *   status back to the client (e.g. `generateInsight`'s `{ enqueued }` contract) must honour it.
  */
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { loadBullMQ } from './load-bullmq';
@@ -24,7 +28,7 @@ export async function enqueueBestEffort(
   queueName: string,
   jobName: string,
   data: Record<string, unknown>
-): Promise<void> {
+): Promise<boolean> {
   try {
     const { Queue } = await loadBullMQ();
     const queue = new Queue(queueName, {
@@ -41,6 +45,7 @@ export async function enqueueBestEffort(
     });
     try {
       await queue.add(jobName, data);
+      return true;
     } finally {
       // Always release the connection — even if add() threw — without letting a dead-Redis
       // close() hang (the fail-fast connection above means there is nothing to wait for).
@@ -48,5 +53,6 @@ export async function enqueueBestEffort(
     }
   } catch {
     // Redis/BullMQ unavailable — best-effort enqueue, skip silently.
+    return false;
   }
 }

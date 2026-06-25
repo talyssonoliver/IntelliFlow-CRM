@@ -2384,13 +2384,15 @@ export const contactRouter = createTRPCRouter({
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const otelCarrier: Record<string, string> = {};
         propagation.inject(otelContext.active(), otelCarrier);
-        await enqueueBestEffort(QUEUE_NAMES.AI_ENTITY_INSIGHT, 'insight', {
+        // Honour the helper's enqueue result: a Redis-down enqueue must surface as
+        // {enqueued:false}, matching this endpoint's response contract.
+        const enqueued = await enqueueBestEffort(QUEUE_NAMES.AI_ENTITY_INSIGHT, 'insight', {
           entityType: 'contact',
           entityId: input.contactId,
           tenantId: typedCtx.tenant.tenantId,
           _otelCarrier: otelCarrier,
         });
-        return { enqueued: true };
+        return { enqueued };
       } catch {
         return { enqueued: false };
       }
