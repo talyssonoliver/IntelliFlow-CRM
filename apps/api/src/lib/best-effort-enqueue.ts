@@ -20,9 +20,15 @@
  *     in-flight command for ioredis's 10s default;
  *   - `retryStrategy` stops reconnecting after a couple of fast retries (rides a transient blip,
  *     then releases the handle);
- *   - add() and close() are each wrapped in a hard `withTimeout` as a final backstop, and close()
- *     always runs in `finally`.
- * A Redis-unavailable enqueue is treated as a no-op (the job is best-effort).
+ *   - close() (whose result is discarded) gets a hard `withTimeout` backstop and always runs in
+ *     `finally`.
+ * The `add()` result is taken straight from ioredis (bounded by the connection settings above) so
+ * it is AUTHORITATIVE — we never wrap it in a local timeout that would detach a still-running
+ * add and mis-report it. A Redis-unavailable enqueue is treated as a no-op (the job is
+ * best-effort). NOTE: like any networked write, a client-aborted command (commandTimeout) may have
+ * already committed server-side; that is acceptable here because these jobs are best-effort and
+ * their workers are idempotent (e.g. `contactAIInsight.upsert`), so a rare duplicate is harmless
+ * and under-reporting `{ enqueued:false }` is the safe direction.
  *
  * @returns `true` if the job was actually enqueued, `false` if Redis/BullMQ was unavailable and the
  *   enqueue was skipped. Pure fire-and-forget callers can ignore it; callers that report enqueue
@@ -70,20 +76,23 @@ export async function enqueueBestEffort(
       connection: {
         host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-        // Producer-only, best-effort: do NOT retry a dead Redis indefinitely (that leaks the
-        // ioredis handle and makes close() block forever). A couple of fast retries cover a
-        // transient blip; after that ioredis stops reconnecting and add() fails fast.
+        // One-shot best-effort producer: never reconnect (that leaks the ioredis handle and makes
+        // close() block forever). On the first connect/command failure ioredis gives up and add()
+        // rejects authoritatively — no buffered/detached command that could commit later.
         enableOfflineQueue: false,
         maxRetriesPerRequest: 1,
         // Bound the TCP connect and any in-flight command so a host that silently drops packets
-        // (no connection refusal) can't stall for ioredis's 10s default.
+        // (no connection refusal) can't stall for ioredis's 10s default. A single connect attempt
+        // within this window still rides a sub-second blip; longer outages fail fast (best-effort).
         connectTimeout: REDIS_OP_TIMEOUT_MS,
         commandTimeout: REDIS_OP_TIMEOUT_MS,
-        retryStrategy: (times: number) => (times > 2 ? null : Math.min(times * 100, 200)),
+        retryStrategy: () => null,
       },
     });
     try {
-      await withTimeout(queue.add(jobName, data), REDIS_OP_TIMEOUT_MS);
+      // No local timeout wrapper here: the connection settings above already bound add() and the
+      // rejection ioredis returns is authoritative, so we never detach a still-running add.
+      await queue.add(jobName, data);
       return true;
     } finally {
       // Always release the connection — even if add() threw or timed out — without letting a
