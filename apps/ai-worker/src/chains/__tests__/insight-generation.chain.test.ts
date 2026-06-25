@@ -36,6 +36,18 @@ vi.mock('../../lib/llm-factory.js', () => ({
       invoke: vi.fn().mockResolvedValue({}),
     })),
   })),
+  // The chain also resolves a tenant-scoped model via createLLMForTenant (async). Without this
+  // export the mock threw "No createLLMForTenant export", which the chain caught into its fallback
+  // path — but that vitest module error pollutes the run and exits the shard process non-zero.
+  // Return a schema-VALID empty insights payload so the tenant path resolves cleanly (no
+  // "Cannot read 'length'" noise) rather than silently falling back; tests that need the fallback
+  // override the version loader / LLM per-case.
+  createLLMForTenant: vi.fn(async () => ({
+    invoke: vi.fn().mockResolvedValue({ content: '{"insights":[]}' }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue({ insights: [] }),
+    })),
+  })),
   createEmbeddings: vi.fn(() => ({
     embedQuery: vi.fn().mockResolvedValue([]),
     embedDocuments: vi.fn().mockResolvedValue([]),
