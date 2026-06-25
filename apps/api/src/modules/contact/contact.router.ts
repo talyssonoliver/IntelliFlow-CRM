@@ -65,6 +65,7 @@ import {
 import { mapContactToResponse } from '../../shared/mappers';
 import type { Context } from '../../context';
 import { loadBullMQ } from '../../lib/load-bullmq';
+import { enqueueBestEffort } from '../../lib/best-effort-enqueue';
 import {
   getTenantContext,
   createTenantWhereClause,
@@ -435,27 +436,15 @@ function buildHygienedContactData(
 
 /** IFC-312: Fire-and-forget AI enrichment queue job for a contact entity. */
 async function enqueueContactAIEnrichment(entityId: string, tenantId: string): Promise<void> {
-  try {
-    const { Queue } = await loadBullMQ();
-    const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-    const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
-      connection: {
-        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-      },
-    });
-    const otelCarrier: Record<string, string> = {};
-    propagation.inject(otelContext.active(), otelCarrier);
-    await queue.add('enrich', {
-      entityType: 'contact',
-      entityId,
-      tenantId,
-      _otelCarrier: otelCarrier,
-    });
-    await queue.close();
-  } catch {
-    // Redis/BullMQ unavailable — silently skip background enrichment
-  }
+  const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+  const otelCarrier: Record<string, string> = {};
+  propagation.inject(otelContext.active(), otelCarrier);
+  await enqueueBestEffort(QUEUE_NAMES.AI_ENRICHMENT, 'enrich', {
+    entityType: 'contact',
+    entityId,
+    tenantId,
+    _otelCarrier: otelCarrier,
+  });
 }
 
 /** Apply info-field updates and throw on failure. */
@@ -704,27 +693,15 @@ export const contactRouter = createTRPCRouter({
     // leaving aiEnrichment as a Cat-1 dead toggle. Fire-and-forget matches
     // the `scoreWithAI` precedent.
     if (flags.aiEnrichment) {
-      try {
-        const { Queue } = await loadBullMQ();
-        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-        const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
-          connection: {
-            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          },
-        });
-        const otelCarrier: Record<string, string> = {};
-        propagation.inject(otelContext.active(), otelCarrier);
-        await queue.add('enrich', {
-          entityType: 'contact',
-          entityId: result.value.id.value,
-          tenantId: typedCtx.tenant.tenantId,
-          _otelCarrier: otelCarrier,
-        });
-        await queue.close();
-      } catch {
-        // Redis/BullMQ unavailable — silently skip background enrichment
-      }
+      const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+      const otelCarrier: Record<string, string> = {};
+      propagation.inject(otelContext.active(), otelCarrier);
+      await enqueueBestEffort(QUEUE_NAMES.AI_ENRICHMENT, 'enrich', {
+        entityType: 'contact',
+        entityId: result.value.id.value,
+        tenantId: typedCtx.tenant.tenantId,
+        _otelCarrier: otelCarrier,
+      });
     }
 
     // IFC-255: fire-and-forget audit logging. If the just-created contact was
@@ -2137,27 +2114,17 @@ export const contactRouter = createTRPCRouter({
       });
 
       // Fire-and-forget: enqueue background LLM enrichment (best-effort)
-      try {
-        const { Queue } = await loadBullMQ();
+      {
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-        const queue = new Queue(QUEUE_NAMES.AI_PREDICTION, {
-          connection: {
-            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          },
-        });
         const _otelCarrierContact: Record<string, string> = {};
         propagation.inject(otelContext.active(), _otelCarrierContact);
-        await queue.add('predict', {
+        await enqueueBestEffort(QUEUE_NAMES.AI_PREDICTION, 'predict', {
           entityType: 'contact',
           entityId: input.contactId,
           predictionType: 'CHURN_RISK',
           tenantId: typedCtx.tenant.tenantId,
           _otelCarrier: _otelCarrierContact,
         });
-        await queue.close();
-      } catch {
-        // Redis/BullMQ unavailable — silently skip background enrichment
       }
 
       // IFC-255: fire-and-forget audit logging (AI scoring — INTERNAL classification)
@@ -2414,23 +2381,15 @@ export const contactRouter = createTRPCRouter({
       if (!flags.aiInsightGeneration) return { enqueued: false };
 
       try {
-        const { Queue } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-        const queue = new Queue(QUEUE_NAMES.AI_ENTITY_INSIGHT, {
-          connection: {
-            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          },
-        });
         const otelCarrier: Record<string, string> = {};
         propagation.inject(otelContext.active(), otelCarrier);
-        await queue.add('insight', {
+        await enqueueBestEffort(QUEUE_NAMES.AI_ENTITY_INSIGHT, 'insight', {
           entityType: 'contact',
           entityId: input.contactId,
           tenantId: typedCtx.tenant.tenantId,
           _otelCarrier: otelCarrier,
         });
-        await queue.close();
         return { enqueued: true };
       } catch {
         return { enqueued: false };
