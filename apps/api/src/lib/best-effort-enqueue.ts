@@ -49,7 +49,13 @@ export async function enqueueBestEffort(
     } finally {
       // Always release the connection — even if add() threw — without letting a dead-Redis
       // close() hang (the fail-fast connection above means there is nothing to wait for).
-      await queue.close().catch(() => {});
+      // try/catch (not .catch()) so a close() that returns a non-thenable never masks the
+      // add() result.
+      try {
+        await queue.close();
+      } catch {
+        /* ignore close errors on a dead/closing connection */
+      }
     }
   } catch {
     // Redis/BullMQ unavailable — best-effort enqueue, skip silently.
