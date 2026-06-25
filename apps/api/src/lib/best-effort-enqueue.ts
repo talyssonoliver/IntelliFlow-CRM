@@ -12,10 +12,17 @@
  * for a graceful quit that never completes on a dead Redis. In Redis-less environments (e.g. the
  * unit-test shards) that leaked handle hung the process. See contact.router.ts.
  *
- * This helper uses a PRODUCER connection that gives up quickly (a couple of fast retries to ride
- * out a transient blip, then no reconnection) and always closes the queue in a `finally`, so the
- * call returns promptly and never leaks — whether Redis is up, blipping, or down. A
- * Redis-unavailable enqueue is treated as a no-op (the job is best-effort).
+ * This helper uses a PRODUCER connection that gives up quickly and bounds EVERY Redis-unavailable
+ * mode — connection refused, a blackhole host that drops packets (no refusal), and a hung close —
+ * so the call always returns promptly and never leaks:
+ *   - `enableOfflineQueue:false` + `maxRetriesPerRequest:1` → `add()` fails fast when disconnected;
+ *   - `connectTimeout`/`commandTimeout` → a silently-dropping host can't stall the TCP connect or an
+ *     in-flight command for ioredis's 10s default;
+ *   - `retryStrategy` stops reconnecting after a couple of fast retries (rides a transient blip,
+ *     then releases the handle);
+ *   - add() and close() are each wrapped in a hard `withTimeout` as a final backstop, and close()
+ *     always runs in `finally`.
+ * A Redis-unavailable enqueue is treated as a no-op (the job is best-effort).
  *
  * @returns `true` if the job was actually enqueued, `false` if Redis/BullMQ was unavailable and the
  *   enqueue was skipped. Pure fire-and-forget callers can ignore it; callers that report enqueue
@@ -23,6 +30,34 @@
  */
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { loadBullMQ } from './load-bullmq';
+
+/**
+ * Hard ceiling for any single Redis operation (connect, add, close). Generous enough that a
+ * healthy Redis never trips it, small enough that a dead/blackhole Redis can't stall the request.
+ */
+const REDIS_OP_TIMEOUT_MS = 2_000;
+
+/**
+ * Resolve/reject with `p`, but reject after `ms` no matter what. `Promise.resolve` first so a mock
+ * (or anything) returning a non-thenable is tolerated. The timer is cleared on settle and `unref`ed
+ * so it can never by itself keep the event loop (or a test worker) alive.
+ */
+function withTimeout<T>(value: PromiseLike<T> | T, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('redis op timed out')), ms);
+    (timer as { unref?: () => void }).unref?.();
+    Promise.resolve(value).then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e);
+      }
+    );
+  });
+}
 
 export async function enqueueBestEffort(
   queueName: string,
@@ -40,21 +75,24 @@ export async function enqueueBestEffort(
         // transient blip; after that ioredis stops reconnecting and add() fails fast.
         enableOfflineQueue: false,
         maxRetriesPerRequest: 1,
+        // Bound the TCP connect and any in-flight command so a host that silently drops packets
+        // (no connection refusal) can't stall for ioredis's 10s default.
+        connectTimeout: REDIS_OP_TIMEOUT_MS,
+        commandTimeout: REDIS_OP_TIMEOUT_MS,
         retryStrategy: (times: number) => (times > 2 ? null : Math.min(times * 100, 200)),
       },
     });
     try {
-      await queue.add(jobName, data);
+      await withTimeout(queue.add(jobName, data), REDIS_OP_TIMEOUT_MS);
       return true;
     } finally {
-      // Always release the connection — even if add() threw — without letting a dead-Redis
-      // close() hang (the fail-fast connection above means there is nothing to wait for).
-      // try/catch (not .catch()) so a close() that returns a non-thenable never masks the
-      // add() result.
+      // Always release the connection — even if add() threw or timed out — without letting a
+      // dead-Redis close() hang. Bounded + try/catch so a slow/non-thenable close() can never
+      // mask the add() result.
       try {
-        await queue.close();
+        await withTimeout(queue.close(), REDIS_OP_TIMEOUT_MS);
       } catch {
-        /* ignore close errors on a dead/closing connection */
+        /* ignore close errors/timeouts on a dead/closing connection */
       }
     }
   } catch {
