@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts_to_track": [
+    "ARTIFACT:apps/api/src/modules/integrations/webhooks.router.ts",
+    "EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-224/context_ack.json"
+  ],
+  "completed_at": "2026-03-07T11:37:53.911Z",
+  "created_at": "2026-03-04T23:51:20.000Z",
+  "definition_of_done": "Webhooks endpoints configured to receive external calendar events; verified by: pnpm test",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.790Z"
+  },
+  "estimate": "120/240/480",
+  "kpis": {},
+  "percent_complete": 0,
+  "prerequisites": [
+    "FILE:packages/adapters/src/calendar/shared/index.ts"
+  ],
+  "started_at": "2026-03-07T11:22:53.911Z",
+  "target_sprint": 14,
+  "task_id": "IFC-224",
+  "updated_at": "2026-03-04T23:51:20.000Z",
+  "validation_method": [
+    "VALIDATE:pnpm test"
+  ],
+  "validations": [
+    {
+      "command": "echo \"Task IFC-224 completed\"",
+      "executed_at": "2026-03-07T11:37:53.911Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

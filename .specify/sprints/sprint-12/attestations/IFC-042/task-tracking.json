@@ -1,0 +1,47 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 30,
+  "artifacts": {
+    "created": [
+      "packages/sdk/README.md"
+    ],
+    "expected": [
+      "packages/sdk/README.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-31T03:55:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.931Z"
+  },
+  "kpis": {
+    "documentation_coverage": {
+      "actual": 100,
+      "met": true,
+      "target": 100,
+      "unit": "percent"
+    }
+  },
+  "started_at": "2025-12-31T03:25:00Z",
+  "status_history": [
+    {
+      "at": "2025-12-31T03:55:00Z",
+      "note": "SDK documentation completed",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-042",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/sdk build",
+      "executed_at": "2025-12-31T03:50:00Z",
+      "exit_code": 0,
+      "name": "SDK Build",
+      "passed": true,
+      "required": true,
+      "timestamp": "2025-12-31T03:55:00Z",
+      "type": "auto"
+    }
+  ]
+}

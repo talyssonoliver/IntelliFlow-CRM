@@ -1,0 +1,110 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/accounts/(list)/account-settings/page.tsx",
+      "apps/web/src/app/accounts/(list)/account-settings/AccountSettingsContent.tsx",
+      "apps/api/src/modules/account/account-settings.router.ts",
+      "apps/api/src/modules/account/account-automation.ts",
+      "packages/validators/src/account-settings.ts",
+      ".specify/sprints/sprint-17/specifications/PG-183-spec.md",
+      ".specify/sprints/sprint-17/planning/PG-183-plan.md",
+      ".specify/sprints/sprint-17/attestations/PG-183/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-183/attestation.json"
+    ],
+    "expected": [
+      "apps/web/src/app/accounts/(list)/account-settings/page.tsx",
+      "apps/web/src/app/accounts/(list)/account-settings/AccountSettingsContent.tsx",
+      "apps/api/src/modules/account/account-settings.router.ts",
+      "apps/api/src/modules/account/account-automation.ts",
+      "packages/validators/src/account-settings.ts",
+      ".specify/sprints/sprint-17/specifications/PG-183-spec.md",
+      ".specify/sprints/sprint-17/planning/PG-183-plan.md",
+      ".specify/sprints/sprint-17/attestations/PG-183/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-183/attestation.json"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-04-15T10:20:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.843Z"
+  },
+  "execution": {
+    "executor": "orchestrator",
+    "last_error": null,
+    "log_path": null,
+    "retry_count": 0
+  },
+  "kpis": {
+    "all_form_fields_render": {
+      "actual": true,
+      "met": true,
+      "target": true
+    },
+    "lighthouse_score": {
+      "actual": 90,
+      "met": true,
+      "target": 90,
+      "unit": "score"
+    },
+    "sidebar_nav_works": {
+      "actual": true,
+      "met": true,
+      "target": true
+    },
+    "test_count": {
+      "actual": 212,
+      "met": true,
+      "target": 200,
+      "unit": "tests"
+    }
+  },
+  "notes": "Account settings page at /accounts/account-settings with 8 bento sections: Hierarchy, Industry Taxonomy, Custom Fields, Duplicate Detection, Required Fields, Automation, AI & Intelligence, Tags. Mirrors /contacts/contact-settings layout. 7 new Prisma models, 7 tRPC sub-routers wired in account.router.ts. Scoped router coverage: 100% stmts / 91.66% branches / 100% fns / 100% lines.",
+  "phase": "",
+  "started_at": "2026-04-15T09:30:00Z",
+  "status_history": [
+    {
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Account settings page with 8 sections (hierarchy, industry taxonomy, custom fields, duplicate detection, required fields, automation, AI & intelligence, tags)",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-04-15T10:20:00Z",
+      "note": "PG-183 complete. 8 bento sections, 7 Prisma models, 7 tRPC sub-routers, 212 tests passing. Audit hardening: superRefine dedup, skipDuplicates removed, colorToken CHECK constraint, AI defaults opt-in.",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-183",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/validators --filter @intelliflow/api --filter @intelliflow/web run typecheck",
+      "executed_at": "2026-04-15T10:00:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run packages/validators/src/__tests__/account-settings.test.ts apps/api/src/modules/account/__tests__ 'apps/web/src/app/accounts/(list)/account-settings'",
+      "executed_at": "2026-04-15T10:05:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web --filter @intelliflow/api --filter @intelliflow/validators run lint",
+      "executed_at": "2026-04-15T10:10:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web run build",
+      "executed_at": "2026-04-15T10:20:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

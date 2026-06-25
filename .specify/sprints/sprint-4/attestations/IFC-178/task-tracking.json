@@ -1,0 +1,183 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 26,
+  "artifacts": {
+    "created": [
+      "packages/db/prisma/schema.prisma",
+      "infra/supabase/migrations/20260204000001_ai_output_review_tables.sql",
+      "infra/supabase/migrations/20260204000000_ai_output_review_rls.sql"
+    ],
+    "expected": [
+      "packages/db/prisma/schema.prisma",
+      "infra/supabase/migrations/20260204000001_ai_output_review_tables.sql",
+      "infra/supabase/migrations/20260204000000_ai_output_review_rls.sql"
+    ],
+    "missing": []
+  },
+  "completed_at": "2026-02-04T19:56:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.736Z"
+  },
+  "execution": {
+    "agents": [
+      "Data-Engineer",
+      "Backend-Architect",
+      "Security-Lead",
+      "Domain-Expert",
+      "Test-Engineer"
+    ],
+    "completed_at": "2026-02-04T19:56:00.000Z",
+    "duration_minutes": 26,
+    "executor": "Claude Code /exec",
+    "retry_count": 0,
+    "started_at": "2026-02-04T19:30:00.000Z"
+  },
+  "kpis": {
+    "migration_runs_cleanly": {
+      "actual": true,
+      "evidence": "Tables and RLS migrations executed successfully via npx prisma db execute. Database introspection confirms tables exist with all indexes.",
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    },
+    "rls_policies_applied": {
+      "actual": true,
+      "evidence": "RLS migration created at infra/supabase/migrations/20260204000000_ai_output_review_rls.sql",
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    },
+    "schema_matches_domain": {
+      "actual": "100%",
+      "evidence": "20 enum consistency tests pass - AI_OUTPUT_TYPES, REVIEW_STATUSES, REVIEW_DECISIONS all match",
+      "met": true,
+      "target": "100%",
+      "unit": "percent"
+    }
+  },
+  "notes": "IFC-178 fully implemented and deployed. Database tables created (ai_output_reviews, ai_output_review_audit) with RLS policies for tenant isolation. Helper functions public.get_current_tenant_id() and public.is_service_role() created for RLS. All 37 tests pass. Audit table is immutable (append-only, no UPDATE/DELETE policies).",
+  "percent_complete": 100,
+  "planning": {
+    "effort_estimate": {
+      "most_likely": "110 min",
+      "optimistic": "75 min",
+      "pessimistic": "165 min"
+    },
+    "generated_at": "2026-02-04T19:00:00.000Z",
+    "integration_checkpoints": 5,
+    "plan_document": ".specify/sprints/sprint-4/planning/IFC-178-plan.md",
+    "prisma_enums": 3,
+    "prisma_models": 2,
+    "tdd_phases": 3,
+    "test_files_to_create": 3
+  },
+  "started_at": "2026-02-04T19:30:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-01-01T00:00:00.000Z",
+      "note": "Initial status",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-04T10:00:00.000Z",
+      "note": "Spec session started with 5 agents: Data-Engineer, Backend-Architect, Security-Lead, Domain-Expert, Test-Engineer",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-04T11:00:00.000Z",
+      "note": "Spec session completed - all 5 agents reached consensus after 4 rounds",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-04T18:30:00.000Z",
+      "note": "Plan session started - generating TDD execution plan",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-04T19:00:00.000Z",
+      "note": "TDD plan generated with 3 phases (RED-GREEN-REFACTOR), 5 integration checkpoints, ~110 min estimated",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-04T19:30:00.000Z",
+      "note": "Exec session started - implementing TDD phases",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-04T19:56:00.000Z",
+      "note": "Exec session completed - all TDD phases passed, 37 tests passing, schema validated",
+      "status": "Completed"
+    }
+  ],
+  "task_id": "IFC-178",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/db typecheck",
+      "executed_at": "2026-02-04T19:55:53.000Z",
+      "exit_code": 0,
+      "name": "typecheck",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run packages/db/src/__tests__/ai-output-review-*.test.ts",
+      "details": {
+        "test_files": 2,
+        "tests_failed": 0,
+        "tests_passed": 37
+      },
+      "executed_at": "2026-02-04T19:55:54.000Z",
+      "exit_code": 0,
+      "name": "tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/db lint",
+      "executed_at": "2026-02-04T19:55:53.000Z",
+      "exit_code": 0,
+      "name": "lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/db build",
+      "executed_at": "2026-02-04T19:55:40.000Z",
+      "exit_code": 0,
+      "name": "build",
+      "passed": true
+    },
+    {
+      "command": "npx prisma validate",
+      "executed_at": "2026-02-04T19:53:00.000Z",
+      "exit_code": 0,
+      "name": "schema_validation",
+      "passed": true
+    },
+    {
+      "command": "npx prisma db execute --file infra/supabase/migrations/20260204000001_ai_output_review_tables.sql",
+      "executed_at": "2026-02-04T19:26:30.000Z",
+      "exit_code": 0,
+      "name": "database_tables_migration",
+      "passed": true
+    },
+    {
+      "command": "npx prisma db execute --file infra/supabase/migrations/20260204000000_ai_output_review_rls.sql",
+      "executed_at": "2026-02-04T19:26:45.000Z",
+      "exit_code": 0,
+      "name": "rls_policies_migration",
+      "passed": true
+    },
+    {
+      "command": "npx prisma db pull --print",
+      "details": {
+        "indexes_verified": 10,
+        "tables_verified": [
+          "ai_output_reviews",
+          "ai_output_review_audit"
+        ]
+      },
+      "executed_at": "2026-02-04T19:26:55.000Z",
+      "exit_code": 0,
+      "name": "database_introspection",
+      "passed": true
+    }
+  ]
+}

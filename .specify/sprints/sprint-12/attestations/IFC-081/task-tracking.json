@@ -1,0 +1,47 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 45,
+  "artifacts": {
+    "created": [
+      "apps/api/openapi.json"
+    ],
+    "expected": [
+      "apps/api/openapi.json"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-31T07:00:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.932Z"
+  },
+  "kpis": {
+    "endpoints_documented": {
+      "actual": 25,
+      "met": true,
+      "target": 20,
+      "unit": "count"
+    }
+  },
+  "started_at": "2025-12-31T06:15:00Z",
+  "status_history": [
+    {
+      "at": "2025-12-31T07:00:00Z",
+      "note": "API documentation completed",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-081",
+  "validations": [
+    {
+      "command": "pnpm --filter api typecheck",
+      "executed_at": "2025-12-31T06:55:00Z",
+      "exit_code": 0,
+      "name": "API Typecheck",
+      "passed": true,
+      "required": true,
+      "timestamp": "2025-12-31T07:00:00Z",
+      "type": "auto"
+    }
+  ]
+}

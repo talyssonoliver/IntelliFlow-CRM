@@ -1,0 +1,50 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/deals/(list)/page.tsx",
+      "apps/web/src/components/deals/DealFilters.tsx",
+      "apps/web/src/components/deals/types.ts"
+    ],
+    "expected": [
+      "apps/web/src/app/deals/(list)/page.tsx",
+      "apps/web/src/components/deals/DealFilters.tsx",
+      "apps/web/src/components/deals/types.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-287/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-18/attestations/IFC-287/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.870Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "Filter selections affect displayed data; owner list from API"
+    }
+  },
+  "notes": "Deal/opportunity domain wiring audit finding. See docs/audit/deal-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-06T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 120,
+  "task_id": "IFC-287",
+  "validations": []
+}

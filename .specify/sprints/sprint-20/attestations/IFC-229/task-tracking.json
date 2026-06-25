@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      ".specify/sprints/sprint-20/attestations/IFC-229/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-20/attestations/IFC-229/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.904Z"
+  },
+  "kpis": {
+    "map_functional": {
+      "actual": "",
+      "met": false,
+      "target": "Map renders or external link works"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Wiring debt: Map section is gradient placeholder with non-functional View Map button.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 120,
+  "task_id": "IFC-229",
+  "validations": []
+}

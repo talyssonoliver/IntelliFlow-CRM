@@ -1,0 +1,95 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 115,
+  "artifacts": {
+    "created": [
+      "apps/web/src/components/sidebar/configs/documents.ts",
+      "apps/web/src/components/documents/DocumentSettingsSidebarNav.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/documents/document-settings/page.tsx",
+      "apps/web/src/components/sidebar/configs/documents.ts",
+      "apps/web/src/components/documents/DocumentSettingsSidebarNav.tsx"
+    ],
+    "missing": [
+      "apps/web/src/app/documents/document-settings/page.tsx"
+    ]
+  },
+  "blockers": [],
+  "completed_at": "2026-04-19T01:55:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.846Z"
+  },
+  "execution": {
+    "last_error": null,
+    "retry_count": 0
+  },
+  "kpis": {
+    "test_count": {
+      "actual": 117,
+      "met": true,
+      "target": 60,
+      "unit": "tests"
+    }
+  },
+  "notes": "Module Settings page for Documents module. Delivered with all audit-driven guards from PG-186 2026-04-16 audit. Pre-existing worktree issues (missing migration, lint failures in unrelated files) explicitly deferred.",
+  "phase": "",
+  "started_at": "2026-04-19T00:00:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-04-01T00:00:00.000Z",
+      "note": "Task created",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-04-19T00:00:00.000Z",
+      "note": "Spec session started",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-04-19T00:10:00.000Z",
+      "note": "Spec written and consensus reached",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-04-19T00:15:00.000Z",
+      "note": "Plan session started",
+      "status": "Planning"
+    },
+    {
+      "at": "2026-04-19T00:20:00.000Z",
+      "note": "Plan written, Plan-Reviewer subagent APPROVED",
+      "status": "Plan Complete"
+    },
+    {
+      "at": "2026-04-19T00:25:00.000Z",
+      "note": "Exec started - TDD implementation",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-04-19T01:55:00.000Z",
+      "note": "117/117 PG-186 tests pass; Cat-1 helpers wired with grep-verified production call sites; Cat-2 pending badges rendered; AI toggles default off",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-186",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/validators test --run src/__tests__/document-settings.test.ts && pnpm --filter @intelliflow/api test --run src/modules/documents/__tests__/ && pnpm --filter @intelliflow/web test --run src/app/documents/document-settings/",
+      "duration_ms": 7000,
+      "executed_at": "2026-04-19T01:50:00.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/validators build && pnpm --filter @intelliflow/db build",
+      "duration_ms": 15000,
+      "executed_at": "2026-04-19T01:35:00.000Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

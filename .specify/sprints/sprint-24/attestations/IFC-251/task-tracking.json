@@ -1,0 +1,50 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/leads/(list)/",
+      "apps/api/src/modules/lead/lead.router.ts"
+    ],
+    "expected": [
+      "apps/web/src/app/leads/(list)/",
+      "apps/api/src/modules/lead/lead.router.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:52.021Z"
+  },
+  "kpis": {
+    "kpi_2": {
+      "actual": "",
+      "met": false,
+      "target": "export completes <5s for 10K leads"
+    },
+    "primary_kpi": {
+      "actual": "",
+      "met": false,
+      "target": "Import handles >=1000 rows"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Comprehensive flow analysis findings: W8,S12",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-251",
+  "validations": []
+}

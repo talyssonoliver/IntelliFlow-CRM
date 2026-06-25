@@ -2,11 +2,18 @@
  * Individual Task JSON File Operations
  */
 
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import type { TaskRecord } from './types';
 import { mapCsvStatusToIndividual, parseDependencies } from './csv-mapping';
-import { readJsonTolerant, writeJsonFile, findTaskFile, findRepoRoot } from './file-io';
+import {
+  readJsonTolerant,
+  writeJsonFile,
+  findTaskFile,
+  findRepoRoot,
+  removeOtherTaskFileCopies,
+} from './file-io';
+import { buildTaskJson, findTaskTracking, indexTasksById } from './task-json-builder';
 
 function classifyArtifacts(
   expectedArtifacts: string[],
@@ -114,4 +121,39 @@ export function updateIndividualTaskFile(
   // and is surfaced as a WARN by the Evidence-Integrity gate, not silently passed.
 
   writeJsonFile(taskFile, taskData, 2);
+}
+
+/**
+ * Build (regenerate) an individual task JSON from CSV + its canonical task-tracking.json
+ * (ADR-067 Phase 2). Unlike updateIndividualTaskFile, this does NOT read/mutate the existing
+ * per-task file as a source — that file is now a pure derived read-model. It writes to the
+ * file's current location if one exists, otherwise to `sprint-N/<TASK>.json`.
+ */
+export function buildIndividualTaskFile(
+  task: TaskRecord,
+  metricsDir: string,
+  allTasks: TaskRecord[],
+  sprintNum: number
+): void {
+  const taskId = task['Task ID'];
+  const repoRoot = findRepoRoot(metricsDir) || metricsDir;
+  // Generate a per-task read-model IFF the task has a canonical operational record under
+  // .specify (task-tracking.json). Backlog/never-started tasks have none and live only in the
+  // aggregate (Sprint_plan.json) — surfaced as "not found" (the orchestrator swallows it).
+  // Resolution prefers the CSV Target Sprint (sprintNum) so a task with records in two sprints
+  // resolves deterministically; the output is a FLAT sprint-{N}/<TASK>.json at the resolved
+  // record's sprint, reproducible from .specify alone on a fresh checkout (no dependence on any
+  // existing file's phase-* location, which does not exist on a fresh checkout).
+  const tt = findTaskTracking(repoRoot, taskId, sprintNum);
+  if (!tt) {
+    throw new Error(`Task file not found for ${taskId}`);
+  }
+  const built = buildTaskJson(task, tt.data, tt.sprintNum, indexTasksById(allTasks));
+  const target = join(metricsDir, `sprint-${tt.sprintNum}`, `${taskId}.json`);
+  // The sprint-{N} dir may not exist yet on a fresh checkout (the whole tree is gitignored).
+  mkdirSync(dirname(target), { recursive: true });
+  // Collapse any pre-existing legacy/relocated copy of this task (e.g. a phase-* file from the old
+  // tracked tree) to exactly one flat file, so the recursive _summary walk never double-counts it.
+  removeOtherTaskFileCopies(metricsDir, taskId, target);
+  writeJsonFile(target, built, 2);
 }

@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "generate:metrics": "tsx scripts/generate-metrics.ts",
+    "predev": "tsx scripts/generate-metrics.ts",
+    "prebuild": "tsx scripts/generate-metrics.ts",
     "dev": "next dev --port 3002",
     "build": "next build",
     "start": "next start --port 3002",

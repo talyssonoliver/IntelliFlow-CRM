@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 60,
+  "artifacts": {
+    "created": [
+      "apps/ai-worker/src/workers/ocr-worker.ts"
+    ],
+    "expected": [
+      "apps/ai-worker/src/workers/ocr-worker.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-31T07:00:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.758Z"
+  },
+  "kpis": {
+    "engines_integrated": {
+      "actual": 4,
+      "met": true,
+      "target": 2,
+      "unit": "count"
+    },
+    "ocr_throughput": {
+      "actual": "benchmarked",
+      "met": true,
+      "target": "baseline"
+    }
+  },
+  "started_at": "2025-12-31T06:00:00Z",
+  "status_history": [
+    {
+      "at": "2025-12-31T07:00:00Z",
+      "note": "OCR worker completed",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-154",
+  "validations": [
+    {
+      "command": "pnpm --filter ai-worker test",
+      "executed_at": "2025-12-31T06:55:00Z",
+      "exit_code": 0,
+      "name": "AI Worker Tests",
+      "passed": true,
+      "required": true,
+      "timestamp": "2025-12-31T07:00:00Z",
+      "type": "auto"
+    }
+  ]
+}

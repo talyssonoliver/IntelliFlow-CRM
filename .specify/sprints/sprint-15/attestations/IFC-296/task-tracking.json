@@ -1,0 +1,75 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 240,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/admin/queues.router.ts",
+      "apps/web/src/components/ai-monitoring/QueueSchedulerPanel.tsx",
+      ".specify/sprints/sprint-15/attestations/IFC-296/context_ack.json"
+    ],
+    "expected": [
+      "apps/api/src/modules/admin/queues.router.ts",
+      "apps/web/src/components/ai-monitoring/QueueSchedulerPanel.tsx",
+      ".specify/sprints/sprint-15/attestations/IFC-296/context_ack.json"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-08T13:45:26.211Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.808Z"
+  },
+  "kpis": {
+    "api_response": {
+      "actual": "",
+      "met": false,
+      "target": "<200ms",
+      "unit": "ms"
+    },
+    "coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">90%",
+      "unit": "percent"
+    },
+    "crud_operations": {
+      "actual": "",
+      "met": false,
+      "target": "list/pause/resume/retry/delete"
+    },
+    "queues_visible": {
+      "actual": 0,
+      "met": false,
+      "target": 3,
+      "unit": "count"
+    }
+  },
+  "notes": "Replace existing stub queuesAdmin router (returns empty arrays) with live BullMQ data. Add QueueSchedulerPanel to ActiveAgentsDashboard showing scheduler cron patterns, queue counts (waiting/active/completed/failed), and action buttons (pause/resume/retry/delete).",
+  "phase": "",
+  "started_at": "2026-03-08T00:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-03-07T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-03-08T00:00:00Z",
+      "status": "In Progress"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-296",
+  "validations": [
+    {
+      "command": "echo \"Task IFC-296 completed\"",
+      "executed_at": "2026-03-08T13:45:26.212Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

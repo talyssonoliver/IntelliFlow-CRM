@@ -1,0 +1,61 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 240,
+  "artifacts": {
+    "created": [
+      "packages/adapters/src/repositories/PrismaOpportunityRepository.ts",
+      "apps/api/src/modules/opportunity/opportunity.router.ts",
+      "apps/api/src/modules/opportunity/pipeline-config.router.ts"
+    ],
+    "expected": [
+      "packages/adapters/src/repositories/PrismaOpportunityRepository.ts",
+      "apps/api/src/modules/opportunity/opportunity.router.ts",
+      "apps/api/src/modules/opportunity/pipeline-config.router.ts",
+      ".specify/sprints/sprint-16/attestations/IFC-281/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-16/attestations/IFC-281/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": "2026-03-19T00:40:53.575Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.830Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "Zero cross-tenant data leaks; audit entries for all 16 procedures"
+    }
+  },
+  "notes": "Deal/opportunity domain wiring audit finding. See docs/audit/deal-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": "2026-03-19T00:25:53.575Z",
+  "status_history": [
+    {
+      "at": "2026-03-06T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-281",
+  "validations": [
+    {
+      "command": "echo \"Task IFC-281 completed\"",
+      "executed_at": "2026-03-19T00:40:53.576Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

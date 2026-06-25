@@ -35,6 +35,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # ADR-067 Phase 2: regenerate the gitignored metrics tree from CSV + .specify before
+      # the consistency check reads it.
+      - name: Generate metrics tree
+        run: pnpm run generate:metrics
+
       - name: Validate Sprint Data Consistency
         run: pnpm run validate:sprint-data -- --strict
 

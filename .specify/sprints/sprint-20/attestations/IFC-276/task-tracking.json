@@ -1,0 +1,49 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [],
+    "expected": [
+      "apps/api/src/__tests__/contract/account.contract.test.ts",
+      "apps/web/src/components/accounts/__tests__/AccountDetail.buttons.test.tsx",
+      "tests/e2e/account-crud.spec.ts",
+      ".specify/sprints/sprint-20/attestations/IFC-276/context_ack.json"
+    ],
+    "missing": [
+      "apps/api/src/__tests__/contract/account.contract.test.ts",
+      "apps/web/src/components/accounts/__tests__/AccountDetail.buttons.test.tsx",
+      "tests/e2e/account-crud.spec.ts",
+      ".specify/sprints/sprint-20/attestations/IFC-276/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.913Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "Contract test passing; E2E CRUD flow passing; >=90% coverage"
+    }
+  },
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 480,
+  "task_id": "IFC-276",
+  "validations": []
+}

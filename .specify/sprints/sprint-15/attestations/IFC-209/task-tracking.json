@@ -1,0 +1,73 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/sitemap.ts",
+      "apps/web/src/app/__tests__/sitemap-fixes.test.ts"
+    ],
+    "expected": [
+      "apps/web/src/app/sitemap.ts",
+      "apps/web/src/app/__tests__/sitemap-fixes.test.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-03T00:34:48.398Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.806Z"
+  },
+  "kpis": {
+    "blog_coverage": {
+      "actual": "pending",
+      "met": false,
+      "target": "2/2 slugs (detail pages)"
+    },
+    "dynamic_routes_included": {
+      "actual": "pending",
+      "met": false,
+      "target": "careers and lp routes"
+    },
+    "lastModified_accuracy": {
+      "actual": "pending",
+      "met": false,
+      "target": "actual timestamps"
+    }
+  },
+  "notes": "Content audit findings F-007 (sitemap.ts uses new Date() making all pages appear freshly modified), F-008 (only 2/6 blog slugs in sitemap), F-009 (dynamic routes /careers/[id] and /lp/[slug] missing from sitemap).",
+  "phase": "",
+  "started_at": "2026-03-02T10:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-25T23:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-03-02T10:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-02T10:30:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-03T00:15:00Z",
+      "status": "Planned"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": null,
+  "task_id": "IFC-209",
+  "validations": [
+    {
+      "command": "echo \"Task IFC-209 completed\"",
+      "executed_at": "2026-03-03T00:34:48.398Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

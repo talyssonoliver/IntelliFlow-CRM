@@ -1,0 +1,98 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 92,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/deals/(list)/trash/page.tsx",
+      ".specify/sprints/sprint-16/attestations/IFC-232/context_ack.json"
+    ],
+    "expected": [
+      "apps/web/src/app/deals/(list)/trash/page.tsx",
+      ".specify/sprints/sprint-16/attestations/IFC-232/context_ack.json"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-04-11T15:34:13Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.820Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "Statements 95.97%, Branches 80.24%, Functions 97.87%, Lines 100% (75 tests)",
+      "met": true,
+      "target": ">=90%"
+    },
+    "zero_404s": {
+      "actual": "/deals/trash route exists in build output (static ○); sidebar deals.ts:103 links correctly",
+      "met": true,
+      "target": "Zero 404 errors from sidebar"
+    }
+  },
+  "notes": "Verification-only task. Objective already resolved by PG-175 (Deals Trash Page). All acceptance criteria confirmed met: /deals/trash route resolves, sidebar link works, 75 tests pass with 95.97% statement coverage.",
+  "phase": "",
+  "started_at": "2026-04-11T14:02:37Z",
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-04-11T14:02:37Z",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-04-11T14:05:00Z",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-04-11T14:08:00Z",
+      "status": "Planning"
+    },
+    {
+      "at": "2026-04-11T14:15:00Z",
+      "status": "Plan Complete"
+    },
+    {
+      "at": "2026-04-11T15:17:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-04-11T15:34:13Z",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 120,
+  "task_id": "IFC-232",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-04-11T15:21:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run apps/web/src/components/deals/__tests__/TrashList.test.tsx",
+      "executed_at": "2026-04-11T15:28:30Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web lint",
+      "executed_at": "2026-04-11T15:22:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "executed_at": "2026-04-11T15:30:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

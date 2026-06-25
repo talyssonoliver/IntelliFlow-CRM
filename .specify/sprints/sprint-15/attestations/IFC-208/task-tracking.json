@@ -1,0 +1,48 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "lighthouserc.js",
+      "apps/web/src/app/layout.tsx"
+    ],
+    "expected": [
+      "lighthouserc.js",
+      "apps/web/src/app/layout.tsx",
+      "public/og-image.png"
+    ],
+    "missing": [
+      "public/og-image.png"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-03-07T22:02:09.239Z"
+  },
+  "kpis": {
+    "og_image_coverage": {
+      "actual": "pending",
+      "met": false,
+      "target": "25 public routes"
+    },
+    "seo_assertion_level": {
+      "actual": "pending",
+      "met": false,
+      "target": "error"
+    }
+  },
+  "notes": "Content audit findings F-005 (Lighthouse SEO uses warn not error, regressions don't block CI) and F-006 (no og:image on any page, degrades social sharing previews).",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-02-25T23:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": null,
+  "task_id": "IFC-208",
+  "validations": []
+}

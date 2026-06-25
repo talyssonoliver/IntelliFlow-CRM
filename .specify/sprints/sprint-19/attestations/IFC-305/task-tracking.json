@@ -1,0 +1,62 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [],
+    "expected": [
+      "apps/web/src/components/leads/LeadDetail.tsx",
+      "apps/web/src/components/shared/entity-profile-card.tsx",
+      "apps/web/src/lib/shared/ai-insight-transforms.ts",
+      ".specify/sprints/sprint-19/attestations/IFC-305/context_ack.json"
+    ],
+    "missing": [
+      "apps/web/src/components/leads/LeadDetail.tsx",
+      "apps/web/src/components/shared/entity-profile-card.tsx",
+      "apps/web/src/lib/shared/ai-insight-transforms.ts",
+      ".specify/sprints/sprint-19/attestations/IFC-305/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.897Z"
+  },
+  "kpis": {
+    "component_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%",
+      "unit": "percent"
+    },
+    "duplication_eliminated": {
+      "actual": "",
+      "met": false,
+      "target": ">=1500 lines",
+      "unit": "lines"
+    },
+    "page_file_reduction": {
+      "actual": "",
+      "met": false,
+      "target": ">=80%",
+      "unit": "percent"
+    },
+    "shared_components_wired": {
+      "actual": "",
+      "met": false,
+      "target": ">=3 bypassed components wired"
+    }
+  },
+  "notes": "Cross-entity refactoring: leads/[id]/page.tsx (2691 lines) + contacts/[id]/page.tsx (2593 lines) are god-files violating SRP. ContactDetail.tsx (503 lines, model pattern) exists but was never wired. EntityHeader, SearchFilterBar, ActivityFeed shared components exist but are bypassed. AI insight transforms (churnRisk/NBA/engagement) copy-pasted 3 times. This task extracts ~15 shared/entity-specific components following SOLID principles.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-16T00:30:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 360,
+  "task_id": "IFC-305",
+  "validations": []
+}

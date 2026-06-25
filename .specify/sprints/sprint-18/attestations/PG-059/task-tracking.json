@@ -1,0 +1,137 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/leads/(list)/page.tsx",
+      "apps/web/src/components/leads/lead-list.tsx",
+      "apps/web/src/lib/leads/bulk-actions.ts",
+      "apps/web/src/lib/leads/lead-types.ts"
+    ],
+    "expected": [
+      "apps/web/src/app/leads/(list)/page.tsx",
+      "apps/web/src/components/leads/lead-list.tsx",
+      "apps/web/src/lib/leads/bulk-actions.ts",
+      "apps/web/src/lib/leads/lead-types.ts"
+    ],
+    "missing": []
+  },
+  "completed_at": "2026-04-19T23:45:00Z",
+  "dependencies_meta": {
+    "notes": "IFC-089 Completed in sprint-5; attestation verified COMPLETE.",
+    "verified_at": "2026-04-29T21:54:51.852Z"
+  },
+  "execution": {
+    "agents": [
+      "Frontend-Lead",
+      "Domain-Expert",
+      "Test-Engineer",
+      "A11y-Expert"
+    ],
+    "executor": "Claude Opus 4.7 (1M)",
+    "last_error": null,
+    "log_path": ".specify/sprints/sprint-18/execution/PG-059/run-2026-04-19T22-23-21Z/PG-059-delivery.md",
+    "retry_count": 0
+  },
+  "kpis": {
+    "coverage_branches": {
+      "actual": 97.87,
+      "met": true,
+      "target": 80,
+      "unit": "percent (bulk-actions.ts)"
+    },
+    "coverage_functions": {
+      "actual": 100,
+      "met": true,
+      "target": 90,
+      "unit": "percent (bulk-actions.ts)"
+    },
+    "coverage_lines": {
+      "actual": 100,
+      "met": true,
+      "target": 90,
+      "unit": "percent (bulk-actions.ts)"
+    },
+    "coverage_statements": {
+      "actual": 100,
+      "met": true,
+      "target": 90,
+      "unit": "percent (bulk-actions.ts)"
+    },
+    "wrapper_loc": {
+      "actual": 16,
+      "met": true,
+      "target": 30,
+      "unit": "lines"
+    }
+  },
+  "phase": "",
+  "started_at": "2026-04-19T20:40:00Z",
+  "status_history": [
+    {
+      "at": "2026-04-19T20:37:00Z",
+      "note": "Spec session start",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-04-19T20:46:00Z",
+      "note": "Unified spec + discussion written; consensus first attempt",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-04-19T20:55:00Z",
+      "note": "Plan-session preflight + TDD decomposition",
+      "status": "Planning"
+    },
+    {
+      "at": "2026-04-19T21:17:00Z",
+      "note": "Plan-reviewer subagent round 1 REVISE → round 2 APPROVE",
+      "status": "Plan Complete"
+    },
+    {
+      "at": "2026-04-19T22:23:00Z",
+      "note": "Exec start: preflights + context pack + context_ack written",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-04-19T23:45:00Z",
+      "note": "Exec complete: 5 files created, 3 modified, 0 missing; 56 new tests + 60 regression tests green; attestation verdict=COMPLETE",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-059",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "duration_ms": 62000,
+      "executed_at": "2026-04-19T23:31:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/lib/leads/__tests__ src/components/leads/__tests__ src/app/leads/__tests__/actions.test.ts (5 touched lead suites) src/components/shared",
+      "duration_ms": 24800,
+      "executed_at": "2026-04-19T23:43:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web exec eslint src/components/leads/lead-list.tsx src/lib/leads/",
+      "duration_ms": 9000,
+      "executed_at": "2026-04-19T23:38:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "duration_ms": 120000,
+      "executed_at": "2026-04-19T23:40:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

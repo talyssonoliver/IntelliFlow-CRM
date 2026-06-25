@@ -1,0 +1,44 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/contacts/(list)/contact-types/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/contacts/(list)/contact-types/page.tsx",
+      "apps/web/src/app/contacts/(list)/contact-types/ContactTypesContent.tsx",
+      "apps/api/src/modules/contact/contact-types.router.ts",
+      "packages/validators/src/contact-types.ts",
+      ".specify/sprints/sprint-18/attestations/PG-205/context_ack.json"
+    ],
+    "missing": [
+      "apps/web/src/app/contacts/(list)/contact-types/ContactTypesContent.tsx",
+      "apps/api/src/modules/contact/contact-types.router.ts",
+      "packages/validators/src/contact-types.ts",
+      ".specify/sprints/sprint-18/attestations/PG-205/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.886Z"
+  },
+  "execution": {
+    "last_error": null,
+    "retry_count": 0
+  },
+  "kpis": {},
+  "notes": "Contact types at /contacts/(list)/contact-types: taxonomy (person/organization/vendor/partner, required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-04-18T00:00:00Z",
+      "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-205",
+  "validations": []
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "packages/application/src/services/OpportunityService.ts",
+      "packages/adapters/src/repositories/PrismaOpportunityRepository.ts",
+      "apps/web/src/components/deals/DealQuickView.tsx",
+      "apps/web/src/components/sidebar/configs/deals.ts"
+    ],
+    "expected": [
+      "packages/application/src/services/OpportunityService.ts",
+      "packages/adapters/src/repositories/PrismaOpportunityRepository.ts",
+      "apps/web/src/components/deals/DealQuickView.tsx",
+      "apps/web/src/components/sidebar/configs/deals.ts",
+      ".specify/sprints/sprint-24/attestations/IFC-285/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-24/attestations/IFC-285/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:52.023Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "Zero dead code methods; zero silent error swallowing"
+    }
+  },
+  "notes": "Deal/opportunity domain wiring audit finding. See docs/audit/deal-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-06T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-285",
+  "validations": []
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 30,
+  "artifacts": {
+    "created": [
+      "docs/development/dev-guide.md",
+      "artifacts/reports/adr-index.csv"
+    ],
+    "expected": [
+      "docs/development/dev-guide.md",
+      "artifacts/reports/adr-index.csv"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-31T07:00:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.952Z"
+  },
+  "kpis": {
+    "adr_coverage": {
+      "actual": 100,
+      "met": true,
+      "target": 100,
+      "unit": "percent"
+    }
+  },
+  "started_at": "2025-12-31T06:30:00Z",
+  "status_history": [
+    {
+      "at": "2025-12-31T07:00:00Z",
+      "note": "ADR registry and dev guide updated",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-126",
+  "validations": [
+    {
+      "command": "code-review",
+      "executed_at": "2025-12-31T06:55:00Z",
+      "exit_code": 0,
+      "name": "Documentation Review",
+      "passed": true,
+      "required": true,
+      "timestamp": "2025-12-31T07:00:00Z",
+      "type": "manual"
+    }
+  ]
+}

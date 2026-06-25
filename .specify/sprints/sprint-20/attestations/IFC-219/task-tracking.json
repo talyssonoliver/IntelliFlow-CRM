@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "packages/db/prisma/schema.prisma",
+      "apps/api/src/modules/misc/timeline.router.ts"
+    ],
+    "expected": [
+      "packages/db/prisma/schema.prisma",
+      "apps/api/src/modules/misc/timeline.router.ts",
+      ".specify/sprints/sprint-20/attestations/IFC-219/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-20/attestations/IFC-219/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.903Z"
+  },
+  "kpis": {
+    "comment_add_latency": {
+      "actual": "",
+      "met": false,
+      "target": "<200ms"
+    },
+    "reaction_add_latency": {
+      "actual": "",
+      "met": false,
+      "target": "<100ms"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Follow-up to IFC-069 (Pattern 2 - scope oversight). Resolves WIRE-IFC-069-001.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-04T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 180,
+  "task_id": "IFC-219",
+  "validations": []
+}

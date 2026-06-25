@@ -1,0 +1,48 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [],
+    "required": [
+      "apps/ai-worker/src/chains/enrichment.chain.ts",
+      "apps/ai-worker/src/jobs/enrichment.job.ts",
+      "packages/adapters/src/enrichment/enrichment-provider.ts",
+      "apps/api/src/modules/contact/contact.router.ts"
+    ],
+    "verified_at": null
+  },
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.927Z"
+  },
+  "gate_results": [],
+  "kpis": {
+    "api_cost": {
+      "actual": "",
+      "met": false,
+      "target": "<$0.05 per enrichment call"
+    },
+    "enrichment_rate": {
+      "actual": "",
+      "met": false,
+      "target": ">=60% of contacts enriched"
+    },
+    "queue_latency": {
+      "actual": "",
+      "met": false,
+      "target": "p95 <5s processing time"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Requires external API keys (CLEARBIT_API_KEY or APOLLO_API_KEY). Use mock provider in development. Depends on ai-worker queue infrastructure (IFC-168) and contact domain model (IFC-131).",
+  "phase": "",
+  "started_at": null,
+  "stream": null,
+  "target_duration_minutes": 480,
+  "task_id": "IFC-307",
+  "validation_results": []
+}

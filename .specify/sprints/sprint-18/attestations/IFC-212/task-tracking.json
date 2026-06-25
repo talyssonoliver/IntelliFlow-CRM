@@ -1,0 +1,62 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/api/src/container.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-212/context_ack.json"
+    ],
+    "expected": [
+      "apps/api/src/services/queue/QueueAIService.ts",
+      "apps/api/src/container.ts",
+      "apps/api/src/modules/leads/__tests__/LeadService.queue-ai.test.ts",
+      "apps/ai-worker/src/queue/jobs/scoring.job.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-212/context_ack.json"
+    ],
+    "missing": [
+      "apps/api/src/services/queue/QueueAIService.ts",
+      "apps/api/src/modules/leads/__tests__/LeadService.queue-ai.test.ts",
+      "apps/ai-worker/src/queue/jobs/scoring.job.ts"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.855Z"
+  },
+  "kpis": {
+    "enqueue_success_rate": {
+      "actual": "",
+      "met": false,
+      "target": ">=99%"
+    },
+    "queue_failure_rate": {
+      "actual": "",
+      "met": false,
+      "target": "<1%"
+    },
+    "scoring_completion_sla_p95": {
+      "actual": "",
+      "met": false,
+      "target": "<=30s"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Follow-up to IFC-015 initial BullMQ setup. Wires API lead scoring through QueueAIService while preserving GuardrailsAIService as the outer decorator.",
+  "phase": "phase-1-validation",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-04T22:04:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 180,
+  "task_id": "IFC-212",
+  "validations": []
+}

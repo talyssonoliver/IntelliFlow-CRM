@@ -1,0 +1,37 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "artifacts": {
+    "created": [],
+    "expected": [
+      "packages/ui/src/components/rich-text-editor.tsx",
+      "packages/ui/src/components/__tests__/rich-text-editor.test.tsx"
+    ],
+    "missing": [
+      "packages/ui/src/components/rich-text-editor.tsx",
+      "packages/ui/src/components/__tests__/rich-text-editor.test.tsx"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.871Z"
+  },
+  "execution": {
+    "last_error": null,
+    "retry_count": 0
+  },
+  "kpis": {},
+  "notes": "Tiptap editor supporting headings, bold, italic, lists, links, images, code blocks. Exports structured sections (heading + content pairs) for HelpArticle compatibility.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Tiptap rich text editor as reusable @intelliflow/ui component",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-301",
+  "validations": []
+}

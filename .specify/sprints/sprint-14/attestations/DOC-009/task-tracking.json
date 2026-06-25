@@ -1,0 +1,57 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "docs/design/content-audit.md",
+      "artifacts/reports/content-audit-results.json"
+    ],
+    "expected": [
+      "docs/design/content-audit.md",
+      "artifacts/reports/content-audit-results.json"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-24T21:54:17.340Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.788Z"
+  },
+  "kpis": {},
+  "notes": "Plan approved by reviewer iteration 2. PERT estimate: 260 minutes (~4.3 hours). 5 files (3 create, 2 modify), 14 test cases, 4 TDD phases.",
+  "phase": "phase-1",
+  "started_at": "2026-02-24T21:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-23T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-24T21:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-24T21:30:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-24T22:00:00Z",
+      "status": "Planned"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": null,
+  "task_id": "DOC-009",
+  "validations": [
+    {
+      "command": "echo \"Task DOC-009 completed\"",
+      "executed_at": "2026-02-24T21:54:17.341Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

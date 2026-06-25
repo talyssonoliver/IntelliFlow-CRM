@@ -1,6 +1,11 @@
 # ADR-067: Finish the Metrics-Harness De-Churn (Formatter Fix) and Stage the Canonical/Derived Split for Parallel-Agent Scale
 
-**Status:** Proposed
+**Status:** Accepted — Phase 0 + 1 shipped (PR #517); **Phase 2 implemented**
+(branch `chore/metrics-phase2-generated-cache`): the entire per-task metrics
+tree is now a generated, gitignored cache rebuilt from `Sprint_plan.csv` +
+`.specify/.../task-tracking.json`, with no-loss proven by
+`tools/scripts/prove-metrics-roundtrip.mjs` (0 operational drift across all
+migrated tasks). Supersedes ADR-066.
 
 **Date:** 2026-06-23
 
@@ -132,6 +137,31 @@ canonical home for the per-task operational fields, with a closed schema that
 tasks into it (one-time script, run as a blocking pre-gitignore gate). Only then
 can the per-task JSONs become fully derived and gitignored. This is a real
 migration with its own rollout, not a follow-on.
+
+> **Implemented** (branch `chore/metrics-phase2-generated-cache`):
+>
+> - Schema `docs/metrics/schemas/task-tracking.schema.json` (permissive
+>   `additionalProperties:true` for no-loss; timestamp pattern accepts Z + the
+>   historical `+00:00` offset so 139 legacy values validate unchanged).
+> - `tools/scripts/migrate-task-tracking.mjs` extracted
+>   full-copy-minus-CSV-owned content into **415** `task-tracking.json` files;
+>   blocking checks: field-completeness, verbatim preservation, schema validity.
+>   Duplicate-source collisions (e.g. IFC-300) merged canonical-wins.
+> - `lib/data-sync/task-json-builder.ts` + `buildIndividualTaskFile` +
+>   orchestrator `rebuildPerTask` rebuild each per-task JSON =
+>   merge(CSV-derived + `task-tracking.json`), driven by task-tracking existence
+>   (FLAT `sprint-{N}/<TASK>.json`, reproducible from `.specify` alone on a
+>   fresh checkout).
+> - No-loss gate `tools/scripts/prove-metrics-roundtrip.mjs`: **0 operational
+>   drift**; the only diffs are CSV-derived corrections (18 stale statuses incl.
+>   merged-but-BACKLOG tasks, 0 regressions). `generate:metrics` is idempotent.
+> - Cutover: the whole `docs/metrics/sprint-*` JSON tree is gitignored +
+>   `git rm --cached`; Gate 6 (`evaluatePerTaskTreeNotTracked`) asserts the tree
+>   is not tracked. Gate 3 (Evidence Integrity) is unchanged — every DONE task
+>   is covered by its tracked `.specify` attestation (0 DONE tasks lack one), so
+>   its per-task-JSON fallback is vestigial. Generation is wired into CI,
+>   `predev`/`prebuild`, and `generate-context.ts`. Agents write session metrics
+>   to `task-tracking.json` (`check-exec-readiness` #2 reads it).
 
 ## Prerequisites before Phase 1/2 land (from the adversarial review — all MUST be met)
 

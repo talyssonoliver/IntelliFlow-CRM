@@ -1,0 +1,84 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 40,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/contacts/[id]/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/contacts/[id]/page.tsx"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-06-10T23:15:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.864Z"
+  },
+  "kpis": {
+    "audit_findings_resolved": {
+      "actual": "F-02, F-03, F-21 resolved — Tickets & Documents tabs render real tenant-scoped contact.getById data; zero hardcoded literals remain",
+      "met": true,
+      "target": "Resolve findings: F-02,F-03,F-21"
+    },
+    "test_coverage": {
+      "actual": "TicketService.ts 94.57% lines / 88.02% branch; changed-API-files aggregate 90.71% lines; page.tsx new lines covered by 6 new IFC-256 web tests",
+      "met": true,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Contact audit finding: F-02,F-03,F-21. See docs/audit/contact-detail-wiring-audit.md. Resolved via TicketService.listByContact + contact.getById tickets/documents wiring + page.tsx Tickets/Documents tabs (real data + empty states). Attestation: .specify/sprints/sprint-18/attestations/IFC-256/attestation.json. PR: feat/ifc-256.",
+  "phase": "",
+  "started_at": "2026-06-10T22:35:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-06-10T22:45:00.000Z",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-06-10T22:52:00.000Z",
+      "status": "Plan Complete"
+    },
+    {
+      "at": "2026-06-10T22:55:00.000Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-06-10T23:15:00.000Z",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-256",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/api test (6137 passed/2 skipped) && pnpm --filter @intelliflow/web test (10343 passed)",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "npx eslint <6 changed files> (0 errors)",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/api build && pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

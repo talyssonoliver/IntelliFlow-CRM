@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/contacts/[id]/page.tsx",
+      "apps/web/src/components/contacts/ContactForm.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/contacts/[id]/page.tsx",
+      "apps/web/src/components/contacts/ContactForm.tsx"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.909Z"
+  },
+  "kpis": {
+    "audit_findings_resolved": {
+      "actual": "",
+      "met": false,
+      "target": "Resolve findings: F-09,F-16,F-17,F-22,F-24"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Contact audit finding: F-09,F-16,F-17,F-22,F-24. See docs/audit/contact-detail-wiring-audit.md",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-258",
+  "validations": []
+}

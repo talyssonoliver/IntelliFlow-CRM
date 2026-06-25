@@ -67,8 +67,13 @@ fi
 echo "💅 Auto-formatting staged files..."
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json|md)$' || true)
 if [ -n "$STAGED_FILES" ]; then
-  echo "$STAGED_FILES" | xargs npx prettier --write --log-level=warn
-  echo "$STAGED_FILES" | xargs git add -f
+  # Chunk so a large commit (e.g. the ADR-067 metrics migration stages 400+ files)
+  # doesn't overflow the command-line limit ("The command line is too long").
+  # `npx`/`prettier` resolve through .cmd shims on Windows, which re-pass args through
+  # cmd.exe's stricter ~8191-char limit at each layer, so the prettier batch must be
+  # small (25); `git add` is a native exe (32KB limit) so 100 is fine.
+  echo "$STAGED_FILES" | xargs -n 25 npx prettier --write --log-level=warn
+  echo "$STAGED_FILES" | xargs -n 100 git add -f
   echo "✅ Formatting applied and re-staged"
 fi
 

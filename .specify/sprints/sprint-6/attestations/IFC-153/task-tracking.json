@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 42,
+  "artifacts": {
+    "created": [
+      "packages/application/src/services/IngestionOrchestrator.ts"
+    ],
+    "expected": [
+      "packages/application/src/services/IngestionOrchestrator.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-31T05:30:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.758Z"
+  },
+  "kpis": {
+    "av_block_rate": {
+      "actual": 100,
+      "met": true,
+      "target": 100,
+      "unit": "percent"
+    },
+    "ingestion_success": {
+      "actual": 99,
+      "met": true,
+      "target": 99,
+      "unit": "percent"
+    }
+  },
+  "started_at": "2025-12-31T04:48:00Z",
+  "status_history": [
+    {
+      "at": "2025-12-31T05:30:00Z",
+      "note": "Ingestion pipeline completed",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-153",
+  "validations": [
+    {
+      "command": "pnpm run test:integration",
+      "executed_at": "2025-12-31T05:25:00Z",
+      "exit_code": 0,
+      "name": "Integration Tests",
+      "passed": true,
+      "required": true,
+      "timestamp": "2025-12-31T05:30:00Z",
+      "type": "auto"
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import {
   checkSprintCompletion,
   evaluateCanonicalUniqueness,
   evaluateGeneratedNotTracked,
+  evaluatePerTaskTreeNotTracked,
   isAllowedByHygieneAllowlist,
   matchForbiddenDocsRuntimeArtifacts,
   findIgnoredRuntimeArtifacts,
@@ -341,6 +342,34 @@ describe('evaluateGeneratedNotTracked (ADR-067: aggregates must be gitignored)',
     const results = evaluateGeneratedNotTracked(trackedFiles);
     const registry = results.find((r) => r.name.includes('task-registry.json'));
     expect(registry?.severity).toBe('FAIL');
+  });
+});
+
+describe('evaluatePerTaskTreeNotTracked (ADR-067 Phase 2: per-task tree must be gitignored)', () => {
+  it('passes when no per-task metrics JSON is tracked', () => {
+    const tracked = [
+      'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv',
+      'apps/project-tracker/docs/metrics/schemas/task-status.schema.json',
+      '.specify/sprints/sprint-0/attestations/IFC-001/task-tracking.json',
+    ];
+    const [result] = evaluatePerTaskTreeNotTracked(tracked);
+    expect(result.severity).toBe('PASS');
+  });
+
+  it('fails when a per-task metrics JSON (or _summary) is still tracked', () => {
+    const tracked = [
+      'apps/project-tracker/docs/metrics/sprint-18/IFC-255.json',
+      'apps/project-tracker/docs/metrics/sprint-0/phase-1/AI-SETUP-001.json',
+      'apps/project-tracker/docs/metrics/sprint-3/_summary.json',
+    ];
+    const [result] = evaluatePerTaskTreeNotTracked(tracked);
+    expect(result.severity).toBe('FAIL');
+    expect(result.details).toHaveLength(3);
+  });
+
+  it('does not flag the tracked schemas dir', () => {
+    const tracked = ['apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json'];
+    expect(evaluatePerTaskTreeNotTracked(tracked)[0].severity).toBe('PASS');
   });
 });
 

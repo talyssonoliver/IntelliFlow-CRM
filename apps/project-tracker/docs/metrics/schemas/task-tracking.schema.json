@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "task-tracking.schema.json",
+  "title": "Task Tracking Schema",
+  "description": "ADR-067 Phase 2. Canonical home for per-task OPERATIONAL + EVIDENCE content that lives in neither Sprint_plan.csv nor attestation.json. Stored at .specify/sprints/sprint-{N}/attestations/{TASK_ID}/task-tracking.json. The derived per-task metrics JSON (docs/metrics/sprint-*/<TASK>.json) is regenerated from CSV + attestation.json + this file. Intentionally permissive (additionalProperties:true) so no sole-copy field is ever dropped on migration; the no-loss regenerate-and-compare proof is the real guarantee, not schema closure.",
+  "type": "object",
+  "definitions": {
+    "isoTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC. New writes (exec-metrics) MUST emit the Z suffix; the offset form (+00:00) is accepted only so 139 historical migrated values validate without being reformatted (no-loss).",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d))$"
+    },
+    "nullableTimestamp": {
+      "anyOf": [{ "$ref": "#/definitions/isoTimestamp" }, { "type": "null" }]
+    },
+    "nullableNumber": {
+      "anyOf": [{ "type": "number" }, { "type": "null" }]
+    },
+    "statusEnum": {
+      "type": "string",
+      "enum": [
+        "PLANNED",
+        "Planned",
+        "BACKLOG",
+        "Backlog",
+        "IN_PROGRESS",
+        "In Progress",
+        "VALIDATING",
+        "Validating",
+        "DONE",
+        "Completed",
+        "BLOCKED",
+        "Blocked",
+        "FAILED",
+        "Failed",
+        "NEEDS_HUMAN",
+        "Needs Human",
+        "IN_REVIEW",
+        "In Review"
+      ]
+    }
+  },
+  "properties": {
+    "$schema": { "type": "string" },
+    "task_id": {
+      "description": "Cross-reference key to Sprint_plan.csv / attestation.json (the ONLY identity field; everything else is operational content).",
+      "type": "string",
+      "pattern": "^[A-Z]+-[A-Z0-9-]+$"
+    },
+    "started_at": { "$ref": "#/definitions/nullableTimestamp" },
+    "completed_at": { "$ref": "#/definitions/nullableTimestamp" },
+    "actual_duration_minutes": { "$ref": "#/definitions/nullableNumber" },
+    "status_history": {
+      "description": "Chronological status transitions (sole-copy; absent from CSV + attestation).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "at": { "$ref": "#/definitions/isoTimestamp" },
+          "note": { "type": "string" }
+        },
+        "required": ["status", "at"],
+        "additionalProperties": true
+      }
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "started_at": { "$ref": "#/definitions/nullableTimestamp" },
+        "completed_at": { "$ref": "#/definitions/nullableTimestamp" },
+        "duration_minutes": { "$ref": "#/definitions/nullableNumber" },
+        "executor": { "type": "string" },
+        "agents": { "type": "array", "items": { "type": "string" } },
+        "execution_log": { "type": "string" },
+        "log_path": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
+        "retry_count": { "type": "integer", "minimum": 0 },
+        "last_error": { "anyOf": [{ "type": "string" }, { "type": "null" }] }
+      },
+      "additionalProperties": true
+    },
+    "dependencies_meta": {
+      "description": "Sole-copy parts of the dependencies block (required[] + all_satisfied are derivable from CSV/attestation and are NOT stored here).",
+      "type": "object",
+      "properties": {
+        "verified_at": { "$ref": "#/definitions/nullableTimestamp" },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "artifacts": {
+      "description": "Evidence kept here for tasks whose attestation does not carry artifact hashes (cohort B/C backfill).",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "validations": {
+      "description": "Evidence kept here for tasks with no attestation (cohort B/C backfill). For attested tasks the generator prefers attestation.validation_results.",
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "kpis": {
+      "description": "KPI key-map (target/actual/met/unit). Key names are sole-copy (not mechanically recoverable from attestation.kpi_results[].kpi free text). A small number of historical tasks stored kpis as an array; both shapes are accepted (no-loss).",
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "anyOf": [
+                  { "type": "string" },
+                  { "type": "number" },
+                  { "type": "boolean" },
+                  { "type": "null" }
+                ]
+              },
+              "actual": {
+                "anyOf": [
+                  { "type": "string" },
+                  { "type": "number" },
+                  { "type": "boolean" },
+                  { "type": "null" }
+                ]
+              },
+              "met": { "anyOf": [{ "type": "boolean" }, { "type": "null" }] },
+              "unit": { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        },
+        { "type": "array" }
+      ]
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": { "type": "string" },
+          "raised_at": { "$ref": "#/definitions/isoTimestamp" },
+          "resolved_at": { "$ref": "#/definitions/nullableTimestamp" },
+          "resolution": { "type": "string" }
+        },
+        "required": ["description", "raised_at"],
+        "additionalProperties": true
+      }
+    },
+    "notes": { "type": "string" },
+    "phase": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
+    "stream": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
+    "branch_url": { "type": "string" },
+    "integration_status": { "type": "string" },
+    "integration_duration_seconds": { "type": "integer", "minimum": 0 },
+    "time_from_completion_to_merge_seconds": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "current_phase": { "type": "string" },
+    "attempt": { "type": "integer", "minimum": 0 },
+    "percent_complete": { "type": "number" },
+    "updated_at": { "$ref": "#/definitions/nullableTimestamp" },
+    "implementation_summary": { "type": "string" },
+    "implements": { "anyOf": [{ "type": "array" }, { "type": "object" }] },
+    "stoa_verdicts": {},
+    "waivers": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "spec_sessions": {},
+    "context_verification": {}
+  },
+  "required": ["task_id"],
+  "additionalProperties": true
+}

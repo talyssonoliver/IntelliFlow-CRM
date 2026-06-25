@@ -1,0 +1,175 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "artifacts": {
+    "created": [
+      {
+        "created_at": "2026-06-13T00:00:00Z",
+        "path": "apps/web/src/components/leads/lead-detail.tsx",
+        "sha256": "cb066afa58fce4cfaffc337d30c56fbb095ba96aed7f574d80f93409300511b3"
+      },
+      {
+        "created_at": "2026-06-13T00:01:00Z",
+        "path": "apps/web/src/components/leads/lead-timeline.tsx",
+        "sha256": "04fd221df4e9c33dd55c35987947ccfc22468bf46c8a0c645f2c49c144d32479"
+      },
+      {
+        "created_at": "2026-06-13T00:02:00Z",
+        "path": "apps/web/src/lib/leads/lead-format.ts",
+        "sha256": "d87f39322ac97db8dac96ae94a4366b4c9c6fd0e812af7db75b3e4b1cd913032"
+      },
+      {
+        "created_at": "2026-06-13T00:25:00Z",
+        "path": "apps/web/src/components/leads/__tests__/lead-detail.test.tsx",
+        "sha256": "e5dede058eae7e36597b8d4bf9f7a40fe2b9e5e7fe1000278b7bd4f5944f0cbf"
+      },
+      {
+        "created_at": "2026-06-13T00:25:00Z",
+        "path": "apps/web/src/components/leads/__tests__/lead-timeline.test.tsx",
+        "sha256": "e99830db73ad2aa497507607673f051ec8d96fac2beb822e4156c45f16f5e1e0"
+      },
+      {
+        "created_at": "2026-06-13T00:25:00Z",
+        "path": "apps/web/src/lib/leads/__tests__/lead-format.test.ts",
+        "sha256": "fb300984c05f688600749ace458a22301b9348cb142a8591056ad564e095c262"
+      }
+    ],
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/components/leads/lead-detail.tsx",
+      "apps/web/src/components/leads/lead-timeline.tsx",
+      "apps/web/src/lib/leads/lead-format.ts",
+      "apps/web/src/components/leads/__tests__/lead-detail.test.tsx",
+      "apps/web/src/components/leads/__tests__/lead-timeline.test.tsx",
+      "apps/web/src/lib/leads/__tests__/lead-format.test.ts"
+    ],
+    "missing": [],
+    "modified": [
+      {
+        "note": "Thinned by ~415 LOC: imports the 3 new modules, composes <LeadDetail> + <LeadTimeline>, deletes the moved definitions. Behaviour preserved.",
+        "path": "apps/web/src/app/leads/[id]/page.tsx",
+        "sha256": "52676cda77fad87ec75ae1f38589310aeef9a92d7e9a061859b6b902b683fc95"
+      }
+    ]
+  },
+  "completed_at": "2026-06-13T00:40:00Z",
+  "dependencies_meta": {
+    "notes": "PG-059 Leads List Completed in sprint-18; attestation verdict COMPLETE; /leads/{id} reachable from lead-list.tsx:456 router.push('/leads/${id}').",
+    "verified_at": "2026-06-13T00:05:00Z"
+  },
+  "execution": {
+    "agents": [
+      "Frontend-Lead",
+      "Domain-Expert",
+      "Backend-Architect",
+      "Test-Engineer",
+      "A11y-Expert"
+    ],
+    "executor": "Claude Opus 4.8 (1M)",
+    "last_error": null,
+    "log_path": ".specify/sprints/sprint-18/execution/PG-061/",
+    "retry_count": 0
+  },
+  "kpis": {
+    "coverage_branches": {
+      "actual": 94.73,
+      "met": true,
+      "target": 80,
+      "unit": "percent (new files aggregate; lead-detail.tsx 83.33%, map-placeholder line uncovered)"
+    },
+    "coverage_functions": {
+      "actual": 100,
+      "met": true,
+      "target": 90,
+      "unit": "percent (new files)"
+    },
+    "coverage_lines": {
+      "actual": 100,
+      "met": true,
+      "target": 90,
+      "unit": "percent (new files)"
+    },
+    "coverage_statements": {
+      "actual": 100,
+      "met": true,
+      "target": 90,
+      "unit": "percent (new files: lead-detail.tsx / lead-timeline.tsx / lead-format.ts)"
+    },
+    "lighthouse_performance": {
+      "actual": "render-neutral extraction — same component tree, route-level code-splitting unchanged, zero new dependencies; the page's prior performance profile is preserved. Full LHCI run on /leads/[id] (auth + seeded lead required) deferred to sprint perf review, per the PG-059 precedent.",
+      "met": null,
+      "target": 90,
+      "unit": "percent (deferred — render-neutral)"
+    },
+    "regression": {
+      "actual": "22 files / 414 tests passed, 0 failed (incl. page.test.tsx, convert-lead.test.tsx, lead-list.test.tsx, PG-060 new/page.test.tsx)",
+      "met": true,
+      "target": "leads suites green"
+    }
+  },
+  "phase": "",
+  "started_at": "2026-06-12T23:50:00Z",
+  "status_history": [
+    {
+      "at": "2026-06-12T23:55:00Z",
+      "note": "Spec session: 5/5 persona consensus (frontend-lead load-bearing); existing page explored, gap = missing named components + pipeline evidence",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-06-13T00:00:00Z",
+      "note": "Unified spec + discussion; behaviour-preserving extraction mirroring AccountDetail / ActivityTimeline (PG-059 precedent)",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-06-13T00:02:00Z",
+      "note": "TDD decomposition",
+      "status": "Planning"
+    },
+    {
+      "at": "2026-06-13T00:08:00Z",
+      "note": "Plan-reviewer subagent (a7ea1158): CHANGES_REQUIRED -> all findings resolved (timeline scope bounded to overview; shared lead-format.ts; badges re-imported)",
+      "status": "Plan Complete"
+    },
+    {
+      "at": "2026-06-13T00:10:00Z",
+      "note": "Exec: 3 modules + 3 test suites created; page rewired; 4 validations PASS; a11y-expert pass (2 net-new fixes applied, 3 pre-existing filed)",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-06-13T00:40:00Z",
+      "note": "Exec complete: 4/4 validations PASS; new-file coverage 100% lines / 94.73% branches; 414 leads regression tests green; a11y-expert pass; /stoa-domain trivially satisfied (no domain surface); attestation verdict=COMPLETE. Lighthouse deferred (render-neutral).",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-061",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-06-13T00:20:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web test --run (leads suite: 22 files / 414 tests)",
+      "executed_at": "2026-06-13T00:29:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "eslint <7 touched files> + prettier --check",
+      "executed_at": "2026-06-13T00:30:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "executed_at": "2026-06-13T00:33:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

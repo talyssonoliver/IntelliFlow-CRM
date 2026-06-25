@@ -1,0 +1,48 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/workers/events-worker/src/main.ts",
+      "apps/workers/events-worker/src/outbox/event-dispatcher.ts"
+    ],
+    "expected": [
+      "apps/workers/events-worker/src/main.ts",
+      "apps/workers/events-worker/src/outbox/event-dispatcher.ts",
+      ".specify/sprints/sprint-22/attestations/IFC-272/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-22/attestations/IFC-272/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.925Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "6/6 event types handled; audit trail populated for account mutations"
+    }
+  },
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-272",
+  "validations": []
+}

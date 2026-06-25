@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/api/src/container.ts",
+      "apps/api/src/webhooks/handler.ts",
+      "packages/db/prisma/schema.prisma"
+    ],
+    "expected": [
+      "apps/api/src/container.ts",
+      "apps/api/src/webhooks/handler.ts",
+      "packages/db/prisma/schema.prisma"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.922Z"
+  },
+  "kpis": {
+    "kpi_2": {
+      "actual": "",
+      "met": false,
+      "target": "webhook delivery latency <5s"
+    },
+    "primary_kpi": {
+      "actual": "",
+      "met": false,
+      "target": "0 events lost on restart"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Comprehensive flow analysis findings: W3,W9",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-250",
+  "validations": []
+}

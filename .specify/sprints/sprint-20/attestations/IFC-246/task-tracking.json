@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "packages/domain/src/crm/lead/Lead.ts",
+      "packages/domain/src/crm/lead/LeadScore.ts",
+      "apps/ai-worker/src/chains/"
+    ],
+    "expected": [
+      "packages/domain/src/crm/lead/Lead.ts",
+      "packages/domain/src/crm/lead/LeadScore.ts",
+      "apps/ai-worker/src/chains/"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.908Z"
+  },
+  "kpis": {
+    "kpi_2": {
+      "actual": "",
+      "met": false,
+      "target": "scoring prompt includes >=3 360 data points"
+    },
+    "primary_kpi": {
+      "actual": "",
+      "met": false,
+      "target": "toJSON() includes 5 relation fields"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Comprehensive flow analysis findings: D1,D2,D3,D4",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-246",
+  "validations": []
+}

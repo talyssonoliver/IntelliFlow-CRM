@@ -188,20 +188,23 @@ apps/project-tracker/docs/metrics/_global/*.tmp
 # Schemas: apps/project-tracker/docs/metrics/schemas/ (tracked, see below).
 # ============================================
 
-# Per-sprint task JSON files are tracked — CI's validate:sprint (--strict) requires them
-# to be git-tracked to pass Gate 3 (Evidence Integrity) and Gate 6 (Canonical Uniqueness).
-# Only exclude phase-summary files (internal aggregates, timestamp-heavy) and _summary.json
-# is excluded because .specify/sprints/sprint-N/_summary.json is the canonical copy.
-apps/project-tracker/docs/metrics/sprint-*/_phase-summary.json
-apps/project-tracker/docs/metrics/sprint-*/**/_phase-summary.json
+# ADR-067 Phase 2: the ENTIRE per-task metrics tree is a GENERATED cache, rebuilt from
+# Sprint_plan.csv + the canonical .specify records (task-tracking.json / attestation.json) by
+# `pnpm generate:metrics`. Its sole-copy operational + evidence content was relocated to
+# .specify/sprints/sprint-{N}/attestations/{TASK_ID}/task-tracking.json (tracked). Committing the
+# tree only re-introduced the write-cascade + merge-conflict class. Gate 6 ASSERTS it is NOT
+# tracked; no-loss is proven by tools/scripts/prove-metrics-roundtrip.mjs. Schemas under
+# docs/metrics/schemas/ stay tracked (hand-authored). CI / predev / prebuild generate the tree
+# before any gate or the dashboard reads it.
+apps/project-tracker/docs/metrics/sprint-*/*.json
+apps/project-tracker/docs/metrics/sprint-*/**/*.json
 
 # Global derived aggregates — GITIGNORED + generated (ADR-067 Phase 1).
 # Sprint_plan.json / task-registry.json / dependency-graph.json are 100%
 # CSV-derived (no canonical content). They are regenerated from Sprint_plan.csv
 # by `pnpm generate:metrics` at dev-start + in CI, so committing them only
 # re-introduced the write-cascade + merge-conflict class. Gate 6 now ASSERTS
-# they are NOT tracked. The per-task sprint-N/<TASK>.json files stay tracked
-# (they carry sole-copy canonical content — see ADR-067).
+# they are NOT tracked. (ADR-067 Phase 2 extends this to the whole per-task tree, above.)
 apps/project-tracker/docs/metrics/_global/Sprint_plan.json
 apps/project-tracker/docs/metrics/_global/task-registry.json
 apps/project-tracker/docs/metrics/_global/dependency-graph.json

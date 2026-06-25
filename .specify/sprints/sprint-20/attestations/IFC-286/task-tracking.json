@@ -1,0 +1,50 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/deals/[id]/__tests__/page.test.tsx",
+      "apps/api/src/__tests__/contract/opportunity.contract.test.ts"
+    ],
+    "expected": [
+      "apps/web/src/app/deals/[id]/__tests__/page.test.tsx",
+      "tests/e2e/deal-crud.spec.ts",
+      "apps/api/src/__tests__/contract/opportunity.contract.test.ts",
+      ".specify/sprints/sprint-20/attestations/IFC-286/context_ack.json"
+    ],
+    "missing": [
+      "tests/e2e/deal-crud.spec.ts",
+      ".specify/sprints/sprint-20/attestations/IFC-286/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.914Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "Deal detail page test coverage >=90%; E2E CRUD flow passing"
+    }
+  },
+  "notes": "Deal/opportunity domain wiring audit finding. See docs/audit/deal-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-06T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 480,
+  "task_id": "IFC-286",
+  "validations": []
+}

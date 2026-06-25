@@ -1,0 +1,85 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "apps/api/src/trpc.ts"
+    ],
+    "expected": [
+      "apps/api/src/modules/*",
+      "apps/api/src/trpc.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-27T11:33:39.034Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.704Z"
+  },
+  "execution": {
+    "completed_at": "2025-12-21T16:30:00Z",
+    "duration_minutes": 120,
+    "execution_log": "logs/sprint-1/IFC-003.log",
+    "executor": "claude-opus-4.5",
+    "started_at": "2025-12-21T14:30:00Z"
+  },
+  "kpis": {
+    "endpoints_documented": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    },
+    "type_safety": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    }
+  },
+  "notes": "tRPC API foundation with type-safe routers and health endpoints.",
+  "started_at": "2025-12-27T11:18:39.034Z",
+  "status_history": [
+    {
+      "at": "2025-12-20T00:00:00Z",
+      "status": "PLANNED"
+    },
+    {
+      "at": "2025-12-21T14:30:00Z",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-21T16:30:00Z",
+      "status": "DONE"
+    },
+    {
+      "at": "2025-12-26T18:30:00Z",
+      "reason": "Reverted for Sprint 4 flow verification",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-26T19:45:00Z",
+      "reason": "Re-validated: tRPC type-safety confirmed, subscription demo verified",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-003",
+  "validations": [
+    {
+      "command": "test -d apps/api/src/modules",
+      "executed_at": "2025-12-21T16:30:00Z",
+      "exit_code": 0,
+      "name": "trpc_modules_exist",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.034Z"
+    },
+    {
+      "command": "test -f apps/api/src/trpc.ts",
+      "executed_at": "2025-12-21T16:30:00Z",
+      "exit_code": 0,
+      "name": "trpc_router_exists",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.034Z"
+    }
+  ]
+}

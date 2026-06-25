@@ -1,0 +1,51 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 60,
+  "artifacts": {
+    "created": [
+      "tools/scripts/cleanup-task-data.ts"
+    ],
+    "expected": [
+      "tools/scripts/cleanup-task-data.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-31T12:00:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.937Z"
+  },
+  "kpis": {
+    "scripts_functional": {
+      "actual": true,
+      "met": true,
+      "target": true
+    },
+    "usage_documented": {
+      "actual": true,
+      "met": true,
+      "target": true
+    }
+  },
+  "started_at": "2025-12-31T11:00:00Z",
+  "status_history": [
+    {
+      "at": "2025-12-31T12:00:00Z",
+      "note": "Utility scripts completed",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "EXP-SCRIPTS-001",
+  "validations": [
+    {
+      "command": "pnpm exec tsx tools/scripts/cleanup-task-data.ts --dry-run",
+      "executed_at": "2025-12-31T11:55:00Z",
+      "exit_code": 0,
+      "name": "Script Execution",
+      "passed": true,
+      "required": true,
+      "timestamp": "2025-12-31T12:00:00Z",
+      "type": "auto"
+    }
+  ]
+}

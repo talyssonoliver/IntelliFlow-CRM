@@ -1,0 +1,68 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts",
+      ".specify/sprints/sprint-18/specifications/IFC-214-spec.md",
+      ".specify/sprints/sprint-18/planning/IFC-214-plan.md",
+      ".specify/sprints/sprint-18/attestations/IFC-214/context_ack.json"
+    ],
+    "expected": [
+      "apps/api/src/modules/ai-monitoring/ai-monitoring.redis-store.ts",
+      "apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts",
+      "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.redis.integration.test.ts",
+      "apps/ai-worker/src/monitoring/redis-monitoring-publisher.ts",
+      "apps/ai-worker/src/monitoring/__tests__/redis-monitoring-publisher.test.ts",
+      ".specify/sprints/sprint-18/specifications/IFC-214-spec.md",
+      ".specify/sprints/sprint-18/planning/IFC-214-plan.md",
+      ".specify/sprints/sprint-18/attestations/IFC-214/context_ack.json"
+    ],
+    "missing": [
+      "apps/api/src/modules/ai-monitoring/ai-monitoring.redis-store.ts",
+      "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.redis.integration.test.ts",
+      "apps/ai-worker/src/monitoring/redis-monitoring-publisher.ts",
+      "apps/ai-worker/src/monitoring/__tests__/redis-monitoring-publisher.test.ts"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.856Z"
+  },
+  "kpis": {
+    "cross_process_metric_consistency": {
+      "actual": "",
+      "met": false,
+      "target": ">=99%"
+    },
+    "malformed_payload_acceptance": {
+      "actual": "",
+      "met": false,
+      "target": "0"
+    },
+    "redis_read_p95": {
+      "actual": "",
+      "met": false,
+      "target": "<50ms"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Mitigates risk R-016 (Cache Poisoning) by moving AI monitoring reads to Redis with tenant-scoped keys, payload validation, and expiration controls.",
+  "phase": "phase-1-validation",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-04T22:20:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-214",
+  "validations": []
+}

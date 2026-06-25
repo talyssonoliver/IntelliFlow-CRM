@@ -1,0 +1,55 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/home/home.router.ts",
+      "apps/api/src/security/types.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-211/context_ack.json"
+    ],
+    "expected": [
+      "apps/api/src/modules/home/home.router.ts",
+      "apps/api/src/modules/home/__tests__/home-rbac.test.ts",
+      "apps/api/src/security/types.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-211/context_ack.json"
+    ],
+    "missing": [
+      "apps/api/src/modules/home/__tests__/home-rbac.test.ts"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.855Z"
+  },
+  "kpis": {
+    "audit_logging": {
+      "actual": "",
+      "met": false,
+      "target": "All goal changes logged"
+    },
+    "rbac_enforcement": {
+      "actual": "",
+      "met": false,
+      "target": "100% goal endpoints enforced"
+    },
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    }
+  },
+  "notes": "Follow-up to IFC-195 (Customizable Daily Goals). Adds RBAC layer: manager team-goal override, admin org defaults, goal resource type in permission matrix, audit trail for goal changes.",
+  "phase": "phase-1-validation",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-02-28T13:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-211",
+  "validations": []
+}

@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 import { generateCurrentStateReport } from '../lib/current-state-report';
 import { generateContextSnapshot } from '../lib/context-snapshot';
+import { syncMetricsFromCSV } from '../lib/data-sync';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectTrackerRoot = join(__dirname, '..');
@@ -38,6 +39,21 @@ for (const outputPath of [sessionContextPath, stateReportMdPath, stateReportJson
   const dir = dirname(outputPath);
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
+  }
+}
+
+// Step 0 (ADR-067 Phase 2): regenerate the metrics tree (per-task JSONs + aggregates) from
+// Sprint_plan.csv + .specify first — it is a gitignored generated cache, so on a fresh checkout
+// the current-state-report / context-snapshot below would otherwise read a stale or absent tree.
+{
+  const csvPath = join(metricsDir, '_global', 'Sprint_plan.csv');
+  if (existsSync(csvPath)) {
+    const result = syncMetricsFromCSV(csvPath, metricsDir, { rebuildPerTask: true });
+    if (!result.success) {
+      console.warn(
+        `  ⚠ metrics generation reported errors: ${result.errors.slice(0, 3).join('; ')}`
+      );
+    }
   }
 }
 

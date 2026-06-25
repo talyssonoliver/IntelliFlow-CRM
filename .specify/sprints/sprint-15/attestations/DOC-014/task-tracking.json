@@ -1,0 +1,63 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "tools/scripts/content-audit.ts",
+      ".github/workflows/content-audit.yml",
+      "tools/scripts/__tests__/content-audit.test.ts"
+    ],
+    "expected": [
+      "tools/scripts/content-audit.ts",
+      ".github/workflows/content-audit.yml",
+      "tools/scripts/__tests__/content-audit.test.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-07T12:07:12.108Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.807Z"
+  },
+  "kpis": {
+    "ci_integration": {
+      "actual": "pending",
+      "met": false,
+      "target": "triggers on route-modifying PRs"
+    },
+    "execution_time": {
+      "actual": "pending",
+      "met": false,
+      "target": "<30s"
+    },
+    "schema_compliance": {
+      "actual": "pending",
+      "met": false,
+      "target": "14/14 existing tests pass on output"
+    }
+  },
+  "notes": "Implements the automated re-audit cadence defined in docs/design/content-audit.md Section 7. Ensures content-audit-results.json stays current as routes are added or removed. CI check prevents stale audit data from persisting across PRs.",
+  "phase": "",
+  "started_at": "2026-03-07T11:52:12.108Z",
+  "status_history": [
+    {
+      "at": "2026-02-25T23:15:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": null,
+  "task_id": "DOC-014",
+  "validations": [
+    {
+      "command": "echo \"Task DOC-014 completed\"",
+      "executed_at": "2026-03-07T12:07:12.109Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

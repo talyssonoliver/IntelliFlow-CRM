@@ -1,0 +1,93 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 200,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/opportunity/opportunity.router.ts",
+      "apps/api/src/modules/opportunity/pipeline-config.router.ts",
+      "packages/validators/src/opportunity.ts",
+      "packages/domain/src/crm/opportunity/Opportunity.ts",
+      "packages/application/src/services/OpportunityService.ts",
+      "apps/api/src/shared/mappers.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-282/attestation.json"
+    ],
+    "expected": [
+      "apps/api/src/modules/opportunity/opportunity.router.ts",
+      "packages/validators/src/opportunity.ts",
+      "packages/domain/src/crm/opportunity/Opportunity.ts",
+      "apps/api/src/shared/mappers.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-282/attestation.json"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-06-13T10:00:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.869Z"
+  },
+  "execution": {
+    "agents": [
+      "stoa-domain"
+    ],
+    "completed_at": "2026-06-13T10:00:00Z",
+    "duration_minutes": 200,
+    "executor": "Claude Code /exec",
+    "started_at": "2026-06-13T02:40:00Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "Every changed line covered; pre-ship diff-coverage PASS; domain 2727 / application 1396 / validators 2375 / api 6167 green.",
+      "met": true,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "B-04/B-05/B-07/B-09/B-10/B-11/B-12 all resolved; name persists, probability unwrap verified, schema key=opportunities, VALIDATION_ERROR->400, deactivation->400, closedAt in responses, CLOSED_LOST reason required.",
+      "met": true,
+      "target": "All 7 correctness issues resolved; zero silent data drops"
+    }
+  },
+  "notes": "Deal/opportunity domain wiring audit finding (B-04/B-05/B-07/B-09/B-10/B-11/B-12). See docs/audit/deal-detail-wiring-audit.md section 6 + .specify/sprints/sprint-18/attestations/IFC-282/attestation.json. Out-of-scope finding tracked: debt-ledger OPP-LIST-SCHEMA-SHAPE-001 + gh issue #413.",
+  "phase": "",
+  "started_at": "2026-06-13T02:40:00Z",
+  "status_history": [
+    {
+      "at": "2026-03-06T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-06-13T02:40:00Z",
+      "note": "Exec session start (STOA workflow Phase 3) — feat/ifc-282 worktree",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-06-13T10:00:00Z",
+      "note": "All 4 validations + 6 gates PASS; codex-review PASS; attestation written",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-282",
+  "validations": [
+    {
+      "command": "pnpm turbo typecheck --filter=@intelliflow/{domain,application,api,validators}",
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/{domain,application,validators,api} test",
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm turbo lint --filter=@intelliflow/{domain,application,api,validators}",
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm turbo build --filter=@intelliflow/{domain,application,api,validators}",
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

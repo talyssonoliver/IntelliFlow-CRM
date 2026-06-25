@@ -1,0 +1,100 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 240,
+  "artifacts": {
+    "created": [
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "apps/api/src/modules/account/account.router.ts",
+      ".specify/sprints/sprint-16/attestations/IFC-268/context_ack.json"
+    ],
+    "expected": [
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "apps/api/src/modules/account/account.router.ts",
+      ".specify/sprints/sprint-16/attestations/IFC-268/context_ack.json"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-19T18:56:57.114Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.826Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "144 tests passing (39 domain + 76 backend + 29 frontend)",
+      "met": true,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "Owner name renders from getById enriched response; assignOwner mutation + assignees query wired; AssignSheet integrated",
+      "met": true,
+      "target": "Owner name renders from API data; assignment completes <500ms"
+    }
+  },
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": "2026-03-18T00:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-03-18T00:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-18T00:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-18T00:00:00Z",
+      "status": "Planned"
+    },
+    {
+      "at": "2026-03-18T00:00:00Z",
+      "status": "Planned"
+    },
+    {
+      "at": "2026-03-19T00:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-19T18:56:00Z",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-268",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/domain typecheck && pnpm --filter @intelliflow/api typecheck",
+      "executed_at": "2026-03-19T18:53:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/domain exec vitest run src/crm/account/__tests__/Account.test.ts && pnpm --filter @intelliflow/api exec vitest run src/modules/account/__tests__/account.router.test.ts && pnpm --filter @intelliflow/web exec vitest run src/components/accounts/__tests__/AccountDetail.test.tsx",
+      "executed_at": "2026-03-19T18:53:30Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "npx eslint apps/web/src/components/accounts/AccountDetail.tsx",
+      "executed_at": "2026-03-19T18:54:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/validators build && pnpm --filter @intelliflow/api build",
+      "executed_at": "2026-03-19T18:54:30Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 75,
+  "artifacts": {
+    "created": [
+      "docs/compliance-and-governance/compliance/vpat-2.5.md",
+      "docs/compliance-and-governance/compliance/wcag-conformance-statement.md",
+      "tests/a11y/axe-core.spec.ts",
+      "tests/a11y/vitest.config.ts",
+      "tests/a11y/setup.ts",
+      "lighthouserc.js",
+      "audit-matrix.yml",
+      ".github/workflows/pr-checks.yml",
+      "apps/web/eslint.config.mjs",
+      "docs/architecture/adr/ADR-038-accessibility-architecture.md",
+      "docs/architecture/diagrams/complete-dependency-chains.md"
+    ],
+    "expected": [
+      "docs/compliance-and-governance/compliance/vpat-2.5.md",
+      "docs/compliance-and-governance/compliance/wcag-conformance-statement.md",
+      "tests/a11y/axe-core.spec.ts",
+      "tests/a11y/vitest.config.ts",
+      "tests/a11y/setup.ts",
+      "lighthouserc.js",
+      "audit-matrix.yml",
+      ".github/workflows/pr-checks.yml",
+      "apps/web/eslint.config.mjs",
+      "docs/architecture/adr/ADR-038-accessibility-architecture.md",
+      "docs/architecture/diagrams/complete-dependency-chains.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-24T01:00:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.787Z"
+  },
+  "kpis": {
+    "axe_core_tests": {
+      "actual": 8,
+      "met": true,
+      "target": 8,
+      "unit": "automated tests"
+    },
+    "lighthouse_accessibility_threshold": {
+      "actual": 0.9,
+      "met": true,
+      "target": 0.9,
+      "unit": "score"
+    },
+    "vpat_criteria_coverage": {
+      "actual": 50,
+      "met": true,
+      "target": 50,
+      "unit": "WCAG 2.1 A+AA criteria"
+    }
+  },
+  "notes": "VPAT 2.5 covers all 50 WCAG 2.1 A+AA criteria. Conformance statement claims partial conformance (SC 1.4.1). 8 axe-core tests across 3 tiers. 86 jsx-a11y violations fixed to enable rule promotion from warn to error. Lighthouse accessibility >= 0.9 enforced in CI. ADR-038 accepted. Screen reader testing plan for Sprint 15-18.",
+  "phase": "phase-1",
+  "started_at": "2026-02-23T23:45:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-23T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-02-23T23:45:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-24T00:20:00Z",
+      "status": "Validating"
+    },
+    {
+      "at": "2026-02-24T01:00:00Z",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": null,
+  "task_id": "DOC-008",
+  "validations": [
+    {
+      "command": "pnpm run typecheck",
+      "duration_ms": 45000,
+      "executed_at": "2026-02-24T00:20:00Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run --config tests/a11y/vitest.config.ts",
+      "duration_ms": 2970,
+      "executed_at": "2026-02-24T00:22:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web lint",
+      "duration_ms": 30000,
+      "executed_at": "2026-02-24T00:24:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "duration_ms": 120000,
+      "executed_at": "2026-02-24T00:26:00Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

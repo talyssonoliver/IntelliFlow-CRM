@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts_to_track": [
+    "ARTIFACT:apps/workers/notifications-worker/src/channels/sms.ts",
+    "EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-222/context_ack.json"
+  ],
+  "completed_at": "2026-03-06T22:15:29.590Z",
+  "created_at": "2026-03-04T23:51:20.000Z",
+  "definition_of_done": "Real Twilio SDK calls replace mock logic; verified by: pnpm test",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.789Z"
+  },
+  "estimate": "60/120/240",
+  "kpis": {},
+  "percent_complete": 0,
+  "prerequisites": [
+    "FILE:apps/workers/notifications-worker/src/channels/sms.ts"
+  ],
+  "started_at": "2026-03-06T22:00:29.590Z",
+  "target_sprint": 14,
+  "task_id": "IFC-222",
+  "updated_at": "2026-03-04T23:51:20.000Z",
+  "validation_method": [
+    "VALIDATE:pnpm test"
+  ],
+  "validations": [
+    {
+      "command": "echo \"Task IFC-222 completed\"",
+      "executed_at": "2026-03-06T22:15:29.590Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

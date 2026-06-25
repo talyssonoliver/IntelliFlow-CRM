@@ -1,0 +1,63 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      {
+        "created_at": "2026-04-12T10:50:00Z",
+        "path": ".specify/sprints/sprint-17/specifications/IFC-031-spec.md",
+        "sha256": "c2cafa659ba6b1edcb10f54474181f127593762b5116ac6d6764ed6bac011fcf"
+      }
+    ],
+    "expected": [],
+    "missing": []
+  },
+  "attempt": 1,
+  "blockers": [],
+  "completed_at": "2026-04-12T14:24:19.977Z",
+  "current_phase": "ARCHITECT_SPEC",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.834Z"
+  },
+  "execution": {
+    "executor": "orchestrator",
+    "last_error": null,
+    "log_path": "artifacts/logs/ralph-IFC-031.log",
+    "retry_count": 0
+  },
+  "kpis": {},
+  "phase": "phase-0-initialisation",
+  "started_at": "2026-04-12T10:45:00Z",
+  "status_history": [
+    {
+      "at": "2026-02-13T23:20:51+00:00",
+      "note": "Task execution started (prior run)",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-04-12T10:45:00Z",
+      "note": "Ralph loop /full-pipeline — spec-session started",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-04-12T10:50:00Z",
+      "note": "Specification produced at .specify/sprints/sprint-17/specifications/IFC-031-spec.md",
+      "status": "Spec Complete"
+    }
+  ],
+  "stream": null,
+  "task_id": "IFC-031",
+  "updated_at": "2026-04-12T10:50:00Z",
+  "validations": [
+    {
+      "command": "echo \"Task IFC-031 completed\"",
+      "executed_at": "2026-04-12T14:24:19.977Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 90,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/(public)/lp/[slug]/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/(public)/lp/[slug]/page.tsx"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-31T12:30:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.935Z"
+  },
+  "kpis": {
+    "ab_tests_running": {
+      "actual": true,
+      "met": true,
+      "target": true
+    }
+  },
+  "started_at": "2025-12-31T11:00:00Z",
+  "status_history": [
+    {
+      "at": "2025-12-31T12:30:00Z",
+      "note": "Landing page template completed",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "PG-013",
+  "validations": [
+    {
+      "command": "pnpm --filter web build",
+      "executed_at": "2025-12-31T12:25:00Z",
+      "exit_code": 0,
+      "name": "Web Build",
+      "passed": true,
+      "required": true,
+      "timestamp": "2025-12-31T12:30:00Z",
+      "type": "auto"
+    }
+  ]
+}

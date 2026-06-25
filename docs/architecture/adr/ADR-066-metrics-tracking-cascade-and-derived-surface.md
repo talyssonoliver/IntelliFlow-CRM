@@ -1,6 +1,11 @@
 # ADR-066: Collapse the Sprint-Metrics Write Cascade and Shrink the Derived Tracked Surface
 
-**Status:** Proposed
+**Status:** Superseded by
+[ADR-067](./ADR-067-metrics-harness-dechurn-and-canonical-split.md) (Phase 2
+makes the entire per-task metrics tree a generated, gitignored cache and
+relocates the sole-copy canonical content to `.specify/.../task-tracking.json` —
+the de-churn this ADR proposed, completed without leaving the per-task JSONs
+tracked.)
 
 **Date:** 2026-06-14
 

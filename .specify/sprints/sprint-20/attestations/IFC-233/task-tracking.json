@@ -1,0 +1,48 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/app/contacts/[id]/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/app/contacts/[id]/page.tsx",
+      ".specify/sprints/sprint-20/attestations/IFC-233/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-20/attestations/IFC-233/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.904Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "zero_unused_endpoints": {
+      "actual": "",
+      "met": false,
+      "target": "Zero unused tRPC procedures"
+    }
+  },
+  "notes": "Wiring debt: ~20 tRPC procedures built but never consumed by frontend.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 120,
+  "task_id": "IFC-233",
+  "validations": []
+}

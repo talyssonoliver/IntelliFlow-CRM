@@ -1,0 +1,50 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "apps/api/src/shared/forecast-algorithm.ts",
+      "packages/validators/src/opportunity.ts",
+      "apps/web/src/app/deals/forecast/page.tsx"
+    ],
+    "expected": [
+      "apps/api/src/shared/forecast-algorithm.ts",
+      "packages/validators/src/opportunity.ts",
+      "apps/web/src/app/deals/forecast/page.tsx",
+      ".specify/sprints/sprint-20/attestations/IFC-284/context_ack.json"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-20/attestations/IFC-284/context_ack.json"
+    ]
+  },
+  "blockers": [],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.914Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "",
+      "met": false,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "",
+      "met": false,
+      "target": "Win rate trend matches actual date window; single probability source"
+    }
+  },
+  "notes": "Deal/opportunity domain wiring audit finding. See docs/audit/deal-detail-wiring-audit.md.",
+  "phase": "",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-06T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-284",
+  "validations": []
+}

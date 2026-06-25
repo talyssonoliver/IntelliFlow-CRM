@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 45,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/(public)/careers/[id]/page.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/(public)/careers/[id]/page.tsx"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-31T09:00:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.934Z"
+  },
+  "kpis": {
+    "apply_working": {
+      "actual": true,
+      "met": true,
+      "target": true
+    }
+  },
+  "started_at": "2025-12-31T08:15:00Z",
+  "status_history": [
+    {
+      "at": "2025-12-31T09:00:00Z",
+      "note": "Career detail page completed",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "PG-012",
+  "validations": [
+    {
+      "command": "pnpm --filter web build",
+      "executed_at": "2025-12-31T08:55:00Z",
+      "exit_code": 0,
+      "name": "Web Build",
+      "passed": true,
+      "required": true,
+      "timestamp": "2025-12-31T09:00:00Z",
+      "type": "auto"
+    }
+  ]
+}

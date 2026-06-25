@@ -1,0 +1,91 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 90,
+  "artifacts": {
+    "created": [
+      "apps/api/src/modules/account/account.router.ts",
+      "packages/validators/src/account.ts",
+      "packages/application/src/services/AccountService.ts",
+      "packages/domain/src/crm/account/Account.ts",
+      "apps/api/src/shared/mappers.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-270/attestation.json"
+    ],
+    "expected": [
+      "apps/api/src/modules/account/account.router.ts",
+      "packages/validators/src/account.ts",
+      "packages/application/src/services/AccountService.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-270/attestation.json"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-06-13T01:30:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.866Z"
+  },
+  "execution": {
+    "agents": [
+      "stoa-domain"
+    ],
+    "completed_at": "2026-06-13T01:30:00Z",
+    "duration_minutes": 90,
+    "executor": "Claude Code /exec",
+    "started_at": "2026-06-13T00:00:00Z"
+  },
+  "kpis": {
+    "test_coverage": {
+      "actual": "Every changed line covered by new/updated tests; pre-ship diff-coverage (Sonar new_coverage >=80%) PASS; domain 2723 / application 1394 / validators 2369 / api 6159 green.",
+      "met": true,
+      "target": ">=90%"
+    },
+    "wiring_complete": {
+      "actual": "revenue/employees/industry persist via account.update (atomic); 3 new tRPC procedures (updateRevenue/updateEmployeeCount/categorizeIndustry) functional with dedicated error mapping + audit logging; B-09 schema key + B-13 website serialization fixed.",
+      "met": true,
+      "target": "All schema fields persist on update; 3 new procedures functional"
+    }
+  },
+  "notes": "Account domain wiring audit finding (B-08..B-13). See docs/audit/account-detail-wiring-audit.md section 12 and .specify/sprints/sprint-18/attestations/IFC-270/attestation.json. Out-of-scope adapter finding (revenue 0 -> null) tracked: debt-ledger REVENUE-ZERO-PERSIST-001 + gh issue #406.",
+  "phase": "",
+  "started_at": "2026-06-13T00:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-03-05T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-06-13T00:00:00Z",
+      "note": "Exec session start (STOA workflow Phase 3) — feat/ifc-270 worktree",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-06-13T01:30:00Z",
+      "note": "All 4 validations + 6 gates PASS; codex-review PASS; attestation written",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 240,
+  "task_id": "IFC-270",
+  "validations": [
+    {
+      "command": "pnpm turbo typecheck --filter=@intelliflow/domain --filter=@intelliflow/application --filter=@intelliflow/api --filter=@intelliflow/validators",
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/{domain,application,validators,api} test",
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm turbo lint --filter=@intelliflow/domain --filter=@intelliflow/application --filter=@intelliflow/api --filter=@intelliflow/validators",
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm turbo build --filter=@intelliflow/domain --filter=@intelliflow/application --filter=@intelliflow/api --filter=@intelliflow/validators",
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

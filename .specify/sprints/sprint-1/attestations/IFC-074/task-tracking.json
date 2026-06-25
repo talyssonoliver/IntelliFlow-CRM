@@ -1,0 +1,67 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "apps/api/src/tracing/otel.ts"
+    ],
+    "expected": [
+      "apps/api/src/tracing/*",
+      "apps/api/src/tracing/otel.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-27T11:33:39.037Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.704Z"
+  },
+  "execution": {
+    "completed_at": "2025-12-21T16:00:00Z",
+    "duration_minutes": 120,
+    "execution_log": "logs/sprint-1/IFC-074.log",
+    "executor": "claude-opus-4.5",
+    "started_at": "2025-12-21T14:00:00Z"
+  },
+  "kpis": {
+    "mttd_target": {
+      "actual": 1.5,
+      "met": true,
+      "target": 2,
+      "unit": "minutes"
+    },
+    "traces_correlating": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    }
+  },
+  "notes": "OpenTelemetry tracing configured with unified logs, metrics, and traces.",
+  "started_at": "2025-12-27T11:18:39.037Z",
+  "status_history": [
+    {
+      "at": "2025-12-20T00:00:00Z",
+      "status": "PLANNED"
+    },
+    {
+      "at": "2025-12-21T14:00:00Z",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-21T16:00:00Z",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-074",
+  "validations": [
+    {
+      "command": "test -d apps/api/src/tracing",
+      "executed_at": "2025-12-21T16:00:00Z",
+      "exit_code": 0,
+      "name": "tracing_module_exists",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.037Z"
+    }
+  ]
+}

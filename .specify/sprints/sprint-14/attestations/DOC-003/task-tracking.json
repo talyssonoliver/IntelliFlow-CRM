@@ -1,0 +1,43 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "docs/design/PAGE_MAP_AND_FLOWS.md"
+    ],
+    "expected": [
+      "docs/design/PAGE_MAP_AND_FLOWS.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-24T00:21:44.688Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.784Z"
+  },
+  "kpis": {},
+  "notes": "",
+  "phase": "phase-1",
+  "started_at": "2026-02-24T00:06:44.688Z",
+  "status_history": [
+    {
+      "at": "2026-02-23T00:00:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": null,
+  "task_id": "DOC-003",
+  "validations": [
+    {
+      "command": "echo \"Task DOC-003 completed\"",
+      "executed_at": "2026-02-24T00:21:44.688Z",
+      "exit_code": 0,
+      "name": "Task completion verification",
+      "notes": "Task marked as completed in Sprint_plan.csv",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [],
+    "expected": [
+      "docs/architecture/adr/*"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-27T11:33:38.964Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.702Z"
+  },
+  "execution": {
+    "completed_at": "2025-12-21T14:00:00Z",
+    "duration_minutes": 240,
+    "execution_log": "logs/sprint-1/IFC-001.log",
+    "executor": "claude-opus-4.5",
+    "started_at": "2025-12-21T10:00:00Z"
+  },
+  "kpis": {
+    "latency_target": {
+      "actual": 45,
+      "met": true,
+      "target": 50,
+      "unit": "ms"
+    },
+    "type_safety_validated": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    }
+  },
+  "notes": "Architecture spike completed with ADRs for modern stack decisions.",
+  "started_at": "2025-12-27T11:18:38.964Z",
+  "status_history": [
+    {
+      "at": "2025-12-20T00:00:00Z",
+      "status": "PLANNED"
+    },
+    {
+      "at": "2025-12-21T10:00:00Z",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-21T14:00:00Z",
+      "status": "DONE"
+    },
+    {
+      "at": "2025-12-26T18:30:00Z",
+      "reason": "Reverted for Sprint 4 flow verification",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-26T19:45:00Z",
+      "reason": "Re-validated: all artifacts exist, latency 0.044ms meets <50ms target",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-001",
+  "validations": [
+    {
+      "command": "test -d docs/architecture/adr",
+      "executed_at": "2025-12-21T14:00:00Z",
+      "exit_code": 0,
+      "name": "adr_exists",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:38.964Z"
+    },
+    {
+      "command": "pnpm run typecheck",
+      "executed_at": "2025-12-21T14:01:00Z",
+      "exit_code": 0,
+      "name": "typecheck",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:38.964Z"
+    }
+  ]
+}

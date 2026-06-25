@@ -1,0 +1,133 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 1202,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/accounts/(list)/page.tsx",
+      "apps/web/src/app/accounts/[id]/page.tsx",
+      "apps/web/src/components/accounts/AccountCard.tsx",
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "apps/web/src/components/accounts/AccountHierarchy.tsx",
+      "apps/web/src/components/accounts/RevenueChart.tsx",
+      "apps/web/src/components/accounts/AccountContactsList.tsx",
+      "apps/web/src/components/accounts/AccountOpportunitiesList.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/accounts/(list)/page.tsx",
+      "apps/web/src/app/accounts/[id]/page.tsx",
+      "apps/web/src/components/accounts/AccountCard.tsx",
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "apps/web/src/components/accounts/AccountHierarchy.tsx",
+      "apps/web/src/components/accounts/RevenueChart.tsx",
+      "apps/web/src/components/accounts/AccountContactsList.tsx",
+      "apps/web/src/components/accounts/AccountOpportunitiesList.tsx"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-02-08T11:02:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:52.003Z"
+  },
+  "execution": {
+    "agents": [
+      "Foundation",
+      "Quality",
+      "Domain"
+    ],
+    "completed_at": "2026-02-08T11:02:00.000Z",
+    "duration_minutes": 1202,
+    "executor": "Claude Code /exec",
+    "last_error": null,
+    "retry_count": 0,
+    "started_at": "2026-02-07T15:00:00.000Z"
+  },
+  "kpis": {
+    "artifacts_created": {
+      "actual": 8,
+      "met": true,
+      "target": 8,
+      "unit": "files"
+    },
+    "test_count": {
+      "actual": 109,
+      "met": true,
+      "target": 109,
+      "unit": "tests"
+    },
+    "test_pass_rate": {
+      "actual": 100,
+      "met": true,
+      "target": 100,
+      "unit": "percent"
+    },
+    "typescript_errors": {
+      "actual": 0,
+      "met": true,
+      "target": 0,
+      "unit": "errors"
+    }
+  },
+  "notes": "Full-stack implementation across 4 sessions. Backend: domain hierarchy (setParent, removeParent, cycle detection), service layer (getHierarchy, setParent with depth check), InMemoryAccountRepository hierarchy methods. Frontend: AccountCard (tier logic, columns), AccountDetail (6-tab detail with lazy loading), AccountHierarchy (accessible tree with keyboard nav, ARIA roles), RevenueChart (pipeline data transformation), AccountContactsList (cursor pagination), AccountOpportunitiesList (stage filter, summary cards). 109 tests total (47 backend + 62 frontend). All 7 completion gates PASS. Attestation created. Dependency chains updated.",
+  "phase": "phase-1",
+  "started_at": "2026-02-07T15:00:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-02-07T15:00:00.000Z",
+      "note": "exec session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-08T11:02:00.000Z",
+      "note": "exec completed — all 105 tests pass, typecheck clean, all artifacts created",
+      "status": "Completed"
+    },
+    {
+      "at": "2026-02-09T22:44:00.000Z",
+      "note": "exec session continued — MATOP validation, compliance, gates, attestation pending",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-09T22:55:00.000Z",
+      "note": "exec completed — all 7 gates PASS, attestation created, 109 tests passing, all artifacts verified",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 390,
+  "task_id": "PG-134",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "duration_ms": 15000,
+      "executed_at": "2026-02-08T10:58:00.000Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "npx vitest run apps/web/src/components/accounts/__tests__/ packages/application/src/services/__tests__/AccountService.hierarchy.test.ts packages/adapters/__tests__/InMemoryAccountRepository.hierarchy.test.ts",
+      "duration_ms": 2710,
+      "executed_at": "2026-02-08T11:01:36.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/application typecheck",
+      "duration_ms": 8000,
+      "executed_at": "2026-02-08T10:59:00.000Z",
+      "exit_code": 0,
+      "name": "TypeScript (application)",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/adapters typecheck",
+      "duration_ms": 6000,
+      "executed_at": "2026-02-08T10:59:00.000Z",
+      "exit_code": 0,
+      "name": "TypeScript (adapters)",
+      "passed": true
+    }
+  ]
+}

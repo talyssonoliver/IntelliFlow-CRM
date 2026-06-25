@@ -1,0 +1,77 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 15,
+  "artifacts": {
+    "created": [
+      "docs/planning/ceremony-calendar.ics",
+      "artifacts/reports/retro-action-items.md"
+    ],
+    "expected": [
+      "docs/planning/ceremony-calendar.ics",
+      "artifacts/misc/templates/*.md",
+      "artifacts/reports/retro-action-items.md"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2025-12-27T11:33:39.132Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.709Z"
+  },
+  "execution": {
+    "completed_at": "2025-12-21T17:30:00Z",
+    "duration_minutes": 60,
+    "execution_log": "logs/sprint-1/IFC-119.log",
+    "executor": "claude-opus-4.5",
+    "started_at": "2025-12-21T16:30:00Z"
+  },
+  "kpis": {
+    "ceremonies_scheduled": {
+      "actual": true,
+      "met": true,
+      "target": true,
+      "unit": "boolean"
+    },
+    "templates_created": {
+      "actual": 5,
+      "met": true,
+      "target": 5,
+      "unit": "count"
+    }
+  },
+  "notes": "Sprint ceremonies scheduled with calendar and templates for planning, retrospective, refinement, standup, and review.",
+  "started_at": "2025-12-27T11:18:39.133Z",
+  "status_history": [
+    {
+      "at": "2025-12-20T00:00:00Z",
+      "status": "PLANNED"
+    },
+    {
+      "at": "2025-12-21T16:30:00Z",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "at": "2025-12-21T17:30:00Z",
+      "status": "DONE"
+    }
+  ],
+  "task_id": "IFC-119",
+  "validations": [
+    {
+      "command": "test -f docs/planning/ceremony-calendar.ics",
+      "executed_at": "2025-12-21T17:30:00Z",
+      "exit_code": 0,
+      "name": "calendar_exists",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.132Z"
+    },
+    {
+      "command": "test -f docs/planning/templates/sprint-planning.md",
+      "executed_at": "2025-12-21T17:30:00Z",
+      "exit_code": 0,
+      "name": "templates_exist",
+      "passed": true,
+      "timestamp": "2025-12-27T11:33:39.132Z"
+    }
+  ]
+}

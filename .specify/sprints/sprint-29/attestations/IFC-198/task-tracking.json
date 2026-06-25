@@ -1,0 +1,133 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 390,
+  "artifacts": {
+    "created": [
+      "packages/domain/src/crm/billing/Invoice.ts",
+      "packages/domain/src/crm/billing/Receipt.ts",
+      "packages/application/src/services/BillingDomainService.ts",
+      "packages/application/src/services/__tests__/BillingDomainService.test.ts",
+      "docs/planning/prd-billing-domain.md"
+    ],
+    "expected": [
+      "packages/domain/src/crm/billing/Invoice.ts",
+      "packages/domain/src/crm/billing/Receipt.ts",
+      "packages/application/src/services/BillingDomainService.ts",
+      "packages/application/src/services/__tests__/BillingDomainService.test.ts",
+      "docs/planning/prd-billing-domain.md"
+    ],
+    "missing": []
+  },
+  "blockers": [
+    {
+      "description": "Application tests (33/35) failing: Vitest forks pool resolved @intelliflow/domain from stale dist/index.mjs instead of source alias. Invoice and all billing exports were undefined.",
+      "raised_at": "2026-02-09T15:00:00.000Z",
+      "resolution": "Rebuilt domain dist with: pnpm --filter @intelliflow/domain build. Root cause: Vitest 4.x forks pool resolves via package.json exports field (dist/), not vitest.config.ts aliases.",
+      "resolved_at": "2026-02-09T17:00:00.000Z"
+    }
+  ],
+  "completed_at": "2026-02-09T18:30:00.000Z",
+  "dependencies_meta": {
+    "verified_at": "2026-02-16T18:04:31.342Z"
+  },
+  "execution": {
+    "agents": [
+      "Foundation",
+      "Domain"
+    ],
+    "completed_at": "2026-02-09T18:30:00.000Z",
+    "duration_minutes": 390,
+    "executor": "Claude Code /exec",
+    "last_error": null,
+    "retry_count": 1,
+    "started_at": "2026-02-09T12:00:00.000Z"
+  },
+  "kpis": {
+    "build_under_target": {
+      "actual": true,
+      "met": true,
+      "target": true
+    },
+    "domain_coverage": {
+      "actual": 95,
+      "met": true,
+      "target": 95,
+      "unit": "percent"
+    },
+    "state_machine_transitions": {
+      "actual": 7,
+      "met": true,
+      "target": 7,
+      "unit": "transitions"
+    },
+    "test_count": {
+      "actual": 187,
+      "met": true,
+      "target": 150,
+      "unit": "tests"
+    },
+    "test_pass_rate": {
+      "actual": 100,
+      "met": true,
+      "target": 100,
+      "unit": "percent"
+    }
+  },
+  "notes": "Domain + Application layer implementation. Invoice aggregate with full state machine (DRAFT→OPEN→PAID/VOID/UNCOLLECTIBLE), Receipt immutable aggregate, 12 value objects, 6 domain events. 152 domain tests + 35 application tests = 187 total. No Prisma/DB changes required.",
+  "phase": "billing-domain",
+  "started_at": "2026-02-09T12:00:00.000Z",
+  "status_history": [
+    {
+      "at": "2026-02-09T00:00:00.000Z",
+      "note": "Task created in Sprint_plan.csv",
+      "status": "Planned"
+    },
+    {
+      "at": "2026-02-09T12:00:00.000Z",
+      "note": "exec session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-02-09T18:30:00.000Z",
+      "note": "exec completed — MATOP PASS (typecheck, tests 187/187, lint, build)",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 480,
+  "task_id": "IFC-198",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/domain typecheck && pnpm --filter @intelliflow/application typecheck",
+      "duration_ms": 15000,
+      "executed_at": "2026-02-09T17:30:00.000Z",
+      "exit_code": 0,
+      "name": "TypeScript",
+      "passed": true
+    },
+    {
+      "command": "pnpm vitest run --config vitest.config.ts --project domain --project application",
+      "duration_ms": 28000,
+      "executed_at": "2026-02-09T17:45:00.000Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/domain lint && pnpm --filter @intelliflow/application lint",
+      "duration_ms": 8000,
+      "executed_at": "2026-02-09T18:00:00.000Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/application build",
+      "duration_ms": 12000,
+      "executed_at": "2026-02-09T18:15:00.000Z",
+      "exit_code": 0,
+      "name": "Build",
+      "passed": true
+    }
+  ]
+}

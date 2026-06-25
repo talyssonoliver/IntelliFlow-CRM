@@ -1,0 +1,135 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": 90,
+  "artifacts": {
+    "created": [
+      "apps/web/src/app/help-center/[article]/page.tsx",
+      "apps/web/src/app/help-center/[article]/layout.tsx",
+      "apps/web/src/components/support/article-renderer.tsx",
+      "apps/web/src/components/support/feedback-widget.tsx",
+      "apps/web/src/lib/support/help-articles.ts"
+    ],
+    "expected": [
+      "apps/web/src/app/help-center/[article]/page.tsx",
+      "apps/web/src/app/help-center/[article]/layout.tsx",
+      "apps/web/src/components/support/article-renderer.tsx",
+      "apps/web/src/components/support/feedback-widget.tsx",
+      "apps/web/src/lib/support/help-articles.ts"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-03-08T12:15:00Z",
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.813Z"
+  },
+  "execution": {
+    "agents": [
+      "spec-session",
+      "plan-session",
+      "exec"
+    ],
+    "completed_at": "2026-03-08T12:15:00Z",
+    "duration_minutes": 90,
+    "executor": "Claude Code",
+    "last_error": null,
+    "log_path": ".specify/sprints/sprint-16/execution/PG-045/exec-pg045-20260308/PG-045-delivery.md",
+    "retry_count": 0,
+    "started_at": "2026-03-08T12:00:00Z"
+  },
+  "kpis": {
+    "coverage_branches": {
+      "actual": "92.85%",
+      "met": true,
+      "target": ">=80%",
+      "unit": "percent"
+    },
+    "coverage_functions": {
+      "actual": "94.44%",
+      "met": true,
+      "target": ">=90%",
+      "unit": "percent"
+    },
+    "coverage_lines": {
+      "actual": "96.15%",
+      "met": true,
+      "target": ">=90%",
+      "unit": "percent"
+    },
+    "coverage_statements": {
+      "actual": "93.54%",
+      "met": true,
+      "target": ">=90%",
+      "unit": "percent"
+    },
+    "new_tests": {
+      "actual": "54",
+      "met": true,
+      "target": ">=48",
+      "unit": "count"
+    },
+    "regressions": {
+      "actual": "0",
+      "met": true,
+      "target": "0",
+      "unit": "count"
+    }
+  },
+  "notes": "Help Article page implemented with TDD. TypeScript and Build failures are pre-existing issues in unrelated files (DealsCharts.tsx, SentimentDistributionChart.tsx JSX comments; login-security.ts node:crypto). All PG-045 files pass lint cleanly.",
+  "phase": "phase-1",
+  "started_at": "2026-03-08T12:00:00Z",
+  "status_history": [
+    {
+      "at": "2026-03-08T12:00:00Z",
+      "note": "Task in backlog",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-03-08T12:00:00Z",
+      "note": "Spec session started",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-03-08T12:15:00Z",
+      "note": "All implementation complete, 54 tests passing, coverage above thresholds",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 120,
+  "task_id": "PG-045",
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web exec tsc --noEmit",
+      "duration_ms": 15000,
+      "executed_at": "2026-03-08T12:04:00Z",
+      "exit_code": 2,
+      "name": "TypeScript",
+      "passed": false
+    },
+    {
+      "command": "npx vitest run apps/web/src/app/help-center/__tests__ apps/web/src/app/help-center/[article]/__tests__ apps/web/src/components/support/__tests__ apps/web/src/lib/support/__tests__ --run",
+      "duration_ms": 6260,
+      "executed_at": "2026-03-08T12:05:00Z",
+      "exit_code": 0,
+      "name": "Tests",
+      "passed": true
+    },
+    {
+      "command": "npx eslint apps/web/src/lib/support/help-articles.ts apps/web/src/components/support/article-renderer.tsx apps/web/src/components/support/feedback-widget.tsx apps/web/src/app/help-center/[article]/page.tsx apps/web/src/app/help-center/[article]/layout.tsx",
+      "duration_ms": 3000,
+      "executed_at": "2026-03-08T12:06:00Z",
+      "exit_code": 0,
+      "name": "Lint",
+      "passed": true
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "duration_ms": 45000,
+      "executed_at": "2026-03-08T12:07:00Z",
+      "exit_code": 1,
+      "name": "Build",
+      "passed": false
+    }
+  ]
+}

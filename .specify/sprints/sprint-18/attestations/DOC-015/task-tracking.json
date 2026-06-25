@@ -1,0 +1,73 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "actual_duration_minutes": null,
+  "artifacts": {
+    "created": [
+      "docs/design/sitemap.md",
+      "docs/design/page-registry.md",
+      "docs/design/PAGE_MAP_AND_FLOWS.md",
+      "docs/design/ui-flow-mapping.md",
+      "docs/design/navigation-reachability-audit.md",
+      "docs/design/information-architecture.md",
+      "docs/design/content-audit.md",
+      ".specify/sprints/sprint-18/attestations/DOC-015/context_ack.json"
+    ],
+    "expected": [
+      "docs/design/sitemap.md",
+      "docs/design/page-registry.md",
+      "docs/design/PAGE_MAP_AND_FLOWS.md",
+      "docs/design/ui-flow-mapping.md",
+      "docs/design/navigation-reachability-audit.md",
+      "docs/design/information-architecture.md",
+      "docs/design/content-audit.md",
+      ".specify/sprints/sprint-18/attestations/DOC-015/context_ack.json"
+    ],
+    "missing": []
+  },
+  "blockers": [
+    {
+      "description": "Cannot finalize reconciliation until DOC-014 automated content audit baseline is implemented and available in CI.",
+      "raised_at": "2026-03-04T23:58:00Z",
+      "resolved_at": null
+    }
+  ],
+  "completed_at": null,
+  "dependencies_meta": {
+    "verified_at": "2026-04-29T21:54:51.853Z"
+  },
+  "kpis": {
+    "canonical_route_count_match": {
+      "actual": "",
+      "met": false,
+      "target": "119"
+    },
+    "cross_doc_mismatch_count": {
+      "actual": "",
+      "met": false,
+      "target": "0"
+    },
+    "doc_lint": {
+      "actual": "",
+      "met": false,
+      "target": "pass"
+    },
+    "stale_total_references": {
+      "actual": "",
+      "met": false,
+      "target": "0"
+    }
+  },
+  "notes": "Closes Issue #019 / R-023 (Docs Integrity) execution gap by reconciling conflicting route totals across design docs using apps/web/src/app/**/page.tsx as source of truth. Tabela .txt quality criteria (clarity, consistency, completeness, update cadence) are applied as acceptance constraints.",
+  "phase": "phase-1-validation",
+  "started_at": null,
+  "status_history": [
+    {
+      "at": "2026-03-04T23:58:00Z",
+      "status": "Backlog"
+    }
+  ],
+  "stream": null,
+  "target_duration_minutes": 180,
+  "task_id": "DOC-015",
+  "validations": []
+}

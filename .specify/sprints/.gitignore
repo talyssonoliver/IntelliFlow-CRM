@@ -17,3 +17,7 @@ sprint-*/attestations/**
 !sprint-*/attestations/*/
 !sprint-*/attestations/*/attestation.json
 !sprint-*/attestations/*/attestation-latest.json
+# ADR-067 Phase 2: task-tracking.json is the canonical home for per-task OPERATIONAL +
+# EVIDENCE content (status_history, blockers, execution.*, timings, kpis.actual/met, ...).
+# It is tracked so the derived metrics tree can be regenerated from CSV + attestation + this.
+!sprint-*/attestations/*/task-tracking.json

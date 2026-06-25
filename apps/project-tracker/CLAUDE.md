@@ -13,29 +13,28 @@ Next.js 16.1.6 (App Router) · React 19.2 · Tailwind v4 · Zod v4 · `csv-parse
 
 Evidence and tracking are split across two trees. Know which is which:
 
-| Tree                                                        | Role                                                                                                                             | Hand-edit?                                               |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `.specify/sprints/sprint-{N}/` (repo root)                  | **Source of truth for evidence** — attestations, context packs, plans, specs, execution runs, STOA verdicts, follow-ups, reports | Yes (by `/exec`, `/plan-session`, `/spec-session`, etc.) |
-| `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` | **Source of truth for the task list** — statuses, KPIs, dependencies, dates                                                      | Yes                                                      |
-| `apps/project-tracker/docs/metrics/sprint-{N}/*.json`       | **MIXED (canonical + derived)** — CSV-derived fields (status, description, deps) PLUS sole-copy canonical fields. See warning.   | Derived fields: no. Canonical fields: yes (by `/exec`)   |
-| `apps/project-tracker/docs/metrics/schemas/`                | JSON schemas referenced by both trees                                                                                            | Schema changes only                                      |
+| Tree                                                                 | Role                                                                                                                                                                                                                                         | Hand-edit?                                               |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `.specify/sprints/sprint-{N}/` (repo root)                           | **Source of truth for evidence** — attestations, context packs, plans, specs, execution runs, STOA verdicts, follow-ups, reports                                                                                                             | Yes (by `/exec`, `/plan-session`, `/spec-session`, etc.) |
+| `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`          | **Source of truth for the task list** — statuses, KPIs, dependencies, dates                                                                                                                                                                  | Yes                                                      |
+| `.specify/sprints/sprint-{N}/attestations/{TASK}/task-tracking.json` | **Source of truth for per-task OPERATIONAL + EVIDENCE content** (ADR-067 Phase 2) — `status_history`, `blockers`, real `validations`, `kpis.actual/met`, `execution.*`, timings, `target_duration_minutes`, `waivers`, `stoa_verdicts`, etc. | Yes (by `/exec`)                                         |
+| `apps/project-tracker/docs/metrics/sprint-{N}/**/*.json`             | **GENERATED CACHE (ADR-067 Phase 2)** — rebuilt by `pnpm generate:metrics` from CSV + `.specify` (per-task JSON = merge of CSV-derived fields + `task-tracking.json`). **Gitignored.**                                                       | No — never hand-edit or commit; it is regenerated.       |
+| `apps/project-tracker/docs/metrics/schemas/`                         | JSON schemas referenced by both trees                                                                                                                                                                                                        | Schema changes only                                      |
 
-Pipeline: CSV + `.specify/**` ─(sync)→ `docs/metrics/sprint-*/*.json` ─→
-dashboard APIs.
+Pipeline: CSV + `.specify/**` ─(`pnpm generate:metrics`)→
+`docs/metrics/sprint-*/**/*.json` (gitignored cache) ─→ dashboard APIs + gates.
 
-> ⚠️ **The per-task JSON is NOT purely derived — do not regenerate it from the
-> CSV alone.** A 2026-06-23 audit found **~233 of ~418 task JSONs carry
-> sole-copy canonical content** that exists in neither the CSV nor `.specify/`:
-> `status_history`, `blockers`, real `validations` (exit codes + stdout hashes),
-> `kpis.actual`/`met`, `execution.*` (executor, agents, retry_count, log_path,
-> timings), `actual_duration_minutes`, plus 27 tasks with extra-schema fields
-> (`waivers`, `stoa_verdicts`, `implements`, `spec_sessions`,
-> `context_verification`). `sync` only **merges CSV-derived fields over** the
-> existing file (it preserves the canonical fields it doesn't own) — it does NOT
-> rebuild the file from scratch. **Deleting or `git restore`-from-CSV a per-task
-> JSON destroys canonical evidence.** Only the `_global/*.json` aggregates,
-> `sprint-N/_summary.json`, and the split CSVs are safe to regenerate wholesale.
-> See ADR-067.
+> ✅ **ADR-067 Phase 2: the per-task metrics tree is now a GENERATED, gitignored
+> cache.** The sole-copy operational + evidence content a 2026-06-23 audit found
+> in ~233 of ~418 task JSONs was **relocated to its canonical home** in
+> `.specify/sprints/sprint-{N}/attestations/{TASK}/task-tracking.json`
+> (tracked), so the per-task JSON can now be rebuilt from scratch with **zero
+> loss** — proven by `tools/scripts/prove-metrics-roundtrip.mjs`. Write per-task
+> operational metrics to `task-tracking.json`, **never** to the `docs/metrics`
+> JSON (it is regenerated and gitignored). Generation runs at dev-start
+> (`predev`), build (`prebuild`), in CI before the sprint gates, and in
+> `generate-context.ts`. Gate 6 ASSERTS the tree is not tracked. See ADR-067
+> (Phase 2 supersedes ADR-066).
 
 ## Sprint Plan CSV
 
