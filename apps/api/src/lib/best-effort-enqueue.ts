@@ -101,7 +101,16 @@ export async function enqueueBestEffort(
       try {
         await withTimeout(queue.close(), REDIS_OP_TIMEOUT_MS);
       } catch {
-        /* ignore close errors/timeouts on a dead/closing connection */
+        // Graceful close hung or failed (e.g. Redis dropped mid-QUIT). Force-disconnect so the
+        // ioredis handle is actually torn down instead of lingering — the whole point of this
+        // helper. (retryStrategy:()=>null already stops reconnects; this covers a stuck QUIT.)
+        if (typeof queue.disconnect === 'function') {
+          try {
+            await withTimeout(queue.disconnect(), REDIS_OP_TIMEOUT_MS);
+          } catch {
+            /* nothing more we can do — the connection is set to never reconnect */
+          }
+        }
       }
     }
   } catch {
