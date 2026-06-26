@@ -1,0 +1,407 @@
+{
+  "_comment": "Machine-readable per-task assignment matrix consumed by tools/scripts/generate-task-prompt.mjs (the /dispatch-task skill). Source of truth is docs/operations/sprint-18-orchestrator-prompt.md §C; keep them in sync. 'persona' is the LOAD-BEARING reviewer whose lens the task-executor adopts (the persona agents are Tier-A spec reviewers and CANNOT implement — the executor is Tier-C). 'done: true' means the task is merged on main and /dispatch-task must REFUSE it (reconcile-and-attest instead).",
+  "defaults": {
+    "persona": "backend-architect",
+    "stoa": "/stoa-foundation",
+    "skills": [],
+    "maxIterByType": { "simple": 15, "settings": 20, "crm": 30, "complex": 40 },
+    "inferByPrefix": {
+      "DOC-": {
+        "persona": "general-purpose",
+        "stoa": "/stoa-automation",
+        "maxIter": 20
+      },
+      "INFRA-TF-": {
+        "persona": "devops-lead",
+        "stoa": "/stoa-foundation",
+        "maxIter": 20
+      }
+    }
+  },
+  "tasks": {
+    "PG-060": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "A"
+    },
+    "PG-061": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design"],
+      "maxIter": 30,
+      "lane": "A"
+    },
+    "PG-062": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design"],
+      "maxIter": 20,
+      "lane": "A"
+    },
+    "PG-063": {
+      "persona": "frontend-lead",
+      "secondary": "backend-architect",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design"],
+      "maxIter": 30,
+      "lane": "A"
+    },
+    "IFC-242": {
+      "persona": "backend-architect",
+      "secondary": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": [],
+      "maxIter": 20,
+      "lane": "A",
+      "done": true
+    },
+    "IFC-230": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-quality",
+      "skills": ["/frontend-design"],
+      "maxIter": 30,
+      "lane": "A",
+      "done": true
+    },
+    "IFC-247": {
+      "persona": "test-engineer",
+      "stoa": "/stoa-quality",
+      "skills": ["/webapp-testing"],
+      "maxIter": 30,
+      "lane": "A"
+    },
+    "IFC-248": {
+      "persona": "test-engineer",
+      "stoa": "/stoa-quality",
+      "skills": ["/webapp-testing"],
+      "maxIter": 30,
+      "lane": "A"
+    },
+    "IFC-256": {
+      "persona": "frontend-lead",
+      "secondary": "backend-architect",
+      "stoa": "/stoa-domain",
+      "skills": [],
+      "maxIter": 30,
+      "lane": "B",
+      "done": true
+    },
+    "IFC-257": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": [],
+      "maxIter": 30,
+      "lane": "B",
+      "done": true
+    },
+    "IFC-265": {
+      "persona": "test-engineer",
+      "stoa": "/stoa-quality",
+      "skills": ["/webapp-testing"],
+      "maxIter": 30,
+      "lane": "B"
+    },
+    "IFC-266": {
+      "persona": "test-engineer",
+      "stoa": "/stoa-quality",
+      "skills": ["/webapp-testing"],
+      "maxIter": 30,
+      "lane": "B"
+    },
+    "IFC-271": {
+      "persona": "domain-expert",
+      "secondary": "backend-architect",
+      "stoa": "/stoa-domain",
+      "skills": [],
+      "maxIter": 30,
+      "lane": "C"
+    },
+    "IFC-270": {
+      "persona": "backend-architect",
+      "stoa": "/stoa-domain",
+      "skills": [],
+      "maxIter": 30,
+      "lane": "C"
+    },
+    "IFC-273": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": [],
+      "maxIter": 20,
+      "lane": "C"
+    },
+    "IFC-282": {
+      "persona": "backend-architect",
+      "stoa": "/stoa-domain",
+      "skills": [],
+      "maxIter": 30,
+      "lane": "D"
+    },
+    "IFC-280": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": [],
+      "maxIter": 30,
+      "lane": "D"
+    },
+    "IFC-287": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": [],
+      "maxIter": 20,
+      "lane": "D"
+    },
+    "IFC-240": {
+      "persona": "security-lead",
+      "stoa": "/stoa-security",
+      "skills": [],
+      "maxIter": 30,
+      "lane": "E",
+      "done": true
+    },
+    "IFC-255": {
+      "persona": "security-lead",
+      "stoa": "/stoa-security",
+      "skills": [],
+      "maxIter": 30,
+      "lane": "E",
+      "done": true
+    },
+    "IFC-301": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "context7 for Tiptap docs"],
+      "maxIter": 30,
+      "lane": "F",
+      "done": true
+    },
+    "PG-181": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design"],
+      "maxIter": 20,
+      "lane": "F"
+    },
+    "IFC-302": {
+      "persona": "frontend-lead",
+      "secondary": "backend-architect",
+      "stoa": "/stoa-domain",
+      "skills": [],
+      "maxIter": 20,
+      "lane": "F"
+    },
+    "PG-188": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G"
+    },
+    "PG-191": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G"
+    },
+    "PG-196": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G"
+    },
+    "PG-197": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G"
+    },
+    "PG-198": {
+      "persona": "frontend-lead",
+      "secondary": "ai-specialist",
+      "stoa": "/stoa-domain",
+      "skills": [
+        "/frontend-design",
+        "a11y-expert review",
+        "ai-specialist review (AI governance)"
+      ],
+      "maxIter": 20,
+      "lane": "G",
+      "note": "Approval Policies — agent-approval API module does not exist; create-vs-extend needs a decision (see orchestrator prompt 'Needs a human decision')."
+    },
+    "PG-199": {
+      "persona": "frontend-lead",
+      "secondary": "ai-specialist",
+      "stoa": "/stoa-domain",
+      "skills": [
+        "/frontend-design",
+        "a11y-expert review",
+        "ai-specialist review (AI governance)"
+      ],
+      "maxIter": 20,
+      "lane": "G",
+      "note": "Model Config — same agent-approval module gap + Never-Downgrade rule."
+    },
+    "PG-200": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G"
+    },
+    "PG-201": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G"
+    },
+    "PG-202": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G"
+    },
+    "PG-203": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G"
+    },
+    "PG-204": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G",
+      "note": "task-JSON path (cases/case-types) mismatches the real stub (cases/(list)/case-types) — reconcile first."
+    },
+    "PG-205": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G"
+    },
+    "PG-206": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G"
+    },
+    "PG-207": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G"
+    },
+    "PG-208": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G",
+      "blockedBy": "PG-191"
+    },
+    "PG-209": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design", "a11y-expert review"],
+      "maxIter": 20,
+      "lane": "G",
+      "blockedBy": "PG-191"
+    },
+    "DOC-015": {
+      "persona": "general-purpose",
+      "stoa": "/stoa-automation",
+      "skills": [],
+      "maxIter": 20,
+      "lane": "H",
+      "note": "Reconcile-and-attest — docs + consistency test already on main; needs attestation + CSV flip. Must close before DOC-016."
+    },
+    "DOC-016": {
+      "persona": "devops-lead",
+      "stoa": "/stoa-automation",
+      "skills": [],
+      "maxIter": 20,
+      "lane": "H",
+      "blockedBy": "DOC-015"
+    },
+    "IFC-214": {
+      "persona": "ai-specialist",
+      "secondary": "backend-architect",
+      "stoa": "/stoa-intelligence",
+      "skills": [],
+      "maxIter": 40,
+      "lane": "I",
+      "note": "Redis-backed monitoring STATE bridge — NOT merged (do not confuse with IFC-212, the snapshot bridge, which is on main #59)."
+    },
+    "IFC-215": {
+      "persona": "ai-specialist",
+      "stoa": "/stoa-intelligence",
+      "skills": [],
+      "maxIter": 40,
+      "lane": "I",
+      "blockedBy": "IFC-214"
+    },
+    "PG-058": {
+      "persona": "frontend-lead",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design"],
+      "maxIter": 30,
+      "lane": "J"
+    },
+    "IFC-032": {
+      "persona": "devops-lead",
+      "stoa": "/stoa-foundation",
+      "skills": [],
+      "maxIter": 40,
+      "lane": "J",
+      "done": true,
+      "note": "Attested via #515; prod apply is a hard stop for user sign-off."
+    },
+    "IFC-211": {
+      "persona": "security-lead",
+      "secondary": "domain-expert",
+      "stoa": "/stoa-security",
+      "skills": [],
+      "maxIter": 30,
+      "lane": "J",
+      "note": "Needs a REAL PR (3 tRPC procs, goal ResourceType, home-rbac.test.ts) + attestation — not attestation-only."
+    },
+    "IFC-234": {
+      "persona": "frontend-lead",
+      "secondary": "backend-architect",
+      "stoa": "/stoa-domain",
+      "skills": ["/frontend-design"],
+      "maxIter": 30,
+      "lane": "J"
+    },
+    "IFC-309": {
+      "persona": "compliance",
+      "secondary": "security-lead",
+      "stoa": "/stoa-security",
+      "skills": [],
+      "maxIter": 30,
+      "lane": "J",
+      "note": "Needs product/compliance decision on termsVersion format + immutability before dispatch."
+    },
+    "IFC-212": {
+      "persona": "ai-specialist",
+      "stoa": "/stoa-intelligence",
+      "skills": [],
+      "maxIter": 40,
+      "lane": "I",
+      "done": true,
+      "note": "Reconcile-and-attest — Redis monitoring snapshot bridge merged #59; verify container→QueueAIService wiring."
+    }
+  }
+}

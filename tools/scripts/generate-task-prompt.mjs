@@ -1,0 +1,240 @@
+#!/usr/bin/env node
+/**
+ * generate-task-prompt.mjs — deterministic per-task agent-dispatch prompt generator.
+ *
+ * Replaces hand-writing a full worktree-agent prompt for every Sprint-18 task. The
+ * orchestrator (or the /dispatch-task skill) runs this; stdout IS the prompt to hand to a
+ * fresh `task-executor` agent/session. Deterministic input → identical output, so the
+ * "mistakes and mismatches" of hand-editing (wrong max-iter, missing gotcha, stale persona,
+ * forgotten DB-target warning) cannot creep in.
+ *
+ * Usage:
+ *   node tools/scripts/generate-task-prompt.mjs <TASK-ID> [--main-sha <sha>] [--slot <n>] [--total <n>]
+ *
+ * Sources:
+ *   - apps/project-tracker/docs/metrics/_global/Sprint_plan.csv  (sprint, description, deps, status)
+ *   - docs/operations/task-assignment-matrix.json                (persona, STOA, skills, max-iter)
+ *   - docs/operations/sprint-18-orchestrator-prompt.md           (the full plan, referenced)
+ *
+ * Exit codes:
+ *   0 — prompt emitted on stdout
+ *   1 — task not found / matrix unreadable (message on stderr)
+ *   3 — task is already DONE on main (refusal + reconcile guidance on stdout; NOT a dispatchable build)
+ */
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+import Papa from 'papaparse';
+
+const REPO_ROOT = process.cwd();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// ── args ──────────────────────────────────────────────────────────────────
+const args = process.argv.slice(2);
+const TASK_ID = (args.find((a) => !a.startsWith('--')) || '').trim().toUpperCase();
+const flag = (name) => {
+  const i = args.indexOf(`--${name}`);
+  return i >= 0 ? args[i + 1] : undefined;
+};
+if (!TASK_ID) {
+  process.stderr.write('Usage: generate-task-prompt.mjs <TASK-ID> [--main-sha <sha>] [--slot n] [--total n]\n');
+  process.exit(1);
+}
+const SLOT = flag('slot');
+const TOTAL = flag('total') || '3';
+
+// ── resolve main SHA (caller may override; else read origin/main) ──────────
+let MAIN_SHA = flag('main-sha');
+if (!MAIN_SHA) {
+  try {
+    MAIN_SHA = execSync('git rev-parse --short origin/main', { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
+  } catch {
+    MAIN_SHA = '<run: git rev-parse --short origin/main>';
+  }
+}
+
+// ── load matrix ─────────────────────────────────────────────────────────────
+const matrixPath = join(REPO_ROOT, 'docs', 'operations', 'task-assignment-matrix.json');
+if (!existsSync(matrixPath)) {
+  process.stderr.write(`Assignment matrix not found: ${matrixPath}\n`);
+  process.exit(1);
+}
+const matrix = JSON.parse(readFileSync(matrixPath, 'utf8'));
+
+// ── load CSV row ────────────────────────────────────────────────────────────
+const csvPath = join(REPO_ROOT, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+if (!existsSync(csvPath)) {
+  process.stderr.write(`Sprint_plan.csv not found: ${csvPath}\n`);
+  process.exit(1);
+}
+const { data: rows } = Papa.parse(readFileSync(csvPath, 'utf8'), { header: true, skipEmptyLines: true });
+const row = rows.find((r) => (r['Task ID'] || '').trim().toUpperCase() === TASK_ID);
+if (!row) {
+  process.stderr.write(`Task ${TASK_ID} not found in Sprint_plan.csv\n`);
+  process.exit(1);
+}
+
+const rawSprint = (row['Target Sprint'] || '').trim();
+const SPRINT = rawSprint === 'Continuous' ? '0' : (String(parseInt(rawSprint, 10) || '18'));
+const DESCRIPTION = (row['Description'] || '').trim();
+const DEPS = (row['Dependencies'] || '').trim() || 'none';
+const CSV_STATUS = (row['Status'] || '').trim();
+
+// ── resolve assignment (explicit → prefix-infer → defaults) ─────────────────
+const d = matrix.defaults;
+let a = matrix.tasks[TASK_ID];
+if (!a) {
+  const prefixRule = Object.entries(d.inferByPrefix || {}).find(([p]) => TASK_ID.startsWith(p));
+  a = prefixRule ? { ...prefixRule[1] } : {};
+}
+const persona = a.persona || d.persona;
+const secondary = a.secondary ? ` (+ ${a.secondary} for the secondary surface)` : '';
+const stoa = a.stoa || d.stoa;
+const skills = (a.skills && a.skills.length) ? a.skills.join(', ') : 'none beyond the pipeline defaults';
+const maxIter = a.maxIter || d.maxIterByType.crm;
+const lane = a.lane ? `Lane ${a.lane}` : '(unassigned lane)';
+const note = a.note ? `\nTASK NOTE (from the plan): ${a.note}` : '';
+const blockedBy = a.blockedBy ? `\n⚠ HARD DEP: ${a.blockedBy} must be merged on main first — verify before provisioning.` : '';
+
+const idLower = TASK_ID.toLowerCase();
+
+// ── DONE detection: git is AUTHORITATIVE, not the CSV ───────────────────────
+// The CSV Status column is "badly stale" (per the orchestrator prompt) in BOTH directions —
+// tasks shipped-but-not-flipped AND tasks flipped-but-never-shipped (e.g. IFC-214). So resolve
+// real status from a feature commit on origin/main, filtering out chore/metrics/orchestrator noise.
+function featureCommitOnMain(id) {
+  try {
+    const raw = execSync(`git log origin/main --grep=${id} --oneline`, { cwd: REPO_ROOT, encoding: 'utf8' });
+    return raw
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .find((l) => !/chore\(metrics|orchestrator|attest |chore\(deps|bump /i.test(l)) || null;
+  } catch {
+    return null; // offline / no git — fall through to matrix flag
+  }
+}
+const onMain = a.done ? '(matrix: verified merged)' : featureCommitOnMain(TASK_ID);
+
+if (a.done || onMain) {
+  process.stdout.write(
+`REFUSE TO DISPATCH — ${TASK_ID} already has code on main. Building it would duplicate merged work.
+  Evidence: ${typeof onMain === 'string' ? onMain : '(matrix done flag)'}
+
+This is NOT a build. Do a RECONCILE-AND-ATTEST instead (no /full-pipeline loop):
+  1. ${persona} runs /task-code-audit ${TASK_ID} — does the merged code satisfy the full DoD?
+  2. If yes: /compliance-check → /exec-attestation → flip Sprint_plan.csv to Completed → sync.
+  3. If a real gap remains: dispatch /full-pipeline ${TASK_ID} for THAT GAP ONLY (it resumes at the right phase).
+${note}
+`);
+  process.exit(3);
+}
+
+// CSV says Completed but NO feature commit on main = stale CSV. Dispatch, but warn loudly.
+const staleCsvWarning = /^(completed|done)$/i.test(CSV_STATUS)
+  ? `\n⚠ STALE CSV: Sprint_plan.csv marks ${TASK_ID} "${CSV_STATUS}" but there is NO feature commit on origin/main. The CSV is wrong — this task is NOT built. Proceed to build it, and the CSV will be corrected on merge.`
+  : '';
+
+// ── emit dispatch prompt ────────────────────────────────────────────────────
+const slotLine = SLOT
+  ? `You are agent session ${SLOT} of ${TOTAL} in a parallel Sprint-${SPRINT} run`
+  : `You are one agent session in a ${TOTAL}-agent parallel Sprint-${SPRINT} run`;
+
+process.stdout.write(
+`${slotLine} for IntelliFlow CRM (${REPO_ROOT}).
+main is green at ${MAIN_SHA}. You own ONE task — ${TASK_ID} — in your OWN git worktree.
+Do not touch the main working dir or other agents' worktrees.
+Full plan: docs/operations/sprint-18-orchestrator-prompt.md (read its "Lessons"/State sections).
+You are the \`task-executor\` agent; ADOPT the ${persona} persona (.claude/agents/${persona}.md) as your
+load-bearing lens${secondary}. The persona agents are Tier-A reviewers convened inside /spec-session —
+you are the Tier-C implementer that actually writes code, runs tests, and ships the PR.
+
+PROVISION — you are ALREADY inside a harness-provisioned isolated git worktree, forked from the
+control plane which the orchestrator keeps even with origin/main. Do NOT run \`git worktree add\`,
+and do NOT \`git worktree remove\` when done — the harness reclaims it. Do NOT touch the main working
+dir or any sibling worktree.
+1. Create your branch:  git checkout -b feat/${idLower}
+2. pnpm install
+3. turbo build --filter='./packages/*'   (libs must be built or imports fail)
+4. The committed .env.test already points DATABASE_URL at the LOCAL test DB
+   (postgresql://postgres:postgres@localhost:5433/intelliflow_test). Verify it's up:
+   docker ps --filter name=postgres-test  (expect "healthy"). The test DB and dev ports are
+   SHARED across all worktrees — that is why the orchestrator caps concurrency at 3. NEVER use
+   .env.local's DATABASE_URL — it is PRODUCTION Supabase. Copy other dev vars from .env.local if
+   needed, but NOT DATABASE_URL/DIRECT_URL.
+5. export NODE_OPTIONS=--max-old-space-size=8192
+
+GATE = node scripts/pre-ship.mjs (mirrors CI). Run it WITHOUT piping to tail/head — a pipe
+reports the PIPE's exit code, not pre-ship's. Read the summary; it must end "pre-ship: PASS".
+No SKIP_PRESHIP exists. --no-verify needs explicit owner approval. PRESHIP_ALLOW_MISSING=1
+only if infra is genuinely down, never to hide a failure.
+
+HARD-WON GOTCHAS (these cost real days — encoded so you don't repeat them):
+1. MAKE THE MINIMAL CHANGE — do NOT refactor beyond the task. Drive-by complexity refactors
+   introduced regressions the codex gate caught (health 503-not-200, dead code, ||→?? empty-string
+   leak). If touching a file trips a sonar-guard, fix it narrowly.
+2. TEST your changed lines — NEVER use /* istanbul ignore next */. Diff-coverage (Sonar
+   new_coverage ≥80% on changed lines) counts istanbul-ignored lines as UNCOVERED. If a line is
+   only reachable via a DB-gated integration test (not run under coverage), add a unit test (IFC-282).
+3. CODEX GATE (pre-ship codex-review step) is non-deterministic, surfaces ONE finding per run, and
+   sometimes hallucinates about removed code. On a finding: grep / git show HEAD:<file> to confirm
+   the cited code still exists. Real bug → fix minimally. True false-positive → waive in
+   tools/audit/codex-review-waivers.yaml with evidence. Iterate \`node scripts/codex-review.mjs\`
+   STANDALONE (~2 min each) to CONVERGENCE before the full ~20-min pre-ship — never discover codex
+   findings one full-gate cycle at a time.
+4. CACHED-PASS PUSH: get ONE clean full pre-ship PASS at the FINAL committed SHA, then push
+   immediately (pre-push reuses the cache — no codex re-run). Any new commit forces a fresh run.
+5. If pre-ship unit-tests fails ONLY on apps/workers/shared/health-server.test.ts
+   ("GET /metrics"/EADDRINUSE), that's pre-existing flake #400 — re-run pre-ship.
+6. NEVER add a Co-Authored-By: Claude trailer (commitlint + CI hard-fail it). Subject ≤100 chars,
+   body lines ≤100 chars (em-dashes inflate byte length — prefer ASCII).
+7. NEVER bypass the git-destructive-guard: no git stash / reset --hard / checkout -- <path> /
+   restore <path> / clean -f / branch -D / push --force (use --force-with-lease). To discard a
+   file, ask the user.
+8. If CI "Security Scanning / npm/pnpm Audit" fails but you changed no dependency, it may be a
+   NEWLY-PUBLISHED advisory (pnpm audit hits the live DB) — check the advisory ID and bump the
+   pnpm override in package.json; don't assume it's your code.
+
+RUN (the build engine — spec → plan → exec → attestation, one phase per iteration):
+/loop "/full-pipeline ${TASK_ID}" --max-iterations ${maxIter} --completion-promise "PIPELINE COMPLETE: Ensure all steps from /spec-session, /plan-session and /exec are all completed."
+
+The loop's promise fires on LOCAL artifacts + attestation — that means "build done", NOT "task
+shipped". After the promise, you still owe the ship steps below.
+
+VALIDATE BEFORE CLAIMING DONE ("PIPELINE COMPLETE" is a claim, not proof):
+- TypeScript + Tests + Lint + BUILD all pass; full suite for every touched package
+  (pnpm --filter <pkg> test, not a guessed subset).
+- Attestation exists at .specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/attestation.json,
+  all gates PASS (binary — no WARN/SKIP).
+- Run /code-review on the diff and /sonarqube-fix for any new Sonar findings BEFORE opening the PR.
+- UI tasks: an a11y-expert review pass (WCAG) before merge.
+
+MERGE DISCIPLINE (this is where the PR # is born — the loop never opens a PR):
+- gh pr create, then gh pr checks <n>: merge ONLY with ZERO fail AND ZERO pending. Wait for ALL
+  workflows to COMPLETE (CI Pipeline + Security Scanning + Release) — never judge green from a
+  subset or while jobs run.
+- STRICT SERIALIZE: only ONE task merges at a time. Before you merge, your branch MUST be even with
+  current origin/main. If the orchestrator says a sibling merged, or \`git fetch origin main\` shows
+  main moved past your base: \`git merge --no-edit origin/main\`, then if pnpm-lock.yaml or
+  packages/** changed re-run \`pnpm install\` + \`turbo build --filter='./packages/*'\` and clear
+  apps/web/.next/types (stale-types trap), then re-run pre-ship + re-trigger CI BEFORE merging.
+  Renamed exports break semantically with NO textual conflict — a clean cherry-merge is not enough.
+- The CSV flip is the ORCHESTRATOR's job on the control plane (not yours — you never touch the main
+  working dir). Report your merged PR # so it can flip Sprint_plan.csv → split → regenerate context.
+
+RED FLAGS mid-task (disabled security, TODO, stub, prod mock) → fix-or-track in ALL THREE:
+a gh issue (file:line + proposed fix), artifacts/metrics/debt-ledger.yaml, the sprint findings doc.
+
+ESCALATE TO THE USER (stop) on: any prod terraform apply, any --no-verify push, any destructive
+git op, or anything needing production credentials / live prod verification.
+
+YOUR TASK: ${TASK_ID} — ${DESCRIPTION || '(see Sprint_plan.csv Description)'}
+${lane}.  Persona/lens: ${persona}${secondary}.  STOA /exec must pass: ${stoa}.  Skills: ${skills}.
+Dependencies: ${DEPS}.${blockedBy}${note}${staleCsvWarning}
+
+REPORT WHEN DONE: the merged PR # and the attestation path
+(.specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/attestation.json).
+`);
+process.exit(0);
