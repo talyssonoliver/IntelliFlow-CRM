@@ -4,7 +4,7 @@
 
 **Product Name:** IntelliFlow CRM **Product Version:** 0.1.0 (Sprint 17)
 **Report Date:** 2026-04-16 **Contact:** accessibility@intelliflow.com
-**Evaluation Methods Used:** Static code review (91 routes), Lighthouse CI
+**Evaluation Methods Used:** Static code review (92 routes), Lighthouse CI
 runtime (26 URLs), axe-core automated testing (8 component tests in jsdom)
 
 ---
@@ -136,12 +136,13 @@ minimum every 6 months.
 
 ## Document Control
 
-| Version | Date       | Author                        | Changes                                                                                                                      |
-| ------- | ---------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 1.0.0   | 2026-02-24 | Engineering (DOC-008)         | Initial VPAT based on DOC-007 gap assessment, post-remediation verification, and axe-core automated testing                  |
-| 1.1.0   | 2026-03-01 | Engineering (DOC-011)         | Updated route count from 26 to 82 to reflect full application scope                                                          |
-| 1.2.0   | 2026-03-10 | Engineering (PG-173)          | Updated route count from 82 to 85 (added /tickets/sla-policies, /tickets/types, /tickets/automations)                        |
-| 1.3.0   | 2026-03-11 | Engineering (PG-174)          | Added 2 notification config routes (channels, quiet-hours) — scope now 87 routes                                             |
-| 1.4.0   | 2026-04-10 | Engineering (PG-051, IFC-031) | Added `/terms` (PG-051) and `/cases/case-workflows` (IFC-031) — scope now 89 routes; `aria-label` on drag/drop palette items |
-| 1.5.0   | 2026-04-12 | Engineering (PG-056)          | Added `/500` system error page — scope now 90 routes                                                                         |
-| 1.6.0   | 2026-04-16 | Engineering (PG-186)          | Added `/documents/document-settings` module-settings page — scope now 91 routes                                              |
+| Version | Date       | Author                        | Changes                                                                                                                                                                                                                                       |
+| ------- | ---------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0.0   | 2026-02-24 | Engineering (DOC-008)         | Initial VPAT based on DOC-007 gap assessment, post-remediation verification, and axe-core automated testing                                                                                                                                   |
+| 1.1.0   | 2026-03-01 | Engineering (DOC-011)         | Updated route count from 26 to 82 to reflect full application scope                                                                                                                                                                           |
+| 1.2.0   | 2026-03-10 | Engineering (PG-173)          | Updated route count from 82 to 85 (added /tickets/sla-policies, /tickets/types, /tickets/automations)                                                                                                                                         |
+| 1.3.0   | 2026-03-11 | Engineering (PG-174)          | Added 2 notification config routes (channels, quiet-hours) — scope now 87 routes                                                                                                                                                              |
+| 1.4.0   | 2026-04-10 | Engineering (PG-051, IFC-031) | Added `/terms` (PG-051) and `/cases/case-workflows` (IFC-031) — scope now 89 routes; `aria-label` on drag/drop palette items                                                                                                                  |
+| 1.5.0   | 2026-04-12 | Engineering (PG-056)          | Added `/500` system error page — scope now 90 routes                                                                                                                                                                                          |
+| 1.6.0   | 2026-04-16 | Engineering (PG-186)          | Added `/documents/document-settings` module-settings page — scope now 91 routes                                                                                                                                                               |
+| 1.7.0   | 2026-06-26 | Engineering (PG-181)          | Added `/settings/help-center/articles/new` help-article editor route (the `[id]/edit` dynamic route inherits) — scope now 92 routes; new editor uses labelled fieldset body group, `<output>` status regions, `aria-describedby` field errors |
