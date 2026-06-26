@@ -151,6 +151,17 @@ You are the \`task-executor\` agent; ADOPT the ${persona} persona (.claude/agent
 load-bearing lens${secondary}. The persona agents are Tier-A reviewers convened inside /spec-session —
 you are the Tier-C implementer that actually writes code, runs tests, and ships the PR.
 
+#1 RULE — DO NOT BUILD BEFORE YOU SPEC. This single mistake cost PG-181 ~5 HOURS.
+Your FIRST real action is the /loop below. Do NOT write, edit, or design feature code, and NEVER
+hand-author the spec or plan files, before /spec-session and /plan-session have run INSIDE the loop
+and produced their artifacts. /full-pipeline detects the phase by FILE EXISTENCE, so hand-authoring
+spec/plan makes it SKIP the multi-persona spec debate and the real plan-reviewer subagent — the exact
+rigor that catches regressions before you build them (on PG-181 the plan-reviewer caught a page-count
+break the author had missed and marked "N/A"). Building first also forces error-prone back-filling of
+session-start metrics, before-coverage, and the plan-reviewer row — and the gates force a full re-run
+anyway, so build-first only wastes hours. Let the pipeline run in order: spec -> plan -> exec. The only
+thing you do before the loop is PROVISION (below).
+
 PROVISION — you are ALREADY inside a harness-provisioned isolated git worktree, forked from the
 control plane which the orchestrator keeps even with origin/main. Do NOT run \`git worktree add\`,
 and do NOT \`git worktree remove\` when done — the harness reclaims it. Do NOT touch the main working
@@ -196,6 +207,26 @@ HARD-WON GOTCHAS (these cost real days — encoded so you don't repeat them):
 8. If CI "Security Scanning / npm/pnpm Audit" fails but you changed no dependency, it may be a
    NEWLY-PUBLISHED advisory (pnpm audit hits the live DB) — check the advisory ID and bump the
    pnpm override in package.json; don't assume it's your code.
+9. ANY new apps/web/**/page.tsx is a DOC-CO-CHANGE EVENT — it raises the filesystem page count,
+   which a wide set of guards enforce. Adding one forces updates to ~8 design docs
+   (PAGE_MAP_AND_FLOWS.md, page-registry.md, sitemap.md, ui-flow-mapping.md,
+   navigation-reachability-audit.md, information-architecture.md, content-audit.md +
+   content-audit-results.json), the WCAG conformance statement + VPAT (route + totals), and a
+   HARD-CODED count in apps/web/src/app/__tests__/sitemap-reconciliation.test.ts. NEVER mark
+   page-doc-cochange "N/A". The plan-reviewer Category Y gate exists for exactly this.
+10. LIGHTHOUSE (only if this task has a lighthouse KPI): local Lighthouse WORKS on this host — use
+   the recipe in docs/claude-refs/lighthouse-playbook.md (\`pnpm --filter @intelliflow/web start -p
+   3400\` then the lighthouse cli with --headless=new). Do NOT assume it's broken, do NOT reach for
+   Supabase / "Path C", and NEVER stop another project's containers (e.g. leangency-portal) — that
+   is a scope violation; escalate instead. (This detour was PG-181's biggest time-sink.)
+11. After editing ANY .md/.json/.yml/.yaml file, immediately run \`npx prettier --write <file>\` —
+   pre-ship format-check fails on hand-edited markdown/JSON otherwise.
+12. SCOPED test runs are the fast inner loop, NOT the gate. Only a FULL pre-ship reveals repo-wide
+   failures (a11y-routes, doc-consistency, current-state invariant, sonar-guard whole-file
+   cognitive-complexity >15 and role->semantic-tag). Don't believe green until pre-ship passes.
+13. Deep tRPC mutation TS2589 ("type instantiation excessively deep"): narrow the mutateAsync
+   reference to the result slice you actually use (e.g. {id}); keep the cast at component scope, not
+   inside the callback.
 
 RUN (the build engine — spec → plan → exec → attestation, one phase per iteration):
 /loop "/full-pipeline ${TASK_ID}" --max-iterations ${maxIter} --completion-promise "PIPELINE COMPLETE: Ensure all steps from /spec-session, /plan-session and /exec are all completed."
