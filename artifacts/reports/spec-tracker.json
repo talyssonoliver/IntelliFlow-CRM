@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-29T21:54:52.924Z",
+  "generated_at": "2026-06-26T19:20:19.873Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 398,
-    "completed": 392,
-    "partially_done": 5,
-    "spec_only": 1,
-    "uncertain": 0
+    "total_specs_analyzed": 496,
+    "completed": 413,
+    "partially_done": 2,
+    "spec_only": 77,
+    "uncertain": 4
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -20,12 +20,6 @@
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec DOC-015 when ready for implementation."
-    },
-    {
-      "task_id": "IFC-032",
-      "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec IFC-032 when ready for implementation."
     },
     {
       "task_id": "IFC-211",
@@ -42,8 +36,80 @@
     {
       "task_id": "IFC-214",
       "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "IFC-227",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "IFC-230",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "IFC-242",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "IFC-255",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "IFC-265",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 10% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "IFC-271",
+      "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec IFC-214 when ready for implementation."
+      "recommendation": "Run /exec IFC-271 when ready for implementation."
+    },
+    {
+      "task_id": "IFC-273",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 20% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "IFC-314",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec IFC-314 when ready for implementation."
+    },
+    {
+      "task_id": "PG-061",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "PG-062",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "PG-063",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "PG-181",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     }
   ],
   "tasks": [
@@ -420,6 +486,23 @@
         "IFC-210"
       ],
       "real_status": "PARTIALLY_DONE"
+    },
+    {
+      "task_id": "DOC-016",
+      "title": "Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "DOC-014",
+        "DOC-015"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "ENG-OPS-001",
@@ -1384,7 +1467,7 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-022"
@@ -1496,13 +1579,13 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Backlog",
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-030"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-039",
@@ -1567,6 +1650,54 @@
         "IFC-044"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-046",
+      "title": "Security Tests (OWASP ZAP + Snyk)",
+      "sprint": 23,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-008"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-047",
+      "title": "Performance Tests (k6 + Lighthouse)",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-007"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-048",
+      "title": "User Acceptance Testing",
+      "sprint": 25,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-039"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-054",
@@ -1997,6 +2128,23 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-083",
+      "title": "RAG Integration for Docs",
+      "sprint": 23,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-039",
+        "IFC-082"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "IFC-085",
       "title": "Ollama Local Development",
       "sprint": 2,
@@ -2027,6 +2175,22 @@
         "IFC-020"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-087",
+      "title": "Edge Functions Optimization",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-014"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-088",
@@ -3152,9 +3316,9 @@
       "task_id": "IFC-156",
       "title": "Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection hardening for retrieved content",
       "sprint": 6,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-6/specifications/IFC-156-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
@@ -3258,6 +3422,58 @@
         "IFC-106"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-164",
+      "title": "Ollama Local Development - Real Integration & Benchmarks",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-005",
+        "IFC-086",
+        "IFC-095"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-165",
+      "title": "Performance Baseline - Real Benchmarks with Live Infrastructure",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-015-AI",
+        "IFC-003",
+        "ENV-005-AI"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-166",
+      "title": "NBA Demo Video Recording",
+      "sprint": 24,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-039"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-167",
@@ -3389,6 +3605,22 @@
         "IFC-168"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-175",
+      "title": "RAG Production Validation - Follow-up to IFC-039",
+      "sprint": 24,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-039"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-176",
@@ -3782,6 +4014,23 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-199",
+      "title": "Document Domain Core - lifecycle, signature state machine, ACL and retention invariants",
+      "sprint": 29,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-106",
+        "IFC-127"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "IFC-200",
       "title": "Analytics Adapter Layer - query builders and export pipeline for metrics router",
       "sprint": 13,
@@ -3797,6 +4046,26 @@
         "IFC-106"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-201",
+      "title": "Settings Control Plane Foundations - domain models, adapters, and router for users/teams/roles/permissions/audit/integrations/webhooks/security",
+      "sprint": 25,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-072",
+        "IFC-098",
+        "IFC-099",
+        "IFC-106",
+        "IFC-124"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-202",
@@ -3830,6 +4099,22 @@
         "IFC-155"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-204",
+      "title": "Activity Feed Performance Observability - queryDurationMs tracking structured logging and latency alerting",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-069"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-205",
@@ -3878,6 +4163,22 @@
         "IFC-189"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-208",
+      "title": "Lighthouse SEO CI enforcement and og:image - change lighthouserc.js SEO assertion from warn to error and add og:image meta tag to root layout (content audit findings F-005 F-006)",
+      "sprint": 21,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "DOC-009"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-209",
@@ -3945,7 +4246,7 @@
         "IFC-125",
         "IFC-168"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "UNCERTAIN"
     },
     {
       "task_id": "IFC-213",
@@ -3971,15 +4272,98 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-015",
         "IFC-168",
         "IFC-197"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-215",
+      "title": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-117",
+        "IFC-197",
+        "IFC-214"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-216",
+      "title": "Entity Detail File Upload/Download Wiring  -  Wire file upload and download handlers on entity detail pages (Lead Contact Deal). Upload: file picker to upload mutation to Supabase Storage. Download: presigned URL to browser download. Follows IFC-094 (Pattern 1  -  infra-only). Resolves WIRE-IFC-094-001.",
+      "sprint": 23,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-094"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-217",
+      "title": "Entity Detail Email Compose Wiring  -  Wire existing EmailCompose component into Compose buttons on Lead and Contact detail pages. Pre-fill recipient. Open as Sheet overlay. Connect to email send API via EmailServiceAdapter. Follows IFC-144 and PG-141 (Pattern 1 + Pattern 2). Resolves WIRE-IFC-144-001 and WIRE-PG-141-001.",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-144",
+        "PG-141"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-218",
+      "title": "Similar Entity API (pgvector)  -  Build lead.getSimilar and contact.getSimilar tRPC queries using pgvector embedding similarity. Top 5 matches exclude self tenant-isolated. Wire to Lead detail sidebar (replace empty state) and Contact detail sidebar. Follows IFC-039 (Pattern 1  -  infra-only). Resolves WIRE-IFC-039-001.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-039"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-219",
+      "title": "Activity Feed Interactions (Reactions + Comments)  -  Add ActivityReaction and ActivityComment models to Prisma schema. tRPC mutations: addReaction removeReaction addComment. Wire into Lead and Contact detail activity action buttons. Remove hardcoded [] arrays. Follows IFC-069 (Pattern 2  -  scope oversight). Resolves WIRE-IFC-069-001.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-069"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-220",
@@ -3996,6 +4380,23 @@
         "IFC-095"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-221",
+      "title": "Email Open Tracking Integration  -  Real email open/click tracking. Backend: tracking pixel endpoint recording opens; click-through URL wrapper; EmailTracking model. Frontend: replace activity-derived open rate with real data on Lead and Contact detail. Inject pixel + wrap links on outbound send. Follows IFC-144 and IFC-099 (Pattern 1  -  infra-only). Resolves WIRE-IFC-099-001.",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-144",
+        "IFC-099"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-222",
@@ -4015,7 +4416,7 @@
     },
     {
       "task_id": "IFC-223",
-      "title": "Wire actual Email Outbound Adapter (Resolves R-018)",
+      "title": "Wire actual Email Outbound Adapter (Resolves R-018) [2026-06-09 audit: shipped as Completed but was MOCK in prod — container.ts had no resend branch; actually wired to Resend via #363/#360 + activated on Railway api service]",
       "sprint": 14,
       "spec_path": ".specify/sprints/sprint-14/specifications/IFC-223-spec.md",
       "has_spec": true,
@@ -4080,6 +4481,64 @@
       "spec_path": ".specify/sprints/sprint-18/specifications/IFC-227-spec.md",
       "has_spec": true,
       "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-228",
+      "title": "Lead Owner Reassignment UI - Owner card on Lead detail (lines 1468-1487) is read-only. Add reassignment capability for MANAGER/ADMIN roles: user picker dropdown, reassign mutation via lead.update, audit trail entry. Apply RBAC check to show/hide reassign button. Extend to Contact and Account detail pages.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-095"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-229",
+      "title": "Lead Detail Map View - Current map section (lines 1453-1465) is a gradient placeholder with non-functional 'View Map' button. Options: (A) Integrate Mapbox/Leaflet with geocoded address, (B) Link to Google Maps in new tab, (C) Remove placeholder entirely if map not in MVP scope. Needs product decision.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-230",
+      "title": "Unify Lead Create/Edit Form - Create page (leads/(list)/new/page.tsx, 1029 lines) and Edit page (leads/[id]/edit/page.tsx, 464 lines) share no components. Issues: different API clients (trpc vs api), different field sets (BANT only in create but silently dropped), different styling, different validation, no auth guard on create. Fix: extract shared LeadForm component, unify API client, include all fields in both views, consistent styling.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-231",
+      "title": "Lead List Saved Views and Filter Persistence - Sidebar view params (?view=my, ?view=starred, ?segment=hot) are completely ignored by LeadsPageClient (no useSearchParams call). Fix: (1) Wire URL params to filter state, (2) Add saved views CRUD (name, filters, columns, sort), (3) Column visibility picker UI exposing DataTable VisibilityState, (4) Persist filter/sort/view selection in localStorage or user preferences.",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
       "has_attestation": false,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
@@ -4100,6 +4559,50 @@
       "acceptance_criteria_count": 0,
       "dependencies": [],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-233",
+      "title": "Wire Unused Backend tRPC Endpoints - ~20 built but unused tRPC procedures. Lead: convertToDeal, getHotLeads, getReadyForQualification, bulkScore. Contact: getByEmail, linkToAccount, unlinkFromAccount, search, linkToLead, unlinkFromLead, getTimeline, logActivity. Opportunity: create, getById, getHistory, getProducts, getPipeline, stats. Account: create, update. Task: stats, assign, reschedule. Wire each to appropriate frontend UI or remove if not needed.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-234",
+      "title": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-235",
+      "title": "Lead Detail AI Chat Panel - Add AI chat panel to Lead detail page for entity-scoped conversations. Backend: conversation.router.ts is fully built with 13 endpoints but NOT registered in router.ts - register it. Frontend: build LeadChatPanel component using conversation API with contextType=LEAD, contextId=leadId. Similar to dashboard TeamChatWidget but with real API calls (TeamChatWidget is decorative with hardcoded messages). ConversationRecord/MessageRecord Prisma models exist.",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-069"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-236",
@@ -4158,6 +4661,176 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-240",
+      "title": "Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant operations (delete, bulkDelete, convert, export) MUST have audit trail. Include: actor (userId), action, entityType (Lead), entityId, tenantId, timestamp, metadata (old/new values for mutations). Integrate with existing audit infrastructure at apps/api/src/security/audit/.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-241",
+      "title": "Lead Router Dead Code & Missing Events Cleanup. Fix 4 MEDIUM/LOW issues: (1) scoreWithAI notification variables at lines 517-527 set but never referenced - dead code [S10]. (2) LeadRoutedEvent defined in domain but never published by any procedure or service [S11]. (3) Only 3 of ~10 lead event types trigger notifications [W10]. (4) Lead notifications processed synchronously, not queued via BullMQ [W11]. Fix: Remove dead notification code, publish LeadRoutedEvent from routing logic, add notification handlers for remaining event types, enqueue via BullMQ.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-242",
+      "title": "Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validation. Fix 3 HIGH issues: (1) BANT fields (Budget, Authority, Need, Timeline) collected in create form but silently dropped on submit - never sent to API [F3]. (2) annualRevenue mapped to estimatedValue - semantic mismatch between company annual revenue and deal estimated value [F4]. (3) Edit form uses 'as any' cast with no client-side Zod validation - no inline field errors [F9]. Fix: Send BANT to API (add to createLeadSchema if needed), map annualRevenue correctly, add Zod resolver to edit form, remove as any.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-243",
+      "title": "Lead Frontend Consistency - StatusBadge, Toast, window.prompt. Fix 3 MEDIUM issues: (1) window.prompt() used for note input at line 1951 - blocks UI, no multi-line, poor UX [F5]. Replace with Dialog/Sheet component. (2) Two different StatusBadge implementations - inline LeadStatusBadge vs shared component with different color schemes [F6]. Consolidate to shared component. (3) Two Toast patterns - sonner toast.success() vs shadcn useToast() used inconsistently across lead pages [F7]. Standardize to one pattern.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-244",
+      "title": "Dashboard Widget Real Data - ActiveLeads, TotalLeads, Analytics. Fix 3 HIGH/MEDIUM issues: (1) ActiveLeadsWidget fully hardcoded with static '1,240' and 'vs 1,100 last month' [F2]. (2) TotalLeadsWidget shows hardcoded '+12%' trend [W6]. (3) Analytics page for leads uses sample data arrays, no API queries [W7]. Fix: Wire ActiveLeadsWidget to lead.stats API, compute real trend from monthly comparison, wire Analytics page to real lead data endpoints.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-245",
+      "title": "Lead Activity Timeline Unification. Fix HIGH issue: logActivity creates LeadActivity records but these are NOT fed into the unified TimelineEvent system (IFC-069). Lead activities exist in a parallel silo [W1]. Also fix: No email-to-lead association - inbound emails not linked to leads by sender address [W2]. Fix: Create TimelineEvent adapter for LeadActivity, add email-to-lead matching in inbound parser, ensure lead detail 'All Sources' toggle shows unified data.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-069:FS"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-246",
+      "title": "Domain Model Lead 360 Alignment. Fix 4 HIGH issues: (1) Lead.toJSON() omits aiInsight, activities, notes, files, tasks relations - domain events carry incomplete snapshots [D1]. (2) qualify() only allows from NEW/CONTACTED but UI doesn't reflect this constraint [D2]. (3) LeadScoringChain throws unhandled error for unknown AI_PROVIDER [D3]. (4) AI scoring prompt only receives basic lead data, ignores activity count, engagement history, note count [D4]. Fix: Extend toJSON, expose allowed transitions, add provider fallback, enrich scoring prompt.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-247",
+      "title": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-248",
+      "title": "Lead List & Create Page Tests. Two major pages with ZERO tests: (1) Lead list page with filtering, sorting, bulk operations, saved views [T2]. (2) Lead create page (1029 lines) with BANT fields, source handling, validation [T3]. Also test: (3) Role-based filtering (ADMIN sees all, others see own) [T7]. (4) Bulk operations UI (score, convert, archive, delete) [T8]. Write component tests covering happy path, error states, and edge cases.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-249",
+      "title": "Lead Edit Page Tests + E2E. Fix remaining test gaps: (1) Edit page onSuccess/onError callbacks untested, as any cast hides type errors [T9]. (2) No E2E tests for complete lead CRUD flow (create -> view -> edit -> delete) [T6]. Write: (1) Edit page component tests with mutation mocking. (2) Playwright E2E test for full lead lifecycle. E2E should cover: create lead with required fields, view on detail page, edit fields, archive/delete.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-250",
+      "title": "Lead Event Pipeline - Persistent Outbox + Webhooks. Fix HIGH/LOW issues: (1) InMemoryEventBus loses all events on server restart - no persistent outbox pattern [W3]. (2) No webhook handlers for lead events - external systems cannot subscribe [W9]. Fix: Implement transactional outbox pattern for lead domain events (LeadCreatedEvent, LeadQualifiedEvent, etc.). Add webhook dispatch for lead events. Ensure event ordering and at-least-once delivery.",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-251",
+      "title": "Lead CSV Import/Export. Add bulk import and export for leads [W8]. Import: CSV upload with validation, duplicate detection, field mapping UI, error report. Export: CSV and JSON formats, filtered export (current view), all-fields export. Common CRM feature needed for data migration and reporting. Also cleanup: Prisma schema backslash comments to standard // format [S12].",
+      "sprint": 24,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "IFC-252",
       "title": "Contact Router Security — Tenant Isolation Fixes. CRITICAL: (1) search procedure has no createTenantWhereClause — cross-tenant search by name/email (R-02). (2) logActivity transaction uses raw ctx.prisma with no tenantId in WHERE — cross-tenant update (R-03). (3) bulkEmail/bulkExport no tenant filter — email exfiltration via guessed UUIDs (R-04). (4) stats ignores typedCtx tenant — no tenantId boundary (R-05). (5) getById/getByEmail double-fetch through unscoped domain repo (R-06). Cross-ref: R-01 (prismaWithTenant raw) is cross-cutting and shared with IFC-237. Audit: docs/audit/contact-detail-wiring-audit.md §15.",
       "sprint": 16,
@@ -4192,6 +4865,174 @@
       "spec_path": ".specify/sprints/sprint-16/specifications/IFC-254-spec.md",
       "has_spec": true,
       "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-255",
+      "title": "Contact Audit Logging. (1) Zero audit logging in all 14 contact router procedures — no ctx.security.auditLogger calls (R-07). (2) Audit event handler PascalCase keys (ContactCreated/Updated/Deleted) don't match domain dot-notation (contact.created/updated) — 5 event types unmapped (D-06). Violates IFC-098 audit requirement. Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-256",
+      "title": "Contact Detail Hardcoded Tabs — Tickets & Documents. (1) Tickets tab fully hardcoded with 'TKT-1234' and static timestamp (F-02, F-21). ContactWithRelations has no tickets relation. Tab badge hardcoded to 0. (2) Documents tab hardcoded with 2 static PDFs — apiContact.documents data exists in interface but is completely ignored (F-03). Need: wire tickets via TicketService query, wire documents from apiContact.documents or file infrastructure. Audit: docs/audit/contact-detail-wiring-audit.md §5,§9,§16.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-257",
+      "title": "Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "IFC-258",
+      "title": "Contact Frontend Consistency — Avatars, Owner Title, Confidence. (1) Default avatars are Unsplash stranger photos — replace with initials-based generated avatar (F-09). (2) Owner title hardcoded 'Account Executive' — map from owner.role like lead detail (F-16). (3) Confidence hardcoded 0.85 for churnRisk and nextBestAction — use API data (F-17). (4) quietPeriodAlert always null (F-22). (5) ContactForm duplicated between create and edit (F-24). Audit: docs/audit/contact-detail-wiring-audit.md §16.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-259",
+      "title": "Contact Dead UI Fields & Unused Components. (1) location/timezone always empty (F-10). (2) isOnline/isVIP always false — dead badges (F-11). (3) tags always empty array (F-12). (4) ContactDetail.tsx component unused by page — 597 lines with tests but never imported (F-14). (5) ContactCard.tsx unused by list page (F-28). (6) emailsOpened always 0 (F-20). Decision needed: wire to real data, show placeholder states, or remove dead UI. Audit: docs/audit/contact-detail-wiring-audit.md §16.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-260",
+      "title": "Contact Domain Model Fixes. (1) reconstitute() silently substitutes unknown@unknown.com for invalid emails — should Result.fail or throw (D-01). (2) mergeContacts no cross-tenant check — linkToLead correctly checks but merge doesn't (D-02). (3) No ContactDeletedEvent — deleteContact publishes no events, audit handler has mapping but event never emitted (D-04). (4) No ContactEmailChangedEvent — old email not captured in generic ContactUpdatedEvent (D-05). (5) Tags update always emits event without deep equality check (D-07). Audit: docs/audit/contact-detail-wiring-audit.md §18.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-261",
+      "title": "Contact Event Pipeline — Worker Handlers + Event Types. (1) Zero contact event handlers in events worker (W-02). (2) Only 2/8 contact event types in DOMAIN_EVENT_TYPES — missing deleted, account_associated, account_disassociated, converted_from_lead, linked_to_lead, interacted (W-04). (3) No webhook routing for contact events (W-05). (4) No notifications for contact events (W-11). Cross-ref: W-01 (InMemoryEventBus) shared with IFC-250. Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-262",
+      "title": "Contact Merge & Duplicate Detection Wiring. (1) mergeContacts deletes secondary without re-parenting all child records — orphaned opportunities/tasks (W-03). (2) findPotentialDuplicates exists in service but no tRPC procedure exposes it (W-09). (3) mergeContacts exists but no router procedure wraps it (W-10). (4) mergeContacts no cross-tenant check between primary and secondary (W-12). (5) associateWithAccount inside mergeContacts causes double-save and potential double event emission (W-13). Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-263",
+      "title": "Contact Email & AI Integration. (1) No email-to-contact matching — inbound emails not linked to contacts by sender address (W-06). (2) No automated AI insight triggering — contact create/update doesn't trigger scoring like lead does (W-07). (3) No contact routing rules — leads have routing but contacts don't (W-14). Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-264",
+      "title": "Contact Bulk Import & Service Layer Fixes. (1) No CSV upload or bulk create for contacts (W-08). (2) listContacts service returns empty array as default when no ownerId/accountId — latent bug for future callers (W-15). (3) getContactStatistics returns empty for undefined ownerId (W-16). Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "sprint": 24,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-265",
+      "title": "Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-266",
+      "title": "Contact List/Create Page Tests + E2E. (1) Contact list page has ZERO page tests (T-02). (2) Contact create page has ZERO page tests — auth guard gap F-07 would be caught (T-03). (3) Bulk selection (select all, bulk email, bulk export) untested (T-05). (4) Contract tests missing for bulkEmail, bulkExport, bulkDelete (T-09). (5) No E2E Playwright tests for contact CRUD flow (T-10). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
@@ -4242,6 +5083,124 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-270",
+      "title": "Account Router Missing Procedures & Update Fix. (1) Update procedure silently drops revenue/employees/industry/parentAccountId fields accepted by schema (B-08). (2) accountListResponseSchema uses 'data' key but router returns 'accounts' — mismatch (B-09). (3) No updateRevenue procedure — domain Account.updateRevenue() unreachable via API (B-10). (4) No updateEmployeeCount procedure (B-11). (5) No categorizeIndustry procedure (B-12). (6) mapAccountToResponse returns raw WebsiteUrl value object instead of string (B-13). Audit: docs/audit/account-detail-wiring-audit.md section 12.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-271",
+      "title": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "IFC-272",
+      "title": "Account Event Pipeline — Worker Handlers + Event Types. (1) Zero account event handlers in events worker (W-01). (2) Zero account event types in DOMAIN_EVENT_TYPES map (W-02). (3) Audit handler has 3 account event mappings (Created/Updated/Deleted) but events never reach it because worker has no handlers and dispatcher has no types (W-03). Add event handlers for AccountCreated, AccountUpdated, AccountDeleted (requires IFC-271), AccountRevenueUpdated, AccountHierarchyUpdated, AccountIndustryCategorized to events worker. Register all types in DOMAIN_EVENT_TYPES. Cross-ref: W-01/W-02 pattern shared with Contact (IFC-261). Audit: docs/audit/account-detail-wiring-audit.md section 14.",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-271:FS"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-273",
+      "title": "Account List Page Type Safety & Filter Enums. (1) serverStats cast to any loses type safety (L-01, AccountsPageClient.tsx:154). (2) Double unsafe cast for withOpportunities stat (L-02, AccountsPageClient.tsx:206-208). (3) AccountTier type and getAccountTier() duplicated locally in AccountCard.tsx instead of using domain enum (L-04). (4) Contact status filter uses hardcoded inline option values instead of ContactStatus domain enum (F-09, AccountContactsList.tsx:81-83). (5) Opportunity stage filter uses hardcoded inline strings instead of OpportunityStage domain enum (F-12, AccountOpportunitiesList.tsx:109-114). Audit: docs/audit/account-detail-wiring-audit.md sections 4-5, 15.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-274",
+      "title": "Account Activity Timeline — Replace Stub Data. AccountService.getAccountActivity() (lines 748-785) returns synthetic/stub activities with hardcoded descriptions and broken cursor pagination — not real Activity model records (F-13). Replace with real activity feed from ActivityFeed component or Activity model queries. Should use same pattern as Lead/Contact activity tabs. Audit: docs/audit/account-detail-wiring-audit.md section 6.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-275",
+      "title": "Account Create & Edit Forms. (1) No account create form page — router has create procedure but no frontend consumer (F-16). Create page at accounts/(list)/new/page.tsx with form for all account fields. (2) No account edit form — Edit button navigates but lands on 404 (F-17). Create edit form page or inline edit mode using router update procedure. Both forms should validate with accountSchema. Audit: docs/audit/account-detail-wiring-audit.md section 10.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-270:FS"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-276",
+      "title": "Account Contract Test + Test Gaps. (1) Accounts is the ONLY entity without a contract test file (T-01). (2) No-op buttons untested — 6 CRITICAL no-op buttons have no click behavior tests (T-02). (3) Tenant isolation untested in router tests (T-03). (4) No E2E Playwright tests for account CRUD flow (T-04). (5) Owner display untested — tests don't verify owner name/title rendering (T-05). Audit: docs/audit/account-detail-wiring-audit.md section 19.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-267:FS;IFC-268:FS"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-277",
+      "title": "Account Service Dead Code & Minor Fixes. (1) calculateAccountHealth() unreachable from router — decide: wire (D-02). (2) getAccountWithContext() unreachable from router — decide: wire (D-03). (3) Revenue NaN risk — Number(revenue) on non-numeric string renders '$NaNM' (F-14). (4) Health bar arbitrary scale — no documented max value (F-15). (5) Contact firstName[0] undefined risk in AccountContactsList (F-18). (6) findAncestors N+1 query pattern (B-14). (7) Merge/Archive toast stubs referencing IFC-044 (F-03/F-04). Audit: docs/audit/account-detail-wiring-audit.md sections 9, 13, 16-17.",
+      "sprint": 24,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "IFC-278",
       "title": "Deal Detail Page — Replace SAMPLE_DEAL with Real API Data. CRITICAL: Entire deal detail page (deals/[id]/page.tsx 792 lines) is 100% hardcoded with SAMPLE_DEAL constant (lines 116-150) — zero API calls. The dealId from useParams() is captured but never used for data fetch (line 684). Must: (1) Replace SAMPLE_DEAL with trpc.opportunity.getById query using dealId param. (2) Add useRequireAuth() guard (F-03 — detail page is the only unguarded page). (3) Fix STAGES constant to match domain 7-stage enum (F-04 — uses CLOSED instead of CLOSED_WON/CLOSED_LOST, omits NEEDS_ANALYSIS). (4) Fix StageProgress to use deal prop instead of SAMPLE_DEAL.value directly (F-05). (5) Remove _SAMPLE_ACTIVITIES dead code (F-06). (6) Add clickable links to account/contact detail pages (F-07). (7) Wire real owner data from getById relation include. Router getById exists (IFC-186). Cross-entity patterns from Lead 360 wiring (2026-03-04) should be followed. Audit: docs/audit/deal-detail-wiring-audit.md section 1.",
       "sprint": 16,
@@ -4270,12 +5229,114 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-280",
+      "title": "Deal Detail Action Buttons — Wire 14 No-Ops. (1) EntityHeader 6 no-ops all with onClick: () => {} (F-08): Won → moveStage CLOSED_WON with success dialog; Lost → moveStage CLOSED_LOST with LossReasonModal (reuse from list page); Edit → navigate to edit form or open inline edit; Clone → duplicate mutation; Archive → set archived status; Delete → AlertDialog confirmation + delete mutation. (2) Stakeholder/Product/File 8 no-ops (F-09): Edit stakeholders → open edit dialog; Account icons → navigate to /accounts/[id] and website; Contact icons → mailto: and tel: links; Add Product → product association dialog; File upload → upload mutation; File links → presigned URL download. Depends on IFC-278 (real data needed for mutations). Audit: docs/audit/deal-detail-wiring-audit.md section 2.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-278:FS"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-281",
       "title": "Deal Backend Tenant Isolation & Audit Logging. (1) CRITICAL: PrismaOpportunityRepository.findById() (line 82) has NO tenantId WHERE clause — cross-tenant read/write/delete possible via getById/update/delete/moveStage/dealForecast (B-01). Fix: add tenantId to findById() and findByOwnerId() WHERE clauses. (2) CRITICAL: Zero auditLogger.log() calls across all 16 opportunity + pipeline-config procedures (B-02). Add audit logging to create/update/delete/moveStage (especially CLOSED_WON/CLOSED_LOST) and pipeline config changes. (3) Create notification in create procedure uses raw ctx.prisma instead of prismaWithTenant (B-03). Audit: docs/audit/deal-detail-wiring-audit.md sections 5-6.",
       "sprint": 16,
       "spec_path": ".specify/sprints/sprint-16/specifications/IFC-281-spec.md",
       "has_spec": true,
       "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-282",
+      "title": "Deal Router Correctness Fixes. (1) Name updates silently dropped — service has TODO 'Add updateName method' (B-04, OpportunityService.ts:313). Add updateName to domain and wire in service. (2) data.probability?.value unwrapping may be undefined if percentageSchema returns plain number (B-05, router:460). Verify and fix. (3) opportunityListResponseSchema key 'data' vs router key 'opportunities' mismatch (B-07, validators:88 vs router:437). (4) throwOpportunityCreateError maps VALIDATION_ERROR to NOT_FOUND — wrong HTTP semantic (B-09, router:55). (5) validateStageDeactivation throws plain Error → 500 instead of BAD_REQUEST (B-10, validators:214). (6) mapOpportunityToResponse drops closedAt field (B-11, mappers.ts:88-108). (7) CLOSED_LOST no-reason passes Zod but fails at service (B-12, router:322). Audit: docs/audit/deal-detail-wiring-audit.md section 6.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-283",
+      "title": "Deal Event Pipeline — Worker Handlers. (1) Only opportunity.won has a handler in events worker; opportunity.created, opportunity.stage_changed, and opportunity.lost are defined in DOMAIN_EVENT_TYPES but have NO registered handlers (W-01). (2) No OpportunityDescriptionUpdatedEvent defined — description changes emit no event (W-02). Add handlers for the 3 missing event types. Add OpportunityDescriptionUpdatedEvent to domain. Cross-ref: same pattern as Account (IFC-272) and Contact (IFC-261). Audit: docs/audit/deal-detail-wiring-audit.md section 7.",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-284",
+      "title": "Deal Forecast Algorithm Fixes. (1) buildWinRateTrend hardcodes months ['May','Jun','Jul','Aug','Sep','Oct'] regardless of current date — semantically incorrect data (B-06, forecast-algorithm.ts:283). Fix to derive from actual 6-month window. (2) DEFAULT_STAGE_PROBABILITIES diverge: validators has NEEDS_ANALYSIS=30/PROPOSAL=70 while domain/service/router/forecast-algorithm uses 40/60 (B-08). Unify to single source of truth. (3) buildMonthlyRevenue uses locale-dependent toLocaleString for month names — breaks on non-en-US servers (B-15, forecast-algorithm.ts:269). (4) Forecast trend values hardcoded as 12 and 5 in forecast page (F-16, deals/forecast/page.tsx:709-710). Compute from API data. Audit: docs/audit/deal-detail-wiring-audit.md sections 4, 6.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-285",
+      "title": "Deal Service Dead Code & Minor Fixes. (1) 11 dead service methods unreachable from router: listOpportunities, advanceStage, updateValue, updateProbability, updateExpectedCloseDate, reopenOpportunity, getPipelineForecast, getOpportunitiesClosingSoon, getHighValueOpportunities, getOpportunitiesByAccount, getOpportunitiesByContact, getWinRateStatistics (B-13). Decide: wire to router or remove. (2) toMoney/toPercentage silent zero fallback on DB corruption (B-14). (3) TOCTOU in stage transitions — no optimistic locking (B-16). (4) Event publish failure swallowed with console.error only (B-17). (5) DealQuickView is a 49-line stub not used anywhere (F-13). (6) RecommendedActions.onActionClick not wired at forecast page level (F-18). (7) Sidebar deals config settingsHref points to /settings/deals instead of /settings/pipeline (W-03). Audit: docs/audit/deal-detail-wiring-audit.md sections 6-7.",
+      "sprint": 24,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-286",
+      "title": "Deal Detail Page Tests + E2E. (1) Deal detail page (792 lines) has ZERO test coverage (T-01). (2) No E2E Playwright tests for /deals, /deals/[id], or /deals/forecast — only pipeline-settings has E2E (T-02). (3) No cross-tenant access attempt test in router tests (T-03). (4) Contract test missing NEEDS_ANALYSIS stage in test data (T-04). Depends on IFC-278 (real data) and IFC-280 (wired buttons). Audit: docs/audit/deal-detail-wiring-audit.md section 10.",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-278:FS;IFC-280:FS"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-287",
+      "title": "Deal Filter Wiring & Type Safety. (1) DealFilters state (filters) captured in page but NEVER passed to trpc.opportunity.list.useQuery — ownerId and dateRange selections have no effect on kanban view data (F-10, deals/(list)/page.tsx:214,226). (2) 'More Filters' button has no onClick handler (F-11, DealFilters.tsx). (3) Owner filter only has 2 hardcoded options: 'All Deals' and 'My Deals' — no dynamic user list (F-12). (4) transformDeals uses loose Record<string,unknown> casting at API boundary instead of typed response (F-19, types.ts:102-119). Wire filters to API query params; add server-side owner filter with user list; type-safe API response handling. Audit: docs/audit/deal-detail-wiring-audit.md sections 3, 8.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
@@ -4367,6 +5428,38 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-301",
+      "title": "Rich Text Editor Integration — Tiptap",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-180"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-302",
+      "title": "Refactor Help Article Page to Use Database",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-299"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "IFC-303",
       "title": "Article Feedback tRPC Mutation",
       "sprint": 17,
@@ -4381,6 +5474,91 @@
         "IFC-298"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-304",
+      "title": "Article Analytics Dashboard",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-303",
+        "PG-180"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-305",
+      "title": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-226"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-307",
+      "title": "Contact Enrichment Pipeline — Automated background job that periodically enriches contact/lead data from external providers (Clearbit, Apollo). Includes: BullMQ queue intelliflow-contact-enrichment, enrichment adapter with rate limiting, on-create trigger in contact.router.ts, periodic cron sweep for stale profiles (>30 days), cost tracking via CostTracker, field updates (company, title, social profiles, industry)",
+      "sprint": 22,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-168",
+        "IFC-131"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-308",
+      "title": "Scheduled Report Generation — BullMQ cron job that generates daily/weekly analytics snapshots and emails summary reports to team leads. Includes: report template system (pipeline summary, lead conversion, revenue trends, SLA compliance), PDF/HTML report rendering, email delivery via notifications worker, configurable schedule per tenant, report archive storage",
+      "sprint": 24,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-168",
+        "IFC-024"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-309",
+      "title": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-051",
+        "IFC-058",
+        "IFC-124"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-310",
@@ -4433,6 +5611,99 @@
         "IFC-310"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-314",
+      "title": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "INFRA-TF-001",
+      "title": "Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deployment->railway_service source_image, default_environment object, and Vercel env->vercel_project_environment_variable / vercel_webhook / edge-config to the current provider schemas.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "INFRA-TF-002",
+      "title": "Provision the three apps/workers (events-worker, ingestion-worker, notifications-worker) as first-class Railway services in Terraform. Closes GH #230/#259/#270 (workers built/tested but never deployed).",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "INFRA-TF-001"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "INFRA-TF-003",
+      "title": "Replace the Supabase null_resource + curl scaffolding with the official supabase/supabase Terraform provider so Supabase auth/storage/extensions config is genuinely drift-detected.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "INFRA-TF-001"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "INFRA-TF-004",
+      "title": "Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "INFRA-TF-001"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "INFRA-TF-005",
+      "title": "CI + import + runbooks: add the three workers to build-images.yml and railway-deploy.yml; terraform import existing live Vercel/Railway/Supabase infra into state; update railway-deploy / workers / observability runbooks.",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "INFRA-TF-002",
+        "INFRA-TF-004"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "PG-001",
@@ -5393,6 +6664,70 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-060",
+      "title": "New Lead",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-059"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-061",
+      "title": "Lead Detail",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-059"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-062",
+      "title": "Edit Lead",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-061"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-063",
+      "title": "Import Leads",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-059"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "PG-104",
       "title": "Settings Home",
       "sprint": 13,
@@ -6287,6 +7622,23 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-181",
+      "title": "Help Article Editor Page",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-180",
+        "IFC-301"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "PG-182",
       "title": "Module Settings - Contacts (/contacts/contact-settings)",
       "sprint": 17,
@@ -6468,6 +7820,246 @@
         "PG-056"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-196",
+      "title": "Module Settings - Account Tiers (/accounts/(list)/account-tiers)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-183"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-197",
+      "title": "Module Settings - Territory Mapping (/accounts/(list)/territory-mapping)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-183"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-198",
+      "title": "Module Settings - Approval Policies (/agent-approvals/approval-policies)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-152",
+        "PG-192"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-199",
+      "title": "Module Settings - Model Config (/agent-approvals/model-config)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-152",
+        "PG-192"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-200",
+      "title": "Module Settings - Report Templates (/analytics/report-templates)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-187"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-201",
+      "title": "Module Settings - Scheduled Reports (/analytics/scheduled-reports)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-187"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-202",
+      "title": "Module Settings - Availability (/calendar/availability)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-189"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-203",
+      "title": "Module Settings - Event Types (/calendar/event-types)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-189"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-204",
+      "title": "Module Settings - Case Types (/cases/case-types)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-190"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-205",
+      "title": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-182"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-206",
+      "title": "Module Settings - Storage Policies (/documents/(list)/storage-policies)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-186"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-207",
+      "title": "Module Settings - Email (/email/email-settings)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-182"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-208",
+      "title": "Module Settings - Task Automation (/tasks/(list)/automation)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-191"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-209",
+      "title": "Module Settings - Task Types (/tasks/(list)/task-types)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-191"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "PM-OPS-001",
