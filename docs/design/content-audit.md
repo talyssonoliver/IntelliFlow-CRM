@@ -24,7 +24,7 @@ tracks navigation ghost-link status. It does not implement fixes by itself.
 
 ### Current baseline
 
-- **Total Pages (filesystem total): 209** — `page.tsx` entries scanned from
+- **Total Pages (filesystem total): 211** — `page.tsx` entries scanned from
   `apps/web/src/app`
 - **32 public entries** under `(public)/`
 - **163 auth-gated entries** outside `(public)/` and `(developer)/`

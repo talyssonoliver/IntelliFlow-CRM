@@ -1,0 +1,24 @@
+{
+  "task_id": "PG-181",
+  "captured_at": "2026-06-26T16:30:00Z",
+  "description": "Post-implementation scoped coverage for PG-181 (Help Article Editor Page). Scoped vitest --coverage over the two new logic-bearing files; the thin route shells are coverage-excluded by the route convention but still have page-shell tests. Diff-coverage floor (Sonar new_coverage >=80% on changed lines) confirmed PASS by pre-ship's diff-coverage step at SHA 0c584997.",
+  "measurement_scope": [
+    "apps/web/src/components/support/article-editor.tsx",
+    "apps/web/src/lib/support/article-editor-mapping.ts"
+  ],
+  "command": "pnpm --filter @intelliflow/web exec vitest run --coverage --coverage.include='src/components/support/article-editor.tsx' --coverage.include='src/lib/support/article-editor-mapping.ts' src/components/support/__tests__/article-editor.test.tsx src/lib/support/__tests__/article-editor-mapping.test.ts",
+  "after_files": {
+    "apps/web/src/components/support/article-editor.tsx": {
+      "lines": { "total": 155, "covered": 152, "pct": 98.06 },
+      "delta_from_before": "+98.06 (file new on this branch)"
+    },
+    "apps/web/src/lib/support/article-editor-mapping.ts": {
+      "lines": { "total": 103, "covered": 101, "pct": 98.05 },
+      "delta_from_before": "+98.05 (file new on this branch)"
+    }
+  },
+  "router_change": {
+    "apps/api/src/modules/help-article/help-article.router.ts": "getById query added; covered by 5 new cases in help-article.router.test.ts (incl. tenant-scope where assertion); full api suite 6394 passing"
+  },
+  "notes": "No istanbul-ignore used. diff-coverage + coverage-floor pre-ship steps both PASS."
+}

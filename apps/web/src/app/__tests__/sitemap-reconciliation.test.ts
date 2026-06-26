@@ -57,8 +57,10 @@ describe('Sitemap Reconciliation', () => {
     // Newly tracked (were gitignored): agent-approvals/logs/page.tsx,
     //   agent-approvals/logs/[id]/page.tsx, governance/quality-reports/coverage/page.tsx
     // PG-063: +1 for the new Import Leads route apps/web/src/app/leads/(list)/import/page.tsx → 209.
+    // PG-181: +2 for the Help Article Editor routes
+    //   settings/help-center/articles/new/page.tsx and .../[id]/edit/page.tsx → 211.
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(209);
+    expect(pageFiles.length).toBe(211);
   });
 
   // TC-26

@@ -1,15 +1,18 @@
 {
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
   "artifacts": {
-    "created": [],
+    "created": [
+      "apps/web/src/app/settings/help-center/articles/[id]/edit/page.tsx",
+      "apps/web/src/app/settings/help-center/articles/new/page.tsx",
+      "apps/web/src/components/support/article-editor.tsx",
+      "apps/web/src/lib/support/article-editor-mapping.ts",
+      "apps/api/src/modules/help-article/help-article.router.ts"
+    ],
     "expected": [
       "apps/web/src/app/settings/help-center/articles/[id]/edit/page.tsx",
       "apps/web/src/app/settings/help-center/articles/new/page.tsx"
     ],
-    "missing": [
-      "apps/web/src/app/settings/help-center/articles/[id]/edit/page.tsx",
-      "apps/web/src/app/settings/help-center/articles/new/page.tsx"
-    ]
+    "missing": []
   },
   "blockers": [],
   "completed_at": null,
@@ -17,18 +20,25 @@
     "verified_at": "2026-04-29T21:54:51.872Z"
   },
   "execution": {
+    "executor": "Claude Code /exec",
     "last_error": null,
-    "retry_count": 0
+    "retry_count": 0,
+    "started_at": "2026-06-26T15:25:00Z"
   },
   "kpis": {},
-  "notes": "Admin editor at /settings/help-center/articles/[id]/edit and /new. Tiptap rich text editor, metadata fields (title, slug, category, excerpt, keywords, read time), preview mode, save draft, publish actions.",
-  "phase": "",
-  "started_at": null,
+  "notes": "Admin editor at /settings/help-center/articles/[id]/edit and /new. Tiptap rich text editor, metadata fields (title, slug, category, excerpt, keywords, read time), preview mode, save draft, publish actions. Backend getById added.",
+  "phase": "exec",
+  "started_at": "2026-06-26T15:25:00Z",
   "status_history": [
     {
       "at": "2026-03-08T18:00:00Z",
       "note": "Task created — Article editor with Tiptap, metadata fields, draft/publish",
       "status": "Backlog"
+    },
+    {
+      "at": "2026-06-26T15:25:00Z",
+      "note": "Exec session started — spec + plan complete; implementing editor pages, shared editor, mapper, and getById router procedure via TDD.",
+      "status": "In Progress"
     }
   ],
   "stream": null,

@@ -101,6 +101,7 @@ describe('helpArticleRouter', () => {
     const procedures = [
       { name: 'list', input: {} },
       { name: 'getBySlug', input: { slug: 'test' } },
+      { name: 'getById', input: { id: ARTICLE_ID_1 } },
       { name: 'getByCategory', input: { categoryId: 'cat-1' } },
       { name: 'getRelated', input: { id: ARTICLE_ID_1 } },
       {
@@ -257,6 +258,60 @@ describe('helpArticleRouter', () => {
       await expect(caller.getBySlug({ slug: 'getting-started' })).rejects.toMatchObject({
         code: 'NOT_FOUND',
       });
+    });
+  });
+
+  // ─── getById ───────────────────────────────────────────────────────────────
+
+  describe('getById', () => {
+    it('returns article with ordered sections when found', async () => {
+      const caller = helpArticleRouter.createCaller(createAdminContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue(mockPublishedWithSections);
+
+      const result = await caller.getById({ id: ARTICLE_ID_2 });
+      expect(result.id).toBe(ARTICLE_ID_2);
+      expect(result.sections).toHaveLength(1);
+      expect(result.feedbackCount).toBe(5);
+      expect(result.keywords).toEqual(['crm', 'setup']);
+    });
+
+    it('scopes the lookup by tenantId for security', async () => {
+      const caller = helpArticleRouter.createCaller(createAdminContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue(mockPublishedWithSections);
+
+      await caller.getById({ id: ARTICLE_ID_2 });
+      expect((prismaMock.helpArticle as any).findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ id: ARTICLE_ID_2, tenantId: TEST_UUIDS.tenant }),
+        })
+      );
+    });
+
+    it('throws NOT_FOUND when id does not exist', async () => {
+      const caller = helpArticleRouter.createCaller(createAdminContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue(null);
+
+      await expect(caller.getById({ id: ARTICLE_ID_1 })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
+    });
+
+    it('hides DRAFT articles from non-privileged users', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue(mockArticleWithSections);
+
+      await expect(caller.getById({ id: ARTICLE_ID_1 })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
+    });
+
+    it('returns a DRAFT article for privileged (ADMIN) users', async () => {
+      const caller = helpArticleRouter.createCaller(createAdminContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue(mockArticleWithSections);
+
+      const result = await caller.getById({ id: ARTICLE_ID_1 });
+      expect(result.status).toBe('DRAFT');
+      expect(result.id).toBe(ARTICLE_ID_1);
     });
   });
 

@@ -1,17 +1,17 @@
 {
   "audit_metadata": {
-    "generated_at": "2026-06-12T23:42:32.046Z",
+    "generated_at": "2026-06-26T17:59:41.028Z",
     "audit_type": "PHANTOM_COMPLETION_DETECTION",
     "sprint_scope": "all",
     "severity": "CRITICAL"
   },
   "summary": {
-    "total_completed_tasks": 396,
-    "verified_completions": 217,
-    "phantom_completions": 179,
+    "total_completed_tasks": 412,
+    "verified_completions": 222,
+    "phantom_completions": 190,
     "sprint_path_mismatches": 0,
-    "integrity_score": "55%",
-    "conclusion": "179 tasks marked as Completed but missing artifacts or unverifiable DOD"
+    "integrity_score": "54%",
+    "conclusion": "190 tasks marked as Completed but missing artifacts or unverifiable DOD"
   },
   "verified_tasks": [
     {
@@ -1345,13 +1345,13 @@
       ]
     },
     {
-      "task_id": "PG-061",
-      "description": "Lead Detail",
+      "task_id": "PG-063",
+      "description": "Import Leads",
       "artifacts_verified": [
-        "apps/web/src/app/leads/[id]/page.tsx",
-        "apps/web/src/components/leads/lead-detail.tsx",
-        "apps/web/src/components/leads/lead-timeline.tsx",
-        ".specify/sprints/sprint-18/attestations/PG-061/context_ack.json"
+        "apps/web/src/app/leads/(list)/import/page.tsx",
+        "apps/web/src/components/leads/csv-importer.tsx",
+        "apps/web/src/lib/leads/field-mapper.ts",
+        ".specify/sprints/sprint-18/attestations/PG-063/context_ack.json"
       ]
     },
     {
@@ -2361,6 +2361,48 @@
       ]
     },
     {
+      "task_id": "IFC-265",
+      "description": "Contact Detail Page Tests. (1) Contact detail page (2242 lin",
+      "artifacts_verified": [
+        "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx",
+        "apps/api/src/modules/contact/__tests__/contact.router.tenant.test.ts"
+      ]
+    },
+    {
+      "task_id": "IFC-266",
+      "description": "Contact List/Create Page Tests + E2E. (1) Contact list page ",
+      "artifacts_verified": [
+        "apps/web/src/app/contacts/(list)/__tests__/page.test.tsx",
+        "tests/e2e/contact-crud.spec.ts"
+      ]
+    },
+    {
+      "task_id": "IFC-270",
+      "description": "Account Router Missing Procedures & Update Fix. (1) Update p",
+      "artifacts_verified": [
+        "apps/api/src/modules/account/account.router.ts",
+        "packages/validators/src/account.ts",
+        "packages/application/src/services/AccountService.ts"
+      ]
+    },
+    {
+      "task_id": "IFC-280",
+      "description": "Deal Detail Action Buttons — Wire 14 No-Ops. (1) EntityHeade",
+      "artifacts_verified": [
+        "apps/web/src/app/deals/[id]/page.tsx"
+      ]
+    },
+    {
+      "task_id": "IFC-282",
+      "description": "Deal Router Correctness Fixes. (1) Name updates silently dro",
+      "artifacts_verified": [
+        "apps/api/src/modules/opportunity/opportunity.router.ts",
+        "packages/validators/src/opportunity.ts",
+        "packages/domain/src/crm/opportunity/Opportunity.ts",
+        "apps/api/src/shared/mappers.ts"
+      ]
+    },
+    {
       "task_id": "PG-185",
       "description": "Module Settings - Tickets (/tickets/sla-policies)",
       "artifacts_verified": [
@@ -2586,9 +2628,10 @@
       "description": "PHASE-005: Auto-Response with Approval Gate",
       "status_claimed": "Completed",
       "issues": [
-        "Missing 2 artifact(s)"
+        "Missing 3 artifact(s)"
       ],
       "missing_artifacts": [
+        "apps/project-tracker/docs/metrics/sprint-16/IFC-029-attestation.json",
         ".specify/sprints/sprint-16/specifications/IFC-029-spec.md",
         ".specify/sprints/sprint-16/planning/IFC-029-plan.md"
       ],
@@ -2619,6 +2662,21 @@
         ".specify/sprints/sprint-17/planning/IFC-031-plan.md"
       ],
       "dod_issues": []
+    },
+    {
+      "task_id": "IFC-032",
+      "description": "PHASE-005: OpenTelemetry Monitoring",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)",
+        "DOD has no measurable or testable criteria"
+      ],
+      "missing_artifacts": [
+        ".specify/sprints/sprint-18/attestations/IFC-032/context_ack.json"
+      ],
+      "dod_issues": [
+        "DOD has no measurable or testable criteria"
+      ]
     },
     {
       "task_id": "IFC-039",
@@ -3004,6 +3062,30 @@
       ],
       "missing_artifacts": [
         ".specify/sprints/sprint-18/attestations/PG-060/context_ack.json"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-061",
+      "description": "Lead Detail",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        ".specify/sprints/sprint-18/attestations/PG-061/context_ack.json"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-062",
+      "description": "Edit Lead",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        ".specify/sprints/sprint-18/attestations/PG-062/context_ack.json"
       ],
       "dod_issues": []
     },
@@ -4292,6 +4374,20 @@
       ]
     },
     {
+      "task_id": "IFC-214",
+      "description": "Redis-backed AI Monitoring State Bridge - Replace process-lo",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 3 artifact(s)"
+      ],
+      "missing_artifacts": [
+        ".specify/sprints/sprint-18/specifications/IFC-214-spec.md",
+        ".specify/sprints/sprint-18/planning/IFC-214-plan.md",
+        ".specify/sprints/sprint-18/attestations/IFC-214/context_ack.json"
+      ],
+      "dod_issues": []
+    },
+    {
       "task_id": "IFC-220",
       "description": "AI Insight Null-State UX (Contact)  -  Add Run AI Analysis b",
       "status_claimed": "Completed",
@@ -4402,6 +4498,18 @@
       ]
     },
     {
+      "task_id": "IFC-230",
+      "description": "Unify Lead Create/Edit Form - Create page (leads/(list)/new/",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
       "task_id": "IFC-232",
       "description": "Sidebar Broken Links Cleanup - 1 remaining broken navigation",
       "status_claimed": "Completed",
@@ -4463,6 +4571,30 @@
       ]
     },
     {
+      "task_id": "IFC-240",
+      "description": "Lead Audit Logging. Add audit log entries to all 20 lead rou",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-242",
+      "description": "Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validat",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
       "task_id": "IFC-252",
       "description": "Contact Router Security — Tenant Isolation Fixes. CRITICAL: ",
       "status_claimed": "Completed",
@@ -4477,6 +4609,18 @@
     {
       "task_id": "IFC-253",
       "description": "Contact Detail NaN Fix + Auth Guard + Status Enum. CRITICAL:",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-255",
+      "description": "Contact Audit Logging. (1) Zero audit logging in all 14 cont",
       "status_claimed": "Completed",
       "issues": [
         "DOD has no artifact reference"
@@ -4523,6 +4667,18 @@
       ]
     },
     {
+      "task_id": "IFC-273",
+      "description": "Account List Page Type Safety & Filter Enums. (1) serverStat",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
       "task_id": "IFC-278",
       "description": "Deal Detail Page — Replace SAMPLE_DEAL with Real API Data. C",
       "status_claimed": "Completed",
@@ -4556,6 +4712,18 @@
     {
       "task_id": "IFC-281",
       "description": "Deal Backend Tenant Isolation & Audit Logging. (1) CRITICAL:",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-287",
+      "description": "Deal Filter Wiring & Type Safety. (1) DealFilters state (fil",
       "status_claimed": "Completed",
       "issues": [
         "DOD has no artifact reference"
@@ -4666,6 +4834,18 @@
         ".specify/sprints/sprint-18/specifications/PG-180-spec.md",
         ".specify/sprints/sprint-18/planning/PG-180-plan.md"
       ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-301",
+      "description": "Rich Text Editor Integration — Tiptap",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
       "dod_issues": [
         "DOD has no artifact reference"
       ]
