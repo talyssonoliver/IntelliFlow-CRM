@@ -6,7 +6,7 @@
 > typing the URL directly.
 
 > **Canonical counts**: All "page.tsx" file-count references in this document
-> reflect the filesystem total (Total Pages: 209) emitted by
+> reflect the filesystem total (Total Pages: 211) emitted by
 > `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`
 > counts once; route groups stripped; `[id]` collapses; `app/api/` excluded. See
 > `docs/design/content-audit.md` for the full counting rule. Verified:

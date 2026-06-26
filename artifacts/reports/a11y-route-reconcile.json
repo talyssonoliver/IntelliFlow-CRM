@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-19T09:34:39.885Z",
+  "timestamp": "2026-06-26T16:38:33.295Z",
   "docRoutes": [
     "/",
     "/404",
@@ -152,6 +152,7 @@
     "/settings/deals",
     "/settings/documents",
     "/settings/help-center/articles",
+    "/settings/help-center/articles/new",
     "/settings/integrations",
     "/settings/leads",
     "/settings/notifications",
@@ -334,6 +335,7 @@
     "/settings/deals",
     "/settings/documents",
     "/settings/help-center/articles",
+    "/settings/help-center/articles/new",
     "/settings/integrations",
     "/settings/leads",
     "/settings/notifications",
@@ -516,6 +518,7 @@
     "/settings/deals",
     "/settings/documents",
     "/settings/help-center/articles",
+    "/settings/help-center/articles/new",
     "/settings/integrations",
     "/settings/leads",
     "/settings/notifications",
@@ -552,12 +555,12 @@
     {
       "name": "PARSE_OK",
       "severity": "PASS",
-      "message": "Parsed 180 routes from conformance statement"
+      "message": "Parsed 181 routes from conformance statement"
     },
     {
       "name": "COUNT_MATCH",
       "severity": "PASS",
-      "message": "Doc routes: 180, FS routes: 180"
+      "message": "Doc routes: 181, FS routes: 181"
     },
     {
       "name": "STATEMENT_COVERS_DISK",
@@ -572,7 +575,7 @@
     {
       "name": "TOTAL_COUNT",
       "severity": "INFO",
-      "message": "Total: 180 matched, 0 doc-only, 0 fs-only"
+      "message": "Total: 181 matched, 0 doc-only, 0 fs-only"
     }
   ],
   "exitCode": 0

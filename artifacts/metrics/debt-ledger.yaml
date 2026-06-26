@@ -5227,3 +5227,36 @@ alerts:
     remediation_sprint: 19
     remediation_plan: 'Fix the root<->project coverage composition so ui/observability/platform/api-client are instrumented in the merged run (they appear in the merged lcov and Sonar measures them), then DROP the per-file exclusions added for IFC-301. Until then, ui coverage is enforced only by the ui package own vitest thresholds (90/80/90/90).'
     notes: 'git issue #482. Workaround: IFC-301 added packages/ui/src/components/rich-text-editor.tsx + components/index.ts to sonar.coverage.exclusions AND check-diff-coverage SONAR_COVERAGE_EXCLUDE (same pattern as supabase.ts #427 / page.tsx #382). The component is 100% covered by its 21 tests via the ui gate. Tracked per project Rule 8.'
+  HELP-ARTICLE-UPDATE-RETURN-TENANT-001:
+    origin_task: PG-181
+    owner: Backend Architect
+    severity: low
+    description: 'apps/api/src/modules/help-article/help-article.router.ts update() final read uses tx.helpArticle.findUniqueOrThrow({ where: { id } }) with no tenantId filter. The preceding findFirst({id,tenantId}) pre-check and tenant-scoped updateMany make a cross-tenant leak non-exploitable in practice (the row is proven to belong to the caller tenant before the read), so this is defense-in-depth, not a live vuln. Pre-existing on origin/main (introduced by IFC-299, not PG-181 which only added getById).'
+    created_at: 2026-06-26
+    status: open
+    expiry_date: 2026-09-26
+    remediation_sprint: 19
+    remediation_plan: 'Change the final read to tx.helpArticle.findFirstOrThrow({ where: { id, tenantId }, include: { sections } }) so the returned row is tenant-scoped even under a (currently impossible) TOCTOU. One-line change; keep the existing update tests green.'
+    notes: 'Found by the frontend-lead code-review pass during PG-181. Out-of-scope pre-existing finding tracked per project Rule 8 (gh issue + findings doc + this ledger).'
+  HELP-ARTICLE-SLUG-EDGE-HYPHEN-001:
+    origin_task: PG-181
+    owner: Backend Architect
+    severity: low
+    description: 'packages/validators/src/help-article.ts slug regex /^[a-z0-9-]+$/ (used by create + update) accepts a leading or trailing hyphen (e.g. "-foo", "bar-"). The PG-181 editor auto-slugify strips edge hyphens, but a manually-typed slug like "-foo" would pass both the client SLUG_PATTERN (mirrors the schema) and the server schema. Cosmetic — produces an ugly but functional slug; no security impact. Pre-existing in the validator (IFC-299).'
+    created_at: 2026-06-26
+    status: open
+    expiry_date: 2026-09-26
+    remediation_sprint: 19
+    remediation_plan: 'Tighten the slug regex to ^[a-z0-9]+(?:-[a-z0-9]+)*$ (or add a .refine rejecting leading/trailing hyphen) in the shared validator, and mirror it in the editor SLUG_PATTERN. Shared-validator change — verify all helpArticle create/update tests + any seed slugs still pass.'
+    notes: 'Found by the frontend-lead code-review pass during PG-181. Out-of-scope shared-validator change tracked per project Rule 8.'
+  HELP-ARTICLE-EDITOR-BLOCK-RENDER-CONTRACT-001:
+    origin_task: PG-181
+    owner: Frontend Lead
+    severity: medium
+    description: 'PG-181 persists editor-authored article bodies as a namespaced wrapper block `[{ type: "tiptapDoc", content: <Tiptap nodes> }]` in ArticleSection.blocks (round-trippable by the editor). The existing static renderer apps/web/src/components/support/article-renderer.tsx only understands the legacy ContentBlock union (paragraph/steps/tip/warning/info/nav-path) and would render nothing for a tiptapDoc block. This is NOT a live defect today: the public page apps/web/src/app/help-center/[article]/page.tsx renders STATIC data from lib/support/help-articles.ts, not DB articles — no DB reader renders ArticleSection.blocks. Editing a legacy seeded article only rewrites sections when the body is actually changed (bodyDirty gate), and StarterKit (IFC-301) inherently cannot represent the bespoke callout/steps blocks, so an active body edit converts them to the nearest editor nodes (ordered list / blockquote / breadcrumb paragraph) — faithful but lossy by design.'
+    created_at: 2026-06-26
+    status: open
+    expiry_date: 2026-09-26
+    remediation_sprint: 18
+    remediation_plan: 'IFC-302 (Refactor help article page to DB) OWNS the DB->render contract. When it wires the public page to helpArticle.getBySlug, it must (a) render the tiptapDoc wrapper via a Tiptap JSON/HTML renderer, and (b) fall back to section.content for any unrecognised block type. Until IFC-302 lands, editor-authored articles are reachable only through the admin editor + DB, never the static public renderer.'
+    notes: 'Codex flagged unsupported-block-format (fingerprint 01fefb20...) on PG-181; waived in tools/audit/codex-review-waivers.yaml as an explicit IFC-302 cross-task contract, not a PG-181 defect. Lane F sequences IFC-301 (editor) -> PG-181 (editor page) -> IFC-302 (DB render) as separate tasks.'

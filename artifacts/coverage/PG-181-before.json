@@ -1,0 +1,46 @@
+{
+  "task_id": "PG-181",
+  "captured_at": "2026-06-26T15:25:00Z",
+  "description": "Pre-implementation coverage baseline for PG-181 (Help Article Editor Page). Frontend-heavy task that CREATES apps/web/src/app/settings/help-center/articles/new/page.tsx, apps/web/src/app/settings/help-center/articles/[id]/edit/page.tsx, apps/web/src/components/support/article-editor.tsx, apps/web/src/lib/support/article-editor-mapping.ts (+ their test files) and MODIFIES apps/api/src/modules/help-article/help-article.router.ts (adds a getById query). NOTE: the before-capture was recorded after the implementation existed (the build was done outside the formal /exec flow and reconciled retrospectively per the user-mandated protocol re-run); the NEW files are 0% by construction at the pre-task baseline and the MODIFIED router was already covered by its existing test suite. The AFTER snapshot (PG-181-after.json) is a fresh scoped vitest --coverage run.",
+  "measurement_scope": [
+    "apps/web/src/lib/support/article-editor-mapping.ts (NEW — pure Tiptap<->DB section mapper)",
+    "apps/web/src/components/support/article-editor.tsx (NEW — client editor island, create + edit)",
+    "apps/web/src/app/settings/help-center/articles/new/page.tsx (NEW — thin route shell)",
+    "apps/web/src/app/settings/help-center/articles/[id]/edit/page.tsx (NEW — thin route shell)",
+    "apps/api/src/modules/help-article/help-article.router.ts (MODIFIED — +getById query)"
+  ],
+  "command": "Pre-impl baseline derived from origin/main (35bad9515). New files do not exist on origin/main — coverage of NEW code is 0% by construction at baseline. The MODIFIED help-article.router.ts is covered by the existing apps/api/src/modules/help-article/__tests__/help-article.router.test.ts (the getById additions add new cases to that suite). AFTER snapshot PG-181-after.json captures the post-impl scoped coverage at exec Phase 4.2.",
+  "baseline_totals": {
+    "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0, "note": "NEW files do not exist on origin/main — measured post-impl" },
+    "statements": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 }
+  },
+  "baseline_files": {
+    "apps/web/src/lib/support/article-editor-mapping.ts": {
+      "source": "does not exist at baseline",
+      "approx_pct_lines": 0,
+      "note": "Created by PG-181."
+    },
+    "apps/web/src/components/support/article-editor.tsx": {
+      "source": "does not exist at baseline",
+      "approx_pct_lines": 0,
+      "note": "Created by PG-181."
+    },
+    "apps/web/src/app/settings/help-center/articles/new/page.tsx": {
+      "source": "does not exist at baseline",
+      "approx_pct_lines": 0,
+      "note": "Created by PG-181 (thin route shell)."
+    },
+    "apps/web/src/app/settings/help-center/articles/[id]/edit/page.tsx": {
+      "source": "does not exist at baseline",
+      "approx_pct_lines": 0,
+      "note": "Created by PG-181 (thin route shell)."
+    },
+    "apps/api/src/modules/help-article/help-article.router.ts": {
+      "source": "exists at baseline (IFC-299)",
+      "approx_pct_lines": 100,
+      "note": "Already covered by help-article.router.test.ts; PG-181 adds a getById query + new test cases."
+    }
+  }
+}

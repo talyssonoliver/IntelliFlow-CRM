@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-04-16 (as of Sprint 17)
-> **Total Pages**: 209
+> **Total Pages**: 211
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`

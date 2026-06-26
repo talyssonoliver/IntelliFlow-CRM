@@ -20,9 +20,10 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 180
-user-facing routes. Dynamic segment routes (e.g., `/contacts/[id]`) inherit
-conformance status from their parent static route and are not listed separately.
+This statement covers the IntelliFlow CRM web application across all 181
+user-facing routes. Dynamic segment routes (e.g., `/contacts/[id]`,
+`/settings/help-center/articles/[id]/edit`) inherit conformance status from
+their parent static route and are not listed separately.
 
 - **Public & marketing (18):** `/`, `/about`, `/aup`, `/blog`, `/careers`,
   `/contact`, `/cookies`, `/dpa`, `/features`, `/partners`, `/press`,
@@ -80,16 +81,17 @@ conformance status from their parent static route and are not listed separately.
 - **Notifications, Help & Profile (7):** `/help-center`, `/help-center/search`,
   `/notifications`, `/notifications/channels`, `/notifications/quiet-hours`,
   `/notifications/settings`, `/profile`
-- **Settings (24):** `/settings`, `/settings/account`, `/settings/accounts`,
+- **Settings (25):** `/settings`, `/settings/account`, `/settings/accounts`,
   `/settings/appointments`, `/settings/automation`,
   `/settings/automation/custom-actions`,
   `/settings/automation/custom-node-types`, `/settings/billing`,
   `/settings/cases`, `/settings/contacts`, `/settings/deals`,
   `/settings/documents`, `/settings/help-center/articles`,
-  `/settings/integrations`, `/settings/leads`, `/settings/notifications`,
-  `/settings/pipeline`, `/settings/reports`, `/settings/routing`,
-  `/settings/security/mfa`, `/settings/security/mfa/setup`, `/settings/tasks`,
-  `/settings/team`, `/settings/tickets`
+  `/settings/help-center/articles/new`, `/settings/integrations`,
+  `/settings/leads`, `/settings/notifications`, `/settings/pipeline`,
+  `/settings/reports`, `/settings/routing`, `/settings/security/mfa`,
+  `/settings/security/mfa/setup`, `/settings/tasks`, `/settings/team`,
+  `/settings/tickets`
 - **Developer portal (2):** `/developers/apps`, `/developers/apps/new`
 - **Docs portal (9):** `/docs`, `/docs/architecture`, `/docs/auth`,
   `/docs/changelog`, `/docs/cli`, `/docs/guides`, `/docs/integrations`,
@@ -109,8 +111,8 @@ conformance status from their parent static route and are not listed separately.
 | Level A: Not Applicable          | 4                   |
 | Level AA: Supports               | 16                  |
 | Level AA: Not Applicable         | 4                   |
-| Routes fully conformant          | 179 of 180          |
-| Routes partially conformant      | 1 of 180 (`/deals`) |
+| Routes fully conformant          | 180 of 181          |
+| Routes partially conformant      | 1 of 181 (`/deals`) |
 
 ---
 

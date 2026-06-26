@@ -164,6 +164,40 @@ export const helpArticleRouter = createTRPCRouter({
   }),
 
   /**
+   * Get a single article by id, including ordered sections.
+   * Tenant-scoped; DRAFT articles are only visible to ADMIN/MANAGER.
+   * Used by the admin editor (PG-181) where the route param is the article id.
+   */
+  getById: tenantProcedure.input(helpArticleIdSchema).query(async ({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
+
+    const article = await ctx.prismaWithTenant.helpArticle.findFirst({
+      where: { id: input.id, tenantId },
+      include: {
+        sections: { orderBy: { order: 'asc' } },
+        _count: { select: { feedback: true } },
+      },
+    });
+
+    if (!article) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+    }
+
+    // DRAFT articles only visible to privileged users
+    const isPrivileged = ctx.tenant.role === 'ADMIN' || ctx.tenant.role === 'MANAGER';
+    if (article.status === 'DRAFT' && !isPrivileged) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+    }
+
+    return {
+      ...article,
+      keywords: article.keywords as string[],
+      relatedArticleIds: article.relatedArticleIds as string[],
+      feedbackCount: article._count.feedback,
+    };
+  }),
+
+  /**
    * Get articles by category. Defaults to PUBLISHED only.
    */
   getByCategory: tenantProcedure.input(helpArticleCategorySchema).query(async ({ ctx, input }) => {
