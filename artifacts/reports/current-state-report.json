@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-18T23:02:03.757Z",
+  "generatedAt": "2026-06-26T19:20:19.877Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -325,13 +325,16 @@
       ".specify/sprints/sprint-17/attestations/PG-185/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-186/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-195/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-032/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-078/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-214/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-227/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-230/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-240/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-242/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-255/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-256/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-257/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-265/attestation.json",
@@ -353,6 +356,7 @@
       ".specify/sprints/sprint-18/attestations/PG-063/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-132/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-180/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-181/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-187/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-189/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-190/attestation.json",
@@ -489,10 +493,10 @@
     "totalTasks": 596,
     "totalNumberedSprintTasks": 591,
     "continuousTaskCount": 5,
-    "completedTasks": 409,
-    "backlogTasks": 186,
+    "completedTasks": 413,
+    "backlogTasks": 182,
     "blockedTasks": 0,
-    "completionPercentage": 68.62,
+    "completionPercentage": 69.3,
     "inProgressTasks": 1,
     "otherTasks": 0
   },
@@ -719,38 +723,6 @@
         }
       },
       {
-        "taskId": "IFC-032",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Automation",
-        "title": "PHASE-005: OpenTelemetry Monitoring",
-        "description": "PHASE-005: OpenTelemetry Monitoring",
-        "summary": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
-        "definitionOfDone": "Distributed tracing, metrics, logs unified; artifacts: otel-collector-config.yaml, trace-examples.json, context_ack.json; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
-        "definitionOfDoneSnapshot": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
-        "dependencies": [
-          "IFC-030"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "IFC-211",
         "sprint": 18,
         "status": "Backlog",
@@ -882,36 +854,6 @@
         }
       },
       {
-        "taskId": "IFC-240",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Core CRM",
-        "title": "Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant operations (delete, bulkDelete, convert, export) MUST have audit trail. Include: actor (userId), action, entityType (Lead), entityId, tenantId, timestamp, metadata (old/new values for mutations). Integrate with existing audit infrastructure at apps/api/src/security/audit/.",
-        "description": "Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant operations (delete, bulkDelete, convert, export) MUST have audit trail. Include: actor (userId), action, entityType (Lead), entityId, tenantId, timestamp, metadata (old/new values for mutations). Integrate with existing audit infrastructure at apps/api/src/security/audit/.",
-        "summary": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
-        "definitionOfDone": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
-        "definitionOfDoneSnapshot": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
-        "dependencies": [],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "IFC-247",
         "sprint": 18,
         "status": "Backlog",
@@ -972,16 +914,82 @@
         }
       },
       {
-        "taskId": "IFC-255",
+        "taskId": "IFC-271",
         "sprint": 18,
         "status": "Backlog",
         "section": "Core CRM",
-        "title": "Contact Audit Logging. (1) Zero audit logging in all 14 contact router procedures — no ctx.security.auditLogger calls (R-07). (2) Audit event handler PascalCase keys (ContactCreated/Updated/Deleted) don't match domain dot-notation (contact.created/updated) — 5 event types unmapped (D-06). Violates IFC-098 audit requirement. Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
-        "description": "Contact Audit Logging. (1) Zero audit logging in all 14 contact router procedures — no ctx.security.auditLogger calls (R-07). (2) Audit event handler PascalCase keys (ContactCreated/Updated/Deleted) don't match domain dot-notation (contact.created/updated) — 5 event types unmapped (D-06). Violates IFC-098 audit requirement. Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
-        "summary": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
-        "definitionOfDone": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
-        "definitionOfDoneSnapshot": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
+        "title": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
+        "description": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
+        "summary": "IFC-271 Account Domain Model Fixes — remediates four findings from docs/audit/account-detail-wiring-audit.md sections 11-13 (D-01, B-15, B-16, B-06) on a worktree branched from origin/main@d8d154230. D-01 (AccountDeletedEvent):......",
+        "definitionOfDone": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated; non-null assertion replaced with proper null check; tests >=90%",
+        "definitionOfDoneSnapshot": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated",
         "dependencies": [],
+        "attestation": {
+          "exists": true,
+          "path": ".specify/sprints/sprint-18/attestations/IFC-271/attestation.json",
+          "verdict": "COMPLETE",
+          "timestamp": "2026-06-10T22:30:00Z",
+          "sprintFolder": 18
+        },
+        "validationSummary": {
+          "total": 4,
+          "passed": 4,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 4,
+          "met": 4,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-302",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Support",
+        "title": "Refactor Help Article Page to Use Database",
+        "description": "Refactor Help Article Page to Use Database",
+        "summary": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing",
+        "definitionOfDone": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing",
+        "dependencies": [
+          "IFC-299"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-309",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Compliance",
+        "title": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
+        "description": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
+        "summary": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion);...",
+        "definitionOfDone": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion); legal.getAcceptance query returns latest record per user; RLS policy scoped by tenantId; Confirm UI on /terms (authenticated users only) calls mutation and hides when current version already accepted; DB migration reviewed; >=90% scoped coverage; all 4 validations pass",
+        "definitionOfDoneSnapshot": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion);...",
+        "dependencies": [
+          "PG-051",
+          "IFC-058",
+          "IFC-124"
+        ],
         "attestation": {
           "exists": false,
           "path": null,
@@ -17476,11 +17484,11 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 66,
-      "completedTasks": 27,
-      "backlogTasks": 38,
+      "completedTasks": 31,
+      "backlogTasks": 34,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 27,
+      "attestedCompletedTasks": 31,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
       "notableCompleted": [
@@ -17676,38 +17684,6 @@
           }
         },
         {
-          "taskId": "IFC-032",
-          "sprint": 18,
-          "status": "Backlog",
-          "section": "Automation",
-          "title": "PHASE-005: OpenTelemetry Monitoring",
-          "description": "PHASE-005: OpenTelemetry Monitoring",
-          "summary": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
-          "definitionOfDone": "Distributed tracing, metrics, logs unified; artifacts: otel-collector-config.yaml, trace-examples.json, context_ack.json; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
-          "definitionOfDoneSnapshot": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
-          "dependencies": [
-            "IFC-030"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
           "taskId": "PG-058",
           "sprint": 18,
           "status": "Backlog",
@@ -17807,14 +17783,47 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "IFC-211",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Core CRM",
+          "title": "Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults)",
+          "description": "Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults)",
+          "summary": "Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes",
+          "definitionOfDone": "Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes",
+          "dependencies": [
+            "IFC-195",
+            "IFC-098"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ],
       "sectionSummary": [
         {
           "section": "Core CRM",
           "total": 27,
-          "completed": 18,
-          "open": 9
+          "completed": 20,
+          "open": 7
         },
         {
           "section": "Settings",
@@ -17837,8 +17846,8 @@
         {
           "section": "Automation",
           "total": 2,
-          "completed": 1,
-          "open": 1
+          "completed": 2,
+          "open": 0
         },
         {
           "section": "Documentation",
@@ -17849,8 +17858,8 @@
         {
           "section": "Support Pages",
           "total": 2,
-          "completed": 1,
-          "open": 1
+          "completed": 2,
+          "open": 0
         },
         {
           "section": "Compliance",
@@ -17887,32 +17896,32 @@
         {
           "taskId": "IFC-032",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Automation",
           "title": "PHASE-005: OpenTelemetry Monitoring",
           "description": "PHASE-005: OpenTelemetry Monitoring",
-          "summary": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
+          "summary": "IFC-032 PHASE-005 OpenTelemetry Monitoring — VERIFY-AND-ATTEST reconciliation, NOT a build.... AC1 — workflow.lead.route parent span with attributes; AC2 — three child spans (evaluate_rules, score_agents, persist_audit); AC3...",
           "definitionOfDone": "Distributed tracing, metrics, logs unified; artifacts: otel-collector-config.yaml, trace-examples.json, context_ack.json; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
-          "definitionOfDoneSnapshot": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
+          "definitionOfDoneSnapshot": "AC1 — workflow.lead.route parent span with attributes; AC2 — three child spans (evaluate_rules, score_agents, persist_audit); AC3 — capture-trace-examples.ts produces real 32-hex trace IDs",
           "dependencies": [
             "IFC-030"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-032/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-22T14:19:35Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 1,
+            "met": 1,
             "missed": 0
           }
         },
@@ -18501,30 +18510,30 @@
         {
           "taskId": "IFC-240",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant operations (delete, bulkDelete, convert, export) MUST have audit trail. Include: actor (userId), action, entityType (Lead), entityId, tenantId, timestamp, metadata (old/new values for mutations). Integrate with existing audit infrastructure at apps/api/src/security/audit/.",
           "description": "Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant operations (delete, bulkDelete, convert, export) MUST have audit trail. Include: actor (userId), action, entityType (Lead), entityId, tenantId, timestamp, metadata (old/new values for mutations). Integrate with existing audit infrastructure at apps/api/src/security/audit/.",
-          "summary": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
+          "summary": "IFC-240 Lead Router Audit Logging — instruments apps/api/src/modules/lead/lead.router.ts with the existing audit infrastructure (getAuditLogger facade), replicating the IFC-281 opportunity-router pattern to close the GDPR Art.......",
           "definitionOfDone": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
-          "definitionOfDoneSnapshot": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
+          "definitionOfDoneSnapshot": "All lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; Audit entries queryable via audit API",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-240/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-21T23:17:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 3,
+            "met": 3,
             "missed": 0
           }
         },
@@ -18621,30 +18630,30 @@
         {
           "taskId": "IFC-255",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Contact Audit Logging. (1) Zero audit logging in all 14 contact router procedures — no ctx.security.auditLogger calls (R-07). (2) Audit event handler PascalCase keys (ContactCreated/Updated/Deleted) don't match domain dot-notation (contact.created/updated) — 5 event types unmapped (D-06). Violates IFC-098 audit requirement. Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
           "description": "Contact Audit Logging. (1) Zero audit logging in all 14 contact router procedures — no ctx.security.auditLogger calls (R-07). (2) Audit event handler PascalCase keys (ContactCreated/Updated/Deleted) don't match domain dot-notation (contact.created/updated) — 5 event types unmapped (D-06). Violates IFC-098 audit requirement. Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
-          "summary": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
+          "summary": "IFC-255 Contact Audit Logging — two halves. R-07: instruments apps/api/src/modules/contact/contact.router.ts with the existing audit infrastructure (getAuditLogger facade), replicating the merged IFC-240 lead-router pattern to close the GDP......",
           "definitionOfDone": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
-          "definitionOfDoneSnapshot": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
+          "definitionOfDoneSnapshot": "All contact CRUD procedures emit audit events; Event handler maps all contact event types; Audit trail for create/update/delete/bulk ops",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-255/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-22T18:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 3,
+            "met": 3,
             "missed": 0
           }
         },
@@ -19017,11 +19026,11 @@
         {
           "taskId": "PG-181",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Support Pages",
           "title": "Help Article Editor Page",
           "description": "Help Article Editor Page",
-          "summary": "response under 200ms, Lighthouse >=90; editor at /settings/help-center/articles/[id]/edit and /new; Tiptap editor, metadata fields, preview, save draft, publish",
+          "summary": "Help Article Editor at /settings/help-center/articles/new and /[id]/edit; shared ArticleEditor client island; pure Tiptap<->DB section mapper; tenant-scoped getById router query. nav_wiring_confirmed:... response under 200ms, Lighthouse >=90;...",
           "definitionOfDone": "Response <200ms, Lighthouse >=90; editor at /settings/help-center/articles/[id]/edit and /new; Tiptap editor, metadata fields, preview, save draft, publish; verified by: pnpm test",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse >=90; editor at /settings/help-center/articles/[id]/edit and /new; Tiptap editor, metadata fields, preview, save draft, publish",
           "dependencies": [
@@ -19029,21 +19038,21 @@
             "IFC-301"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-181/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-26T18:00:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
