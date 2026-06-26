@@ -14,8 +14,11 @@ import {
 } from '../article-editor-mapping';
 
 const EDITOR_BLOCK = 'tiptapDoc';
-function editorBlocks(...nodes: EditorNode[]): EditorNode[] {
-  return [{ type: EDITOR_BLOCK, content: nodes }];
+function editorBlocks(...nodes: EditorNode[]): unknown[] {
+  return [{ type: EDITOR_BLOCK, level: 2, content: nodes }];
+}
+function editorBlocksAtLevel(level: number, ...nodes: EditorNode[]): unknown[] {
+  return [{ type: EDITOR_BLOCK, level, content: nodes }];
 }
 
 function heading(text: string, level = 2): EditorNode {
@@ -159,6 +162,14 @@ describe('docToSections', () => {
     expect(sections[0].blocks).toEqual(editorBlocks(image));
   });
 
+  it('preserves the authored heading level in the wrapper', () => {
+    const sections = docToSections(
+      doc(heading('Big', 1), para('body'), heading('Small', 3), para('x'))
+    );
+    expect(sections[0].blocks).toEqual(editorBlocksAtLevel(1, para('body')));
+    expect(sections[1].blocks).toEqual(editorBlocksAtLevel(3, para('x')));
+  });
+
   it('wraps pre-heading content in an Introduction section', () => {
     const sections = docToSections(doc(para('Intro line.'), heading('Next'), para('More.')));
     expect(sections[0].heading).toBe('Introduction');
@@ -232,6 +243,17 @@ describe('sectionsToDoc', () => {
     const original = doc(heading('A'), para('alpha'), heading('B'), para('beta'));
     const sections = docToSections(original);
     const rebuilt = sectionsToDoc(sections);
+    expect(docToSections(rebuilt)).toEqual(sections);
+  });
+
+  it('restores the authored heading level (H1/H3 are not normalized to H2)', () => {
+    const sections = docToSections(
+      doc(heading('Big', 1), para('body'), heading('Small', 3), para('x'))
+    );
+    const rebuilt = sectionsToDoc(sections);
+    expect(rebuilt.content?.[0]).toEqual(heading('Big', 1));
+    expect(rebuilt.content?.[2]).toEqual(heading('Small', 3));
+    // and the full round-trip stays stable
     expect(docToSections(rebuilt)).toEqual(sections);
   });
 });

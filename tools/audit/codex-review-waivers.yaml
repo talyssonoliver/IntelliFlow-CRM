@@ -706,7 +706,7 @@ waivers:
       import block, so this re-blocks if those imports change.
     author: talyssonoliver
     date: '2026-06-20'
-  - fingerprint: '01fefb20c7ddb5552d3604e3b7ec7a566c6f84d8b2da4a4c3d57aa26ebd0735e'
+  - fingerprint: '1811143672a4b3abd42bd7da0208db0e7207b6edea6dd927bd6734eb1a695790'
     reason: >-
       Accepted cross-task contract, not a PG-181 defect. PG-181 persists
       editor-authored bodies as a namespaced wrapper block

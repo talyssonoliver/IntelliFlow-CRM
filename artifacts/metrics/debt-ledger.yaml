@@ -5259,4 +5259,4 @@ alerts:
     expiry_date: 2026-09-26
     remediation_sprint: 18
     remediation_plan: 'IFC-302 (Refactor help article page to DB) OWNS the DB->render contract. When it wires the public page to helpArticle.getBySlug, it must (a) render the tiptapDoc wrapper via a Tiptap JSON/HTML renderer, and (b) fall back to section.content for any unrecognised block type. Until IFC-302 lands, editor-authored articles are reachable only through the admin editor + DB, never the static public renderer.'
-    notes: 'Codex flagged unsupported-block-format (fingerprint 01fefb20...) on PG-181; waived in tools/audit/codex-review-waivers.yaml as an explicit IFC-302 cross-task contract, not a PG-181 defect. Lane F sequences IFC-301 (editor) -> PG-181 (editor page) -> IFC-302 (DB render) as separate tasks.'
+    notes: 'Codex flagged unsupported-block-format (fingerprint 1811143672...) on PG-181; waived in tools/audit/codex-review-waivers.yaml as an explicit IFC-302 cross-task contract, not a PG-181 defect. Lane F sequences IFC-301 (editor) -> PG-181 (editor page) -> IFC-302 (DB render) as separate tasks.'

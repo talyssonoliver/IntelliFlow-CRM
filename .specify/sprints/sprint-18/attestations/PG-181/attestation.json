@@ -18,8 +18,8 @@
     ]
   },
   "artifact_hashes": {
-    "apps/web/src/components/support/article-editor.tsx": "b8aebae2f9eaadd1cc8e29ff814dc38add75ccbaed83c1c58636b18119aa278f",
-    "apps/web/src/lib/support/article-editor-mapping.ts": "32d73ac6e122c4feb3142cc2f51c5c9e7b7ef291ed80935d5b2f1c11c859a6a0",
+    "apps/web/src/components/support/article-editor.tsx": "700e54c20bdaab132dcd32ecb30c7f0be00533ba37bbace438f7655656ba8986",
+    "apps/web/src/lib/support/article-editor-mapping.ts": "2b2dea6bbc794191a104cffabbbf083b09255ee66fa4b5094647362b549112ed",
     "apps/web/src/app/settings/help-center/articles/new/page.tsx": "cd3a69a789c86262a2e776df84c46ec59d152dc5f75e8cb43941d83fa0c1a603",
     "apps/web/src/app/settings/help-center/articles/[id]/edit/page.tsx": "dba46365abc6686f0ea221e81e12516118c0af79fd5cbca4ac9d8d9a5651124a",
     "apps/api/src/modules/help-article/help-article.router.ts": "6051552b9cb0153a64e08fa0cee0d939259cc8f134af9cc1b9b30449a6684b8c",

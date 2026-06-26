@@ -508,8 +508,15 @@ export function ArticleEditor({ mode, articleId }: Readonly<ArticleEditorProps>)
         description: err instanceof Error ? err.message : 'Unexpected error',
         variant: 'destructive',
       });
+      // In create mode the draft was already persisted with this id. Move to its
+      // edit route so a retry updates the existing draft instead of attempting a
+      // duplicate-slug create.
+      if (mode === 'create') {
+        invalidate(id);
+        router.push(`/settings/help-center/articles/${id}/edit`);
+      }
     }
-  }, [persist, publishMutation, invalidate, router]);
+  }, [persist, publishMutation, invalidate, mode, router]);
 
   const handleUnpublish = useCallback(async () => {
     if (!articleId) return;

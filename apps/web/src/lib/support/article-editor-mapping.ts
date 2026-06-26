@@ -124,19 +124,32 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+const DEFAULT_HEADING_LEVEL = 2;
+
 /**
- * Extract the editor body nodes from a stored `blocks` value, or `null` when the
- * value is not the editor wrapper (legacy ContentBlocks, empty, or absent).
+ * Extract the editor wrapper (`{ content, level }`) from a stored `blocks` value,
+ * or `null` when the value is not the editor wrapper (legacy ContentBlocks,
+ * empty, or absent). `level` is the section heading's authored level (1–6),
+ * defaulting to 2 when absent.
  */
-export function tiptapBodyFromBlocks(blocks: unknown): EditorNode[] | null {
+function tiptapWrapper(blocks: unknown): { content: EditorNode[]; level: number } | null {
   if (!Array.isArray(blocks) || blocks.length !== 1) {
     return null;
   }
   const [wrapper] = blocks;
   if (isRecord(wrapper) && wrapper.type === EDITOR_BLOCK_TYPE && Array.isArray(wrapper.content)) {
-    return wrapper.content as EditorNode[];
+    const level = typeof wrapper.level === 'number' ? wrapper.level : DEFAULT_HEADING_LEVEL;
+    return { content: wrapper.content as EditorNode[], level };
   }
   return null;
+}
+
+/**
+ * Extract the editor body nodes from a stored `blocks` value, or `null` when the
+ * value is not the editor wrapper (legacy ContentBlocks, empty, or absent).
+ */
+export function tiptapBodyFromBlocks(blocks: unknown): EditorNode[] | null {
+  return tiptapWrapper(blocks)?.content ?? null;
 }
 
 /** True when a section body carries something worth persisting. */
@@ -146,6 +159,7 @@ function hasMeaningfulBody(content: string, body: EditorNode[]): boolean {
 
 function buildSection(
   headingText: string,
+  headingLevel: number,
   body: EditorNode[],
   order: number
 ): DbSectionInput | null {
@@ -156,10 +170,15 @@ function buildSection(
     return null; // truly empty (e.g. a blank Tiptap paragraph) — drop it
   }
   const safeHeading = heading || INTRO_HEADING;
+  // Persist a wrapper (carrying the heading level + body) when there is a body
+  // OR when a heading-only section uses a non-default level worth preserving.
+  const keepWrapper = hasBody || (!!heading && headingLevel !== DEFAULT_HEADING_LEVEL);
   return {
     heading: safeHeading,
     content: content || safeHeading, // schema requires a non-empty content
-    ...(hasBody ? { blocks: [{ type: EDITOR_BLOCK_TYPE, content: body }] } : {}),
+    ...(keepWrapper
+      ? { blocks: [{ type: EDITOR_BLOCK_TYPE, level: headingLevel, content: body }] }
+      : {}),
     order,
   };
 }
@@ -173,6 +192,7 @@ export function docToSections(doc: EditorNode | null | undefined): DbSectionInpu
   const top = doc?.content ?? [];
   const sections: DbSectionInput[] = [];
   let headingText = '';
+  let headingLevel = DEFAULT_HEADING_LEVEL;
   let body: EditorNode[] = [];
   let started = false;
 
@@ -180,7 +200,7 @@ export function docToSections(doc: EditorNode | null | undefined): DbSectionInpu
     if (!started) {
       return;
     }
-    const section = buildSection(headingText, body, sections.length);
+    const section = buildSection(headingText, headingLevel, body, sections.length);
     if (section) {
       sections.push(section);
     }
@@ -190,6 +210,8 @@ export function docToSections(doc: EditorNode | null | undefined): DbSectionInpu
     if (node.type === 'heading') {
       flush();
       headingText = nodeText(node);
+      headingLevel =
+        typeof node.attrs?.level === 'number' ? node.attrs.level : DEFAULT_HEADING_LEVEL;
       body = [];
       started = true;
     } else {
@@ -274,8 +296,8 @@ export function legacyBlocksToNodes(blocks: unknown): EditorNode[] | null {
   return blocks.flatMap((b) => legacyBlockToNodes(b as Record<string, unknown>));
 }
 
-function headingNode(text: string): EditorNode {
-  return { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text }] };
+function headingNode(text: string, level: number = DEFAULT_HEADING_LEVEL): EditorNode {
+  return { type: 'heading', attrs: { level }, content: [{ type: 'text', text }] };
 }
 
 /** Reconstruct the editor body nodes for one stored section (heading excluded). */
@@ -283,10 +305,10 @@ function sectionBodyNodes(
   section: Pick<DbSectionInput, 'heading' | 'content' | 'blocks'>,
   heading: string
 ): EditorNode[] {
-  // Editor-authored wrapper → replay verbatim.
-  const editorBody = tiptapBodyFromBlocks(section.blocks);
-  if (editorBody) {
-    return editorBody;
+  // Editor-authored wrapper → replay verbatim (level handled by the caller).
+  const wrapper = tiptapWrapper(section.blocks);
+  if (wrapper) {
+    return wrapper.content;
   }
 
   // Legacy seeded ContentBlocks → convert to the nearest editor nodes so a no-op
@@ -329,7 +351,8 @@ export function sectionsToDoc(
   for (const section of sections) {
     const heading = section.heading.trim();
     if (heading) {
-      content.push(headingNode(heading));
+      // Restore the authored heading level from the wrapper (default 2).
+      content.push(headingNode(heading, tiptapWrapper(section.blocks)?.level));
     }
     content.push(...sectionBodyNodes(section, heading));
   }

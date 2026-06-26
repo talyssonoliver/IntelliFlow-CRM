@@ -261,6 +261,11 @@ describe('ArticleEditor — create flow', () => {
         expect.objectContaining({ title: 'Publish failed', variant: 'destructive' })
       )
     );
+    // the draft was created; create-mode publish-failure routes to its edit page
+    // so a retry updates the existing draft instead of re-creating (dup slug)
+    await waitFor(() =>
+      expect(routerPush).toHaveBeenCalledWith('/settings/help-center/articles/new-1/edit')
+    );
   });
 
   it('cancels back to the article list', () => {
