@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-04-28T18:36:27.957Z",
+  "generated_at": "2026-06-26T10:11:53.391Z",
   "agents": [
     {
       "name": "a11y-expert",
@@ -59,6 +59,13 @@
       "description": "Next.js 16, shadcn, Tailwind, tRPC client reviewer"
     },
     {
+      "name": "orchestrator",
+      "tier": "C",
+      "ram_ceiling_mb": 6144,
+      "concurrent_cap": 2,
+      "description": "Sprint orchestrator — reconciles task status against main, dispatches one task-executor per task in an isolated worktree (concurrency cap 3), and validates the 6-point definition of done. Never implements tasks itself."
+    },
+    {
       "name": "plan-reviewer",
       "tier": "A",
       "ram_ceiling_mb": 300,
@@ -113,6 +120,13 @@
       "ram_ceiling_mb": 6144,
       "concurrent_cap": 2,
       "description": "Secret scanning, SAST, dependency vulnerabilities, OWASP"
+    },
+    {
+      "name": "task-executor",
+      "tier": "C",
+      "ram_ceiling_mb": 6144,
+      "concurrent_cap": 2,
+      "description": "Per-task implementer for a Sprint task in an isolated worktree — runs /loop /full-pipeline then ships the PR. Adopts the named persona's lens but, unlike the Tier-A persona reviewers, has write/test/build/PR permissions."
     },
     {
       "name": "test-engineer",
