@@ -44,8 +44,13 @@ it is stale or dirty, **every executor inherits that**. Therefore:
   writes you make are the post-merge CSV flip (commit + push immediately, never
   leave it dirty).
 - Keep local `main` **even with `origin/main`**: `git fetch origin main` then
-  `git pull --ff-only` whenever clean. If a `git pull --ff-only` ever fails, the
-  control plane is dirty — stop and reconcile before dispatching anything.
+  `git pull --ff-only` whenever clean. If `git pull --ff-only` fails because the
+  plane is behind + carries only discardable generated noise (e.g. the metrics
+  cache), recover autonomously with the vetted, fast-forward-ONLY sync — never a
+  raw `git reset --hard` (the guard blocks it, and rightly):
+  `node tools/scripts/sync-control-plane.mjs --branch main --apply`. It REFUSES
+  if the branch has any commit not on `origin/main` (divergence → stop, that
+  needs a human). It only ever discards uncommitted generated files.
 - After **every** merge: `git fetch` + `git pull --ff-only` so the next executor
   forks from current main. (4 staleness classes + invariants:
   `docs/operations/worktree-parallelism.md`.)

@@ -20,6 +20,12 @@
  *   - git reflog expire / delete
  *   - git show <ref>:<path> > <path>  (same-path redirect silently overwrites working tree)
  *
+ * Allowlist: a TINY set of vetted scripts (ALLOWLISTED_SCRIPT_SUFFIXES) that contain
+ * a destructive git call but are SAFE by construction — they guard against data loss
+ * internally and must run autonomously (e.g. the fleet's fast-forward-only
+ * control-plane sync). Raw destructive commands stay blocked; only the named,
+ * reviewed script is exempt from the content scan.
+ *
  * Also scans interpreter invocations (node/tsx/ts-node/bun/deno/python*) and inspects
  * the target script file for destructive git calls via child_process / subprocess / os.system,
  * so a subagent cannot bypass the guard by writing a small wrapper script.
@@ -52,7 +58,7 @@ const DESTRUCTIVE_PATTERNS = [
   },
   {
     pattern: /\bgit\s+reset\s+--hard\b/,
-    reason: 'git reset --hard is blocked — it permanently discards uncommitted changes. Use git reset --soft instead.',
+    reason: 'Raw git reset --hard is blocked — it permanently discards uncommitted changes. Use git reset --soft, or for a fast-forward-only control-plane sync run the vetted `node tools/scripts/sync-control-plane.mjs --apply` (it refuses to drop any committed work). To discard a specific file, ask the user.',
   },
   {
     pattern: /\bgit\s+clean\s+-[a-zA-Z]*f/,
@@ -145,6 +151,30 @@ const SCRIPT_DESTRUCTIVE_PATTERNS = [
     pattern: /\bgit\s+show\s+\S*?:([^\s>'"`]+)\s*>{1,2}\s*\1(?:\s|$|['"`])/,
     reason: 'Script contains `git show <ref>:<path> > <path>` — same-path redirect silently overwrites working tree. Use a /tmp intermediate.',
   },
+  // ── Array-form argv that EVADES the first-token check via global options ──
+  // e.g. execFileSync('git', ['-C', repo, 'reset', '--hard', ...]). We match the
+  // destructive subcommand + its dangerous flag ANYWHERE inside the argv array,
+  // so a leading `-C <path>` / `-c k=v` / `--git-dir` can't smuggle it past.
+  {
+    pattern: /\b(?:exec|execSync|execFile|execFileSync|spawn|spawnSync|fork)\s*\(\s*(['"`])git\1\s*,\s*\[[^\]]*\breset\b[^\]]*--hard\b/,
+    reason: 'Script spawns `git [...] reset --hard` (argv form, possibly behind -C/--git-dir). Blocked.',
+  },
+  {
+    pattern: /\b(?:exec|execSync|execFile|execFileSync|spawn|spawnSync|fork)\s*\(\s*(['"`])git\1\s*,\s*\[[^\]]*\bclean\b[^\]]*-[a-zA-Z]*f/,
+    reason: 'Script spawns `git [...] clean -f` (argv form). Blocked.',
+  },
+  {
+    pattern: /\b(?:exec|execSync|execFile|execFileSync|spawn|spawnSync|fork)\s*\(\s*(['"`])git\1\s*,\s*\[[^\]]*\bpush\b[^\]]*--force(?!-with-lease)/,
+    reason: 'Script spawns `git [...] push --force` (argv form). Use --force-with-lease. Blocked.',
+  },
+  {
+    pattern: /\b(?:exec|execSync|execFile|execFileSync|spawn|spawnSync|fork)\s*\(\s*(['"`])git\1\s*,\s*\[[^\]]*\bbranch\b[^\]]*(['"`])-D\2/,
+    reason: 'Script spawns `git [...] branch -D` (argv form). Blocked.',
+  },
+  {
+    pattern: /\b(?:exec|execSync|execFile|execFileSync|spawn|spawnSync|fork)\s*\(\s*(['"`])git\1\s*,\s*\[[^\]]*(['"`])stash\2/,
+    reason: 'Script spawns `git [...] stash` (argv form). Blocked.',
+  },
 ];
 
 // ─── Interpreter detection ──────────────────────────────────────────────────
@@ -155,6 +185,21 @@ const INTERPRETER_RX =
   /\b(?:node|bun(?:\s+run)?|deno(?:\s+run)?|python3?|tsx|ts-node|npx(?:\s+tsx|\s+ts-node)?|pnpm\s+(?:dlx|exec)\s+(?:tsx|ts-node))\b[^\n]*?((?:\.?\/)?[^\s"']+?\.(?:mjs|cjs|js|ts|tsx|py))(?:\s|$)/i;
 
 const MAX_SCRIPT_BYTES = 256 * 1024; // Don't read huge files
+
+// ─── Allowlisted scripts (exempt from the destructive content scan) ──────────
+// Vetted scripts that intentionally contain a destructive git call but are SAFE
+// by construction (they guard against data loss internally) and must run without
+// a human in the loop. Matched by EXACT repo-relative path suffix so a worktree /
+// absolute-path prefix is fine, but a look-alike like `evil-tools/...` is NOT.
+// Keep this list tiny; only add scripts whose safety is proven and reviewed.
+const ALLOWLISTED_SCRIPT_SUFFIXES = [
+  'tools/scripts/sync-control-plane.mjs', // fast-forward-ONLY control-plane sync; aborts on divergence
+];
+
+function isAllowlistedScript(scriptPath) {
+  const norm = scriptPath.replace(/\\/g, '/').replace(/^\.\//, '');
+  return ALLOWLISTED_SCRIPT_SUFFIXES.some((suf) => norm === suf || norm.endsWith('/' + suf));
+}
 
 function extractScriptPath(cmd) {
   const m = cmd.match(INTERPRETER_RX);
@@ -187,12 +232,30 @@ function scanScriptFile(scriptPath) {
   return null;
 }
 
+// Collapse git's global options (`-C <path>`, `-c k=v`, `--git-dir <d>`,
+// `--work-tree <d>`, `--no-pager`, …) that sit between `git` and the subcommand,
+// so `git -C /repo reset --hard` normalizes to `git reset --hard` and the
+// subcommand patterns below catch it. Prevents the -C/--git-dir bypass.
+function stripGitGlobalOpts(sub) {
+  const optRx =
+    /\bgit\s+(?:(?:-C|-c|--git-dir|--work-tree|--namespace|--super-prefix)(?:=\S+|\s+\S+)|--no-pager|--bare|--paginate|--literal-pathspecs|--no-optional-locks|--no-replace-objects)\s+/;
+  let prev;
+  let s = sub;
+  do {
+    prev = s;
+    s = s.replace(optRx, 'git ');
+  } while (s !== prev);
+  return s;
+}
+
 function checkDirectPatterns(cmd) {
   // Split on &&, ||, ;, newlines — check each subcommand independently
   const subs = cmd.split(/&&|\|\||;|\n/).map((s) => s.trim());
   for (const sub of subs) {
+    const norm = stripGitGlobalOpts(sub);
     for (const { pattern, reason } of DESTRUCTIVE_PATTERNS) {
-      if (pattern.test(sub)) return reason;
+      // Test both the original and the global-opts-stripped form.
+      if (pattern.test(sub) || pattern.test(norm)) return reason;
     }
   }
   return null;
@@ -204,6 +267,7 @@ function checkInterpreterScripts(cmd) {
   for (const sub of subs) {
     const scriptPath = extractScriptPath(sub);
     if (!scriptPath) continue;
+    if (isAllowlistedScript(scriptPath)) continue; // vetted safe-by-construction script
     const hit = scanScriptFile(scriptPath);
     if (hit) {
       return `${hit.reason} (in script ${hit.path})`;
