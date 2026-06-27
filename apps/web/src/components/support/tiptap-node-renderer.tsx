@@ -36,47 +36,51 @@ export interface TiptapNode {
   readonly content?: readonly TiptapNode[];
 }
 
-const HTTP_SCHEMES = new Set(['http:', 'https:']);
+// A fixed, non-resolvable base lets `new URL` resolve PATH-RELATIVE values
+// (e.g. `images/x.png`, `help-center/search`) and in-page fragments, so a relative
+// editor-authored URL is kept rather than dropped — while absolute URLs keep their
+// own scheme so `javascript:`/`data:`/`vbscript:` are still rejected.
+const SAFE_BASE = 'https://intelliflow.invalid';
 
 /** Stored `blocks` is untrusted `z.unknown()` JSON — guard every node before dereferencing. */
 function isRecord(value: unknown): value is TiptapNode {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isRelative(value: string): boolean {
-  // Same-origin relative path or in-page anchor; reject protocol-relative `//host`.
-  return (value.startsWith('/') && !value.startsWith('//')) || value.startsWith('#');
+/**
+ * Validate a URL against the scheme allowlist (http/https, relative/fragment, and
+ * optionally mailto). Returns the ORIGINAL value (preserving relative form) or null.
+ * Protocol-relative `//host` is rejected (ambiguous origin).
+ */
+function safeUrl(value: unknown, allowMailto: boolean): string | null {
+  if (typeof value !== 'string' || value.length === 0) {
+    return null;
+  }
+  if (value.startsWith('//')) {
+    return null; // protocol-relative — ambiguous origin
+  }
+  try {
+    const { protocol } = new URL(value, SAFE_BASE);
+    if (protocol === 'http:' || protocol === 'https:') {
+      return value; // absolute http(s) OR a relative path/fragment resolved against the base
+    }
+    if (allowMailto && protocol === 'mailto:') {
+      return value;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 /** Validate an image `src` against the scheme allowlist; returns the src or null. */
 export function safeImageSrc(src: unknown): string | null {
-  if (typeof src !== 'string' || src.length === 0) {
-    return null;
-  }
-  if (isRelative(src)) {
-    return src;
-  }
-  try {
-    return HTTP_SCHEMES.has(new URL(src).protocol) ? src : null;
-  } catch {
-    return null;
-  }
+  return safeUrl(src, false);
 }
 
 /** Validate a link `href` against the scheme allowlist; returns the href or null. */
 export function safeHref(href: unknown): string | null {
-  if (typeof href !== 'string' || href.length === 0) {
-    return null;
-  }
-  if (isRelative(href)) {
-    return href;
-  }
-  try {
-    const { protocol } = new URL(href);
-    return HTTP_SCHEMES.has(protocol) || protocol === 'mailto:' ? href : null;
-  } catch {
-    return null;
-  }
+  return safeUrl(href, true);
 }
 
 const DEFAULT_LEVEL = 2;

@@ -297,24 +297,27 @@ describe('TiptapNodeRenderer — security (SEC-T01..T08)', () => {
 });
 
 describe('safeImageSrc / safeHref helpers', () => {
-  it('safeImageSrc accepts https, http and relative; rejects others', () => {
+  it('safeImageSrc accepts https, http, root-relative AND path-relative; rejects others', () => {
     expect(safeImageSrc('https://x/y.png')).toBe('https://x/y.png');
     expect(safeImageSrc('http://x/y.png')).toBe('http://x/y.png');
     expect(safeImageSrc('/local/y.png')).toBe('/local/y.png');
+    expect(safeImageSrc('images/diagram.png')).toBe('images/diagram.png'); // path-relative kept
     expect(safeImageSrc('javascript:alert(1)')).toBeNull();
     expect(safeImageSrc('data:image/png;base64,xx')).toBeNull();
-    expect(safeImageSrc('//evil.com/x.png')).toBeNull();
+    expect(safeImageSrc('//evil.com/x.png')).toBeNull(); // protocol-relative rejected
     expect(safeImageSrc('')).toBeNull();
     expect(safeImageSrc(42)).toBeNull();
   });
 
-  it('safeHref accepts https/relative/anchor/mailto; rejects javascript', () => {
+  it('safeHref accepts https/root-relative/path-relative/anchor/mailto; rejects javascript', () => {
     expect(safeHref('https://x.com')).toBe('https://x.com');
     expect(safeHref('/path')).toBe('/path');
+    expect(safeHref('help-center/search')).toBe('help-center/search'); // path-relative kept
     expect(safeHref('#anchor')).toBe('#anchor');
     expect(safeHref('mailto:a@b.com')).toBe('mailto:a@b.com');
     expect(safeHref('javascript:alert(1)')).toBeNull();
     expect(safeHref('vbscript:msgbox(1)')).toBeNull();
+    expect(safeHref('//evil.com')).toBeNull(); // protocol-relative rejected
     expect(safeHref(null)).toBeNull();
   });
 });
