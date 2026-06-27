@@ -44,7 +44,14 @@ that is why concurrency is capped at 3.
 2. **Build engine:** `/loop "/full-pipeline <TASK-ID>" --max-iterations <N>`
    with the completion promise from the prompt. This runs spec → plan → exec →
    attestation, one phase per iteration. The promise means **build done**, not
-   **shipped**.
+   **shipped**. **DO NOT BUILD BEFORE YOU SPEC** — your first real action is
+   this loop. Never write feature code or hand-author the spec/plan before
+   `/spec-session` + `/plan-session` have run and produced their artifacts.
+   `/full-pipeline` detects phase by file existence, so hand-authoring bypasses
+   the multi-persona spec debate + the real plan-reviewer subagent (the rigor
+   that catches regressions before you build them). This was the PG-181 root
+   cause (~5h lost) — see
+   `docs/operations/sprint-18-pg-181-session-issues-log.md`.
 3. **Validate** (the prompt's VALIDATE block): 4 build validations, attestation
    gates all PASS, `/code-review` + `/sonarqube-fix`, a11y pass for UI.
 4. **Ship (STRICT SERIALIZE):** only one task merges at a time. Before merging,
@@ -86,4 +93,7 @@ the blocker; do not fake a completion promise.
 
 Touch **only your own worktree** (`../iflow-<task-id>`). Never edit the main
 working dir or another executor's worktree. You own a single branch — it is a
-single-writer resource.
+single-writer resource. **Never stop, start, or reconfigure another project's
+services or containers** (e.g. `leangency-portal`'s Supabase) — on PG-181 that
+detour cost hours and disrupted the owner's environment. If a tool seems to need
+another project's resources, ESCALATE instead of touching it.
