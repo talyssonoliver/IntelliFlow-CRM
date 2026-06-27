@@ -326,6 +326,25 @@ describe('helpArticleRouter', () => {
       expect(result).toHaveLength(1);
     });
 
+    it('exposes sectionCount from _count.sections (IFC-302 category-card chip)', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findMany.mockResolvedValue([
+        { ...mockPublishedArticle, _count: { feedback: 5, sections: 3 } },
+      ]);
+
+      const result = await caller.getByCategory({ categoryId: 'cat-onboarding' });
+      expect(result[0].sectionCount).toBe(3);
+      expect(result[0].feedbackCount).toBe(5);
+      // The select must request the sections count additively.
+      expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: expect.objectContaining({
+            _count: { select: { feedback: true, sections: true } },
+          }),
+        })
+      );
+    });
+
     it('returns empty array for unknown category', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
       (prismaMock.helpArticle as any).findMany.mockResolvedValue([]);

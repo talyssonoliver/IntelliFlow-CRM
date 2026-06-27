@@ -706,25 +706,97 @@ waivers:
       import block, so this re-blocks if those imports change.
     author: talyssonoliver
     date: '2026-06-20'
-  - fingerprint: '1811143672a4b3abd42bd7da0208db0e7207b6edea6dd927bd6734eb1a695790'
+  # [RETIRED 2026-06-27 by IFC-302] The PG-181 unsupported-block-format waiver
+  # (fingerprint 1811143672...) is removed: the public help-article page now reads
+  # from the DB and apps/web/src/components/support/tiptap-node-renderer.tsx renders
+  # the tiptapDoc wrapper directly (with a section.content fallback), so the finding
+  # no longer applies. See debt-ledger HELP-ARTICLE-EDITOR-BLOCK-RENDER-CONTRACT-001.
+  - fingerprint: 'b9825456614f23d2de09dde7f7295399e2c219c34d7b2941691c1f0411723801'
     reason: >-
-      Accepted cross-task contract, not a PG-181 defect. PG-181 persists
-      editor-authored bodies as a namespaced wrapper block
-      (`[{ type: 'tiptapDoc', content: <Tiptap nodes> }]`) so the editor can
-      round-trip them. The existing static renderer
-      (apps/web/src/components/support/article-renderer.tsx) only understands the
-      legacy ContentBlock union — but it is fed STATIC data from
-      lib/support/help-articles.ts; the public page
-      (app/help-center/[article]/page.tsx) does NOT read DB articles, so no reader
-      renders ArticleSection.blocks today and nothing appears blank. Wiring the
-      public page to the DB and teaching the renderer to handle `tiptapDoc` (with a
-      `section.content` fallback for unknown blocks) is the explicit scope of the
-      next Lane-F task, IFC-302 (Refactor help article page to DB). Tracked as debt
-      HELP-ARTICLE-EDITOR-BLOCK-RENDER-CONTRACT-001. StarterKit (IFC-301) cannot
-      represent the bespoke callout/steps blocks, so a renderer-compatible
-      ContentBlock round-trip is not achievable inside the editor; metadata-only
-      edits preserve original blocks (bodyDirty gate) and only an active body edit
-      converts them. Source-anchored fingerprint re-blocks if the storage line changes.
+      Accepted cross-task scope boundary, not an IFC-302 defect. IFC-302's DoD is
+      narrowly "replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC
+      queries; same UI, DB data source; static dependency removed". Help articles are
+      tenant-scoped BY DESIGN across all of Lane F: the IFC-299 router keys on
+      `tenantId_slug` (schema `@@unique([tenantId, slug])`) and PG-181 ships a
+      per-tenant ADMIN/MANAGER editor, so each tenant owns its help content. The page
+      now correctly reads that tenant-scoped data and shows an HONEST notFound/empty
+      state when a tenant has no rows — it deliberately does NOT fall back to the
+      static built-in articles, because (a) the DoD explicitly requires removing that
+      static dependency and (b) the project "Never Mock or Simulate Data" rule forbids
+      rendering canonical static content as a stand-in for absent DB data. The default
+      tenant (the only seeded + active tenant in this MVP) is fully seeded
+      (packages/db/prisma/seed-help-articles.ts → 17 PUBLISHED articles) so the page
+      works end-to-end today. The genuine gap codex identifies — non-default tenants
+      have no help articles, and the help-center index/search pages
+      (apps/web/src/app/help-center/(list)/page.tsx) are STILL static — is a broader,
+      multi-task concern (make built-in help global, OR seed/provision canonical help
+      articles on tenant creation, OR migrate index+search to the DB). That is tracked
+      as a follow-up (gh issue + debt-ledger HELP-ARTICLE-GLOBAL-BUILTIN-PROVISIONING-001),
+      not silently dropped. Fixing it inside IFC-302 would either reintroduce the static
+      dependency the task removes or expand scope into provisioning/router redesign.
     author: talyssonoliver
-    date: '2026-06-26'
-    expires: '2026-09-26'
+    date: '2026-06-27'
+    expires: '2026-09-27'
+  - fingerprint: '99e32e46f9df8bf48a8e56c872838e68e06a7fd776d7086176bc7adeba923191'
+    reason: >-
+      False positive — codex reviewed the changed page in isolation and missed the
+      UNCHANGED layout that already auth/tenant-gates the route. apps/web/src/app/
+      help-center/[article]/layout.tsx wraps ALL children in <ModuleGate moduleId="SUPPORT">,
+      and ModuleGate (apps/web/src/components/ModuleGate.tsx) calls the tenant-scoped
+      trpc.moduleAccess.getEnabledModules query (apps/web/src/hooks/useEnabledModules.ts:34);
+      a user without a tenant session gets isError -> ModulePaywall and the page's children
+      NEVER render, so getBySlug never runs for an unauthenticated user. IFC-302 changes only
+      the page's DATA SOURCE (static -> DB); the route's reachability/auth posture is
+      identical before and after (the old static page sat behind the same ModuleGate). There
+      is no auth regression. As defense-in-depth the page still maps an UNAUTHORIZED error to
+      a recoverable error state rather than a crash. No middleware blanket-auth exists; gating
+      is RouteAccessGate + ModuleGate at the component layer. Source-anchored to the getBySlug
+      call so it re-blocks if the query wiring changes.
+    author: talyssonoliver
+    date: '2026-06-27'
+    expires: '2026-09-27'
+  - fingerprint: '4c4a5809edce10243fb0f74b4d6c85cacd2cb08a978827ab50f1849863c553b7'
+    reason: >-
+      False positive — same root as fingerprint 99e32e46... applied to the category-listing
+      view's getByCategory call. The whole /help-center/[article] route is gated by the
+      unchanged layout's <ModuleGate moduleId="SUPPORT"> (tenant-scoped
+      moduleAccess.getEnabledModules); CategoryListingView's children never render for a user
+      without a tenant session, so getByCategory never runs unauthenticated. IFC-302 alters
+      only the data source, not the route's pre-existing auth gating. Source-anchored to the
+      getByCategory call.
+    author: talyssonoliver
+    date: '2026-06-27'
+    expires: '2026-09-27'
+  - fingerprint: '5d4c7e8c847fa657fa1146c5d071c7e8db8a61c40ce2aa6d7e53700a8b2205c4'
+    reason: >-
+      False positive — SAME public-route-auth-regression finding on the category view's
+      getByCategory call as fingerprint 4c4a5809...; codex re-emitted it under a new
+      source-anchored fingerprint because the line position shifted across the codex-fix
+      commits (the documented codex fingerprint drift / non-determinism). The route is gated
+      by the UNCHANGED layout <ModuleGate moduleId="SUPPORT"> (tenant-scoped
+      moduleAccess.getEnabledModules -> ModulePaywall for session-less users), so the page's
+      children — and getByCategory — never render unauthenticated. IFC-302 changes only the
+      data source, not the route's pre-existing auth posture (the old static page sat behind
+      the same gate). Verified ModuleGate.tsx + useEnabledModules.ts + no blanket middleware.
+    author: talyssonoliver
+    date: '2026-06-27'
+    expires: '2026-09-27'
+  - fingerprint: '1108357964755afdad42981d6326dfc1d4070df28644a37bd0ecc20da449e682'
+    reason: >-
+      Accepted pre-existing design constraint, not an IFC-302 defect (and moot for this route).
+      The page is a CLIENT component ('use client') by deliberate spec decision — the old
+      STATIC help-article page was ALSO 'use client' and ALSO called notFound() at client
+      render time, and the IFC-302 spec/plan explicitly kept it client-side so the tRPC client
+      carries the JWT cookie (a server caller would need to thread the authed context). The
+      page-source test asserts the 'use client' directive. So the client-side notFound() is
+      not introduced by IFC-302. It is also MOOT here: the route is auth-gated by the layout's
+      <ModuleGate moduleId="SUPPORT"> (tenant-scoped), so crawlers / unauthenticated direct
+      requests never reach the article view — the HTTP-200-shell-vs-404 concern only matters
+      for public, indexable pages. Functionally a missing slug shows the loading state then the
+      Next not-found UI (client boundary), which is correct UX. Converting to an RSC + server
+      tRPC caller is a real architectural change beyond IFC-302's "refactor page to DB" scope;
+      if desired it should be its own task. (Surfaced once across 7 codex runs — codex
+      non-determinism; passed standalone on this same SHA.)
+    author: talyssonoliver
+    date: '2026-06-27'
+    expires: '2026-09-27'

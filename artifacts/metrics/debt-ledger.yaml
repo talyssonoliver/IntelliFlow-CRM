@@ -5255,8 +5255,43 @@ alerts:
     severity: medium
     description: 'PG-181 persists editor-authored article bodies as a namespaced wrapper block `[{ type: "tiptapDoc", content: <Tiptap nodes> }]` in ArticleSection.blocks (round-trippable by the editor). The existing static renderer apps/web/src/components/support/article-renderer.tsx only understands the legacy ContentBlock union (paragraph/steps/tip/warning/info/nav-path) and would render nothing for a tiptapDoc block. This is NOT a live defect today: the public page apps/web/src/app/help-center/[article]/page.tsx renders STATIC data from lib/support/help-articles.ts, not DB articles — no DB reader renders ArticleSection.blocks. Editing a legacy seeded article only rewrites sections when the body is actually changed (bodyDirty gate), and StarterKit (IFC-301) inherently cannot represent the bespoke callout/steps blocks, so an active body edit converts them to the nearest editor nodes (ordered list / blockquote / breadcrumb paragraph) — faithful but lossy by design.'
     created_at: 2026-06-26
-    status: open
+    status: resolved
+    resolved_at: 2026-06-27
+    resolution: 'Closed by IFC-302. The public page apps/web/src/app/help-center/[article]/page.tsx now reads from the DB via helpArticle.getBySlug/getByCategory/getRelated, and apps/web/src/components/support/article-renderer.tsx routes editor-authored tiptapDoc wrappers through the new pure React apps/web/src/components/support/tiptap-node-renderer.tsx (StarterKit + Image allowlist, no dangerouslySetInnerHTML), with a section.content fallback for absent/unrecognised blocks and the legacy ContentBlock path preserved via BlockRenderer. End-to-end editor->DB->render proven by integration.test.tsx. The PG-181 codex waiver (fingerprint 1811143672...) is retired in the same change.'
     expiry_date: 2026-09-26
     remediation_sprint: 18
     remediation_plan: 'IFC-302 (Refactor help article page to DB) OWNS the DB->render contract. When it wires the public page to helpArticle.getBySlug, it must (a) render the tiptapDoc wrapper via a Tiptap JSON/HTML renderer, and (b) fall back to section.content for any unrecognised block type. Until IFC-302 lands, editor-authored articles are reachable only through the admin editor + DB, never the static public renderer.'
-    notes: 'Codex flagged unsupported-block-format (fingerprint 1811143672...) on PG-181; waived in tools/audit/codex-review-waivers.yaml as an explicit IFC-302 cross-task contract, not a PG-181 defect. Lane F sequences IFC-301 (editor) -> PG-181 (editor page) -> IFC-302 (DB render) as separate tasks.'
+    notes: 'Codex flagged unsupported-block-format (fingerprint 1811143672...) on PG-181; waived in tools/audit/codex-review-waivers.yaml as an explicit IFC-302 cross-task contract, not a PG-181 defect. Lane F sequences IFC-301 (editor) -> PG-181 (editor page) -> IFC-302 (DB render) as separate tasks. RESOLVED 2026-06-27 by IFC-302.'
+  HELP-ARTICLE-BLOCKS-SERVER-VALIDATION-001:
+    origin_task: IFC-302
+    owner: Security Lead
+    severity: medium
+    description: 'ArticleSection.blocks is persisted via packages/validators/src/help-article.ts as `z.unknown().optional()` — the router accepts ANY JSON shape for section blocks (no structural validation on write). A hand-crafted helpArticle.create/update call (bypassing the editor UI) could store an arbitrary node tree. IFC-302 mitigates the RENDER side with defense-in-depth (pure React renderer, node/mark allowlist, image/link scheme validation, no dangerouslySetInnerHTML in apps/web/src/components/support/tiptap-node-renderer.tsx), so this is not a live XSS today, but the storage layer remains schema-open.'
+    created_at: 2026-06-27
+    status: open
+    expiry_date: 2026-09-27
+    remediation_sprint: 19
+    remediation_plan: 'Add a Zod schema for the tiptapDoc wrapper to packages/validators/src/help-article.ts (e.g. z.array(z.object({ type: z.literal("tiptapDoc"), level: z.number().int().min(1).max(6).optional(), content: z.array(z.unknown()) })).max(1).optional()) plus a permissive legacy-ContentBlock branch, so the router rejects structurally invalid block payloads before they reach the DB. Keep all helpArticle create/update tests + seed slugs green.'
+    notes: 'Recommended by the IFC-302 security-lead spec review (AC-SEC-08) as a non-blocking follow-up to the consumer-side refactor. Defense-in-depth at the render layer is the in-scope mitigation. gh issue #531.'
+  HELP-ARTICLE-RELATED-QUERY-WATERFALL-001:
+    origin_task: IFC-302
+    owner: Frontend Lead
+    severity: low
+    description: 'The public article page (apps/web/src/app/help-center/[article]/page.tsx) fetches related articles with a second query (trpc.helpArticle.getRelated, enabled:!!article.id) that can only fire after getBySlug resolves — a sequential waterfall. Acceptable today: related articles are below-the-fold supplementary content.'
+    created_at: 2026-06-27
+    status: open
+    expiry_date: 2026-09-27
+    remediation_sprint: 19
+    remediation_plan: 'Inline the resolved related articles into the helpArticle.getBySlug response (resolve relatedArticleIds server-side and return slim related items) so the public page needs a single round-trip. Update getBySlug tests + the page consumer; drop the separate getRelated call from the page.'
+    notes: 'Identified by the IFC-302 frontend-lead + backend-architect spec review as a known trade-off (no router change in IFC-302 scope). gh issue #532.'
+  HELP-ARTICLE-GLOBAL-BUILTIN-PROVISIONING-001:
+    origin_task: IFC-302
+    owner: Backend Architect
+    severity: high
+    description: 'Help articles are tenant-scoped (HelpArticle @@unique([tenantId, slug]); IFC-299 router keys on tenantId_slug; PG-181 per-tenant editor). The seed (packages/db/prisma/seed-help-articles.ts) only seeds the DEFAULT tenant. After IFC-302 the public [article] detail page reads tenant-scoped DB data, so a NON-default tenant with no seeded help articles gets notFound/empty for the built-in articles the old static page always showed. Compounded because the help-center index/search pages (apps/web/src/app/help-center/(list)/page.tsx) are STILL static — for a non-default tenant the index would list built-in articles whose detail pages then 404.'
+    created_at: 2026-06-27
+    status: open
+    expiry_date: 2026-09-27
+    remediation_sprint: 19
+    remediation_plan: 'Pick one: (a) make built-in help articles GLOBAL (shared/system tenant or nullable tenantId) so every tenant sees them; (b) seed/copy the canonical help articles when a tenant is provisioned; or (c) migrate the help-center index + search pages to the same tenant-scoped DB API so list and detail stay consistent. Likely (b)+(c) together. Coordinate with the IFC-299 router design.'
+    notes: 'Flagged by codex on IFC-302 (fingerprint b9825456...), waived in tools/audit/codex-review-waivers.yaml as a cross-task scope boundary (IFC-302 DoD is the detail page only; a static fallback would violate the Never-Mock rule + the DoD static-removal). Default tenant is seeded so the MVP works today. gh issue #533.'
