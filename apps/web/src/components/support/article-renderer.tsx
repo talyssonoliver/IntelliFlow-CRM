@@ -72,11 +72,15 @@ function isLegacyContentBlocks(blocks: unknown): blocks is ContentBlock[] {
   );
 }
 
-/** Deduplicate slugified headings so section ids (and matching TOC anchors) stay unique. */
+/**
+ * Deduplicate slugified headings so section ids (and matching TOC anchors) stay unique.
+ * A heading that slugifies to empty (e.g. "!!!" or non-Latin text) falls back to
+ * `section-N` so no id is "" and no TOC href is "#".
+ */
 function dedupeSlugs(headings: readonly string[]): string[] {
   const seen = new Map<string, number>();
-  return headings.map((heading) => {
-    const base = slugify(heading);
+  return headings.map((heading, index) => {
+    const base = slugify(heading) || `section-${index + 1}`;
     const count = seen.get(base) ?? 0;
     seen.set(base, count + 1);
     return count === 0 ? base : `${base}-${count + 1}`;

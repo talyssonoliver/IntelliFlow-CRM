@@ -306,6 +306,24 @@ describe('ArticleRenderer', () => {
     expect(screen.getByText('Content shows.')).toBeInTheDocument();
   });
 
+  it('falls back to section-N ids for headings that slugify to empty (no empty id / "#" anchor)', () => {
+    const symbolHeadingArticle = {
+      ...SAMPLE_ARTICLE,
+      id: 'symbol-headings',
+      sections: [
+        { heading: '!!!', content: 'first' },
+        { heading: '???', content: 'second' },
+      ],
+    };
+    const { container } = render(<ArticleRenderer article={symbolHeadingArticle} />);
+    const ids = Array.from(container.querySelectorAll('h2[id]')).map((h) => h.id);
+    expect(ids).toEqual(['section-1', 'section-2']);
+    expect(ids.every((id) => id.length > 0)).toBe(true);
+    const tocNav = screen.getByRole('navigation', { name: 'Table of contents' });
+    const hrefs = Array.from(tocNav.querySelectorAll('a')).map((a) => a.getAttribute('href'));
+    expect(hrefs).toEqual(['#section-1', '#section-2']);
+  });
+
   it('deduplicates ids for duplicate section headings (TOC anchors stay unique)', () => {
     const dupArticle = {
       ...SAMPLE_ARTICLE,
