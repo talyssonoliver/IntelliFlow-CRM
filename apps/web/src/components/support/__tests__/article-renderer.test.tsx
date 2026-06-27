@@ -324,6 +324,24 @@ describe('ArticleRenderer', () => {
     expect(hrefs).toEqual(['#section-1', '#section-2']);
   });
 
+  it('keeps ids unique when a suffixed duplicate would collide with a natural slug', () => {
+    // "Overview", "Overview 2", "Overview" -> a naive base-count dedup yields
+    // overview, overview-2, overview-2 (collision); the loop must give 3 unique ids.
+    const collisionArticle = {
+      ...SAMPLE_ARTICLE,
+      id: 'collision-headings',
+      sections: [
+        { heading: 'Overview', content: 'a' },
+        { heading: 'Overview 2', content: 'b' },
+        { heading: 'Overview', content: 'c' },
+      ],
+    };
+    const { container } = render(<ArticleRenderer article={collisionArticle} />);
+    const ids = Array.from(container.querySelectorAll('h2[id]')).map((h) => h.id);
+    expect(ids).toEqual(['overview', 'overview-2', 'overview-3']);
+    expect(new Set(ids).size).toBe(ids.length); // all unique
+  });
+
   it('deduplicates ids for duplicate section headings (TOC anchors stay unique)', () => {
     const dupArticle = {
       ...SAMPLE_ARTICLE,

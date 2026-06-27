@@ -78,12 +78,19 @@ function isLegacyContentBlocks(blocks: unknown): blocks is ContentBlock[] {
  * `section-N` so no id is "" and no TOC href is "#".
  */
 function dedupeSlugs(headings: readonly string[]): string[] {
-  const seen = new Map<string, number>();
+  const seen = new Set<string>();
   return headings.map((heading, index) => {
     const base = slugify(heading) || `section-${index + 1}`;
-    const count = seen.get(base) ?? 0;
-    seen.set(base, count + 1);
-    return count === 0 ? base : `${base}-${count + 1}`;
+    // Increment the suffix until the FULL candidate is unused, so a suffixed duplicate
+    // can't collide with another heading's natural slug (e.g. "Overview"/"Overview 2").
+    let candidate = base;
+    let suffix = 2;
+    while (seen.has(candidate)) {
+      candidate = `${base}-${suffix}`;
+      suffix += 1;
+    }
+    seen.add(candidate);
+    return candidate;
   });
 }
 
