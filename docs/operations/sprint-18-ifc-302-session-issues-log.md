@@ -116,6 +116,30 @@
   Both fixed narrowly; finding 1 is a legitimate scope/architecture boundary,
   waived with evidence + tracked, not dodged.
 
+### 8. (MIXED) codex converged over 5 standalone rounds (one finding per run)
+
+codex re-reviews only the committed diff and surfaces ~one finding per run, so
+convergence took several rounds (run standalone via
+`node scripts/codex-review.mjs`, not the 20-min full pre-ship):
+
+- R2 [MED] empty-slug id → FIXED (`section-N` fallback in `dedupeSlugs`).
+- R3 [LOW] path-relative URLs (`images/x.png`) silently dropped by the sanitizer
+  → FIXED (resolve against a fixed base; still reject
+  `javascript:`/`data:`/`//`).
+- R3-again [LOW] dedup could still collide (`Overview`/`Overview 2`/`Overview`)
+  → FIXED (loop the suffix until the full candidate is unused).
+- R4 [HIGH ×2] "public-route-auth-regression" → **WAIVED** (`99e32e46...`,
+  `4c4a5809...`): codex reviewed the page in isolation and missed the UNCHANGED
+  layout, which wraps the route in `<ModuleGate moduleId="SUPPORT">` — a
+  tenant-scoped gate (`moduleAccess.getEnabledModules`) that renders
+  `ModulePaywall` and never renders the page's children for a session-less user.
+  IFC-302 changes the data source only, not the route's pre-existing auth
+  posture. Verified `ModuleGate.tsx` + `useEnabledModules.ts` + no blanket
+  middleware before waiving.
+- **Net:** every finding investigated against the real code; 5 real fixes (with
+  tests), 3 false positives waived with source-anchored evidence (auth ×2 + the
+  tenant-data scope finding #533). Nothing waived to dodge work.
+
 ## Net assessment
 
 No avoidable root cause. The pipeline ran in the mandated order (spec → plan →

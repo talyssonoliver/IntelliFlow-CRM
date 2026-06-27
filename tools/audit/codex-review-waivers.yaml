@@ -737,3 +737,33 @@ waivers:
     author: talyssonoliver
     date: '2026-06-27'
     expires: '2026-09-27'
+  - fingerprint: '99e32e46f9df8bf48a8e56c872838e68e06a7fd776d7086176bc7adeba923191'
+    reason: >-
+      False positive — codex reviewed the changed page in isolation and missed the
+      UNCHANGED layout that already auth/tenant-gates the route. apps/web/src/app/
+      help-center/[article]/layout.tsx wraps ALL children in <ModuleGate moduleId="SUPPORT">,
+      and ModuleGate (apps/web/src/components/ModuleGate.tsx) calls the tenant-scoped
+      trpc.moduleAccess.getEnabledModules query (apps/web/src/hooks/useEnabledModules.ts:34);
+      a user without a tenant session gets isError -> ModulePaywall and the page's children
+      NEVER render, so getBySlug never runs for an unauthenticated user. IFC-302 changes only
+      the page's DATA SOURCE (static -> DB); the route's reachability/auth posture is
+      identical before and after (the old static page sat behind the same ModuleGate). There
+      is no auth regression. As defense-in-depth the page still maps an UNAUTHORIZED error to
+      a recoverable error state rather than a crash. No middleware blanket-auth exists; gating
+      is RouteAccessGate + ModuleGate at the component layer. Source-anchored to the getBySlug
+      call so it re-blocks if the query wiring changes.
+    author: talyssonoliver
+    date: '2026-06-27'
+    expires: '2026-09-27'
+  - fingerprint: '4c4a5809edce10243fb0f74b4d6c85cacd2cb08a978827ab50f1849863c553b7'
+    reason: >-
+      False positive — same root as fingerprint 99e32e46... applied to the category-listing
+      view's getByCategory call. The whole /help-center/[article] route is gated by the
+      unchanged layout's <ModuleGate moduleId="SUPPORT"> (tenant-scoped
+      moduleAccess.getEnabledModules); CategoryListingView's children never render for a user
+      without a tenant session, so getByCategory never runs unauthenticated. IFC-302 alters
+      only the data source, not the route's pre-existing auth gating. Source-anchored to the
+      getByCategory call.
+    author: talyssonoliver
+    date: '2026-06-27'
+    expires: '2026-09-27'
