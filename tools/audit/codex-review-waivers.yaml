@@ -706,25 +706,8 @@ waivers:
       import block, so this re-blocks if those imports change.
     author: talyssonoliver
     date: '2026-06-20'
-  - fingerprint: '1811143672a4b3abd42bd7da0208db0e7207b6edea6dd927bd6734eb1a695790'
-    reason: >-
-      Accepted cross-task contract, not a PG-181 defect. PG-181 persists
-      editor-authored bodies as a namespaced wrapper block
-      (`[{ type: 'tiptapDoc', content: <Tiptap nodes> }]`) so the editor can
-      round-trip them. The existing static renderer
-      (apps/web/src/components/support/article-renderer.tsx) only understands the
-      legacy ContentBlock union — but it is fed STATIC data from
-      lib/support/help-articles.ts; the public page
-      (app/help-center/[article]/page.tsx) does NOT read DB articles, so no reader
-      renders ArticleSection.blocks today and nothing appears blank. Wiring the
-      public page to the DB and teaching the renderer to handle `tiptapDoc` (with a
-      `section.content` fallback for unknown blocks) is the explicit scope of the
-      next Lane-F task, IFC-302 (Refactor help article page to DB). Tracked as debt
-      HELP-ARTICLE-EDITOR-BLOCK-RENDER-CONTRACT-001. StarterKit (IFC-301) cannot
-      represent the bespoke callout/steps blocks, so a renderer-compatible
-      ContentBlock round-trip is not achievable inside the editor; metadata-only
-      edits preserve original blocks (bodyDirty gate) and only an active body edit
-      converts them. Source-anchored fingerprint re-blocks if the storage line changes.
-    author: talyssonoliver
-    date: '2026-06-26'
-    expires: '2026-09-26'
+  # [RETIRED 2026-06-27 by IFC-302] The PG-181 unsupported-block-format waiver
+  # (fingerprint 1811143672...) is removed: the public help-article page now reads
+  # from the DB and apps/web/src/components/support/tiptap-node-renderer.tsx renders
+  # the tiptapDoc wrapper directly (with a section.content fallback), so the finding
+  # no longer applies. See debt-ledger HELP-ARTICLE-EDITOR-BLOCK-RENDER-CONTRACT-001.

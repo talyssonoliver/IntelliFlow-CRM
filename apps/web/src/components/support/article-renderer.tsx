@@ -2,11 +2,62 @@
 
 import { Fragment } from 'react';
 import { Badge } from '@intelliflow/ui';
-import type { HelpArticle, ContentBlock } from '@/lib/support/help-articles';
+import type { ContentBlock } from '@/lib/support/help-articles';
 import { getCategoryById } from '@/lib/support/help-articles';
+import { tiptapBodyFromBlocks } from '@/lib/support/article-editor-mapping';
+import { TiptapNodeRenderer } from './tiptap-node-renderer';
+
+/**
+ * A section as consumed by the renderer. `blocks` is `unknown` so this accepts both
+ * the static `ContentBlock[]` shape (seed data) AND the DB `ArticleSection.blocks`
+ * (`Json`) shape — including the editor-authored `[{ type: 'tiptapDoc', ... }]` wrapper.
+ */
+export interface RenderableSection {
+  readonly heading: string;
+  readonly content: string;
+  readonly blocks?: unknown;
+}
+
+/** The article shape the renderer needs (DB-shaped or static-shaped via a page adapter). */
+export interface RenderableArticle {
+  readonly id: string;
+  readonly categoryId: string;
+  readonly readTimeMinutes: number;
+  /** ISO date string (DB `updatedAt` mapped by the page adapter, or static `lastUpdatedAt`). */
+  readonly lastUpdatedAt: string;
+  readonly sections: readonly RenderableSection[];
+}
 
 export interface ArticleRendererProps {
-  article: HelpArticle;
+  article: RenderableArticle;
+}
+
+// ─── Block classification helpers ───────────────────────────────────────────
+
+const LEGACY_BLOCK_TYPES = new Set(['paragraph', 'steps', 'tip', 'warning', 'info', 'nav-path']);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** True when `blocks` is a legacy `ContentBlock[]` (seed data) the `BlockRenderer` understands. */
+function isLegacyContentBlocks(blocks: unknown): blocks is ContentBlock[] {
+  return (
+    Array.isArray(blocks) &&
+    blocks.length > 0 &&
+    blocks.every((b) => isRecord(b) && typeof b.type === 'string' && LEGACY_BLOCK_TYPES.has(b.type))
+  );
+}
+
+/** Deduplicate slugified headings so section ids (and matching TOC anchors) stay unique. */
+function dedupeSlugs(headings: readonly string[]): string[] {
+  const seen = new Map<string, number>();
+  return headings.map((heading) => {
+    const base = slugify(heading);
+    const count = seen.get(base) ?? 0;
+    seen.set(base, count + 1);
+    return count === 0 ? base : `${base}-${count + 1}`;
+  });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -143,8 +194,10 @@ function BlockRenderer({ block }: Readonly<{ block: ContentBlock }>) {
 
 // ─── Table of Contents ────────────────────────────────────────────────────
 
-function TableOfContents({ sections }: Readonly<{ sections: readonly { heading: string }[] }>) {
-  if (sections.length < 2) return null;
+function TableOfContents({
+  items,
+}: Readonly<{ items: readonly { heading: string; id: string }[] }>) {
+  if (items.length < 2) return null;
 
   return (
     <nav
@@ -161,24 +214,56 @@ function TableOfContents({ sections }: Readonly<{ sections: readonly { heading: 
         In this article
       </h2>
       <ul className="space-y-2 list-none p-0 m-0">
-        {sections.map((section) => {
-          const id = slugify(section.heading);
-          return (
-            <li key={id}>
-              <a
-                href={`#${id}`}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
-              >
-                <span className="material-symbols-outlined text-xs" aria-hidden="true">
-                  arrow_forward
-                </span>
-                {section.heading}
-              </a>
-            </li>
-          );
-        })}
+        {items.map((item) => (
+          <li key={item.id}>
+            <a
+              href={`#${item.id}`}
+              className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-xs" aria-hidden="true">
+                arrow_forward
+              </span>
+              {item.heading}
+            </a>
+          </li>
+        ))}
       </ul>
     </nav>
+  );
+}
+
+// ─── Section Body ───────────────────────────────────────────────────────────
+
+/**
+ * Render a section body, routing on the stored `blocks` shape:
+ *  1. editor-authored Tiptap wrapper → `TiptapNodeRenderer`
+ *  2. legacy `ContentBlock[]` (seed data) → `BlockRenderer` (rich callouts preserved)
+ *  3. otherwise → plain-text `content` fallback (covers unrecognized/absent blocks)
+ */
+function SectionBody({ section }: Readonly<{ section: RenderableSection }>) {
+  const tiptapNodes = tiptapBodyFromBlocks(section.blocks);
+  if (tiptapNodes) {
+    return (
+      <div className="space-y-4">
+        <TiptapNodeRenderer nodes={tiptapNodes} />
+      </div>
+    );
+  }
+
+  if (isLegacyContentBlocks(section.blocks)) {
+    return (
+      <div className="space-y-4">
+        {section.blocks.map((block, i) => (
+          <BlockRenderer key={`block-${i}`} block={block} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <p className="text-base leading-relaxed text-slate-700 dark:text-slate-300">
+      {section.content}
+    </p>
   );
 }
 
@@ -186,6 +271,7 @@ function TableOfContents({ sections }: Readonly<{ sections: readonly { heading: 
 
 export function ArticleRenderer({ article }: Readonly<ArticleRendererProps>) {
   const category = getCategoryById(article.categoryId);
+  const sectionIds = dedupeSlugs(article.sections.map((s) => s.heading));
 
   return (
     <article className="space-y-8">
@@ -211,11 +297,16 @@ export function ArticleRenderer({ article }: Readonly<ArticleRendererProps>) {
       </div>
 
       {/* Table of contents */}
-      <TableOfContents sections={article.sections} />
+      <TableOfContents
+        items={article.sections.map((section, i) => ({
+          heading: section.heading,
+          id: sectionIds[i],
+        }))}
+      />
 
       {/* Article sections */}
-      {article.sections.map((section) => {
-        const headingId = slugify(section.heading);
+      {article.sections.map((section, i) => {
+        const headingId = sectionIds[i];
         return (
           <section key={headingId} className="space-y-4">
             <h2
@@ -224,17 +315,7 @@ export function ArticleRenderer({ article }: Readonly<ArticleRendererProps>) {
             >
               {section.heading}
             </h2>
-            {section.blocks ? (
-              <div className="space-y-4">
-                {section.blocks.map((block, i) => (
-                  <BlockRenderer key={`block-${headingId}-${i}`} block={block} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-base leading-relaxed text-slate-700 dark:text-slate-300">
-                {section.content}
-              </p>
-            )}
+            <SectionBody section={section} />
           </section>
         );
       })}

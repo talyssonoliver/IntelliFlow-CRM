@@ -1090,6 +1090,37 @@ Dependency Chain:
 
 ---
 
+## Help Center / Support Articles (COMPLETE — DB-backed render IFC-302)
+
+```
+Dependency Chain:
+  IFC-299 (helpArticle router + validators) ✅
+    helpArticle.{list,getBySlug,getById,getByCategory,getRelated,create,update,delete,
+                publish,unpublish,submitFeedback,getFeedbackStats}  (tenantProcedure)
+    Prisma: HelpArticle / ArticleSection(blocks: Json) / ArticleFeedback
+  ──► IFC-301 (RichTextEditor, @tiptap StarterKit + Image) ✅
+  ──► PG-181 (admin editor page settings/help-center/articles/[id]/edit) ✅
+        persists section bodies as [{ type:'tiptapDoc', level, content:<Tiptap nodes> }]
+        via apps/web/src/lib/support/article-editor-mapping.ts (pure, framework-free)
+  ──► IFC-302 (public page DB render) ✅
+        apps/web/src/app/help-center/[article]/page.tsx
+          → trpc.helpArticle.getBySlug  (article detail; notFound on NOT_FOUND)
+          → trpc.helpArticle.getRelated ({id}, enabled:!!id — below-the-fold)
+          → trpc.helpArticle.getByCategory ({categoryId}; sectionCount via _count.sections)
+          (static DEFAULT_HELP_ARTICLES data dependency REMOVED; categories stay static config)
+        apps/web/src/components/support/article-renderer.tsx
+          → tiptapBodyFromBlocks() routes editor bodies to
+            apps/web/src/components/support/tiptap-node-renderer.tsx
+            (pure React, StarterKit+Image allowlist, no dangerouslySetInnerHTML,
+             image/link scheme validation, heading offset to <h3>+)
+          → legacy ContentBlock[] still rendered via BlockRenderer
+          → section.content plain-text fallback for absent/unrecognised blocks
+  Retires PG-181 debt HELP-ARTICLE-EDITOR-BLOCK-RENDER-CONTRACT-001 + its codex waiver.
+  Reachable via sidebar /help-center (support-tickets.ts, help-center.ts) + article links.
+```
+
+---
+
 ## RBAC/Audit (COMPLETE, UI BACKLOG)
 
 ```

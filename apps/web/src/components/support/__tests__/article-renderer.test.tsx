@@ -225,4 +225,90 @@ describe('ArticleRenderer', () => {
     // 'Fallback content' should NOT be rendered because blocks are present
     expect(screen.queryByText('Fallback content')).not.toBeInTheDocument();
   });
+
+  // ─── Editor-authored tiptapDoc blocks (IFC-302) ─────────────────────────
+
+  it('renders editor-authored tiptapDoc blocks (closes PG-181 DB->render contract)', () => {
+    const tiptapArticle = {
+      ...SAMPLE_ARTICLE,
+      id: 'tiptap-article',
+      sections: [
+        {
+          heading: 'Editor Section',
+          content: 'plain fallback that should be ignored',
+          blocks: [
+            {
+              type: 'tiptapDoc',
+              level: 2,
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [{ type: 'text', text: 'Editor-authored body paragraph.' }],
+                },
+                {
+                  type: 'bulletList',
+                  content: [
+                    {
+                      type: 'listItem',
+                      content: [
+                        { type: 'paragraph', content: [{ type: 'text', text: 'bullet a' }] },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    render(<ArticleRenderer article={tiptapArticle} />);
+    expect(screen.getByText('Editor-authored body paragraph.')).toBeInTheDocument();
+    expect(screen.getByText('bullet a')).toBeInTheDocument();
+    // The plain-text fallback must NOT render when a tiptapDoc body is present.
+    expect(screen.queryByText('plain fallback that should be ignored')).not.toBeInTheDocument();
+  });
+
+  it('falls back to section.content for unrecognized block shapes', () => {
+    const unknownBlocksArticle = {
+      ...SAMPLE_ARTICLE,
+      id: 'unknown-blocks',
+      sections: [
+        {
+          heading: 'Mystery',
+          content: 'Fallback paragraph wins.',
+          blocks: [{ type: 'mystery-widget', foo: 1 }],
+        },
+      ],
+    };
+    render(<ArticleRenderer article={unknownBlocksArticle} />);
+    expect(screen.getByText('Fallback paragraph wins.')).toBeInTheDocument();
+  });
+
+  it('falls back to section.content for an empty blocks array', () => {
+    const emptyBlocksArticle = {
+      ...SAMPLE_ARTICLE,
+      id: 'empty-blocks',
+      sections: [{ heading: 'Empty', content: 'Content shows.', blocks: [] }],
+    };
+    render(<ArticleRenderer article={emptyBlocksArticle} />);
+    expect(screen.getByText('Content shows.')).toBeInTheDocument();
+  });
+
+  it('deduplicates ids for duplicate section headings (TOC anchors stay unique)', () => {
+    const dupArticle = {
+      ...SAMPLE_ARTICLE,
+      id: 'dup-headings',
+      sections: [
+        { heading: 'Overview', content: 'first overview' },
+        { heading: 'Overview', content: 'second overview' },
+      ],
+    };
+    const { container } = render(<ArticleRenderer article={dupArticle} />);
+    const ids = Array.from(container.querySelectorAll('h2[id]')).map((h) => h.id);
+    expect(ids).toEqual(['overview', 'overview-2']);
+    const tocNav = screen.getByRole('navigation', { name: 'Table of contents' });
+    const hrefs = Array.from(tocNav.querySelectorAll('a')).map((a) => a.getAttribute('href'));
+    expect(hrefs).toEqual(['#overview', '#overview-2']);
+  });
 });
