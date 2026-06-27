@@ -1,0 +1,21 @@
+{
+  "task_id": "IFC-302",
+  "captured_at": "2026-06-27T18:28:00Z",
+  "description": "Pre-implementation coverage baseline for IFC-302 (Refactor Help Article Page to Use Database). Consumer-side refactor that MODIFIES apps/web/src/app/help-center/[article]/page.tsx (static->tRPC) and apps/web/src/components/support/article-renderer.tsx (adds tiptapDoc branch), CREATES apps/web/src/components/support/tiptap-node-renderer.tsx (+ tests), and adds an additive sectionCount field to apps/api/src/modules/help-article/help-article.router.ts getByCategory. Baseline captured by running the existing article-renderer + [article] page + integration test suites with istanbul coverage BEFORE any implementation.",
+  "command": "COVERAGE_RUN=1 pnpm --filter @intelliflow/web test --run --coverage src/components/support/__tests__/article-renderer.test.tsx \"src/app/help-center/[article]/__tests__/page.test.tsx\" \"src/app/help-center/[article]/__tests__/integration.test.tsx\"",
+  "result": {
+    "test_files_passed": 3,
+    "tests_passed": 39,
+    "totals": {
+      "statements": { "pct": 93.75, "covered": 75, "total": 80 },
+      "branches": { "pct": 84.78, "covered": 39, "total": 46 },
+      "functions": { "pct": 94.59, "covered": 35, "total": 37 },
+      "lines": { "pct": 95.83, "covered": 69, "total": 72 }
+    },
+    "files": {
+      "apps/web/src/app/help-center/[article]/page.tsx": { "statements": 100, "branches": 75, "functions": 100, "lines": 100, "uncovered_lines": [44, 123, 124, 125, 126, 127, 128, 129, 130, 131, 183] },
+      "apps/web/src/components/support/article-renderer.tsx": { "note": "covered within components/support aggregate 91.83% stmt / 92.3% branch" },
+      "apps/web/src/lib/support/help-articles.ts": { "statements": 90.9, "branches": 75, "functions": 100, "lines": 100, "uncovered_lines": [1097] }
+    }
+  }
+}

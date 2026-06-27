@@ -226,7 +226,7 @@ export const helpArticleRouter = createTRPCRouter({
         publishedAt: true,
         keywords: true,
         relatedArticleIds: true,
-        _count: { select: { feedback: true } },
+        _count: { select: { feedback: true, sections: true } },
       },
       orderBy: { order: 'asc' },
     });
@@ -236,6 +236,9 @@ export const helpArticleRouter = createTRPCRouter({
       keywords: a.keywords as string[],
       relatedArticleIds: a.relatedArticleIds as string[],
       feedbackCount: a._count.feedback,
+      // IFC-302: the public category-listing card shows a "{n} sections" chip.
+      // getByCategory omits the sections relation, so expose the count additively.
+      sectionCount: a._count.sections,
     }));
   }),
 

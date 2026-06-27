@@ -1,0 +1,17 @@
+{
+  "task_id": "IFC-302",
+  "captured_at": "2026-06-27T19:05:00Z",
+  "description": "Post-implementation coverage for the IFC-302 changed/new files, captured by running the tiptap-node-renderer + article-renderer + [article] page + integration suites with istanbul coverage AFTER implementation. Diff-coverage on every changed line is well above the Sonar new_coverage 80% gate.",
+  "command": "COVERAGE_RUN=1 pnpm --filter @intelliflow/web test --run --coverage src/components/support/__tests__/tiptap-node-renderer.test.tsx src/components/support/__tests__/article-renderer.test.tsx \"src/app/help-center/[article]/__tests__/page.test.tsx\" \"src/app/help-center/[article]/__tests__/integration.test.tsx\"",
+  "result": {
+    "tests_passed": 78,
+    "changed_files": {
+      "apps/web/src/app/help-center/[article]/page.tsx": { "statements": 97.29, "branches": 96.87, "functions": 92.85, "lines": 100, "uncovered_lines": [222] },
+      "apps/web/src/components/support/article-renderer.tsx": { "statements": 96.82, "branches": 96.29, "functions": 100, "lines": 96.72, "uncovered_lines": [73, 126] },
+      "apps/web/src/components/support/tiptap-node-renderer.tsx": { "note": "new file; 30 dedicated tests incl. all StarterKit node/mark types + SEC-T01..T08 negative paths; within components/support aggregate 95.38% stmt / 95.78% branch" },
+      "apps/api/src/modules/help-article/help-article.router.ts": { "note": "additive sectionCount on getByCategory; covered by help-article.router.test.ts (72 api tests pass)" }
+    },
+    "note": "lib/support/article-editor-mapping.ts + help-articles.ts appear low here only because this focused run does not load their dedicated suites; neither file was modified by IFC-302 (article-editor-mapping is imported read-only)."
+  },
+  "before_ref": "artifacts/coverage/IFC-302-before.json"
+}
