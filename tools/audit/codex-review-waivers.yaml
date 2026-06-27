@@ -767,3 +767,17 @@ waivers:
     author: talyssonoliver
     date: '2026-06-27'
     expires: '2026-09-27'
+  - fingerprint: '5d4c7e8c847fa657fa1146c5d071c7e8db8a61c40ce2aa6d7e53700a8b2205c4'
+    reason: >-
+      False positive — SAME public-route-auth-regression finding on the category view's
+      getByCategory call as fingerprint 4c4a5809...; codex re-emitted it under a new
+      source-anchored fingerprint because the line position shifted across the codex-fix
+      commits (the documented codex fingerprint drift / non-determinism). The route is gated
+      by the UNCHANGED layout <ModuleGate moduleId="SUPPORT"> (tenant-scoped
+      moduleAccess.getEnabledModules -> ModulePaywall for session-less users), so the page's
+      children — and getByCategory — never render unauthenticated. IFC-302 changes only the
+      data source, not the route's pre-existing auth posture (the old static page sat behind
+      the same gate). Verified ModuleGate.tsx + useEnabledModules.ts + no blanket middleware.
+    author: talyssonoliver
+    date: '2026-06-27'
+    expires: '2026-09-27'
