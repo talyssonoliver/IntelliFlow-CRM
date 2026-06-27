@@ -781,3 +781,22 @@ waivers:
     author: talyssonoliver
     date: '2026-06-27'
     expires: '2026-09-27'
+  - fingerprint: '1108357964755afdad42981d6326dfc1d4070df28644a37bd0ecc20da449e682'
+    reason: >-
+      Accepted pre-existing design constraint, not an IFC-302 defect (and moot for this route).
+      The page is a CLIENT component ('use client') by deliberate spec decision — the old
+      STATIC help-article page was ALSO 'use client' and ALSO called notFound() at client
+      render time, and the IFC-302 spec/plan explicitly kept it client-side so the tRPC client
+      carries the JWT cookie (a server caller would need to thread the authed context). The
+      page-source test asserts the 'use client' directive. So the client-side notFound() is
+      not introduced by IFC-302. It is also MOOT here: the route is auth-gated by the layout's
+      <ModuleGate moduleId="SUPPORT"> (tenant-scoped), so crawlers / unauthenticated direct
+      requests never reach the article view — the HTTP-200-shell-vs-404 concern only matters
+      for public, indexable pages. Functionally a missing slug shows the loading state then the
+      Next not-found UI (client boundary), which is correct UX. Converting to an RSC + server
+      tRPC caller is a real architectural change beyond IFC-302's "refactor page to DB" scope;
+      if desired it should be its own task. (Surfaced once across 7 codex runs — codex
+      non-determinism; passed standalone on this same SHA.)
+    author: talyssonoliver
+    date: '2026-06-27'
+    expires: '2026-09-27'
