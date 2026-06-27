@@ -34,18 +34,41 @@ export interface ArticleRendererProps {
 
 // ─── Block classification helpers ───────────────────────────────────────────
 
-const LEGACY_BLOCK_TYPES = new Set(['paragraph', 'steps', 'tip', 'warning', 'info', 'nav-path']);
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-/** True when `blocks` is a legacy `ContentBlock[]` (seed data) the `BlockRenderer` understands. */
+function isStringArray(value: unknown): boolean {
+  return Array.isArray(value) && value.every((s) => typeof s === 'string');
+}
+
+/**
+ * Validate one legacy block's REQUIRED fields, not just its discriminator. `blocks`
+ * is untrusted `z.unknown()` JSON, so a malformed `{ type: 'steps' }` (no `items`)
+ * must NOT be treated as a valid block — otherwise `StepsBlock` would `.map` undefined.
+ */
+function isValidLegacyBlock(b: Record<string, unknown>): boolean {
+  switch (b.type) {
+    case 'paragraph':
+    case 'tip':
+    case 'warning':
+    case 'info':
+      return typeof b.text === 'string';
+    case 'steps':
+      return isStringArray(b.items);
+    case 'nav-path':
+      return isStringArray(b.path);
+    default:
+      return false;
+  }
+}
+
+/** True when `blocks` is a well-formed legacy `ContentBlock[]` the `BlockRenderer` understands. */
 function isLegacyContentBlocks(blocks: unknown): blocks is ContentBlock[] {
   return (
     Array.isArray(blocks) &&
     blocks.length > 0 &&
-    blocks.every((b) => isRecord(b) && typeof b.type === 'string' && LEGACY_BLOCK_TYPES.has(b.type))
+    blocks.every((b) => isRecord(b) && isValidLegacyBlock(b))
   );
 }
 

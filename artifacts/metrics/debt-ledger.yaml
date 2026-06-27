@@ -5284,3 +5284,14 @@ alerts:
     remediation_sprint: 19
     remediation_plan: 'Inline the resolved related articles into the helpArticle.getBySlug response (resolve relatedArticleIds server-side and return slim related items) so the public page needs a single round-trip. Update getBySlug tests + the page consumer; drop the separate getRelated call from the page.'
     notes: 'Identified by the IFC-302 frontend-lead + backend-architect spec review as a known trade-off (no router change in IFC-302 scope). gh issue #532.'
+  HELP-ARTICLE-GLOBAL-BUILTIN-PROVISIONING-001:
+    origin_task: IFC-302
+    owner: Backend Architect
+    severity: high
+    description: 'Help articles are tenant-scoped (HelpArticle @@unique([tenantId, slug]); IFC-299 router keys on tenantId_slug; PG-181 per-tenant editor). The seed (packages/db/prisma/seed-help-articles.ts) only seeds the DEFAULT tenant. After IFC-302 the public [article] detail page reads tenant-scoped DB data, so a NON-default tenant with no seeded help articles gets notFound/empty for the built-in articles the old static page always showed. Compounded because the help-center index/search pages (apps/web/src/app/help-center/(list)/page.tsx) are STILL static — for a non-default tenant the index would list built-in articles whose detail pages then 404.'
+    created_at: 2026-06-27
+    status: open
+    expiry_date: 2026-09-27
+    remediation_sprint: 19
+    remediation_plan: 'Pick one: (a) make built-in help articles GLOBAL (shared/system tenant or nullable tenantId) so every tenant sees them; (b) seed/copy the canonical help articles when a tenant is provisioned; or (c) migrate the help-center index + search pages to the same tenant-scoped DB API so list and detail stay consistent. Likely (b)+(c) together. Coordinate with the IFC-299 router design.'
+    notes: 'Flagged by codex on IFC-302 (fingerprint b9825456...), waived in tools/audit/codex-review-waivers.yaml as a cross-task scope boundary (IFC-302 DoD is the detail page only; a static fallback would violate the Never-Mock rule + the DoD static-removal). Default tenant is seeded so the MVP works today. gh issue #533.'

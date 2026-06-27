@@ -285,6 +285,17 @@ describe('ArticleRenderer', () => {
     expect(screen.getByText('Fallback paragraph wins.')).toBeInTheDocument();
   });
 
+  it('falls back to section.content for a malformed legacy block (missing required field)', () => {
+    // `blocks` is untrusted JSON; a `steps` block with no `items` must NOT crash BlockRenderer.
+    const malformedArticle = {
+      ...SAMPLE_ARTICLE,
+      id: 'malformed-block',
+      sections: [{ heading: 'Bad', content: 'Safe fallback text.', blocks: [{ type: 'steps' }] }],
+    };
+    expect(() => render(<ArticleRenderer article={malformedArticle} />)).not.toThrow();
+    expect(screen.getByText('Safe fallback text.')).toBeInTheDocument();
+  });
+
   it('falls back to section.content for an empty blocks array', () => {
     const emptyBlocksArticle = {
       ...SAMPLE_ARTICLE,

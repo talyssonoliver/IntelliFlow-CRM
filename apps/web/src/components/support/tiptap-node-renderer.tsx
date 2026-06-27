@@ -38,6 +38,11 @@ export interface TiptapNode {
 
 const HTTP_SCHEMES = new Set(['http:', 'https:']);
 
+/** Stored `blocks` is untrusted `z.unknown()` JSON — guard every node before dereferencing. */
+function isRecord(value: unknown): value is TiptapNode {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function isRelative(value: string): boolean {
   // Same-origin relative path or in-page anchor; reject protocol-relative `//host`.
   return (value.startsWith('/') && !value.startsWith('//')) || value.startsWith('#');
@@ -88,8 +93,9 @@ function headingTag(level: unknown): 'h3' | 'h4' | 'h5' | 'h6' {
 /** Wrap a text node's content in its allowlisted marks (unknown marks ignored). */
 function renderText(node: TiptapNode, key: string): ReactNode {
   let content: ReactNode = node.text ?? '';
-  for (const mark of node.marks ?? []) {
-    switch (mark?.type) {
+  const marks = Array.isArray(node.marks) ? node.marks : [];
+  for (const mark of marks) {
+    switch (isRecord(mark) ? mark.type : undefined) {
       case 'bold':
         content = <strong>{content}</strong>;
         break;
@@ -130,12 +136,18 @@ function renderText(node: TiptapNode, key: string): ReactNode {
 }
 
 function renderChildren(node: TiptapNode, key: string): ReactNode[] {
-  return (node.content ?? []).map((child, i) => renderNode(child, `${key}-${i}`));
+  // Untrusted JSON: a non-array `content` is treated as empty rather than crashing on .map.
+  const children = Array.isArray(node.content) ? node.content : [];
+  return children.map((child, i) => renderNode(child, `${key}-${i}`));
 }
 
 const PARA_CLASS = 'text-base leading-relaxed text-slate-700 dark:text-slate-300';
 
-function renderNode(node: TiptapNode, key: string): ReactNode {
+function renderNode(node: unknown, key: string): ReactNode {
+  // Untrusted JSON: drop anything that is not a node object (null, arrays, primitives).
+  if (!isRecord(node)) {
+    return null;
+  }
   if (typeof node.text === 'string') {
     return renderText(node, key);
   }

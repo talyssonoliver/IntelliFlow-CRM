@@ -711,3 +711,29 @@ waivers:
   # from the DB and apps/web/src/components/support/tiptap-node-renderer.tsx renders
   # the tiptapDoc wrapper directly (with a section.content fallback), so the finding
   # no longer applies. See debt-ledger HELP-ARTICLE-EDITOR-BLOCK-RENDER-CONTRACT-001.
+  - fingerprint: 'b9825456614f23d2de09dde7f7295399e2c219c34d7b2941691c1f0411723801'
+    reason: >-
+      Accepted cross-task scope boundary, not an IFC-302 defect. IFC-302's DoD is
+      narrowly "replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC
+      queries; same UI, DB data source; static dependency removed". Help articles are
+      tenant-scoped BY DESIGN across all of Lane F: the IFC-299 router keys on
+      `tenantId_slug` (schema `@@unique([tenantId, slug])`) and PG-181 ships a
+      per-tenant ADMIN/MANAGER editor, so each tenant owns its help content. The page
+      now correctly reads that tenant-scoped data and shows an HONEST notFound/empty
+      state when a tenant has no rows — it deliberately does NOT fall back to the
+      static built-in articles, because (a) the DoD explicitly requires removing that
+      static dependency and (b) the project "Never Mock or Simulate Data" rule forbids
+      rendering canonical static content as a stand-in for absent DB data. The default
+      tenant (the only seeded + active tenant in this MVP) is fully seeded
+      (packages/db/prisma/seed-help-articles.ts → 17 PUBLISHED articles) so the page
+      works end-to-end today. The genuine gap codex identifies — non-default tenants
+      have no help articles, and the help-center index/search pages
+      (apps/web/src/app/help-center/(list)/page.tsx) are STILL static — is a broader,
+      multi-task concern (make built-in help global, OR seed/provision canonical help
+      articles on tenant creation, OR migrate index+search to the DB). That is tracked
+      as a follow-up (gh issue + debt-ledger HELP-ARTICLE-GLOBAL-BUILTIN-PROVISIONING-001),
+      not silently dropped. Fixing it inside IFC-302 would either reintroduce the static
+      dependency the task removes or expand scope into provisioning/router redesign.
+    author: talyssonoliver
+    date: '2026-06-27'
+    expires: '2026-09-27'

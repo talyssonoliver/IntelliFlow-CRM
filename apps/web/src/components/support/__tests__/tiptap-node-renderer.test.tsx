@@ -251,6 +251,38 @@ describe('TiptapNodeRenderer — security (SEC-T01..T08)', () => {
     expect(() => renderNodes([{ type: 'paragraph' } as EditorNode])).not.toThrow();
   });
 
+  it('SEC-T09: a null child in content is dropped, not dereferenced', () => {
+    const { container } = renderNodes([
+      { type: 'paragraph', content: [null, { type: 'text', text: 'ok' }] } as unknown as EditorNode,
+    ]);
+    expect(container.querySelector('p')).toHaveTextContent('ok');
+  });
+
+  it('SEC-T10: non-array content is treated as empty (no crash)', () => {
+    expect(() =>
+      renderNodes([{ type: 'paragraph', content: 'not-an-array' } as unknown as EditorNode])
+    ).not.toThrow();
+  });
+
+  it('SEC-T11: a non-record node (null / primitive / array) is dropped', () => {
+    const { container } = renderNodes([
+      null as unknown as EditorNode,
+      'string-node' as unknown as EditorNode,
+      [] as unknown as EditorNode,
+    ]);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('SEC-T12: non-array marks on a text node do not crash', () => {
+    const { container } = renderNodes([
+      {
+        type: 'paragraph',
+        content: [{ type: 'text', text: 'hi', marks: 'bold' }],
+      } as unknown as EditorNode,
+    ]);
+    expect(container).toHaveTextContent('hi');
+  });
+
   it('renders nothing for empty node list (no throw)', () => {
     const { container } = renderNodes([]);
     expect(container).toBeEmptyDOMElement();

@@ -11,7 +11,7 @@
 | Worktree provisioned (`feat/ifc-302` off `origin/main` b7b0be363)   | 2026-06-27 18:55 |
 | Spec done (5-persona session, spec+discussion written)              | 2026-06-27 19:20 |
 | Plan done (TDD plan + plan-reviewer subagent, 3 ERR + 4 WARN fixed) | 2026-06-27 19:40 |
-| Exec / attestation done                                             | _pending_        |
+| Exec — feature commit `3b2007e2b` (impl + tests + debt retire)      | 2026-06-27 20:12 |
 | PR opened                                                           | _pending_        |
 | PR merged                                                           | _pending_        |
 
@@ -82,6 +82,39 @@
 - `node scripts/codex-review.mjs` reports "0 files changed" pre-commit (it diffs
   committed vs origin/main). Re-run after the commit / rely on the full pre-ship
   codex step on the committed SHA.
+
+### 7. (MIXED) Full pre-ship: 23/24 gates passed; codex-review found 3 findings on the committed diff
+
+- **Context:** all heavy gates passed first try — build, unit-tests (11,059),
+  coverage, diff-coverage, osv-scan, architecture, validate-sprint-data. Only
+  `codex-review` failed (it only sees the diff once committed; the pre-commit
+  standalone run was a no-op, issue #6).
+- **[HIGH] tenant-scoped-global-help-data** (`page.tsx`): non-default tenants
+  have no seeded help articles, so the DB-backed detail page 404s where the
+  static page showed built-in content. **Disposition: WAIVED** (fingerprint
+  `b9825456...`) as a cross-task scope boundary — help articles are
+  tenant-scoped by design (IFC-299 `@@unique([tenantId,slug])`, PG-181
+  per-tenant editor); IFC-302's DoD is the detail page only; a static fallback
+  would violate the Never-Mock rule + the DoD. Default tenant is seeded so the
+  MVP works. Tracked: gh #533 + debt
+  `HELP-ARTICLE-GLOBAL-BUILTIN-PROVISIONING-001`. The index/search pages
+  (`(list)/page.tsx`) are still static — full DB migration + per-tenant
+  provisioning is the follow-up.
+- **[MEDIUM] incomplete-json-shape-guard** (`article-renderer.tsx`): the
+  legacy-block guard only checked the discriminator, so a malformed
+  `{type:'steps'}` (no `items`) would crash `StepsBlock`. **Disposition: FIXED**
+  — per-variant field validation (`isValidLegacyBlock`); malformed blocks fall
+  back to `section.content`. +negative test.
+- **[MEDIUM] untrusted-tiptap-node-crash** (`tiptap-node-renderer.tsx`): the
+  renderer dereferenced `node.content`/`node.text` without runtime object/array
+  checks, so `content:[null]` or non-array content could throw — contradicting
+  its own "untrusted JSON" claim. **Disposition: FIXED** — `isRecord` node
+  guard, non-array `content`/`marks` treated as empty. +4 negative tests
+  (SEC-T09..T12).
+- **Why it matters:** codex earned its keep — findings 2 & 3 were real
+  robustness gaps in code that explicitly claimed to handle untrusted DB JSON.
+  Both fixed narrowly; finding 1 is a legitimate scope/architecture boundary,
+  waived with evidence + tracked, not dodged.
 
 ## Net assessment
 
