@@ -182,6 +182,15 @@ reports the PIPE's exit code, not pre-ship's. Read the summary; it must end "pre
 No SKIP_PRESHIP exists. --no-verify needs explicit owner approval. PRESHIP_ALLOW_MISSING=1
 only if infra is genuinely down, never to hide a failure.
 
+PRE-SHIP READINESS — a FULL pre-ship is ~20 min; do NOT use it as your inner loop (PG-181 burned
+~6 full runs ≈ 2 hours discovering cheap failures one 20-min cycle at a time). First converge the
+CHEAP gates with the subset runner (seconds-to-minutes each), iterating until ALL pass:
+  node scripts/pre-ship.mjs --only=format-check,lint,typecheck,governance-schema,lint-artifacts,lint-runtime-paths,material-symbols-audit,a11y-routes,architecture,validate-sprint-data
+(\`typecheck\` includes lint:sonar:guard; \`a11y-routes\` + the doc/runtime-path steps catch the
+page-count / WCAG-scope cascade). Alongside it run \`node scripts/codex-review.mjs\` standalone to
+convergence and \`npx prettier --write\` on every edited doc. ONLY when all of that is green do you
+spend the one FULL pre-ship — it should then pass on the 1st-2nd try, not the 6th.
+
 HARD-WON GOTCHAS (these cost real days — encoded so you don't repeat them):
 1. MAKE THE MINIMAL CHANGE — do NOT refactor beyond the task. Drive-by complexity refactors
    introduced regressions the codex gate caught (health 503-not-200, dead code, ||→?? empty-string
