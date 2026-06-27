@@ -1,13 +1,13 @@
 # Current State Report
-_Generated: 2026-06-26T19:20:19.877Z_
+_Generated: 2026-06-27T23:53:51.527Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 5 continuous tasks.
-- Overall progress: 413/596 tasks completed (69.3%), 182 backlog, 0 blocked, 1 in progress.
-- Numbered sprint progress alone: 408/591 tasks completed or attested inside numbered sprints.
+- Overall progress: 441/596 tasks completed (73.99%), 154 backlog, 0 blocked, 1 in progress.
+- Numbered sprint progress alone: 436/591 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
 - Ready-to-start work: DOC-015 (Sprint 18), IFC-211 (Sprint 18), IFC-212 (Sprint 18), IFC-215 (Sprint 18), IFC-234 (Sprint 18).
 - Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
@@ -15,6 +15,7 @@ _Generated: 2026-06-26T19:20:19.877Z_
 ## Source Health
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
+- CSV marks these tasks completed without a canonical attestation: IFC-043, IFC-052, IFC-071, PG-110, PG-114, PG-127, PG-147, IFC-199, IFC-201, IFC-204, IFC-304, PG-188, PG-191, IFC-306, PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209.
 - Attested but not completed in CSV: IFC-212 (Backlog), IFC-257 (In Progress), IFC-271 (Backlog), IFC-314 (Backlog).
 
 ## Continuous Work
@@ -263,9 +264,10 @@ _Generated: 2026-06-26T19:20:19.877Z_
 
 ## Sprint 18 - Sprint 18
 
-- Status: 31/66 completed, 34 backlog, 0 blocked, 1 in progress.
+- Status: 47/66 completed, 18 backlog, 0 blocked, 1 in progress.
 - Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).
-- Evidence coverage: 31/31 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 32/47 completed tasks have canonical `attestation.json` evidence.
+- Evidence gaps: completed in CSV but missing canonical attestation: PG-188, PG-191, PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209.
 
 **Accomplished**
 - **IFC-070** — Data Migration from Legacy. IFC-070 Data Migration from Legacy completed via TDD. 13 steps across 4 phases (RED/GREEN/REFACTOR/VALIDATION). 66 tests, 98.88% statement coverage. All 6 completion gates PASS. Compliance check PASS. 100% data migrated, validation passed;...
@@ -283,13 +285,16 @@ _Generated: 2026-06-26T19:20:19.877Z_
 
 ## Sprint 19 - Sprint 19
 
-- Status: 2/15 completed, 13 backlog, 0 blocked.
+- Status: 4/15 completed, 11 backlog, 0 blocked.
 - Primary focus areas: Core CRM (9), AI/Intelligence (2), Automation (1).
-- Evidence coverage: 2/2 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 2/4 completed tasks have canonical `attestation.json` evidence.
+- Evidence gaps: completed in CSV but missing canonical attestation: IFC-304, IFC-306.
 
 **Accomplished**
 - **IFC-312** — AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).. Originally attested 2026-04-22 with verdict COMPLETE, but a 2026-04-24 code audit (/task-code-audit) identified 7 findings (2 High, 4 Medium, 1 Low) that contradicted the attestation......
 - **PG-166** — Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90. All implementation code, tests, configs, and documentation are complete. 3 test regressions fixed this session (SVG role='img', heading text, EmptyState refactor). Pre-existing build blocker fixed (unused @ts-expect-error).... Lighthouse CI audit on / route;...
+- **IFC-306** — Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated. compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...
+- **IFC-304** — Article Analytics Dashboard. Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%
 
 **Open Work**
 - **IFC-033** — PHASE-005: Load Testing with k6. System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report
@@ -300,9 +305,14 @@ _Generated: 2026-06-26T19:20:19.877Z_
 
 ## Sprint 20 - Sprint 20
 
-- Status: 0/34 completed, 34 backlog, 0 blocked.
+- Status: 2/34 completed, 32 backlog, 0 blocked.
 - Primary focus areas: Core CRM (25), AI Foundation (2), Performance (2).
-- Evidence coverage: 0/0 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 0/2 completed tasks have canonical `attestation.json` evidence.
+- Evidence gaps: completed in CSV but missing canonical attestation: PG-127, IFC-204.
+
+**Accomplished**
+- **IFC-204** — Activity Feed Performance Observability - queryDurationMs tracking structured logging and latency alerting. queryDurationMs field added to feed response; repository measures query execution time via performance.now(); structured JSON logging for all feed queries (tenant, duration, source count, cache hit/miss); alert threshold at p95 >500ms;...
+- **PG-127** — Partner Application Workflow - Dedicated partner application form with specialized fields, routing, and onboarding process. Dedicated partner application form; specialized fields (company size, integration type, use case); separate routing/CRM tagging; partner-specific auto-response
 
 **Open Work**
 - **IFC-035** — PHASE-006: WhatsApp Business API Research. Integration approach with Supabase webhooks validated
@@ -365,22 +375,32 @@ _Generated: 2026-06-26T19:20:19.877Z_
 
 ## Sprint 25 - Sprint 25
 
-- Status: 0/14 completed, 14 backlog, 0 blocked.
+- Status: 3/14 completed, 11 backlog, 0 blocked.
 - Primary focus areas: Core CRM (6), Resilience (2), Settings (2).
-- Evidence coverage: 0/0 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 0/3 completed tasks have canonical `attestation.json` evidence.
+- Evidence gaps: completed in CSV but missing canonical attestation: IFC-043, IFC-071, IFC-201.
+
+**Accomplished**
+- **IFC-201** — Settings Control Plane Foundations - domain models, adapters, and router for users/teams/roles/permissions/audit/integrations/webhooks/security. Settings domain policies and APIs implemented for IAM, audit, integrations and security controls
+- **IFC-043** — Operational runbooks (deploy, rollback, incident response, backup/restore, access requests). Incident response, deployment, rollback procedures
+- **IFC-071** — Multi-Region Setup. Multi-region database replication active
 
 **Open Work**
 - **IFC-040** — Production hardening incl. HttpOnly auth sessions and release security gates. Railway production config, Vercel optimized, monitoring active, and browser auth migrated from localStorage/JS-readable bearer cookies to HttpOnly secure cookies or a server-managed Supabase session
-- **IFC-043** — Operational runbooks (deploy, rollback, incident response, backup/restore, access requests). Incident response, deployment, rollback procedures
 - **IFC-048** — User Acceptance Testing. Real users validate workflows and AI accuracy
 - **IFC-059** — ISO 42001 Readiness Assessment. AI system compliance evaluated, roadmap created
-- **IFC-071** — Multi-Region Setup. Multi-region database replication active
+- **PG-100** — Order Detail. response under 200ms, Lighthouse 90, tracking live
+- **PG-101** — Reports. response under 200ms, Lighthouse 90, reports accessible
 
 ## Sprint 26 - Sprint 26
 
-- Status: 0/9 completed, 9 backlog, 0 blocked.
+- Status: 1/9 completed, 8 backlog, 0 blocked.
 - Primary focus areas: Settings (6), AI Intelligence (1), Investment Gate (1).
-- Evidence coverage: 0/0 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 0/1 completed tasks have canonical `attestation.json` evidence.
+- Evidence gaps: completed in CSV but missing canonical attestation: PG-110.
+
+**Accomplished**
+- **PG-110** — Permissions. response under 200ms, Lighthouse 90, permissions enforced
 
 **Open Work**
 - **IFC-049** — Gate 4 Review - £5000 Investment. Decision on productization and scale
@@ -391,22 +411,31 @@ _Generated: 2026-06-26T19:20:19.877Z_
 
 ## Sprint 27 - Sprint 27
 
-- Status: 0/9 completed, 9 backlog, 0 blocked.
+- Status: 2/9 completed, 7 backlog, 0 blocked.
 - Primary focus areas: Settings (6), Launch (2), Documentation (1).
-- Evidence coverage: 0/0 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 0/2 completed tasks have canonical `attestation.json` evidence.
+- Evidence gaps: completed in CSV but missing canonical attestation: IFC-052, PG-114.
+
+**Accomplished**
+- **IFC-052** — Production Deployment. Zero-downtime deployment with feature flags
+- **PG-114** — Webhooks. response under 200ms, Lighthouse 90, webhooks firing
 
 **Open Work**
 - **IFC-051** — Pilot Customer Selection. 2-3 pilot customers for beta testing
-- **IFC-052** — Production Deployment. Zero-downtime deployment with feature flags
 - **IFC-084** — Video Tutorials & Demos. Loom videos for key features, embedded in docs
 - **PG-112** — Audit Log. response under 200ms, Lighthouse 90, logs searchable
 - **PG-113** — API Keys. response under 200ms, Lighthouse 90, keys secure
+- **PG-115** — Integrations. response under 200ms, Lighthouse 90, integrations connected
 
 ## Sprint 28 - Sprint 28
 
-- Status: 0/9 completed, 9 backlog, 0 blocked.
+- Status: 1/9 completed, 8 backlog, 0 blocked.
 - Primary focus areas: Settings (6), Launch (1), Platform (1).
-- Evidence coverage: 0/0 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 0/1 completed tasks have canonical `attestation.json` evidence.
+- Evidence gaps: completed in CSV but missing canonical attestation: PG-147.
+
+**Accomplished**
+- **PG-147** — Workflow List & Status UI - Active workflows execution status step visualization logs. response under 500ms, Lighthouse >=90; WorkflowList, WorkflowDetail, StepVisualization, ExecutionLogs, StatusBadges, WorkflowTriggers components
 
 **Open Work**
 - **IFC-053** — Hypercare Period. 24/7 support for 2 weeks, then business hours
@@ -417,9 +446,10 @@ _Generated: 2026-06-26T19:20:19.877Z_
 
 ## Sprint 29 - Sprint 29
 
-- Status: 0/1 completed, 1 backlog, 0 blocked.
+- Status: 1/1 completed, 0 backlog, 0 blocked.
 - Primary focus areas: Core CRM (1).
-- Evidence coverage: 0/0 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 0/1 completed tasks have canonical `attestation.json` evidence.
+- Evidence gaps: completed in CSV but missing canonical attestation: IFC-199.
 
-**Open Work**
+**Accomplished**
 - **IFC-199** — Document Domain Core - lifecycle, signature state machine, ACL and retention invariants. Document aggregate and signature lifecycle rules implemented with ACL/retention validation, wired through application services
