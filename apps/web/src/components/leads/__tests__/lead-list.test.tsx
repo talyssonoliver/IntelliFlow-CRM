@@ -358,6 +358,7 @@ vi.mock('@intelliflow/ui', async () => {
                       aria-label={`Select ${String(row.id)}`}
                       data-testid={`select-row-${String(row.id)}`}
                       checked={selectedIds.includes(String(row.id))}
+                      onClick={(e) => e.stopPropagation()}
                       onChange={(e) => toggleRow(String(row.id), e.target.checked)}
                     />
                   </td>
@@ -382,6 +383,9 @@ vi.mock('@intelliflow/ui', async () => {
       quickActions?: Array<{ label: string; onClick: () => void; separator?: boolean }>;
       dropdownActions?: Array<{ label: string; onClick: () => void; separator?: boolean }>;
     }) => (
+      // Mirror the real TableRowActions toolbar: each action stops click
+      // propagation so row-action clicks never bubble into the row's navigation
+      // handler (matches packages/ui TableRowActions).
       <>
         {[...quickActions, ...dropdownActions]
           .filter((a) => !a.separator && a.label)
@@ -390,7 +394,10 @@ vi.mock('@intelliflow/ui', async () => {
               key={`${a.label}-${i}`}
               type="button"
               data-testid={`rowaction-${a.label}`}
-              onClick={a.onClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                a.onClick();
+              }}
             >
               {a.label}
             </button>
