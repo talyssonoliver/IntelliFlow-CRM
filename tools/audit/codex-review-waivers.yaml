@@ -816,3 +816,19 @@ waivers:
     author: talyssonoliver
     date: '2026-06-28'
     expires: '2026-09-28'
+  - fingerprint: '05c405e0642cccb3e6bc749745eeabfec1db4c3406bb65ecfdacbae03996baec'
+    reason: >-
+      Accepted, intentional design — not a regression. computeDeltaPercent returns 0
+      when the previous-period value is <= 0 because a period-over-period percentage is
+      mathematically undefined with no prior baseline. This preserves the EXACT
+      pre-existing behaviour of both call sites (TotalLeadsWidget and RevenueWidget used
+      `previous > 0 ? ... : 0` before PG-058's extraction). The absolute KPI value is
+      always rendered correctly (e.g. "100 leads"); only the optional +/-% delta badge is
+      suppressed when there is no baseline, which is reasonable UX and not a fabricated
+      number. Surfacing a distinct "New" indicator would change the return type and the
+      render logic of every caller, which is a UX enhancement beyond PG-058's scope
+      (KPI-calculator extraction + real-time polling + a11y). (kpi-calculator.ts
+      computeDeltaPercent — codex non-determinism: surfaced after 11 clean-or-other runs.)
+    author: talyssonoliver
+    date: '2026-06-28'
+    expires: '2026-09-28'
