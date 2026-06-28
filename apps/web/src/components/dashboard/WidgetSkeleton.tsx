@@ -31,6 +31,7 @@ export function WidgetSkeleton({
 }: Readonly<WidgetSkeletonProps>) {
   return (
     <Card
+      aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
         ${colSpanClasses[colSpan] ?? 'col-span-1'}
@@ -46,6 +47,7 @@ export function WidgetSkeleton({
 export function StatCardSkeleton({ colSpan = 1 }: Readonly<{ colSpan?: number }>) {
   return (
     <Card
+      aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
         ${colSpanClasses[colSpan] ?? 'col-span-1'}
@@ -68,6 +70,7 @@ export function StatCardSkeleton({ colSpan = 1 }: Readonly<{ colSpan?: number }>
 export function ChartWidgetSkeleton({ colSpan = 3 }: Readonly<{ colSpan?: number }>) {
   return (
     <Card
+      aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
         ${colSpanClasses[colSpan] ?? 'col-span-1'}
@@ -95,6 +98,7 @@ export function ChartWidgetSkeleton({ colSpan = 3 }: Readonly<{ colSpan?: number
 export function ListWidgetSkeleton({ colSpan = 1 }: Readonly<{ colSpan?: number }>) {
   return (
     <Card
+      aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
         ${colSpanClasses[colSpan] ?? 'col-span-1'}
@@ -120,6 +124,7 @@ export function ListWidgetSkeleton({ colSpan = 1 }: Readonly<{ colSpan?: number 
 export function PipelineWidgetSkeleton({ colSpan = 3 }: Readonly<{ colSpan?: number }>) {
   return (
     <Card
+      aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
         ${colSpanClasses[colSpan] ?? 'col-span-1'}

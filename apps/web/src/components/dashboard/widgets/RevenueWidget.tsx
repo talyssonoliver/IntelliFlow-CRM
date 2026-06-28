@@ -2,6 +2,12 @@
 
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import {
+  chartMax,
+  computeBarHeightPercent,
+  computeDeltaPercent,
+  formatGBP,
+} from '@/lib/dashboard/kpi-calculator';
 import type { WidgetProps } from './index';
 
 export function RevenueWidget({ config }: Readonly<WidgetProps>) {
@@ -18,7 +24,7 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
     return { startDate: start.toISOString(), endDate: end.toISOString() };
   }, [timeRange]);
 
-  const { data: overview } = trpc.analytics.getOverview.useQuery({});
+  const { data: overview, isLoading: overviewLoading } = trpc.analytics.getOverview.useQuery({});
   const { data: timeSeries, isLoading } = trpc.analytics.getTimeSeriesData.useQuery({
     metric: 'revenue',
     startDate: dateRange.startDate,
@@ -26,13 +32,16 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
     granularity: timeRange === 'week' ? 'day' : 'month',
   });
 
+  // The revenue figure comes from `overview`, not the time-series query — gate
+  // on the overview's own state so a missing overview never shows a fake £0.
+  const revenuePending = overviewLoading || !overview;
   const totalRevenue = Number(overview?.totalRevenue ?? 0);
   const revenueDelta = Number(overview?.revenueDelta ?? 0);
   const previous = totalRevenue - revenueDelta;
-  const deltaPercent = previous > 0 ? (revenueDelta / previous) * 100 : 0;
+  const deltaPercent = computeDeltaPercent(revenueDelta, previous);
 
   const points = Array.isArray(timeSeries) ? timeSeries : [];
-  const maxValue = Math.max(...points.map((p: Record<string, unknown>) => Number(p.value || 0)), 1);
+  const maxValue = chartMax(points.map((p: Record<string, unknown>) => Number(p.value || 0)));
 
   const dayLabels =
     timeRange === 'week'
@@ -45,14 +54,8 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
         <div>
           <h3 className="text-slate-900 dark:text-white font-semibold">Total Revenue</h3>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900 dark:text-white">
-              {isLoading
-                ? '...'
-                : totalRevenue.toLocaleString('en-GB', {
-                    style: 'currency',
-                    currency: 'GBP',
-                    maximumFractionDigits: 0,
-                  })}
+            <span className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
+              {revenuePending ? '...' : formatGBP(totalRevenue)}
             </span>
             {deltaPercent !== 0 && (
               <span
@@ -75,7 +78,7 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
         {points.length > 0 ? (
           points.map((point: Record<string, unknown>, i: number) => {
             const value = Number(point.value || 0);
-            const height = maxValue > 0 ? Math.max((value / maxValue) * 100, 2) : 2;
+            const height = computeBarHeightPercent(value, maxValue);
             const isLast = i === points.length - 1;
             return (
               <div

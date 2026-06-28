@@ -1,0 +1,41 @@
+{
+  "task_id": "PG-058",
+  "title": "Dashboard",
+  "sprint": 18,
+  "acknowledged_by": "Claude Opus 4.8 (1M) — /full-pipeline PG-058 (frontend-lead lens)",
+  "acknowledged_at": "2026-06-28T16:12:35Z",
+  "files_read": [
+    "apps/web/src/app/dashboard/page.tsx",
+    "apps/web/src/app/dashboard/DashboardClient.tsx",
+    "apps/web/src/components/dashboard/WidgetSkeleton.tsx",
+    "apps/web/src/components/dashboard/widgets/index.ts",
+    "apps/web/src/components/dashboard/widgets/TotalLeadsWidget.tsx",
+    "apps/web/src/components/dashboard/widgets/SalesRevenueWidget.tsx",
+    "apps/web/src/components/dashboard/widgets/ActiveDealsWidget.tsx",
+    "apps/web/src/components/dashboard/widgets/OpenTicketsWidget.tsx",
+    "apps/web/src/components/dashboard/widgets/PipelineSummaryWidget.tsx",
+    "apps/web/src/components/dashboard/widgets/DealsWonWidget.tsx",
+    "apps/web/src/components/dashboard/widgets/RevenueWidget.tsx",
+    "apps/web/src/lib/pricing/calculator.ts",
+    "apps/api/src/modules/analytics/analytics.router.ts",
+    "apps/api/src/modules/opportunity/opportunity.router.ts",
+    "apps/api/src/modules/lead/lead.router.ts",
+    "apps/api/src/modules/contact/contact.router.ts",
+    "apps/api/src/modules/ticket/ticket.router.ts",
+    "packages/application/src/services/AnalyticsAggregationService.ts",
+    "packages/api-client/src/react-client.tsx",
+    ".specify/sprints/sprint-18/specifications/PG-058-spec.md",
+    ".specify/sprints/sprint-18/planning/PG-058-plan.md"
+  ],
+  "invariants_acknowledged": [
+    "page.tsx ALREADY EXISTS (PG-129) — PG-058 does NOT create a new page, so the page-doc-cochange (gotcha #9) cascade does NOT apply; no PAGE_MAP/sitemap/registry edits are owed.",
+    "kpi-calculator.ts holds ONLY pure presentation/derivation math (delta %, trend, ticket urgency, stage %, bar height, GBP format). Business rules (winRate, conversionRate, yoyChange) stay server-authoritative per ADR-016; they are NOT duplicated client-side.",
+    "Money is mixed-typed on the wire: analytics.getOverview returns revenue as number; opportunity.getPipeline returns totalValue/totalPipelineValue as Prisma Decimal STRINGS. The calculator coerces via toFiniteNumber and never does arithmetic on raw strings.",
+    "Null/undefined/zero-denominator KPIs resolve to 0 or a documented safe sentinel (never Infinity/NaN/placeholder string) per prd-core-crm.md; widgets show a pending '...' rather than a fake 0/£0 when a query is disabled or has no data yet (codex no-fake-KPI rule).",
+    "Real-time polling uses one shared DASHBOARD_REFETCH_INTERVAL_MS (60s; DealsWon 5x), matching the global React Query staleTime; React Query dedupes identical query keys so polling does not amplify requests (avoids the getStatus refetch-storm).",
+    "A single semantic <output> live region conveys the auto-refresh cadence; KPI cards are NOT aria-live (would spam screen readers each poll) per WCAG 4.1.3.",
+    "Lighthouse ≥90 is verified on the AUTHENTICATED /dashboard (perf 97 / a11y 90); the unauthenticated base-recipe measurement (74) is a redirect artifact and is NOT representative — see artifacts/lighthouse/PG-058/SUMMARY.md.",
+    "PipelineSummary stage % uses the sum of DISPLAYED (open) stages as the denominator, not the API totalPipelineValue (which includes closed stages) — a correctness fix flagged by both the domain-expert and codex.",
+    "Pipeline stage bars are decorative (no progressbar role): the value is already in the adjacent '£X (N Deals)' text and the repo sonar-guard (jsx-a11y/prefer-tag-over-role) forbids role=progressbar."
+  ]
+}

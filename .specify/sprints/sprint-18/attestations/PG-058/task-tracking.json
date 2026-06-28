@@ -1,0 +1,49 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "PG-058",
+  "attempt": 0,
+  "current_phase": "EXEC",
+  "phase": "phase-3-exec",
+  "started_at": "2026-06-28T12:36:48.404Z",
+  "completed_at": null,
+  "updated_at": "2026-06-28T12:36:48.404Z",
+  "status_history": [
+    {
+      "status": "Specifying",
+      "at": "2026-06-28T11:56:47.000Z",
+      "note": "spec-session started"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-06-28T12:33:31.000Z",
+      "note": "plan-session complete (plan-reviewer subagent REVISE->fixed)"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-06-28T12:36:48.404Z",
+      "note": "exec session started"
+    }
+  ],
+  "execution": {
+    "executor": "Claude Code /exec",
+    "agents": ["Foundation", "Domain", "Quality"],
+    "started_at": "2026-06-28T12:36:48.404Z",
+    "completed_at": null,
+    "last_error": null,
+    "retry_count": 0
+  },
+  "dependencies_meta": {
+    "verified_at": "2026-06-28T12:00:00.000Z",
+    "notes": "IFC-089/091/095 attestations on disk; consuming code verified"
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/lib/dashboard/kpi-calculator.ts"
+    ],
+    "created": [],
+    "missing": []
+  },
+  "blockers": [],
+  "kpis": {},
+  "validations": []
+}
