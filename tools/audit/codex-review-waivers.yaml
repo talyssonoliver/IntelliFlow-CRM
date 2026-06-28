@@ -800,3 +800,19 @@ waivers:
     author: talyssonoliver
     date: '2026-06-27'
     expires: '2026-09-27'
+  - fingerprint: '039ddb1c373cbb6de4521ba2ea07de6d8881010931a103b619a7e5cde7dae2e0'
+    reason: >-
+      Accepted design constraint, not a defect. The pipeline stage bar is a purely
+      decorative, redundant visual of data already conveyed in the adjacent accessible
+      text on the same row ("<stage> — £X (N Deals)"), so it needs no progressbar
+      semantics for WCAG. role="progressbar" cannot be added anyway: the repo
+      sonar-guard rule jsx-a11y/prefer-tag-over-role (a hard CI/pre-ship error) forbids
+      role="progressbar" in favour of a native <progress>, and converting the styled
+      Tailwind bar to a native <progress> element would regress the stage-coloured visual
+      with no accessibility gain (the value is already text). PG-058's real Lighthouse
+      gate-blockers (button-name, select label, decorative-icon aria-hidden) are fixed.
+      (PipelineSummaryWidget.tsx pipeline bar — codex non-determinism: surfaced once
+      across 4 runs.)
+    author: talyssonoliver
+    date: '2026-06-28'
+    expires: '2026-09-28'

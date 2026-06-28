@@ -9,7 +9,11 @@
  *  - decorative material-symbols icons are aria-hidden (button-name/link-name)
  *  - the Pipeline "options" icon-only button has an accessible name (button-name)
  *  - the Deals-Won <select> has an accessible name (label)
- *  - pipeline progress bars expose progressbar role + values
+ *
+ * Note: the pipeline stage bars are intentionally decorative (no progressbar
+ * role) — the value they depict is already conveyed in the adjacent
+ * "<stage> — £X (N Deals)" text, and the repo sonar-guard
+ * (jsx-a11y/prefer-tag-over-role) forbids role="progressbar".
  */
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';

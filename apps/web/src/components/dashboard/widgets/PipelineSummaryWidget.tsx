@@ -23,6 +23,11 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
     { refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
 
+  // Denominator = sum of the DISPLAYED (open) stages, not the API's
+  // `totalPipelineValue` which includes closed-won/lost. Using the API total
+  // here would understate every open-stage share.
+  const displayedTotal = (data?.stages ?? []).reduce((sum, s) => sum + Number(s.totalValue), 0);
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
@@ -50,10 +55,7 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
               </div>
             ))
           : data?.stages.map((stage) => {
-              const percentage = computePipelineStagePercent(
-                stage.totalValue,
-                data.totalPipelineValue
-              );
+              const percentage = computePipelineStagePercent(stage.totalValue, displayedTotal);
               return (
                 <div key={stage.stageKey}>
                   <div className="flex items-center justify-between mb-2">

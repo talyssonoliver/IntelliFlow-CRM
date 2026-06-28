@@ -76,8 +76,12 @@ FLAGS protocol):
    labels from real `closedAt` dates.
 2. `apps/api/src/modules/opportunity/opportunity.router.ts:1290-1291` —
    `getPipeline.totalPipelineValue` includes CLOSED_WON/CLOSED_LOST even when
-   `includeClosedStages:false`, understating open-stage %. Fix: compute total
-   over the same stage filter (server) OR sum displayed stages (client).
+   `includeClosedStages:false`. **Client side now FIXED in this task:**
+   `PipelineSummaryWidget` computes the denominator from the displayed (open)
+   stages instead of the API total, so open-stage percentages are no longer
+   understated (flagged independently by the domain-expert AND codex-review).
+   The underlying SERVER total is still mis-scoped and remains a tracked
+   server-side finding for a follow-up.
 3. `packages/application/src/services/AnalyticsAggregationService.ts:194` —
    `result.at(-12)` on a 12-element array is 11 months back; YoY off by one.
 
