@@ -31,6 +31,40 @@
 
 ## Issues
 
+### S1 (resolved) — Lighthouse gate: unauthenticated `/dashboard` measurement was a misleading 74
+
+- **What happened:** A base-recipe (unauthenticated) Lighthouse run of
+  `/dashboard` scored perf **74** (LCP 6.5s) — below the ≥90 gate. Root cause:
+  `/dashboard` is auth-gated client-side, so an unauthenticated headless run
+  renders the shell then the client redirects to the login/home page; the LCP
+  element was the **login hero `<p>`**, and 93% of LCP was the redirect's render
+  delay. The 74 measured the redirect, not the dashboard.
+- **Why it matters:** Nearly shipped with the perf KPI mis-recorded (I initially
+  proposed waiving it out-of-scope — the owner correctly rejected that). The
+  real gate status was unknown until a representative measurement was taken.
+- **Fix/prevention:** Owner-authorized a read-only authenticated measurement.
+  The harness's designated test user (`admin@intelliflow.dev`) did not exist in
+  prod Supabase (`invalid_credentials`); owner authorized creating it via the
+  service-role admin API. Rebuilt web with `NEXT_PUBLIC_API_URL` = live Railway
+  baked in (NEXT*PUBLIC* are build-time), served on port **3500** (port 3000 had
+  an unrelated project's stale server — NOT touched), ran the PG-166
+  Supabase-auth Puppeteer harness. **Authenticated result: perf 97 / a11y 90 /
+  LCP 1.2s / TTI 1.2s / TBT 0ms — gate PASSES.** Deleted the test user afterward
+  (login now 400, prod restored). Evidence + full writeup:
+  `artifacts/lighthouse/PG-058/SUMMARY.md`. **Lesson for the harness:** for
+  client-side-auth-gated routes the base recipe is not representative; the
+  authenticated harness is required, and it needs the test user provisioned +
+  `NEXT_PUBLIC_API_URL` baked at build time. Consider permanently provisioning
+  the lighthouse test user so future authenticated runs don't hit
+  `invalid_credentials`.
+
+### S3 (tracked, not fixed) — pre-existing `color-contrast` a11y failure on /dashboard
+
+- The authenticated a11y score is held at exactly 90 by a `color-contrast`
+  failure (muted text on muted backgrounds). This is an app-wide brand
+  design-token issue, not introduced by PG-058 and out of its scope. Tracked for
+  a design-system follow-up.
+
 ### S3 — Orchestrator prompt referenced a non-existent `iflow-fleet` main dir
 
 - **What happened:** The dispatch prompt named
