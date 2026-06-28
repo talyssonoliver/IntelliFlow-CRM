@@ -2,6 +2,7 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { TotalLeadsWidget } from '../TotalLeadsWidget';
+import { DASHBOARD_REFETCH_INTERVAL_MS } from '@/lib/dashboard/kpi-calculator';
 
 const useQueryMock = vi.fn();
 const overviewQueryMock = vi.fn((..._args: unknown[]) => ({
@@ -52,5 +53,15 @@ describe('TotalLeadsWidget', () => {
     const { container } = render(<TotalLeadsWidget />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('polls lead.stats on the shared dashboard refetch interval', () => {
+    useQueryMock.mockReturnValue({ data: { total: 1 }, isLoading: false, error: null });
+    render(<TotalLeadsWidget />);
+
+    expect(useQueryMock).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS })
+    );
   });
 });

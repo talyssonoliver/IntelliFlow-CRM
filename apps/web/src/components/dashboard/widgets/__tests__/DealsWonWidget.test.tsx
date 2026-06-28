@@ -2,6 +2,7 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { DealsWonWidget } from '../DealsWonWidget';
+import { DASHBOARD_REFETCH_INTERVAL_MS } from '@/lib/dashboard/kpi-calculator';
 
 const useQueryMock = vi.fn();
 
@@ -41,5 +42,15 @@ describe('DealsWonWidget', () => {
     expect(screen.getByText('Deals Won (Last 6 Months)')).toBeInTheDocument();
     expect(screen.getByText('Jan')).toBeInTheDocument();
     expect(screen.getByText('Feb')).toBeInTheDocument();
+  });
+
+  it('polls the slow trend at 5x the shared dashboard interval', () => {
+    useQueryMock.mockReturnValue({ data: [], isLoading: false });
+    render(<DealsWonWidget />);
+
+    expect(useQueryMock).toHaveBeenCalledWith(
+      { months: 6 },
+      expect.objectContaining({ refetchInterval: 5 * DASHBOARD_REFETCH_INTERVAL_MS })
+    );
   });
 });

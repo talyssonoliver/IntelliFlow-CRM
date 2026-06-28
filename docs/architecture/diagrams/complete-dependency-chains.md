@@ -2029,7 +2029,15 @@ AI Review:     IFC-128 ✅ ──► IFC-176 ✅ ──► IFC-177 ✅ ──►
 Home Page:     IFC-182 ✅ ──► IFC-195 ✅ ──► PG-156 ✅ ──► IFC-191 ✅ ──► PG-129 ✅ ──► PG-157 ✅ ──► PG-158 (DnD Reorder) ⏳
                                                                                          ──► PG-160 (AI Insights) ✅
                                                                                          ──► PG-166 (Lighthouse Audit) ✅
+                                                                                         ──► PG-058 (Dashboard KPI calculator + real-time) ⏳
 ```
+
+PG-058 adds `apps/web/src/lib/dashboard/kpi-calculator.ts` (pure KPI derivation/
+formatting) consumed by the dashboard KPI widgets (TotalLeads, SalesRevenue,
+ActiveDeals, OpenTickets, PipelineSummary, DealsWon, Revenue), plus a shared
+`DASHBOARD_REFETCH_INTERVAL_MS` polling cadence — over the existing analytics /
+lead / opportunity / ticket tRPC procedures (no new endpoints). Deps: IFC-089
+✅, IFC-091 ✅, IFC-095 ✅.
 
 ## Chains Missing UI Only (Router Exists) - 11 Total
 

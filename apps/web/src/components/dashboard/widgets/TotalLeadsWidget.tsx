@@ -2,6 +2,11 @@
 
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
+import {
+  DASHBOARD_REFETCH_INTERVAL_MS,
+  computeDeltaPercent,
+  isTrendingUp,
+} from '@/lib/dashboard/kpi-calculator';
 import type { WidgetProps } from './index';
 
 export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
@@ -12,6 +17,7 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
     error,
   } = trpc.lead.stats.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
+    refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS,
     ...(initialData == null
       ? {}
       : {
@@ -22,7 +28,7 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
   });
   const { data: overview } = trpc.analytics.getOverview.useQuery(
     {},
-    { enabled: isAuthenticated && !authLoading }
+    { enabled: isAuthenticated && !authLoading, refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
 
   if (isLoading || authLoading) {
@@ -45,14 +51,16 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
   const total = stats.total;
   const delta = Number(overview?.leadDelta ?? 0);
   const previous = total - delta;
-  const deltaPercent = previous > 0 ? Math.round((delta / previous) * 100) : 0;
-  const isPositive = deltaPercent >= 0;
+  const deltaPercent = Math.round(computeDeltaPercent(delta, previous));
+  const isPositive = isTrendingUp(deltaPercent);
 
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-start justify-between">
         <div className="w-12 h-12 rounded-lg bg-ds-primary/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-2xl text-ds-primary">group</span>
+          <span className="material-symbols-outlined text-2xl text-ds-primary" aria-hidden="true">
+            group
+          </span>
         </div>
         {deltaPercent !== 0 && (
           <span
@@ -60,7 +68,7 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
               isPositive ? 'text-green-600' : 'text-red-600'
             }`}
           >
-            <span className="material-symbols-outlined text-lg">
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
               {isPositive ? 'trending_up' : 'trending_down'}
             </span>{' '}
             {isPositive ? '+' : ''}
@@ -69,7 +77,7 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
         )}
       </div>
       <p className="text-sm text-slate-500 dark:text-slate-400 mt-4">Total Leads</p>
-      <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">
+      <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1 tabular-nums">
         {total.toLocaleString('en-GB')}
       </p>
     </div>

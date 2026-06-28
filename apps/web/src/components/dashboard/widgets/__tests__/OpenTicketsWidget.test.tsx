@@ -2,6 +2,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { OpenTicketsWidget } from '../OpenTicketsWidget';
+import { DASHBOARD_REFETCH_INTERVAL_MS } from '@/lib/dashboard/kpi-calculator';
 
 const useQueryMock = vi.fn();
 
@@ -35,5 +36,15 @@ describe('OpenTicketsWidget', () => {
     expect(screen.getByText('12')).toBeInTheDocument();
     expect(screen.getByText(/5 Urgent/)).toBeInTheDocument();
     expect(screen.getByText(/SLA breach/)).toHaveTextContent('2 SLA breaches');
+  });
+
+  it('polls ticket.stats on the shared dashboard refetch interval', () => {
+    useQueryMock.mockReturnValue({ data: { total: 0, bySLAStatus: {} }, isLoading: false });
+    render(<OpenTicketsWidget />);
+
+    expect(useQueryMock).toHaveBeenCalledWith(
+      { timeWindow: 'all' },
+      expect.objectContaining({ refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS })
+    );
   });
 });
