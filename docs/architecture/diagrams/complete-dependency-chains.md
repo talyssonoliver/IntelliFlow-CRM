@@ -1345,7 +1345,7 @@ Dependency Chain:
                             ├──► TRACK-004 (Metrics) ⬜ ────────────────────────────────────────────────┘
                             └──► ai-metrics.ts (Val) ⬜ ────────────────────────────────────────────────┘
 
-  IFC-015 (Platform) ✅ + IFC-297 (DB Persistence) ✅ ──► IFC-197 (AI Monitoring API) ✅ ──► IFC-214 (Redis Live Snapshot Bridge) ⏳ ──► PG-151 (Dashboard UI) ⏳ ──► IFC-296 (Queue Admin API + UI) ⏳
+  IFC-015 (Platform) ✅ + IFC-297 (DB Persistence) ✅ ──► IFC-197 (AI Monitoring API) ✅ ──► IFC-214 (Redis Live Snapshot Bridge) ✅ ──► PG-151 (Dashboard UI) ⏳ ──► IFC-296 (Queue Admin API + UI) ⏳
                                                                     └──► PG-192 (Agent Logs Fix) ✅ ──┬──► PG-193 (Workflow Progress Panel) ✅
                                                                                                      │
   workflow.router.ts ✅ ──► workflow.getExecution/getExecutionsByEntity (tenantProcedure) ✅ ────────┘

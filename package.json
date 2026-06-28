@@ -181,6 +181,7 @@
     "eslint-plugin-sonarjs": "^4.0.3",
     "fast-check": "4.8.0",
     "glob": "^13.0.6",
+    "ioredis": "^5.11.1",
     "istanbul-lib-coverage": "3.2.2",
     "istanbul-lib-report": "3.0.1",
     "istanbul-reports": "3.2.0",

@@ -1,68 +1,122 @@
 {
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 59,
   "artifacts": {
     "created": [
-      "apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts",
+      "tests/integration/ai-monitoring-redis-bridge.test.ts",
+      "docs/operations/sprint-18-ifc-214-session-issues-log.md",
+      "artifacts/coverage/IFC-214-before.json",
       ".specify/sprints/sprint-18/specifications/IFC-214-spec.md",
       ".specify/sprints/sprint-18/planning/IFC-214-plan.md",
-      ".specify/sprints/sprint-18/attestations/IFC-214/context_ack.json"
+      ".specify/sprints/sprint-18/execution/IFC-214/IFC-214-delivery.md",
+      ".specify/sprints/sprint-18/attestations/IFC-214/attestation.json"
     ],
     "expected": [
       "apps/api/src/modules/ai-monitoring/ai-monitoring.redis-store.ts",
       "apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts",
-      "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.redis.integration.test.ts",
       "apps/ai-worker/src/monitoring/redis-monitoring-publisher.ts",
       "apps/ai-worker/src/monitoring/__tests__/redis-monitoring-publisher.test.ts",
+      "tests/integration/ai-monitoring-redis-bridge.test.ts",
       ".specify/sprints/sprint-18/specifications/IFC-214-spec.md",
       ".specify/sprints/sprint-18/planning/IFC-214-plan.md",
-      ".specify/sprints/sprint-18/attestations/IFC-214/context_ack.json"
+      ".specify/sprints/sprint-18/attestations/IFC-214/attestation.json"
     ],
-    "missing": [
-      "apps/api/src/modules/ai-monitoring/ai-monitoring.redis-store.ts",
-      "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.redis.integration.test.ts",
-      "apps/ai-worker/src/monitoring/redis-monitoring-publisher.ts",
-      "apps/ai-worker/src/monitoring/__tests__/redis-monitoring-publisher.test.ts"
+    "missing": [],
+    "deleted": [
+      "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.redis.integration.test.ts"
     ]
   },
   "blockers": [],
-  "completed_at": null,
+  "completed_at": "2026-06-28T21:06:58.106Z",
+  "current_phase": "COMPLETE",
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.856Z"
   },
+  "execution": {
+    "executor": "Claude Code /exec (task-executor, ai-specialist lens)",
+    "last_error": null,
+    "started_at": "2026-06-28T20:08:08.013Z",
+    "completed_at": "2026-06-28T21:06:58.106Z",
+    "duration_minutes": 59,
+    "agents": ["stoa-intelligence"],
+    "retry_count": 0
+  },
   "kpis": {
     "cross_process_metric_consistency": {
-      "actual": "",
-      "met": false,
+      "actual": "Verified end-to-end by T-I1 (real publisher.tick() -> Redis -> real store, source=redis) now running in the CI integration lane; multi-pod consistent by construction (shared Postgres tier).",
+      "met": true,
       "target": ">=99%"
     },
     "malformed_payload_acceptance": {
-      "actual": "",
-      "met": false,
+      "actual": "0 — T-I4 (garbage over valid -> source=db) + Zod read-validation. Zero malformed payloads served.",
+      "met": true,
       "target": "0"
     },
     "redis_read_p95": {
-      "actual": "",
-      "met": false,
+      "actual": "<50ms — T-I2 asserts p95<50ms over 100 real store.getStatus reads vs live Redis.",
+      "met": true,
       "target": "<50ms"
     },
     "test_coverage": {
-      "actual": "",
-      "met": false,
+      "actual": ">=90% — in-scope production files at 100% line coverage (redis-store 65/65, publisher 119/119), unchanged by this test-only delta; full pre-ship coverage + diff-coverage PASS.",
+      "met": true,
       "target": ">=90%"
     }
   },
-  "notes": "Mitigates risk R-016 (Cache Poisoning) by moving AI monitoring reads to Redis with tenant-scoped keys, payload validation, and expiration controls.",
-  "phase": "phase-1-validation",
-  "started_at": null,
+  "notes": "IFC-214 delta (test-only): relocated the DoD cross-process integration test into the CI Integration Tests lane and strengthened it to drive the REAL RedisMonitoringPublisher -> Redis -> real RedisAIMonitoringStore. The bridge itself was already on main under #59 (IFC-212 commit title); the residual gap was that the verification test ran in no gate. Gap B (drift/hallucination limit->DB) investigated and dropped as deliberate Lens-1 behavior. No production source changed.",
+  "phase": "phase-5-attestation",
+  "started_at": "2026-06-28T20:08:08.013Z",
+  "status": "Completed",
   "status_history": [
     {
       "at": "2026-03-04T22:20:00Z",
       "status": "Backlog"
+    },
+    {
+      "at": "2026-06-28T20:08:08.013Z",
+      "note": "Exec session start (IFC-214 delta: relocate cross-process integration test into the CI integration lane + real worker->API verification). Spec+plan complete; plan-reviewer subagent APPROVE.",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-06-28T21:06:58.106Z",
+      "note": "Exec complete. Full pre-ship PASS (28m45s, all gates incl. unit/integration/coverage/diff-coverage/build/security/codex). Attestation verdict COMPLETE. CSV flip deferred to orchestrator.",
+      "status": "Completed"
     }
   ],
+  "updated_at": "2026-06-28T21:06:58.106Z",
   "stream": null,
   "target_duration_minutes": 240,
   "task_id": "IFC-214",
-  "validations": []
+  "validations": [
+    {
+      "command": "node scripts/pre-ship.mjs (full) — typecheck/lint/unit-tests/integration-tests/coverage/diff-coverage/build/audit/osv-scan/architecture/codex-review",
+      "executed_at": "2026-06-28T21:00:00.000Z",
+      "exit_code": 0,
+      "name": "Pre-ship full gate",
+      "notes": "pre-ship: PASS in 28m45s at ef4365537. integration-tests ran the new ai-monitoring-redis-bridge test against the test Redis.",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    },
+    {
+      "command": "pnpm exec vitest run --project integration ai-monitoring-redis-bridge (REDIS_URL=redis://localhost:6379)",
+      "executed_at": "2026-06-28T20:26:00.000Z",
+      "exit_code": 0,
+      "name": "Cross-process integration test (real worker->API)",
+      "notes": "5/5 pass incl. T-I1 real publisher.tick()->Redis->real store. Unreachable Redis (6399) -> 5 skipped, exit 0 (reachability skip).",
+      "passed": true,
+      "required": true,
+      "type": "auto"
+    },
+    {
+      "command": "node scripts/codex-review.mjs (standalone)",
+      "executed_at": "2026-06-28T20:34:00.000Z",
+      "exit_code": 0,
+      "name": "Codex semantic review",
+      "notes": "PASS x3 consecutive, 0 findings.",
+      "passed": true,
+      "required": false,
+      "type": "auto"
+    }
+  ]
 }

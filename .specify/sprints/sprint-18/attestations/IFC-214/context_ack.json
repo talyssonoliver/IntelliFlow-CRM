@@ -1,0 +1,40 @@
+{
+  "task_id": "IFC-214",
+  "title": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
+  "sprint": 18,
+  "acknowledged_by": "Claude Opus 4.8 (1M) — task-executor /full-pipeline IFC-214 (ai-specialist lens + backend-architect)",
+  "acknowledged_at": "2026-06-28T20:10:00Z",
+  "files_read": [
+    "apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts",
+    "apps/api/src/modules/ai-monitoring/ai-monitoring.redis-store.ts",
+    "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.redis.unit.test.ts",
+    "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.redis.integration.test.ts",
+    "apps/api/src/services/AIMonitoringService.ts",
+    "apps/api/src/container.ts",
+    "apps/api/src/context.ts",
+    "apps/api/vitest.config.ts",
+    "apps/ai-worker/src/monitoring/redis-monitoring-publisher.ts",
+    "apps/ai-worker/src/monitoring/__tests__/redis-monitoring-publisher.test.ts",
+    "apps/ai-worker/src/ai-worker.ts",
+    "apps/web/src/lib/ai-monitoring/hooks.ts",
+    "vitest.config.ts",
+    ".github/workflows/ci.yml",
+    "scripts/pre-ship.mjs",
+    "tests/integration/cross-tenant.test.ts",
+    "docs/architecture/adr/ADR-052-redis-monitoring-snapshot-bridge.md",
+    ".specify/sprints/sprint-18/specifications/IFC-214-spec.md",
+    ".specify/sprints/sprint-18/planning/IFC-214-plan.md"
+  ],
+  "invariants_acknowledged": [
+    "ALREADY ON MAIN: the entire Redis bridge (RedisAIMonitoringStore read-side, RedisMonitoringPublisher write-side, router wiring, container/context registration, R-016 controls, ADR-052) shipped under commit 1d90766e6 'feat(IFC-212): Redis monitoring snapshot bridge (#59)'. Do NOT re-implement merged code (gotcha L1). The orchestrator's 'not on main' was a git-log --grep=IFC-214 artifact (code shipped under the #59 commit title).",
+    "redis-store.ts (SHA256 aa2f4464...) and redis-monitoring-publisher.ts (SHA256 b927a18d...) are NOT modified by this task — verified identical to the pre-existing #59 attestation. This is a TEST-ONLY delta.",
+    "THE REAL GAP (Gap A): the DoD 'cross-process integration test verifies worker writes are visible to API' existed but ran in NO gate — excluded from the apps/api unit project by the *.integration.test.ts suffix (apps/api/vitest.config.ts:26), and not under tests/integration/ so pnpm test:integration (root --project integration) never picked it up. It verified nothing.",
+    "FIX: relocate into tests/integration/ (CI Integration Tests lane provisions Redis) AND strengthen to drive the REAL RedisMonitoringPublisher.tick() -> Redis -> real RedisAIMonitoringStore. The integration lane may import across the api/ai-worker package boundary (cross-tenant.test.ts precedent), which the apps/api unit project cannot.",
+    "Gap B DROPPED (not a bug): the ai-specialist 'getDriftMetrics/getHallucinationReport never serve from Redis when limit is set' finding is deliberate Lens-1 behaviour. hasFilters() busts the cache on limit because the DB queries ALL TIME (AIMonitoringService.ts:159-162 take: limit ?? 100) while the publisher snapshot is a rolling lookbackMs window — slicing would re-introduce a query-semantic inconsistency. Regression tests assert limit->source:db (unit.test.ts:412-420,494-500). The Redis branch is reachable+tested for no-limit requests (T-A2/T-A4). Reversing it is a regression, not a fix.",
+    "tokenCost:0 / hallucinationFlags:[] stubs in chain-monitor.ts are IFC-215 (payload fidelity) scope, NOT IFC-214.",
+    "REDIS_URL precedence: an externally-set REDIS_URL wins over .env.test's loadEnv (probe-confirmed), so CI's 6379 is honoured; .env.test's 6380 matches the docker-compose redis-test service. The test uses a reachability ping-skip so a set-but-unreachable URL skips cleanly, never failing the gate.",
+    "ioredis is a transitive-only dep (via bullmq) — added to ROOT devDependencies (^5.11.1) so the integration test resolves a real client at the root context.",
+    "CONTROL PLANE: the CSV status flip AND the CSV 'Artifacts To Track' path swap (old integration test -> tests/integration/ai-monitoring-redis-bridge.test.ts) are the ORCHESTRATOR's job, performed on merge — NOT done in this worktree.",
+    "Plan-reviewer subagent APPROVE (Round 2) after the 3 required structural fixes (dep-chain marker step, Files Summary block, spec Related Documents)."
+  ]
+}

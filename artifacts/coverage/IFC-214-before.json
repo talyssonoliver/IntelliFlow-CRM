@@ -1,0 +1,26 @@
+{
+  "task_id": "IFC-214",
+  "captured_at": "2026-06-28T20:13:00Z",
+  "description": "Pre-implementation coverage baseline for IFC-214 (Redis-backed AI Monitoring State Bridge). Phase-0 exploration established this is a TEST-ONLY delta: the production bridge (router/store/publisher/container/context) is already on origin/main via #59 and is NOT modified. The delta relocates the orphaned cross-process integration test into the CI integration lane (tests/integration/) and strengthens it to drive the real RedisMonitoringPublisher -> Redis -> real RedisAIMonitoringStore, and deletes the superseded apps/api/.../ai-monitoring.redis.integration.test.ts. No production source lines change, so production coverage is unchanged by construction; AFTER snapshot will re-measure the same in-scope files to confirm zero regression.",
+  "measurement_scope": [
+    "apps/api/src/modules/ai-monitoring/ai-monitoring.redis-store.ts (in-scope production file; UNCHANGED — exercised by the new integration test + existing unit tests)",
+    "apps/ai-worker/src/monitoring/redis-monitoring-publisher.ts (in-scope production file; UNCHANGED — exercised by the new integration test + existing unit tests)",
+    "tests/integration/ai-monitoring-redis-bridge.test.ts (NEW test file — test code, not a coverage target)",
+    "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.redis.integration.test.ts (DELETED — was excluded from coverage by the *.integration.test.ts glob, so removal does not change measured coverage)"
+  ],
+  "command": "Scoped istanbul vitest --coverage runs at baseline (origin/main @ 2de1aef52): apps/api ai-monitoring.redis.unit + router tests over ai-monitoring.redis-store.ts; apps/ai-worker redis-monitoring-publisher.test.ts over redis-monitoring-publisher.ts.",
+  "baseline_files": {
+    "apps/api/src/modules/ai-monitoring/ai-monitoring.redis-store.ts": {
+      "lines": { "total": 65, "covered": 65, "skipped": 0, "pct": 100 },
+      "note": "100% line coverage from ai-monitoring.redis.unit.test.ts (34) + ai-monitoring.router.test.ts; unchanged by this task"
+    },
+    "apps/ai-worker/src/monitoring/redis-monitoring-publisher.ts": {
+      "lines": { "total": 119, "covered": 119, "skipped": 0, "pct": 100 },
+      "note": "100% line coverage from redis-monitoring-publisher.test.ts (19); unchanged by this task"
+    }
+  },
+  "baseline_totals": {
+    "lines": { "total": 184, "covered": 184, "skipped": 0, "pct": 100 },
+    "note": "Aggregate of the two in-scope production files. No production source changes in this task -> AFTER equals BEFORE (zero regression expected)."
+  }
+}
