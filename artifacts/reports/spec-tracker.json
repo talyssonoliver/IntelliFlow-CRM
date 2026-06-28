@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-06-26T19:20:19.873Z",
+  "generated_at": "2026-06-27T23:53:51.522Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 496,
-    "completed": 413,
+    "completed": 431,
     "partially_done": 2,
-    "spec_only": 77,
+    "spec_only": 59,
     "uncertain": 4
   },
   "status_legend": {
@@ -4021,14 +4021,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-106",
         "IFC-127"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-200",
@@ -4055,8 +4055,8 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-072",
@@ -4065,7 +4065,7 @@
         "IFC-106",
         "IFC-124"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-202",
@@ -4108,13 +4108,13 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-069"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-205",
@@ -5450,14 +5450,14 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-299"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-303",
@@ -5483,14 +5483,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-303",
         "PG-180"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-305",
@@ -7829,14 +7829,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-183"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-197",
@@ -7846,14 +7846,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-183"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-198",
@@ -7863,15 +7863,15 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-152",
         "PG-192"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-199",
@@ -7881,15 +7881,15 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-152",
         "PG-192"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-200",
@@ -7916,14 +7916,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-187"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-202",
@@ -7933,14 +7933,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-189"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-203",
@@ -7950,14 +7950,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-189"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-204",
@@ -7967,14 +7967,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-190"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-205",
@@ -7984,14 +7984,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-182"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-206",
@@ -8001,14 +8001,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-186"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-207",
@@ -8018,14 +8018,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-182"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-208",
@@ -8035,14 +8035,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-191"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-209",
@@ -8052,14 +8052,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-191"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PM-OPS-001",

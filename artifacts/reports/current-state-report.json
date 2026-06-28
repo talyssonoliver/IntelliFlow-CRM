@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-26T19:20:19.877Z",
+  "generatedAt": "2026-06-27T23:53:51.527Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -346,6 +346,7 @@
       ".specify/sprints/sprint-18/attestations/IFC-282/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-287/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-301/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-302/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-311/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json",
@@ -493,17 +494,45 @@
     "totalTasks": 596,
     "totalNumberedSprintTasks": 591,
     "continuousTaskCount": 5,
-    "completedTasks": 413,
-    "backlogTasks": 182,
+    "completedTasks": 441,
+    "backlogTasks": 154,
     "blockedTasks": 0,
-    "completionPercentage": 69.3,
+    "completionPercentage": 73.99,
     "inProgressTasks": 1,
     "otherTasks": 0
   },
   "inconsistencies": {
     "missingSpecifySprintSummaries": [],
     "ignoredSpecifySprintDirs": [],
-    "completedWithoutCanonicalAttestation": [],
+    "completedWithoutCanonicalAttestation": [
+      "IFC-043",
+      "IFC-052",
+      "IFC-071",
+      "PG-110",
+      "PG-114",
+      "PG-127",
+      "PG-147",
+      "IFC-199",
+      "IFC-201",
+      "IFC-204",
+      "IFC-304",
+      "PG-188",
+      "PG-191",
+      "IFC-306",
+      "PG-196",
+      "PG-197",
+      "PG-198",
+      "PG-199",
+      "PG-201",
+      "PG-202",
+      "PG-203",
+      "PG-204",
+      "PG-205",
+      "PG-206",
+      "PG-207",
+      "PG-208",
+      "PG-209"
+    ],
     "attestedButNotCompletedInCsv": [
       {
         "taskId": "IFC-212",
@@ -944,38 +973,6 @@
         }
       },
       {
-        "taskId": "IFC-302",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Support",
-        "title": "Refactor Help Article Page to Use Database",
-        "description": "Refactor Help Article Page to Use Database",
-        "summary": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing",
-        "definitionOfDone": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing",
-        "dependencies": [
-          "IFC-299"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "IFC-309",
         "sprint": 18,
         "status": "Backlog",
@@ -1006,6 +1003,36 @@
         "kpiSummary": {
           "total": 0,
           "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-314",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Integration",
+        "title": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
+        "description": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
+        "summary": "IFC-314 — N+1 Query-Budget Detector + cross-context N+1 remediation, governed by ADR-053 (Accepted). DETECTOR (packages/db/src/query-budget/): AsyncLocalStorage request-scoped store (context.ts:... All 56 findings fixed-or-documented;...",
+        "definitionOfDone": "SetupInstalment + DeliveryTier + tenantSlug on Opportunity (migration applied); Stripe adapter createInvoiceItem/createInvoice/finalizeInvoice; StripeSubscription persisted on customer.subscription.*; PortalDeliverySync POSTs provision + delivery via the domain_events outbox; CloseDealWonUseCase creates 3 instalments + finalises instalment-1 + enqueues the push; events-worker handles opportunity.deal_won_enriched; ai-worker runs a daily portal-delivery-sweep job; handleSubscriptionWebhook verifies the Stripe signature; artifacts: packages/db, packages/adapters, packages/application, apps/api, apps/workers/events-worker, apps/ai-worker; targets: >=90% scoped coverage, idempotent push; verified by: pnpm typecheck/test/lint/build + pre-ship",
+        "definitionOfDoneSnapshot": "All 56 findings fixed-or-documented; Each fixed N+1 has a query-count regression test proving non-linear growth; Detector suite passes (counter, isolation, over/under budget, background no-throw, missing-context no-crash)",
+        "dependencies": [],
+        "attestation": {
+          "exists": true,
+          "path": ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json",
+          "verdict": "COMPLETE",
+          "timestamp": "2026-05-31T18:00:00Z",
+          "sprintFolder": 18
+        },
+        "validationSummary": {
+          "total": 4,
+          "passed": 4,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 4,
+          "met": 4,
           "missed": 0
         }
       }
@@ -17484,12 +17511,28 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 66,
-      "completedTasks": 31,
-      "backlogTasks": 34,
+      "completedTasks": 47,
+      "backlogTasks": 18,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 31,
-      "missingCompletedAttestations": [],
+      "attestedCompletedTasks": 32,
+      "missingCompletedAttestations": [
+        "PG-188",
+        "PG-191",
+        "PG-196",
+        "PG-197",
+        "PG-198",
+        "PG-199",
+        "PG-201",
+        "PG-202",
+        "PG-203",
+        "PG-204",
+        "PG-205",
+        "PG-206",
+        "PG-207",
+        "PG-208",
+        "PG-209"
+      ],
       "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
       "notableCompleted": [
         {
@@ -17828,8 +17871,8 @@
         {
           "section": "Settings",
           "total": 19,
-          "completed": 3,
-          "open": 16
+          "completed": 18,
+          "open": 1
         },
         {
           "section": "Infrastructure",
@@ -17888,8 +17931,8 @@
         {
           "section": "Support",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         }
       ],
       "tasks": [
@@ -19059,32 +19102,32 @@
         {
           "taskId": "IFC-302",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Support",
           "title": "Refactor Help Article Page to Use Database",
           "description": "Refactor Help Article Page to Use Database",
-          "summary": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing",
+          "summary": "Pure consumer-side refactor: public [article]/page.tsx reads the DB via trpc.helpArticle.getBySlug/getByCategory/getRelated; only API change is an additive sectionCount on getByCategory.......",
           "definitionOfDone": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing; verified by: pnpm test",
           "definitionOfDoneSnapshot": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing",
           "dependencies": [
             "IFC-299"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-302/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-27T20:20:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
@@ -19123,7 +19166,7 @@
         {
           "taskId": "PG-188",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Billing (/billing/settings)",
           "description": "Module Settings - Billing (/billing/settings)",
@@ -19219,7 +19262,7 @@
         {
           "taskId": "PG-191",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Tasks (/tasks/task-settings)",
           "description": "Module Settings - Tasks (/tasks/task-settings)",
@@ -19351,7 +19394,7 @@
         {
           "taskId": "PG-196",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Account Tiers (/accounts/(list)/account-tiers)",
           "description": "Module Settings - Account Tiers (/accounts/(list)/account-tiers)",
@@ -19384,7 +19427,7 @@
         {
           "taskId": "PG-197",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Territory Mapping (/accounts/(list)/territory-mapping)",
           "description": "Module Settings - Territory Mapping (/accounts/(list)/territory-mapping)",
@@ -19417,7 +19460,7 @@
         {
           "taskId": "PG-198",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Approval Policies (/agent-approvals/approval-policies)",
           "description": "Module Settings - Approval Policies (/agent-approvals/approval-policies)",
@@ -19451,7 +19494,7 @@
         {
           "taskId": "PG-199",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Model Config (/agent-approvals/model-config)",
           "description": "Module Settings - Model Config (/agent-approvals/model-config)",
@@ -19518,7 +19561,7 @@
         {
           "taskId": "PG-201",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Scheduled Reports (/analytics/scheduled-reports)",
           "description": "Module Settings - Scheduled Reports (/analytics/scheduled-reports)",
@@ -19551,7 +19594,7 @@
         {
           "taskId": "PG-202",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Availability (/calendar/availability)",
           "description": "Module Settings - Availability (/calendar/availability)",
@@ -19584,7 +19627,7 @@
         {
           "taskId": "PG-203",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Event Types (/calendar/event-types)",
           "description": "Module Settings - Event Types (/calendar/event-types)",
@@ -19617,7 +19660,7 @@
         {
           "taskId": "PG-204",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Case Types (/cases/case-types)",
           "description": "Module Settings - Case Types (/cases/case-types)",
@@ -19650,7 +19693,7 @@
         {
           "taskId": "PG-205",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
           "description": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
@@ -19683,7 +19726,7 @@
         {
           "taskId": "PG-206",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Storage Policies (/documents/(list)/storage-policies)",
           "description": "Module Settings - Storage Policies (/documents/(list)/storage-policies)",
@@ -19716,7 +19759,7 @@
         {
           "taskId": "PG-207",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Email (/email/email-settings)",
           "description": "Module Settings - Email (/email/email-settings)",
@@ -19749,7 +19792,7 @@
         {
           "taskId": "PG-208",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Task Automation (/tasks/(list)/automation)",
           "description": "Module Settings - Task Automation (/tasks/(list)/automation)",
@@ -19782,7 +19825,7 @@
         {
           "taskId": "PG-209",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Task Types (/tasks/(list)/task-types)",
           "description": "Module Settings - Task Types (/tasks/(list)/task-types)",
@@ -20008,12 +20051,15 @@
       "name": "Sprint 19",
       "summarySource": "specify",
       "totalTasks": 15,
-      "completedTasks": 2,
-      "backlogTasks": 13,
+      "completedTasks": 4,
+      "backlogTasks": 11,
       "blockedTasks": 0,
       "inProgressTasks": 0,
       "attestedCompletedTasks": 2,
-      "missingCompletedAttestations": [],
+      "missingCompletedAttestations": [
+        "IFC-304",
+        "IFC-306"
+      ],
       "context": "Primary focus areas: Core CRM (9), AI/Intelligence (2), Automation (1).",
       "notableCompleted": [
         {
@@ -20078,6 +20124,71 @@
           },
           "kpiSummary": {
             "total": 1,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-306",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "Compliance",
+          "title": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
+          "description": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
+          "summary": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
+          "definitionOfDone": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026; timeline API serves updated data; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
+          "dependencies": [
+            "IFC-073"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-304",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "Support",
+          "title": "Article Analytics Dashboard",
+          "description": "Article Analytics Dashboard",
+          "summary": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
+          "definitionOfDone": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
+          "dependencies": [
+            "IFC-303",
+            "PG-180"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
             "met": 0,
             "missed": 0
           }
@@ -20268,8 +20379,8 @@
         {
           "section": "Compliance",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         },
         {
           "section": "Investment Gate",
@@ -20280,8 +20391,8 @@
         {
           "section": "Support",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         }
       ],
       "tasks": [
@@ -20577,7 +20688,7 @@
         {
           "taskId": "IFC-304",
           "sprint": 19,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Support",
           "title": "Article Analytics Dashboard",
           "description": "Article Analytics Dashboard",
@@ -20642,7 +20753,7 @@
         {
           "taskId": "IFC-306",
           "sprint": 19,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Compliance",
           "title": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
           "description": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
@@ -20776,14 +20887,84 @@
       "name": "Sprint 20",
       "summarySource": "specify",
       "totalTasks": 34,
-      "completedTasks": 0,
-      "backlogTasks": 34,
+      "completedTasks": 2,
+      "backlogTasks": 32,
       "blockedTasks": 0,
       "inProgressTasks": 0,
       "attestedCompletedTasks": 0,
-      "missingCompletedAttestations": [],
+      "missingCompletedAttestations": [
+        "PG-127",
+        "IFC-204"
+      ],
       "context": "Primary focus areas: Core CRM (25), AI Foundation (2), Performance (2).",
-      "notableCompleted": [],
+      "notableCompleted": [
+        {
+          "taskId": "IFC-204",
+          "sprint": 20,
+          "status": "Completed",
+          "section": "Core CRM",
+          "title": "Activity Feed Performance Observability - queryDurationMs tracking structured logging and latency alerting",
+          "description": "Activity Feed Performance Observability - queryDurationMs tracking structured logging and latency alerting",
+          "summary": "queryDurationMs field added to feed response; repository measures query execution time via performance.now(); structured JSON logging for all feed queries (tenant, duration, source count, cache hit/miss); alert threshold at p95 >500ms;...",
+          "definitionOfDone": "queryDurationMs field added to feed response; repository measures query execution time via performance.now(); structured JSON logging for all feed queries (tenant, duration, source count, cache hit/miss); alert threshold at p95 >500ms; Grafana dashboard panel; unit tests for timing; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "queryDurationMs field added to feed response; repository measures query execution time via performance.now(); structured JSON logging for all feed queries (tenant, duration, source count, cache hit/miss); alert threshold at p95 >500ms;...",
+          "dependencies": [
+            "IFC-069"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-127",
+          "sprint": 20,
+          "status": "Completed",
+          "section": "Public Pages",
+          "title": "Partner Application Workflow - Dedicated partner application form with specialized fields, routing, and onboarding process",
+          "description": "Partner Application Workflow - Dedicated partner application form with specialized fields, routing, and onboarding process",
+          "summary": "Dedicated partner application form; specialized fields (company size, integration type, use case); separate routing/CRM tagging; partner-specific auto-response",
+          "definitionOfDone": "Dedicated partner application form; specialized fields (company size, integration type, use case); separate routing/CRM tagging; partner-specific auto-response; artifacts: page.tsx, partner-application.ts, application-handler.ts; targets: Response <200ms, Lighthouse >=90, >=90% coverage; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Dedicated partner application form; specialized fields (company size, integration type, use case); separate routing/CRM tagging; partner-specific auto-response",
+          "dependencies": [
+            "PG-006",
+            "PG-005",
+            "GTM-002"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        }
+      ],
       "openTasks": [
         {
           "taskId": "IFC-035",
@@ -20950,8 +21131,8 @@
         {
           "section": "Core CRM",
           "total": 25,
-          "completed": 0,
-          "open": 25
+          "completed": 1,
+          "open": 24
         },
         {
           "section": "AI Foundation",
@@ -20992,8 +21173,8 @@
         {
           "section": "Public Pages",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         }
       ],
       "tasks": [
@@ -21256,7 +21437,7 @@
         {
           "taskId": "PG-127",
           "sprint": 20,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Public Pages",
           "title": "Partner Application Workflow - Dedicated partner application form with specialized fields, routing, and onboarding process",
           "description": "Partner Application Workflow - Dedicated partner application form with specialized fields, routing, and onboarding process",
@@ -21358,7 +21539,7 @@
         {
           "taskId": "IFC-204",
           "sprint": 20,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Activity Feed Performance Observability - queryDurationMs tracking structured logging and latency alerting",
           "description": "Activity Feed Performance Observability - queryDurationMs tracking structured logging and latency alerting",
@@ -24793,14 +24974,123 @@
       "name": "Sprint 25",
       "summarySource": "specify",
       "totalTasks": 14,
-      "completedTasks": 0,
-      "backlogTasks": 14,
+      "completedTasks": 3,
+      "backlogTasks": 11,
       "blockedTasks": 0,
       "inProgressTasks": 0,
       "attestedCompletedTasks": 0,
-      "missingCompletedAttestations": [],
+      "missingCompletedAttestations": [
+        "IFC-043",
+        "IFC-071",
+        "IFC-201"
+      ],
       "context": "Primary focus areas: Core CRM (6), Resilience (2), Settings (2).",
-      "notableCompleted": [],
+      "notableCompleted": [
+        {
+          "taskId": "IFC-201",
+          "sprint": 25,
+          "status": "Completed",
+          "section": "Settings",
+          "title": "Settings Control Plane Foundations - domain models, adapters, and router for users/teams/roles/permissions/audit/integrations/webhooks/security",
+          "description": "Settings Control Plane Foundations - domain models, adapters, and router for users/teams/roles/permissions/audit/integrations/webhooks/security",
+          "summary": "Settings domain policies and APIs implemented for IAM, audit, integrations and security controls",
+          "definitionOfDone": "Settings domain policies and APIs implemented for IAM, audit, integrations and security controls; artifacts: settings.router.ts, settings-policy.ts, PrismaSettingsRepository.ts; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Settings domain policies and APIs implemented for IAM, audit, integrations and security controls",
+          "dependencies": [
+            "IFC-072",
+            "IFC-098",
+            "IFC-099",
+            "IFC-106",
+            "IFC-124"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-043",
+          "sprint": 25,
+          "status": "Completed",
+          "section": "Documentation",
+          "title": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+          "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+          "summary": "Incident response, deployment, rollback procedures",
+          "definitionOfDone": "Incident response, deployment, rollback procedures; artifacts: incident-response-flowchart.svg, deployment-checklist.md, rollback-test.log; targets: <30min; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Incident response, deployment, rollback procedures",
+          "dependencies": [
+            "ENV-008-AI",
+            "IFC-112",
+            "IFC-113",
+            "IFC-115",
+            "IFC-130"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-071",
+          "sprint": 25,
+          "status": "Completed",
+          "section": "Resilience",
+          "title": "Multi-Region Setup",
+          "description": "Multi-Region Setup",
+          "summary": "Multi-region database replication active",
+          "definitionOfDone": "Multi-region database replication active; artifacts: multi-region-architecture.puml, replication-lag-metrics.json, cost-comparison.xlsx; targets: <5min, <30min; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Multi-region database replication active",
+          "dependencies": [
+            "IFC-040"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        }
+      ],
       "openTasks": [
         {
           "taskId": "IFC-040",
@@ -24827,42 +25117,6 @@
             "IFC-133",
             "IFC-134",
             "IFC-169"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "IFC-043",
-          "sprint": 25,
-          "status": "Backlog",
-          "section": "Documentation",
-          "title": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
-          "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
-          "summary": "Incident response, deployment, rollback procedures",
-          "definitionOfDone": "Incident response, deployment, rollback procedures; artifacts: incident-response-flowchart.svg, deployment-checklist.md, rollback-test.log; targets: <30min; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Incident response, deployment, rollback procedures",
-          "dependencies": [
-            "ENV-008-AI",
-            "IFC-112",
-            "IFC-113",
-            "IFC-115",
-            "IFC-130"
           ],
           "attestation": {
             "exists": false,
@@ -24948,17 +25202,49 @@
           }
         },
         {
-          "taskId": "IFC-071",
+          "taskId": "PG-100",
           "sprint": 25,
           "status": "Backlog",
-          "section": "Resilience",
-          "title": "Multi-Region Setup",
-          "description": "Multi-Region Setup",
-          "summary": "Multi-region database replication active",
-          "definitionOfDone": "Multi-region database replication active; artifacts: multi-region-architecture.puml, replication-lag-metrics.json, cost-comparison.xlsx; targets: <5min, <30min; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Multi-region database replication active",
+          "section": "Core CRM",
+          "title": "Order Detail",
+          "description": "Order Detail",
+          "summary": "response under 200ms, Lighthouse 90, tracking live",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, tracking live; artifacts: page.tsx, order-detail.tsx, shipment-tracker.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, tracking live",
           "dependencies": [
-            "IFC-040"
+            "PG-099"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-101",
+          "sprint": 25,
+          "status": "Backlog",
+          "section": "Core CRM",
+          "title": "Reports",
+          "description": "Reports",
+          "summary": "response under 200ms, Lighthouse 90, reports accessible",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, reports accessible",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, reports accessible",
+          "dependencies": [
+            "IFC-096"
           ],
           "attestation": {
             "exists": false,
@@ -24990,14 +25276,14 @@
         {
           "section": "Resilience",
           "total": 2,
-          "completed": 0,
-          "open": 2
+          "completed": 1,
+          "open": 1
         },
         {
           "section": "Settings",
           "total": 2,
-          "completed": 0,
-          "open": 2
+          "completed": 1,
+          "open": 1
         },
         {
           "section": "Compliance",
@@ -25008,8 +25294,8 @@
         {
           "section": "Documentation",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         },
         {
           "section": "Enhancement",
@@ -25073,7 +25359,7 @@
         {
           "taskId": "IFC-043",
           "sprint": 25,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Documentation",
           "title": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
           "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
@@ -25173,7 +25459,7 @@
         {
           "taskId": "IFC-071",
           "sprint": 25,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Resilience",
           "title": "Multi-Region Setup",
           "description": "Multi-Region Setup",
@@ -25397,7 +25683,7 @@
         {
           "taskId": "IFC-201",
           "sprint": 25,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Settings Control Plane Foundations - domain models, adapters, and router for users/teams/roles/permissions/audit/integrations/webhooks/security",
           "description": "Settings Control Plane Foundations - domain models, adapters, and router for users/teams/roles/permissions/audit/integrations/webhooks/security",
@@ -25500,14 +25786,50 @@
       "name": "Sprint 26",
       "summarySource": "specify",
       "totalTasks": 9,
-      "completedTasks": 0,
-      "backlogTasks": 9,
+      "completedTasks": 1,
+      "backlogTasks": 8,
       "blockedTasks": 0,
       "inProgressTasks": 0,
       "attestedCompletedTasks": 0,
-      "missingCompletedAttestations": [],
+      "missingCompletedAttestations": [
+        "PG-110"
+      ],
       "context": "Primary focus areas: Settings (6), AI Intelligence (1), Investment Gate (1).",
-      "notableCompleted": [],
+      "notableCompleted": [
+        {
+          "taskId": "PG-110",
+          "sprint": 26,
+          "status": "Completed",
+          "section": "Settings",
+          "title": "Permissions",
+          "description": "Permissions",
+          "summary": "response under 200ms, Lighthouse 90, permissions enforced",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, permissions enforced; artifacts: page.tsx, permission-matrix.tsx, permission-tester.ts; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, permissions enforced",
+          "dependencies": [
+            "PG-109",
+            "IFC-201"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        }
+      ],
       "openTasks": [
         {
           "taskId": "IFC-049",
@@ -25675,8 +25997,8 @@
         {
           "section": "Settings",
           "total": 6,
-          "completed": 0,
-          "open": 6
+          "completed": 1,
+          "open": 5
         },
         {
           "section": "AI Intelligence",
@@ -25895,7 +26217,7 @@
         {
           "taskId": "PG-110",
           "sprint": 26,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Permissions",
           "description": "Permissions",
@@ -25997,27 +26319,30 @@
       "name": "Sprint 27",
       "summarySource": "specify",
       "totalTasks": 9,
-      "completedTasks": 0,
-      "backlogTasks": 9,
+      "completedTasks": 2,
+      "backlogTasks": 7,
       "blockedTasks": 0,
       "inProgressTasks": 0,
       "attestedCompletedTasks": 0,
-      "missingCompletedAttestations": [],
+      "missingCompletedAttestations": [
+        "IFC-052",
+        "PG-114"
+      ],
       "context": "Primary focus areas: Settings (6), Launch (2), Documentation (1).",
-      "notableCompleted": [],
-      "openTasks": [
+      "notableCompleted": [
         {
-          "taskId": "IFC-051",
+          "taskId": "IFC-052",
           "sprint": 27,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Launch",
-          "title": "Pilot Customer Selection",
-          "description": "Pilot Customer Selection",
-          "summary": "2-3 pilot customers for beta testing",
-          "definitionOfDone": "2-3 pilot customers for beta testing; artifacts: pilot-customer-criteria.md, expectations-matrix.xlsx, context_ack.json",
-          "definitionOfDoneSnapshot": "2-3 pilot customers for beta testing",
+          "title": "Production Deployment",
+          "description": "Production Deployment",
+          "summary": "Zero-downtime deployment with feature flags",
+          "definitionOfDone": "Zero-downtime deployment with feature flags; artifacts: deployment-log.txt, feature-flags-config.json, monitoring-dashboard.url; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Zero-downtime deployment with feature flags",
           "dependencies": [
-            "IFC-049"
+            "IFC-040",
+            "IFC-050"
           ],
           "attestation": {
             "exists": false,
@@ -26039,18 +26364,52 @@
           }
         },
         {
-          "taskId": "IFC-052",
+          "taskId": "PG-114",
+          "sprint": 27,
+          "status": "Completed",
+          "section": "Settings",
+          "title": "Webhooks",
+          "description": "Webhooks",
+          "summary": "response under 200ms, Lighthouse 90, webhooks firing",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, webhooks firing; artifacts: page.tsx, webhook-config.tsx, webhook-tester.ts; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, webhooks firing",
+          "dependencies": [
+            "IFC-099",
+            "IFC-201"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        }
+      ],
+      "openTasks": [
+        {
+          "taskId": "IFC-051",
           "sprint": 27,
           "status": "Backlog",
           "section": "Launch",
-          "title": "Production Deployment",
-          "description": "Production Deployment",
-          "summary": "Zero-downtime deployment with feature flags",
-          "definitionOfDone": "Zero-downtime deployment with feature flags; artifacts: deployment-log.txt, feature-flags-config.json, monitoring-dashboard.url; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Zero-downtime deployment with feature flags",
+          "title": "Pilot Customer Selection",
+          "description": "Pilot Customer Selection",
+          "summary": "2-3 pilot customers for beta testing",
+          "definitionOfDone": "2-3 pilot customers for beta testing; artifacts: pilot-customer-criteria.md, expectations-matrix.xlsx, context_ack.json",
+          "definitionOfDoneSnapshot": "2-3 pilot customers for beta testing",
           "dependencies": [
-            "IFC-040",
-            "IFC-050"
+            "IFC-049"
           ],
           "attestation": {
             "exists": false,
@@ -26169,20 +26528,53 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "PG-115",
+          "sprint": 27,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Integrations",
+          "description": "Integrations",
+          "summary": "response under 200ms, Lighthouse 90, integrations connected",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, integrations connected; artifacts: page.tsx, integration-catalog.tsx, oauth-handler.ts; verified by: pnpm test:integration",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, integrations connected",
+          "dependencies": [
+            "IFC-099",
+            "IFC-201"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ],
       "sectionSummary": [
         {
           "section": "Settings",
           "total": 6,
-          "completed": 0,
-          "open": 6
+          "completed": 1,
+          "open": 5
         },
         {
           "section": "Launch",
           "total": 2,
-          "completed": 0,
-          "open": 2
+          "completed": 1,
+          "open": 1
         },
         {
           "section": "Documentation",
@@ -26227,7 +26619,7 @@
         {
           "taskId": "IFC-052",
           "sprint": 27,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Launch",
           "title": "Production Deployment",
           "description": "Production Deployment",
@@ -26359,7 +26751,7 @@
         {
           "taskId": "PG-114",
           "sprint": 27,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Webhooks",
           "description": "Webhooks",
@@ -26493,14 +26885,50 @@
       "name": "Sprint 28",
       "summarySource": "specify",
       "totalTasks": 9,
-      "completedTasks": 0,
-      "backlogTasks": 9,
+      "completedTasks": 1,
+      "backlogTasks": 8,
       "blockedTasks": 0,
       "inProgressTasks": 0,
       "attestedCompletedTasks": 0,
-      "missingCompletedAttestations": [],
+      "missingCompletedAttestations": [
+        "PG-147"
+      ],
       "context": "Primary focus areas: Settings (6), Launch (1), Platform (1).",
-      "notableCompleted": [],
+      "notableCompleted": [
+        {
+          "taskId": "PG-147",
+          "sprint": 28,
+          "status": "Completed",
+          "section": "Platform",
+          "title": "Workflow List & Status UI - Active workflows execution status step visualization logs",
+          "description": "Workflow List & Status UI - Active workflows execution status step visualization logs",
+          "summary": "response under 500ms, Lighthouse >=90; WorkflowList, WorkflowDetail, StepVisualization, ExecutionLogs, StatusBadges, WorkflowTriggers components",
+          "definitionOfDone": "Response <500ms, Lighthouse >=90; WorkflowList, WorkflowDetail, StepVisualization, ExecutionLogs, StatusBadges, WorkflowTriggers components; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "response under 500ms, Lighthouse >=90; WorkflowList, WorkflowDetail, StepVisualization, ExecutionLogs, StatusBadges, WorkflowTriggers components",
+          "dependencies": [
+            "IFC-028",
+            "IFC-141"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        }
+      ],
       "openTasks": [
         {
           "taskId": "IFC-053",
@@ -26680,8 +27108,8 @@
         {
           "section": "Platform",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         },
         {
           "section": "Success",
@@ -26951,7 +27379,7 @@
         {
           "taskId": "PG-147",
           "sprint": 28,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Platform",
           "title": "Workflow List & Status UI - Active workflows execution status step visualization logs",
           "description": "Workflow List & Status UI - Active workflows execution status step visualization logs",
@@ -26988,19 +27416,20 @@
       "name": "Sprint 29",
       "summarySource": "specify",
       "totalTasks": 1,
-      "completedTasks": 0,
-      "backlogTasks": 1,
+      "completedTasks": 1,
+      "backlogTasks": 0,
       "blockedTasks": 0,
       "inProgressTasks": 0,
       "attestedCompletedTasks": 0,
-      "missingCompletedAttestations": [],
+      "missingCompletedAttestations": [
+        "IFC-199"
+      ],
       "context": "Primary focus areas: Core CRM (1).",
-      "notableCompleted": [],
-      "openTasks": [
+      "notableCompleted": [
         {
           "taskId": "IFC-199",
           "sprint": 29,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Document Domain Core - lifecycle, signature state machine, ACL and retention invariants",
           "description": "Document Domain Core - lifecycle, signature state machine, ACL and retention invariants",
@@ -27031,19 +27460,20 @@
           }
         }
       ],
+      "openTasks": [],
       "sectionSummary": [
         {
           "section": "Core CRM",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         }
       ],
       "tasks": [
         {
           "taskId": "IFC-199",
           "sprint": 29,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Document Domain Core - lifecycle, signature state machine, ACL and retention invariants",
           "description": "Document Domain Core - lifecycle, signature state machine, ACL and retention invariants",
