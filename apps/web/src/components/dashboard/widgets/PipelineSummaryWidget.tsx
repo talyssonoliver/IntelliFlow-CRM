@@ -65,7 +65,11 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
                   <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                     <div
                       className={`h-full ${STAGE_COLORS[stage.stageKey] || 'bg-primary'} rounded-full motion-safe:transition-all`}
-                      style={{ width: `${Math.max(percentage, 2)}%` }}
+                      // Floor only non-zero shares so truly-empty stages show no
+                      // bar (avoids a phantom 2% sliver for a GBP0 stage).
+                      style={{
+                        width: percentage > 0 ? `${Math.min(Math.max(percentage, 2), 100)}%` : '0%',
+                      }}
                     />
                   </div>
                 </div>

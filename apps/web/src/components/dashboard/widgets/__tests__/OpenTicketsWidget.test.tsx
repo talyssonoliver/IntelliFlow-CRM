@@ -47,4 +47,12 @@ describe('OpenTicketsWidget', () => {
       expect.objectContaining({ refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS })
     );
   });
+
+  it('hides the urgent pill (no fake "0 Urgent") while stats are loading', () => {
+    useQueryMock.mockReturnValue({ data: undefined, isLoading: true });
+    render(<OpenTicketsWidget />);
+
+    expect(screen.queryByText(/Urgent/)).not.toBeInTheDocument();
+    expect(screen.getByText('...')).toBeInTheDocument();
+  });
 });

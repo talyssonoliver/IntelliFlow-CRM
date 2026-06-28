@@ -39,9 +39,11 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
             confirmation_number
           </span>
         </div>
-        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-destructive-muted text-destructive">
-          {metrics.urgent} Urgent
-        </span>
+        {!isLoading && data && (
+          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-destructive-muted text-destructive">
+            {metrics.urgent} Urgent
+          </span>
+        )}
       </div>
       <p className="text-sm text-muted-foreground mt-4">Open Tickets</p>
       <p className="text-3xl font-bold text-foreground mt-1 tabular-nums">
