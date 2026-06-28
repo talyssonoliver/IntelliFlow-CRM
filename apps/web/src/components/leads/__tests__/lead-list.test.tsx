@@ -433,7 +433,9 @@ vi.mock('@intelliflow/ui', async () => {
           </button>
         </div>
       ) : null,
-    // IFC-248: render a confirm button that submits a chosen status when open.
+    // IFC-248: models the real StatusSelectDialog selection contract — the user
+    // must pick a status before confirm is enabled; confirm submits the chosen
+    // status (not a hard-coded value).
     StatusSelectDialog: ({
       open,
       description,
@@ -444,24 +446,33 @@ vi.mock('@intelliflow/ui', async () => {
       description?: string;
       options?: Array<{ value: string; label: string }>;
       onConfirm?: (status: string) => void;
-    }) =>
-      open ? (
+    }) => {
+      const [selected, setSelected] = React.useState<string>('');
+      if (!open) return null;
+      return (
         <div data-testid="dialog-status" data-option-count={options.length}>
           <span>{description}</span>
           {options.map((o) => (
-            <span key={o.value} data-testid={`status-option-${o.value}`}>
+            <button
+              key={o.value}
+              type="button"
+              data-testid={`status-option-${o.value}`}
+              onClick={() => setSelected(o.value)}
+            >
               {o.label}
-            </span>
+            </button>
           ))}
           <button
             type="button"
             data-testid="status-confirm"
-            onClick={() => onConfirm?.('CONTACTED')}
+            disabled={!selected}
+            onClick={() => selected && onConfirm?.(selected)}
           >
             Apply
           </button>
         </div>
-      ) : null,
+      );
+    },
     toast: mockToast,
     Skeleton: ({ className }: { className?: string }) => <div className={className} />,
   };
@@ -938,6 +949,7 @@ describe('LeadList — bulk operations (IFC-248)', () => {
     render(<LeadList />);
     fireEvent.click(screen.getByTestId('select-all'));
     fireEvent.click(screen.getByTestId('bulk-Update Status'));
+    fireEvent.click(screen.getByTestId('status-option-CONTACTED'));
     await act(async () => {
       fireEvent.click(screen.getByTestId('status-confirm'));
     });
