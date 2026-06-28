@@ -20,9 +20,11 @@ export function SalesRevenueWidget(_props: Readonly<WidgetProps>) {
   const delta = Number(data?.revenueDelta ?? 0);
   const isOnTrack = isTrendingUp(delta);
 
-  if (isLoading) {
+  // Show the skeleton while auth is resolving or the query is disabled/pending
+  // (`data` undefined) rather than rendering a real-looking £0 / "On track".
+  if (isLoading || authLoading || !data) {
     return (
-      <div className="p-6 h-full flex flex-col animate-pulse">
+      <div className="p-6 h-full flex flex-col animate-pulse" aria-hidden="true">
         <div className="flex items-start justify-between">
           <div className="w-12 h-12 rounded-lg bg-muted" />
           <div className="w-16 h-5 rounded bg-muted" />

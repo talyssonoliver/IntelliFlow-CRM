@@ -4,7 +4,12 @@ import { describe, it, expect, vi } from 'vitest';
 
 // Mock tRPC — SalesRevenueWidget reads analytics.getOverview
 // (SalesRevenueWidget.tsx:7). revenueDelta >= 0 triggers the 'On track' pill.
-const useQueryMock = vi.fn((..._args: unknown[]) => ({
+const useQueryMock = vi.fn<
+  (...args: unknown[]) => {
+    data?: { totalRevenue: number; revenueDelta: number };
+    isLoading: boolean;
+  }
+>(() => ({
   data: { totalRevenue: 45200, revenueDelta: 0 },
   isLoading: false,
 }));
@@ -39,5 +44,14 @@ describe('SalesRevenueWidget', () => {
       {},
       expect.objectContaining({ refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS })
     );
+  });
+
+  it('shows the skeleton (not a fake £0) when the query has no data yet', () => {
+    useQueryMock.mockReturnValueOnce({ data: undefined, isLoading: false });
+    const { container } = render(<SalesRevenueWidget />);
+
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
+    expect(screen.queryByText('£0')).not.toBeInTheDocument();
+    expect(screen.queryByText('On track')).not.toBeInTheDocument();
   });
 });

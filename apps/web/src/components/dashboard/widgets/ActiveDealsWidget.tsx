@@ -12,6 +12,10 @@ export function ActiveDealsWidget(_props: Readonly<WidgetProps>) {
     { enabled: isAuthenticated && !authLoading, refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
 
+  // While auth is resolving or the query is disabled/pending, `data` is
+  // undefined — show a pending indicator rather than a real-looking 0.
+  const pending = authLoading || isLoading || !data;
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-start justify-between">
@@ -23,7 +27,7 @@ export function ActiveDealsWidget(_props: Readonly<WidgetProps>) {
       </div>
       <p className="text-sm text-muted-foreground mt-4">Active Deals</p>
       <p className="text-3xl font-bold text-foreground mt-1 tabular-nums">
-        {isLoading ? '...' : (data?.openOpportunities ?? 0)}
+        {pending ? '...' : (data?.openOpportunities ?? 0)}
       </p>
     </div>
   );
