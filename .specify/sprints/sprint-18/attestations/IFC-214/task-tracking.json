@@ -27,8 +27,16 @@
   },
   "blockers": [],
   "completed_at": null,
+  "current_phase": "EXEC",
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.856Z"
+  },
+  "execution": {
+    "executor": "Claude Code /exec (task-executor, ai-specialist lens)",
+    "last_error": null,
+    "started_at": "2026-06-28T20:08:08.013Z",
+    "agents": ["stoa-intelligence"],
+    "retry_count": 0
   },
   "kpis": {
     "cross_process_metric_consistency": {
@@ -53,14 +61,21 @@
     }
   },
   "notes": "Mitigates risk R-016 (Cache Poisoning) by moving AI monitoring reads to Redis with tenant-scoped keys, payload validation, and expiration controls.",
-  "phase": "phase-1-validation",
-  "started_at": null,
+  "phase": "phase-3-exec",
+  "started_at": "2026-06-28T20:08:08.013Z",
+  "status": "In Progress",
   "status_history": [
     {
       "at": "2026-03-04T22:20:00Z",
       "status": "Backlog"
+    },
+    {
+      "at": "2026-06-28T20:08:08.013Z",
+      "note": "Exec session start (IFC-214 delta: relocate cross-process integration test into the CI integration lane + real worker->API verification). Spec+plan complete; plan-reviewer subagent APPROVE.",
+      "status": "In Progress"
     }
   ],
+  "updated_at": "2026-06-28T20:08:08.013Z",
   "stream": null,
   "target_duration_minutes": 240,
   "task_id": "IFC-214",
