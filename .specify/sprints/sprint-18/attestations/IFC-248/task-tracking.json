@@ -1,6 +1,7 @@
 {
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 105,
+  "completed_at": "2026-06-28T20:42:00Z",
   "artifacts": {
     "created": [
       "apps/web/src/app/leads/(list)/__tests__/LeadsPageClient.test.tsx",
@@ -19,7 +20,6 @@
     "missing": []
   },
   "blockers": [],
-  "completed_at": null,
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.862Z"
   },

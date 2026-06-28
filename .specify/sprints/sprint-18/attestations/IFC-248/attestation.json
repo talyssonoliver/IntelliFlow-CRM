@@ -1,0 +1,95 @@
+{
+  "task_id": "IFC-248",
+  "sprint": "sprint-18",
+  "verdict": "COMPLETE",
+  "completed_at": "2026-06-28T20:40:00Z",
+  "evidence_summary": "Lead List & Create Page Tests (DELTA, test-authoring only, NO production code changed). Closed the lead-list.tsx component-integration coverage gap (36.9% -> 100% statements / 100% lines / 81.2% branches / 98.8% functions): filtering (status/score), sorting, bulk operations (convert/status/archive/delete dialogs + runners with selected-rows contract), row actions with status gating (Qualify only for NEW/CONTACTED, Convert only for QUALIFIED, neither for CONVERTED), status/score badges, date formatting, and per-mutation onSuccess/onError toasts. Extended lead-list.test.tsx (22 -> 61 tests). Added LeadsPageClient.test.tsx (thin-wrapper isolation, 100%). Added T-012 in lead.router.security.test.ts pinning lead.list role filter (ADMIN sees all; non-admin sees own). TypeCheck (web+api), Lint, Build (web+api), and full test suites all GREEN; codex-review converged PASS.",
+  "artifact_hashes": {
+    "apps/web/src/components/leads/__tests__/lead-list.test.tsx": "63ae8eb3b27b5c19d3cf6a46bc8767937a55c030a36d3c683c74980211dea6f5",
+    "apps/web/src/app/leads/(list)/__tests__/LeadsPageClient.test.tsx": "192ecda78375cc5593db61c412f575cdf50a01dd3207a6b15749573e8f9e27fd",
+    "apps/api/src/modules/lead/__tests__/lead.router.security.test.ts": "c0254111630e17cc637f866cfabb0b4e50f78fcd874b4fae20bb5a41b3b47ed2"
+  },
+  "dependencies_verified": [],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck && pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-28T20:07:00Z",
+      "duration_ms": 60000
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web test (631 files / 11176 tests) && pnpm --filter @intelliflow/api test (245 files / 6397 tests)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-28T20:12:00Z",
+      "duration_ms": 391000
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint <changed web + api test files>",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-28T20:14:00Z",
+      "duration_ms": 20000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build && pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-28T20:38:00Z",
+      "duration_ms": 120000
+    }
+  ],
+  "gate_results": [
+    {
+      "gate": "G1-Plan-Checkboxes",
+      "verdict": "PASS",
+      "detail": "Plan uses a numbered STEP 1-7 structure (no [ ] checkbox syntax); all 7 steps executed with their VALIDATION commands run. No unchecked items remain."
+    },
+    {
+      "gate": "G2-Artifact-Verification",
+      "verdict": "PASS",
+      "detail": "lead-list.test.tsx (modified), LeadsPageClient.test.tsx (new), lead.router.security.test.ts (modified) all exist with SHA256 hashes recorded above."
+    },
+    {
+      "gate": "G4-Build",
+      "verdict": "PASS",
+      "detail": "pnpm --filter @intelliflow/web build + pnpm --filter @intelliflow/api build both exit 0. Test-only change does not alter production build output; typecheck over the whole project (incl. tests) is clean."
+    },
+    {
+      "gate": "G6-Coverage",
+      "verdict": "PASS",
+      "detail": "lead-list.tsx: 100% stmts (>=90), 81.2% branches (>=80), 98.8% funcs (>=90), 100% lines (>=90). LeadsPageClient.tsx: 100% stmts/funcs/lines. Before: lead-list.tsx 36.9% stmts / 39.9% lines."
+    },
+    {
+      "gate": "G7-Codex-Review",
+      "verdict": "PASS",
+      "detail": "node scripts/codex-review.mjs converged to PASS (3+ consecutive clean standalone runs after fixing the selected-rows contract, click-propagation, and status-selection mock-fidelity findings)."
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "test_coverage",
+      "target": ">=90% (stmts/lines/funcs), >=80% branches",
+      "actual": "lead-list.tsx 100% stmts / 100% lines / 98.8% funcs / 81.2% branches; LeadsPageClient.tsx 100%",
+      "met": true
+    },
+    {
+      "kpi": "test_count",
+      "target": ">=25 total test cases across the lead surfaces",
+      "actual": "66 new/extended (lead-list 22->61 = +39, LeadsPageClient +3, lead.router.security T-012 +2)",
+      "met": true
+    },
+    {
+      "kpi": "role_based_filtering_pinned",
+      "target": "ADMIN sees all, others see own (T7)",
+      "actual": "lead.router.security.test.ts T-012: ADMIN list WHERE has no ownerId; USER list WHERE has ownerId = caller",
+      "met": true
+    }
+  ],
+  "notes": "Test-authoring task — NO production source modified, so Sonar new_coverage (changed production lines) has no exposure; the binding metric is whole-file coverage. The create page (NewLeadForm 93.9%) and the bulk-actions.ts helper (51 tests) were already covered and intentionally out of scope. The async server (list)/page.tsx shell is excluded by repo convention (logic lives in the tested client island); its surface is covered via lead-list.test.tsx + LeadsPageClient.test.tsx. Spec/plan multi-persona debate + a real plan-reviewer subagent (2 ERRORs caught and fixed pre-exec) ran per the full pipeline. Session issues log: docs/operations/sprint-18-ifc-248-session-issues-log.md."
+}
