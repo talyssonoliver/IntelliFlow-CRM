@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-27T23:53:51.527Z",
+  "generatedAt": "2026-06-28T17:34:08.276Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -350,6 +350,7 @@
       ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-311/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-058/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-059/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-060/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-061/attestation.json",
@@ -494,10 +495,10 @@
     "totalTasks": 596,
     "totalNumberedSprintTasks": 591,
     "continuousTaskCount": 5,
-    "completedTasks": 441,
-    "backlogTasks": 154,
+    "completedTasks": 442,
+    "backlogTasks": 153,
     "blockedTasks": 0,
-    "completionPercentage": 73.99,
+    "completionPercentage": 74.16,
     "inProgressTasks": 1,
     "otherTasks": 0
   },
@@ -17511,11 +17512,11 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 66,
-      "completedTasks": 47,
-      "backlogTasks": 18,
+      "completedTasks": 48,
+      "backlogTasks": 17,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 32,
+      "attestedCompletedTasks": 33,
       "missingCompletedAttestations": [
         "PG-188",
         "PG-191",
@@ -17727,40 +17728,6 @@
           }
         },
         {
-          "taskId": "PG-058",
-          "sprint": 18,
-          "status": "Backlog",
-          "section": "Core CRM",
-          "title": "Dashboard",
-          "description": "Dashboard",
-          "summary": "response under 200ms, Lighthouse 90, real-time data",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, real-time data; artifacts: page.tsx, kpi-calculator.ts, context_ack.json",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, real-time data",
-          "dependencies": [
-            "IFC-089",
-            "IFC-091",
-            "IFC-095"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
           "taskId": "DOC-015",
           "sprint": 18,
           "status": "Backlog",
@@ -17859,14 +17826,48 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "IFC-212",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "AI/ML",
+          "title": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
+          "description": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
+          "summary": "IFC-212 exec phase complete with 5 audit findings remediated honestly (2026-04-27 audit-fix iteration): [HIGH-1 FIXED] tenantId='default' regression — extended AIServicePort.scoreLead/qualifyLead with optional `opts:......",
+          "definitionOfDone": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; lead scoring jobs are enqueued with correlation metadata and consumed by ai-scoring worker contract; retry and failure handling follow BullMQ defaults; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
+          "definitionOfDoneSnapshot": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; Lead scoring jobs enqueued with correlation metadata and consumed by ai-scoring worker contract",
+          "dependencies": [
+            "IFC-015",
+            "IFC-125",
+            "IFC-168"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-27T20:55:00Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 4,
+            "met": 1,
+            "missed": 3
+          }
         }
       ],
       "sectionSummary": [
         {
           "section": "Core CRM",
           "total": 27,
-          "completed": 20,
-          "open": 7
+          "completed": 21,
+          "open": 6
         },
         {
           "section": "Settings",
@@ -18035,34 +18036,34 @@
         {
           "taskId": "PG-058",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Dashboard",
           "description": "Dashboard",
-          "summary": "response under 200ms, Lighthouse 90, real-time data",
+          "summary": "PG-058 Dashboard — KPI calculator extraction + real-time polling + accessibility.... AC-001 — kpi-calculator.ts exists, exports the pure functions + DASHBOARD_REFETCH_INTERVAL_MS, each consumed by >=1 production widget (no dead exports); AC-002...",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, real-time data; artifacts: page.tsx, kpi-calculator.ts, context_ack.json",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, real-time data",
+          "definitionOfDoneSnapshot": "AC-001 — kpi-calculator.ts exists, exports the pure functions + DASHBOARD_REFETCH_INTERVAL_MS, each consumed by >=1 production widget (no dead exports); AC-002...",
           "dependencies": [
             "IFC-089",
             "IFC-091",
             "IFC-095"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-058/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-28T16:13:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
