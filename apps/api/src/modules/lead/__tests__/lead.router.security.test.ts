@@ -377,4 +377,42 @@ describe('Lead Router Security — Tenant Isolation (IFC-237)', () => {
       expect(userLookupUsages).toBeLessThanOrEqual(1);
     });
   });
+
+  // T-012 (IFC-248 / T7): role-based visibility on the `list` procedure.
+  // createTenantWhereClause (security/tenant-context.ts) returns a WHERE with no
+  // ownerId for ADMIN (sees all in tenant) and ownerId = caller for non-admins
+  // (sees own only). This pins "ADMIN sees all, others see own".
+  describe('T-012: list role-based ownerId filter (IFC-248 / T7)', () => {
+    it('ADMIN: list WHERE is tenant-scoped with NO ownerId restriction (sees all)', async () => {
+      const ctx = createAdminContext();
+      const caller = leadRouter.createCaller(ctx);
+      prismaMock.lead.findMany.mockResolvedValue([]);
+      prismaMock.lead.count.mockResolvedValue(0);
+
+      await caller.list({});
+
+      const where = (
+        prismaMock.lead.findMany.mock.calls[0]?.[0] as { where: Record<string, unknown> }
+      ).where;
+      expect(where).toMatchObject({ tenantId: TEST_UUIDS.tenant });
+      expect(where).not.toHaveProperty('ownerId');
+    });
+
+    it('USER (non-admin): list WHERE includes ownerId = caller (sees own only)', async () => {
+      const ctx = createTestContext();
+      const caller = leadRouter.createCaller(ctx);
+      prismaMock.lead.findMany.mockResolvedValue([]);
+      prismaMock.lead.count.mockResolvedValue(0);
+
+      await caller.list({});
+
+      const where = (
+        prismaMock.lead.findMany.mock.calls[0]?.[0] as { where: Record<string, unknown> }
+      ).where;
+      expect(where).toMatchObject({
+        tenantId: TEST_UUIDS.tenant,
+        ownerId: TEST_UUIDS.user1,
+      });
+    });
+  });
 });

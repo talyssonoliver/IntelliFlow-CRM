@@ -1,0 +1,36 @@
+{
+  "task_id": "IFC-248",
+  "captured_at": "2026-06-28T20:05:00Z",
+  "description": "Post-implementation coverage for IFC-248 (Lead List & Create Page Tests). Test-authoring only — NO production code changed. Primary target apps/web/src/components/leads/lead-list.tsx lifted from ~37% to 100% statements / 100% lines / 81.2% branches / 98.8% functions via the extended lead-list.test.tsx (filtering/sorting/bulk-ops/row-actions/gating/badges/cell-render). New apps/web/src/app/leads/(list)/LeadsPageClient.tsx isolation test → 100% stmt/func/lines. T7 role filter pinned at the API level via lead.router.security.test.ts T-012 (no coverage-delta target).",
+  "command": "cd apps/web && npx vitest run \"src/components/leads/__tests__/lead-list.test.tsx\" \"src/app/leads/(list)/__tests__/LeadsPageClient.test.tsx\" --coverage --coverage.include='src/components/leads/lead-list.tsx' (LeadsPageClient measured separately with --coverage.include='src/app/leads/*/LeadsPageClient.tsx')",
+  "after_files": {
+    "apps/web/src/components/leads/lead-list.tsx": {
+      "statements_pct": 100,
+      "branches_pct": 81.2,
+      "functions_pct": 98.8,
+      "lines_pct": 100,
+      "before": { "statements_pct": 36.93, "branches_pct": 46.3, "functions_pct": 22.61, "lines_pct": 39.89 },
+      "note": "Exceeds thresholds (stmt>=90, lines>=90, branch>=80, func>=90). Single residual uncovered fn is the LeadAvatar colour helper branch — non-behavioural."
+    },
+    "apps/web/src/app/leads/(list)/LeadsPageClient.tsx": {
+      "statements_pct": 100,
+      "branches_pct": 100,
+      "functions_pct": 100,
+      "lines_pct": 100,
+      "before": { "statements_pct": 0, "branches_pct": 0, "functions_pct": 0, "lines_pct": 0 },
+      "note": "Thin wrapper fully exercised by the new isolation test."
+    }
+  },
+  "regression": {
+    "web_full_suite": "631 files / 11176 tests passed (0 failed)",
+    "api_full_suite": "245 files / 6397 tests passed (2 skipped)",
+    "web_typecheck": "clean",
+    "api_typecheck": "clean",
+    "lint": "changed files clean"
+  },
+  "notes": [
+    "lead-list.test.tsx grew from 22 to 54 tests (+32) across filtering/sorting, bulk operations, row actions/gating/cell rendering, and misc interaction handlers.",
+    "LeadsPageClient.test.tsx adds 3 tests; lead.router.security.test.ts adds 2 (T-012 ADMIN/USER role filter).",
+    "No production source modified → Sonar new_coverage has no changed production lines (gate trivially satisfied); the binding metric is the whole-file coverage above."
+  ]
+}

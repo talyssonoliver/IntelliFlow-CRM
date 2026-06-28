@@ -1,0 +1,39 @@
+{
+  "task_id": "IFC-248",
+  "captured_at": "2026-06-28T19:25:00Z",
+  "description": "Pre-implementation coverage baseline for IFC-248 (Lead List & Create Page Tests). Test-authoring DELTA task — NO production code changes. Primary target is apps/web/src/components/leads/lead-list.tsx (the list surface: filtering/sorting/bulk-ops/row-actions/badges) which sits at ~37% because the existing lead-list.test.tsx stubs out SearchFilterBar filters/sort, DataTable bulkActions+cells, the dialogs, and TableRowActions. Secondary: apps/web/src/app/leads/(list)/LeadsPageClient.tsx (0%, trivial wrapper). The create page (NewLeadForm.tsx, already 93.9%) and the bulk-actions.ts helper (51 tests) are already covered and out of scope. T7 role filter is exercised at the API level (lead.router.ts list proc) via lead.router.security.test.ts (no coverage-delta target — existing source).",
+  "measurement_scope": [
+    "apps/web/src/components/leads/lead-list.tsx (PRIMARY — extend lead-list.test.tsx, target >=90% stmt/lines, >=80% branch)",
+    "apps/web/src/app/leads/(list)/LeadsPageClient.tsx (SECONDARY — new LeadsPageClient.test.tsx, target ~100%)",
+    "apps/web/src/app/leads/(list)/new/NewLeadForm.tsx (REFERENCE — already covered, no new file required)"
+  ],
+  "command": "cd apps/web && npx vitest run \"src/components/leads/__tests__/lead-list.test.tsx\" \"src/app/leads/(list)/new/__tests__/page.test.tsx\" --coverage --coverage.include='src/components/leads/lead-list.tsx' --coverage.include='src/app/leads/**'",
+  "baseline_files": {
+    "apps/web/src/components/leads/lead-list.tsx": {
+      "statements_pct": 36.93,
+      "branches_pct": 46.3,
+      "functions_pct": 22.61,
+      "lines_pct": 39.89,
+      "note": "Uncovered ~418-525 (bulk runners/handlers, rowActionHandlers, mutation onSuccess/onError) and ~689-848 (dialogs + StatusBadge + ScoreBadge). This is the gap IFC-248 closes."
+    },
+    "apps/web/src/app/leads/(list)/LeadsPageClient.tsx": {
+      "statements_pct": 0,
+      "branches_pct": 0,
+      "functions_pct": 0,
+      "lines_pct": 0,
+      "note": "Trivial pass-through wrapper; no dedicated test. New isolation test added."
+    },
+    "apps/web/src/app/leads/(list)/new/NewLeadForm.tsx": {
+      "statements_pct": 93.93,
+      "branches_pct": 89.02,
+      "functions_pct": 89.28,
+      "lines_pct": 96.42,
+      "note": "Already covered by new/__tests__/page.test.tsx (~30 tests). Reference only — confirms T3 done. Uncovered stray lines 262, 336, 406."
+    }
+  },
+  "notes": [
+    "Baseline measured with Istanbul provider via the scoped vitest command above.",
+    "AFTER snapshot artifacts/coverage/IFC-248-after.json is the binding reference for the coverage-gte-90 gate.",
+    "No production source is modified by IFC-248, so Sonar new_coverage (changed production lines) has no exposure; the gate is whole-file coverage improvement on the targets."
+  ]
+}
