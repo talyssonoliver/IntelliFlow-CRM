@@ -290,11 +290,13 @@ vi.mock('@intelliflow/ui', async () => {
   const actual = await import('@intelliflow/ui');
   void actual;
   return {
-    // IFC-248: widened to render (a) a button per bulkAction (calls onClick with
-    // all current rows = "selected"), and (b) the real column cells per row so
-    // StatusBadge / ScoreBadge / formatDate / row-action dropdown render and are
-    // reachable to tests. `columns` is typed `any[]` (real ColumnDef<Lead>[] is
-    // deep → TS2589 risk in the mock).
+    // IFC-248: widened to model the real DataTable contract: (a) per-row +
+    // select-all checkboxes drive a selection set; bulk-action buttons render
+    // ONLY when rows are selected and receive the SELECTED rows (not all rows),
+    // mirroring the production bulkAction.onClick(selected) contract; and (b) the
+    // real column cells per row so StatusBadge / ScoreBadge / formatDate /
+    // row-action dropdown render and are reachable to tests. `columns` is typed
+    // `any[]` (real ColumnDef<Lead>[] is deep → TS2589 risk in the mock).
     DataTable: ({
       data,
       columns,
@@ -308,19 +310,35 @@ vi.mock('@intelliflow/ui', async () => {
       emptyMessage?: string;
       bulkActions?: Array<{ label: string; onClick: (rows: unknown[]) => void }>;
     }) => {
+      const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
       if (data.length === 0) return <div data-testid="empty-state">{emptyMessage}</div>;
+      const selectedRows = data.filter((r) => selectedIds.includes(String(r.id)));
+      const allSelected = data.length > 0 && selectedRows.length === data.length;
+      const toggleAll = (checked: boolean) =>
+        setSelectedIds(checked ? data.map((r) => String(r.id)) : []);
+      const toggleRow = (id: string, checked: boolean) =>
+        setSelectedIds((prev) => (checked ? [...prev, id] : prev.filter((x) => x !== id)));
       return (
         <div>
-          {(bulkActions ?? []).map((a) => (
-            <button
-              key={a.label}
-              type="button"
-              data-testid={`bulk-${a.label}`}
-              onClick={() => a.onClick(data)}
-            >
-              {a.label}
-            </button>
-          ))}
+          <input
+            type="checkbox"
+            aria-label="Select all"
+            data-testid="select-all"
+            checked={allSelected}
+            onChange={(e) => toggleAll(e.target.checked)}
+          />
+          {selectedRows.length > 0
+            ? (bulkActions ?? []).map((a) => (
+                <button
+                  key={a.label}
+                  type="button"
+                  data-testid={`bulk-${a.label}`}
+                  onClick={() => a.onClick(selectedRows)}
+                >
+                  {a.label}
+                </button>
+              ))
+            : null}
           <table>
             <thead>
               <tr>
@@ -334,6 +352,15 @@ vi.mock('@intelliflow/ui', async () => {
             <tbody>
               {data.map((row) => (
                 <tr key={String(row.id)} onClick={() => onRowClick?.(row)}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${String(row.id)}`}
+                      data-testid={`select-row-${String(row.id)}`}
+                      checked={selectedIds.includes(String(row.id))}
+                      onChange={(e) => toggleRow(String(row.id), e.target.checked)}
+                    />
+                  </td>
                   {(columns ?? []).map((c: any, i: number) => (
                     <td key={c.id ?? c.accessorKey ?? i}>
                       {c.cell ? c.cell({ row: { original: row } }) : null}
@@ -889,6 +916,7 @@ describe('LeadList — bulk operations (IFC-248)', () => {
 
   it('bulk convert → confirm → bulkConvert.mutateAsync with selected ids (AC-11)', async () => {
     render(<LeadList />);
+    fireEvent.click(screen.getByTestId('select-all'));
     fireEvent.click(screen.getByTestId('bulk-Convert to Contacts'));
     await act(async () => {
       fireEvent.click(screen.getByTestId('confirm-Convert'));
@@ -901,6 +929,7 @@ describe('LeadList — bulk operations (IFC-248)', () => {
 
   it('bulk update status → status dialog confirm → bulkUpdateStatus.mutateAsync (AC-12)', async () => {
     render(<LeadList />);
+    fireEvent.click(screen.getByTestId('select-all'));
     fireEvent.click(screen.getByTestId('bulk-Update Status'));
     await act(async () => {
       fireEvent.click(screen.getByTestId('status-confirm'));
@@ -913,6 +942,7 @@ describe('LeadList — bulk operations (IFC-248)', () => {
 
   it('bulk archive dialog states it sets status to Lost → bulkArchive.mutateAsync (AC-13)', async () => {
     render(<LeadList />);
+    fireEvent.click(screen.getByTestId('select-all'));
     fireEvent.click(screen.getByTestId('bulk-Archive'));
     expect(screen.getByText(/set their status to Lost/i)).toBeTruthy();
     await act(async () => {
@@ -925,6 +955,7 @@ describe('LeadList — bulk operations (IFC-248)', () => {
 
   it('bulk delete dialog is destructive + warns about converted leads → bulkDelete.mutateAsync (AC-14)', async () => {
     render(<LeadList />);
+    fireEvent.click(screen.getByTestId('select-all'));
     fireEvent.click(screen.getByTestId('bulk-Delete'));
     expect(screen.getByTestId('dialog-Delete').getAttribute('data-variant')).toBe('destructive');
     expect(screen.getByText(/Converted leads cannot be deleted/i)).toBeTruthy();
@@ -942,6 +973,7 @@ describe('LeadList — bulk operations (IFC-248)', () => {
       failed: [],
     });
     render(<LeadList />);
+    fireEvent.click(screen.getByTestId('select-all'));
     fireEvent.click(screen.getByTestId('bulk-Convert to Contacts'));
     await act(async () => {
       fireEvent.click(screen.getByTestId('confirm-Convert'));
@@ -955,6 +987,7 @@ describe('LeadList — bulk operations (IFC-248)', () => {
       failed: [{ id: 'lead-2', error: 'boom' }],
     });
     render(<LeadList />);
+    fireEvent.click(screen.getByTestId('select-all'));
     fireEvent.click(screen.getByTestId('bulk-Convert to Contacts'));
     await act(async () => {
       fireEvent.click(screen.getByTestId('confirm-Convert'));
@@ -964,9 +997,31 @@ describe('LeadList — bulk operations (IFC-248)', () => {
 
   it('status dialog offers exactly the 6 non-CONVERTED statuses (AC-16)', () => {
     render(<LeadList />);
+    fireEvent.click(screen.getByTestId('select-all'));
     fireEvent.click(screen.getByTestId('bulk-Update Status'));
     expect(screen.getByTestId('dialog-status').getAttribute('data-option-count')).toBe('6');
     expect(screen.queryByTestId('status-option-CONVERTED')).toBeNull();
+  });
+
+  it('bulk action receives only the SELECTED rows, not all rows (AC-11 selection contract)', async () => {
+    render(<LeadList />);
+    // select only the second row
+    fireEvent.click(screen.getByTestId('select-row-lead-2'));
+    fireEvent.click(screen.getByTestId('bulk-Convert to Contacts'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('confirm-Convert'));
+    });
+    expect(mutationMocks.bulkConvert.mutateAsync).toHaveBeenCalledWith({
+      ids: ['lead-2'],
+      createAccounts: false,
+    });
+  });
+
+  it('bulk action buttons are hidden until at least one row is selected', () => {
+    render(<LeadList />);
+    expect(screen.queryByTestId('bulk-Convert to Contacts')).toBeNull();
+    fireEvent.click(screen.getByTestId('select-all'));
+    expect(screen.getByTestId('bulk-Convert to Contacts')).toBeTruthy();
   });
 
   it('bulk mutation onSuccess handlers run their cache-invalidation wiring', () => {
