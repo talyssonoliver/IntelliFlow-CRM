@@ -44,6 +44,7 @@ if (!TASK_ID) {
 }
 const SLOT = flag('slot');
 const TOTAL = flag('total') || '3';
+const CLI = args.includes('--cli'); // emit a standalone-CLI-session prompt (manual worktree) vs harness-managed
 
 // ── resolve main SHA (caller may override; else read origin/main) ──────────
 let MAIN_SHA = flag('main-sha');
@@ -138,9 +139,43 @@ const staleCsvWarning = /^(completed|done)$/i.test(CSV_STATUS)
   : '';
 
 // ── emit dispatch prompt ────────────────────────────────────────────────────
-const slotLine = SLOT
-  ? `You are agent session ${SLOT} of ${TOTAL} in a parallel Sprint-${SPRINT} run`
-  : `You are one agent session in a ${TOTAL}-agent parallel Sprint-${SPRINT} run`;
+const slotLine = CLI
+  ? `You are a standalone CLI agent session implementing ONE task — ${TASK_ID} — in your OWN git worktree`
+  : SLOT
+    ? `You are agent session ${SLOT} of ${TOTAL} in a parallel Sprint-${SPRINT} run`
+    : `You are one agent session in a ${TOTAL}-agent parallel Sprint-${SPRINT} run`;
+
+const provisionBlock = CLI
+  ? `PROVISION — you create your OWN worktree (standalone CLI session, NOT harness-managed). Do NOT
+touch the main working dir, local main, or any sibling worktree.
+1. From the main repo (${REPO_ROOT}):
+   git fetch origin main
+   git worktree add -b feat/${idLower} ../iflow-${idLower} origin/main
+2. cd ../iflow-${idLower} && pnpm install
+3. pnpm exec turbo build --filter='./packages/*'   (turbo is NOT on PATH; use pnpm exec. Libs must be
+   built or imports fail.)
+4. The committed .env.test points DATABASE_URL at the LOCAL test DB
+   (postgresql://postgres:postgres@localhost:5433/intelliflow_test). Verify: docker ps --filter
+   name=postgres-test (expect "healthy"). NEVER use .env.local's DATABASE_URL — it is PRODUCTION
+   Supabase. Copy other dev vars from .env.local but NOT DATABASE_URL/DIRECT_URL. The local test DB +
+   dev ports are SHARED across parallel sessions — cap is 3.
+5. export NODE_OPTIONS=--max-old-space-size=8192
+When fully merged, from the main repo: git worktree remove --force ../iflow-${idLower} && git worktree
+prune (a locked empty dir may remain on Windows — cosmetic).`
+  : `PROVISION — you are ALREADY inside a harness-provisioned isolated git worktree, forked from the
+control plane which the orchestrator keeps even with origin/main. Do NOT run \`git worktree add\`,
+and do NOT \`git worktree remove\` when done — the harness reclaims it. Do NOT touch the main working
+dir or any sibling worktree.
+1. Create your branch:  git checkout -b feat/${idLower}
+2. pnpm install
+3. turbo build --filter='./packages/*'   (libs must be built or imports fail)
+4. The committed .env.test already points DATABASE_URL at the LOCAL test DB
+   (postgresql://postgres:postgres@localhost:5433/intelliflow_test). Verify it's up:
+   docker ps --filter name=postgres-test  (expect "healthy"). The test DB and dev ports are
+   SHARED across all worktrees — that is why the orchestrator caps concurrency at 3. NEVER use
+   .env.local's DATABASE_URL — it is PRODUCTION Supabase. Copy other dev vars from .env.local if
+   needed, but NOT DATABASE_URL/DIRECT_URL.
+5. export NODE_OPTIONS=--max-old-space-size=8192`;
 
 process.stdout.write(
 `${slotLine} for IntelliFlow CRM (${REPO_ROOT}).
@@ -162,34 +197,48 @@ session-start metrics, before-coverage, and the plan-reviewer row — and the ga
 anyway, so build-first only wastes hours. Let the pipeline run in order: spec -> plan -> exec. The only
 thing you do before the loop is PROVISION (below).
 
-PROVISION — you are ALREADY inside a harness-provisioned isolated git worktree, forked from the
-control plane which the orchestrator keeps even with origin/main. Do NOT run \`git worktree add\`,
-and do NOT \`git worktree remove\` when done — the harness reclaims it. Do NOT touch the main working
-dir or any sibling worktree.
-1. Create your branch:  git checkout -b feat/${idLower}
-2. pnpm install
-3. turbo build --filter='./packages/*'   (libs must be built or imports fail)
-4. The committed .env.test already points DATABASE_URL at the LOCAL test DB
-   (postgresql://postgres:postgres@localhost:5433/intelliflow_test). Verify it's up:
-   docker ps --filter name=postgres-test  (expect "healthy"). The test DB and dev ports are
-   SHARED across all worktrees — that is why the orchestrator caps concurrency at 3. NEVER use
-   .env.local's DATABASE_URL — it is PRODUCTION Supabase. Copy other dev vars from .env.local if
-   needed, but NOT DATABASE_URL/DIRECT_URL.
-5. export NODE_OPTIONS=--max-old-space-size=8192
+${provisionBlock}
+
+TRACK AS YOU GO (owner-required — this is the feedback loop that turns each run's mistakes into the
+next agent's prevention; PG-181's + IFC-302's logs are exactly what was mined to harden this system):
+A. TIME. Stamp each milestone: worktree provisioned, spec done, plan done, exec/attestation done, PR
+   opened, PR merged. At the end report TOTAL wall-clock split into build/compute vs WAITING on
+   pre-ship + CI. Use real timestamps from your own work (commit times, gh pr view --json events) —
+   do not guess. For tokens/cost point to /cost; never invent a number.
+B. ISSUES LOG. Maintain, as you go, docs/operations/sprint-18-${idLower}-session-issues-log.md — a
+   CANDID, severity-ordered record of EVERY issue, mistake, workaround, protocol mismatch, and gate
+   failure, each with what happened / why it matters / fix-or-prevention, ending with a "Net
+   assessment" naming the single avoidable root cause (if any). Commit it WITH your feature PR.
 
 GATE = node scripts/pre-ship.mjs (mirrors CI). Run it WITHOUT piping to tail/head — a pipe
 reports the PIPE's exit code, not pre-ship's. Read the summary; it must end "pre-ship: PASS".
 No SKIP_PRESHIP exists. --no-verify needs explicit owner approval. PRESHIP_ALLOW_MISSING=1
 only if infra is genuinely down, never to hide a failure.
 
-PRE-SHIP READINESS — a FULL pre-ship is ~20 min; do NOT use it as your inner loop (PG-181 burned
-~6 full runs ≈ 2 hours discovering cheap failures one 20-min cycle at a time). First converge the
-CHEAP gates with the subset runner (seconds-to-minutes each), iterating until ALL pass:
-  node scripts/pre-ship.mjs --only=format-check,lint,typecheck,governance-schema,lint-artifacts,lint-runtime-paths,material-symbols-audit,a11y-routes,architecture,validate-sprint-data
-(\`typecheck\` includes lint:sonar:guard; \`a11y-routes\` + the doc/runtime-path steps catch the
-page-count / WCAG-scope cascade). Alongside it run \`node scripts/codex-review.mjs\` standalone to
-convergence and \`npx prettier --write\` on every edited doc. ONLY when all of that is green do you
-spend the one FULL pre-ship — it should then pass on the 1st-2nd try, not the 6th.
+PRE-SHIP READINESS — a FULL pre-ship is ~20 min; it is your FINAL gate, NEVER your inner loop.
+PG-181 AND IFC-302 each burned ~6 full runs (~2 h) discovering failures one 20-min cycle at a time.
+Converge everything in the CHEAP loops first, then spend ONE full pre-ship.
+
+1. CHEAP GATES — \`node scripts/pre-ship.mjs --only=format-check,lint,typecheck,governance-schema,lint-artifacts,lint-runtime-paths,material-symbols-audit,a11y-routes,architecture,validate-sprint-data\`
+   (seconds-to-minutes; \`typecheck\` includes lint:sonar:guard; \`a11y-routes\`+doc/runtime-path steps
+   catch the page-count/WCAG cascade). Iterate until green. Run \`npx prettier --write\` on edited docs.
+
+2. CODEX CONVERGENCE — this is what actually burned the runs. \`codex-review.mjs\` only sees the
+   COMMITTED diff and is NON-DETERMINISTIC even at a FIXED SHA: it can pass once, then surface a NEW
+   finding on the SAME code. So flush it in the CHEAP loop, not via full pre-ships:
+     commit your impl → \`node scripts/codex-review.mjs\` (~2 min) → for each finding confirm against
+     the real code (grep / git show HEAD:<file>), then fix minimally OR waive with source-anchored
+     evidence in tools/audit/codex-review-waivers.yaml → re-commit → repeat until you get 2-3
+     CONSECUTIVE CLEAN standalone runs. (A waiver-only commit doesn't touch source, so re-running is
+     cheap.) Only then does the full pre-ship's codex step reliably pass on the 1st try.
+
+3. WINDOWS BUILD FLAKE — if a pre-ship step dies with an esbuild / Next "build worker" crash (not a
+   real test/lint failure), that's host-level flakiness under load, not your code: re-run the step;
+   if it recurs, lower load (e.g. drop NODE_OPTIONS max-old-space or TURBO concurrency). Don't "fix"
+   code for it.
+
+ONLY when the cheap gates are green AND codex is 2-3-clean do you spend the one FULL pre-ship. It
+should then pass on the 1st-2nd try, not the 6th.
 
 HARD-WON GOTCHAS (these cost real days — encoded so you don't repeat them):
 1. MAKE THE MINIMAL CHANGE — do NOT refactor beyond the task. Drive-by complexity refactors
@@ -258,23 +307,27 @@ MERGE DISCIPLINE (this is where the PR # is born — the loop never opens a PR):
 - STRICT SERIALIZE: only ONE task merges at a time. Before you merge, your branch MUST be even with
   current origin/main. If the orchestrator says a sibling merged, or \`git fetch origin main\` shows
   main moved past your base: \`git merge --no-edit origin/main\`, then if pnpm-lock.yaml or
-  packages/** changed re-run \`pnpm install\` + \`turbo build --filter='./packages/*'\` and clear
-  apps/web/.next/types (stale-types trap), then re-run pre-ship + re-trigger CI BEFORE merging.
+  packages/** changed re-run \`pnpm install\` + \`pnpm exec turbo build --filter='./packages/*'\` and
+  clear apps/web/.next/types (stale-types trap), then re-run pre-ship + re-trigger CI BEFORE merging.
   Renamed exports break semantically with NO textual conflict — a clean cherry-merge is not enough.
-- The CSV flip is the ORCHESTRATOR's job on the control plane (not yours — you never touch the main
-  working dir). Report your merged PR # so it can flip Sprint_plan.csv → split → regenerate context.
+- The CSV flip is the ORCHESTRATOR's job, NOT yours. You NEVER commit to local main or touch the
+  control plane (doing so DIVERGES it — that was the IFC-302 hand-off mess). Just REPORT your merged
+  PR # to the orchestrator; it flips Sprint_plan.csv, splits, and regenerates context.
 
 RED FLAGS mid-task (disabled security, TODO, stub, prod mock) → fix-or-track in ALL THREE:
 a gh issue (file:line + proposed fix), artifacts/metrics/debt-ledger.yaml, the sprint findings doc.
 
 ESCALATE TO THE USER (stop) on: any prod terraform apply, any --no-verify push, any destructive
-git op, or anything needing production credentials / live prod verification.
+git op, anything needing production credentials / live prod verification, or the loop exhausting its
+--max-iterations without a green attestation. NEVER stop/start/reconfigure another project's services
+or containers (e.g. leangency-portal's Supabase) — escalate instead (that detour cost PG-181 hours).
 
 YOUR TASK: ${TASK_ID} — ${DESCRIPTION || '(see Sprint_plan.csv Description)'}
 ${lane}.  Persona/lens: ${persona}${secondary}.  STOA /exec must pass: ${stoa}.  Skills: ${skills}.
 Dependencies: ${DEPS}.${blockedBy}${note}${staleCsvWarning}
 
-REPORT WHEN DONE: the merged PR # and the attestation path
-(.specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/attestation.json).
+REPORT WHEN DONE: the merged PR # + the attestation path
+(.specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/attestation.json) + your TIME breakdown
+(build vs waiting) + a pointer to the committed issues log. Do NOT flip the CSV — report the PR #.
 `);
 process.exit(0);
