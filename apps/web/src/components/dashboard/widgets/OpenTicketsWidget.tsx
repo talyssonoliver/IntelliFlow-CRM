@@ -31,6 +31,9 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
     [data]
   );
 
+  // No data yet (loading or disabled/error) — show pending, never a fake 0.
+  const pending = isLoading || !data;
+
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-start justify-between">
@@ -39,7 +42,7 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
             confirmation_number
           </span>
         </div>
-        {!isLoading && data && (
+        {!pending && (
           <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-destructive-muted text-destructive">
             {metrics.urgent} Urgent
           </span>
@@ -47,7 +50,7 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
       </div>
       <p className="text-sm text-muted-foreground mt-4">Open Tickets</p>
       <p className="text-3xl font-bold text-foreground mt-1 tabular-nums">
-        {isLoading ? '...' : metrics.total}
+        {pending ? '...' : metrics.total}
       </p>
       {metrics.breached > 0 && (
         <p className="text-xs text-destructive mt-2">

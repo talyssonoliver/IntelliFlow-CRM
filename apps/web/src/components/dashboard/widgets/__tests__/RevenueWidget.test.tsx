@@ -4,14 +4,18 @@ import { describe, it, expect, vi } from 'vitest';
 
 // Mock tRPC — RevenueWidget reads analytics.getOverview for the total and
 // analytics.getTimeSeriesData for the bar chart (RevenueWidget.tsx:21-27).
+const overviewQueryMock = vi.fn<
+  () => { data?: { totalRevenue: number; revenueDelta: number }; isLoading: boolean }
+>(() => ({
+  data: { totalRevenue: 124500, revenueDelta: 0 },
+  isLoading: false,
+}));
+
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     analytics: {
       getOverview: {
-        useQuery: () => ({
-          data: { totalRevenue: 124500, revenueDelta: 0 },
-          isLoading: false,
-        }),
+        useQuery: () => overviewQueryMock(),
       },
       getTimeSeriesData: {
         useQuery: () => ({
@@ -40,5 +44,13 @@ describe('RevenueWidget', () => {
     // The old 'This Week' pill text was removed when the widget was
     // refactored to show day-of-week labels under the bar chart.
     expect(screen.getByText('Mon')).toBeInTheDocument();
+  });
+
+  it('shows a pending indicator (not a fake £0) when overview has no data', () => {
+    overviewQueryMock.mockReturnValueOnce({ data: undefined, isLoading: false });
+    render(<RevenueWidget config={{ timeRange: 'week' }} />);
+
+    expect(screen.getByText('...')).toBeInTheDocument();
+    expect(screen.queryByText('£0')).not.toBeInTheDocument();
   });
 });

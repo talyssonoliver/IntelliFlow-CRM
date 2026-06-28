@@ -24,7 +24,7 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
     return { startDate: start.toISOString(), endDate: end.toISOString() };
   }, [timeRange]);
 
-  const { data: overview } = trpc.analytics.getOverview.useQuery({});
+  const { data: overview, isLoading: overviewLoading } = trpc.analytics.getOverview.useQuery({});
   const { data: timeSeries, isLoading } = trpc.analytics.getTimeSeriesData.useQuery({
     metric: 'revenue',
     startDate: dateRange.startDate,
@@ -32,6 +32,9 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
     granularity: timeRange === 'week' ? 'day' : 'month',
   });
 
+  // The revenue figure comes from `overview`, not the time-series query — gate
+  // on the overview's own state so a missing overview never shows a fake £0.
+  const revenuePending = overviewLoading || !overview;
   const totalRevenue = Number(overview?.totalRevenue ?? 0);
   const revenueDelta = Number(overview?.revenueDelta ?? 0);
   const previous = totalRevenue - revenueDelta;
@@ -52,7 +55,7 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
           <h3 className="text-slate-900 dark:text-white font-semibold">Total Revenue</h3>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
-              {isLoading ? '...' : formatGBP(totalRevenue)}
+              {revenuePending ? '...' : formatGBP(totalRevenue)}
             </span>
             {deltaPercent !== 0 && (
               <span
