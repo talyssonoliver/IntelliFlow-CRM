@@ -91,13 +91,17 @@ export function chartMax(values: number[]): number {
 }
 
 /**
- * Bar height as a percentage of `max`, floored at `minPercent` (default `2`,
- * so non-zero bars stay visible). `max <= 0` → `minPercent`.
+ * Bar height as a percentage of `max`. A zero/negative value renders no bar
+ * (returns `0`) so empty periods are not misrepresented; positive values are
+ * floored at `minPercent` (default `2`) so a small-but-nonzero bar stays
+ * visible. `max <= 0` with a positive value falls back to `minPercent`.
  */
 export function computeBarHeightPercent(value: number, max: number, minPercent = 2): number {
+  const v = toFiniteNumber(value);
+  if (v <= 0) return 0;
   const m = toFiniteNumber(max);
   if (m <= 0) return minPercent;
-  return Math.max((toFiniteNumber(value) / m) * 100, minPercent);
+  return Math.max((v / m) * 100, minPercent);
 }
 
 /**

@@ -179,29 +179,33 @@ describe('kpi-calculator', () => {
       expect(computeBarHeightPercent(15000, 20000)).toBe(75);
     });
 
-    it('applies the default minimum floor (2) to tiny values', () => {
+    it('applies the default minimum floor (2) to tiny positive values', () => {
       expect(computeBarHeightPercent(1, 10000)).toBe(2);
     });
 
-    it('floors a zero value at the minimum (default 2)', () => {
-      expect(computeBarHeightPercent(0, 20000)).toBe(2);
+    it('renders no bar (0) for a zero value', () => {
+      expect(computeBarHeightPercent(0, 20000)).toBe(0);
     });
 
-    it('returns the floor when max is 0', () => {
+    it('renders no bar (0) for a negative value', () => {
+      expect(computeBarHeightPercent(-5, 20000)).toBe(0);
+    });
+
+    it('returns the floor when max is 0 but the value is positive', () => {
       expect(computeBarHeightPercent(5000, 0)).toBe(2);
     });
 
-    it('returns the floor when both are 0', () => {
-      expect(computeBarHeightPercent(0, 0)).toBe(2);
+    it('returns 0 when both are 0', () => {
+      expect(computeBarHeightPercent(0, 0)).toBe(0);
     });
 
     it('returns 100 at full height', () => {
       expect(computeBarHeightPercent(20000, 20000)).toBe(100);
     });
 
-    it('honours a custom minPercent of 0 (DealsWon behaviour)', () => {
-      expect(computeBarHeightPercent(0, 6)).toBe(2); // default floor
-      expect(computeBarHeightPercent(0, 6, 0)).toBe(0); // explicit no floor
+    it('returns 0 for a zero value regardless of minPercent', () => {
+      expect(computeBarHeightPercent(0, 6)).toBe(0);
+      expect(computeBarHeightPercent(0, 6, 0)).toBe(0);
     });
   });
 
