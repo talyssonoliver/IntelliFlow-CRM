@@ -28,7 +28,20 @@ import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import Papa from 'papaparse';
 
-const REPO_ROOT = process.cwd();
+// Resolve the MAIN repo root (the primary worktree), NOT the current dir — so a prompt generated
+// from a linked worktree still names the canonical control-plane path the agent runs from. (PG-058
+// baked the temporary iflow-fleet worktree path into the prompt because this used process.cwd().)
+function resolveMainRepoRoot() {
+  try {
+    const out = execSync('git worktree list --porcelain', { encoding: 'utf8' });
+    const m = out.match(/^worktree (.+)$/m); // the first entry is always the main worktree
+    if (m) return m[1].trim().replace(/\\/g, '/');
+  } catch {
+    /* not a git repo / git unavailable — fall back to cwd */
+  }
+  return process.cwd().replace(/\\/g, '/');
+}
+const REPO_ROOT = resolveMainRepoRoot();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ── args ──────────────────────────────────────────────────────────────────
@@ -179,7 +192,8 @@ dir or any sibling worktree.
 
 process.stdout.write(
 `${slotLine} for IntelliFlow CRM (${REPO_ROOT}).
-main is green at ${MAIN_SHA}. You own ONE task — ${TASK_ID} — in your OWN git worktree.
+main was green at ${MAIN_SHA} when this was generated (a SNAPSHOT — always branch from the LIVE
+origin/main, which may be newer). You own ONE task — ${TASK_ID} — in your OWN git worktree.
 Do not touch the main working dir or other agents' worktrees.
 Full plan: docs/operations/sprint-18-orchestrator-prompt.md (read its "Lessons"/State sections).
 You are the \`task-executor\` agent; ADOPT the ${persona} persona (.claude/agents/${persona}.md) as your
@@ -272,11 +286,16 @@ HARD-WON GOTCHAS (these cost real days — encoded so you don't repeat them):
    content-audit-results.json), the WCAG conformance statement + VPAT (route + totals), and a
    HARD-CODED count in apps/web/src/app/__tests__/sitemap-reconciliation.test.ts. NEVER mark
    page-doc-cochange "N/A". The plan-reviewer Category Y gate exists for exactly this.
-10. LIGHTHOUSE (only if this task has a lighthouse KPI): local Lighthouse WORKS on this host — use
-   the recipe in docs/claude-refs/lighthouse-playbook.md (\`pnpm --filter @intelliflow/web start -p
-   3400\` then the lighthouse cli with --headless=new). Do NOT assume it's broken, do NOT reach for
-   Supabase / "Path C", and NEVER stop another project's containers (e.g. leangency-portal) — that
-   is a scope violation; escalate instead. (This detour was PG-181's biggest time-sink.)
+10. LIGHTHOUSE (only if this task has a lighthouse KPI): follow the DECISION TREE in
+   docs/claude-refs/lighthouse-playbook.md. PUBLIC route -> Path A (local unauth recipe: \`pnpm
+   --filter @intelliflow/web start -p 3400\` + the lighthouse cli with --headless=new; it WORKS on
+   this host, don't assume it's broken). AUTH-GATED route (/dashboard, /settings/**, anything behind
+   client-side auth) -> Path C (the authenticated lighthouse:auth harness, PG-166/ADR-027). An
+   UNAUTHENTICATED run of an auth-gated route measures the LOGIN REDIRECT, not your page (the LCP is
+   the login hero) — a sub-90 there is a REDIRECT ARTIFACT: do NOT waive it, run Path C instead
+   (PG-058 lost ~1h and nearly mis-waived a 74 that was really 97 authenticated). NEVER stop or
+   reconfigure another project's containers (e.g. leangency-portal) to measure — escalate for an
+   owner-authorized authenticated measurement instead (PG-181 + PG-058 lessons).
 11. After editing ANY .md/.json/.yml/.yaml file, immediately run \`npx prettier --write <file>\` —
    pre-ship format-check fails on hand-edited markdown/JSON otherwise.
 12. SCOPED test runs are the fast inner loop, NOT the gate. Only a FULL pre-ship reveals repo-wide
