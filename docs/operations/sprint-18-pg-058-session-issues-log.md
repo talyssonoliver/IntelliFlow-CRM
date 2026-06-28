@@ -25,9 +25,21 @@
 | Worktree provisioned  | 2026-06-28 12:58:26 |
 | Spec done             | 2026-06-28 13:18:37 |
 | Plan done             | 2026-06-28 13:33:31 |
-| Exec/attestation done | _pending_           |
-| PR opened             | _pending_           |
-| PR merged             | _pending_           |
+| Exec/attestation done | 2026-06-28 17:13:00 |
+| PR opened             | 2026-06-28 17:38:21 |
+| PR merged             | _pending (PR #537)_ |
+
+**Wall-clock breakdown (≈4h41m to PR open):**
+
+- Build/compute (spec → plan → exec impl → codex convergence → lighthouse
+  investigation): the dominant cost. Heaviest single item = the Lighthouse gate
+  detour (~1h: unauthenticated-artifact diagnosis → owner escalations → prod
+  test user create/measure/delete → scoped re-run → Gate-14 hash iteration).
+  Second = codex convergence (17 standalone ~2-min runs flushed in the cheap
+  loop, not via full pre-ships).
+- Waiting on pre-ship + CI: 3 full pre-ships (~17m + ~15.5m + a cached 0.6m
+  push) ≈ 33m of pre-ship waiting; CI for PR #537 is in flight at PR-open.
+- For exact figures see `/cost`; commit times are in `git log`.
 
 ## Issues
 
@@ -137,4 +149,31 @@ FLAGS protocol):
 
 ## Net assessment
 
-_To be completed at session end._
+**Single avoidable root cause: the Lighthouse gate could not be measured by the
+documented base recipe for a client-side-auth-gated route, and that was not
+known up front.** Everything else went smoothly — the spec/plan/exec pipeline,
+the behavior-preserving extraction, and the codex convergence were all routine.
+The ~1h Lighthouse detour was _not_ avoidable work (the gate genuinely needed a
+representative measurement, and the real answer — perf 97/98 — mattered), but it
+_was_ avoidable friction: (1) I briefly proposed waiving perf out-of-scope,
+which the owner rightly rejected; (2) the base recipe (gotcha #10) is simply
+wrong for `/dashboard` because the page redirects client-side when
+unauthenticated, so the 74 measured the login hero, not the dashboard; (3) the
+authenticated harness's designated test user did not exist in prod Supabase.
+
+**Prevention for the harness:** for client-side-auth-gated routes (`/dashboard`,
+`/contacts/**`, etc.) the base recipe is non-representative — the dispatch's
+gotcha #10 should carve out an exception and point straight at the authenticated
+harness, which additionally needs (a) the lighthouse test user permanently
+provisioned in the target Supabase, and (b) `NEXT_PUBLIC_API_URL` baked at build
+time (it is a build-time client var). Two other smaller avoidables: the CSV
+status enum (`Specifying`/`Plan Complete`) the skills write is not in the
+`validate-sprint-data` allow-list, and Gate 4b's `agent/<ID>` branch pattern
+conflicts with the CI-required `feat/*` — both are stale harness assumptions
+that cost a few minutes each to work around.
+
+**What went right:** spec-session caught that `page.tsx` already existed (no
+rebuild, no page-doc cascade); the plan-reviewer subagent caught a silently-
+skipped a11y-test path; codex caught 5 real "fake-0-while-loading" bugs and the
+pipeline-denominator correctness issue; and the control-plane discipline held —
+`Sprint_plan.csv` is left untouched for the orchestrator.
