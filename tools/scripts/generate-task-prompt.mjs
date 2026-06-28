@@ -23,7 +23,7 @@
  */
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import Papa from 'papaparse';
@@ -95,6 +95,29 @@ const SPRINT = rawSprint === 'Continuous' ? '0' : (String(parseInt(rawSprint, 10
 const DESCRIPTION = (row['Description'] || '').trim();
 const DEPS = (row['Dependencies'] || '').trim() || 'none';
 const CSV_STATUS = (row['Status'] || '').trim();
+
+// ── artifact precheck: warn if the task's required source artifacts ALREADY exist on origin/main ──
+// (PG-058 wasted discovery time learning dashboard/page.tsx was already shipped by PG-129.) Strip the
+// ARTIFACT:/FILE:/EVIDENCE: prefixes, keep real source files, and git-check each against origin/main.
+const artifactPaths = (row['Artifacts To Track'] || '')
+  .split(';')
+  .map((s) => s.trim().replace(/^[A-Z]+:/, '').trim())
+  .filter((s) => /\.(tsx?|jsx?|mjs|cjs|prisma|css|scss)$/i.test(s) && !s.startsWith('.specify/'));
+const existingArtifacts = artifactPaths.filter((p) => {
+  try {
+    execFileSync('git', ['cat-file', '-e', `origin/main:${p}`], { cwd: REPO_ROOT, stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+});
+const artifactPrecheck = existingArtifacts.length
+  ? `\n⚠ ARTIFACT PRECHECK — ${existingArtifacts.length} required artifact(s) ALREADY exist on origin/main:\n${existingArtifacts
+      .map((p) => '   - ' + p)
+      .join(
+        '\n'
+      )}\nThis task is a DELTA / refactor of existing code, NOT a from-scratch build. Read those files FIRST and scope to the gap (spec-session Phase 0 will confirm). Do not re-create what exists.`
+  : '';
 
 // ── resolve assignment (explicit → prefix-infer → defaults) ─────────────────
 const d = matrix.defaults;
@@ -304,6 +327,11 @@ HARD-WON GOTCHAS (these cost real days — encoded so you don't repeat them):
 13. Deep tRPC mutation TS2589 ("type instantiation excessively deep"): narrow the mutateAsync
    reference to the result slice you actually use (e.g. {id}); keep the cast at component scope, not
    inside the callback.
+14. PLACE NEW TESTS INSIDE THE PACKAGE'S vitest \`include\` GLOB. For apps/web that is \`src/**\` — a
+   test at apps/web/tests/** or any path outside src/ is SILENTLY SKIPPED by vitest (FAKE GREEN: the
+   per-package test command runs the include, so an out-of-include test never executes, and coverage
+   never sees it). Colocate as <feature>/__tests__/<name>.test.tsx next to the code. (PG-058's draft
+   plan placed a11y tests outside src/; the plan-reviewer caught it — author it right the first time.)
 
 RUN (the build engine — spec → plan → exec → attestation, one phase per iteration):
 /loop "/full-pipeline ${TASK_ID}" --max-iterations ${maxIter} --completion-promise "PIPELINE COMPLETE: Ensure all steps from /spec-session, /plan-session and /exec are all completed."
@@ -343,7 +371,7 @@ or containers (e.g. leangency-portal's Supabase) — escalate instead (that deto
 
 YOUR TASK: ${TASK_ID} — ${DESCRIPTION || '(see Sprint_plan.csv Description)'}
 ${lane}.  Persona/lens: ${persona}${secondary}.  STOA /exec must pass: ${stoa}.  Skills: ${skills}.
-Dependencies: ${DEPS}.${blockedBy}${note}${staleCsvWarning}
+Dependencies: ${DEPS}.${blockedBy}${note}${staleCsvWarning}${artifactPrecheck}
 
 REPORT WHEN DONE: the merged PR # + the attestation path
 (.specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/attestation.json) + your TIME breakdown
