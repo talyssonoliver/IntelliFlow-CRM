@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T17:34:08.276Z",
+  "generatedAt": "2026-06-28T23:35:59.641Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -334,6 +334,7 @@
       ".specify/sprints/sprint-18/attestations/IFC-230/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-240/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-242/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-248/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-255/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-256/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-257/attestation.json",
@@ -495,10 +496,10 @@
     "totalTasks": 596,
     "totalNumberedSprintTasks": 591,
     "continuousTaskCount": 5,
-    "completedTasks": 442,
-    "backlogTasks": 153,
+    "completedTasks": 443,
+    "backlogTasks": 152,
     "blockedTasks": 0,
-    "completionPercentage": 74.16,
+    "completionPercentage": 74.33,
     "inProgressTasks": 1,
     "otherTasks": 0
   },
@@ -914,36 +915,6 @@
         }
       },
       {
-        "taskId": "IFC-248",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Core CRM",
-        "title": "Lead List & Create Page Tests. Two major pages with ZERO tests: (1) Lead list page with filtering, sorting, bulk operations, saved views [T2]. (2) Lead create page (1029 lines) with BANT fields, source handling, validation [T3]. Also test: (3) Role-based filtering (ADMIN sees all, others see own) [T7]. (4) Bulk operations UI (score, convert, archive, delete) [T8]. Write component tests covering happy path, error states, and edge cases.",
-        "description": "Lead List & Create Page Tests. Two major pages with ZERO tests: (1) Lead list page with filtering, sorting, bulk operations, saved views [T2]. (2) Lead create page (1029 lines) with BANT fields, source handling, validation [T3]. Also test: (3) Role-based filtering (ADMIN sees all, others see own) [T7]. (4) Bulk operations UI (score, convert, archive, delete) [T8]. Write component tests covering happy path, error states, and edge cases.",
-        "summary": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
-        "definitionOfDone": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
-        "definitionOfDoneSnapshot": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
-        "dependencies": [],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "IFC-271",
         "sprint": 18,
         "status": "Backlog",
@@ -1034,6 +1005,36 @@
         "kpiSummary": {
           "total": 4,
           "met": 4,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "INFRA-TF-001",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Infrastructure",
+        "title": "Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deployment->railway_service source_image, default_environment object, and Vercel env->vercel_project_environment_variable / vercel_webhook / edge-config to the current provider schemas.",
+        "description": "Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deployment->railway_service source_image, default_environment object, and Vercel env->vercel_project_environment_variable / vercel_webhook / edge-config to the current provider schemas.",
+        "summary": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
+        "definitionOfDone": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
+        "definitionOfDoneSnapshot": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
+        "dependencies": [],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
           "missed": 0
         }
       }
@@ -17512,11 +17513,11 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 66,
-      "completedTasks": 48,
-      "backlogTasks": 17,
+      "completedTasks": 49,
+      "backlogTasks": 16,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 33,
+      "attestedCompletedTasks": 34,
       "missingCompletedAttestations": [
         "PG-188",
         "PG-191",
@@ -17866,8 +17867,8 @@
         {
           "section": "Core CRM",
           "total": 27,
-          "completed": 21,
-          "open": 6
+          "completed": 22,
+          "open": 5
         },
         {
           "section": "Settings",
@@ -18400,9 +18401,9 @@
           "section": "AI/ML",
           "title": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
           "description": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
-          "summary": "IFC-214 (Redis-backed AI Monitoring State Bridge) verify-and-attest RECONCILE — NOT a fresh implementation. DISCOVERY: the entire IFC-214 scope was already implemented, tested, and merged by 'feat(IFC-212):......",
+          "summary": "IFC-214 (Redis-backed AI Monitoring State Bridge) — GENUINE exec, scoped to the one real residual gap. Phase-0 exploration established that the bridge itself was already implemented + merged under 'feat(IFC-212):......",
           "definitionOfDone": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons; cache-poisoning mitigations enforced (key namespacing, schema validation, TTL/versioning); Redis outage fallback returns safe empty payloads; cross-process integration test verifies worker writes are visible to API; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
-          "definitionOfDoneSnapshot": "ai-worker publishes tenant-scoped monitoring snapshots to Redis; aiMonitoring router reads Redis-backed metrics instead of in-process singletons; Cache-poisoning mitigations (key namespacing, schema validation, TTL/versioning)",
+          "definitionOfDoneSnapshot": "ai-worker publishes tenant-scoped monitoring snapshots to Redis; aiMonitoring router reads Redis-backed metrics (5 endpoints) instead of in-process singletons; Cache-poisoning mitigations (key namespacing, schema validation, TTL/versioning)",
           "dependencies": [
             "IFC-015",
             "IFC-168",
@@ -18412,7 +18413,7 @@
             "exists": true,
             "path": ".specify/sprints/sprint-18/attestations/IFC-214/attestation.json",
             "verdict": "COMPLETE",
-            "timestamp": "2026-06-15T13:05:00Z",
+            "timestamp": "2026-06-28T20:45:00Z",
             "sprintFolder": 18
           },
           "validationSummary": {
@@ -18644,30 +18645,30 @@
         {
           "taskId": "IFC-248",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Lead List & Create Page Tests. Two major pages with ZERO tests: (1) Lead list page with filtering, sorting, bulk operations, saved views [T2]. (2) Lead create page (1029 lines) with BANT fields, source handling, validation [T3]. Also test: (3) Role-based filtering (ADMIN sees all, others see own) [T7]. (4) Bulk operations UI (score, convert, archive, delete) [T8]. Write component tests covering happy path, error states, and edge cases.",
           "description": "Lead List & Create Page Tests. Two major pages with ZERO tests: (1) Lead list page with filtering, sorting, bulk operations, saved views [T2]. (2) Lead create page (1029 lines) with BANT fields, source handling, validation [T3]. Also test: (3) Role-based filtering (ADMIN sees all, others see own) [T7]. (4) Bulk operations UI (score, convert, archive, delete) [T8]. Write component tests covering happy path, error states, and edge cases.",
-          "summary": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
+          "summary": "Test-authoring task — NO production source modified, so Sonar new_coverage (changed production lines) has no exposure; the binding metric is whole-file coverage.... Lead list test file with >=15 cases (filter, sort, bulk ops, role-based);...",
           "definitionOfDone": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
           "definitionOfDoneSnapshot": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-248/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-28T20:40:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 3,
+            "met": 3,
             "missed": 0
           }
         },
