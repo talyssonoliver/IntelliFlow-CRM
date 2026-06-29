@@ -168,7 +168,7 @@ export const reportTemplatesRouter = createTRPCRouter({
     }
 
     try {
-      const updated = await ctx.prisma.$transaction(async (tx) => {
+      const updated = await ctx.prismaWithTenant.$transaction(async (tx) => {
         return tx.reportTemplate.update({
           where: { id, tenantId },
           data: {
@@ -217,7 +217,7 @@ export const reportTemplatesRouter = createTRPCRouter({
     // Creator-only delete: mirrors the update ownership guard.
     // A user who can *see* a shared template (via list()) cannot delete it
     // if they are not the creator.
-    const result = await ctx.prisma.$transaction(async (tx) => {
+    const result = await ctx.prismaWithTenant.$transaction(async (tx) => {
       return tx.reportTemplate.deleteMany({
         where: { id: input.id, tenantId, createdBy: userId },
       });

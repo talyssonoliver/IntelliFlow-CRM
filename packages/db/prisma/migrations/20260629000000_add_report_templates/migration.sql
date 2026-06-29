@@ -29,3 +29,6 @@ ALTER TABLE "report_templates" ADD CONSTRAINT "report_templates_tenantId_fkey"
     FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "report_templates" ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "report_templates_tenant_isolation" ON "report_templates"
+    USING ("tenantId" = current_setting('app.current_tenant_id', true));
