@@ -1,21 +1,21 @@
 # Current State Report
-_Generated: 2026-06-28T23:35:59.641Z_
+_Generated: 2026-06-29T06:32:01.011Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 5 continuous tasks.
-- Overall progress: 443/596 tasks completed (74.33%), 152 backlog, 0 blocked, 1 in progress.
-- Numbered sprint progress alone: 438/591 tasks completed or attested inside numbered sprints.
+- Overall progress: 445/596 tasks completed (74.66%), 150 backlog, 0 blocked, 1 in progress.
+- Numbered sprint progress alone: 440/591 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
-- Ready-to-start work: DOC-015 (Sprint 18), IFC-211 (Sprint 18), IFC-212 (Sprint 18), IFC-215 (Sprint 18), IFC-234 (Sprint 18).
+- Ready-to-start work: DOC-015 (Sprint 18), IFC-211 (Sprint 18), IFC-212 (Sprint 18), IFC-234 (Sprint 18), IFC-271 (Sprint 18).
 - Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
 
 ## Source Health
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
-- CSV marks these tasks completed without a canonical attestation: IFC-043, IFC-052, IFC-071, PG-110, PG-114, PG-127, PG-147, IFC-199, IFC-201, IFC-204, IFC-304, PG-188, PG-191, IFC-306, PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209.
+- CSV marks these tasks completed without a canonical attestation: IFC-043, IFC-052, IFC-071, PG-110, PG-114, PG-127, PG-147, IFC-199, IFC-201, IFC-204, IFC-304, PG-191, IFC-306, PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209.
 - Attested but not completed in CSV: IFC-212 (Backlog), IFC-257 (In Progress), IFC-271 (Backlog), IFC-314 (Backlog).
 
 ## Continuous Work
@@ -264,17 +264,17 @@ _Generated: 2026-06-28T23:35:59.641Z_
 
 ## Sprint 18 - Sprint 18
 
-- Status: 49/66 completed, 16 backlog, 0 blocked, 1 in progress.
+- Status: 51/66 completed, 14 backlog, 0 blocked, 1 in progress.
 - Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).
-- Evidence coverage: 34/49 completed tasks have canonical `attestation.json` evidence.
-- Evidence gaps: completed in CSV but missing canonical attestation: PG-188, PG-191, PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209.
+- Evidence coverage: 37/51 completed tasks have canonical `attestation.json` evidence.
+- Evidence gaps: completed in CSV but missing canonical attestation: PG-191, PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209.
 
 **Accomplished**
 - **IFC-070** — Data Migration from Legacy. IFC-070 Data Migration from Legacy completed via TDD. 13 steps across 4 phases (RED/GREEN/REFACTOR/VALIDATION). 66 tests, 98.88% statement coverage. All 6 completion gates PASS. Compliance check PASS. 100% data migrated, validation passed;...
+- **IFC-215** — AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata. IFC-215 replaces three hardcoded placeholder values in withMonitoring() (apps/ai-worker/src/monitoring/chain-monitor.ts): tokenCost:0, hallucinationFlags:[], model:'default'.... chain-monitor records actual model id (no 'default' placeholder);...
 - **IFC-265** — Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.. Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth surface. Findings L? no — test-gap findings T-01/T-04/T-06/T-07/T-08 closed (audit §19 was stale; scoped to genuine gaps).... Contact detail page test file with >=20 tests;...
+- **IFC-266** — Contact List/Create Page Tests + E2E. (1) Contact list page has ZERO page tests (T-02). (2) Contact create page has ZERO page tests — auth guard gap F-07 would be caught (T-03). (3) Bulk selection (select all, bulk email, bulk export) untested (T-05). (4) Contract tests missing for bulkEmail, bulkExport, bulkDelete (T-09). (5) No E2E Playwright tests for contact CRUD flow (T-10). Audit: docs/audit/contact-detail-wiring-audit.md §19.. Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth-surface change. Findings: audit §19 stale for T-03 (auth already fixed IFC-253) and T-09 (bulk contract tests already present)... List page test file with >=10 tests;...
 - **IFC-301** — Rich Text Editor Integration — Tiptap. Pure UI package (STOA-Domain trivially satisfied — no backend/domain/schema/migration).... Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%
-- **IFC-310** — Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.. IFC-310 iteration-4 — residual concerns from the second audit round fully resolved. No items deferred. R1 (AC-007 AI branch unreachable at runtime): RESOLVED.... Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time;...
-- **PG-180** — Help Article Admin List Page. Compliance-check invoked inline: all 4 mandatory validations PASS (typecheck, tests, lint, build), scoped Istanbul coverage 97.26/95.06/91.66/96.96 (aggregate) exceeds 90/80/90/90 thresholds, icon policy PASS (Material Symbols only, zero fo... Articles listed;...
 
 **Open Work**
 - **IFC-257** — Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.. Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation

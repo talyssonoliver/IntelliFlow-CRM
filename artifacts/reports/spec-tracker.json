@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-06-29T01:08:51.804Z",
+  "generated_at": "2026-06-29T06:32:01.007Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 497,
-    "completed": 433,
+    "total_specs_analyzed": 498,
+    "completed": 436,
     "partially_done": 0,
-    "spec_only": 60,
+    "spec_only": 58,
     "uncertain": 4
   },
   "status_legend": {
@@ -28,6 +28,12 @@
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
+      "task_id": "IFC-215",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
       "task_id": "IFC-227",
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
@@ -43,6 +49,12 @@
       "task_id": "IFC-242",
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "IFC-247",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 75% complete. Likely a CSV update lag.",
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
@@ -109,6 +121,12 @@
       "task_id": "PG-181",
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "PG-188",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 80% complete. Likely a CSV update lag.",
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     }
   ],
@@ -4286,19 +4304,19 @@
       "task_id": "IFC-215",
       "title": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
       "sprint": 18,
-      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-215-spec.md",
-      "has_spec": true,
-      "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Plan Complete",
-      "metric_status": "PLANNED",
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-117",
         "IFC-197",
         "IFC-214"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-216",
@@ -4764,15 +4782,15 @@
       "task_id": "IFC-247",
       "title": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-247-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-248",
@@ -7752,6 +7770,22 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-188",
+      "title": "Module Settings - Billing (/billing/settings)",
+      "sprint": 18,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178"

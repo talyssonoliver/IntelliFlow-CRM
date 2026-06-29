@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T23:35:59.641Z",
+  "generatedAt": "2026-06-29T06:32:01.011Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -330,10 +330,12 @@
       ".specify/sprints/sprint-18/attestations/IFC-078/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-214/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-215/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-227/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-230/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-240/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-242/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-247/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-248/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-255/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-256/attestation.json",
@@ -361,6 +363,7 @@
       ".specify/sprints/sprint-18/attestations/PG-180/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-181/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-187/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-188/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-189/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-190/attestation.json",
       ".specify/sprints/sprint-19/attestations/IFC-312/attestation.json",
@@ -496,10 +499,10 @@
     "totalTasks": 596,
     "totalNumberedSprintTasks": 591,
     "continuousTaskCount": 5,
-    "completedTasks": 443,
-    "backlogTasks": 152,
+    "completedTasks": 445,
+    "backlogTasks": 150,
     "blockedTasks": 0,
-    "completionPercentage": 74.33,
+    "completionPercentage": 74.66,
     "inProgressTasks": 1,
     "otherTasks": 0
   },
@@ -518,7 +521,6 @@
       "IFC-201",
       "IFC-204",
       "IFC-304",
-      "PG-188",
       "PG-191",
       "IFC-306",
       "PG-196",
@@ -821,40 +823,6 @@
         }
       },
       {
-        "taskId": "IFC-215",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "AI/ML",
-        "title": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
-        "description": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
-        "summary": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics;...",
-        "definitionOfDone": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics; unit and integration tests cover populated and fallback scenarios; verified by: pnpm test --filter ai-worker;pnpm test --filter api",
-        "definitionOfDoneSnapshot": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics;...",
-        "dependencies": [
-          "IFC-117",
-          "IFC-197",
-          "IFC-214"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "IFC-234",
         "sprint": 18,
         "status": "Backlog",
@@ -864,36 +832,6 @@
         "summary": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
         "definitionOfDone": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
         "definitionOfDoneSnapshot": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
-        "dependencies": [],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "IFC-247",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Core CRM",
-        "title": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
-        "description": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
-        "summary": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
-        "definitionOfDone": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
-        "definitionOfDoneSnapshot": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
         "dependencies": [],
         "attestation": {
           "exists": false,
@@ -1019,6 +957,72 @@
         "definitionOfDone": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
         "definitionOfDoneSnapshot": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
         "dependencies": [],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-200",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Settings",
+        "title": "Module Settings - Report Templates (/analytics/report-templates)",
+        "description": "Module Settings - Report Templates (/analytics/report-templates)",
+        "summary": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+        "definitionOfDone": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate template names within scope; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in analytics automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+        "dependencies": [
+          "PG-178",
+          "PG-187"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-033",
+        "sprint": 19,
+        "status": "Backlog",
+        "section": "Automation",
+        "title": "PHASE-005: Load Testing with k6",
+        "description": "PHASE-005: Load Testing with k6",
+        "summary": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+        "definitionOfDone": "System handles 5000 leads/hour with automation; artifacts: load-test-report.html, bottleneck-analysis.md, grafana-load-test.png; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+        "definitionOfDoneSnapshot": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+        "dependencies": [
+          "IFC-030",
+          "IFC-032"
+        ],
         "attestation": {
           "exists": false,
           "path": null,
@@ -17513,13 +17517,12 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 66,
-      "completedTasks": 49,
-      "backlogTasks": 16,
+      "completedTasks": 51,
+      "backlogTasks": 14,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 34,
+      "attestedCompletedTasks": 37,
       "missingCompletedAttestations": [
-        "PG-188",
         "PG-191",
         "PG-196",
         "PG-197",
@@ -17570,6 +17573,40 @@
           }
         },
         {
+          "taskId": "IFC-215",
+          "sprint": 18,
+          "status": "Completed",
+          "section": "AI/ML",
+          "title": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
+          "description": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
+          "summary": "IFC-215 replaces three hardcoded placeholder values in withMonitoring() (apps/ai-worker/src/monitoring/chain-monitor.ts): tokenCost:0, hallucinationFlags:[], model:'default'.... chain-monitor records actual model id (no 'default' placeholder);...",
+          "definitionOfDone": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics; unit and integration tests cover populated and fallback scenarios; verified by: pnpm test --filter ai-worker;pnpm test --filter api",
+          "definitionOfDoneSnapshot": "chain-monitor records actual model id (no 'default' placeholder); chain-monitor records actual tokenCost (no 0 placeholder); chain-monitor records actual hallucinationFlags (no [] placeholder)",
+          "dependencies": [
+            "IFC-117",
+            "IFC-197",
+            "IFC-214"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-215/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-29T02:30:00Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 4,
+            "met": 4,
+            "missed": 0
+          }
+        },
+        {
           "taskId": "IFC-265",
           "sprint": 18,
           "status": "Completed",
@@ -17585,6 +17622,36 @@
             "path": ".specify/sprints/sprint-18/attestations/IFC-265/attestation.json",
             "verdict": "COMPLETE",
             "timestamp": "2026-06-13T15:25:00Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 4,
+            "met": 4,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-266",
+          "sprint": 18,
+          "status": "Completed",
+          "section": "Core CRM",
+          "title": "Contact List/Create Page Tests + E2E. (1) Contact list page has ZERO page tests (T-02). (2) Contact create page has ZERO page tests — auth guard gap F-07 would be caught (T-03). (3) Bulk selection (select all, bulk email, bulk export) untested (T-05). (4) Contract tests missing for bulkEmail, bulkExport, bulkDelete (T-09). (5) No E2E Playwright tests for contact CRUD flow (T-10). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
+          "description": "Contact List/Create Page Tests + E2E. (1) Contact list page has ZERO page tests (T-02). (2) Contact create page has ZERO page tests — auth guard gap F-07 would be caught (T-03). (3) Bulk selection (select all, bulk email, bulk export) untested (T-05). (4) Contract tests missing for bulkEmail, bulkExport, bulkDelete (T-09). (5) No E2E Playwright tests for contact CRUD flow (T-10). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
+          "summary": "Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth-surface change. Findings: audit §19 stale for T-03 (auth already fixed IFC-253) and T-09 (bulk contract tests already present)... List page test file with >=10 tests;...",
+          "definitionOfDone": "List page test file with >=10 tests; create page test file with auth guard test; bulk operation tests; contract tests for bulk procedures; E2E create-view-edit-delete flow; coverage >=90%",
+          "definitionOfDoneSnapshot": "List page test file with >=10 tests; create page test file with auth guard test; bulk operation tests; contract tests for bulk procedures; E2E create-view-edit-delete flow; coverage >=90%",
+          "dependencies": [],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-266/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-14T00:00:00Z",
             "sprintFolder": 18
           },
           "validationSummary": {
@@ -17629,71 +17696,6 @@
             "total": 4,
             "met": 4,
             "missed": 0
-          }
-        },
-        {
-          "taskId": "IFC-310",
-          "sprint": 18,
-          "status": "Completed",
-          "section": "Core CRM",
-          "title": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
-          "description": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
-          "summary": "IFC-310 iteration-4 — residual concerns from the second audit round fully resolved. No items deferred. R1 (AC-007 AI branch unreachable at runtime): RESOLVED.... Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time;...",
-          "definitionOfDone": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate; auto-merge/auto-link operations are transactional and preserve the oldest record's id while folding in newer relations; new contact_duplicate and account_duplicate notification types added to NOTIFICATION_TYPES; aiDuplicateDetection uses pgvector similarity on the entity's embeddings; >=90% scoped coverage; all 4 validations pass",
-          "definitionOfDoneSnapshot": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate;...",
-          "dependencies": [
-            "PG-182",
-            "PG-183"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-04-21T22:00:00.000Z",
-            "sprintFolder": 18
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 5,
-            "met": 4,
-            "missed": 1
-          }
-        },
-        {
-          "taskId": "PG-180",
-          "sprint": 18,
-          "status": "Completed",
-          "section": "Support Pages",
-          "title": "Help Article Admin List Page",
-          "description": "Help Article Admin List Page",
-          "summary": "Compliance-check invoked inline: all 4 mandatory validations PASS (typecheck, tests, lint, build), scoped Istanbul coverage 97.26/95.06/91.66/96.96 (aggregate) exceeds 90/80/90/90 thresholds, icon policy PASS (Material Symbols only, zero fo... Articles listed;...",
-          "definitionOfDone": "Response <200ms, Lighthouse >=90; admin page at /settings/help-center/articles with article list, status badges, category filters, search, CRUD actions; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Articles listed; Filters working; CRUD actions functional",
-          "dependencies": [
-            "IFC-299"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/PG-180/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-04-19T22:50:00Z",
-            "sprintFolder": 18
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 5,
-            "met": 4,
-            "missed": 1
           }
         }
       ],
@@ -17867,8 +17869,8 @@
         {
           "section": "Core CRM",
           "total": 27,
-          "completed": 22,
-          "open": 5
+          "completed": 23,
+          "open": 4
         },
         {
           "section": "Settings",
@@ -17885,8 +17887,8 @@
         {
           "section": "AI/ML",
           "total": 3,
-          "completed": 1,
-          "open": 2
+          "completed": 2,
+          "open": 1
         },
         {
           "section": "Automation",
@@ -18431,34 +18433,34 @@
         {
           "taskId": "IFC-215",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "AI/ML",
           "title": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
           "description": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
-          "summary": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics;...",
+          "summary": "IFC-215 replaces three hardcoded placeholder values in withMonitoring() (apps/ai-worker/src/monitoring/chain-monitor.ts): tokenCost:0, hallucinationFlags:[], model:'default'.... chain-monitor records actual model id (no 'default' placeholder);...",
           "definitionOfDone": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics; unit and integration tests cover populated and fallback scenarios; verified by: pnpm test --filter ai-worker;pnpm test --filter api",
-          "definitionOfDoneSnapshot": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics;...",
+          "definitionOfDoneSnapshot": "chain-monitor records actual model id (no 'default' placeholder); chain-monitor records actual tokenCost (no 0 placeholder); chain-monitor records actual hallucinationFlags (no [] placeholder)",
           "dependencies": [
             "IFC-117",
             "IFC-197",
             "IFC-214"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-215/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-29T02:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
@@ -18615,30 +18617,30 @@
         {
           "taskId": "IFC-247",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
           "description": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
-          "summary": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
+          "summary": "IFC-247 Lead Detail Page Tests — 45 tests implemented (20 existing + 25 new). Used capturedCallbacks pattern to exercise useMutation onSuccess/onError handlers. Codex converged to PASS in 4 rounds fixing:... AC-01 Tab Switching:...",
           "definitionOfDone": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
-          "definitionOfDoneSnapshot": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
+          "definitionOfDoneSnapshot": "AC-01 Tab Switching: 7 tab labels render + tab switching + Overview default; AC-02 Notes Tab + addNote mutation: textarea, mutate call, isPending disables button, onSuccess/onError callbacks; AC-03 logActivity mutation:...",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-247/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-29T12:00:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 3,
+            "met": 3,
             "missed": 0
           }
         },
@@ -19179,15 +19181,15 @@
             "PG-178"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-188/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-29T02:00:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 7,
+            "passed": 7,
             "failed": 0,
             "failingNames": []
           },
