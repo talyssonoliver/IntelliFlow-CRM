@@ -1033,3 +1033,30 @@ waivers:
     author: talyssonoliver
     date: '2026-06-29'
     expires: '2026-12-29'
+  - fingerprint: '003f0b45893c0f7fc43aa402f07512a9badc80c2c0161ce1b70744a48e76870f'
+    reason: >-
+      Same accepted V1 limitation as fingerprint 784986853c5c... (team-scope-overexposure).
+      Codex re-anchored the identical finding with a new fingerprint because the list/get
+      visibility predicate lines shifted after the uniqueness-scope fixes (documented codex
+      fingerprint-drift / non-determinism). The team-scope concern (no teamId FK or
+      team-membership check means team templates are visible to all tenant members) is
+      accepted out-of-scope: ReportTemplate has no teamId column; team-membership filtering
+      requires a follow-up task (REPORT-TEMPLATES-TEAM-SCOPE-001 in debt-ledger.yaml +
+      gh issue). Current behaviour is conservative (over-shares within tenant) not
+      under-sharing. Source-anchored to the OR-predicate — re-blocks if predicate changes.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-31'
+  - fingerprint: '145ba0f8f4527b6faeefd131ab5e0fed28f928ac47286954087553644152da6d'
+    reason: >-
+      Verified false positive — codex is hallucinating the pre-fix code. The finding
+      claims the non-private branch lacks sharingScope filter, but the fix is committed:
+      line 102 reads `{ tenantId, name: input.name, sharingScope: { not: 'private' as const } }`
+      and the rename path (update line 179) has the same filter. Verified via grep:
+      `grep -n "sharingScope.*not.*private"` in report-templates.router.ts returns 4
+      matches (lines 57, 77, 102, 179). This is the documented codex hallucinate-fixed-code
+      pattern. The fingerprint is source-anchored to the FIXED code, so this waiver
+      auto-re-blocks if the fix is ever reverted.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-31'
