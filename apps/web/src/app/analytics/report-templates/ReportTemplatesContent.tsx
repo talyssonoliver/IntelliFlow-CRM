@@ -142,7 +142,10 @@ export default function ReportTemplatesContent() {
       await updateMutation.mutateAsync({
         id: editingId,
         name: form.name.trim(),
-        description: form.description.trim() || undefined,
+        // Send empty string (not undefined) so clearing the field actually
+        // persists the cleared value. The router applies the field only when
+        // !== undefined, so undefined would silently preserve the old value.
+        description: form.description.trim(),
         selectedColumns: columns,
         chartType: form.chartType,
         defaultPeriod: form.defaultPeriod,

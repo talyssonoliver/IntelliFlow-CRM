@@ -99,20 +99,32 @@ export const reportTemplatesRouter = createTRPCRouter({
       });
     }
 
-    const created = await ctx.prismaWithTenant.reportTemplate.create({
-      data: {
-        tenantId,
-        createdBy: userId,
-        name: input.name,
-        description: input.description,
-        selectedColumns: input.selectedColumns as unknown as Prisma.InputJsonValue,
-        chartType: input.chartType ?? 'table',
-        defaultPeriod: input.defaultPeriod ?? '30d',
-        sharingScope: input.sharingScope ?? 'private',
-        filterSet: (input.filterSet ?? {}) as unknown as Prisma.InputJsonValue,
-      },
-    });
-    return normalizeRow(created);
+    try {
+      const created = await ctx.prismaWithTenant.reportTemplate.create({
+        data: {
+          tenantId,
+          createdBy: userId,
+          name: input.name,
+          description: input.description,
+          selectedColumns: input.selectedColumns as unknown as Prisma.InputJsonValue,
+          chartType: input.chartType ?? 'table',
+          defaultPeriod: input.defaultPeriod ?? '30d',
+          sharingScope: input.sharingScope ?? 'private',
+          filterSet: (input.filterSet ?? {}) as unknown as Prisma.InputJsonValue,
+        },
+      });
+      return normalizeRow(created);
+    } catch (err: unknown) {
+      const prismaError = err as { code?: string };
+      if (prismaError.code === 'P2002') {
+        // Concurrent duplicate-name insert (TOCTOU race on pre-check).
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `A report template named "${input.name}" already exists.`,
+        });
+      }
+      throw err;
+    }
   }),
 
   /**
