@@ -93,11 +93,51 @@ Only **one** PR merges at a time — you hold the merge token.
   re-run pre-ship + re-trigger CI before it may take the token. A branch that
   isn't even with `origin/main` does not merge (renamed exports break
   semantically with no textual conflict).
-- After the merged task passes the 6-point DONE, flip its CSV row on the control
+- After the merged task passes the DONE check, flip its CSV row on the control
   plane (CSV only → `split-sprint-plan.ts` → `generate-context.ts`), commit,
-  push — then release the token.
+  push — then release the token. Flip with **surgical `sed`**
+  (`sed -i "/^TASK,/ s/,In Progress,/,Completed,/"`) — a Python/JS CSV rewriter
+  reformats the WHOLE file (line-ending/quoting churn). `generate-context.ts`
+  needs `pnpm install` (papaparse) in a fresh worktree. For a multi-task fleet
+  you MAY BATCH all flips into ONE PR after the last feature merges — fewer
+  context-snapshot regenerations and conflicts.
 - Verify the harness reclaimed the finished worktree (a committed branch may
   linger); if not, note it for the periodic audit.
+
+### Gate-lock: serialize the HEAVY gate (not just the merge)
+
+The merge token serializes merges; a **separate gate-lock** must serialize the
+full **pre-ship/coverage gate**. On this single host, two coverage runs at once
+collide on `artifacts/coverage-parts` (ENOTEMPTY), OOM the web Istanbul write
+(SIGKILL), and triple wall-clock (coverage 43min contended vs 18min solo).
+
+- Grant the gate-lock to **exactly one** executor at a time. Everything else
+  (spec, plan, exec-build, scoped tests, cheap gates, codex standalone) runs
+  parallel; only the full `pre-ship` / `git push` (its pre-push hook runs the
+  gate) needs the lock.
+- Set this expectation at **dispatch** (it's in the generated prompt), not
+  mid-run — an executor that reaches the gate before being told to wait will
+  push and re-introduce contention.
+- On a strict-serialize re-sync, the re-syncing executor needs the gate-lock
+  again for its solo re-run; hand it over in order.
+
+### Driving sub-agent executors (harness-managed)
+
+A spawned `task-executor` is NOT a self-driving CLI session:
+
+- **It yields between phases.** `/loop /full-pipeline` runs ONE phase (or one
+  nested subagent, e.g. the plan-reviewer) then comes to rest. You **pump** it
+  to the next phase with `SendMessage(to: agentId, ...)`. Budget ~1 extra pump
+  per nested-subagent boundary.
+- **It cannot block on a long gate.** A full pre-ship (~20-45min) exceeds the
+  foreground shell cap so it must background, and the sub-agent does NOT
+  auto-wake when the background job finishes. So **YOU are the wake mechanism**:
+  pace polls against **objective git state**
+  (`git ls-remote origin refs/heads/feat/*`, `gh pr checks`, attestation read
+  via blob hash) — NOT the agent's self-reports — using a `run_in_background`
+  until-loop timer; don't tight-poll a parked agent.
+- Tell idle agents to **stand by silently** (stop self-monitoring CI) once you
+  own the watch, to avoid notification churn.
 
 ## Global rules (non-negotiable)
 
@@ -121,8 +161,25 @@ A task is DONE only when you have **independently verified all six**:
 1. The executor's loop emitted its promise AND the attestation exists at
    `.specify/sprints/sprint-{N}/attestations/{TASK}/attestation.json`, all gates
    PASS (binary — no WARN/SKIP).
-2. Spec + plan + exec artifacts all exist.
-3. The 4 build validations passed (TypeScript, Tests, Lint, **Build**).
+2. **The FULL evidence trail is committed on the branch with GENUINE provenance
+   — verify by READING the files, not by trusting the attestation verdict.** All
+   four must be present under `.specify/sprints/sprint-{N}/`:
+   `specifications/{TASK}-spec.md`, `planning/{TASK}-plan.md`,
+   `attestations/{TASK}/attestation.json`,
+   `attestations/{TASK}/task-tracking.json`. Read them via blob hash to dodge
+   MSYS path mangling (`git ls-tree -r origin/main --name-only` →
+   `git show`/`cat-file`, or prefix `MSYS_NO_PATHCONV=1`). The spec must show
+   **multi-persona consensus** (not a single templated voice); the plan must
+   carry a **plan-reviewer sign-off**; `task-tracking` `status_history` must
+   show the spec→plan→exec progression with **real, non-placeholder timestamps**
+   (round 00:00/01:00/02:00 series = fabricated → reject). A PR carrying ONLY
+   `attestation.json` is NOT done — the ceremony is unproven; send it back.
+   (This gap shipped a sub-fleet: IFC-247 had the full trail, IFC-215 dropped
+   spec/plan, PG-188 had attestation only — code was CI-validated but the
+   process was unauditable.)
+3. The 4 build validations passed (TypeScript, Tests, Lint, **Build**) — and CI
+   re-ran them independently on the PR (external, unfakeable), so trust CI over
+   the self-authored attestation for code quality.
 4. `/compliance-check` passed.
 5. **The PR is merged to main with ALL checks green** (zero fail, zero pending,
    all workflows complete). If a sibling sprint PR merged since the branch was

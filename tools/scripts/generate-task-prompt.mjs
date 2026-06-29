@@ -332,6 +332,25 @@ HARD-WON GOTCHAS (these cost real days — encoded so you don't repeat them):
    per-package test command runs the include, so an out-of-include test never executes, and coverage
    never sees it). Colocate as <feature>/__tests__/<name>.test.tsx next to the code. (PG-058's draft
    plan placed a11y tests outside src/; the plan-reviewer caught it — author it right the first time.)
+15. GATE-LOCK — the full pre-ship/coverage gate is SERIALIZED across the fleet. Running two coverage
+   runs at once on this single host COLLIDES on artifacts/coverage-parts (ENOTEMPTY) and OOMs (web
+   Istanbul write SIGKILL), and triples wall-clock (coverage 43min contended vs 18min solo). So: do
+   all the parallel-safe work freely (spec, plan, exec-build, scoped tests, the CHEAP gates, codex
+   standalone), but BEFORE you run the ONE full \`node scripts/pre-ship.mjs\` or \`git push\` (the
+   pre-push hook runs the full gate), tell the orchestrator "ready for the gate-lock" and WAIT for it.
+   Only one executor holds the lock at a time.
+16. COMMIT ALL EVIDENCE BEFORE THE ONE FULL PRE-SHIP. Stage + commit your code AND the 4 .specify
+   artifacts (spec, plan, attestation, task-tracking) AND the issues-log as your FINAL commit, THEN run
+   the single full pre-ship at that SHA, THEN push immediately (pre-push reuses the cache). If you
+   commit evidence AFTER a passing pre-ship, the new SHA makes the pre-push hook re-run the whole
+   ~20-45min gate (a sub-fleet lost ~45min each to exactly this). The clean path = one commit, one gate,
+   one push.
+17. CLEAN COVERAGE DIRS before every pre-ship: remove artifacts/coverage-parts and artifacts/coverage-vitest
+   first (a stale/locked parts dir from a prior or concurrent run throws "ENOTEMPTY: directory not empty").
+18. YOU ARE A SUB-AGENT — the /loop does NOT self-iterate inside you the way a CLI session does: it
+   runs ONE phase (or one nested subagent, e.g. the plan-reviewer) then YIELDS. After each phase report
+   your state and let the orchestrator pump you to the next; do not sit waiting for a background
+   notification (a backgrounded pre-ship will NOT auto-wake you — report its tail when asked).
 
 RUN (the build engine — spec → plan → exec → attestation, one phase per iteration):
 /loop "/full-pipeline ${TASK_ID}" --max-iterations ${maxIter} --completion-promise "PIPELINE COMPLETE: Ensure all steps from /spec-session, /plan-session and /exec are all completed."
@@ -342,24 +361,37 @@ shipped". After the promise, you still owe the ship steps below.
 VALIDATE BEFORE CLAIMING DONE ("PIPELINE COMPLETE" is a claim, not proof):
 - TypeScript + Tests + Lint + BUILD all pass; full suite for every touched package
   (pnpm --filter <pkg> test, not a guessed subset).
-- Attestation exists at .specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/attestation.json,
-  all gates PASS (binary — no WARN/SKIP).
+- COMMIT THE FULL EVIDENCE TRAIL to your PR — all FOUR of these, not just the attestation
+  (a sub-fleet shipped with ONLY attestation.json, leaving NO durable proof the ceremony ran;
+  the orchestrator now REJECTS that):
+    1. .specify/sprints/sprint-${SPRINT}/specifications/${TASK_ID}-spec.md  (the multi-persona spec)
+    2. .specify/sprints/sprint-${SPRINT}/planning/${TASK_ID}-plan.md        (the plan-reviewer-signed plan)
+    3. .specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/attestation.json   (all gates PASS, binary)
+    4. .specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/task-tracking.json (status_history etc.)
+  /spec-session and /plan-session WRITE files 1+2 — you must git-add and commit them, or the proof
+  is lost. task-tracking status_history timestamps MUST be the REAL wall-clock times each phase finished
+  (commit times / your own clock) — NEVER synthetic round placeholders like 00:00/01:00/02:00 (that is
+  fabricated evidence and a process violation, even if the phases really ran).
 - Run /code-review on the diff and /sonarqube-fix for any new Sonar findings BEFORE opening the PR.
 - UI tasks: an a11y-expert review pass (WCAG) before merge.
 
-MERGE DISCIPLINE (this is where the PR # is born — the loop never opens a PR):
-- gh pr create, then gh pr checks <n>: merge ONLY with ZERO fail AND ZERO pending. Wait for ALL
-  workflows to COMPLETE (CI Pipeline + Security Scanning + Release) — never judge green from a
-  subset or while jobs run.
-- STRICT SERIALIZE: only ONE task merges at a time. Before you merge, your branch MUST be even with
-  current origin/main. If the orchestrator says a sibling merged, or \`git fetch origin main\` shows
-  main moved past your base: \`git merge --no-edit origin/main\`, then if pnpm-lock.yaml or
-  packages/** changed re-run \`pnpm install\` + \`pnpm exec turbo build --filter='./packages/*'\` and
-  clear apps/web/.next/types (stale-types trap), then re-run pre-ship + re-trigger CI BEFORE merging.
-  Renamed exports break semantically with NO textual conflict — a clean cherry-merge is not enough.
+OPEN THE PR AND REPORT — YOU DO NOT MERGE (this is where the PR # is born — the loop never opens a PR):
+- gh pr create, then wait for ALL workflows to COMPLETE green (CI Pipeline + Security Scanning +
+  Release; zero fail, zero pending) — never judge green from a subset or while jobs run.
+- Then STOP and REPORT to the orchestrator: PR #, the 4 evidence-artifact paths, \`gh pr checks\`
+  summary, TIME breakdown, issues-log pointer. The ORCHESTRATOR holds the merge token and merges
+  strictly serially — you do NOT merge, do NOT --admin, do NOT flip the CSV. (An executor that
+  self-merges or touches the control plane DIVERGES it — the IFC-302 hand-off mess.)
+- RE-SYNC ON REQUEST: the instant a sibling merges, origin/main moves and your PR will likely CONFLICT
+  on the shared files (Sprint_plan.csv + artifacts/reports/a11y-route-reconcile.json + the context
+  snapshot). When the orchestrator says "re-sync": \`git merge --no-edit origin/main\` (keep ALL CSV
+  rows + re-run split-sprint-plan.ts; a11y-route-reconcile.json is regenerated by pre-ship), then if
+  pnpm-lock.yaml or packages/** changed re-run \`pnpm install\` + \`pnpm exec turbo build
+  --filter='./packages/*'\` and clear apps/web/.next/types, then take the gate-lock, re-run the full
+  pre-ship SOLO, and re-push. Renamed exports break semantically with NO textual conflict — a clean
+  cherry-merge is not enough.
 - The CSV flip is the ORCHESTRATOR's job, NOT yours. You NEVER commit to local main or touch the
-  control plane (doing so DIVERGES it — that was the IFC-302 hand-off mess). Just REPORT your merged
-  PR # to the orchestrator; it flips Sprint_plan.csv, splits, and regenerates context.
+  control plane.
 
 RED FLAGS mid-task (disabled security, TODO, stub, prod mock) → fix-or-track in ALL THREE:
 a gh issue (file:line + proposed fix), artifacts/metrics/debt-ledger.yaml, the sprint findings doc.
@@ -373,8 +405,9 @@ YOUR TASK: ${TASK_ID} — ${DESCRIPTION || '(see Sprint_plan.csv Description)'}
 ${lane}.  Persona/lens: ${persona}${secondary}.  STOA /exec must pass: ${stoa}.  Skills: ${skills}.
 Dependencies: ${DEPS}.${blockedBy}${note}${staleCsvWarning}${artifactPrecheck}
 
-REPORT WHEN DONE: the merged PR # + the attestation path
-(.specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/attestation.json) + your TIME breakdown
-(build vs waiting) + a pointer to the committed issues log. Do NOT flip the CSV — report the PR #.
+REPORT WHEN DONE: the OPEN PR # (green, NOT merged — the orchestrator merges) + all 4 committed
+evidence paths under .specify/sprints/sprint-${SPRINT}/ (specifications/${TASK_ID}-spec.md,
+planning/${TASK_ID}-plan.md, attestations/${TASK_ID}/attestation.json + task-tracking.json) + your
+TIME breakdown (build vs waiting) + a pointer to the committed issues log. Do NOT merge, do NOT flip the CSV.
 `);
 process.exit(0);
