@@ -82,6 +82,33 @@ When implementing new features or modifying existing ones:
 | `/cookies` | `PG-052` | ✅ Implemented | Cookie policy; reuses `@intelliflow/ui::CookieConsentBanner` and shared legal parser                                                                                              |
 | `/dpa`     | `PG-053` | ✅ Implemented | GDPR Article 28 Data Processing Addendum; reuses `legal-content-parser.ts`; ships `DpaSignaturePanel` with client-only localStorage acknowledgement and downloadable template PDF |
 
+### IFC-309: Server-side Terms Acceptance Dependency Chain
+
+Adds an immutable server-side audit record for ToS acceptance to the /terms
+page.
+
+**Dependency path (bottom-up):**
+
+```
+PG-051 (Terms page) → IFC-309 (Server-side Terms Acceptance)
+IFC-058 (GDPR compliance baseline) → IFC-309
+IFC-124 (Audit logging foundation) → IFC-309
+```
+
+**Implementation artifacts:**
+
+| Layer      | File                                                                 | Role                          |
+| ---------- | -------------------------------------------------------------------- | ----------------------------- |
+| Domain     | `packages/domain/src/legal/TermsAcceptance.ts`                       | Value class, zero infra deps  |
+| Validators | `packages/validators/src/terms-acceptance.ts`                        | Zod input/output schemas      |
+| Migration  | `packages/db/prisma/migrations/20260629000000_add_terms_acceptance/` | DB schema                     |
+| API        | `apps/api/src/modules/legal/terms-acceptance.router.ts`              | tRPC (plain tenantProcedure)  |
+| UI         | `apps/web/src/components/legal/TermsAcceptanceConfirm.tsx`           | Client component (auth-gated) |
+| Page       | `apps/web/src/app/(public)/terms/page.tsx`                           | RSC parent (MODIFIED)         |
+
+**IFC-309 is a terminal node** — no downstream feature dependencies at this
+time.
+
 ---
 
 # CORE CRM DOMAIN
