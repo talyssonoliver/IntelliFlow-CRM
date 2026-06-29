@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T06:32:01.011Z",
+  "generatedAt": "2026-06-29T23:14:12.542Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -333,6 +333,7 @@
       ".specify/sprints/sprint-18/attestations/IFC-215/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-227/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-230/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-234/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-240/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-242/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-247/attestation.json",
@@ -350,6 +351,7 @@
       ".specify/sprints/sprint-18/attestations/IFC-287/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-301/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-302/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-309/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-311/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json",
@@ -366,6 +368,7 @@
       ".specify/sprints/sprint-18/attestations/PG-188/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-189/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-190/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-200/attestation.json",
       ".specify/sprints/sprint-19/attestations/IFC-312/attestation.json",
       ".specify/sprints/sprint-19/attestations/PG-166/attestation.json",
       ".specify/sprints/sprint-2/attestations/IFC-004/attestation.json",
@@ -499,10 +502,10 @@
     "totalTasks": 596,
     "totalNumberedSprintTasks": 591,
     "continuousTaskCount": 5,
-    "completedTasks": 445,
-    "backlogTasks": 150,
+    "completedTasks": 448,
+    "backlogTasks": 147,
     "blockedTasks": 0,
-    "completionPercentage": 74.66,
+    "completionPercentage": 75.17,
     "inProgressTasks": 1,
     "otherTasks": 0
   },
@@ -823,36 +826,6 @@
         }
       },
       {
-        "taskId": "IFC-234",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Core CRM",
-        "title": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
-        "description": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
-        "summary": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
-        "definitionOfDone": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
-        "definitionOfDoneSnapshot": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
-        "dependencies": [],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "IFC-271",
         "sprint": 18,
         "status": "Backlog",
@@ -879,40 +852,6 @@
         "kpiSummary": {
           "total": 4,
           "met": 4,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "IFC-309",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Compliance",
-        "title": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
-        "description": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
-        "summary": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion);...",
-        "definitionOfDone": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion); legal.getAcceptance query returns latest record per user; RLS policy scoped by tenantId; Confirm UI on /terms (authenticated users only) calls mutation and hides when current version already accepted; DB migration reviewed; >=90% scoped coverage; all 4 validations pass",
-        "definitionOfDoneSnapshot": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion);...",
-        "dependencies": [
-          "PG-051",
-          "IFC-058",
-          "IFC-124"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
           "missed": 0
         }
       },
@@ -977,18 +916,18 @@
         }
       },
       {
-        "taskId": "PG-200",
-        "sprint": 18,
+        "taskId": "IFC-033",
+        "sprint": 19,
         "status": "Backlog",
-        "section": "Settings",
-        "title": "Module Settings - Report Templates (/analytics/report-templates)",
-        "description": "Module Settings - Report Templates (/analytics/report-templates)",
-        "summary": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
-        "definitionOfDone": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate template names within scope; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in analytics automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+        "section": "Automation",
+        "title": "PHASE-005: Load Testing with k6",
+        "description": "PHASE-005: Load Testing with k6",
+        "summary": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+        "definitionOfDone": "System handles 5000 leads/hour with automation; artifacts: load-test-report.html, bottleneck-analysis.md, grafana-load-test.png; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+        "definitionOfDoneSnapshot": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
         "dependencies": [
-          "PG-178",
-          "PG-187"
+          "IFC-030",
+          "IFC-032"
         ],
         "attestation": {
           "exists": false,
@@ -1010,18 +949,81 @@
         }
       },
       {
-        "taskId": "IFC-033",
+        "taskId": "IFC-305",
         "sprint": 19,
         "status": "Backlog",
-        "section": "Automation",
-        "title": "PHASE-005: Load Testing with k6",
-        "description": "PHASE-005: Load Testing with k6",
-        "summary": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
-        "definitionOfDone": "System handles 5000 leads/hour with automation; artifacts: load-test-report.html, bottleneck-analysis.md, grafana-load-test.png; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
-        "definitionOfDoneSnapshot": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+        "section": "Core CRM",
+        "title": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
+        "description": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
+        "summary": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
+        "definitionOfDone": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility; each component independently testable >=90% coverage; zero functional regression; verified by: pnpm typecheck + test + lint + build",
+        "definitionOfDoneSnapshot": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
         "dependencies": [
-          "IFC-030",
-          "IFC-032"
+          "IFC-226"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-313",
+        "sprint": 19,
+        "status": "Backlog",
+        "section": "AI/Intelligence",
+        "title": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
+        "description": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
+        "summary": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+        "definitionOfDone": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+        "definitionOfDoneSnapshot": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+        "dependencies": [
+          "IFC-312"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-064",
+        "sprint": 19,
+        "status": "Backlog",
+        "section": "Core CRM",
+        "title": "Contacts List",
+        "description": "Contacts List",
+        "summary": "response under 200ms, Lighthouse 90, search fast",
+        "definitionOfDone": "Response <200ms, Lighthouse ≥90, search fast; artifacts: page.tsx, contact-list.tsx, contact-search.ts",
+        "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, search fast",
+        "dependencies": [
+          "IFC-089"
         ],
         "attestation": {
           "exists": false,
@@ -17517,11 +17519,11 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 66,
-      "completedTasks": 51,
-      "backlogTasks": 14,
+      "completedTasks": 54,
+      "backlogTasks": 11,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 37,
+      "attestedCompletedTasks": 40,
       "missingCompletedAttestations": [
         "PG-191",
         "PG-196",
@@ -17869,14 +17871,14 @@
         {
           "section": "Core CRM",
           "total": 27,
-          "completed": 23,
-          "open": 4
+          "completed": 24,
+          "open": 3
         },
         {
           "section": "Settings",
           "total": 19,
-          "completed": 18,
-          "open": 1
+          "completed": 19,
+          "open": 0
         },
         {
           "section": "Infrastructure",
@@ -17911,8 +17913,8 @@
         {
           "section": "Compliance",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         },
         {
           "section": "Integration",
@@ -18527,20 +18529,20 @@
         {
           "taskId": "IFC-234",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
           "description": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
-          "summary": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
+          "summary": "user.list does not return role field — Role column dropped from team page (was hardcoded fake data) user.list default limit=5 — passed limit:50 to fetch full team roster getAllConnectorsHealth uses protectedProcedure......",
           "definitionOfDone": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
           "definitionOfDoneSnapshot": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-234/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-29T14:20:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
             "total": 0,
@@ -18549,8 +18551,8 @@
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
@@ -19298,7 +19300,7 @@
         {
           "taskId": "IFC-309",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Compliance",
           "title": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
           "description": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
@@ -19311,11 +19313,11 @@
             "IFC-124"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-309/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 18
           },
           "validationSummary": {
             "total": 0,
@@ -19532,33 +19534,33 @@
         {
           "taskId": "PG-200",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Report Templates (/analytics/report-templates)",
           "description": "Module Settings - Report Templates (/analytics/report-templates)",
-          "summary": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+          "summary": "PG-200 Module Settings - Report Templates. Real /analytics/report-templates page replacing the stub. ReportTemplate model with 5 tRPC procedures, Zod schemas, Prisma migration with RLS, Next.js server component + client content component.......",
           "definitionOfDone": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate template names within scope; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in analytics automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+          "definitionOfDoneSnapshot": "Page /analytics/report-templates renders real data (no stub); 5 tRPC procedures: list, get, create, update, delete; Zod schemas in @intelliflow/validators",
           "dependencies": [
             "PG-178",
             "PG-187"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-200/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-29T16:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 2,
+            "passed": 2,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 3,
+            "met": 3,
             "missed": 0
           }
         },

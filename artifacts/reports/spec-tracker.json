@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-06-29T12:31:39.666Z",
+  "generated_at": "2026-06-29T23:14:12.538Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 498,
-    "completed": 436,
+    "completed": 439,
     "partially_done": 0,
-    "spec_only": 58,
+    "spec_only": 55,
     "uncertain": 4
   },
   "status_legend": {
@@ -88,6 +88,12 @@
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
+      "task_id": "IFC-309",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
       "task_id": "IFC-314",
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
@@ -127,6 +133,12 @@
       "task_id": "PG-188",
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 80% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "PG-200",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     }
   ],
@@ -4596,15 +4608,15 @@
       "task_id": "IFC-234",
       "title": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
       "sprint": 18,
-      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-234-spec.md",
-      "has_spec": true,
-      "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Plan Complete",
-      "metric_status": "PLANNED",
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-235",
@@ -5564,19 +5576,19 @@
       "task_id": "IFC-309",
       "title": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-309-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-051",
         "IFC-058",
         "IFC-124"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-310",
@@ -7950,15 +7962,15 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-187"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-201",
