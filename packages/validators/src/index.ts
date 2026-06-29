@@ -130,3 +130,6 @@ export * from './public-onboarding';
 
 // Production-safe URL/host resolution — fail-fast instead of localhost (#228)
 export * from './required-url';
+
+// Report Template Schemas (PG-200)
+export * from './report-templates';

@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-06-26T16:46:43.330Z",
+  "timestamp": "2026-06-29T14:03:20.230Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 62,
-    "total_endpoints": 527,
-    "total_queries": 240,
-    "total_mutations": 287,
+    "total_routers": 63,
+    "total_endpoints": 532,
+    "total_queries": 242,
+    "total_mutations": 290,
     "routers": [
       {
         "name": "contact",
@@ -1261,6 +1261,12 @@
         "mutations": 0
       },
       {
+        "name": "reportTemplates",
+        "endpoints": 5,
+        "queries": 2,
+        "mutations": 3
+      },
+      {
         "name": "health",
         "endpoints": 5,
         "queries": 5,
@@ -1395,16 +1401,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 174,
-    "total_fields": 2565,
-    "total_indexes": 816,
+    "total_tables": 175,
+    "total_fields": 2572,
+    "total_indexes": 817,
     "total_relations": 245,
     "tables_with_embeddings": 4,
     "enums": 74,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 152,
+        "fields": 153,
         "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
@@ -2593,6 +2599,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "ReportTemplate",
+        "fields": 6,
+        "indexes": 1,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
         "name": "DealScoringRule",
         "fields": 5,
         "indexes": 1,
@@ -2989,11 +3002,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 48,
-    "total_schemas": 575,
+    "total_validators": 49,
+    "total_schemas": 581,
     "by_complexity": {
       "complex": 31,
-      "moderate": 13,
+      "moderate": 14,
       "simple": 4
     },
     "validators": [
@@ -3187,6 +3200,12 @@
         "name": "module",
         "file": "module.ts",
         "schemas": 7,
+        "complexity": "moderate"
+      },
+      {
+        "name": "report-templates",
+        "file": "report-templates.ts",
+        "schemas": 6,
         "complexity": "moderate"
       },
       {
@@ -3827,6 +3846,33 @@
         "name": "reportSettings.resetToDefaults",
         "method": "POST",
         "description": "Reset to defaults"
+      }
+    ],
+    "reportTemplates": [
+      {
+        "name": "reportTemplates.list",
+        "method": "GET",
+        "description": "List reportTemplatess with pagination"
+      },
+      {
+        "name": "reportTemplates.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "reportTemplates.create",
+        "method": "POST",
+        "description": "Create new reportTemplates"
+      },
+      {
+        "name": "reportTemplates.update",
+        "method": "POST",
+        "description": "Update reportTemplates"
+      },
+      {
+        "name": "reportTemplates.delete",
+        "method": "POST",
+        "description": "Delete reportTemplates"
       }
     ],
     "auth": [
