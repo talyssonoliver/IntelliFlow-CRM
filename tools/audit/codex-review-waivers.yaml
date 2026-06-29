@@ -962,3 +962,58 @@ waivers:
     author: talyssonoliver
     date: '2026-06-29'
     expires: '2026-12-31'
+  - fingerprint: '228d78ed1da2ecda4b95d7d1279f3473392f24a045afca4d651d5c9dd21753ea'
+    reason: >-
+      Accepted out-of-scope API limitation, not a defect in IFC-234. The team settings page
+      uses trpc.user.list (limit: 50) because no dedicated paginated team-roster endpoint with
+      total counts exists in the API (user.list caps at 50 with no total field; team.router.list
+      is also capped at 50 and is for entity-search pickers, not roster display). The label
+      "Members loaded" (not "Total Members") is an honest disclosure of the cap — it does not
+      claim to be the full count. Adding pagination/total metadata to user.list is a backend
+      task outside IFC-234's "wire existing pages to real tRPC data" scope. Source-anchored:
+      re-blocks if the trpc.user.list call site or the rendered count label changes.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-29'
+  - fingerprint: '189f69f27b025d024df6c815c4e66beec32fa506422e1fa9ed142908bedebdae'
+    reason: >-
+      Verified false positive — codex oscillation; round 4 of the same file contradicted this
+      finding. The integrations router OWN contract at testConnection (integrations.router.ts
+      line 535) defines: `const success = status.status === 'healthy' || status.status ===
+      'degraded'`; unhealthy is explicitly a FAILURE state at the router level. isConnected
+      returning `status === 'healthy' || status === 'degraded'` is CORRECT per this contract.
+      Round 2 codex flagged this as wrong; round 4 codex cited the same testConnection
+      contract and endorsed `healthy || degraded` as correct (flagging the opposite predicate
+      `status !== 'unknown'`). The round 2 evidence argued a UX design opinion that contradicts
+      the router contract. The router's own definition of connection success is authoritative.
+      Source-anchored: re-blocks if the isConnected function body changes.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-29'
+  - fingerprint: '0e827300969c25e9cba4814416db09f30f145cf8cb09c9f45622551cc77679fd'
+    reason: >-
+      Verified false positive — this fingerprint anchors to the INTERMEDIATE `status !== 'unknown'`
+      predicate introduced in round 3 and REVERTED in round 4. The current isConnected is
+      `status === 'healthy' || status === 'degraded'`, which is what round 4 endorses via
+      testConnection (integrations.router.ts line 535). If codex re-emits this finding against
+      the reverted source it is citing a predicate that no longer exists at HEAD.
+      Source-anchored: auto-re-blocks if the intermediate predicate is reintroduced.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-29'
+  - fingerprint: '2143277b3355d0ab482699acbaf36fd77bdf9adda753f469dfeb5b757ec9bcb0'
+    reason: >-
+      Accepted out-of-scope architectural gap, not an IFC-234 defect. IFC-234's DoD is
+      "wire 4 settings pages to real tRPC queries; remove hardcoded arrays". The ONLY existing
+      connector health endpoint is getAllConnectorsHealth (protectedProcedure, env-backed global
+      health). No tenant-scoped integration-connection endpoint exists in the API (grep
+      integrations.router.ts for tenant-scoped procedure returns 0 results for
+      tenant connection records). The page was wired to the ONLY real connector health data
+      available; displaying it honestly is the correct behaviour under the never-mock-data rule.
+      Connect/Disconnect buttons already show "coming soon" toasts — no live mutation is wired.
+      Relabelling or adding a tenant-scoped integrations endpoint is a backend feature tracked
+      separately; implementing it inside IFC-234 would exceed scope and require new router/DB
+      work. Source-anchored: re-blocks if the getAllConnectorsHealth.useQuery call block changes.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-29'
