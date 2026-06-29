@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-06-29T06:32:01.007Z",
+  "generated_at": "2026-06-29T13:31:00.740Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 498,
     "completed": 436,
-    "partially_done": 0,
-    "spec_only": 58,
+    "partially_done": 1,
+    "spec_only": 57,
     "uncertain": 4
   },
   "status_legend": {
@@ -7947,9 +7947,9 @@
       "task_id": "PG-200",
       "title": "Module Settings - Report Templates (/analytics/report-templates)",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-200-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": false,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
@@ -7958,7 +7958,7 @@
         "PG-178",
         "PG-187"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-201",
