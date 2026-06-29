@@ -19,6 +19,6 @@
   "author": "IntelliFlow CRM Team",
   "license": "MIT",
   "dependencies": {
-    "js-yaml": "^4.2.0"
+    "js-yaml": "^5.2.0"
   }
 }
