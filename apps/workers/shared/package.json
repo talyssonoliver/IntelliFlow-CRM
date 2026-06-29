@@ -32,10 +32,10 @@
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
-    "@types/node": "^25.9.2",
+    "@types/node": "^26.0.1",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9"
   },
   "peerDependencies": {
     "@intelliflow/observability": "workspace:*",
