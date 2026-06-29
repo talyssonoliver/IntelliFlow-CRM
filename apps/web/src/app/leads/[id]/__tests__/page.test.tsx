@@ -5,6 +5,7 @@
 import * as React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { toast } from '@intelliflow/ui';
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
@@ -227,7 +228,8 @@ vi.mock('@intelliflow/ui', () => ({
     <div>{children}</div>
   ),
   AlertDialogTitle: ({ children }: Readonly<{ children: React.ReactNode }>) => <h2>{children}</h2>,
-  Dialog: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+  Dialog: ({ children, open }: Readonly<{ children: React.ReactNode; open?: boolean }>) =>
+    open !== false ? <div>{children}</div> : null,
   DialogContent: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   DialogHeader: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   DialogFooter: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
@@ -682,11 +684,12 @@ describe('LeadDetailPage - Notes Tab + addNote mutation (IFC-247)', () => {
     expect(capturedCallbacks.addNote.onError).not.toBeNull();
     // Invoke the onError callback with a simulated error
     capturedCallbacks.addNote.onError!({ message: 'Failed to add note' });
-    // The onError handler calls toast() — assert it was called
-    // toast is mocked in @intelliflow/ui (already captured as vi.fn())
-    expect(mockAddNoteMutate).toBeDefined(); // confirms render was successful
-    // The onError path runs synchronously; verify no thrown exception
-    expect(capturedCallbacks.addNote.onError).not.toBeNull();
+    // Assert the destructive toast was called with the expected args (page.tsx:2367)
+    expect(toast).toHaveBeenCalledWith({
+      title: 'Failed to add note',
+      description: 'Failed to add note',
+      variant: 'destructive',
+    });
   });
 
   it('addNote onError path: mutate calls are tracked', () => {
@@ -768,16 +771,19 @@ describe('LeadDetailPage - logActivity mutation (IFC-247)', () => {
     expect(savingBtn.closest('button')).toBeDisabled();
   });
 
-  it('logActivity onError: captured onError callback runs without throwing', () => {
+  it('logActivity onError: destructive toast fires when logActivity mutation fails', () => {
     // This test exercises the actual onError callback captured from the component's
     // useMutation config (page.tsx:2381-2383), which fires a destructive toast.
     render(<Lead360Page />);
     expect(capturedCallbacks.logActivity.onError).not.toBeNull();
     // Invoke the onError callback — this is what runs when logActivity mutation fails
-    // The handler fires a destructive toast and should not throw
     capturedCallbacks.logActivity.onError!({ message: 'Log activity failed' });
-    // Verify no exception was thrown and the component is still functional
-    expect(capturedCallbacks.logActivity.onError).not.toBeNull();
+    // Assert the destructive toast was called with the expected args (page.tsx:2382)
+    expect(toast).toHaveBeenCalledWith({
+      title: 'Failed to log activity',
+      description: 'Log activity failed',
+      variant: 'destructive',
+    });
   });
 
   it('logActivity mutate call args tracked via dialog', () => {
