@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T23:35:59.637Z",
+  "generated_at": "2026-06-29T01:08:51.804Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 497,
@@ -4286,12 +4286,12 @@
       "task_id": "IFC-215",
       "title": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-215-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Plan Complete",
+      "metric_status": "PLANNED",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-117",

@@ -832,3 +832,47 @@ waivers:
     author: talyssonoliver
     date: '2026-06-28'
     expires: '2026-09-28'
+  - fingerprint: '199810b1b1a0f6e992b5e72ecb5c84af298190efdb7464383f564ada7c3f1e74'
+    reason: >-
+      Verified false positive. `scoring-${tier}` keys (scoring-free, scoring-standard,
+      scoring-premium) are the ADR-048 CANONICAL logical LiteLLM alias names used
+      exactly in MODEL_PRICING (ai.config.ts lines 235, 248, 259). These keys are the
+      routing aliases, not provider-specific model IDs — LiteLLM routes each alias to the
+      actual provider model (groq/llama, openrouter/model, etc.) transparently.
+      calculateCost('scoring-free', ...) correctly uses the ADR-048-defined per-alias
+      pricing; it does NOT fall back to gpt-3.5-turbo because 'scoring-free' is a
+      defined key. Codex misread the fallback logic (`|| MODEL_PRICING['gpt-3.5-turbo']`)
+      as applying here, but the key IS present. The fingerprint is source-anchored to the
+      costModelKey line so this re-blocks if the alias naming changes.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-31'
+  - fingerprint: '05b1d7455dc504f5dfaadde0b1fc78a3efba026c9019bbb6140c0a7dc18f8773'
+    reason: >-
+      Verified false positive — duplicate of 199810b1b1a0... for the same logical line
+      after it was renamed from `costModelKey` string to a template literal.
+      scoring-${effectiveTierLabel} keys (scoring-free, scoring-standard, scoring-premium)
+      are the ADR-048 canonical LiteLLM logical aliases present in MODEL_PRICING
+      (ai.config.ts lines 235, 248, 259). calculateCost() uses these alias keys directly;
+      there is no fallback to gpt-3.5-turbo for these keys because they ARE defined.
+      Codex misreads the `|| MODEL_PRICING['gpt-3.5-turbo']` fallback as applying here.
+      Source-anchored fingerprint will re-block if the alias naming convention changes.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-31'
+  - fingerprint: '051a0a653ee9762055b82cd2373584b1a6af249bd39313f1829bb1ed9252d6fc'
+    reason: >-
+      Verified false positive (codex citing pre-fix code). The fix IS in the source:
+      handleLLMEnd() now reads BOTH `tokenUsage` AND `estimatedTokenUsage` via
+      `(output.llmOutput?.tokenUsage as TokenCounts | undefined) ??
+       (output.llmOutput?.estimatedTokenUsage as TokenCounts | undefined)`.
+      Codex evidence quotes the pre-fix single-path `tokenUsage as | {...} | undefined`
+      but that text no longer exists at lines 59-61 (verified git show HEAD:...).
+      The new test `captures estimatedTokenUsage when tokenUsage is absent (streaming)`
+      in token-usage-callback.test.ts covers this path. Codex non-determinism:
+      fingerprint changed on the same finding when source changed, confirming evidence
+      is stale. Source-anchored fingerprint will re-block if estimatedTokenUsage path
+      is removed.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-31'
