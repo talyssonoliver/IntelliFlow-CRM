@@ -184,6 +184,7 @@ export interface StripeCustomer {
   balance: number;
   currency: string;
   created: Date;
+  metadata?: Record<string, string>;
 }
 
 // Simple Result type for Stripe operations
@@ -214,7 +215,12 @@ interface IStripeAdapter {
   detachPaymentMethod(paymentMethodId: string): Promise<StripeResult<StripePaymentMethod>>;
   updateCustomer(
     customerId: string,
-    params: { defaultPaymentMethodId?: string; email?: string; name?: string }
+    params: {
+      defaultPaymentMethodId?: string;
+      email?: string;
+      name?: string;
+      metadata?: Record<string, string>;
+    }
   ): Promise<StripeResult<StripeCustomer>>;
   updateSubscription(
     subscriptionId: string,
@@ -1171,9 +1177,13 @@ export const billingRouter = createTRPCRouter({
     }
 
     const cacheKey = `${user.stripeCustomerId}:billingInfo`;
-    const cached = getCached<{ organization: string | null; email: string; address: any }>(
-      cacheKey
-    );
+    const cached = getCached<{
+      organization: string | null;
+      email: string;
+      address: any;
+      taxId: string | null;
+      invoiceContact: string | null;
+    }>(cacheKey);
     if (cached !== undefined) return cached;
 
     try {
@@ -1214,6 +1224,8 @@ export const billingRouter = createTRPCRouter({
         organization: customer.name ?? null,
         email: customer.email ?? '',
         address,
+        taxId: customer.metadata?.taxId ?? null,
+        invoiceContact: customer.metadata?.invoiceContact ?? null,
       };
 
       setCache(cacheKey, data);
@@ -1244,8 +1256,9 @@ export const billingRouter = createTRPCRouter({
       try {
         const stripe = await getStripeAdapter();
 
-        // Update customer name and email if provided
-        const updateParams: { name?: string; email?: string } = {};
+        // Update customer name, email and metadata if provided
+        const updateParams: { name?: string; email?: string; metadata?: Record<string, string> } =
+          {};
         if (input.organization !== undefined) {
           updateParams.name = input.organization ?? undefined;
         }
@@ -1253,16 +1266,24 @@ export const billingRouter = createTRPCRouter({
           updateParams.email = input.email;
         }
 
-        // Note: Address update would require extending StripeAdapter
-        // to support customer address update. For now we update name/email only.
+        // Persist taxId and invoiceContact in Stripe customer metadata (no DB migration needed)
+        const metadata: Record<string, string> = {};
+        if (input.taxId !== undefined) {
+          metadata.taxId = input.taxId ?? '';
+        }
+        if (input.invoiceContact !== undefined) {
+          metadata.invoiceContact = input.invoiceContact ?? '';
+        }
+        if (Object.keys(metadata).length > 0) {
+          updateParams.metadata = metadata;
+        }
+
         if (Object.keys(updateParams).length > 0) {
-          // Use createCustomer-style params through the adapter
-          // In production, extend adapter with updateCustomer method
-          const result = await stripe.getCustomer(user.stripeCustomerId);
+          const result = await stripe.updateCustomer(user.stripeCustomerId, updateParams);
           if (result.isFailure) {
             throw new TRPCError({
               code: 'INTERNAL_SERVER_ERROR',
-              message: 'Failed to verify billing account.',
+              message: 'Failed to update billing information.',
             });
           }
         }

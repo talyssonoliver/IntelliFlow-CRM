@@ -1,17 +1,17 @@
-'use client';
-
-import { PageHeader } from '@/components/shared/page-header';
+import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { BillingSettings } from '@/components/billing/billing-settings';
+import BillingSettingsLoading from './loading';
+
+export const metadata: Metadata = {
+  title: 'Billing Settings — IntelliFlow',
+  description: 'Manage your billing information, tax ID, and invoice contact.',
+};
 
 export default function BillingSettingsPage() {
   return (
-    <>
-      <PageHeader
-        breadcrumbs={[{ label: 'Billing', href: '/billing' }, { label: 'Billing Settings' }]}
-        title="Billing Settings"
-        description="Manage your billing information."
-      />
+    <Suspense fallback={<BillingSettingsLoading />}>
       <BillingSettings />
-    </>
+    </Suspense>
   );
 }

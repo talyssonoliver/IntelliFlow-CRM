@@ -25,6 +25,11 @@ const mockUpdateMutate = vi.fn();
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
+    useUtils: () => ({
+      billing: {
+        getBillingInformation: { invalidate: vi.fn() },
+      },
+    }),
     billing: {
       getBillingInformation: { useQuery: () => mockGetBillingInfo() },
       updateBillingInformation: {
@@ -107,5 +112,61 @@ describe('BillingSettings', () => {
     expect(nameInput.value).toBe('Changed');
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
     expect(nameInput.value).toBe('Acme Corp');
+  });
+
+  // PG-188: New fields — taxId and invoiceContact
+  it('displays taxId from fixture', () => {
+    render(<BillingSettings />);
+    const input = screen.getByLabelText(/tax id/i) as HTMLInputElement;
+    expect(input.value).toBe('GB123456789');
+  });
+
+  it('displays invoiceContact from fixture', () => {
+    render(<BillingSettings />);
+    const input = screen.getByLabelText(/invoice contact/i) as HTMLInputElement;
+    expect(input.value).toBe('ap@acme.com');
+  });
+
+  it('save mutation includes taxId and invoiceContact', () => {
+    render(<BillingSettings />);
+    const nameInput = screen.getByLabelText(/organization/i) as HTMLInputElement;
+    fireEvent.change(nameInput, { target: { value: 'New Corp' } });
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+    expect(mockUpdateMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organization: 'New Corp',
+        taxId: 'GB123456789',
+        invoiceContact: 'ap@acme.com',
+      })
+    );
+  });
+
+  it('cancel resets taxId and invoiceContact to loaded values', () => {
+    render(<BillingSettings />);
+    const taxInput = screen.getByLabelText(/tax id/i) as HTMLInputElement;
+    fireEvent.change(taxInput, { target: { value: 'CHANGED' } });
+    expect(taxInput.value).toBe('CHANGED');
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(taxInput.value).toBe('GB123456789');
+  });
+
+  it('handles null taxId and invoiceContact', () => {
+    mockGetBillingInfo.mockReturnValue({
+      data: createMockBillingInformation({ taxId: null, invoiceContact: null }),
+      isLoading: false,
+      error: null,
+    });
+    render(<BillingSettings />);
+    const taxInput = screen.getByLabelText(/tax id/i) as HTMLInputElement;
+    const invoiceInput = screen.getByLabelText(/invoice contact/i) as HTMLInputElement;
+    expect(taxInput.value).toBe('');
+    expect(invoiceInput.value).toBe('');
+  });
+
+  it('renders bento grid layout', () => {
+    const { container } = render(<BillingSettings />);
+    // The outer grid wrapper must have grid-cols-1
+    const grid = container.querySelector('.grid-cols-1');
+    expect(grid).toBeInTheDocument();
   });
 });
