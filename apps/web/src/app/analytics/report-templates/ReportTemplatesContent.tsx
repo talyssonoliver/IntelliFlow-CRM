@@ -385,8 +385,13 @@ export default function ReportTemplatesContent() {
         description={deleteTarget ? `"${deleteTarget.name}" will be permanently deleted.` : ''}
         confirmLabel="Delete"
         onConfirm={async () => {
-          if (deleteTarget) {
-            await deleteMutation.mutateAsync({ id: deleteTarget.id });
+          try {
+            if (deleteTarget) {
+              await deleteMutation.mutateAsync({ id: deleteTarget.id });
+            }
+          } catch {
+            // onError on the mutation already surfaces a toast; swallow here to
+            // prevent an unhandled promise rejection.
           }
         }}
         isLoading={deleteMutation.isPending}
