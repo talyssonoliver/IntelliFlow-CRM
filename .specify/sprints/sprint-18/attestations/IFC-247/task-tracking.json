@@ -32,13 +32,29 @@
       "target": ">=90%"
     }
   },
-  "notes": "Comprehensive flow analysis findings: T1,T4,T5",
-  "phase": "",
-  "started_at": null,
+  "notes": "Comprehensive flow analysis findings: T1,T4,T5. Spec complete 2026-06-29. Plan reviewed by plan-reviewer-ifc247 subagent: REVISE with 7 fixes applied (3 ERRORs + 4 WARNINGs). Plan complete 2026-06-29.",
+  "phase": "plan",
+  "started_at": "2026-06-29T00:00:00Z",
   "status_history": [
     {
       "at": "2026-03-05T00:00:00Z",
       "status": "Backlog"
+    },
+    {
+      "at": "2026-06-29T00:00:00Z",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-06-29T01:00:00Z",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-06-29T02:00:00Z",
+      "status": "Planning"
+    },
+    {
+      "at": "2026-06-29T03:00:00Z",
+      "status": "Plan Complete"
     }
   ],
   "stream": null,
