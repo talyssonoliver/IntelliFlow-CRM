@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 
 // ─── tRPC mock ─────────────────────────────────────────────────────────────
 const mockListQuery = vi.fn();
@@ -68,6 +68,11 @@ const mockTemplate = {
   updatedAt: new Date('2026-06-29'),
 };
 
+// Captured opts from each useMutation call — lets tests invoke onSuccess/onError directly.
+let capturedCreateOpts: Record<string, (arg?: unknown) => void> = {};
+let capturedUpdateOpts: Record<string, (arg?: unknown) => void> = {};
+let capturedDeleteOpts: Record<string, (arg?: unknown) => void> = {};
+
 function setup({
   listData = [],
   isLoading = false,
@@ -91,24 +96,27 @@ function setup({
     error: null,
     refetch: vi.fn(),
   });
-  mockCreateMutation.mockImplementation((_opts: unknown) => ({
-    mutateAsync: mutateCreate,
-    isPending: createPending,
-  }));
-  mockUpdateMutation.mockImplementation((_opts: unknown) => ({
-    mutateAsync: mutateUpdate,
-    isPending: updatePending,
-  }));
-  mockDeleteMutation.mockImplementation((_opts: unknown) => ({
-    mutateAsync: mutateDelete,
-    isPending: deletePending,
-  }));
+  mockCreateMutation.mockImplementation((opts: Record<string, (arg?: unknown) => void>) => {
+    capturedCreateOpts = opts ?? {};
+    return { mutateAsync: mutateCreate, isPending: createPending };
+  });
+  mockUpdateMutation.mockImplementation((opts: Record<string, (arg?: unknown) => void>) => {
+    capturedUpdateOpts = opts ?? {};
+    return { mutateAsync: mutateUpdate, isPending: updatePending };
+  });
+  mockDeleteMutation.mockImplementation((opts: Record<string, (arg?: unknown) => void>) => {
+    capturedDeleteOpts = opts ?? {};
+    return { mutateAsync: mutateDelete, isPending: deletePending };
+  });
 
   return { mutateCreate, mutateUpdate, mutateDelete };
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
+  capturedCreateOpts = {};
+  capturedUpdateOpts = {};
+  capturedDeleteOpts = {};
 });
 
 describe('ReportTemplatesContent', () => {
@@ -197,6 +205,103 @@ describe('ReportTemplatesContent', () => {
       await waitFor(() => {
         expect(mutateCreate).toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('mutation callbacks', () => {
+    it('create onSuccess: invalidates list, shows toast, closes dialog', async () => {
+      const { toast } = await import('@intelliflow/ui');
+      setup({ listData: [] });
+      render(<ReportTemplatesContent />);
+
+      // Open dialog first so setDialogOpen(false) has something to close
+      fireEvent.click(screen.getByRole('button', { name: /new template/i }));
+      await waitFor(() => screen.getByRole('dialog'));
+
+      // Now invoke the onSuccess callback that was captured during render
+      await act(async () => {
+        capturedCreateOpts.onSuccess?.();
+      });
+
+      expect(mockInvalidate).toHaveBeenCalled();
+      expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Template created' }));
+    });
+
+    it('create onError: shows error toast', async () => {
+      const { toast } = await import('@intelliflow/ui');
+      setup({ listData: [] });
+      render(<ReportTemplatesContent />);
+
+      await act(async () => {
+        capturedCreateOpts.onError?.({ message: 'Something went wrong' });
+      });
+
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Error', variant: 'destructive' })
+      );
+    });
+
+    it('update onSuccess: invalidates list, shows updated toast, closes dialog', async () => {
+      const { toast } = await import('@intelliflow/ui');
+      setup({ listData: [mockTemplate] });
+      render(<ReportTemplatesContent />);
+
+      // Open edit dialog so setDialogOpen(false) has something to close
+      await waitFor(() => screen.getByText('Revenue Report'));
+      fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+      await waitFor(() => screen.getByRole('dialog'));
+
+      await act(async () => {
+        capturedUpdateOpts.onSuccess?.();
+      });
+
+      expect(mockInvalidate).toHaveBeenCalled();
+      expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Template updated' }));
+    });
+
+    it('update onError: shows error toast', async () => {
+      const { toast } = await import('@intelliflow/ui');
+      setup({ listData: [mockTemplate] });
+      render(<ReportTemplatesContent />);
+
+      await act(async () => {
+        capturedUpdateOpts.onError?.({ message: 'Conflict error' });
+      });
+
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Error', variant: 'destructive' })
+      );
+    });
+
+    it('delete onSuccess: invalidates list, shows deleted toast, clears deleteTarget', async () => {
+      const { toast } = await import('@intelliflow/ui');
+      setup({ listData: [mockTemplate] });
+      render(<ReportTemplatesContent />);
+
+      await waitFor(() => screen.getByText('Revenue Report'));
+      fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+      await waitFor(() => screen.getByRole('alertdialog'));
+
+      await act(async () => {
+        capturedDeleteOpts.onSuccess?.();
+      });
+
+      expect(mockInvalidate).toHaveBeenCalled();
+      expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Template deleted' }));
+    });
+
+    it('delete onError: shows error toast', async () => {
+      const { toast } = await import('@intelliflow/ui');
+      setup({ listData: [mockTemplate] });
+      render(<ReportTemplatesContent />);
+
+      await act(async () => {
+        capturedDeleteOpts.onError?.({ message: 'Delete failed' });
+      });
+
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Error', variant: 'destructive' })
+      );
     });
   });
 

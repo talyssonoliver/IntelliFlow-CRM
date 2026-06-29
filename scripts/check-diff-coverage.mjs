@@ -198,6 +198,13 @@ const SONAR_COVERAGE_EXCLUDE = [
   /^packages\/domain\/src\/index\.ts$/,
   /^packages\/validators\/src\/terms-acceptance\.ts$/,
   /^packages\/validators\/src\/index\.ts$/,
+  // packages/db/src/index.ts is a pure type-barrel re-export (export type { ... } blocks,
+  // no executable logic). The db package does not produce coverage-final.json in the merged
+  // run (packages/db/vitest.config.ts has no coverage section), so its files never appear
+  // in lcov; counting the one added type-export line as "0% uncovered" is the same
+  // false-negative as packages/validators/src/index.ts and packages/adapters/src/external/index.ts.
+  // Mirror in sonar.coverage.exclusions. (PG-200)
+  /^packages\/db\/src\/index\.ts$/,
 ];
 const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
 const isCoverableFile = (f) =>
