@@ -11,9 +11,9 @@ export const sharingScopeSchema = z.enum(['private', 'team', 'tenant']);
 export type SharingScope = z.infer<typeof sharingScopeSchema>;
 
 export const createReportTemplateSchema = z.object({
-  name: z.string().min(1).max(100),
+  name: z.string().trim().min(1).max(100),
   description: z.string().max(500).optional(),
-  selectedColumns: z.array(z.string()).min(1),
+  selectedColumns: z.array(z.string().trim().min(1)).min(1),
   // No .default() here — defaults are applied in the router to avoid TS2589
   // deep type instantiation through tRPC + Zod v4 generics.
   chartType: chartTypeSchema.optional(),
@@ -27,9 +27,9 @@ export type CreateReportTemplateInput = z.infer<typeof createReportTemplateSchem
 // type instantiation when inferred through tRPC + Zod v4 defaults.
 export const updateReportTemplateSchema = z.object({
   id: z.string().cuid(),
-  name: z.string().min(1).max(100).optional(),
+  name: z.string().trim().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
-  selectedColumns: z.array(z.string()).min(1).optional(),
+  selectedColumns: z.array(z.string().trim().min(1)).min(1).optional(),
   chartType: chartTypeSchema.optional(),
   defaultPeriod: defaultRangeSchema.optional(),
   sharingScope: sharingScopeSchema.optional(),

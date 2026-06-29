@@ -191,6 +191,7 @@ export default function ReportTemplatesContent() {
 
   const templates = (listQuery.data ?? []) as unknown as ReportTemplateView[];
   const isLoading = listQuery.isLoading;
+  const listError = listQuery.error;
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
@@ -214,10 +215,15 @@ export default function ReportTemplatesContent() {
                 ))}
               </div>
             )}
-            {!isLoading && templates.length === 0 && (
+            {!isLoading && listError && (
+              <p role="alert" className="text-sm text-destructive">
+                {'Failed to load report templates. Please try again.'}
+              </p>
+            )}
+            {!isLoading && !listError && templates.length === 0 && (
               <EmptyState entity="reports" phase="passive" size="sm" />
             )}
-            {!isLoading && templates.length > 0 && (
+            {!isLoading && !listError && templates.length > 0 && (
               <div className="divide-y">
                 {templates.map((t) => (
                   <div key={t.id} className="flex items-center justify-between py-3">

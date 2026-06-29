@@ -76,12 +76,14 @@ let capturedDeleteOpts: Record<string, (arg?: unknown) => void> = {};
 function setup({
   listData = [],
   isLoading = false,
+  listError = null,
   createPending = false,
   updatePending = false,
   deletePending = false,
 }: {
   listData?: (typeof mockTemplate)[];
   isLoading?: boolean;
+  listError?: Error | null;
   createPending?: boolean;
   updatePending?: boolean;
   deletePending?: boolean;
@@ -93,7 +95,7 @@ function setup({
   mockListQuery.mockReturnValue({
     data: listData,
     isLoading,
-    error: null,
+    error: listError,
     refetch: vi.fn(),
   });
   mockCreateMutation.mockImplementation((opts: Record<string, (arg?: unknown) => void>) => {
@@ -135,6 +137,16 @@ describe('ReportTemplatesContent', () => {
       render(<ReportTemplatesContent />);
       // Loading skeleton should be present
       expect(document.querySelector('[aria-busy="true"], .animate-pulse')).toBeTruthy();
+    });
+  });
+
+  describe('error state', () => {
+    it('shows error message and does not show EmptyState when list query fails', () => {
+      setup({ listError: new Error('Network error') });
+      render(<ReportTemplatesContent />);
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByText(/failed to load report templates/i)).toBeInTheDocument();
+      expect(screen.queryByText(/no reports available/i)).not.toBeInTheDocument();
     });
   });
 
