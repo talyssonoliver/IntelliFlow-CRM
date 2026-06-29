@@ -99,7 +99,7 @@ export const reportTemplatesRouter = createTRPCRouter({
     const duplicateWhere =
       effectiveScope === 'private'
         ? { tenantId, createdBy: userId, name: input.name, sharingScope: 'private' as const }
-        : { tenantId, name: input.name };
+        : { tenantId, name: input.name, sharingScope: { not: 'private' as const } };
 
     const existing = await ctx.prismaWithTenant.reportTemplate.findFirst({
       where: duplicateWhere,
@@ -176,7 +176,7 @@ export const reportTemplatesRouter = createTRPCRouter({
               name: fields.name,
               NOT: { id },
             }
-          : { tenantId, name: fields.name, NOT: { id } };
+          : { tenantId, name: fields.name, sharingScope: { not: 'private' as const }, NOT: { id } };
 
       const collision = await ctx.prismaWithTenant.reportTemplate.findFirst({
         where: renameWhere,

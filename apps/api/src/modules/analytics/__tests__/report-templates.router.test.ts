@@ -251,7 +251,7 @@ describe('Report Templates Router (PG-200)', () => {
       );
     });
 
-    it('scopes duplicate-name check to (tenantId, name) for tenant-scoped templates', async () => {
+    it('scopes duplicate-name check to non-private templates for tenant-scoped templates', async () => {
       (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
       const tenantTemplate = { ...mockTemplate, sharingScope: 'tenant' };
       (prismaMock.reportTemplate.create as any).mockResolvedValueOnce(tenantTemplate);
@@ -262,10 +262,15 @@ describe('Report Templates Router (PG-200)', () => {
         sharingScope: 'tenant',
       });
 
-      // findFirst should NOT include createdBy for tenant-scope (all users)
+      // Shared-scope check includes sharingScope: { not: 'private' } so a
+      // private template with the same name does not block a shared template.
       const call = (prismaMock.reportTemplate.findFirst as any).mock.calls[0][0];
       expect(call.where).not.toHaveProperty('createdBy');
-      expect(call.where).toMatchObject({ tenantId, name: 'Shared Report' });
+      expect(call.where).toMatchObject({
+        tenantId,
+        name: 'Shared Report',
+        sharingScope: { not: 'private' },
+      });
     });
   });
 
