@@ -1,8 +1,8 @@
 # IntelliFlow CRM - Information Architecture
 
 > **Location**: `docs/design/information-architecture.md` **Last Updated**:
-> 2026-05-02 **Total Pages**: 211 | **Total Flows**: 48 | **API Routers**: 62
-> (367 procedures) | **Ghost Links**: 0
+> 2026-05-02 **Total Pages**: 211 | **Total Flows**: 48 | **API Routers**: 63
+> (369 procedures) | **Ghost Links**: 0
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`

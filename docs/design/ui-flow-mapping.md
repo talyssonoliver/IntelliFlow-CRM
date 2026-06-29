@@ -3,7 +3,7 @@
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
 > Guide Components **Total Pages**: 211 implemented **Total Flows**: 42 **API
-> Routers**: 62 (367 procedures)
+> Routers**: 63 (369 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -699,49 +699,50 @@ data
 
 ## API Router Summary
 
-| Router           | Procedures | Primary Routes                                        | Status            |
-| ---------------- | ---------- | ----------------------------------------------------- | ----------------- |
-| `auth`           | 18         | `/login`, `/signup`, `/auth/*`, `/settings/account`   | ✅ Active         |
-| `lead`           | 18         | `/leads`, `/leads/new`, `/leads/[id]`                 | ✅ Active         |
-| `contact`        | 17         | `/contacts`, `/contacts/new`, `/contacts/[id]`        | ✅ Active         |
-| `account`        | 12         | `/accounts`, `/accounts/[id]`                         | ✅ Active         |
-| `opportunity`    | 12         | `/deals`, `/deals/[id]`                               | ✅ Active         |
-| `pipelineConfig` | 5          | `/settings/pipeline`                                  | ✅ Active         |
-| `task`           | 12         | `/tasks`, `/tasks/[id]`                               | ✅ Active         |
-| `ticket`         | 15         | `/tickets`, `/tickets/[id]`                           | ✅ Active         |
-| `ticketRouting`  | 2          | Ticket auto-routing (IFC-067)                         | ✅ Active         |
-| `analytics`      | 13         | `/analytics`, `/dashboard`                            | ✅ Active         |
-| `cases`          | 12         | `/cases`, `/cases/new`, `/cases/[id]`                 | ✅ Active         |
-| `appointments`   | 19         | `/calendar`, `/calendar/new`, `/calendar/[id]`        | ✅ Active         |
-| `documents`      | 18         | `/documents`, `/documents/[id]`                       | ✅ Active         |
-| `upload`         | 2          | `/documents/new` (file upload)                        | ✅ Active         |
-| `billing`        | 16         | `/billing/*`                                          | ⏳ Stripe pending |
-| `agent`          | 8          | `/agent-approvals`, `/agent-approvals/agents`         | ✅ Active         |
-| `chainVersion`   | 14         | `/settings/ai`                                        | ✅ Active         |
-| `zepBudget`      | 3          | AI memory budget management                           | ✅ Active         |
-| `intelligence`   | 10         | `/agent-approvals/churn-risk`, `/deals/[id]/forecast` | ✅ Active         |
-| `autoResponse`   | 13         | Auto-response management (IFC-029)                    | ✅ Active         |
-| `aiMonitoring`   | 8          | `/agent-approvals/drift`, `/agent-approvals/latency`  | ✅ Active         |
-| `aiReview`       | 7          | `/agent-approvals/ai-review`                          | ✅ Active         |
-| `experiment`     | 15         | `/agent-approvals/experiments`                        | ✅ Active         |
-| `audit`          | 5          | `/governance/*`                                       | ✅ Active         |
-| `health`         | 5          | Health checks                                         | ✅ Active         |
-| `system`         | 8          | System info                                           | ✅ Active         |
-| `timeline`       | 8          | `/cases/timeline`                                     | ✅ Active         |
-| `subscriptions`  | 5          | Real-time WebSocket subscriptions                     | ✅ Active         |
-| `integrations`   | 6          | `/settings/integrations`                              | ✅ Active         |
-| `email`          | 12         | `/email`, `/email/[id]`                               | ✅ Active         |
-| `webhooks`       | 9          | `/docs/webhooks`, webhook management                  | ✅ Active         |
-| `home`           | 7          | Authenticated home page data (IFC-182)                | ✅ Active         |
-| `notifications`  | 8          | `/notifications`, `/notifications/settings`           | ✅ Active         |
-| `workflow`       | 2          | Workflow engine (IFC-028)                             | ✅ Active         |
-| `queuesAdmin`    | 2          | Admin queue management                                | ✅ Active         |
-| `activityFeed`   | 2          | Activity feed (IFC-069)                               | ✅ Active         |
-| `moduleAccess`   | 3          | Module access control (IFC-209)                       | ✅ Active         |
-| `routing`        | 11         | `/settings/routing`, lead routing (PG-132)            | ✅ Active         |
-| `feedbackSurvey` | 4          | `/analytics/feedback` (IFC-068)                       | ✅ Active         |
-| `inbound`        | 1          | Cross-repo intake (`inbound.createLead`)              | ✅ Active         |
-| **Total**        | **367**    | **40 routers**                                        |                   |
+| Router            | Procedures | Primary Routes                                        | Status            |
+| ----------------- | ---------- | ----------------------------------------------------- | ----------------- |
+| `auth`            | 18         | `/login`, `/signup`, `/auth/*`, `/settings/account`   | ✅ Active         |
+| `lead`            | 18         | `/leads`, `/leads/new`, `/leads/[id]`                 | ✅ Active         |
+| `contact`         | 17         | `/contacts`, `/contacts/new`, `/contacts/[id]`        | ✅ Active         |
+| `account`         | 12         | `/accounts`, `/accounts/[id]`                         | ✅ Active         |
+| `opportunity`     | 12         | `/deals`, `/deals/[id]`                               | ✅ Active         |
+| `pipelineConfig`  | 5          | `/settings/pipeline`                                  | ✅ Active         |
+| `task`            | 12         | `/tasks`, `/tasks/[id]`                               | ✅ Active         |
+| `ticket`          | 15         | `/tickets`, `/tickets/[id]`                           | ✅ Active         |
+| `ticketRouting`   | 2          | Ticket auto-routing (IFC-067)                         | ✅ Active         |
+| `analytics`       | 13         | `/analytics`, `/dashboard`                            | ✅ Active         |
+| `cases`           | 12         | `/cases`, `/cases/new`, `/cases/[id]`                 | ✅ Active         |
+| `appointments`    | 19         | `/calendar`, `/calendar/new`, `/calendar/[id]`        | ✅ Active         |
+| `documents`       | 18         | `/documents`, `/documents/[id]`                       | ✅ Active         |
+| `upload`          | 2          | `/documents/new` (file upload)                        | ✅ Active         |
+| `billing`         | 16         | `/billing/*`                                          | ⏳ Stripe pending |
+| `agent`           | 8          | `/agent-approvals`, `/agent-approvals/agents`         | ✅ Active         |
+| `chainVersion`    | 14         | `/settings/ai`                                        | ✅ Active         |
+| `zepBudget`       | 3          | AI memory budget management                           | ✅ Active         |
+| `intelligence`    | 10         | `/agent-approvals/churn-risk`, `/deals/[id]/forecast` | ✅ Active         |
+| `autoResponse`    | 13         | Auto-response management (IFC-029)                    | ✅ Active         |
+| `aiMonitoring`    | 8          | `/agent-approvals/drift`, `/agent-approvals/latency`  | ✅ Active         |
+| `aiReview`        | 7          | `/agent-approvals/ai-review`                          | ✅ Active         |
+| `experiment`      | 15         | `/agent-approvals/experiments`                        | ✅ Active         |
+| `audit`           | 5          | `/governance/*`                                       | ✅ Active         |
+| `health`          | 5          | Health checks                                         | ✅ Active         |
+| `system`          | 8          | System info                                           | ✅ Active         |
+| `timeline`        | 8          | `/cases/timeline`                                     | ✅ Active         |
+| `subscriptions`   | 5          | Real-time WebSocket subscriptions                     | ✅ Active         |
+| `integrations`    | 6          | `/settings/integrations`                              | ✅ Active         |
+| `email`           | 12         | `/email`, `/email/[id]`                               | ✅ Active         |
+| `webhooks`        | 9          | `/docs/webhooks`, webhook management                  | ✅ Active         |
+| `home`            | 7          | Authenticated home page data (IFC-182)                | ✅ Active         |
+| `notifications`   | 8          | `/notifications`, `/notifications/settings`           | ✅ Active         |
+| `workflow`        | 2          | Workflow engine (IFC-028)                             | ✅ Active         |
+| `queuesAdmin`     | 2          | Admin queue management                                | ✅ Active         |
+| `activityFeed`    | 2          | Activity feed (IFC-069)                               | ✅ Active         |
+| `moduleAccess`    | 3          | Module access control (IFC-209)                       | ✅ Active         |
+| `routing`         | 11         | `/settings/routing`, lead routing (PG-132)            | ✅ Active         |
+| `feedbackSurvey`  | 4          | `/analytics/feedback` (IFC-068)                       | ✅ Active         |
+| `inbound`         | 1          | Cross-repo intake (`inbound.createLead`)              | ✅ Active         |
+| `termsAcceptance` | 2          | `/terms` (server-side ToS acceptance audit, IFC-309)  | ✅ Active         |
+| **Total**         | **369**    | **41 routers**                                        |                   |
 
 ---
 

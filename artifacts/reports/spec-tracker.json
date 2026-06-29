@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-06-29T13:31:00.740Z",
+  "generated_at": "2026-06-29T12:31:39.666Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 498,
     "completed": 436,
-    "partially_done": 1,
-    "spec_only": 57,
+    "partially_done": 0,
+    "spec_only": 58,
     "uncertain": 4
   },
   "status_legend": {
@@ -4596,12 +4596,12 @@
       "task_id": "IFC-234",
       "title": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-234-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Plan Complete",
+      "metric_status": "PLANNED",
       "acceptance_criteria_count": 0,
       "dependencies": [],
       "real_status": "SPEC_ONLY"
@@ -7947,9 +7947,9 @@
       "task_id": "PG-200",
       "title": "Module Settings - Report Templates (/analytics/report-templates)",
       "sprint": 18,
-      "spec_path": ".specify/sprints/sprint-18/specifications/PG-200-spec.md",
-      "has_spec": true,
-      "has_plan": true,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
       "has_attestation": false,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
@@ -7958,7 +7958,7 @@
         "PG-178",
         "PG-187"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "PG-201",

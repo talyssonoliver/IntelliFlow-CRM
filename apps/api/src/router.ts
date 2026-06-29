@@ -68,6 +68,7 @@ import { customNodeTypeRouter } from './modules/custom-node-type/custom-node-typ
 import { customActionHandlerRouter } from './modules/custom-action-handler/custom-action-handler.router';
 import { inboundRouter } from './modules/inbound/inbound.router';
 import { onboardingRouter } from './modules/onboarding/onboarding.router';
+import { termsAcceptanceRouter } from './modules/legal/terms-acceptance.router';
 
 /**
  * Main application router
@@ -153,6 +154,7 @@ export const appRouter = createTRPCRouter({
   documents: documentsRouter,
   documentSettings: documentSettingsRouter, // PG-186: Document Settings Configuration
   upload: uploadRouter, // IFC-094: File upload endpoint (AC-005)
+  termsAcceptance: termsAcceptanceRouter, // IFC-309: server-side terms acceptance (all plans — plain tenantProcedure)
 
   // AI & Automation
   agent: agentRouter,

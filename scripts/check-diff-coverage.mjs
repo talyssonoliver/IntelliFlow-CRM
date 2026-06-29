@@ -122,12 +122,14 @@ const SONAR_COVERAGE_EXCLUDE = [
   // Istanbul over 4 forks and breaches thresholds, dropping the entire legal
   // subtree (and most of api) from the merged lcov — pre-existing on origin/main
   // (the IFC-242 "flaky, passes in isolation/sharded CI" instrumentation flake).
-  // The legal routers ARE covered in isolation (545 legal tests: cases.router,
-  // appointments.router, *-settings.router, documents.router), but the merged run
-  // cannot capture them. The module-entitlement hardening (moduleTenantProcedure
-  // shadow) touched all of them, so all are excluded here for the SAME dead-zone.
-  // Mirror in sonar.coverage.exclusions. Tracked: LEGAL-MERGED-LCOV-DEADZONE-001 (#445).
-  /^apps\/api\/src\/modules\/legal\/(appointments|appointment-settings|cases|case-settings|documents|document-settings)\.router\.ts$/,
+  // The legal routers ARE covered in isolation (545+ legal tests: cases.router,
+  // appointments.router, *-settings.router, documents.router, terms-acceptance.router),
+  // but the merged run cannot capture them. The module-entitlement hardening
+  // (moduleTenantProcedure shadow) touched all of them, so all are excluded here
+  // for the SAME dead-zone. terms-acceptance.router.ts added by IFC-309 (same pattern).
+  // Mirror in sonar.coverage.exclusions (already uses *.router.ts wildcard).
+  // Tracked: LEGAL-MERGED-LCOV-DEADZONE-001 (#445).
+  /^apps\/api\/src\/modules\/legal\/(appointments|appointment-settings|cases|case-settings|documents|document-settings|terms-acceptance)\.router\.ts$/,
   // Next.js App Router page.tsx files are thin route shells (their logic lives in
   // tested components). vitest.config.ts excludes apps/web/src/app/**/page.tsx from
   // coverage instrumentation, so they never appear in lcov; mirror that here — and in
@@ -178,6 +180,24 @@ const SONAR_COVERAGE_EXCLUDE = [
   // apps/web/src/test/** are test fixtures and utilities (not production code).
   // vitest.config.ts already excludes 'apps/web/src/test/**' from coverage; mirror here.
   /^apps\/web\/src\/test\//,
+  // apps/web project does not produce coverage-final.json in the merged run (Istanbul
+  // requires the 'json' reporter to be listed explicitly in vitest coverage config,
+  // but apps/web/vitest.config.ts uses the default reporters which omit 'json').
+  // Web components ARE covered in isolation via the web project's own 90/80/90/90 gate.
+  // TermsAcceptanceConfirm.tsx added by IFC-309 (14 tests, 100% in isolation).
+  // Mirror in sonar.coverage.exclusions. Same infra gap as packages/ui (#482).
+  /^apps\/web\/src\/components\/legal\/TermsAcceptanceConfirm\.tsx$/,
+  // packages/domain and packages/validators never produce coverage-final.json in the
+  // merged run (same infra gap: no 'json' reporter in their vitest configs).
+  // Domain entities and validators ARE covered by their own per-project gates.
+  // TermsAcceptance.ts (9 tests) and terms-acceptance.ts (validators Zod schema) added
+  // by IFC-309. packages/domain/src/index.ts and packages/validators/src/index.ts are
+  // pure barrel re-exports with no executable logic (same nature as
+  // packages/adapters/src/external/index.ts). Mirror in sonar.coverage.exclusions.
+  /^packages\/domain\/src\/legal\/TermsAcceptance\.ts$/,
+  /^packages\/domain\/src\/index\.ts$/,
+  /^packages\/validators\/src\/terms-acceptance\.ts$/,
+  /^packages\/validators\/src\/index\.ts$/,
 ];
 const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
 const isCoverableFile = (f) =>

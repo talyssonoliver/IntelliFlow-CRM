@@ -5307,4 +5307,32 @@ alerts:
     remediation_sprint: 19
     remediation_plan: 'Add teamId FK to ReportTemplate model + migration. Extend list/get visibility predicate to OR:[{createdBy:userId},{sharingScope:''tenant''},{AND:[{sharingScope:''team''},{teamId:{in:callerTeamIds}}]}] where callerTeamIds is resolved from TeamMember. Update tests + UI delete button to respect team ownership.'
     notes: 'Flagged by codex on PG-200 (fingerprint 784986853...), waived in tools/audit/codex-review-waivers.yaml as an out-of-scope V1 limitation (no teamId column, adding it is a schema change requiring a dedicated task). gh issue #561.'
-
+  TERMS-VERSION-SERVER-ALLOWLIST-001:
+    origin_task: IFC-309
+    owner: Backend Architect
+    severity: low
+    description: >-
+      The termsAcceptance.accept mutation trusts the client-supplied termsVersion
+      string (validated only for length 1-32). An authenticated user can pre-accept
+      a future version (e.g. "v2.0") before it is published, creating an audit
+      record that will be matched when the server later enforces "v2.0". Risk is
+      low (authenticated tenant users only, no privilege escalation, bounded by the
+      server controlling which version string is enforced) but is a design gap.
+    created_at: 2026-06-29
+    status: open
+    expiry_date: 2026-12-31
+    remediation_sprint: 20
+    remediation_plan: >-
+      Add server-side derivation or validation of the termsVersion in the accept
+      mutation: either (a) read the current version from getTermsOfService() on the
+      server and ignore the client-supplied version entirely, or (b) maintain a
+      canonical config list of valid version strings and reject out-of-list inputs.
+      Option (a) is cleaner but requires the server to know which terms document to
+      load (currently the RSC parent controls this). A simple allowlist in config
+      is a pragmatic interim fix. Update the accept mutation + tests + spec.
+    notes: >-
+      Flagged by codex (fingerprint 1a9b1daefb66...) during IFC-309 convergence.
+      Waived as out-of-scope in codex-review-waivers.yaml: the IFC-309 spec does
+      not require server-side version validation and adding it would require a new
+      persistence/config layer. The UI always passes the RSC-read version, making
+      the normal web path authoritative. gh issue #559.

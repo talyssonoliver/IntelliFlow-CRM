@@ -133,3 +133,5 @@ export * from './required-url';
 
 // Report Template Schemas (PG-200)
 export * from './report-templates';
+// Terms Acceptance Schemas (IFC-309)
+export * from './terms-acceptance';

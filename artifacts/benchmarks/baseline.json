@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-06-29T14:03:20.230Z",
+  "timestamp": "2026-06-29T18:27:03.572Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 63,
-    "total_endpoints": 532,
-    "total_queries": 242,
-    "total_mutations": 290,
+    "total_routers": 64,
+    "total_endpoints": 534,
+    "total_queries": 243,
+    "total_mutations": 291,
     "routers": [
       {
         "name": "contact",
@@ -1345,6 +1345,12 @@
         "mutations": 2
       },
       {
+        "name": "termsAcceptance",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
         "name": "onboarding",
         "endpoints": 2,
         "queries": 1,
@@ -1401,25 +1407,25 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 175,
-    "total_fields": 2572,
-    "total_indexes": 817,
-    "total_relations": 245,
+    "total_tables": 176,
+    "total_fields": 2584,
+    "total_indexes": 820,
+    "total_relations": 249,
     "tables_with_embeddings": 4,
     "enums": 74,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 153,
+        "fields": 154,
         "indexes": 4,
-        "relations": 1,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
         "name": "User",
-        "fields": 41,
+        "fields": 42,
         "indexes": 7,
-        "relations": 6,
+        "relations": 7,
         "hasEmbedding": false
       },
       {
@@ -2333,6 +2339,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TermsAcceptance",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "AccountDuplicateRule",
         "fields": 9,
         "indexes": 3,
@@ -3002,11 +3015,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 49,
-    "total_schemas": 581,
+    "total_validators": 50,
+    "total_schemas": 585,
     "by_complexity": {
       "complex": 31,
-      "moderate": 14,
+      "moderate": 15,
       "simple": 4
     },
     "validators": [
@@ -3229,6 +3242,12 @@
       {
         "name": "public-onboarding",
         "file": "public-onboarding.ts",
+        "schemas": 4,
+        "complexity": "moderate"
+      },
+      {
+        "name": "terms-acceptance",
+        "file": "terms-acceptance.ts",
         "schemas": 4,
         "complexity": "moderate"
       },
@@ -5287,6 +5306,18 @@
         "name": "documents.bulkDelete",
         "method": "POST",
         "description": "Bulk delete"
+      }
+    ],
+    "termsAcceptance": [
+      {
+        "name": "termsAcceptance.accept",
+        "method": "POST",
+        "description": "Accept"
+      },
+      {
+        "name": "termsAcceptance.getAcceptance",
+        "method": "GET",
+        "description": "Get acceptance"
       }
     ],
     "activityFeed": [

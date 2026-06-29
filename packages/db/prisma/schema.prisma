@@ -174,6 +174,7 @@ model Tenant {
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
   memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
   goalDefault               TenantGoalDefault?         // IFC-211: org-wide default daily goal
+  termsAcceptances          TermsAcceptance[]          @relation("TenantTermsAcceptances") @ignore // IFC-309
 
   @@index([slug])
   @@index([status])
@@ -363,6 +364,7 @@ model User {
   calendars           Calendar[]
   mfaSettings         UserMfaSettings?
   sessions            Session[]
+  termsAcceptances    TermsAcceptance[] @relation("UserTermsAcceptances") // IFC-309
 
   @@index([email])
   @@index([role])
@@ -5773,6 +5775,35 @@ model PublicFeedback {
   @@index([createdAt])
   @@index([rating])
   @@map("public_feedback")
+}
+
+// ============================================
+// LEGAL COMPLIANCE — TERMS ACCEPTANCE (IFC-309)
+// ============================================
+
+/// Immutable audit record of a user accepting a specific Terms of Service version.
+/// One record per (tenantId, userId, termsVersion). Records MUST NOT be updated
+/// or deleted — they are audit evidence. The application enforces this via an
+/// idempotent upsert with an empty update: {} block.
+///
+/// NF-003: ipAddress and userAgent are PII — never log or span-attribute these fields.
+model TermsAcceptance {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation("TenantTermsAcceptances", fields: [tenantId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation("UserTermsAcceptances", fields: [userId], references: [id], onDelete: Cascade)
+  termsVersion String
+  acceptedAt   DateTime @default(now())
+  /// PII: IPv4 or IPv6 address (up to 45 chars for IPv6 with mapped IPv4). Never log.
+  ipAddress    String?  @db.VarChar(45)
+  /// PII: browser User-Agent string. Never log or span-attribute.
+  userAgent    String?  @db.VarChar(512)
+  route        String   @db.VarChar(255)
+
+  @@unique([tenantId, userId, termsVersion])
+  @@index([tenantId])
+  @@map("terms_acceptances")
 }
 
 /// CRM-PR-A: inbound ledger for leangency-portal PM-event deliveries (ADR-022).
