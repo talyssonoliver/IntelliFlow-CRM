@@ -31,3 +31,11 @@ ALTER TABLE "terms_acceptances" ADD CONSTRAINT "terms_acceptances_tenantId_fkey"
 -- FK: user cascade delete — if user is removed, remove their acceptance records
 ALTER TABLE "terms_acceptances" ADD CONSTRAINT "terms_acceptances_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Row Level Security — all tenants may only see/insert their own records.
+-- SELECT: tenant-scoped read for getAcceptance query.
+-- INSERT: tenant-scoped write for accept mutation (no UPDATE/DELETE by design).
+ALTER TABLE "terms_acceptances" ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY tenant_isolation_terms_acceptances ON "terms_acceptances"
+    FOR ALL USING ("tenantId" = get_current_tenant_id());
