@@ -15,6 +15,7 @@
  * OTel span attributes. They appear only in the Prisma create block.
  */
 
+import { isIP } from 'net';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { pickTrustedForwardedIp } from '../../security/client-ip';
 import { assertTenantContext } from '../../security/tenant-context';
@@ -22,6 +23,23 @@ import {
   acceptTermsInputSchema,
   getAcceptanceInputSchema,
 } from '@intelliflow/validators/terms-acceptance';
+
+/** Max length of the ipAddress column (VarChar(45) supports IPv6). */
+const IP_MAX_LEN = 45;
+
+/**
+ * Validate and bound the IP from the x-forwarded-for header.
+ * Returns null for missing, malformed, or overlong values.
+ * NF-003: This value is PII — never log or span-attribute.
+ */
+function sanitizeIp(raw: string | undefined | null): string | null {
+  if (!raw) return null;
+  // Reject anything that isn't a valid IPv4 or IPv6 address.
+  if (!isIP(raw)) return null;
+  // Guard the VarChar(45) column. Valid IPv6 is ≤45 chars; this is belt-and-braces.
+  if (raw.length > IP_MAX_LEN) return null;
+  return raw;
+}
 
 export const termsAcceptanceRouter = createTRPCRouter({
   /**
@@ -41,8 +59,9 @@ export const termsAcceptanceRouter = createTRPCRouter({
 
     // NF-003: Do NOT log ipAddress/userAgent or add them to OTel span attributes.
     // IP extracted server-side — never from input (AC-004).
+    // sanitizeIp validates the value is a real IP address and fits VarChar(45).
     const forwardedFor = ctx.req?.headers?.get?.('x-forwarded-for') ?? null;
-    const ipAddress = pickTrustedForwardedIp(forwardedFor) ?? null;
+    const ipAddress = sanitizeIp(pickTrustedForwardedIp(forwardedFor));
 
     // userAgent read from request header server-side — never from client body.
     // Truncate to VARCHAR(512) DB limit to prevent overlong values.

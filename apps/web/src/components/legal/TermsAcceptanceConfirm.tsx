@@ -24,6 +24,7 @@ export function TermsAcceptanceConfirm({ termsVersion }: TermsAcceptanceConfirmP
   const { isAuthenticated, isLoading } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [locallyAccepted, setLocallyAccepted] = useState(false);
+  const utils = trpc.useUtils();
 
   const { data, isLoading: queryLoading } = trpc.termsAcceptance.getAcceptance.useQuery(
     { termsVersion },
@@ -31,7 +32,12 @@ export function TermsAcceptanceConfirm({ termsVersion }: TermsAcceptanceConfirmP
   );
 
   const mutation = trpc.termsAcceptance.accept.useMutation({
-    onSuccess: () => setLocallyAccepted(true),
+    onSuccess: () => {
+      // Invalidate the cached getAcceptance result so re-navigation within the
+      // React Query staleTime window does not re-show the confirmation (AC-009).
+      void utils.termsAcceptance.getAcceptance.invalidate({ termsVersion });
+      setLocallyAccepted(true);
+    },
   });
 
   // AC-008: hide for unauthenticated users or while auth / query is loading

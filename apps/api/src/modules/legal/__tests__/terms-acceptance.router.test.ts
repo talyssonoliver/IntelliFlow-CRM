@@ -148,6 +148,15 @@ describe('termsAcceptanceRouter', () => {
       expect(upsertArgs.create.ipAddress).toBeNull();
     });
 
+    it('stores null for malformed x-forwarded-for values (AC-004 — sanitizeIp guard)', async () => {
+      const caller = await createCaller(makeCtx(TENANT_A, USER_1, 'not-an-ip-at-all'));
+      await caller.accept({ termsVersion: TERMS_V1, route: '/terms' });
+
+      const upsertArgs = mockPrisma.termsAcceptance.upsert.mock.calls[0]![0];
+      // sanitizeIp rejects malformed values to prevent garbage in the DB audit column
+      expect(upsertArgs.create.ipAddress).toBeNull();
+    });
+
     it('extracts userAgent from request user-agent header server-side — not from input', async () => {
       const caller = await createCaller(makeCtx(TENANT_A, USER_1, undefined, 'Mozilla/5.0 Test'));
       await caller.accept({ termsVersion: TERMS_V1, route: '/terms' });

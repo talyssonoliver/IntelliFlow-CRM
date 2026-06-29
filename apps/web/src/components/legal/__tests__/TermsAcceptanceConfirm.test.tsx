@@ -18,6 +18,7 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 const mockGetAcceptance = vi.fn();
 const mockAcceptMutate = vi.fn();
 const mockUseMutation = vi.fn();
+const mockInvalidateGetAcceptance = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
@@ -29,6 +30,13 @@ vi.mock('@/lib/trpc', () => ({
         useMutation: (...args: unknown[]) => mockUseMutation(...args),
       },
     },
+    useUtils: () => ({
+      termsAcceptance: {
+        getAcceptance: {
+          invalidate: mockInvalidateGetAcceptance,
+        },
+      },
+    }),
   },
 }));
 
@@ -173,6 +181,18 @@ describe('TermsAcceptanceConfirm', () => {
       const btn = screen.getByRole('button', { name: /i agree/i });
       fireEvent.click(btn);
       expect(mockAcceptMutate).not.toHaveBeenCalled();
+    });
+
+    it('invalidates getAcceptance cache on success to prevent stale re-show (AC-009)', async () => {
+      render(<TermsAcceptanceConfirm termsVersion={TERMS_V1} />);
+      const checkbox = screen.getByRole('checkbox');
+      fireEvent.click(checkbox);
+      const btn = screen.getByRole('button', { name: /i agree/i });
+      fireEvent.click(btn);
+
+      await waitFor(() => {
+        expect(mockInvalidateGetAcceptance).toHaveBeenCalledWith({ termsVersion: TERMS_V1 });
+      });
     });
   });
 
