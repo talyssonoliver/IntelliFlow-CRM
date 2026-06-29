@@ -155,20 +155,30 @@ describe('IntegrationsPage', () => {
     expect(screen.getAllByText('2').length).toBeGreaterThan(0);
   });
 
-  it('shows unhealthy and unknown connectors in the Available section', () => {
+  it('shows unhealthy connectors in Connected and unknown in Available', () => {
+    // unhealthy = configured but health check failed → Connected section with error
+    // unknown   = not configured at all (no credentials) → Available section
     mockHealthData = {
       connectors: [
-        makeConnector({ id: 'salesforce', name: 'Salesforce', status: 'unhealthy' }),
+        makeConnector({
+          id: 'salesforce',
+          name: 'Salesforce',
+          status: 'unhealthy',
+          errorMessage: 'Auth token expired',
+        }),
         makeConnector({ id: 'hubspot', name: 'HubSpot', status: 'unknown' }),
       ],
       summary: { total: 2, healthy: 0, degraded: 0, unhealthy: 1, unknown: 1 },
       checkedAt: NOW,
     };
     render(<IntegrationsPage />);
+    // Salesforce (unhealthy = configured) appears in Connected section
     expect(screen.getByText('Salesforce')).toBeInTheDocument();
+    expect(screen.getByText(/disconnected/i)).toBeInTheDocument();
+    // HubSpot (unknown = not configured) appears in Available section
     expect(screen.getByText('HubSpot')).toBeInTheDocument();
     // Unknown connectors should show "Not configured"
-    expect(screen.getAllByText('Not configured').length).toBeGreaterThan(0);
+    expect(screen.getByText('Not configured')).toBeInTheDocument();
   });
 
   it('shows error state with a retry button on query failure', () => {

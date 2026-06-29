@@ -92,8 +92,8 @@ describe('TeamPage', () => {
   it('shows empty state when no users are returned', () => {
     mockListData = { users: [] };
     render(<TeamPage />);
-    // EmptyState renders with role="region" aria-label="agents empty state"
-    expect(screen.getByRole('region', { name: /agents empty state/i })).toBeInTheDocument();
+    // EmptyState (legacy icon mode) renders the team-specific title
+    expect(screen.getByText('No team members yet')).toBeInTheDocument();
   });
 
   it('shows error state with a retry button on query failure', () => {

@@ -109,7 +109,11 @@ export default function TeamPage() {
 
           {users.length === 0 ? (
             <div className="p-6">
-              <EmptyState entity="agents" />
+              <EmptyState
+                icon="group"
+                title="No team members yet"
+                description="Invite colleagues to collaborate in your workspace."
+              />
             </div>
           ) : (
             <div className="overflow-x-auto">

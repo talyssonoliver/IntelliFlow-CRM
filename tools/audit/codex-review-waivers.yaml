@@ -892,3 +892,16 @@ waivers:
     author: talyssonoliver
     date: '2026-06-29'
     expires: '2026-12-31'
+  - fingerprint: '228d78ed1da2ecda4b95d7d1279f3473392f24a045afca4d651d5c9dd21753ea'
+    reason: >-
+      Accepted out-of-scope API limitation, not a defect in IFC-234. The team settings page
+      uses trpc.user.list (limit: 50) because no dedicated paginated team-roster endpoint with
+      total counts exists in the API (user.list caps at 50 with no total field; team.router.list
+      is also capped at 50 and is for entity-search pickers, not roster display). The label
+      "Members loaded" (not "Total Members") is an honest disclosure of the cap — it does not
+      claim to be the full count. Adding pagination/total metadata to user.list is a backend
+      task outside IFC-234's "wire existing pages to real tRPC data" scope. Source-anchored:
+      re-blocks if the trpc.user.list call site or the rendered count label changes.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-29'

@@ -10,8 +10,14 @@ import { trpc } from '@/lib/trpc';
 
 type ConnectorStatus = 'healthy' | 'degraded' | 'unhealthy' | 'unknown';
 
+/**
+ * A connector is "connected" (configured) when its status is NOT unknown.
+ * - healthy / degraded / unhealthy = integration is configured; unhealthy means
+ *   the health check failed, but the connector IS set up (credentials present).
+ * - unknown = credentials missing / not configured at all → Available section.
+ */
 function isConnected(status: ConnectorStatus): boolean {
-  return status === 'healthy' || status === 'degraded';
+  return status !== 'unknown';
 }
 
 function statusLabel(status: ConnectorStatus): string {
