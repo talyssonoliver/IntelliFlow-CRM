@@ -64,7 +64,7 @@ function parseColumns(raw: string): string[] {
 }
 
 export default function ReportTemplatesContent() {
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
 
   // ─── tRPC ──────────────────────────────────────────────────────────────────
   const utils = trpc.useUtils();
@@ -238,24 +238,27 @@ export default function ReportTemplatesContent() {
                         </Badge>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        aria-label="Edit"
-                        onClick={() => openEdit(t)}
-                      >
-                        <span className="material-symbols-outlined text-base">edit</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        aria-label="Delete"
-                        onClick={() => setDeleteTarget({ id: t.id, name: t.name })}
-                      >
-                        <span className="material-symbols-outlined text-base">delete</span>
-                      </Button>
-                    </div>
+                    {/* Only the creator can mutate a template; hide buttons for shared templates */}
+                    {t.createdBy === user?.id && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-label="Edit"
+                          onClick={() => openEdit(t)}
+                        >
+                          <span className="material-symbols-outlined text-base">edit</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-label="Delete"
+                          onClick={() => setDeleteTarget({ id: t.id, name: t.name })}
+                        >
+                          <span className="material-symbols-outlined text-base">delete</span>
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

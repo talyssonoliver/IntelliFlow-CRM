@@ -34,7 +34,12 @@ vi.mock('@/lib/trpc', () => ({
 }));
 
 vi.mock('@/lib/auth/AuthContext', () => ({
-  useRequireAuth: () => ({ isLoading: false, isAuthenticated: true }),
+  useRequireAuth: () => ({
+    isLoading: false,
+    isAuthenticated: true,
+    // user-1 is the creator of mockTemplate — Edit/Delete buttons should appear for own templates
+    user: { id: 'user-1', email: 'user@example.com', name: 'Test User' },
+  }),
 }));
 
 vi.mock('@intelliflow/ui', async (importOriginal) => {
@@ -192,6 +197,34 @@ describe('ReportTemplatesContent', () => {
       await waitFor(() => {
         expect(mutateCreate).toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('ownership-gated actions', () => {
+    it('shows Edit and Delete buttons for templates the current user created', async () => {
+      setup({ listData: [mockTemplate] }); // mockTemplate.createdBy === 'user-1' === user.id
+      render(<ReportTemplatesContent />);
+
+      await waitFor(() => screen.getByText('Revenue Report'));
+
+      expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
+    });
+
+    it('hides Edit and Delete buttons for templates created by another user', async () => {
+      const sharedTemplate = {
+        ...mockTemplate,
+        id: 'other-id',
+        createdBy: 'user-2',
+        sharingScope: 'team',
+      };
+      setup({ listData: [sharedTemplate] });
+      render(<ReportTemplatesContent />);
+
+      await waitFor(() => screen.getByText('Revenue Report'));
+
+      expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
     });
   });
 
