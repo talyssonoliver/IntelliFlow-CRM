@@ -1,16 +1,17 @@
 /**
  * Report Templates page.tsx Tests — PG-200
  * Validates Suspense wrapper + metadata export.
+ * Page lives under analytics/(list)/report-templates/ to inherit ModuleGate.
  */
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-vi.mock('../ReportTemplatesContent', () => ({
+vi.mock('@/app/analytics/report-templates/ReportTemplatesContent', () => ({
   default: () => <div data-testid="content-stub">content</div>,
 }));
 
-vi.mock('../loading', () => ({
+vi.mock('@/app/analytics/report-templates/loading', () => ({
   default: () => <div data-testid="loading-stub">loading</div>,
 }));
 
