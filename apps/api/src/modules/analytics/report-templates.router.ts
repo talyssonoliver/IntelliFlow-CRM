@@ -87,20 +87,26 @@ export const reportTemplatesRouter = createTRPCRouter({
 
   /**
    * Create a new report template.
-   * Pre-checks for duplicate name within tenant before inserting.
+   * Pre-checks for duplicate name scoped to the template's visibility:
+   *   private  → unique per (tenantId, createdBy, name)
+   *   team/tenant → unique per (tenantId, name)
    */
   create: tenantProcedure.input(createReportTemplateSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
     const userId = ctx.tenant.userId;
+    const effectiveScope = input.sharingScope ?? 'private';
+
+    const duplicateWhere =
+      effectiveScope === 'private'
+        ? { tenantId, createdBy: userId, name: input.name, sharingScope: 'private' as const }
+        : { tenantId, name: input.name };
 
     const existing = await ctx.prismaWithTenant.reportTemplate.findFirst({
-      where: { tenantId, name: input.name },
+      where: duplicateWhere,
       select: { id: true },
     });
 
     if (existing) {
-      // Generic message: do not disclose whether the conflicting template
-      // is private and owned by another user (information disclosure).
       throw new TRPCError({
         code: 'CONFLICT',
         message: 'A report template with that name already exists in this workspace.',
@@ -149,20 +155,34 @@ export const reportTemplatesRouter = createTRPCRouter({
     // can mutate it. Shared templates are read-only for non-owners.
     const editable = await ctx.prismaWithTenant.reportTemplate.findFirst({
       where: { id, tenantId, createdBy: userId },
-      select: { id: true },
+      select: { id: true, sharingScope: true },
     });
     if (!editable) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Report template not found.' });
     }
 
-    // Pre-check name uniqueness when renaming (same invariant as create).
+    // Pre-check name uniqueness when renaming (scoped to sharing level like create).
     if (fields.name !== undefined) {
+      // Effective scope after rename uses the incoming sharingScope if provided,
+      // otherwise the existing one. Private templates only conflict within the
+      // same owner; team/tenant templates conflict across the full workspace.
+      const effectiveScope = fields.sharingScope ?? editable.sharingScope;
+      const renameWhere =
+        effectiveScope === 'private'
+          ? {
+              tenantId,
+              createdBy: userId,
+              sharingScope: 'private' as const,
+              name: fields.name,
+              NOT: { id },
+            }
+          : { tenantId, name: fields.name, NOT: { id } };
+
       const collision = await ctx.prismaWithTenant.reportTemplate.findFirst({
-        where: { tenantId, name: fields.name, NOT: { id } },
+        where: renameWhere,
         select: { id: true },
       });
       if (collision) {
-        // Generic message: do not disclose private template names from other users.
         throw new TRPCError({
           code: 'CONFLICT',
           message: 'A report template with that name already exists in this workspace.',

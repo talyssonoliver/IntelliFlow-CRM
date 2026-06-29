@@ -231,6 +231,42 @@ describe('Report Templates Router (PG-200)', () => {
         })
       );
     });
+
+    it('scopes duplicate-name check to (tenantId, createdBy, name) for private templates', async () => {
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
+      (prismaMock.reportTemplate.create as any).mockResolvedValueOnce(mockTemplate);
+
+      await caller.create({ name: 'Revenue Report', selectedColumns: ['col'] });
+
+      // findFirst should be called with createdBy + sharingScope for a private template
+      expect(prismaMock.reportTemplate.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            tenantId,
+            createdBy: userId,
+            sharingScope: 'private',
+            name: 'Revenue Report',
+          }),
+        })
+      );
+    });
+
+    it('scopes duplicate-name check to (tenantId, name) for tenant-scoped templates', async () => {
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
+      const tenantTemplate = { ...mockTemplate, sharingScope: 'tenant' };
+      (prismaMock.reportTemplate.create as any).mockResolvedValueOnce(tenantTemplate);
+
+      await caller.create({
+        name: 'Shared Report',
+        selectedColumns: ['col'],
+        sharingScope: 'tenant',
+      });
+
+      // findFirst should NOT include createdBy for tenant-scope (all users)
+      const call = (prismaMock.reportTemplate.findFirst as any).mock.calls[0][0];
+      expect(call.where).not.toHaveProperty('createdBy');
+      expect(call.where).toMatchObject({ tenantId, name: 'Shared Report' });
+    });
   });
 
   // ─── update ───────────────────────────────────────────────────────────────
@@ -238,8 +274,11 @@ describe('Report Templates Router (PG-200)', () => {
   describe('update', () => {
     it('updates template fields via $transaction', async () => {
       const updated = { ...mockTemplate, chartType: 'line' };
-      // Visibility guard (findFirst call 1): caller owns it → proceed
-      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTemplate);
+      // Ownership guard (findFirst call 1): returns { id, sharingScope }
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce({
+        id: mockTemplate.id,
+        sharingScope: mockTemplate.sharingScope,
+      });
       // No name change → no uniqueness pre-check (no second findFirst)
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
@@ -264,8 +303,11 @@ describe('Report Templates Router (PG-200)', () => {
     });
 
     it('throws NOT_FOUND when template not in tenant (P2025)', async () => {
-      // Visibility guard passes but update fails with P2025
-      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTemplate);
+      // Ownership guard returns { id, sharingScope }; update fails with P2025
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce({
+        id: mockTemplate.id,
+        sharingScope: mockTemplate.sharingScope,
+      });
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
           reportTemplate: {
@@ -281,8 +323,11 @@ describe('Report Templates Router (PG-200)', () => {
     });
 
     it('throws CONFLICT when renaming to an existing name', async () => {
-      // Visibility guard (findFirst call 1): passes
-      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTemplate);
+      // Ownership guard (findFirst call 1): returns { id, sharingScope }
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce({
+        id: mockTemplate.id,
+        sharingScope: mockTemplate.sharingScope,
+      });
       // Name-change triggers uniqueness pre-check (findFirst call 2): returns collision
       (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTeamTemplate);
 
@@ -293,8 +338,11 @@ describe('Report Templates Router (PG-200)', () => {
 
     it('allows rename when no collision exists', async () => {
       const updated = { ...mockTemplate, name: 'New Name' };
-      // Visibility guard (findFirst call 1): passes
-      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTemplate);
+      // Ownership guard (findFirst call 1): returns { id, sharingScope }
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce({
+        id: mockTemplate.id,
+        sharingScope: mockTemplate.sharingScope,
+      });
       // Uniqueness pre-check (findFirst call 2): no collision
       (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
@@ -312,8 +360,11 @@ describe('Report Templates Router (PG-200)', () => {
     it('scopes update to caller tenantId', async () => {
       const updated = { ...mockTemplate, chartType: 'line' };
       let capturedWhere: any;
-      // Visibility guard passes; no name change
-      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTemplate);
+      // Ownership guard passes; no name change
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce({
+        id: mockTemplate.id,
+        sharingScope: mockTemplate.sharingScope,
+      });
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
           reportTemplate: {
