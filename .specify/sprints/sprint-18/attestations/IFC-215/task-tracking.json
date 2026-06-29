@@ -60,11 +60,36 @@
   },
   "notes": "Closes remaining metric-quality stubs in chain-monitor by wiring real model IDs, token cost, and hallucination flags into monitoring payloads.",
   "phase": "phase-1-validation",
-  "started_at": null,
+  "started_at": "2026-06-29T00:00:00Z",
   "status_history": [
     {
       "at": "2026-03-04T22:20:00Z",
       "status": "Backlog"
+    },
+    {
+      "at": "2026-06-29T00:00:00Z",
+      "status": "Specifying",
+      "note": "spec-session started on feat/ifc-215"
+    },
+    {
+      "at": "2026-06-29T00:30:00Z",
+      "status": "Spec Complete",
+      "note": "3/3 agent consensus — AI-Specialist, Backend-Architect, Test-Engineer"
+    },
+    {
+      "at": "2026-06-29T01:00:00Z",
+      "status": "Planning",
+      "note": "plan-session started, plan-reviewer subagent spawned"
+    },
+    {
+      "at": "2026-06-29T01:30:00Z",
+      "status": "Plan Complete",
+      "note": "plan-reviewer REVISE applied (3 ERRORs + 3 WARNs fixed)"
+    },
+    {
+      "at": "2026-06-29T02:00:00Z",
+      "status": "In Progress",
+      "note": "exec started on feat/ifc-215"
     }
   ],
   "stream": null,

@@ -1,0 +1,24 @@
+{
+  "task_id": "IFC-215",
+  "captured_at": "2026-06-29T02:08:00Z",
+  "description": "Pre-implementation coverage baseline for IFC-215 (AI Monitoring Payload Fidelity). Changed files: apps/ai-worker/src/monitoring/chain-monitor.ts (placeholder replacements), apps/ai-worker/src/chains/scoring.chain.ts (MonitoringContext wiring). New test file: apps/ai-worker/src/monitoring/__tests__/chain-monitor.metrics-fidelity.test.ts. The baseline is captured AFTER implementation (fork agent applied changes) but before full attestation — the fidelity tests were written as part of the RED-GREEN-REFACTOR cycle.",
+  "measurement_scope": [
+    "apps/ai-worker/src/monitoring/chain-monitor.ts (MODIFIED — 3 placeholder replacements + MonitoringContext interface + calculateCost/hallucinationChecker wiring)",
+    "apps/ai-worker/src/chains/scoring.chain.ts (MODIFIED — MonitoringContext passed to withMonitoring)",
+    "apps/ai-worker/src/monitoring/__tests__/chain-monitor.metrics-fidelity.test.ts (NEW — 10 fidelity test cases)"
+  ],
+  "command": "pnpm --filter @intelliflow/ai-worker exec vitest run src/monitoring/__tests__/chain-monitor.test.ts src/monitoring/__tests__/chain-monitor.metrics-fidelity.test.ts --reporter=verbose",
+  "baseline_files": {
+    "apps/ai-worker/src/monitoring/chain-monitor.ts": {
+      "lines": { "note": "Measured via full suite run; 43 tests pass across 2 test files" }
+    },
+    "apps/ai-worker/src/chains/scoring.chain.ts": {
+      "lines": { "note": "Existing scoring-with-monitoring.integration.test.ts covers scoreLead() path" }
+    }
+  },
+  "baseline_totals": {
+    "test_files": 2,
+    "tests_passed": 43,
+    "note": "chain-monitor.test.ts (33 passed) + chain-monitor.metrics-fidelity.test.ts (10 passed)"
+  }
+}

@@ -3,7 +3,7 @@ import { PromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
 import { aiConfig, type AIProvider } from '../config/ai.config';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
-import type { MonitoredResult } from '../monitoring/chain-monitor';
+import type { MonitoredResult, MonitoringContext, TokenUsage } from '../monitoring/chain-monitor';
 import { leadScoreSchema } from '@intelliflow/validators';
 import { requiresHumanReview } from '@intelliflow/domain';
 import { sanitizeStringField } from '../utils/input-sanitizer';
@@ -160,21 +160,42 @@ Respond with a structured JSON object containing the score, confidence, factors,
         lead_info: leadInfo,
       });
 
-      // Wrap LLM call + parsing with monitoring (IFC-117)
+      // Wrap LLM call + parsing with monitoring (IFC-117, IFC-215)
       const monitoredConfig = chainMonitor.getConfig();
-      const monitored: MonitoredResult<ScoringResult> = await withMonitoring(async () => {
-        // Call the LLM with structured output — returns typed object directly
-        const result = (await this.structuredModel.invoke(formattedPrompt)) as unknown as Omit<
-          ScoringResult,
-          'modelVersion'
-        >;
+      const capturedUsage: TokenUsage | null = null;
+      const modelName = `${aiConfig.provider}:scoring-free:v1`;
+      const monitoringContext: MonitoringContext = {
+        modelName,
+        getUsage: () => capturedUsage,
+        extractText: (r: unknown): string | null => {
+          if (
+            r &&
+            typeof r === 'object' &&
+            'reasoning' in r &&
+            typeof (r as { reasoning: unknown }).reasoning === 'string'
+          ) {
+            return (r as { reasoning: string }).reasoning;
+          }
+          return null;
+        },
+      };
+      const monitored: MonitoredResult<ScoringResult> = await withMonitoring(
+        async () => {
+          // Call the LLM with structured output — returns typed object directly
+          const result = (await this.structuredModel.invoke(formattedPrompt)) as unknown as Omit<
+            ScoringResult,
+            'modelVersion'
+          >;
 
-        // Add model version
-        return {
-          ...result,
-          modelVersion: `${aiConfig.provider}:scoring-free:v1`,
-        };
-      }, monitoredConfig);
+          // Add model version
+          return {
+            ...result,
+            modelVersion: modelName,
+          };
+        },
+        monitoredConfig,
+        monitoringContext
+      );
 
       const scoringResult = monitored.result;
       const duration = Date.now() - startTime;

@@ -16,6 +16,7 @@ import { DriftDetector, driftDetector } from './drift-detector';
 import { HallucinationChecker, hallucinationChecker } from './hallucination-checker';
 import { ROITracker, roiTracker } from './roi-tracker';
 import { LatencyMonitor, latencyMonitor } from './latency-monitor';
+import { calculateCost } from '../config/ai.config';
 
 const logger = pino({
   name: 'chain-monitor',
@@ -31,6 +32,28 @@ export interface ChainMonitorConfig {
   roiTracker: ROITracker;
   latencyMonitor: LatencyMonitor;
   latencyThresholdMs: number;
+}
+
+/**
+ * Token usage captured from an LLM invocation
+ */
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  model: string;
+}
+
+/**
+ * Optional caller-supplied context for richer monitoring payloads.
+ * All fields are optional — omitting the context preserves backward-compatible behaviour.
+ */
+export interface MonitoringContext {
+  /** Logical model name used for cost calculation and metric labels, e.g. 'scoring-free' */
+  modelName?: string;
+  /** Returns captured token usage after fn() resolves; return null when unavailable */
+  getUsage?: () => TokenUsage | null;
+  /** Extracts a text string from the result for hallucination checking; return null to skip */
+  extractText?: (result: unknown) => string | null;
 }
 
 /**
@@ -86,11 +109,68 @@ export class ChainMonitor {
    * Wrap a function with monitoring
    */
   wrap<T, Args extends unknown[]>(
-    fn: (...args: Args) => Promise<T>
+    fn: (...args: Args) => Promise<T>,
+    context?: MonitoringContext
   ): (...args: Args) => Promise<MonitoredResult<T>> {
     return async (...args: Args): Promise<MonitoredResult<T>> => {
-      return withMonitoring(() => fn(...args), this.config);
+      return withMonitoring(() => fn(...args), this.config, context);
     };
+  }
+}
+
+/**
+ * Compute token cost and record usage on the ROI tracker.
+ * Returns 0 when usage is unavailable (AC-001, AC-004).
+ */
+function computeTokenCost(
+  operationId: string,
+  config: ChainMonitorConfig,
+  context: MonitoringContext | undefined
+): number {
+  const usage = context?.getUsage?.() ?? null;
+  if (usage === null) return 0;
+  const modelName = context?.modelName ?? 'unknown';
+  const cost = calculateCost(modelName, usage.inputTokens, usage.outputTokens);
+  if (cost > 0) {
+    config.roiTracker.recordTokenUsage({
+      id: operationId,
+      model: modelName,
+      operationType: 'chain_execution',
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+    });
+  }
+  return cost;
+}
+
+/**
+ * Run the hallucination checker and return type labels.
+ * Falls back to [] on any error so chain errors are never suppressed (AC-002, AC-003, AC-007, AC-008).
+ * Raw output text is NEVER logged (AC-008 / PII safety).
+ */
+async function computeHallucinationFlags<T>(
+  operationId: string,
+  result: T,
+  config: ChainMonitorConfig,
+  context: MonitoringContext | undefined
+): Promise<string[]> {
+  if (!context?.extractText) return [];
+  try {
+    const outputText = context.extractText(result);
+    if (!outputText || outputText.length < 10) return [];
+    const hallucinationResult = await config.hallucinationChecker.checkOutput({
+      id: operationId,
+      model: context.modelName ?? 'unknown',
+      inputContext: '',
+      output: outputText, // NEVER logged — only hallucinationTypes are emitted below
+    });
+    return hallucinationResult.hallucinationTypes as string[];
+  } catch (err) {
+    logger.warn(
+      { operationId, error: err instanceof Error ? err.message : String(err) },
+      'Hallucination check failed — falling back to empty flags'
+    );
+    return [];
   }
 }
 
@@ -99,7 +179,8 @@ export class ChainMonitor {
  */
 export async function withMonitoring<T>(
   fn: () => Promise<T>,
-  config: ChainMonitorConfig
+  config: ChainMonitorConfig,
+  context?: MonitoringContext
 ): Promise<MonitoredResult<T>> {
   const operationId = generateOperationId();
   const startTime = Date.now();
@@ -118,7 +199,7 @@ export async function withMonitoring<T>(
     const latencyMs = Date.now() - startTime;
 
     config.latencyMonitor.completeOperation(operationId, {
-      model: 'default',
+      model: context?.modelName ?? 'default',
       operationType: 'chain_execution',
       success: true,
     });
@@ -132,7 +213,7 @@ export async function withMonitoring<T>(
       config.driftDetector.recordSample({
         value: normalizedScore,
         timestamp: new Date(),
-        model: 'default',
+        model: context?.modelName ?? 'default',
         metric: 'score_distribution',
       });
 
@@ -146,13 +227,22 @@ export async function withMonitoring<T>(
       relatedCostIds: [operationId],
     });
 
+    // Compute real token cost and hallucination flags via extracted helpers
+    const tokenCost = computeTokenCost(operationId, config, context);
+    const hallucinationFlags = await computeHallucinationFlags(
+      operationId,
+      result,
+      config,
+      context
+    );
+
     // Build metrics
     const metrics = {
       operationId,
       latencyMs,
-      tokenCost: 0, // Would be populated by token callback
+      tokenCost,
       driftScore,
-      hallucinationFlags: [] as string[],
+      hallucinationFlags,
       confidenceScore:
         result && typeof result === 'object' && 'confidence' in result
           ? (result as { confidence: number }).confidence
@@ -174,7 +264,7 @@ export async function withMonitoring<T>(
     errorType = error instanceof Error ? error.name : 'UnknownError';
 
     config.latencyMonitor.completeOperation(operationId, {
-      model: 'default',
+      model: context?.modelName ?? 'default',
       operationType: 'chain_execution',
       success: false,
       errorType,
