@@ -606,7 +606,7 @@ importers:
         version: 0.9.47(axios@1.16.1)(react@19.2.7)(tailwindcss@4.3.0)(typescript@5.9.3)(zod@4.4.3)
       '@schedule-x/calendar':
         specifier: ^4.6.0
-        version: 4.6.0(@preact/signals@2.8.1(preact@10.28.4))(preact@10.28.4)(temporal-polyfill@0.3.2)
+        version: 4.6.0(@preact/signals@2.8.1(preact@10.28.4))(preact@10.28.4)(temporal-polyfill@1.0.1)
       '@schedule-x/calendar-controls':
         specifier: ^4.6.0
         version: 4.6.0
@@ -615,7 +615,7 @@ importers:
         version: 4.6.0
       '@schedule-x/react':
         specifier: ^4.1.0
-        version: 4.1.0(@schedule-x/calendar@4.6.0(@preact/signals@2.8.1(preact@10.28.4))(preact@10.28.4)(temporal-polyfill@0.3.2))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        version: 4.1.0(@schedule-x/calendar@4.6.0(@preact/signals@2.8.1(preact@10.28.4))(preact@10.28.4)(temporal-polyfill@1.0.1))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@schedule-x/theme-default':
         specifier: ^4.6.0
         version: 4.6.0
@@ -680,8 +680,8 @@ importers:
         specifier: ^0.0.1
         version: 0.0.1
       temporal-polyfill:
-        specifier: ^0.3.2
-        version: 0.3.2
+        specifier: ^1.0.1
+        version: 1.0.1
       use-debounce:
         specifier: ^10.1.1
         version: 10.1.1(react@19.2.7)
@@ -8228,6 +8228,9 @@ packages:
   fast-uri@3.1.2:
     resolution: {integrity: sha512-rVjf7ArG3LTk+FS6Yw81V1DLuZl1bRbNrev6Tmd/9RaroeeRRJhAt7jg/6YFxbvAQXUCavSoZhPPj6oOx+5KjQ==}
 
+  fast-uri@3.1.3:
+    resolution: {integrity: sha512-i70LwGWUduXqzicKXWshooq+sWL1K3WUU5rKZNG/0i3a1OSoX3HqhH5WbWwTmqWfor4urUakGPiRQcleRZTwOg==}
+
   fast-wrap-ansi@0.2.2:
     resolution: {integrity: sha512-7F2Fl+TjRSenLqlU3UjSH0iyqopqoZIu7eZVpEirP2g1GtWa2G/ecEmBdgz31+Mxr+ELclgg6sokpSFIQiZ02Q==}
 
@@ -11545,11 +11548,14 @@ packages:
   teex@1.0.1:
     resolution: {integrity: sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg==}
 
-  temporal-polyfill@0.3.2:
-    resolution: {integrity: sha512-TzHthD/heRK947GNiSu3Y5gSPpeUDH34+LESnfsq8bqpFhsB79HFBX8+Z834IVX68P3EUyRPZK5bL/1fh437Eg==}
+  temporal-polyfill@1.0.1:
+    resolution: {integrity: sha512-N2SoI9olnW7BUsU8RosDphZQl9s+WJ8O7PoJMFCr/e5/1rFkVI4GNOWaSeySG+UoP04foPYsnLWbJmbXOiShZg==}
 
-  temporal-spec@0.3.1:
-    resolution: {integrity: sha512-B4TUhezh9knfSIMwt7RVggApDRJZo73uZdj8AacL2mZ8RP5KtLianh2MXxL06GN9ESYiIsiuoLQhgVfwe55Yhw==}
+  temporal-spec@1.0.0:
+    resolution: {integrity: sha512-00Ahj1e1ifaERTMOIIGpOCdOo9IEk2m6GGSMedsn9a2SIsGLdOTbmME1Htv6IM82b6VHrzSUTIVc7YHy6hdhFQ==}
+
+  temporal-utils@1.0.1:
+    resolution: {integrity: sha512-HAixuesxFQIUaQk3ptX2jhfO/FsOkgVkDDMawvp6n/fkB1q6BKfs3lURw9I+pK/2e2e/q/vrLrxmeqauBoyGMQ==}
 
   testcontainers@12.0.1:
     resolution: {integrity: sha512-EMjjfMNJf3HlL7V3elkxqKUO1r3CtqNBTdmKGwwma/lOtUGfoWvFJ0WQ/KQf1DHEMnRjLWzW4cXbv/Tndsbcbw==}
@@ -16265,17 +16271,17 @@ snapshots:
 
   '@schedule-x/calendar-controls@4.6.0': {}
 
-  '@schedule-x/calendar@4.6.0(@preact/signals@2.8.1(preact@10.28.4))(preact@10.28.4)(temporal-polyfill@0.3.2)':
+  '@schedule-x/calendar@4.6.0(@preact/signals@2.8.1(preact@10.28.4))(preact@10.28.4)(temporal-polyfill@1.0.1)':
     dependencies:
       '@preact/signals': 2.8.1(preact@10.28.4)
       preact: 10.28.4
-      temporal-polyfill: 0.3.2
+      temporal-polyfill: 1.0.1
 
   '@schedule-x/events-service@4.6.0': {}
 
-  '@schedule-x/react@4.1.0(@schedule-x/calendar@4.6.0(@preact/signals@2.8.1(preact@10.28.4))(preact@10.28.4)(temporal-polyfill@0.3.2))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+  '@schedule-x/react@4.1.0(@schedule-x/calendar@4.6.0(@preact/signals@2.8.1(preact@10.28.4))(preact@10.28.4)(temporal-polyfill@1.0.1))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
-      '@schedule-x/calendar': 4.6.0(@preact/signals@2.8.1(preact@10.28.4))(preact@10.28.4)(temporal-polyfill@0.3.2)
+      '@schedule-x/calendar': 4.6.0(@preact/signals@2.8.1(preact@10.28.4))(preact@10.28.4)(temporal-polyfill@1.0.1)
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -17894,7 +17900,7 @@ snapshots:
   ajv@8.18.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.2
+      fast-uri: 3.1.3
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
     optional: true
@@ -19666,6 +19672,9 @@ snapshots:
       fast-string-truncated-width: 3.0.3
 
   fast-uri@3.1.2: {}
+
+  fast-uri@3.1.3:
+    optional: true
 
   fast-wrap-ansi@0.2.2:
     dependencies:
@@ -23775,11 +23784,14 @@ snapshots:
       - bare-abort-controller
       - react-native-b4a
 
-  temporal-polyfill@0.3.2:
+  temporal-polyfill@1.0.1:
     dependencies:
-      temporal-spec: 0.3.1
+      temporal-spec: 1.0.0
+      temporal-utils: 1.0.1
 
-  temporal-spec@0.3.1: {}
+  temporal-spec@1.0.0: {}
+
+  temporal-utils@1.0.1: {}
 
   testcontainers@12.0.1:
     dependencies:
