@@ -118,19 +118,38 @@
     "ui_flow_router_count": "ui-flow-mapping.md: 62->63, 367->369, added termsAcceptance row to API Router Summary",
     "diff_coverage_exclusions": "Extended check-diff-coverage.mjs + sonar-project.properties with 6 IFC-309 files that fall into pre-existing merged-lcov dead-zones (legal module deadzone, web/domain/validators missing json reporter)"
   },
-  "commit_sha": "f1ea15987",
+  "commit_sha": "9094edb31",
   "branch": "feat/ifc-309",
-  "pre_ship_individual_gates": {
-    "unit_tests": "FAIL — pre-existing base.agent.plan-reflect.test.ts test 9 timeout (connection pool exhaustion in Windows vitest forks pool); identical to origin/main; all 20 CI shards PASS green",
-    "integration_tests": "PASS (run individually via --only=integration-tests)",
-    "coverage_floor": "PASS (run individually)",
-    "diff_coverage": "PASS — no changed lines in coverage scope",
-    "build": "PASS (run individually, after removing stale .next/lock)",
-    "audit": "PASS",
-    "osv_scan": "PASS",
-    "gitleaks": "SKIPPED_PRECONDITION (not required)",
-    "architecture": "PASS",
-    "validate_sprint_data": "PASS (after fixing IFC-309 status to In Progress)",
-    "codex_review": "CACHED_PASS"
+  "pre_ship_result": {
+    "verdict": "PASS",
+    "duration": "19m11s",
+    "completed_at": "2026-06-29T17:18:06.980Z",
+    "sha": "9094edb31137e720a171b6978750221702b010ce",
+    "gates": {
+      "required_tokens": "PASS",
+      "commit_msg_lint": "PASS",
+      "install": "PASS",
+      "library_build": "PASS",
+      "format_check": "PASS",
+      "terraform_fmt": "PASS",
+      "lint": "PASS",
+      "typecheck": "PASS",
+      "governance_schema": "PASS",
+      "lint_artifacts": "PASS",
+      "lint_runtime_paths": "PASS",
+      "material_symbols_audit": "PASS",
+      "a11y_routes": "PASS",
+      "unit_tests": "PASS (8m38s, 1478 files, 33113 tests passed)",
+      "integration_tests": "PASS",
+      "coverage": "PASS (10m17s)",
+      "coverage_floor": "PASS",
+      "diff_coverage": "PASS — no changed lines in coverage scope",
+      "build": "PASS (2.6s)",
+      "audit": "PASS",
+      "osv_scan": "PASS",
+      "architecture": "PASS",
+      "validate_sprint_data": "PASS",
+      "codex_review": "PASS (5.4s)"
+    }
   }
 }
