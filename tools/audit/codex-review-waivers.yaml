@@ -892,3 +892,19 @@ waivers:
     author: talyssonoliver
     date: '2026-06-29'
     expires: '2026-12-31'
+  - fingerprint: '784986853c5c92e583990744aa1ab841537c8e77dd19464bffa3d843d589c853'
+    reason: >-
+      Accepted as out-of-scope V1 limitation - tracked for follow-up. PG-200 spec
+      defines three sharingScope values (private/team/tenant) for the UI, and the
+      validator/migration implement all three. The ReportTemplate schema has no teamId
+      column, so 'team' scope currently behaves identically to 'tenant' (visible to
+      all tenant members). This is a known V1 limitation: implementing team-membership
+      filtering requires adding teamId FK, a team-membership lookup, and extending
+      the visibility predicate - a follow-up task. The current behaviour is
+      conservative (over-shares team-scope templates within tenant) rather than
+      under-sharing, and the UI shows 'Team' as a distinct option. Tracked in
+      artifacts/metrics/debt-ledger.yaml (REPORT-TEMPLATES-TEAM-SCOPE-001) and
+      raised as gh issue for the follow-up.
+      Source-anchored - re-blocks if the sharingScope predicate changes.
+    author: talyssonoliver
+    date: '2026-06-29'

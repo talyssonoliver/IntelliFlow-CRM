@@ -99,9 +99,11 @@ export const reportTemplatesRouter = createTRPCRouter({
     });
 
     if (existing) {
+      // Generic message: do not disclose whether the conflicting template
+      // is private and owned by another user (information disclosure).
       throw new TRPCError({
         code: 'CONFLICT',
-        message: `A report template named "${input.name}" already exists.`,
+        message: 'A report template with that name already exists in this workspace.',
       });
     }
 
@@ -126,7 +128,7 @@ export const reportTemplatesRouter = createTRPCRouter({
         // Concurrent duplicate-name insert (TOCTOU race on pre-check).
         throw new TRPCError({
           code: 'CONFLICT',
-          message: `A report template named "${input.name}" already exists.`,
+          message: 'A report template with that name already exists in this workspace.',
         });
       }
       throw err;
@@ -160,9 +162,10 @@ export const reportTemplatesRouter = createTRPCRouter({
         select: { id: true },
       });
       if (collision) {
+        // Generic message: do not disclose private template names from other users.
         throw new TRPCError({
           code: 'CONFLICT',
-          message: `A report template named "${fields.name}" already exists.`,
+          message: 'A report template with that name already exists in this workspace.',
         });
       }
     }

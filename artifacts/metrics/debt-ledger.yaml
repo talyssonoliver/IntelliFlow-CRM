@@ -5295,3 +5295,16 @@ alerts:
     remediation_sprint: 19
     remediation_plan: 'Pick one: (a) make built-in help articles GLOBAL (shared/system tenant or nullable tenantId) so every tenant sees them; (b) seed/copy the canonical help articles when a tenant is provisioned; or (c) migrate the help-center index + search pages to the same tenant-scoped DB API so list and detail stay consistent. Likely (b)+(c) together. Coordinate with the IFC-299 router design.'
     notes: 'Flagged by codex on IFC-302 (fingerprint b9825456...), waived in tools/audit/codex-review-waivers.yaml as a cross-task scope boundary (IFC-302 DoD is the detail page only; a static fallback would violate the Never-Mock rule + the DoD static-removal). Default tenant is seeded so the MVP works today. gh issue #533.'
+
+  REPORT-TEMPLATES-TEAM-SCOPE-001:
+    origin_task: PG-200
+    owner: Backend Architect
+    severity: medium
+    description: 'sharingScope=''team'' on report_templates behaves identically to ''tenant'' (visible to all tenant members) because the ReportTemplate model has no teamId column and no team-membership filter in the list/get visibility predicate. The three-scope UI (private/team/tenant) is implemented in the validator and migration but only private vs non-private is enforced at the query layer.'
+    created_at: 2026-06-29
+    status: open
+    expiry_date: 2026-09-29
+    remediation_sprint: 19
+    remediation_plan: 'Add teamId FK to ReportTemplate model + migration. Extend list/get visibility predicate to OR:[{createdBy:userId},{sharingScope:''tenant''},{AND:[{sharingScope:''team''},{teamId:{in:callerTeamIds}}]}] where callerTeamIds is resolved from TeamMember. Update tests + UI delete button to respect team ownership.'
+    notes: 'Flagged by codex on PG-200 (fingerprint 784986853...), waived in tools/audit/codex-review-waivers.yaml as an out-of-scope V1 limitation (no teamId column, adding it is a schema change requiring a dedicated task). gh issue #561.'
+
