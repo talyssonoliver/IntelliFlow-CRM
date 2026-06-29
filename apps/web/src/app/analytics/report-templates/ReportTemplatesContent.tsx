@@ -138,29 +138,34 @@ export default function ReportTemplatesContent() {
     const columns = parseColumns(form.selectedColumns);
     if (!form.name.trim() || columns.length === 0) return;
 
-    if (editingId) {
-      await updateMutation.mutateAsync({
-        id: editingId,
-        name: form.name.trim(),
-        // Send empty string (not undefined) so clearing the field actually
-        // persists the cleared value. The router applies the field only when
-        // !== undefined, so undefined would silently preserve the old value.
-        description: form.description.trim(),
-        selectedColumns: columns,
-        chartType: form.chartType,
-        defaultPeriod: form.defaultPeriod,
-        sharingScope: form.sharingScope,
-      });
-    } else {
-      await createMutation.mutateAsync({
-        name: form.name.trim(),
-        description: form.description.trim() || undefined,
-        selectedColumns: columns,
-        chartType: form.chartType,
-        defaultPeriod: form.defaultPeriod,
-        sharingScope: form.sharingScope,
-        filterSet: {},
-      });
+    try {
+      if (editingId) {
+        await updateMutation.mutateAsync({
+          id: editingId,
+          name: form.name.trim(),
+          // Send empty string (not undefined) so clearing the field actually
+          // persists the cleared value. The router applies the field only when
+          // !== undefined, so undefined would silently preserve the old value.
+          description: form.description.trim(),
+          selectedColumns: columns,
+          chartType: form.chartType,
+          defaultPeriod: form.defaultPeriod,
+          sharingScope: form.sharingScope,
+        });
+      } else {
+        await createMutation.mutateAsync({
+          name: form.name.trim(),
+          description: form.description.trim() || undefined,
+          selectedColumns: columns,
+          chartType: form.chartType,
+          defaultPeriod: form.defaultPeriod,
+          sharingScope: form.sharingScope,
+          filterSet: {},
+        });
+      }
+    } catch {
+      // onError on the mutation already surfaces a toast; swallow here to
+      // prevent an unhandled promise rejection (e.g. CONFLICT on duplicate name).
     }
   }
 
