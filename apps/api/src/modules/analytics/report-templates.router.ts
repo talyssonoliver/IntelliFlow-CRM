@@ -136,15 +136,11 @@ export const reportTemplatesRouter = createTRPCRouter({
     const userId = ctx.tenant.userId;
     const { id, ...fields } = input;
 
-    // Visibility guard: only the owner can mutate a private template.
-    // Mirrors the list() visibility predicate so a user who can see the
-    // template can also edit it (own + non-private within tenant).
+    // Ownership guard: only the creator can modify a template.
+    // sharingScope controls who can *see* the template (via list()), not who
+    // can mutate it. Shared templates are read-only for non-owners.
     const editable = await ctx.prismaWithTenant.reportTemplate.findFirst({
-      where: {
-        id,
-        tenantId,
-        OR: [{ createdBy: userId }, { sharingScope: { not: 'private' } }],
-      },
+      where: { id, tenantId, createdBy: userId },
       select: { id: true },
     });
     if (!editable) {
