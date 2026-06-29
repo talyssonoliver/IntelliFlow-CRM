@@ -73,6 +73,7 @@ export type {
   DocumentAutomationSetting,
   DocumentRetentionPolicy,
   ReportSettings,
+  ReportTemplate,
   Case,
   CaseTask,
   CaseSettings,

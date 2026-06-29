@@ -169,6 +169,7 @@ model Tenant {
   caseAutomationSettings    CaseAutomationSetting[]   @ignore
   appointmentSettings       AppointmentSettings[]     @ignore
   reportSettings            ReportSettings[]          @ignore
+  reportTemplates           ReportTemplate[]          @ignore
   toolEnablements           TenantToolEnablement[]    // H6: per-tenant tool on/off
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
   memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
@@ -1999,6 +2000,35 @@ model ReportSettings {
   updatedAt         DateTime @updatedAt
 
   @@map("report_settings")
+}
+
+/// PG-200 — per-tenant saveable report layouts (filter set + columns + chart +
+/// period + sharing scope). Private templates are only visible to the creator;
+/// team/tenant-scoped templates are shared within the tenant.
+model ReportTemplate {
+  id              String   @id @default(cuid())
+  tenantId        String
+  createdBy       String
+  name            String
+  description     String?
+  filterSet       Json     @default("{}")
+  selectedColumns Json
+  chartType       String   @default("table")
+  defaultPeriod   String   @default("30d")
+  sharingScope    String   @default("private")
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Uniqueness enforced by partial indexes in migration 20260629000002:
+  //   private  -> UNIQUE (tenantId, createdBy, name) WHERE sharingScope='private'
+  //   shared   -> UNIQUE (tenantId, name) WHERE sharingScope!='private'
+  // No @@unique here — Prisma does not support partial unique indexes.
+  @@index([tenantId])
+  @@index([createdBy])
+  @@map("report_templates")
 }
 
 model CaseTask {
