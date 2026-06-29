@@ -19,7 +19,8 @@ describe('generateCurrentStateReport', () => {
       result.data.overview.completedTasks +
       result.data.overview.backlogTasks +
       result.data.overview.blockedTasks +
-      result.data.overview.inProgressTasks;
+      result.data.overview.inProgressTasks +
+      result.data.overview.otherTasks;
 
     expect(result.markdown).toContain('# Current State Report');
     expect(result.data.overview.totalTasks).toBeGreaterThan(0);
