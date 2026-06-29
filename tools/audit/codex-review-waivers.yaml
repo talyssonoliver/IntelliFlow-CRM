@@ -832,6 +832,22 @@ waivers:
     author: talyssonoliver
     date: '2026-06-28'
     expires: '2026-09-28'
+  - fingerprint: '1a237679b5626da6decef815ed6bb04190efb7e13249a7e568564552aa5104d9'
+    reason: >-
+      Accepted architectural decision (PG-188 spec §Architecture Decision 1):
+      storing taxId in Stripe customer metadata rather than Stripe Tax IDs API
+      is intentional. The taxId here is a display-only text label for invoices
+      (EU VAT number, company registration, etc.) shown to users in the billing
+      UI — it is NOT used for Stripe's automated tax computation. Using
+      customer.metadata avoids the Stripe Tax IDs API (which requires type
+      enumeration like EU_VAT, GB_VAT, etc. and is subject to geolocation).
+      This matches the existing adapter capability (UpdateCustomerParams already
+      supports metadata) and requires no external API changes or new adapter
+      methods. A follow-up task will be created if full Stripe Tax ID integration
+      is needed for tax-compliant invoicing (IFC scope, not PG-188).
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-29'
   - fingerprint: '199810b1b1a0f6e992b5e72ecb5c84af298190efdb7464383f564ada7c3f1e74'
     reason: >-
       Verified false positive. `scoring-${tier}` keys (scoring-free, scoring-standard,

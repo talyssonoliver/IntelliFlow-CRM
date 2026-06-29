@@ -2341,4 +2341,246 @@ describe('billingRouter', () => {
       expect(result.success).toBe(true);
     });
   });
+
+  // ============================================
+  // getBillingInformation Tests (PG-188)
+  // ============================================
+
+  describe('getBillingInformation', () => {
+    it('returns null when user has no stripeCustomerId', async () => {
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: undefined,
+          emailVerified: true,
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+      const result = await caller.getBillingInformation();
+      expect(result).toBeNull();
+    });
+
+    it('returns taxId and invoiceContact from Stripe customer metadata', async () => {
+      mockStripeAdapterMethods.getCustomer.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          ...mockCustomer,
+          metadata: { taxId: 'GB123456789', invoiceContact: 'ap@acme.com' },
+        },
+      });
+      mockStripeAdapterMethods.listPaymentMethods.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [],
+      });
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+          emailVerified: true,
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+      const result = await caller.getBillingInformation();
+      expect(result).not.toBeNull();
+      expect(result?.taxId).toBe('GB123456789');
+      expect(result?.invoiceContact).toBe('ap@acme.com');
+    });
+
+    it('returns null taxId and invoiceContact when metadata is absent', async () => {
+      mockStripeAdapterMethods.getCustomer.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { ...mockCustomer, metadata: undefined },
+      });
+      mockStripeAdapterMethods.listPaymentMethods.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [],
+      });
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+          emailVerified: true,
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+      const result = await caller.getBillingInformation();
+      expect(result?.taxId).toBeNull();
+      expect(result?.invoiceContact).toBeNull();
+    });
+
+    it('returns null when getCustomer fails', async () => {
+      mockStripeAdapterMethods.getCustomer.mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: new Error('Stripe error'),
+      });
+      mockStripeAdapterMethods.listPaymentMethods.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [],
+      });
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+          emailVerified: true,
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+      const result = await caller.getBillingInformation();
+      expect(result).toBeNull();
+    });
+  });
+
+  // ============================================
+  // updateBillingInformation Tests (PG-188)
+  // ============================================
+
+  describe('updateBillingInformation', () => {
+    it('throws BAD_REQUEST when user has no stripeCustomerId', async () => {
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: undefined,
+          emailVerified: true,
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+      await expect(caller.updateBillingInformation({ email: 'billing@acme.com' })).rejects.toThrow(
+        /no billing account/i
+      );
+    });
+
+    it('calls updateCustomer with taxId and invoiceContact in metadata', async () => {
+      mockStripeAdapterMethods.updateCustomer.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockCustomer,
+      });
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+          emailVerified: true,
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+      const result = await caller.updateBillingInformation({
+        email: 'billing@acme.com',
+        organization: 'Acme Corp',
+        taxId: 'GB123456789',
+        invoiceContact: 'ap@acme.com',
+      });
+      expect(result.success).toBe(true);
+      expect(mockStripeAdapterMethods.updateCustomer).toHaveBeenCalledWith(
+        'cus_123',
+        expect.objectContaining({
+          email: 'billing@acme.com',
+          name: 'Acme Corp',
+          metadata: { taxId: 'GB123456789', invoiceContact: 'ap@acme.com' },
+        })
+      );
+    });
+
+    it('clears taxId and invoiceContact when passed null', async () => {
+      mockStripeAdapterMethods.updateCustomer.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockCustomer,
+      });
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+          emailVerified: true,
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+      await caller.updateBillingInformation({
+        email: 'billing@acme.com',
+        taxId: null,
+        invoiceContact: null,
+      });
+      expect(mockStripeAdapterMethods.updateCustomer).toHaveBeenCalledWith(
+        'cus_123',
+        expect.objectContaining({
+          metadata: { taxId: '', invoiceContact: '' },
+        })
+      );
+    });
+
+    it('throws INTERNAL_SERVER_ERROR when updateCustomer fails', async () => {
+      mockStripeAdapterMethods.updateCustomer.mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: new Error('Stripe error'),
+      });
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+          emailVerified: true,
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+      await expect(
+        caller.updateBillingInformation({
+          email: 'billing@acme.com',
+          taxId: 'GB123456789',
+        })
+      ).rejects.toThrow(/failed to update billing information/i);
+    });
+  });
 });

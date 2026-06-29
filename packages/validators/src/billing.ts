@@ -315,6 +315,8 @@ export const billingInformationSchema = z.object({
   organization: z.string().nullable(),
   email: z.email(),
   address: billingAddressSchema.nullable(),
+  taxId: z.string().nullable().optional(),
+  invoiceContact: z.string().nullable().optional(),
 });
 export type BillingInformation = z.infer<typeof billingInformationSchema>;
 
@@ -325,6 +327,8 @@ export const updateBillingInformationInputSchema = z.object({
   organization: z.string().nullable().optional(),
   email: z.email().optional(),
   address: billingAddressSchema.optional(),
+  taxId: z.string().nullable().optional(),
+  invoiceContact: z.string().email().nullable().optional(),
 });
 export type UpdateBillingInformationInput = z.infer<typeof updateBillingInformationInputSchema>;
 

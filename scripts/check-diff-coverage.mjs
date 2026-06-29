@@ -171,6 +171,13 @@ const SONAR_COVERAGE_EXCLUDE = [
   // its only change is removing two re-exports + a comment; barrels have no lcov, so
   // the changed lines false-negative at 0%. Mirror sonar.coverage.exclusions.
   /^packages\/adapters\/src\/external\/index\.ts$/,
+  // Next.js App Router loading.tsx files are pure skeleton shells (animated placeholder
+  // divs with no logic) used by Suspense. vitest.config.ts excludes these from coverage
+  // instrumentation (same nature as page.tsx route shells). Mirror sonar.coverage.exclusions.
+  /^apps\/web\/src\/app\/.*\/loading\.tsx$/,
+  // apps/web/src/test/** are test fixtures and utilities (not production code).
+  // vitest.config.ts already excludes 'apps/web/src/test/**' from coverage; mirror here.
+  /^apps\/web\/src\/test\//,
 ];
 const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
 const isCoverableFile = (f) =>

@@ -74,6 +74,8 @@ interface MockBillingInformation {
     postalCode: string;
     country: string;
   } | null;
+  taxId?: string | null;
+  invoiceContact?: string | null;
 }
 
 interface MockUsageLimitMetric {
@@ -186,6 +188,8 @@ export function createMockBillingInformation(
       postalCode: 'EC1A 1BB',
       country: 'GB',
     },
+    taxId: 'GB123456789',
+    invoiceContact: 'ap@acme.com',
     ...overrides,
   };
 }
