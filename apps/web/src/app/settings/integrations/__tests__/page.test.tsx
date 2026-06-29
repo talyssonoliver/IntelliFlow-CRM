@@ -26,13 +26,8 @@ vi.mock('@intelliflow/ui', async (importActual) => {
   };
 });
 
-// Mock auth
+// Mock auth — integrations page uses useRequireAuth (query gated on isAuthenticated)
 vi.mock('@/lib/auth/AuthContext', () => ({
-  useAuth: () => ({
-    isLoading: false,
-    isAuthenticated: true,
-    user: { id: 'user-1' },
-  }),
   useRequireAuth: () => ({
     isLoading: false,
     isAuthenticated: true,

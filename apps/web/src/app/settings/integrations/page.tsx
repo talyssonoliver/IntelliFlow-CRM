@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback } from 'react';
 import { Card, Badge, Button, Skeleton, toast } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared/page-header';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { revalidateModuleAccess, revalidateAllDashboardCaches } from '@/app/settings/actions';
 import { trpc } from '@/lib/trpc';
 
@@ -38,8 +38,10 @@ function getConnectorIcon(type: string): string {
 }
 
 export default function IntegrationsPage() {
-  const { user } = useAuth();
-  const healthQuery = trpc.integrations.getAllConnectorsHealth.useQuery();
+  const { user, isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  const healthQuery = trpc.integrations.getAllConnectorsHealth.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
   const connectors = healthQuery.data?.connectors ?? [];
   const summary = healthQuery.data?.summary;
 
@@ -223,7 +225,7 @@ export default function IntegrationsPage() {
               </div>
               <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                 <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                  {summary ? summary.healthy + summary.degraded : connected.length}
+                  {connected.length}
                 </p>
                 <p className="text-xs text-muted-foreground">Connected</p>
               </div>
