@@ -150,9 +150,10 @@ describe('IntegrationsPage', () => {
     expect(screen.getAllByText('2').length).toBeGreaterThan(0);
   });
 
-  it('shows unhealthy connectors in Connected and unknown in Available', () => {
-    // unhealthy = configured but health check failed → Connected section with error
-    // unknown   = not configured at all (no credentials) → Available section
+  it('shows unhealthy and unknown connectors in the Available section', () => {
+    // unhealthy = health check failed (not connected per testConnection contract)
+    // unknown   = not configured at all (no credentials)
+    // Both go to Available — only healthy|degraded = Connected
     mockHealthData = {
       connectors: [
         makeConnector({
@@ -167,12 +168,12 @@ describe('IntegrationsPage', () => {
       checkedAt: NOW,
     };
     render(<IntegrationsPage />);
-    // Salesforce (unhealthy = configured) appears in Connected section
+    // Both appear somewhere on the page
     expect(screen.getByText('Salesforce')).toBeInTheDocument();
-    expect(screen.getByText(/disconnected/i)).toBeInTheDocument();
-    // HubSpot (unknown = not configured) appears in Available section
     expect(screen.getByText('HubSpot')).toBeInTheDocument();
-    // Unknown connectors should show "Not configured"
+    // Salesforce status label = Disconnected (unhealthy)
+    expect(screen.getByText(/disconnected/i)).toBeInTheDocument();
+    // HubSpot status label = Not configured (unknown)
     expect(screen.getByText('Not configured')).toBeInTheDocument();
   });
 
