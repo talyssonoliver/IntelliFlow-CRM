@@ -335,8 +335,8 @@ describe('Report Templates Router (PG-200)', () => {
       expect(result).toEqual({ deleted: true });
     });
 
-    it('throws NOT_FOUND when no rows deleted (private template from another user)', async () => {
-      // deleteMany scopes by visibility predicate → count 0 for private template from another user
+    it('throws NOT_FOUND when caller is not the creator', async () => {
+      // Creator-only delete: count 0 when the caller didn't create the template
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
           reportTemplate: {
@@ -351,7 +351,7 @@ describe('Report Templates Router (PG-200)', () => {
       });
     });
 
-    it('scopes deleteMany to caller tenantId and visibility predicate', async () => {
+    it('scopes deleteMany to caller tenantId and createdBy (creator-only)', async () => {
       let capturedWhere: any;
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
@@ -370,7 +370,7 @@ describe('Report Templates Router (PG-200)', () => {
       expect(capturedWhere).toMatchObject({
         id: mockTemplate.id,
         tenantId,
-        OR: expect.arrayContaining([{ createdBy: userId }, { sharingScope: { not: 'private' } }]),
+        createdBy: userId,
       });
     });
   });

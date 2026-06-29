@@ -200,21 +200,20 @@ export const reportTemplatesRouter = createTRPCRouter({
   /**
    * Delete a report template (tenant-scoped $transaction).
    * Returns { deleted: true } on success; throws NOT_FOUND when no row deleted.
+   *
+   * Ownership model: only the creator can delete their template — consistent
+   * with update(). sharingScope governs visibility (list()), not mutability.
    */
   delete: tenantProcedure.input(deleteReportTemplateSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
     const userId = ctx.tenant.userId;
 
-    // Scope delete by ownership: only the creator can delete their private
-    // template; non-private templates can be deleted by any tenant member
-    // who can see them (mirrors the list() visibility predicate).
+    // Creator-only delete: mirrors the update ownership guard.
+    // A user who can *see* a shared template (via list()) cannot delete it
+    // if they are not the creator.
     const result = await ctx.prisma.$transaction(async (tx) => {
       return tx.reportTemplate.deleteMany({
-        where: {
-          id: input.id,
-          tenantId,
-          OR: [{ createdBy: userId }, { sharingScope: { not: 'private' } }],
-        },
+        where: { id: input.id, tenantId, createdBy: userId },
       });
     });
 
