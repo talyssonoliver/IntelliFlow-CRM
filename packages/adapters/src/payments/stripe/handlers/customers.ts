@@ -68,7 +68,8 @@ export async function updateCustomer(
   try {
     const body = new URLSearchParams();
     if (params.email) body.append('email', params.email);
-    if (params.name) body.append('name', params.name);
+    // Use !== undefined so empty string clears the customer name in Stripe
+    if (params.name !== undefined) body.append('name', params.name);
     if (params.defaultPaymentMethodId) {
       body.append('invoice_settings[default_payment_method]', params.defaultPaymentMethodId);
     }

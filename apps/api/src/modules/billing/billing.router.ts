@@ -1260,7 +1260,8 @@ export const billingRouter = createTRPCRouter({
         const updateParams: { name?: string; email?: string; metadata?: Record<string, string> } =
           {};
         if (input.organization !== undefined) {
-          updateParams.name = input.organization ?? undefined;
+          // Pass empty string to Stripe to clear the customer name (null → clear)
+          updateParams.name = input.organization ?? '';
         }
         if (input.email !== undefined) {
           updateParams.email = input.email;

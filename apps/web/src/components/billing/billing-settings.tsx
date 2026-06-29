@@ -40,21 +40,50 @@ export function BillingSettings() {
   const [taxId, setTaxId] = React.useState('');
   const [invoiceContact, setInvoiceContact] = React.useState('');
   const [initialSnapshot, setInitialSnapshot] = React.useState<string | null>(null);
+  // Refs let the effect read latest values without appearing in deps (avoids stale closure
+  // while keeping exhaustive-deps rule satisfied — state reads inside effect use refs).
+  const initializedRef = React.useRef(false);
+  const initialSnapshotRef = React.useRef<string | null>(null);
+  const formValuesRef = React.useRef({
+    organization: '',
+    email: '',
+    taxId: '',
+    invoiceContact: '',
+  });
 
-  // Sync form state when data loads — reset snapshot on fresh load
+  // Keep the ref in sync with state so the effect can read it without deps
+  formValuesRef.current = { organization, email, taxId, invoiceContact };
+
   React.useEffect(() => {
     if (!billingInfo) return;
     const org = normalize(billingInfo.organization);
     const eml = normalize(billingInfo.email);
     const tax = normalize(billingInfo.taxId);
     const inv = normalize(billingInfo.invoiceContact);
-    setOrganization(org);
-    setEmail(eml);
-    setTaxId(tax);
-    setInvoiceContact(inv);
-    setInitialSnapshot(
-      JSON.stringify({ organization: org, email: eml, taxId: tax, invoiceContact: inv })
-    );
+    const snap = JSON.stringify({ organization: org, email: eml, taxId: tax, invoiceContact: inv });
+
+    if (!initializedRef.current) {
+      // First load — initialize form and baseline snapshot
+      setOrganization(org);
+      setEmail(eml);
+      setTaxId(tax);
+      setInvoiceContact(inv);
+      setInitialSnapshot(snap);
+      initialSnapshotRef.current = snap;
+      initializedRef.current = true;
+    } else if (initialSnapshotRef.current !== null) {
+      // Subsequent refetch — only update if form is not dirty (no unsaved edits)
+      const currentSnap = JSON.stringify(formValuesRef.current);
+      if (currentSnap === initialSnapshotRef.current) {
+        setOrganization(org);
+        setEmail(eml);
+        setTaxId(tax);
+        setInvoiceContact(inv);
+        setInitialSnapshot(snap);
+        initialSnapshotRef.current = snap;
+      }
+      // If dirty (currentSnap !== initialSnapshot), keep user edits — no override
+    }
   }, [billingInfo]);
 
   const currentSnapshot = React.useMemo(
@@ -65,6 +94,10 @@ export function BillingSettings() {
 
   const updateMutation = trpc.billing.updateBillingInformation.useMutation({
     onSuccess: () => {
+      // Reset the baseline snapshot so isDirty becomes false after save
+      const savedSnap = JSON.stringify(formValuesRef.current);
+      setInitialSnapshot(savedSnap);
+      initialSnapshotRef.current = savedSnap;
       void utils.billing.getBillingInformation.invalidate();
       toast({ title: 'Saved', description: 'Billing information updated successfully.' });
     },
@@ -80,9 +113,18 @@ export function BillingSettings() {
   const isPending = updateMutation.isPending;
 
   function handleSave() {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      toast({
+        title: 'Billing email is required',
+        description: 'Please enter a valid billing email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
     updateMutation.mutate({
       organization: organization || null,
-      email: email || undefined,
+      email: trimmedEmail,
       taxId: taxId.trim() || null,
       invoiceContact: invoiceContact.trim() || null,
     });
