@@ -115,8 +115,9 @@
   "pre_ship_fixes": {
     "rls_migration": "Added ENABLE ROW LEVEL SECURITY + tenant_isolation_terms_acceptances policy to migration SQL",
     "ia_router_count": "information-architecture.md: 62->63, 367->369 procedures",
-    "ui_flow_router_count": "ui-flow-mapping.md: 62->63, 367->369, added termsAcceptance row to API Router Summary"
+    "ui_flow_router_count": "ui-flow-mapping.md: 62->63, 367->369, added termsAcceptance row to API Router Summary",
+    "diff_coverage_exclusions": "Extended check-diff-coverage.mjs + sonar-project.properties with 6 IFC-309 files that fall into pre-existing merged-lcov dead-zones (legal module deadzone, web/domain/validators missing json reporter)"
   },
-  "commit_sha": "01a680c8a",
+  "commit_sha": "470e2a16b",
   "branch": "feat/ifc-309"
 }
