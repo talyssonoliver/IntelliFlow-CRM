@@ -118,6 +118,6 @@
     "ui_flow_router_count": "ui-flow-mapping.md: 62->63, 367->369, added termsAcceptance row to API Router Summary",
     "diff_coverage_exclusions": "Extended check-diff-coverage.mjs + sonar-project.properties with 6 IFC-309 files that fall into pre-existing merged-lcov dead-zones (legal module deadzone, web/domain/validators missing json reporter)"
   },
-  "commit_sha": "470e2a16b",
+  "commit_sha": "34e755875",
   "branch": "feat/ifc-309"
 }
