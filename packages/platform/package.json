@@ -59,7 +59,7 @@
   },
   "dependencies": {
     "@bull-board/api": "^7.2.1",
-    "@bull-board/ui": "^7.2.1",
+    "@bull-board/ui": "^8.0.1",
     "@intelliflow/domain": "workspace:*",
     "@intelliflow/validators": "workspace:*",
     "bullmq": "^5.79.1",
