@@ -1,0 +1,26 @@
+{
+  "task_id": "IFC-234",
+  "captured_at": "2026-06-29T00:40:00Z",
+  "description": "Pre-implementation coverage baseline for IFC-234 (Settings Pages Wiring). Two files are modified: apps/web/src/app/settings/team/page.tsx and apps/web/src/app/settings/integrations/page.tsx. Two new test files are created: apps/web/src/app/settings/team/__tests__/page.test.tsx and apps/web/src/app/settings/integrations/__tests__/page.test.tsx. The baseline captures coverage state before wiring. No test files exist for these pages yet (hardcoded arrays, no tRPC hooks).",
+  "measurement_scope": [
+    "apps/web/src/app/settings/team/page.tsx (MODIFIED — hardcoded array -> trpc.user.list)",
+    "apps/web/src/app/settings/integrations/page.tsx (MODIFIED — hardcoded array -> trpc.integrations.getAllConnectorsHealth)",
+    "apps/web/src/app/settings/team/__tests__/page.test.tsx (NEW — no prior coverage)",
+    "apps/web/src/app/settings/integrations/__tests__/page.test.tsx (NEW — no prior coverage)"
+  ],
+  "command": "Baseline: no prior test coverage exists for settings/team/page.tsx or settings/integrations/page.tsx. After capture: pnpm --filter @intelliflow/web test --run --coverage targeting src/app/settings/team/page.tsx and src/app/settings/integrations/page.tsx.",
+  "baseline_files": {
+    "apps/web/src/app/settings/team/page.tsx": {
+      "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+      "note": "No tests exist pre-implementation. File has hardcoded data; no test file in src/**."
+    },
+    "apps/web/src/app/settings/integrations/page.tsx": {
+      "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+      "note": "No tests exist pre-implementation. File has hardcoded data; no test file in src/**."
+    }
+  },
+  "baseline_totals": {
+    "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "note": "Zero coverage for in-scope files pre-implementation. New test files will drive coverage to >=80%."
+  }
+}
