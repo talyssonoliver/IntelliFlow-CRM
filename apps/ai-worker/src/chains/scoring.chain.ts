@@ -1,4 +1,6 @@
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
+import type { LLMResult } from '@langchain/core/outputs';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
 import { aiConfig, type AIProvider } from '../config/ai.config';
@@ -8,7 +10,7 @@ import { leadScoreSchema } from '@intelliflow/validators';
 import { requiresHumanReview } from '@intelliflow/domain';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
-import { resolveRateLimit } from '../lib/tenant-ai-config.js';
+import { resolveRateLimit, resolveEffectiveTier } from '../lib/tenant-ai-config.js';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import pino from 'pino';
 
@@ -39,12 +41,50 @@ export type LeadInput = z.infer<typeof leadInputSchema>;
 export type ScoringResult = z.infer<typeof leadScoreSchema>;
 
 /**
+ * Captures LLM token usage from LangChain callbacks so withMonitoring() can
+ * compute a real tokenCost (IFC-215). Usage metadata lives in the callback
+ * because withStructuredOutput().invoke() returns only the parsed output.
+ */
+export class TokenUsageCallbackHandler extends BaseCallbackHandler {
+  name = 'TokenUsageCallbackHandler';
+  private captured: TokenUsage | null = null;
+  private readonly modelName: string;
+
+  constructor(modelName: string) {
+    super();
+    this.modelName = modelName;
+  }
+
+  handleLLMEnd(output: LLMResult): void {
+    // Accept both tokenUsage (standard path) and estimatedTokenUsage (Responses API / streaming
+    // fallback path used by @langchain/openai on streaming responses).
+    type TokenCounts = { promptTokens?: number; completionTokens?: number };
+    const usage =
+      (output.llmOutput?.tokenUsage as TokenCounts | undefined) ??
+      (output.llmOutput?.estimatedTokenUsage as TokenCounts | undefined);
+    if (usage) {
+      this.captured = {
+        inputTokens: usage.promptTokens ?? 0,
+        outputTokens: usage.completionTokens ?? 0,
+        model: this.modelName,
+      };
+    }
+  }
+
+  getUsage(): TokenUsage | null {
+    return this.captured;
+  }
+}
+
+/**
  * Lead Scoring Chain
  * Uses LangChain to score leads based on multiple factors with structured output
  */
 export class LeadScoringChain {
   private readonly model: BaseChatModel;
-  private structuredModel: { invoke(input: unknown): Promise<unknown> };
+  private structuredModel: {
+    invoke(input: unknown, options?: { callbacks?: unknown[] }): Promise<unknown>;
+  };
   private readonly prompt: PromptTemplate;
   private readonly tenantId?: string;
   /** Optional provider override (job-level fallback, #324). */
@@ -135,8 +175,12 @@ Respond with a structured JSON object containing the score, confidence, factors,
       logger.info({ leadEmail: lead.email }, 'Starting lead scoring');
 
       // Lazy tenant-tier resolution: if tenantId is set, re-resolve model at invoke time.
+      // Capture the effective tier so monitoring uses the correct pricing key (IFC-215 AC-004).
+      let effectiveTierLabel = 'free';
       if (this.tenantId) {
-        const tenantModel = await createLLMForTenant('scoring', 'free', {
+        const resolved = await resolveEffectiveTier(this.tenantId, 'scoring', 'free');
+        effectiveTierLabel = resolved.tier;
+        const tenantModel = await createLLMForTenant('scoring', resolved.tier, {
           tenantId: this.tenantId,
           temperature: aiConfig.openai.temperature,
           maxTokens: aiConfig.openai.maxTokens,
@@ -162,35 +206,52 @@ Respond with a structured JSON object containing the score, confidence, factors,
 
       // Wrap LLM call + parsing with monitoring (IFC-117, IFC-215)
       const monitoredConfig = chainMonitor.getConfig();
-      const capturedUsage: TokenUsage | null = null;
-      const modelName = `${aiConfig.provider}:scoring-free:v1`;
+      // Use the logical pricing key (tier-aware) so calculateCost() matches the pricing table
+      // (IFC-215 AC-004). The full versioned string is stored in modelVersion for audit tracing.
+      const costModelKey = `scoring-${effectiveTierLabel}`;
+      const modelVersion = `${aiConfig.provider}:${costModelKey}:v1`;
+      const usageHandler = new TokenUsageCallbackHandler(costModelKey);
       const monitoringContext: MonitoringContext = {
-        modelName,
-        getUsage: () => capturedUsage,
+        modelName: costModelKey,
+        getUsage: () => usageHandler.getUsage(),
+        inputContext: leadInfo, // sanitized lead text — no raw PII beyond what is already logged
         extractText: (r: unknown): string | null => {
-          if (
-            r &&
-            typeof r === 'object' &&
-            'reasoning' in r &&
-            typeof (r as { reasoning: unknown }).reasoning === 'string'
-          ) {
-            return (r as { reasoning: string }).reasoning;
+          // leadScoreSchema nests reasoning inside factors[].reasoning (not top-level)
+          if (r && typeof r === 'object' && 'factors' in r) {
+            const factors = (r as { factors?: unknown[] }).factors;
+            if (Array.isArray(factors)) {
+              const lines = factors
+                .map((f) => {
+                  if (
+                    f &&
+                    typeof f === 'object' &&
+                    'reasoning' in f &&
+                    typeof (f as { reasoning: unknown }).reasoning === 'string'
+                  ) {
+                    const factor = f as { name?: unknown; reasoning: string };
+                    const label = typeof factor.name === 'string' ? `${factor.name}: ` : '';
+                    return `${label}${factor.reasoning}`;
+                  }
+                  return null;
+                })
+                .filter((line): line is string => line !== null);
+              return lines.length > 0 ? lines.join('\n') : null;
+            }
           }
           return null;
         },
       };
       const monitored: MonitoredResult<ScoringResult> = await withMonitoring(
         async () => {
-          // Call the LLM with structured output — returns typed object directly
-          const result = (await this.structuredModel.invoke(formattedPrompt)) as unknown as Omit<
-            ScoringResult,
-            'modelVersion'
-          >;
+          // Call the LLM with structured output; usageHandler captures token usage via callback
+          const result = (await this.structuredModel.invoke(formattedPrompt, {
+            callbacks: [usageHandler],
+          })) as unknown as Omit<ScoringResult, 'modelVersion'>;
 
-          // Add model version
+          // Add model version (versioned string for audit; costModelKey used for pricing above)
           return {
             ...result,
-            modelVersion: modelName,
+            modelVersion,
           };
         },
         monitoredConfig,

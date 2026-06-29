@@ -117,12 +117,12 @@ describe('withMonitoring — metrics fidelity (IFC-215)', () => {
   });
 
   // T-02: hallucinationFlags populated when checker detects an issue
-  it('T-02: hallucinationFlags non-empty when extractText returns content and checker flags issue', async () => {
+  it('T-02: hallucinationFlags non-empty when extractText + inputContext provided and checker flags issue', async () => {
     const fakeResult: HallucinationResult = {
       id: 'test-op',
       timestamp: new Date(),
       model: 'scoring-free',
-      inputContext: '',
+      inputContext: 'Lead from acme.com, enterprise sector',
       output: 'The company XYZ-9999-FAKE was founded in 1234 and has 999 trillion employees.',
       hallucinated: true,
       confidence: 0.8,
@@ -136,6 +136,7 @@ describe('withMonitoring — metrics fidelity (IFC-215)', () => {
 
     const context: MonitoringContext = {
       modelName: 'scoring-free',
+      inputContext: 'Lead from acme.com, enterprise sector', // required: prevents false-positive context_drift
       extractText: () =>
         'The company XYZ-9999-FAKE was founded in 1234 and has 999 trillion employees.',
     };
@@ -177,7 +178,8 @@ describe('withMonitoring — metrics fidelity (IFC-215)', () => {
 
     const context: MonitoringContext = {
       modelName: 'scoring-free',
-      extractText: () => 'short',
+      inputContext: 'Lead enterprise context long enough to be non-empty',
+      extractText: () => 'short', // <10 chars → skipped
     };
 
     await withMonitoring(async () => ({ score: 50 }), config, context);
@@ -191,7 +193,8 @@ describe('withMonitoring — metrics fidelity (IFC-215)', () => {
 
     const context: MonitoringContext = {
       modelName: 'scoring-free',
-      extractText: () => null,
+      inputContext: 'Lead enterprise context long enough to be non-empty',
+      extractText: () => null, // null → skipped
     };
 
     await withMonitoring(async () => ({ score: 50 }), config, context);
@@ -224,6 +227,7 @@ describe('withMonitoring — metrics fidelity (IFC-215)', () => {
 
     const context: MonitoringContext = {
       modelName: 'scoring-free',
+      inputContext: 'Lead enterprise context non-empty to isolate the fn-throws path',
       extractText: () => 'this would trigger the checker if reached',
     };
 
@@ -247,6 +251,7 @@ describe('withMonitoring — metrics fidelity (IFC-215)', () => {
 
     const context: MonitoringContext = {
       modelName: 'scoring-free',
+      inputContext: 'enterprise lead context: company acme, sector tech',
       extractText: () => sensitiveText,
     };
 
@@ -265,6 +270,21 @@ describe('withMonitoring — metrics fidelity (IFC-215)', () => {
     expect(loggedAsString).not.toContain('SENSITIVE-PII-DATA');
   });
 
+  // T-09: no inputContext → checkOutput NOT called (prevents false context_drift flags)
+  it('T-09: no inputContext → hallucinationChecker.checkOutput NOT called even with extractText', async () => {
+    const checkSpy = vi.spyOn(config.hallucinationChecker, 'checkOutput');
+
+    const context: MonitoringContext = {
+      modelName: 'scoring-free',
+      // intentionally no inputContext
+      extractText: () => 'Long enough output text that would otherwise trigger checking.',
+    };
+
+    await withMonitoring(async () => ({ score: 70 }), config, context);
+
+    expect(checkSpy).not.toHaveBeenCalled();
+  });
+
   // Bonus: hallucinationChecker error → falls back gracefully, does not rethrow
   it('hallucinationChecker.checkOutput throwing → falls back to [] and does not rethrow', async () => {
     vi.spyOn(config.hallucinationChecker, 'checkOutput').mockRejectedValue(
@@ -273,6 +293,7 @@ describe('withMonitoring — metrics fidelity (IFC-215)', () => {
 
     const context: MonitoringContext = {
       modelName: 'scoring-free',
+      inputContext: 'enterprise lead context: company acme, sector tech — non-empty',
       extractText: () => 'Long enough output text to trigger the hallucination check path.',
     };
 

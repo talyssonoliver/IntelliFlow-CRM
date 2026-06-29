@@ -54,6 +54,11 @@ export interface MonitoringContext {
   getUsage?: () => TokenUsage | null;
   /** Extracts a text string from the result for hallucination checking; return null to skip */
   extractText?: (result: unknown) => string | null;
+  /**
+   * Sanitized input context for hallucination checking (e.g. the lead info sent to the LLM).
+   * Omit when not available — skips context-dependent hallucination checks.
+   */
+  inputContext?: string;
 }
 
 /**
@@ -119,8 +124,9 @@ export class ChainMonitor {
 }
 
 /**
- * Compute token cost and record usage on the ROI tracker.
- * Returns 0 when usage is unavailable (AC-001, AC-004).
+ * Compute token cost and record it on the ROI tracker using the same computed value
+ * so metrics.tokenCost and the stored cost never diverge (AC-001, AC-004).
+ * Returns 0 when usage is unavailable.
  */
 function computeTokenCost(
   operationId: string,
@@ -129,15 +135,19 @@ function computeTokenCost(
 ): number {
   const usage = context?.getUsage?.() ?? null;
   if (usage === null) return 0;
-  const modelName = context?.modelName ?? 'unknown';
+  // Prefer the caller-supplied modelName; fall back to usage.model so the pricing key is
+  // never silently lost when context.modelName is omitted (AC-004).
+  const modelName = context?.modelName ?? usage.model ?? 'unknown';
   const cost = calculateCost(modelName, usage.inputTokens, usage.outputTokens);
   if (cost > 0) {
-    config.roiTracker.recordTokenUsage({
+    // Pass the pre-computed cost so ROI tracker and metrics.tokenCost use the same value.
+    config.roiTracker.recordCost({
       id: operationId,
       model: modelName,
       operationType: 'chain_execution',
       inputTokens: usage.inputTokens,
       outputTokens: usage.outputTokens,
+      cost,
     });
   }
   return cost;
@@ -147,6 +157,11 @@ function computeTokenCost(
  * Run the hallucination checker and return type labels.
  * Falls back to [] on any error so chain errors are never suppressed (AC-002, AC-003, AC-007, AC-008).
  * Raw output text is NEVER logged (AC-008 / PII safety).
+ *
+ * NOTE: We require a non-empty inputContext before calling checkOutput. Passing an empty
+ * context string causes HallucinationChecker to flag ALL extracted claims as
+ * unsupported_claim and ALL topic overlaps as context_drift — producing false positives.
+ * When context is unavailable, we return [] rather than emit misleading flags (AC-003).
  */
 async function computeHallucinationFlags<T>(
   operationId: string,
@@ -155,13 +170,15 @@ async function computeHallucinationFlags<T>(
   context: MonitoringContext | undefined
 ): Promise<string[]> {
   if (!context?.extractText) return [];
+  const inputContext = context.inputContext;
+  if (!inputContext || inputContext.trim().length === 0) return []; // skip context-dependent checks
   try {
     const outputText = context.extractText(result);
     if (!outputText || outputText.length < 10) return [];
     const hallucinationResult = await config.hallucinationChecker.checkOutput({
       id: operationId,
       model: context.modelName ?? 'unknown',
-      inputContext: '',
+      inputContext, // non-empty: caller supplies sanitized context (AC-008 — raw PII never logged)
       output: outputText, // NEVER logged — only hallucinationTypes are emitted below
     });
     return hallucinationResult.hallucinationTypes as string[];
