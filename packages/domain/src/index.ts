@@ -73,6 +73,9 @@ export * from './legal/appointments/Recurrence';
 export * from './legal/appointments/Buffer';
 export * from './legal/appointments/ConflictDetector';
 
+// Legal Domain - Terms Acceptance (IFC-309)
+export * from './legal/TermsAcceptance';
+
 // Legal Domain - Deadlines
 export * from './legal/deadlines/DeadlineId';
 export * from './legal/deadlines/DeadlineRule';

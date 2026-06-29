@@ -130,3 +130,6 @@ export * from './public-onboarding';
 
 // Production-safe URL/host resolution — fail-fast instead of localhost (#228)
 export * from './required-url';
+
+// Terms Acceptance Schemas (IFC-309)
+export * from './terms-acceptance';

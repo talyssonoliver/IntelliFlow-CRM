@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { formatTermsDate, getTermsOfService } from '@/lib/legal/acceptance-tracker';
+import { TermsAcceptanceConfirm } from '@/components/legal/TermsAcceptanceConfirm';
 
 export const metadata: Metadata = {
   title: 'Terms of Service | IntelliFlow CRM',
@@ -175,6 +176,15 @@ export default function TermsPage() {
                 </p>
               </Card>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* IFC-309: Server-side terms acceptance — renders only for authenticated users */}
+      <section className="pb-8 lg:pb-12">
+        <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <TermsAcceptanceConfirm termsVersion={terms.metadata.version} />
           </div>
         </div>
       </section>
