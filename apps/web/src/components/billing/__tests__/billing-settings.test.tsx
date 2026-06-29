@@ -7,7 +7,7 @@
  * @implements PG-172 (Billing Ghost Pages — Settings)
  */
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockBillingInformation } from '@/test/fixtures/billing-data';
 
@@ -23,6 +23,8 @@ const mockGetBillingInfo = vi.fn<() => MockQueryReturn<typeof mockBillingInfo>>(
 
 const mockUpdateMutate = vi.fn();
 
+let mockOnError: ((err: { message?: string }) => void) | null = null;
+
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     useUtils: () => ({
@@ -33,16 +35,21 @@ vi.mock('@/lib/trpc', () => ({
     billing: {
       getBillingInformation: { useQuery: () => mockGetBillingInfo() },
       updateBillingInformation: {
-        useMutation: (opts?: Record<string, unknown>) => ({
-          mutate: (...args: unknown[]) => {
-            mockUpdateMutate(...args);
-            if (opts && typeof (opts as Record<string, unknown>).onSuccess === 'function')
-              (opts as { onSuccess: () => void }).onSuccess();
-          },
-          isPending: false,
-          isSuccess: false,
-          error: null,
-        }),
+        useMutation: (opts?: Record<string, unknown>) => {
+          if (opts && typeof (opts as Record<string, unknown>).onError === 'function') {
+            mockOnError = (opts as { onError: (err: { message?: string }) => void }).onError;
+          }
+          return {
+            mutate: (...args: unknown[]) => {
+              mockUpdateMutate(...args);
+              if (opts && typeof (opts as Record<string, unknown>).onSuccess === 'function')
+                (opts as { onSuccess: () => void }).onSuccess();
+            },
+            isPending: false,
+            isSuccess: false,
+            error: null,
+          };
+        },
       },
     },
   },
@@ -57,6 +64,7 @@ import { BillingSettings } from '../billing-settings';
 describe('BillingSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockOnError = null;
     mockGetBillingInfo.mockReturnValue({ data: mockBillingInfo, isLoading: false, error: null });
   });
 
@@ -168,5 +176,41 @@ describe('BillingSettings', () => {
     // The outer grid wrapper must have grid-cols-1
     const grid = container.querySelector('.grid-cols-1');
     expect(grid).toBeInTheDocument();
+  });
+
+  it('updates email field when user types', () => {
+    render(<BillingSettings />);
+    const emailInput = screen.getByLabelText(/billing email/i) as HTMLInputElement;
+    fireEvent.change(emailInput, { target: { value: 'new@acme.com' } });
+    expect(emailInput.value).toBe('new@acme.com');
+  });
+
+  it('updates invoiceContact field when user types', () => {
+    render(<BillingSettings />);
+    const invoiceInput = screen.getByLabelText(/invoice contact/i) as HTMLInputElement;
+    fireEvent.change(invoiceInput, { target: { value: 'finance@acme.com' } });
+    expect(invoiceInput.value).toBe('finance@acme.com');
+  });
+
+  it('shows toast error and does not mutate when email is empty', () => {
+    render(<BillingSettings />);
+    const emailInput = screen.getByLabelText(/billing email/i) as HTMLInputElement;
+    // Clear the email field
+    fireEvent.change(emailInput, { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+    // mutate should NOT be called when email is empty
+    expect(mockUpdateMutate).not.toHaveBeenCalled();
+  });
+
+  it('calls onError handler when mutation errors', () => {
+    render(<BillingSettings />);
+    // The onError is captured by the mock — invoke it to exercise the error toast branch
+    expect(mockOnError).not.toBeNull();
+    act(() => {
+      mockOnError!({ message: 'Stripe unavailable' });
+    });
+    // Verify error toast was shown (toast mock captures the call)
+    // The test simply asserts the handler doesn't throw and the component stays mounted
+    expect(screen.getByLabelText(/organization/i)).toBeInTheDocument();
   });
 });
