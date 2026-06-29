@@ -109,9 +109,14 @@
       "0c767e2a... immutable-upsert-update-path (design decision, plan-approved upsert pattern)",
       "048ab16f... wrong-date-wire-contract (output schemas not wired into .output())",
       "486dec01... mutable-date-leak (fp citing fixed code)",
-      "1a9b1dae... client-controlled-version (out-of-scope, tracked in debt-ledger)"
+      "1a9b1dae... client-controlled-version (out-of-scope, tracked in debt-ledger + gh #559)"
     ]
   },
-  "commit_sha": "bbafdf31f",
+  "pre_ship_fixes": {
+    "rls_migration": "Added ENABLE ROW LEVEL SECURITY + tenant_isolation_terms_acceptances policy to migration SQL",
+    "ia_router_count": "information-architecture.md: 62->63, 367->369 procedures",
+    "ui_flow_router_count": "ui-flow-mapping.md: 62->63, 367->369, added termsAcceptance row to API Router Summary"
+  },
+  "commit_sha": "01a680c8a",
   "branch": "feat/ifc-309"
 }
