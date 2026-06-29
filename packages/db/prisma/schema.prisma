@@ -2022,7 +2022,10 @@ model ReportTemplate {
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@unique([tenantId, name])
+  // Uniqueness enforced by partial indexes in migration 20260629000002:
+  //   private  -> UNIQUE (tenantId, createdBy, name) WHERE sharingScope='private'
+  //   shared   -> UNIQUE (tenantId, name) WHERE sharingScope!='private'
+  // No @@unique here — Prisma does not support partial unique indexes.
   @@index([tenantId])
   @@index([createdBy])
   @@map("report_templates")
