@@ -133,7 +133,23 @@ export const reportTemplatesRouter = createTRPCRouter({
    */
   update: tenantProcedure.input(updateReportTemplateSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
+    const userId = ctx.tenant.userId;
     const { id, ...fields } = input;
+
+    // Visibility guard: only the owner can mutate a private template.
+    // Mirrors the list() visibility predicate so a user who can see the
+    // template can also edit it (own + non-private within tenant).
+    const editable = await ctx.prismaWithTenant.reportTemplate.findFirst({
+      where: {
+        id,
+        tenantId,
+        OR: [{ createdBy: userId }, { sharingScope: { not: 'private' } }],
+      },
+      select: { id: true },
+    });
+    if (!editable) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Report template not found.' });
+    }
 
     // Pre-check name uniqueness when renaming (same invariant as create).
     if (fields.name !== undefined) {
@@ -191,10 +207,18 @@ export const reportTemplatesRouter = createTRPCRouter({
    */
   delete: tenantProcedure.input(deleteReportTemplateSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
+    const userId = ctx.tenant.userId;
 
+    // Scope delete by ownership: only the creator can delete their private
+    // template; non-private templates can be deleted by any tenant member
+    // who can see them (mirrors the list() visibility predicate).
     const result = await ctx.prisma.$transaction(async (tx) => {
       return tx.reportTemplate.deleteMany({
-        where: { id: input.id, tenantId },
+        where: {
+          id: input.id,
+          tenantId,
+          OR: [{ createdBy: userId }, { sharingScope: { not: 'private' } }],
+        },
       });
     });
 

@@ -222,12 +222,12 @@ describe('Report Templates Router (PG-200)', () => {
   describe('update', () => {
     it('updates template fields via $transaction', async () => {
       const updated = { ...mockTemplate, chartType: 'line' };
-      // No name change → no uniqueness pre-check (findFirst not called)
+      // Visibility guard (findFirst call 1): caller owns it → proceed
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTemplate);
+      // No name change → no uniqueness pre-check (no second findFirst)
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
-          reportTemplate: {
-            update: vi.fn().mockResolvedValue(updated),
-          },
+          reportTemplate: { update: vi.fn().mockResolvedValue(updated) },
         };
         return fn(mockTx);
       });
@@ -238,8 +238,18 @@ describe('Report Templates Router (PG-200)', () => {
       expect(result).toMatchObject({ chartType: 'line' });
     });
 
-    it('throws NOT_FOUND when template not in tenant', async () => {
-      // No name change → skip uniqueness check
+    it('throws NOT_FOUND when caller cannot see the template', async () => {
+      // Visibility guard returns null (private template from another user)
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
+
+      await expect(caller.update({ id: mockTemplate.id, chartType: 'bar' })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
+    });
+
+    it('throws NOT_FOUND when template not in tenant (P2025)', async () => {
+      // Visibility guard passes but update fails with P2025
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTemplate);
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
           reportTemplate: {
@@ -255,7 +265,9 @@ describe('Report Templates Router (PG-200)', () => {
     });
 
     it('throws CONFLICT when renaming to an existing name', async () => {
-      // Name-change triggers uniqueness pre-check; findFirst returns a collision
+      // Visibility guard (findFirst call 1): passes
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTemplate);
+      // Name-change triggers uniqueness pre-check (findFirst call 2): returns collision
       (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTeamTemplate);
 
       await expect(
@@ -265,7 +277,9 @@ describe('Report Templates Router (PG-200)', () => {
 
     it('allows rename when no collision exists', async () => {
       const updated = { ...mockTemplate, name: 'New Name' };
-      // Name-change triggers uniqueness pre-check; no collision found
+      // Visibility guard (findFirst call 1): passes
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTemplate);
+      // Uniqueness pre-check (findFirst call 2): no collision
       (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
@@ -282,7 +296,8 @@ describe('Report Templates Router (PG-200)', () => {
     it('scopes update to caller tenantId', async () => {
       const updated = { ...mockTemplate, chartType: 'line' };
       let capturedWhere: any;
-      // No name change → skip uniqueness pre-check
+      // Visibility guard passes; no name change
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTemplate);
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
           reportTemplate: {
@@ -320,7 +335,8 @@ describe('Report Templates Router (PG-200)', () => {
       expect(result).toEqual({ deleted: true });
     });
 
-    it('throws NOT_FOUND when no rows deleted', async () => {
+    it('throws NOT_FOUND when no rows deleted (private template from another user)', async () => {
+      // deleteMany scopes by visibility predicate → count 0 for private template from another user
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
           reportTemplate: {
@@ -335,7 +351,7 @@ describe('Report Templates Router (PG-200)', () => {
       });
     });
 
-    it('scopes deleteMany to caller tenantId', async () => {
+    it('scopes deleteMany to caller tenantId and visibility predicate', async () => {
       let capturedWhere: any;
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
@@ -351,7 +367,11 @@ describe('Report Templates Router (PG-200)', () => {
 
       await caller.delete({ id: mockTemplate.id });
 
-      expect(capturedWhere).toMatchObject({ id: mockTemplate.id, tenantId });
+      expect(capturedWhere).toMatchObject({
+        id: mockTemplate.id,
+        tenantId,
+        OR: expect.arrayContaining([{ createdBy: userId }, { sharingScope: { not: 'private' } }]),
+      });
     });
   });
 });
