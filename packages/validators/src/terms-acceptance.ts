@@ -10,19 +10,16 @@ import { z } from 'zod';
 /**
  * Input schema for the `termsAcceptance.accept` mutation.
  *
- * NOTE: ipAddress is extracted server-side from x-forwarded-for.
- * tenantId and userId are taken from the session context.
- * acceptedAt is set by the DB @default(now()).
- * None of these may be submitted by the client.
+ * NOTE: acceptedAt, ipAddress, userAgent, tenantId, and userId are ALL
+ * server-set only — they are NEVER accepted from client input.
+ * - acceptedAt: set by DB @default(now())
+ * - ipAddress: extracted server-side from x-forwarded-for header
+ * - userAgent: extracted server-side from user-agent request header
+ * - tenantId/userId: taken from the session context (ctx.tenant/ctx.user)
  */
 export const acceptTermsInputSchema = z.object({
   termsVersion: z.string().min(1).max(32),
   route: z.string().min(1).max(255),
-  // userAgent is the ONLY field the client may optionally provide
-  // (from navigator.userAgent on the browser — the server cannot reliably
-  // read it from a tRPC JSON body request; headers carry it but the schema
-  // allows explicit passing as a belt-and-suspenders approach).
-  userAgent: z.string().max(512).optional(),
 });
 
 /**

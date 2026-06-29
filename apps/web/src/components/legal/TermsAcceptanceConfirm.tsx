@@ -45,7 +45,7 @@ export function TermsAcceptanceConfirm({ termsVersion }: TermsAcceptanceConfirmP
     mutation.mutate({
       termsVersion,
       route: '/terms',
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      // userAgent is now read server-side from the request header — not sent from client
     });
   };
 

@@ -892,3 +892,34 @@ waivers:
     author: talyssonoliver
     date: '2026-06-29'
     expires: '2026-12-31'
+  - fingerprint: '486dec01730b57e78233cc5d36b3b4e41c993de480928ca563edde23176c42b5'
+    reason: >-
+      Verified false positive (IFC-309) — codex cited already-fixed code. The finding
+      claims toRecord() returns `{ ...this.props }` (shallow copy, leaking the internal
+      Date). That line was ALREADY FIXED in this PR: the committed toRecord() returns
+      `{ ...this.props, acceptedAt: new Date(this.props.acceptedAt.getTime()) }` and
+      the acceptedAt getter returns `new Date(this.props.acceptedAt.getTime())`.
+      fromRecord() stores a cloned Date on construction. Verified via working-tree grep:
+      `grep -n "getTime" packages/domain/src/legal/TermsAcceptance.ts` returns lines 47,
+      58, and 79 — all three clone sites. Codex reviewed a stale snapshot of the file
+      (the same hallucinate-fixed-code pattern). Source-anchored fingerprint re-blocks
+      if the Date-clone fix is ever reverted.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-31'
+  - fingerprint: '048ab16f81878a45a828eaac57006ce9661c1f079d4e15f27fe1270397024926'
+    reason: >-
+      Verified false positive (IFC-309) — output schemas are NOT wired into tRPC
+      .output() validators; they are TypeScript-only type exports with no runtime
+      impact. The terms-acceptance.router.ts accept mutation and getAcceptance query
+      use NO .output() call (grep for ".output(" in the router file returns nothing).
+      The z.date() schemas in terms-acceptance.ts are decorative TypeScript types only;
+      the tRPC stack infers return types from the actual router return values, not these
+      schemas. This is identical to the accepted IFC-282 precedent (waiver 2c5eeef9...)
+      where opportunityResponseSchema uses z.date() but is also not wired as .output().
+      There is no runtime validation failure. Consistent with the codebase convention of
+      decorative output schemas. Source-anchored fingerprint re-blocks if the schema
+      lines change.
+    author: talyssonoliver
+    date: '2026-06-29'
+    expires: '2026-12-31'

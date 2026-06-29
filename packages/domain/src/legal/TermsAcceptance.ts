@@ -39,16 +39,24 @@ export class TermsAcceptance {
 
   /**
    * Rehydrate from a persisted DB record (all fields including acceptedAt supplied).
+   * Defensive clone: ensures we own the Date instance, not the caller.
    */
   static fromRecord(props: TermsAcceptanceProps): TermsAcceptance {
-    return new TermsAcceptance(props);
+    return new TermsAcceptance({
+      ...props,
+      acceptedAt: new Date(props.acceptedAt.getTime()),
+    });
   }
 
   /**
    * Returns a plain copy of the internal props for persistence or serialisation.
+   * Returns a cloned Date so callers cannot mutate the internal audit timestamp.
    */
   toRecord(): TermsAcceptanceProps {
-    return { ...this.props };
+    return {
+      ...this.props,
+      acceptedAt: new Date(this.props.acceptedAt.getTime()),
+    };
   }
 
   get id(): string {
@@ -68,7 +76,7 @@ export class TermsAcceptance {
   }
 
   get acceptedAt(): Date {
-    return this.props.acceptedAt;
+    return new Date(this.props.acceptedAt.getTime());
   }
 
   get ipAddress(): string | null {

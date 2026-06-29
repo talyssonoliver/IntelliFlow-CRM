@@ -44,9 +44,16 @@ export const termsAcceptanceRouter = createTRPCRouter({
     const forwardedFor = ctx.req?.headers?.get?.('x-forwarded-for') ?? null;
     const ipAddress = pickTrustedForwardedIp(forwardedFor) ?? null;
 
+    // userAgent read from request header server-side — never from client body.
+    // Truncate to VARCHAR(512) DB limit to prevent overlong values.
+    // NF-003: PII — do NOT log or span-attribute.
+    const rawUserAgent = ctx.req?.headers?.get?.('user-agent') ?? null;
+    const userAgent = rawUserAgent ? rawUserAgent.slice(0, 512) : null;
+
     // Idempotent upsert — re-acceptance is a no-op; same record returned (AC-002).
     // NF-005: update is intentionally empty — records are IMMUTABLE.
-    const record = await ctx.prisma.termsAcceptance.upsert({
+    // Use prismaWithTenant (RLS-scoped) not raw ctx.prisma — defence-in-depth.
+    const record = await ctx.prismaWithTenant!.termsAcceptance.upsert({
       where: {
         tenantId_userId_termsVersion: {
           tenantId,
@@ -60,7 +67,7 @@ export const termsAcceptanceRouter = createTRPCRouter({
         termsVersion: input.termsVersion,
         // NF-003: PII stored only for immutable audit record — never in logs/spans
         ipAddress,
-        userAgent: input.userAgent ?? null,
+        userAgent,
         route: input.route,
       },
       update: {}, // immutable — empty update is a no-op (NF-005)
@@ -86,7 +93,8 @@ export const termsAcceptanceRouter = createTRPCRouter({
     const tenantId = ctx.tenant.tenantId;
     const userId = ctx.user!.userId;
 
-    const record = await ctx.prisma.termsAcceptance.findFirst({
+    // Use prismaWithTenant (RLS-scoped) not raw ctx.prisma — defence-in-depth.
+    const record = await ctx.prismaWithTenant!.termsAcceptance.findFirst({
       where: {
         tenantId,
         userId,

@@ -161,12 +161,11 @@ describe('TermsAcceptanceConfirm', () => {
       const btn = screen.getByRole('button', { name: /i agree/i });
       fireEvent.click(btn);
 
-      expect(mockAcceptMutate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          termsVersion: TERMS_V1,
-          route: '/terms',
-        })
-      );
+      // userAgent is now server-side only — not sent from client
+      expect(mockAcceptMutate).toHaveBeenCalledWith({
+        termsVersion: TERMS_V1,
+        route: '/terms',
+      });
     });
 
     it('does NOT call accept mutation when button clicked without checking checkbox', () => {

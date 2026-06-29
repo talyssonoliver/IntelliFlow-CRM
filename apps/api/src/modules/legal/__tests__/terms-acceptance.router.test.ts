@@ -42,21 +42,32 @@ const mockPrisma = {
   },
 };
 
-function makeMockReq(xffHeader?: string) {
+function makeMockReq(xffHeader?: string, userAgentHeader?: string) {
   return {
     headers: {
       get: vi.fn((name: string) => {
         if (name === 'x-forwarded-for') return xffHeader ?? null;
+        if (name === 'user-agent') return userAgentHeader ?? 'TestAgent/1.0';
+        // CSRF guard: mutations require either an Origin or a custom anti-CSRF header.
+        // Supply a Bearer token so assertMutationCsrfSafe passes in direct caller tests.
+        if (name === 'authorization') return 'Bearer test-token';
         return null;
       }),
-      has: vi.fn(() => false),
+      has: vi.fn((name: string) => name === 'authorization'),
     },
   };
 }
 
-function makeCtx(tenantId: string = TENANT_A, userId: string = USER_1, xffHeader?: string) {
+function makeCtx(
+  tenantId: string = TENANT_A,
+  userId: string = USER_1,
+  xffHeader?: string,
+  userAgentHeader?: string
+) {
   return {
     prisma: mockPrisma as any,
+    // Router uses ctx.prismaWithTenant (RLS-scoped) for all data ops.
+    prismaWithTenant: mockPrisma as any,
     user: {
       userId,
       email: 'test@example.com',
@@ -70,7 +81,7 @@ function makeCtx(tenantId: string = TENANT_A, userId: string = USER_1, xffHeader
       userId,
       role: 'user' as const,
     },
-    req: makeMockReq(xffHeader),
+    req: makeMockReq(xffHeader, userAgentHeader),
     services: {},
   };
 }
@@ -97,7 +108,6 @@ describe('termsAcceptanceRouter', () => {
       const result = await caller.accept({
         termsVersion: TERMS_V1,
         route: '/terms',
-        userAgent: 'Mozilla/5.0',
       });
 
       expect(result.accepted).toBe(true);
@@ -138,6 +148,14 @@ describe('termsAcceptanceRouter', () => {
       expect(upsertArgs.create.ipAddress).toBeNull();
     });
 
+    it('extracts userAgent from request user-agent header server-side — not from input', async () => {
+      const caller = await createCaller(makeCtx(TENANT_A, USER_1, undefined, 'Mozilla/5.0 Test'));
+      await caller.accept({ termsVersion: TERMS_V1, route: '/terms' });
+
+      const upsertArgs = mockPrisma.termsAcceptance.upsert.mock.calls[0]![0];
+      expect(upsertArgs.create.userAgent).toBe('Mozilla/5.0 Test');
+    });
+
     it('takes tenantId from session ctx — not from input (AC-005)', async () => {
       const caller = await createCaller(makeCtx(TENANT_A, USER_1));
       await caller.accept({ termsVersion: TERMS_V1, route: '/terms' });
@@ -158,7 +176,6 @@ describe('termsAcceptanceRouter', () => {
       const caller = await createCaller(makeCtx());
       // Zod strips unknown fields by default; the extra field is silently ignored
       await expect(
-         
         caller.accept({
           termsVersion: TERMS_V1,
           route: '/terms',
@@ -172,7 +189,7 @@ describe('termsAcceptanceRouter', () => {
 
     it('Zod schema does not allow tenantId in input (AC-005) — extra fields stripped', async () => {
       const caller = await createCaller(makeCtx(TENANT_A, USER_1));
-       
+
       await caller.accept({
         termsVersion: TERMS_V1,
         route: '/terms',
@@ -269,12 +286,16 @@ describe('termsAcceptanceRouter', () => {
   // Procedure type: plain tenantProcedure (AC-007)
   // -------------------------------------------------------------------------
   describe('uses plain tenantProcedure — not moduleTenantProcedure (AC-007)', () => {
-    it('does not import moduleTenantProcedure in the router file', async () => {
+    it('does not import or call moduleTenantProcedure in the router file', async () => {
       const fs = await import('fs');
       const path = await import('path');
       const routerFile = path.join(__dirname, '..', 'terms-acceptance.router.ts');
       const content = fs.readFileSync(routerFile, 'utf8');
-      expect(content).not.toMatch(/moduleTenantProcedure/);
+      // Only check import/call lines — comments may mention it to explain the design decision.
+      const codeLines = content
+        .split('\n')
+        .filter((line) => !line.trimStart().startsWith('*') && !line.trimStart().startsWith('//'));
+      expect(codeLines.join('\n')).not.toMatch(/moduleTenantProcedure/);
     });
   });
 });
