@@ -217,7 +217,7 @@ export default function IntegrationsPage() {
               </div>
               <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                 <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                  {summary?.healthy ?? connected.length}
+                  {summary ? summary.healthy + summary.degraded : connected.length}
                 </p>
                 <p className="text-xs text-muted-foreground">Connected</p>
               </div>

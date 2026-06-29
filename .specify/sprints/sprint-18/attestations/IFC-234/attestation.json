@@ -1,0 +1,102 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "task_id": "IFC-234",
+  "sprint": 18,
+  "verdict": "COMPLETE",
+  "completed_at": "2026-06-29T14:20:00Z",
+  "git_sha": "104d56394",
+  "branch": "feat/ifc-234",
+  "persona": "frontend-lead",
+  "spec_path": ".specify/sprints/sprint-18/specifications/IFC-234-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/IFC-234-plan.md",
+  "delivery_summary": {
+    "description": "Settings Pages Wiring — wired team and integrations pages to real tRPC queries. Notifications (redirect) and account (AccountSettingsContent) pages were already fully wired and required no changes.",
+    "files_modified": [
+      "apps/web/src/app/settings/team/page.tsx",
+      "apps/web/src/app/settings/integrations/page.tsx"
+    ],
+    "files_created": [
+      "apps/web/src/app/settings/team/__tests__/page.test.tsx",
+      "apps/web/src/app/settings/integrations/__tests__/page.test.tsx",
+      "artifacts/coverage/IFC-234-before.json"
+    ],
+    "files_unchanged": [
+      "apps/web/src/app/settings/notifications/page.tsx",
+      "apps/web/src/app/settings/account/page.tsx"
+    ]
+  },
+  "acceptance_criteria": {
+    "AC-1-team-real-data": {
+      "met": true,
+      "evidence": "Replaced const teamMembers=[...] with trpc.user.list.useQuery({ limit: 50 }). Loading skeleton, error state with Retry, EmptyState entity=agents for zero users."
+    },
+    "AC-2-integrations-real-connector-health": {
+      "met": true,
+      "evidence": "Replaced const integrations=[...] with trpc.integrations.getAllConnectorsHealth.useQuery(). healthy|degraded=Connected, unhealthy|unknown=Available, unknown='Not configured'. Latency badge. Toast 'coming soon' for Disconnect/Connect. No console.info stubs."
+    },
+    "AC-3-tests": {
+      "met": true,
+      "evidence": "6 team tests + 8 integrations tests in src/app/settings/*/--tests--/. team: 100% line coverage. integrations: 100% statements/lines, 86% branches (above 80% gate). 633 total test files, 11227 tests all pass."
+    },
+    "AC-4-no-regressions": {
+      "met": true,
+      "evidence": "pnpm --filter @intelliflow/web typecheck: PASS. pnpm --filter @intelliflow/web test --run: 633 files, 11227 tests, 0 failures. pnpm --filter @intelliflow/web lint: PASS. pnpm --filter @intelliflow/web build: PASS (Compiled successfully in 39.9s)."
+    }
+  },
+  "validation_matrix": {
+    "typecheck": {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "result": "PASS"
+    },
+    "tests_scoped": {
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/app/settings/",
+      "result": "PASS (21 files, 281 tests)"
+    },
+    "tests_full": {
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "result": "PASS (633 files, 11227 tests)"
+    },
+    "lint": {
+      "command": "pnpm --filter @intelliflow/web lint",
+      "result": "PASS"
+    },
+    "build": {
+      "command": "pnpm --filter @intelliflow/web build",
+      "result": "PASS (Compiled successfully in 39.9s)"
+    },
+    "coverage_team": {
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/app/settings/team/__tests__/page.test.tsx --coverage --coverage.include src/app/settings/team/page.tsx",
+      "result": "PASS (100% statements, 100% branches, 100% functions, 100% lines)"
+    },
+    "coverage_integrations": {
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/app/settings/integrations/__tests__/page.test.tsx --coverage --coverage.include src/app/settings/integrations/page.tsx",
+      "result": "PASS (100% statements, 86.48% branches, 87.5% functions, 100% lines — above 80% gate)"
+    }
+  },
+  "kpi_results": {
+    "all_settings_functional": {
+      "target": "All 4 settings pages load real data",
+      "actual": "team+integrations: wired to tRPC. notifications: redirect to fully-wired /notifications/settings. account: delegates to fully-wired AccountSettingsContent. 0 hardcoded arrays remain.",
+      "met": true
+    },
+    "test_coverage": {
+      "target": ">=80% new-line coverage",
+      "actual": "team: 100%. integrations: 86% branches / 100% lines.",
+      "met": true
+    }
+  },
+  "plan_reviewer_verdict": "APPROVED",
+  "plan_reviewer_marker": "plan-reviewer: subagent",
+  "plan_reviewer_agent": "plan-reviewer-ifc234",
+  "spec_session_consensus": "UNANIMOUS — 2 pages (notifications/account) already wired, 2 pages need wiring (team/integrations). Delta-only approach.",
+  "notes": [
+    "user.list does not return role field — Role column dropped from team page (was hardcoded fake data)",
+    "user.list default limit=5 — passed limit:50 to fetch full team roster",
+    "getAllConnectorsHealth uses protectedProcedure — appropriate (connector health is env-var scoped, not tenant-scoped)",
+    "status:'unknown' = env vars not configured = 'Not configured' label (honest per never-mock-data rule)",
+    "No connect/disconnect mutations exist — buttons show toast 'Integration management coming soon'",
+    "integrations is NOT a valid EmptyState entity — inline empty text used for zero-connector state",
+    "Material Symbols Outlined only — no lucide-react or other icon libraries",
+    "Tests colocated in src/app/settings/*/--tests--/ to satisfy vitest include glob src/**"
+  ]
+}

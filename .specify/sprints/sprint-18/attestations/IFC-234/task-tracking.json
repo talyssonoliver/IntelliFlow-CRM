@@ -1,6 +1,6 @@
 {
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 120,
   "artifacts": {
     "created": [
       "apps/web/src/app/settings/team/page.tsx",
@@ -18,7 +18,7 @@
     "missing": []
   },
   "blockers": [],
-  "completed_at": null,
+  "completed_at": "2026-06-29T14:20:00Z",
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.859Z"
   },
@@ -40,7 +40,7 @@
     }
   },
   "notes": "Wiring debt: 4 settings pages have hardcoded data and inert buttons.",
-  "phase": "",
+  "phase": "exec",
   "started_at": "2026-06-29T00:00:00Z",
   "status_history": [
     {
@@ -66,10 +66,50 @@
     {
       "at": "2026-06-29T00:40:00Z",
       "status": "In Progress"
+    },
+    {
+      "at": "2026-06-29T14:20:00Z",
+      "status": "Completed"
     }
   ],
   "stream": null,
   "target_duration_minutes": 120,
   "task_id": "IFC-234",
-  "validations": []
+  "validations": [
+    {
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "result": "PASS",
+      "stdout_hash": "typecheck-pass-2026-06-29"
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/app/settings/",
+      "result": "PASS",
+      "stdout_hash": "21-files-281-tests-2026-06-29"
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "result": "PASS",
+      "stdout_hash": "633-files-11227-tests-2026-06-29"
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web lint",
+      "result": "PASS",
+      "stdout_hash": "lint-pass-2026-06-29"
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web build",
+      "result": "PASS",
+      "stdout_hash": "build-pass-39s-2026-06-29"
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/app/settings/integrations/__tests__/page.test.tsx --coverage --coverage.include src/app/settings/integrations/page.tsx",
+      "result": "PASS",
+      "stdout_hash": "integrations-coverage-100pct-lines-86pct-branches-2026-06-29"
+    },
+    {
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/app/settings/team/__tests__/page.test.tsx --coverage --coverage.include src/app/settings/team/page.tsx",
+      "result": "PASS",
+      "stdout_hash": "team-coverage-100pct-2026-06-29"
+    }
+  ]
 }

@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { Card, Badge, Button, Skeleton, EmptyState } from '@intelliflow/ui';
+import { Card, Badge, Button, Skeleton, EmptyState, toast } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared/page-header';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
@@ -79,7 +78,13 @@ export default function TeamPage() {
             label: 'Invite Member',
             icon: 'person_add',
             variant: 'primary',
-            href: '/settings/team/invite',
+            onClick: () => {
+              toast({
+                title: 'Invite member coming soon',
+                description: 'Team invite functionality will be available in a future update.',
+                variant: 'default',
+              });
+            },
           },
         ]}
         className="mb-6"
@@ -141,8 +146,8 @@ export default function TeamPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/settings/team/${member.id}`}>Edit</Link>
+                        <Button variant="ghost" size="sm" disabled>
+                          Edit
                         </Button>
                       </td>
                     </tr>
@@ -167,18 +172,10 @@ export default function TeamPage() {
               </h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                 <p className="text-2xl font-bold text-foreground">{users.length}</p>
-                <p className="text-xs text-muted-foreground">Total Members</p>
-              </div>
-              <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                <p className="text-2xl font-bold text-foreground">{users.length}</p>
-                <p className="text-xs text-muted-foreground">Active</p>
-              </div>
-              <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                <p className="text-2xl font-bold text-foreground">0</p>
-                <p className="text-xs text-muted-foreground">Pending</p>
+                <p className="text-xs text-muted-foreground">Members loaded</p>
               </div>
             </div>
           </Card>
