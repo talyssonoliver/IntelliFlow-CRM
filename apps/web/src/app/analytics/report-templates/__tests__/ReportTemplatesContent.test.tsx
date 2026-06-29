@@ -228,6 +228,120 @@ describe('ReportTemplatesContent', () => {
     });
   });
 
+  describe('edit template (openEdit)', () => {
+    it('opens edit dialog with pre-filled data when Edit is clicked', async () => {
+      setup({ listData: [mockTemplate] });
+      render(<ReportTemplatesContent />);
+
+      await waitFor(() => screen.getByText('Revenue Report'));
+
+      const editBtn = screen.getByRole('button', { name: /edit/i });
+      fireEvent.click(editBtn);
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      // The dialog should be in edit mode (title says "Edit Template")
+      expect(screen.getByRole('heading', { name: /edit template/i })).toBeInTheDocument();
+
+      // Template name should be pre-filled
+      const nameInput = screen.getByLabelText(/template name/i) as HTMLInputElement;
+      expect(nameInput.value).toBe('Revenue Report');
+    });
+
+    it('calls update mutation when saving an edited template', async () => {
+      const { mutateUpdate } = setup({ listData: [mockTemplate] });
+      render(<ReportTemplatesContent />);
+
+      await waitFor(() => screen.getByText('Revenue Report'));
+
+      // Open edit dialog
+      fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+      await waitFor(() => screen.getByRole('dialog'));
+
+      // Change the name
+      const nameInput = screen.getByLabelText(/template name/i);
+      fireEvent.change(nameInput, { target: { value: 'Updated Report' } });
+
+      // Submit
+      fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+      await waitFor(() => {
+        expect(mutateUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({ id: mockTemplate.id, name: 'Updated Report' })
+        );
+      });
+    });
+
+    it('calls create mutation (not update) when saving a new template', async () => {
+      const { mutateCreate, mutateUpdate } = setup({ listData: [] });
+      render(<ReportTemplatesContent />);
+
+      fireEvent.click(screen.getByRole('button', { name: /new template/i }));
+      await waitFor(() => screen.getByRole('dialog'));
+
+      const nameInput = screen.getByLabelText(/template name/i);
+      fireEvent.change(nameInput, { target: { value: 'New Template' } });
+      const colInput = screen.getByLabelText(/columns/i);
+      fireEvent.change(colInput, { target: { value: 'col1' } });
+
+      fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+      await waitFor(() => {
+        expect(mutateCreate).toHaveBeenCalled();
+        expect(mutateUpdate).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('dialog form interactions', () => {
+    it('renders description field in create dialog', async () => {
+      setup({ listData: [] });
+      render(<ReportTemplatesContent />);
+
+      fireEvent.click(screen.getByRole('button', { name: /new template/i }));
+      await waitFor(() => screen.getByRole('dialog'));
+
+      expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
+    });
+
+    it('does not call create when name is empty', async () => {
+      const { mutateCreate } = setup({ listData: [] });
+      render(<ReportTemplatesContent />);
+
+      fireEvent.click(screen.getByRole('button', { name: /new template/i }));
+      await waitFor(() => screen.getByRole('dialog'));
+
+      // Don't fill in name — just click save
+      const colInput = screen.getByLabelText(/columns/i);
+      fireEvent.change(colInput, { target: { value: 'col1' } });
+
+      fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+      // Give it a moment to see if mutation fires
+      await new Promise((r) => setTimeout(r, 50));
+      expect(mutateCreate).not.toHaveBeenCalled();
+    });
+
+    it('does not call create when columns are empty', async () => {
+      const { mutateCreate } = setup({ listData: [] });
+      render(<ReportTemplatesContent />);
+
+      fireEvent.click(screen.getByRole('button', { name: /new template/i }));
+      await waitFor(() => screen.getByRole('dialog'));
+
+      // Fill name but leave columns empty
+      const nameInput = screen.getByLabelText(/template name/i);
+      fireEvent.change(nameInput, { target: { value: 'My Template' } });
+
+      fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+      await new Promise((r) => setTimeout(r, 50));
+      expect(mutateCreate).not.toHaveBeenCalled();
+    });
+  });
+
   describe('delete template', () => {
     it('opens confirmation dialog on delete action', async () => {
       setup({ listData: [mockTemplate] });
