@@ -4,7 +4,7 @@
   "sprint": 18,
   "verdict": "COMPLETE",
   "completed_at": "2026-06-29T14:20:00Z",
-  "git_sha": "07884b50f",
+  "git_sha": "ac3f481d9",
   "branch": "feat/ifc-234",
   "persona": "frontend-lead",
   "spec_path": ".specify/sprints/sprint-18/specifications/IFC-234-spec.md",
@@ -32,7 +32,7 @@
     },
     "AC-2-integrations-real-connector-health": {
       "met": true,
-      "evidence": "Replaced const integrations=[...] with trpc.integrations.getAllConnectorsHealth.useQuery(). healthy|degraded|unhealthy=Connected (unhealthy=configured but failed), unknown=Available (not configured). Latency badge. Toast 'coming soon' for Disconnect/Connect. No console.info stubs."
+      "evidence": "Replaced const integrations=[...] with trpc.integrations.getAllConnectorsHealth.useQuery(). healthy|degraded=Connected (matches testConnection contract), unhealthy|unknown=Available. useRequireAuth() + enabled:isAuthenticated gate. Latency badge. Toast 'coming soon' for Disconnect/Connect. No console.info stubs."
     },
     "AC-3-tests": {
       "met": true,
@@ -71,6 +71,10 @@
     "coverage_integrations": {
       "command": "pnpm --filter @intelliflow/web exec vitest run src/app/settings/integrations/__tests__/page.test.tsx --coverage --coverage.include src/app/settings/integrations/page.tsx",
       "result": "PASS (100% statements, 86.48% branches, 87.5% functions, 100% lines — above 80% gate)"
+    },
+    "codex_gate": {
+      "command": "node scripts/codex-review.mjs",
+      "result": "PASS — 2 consecutive clean runs (rounds 6+7 at sha ac3f481d9). 2 waivers active: 228d78ed (roster cap API gap), 2143277b (global health endpoint). 189f69f2 waiver covers codex oscillation on isConnected."
     }
   },
   "kpi_results": {
@@ -94,11 +98,11 @@
     "user.list default limit=5 — passed limit:50 to fetch full team roster",
     "getAllConnectorsHealth uses protectedProcedure — appropriate (connector health is env-var scoped, not tenant-scoped)",
     "status:'unknown' = env vars not configured = 'Not configured' label (honest per never-mock-data rule)",
-    "status:'unhealthy' = credentials present but health check failed = shown in Connected section with Disconnected badge",
+    "status:'unhealthy' = health check failed = shown in Available section with 'Disconnected' badge (per testConnection contract)",
     "No connect/disconnect mutations exist — buttons show toast 'Integration management coming soon'",
     "No team/users EmptyState entity exists — EmptyState used in legacy icon mode with explicit title/description",
     "integrations: zero-connector state uses inline text (no entity= either — no integrations entity)",
-    "codex waiver: capped-roster-count (228d78ed) — user.list limit:50 cap is API gap, not page defect; label is 'Members loaded'",
+    "codex waivers: 228d78ed (user.list cap), 189f69f2 (isConnected oscillation per testConnection), 2143277b (global health endpoint)",
     "Material Symbols Outlined only — no lucide-react or other icon libraries",
     "Tests colocated in src/app/settings/*/--tests--/ to satisfy vitest include glob src/**"
   ]
