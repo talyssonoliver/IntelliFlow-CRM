@@ -116,14 +116,21 @@ describe('Report Templates Router (PG-200)', () => {
   // ─── get ──────────────────────────────────────────────────────────────────
 
   describe('get', () => {
-    it('returns the template by id', async () => {
+    it('returns the template by id with visibility predicate', async () => {
       (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTemplate);
 
       const result = await caller.get({ id: mockTemplate.id });
 
       expect(prismaMock.reportTemplate.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: mockTemplate.id, tenantId },
+          where: {
+            id: mockTemplate.id,
+            tenantId,
+            OR: expect.arrayContaining([
+              { createdBy: userId },
+              { sharingScope: { not: 'private' } },
+            ]),
+          },
         })
       );
       expect(result).toEqual(mockTemplate);
@@ -142,6 +149,15 @@ describe('Report Templates Router (PG-200)', () => {
       (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
 
       await expect(caller.get({ id: mockTemplate.id })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
+    });
+
+    it('throws NOT_FOUND for a private template owned by another user (IDOR guard)', async () => {
+      // Visibility predicate excludes private templates from other users
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
+
+      await expect(caller.get({ id: mockTeamTemplate.id })).rejects.toMatchObject({
         code: 'NOT_FOUND',
       });
     });

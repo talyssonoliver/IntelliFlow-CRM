@@ -62,14 +62,20 @@ export const reportTemplatesRouter = createTRPCRouter({
   }),
 
   /**
-   * Get a single report template by id (tenant-scoped).
-   * Throws NOT_FOUND if absent or belongs to another tenant.
+   * Get a single report template by id (tenant-scoped, visibility-filtered).
+   * Throws NOT_FOUND if absent, belongs to another tenant, or is private and
+   * belongs to a different user — mirrors the list() visibility predicate.
    */
   get: tenantProcedure.input(getReportTemplateSchema).query(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
+    const userId = ctx.tenant.userId;
 
     const template = await ctx.prismaWithTenant.reportTemplate.findFirst({
-      where: { id: input.id, tenantId },
+      where: {
+        id: input.id,
+        tenantId,
+        OR: [{ createdBy: userId }, { sharingScope: { not: 'private' } }],
+      },
     });
 
     if (!template) {
