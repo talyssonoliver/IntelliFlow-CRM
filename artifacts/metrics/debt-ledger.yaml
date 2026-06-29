@@ -5323,4 +5323,4 @@ alerts:
       Waived as out-of-scope in codex-review-waivers.yaml: the IFC-309 spec does
       not require server-side version validation and adding it would require a new
       persistence/config layer. The UI always passes the RSC-read version, making
-      the normal web path authoritative.
+      the normal web path authoritative. gh issue #559.

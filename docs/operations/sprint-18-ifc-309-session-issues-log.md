@@ -87,8 +87,9 @@ the current version from `getTermsOfService()` before rendering
 - `tools/audit/codex-review-waivers.yaml`: fingerprint `1a9b1daefb66...`,
   expires 2026-12-31
 - `artifacts/metrics/debt-ledger.yaml`: `TERMS-VERSION-SERVER-ALLOWLIST-001`,
-  severity low, remediation_sprint 20
+  severity low, remediation_sprint 20, gh issue #559
 - This log entry (third location)
+- gh issue: https://github.com/talyssonoliver/IntelliFlow-CRM/issues/559
 
 ### Finding C-2: immutable-upsert-update-path (MEDIUM, waived, design decision)
 
