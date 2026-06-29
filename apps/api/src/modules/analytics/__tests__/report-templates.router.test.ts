@@ -222,6 +222,7 @@ describe('Report Templates Router (PG-200)', () => {
   describe('update', () => {
     it('updates template fields via $transaction', async () => {
       const updated = { ...mockTemplate, chartType: 'line' };
+      // No name change → no uniqueness pre-check (findFirst not called)
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
           reportTemplate: {
@@ -238,6 +239,7 @@ describe('Report Templates Router (PG-200)', () => {
     });
 
     it('throws NOT_FOUND when template not in tenant', async () => {
+      // No name change → skip uniqueness check
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
           reportTemplate: {
@@ -247,14 +249,40 @@ describe('Report Templates Router (PG-200)', () => {
         return fn(mockTx);
       });
 
-      await expect(caller.update({ id: mockTemplate.id, name: 'Changed' })).rejects.toMatchObject({
+      await expect(caller.update({ id: mockTemplate.id, chartType: 'bar' })).rejects.toMatchObject({
         code: 'NOT_FOUND',
       });
     });
 
+    it('throws CONFLICT when renaming to an existing name', async () => {
+      // Name-change triggers uniqueness pre-check; findFirst returns a collision
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(mockTeamTemplate);
+
+      await expect(
+        caller.update({ id: mockTemplate.id, name: 'Team Pipeline' })
+      ).rejects.toMatchObject({ code: 'CONFLICT' });
+    });
+
+    it('allows rename when no collision exists', async () => {
+      const updated = { ...mockTemplate, name: 'New Name' };
+      // Name-change triggers uniqueness pre-check; no collision found
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
+      (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
+        const mockTx = {
+          reportTemplate: { update: vi.fn().mockResolvedValue(updated) },
+        };
+        return fn(mockTx);
+      });
+
+      const result = await caller.update({ id: mockTemplate.id, name: 'New Name' });
+
+      expect(result).toMatchObject({ name: 'New Name' });
+    });
+
     it('scopes update to caller tenantId', async () => {
-      const updated = { ...mockTemplate, name: 'Changed' };
+      const updated = { ...mockTemplate, chartType: 'line' };
       let capturedWhere: any;
+      // No name change → skip uniqueness pre-check
       (prismaMock.$transaction as any).mockImplementation(async (fn: (tx: any) => Promise<any>) => {
         const mockTx = {
           reportTemplate: {
@@ -267,7 +295,7 @@ describe('Report Templates Router (PG-200)', () => {
         return fn(mockTx);
       });
 
-      await caller.update({ id: mockTemplate.id, name: 'Changed' });
+      await caller.update({ id: mockTemplate.id, chartType: 'line' });
 
       expect(capturedWhere).toMatchObject({ id: mockTemplate.id, tenantId });
     });

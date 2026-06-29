@@ -123,6 +123,20 @@ export const reportTemplatesRouter = createTRPCRouter({
     const tenantId = ctx.tenant.tenantId;
     const { id, ...fields } = input;
 
+    // Pre-check name uniqueness when renaming (same invariant as create).
+    if (fields.name !== undefined) {
+      const collision = await ctx.prismaWithTenant.reportTemplate.findFirst({
+        where: { tenantId, name: fields.name, NOT: { id } },
+        select: { id: true },
+      });
+      if (collision) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `A report template named "${fields.name}" already exists.`,
+        });
+      }
+    }
+
     try {
       const updated = await ctx.prisma.$transaction(async (tx) => {
         return tx.reportTemplate.update({
@@ -147,6 +161,13 @@ export const reportTemplatesRouter = createTRPCRouter({
       const prismaError = err as { code?: string };
       if (prismaError.code === 'P2025') {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Report template not found.' });
+      }
+      if (prismaError.code === 'P2002') {
+        // Unique constraint fallback (belt-and-suspenders for concurrent renames).
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'A report template with that name already exists.',
+        });
       }
       throw err;
     }

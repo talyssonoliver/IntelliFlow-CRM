@@ -357,7 +357,12 @@ export default function ReportTemplatesContent() {
             <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={isSaving}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={isSaving || !form.name.trim()}>
+            <Button
+              onClick={handleSave}
+              disabled={
+                isSaving || !form.name.trim() || parseColumns(form.selectedColumns).length === 0
+              }
+            >
               {isSaving ? 'Saving…' : 'Save'}
             </Button>
           </DialogFooter>
