@@ -1,15 +1,15 @@
 # Session Context Snapshot
-_Generated: 2026-06-29T06:32:01.106Z • Branch: chore/sprint18-fleet-csv_
+_Generated: 2026-06-29T23:14:12.647Z • Branch: chore/sprint18-iter2b-csv_
 
 > Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 18** (sprint-18) — 77% complete (51/66 tasks). 1 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 1s ago; 596 total tasks across the project.
+Active sprint: **Sprint 18** (sprint-18) — 82% complete (54/66 tasks). 1 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 2s ago; 596 total tasks across the project.
 
 ## Project Health
 
-- **Progress:** 445/596 tasks completed (74.66%) — 150 backlog, 0 blocked, 1 in progress.
+- **Progress:** 448/596 tasks completed (75.17%) — 147 backlog, 0 blocked, 1 in progress.
 - **Focus band:** Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
 - **Evidence issues:** 26 completed without attestation; 4 attested but CSV not updated.
 - _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
@@ -35,19 +35,19 @@ Active sprint: **Sprint 18** (sprint-18) — 77% complete (51/66 tasks). 1 task(
 
 ## Git Activity
 
-- **Branch:** `chore/sprint18-fleet-csv` (7 dirty file(s))
-- **Dirty preview:** `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`, `apps/project-tracker/docs/metrics/_global/Sprint_plan_G.csv`, `apps/project-tracker/docs/metrics/_global/Sprint_plan_H.csv`, `apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv`, `artifacts/reports/current-state-report.json` …
+- **Branch:** `chore/sprint18-iter2b-csv` (5 dirty file(s))
+- **Dirty preview:** `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`, `apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv`, `artifacts/reports/current-state-report.json`, `artifacts/reports/spec-tracker.json`, `docs/CURRENT_STATE_REPORT.md`
 - **Last 10 commits:**
-  - `d3905b317` feat(PG-188): billing settings page - org details, tax ID, invoice contact (#547) — Talysson Da Silva Oliveira, 9 minutes ago
-  - `98a13f22f` feat(IFC-215): replace tokenCost/model/hallucinationFlags placeholders with real chain metadata (#546) — Talysson Da Silva Oliveira, 2 hours ago
-  - `e858a043a` test(IFC-247): lead detail page comprehensive tests (#545) — Talysson Da Silva Oliveira, 2 hours ago
-  - `c9e33703a` chore(IFC-248): flip CSV to Completed after #542 merge (#544) — Talysson Da Silva Oliveira, 6 hours ago
-  - `d579cb06b` test(IFC-214): run AI monitoring cross-process bridge verification in CI integration lane (#543) — Talysson Da Silva Oliveira, 8 hours ago
-  - `f4ceb644a` test(IFC-248): lead list & create page tests (#542) — Talysson Da Silva Oliveira, 9 hours ago
-  - `2de1aef52` fix(orchestration): 4 generator fixes from PG-058's session issues log (#541) — Talysson Da Silva Oliveira, 11 hours ago
-  - `4792c0793` chore(PG-058): flip CSV to Completed after #537 merge (#538) — Talysson Da Silva Oliveira, 12 hours ago
-  - `be394e078` feat(PG-058): dashboard KPI calculator + real-time polling + a11y (#537) — Talysson Da Silva Oliveira, 13 hours ago
-  - `bb7acac1e` feat(orchestration): kill gate friction + standardize time/issues tracking + --cli prompts (#536) — Talysson Da Silva Oliveira, 19 hours ago
+  - `15f789404` feat(PG-200): report templates module settings page (#563) — Talysson Da Silva Oliveira, 13 minutes ago
+  - `89f8851cd` feat(IFC-309): server-side Terms Acceptance — immutable audit record + tRPC + UI (#562) — Talysson Da Silva Oliveira, 5 hours ago
+  - `7360b207a` feat(ifc-234): wire settings team+integrations pages to real tRPC data (#560) — Talysson Da Silva Oliveira, 8 hours ago
+  - `9359c7e1c` chore(orchestrator): encode 7 fleet findings into dispatch prompt + DoD (#558) — Talysson Da Silva Oliveira, 14 hours ago
+  - `21f44cc50` chore(sprint-18): mark IFC-247, IFC-215, PG-188 completed after fleet merge (#551) — Talysson Da Silva Oliveira, 16 hours ago
+  - `d3905b317` feat(PG-188): billing settings page - org details, tax ID, invoice contact (#547) — Talysson Da Silva Oliveira, 17 hours ago
+  - `98a13f22f` feat(IFC-215): replace tokenCost/model/hallucinationFlags placeholders with real chain metadata (#546) — Talysson Da Silva Oliveira, 18 hours ago
+  - `e858a043a` test(IFC-247): lead detail page comprehensive tests (#545) — Talysson Da Silva Oliveira, 19 hours ago
+  - `c9e33703a` chore(IFC-248): flip CSV to Completed after #542 merge (#544) — Talysson Da Silva Oliveira, 23 hours ago
+  - `d579cb06b` test(IFC-214): run AI monitoring cross-process bridge verification in CI integration lane (#543) — Talysson Da Silva Oliveira, 25 hours ago
 
 ## Key File References
 
