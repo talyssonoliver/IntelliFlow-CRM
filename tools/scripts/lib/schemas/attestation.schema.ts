@@ -27,6 +27,12 @@ export const verdictSchema = z.enum([
   'NEEDS_HUMAN',
 ]);
 
+// Plan-reviewer verdict (AUTOMATION-003 — ceremony provenance). A named enum,
+// NOT a free string, so the orchestrator's affirmative check and the
+// check-attestation-provenance.mjs gate cannot be fooled by "pending"/casing.
+// Affirmative = APPROVED | APPROVED_WITH_CHANGES.
+export const planReviewerVerdictSchema = z.enum(['APPROVED', 'APPROVED_WITH_CHANGES', 'REJECTED']);
+
 // SHA256 hash pattern
 const sha256Pattern = /^[a-f0-9]{64}$/;
 
@@ -202,6 +208,32 @@ export const attestationSchema = z.object({
     .optional()
     .describe('Environment details where attestation was generated'),
   notes: z.string().optional().describe('Additional notes or context'),
+  // ── Ceremony provenance (AUTOMATION-003) ──────────────────────────────────
+  // Optional in the schema (so the ~1000 historical attestations that predate
+  // this are NOT invalidated); REQUIRED-ness is enforced per-task at exec time
+  // by tools/scripts/exec-preflight/check-attestation-provenance.mjs, which also
+  // cross-checks plan_path/spec_path against the on-disk plan-reviewer marker.
+  spec_session_consensus: z
+    .string()
+    .optional()
+    .describe('The /spec-session consensus verdict + one-line summary (e.g. "UNANIMOUS — …")'),
+  plan_reviewer_verdict: planReviewerVerdictSchema
+    .optional()
+    .describe(
+      'Verdict from the plan-reviewer subagent (APPROVED | APPROVED_WITH_CHANGES | REJECTED)'
+    ),
+  plan_reviewer_agent: z
+    .string()
+    .optional()
+    .describe('Agent id / transcript label of the plan-reviewer subagent'),
+  plan_reviewer_marker: z
+    .string()
+    .optional()
+    .describe(
+      'Informational marker string ("plan-reviewer: subagent"); the authoritative proof is the plan_path file marker'
+    ),
+  spec_path: z.string().optional().describe('Repo-relative path to the spec file'),
+  plan_path: z.string().optional().describe('Repo-relative path to the plan file'),
 });
 
 // Export TypeScript types inferred from Zod schema

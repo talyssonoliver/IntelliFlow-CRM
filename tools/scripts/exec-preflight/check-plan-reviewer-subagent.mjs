@@ -33,6 +33,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { PLAN_REVIEWER_SUBAGENT_MARKER_RE } from '../lib/plan-reviewer-marker.mjs';
 
 const REPO_ROOT = resolve(process.cwd());
 const CSV_PATH = join(
@@ -265,7 +266,7 @@ function main() {
 
   info('[preflight] Checking ' + taskId + ' plan at ' + planPath);
 
-  const hasMarkerComment = /<!--\s*plan-reviewer\s*:\s*subagent\s*-->/i.test(content);
+  const hasMarkerComment = PLAN_REVIEWER_SUBAGENT_MARKER_RE.test(content);
   const hasSubagentLine = /reviewer_subagent\s*:\s*\S+/i.test(signoff);
   const hasTranscriptLine = /(?:Subagent\s+transcript|subagent-transcript)\s*:/i.test(signoff);
   const acceptable = hasMarkerComment || hasSubagentLine || hasTranscriptLine;

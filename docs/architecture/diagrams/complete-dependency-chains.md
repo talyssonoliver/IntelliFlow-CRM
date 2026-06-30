@@ -2624,3 +2624,22 @@ inference), ADR-050 (duplicate-detection parallel).
   activity feed (no call-recording integration; no download URL in activity
   metadata), and opening an unvalidated `recordingUrl` was an unsafe-URL
   surface.
+
+---
+
+## Harness / Tooling Script Dependencies (non-hexagonal)
+
+Not a domain chain — recorded here for traceability per the AUTOMATION-003
+plan-reviewer (W-1).
+
+- `tools/scripts/lib/plan-reviewer-marker.mjs` — single source of truth for the
+  `<!-- plan-reviewer: subagent -->` marker regex. Imported by:
+  - `tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs` (was an
+    inline regex; now imports the shared module)
+  - `tools/scripts/exec-preflight/check-attestation-provenance.mjs` (NP-5
+    cross-check of the attestation `plan_path` file)
+- `tools/scripts/exec-preflight/check-attestation-provenance.mjs` is invoked
+  POST-attestation by `.claude/skills/exec-attestation` (Phase 5 self-check) and
+  `tools/scripts/generate-final-report.mjs`.
+
+See ADR-068 (attestation provenance standardization).

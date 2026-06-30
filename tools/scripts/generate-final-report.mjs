@@ -56,6 +56,12 @@ const preflights = [
     ['tools/scripts/exec-preflight/check-exec-readiness.mjs', TASK_ID]),
   runCheck('Task JSON schema sweep', 'node',
     ['tools/scripts/validate-task-json-schemas.mjs', '--quiet']),
+  // Post-attestation: the provenance block on attestation.json must be present
+  // (on PG-/IFC- tasks), affirmative, and cross-validated against the on-disk
+  // plan/spec files (AUTOMATION-003). Safe to run here — this report fires after
+  // the attestation lands, unlike the pre-exec preflight table.
+  runCheck('Attestation Provenance', 'node',
+    ['tools/scripts/exec-preflight/check-attestation-provenance.mjs', TASK_ID]),
 ];
 
 // ─── 2. Workflow audit (the 30+ phase check) ──────────────────────────────
