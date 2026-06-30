@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T08:33:38.779Z",
+  "generatedAt": "2026-07-19T12:22:03.146Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -504,11 +504,11 @@
     "totalTasks": 597,
     "totalNumberedSprintTasks": 592,
     "continuousTaskCount": 5,
-    "completedTasks": 448,
+    "completedTasks": 449,
     "backlogTasks": 147,
     "blockedTasks": 0,
-    "completionPercentage": 75.04,
-    "inProgressTasks": 2,
+    "completionPercentage": 75.21,
+    "inProgressTasks": 1,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -565,12 +565,6 @@
         "status": "Backlog",
         "sprint": 18,
         "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json"
-      },
-      {
-        "taskId": "AUTOMATION-003",
-        "status": "In Progress",
-        "sprint": 18,
-        "attestationPath": ".specify/sprints/sprint-18/attestations/AUTOMATION-003/attestation.json"
       }
     ],
     "duplicateCanonicalAttestations": [],
@@ -17526,11 +17520,11 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 67,
-      "completedTasks": 54,
+      "completedTasks": 55,
       "backlogTasks": 11,
       "blockedTasks": 0,
-      "inProgressTasks": 2,
-      "attestedCompletedTasks": 41,
+      "inProgressTasks": 1,
+      "attestedCompletedTasks": 42,
       "missingCompletedAttestations": [
         "PG-196",
         "PG-197",
@@ -17739,36 +17733,6 @@
           }
         },
         {
-          "taskId": "AUTOMATION-003",
-          "sprint": 18,
-          "status": "In Progress",
-          "section": "AI Foundation",
-          "title": "Standardize attestation provenance fields (exec-attestation emits; schema declares; exec-preflight gate enforces; orchestrator DoD requires)",
-          "description": "Standardize attestation provenance fields (exec-attestation emits; schema declares; exec-preflight gate enforces; orchestrator DoD requires)",
-          "summary": "Standardize attestation provenance. POST-attestation gate (check-attestation-provenance.mjs) cross-checks plan_path on disk for the plan-reviewer marker via the shared plan-reviewer-marker.mjs (one definition;......",
-          "definitionOfDone": "exec-attestation always writes a provenance block (spec_session_consensus, plan_reviewer_verdict, plan_reviewer_agent, plan_reviewer_marker, spec_path, plan_path); attestation Zod+JSON schema declares those 6 fields as OPTIONAL with zero new corpus failures; new tools/scripts/exec-preflight/check-attestation-provenance.mjs BLOCKs on missing or non-affirmative provenance and is wired into the exec preflight gate list; orchestrator.md DoD requires the fields; vitest covers the gate; ADR-068 documents the decision; verified by the gate vitest test passing and validate-schemas failure count unchanged from baseline",
-          "definitionOfDoneSnapshot": "exec-attestation always writes a provenance block (spec_session_consensus, plan_reviewer_verdict, plan_reviewer_agent, plan_reviewer_marker, spec_path, plan_path);...",
-          "dependencies": [],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/AUTOMATION-003/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-06-30T14:27:31Z",
-            "sprintFolder": 18
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 3,
-            "met": 3,
-            "missed": 0
-          }
-        },
-        {
           "taskId": "DOC-015",
           "sprint": 18,
           "status": "Backlog",
@@ -17867,6 +17831,40 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "IFC-212",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "AI/ML",
+          "title": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
+          "description": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
+          "summary": "IFC-212 exec phase complete with 5 audit findings remediated honestly (2026-04-27 audit-fix iteration): [HIGH-1 FIXED] tenantId='default' regression — extended AIServicePort.scoreLead/qualifyLead with optional `opts:......",
+          "definitionOfDone": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; lead scoring jobs are enqueued with correlation metadata and consumed by ai-scoring worker contract; retry and failure handling follow BullMQ defaults; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
+          "definitionOfDoneSnapshot": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; Lead scoring jobs enqueued with correlation metadata and consumed by ai-scoring worker contract",
+          "dependencies": [
+            "IFC-015",
+            "IFC-125",
+            "IFC-168"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-27T20:55:00Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 4,
+            "met": 1,
+            "missed": 3
+          }
         }
       ],
       "sectionSummary": [
@@ -17915,8 +17913,8 @@
         {
           "section": "AI Foundation",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         },
         {
           "section": "Compliance",
@@ -20061,7 +20059,7 @@
         {
           "taskId": "AUTOMATION-003",
           "sprint": 18,
-          "status": "In Progress",
+          "status": "Completed",
           "section": "AI Foundation",
           "title": "Standardize attestation provenance fields (exec-attestation emits; schema declares; exec-preflight gate enforces; orchestrator DoD requires)",
           "description": "Standardize attestation provenance fields (exec-attestation emits; schema declares; exec-preflight gate enforces; orchestrator DoD requires)",
