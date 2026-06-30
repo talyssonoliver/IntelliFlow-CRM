@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T23:14:12.542Z",
+  "generatedAt": "2026-06-30T21:56:50.290Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -325,6 +325,7 @@
       ".specify/sprints/sprint-17/attestations/PG-185/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-186/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-195/attestation.json",
+      ".specify/sprints/sprint-18/attestations/AUTOMATION-003/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-032/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-078/attestation.json",
@@ -499,13 +500,13 @@
   "overview": {
     "numberedSprintCount": 30,
     "numberedSprintRange": "0-29",
-    "totalTasks": 596,
-    "totalNumberedSprintTasks": 591,
+    "totalTasks": 597,
+    "totalNumberedSprintTasks": 592,
     "continuousTaskCount": 5,
-    "completedTasks": 448,
+    "completedTasks": 449,
     "backlogTasks": 147,
     "blockedTasks": 0,
-    "completionPercentage": 75.17,
+    "completionPercentage": 75.21,
     "inProgressTasks": 1,
     "otherTasks": 0
   },
@@ -17518,12 +17519,12 @@
       "sprint": 18,
       "name": "Sprint 18",
       "summarySource": "specify",
-      "totalTasks": 66,
-      "completedTasks": 54,
+      "totalTasks": 67,
+      "completedTasks": 55,
       "backlogTasks": 11,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 40,
+      "attestedCompletedTasks": 41,
       "missingCompletedAttestations": [
         "PG-191",
         "PG-196",
@@ -17908,6 +17909,12 @@
           "section": "Support Pages",
           "total": 2,
           "completed": 2,
+          "open": 0
+        },
+        {
+          "section": "AI Foundation",
+          "total": 1,
+          "completed": 1,
           "open": 0
         },
         {
@@ -20047,6 +20054,36 @@
           "kpiSummary": {
             "total": 4,
             "met": 4,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "AUTOMATION-003",
+          "sprint": 18,
+          "status": "Completed",
+          "section": "AI Foundation",
+          "title": "Standardize attestation provenance fields (exec-attestation emits; schema declares; exec-preflight gate enforces; orchestrator DoD requires)",
+          "description": "Standardize attestation provenance fields (exec-attestation emits; schema declares; exec-preflight gate enforces; orchestrator DoD requires)",
+          "summary": "Standardize attestation provenance. POST-attestation gate (check-attestation-provenance.mjs) cross-checks plan_path on disk for the plan-reviewer marker via the shared plan-reviewer-marker.mjs (one definition;......",
+          "definitionOfDone": "exec-attestation always writes a provenance block (spec_session_consensus, plan_reviewer_verdict, plan_reviewer_agent, plan_reviewer_marker, spec_path, plan_path); attestation Zod+JSON schema declares those 6 fields as OPTIONAL with zero new corpus failures; new tools/scripts/exec-preflight/check-attestation-provenance.mjs BLOCKs on missing or non-affirmative provenance and is wired into the exec preflight gate list; orchestrator.md DoD requires the fields; vitest covers the gate; ADR-068 documents the decision; verified by the gate vitest test passing and validate-schemas failure count unchanged from baseline",
+          "definitionOfDoneSnapshot": "exec-attestation always writes a provenance block (spec_session_consensus, plan_reviewer_verdict, plan_reviewer_agent, plan_reviewer_marker, spec_path, plan_path);...",
+          "dependencies": [],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/AUTOMATION-003/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-06-30T14:27:31Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 3,
+            "met": 3,
             "missed": 0
           }
         }

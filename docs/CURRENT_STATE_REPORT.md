@@ -1,13 +1,13 @@
 # Current State Report
-_Generated: 2026-06-29T23:14:12.542Z_
+_Generated: 2026-06-30T21:56:50.290Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 5 continuous tasks.
-- Overall progress: 448/596 tasks completed (75.17%), 147 backlog, 0 blocked, 1 in progress.
-- Numbered sprint progress alone: 443/591 tasks completed or attested inside numbered sprints.
+- Overall progress: 449/597 tasks completed (75.21%), 147 backlog, 0 blocked, 1 in progress.
+- Numbered sprint progress alone: 444/592 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
 - Ready-to-start work: DOC-015 (Sprint 18), IFC-211 (Sprint 18), IFC-212 (Sprint 18), IFC-271 (Sprint 18), IFC-314 (Sprint 18).
 - Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
@@ -264,9 +264,9 @@ _Generated: 2026-06-29T23:14:12.542Z_
 
 ## Sprint 18 - Sprint 18
 
-- Status: 54/66 completed, 11 backlog, 0 blocked, 1 in progress.
+- Status: 55/67 completed, 11 backlog, 0 blocked, 1 in progress.
 - Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).
-- Evidence coverage: 40/54 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 41/55 completed tasks have canonical `attestation.json` evidence.
 - Evidence gaps: completed in CSV but missing canonical attestation: PG-191, PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209.
 
 **Accomplished**
