@@ -86,6 +86,17 @@ For each dispatchable, unblocked task, up to the concurrency cap:
 
 Only **one** PR merges at a time — you hold the merge token.
 
+⚠ **The merge token is ADVISORY, not enforced.** An executor shares your `gh`
+identity, so it _can_ `gh pr merge` its own PR — and one did (IFC-309), despite
+"do NOT merge" in the prompt + override + repeated messages. Instruction is not
+enforcement. Mitigations: (a) state the no-merge rule forcefully at dispatch
+(PG-200 then obeyed); (b) **poll `origin/main` while any PR is in flight** — an
+unexpected SHA move = a self-merge; verify the 8-point post-hoc and, if it
+fails, you cannot un-merge cheaply, so this is detection not prevention. The
+only true fix is **separate agent credentials** (a bot token WITHOUT merge
+rights) + branch protection — an infra change; flag it to the owner before
+unattended runs.
+
 - When an executor reports green-and-ready, grant the token to exactly one;
   merge it; then `git fetch` + `git pull --ff-only` the control plane.
 - The instant a merge lands, flag **every** other in-flight executor
@@ -93,14 +104,18 @@ Only **one** PR merges at a time — you hold the merge token.
   re-run pre-ship + re-trigger CI before it may take the token. A branch that
   isn't even with `origin/main` does not merge (renamed exports break
   semantically with no textual conflict).
-- After the merged task passes the DONE check, flip its CSV row on the control
-  plane (CSV only → `split-sprint-plan.ts` → `generate-context.ts`), commit,
-  push — then release the token. Flip with **surgical `sed`**
-  (`sed -i "/^TASK,/ s/,In Progress,/,Completed,/"`) — a Python/JS CSV rewriter
-  reformats the WHOLE file (line-ending/quoting churn). `generate-context.ts`
-  needs `pnpm install` (papaparse) in a fresh worktree. For a multi-task fleet
-  you MAY BATCH all flips into ONE PR after the last feature merges — fewer
-  context-snapshot regenerations and conflicts.
+- After the merged task passes the DONE check, flip its CSV row (in a worktree,
+  never the live control plane), then `split-sprint-plan.ts` → `pnpm install` →
+  `generate-context.ts`, commit, push, merge — then release the token. **Use
+  `node tools/scripts/flip-task-status.mjs <TASK>=<Status> [...]`** — do NOT
+  hand-edit with `sed`/regex/`[System.IO.File]`: the CSV has **multi-line quoted
+  cells** (a row spans physical lines) and embedded task-IDs, so naive patterns
+  match the wrong cell; `,In Progress,` is not unique (tasks share statuses);
+  and PowerShell `[System.IO.File]` uses the .NET process cwd (the main repo),
+  NOT `Set-Location` — writes silently hit the control plane (this flipped 6
+  wrong tasks once). The script uses Papa.parse + a stable writer and only
+  touches the named rows. For a multi-task fleet, BATCH all flips into ONE PR
+  after the last feature merges.
 - Verify the harness reclaimed the finished worktree (a committed branch may
   linger); if not, note it for the periodic audit.
 
@@ -161,22 +176,28 @@ A task is DONE only when you have **independently verified all six**:
 1. The executor's loop emitted its promise AND the attestation exists at
    `.specify/sprints/sprint-{N}/attestations/{TASK}/attestation.json`, all gates
    PASS (binary — no WARN/SKIP).
-2. **The FULL evidence trail is committed on the branch with GENUINE provenance
-   — verify by READING the files, not by trusting the attestation verdict.** All
-   four must be present under `.specify/sprints/sprint-{N}/`:
-   `specifications/{TASK}-spec.md`, `planning/{TASK}-plan.md`,
-   `attestations/{TASK}/attestation.json`,
-   `attestations/{TASK}/task-tracking.json`. Read them via blob hash to dodge
-   MSYS path mangling (`git ls-tree -r origin/main --name-only` →
-   `git show`/`cat-file`, or prefix `MSYS_NO_PATHCONV=1`). The spec must show
-   **multi-persona consensus** (not a single templated voice); the plan must
-   carry a **plan-reviewer sign-off**; `task-tracking` `status_history` must
-   show the spec→plan→exec progression with **real, non-placeholder timestamps**
-   (round 00:00/01:00/02:00 series = fabricated → reject). A PR carrying ONLY
-   `attestation.json` is NOT done — the ceremony is unproven; send it back.
-   (This gap shipped a sub-fleet: IFC-247 had the full trail, IFC-215 dropped
-   spec/plan, PG-188 had attestation only — code was CI-validated but the
-   process was unauditable.)
+2. **The CANONICAL evidence is committed with GENUINE provenance — verify by
+   READING it, not by trusting "PIPELINE COMPLETE".** The tracked canonical
+   files are `attestations/{TASK}/attestation.json` +
+   `attestation-latest.json` + `attestations/{TASK}/task-tracking.json`. **DO
+   NOT require or force-add raw `spec.md`/`plan.md`** —
+   `.specify/sprints/.gitignore` IGNORES `specifications/`
+   - `planning/` BY DESIGN ("keep ONLY canonical attestation files"); they are
+     ephemeral working artifacts. (Earlier guidance requiring the md files was
+     WRONG — it fought the gitignore and falsely rejected a complete task.)
+     Proof the ceremony ran lives in the attestation as provenance fields
+     (`spec_session_consensus`, `plan_reviewer_verdict`, `plan_reviewer_marker`)
+     AND is INDEPENDENTLY gate-enforced at exec by
+     `tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs`. Verify:
+     attestation `verdict: COMPLETE`, `task-tracking.json` present with **real
+     (non-placeholder) `status_history` timestamps** (a round 00:00/01:00/02:00
+     series = fabricated → reject), and — when present — the provenance fields
+     are affirmative. ⚠ The attestation schema is NOT yet standardized — some
+     agents omit the provenance fields (IFC-234 has them; IFC-309/PG-200 don't);
+     until it is, lean on the gate-enforced plan-reviewer marker + CI. A PR with
+     NEITHER the provenance fields NOR `task-tracking.json` is unproven — send
+     it back. Read via `MSYS_NO_PATHCONV=1` (or blob hash) to dodge MSYS path
+     mangling.
 3. The 4 build validations passed (TypeScript, Tests, Lint, **Build**) — and CI
    re-ran them independently on the PR (external, unfakeable), so trust CI over
    the self-authored attestation for code quality.
