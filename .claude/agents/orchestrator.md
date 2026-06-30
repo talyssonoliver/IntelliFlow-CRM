@@ -186,18 +186,25 @@ A task is DONE only when you have **independently verified all six**:
      ephemeral working artifacts. (Earlier guidance requiring the md files was
      WRONG — it fought the gitignore and falsely rejected a complete task.)
      Proof the ceremony ran lives in the attestation as provenance fields
-     (`spec_session_consensus`, `plan_reviewer_verdict`, `plan_reviewer_marker`)
-     AND is INDEPENDENTLY gate-enforced at exec by
-     `tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs`. Verify:
-     attestation `verdict: COMPLETE`, `task-tracking.json` present with **real
+     (`spec_session_consensus`, `plan_reviewer_verdict`, `plan_reviewer_agent`,
+     `plan_reviewer_marker`, `spec_path`, `plan_path`) which are now **schema-
+     declared and gate-enforced** (AUTOMATION-003): the attestation schema
+     allows them and
+     `tools/scripts/exec-preflight/check-attestation-provenance.mjs` BLOCKs a
+     PG-/IFC- task whose attestation omits them, has a non-affirmative
+     `plan_reviewer_verdict`, or whose `plan_path` does not exist on disk with
+     the `<!-- plan-reviewer: subagent -->` marker (it composes the same marker
+     check as `check-plan-reviewer-subagent.mjs`). Verify: attestation
+     `verdict: COMPLETE`, `task-tracking.json` present with **real
      (non-placeholder) `status_history` timestamps** (a round 00:00/01:00/02:00
-     series = fabricated → reject), and — when present — the provenance fields
-     are affirmative. ⚠ The attestation schema is NOT yet standardized — some
-     agents omit the provenance fields (IFC-234 has them; IFC-309/PG-200 don't);
-     until it is, lean on the gate-enforced plan-reviewer marker + CI. A PR with
-     NEITHER the provenance fields NOR `task-tracking.json` is unproven — send
-     it back. Read via `MSYS_NO_PATHCONV=1` (or blob hash) to dodge MSYS path
-     mangling.
+     series = fabricated → reject), and the provenance fields are present +
+     affirmative (**REQUIRED** for PG-/IFC- tasks — no longer "when present"; an
+     executor that ran the real pipeline always emits them). For the
+     **reconcile-and-attest path** (which does not run exec preflights), run
+     `check-attestation-provenance.mjs <TASK>` yourself before accepting. A PR
+     missing the provenance fields, `task-tracking.json`, OR failing that gate
+     is unproven — send it back. Read via `MSYS_NO_PATHCONV=1` (or blob hash) to
+     dodge MSYS path mangling.
 3. The 4 build validations passed (TypeScript, Tests, Lint, **Build**) — and CI
    re-ran them independently on the PR (external, unfakeable), so trust CI over
    the self-authored attestation for code quality.

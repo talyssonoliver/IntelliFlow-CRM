@@ -337,6 +337,31 @@
     "lighthouse_waiver_approved_by": {
       "description": "If any kpi_results entry has kpi matching /lighthouse/i and met: false, and this is not the first such waiver in the sprint, this field MUST be a human name or email accepting the risk that CI-only Lighthouse enforcement may drift. Guard 4 gate (check-lighthouse-waiver.mjs) enforces this at exec time. Introduced 2026-04-20 to break the PG-047 -> PG-053 -> PG-054 -> PG-056 -> PG-180 -> PG-189 precedent chain.",
       "type": "string"
+    },
+    "spec_session_consensus": {
+      "description": "Ceremony provenance (AUTOMATION-003): the /spec-session consensus verdict + one-line summary, e.g. 'UNANIMOUS — …'. Optional in schema; required per-task at exec by check-attestation-provenance.mjs.",
+      "type": "string"
+    },
+    "plan_reviewer_verdict": {
+      "description": "Ceremony provenance (AUTOMATION-003): verdict from the plan-reviewer subagent. Named enum so the affirmative check cannot be fooled by casing/'pending'.",
+      "type": "string",
+      "enum": ["APPROVED", "APPROVED_WITH_CHANGES", "REJECTED"]
+    },
+    "plan_reviewer_agent": {
+      "description": "Ceremony provenance (AUTOMATION-003): agent id / transcript label of the plan-reviewer subagent.",
+      "type": "string"
+    },
+    "plan_reviewer_marker": {
+      "description": "Ceremony provenance (AUTOMATION-003): informational marker string ('plan-reviewer: subagent'); the authoritative proof is the plan_path file marker.",
+      "type": "string"
+    },
+    "spec_path": {
+      "description": "Ceremony provenance (AUTOMATION-003): repo-relative path to the spec file.",
+      "type": "string"
+    },
+    "plan_path": {
+      "description": "Ceremony provenance (AUTOMATION-003): repo-relative path to the plan file.",
+      "type": "string"
     }
   },
   "required": [

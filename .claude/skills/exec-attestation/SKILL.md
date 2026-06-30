@@ -67,12 +67,17 @@ Recovery: `docs/runbooks/gate-4b-recovery.md`.
 
 1. Run the validation matrix plus build commands (typecheck, tests, lint, build as applicable) — capture exit codes and durations
 2. Calculate SHA256 hashes for all created/modified artifacts
-3. Create `attestation.json` with actual results
+3. Create `attestation.json` (AND `attestation-latest.json`) with actual results — **including the REQUIRED provenance block** (`spec_session_consensus`, `plan_reviewer_verdict`, `plan_reviewer_agent`, `plan_reviewer_marker`, `spec_path`, `plan_path`; sourced from the real run — see `references/attestation-format.md` → "Provenance Block (REQUIRED)").
 4. **MANDATORY: Validate against the schema before proceeding**:
    ```bash
    npx tsx tools/scripts/validate-schemas.ts
    ```
    If this reports errors on your attestation, fix the shape — do NOT proceed. Common failure: `kpi_results`/`gate_results` written as objects instead of arrays (see attestation-format.md "MUST be arrays, NEVER objects" section). 18 historical attestations slipped through because the validator's glob was misconfigured — that's fixed now, so any shape drift WILL be caught.
+4b. **MANDATORY: Provenance gate self-check** — the attestation now exists, so run:
+   ```bash
+   node tools/scripts/exec-preflight/check-attestation-provenance.mjs <TASK_ID>
+   ```
+   It MUST exit 0. It BLOCKs (exit 1) if the provenance block is missing (on a PG-/IFC- task), non-affirmative, or not cross-validated — it confirms `plan_path` exists on disk and carries the `<!-- plan-reviewer: subagent -->` marker, and that `spec_path` exists. If it BLOCKs, fix the provenance block (or rerun the plan-reviewer) — do NOT finish the task.
 5. Verify API returns correct status:
    ```bash
    curl http://localhost:3002/api/tasks/validation-summary/<TASK_ID>
@@ -90,6 +95,7 @@ Recovery: `docs/runbooks/gate-4b-recovery.md`.
 | `artifact_hashes` | Use this (NOT `files_created` or `files_modified`) |
 | `nav_wiring_confirmed` | REQUIRED `true` when `artifact_hashes` contains any `apps/web/src/app/**/page.tsx`. Verified at exec time by Gate 12 (`check-nav-wiring.mjs`). Guard 5 — PG-180 lesson. |
 | `lighthouse_waiver_approved_by` | REQUIRED when a Lighthouse KPI has `met: false` AND the sprint already has another such waiver. Value is the human name/email accepting the risk. Verified by Gate 13 (`check-lighthouse-waiver.mjs`). Guard 4 — PG-180/PG-189 precedent chain. |
+| provenance block (`spec_session_consensus`, `plan_reviewer_verdict`, `plan_reviewer_agent`, `plan_reviewer_marker`, `spec_path`, `plan_path`) | REQUIRED. `plan_reviewer_verdict` is an enum (`APPROVED`\|`APPROVED_WITH_CHANGES`\|`REJECTED`). `spec_path`/`plan_path` MUST be repo-relative. Verified post-write by `check-attestation-provenance.mjs` (AUTOMATION-003) which cross-checks the `plan_path` file for the `<!-- plan-reviewer: subagent -->` marker. |
 
 ## Forbidden marketing phrases
 
