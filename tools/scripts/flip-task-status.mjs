@@ -88,3 +88,4 @@ for (const { id, status } of args) {
   }
 }
 process.stdout.write('flip-task-status: OK (verified). Next: split-sprint-plan.ts + generate-context.ts\n');
+// CSV status flip is string-op based (no dynamic RegExp) by design.
