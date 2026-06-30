@@ -265,9 +265,12 @@ Converge everything in the CHEAP loops first, then spend ONE full pre-ship.
    finding on the SAME code. So flush it in the CHEAP loop, not via full pre-ships:
      commit your impl → \`node scripts/codex-review.mjs\` (~2 min) → for each finding confirm against
      the real code (grep / git show HEAD:<file>), then fix minimally OR waive with source-anchored
-     evidence in tools/audit/codex-review-waivers.yaml → re-commit → repeat until you get 2-3
-     CONSECUTIVE CLEAN standalone runs. (A waiver-only commit doesn't touch source, so re-running is
-     cheap.) Only then does the full pre-ship's codex step reliably pass on the 1st try.
+     evidence in tools/audit/codex-review-waivers.yaml → re-commit → repeat until you get >=5
+     CONSECUTIVE CLEAN standalone runs (a single clean pass is NOT enough — codex is non-deterministic;
+     one task burned 8 FULL pre-ship runs because each ~28-min full run surfaced a new real bug. >=5
+     standalone-clean flushes that backlog at ~2 min each, not ~28). The findings are usually REAL
+     (e.g. a ModuleGate entitlement bypass, a cross-tenant uniqueness leak) — fix, don't wave away.
+     Only then does the full pre-ship's codex step reliably pass on the 1st try.
 
 3. WINDOWS BUILD FLAKE — if a pre-ship step dies with an esbuild / Next "build worker" crash (not a
    real test/lint failure), that's host-level flakiness under load, not your code: re-run the step;
@@ -361,15 +364,15 @@ shipped". After the promise, you still owe the ship steps below.
 VALIDATE BEFORE CLAIMING DONE ("PIPELINE COMPLETE" is a claim, not proof):
 - TypeScript + Tests + Lint + BUILD all pass; full suite for every touched package
   (pnpm --filter <pkg> test, not a guessed subset).
-- COMMIT THE FULL EVIDENCE TRAIL to your PR — all FOUR of these, not just the attestation
-  (a sub-fleet shipped with ONLY attestation.json, leaving NO durable proof the ceremony ran;
-  the orchestrator now REJECTS that):
-    1. .specify/sprints/sprint-${SPRINT}/specifications/${TASK_ID}-spec.md  (the multi-persona spec)
-    2. .specify/sprints/sprint-${SPRINT}/planning/${TASK_ID}-plan.md        (the plan-reviewer-signed plan)
-    3. .specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/attestation.json   (all gates PASS, binary)
-    4. .specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/task-tracking.json (status_history etc.)
-  /spec-session and /plan-session WRITE files 1+2 — you must git-add and commit them, or the proof
-  is lost. task-tracking status_history timestamps MUST be the REAL wall-clock times each phase finished
+- COMMIT THE CANONICAL EVIDENCE to your PR (these two — the .specify/sprints/.gitignore tracks ONLY
+  canonical attestation files; do NOT try to force-add spec.md/plan.md, they are gitignored working
+  artifacts BY DESIGN, and the orchestrator does NOT require them):
+    1. .specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/attestation.json   (verdict COMPLETE; all gates PASS, binary)
+    2. .specify/sprints/sprint-${SPRINT}/attestations/${TASK_ID}/task-tracking.json (status_history etc.)
+  Your attestation SHOULD carry the ceremony provenance fields (spec_session_consensus,
+  plan_reviewer_verdict, plan_reviewer_marker) — /exec-attestation populates them; confirm they are
+  present + affirmative. The plan-reviewer is independently gate-enforced (check-plan-reviewer-subagent.mjs),
+  so its marker is trustworthy. task-tracking status_history timestamps MUST be REAL wall-clock times
   (commit times / your own clock) — NEVER synthetic round placeholders like 00:00/01:00/02:00 (that is
   fabricated evidence and a process violation, even if the phases really ran).
 - Run /code-review on the diff and /sonarqube-fix for any new Sonar findings BEFORE opening the PR.
@@ -378,10 +381,11 @@ VALIDATE BEFORE CLAIMING DONE ("PIPELINE COMPLETE" is a claim, not proof):
 OPEN THE PR AND REPORT — YOU DO NOT MERGE (this is where the PR # is born — the loop never opens a PR):
 - gh pr create, then wait for ALL workflows to COMPLETE green (CI Pipeline + Security Scanning +
   Release; zero fail, zero pending) — never judge green from a subset or while jobs run.
-- Then STOP and REPORT to the orchestrator: PR #, the 4 evidence-artifact paths, \`gh pr checks\`
-  summary, TIME breakdown, issues-log pointer. The ORCHESTRATOR holds the merge token and merges
-  strictly serially — you do NOT merge, do NOT --admin, do NOT flip the CSV. (An executor that
-  self-merges or touches the control plane DIVERGES it — the IFC-302 hand-off mess.)
+- Then STOP and REPORT to the orchestrator: PR #, the canonical evidence paths (attestation.json +
+  task-tracking.json), \`gh pr checks\` summary, TIME breakdown, issues-log pointer. The ORCHESTRATOR
+  holds the merge token and merges strictly serially. **DO NOT merge your own PR — not even after CI is
+  green. This is absolute.** \`gh pr merge\` by the executor is a protocol violation (one agent did it;
+  do NOT repeat it); no --admin, no CSV flip, no touching the control plane.
 - RE-SYNC ON REQUEST: the instant a sibling merges, origin/main moves and your PR will likely CONFLICT
   on the shared files (Sprint_plan.csv + artifacts/reports/a11y-route-reconcile.json + the context
   snapshot). When the orchestrator says "re-sync": \`git merge --no-edit origin/main\` (keep ALL CSV
