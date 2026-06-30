@@ -1,0 +1,76 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "AUTOMATION-003",
+  "phase": "exec",
+  "started_at": "2026-06-30T14:00:11Z",
+  "target_duration_minutes": 120,
+  "blockers": [],
+  "artifacts": {
+    "expected": [
+      "tools/scripts/lib/plan-reviewer-marker.mjs",
+      "tools/scripts/exec-preflight/check-attestation-provenance.mjs",
+      "tools/scripts/__tests__/check-attestation-provenance.test.ts",
+      "docs/architecture/adr/ADR-068-attestation-provenance-standardization.md"
+    ],
+    "created": [
+      "tools/scripts/exec-preflight/check-attestation-provenance.mjs",
+      "tools/scripts/lib/plan-reviewer-marker.mjs",
+      "tools/scripts/__tests__/check-attestation-provenance.test.ts",
+      "tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs",
+      "tools/scripts/lib/schemas/attestation.schema.ts",
+      "apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+      "tools/scripts/generate-final-report.mjs",
+      ".claude/agents/orchestrator.md",
+      ".claude/skills/exec-attestation/SKILL.md",
+      "docs/architecture/adr/ADR-068-attestation-provenance-standardization.md",
+      "docs/architecture/diagrams/complete-dependency-chains.md"
+    ],
+    "missing": []
+  },
+  "status_history": [
+    {
+      "at": "2026-06-30T13:30:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-06-30T13:35:00Z",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-06-30T13:50:00Z",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-06-30T13:52:00Z",
+      "status": "Planning"
+    },
+    {
+      "at": "2026-06-30T13:58:00Z",
+      "status": "Plan Complete"
+    },
+    {
+      "at": "2026-06-30T14:00:11Z",
+      "status": "In Progress"
+    }
+  ],
+  "completed_at": "2026-06-30T14:27:31Z",
+  "actual_duration_minutes": 180,
+  "validations": [
+    {
+      "command": "pnpm typecheck (husky pre-commit, full monorepo)",
+      "result": "PASS"
+    },
+    {
+      "command": "npx vitest run tools/scripts/__tests__/check-attestation-provenance.test.ts",
+      "result": "PASS"
+    },
+    {
+      "command": "npx eslint tools/scripts/lib/plan-reviewer-marker.mjs tools/scripts/exec-preflight/check-attestation-provenance.mjs ...",
+      "result": "PASS"
+    },
+    {
+      "command": "pnpm build",
+      "result": "PASS"
+    }
+  ]
+}

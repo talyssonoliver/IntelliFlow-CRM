@@ -1,0 +1,117 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "AUTOMATION-003",
+  "run_id": "AUTOMATION-003-validation-20260630-140000",
+  "attestor": "Claude Code",
+  "attestation_timestamp": "2026-06-30T14:27:31Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 11,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 4,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck (husky pre-commit, full monorepo)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-06-30T14:27:31Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run tools/scripts/__tests__/check-attestation-provenance.test.ts",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-06-30T14:27:31Z"
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint tools/scripts/lib/plan-reviewer-marker.mjs tools/scripts/exec-preflight/check-attestation-provenance.mjs ...",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-06-30T14:27:31Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-06-30T14:27:31Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "check-attestation-provenance-self-run",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "check-plan-reviewer-subagent",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "check-exec-readiness",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "lint",
+      "passed": true,
+      "exit_code": 0
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Gate blocks a provenance-less / invalid attestation",
+      "target": "vitest NP-1..NP-7 + happy + non-UI + abs-path",
+      "actual": "16/16 gate tests pass",
+      "met": true
+    },
+    {
+      "kpi": "Skill emits provenance block",
+      "target": "exec-attestation SKILL + template declare the 6 fields",
+      "actual": "SKILL step 3 + Phase-5 self-check (4b) + field-rules row",
+      "met": true
+    },
+    {
+      "kpi": "No corpus regression from the schema change",
+      "target": "0 new validate-schemas failures attributable to the schema change",
+      "actual": "only optional fields added; verdict enum matches both historical values (APPROVED); +3 count delta is the task own generated task-status JSON, not the schema",
+      "met": true
+    }
+  ],
+  "artifact_hashes": {
+    "tools/scripts/exec-preflight/check-attestation-provenance.mjs": "4a9962a63050f0875365a5a396e58e934a71ef0db3e937538c88a8b3760d9c63",
+    "tools/scripts/lib/plan-reviewer-marker.mjs": "db6f845e410144b874ba572f3f51a784cd4c59afea65c98821c05432be04682d",
+    "tools/scripts/__tests__/check-attestation-provenance.test.ts": "02872d3ac3ee3b00863ec30b258f892e3c51fefe83d5fb81099f96e46cd6e319",
+    "tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs": "314bf2a6810d3f0fabcfe379d00c249aa785add5794c2e07f492de5f8d94381f",
+    "tools/scripts/lib/schemas/attestation.schema.ts": "e1632ef285ab7d9558b82c21ddee038cd9af5a8453a6a3703a588734db1bf490",
+    "apps/project-tracker/docs/metrics/schemas/attestation.schema.json": "9661c2f434c4dbd3009013f301b809d56425223c992edce00eadf2a915d706ad",
+    "tools/scripts/generate-final-report.mjs": "8b837856af10eb12eb0e32a33b3afd41e50eaef0acc0b2dd608bdfa3dbf530d0",
+    ".claude/agents/orchestrator.md": "861a5bf6a552e8307242d5c6ed6286fb489398a104ee334de3d97808aa45c555",
+    ".claude/skills/exec-attestation/SKILL.md": "e15a07a710deb5c4766fcbd196ccc5634ebfd3aeb88ea8a85ecdc09cc776320d",
+    "docs/architecture/adr/ADR-068-attestation-provenance-standardization.md": "f10f55e8ed68926b7aff013ddbeb5f32d69c4f99ddf9861f9501712898b1a0b7",
+    "docs/architecture/diagrams/complete-dependency-chains.md": "2d395b7667bc9cb485ba1a8ecbcd14bb82d5627c4f67f1a86fa4ca907ccb68db"
+  },
+  "environment": {
+    "os": "win32",
+    "node_version": "v25.2.1",
+    "git_commit": "1d678c1aa2bac8f2d61d128a204db115345a3be4",
+    "branch": "feat/automation-003-attestation-provenance"
+  },
+  "notes": "Standardize attestation provenance. POST-attestation gate (check-attestation-provenance.mjs) cross-checks plan_path on disk for the plan-reviewer marker via the shared plan-reviewer-marker.mjs (one definition; check-plan-reviewer-subagent.mjs imports it too). Schema fields OPTIONAL (no corpus regression); enforcement per-task at the gate; orchestrator DoD flipped to required. references/attestation-format.md is gitignored by design (.gitignore:121) so the tracked SKILL.md carries the contract.",
+  "spec_session_consensus": "UNANIMOUS — 3/3 APPROVE-WITH-CHANGES (devops-lead, backend-architect, security-lead); all required changes folded into the spec (post-attestation placement, plan_path marker cross-check, named verdict enum, non-UI exemption, optional-in-schema).",
+  "plan_reviewer_verdict": "APPROVED",
+  "plan_reviewer_agent": "plan-reviewer (AUTOMATION-003, sprint 18)",
+  "plan_reviewer_marker": "plan-reviewer: subagent",
+  "spec_path": ".specify/sprints/sprint-18/specifications/AUTOMATION-003-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/AUTOMATION-003-plan.md"
+}
