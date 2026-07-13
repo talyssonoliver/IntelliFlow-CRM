@@ -19,7 +19,7 @@
     "@intelliflow/ai-worker": "workspace:*",
     "@intelliflow/db": "workspace:*",
     "@intelliflow/worker-shared": "workspace:*",
-    "bullmq": "^5.79.1",
+    "bullmq": "^5.80.2",
     "mammoth": "^1.12.0",
     "pdf-parse": "^2.4.5",
     "pino": "^10.3.1",
