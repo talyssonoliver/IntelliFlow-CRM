@@ -54,13 +54,13 @@
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
-    "@storybook/addon-a11y": "^10.4.2",
+    "@storybook/addon-a11y": "^10.5.0",
     "@storybook/addon-essentials": "^8.6.18",
     "@storybook/addon-interactions": "^8.6.18",
-    "@storybook/addon-links": "^10.4.2",
-    "@storybook/addon-onboarding": "^10.4.2",
-    "@storybook/react": "^10.4.2",
-    "@storybook/react-vite": "^10.4.2",
+    "@storybook/addon-links": "^10.5.0",
+    "@storybook/addon-onboarding": "^10.5.0",
+    "@storybook/react": "^10.5.0",
+    "@storybook/react-vite": "^10.5.0",
     "@storybook/test": "^8.6.15",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^16.3.2",
@@ -68,12 +68,12 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.2.0",
-    "@vitest/coverage-v8": "^4.1.8",
-    "axe-core": "^4.12.0",
+    "@vitest/coverage-v8": "^4.1.10",
+    "axe-core": "^4.12.1",
     "jsdom": "^29.1.1",
-    "storybook": "^10.4.6",
+    "storybook": "^10.5.0",
     "typescript": "^5.3.3",
-    "vitest": "^4.1.8",
+    "vitest": "^4.1.10",
     "vitest-axe": "^0.1.0"
   }
 }
