@@ -16,6 +16,7 @@ import { opportunityRouter } from './modules/opportunity/opportunity.router';
 import { pipelineConfigRouter } from './modules/opportunity/pipeline-config.router';
 import { dealSettingsRouter } from './modules/opportunity/deal-settings.router';
 import { taskRouter } from './modules/task/task.router';
+import { taskSettingsRouter } from './modules/task/task-settings.router';
 import { ticketRouter } from './modules/ticket/ticket.router';
 import { ticketRoutingRouter } from './modules/ticket/ticket-routing.router';
 import { ticketConfigRouter } from './modules/ticket/ticket-config.router';
@@ -144,6 +145,7 @@ export const appRouter = createTRPCRouter({
   caseSettings: caseSettingsRouter, // PG-190: Case Settings Configuration
   appointmentSettings: appointmentSettingsRouter, // PG-189: Appointment/Calendar Settings (wired alongside PG-190)
   reportSettings: reportSettingsRouter, // PG-187: Report Settings (wired alongside PG-190)
+  taskSettings: taskSettingsRouter, // PG-191: Task Settings Configuration
 
   // Analytics & Reporting
   analytics: analyticsRouter,

@@ -1,0 +1,35 @@
+{
+  "task_id": "PG-191",
+  "captured_at": "2026-07-14T21:25:55Z",
+  "description": "Pre-implementation coverage baseline for PG-191 (Module Settings - Tasks). The route apps/web/src/app/tasks/(list)/task-settings/page.tsx exists only as a 16-line 'coming soon' stub with no tests. All persistence/form/validator/router code is greenfield: no TaskSettings Prisma model, no task-settings validators, no taskSettings router, no TaskSettingsContent/section components, and no colocated tests. Baseline coverage for every in-scope changed line is therefore 0%.",
+  "measurement_scope": [
+    "apps/web/src/app/tasks/(list)/task-settings/page.tsx (MODIFIED — stub -> server-component Suspense shell)",
+    "apps/web/src/app/tasks/(list)/task-settings/TaskSettingsContent.tsx (NEW)",
+    "apps/web/src/app/tasks/(list)/task-settings/TaskSettingsLoading.tsx (NEW)",
+    "apps/web/src/app/tasks/(list)/task-settings/components/DueDateOffsetSection.tsx (NEW)",
+    "apps/web/src/app/tasks/(list)/task-settings/components/ReminderDefaultsSection.tsx (NEW)",
+    "apps/web/src/app/tasks/(list)/task-settings/components/TaskTemplatesSection.tsx (NEW)",
+    "packages/validators/src/task-settings.ts (NEW)",
+    "apps/api/src/modules/task/task-settings.router.ts (NEW)",
+    "apps/web/src/lib/shared/settings-search.ts (MODIFIED — add tasks item)"
+  ],
+  "command": "Baseline: no prior test coverage exists for any in-scope file. After capture: pnpm --filter <pkg> test --coverage across packages/validators, apps/api, apps/web targeting the new task-settings surfaces.",
+  "baseline_files": {
+    "apps/web/src/app/tasks/(list)/task-settings/page.tsx": {
+      "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+      "note": "16-line 'use client' stub, no colocated test."
+    },
+    "packages/validators/src/task-settings.ts": {
+      "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+      "note": "File does not exist pre-implementation."
+    },
+    "apps/api/src/modules/task/task-settings.router.ts": {
+      "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+      "note": "File does not exist pre-implementation."
+    }
+  },
+  "baseline_totals": {
+    "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "note": "Zero coverage for in-scope files pre-implementation. New TDD test files drive coverage to >=80% on changed lines (Sonar new_coverage gate)."
+  }
+}

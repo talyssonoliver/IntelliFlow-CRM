@@ -19,6 +19,7 @@ export * from './contact';
 export * from './account';
 export * from './opportunity';
 export * from './task';
+export * from './task-settings';
 export * from './ticket';
 export * from './case';
 export * from './appointment';

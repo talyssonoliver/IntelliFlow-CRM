@@ -165,6 +165,16 @@ export const SETTINGS_ITEMS: SettingItem[] = [
       'required',
     ],
   },
+  {
+    id: 'tasks',
+    title: 'Task Settings',
+    description:
+      'Default due-date offset, reminder defaults, and task templates for the Tasks module',
+    href: '/tasks/task-settings',
+    icon: 'tune',
+    color: 'bg-primary/62',
+    keywords: ['task', 'due date', 'offset', 'reminder', 'template', 'default'],
+  },
 ];
 
 /**
@@ -179,7 +189,7 @@ export const SETTINGS_CATEGORIES: SettingCategory[] = [
   {
     id: 'ai-automation',
     title: 'AI & Automation',
-    itemIds: ['ai', 'pipeline', 'leads', 'accounts', 'deals', 'tickets', 'documents'],
+    itemIds: ['ai', 'pipeline', 'leads', 'accounts', 'deals', 'tickets', 'documents', 'tasks'],
   },
   {
     id: 'integrations-comms',

@@ -10,9 +10,15 @@ import {
 
 describe('settings-search', () => {
   describe('SETTINGS_ITEMS', () => {
-    it('contains 12 settings items', () => {
+    it('contains 13 settings items', () => {
       // Item count tracked against SETTINGS_ITEMS source; bump when adding/removing hubs.
-      expect(SETTINGS_ITEMS).toHaveLength(12);
+      expect(SETTINGS_ITEMS).toHaveLength(13);
+    });
+
+    it('includes the Tasks settings hub (PG-191)', () => {
+      const tasks = SETTINGS_ITEMS.find((item) => item.id === 'tasks');
+      expect(tasks).toBeDefined();
+      expect(tasks?.href).toBe('/tasks/task-settings');
     });
 
     it('each item has required fields', () => {

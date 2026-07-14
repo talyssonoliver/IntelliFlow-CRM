@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "PG-191",
+  "phase": "phase-3-exec",
+  "status": "In Progress",
+  "started_at": "2026-07-13T21:00:14Z",
+  "completed_at": null,
+  "actual_duration_minutes": null,
+  "target_duration_minutes": 240,
+  "stream": "sprint-18-lane-G",
+  "notes": "Module Settings - Tasks (/tasks/task-settings). Delta/refactor of an existing stub page into a real persisted Task Settings form (due-date offset, reminder defaults, task templates) following the PG-178 singleton module-settings pattern.",
+  "dependencies_meta": {
+    "verified_at": "2026-07-13T21:00:14Z"
+  },
+  "execution": {
+    "started_at": "2026-07-14T21:25:55Z",
+    "executor": "Claude Code /exec",
+    "agents": ["stoa-domain"],
+    "completed_at": null,
+    "duration_minutes": null,
+    "last_error": null
+  },
+  "status_history": [
+    { "at": "2026-07-13T21:00:14Z", "status": "Specifying", "note": "Worktree provisioned; multi-persona spec-session started (frontend-lead lens)." },
+    { "at": "2026-07-14T15:33:31Z", "status": "Spec Complete", "note": "Unified spec + discussion written; 3-persona consensus (backend-architect, test-engineer, a11y-expert)." },
+    { "at": "2026-07-14T15:33:31Z", "status": "Planning", "note": "TDD plan-session started." },
+    { "at": "2026-07-14T20:23:11Z", "status": "Plan Complete", "note": "TDD plan finalized; plan-reviewer subagent REVISE -> all 5 errors incorporated; Category Y UI-Reachability row added." },
+    { "at": "2026-07-14T21:25:55Z", "status": "In Progress", "note": "Exec session start (Phase 3)." }
+  ],
+  "artifacts": { "created": [], "expected": [], "missing": [] },
+  "kpis": {},
+  "validations": [],
+  "blockers": []
+}
