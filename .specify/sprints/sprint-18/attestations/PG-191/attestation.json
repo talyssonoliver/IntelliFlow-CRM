@@ -1,0 +1,101 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-191",
+  "run_id": "PG-191-exec-20260714-224005",
+  "attestor": "Claude Code (task-executor, frontend-lead lens)",
+  "attestation_timestamp": "2026-07-14T22:40:05Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 9,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 6,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "turbo run typecheck (all 25 packages) + lint:sonar:guard — via pre-ship typecheck step",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-07-14T22:40:05Z"
+    },
+    {
+      "name": "Tests",
+      "command": "vitest: validators (2432), db (199), api unit incl. taskSettings router+smoke, web task-settings (29) — full comprehensive run via pre-ship unit/integration steps under gate-lock",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-07-14T22:40:05Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm lint + format-check + sonar-guard (web a11y guard on 12 files) — via pre-ship",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-07-14T22:40:05Z"
+    },
+    {
+      "name": "Build",
+      "command": "packages + apps build (db/validators/api/api-client rebuilt; full build via pre-ship build step under gate-lock)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-07-14T22:40:05Z"
+    }
+  ],
+  "gate_results": [
+    { "gate_id": "check-plan-reviewer-subagent (incl. Category Y UI Reachability)", "passed": true, "exit_code": 0 },
+    { "gate_id": "check-page-doc-cochange (N/A — no new page.tsx)", "passed": true, "exit_code": 0 },
+    { "gate_id": "check-exec-readiness (5/5)", "passed": true, "exit_code": 0 },
+    { "gate_id": "check-nav-wiring (route already reachable)", "passed": true, "exit_code": 0 },
+    { "gate_id": "rls-migrations (task_settings RLS enabled)", "passed": true, "exit_code": 0 },
+    { "gate_id": "pre-ship full gate (typecheck/lint/format/unit/integration/coverage/diff-coverage/build) under gate-lock", "passed": true, "exit_code": 0 }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "All form fields render and save",
+      "target": "offset + reminder + templates persist per tenant via tRPC",
+      "actual": "taskSettings.get/update/resetToDefaults upsert-by-tenantId; TaskSettingsContent save calls update.mutateAsync (tested)",
+      "met": true
+    },
+    {
+      "kpi": "Sidebar settings nav works (no regression)",
+      "target": "in-module settings sidebar reachable",
+      "actual": "TASK_SETTINGS_ITEMS + TaskSettingsSidebarNav unchanged; rendered from layout.tsx (independent of page.tsx)",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse >=90",
+      "target": ">=90 on /tasks/task-settings",
+      "actual": "auth-gated route -> Path C authenticated measurement (see lighthouse evidence); a11y contracts unit-tested",
+      "met": true
+    }
+  ],
+  "artifact_hashes": {
+    "packages/db/prisma/migrations/20260714000000_task_settings/migration.sql": "33b7cce70e20ffe98c794fc26a2b015c5b75a57eeee052564085740343acf285",
+    "packages/validators/src/task-settings.ts": "0bb868fd4a1d40a032ffbceeadee0d33dd06a6e07acceea4330a38c6ae4d3b15",
+    "apps/api/src/modules/task/task-settings.router.ts": "5fa5cd52a81ed8e0fe42d59245cf9a09cccef95c495a94576ba30f493bcf635d",
+    "apps/web/src/app/tasks/(list)/task-settings/page.tsx": "43466e48fc193b7badab1a7895cc67b0890511b4e69caab7c3848172e2dce577",
+    "apps/web/src/app/tasks/(list)/task-settings/TaskSettingsContent.tsx": "5b76809248246273effa1ba5adc55776c5242d8bf24ff5f027abb8f085a99f1c",
+    "apps/web/src/app/tasks/(list)/task-settings/components/DueDateOffsetSection.tsx": "15f46a5f5c5118ce5d5bdaf330d124f66db2355066e1035925e98f5afb476e3a",
+    "apps/web/src/app/tasks/(list)/task-settings/components/ReminderDefaultsSection.tsx": "2ee2fb96fbcb1fb3b8003e64cba13160f8c50207dfa938a80457e23d82b24742",
+    "apps/web/src/app/tasks/(list)/task-settings/components/TaskTemplatesSection.tsx": "e1edaf080f02f754ec96f2c650524fa8ed9da118df1ca580fab7945f1eebc5cf",
+    "apps/web/src/lib/shared/settings-search.ts": "053c41723948f757f7faf8814bfae997367879540bf93ddea33f9c935b011863"
+  },
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "feat/pg-191 (final feature commit — impl 80f2f6e7d + review fixes + evidence)",
+    "branch": "feat/pg-191"
+  },
+  "notes": "Delta/refactor: replaced the /tasks/task-settings stub with a real per-tenant settings form (due-date offset, reminder defaults, task templates) on the PG-178 singleton module-settings pattern. codex-review gate is NON-FUNCTIONAL on this host (codex-cli 0.79.0 rejects --ephemeral -> SKIPPED_PRECONDITION exit 0); COMPENSATED with adversarial backend-architect + frontend-lead subagent reviews of the committed diff (3 real web findings found+fixed: in-flight-save race, keyboard-editable disabled reminder field, all-or-nothing server-parse wiping valid templates). See docs/operations/sprint-18-pg-191-session-issues-log.md. The full pre-ship (integration/coverage/build) runs under the fleet gate-lock (shared test DB serialization).",
+  "spec_session_consensus": "UNANIMOUS — 3/3 (backend-architect, test-engineer, a11y-expert) with mandatory codebase exploration; all challenges (RLS-in-migration, app-router smoke wiring, EmptyState, per-field a11y, no container.ts) folded into the spec.",
+  "plan_reviewer_verdict": "APPROVED",
+  "plan_reviewer_agent": "plan-reviewer (PG-191, sprint 18, agent a5bd88ad4a41a4718)",
+  "plan_reviewer_marker": "plan-reviewer: subagent",
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-191-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-191-plan.md"
+}

@@ -80,6 +80,47 @@ the feature PR.
 
 ---
 
+## Severity: HIGH
+
+### H3 — codex-review gate is non-functional in this environment (CLI version drift)
+
+- **What happened:** `scripts/codex-review.mjs` invokes
+  `codex exec - --ephemeral -o <path>` (line ~655), but the installed
+  `codex-cli 0.79.0` rejects `--ephemeral` ("unexpected argument"). The script
+  then falls back to a local `claude -p` review, which is also unavailable in
+  this headless sub-agent context, so it degrades to `SKIPPED_PRECONDITION` and
+  **exits 0**.
+- **Why it matters:** The dispatch protocol's core quality gate — codex semantic
+  convergence to >=5 clean runs — CANNOT run here. Worse, because it exits 0,
+  the full pre-ship `codex-review` step PASSES silently without any semantic
+  review actually happening. A real bug that codex would catch would sail
+  through.
+- **Fix / prevention:** Did NOT patch the shared tool (out of scope; a
+  fleet-wide tooling fix). COMPENSATED by spawning adversarial subagent
+  reviewers (backend-architect over db/api, frontend-lead over web) on the
+  committed diff to substitute for codex's semantic pass, and fixing every real
+  finding. **Prevention (orchestrator/owner):** bump `codex-review.mjs` to the
+  `codex-cli` 0.79.x arg surface (drop/replace `--ephemeral`), or pin the codex
+  CLI version the script expects. Until then, the codex gate is a no-op on this
+  host.
+- **Compensating review outcome:** backend-architect review of db/api found NO
+  bugs (2 minor non-blocking notes). frontend-lead review of the web diff found
+  3 REAL findings, ALL FIXED before final commit:
+  1. Edit-during-in-flight-save race (an invalidate refetch could clobber an
+     unsaved concurrent edit) -> wrapped the sections in a native
+     `<fieldset disabled={isSaving}>` so inputs lock during save/reset.
+  2. Reminder lead-time was `aria-disabled` + `pointer-events-none` only, so a
+     keyboard user could still Tab in and edit a visually-disabled field ->
+     switched to a native `<fieldset disabled={!enabled}>` (blocks keyboard +
+     removes from tab order); test now asserts the input is truly disabled.
+  3. `parseServerSnapshot` did a whole-object parse, so ONE corrupt/out-of-range
+     server field wiped ALL three (a valid template list could be silently
+     dropped, then persisted-as-empty on next save) -> made it parse each field
+     INDEPENDENTLY (mirrors the router's per-column normalizeRow); added a test
+     proving a valid template survives a corrupt offset field.
+
+---
+
 ## Severity: LOW
 
 ### L1 — `vi.mock` factory + top-level `mockToast` const → "Cannot access before initialization"
@@ -108,4 +149,29 @@ the feature PR.
 
 ## Net assessment
 
-_(to be completed at end of task)_
+**Single avoidable root cause: none in the implementation itself** — the task
+built cleanly on a well-established, 9x-proven pattern (PG-178 module settings),
+and the multi-persona spec/plan ceremony pre-empted every structural pitfall
+(RLS-in-migration, app-router smoke wiring, EmptyState, per-field a11y, no
+container.ts, the db type-export allowlist was the only surprise and was caught
+by typecheck in seconds).
+
+The two genuinely avoidable frictions were **environmental / harness-level, not
+task-level**:
+
+1. **Harness provisioning gap (H1):** the agent was launched in the main working
+   dir with an "already provisioned" prompt. Self-provisioning a worktree
+   recovered it, but a `pwd`-check in the harness would remove the ambiguity and
+   the risk of an agent building in the shared control plane.
+2. **codex gate is a silent no-op on this host (H3):** `codex-review.mjs` is out
+   of date vs `codex-cli 0.79.0` (`--ephemeral` rejected) and exits 0, so the
+   fleet's primary semantic gate provides ZERO coverage while appearing to pass.
+   This is the most dangerous finding: a real bug WOULD ship. Only the
+   compensating adversarial subagent review caught 3 real web bugs. **Fix the
+   tool or the fleet is running without its semantic safety net.**
+
+Everything else (Node 25 default, db type-export, vi.mock hoisting, jsx spacing,
+CSV-ownership deviation) was minor, expected, or already encoded in prior fleet
+memory. The shared-test-DB integration-test contention is precisely what the
+gate-lock exists to serialize and is handled by running the one full pre-ship
+solo under the lock.

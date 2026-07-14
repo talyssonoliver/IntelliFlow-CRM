@@ -33,7 +33,10 @@ describe('ReminderDefaultsSection (PG-191)', () => {
       <ReminderDefaultsSection value={{ enabled: false, minutesBefore: 0 }} onChange={vi.fn()} />
     );
     const fieldset = container.querySelector('fieldset');
-    expect(fieldset).toHaveAttribute('aria-disabled', 'true');
+    expect(fieldset).toBeDisabled();
+    // Native fieldset[disabled] removes the lead-time input from the tab order
+    // AND blocks keyboard edits (aria-disabled + pointer-events would not).
+    expect(screen.getByRole('spinbutton', { name: /lead time/i })).toBeDisabled();
   });
 
   it('shows a lead-time error tied via aria-describedby when enabled and out of range', () => {

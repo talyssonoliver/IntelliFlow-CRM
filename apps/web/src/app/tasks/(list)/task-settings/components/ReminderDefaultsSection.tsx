@@ -52,10 +52,7 @@ export function ReminderDefaultsSection({
         />
       </div>
 
-      <fieldset
-        aria-disabled={!enabled}
-        className={!enabled ? 'opacity-60 pointer-events-none' : ''}
-      >
+      <fieldset disabled={!enabled} className={!enabled ? 'opacity-60' : ''}>
         <div className="space-y-2 max-w-xs">
           <Label htmlFor="reminder-lead-time" className="text-sm font-medium">
             Lead time (minutes before due)

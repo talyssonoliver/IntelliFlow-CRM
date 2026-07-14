@@ -10,7 +10,9 @@ import { trpc } from '@/lib/trpc';
 import { Card, ConfirmationDialog, toast } from '@intelliflow/ui';
 import { PageHeader, type PageAction } from '@/components/shared/page-header';
 import {
-  taskSettingsSchema,
+  dueDateOffsetDaysSchema,
+  reminderDefaultsSchema,
+  taskTemplatesSchema,
   DEFAULT_TASK_SETTINGS,
   type ReminderDefaults,
   type TaskTemplateInput,
@@ -25,13 +27,21 @@ interface TaskSettingsSnapshot {
   taskTemplates: TaskTemplateInput[];
 }
 
+/**
+ * Parse each server field INDEPENDENTLY so one corrupt/out-of-range field never
+ * wipes the others (a whole-object parse would fall a valid template list back
+ * to [] just because, e.g., dueDateOffsetDays was out of range). Mirrors the
+ * router's per-column normalizeRow philosophy.
+ */
 function parseServerSnapshot(data: unknown): TaskSettingsSnapshot {
-  const parsed = taskSettingsSchema.safeParse(data);
-  if (parsed.success) return parsed.data;
+  const record = (data ?? {}) as Record<string, unknown>;
+  const offset = dueDateOffsetDaysSchema.safeParse(record.dueDateOffsetDays);
+  const reminder = reminderDefaultsSchema.safeParse(record.reminderDefaults);
+  const templates = taskTemplatesSchema.safeParse(record.taskTemplates);
   return {
-    dueDateOffsetDays: DEFAULT_TASK_SETTINGS.dueDateOffsetDays,
-    reminderDefaults: DEFAULT_TASK_SETTINGS.reminderDefaults,
-    taskTemplates: DEFAULT_TASK_SETTINGS.taskTemplates,
+    dueDateOffsetDays: offset.success ? offset.data : DEFAULT_TASK_SETTINGS.dueDateOffsetDays,
+    reminderDefaults: reminder.success ? reminder.data : DEFAULT_TASK_SETTINGS.reminderDefaults,
+    taskTemplates: templates.success ? templates.data : DEFAULT_TASK_SETTINGS.taskTemplates,
   };
 }
 
@@ -187,11 +197,15 @@ export default function TaskSettingsContent() {
         className="mb-6"
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-        <DueDateOffsetSection value={dueDateOffsetDays} onChange={setDueDateOffsetDays} />
-        <ReminderDefaultsSection value={reminderDefaults} onChange={setReminderDefaults} />
-        <TaskTemplatesSection value={taskTemplates} onChange={setTaskTemplates} />
-      </div>
+      {/* Disable all inputs while a save/reset is in flight so an in-flight
+          refetch (post-save get.invalidate) can't clobber a concurrent edit. */}
+      <fieldset disabled={isSaving} className="contents">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+          <DueDateOffsetSection value={dueDateOffsetDays} onChange={setDueDateOffsetDays} />
+          <ReminderDefaultsSection value={reminderDefaults} onChange={setReminderDefaults} />
+          <TaskTemplatesSection value={taskTemplates} onChange={setTaskTemplates} />
+        </div>
+      </fieldset>
 
       <ConfirmationDialog
         open={resetOpen}

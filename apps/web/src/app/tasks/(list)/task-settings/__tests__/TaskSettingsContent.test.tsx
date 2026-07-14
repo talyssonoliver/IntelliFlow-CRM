@@ -130,6 +130,24 @@ describe('TaskSettingsContent', () => {
     });
   });
 
+  it('preserves valid fields when only one server field is corrupt (per-field fallback)', async () => {
+    setup({
+      queryData: {
+        dueDateOffsetDays: -99, // corrupt
+        reminderDefaults: { enabled: true, minutesBefore: 30 }, // valid
+        taskTemplates: [
+          { id: 't1', name: 'Kickoff', defaultPriority: 'HIGH', defaultDueOffsetDays: 1 },
+        ], // valid — must NOT be wiped
+      },
+    });
+    render(<TaskSettingsContent />);
+    await waitFor(() => {
+      expect(screen.getByRole('spinbutton', { name: /due-date offset/i })).toHaveValue(3); // fell back
+    });
+    // The valid template survived (not clobbered by the bad offset field).
+    expect(screen.getByText('Kickoff')).toBeInTheDocument();
+  });
+
   it('Save button disabled when not dirty', async () => {
     setup({ queryData: validData });
     render(<TaskSettingsContent />);
