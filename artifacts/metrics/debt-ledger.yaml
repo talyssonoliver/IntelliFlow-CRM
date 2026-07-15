@@ -4446,6 +4446,31 @@ items:
     remediation_sprint: 18
     recommended_skill: webapp-testing
     status: open
+  AUTOMATION-003-PLAN-OVERRIDES-MISSING-001:
+    origin_task: PG-191
+    owner: Tech Lead
+    severity: low
+    description: >-
+      AUTOMATION-003 (merged via #566) was added to Sprint_plan.csv but never
+      given a plan-overrides.yaml entry, so the plan-linter auto-classifies it
+      Tier A and hard-fails on missing gate_profile/acceptance_owner/
+      evidence_required. This is an IFC-314-class landmine: it only surfaces on
+      non-TS-only commits (which run the full pnpm run lint -> plan-linter), so
+      it silently blocks unrelated feature PRs (it blocked PG-191).
+    created_at: 2026-07-14
+    expiry_date: 2026-08-31
+    status: open
+    remediation_sprint: 18
+    remediation_plan: >-
+      Replace the provisional tier:B waiver in plan-overrides.yaml with
+      AUTOMATION-003's real tier + gate_profile + acceptance_owner +
+      evidence_required (see its attestation), then remove the
+      debt_allowed/waiver_expiry markers. Tracked in GH #574.
+    notes: >-
+      Provisional unblock applied on feat/pg-191: plan-overrides.yaml
+      AUTOMATION-003 set to tier:B (mirrors sibling AUTOMATION-001/002) with
+      debt_allowed:yes + waiver_expiry 2026-08-31. No gate/owner/evidence values
+      fabricated. gh issue #574.
 summary:
   total_items: 419
   by_severity:
