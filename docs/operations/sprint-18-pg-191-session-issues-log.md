@@ -78,6 +78,32 @@ the feature PR.
   (one extra file beyond the plan's 16, noted here for the count
   reconciliation).
 
+### M3 — Adding a tRPC router to `router.ts` is a DOC-COCHANGE event (API-router count)
+
+- **What happened:** The FULL pre-ship (only reachable at the end, not the cheap
+  loop) failed `unit-tests` on 2 of 33,314 tests:
+  `apps/web/src/app/__tests__/ia-reconciliation.test.ts` and
+  `ui-flow-mapping-reconciliation.test.ts` both assert the "API Routers" count
+  in a design-doc header matches the live `router.ts` registration count. Adding
+  `taskSettings: taskSettingsRouter` bumped that count 63 -> 64, so both docs
+  (`docs/design/information-architecture.md:4`,
+  `docs/design/ui-flow-mapping.md:6`) were stale.
+- **Why it matters:** This is a NEW doc-cascade class the spec/plan did not
+  anticipate. The well-known page-doc-cochange gotcha (#9) covers NEW
+  `page.tsx`; it does NOT mention that **adding a NEW tRPC router key to
+  `apps/api/src/ router.ts` also triggers a doc-cochange** on the two
+  API-router-count docs. Because these are unit tests over the whole repo, the
+  failure ONLY surfaces at the final full pre-ship — costing a ~10-min gate
+  cycle to discover.
+- **Fix / prevention:** Bumped both doc headers 63 -> 64 (the `(369 procedures)`
+  count is validated only for in-doc self-consistency, not vs `router.ts`, so it
+  stays untouched). **PREVENTION — encode alongside gotcha #9:** any Lane-G
+  module-settings task (or any task adding a root-sibling `*Settings` router)
+  must update `docs/design/information-architecture.md` +
+  `docs/design/ ui-flow-mapping.md` "API Routers" count in the SAME PR, and the
+  plan should list those two docs as co-change files. The plan-reviewer Category
+  Y (page reachability) should gain a sibling check for the API-router count.
+
 ---
 
 ## Severity: HIGH
