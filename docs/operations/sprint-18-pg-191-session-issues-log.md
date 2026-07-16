@@ -104,6 +104,31 @@ the feature PR.
   plan should list those two docs as co-change files. The plan-reviewer Category
   Y (page reachability) should gain a sibling check for the API-router count.
 
+### M4 — A pre-existing IFC-214 integration test flaked ONLY under coverage instrumentation
+
+- **What happened:** Pre-ship #4 (the first to reach `coverage` with the DB
+  stack up) failed the `coverage` step on
+  `tests/integration/ai-monitoring-redis-bridge.test.ts` (IFC-214, added by #543
+  — NOT PG-191). Its `T-I3` case did `SET key EX 1` + real `setTimeout(2100)`
+  then asserted the Redis key had expired (fallback `source='db'`), but read
+  `'redis'`. It PASSES standalone (5/5) and in the non-instrumented
+  `integration-tests` step; it only fails under the `coverage` step's Istanbul
+  instrumentation, which slows execution ~2-5x and drifts the
+  real-timer/real-TTL window.
+- **Why it matters:** `coverage` and `integration-tests` run the SAME
+  integration project but only `coverage` instruments, so a real-timer test can
+  pass the cheaper gate and fail only at the ~9-min coverage step — the most
+  expensive place to discover it. It blocked an unrelated feature PR.
+- **Fix / prevention:** Authorized to fix in-branch (IFC-314-class "fix inside
+  the branch that hits it"). Replaced the real-TTL + real-`setTimeout` race with
+  a deterministic `SET` then `DEL key` (reproduces the identical store-side
+  state: Redis miss -> service/db fallback) — one test file, no production
+  change. Verified 5/5 standalone AND 5/5 under `--coverage` (987ms, was
+  ~2.1s+). **PREVENTION:** integration tests asserting real Redis-TTL /
+  wall-clock timer expiry are fragile under Istanbul coverage — assert the end
+  STATE deterministically (delete the key / fake timers), never a real-time
+  expiry window.
+
 ---
 
 ## Severity: HIGH
