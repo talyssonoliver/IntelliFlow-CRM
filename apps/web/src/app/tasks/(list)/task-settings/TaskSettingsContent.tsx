@@ -1,14 +1,14 @@
 'use client';
 
 // Task Settings Content — PG-191
-// PageHeader + section cards, dirty-state save/reset. Mirrors the PG-187
-// report-settings orchestrator pattern.
+// Task-specific state/validation over the shared ModuleSettingsShell, which
+// owns the page chrome (skeleton / error / header actions / grid / reset dialog).
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { Card, ConfirmationDialog, toast } from '@intelliflow/ui';
-import { PageHeader, type PageAction } from '@/components/shared/page-header';
+import { toast } from '@intelliflow/ui';
+import { ModuleSettingsShell } from '@/components/shared/module-settings-shell';
 import {
   dueDateOffsetDaysSchema,
   reminderDefaultsSchema,
@@ -139,83 +139,33 @@ export default function TaskSettingsContent() {
     }
   }, [resetMutation]);
 
-  // ─── Early returns ─────────────────────────────────────────────────────────
-  if (authLoading || settingsQuery.isLoading) {
-    return (
-      <div className="w-full">
-        <div className="mb-6">
-          <div className="h-7 bg-muted animate-pulse rounded-md w-64 mb-2" />
-          <div className="h-4 bg-muted animate-pulse rounded-md w-96" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-          <div className="lg:col-span-6 h-48 bg-muted animate-pulse rounded-md" />
-          <div className="lg:col-span-6 h-48 bg-muted animate-pulse rounded-md" />
-          <div className="lg:col-span-12 h-64 bg-muted animate-pulse rounded-md" />
-        </div>
-      </div>
-    );
-  }
-
-  if (settingsQuery.error) {
-    return (
-      <div className="w-full">
-        <Card className="p-6 text-center">
-          <h2 className="text-lg font-semibold">Failed to load task settings</h2>
-          <p className="text-sm text-muted-foreground mt-2">{settingsQuery.error.message}</p>
-        </Card>
-      </div>
-    );
-  }
-
-  const actions: PageAction[] = [
-    {
-      label: 'Reset to Defaults',
-      variant: 'secondary',
-      onClick: () => setResetOpen(true),
-      disabled: isSaving,
-    },
-    {
-      label: isSaving ? 'Saving…' : 'Save Changes',
-      variant: 'primary',
-      onClick: handleSave,
-      disabled: !canSave,
-      loading: isSaving,
-    },
-  ];
-
+  // ─── Render ────────────────────────────────────────────────────────────────
+  // The chrome (skeleton / error card / header actions / section grid / reset
+  // dialog) lives in ModuleSettingsShell; this component only supplies its
+  // config + sections. See components/shared/module-settings-shell.tsx.
   return (
-    <div className="w-full">
-      <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Tasks', href: '/tasks' },
-          { label: 'Task Settings' },
-        ]}
-        title="Task Settings"
-        description="Configure default due-date offset, reminder defaults, and task templates."
-        actions={actions}
-        className="mb-6"
-      />
-
-      {/* Disable all inputs while a save/reset is in flight so an in-flight
-          refetch (post-save get.invalidate) can't clobber a concurrent edit. */}
-      <fieldset disabled={isSaving} className="contents">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-          <DueDateOffsetSection value={dueDateOffsetDays} onChange={setDueDateOffsetDays} />
-          <ReminderDefaultsSection value={reminderDefaults} onChange={setReminderDefaults} />
-          <TaskTemplatesSection value={taskTemplates} onChange={setTaskTemplates} />
-        </div>
-      </fieldset>
-
-      <ConfirmationDialog
-        open={resetOpen}
-        onOpenChange={setResetOpen}
-        title="Reset to Defaults"
-        description="This will restore all task settings to their factory defaults. This action cannot be undone."
-        confirmLabel="Reset"
-        variant="destructive"
-        onConfirm={handleReset}
-      />
-    </div>
+    <ModuleSettingsShell
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/' },
+        { label: 'Tasks', href: '/tasks' },
+        { label: 'Task Settings' },
+      ]}
+      title="Task Settings"
+      description="Configure default due-date offset, reminder defaults, and task templates."
+      errorTitle="Failed to load task settings"
+      isLoading={authLoading || settingsQuery.isLoading}
+      errorMessage={settingsQuery.error?.message ?? null}
+      isSaving={isSaving}
+      canSave={canSave}
+      onSave={handleSave}
+      resetOpen={resetOpen}
+      onResetOpenChange={setResetOpen}
+      onResetConfirm={handleReset}
+      resetDescription="This will restore all task settings to their factory defaults. This action cannot be undone."
+    >
+      <DueDateOffsetSection value={dueDateOffsetDays} onChange={setDueDateOffsetDays} />
+      <ReminderDefaultsSection value={reminderDefaults} onChange={setReminderDefaults} />
+      <TaskTemplatesSection value={taskTemplates} onChange={setTaskTemplates} />
+    </ModuleSettingsShell>
   );
 }

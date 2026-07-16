@@ -4446,6 +4446,37 @@ items:
     remediation_sprint: 18
     recommended_skill: webapp-testing
     status: open
+  MODULE-SETTINGS-SHELL-SIBLING-MIGRATION-001:
+    origin_task: PG-191
+    owner: Frontend Lead
+    severity: low
+    description: >-
+      PG-191 extracted the repeated module-settings page chrome (loading
+      skeleton, load-error card, PageHeader Reset/Save actions, 12-col section
+      grid locked while saving, reset ConfirmationDialog) into
+      apps/web/src/components/shared/module-settings-shell.tsx so new settings
+      pages extend by config instead of re-implementing boilerplate (OCP). Only
+      task-settings was migrated (PG-191 scope). The 8 sibling settings pages
+      (report/calendar/ticket/contact/deal/case/account/document) still each
+      carry an inline copy and therefore still duplicate each other.
+    created_at: 2026-07-16
+    expiry_date: 2026-12-31
+    status: open
+    remediation_sprint: 19
+    remediation_plan: >-
+      Migrate each sibling *SettingsContent.tsx onto <ModuleSettingsShell>,
+      deleting its inline chrome and keeping its own state/validation/sections.
+      Extend the shell's props (e.g. the `skeleton` prop) rather than forking it
+      if a page needs different chrome. Verify colocated tests stay green and
+      repo duplication drops via
+      `npx jscpd apps/web/src/app apps/web/src/components --min-tokens 100`.
+      Tracked in GH #576.
+    notes: >-
+      Surfaced by SonarCloud on PG-191 (#575): new_duplicated_lines_density 8.1%
+      vs 3% threshold. jscpd localised it to exactly 2 clones (66 lines) between
+      TaskSettingsContent and ReportSettingsContent — all of it the chrome.
+      Extracting the shell took clones involving the changed files to 0. Fixed by
+      real refactor, NOT a sonar.cpd.exclusions escape hatch. gh issue #576.
   AUTOMATION-003-PLAN-OVERRIDES-MISSING-001:
     origin_task: PG-191
     owner: Tech Lead

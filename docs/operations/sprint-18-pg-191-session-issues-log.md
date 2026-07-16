@@ -129,6 +129,35 @@ the feature PR.
   STATE deterministically (delete the key / fake timers), never a real-time
   expiry window.
 
+### M5 — SonarCloud CPD flagged the deliberate module-settings pattern as duplication
+
+- **What happened:** CI SonarCloud quality gate FAILED on one condition:
+  `new_duplicated_lines_density = 8.1%` (threshold 3%). `new_coverage` PASSED —
+  it was purely duplication. The task-settings Content mirrors the sibling
+  module-settings pattern **because the spec-session + plan-reviewer required
+  it**, and Sonar's copy-paste detector reads that pattern-consistency as
+  duplication.
+- **Why it matters:** This gate is only reachable AFTER a full CI run (~25 min
+  local pre-ship + ~20 min CI), and it punishes exactly the pattern-following
+  the ceremony mandates. It is the tension between "match the established
+  pattern" and "don't repeat yourself".
+- **Fix / prevention:** Fixed by a **real OCP refactor, NOT a
+  `sonar.cpd.exclusions` escape hatch** (an exclusion precedent exists at
+  `apps/api/src/shared/**`, but excluding would have hidden a genuine
+  abstraction gap). Localised the duplication precisely with
+  `npx jscpd --min-tokens 100`: exactly **2 clones / 66 lines**, both
+  `TaskSettingsContent` <-> `ReportSettingsContent`, and all of it the page
+  **chrome** (skeleton / error card / PageHeader actions / section grid / reset
+  dialog) — the state logic did NOT clone. Extracted that chrome into a generic
+  `apps/web/src/components/shared/module-settings-shell.tsx`; task-settings is
+  now thin over it (config + sections). Verified: **0 clones** involving the
+  changed files. Only task-settings migrated (PG-191 scope); sibling migration
+  tracked in **GH #576** + debt ledger. **PREVENTION:** (1) measure duplication
+  locally with jscpd BEFORE pushing when adding an Nth instance of an
+  established pattern — Sonar's CPD only surfaces it after a full CI round; (2)
+  when a pattern reaches N copies, extract the shared chrome instead of copying
+  it a further time.
+
 ---
 
 ## Severity: HIGH
