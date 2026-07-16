@@ -220,12 +220,19 @@ describe.skipIf(!REDIS_URL)('IFC-214 cross-process bridge (REDIS_URL set)', () =
     expect(p95).toBeLessThan(50);
   });
 
-  it('T-I3 outage fallback: TTL expiry -> store reads source=db', async (ctx) => {
+  it('T-I3 outage fallback: key expiry -> store reads source=db', async (ctx) => {
     if (!redisReady) return ctx.skip();
     const key = __test.redisKey(RUN_TENANT, 'status');
-    await redis.set(key, JSON.stringify(validStatusSnapshot), 'EX', 1);
-    // Wait out the 1s TTL with margin for CI load (2x TTL).
-    await new Promise((r) => setTimeout(r, 2100));
+    // Establish the key, then DELETE it to deterministically reproduce TTL
+    // expiry. The previous approach (SET ... EX 1 + real setTimeout(2100)) is a
+    // real-timer/real-TTL race: under Istanbul coverage instrumentation the
+    // per-statement/branch counters slow execution ~2-5x and drift the
+    // wall-clock window, so the key could still be present at read time
+    // (observed `source='redis'` instead of `'db'`). Deleting the key yields the
+    // identical store-side state — a Redis miss that falls back to the service
+    // (db) — with zero timing dependency, so it is stable under instrumentation.
+    await redis.set(key, JSON.stringify(validStatusSnapshot), 'EX', 30);
+    await redis.del(key);
     const store = new RedisAIMonitoringStore({ redis, service: makeServiceMock() as never });
     const r = await store.getStatus({ tenantId: RUN_TENANT });
     expect(r.source).toBe('db');

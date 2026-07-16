@@ -1848,6 +1848,21 @@ AUTOMATION-002:
     - infra/monitoring/optimization-loop.yaml
   notes: 'AI performance dashboard. Waiver closed 2026-03-09: build/typecheck/lint pass (lint fixed). DashboardView, SwarmMonitor, ExecutiveSummary components real. dashboard_test has no dedicated suite but dashboard is functional at localhost:3002. (artifacts/misc/ai-dashboard/* dir removed from evidence — never tracked in git; live evidence is the runtime dashboard components.)'
 
+# PROVISIONAL WAIVER — added by PG-191 (IFC-314-class pre-existing landmine).
+# AUTOMATION-003 shipped via #566 but its plan-overrides entry was never added,
+# so the linter auto-classifies it Tier A and hard-fails on missing
+# gate_profile/acceptance_owner/evidence_required — which silently blocks ALL
+# unrelated non-TS-only feature PRs (they trigger the full lint -> plan-linter).
+# This entry classifies it tier B (consistent with its sibling automation tasks
+# AUTOMATION-001/002) to clear the three Tier-A hard errors WITHOUT fabricating
+# its canonical gate/owner/evidence values. Canonical fix tracked in GH #574;
+# replace this waiver with AUTOMATION-003's real tier + metadata there.
+AUTOMATION-003:
+  tier: B
+  debt_allowed: yes
+  waiver_expiry: '2026-08-31'
+  notes: 'PG-191 unblock waiver (GH #574). Pre-existing landmine: AUTOMATION-003 (#566) was never given a plan-overrides entry, so it auto-classified Tier A and hard-failed the plan-linter, blocking unrelated feature PRs. tier:B mirrors sibling AUTOMATION-001/002; do NOT treat gate_profile/acceptance_owner/evidence_required as canonical — they are intentionally omitted pending the real values in GH #574.'
+
 EXC-SEC-001:
   tier: A
   gate_profile:

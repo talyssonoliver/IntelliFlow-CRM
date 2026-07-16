@@ -120,4 +120,18 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
     expect(appointmentSettings?.update).toBeDefined();
     expect(appointmentSettings?.resetToDefaults).toBeDefined();
   });
+
+  it('registers taskSettings router with get/update/resetToDefaults (PG-191)', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, unknown>;
+
+    expect(record.taskSettings).toBeDefined();
+    // Typo guard — a mistyped singular Prisma accessor must not leak back in.
+    expect(record['taskSetting']).toBeUndefined();
+
+    const taskSettings = record.taskSettings as Record<string, unknown> | undefined;
+    expect(taskSettings?.get).toBeDefined();
+    expect(taskSettings?.update).toBeDefined();
+    expect(taskSettings?.resetToDefaults).toBeDefined();
+  });
 });

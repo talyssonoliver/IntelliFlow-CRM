@@ -170,6 +170,7 @@ model Tenant {
   appointmentSettings       AppointmentSettings[]     @ignore
   reportSettings            ReportSettings[]          @ignore
   reportTemplates           ReportTemplate[]          @ignore
+  taskSettings              TaskSettings[]            @ignore
   toolEnablements           TenantToolEnablement[]    // H6: per-tenant tool on/off
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
   memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
@@ -2000,6 +2001,23 @@ model ReportSettings {
   updatedAt         DateTime @updatedAt
 
   @@map("report_settings")
+}
+
+/// PG-191 — per-tenant task defaults: default due-date offset, reminder defaults,
+/// and a bounded task-template config list. Singleton per tenant (tenantId
+/// @unique), mirroring the ReportSettings pattern. `reminderDefaults` and
+/// `taskTemplates` are JSON blobs validated by Zod at the router boundary.
+model TaskSettings {
+  id                String   @id @default(cuid())
+  tenantId          String   @unique
+  dueDateOffsetDays Int      @default(3)
+  reminderDefaults  Json     @default("{\"enabled\":true,\"minutesBefore\":60}")
+  taskTemplates     Json     @default("[]")
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("task_settings")
 }
 
 /// PG-200 — per-tenant saveable report layouts (filter set + columns + chart +

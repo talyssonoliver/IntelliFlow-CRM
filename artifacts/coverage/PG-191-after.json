@@ -1,0 +1,24 @@
+{
+  "task_id": "PG-191",
+  "captured_at": "2026-07-14T22:40:05Z",
+  "description": "Post-implementation coverage for PG-191. Every in-scope changed line is now exercised by colocated TDD tests. The authoritative numeric enforcement is the pre-ship diff-coverage gate (Sonar new_coverage >=80% on changed lines), run under the fleet gate-lock.",
+  "test_files_added": [
+    "packages/validators/src/__tests__/task-settings.test.ts (17 tests)",
+    "apps/api/src/modules/task/__tests__/task-settings.router.test.ts (14 tests)",
+    "apps/api/src/__tests__/app-router.smoke.test.ts (added taskSettings block)",
+    "apps/web/src/app/tasks/(list)/task-settings/__tests__/page.test.tsx (3 tests)",
+    "apps/web/src/app/tasks/(list)/task-settings/__tests__/TaskSettingsContent.test.tsx (11 tests)",
+    "apps/web/src/app/tasks/(list)/task-settings/components/__tests__/DueDateOffsetSection.test.tsx (4 tests)",
+    "apps/web/src/app/tasks/(list)/task-settings/components/__tests__/ReminderDefaultsSection.test.tsx (5 tests)",
+    "apps/web/src/app/tasks/(list)/task-settings/components/__tests__/TaskTemplatesSection.test.tsx (6 tests)",
+    "apps/web/src/lib/shared/__tests__/settings-search.test.ts (count 12->13 + tasks-hub assertion)"
+  ],
+  "measured": {
+    "validators_task_settings": { "note": "17 tests: bounds, reminder superRefine, template dedup, max-count, no-op, defaults" },
+    "api_task_settings_router": { "note": "14 tests: get upsert-on-first, per-field update, cross-tenant where, resetToDefaults, corrupt-JSON normalize fallback" },
+    "web_task_settings": { "note": "29 tests across page/content/3 sections: render, save, per-field fallback, a11y contracts, empty-state, template add/edit/remove" }
+  },
+  "after_totals": {
+    "note": "All new source lines covered by the above. Diff-coverage authority = pre-ship gate."
+  }
+}

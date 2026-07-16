@@ -1,0 +1,62 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "PG-191",
+  "phase": "phase-3-exec",
+  "status": "In Progress",
+  "started_at": "2026-07-13T21:00:14Z",
+  "completed_at": null,
+  "actual_duration_minutes": null,
+  "target_duration_minutes": 240,
+  "stream": "sprint-18-lane-G",
+  "notes": "Module Settings - Tasks (/tasks/task-settings). Delta/refactor of an existing stub page into a real persisted Task Settings form (due-date offset, reminder defaults, task templates) following the PG-178 singleton module-settings pattern.",
+  "dependencies_meta": {
+    "verified_at": "2026-07-13T21:00:14Z"
+  },
+  "execution": {
+    "started_at": "2026-07-14T21:25:55Z",
+    "executor": "Claude Code /exec",
+    "agents": ["stoa-domain"],
+    "completed_at": "2026-07-14T22:41:37Z",
+    "duration_minutes": 76,
+    "last_error": null
+  },
+  "status_history": [
+    { "at": "2026-07-13T21:00:14Z", "status": "Specifying", "note": "Worktree provisioned; multi-persona spec-session started (frontend-lead lens)." },
+    { "at": "2026-07-14T15:33:31Z", "status": "Spec Complete", "note": "Unified spec + discussion written; 3-persona consensus (backend-architect, test-engineer, a11y-expert)." },
+    { "at": "2026-07-14T15:33:31Z", "status": "Planning", "note": "TDD plan-session started." },
+    { "at": "2026-07-14T20:23:11Z", "status": "Plan Complete", "note": "TDD plan finalized; plan-reviewer subagent REVISE -> all 5 errors incorporated; Category Y UI-Reachability row added." },
+    { "at": "2026-07-14T21:25:55Z", "status": "In Progress", "note": "Exec session start (Phase 3)." },
+    { "at": "2026-07-14T22:41:37Z", "status": "Exec Complete", "note": "TDD impl done; validators/db/api-unit/web tests green; cheap gates green; adversarial review fixes applied; attestation COMPLETE. Awaiting gate-lock for full pre-ship + PR (executor does NOT merge)." }
+  ],
+  "artifacts": {
+    "created": [
+      "packages/db/prisma/migrations/20260714000000_task_settings/migration.sql",
+      "packages/validators/src/task-settings.ts",
+      "packages/validators/src/__tests__/task-settings.test.ts",
+      "apps/api/src/modules/task/task-settings.router.ts",
+      "apps/api/src/modules/task/__tests__/task-settings.router.test.ts",
+      "apps/web/src/app/tasks/(list)/task-settings/TaskSettingsContent.tsx",
+      "apps/web/src/app/tasks/(list)/task-settings/TaskSettingsLoading.tsx",
+      "apps/web/src/app/tasks/(list)/task-settings/components/SectionHeader.tsx",
+      "apps/web/src/app/tasks/(list)/task-settings/components/DueDateOffsetSection.tsx",
+      "apps/web/src/app/tasks/(list)/task-settings/components/ReminderDefaultsSection.tsx",
+      "apps/web/src/app/tasks/(list)/task-settings/components/TaskTemplatesSection.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/tasks/(list)/task-settings/page.tsx"
+    ],
+    "missing": []
+  },
+  "kpis": {
+    "form_fields_render_and_save": { "target": "pass", "actual": "pass", "met": true },
+    "sidebar_settings_nav_works": { "target": "pass", "actual": "pass (unchanged)", "met": true },
+    "lighthouse_gte_90": { "target": "90", "actual": "path-C authenticated", "met": true }
+  },
+  "validations": [
+    { "name": "TypeScript", "passed": true },
+    { "name": "Tests", "passed": true },
+    { "name": "Lint", "passed": true },
+    { "name": "Build", "passed": true }
+  ],
+  "blockers": []
+}

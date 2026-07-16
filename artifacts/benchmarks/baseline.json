@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-06-29T18:27:03.572Z",
+  "timestamp": "2026-07-14T22:15:37.573Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 64,
-    "total_endpoints": 534,
-    "total_queries": 243,
-    "total_mutations": 291,
+    "total_routers": 65,
+    "total_endpoints": 537,
+    "total_queries": 244,
+    "total_mutations": 293,
     "routers": [
       {
         "name": "contact",
@@ -1327,6 +1327,12 @@
         "mutations": 1
       },
       {
+        "name": "taskSettings",
+        "endpoints": 3,
+        "queries": 1,
+        "mutations": 2
+      },
+      {
         "name": "zepBudget",
         "endpoints": 3,
         "queries": 2,
@@ -1407,16 +1413,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 176,
-    "total_fields": 2584,
-    "total_indexes": 820,
+    "total_tables": 177,
+    "total_fields": 2589,
+    "total_indexes": 822,
     "total_relations": 249,
     "tables_with_embeddings": 4,
     "enums": 74,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 154,
+        "fields": 155,
         "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
@@ -2645,6 +2651,13 @@
         "indexes": 1,
         "relations": 1,
         "hasEmbedding": false
+      },
+      {
+        "name": "TaskSettings",
+        "fields": 4,
+        "indexes": 2,
+        "relations": 0,
+        "hasEmbedding": false
       }
     ]
   },
@@ -3015,11 +3028,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 50,
-    "total_schemas": 585,
+    "total_validators": 51,
+    "total_schemas": 589,
     "by_complexity": {
       "complex": 31,
-      "moderate": 15,
+      "moderate": 16,
       "simple": 4
     },
     "validators": [
@@ -3242,6 +3255,12 @@
       {
         "name": "public-onboarding",
         "file": "public-onboarding.ts",
+        "schemas": 4,
+        "complexity": "moderate"
+      },
+      {
+        "name": "task-settings",
+        "file": "task-settings.ts",
         "schemas": 4,
         "complexity": "moderate"
       },
@@ -5839,6 +5858,23 @@
         "name": "subscription.toggleModule",
         "method": "POST",
         "description": "Toggle module"
+      }
+    ],
+    "taskSettings": [
+      {
+        "name": "taskSettings.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "taskSettings.update",
+        "method": "POST",
+        "description": "Update taskSettings"
+      },
+      {
+        "name": "taskSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
       }
     ],
     "task": [

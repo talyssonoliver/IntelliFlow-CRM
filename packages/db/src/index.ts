@@ -74,6 +74,7 @@ export type {
   DocumentRetentionPolicy,
   ReportSettings,
   ReportTemplate,
+  TaskSettings,
   Case,
   CaseTask,
   CaseSettings,
