@@ -100,10 +100,13 @@ STAGED_TS=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|ts
 if [ -n "$STAGED_TS" ] && [ "${ESCAPE_LINT_FIX:-0}" != "1" ]; then
   # eslint --fix mutates files in place. Use --max-warnings=0 so any
   # remaining violation (one we can't auto-fix) still blocks the commit.
+  # --no-warn-ignored so an ESLint-ignored staged file (e.g. .claude/hooks/*.mjs)
+  # emits no "File ignored" warning, which --max-warnings=0 would otherwise treat
+  # as fatal and force an ESCAPE_LINT_FIX override for an unrelated edit.
   # `2>/dev/null || true` on `git add` because some staged files may be
   # in directories ESLint ignored (e.g., dist/) — re-staging only matters
   # for files we actually fixed.
-  echo "$STAGED_TS" | xargs pnpm exec eslint --fix --max-warnings=0 || {
+  echo "$STAGED_TS" | xargs pnpm exec eslint --fix --max-warnings=0 --no-warn-ignored || {
     echo "❌ Lint failed on staged files after autofix. Fix the remaining errors before committing."
     echo "   (Override only if necessary: ESCAPE_LINT_FIX=1 git commit ... — record reason in commit body.)"
     exit 1
