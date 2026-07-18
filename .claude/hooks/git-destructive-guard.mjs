@@ -248,14 +248,163 @@ function stripGitGlobalOpts(sub) {
   return s;
 }
 
-function checkDirectPatterns(cmd) {
-  // Split on &&, ||, ;, newlines — check each subcommand independently
-  const subs = cmd.split(/&&|\|\||;|\n/).map((s) => s.trim());
-  for (const sub of subs) {
-    const norm = stripGitGlobalOpts(sub);
+// ─── Executable-aware command analysis ──────────────────────────────────────
+// The direct-pattern scan must only fire on text that is ACTUALLY a git command,
+// not on git-command strings living inside a quoted argument value or a heredoc
+// body (e.g. `gh issue create --body "...git push origin main..."`). To do that
+// we identify the real executable of each command segment and only apply the
+// destructive patterns when that executable is `git`.
+
+// Wrapper prefixes that sit BEFORE the real command (`env git ...`, `sudo git ...`).
+// Must be skipped so they can't smuggle a git command past the executable check.
+const WRAPPER_PREFIXES = new Set([
+  'env', 'sudo', 'time', 'nice', 'nohup', 'command', 'builtin', 'xargs', 'stdbuf', 'setsid', 'doas',
+]);
+// Shells whose `-c "<payload>"` we recurse into, so `bash -c "git reset --hard"`
+// is still caught rather than skipped as a non-git executable.
+const SHELL_DASH_C = new Set(['sh', 'bash', 'zsh', 'dash', 'ksh']);
+
+function baseName(tok) {
+  return tok.replace(/^['"]+|['"]+$/g, '').split(/[\\/]/).pop().toLowerCase();
+}
+
+// Whitespace tokenizer that respects single/double/back quotes. Char-walk (no
+// nested-quantifier regex) so there is no ReDoS surface on hostile input.
+function tokenizeRespectingQuotes(s) {
+  const toks = [];
+  let buf = '', q = null, started = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (q) { buf += c; if (c === q) q = null; continue; }
+    if (c === '"' || c === "'" || c === '`') { q = c; buf += c; started = true; continue; }
+    if (c === ' ' || c === '\t' || c === '\n' || c === '\r') {
+      if (started) { toks.push(buf); buf = ''; started = false; }
+      continue;
+    }
+    buf += c; started = true;
+  }
+  if (started) toks.push(buf);
+  return toks;
+}
+
+// Drop heredoc bodies (<<TAG / <<'TAG' / <<-TAG ... TAG) so their DATA text is
+// never scanned as shell code. This is what removed the issue-body false positive.
+function stripHeredocs(cmd) {
+  const lines = cmd.split('\n');
+  const out = [];
+  let closer = null;
+  for (const line of lines) {
+    if (closer) { if (line.trim() === closer) closer = null; continue; }
+    const m = line.match(/<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1/);
+    if (m) closer = m[2];
+    out.push(line);
+  }
+  return out.join('\n');
+}
+
+// Split into command segments on bare && || ; | and newline, honouring quotes so
+// operators inside a quoted argument don't create phantom segments.
+function splitSegmentsQuoteAware(cmd) {
+  const segs = [];
+  let buf = '', q = null;
+  for (let i = 0; i < cmd.length; i++) {
+    const c = cmd[i], n = cmd[i + 1];
+    if (q) { buf += c; if (c === q) q = null; continue; }
+    if (c === '"' || c === "'" || c === '`') { q = c; buf += c; continue; }
+    if (c === '\n' || c === ';') { segs.push(buf); buf = ''; continue; }
+    if ((c === '&' && n === '&') || (c === '|' && n === '|')) { segs.push(buf); buf = ''; i++; continue; }
+    if (c === '|') { segs.push(buf); buf = ''; continue; }
+    buf += c;
+  }
+  segs.push(buf);
+  return segs.map((s) => s.trim()).filter(Boolean);
+}
+
+// Extract command-substitution bodies — $(...) and `...` — that the shell would
+// actually evaluate, so an embedded destructive git call (e.g. `foo=$(git reset
+// --hard)`) is still caught. Single-quoted regions are LITERAL to the shell, so a
+// $(...) inside them is not a substitution and is skipped — avoids false positives
+// on data like `echo 'text $(git reset --hard)'`. Substitutions inside double
+// quotes ARE evaluated, so those are still captured. Paren-depth aware for nesting.
+function extractCommandSubs(cmd) {
+  const bodies = [];
+  let mode = 'none'; // none | single | double
+  for (let i = 0; i < cmd.length; i++) {
+    const c = cmd[i], n = cmd[i + 1];
+    if (mode === 'single') { if (c === "'") mode = 'none'; continue; }
+    if (mode === 'none' && c === "'") { mode = 'single'; continue; }
+    if (mode === 'none' && c === '"') { mode = 'double'; continue; }
+    if (mode === 'double' && c === '"') { mode = 'none'; continue; }
+    // mode is 'none' or 'double' → substitutions are active here.
+    if (c === '$' && n === '(') {
+      let depth = 1, j = i + 2, body = '';
+      for (; j < cmd.length; j++) {
+        const d = cmd[j];
+        if (d === '(') depth++;
+        else if (d === ')') { depth--; if (depth === 0) break; }
+        body += d;
+      }
+      bodies.push(body);
+      i = j;
+      continue;
+    }
+    if (c === '`') {
+      let j = i + 1, body = '';
+      for (; j < cmd.length && cmd[j] !== '`'; j++) body += cmd[j];
+      bodies.push(body);
+      i = j;
+      continue;
+    }
+  }
+  return bodies;
+}
+
+// Blank the CONTENTS of quoted strings (keep the quotes) so a git-command string
+// inside a message/flag value — e.g. `git commit -m "remember to git push origin
+// main"` — isn't matched, while a REAL `git push origin main` (unquoted) still is.
+function blankQuotedValues(seg) {
+  return seg.replace(/"(?:[^"\\]|\\.)*"/g, '""').replace(/'[^']*'/g, "''");
+}
+
+// Identify the real executable of a segment (after skipping VAR=val assignments
+// and wrapper prefixes) plus any `sh -c <payload>` string to recurse into.
+function segmentExecutable(seg) {
+  const toks = tokenizeRespectingQuotes(seg);
+  let i = 0;
+  while (i < toks.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(toks[i])) i++; // env-assignments
+  while (i < toks.length && WRAPPER_PREFIXES.has(baseName(toks[i]))) i++;   // env/sudo/time/...
+  if (i >= toks.length) return { exec: '', dashC: null };
+  const exec = baseName(toks[i]);
+  let dashC = null;
+  if (SHELL_DASH_C.has(exec)) {
+    const ci = toks.indexOf('-c', i + 1);
+    if (ci >= 0 && toks[ci + 1]) dashC = toks[ci + 1].replace(/^['"]|['"]$/g, '');
+  }
+  return { exec, dashC };
+}
+
+function checkDirectPatterns(cmd, _depth = 0) {
+  if (_depth > 8) return null; // recursion backstop against pathological nesting
+  const stripped = stripHeredocs(cmd);
+
+  // Recurse into command-substitution bodies so a destructive git call that isn't
+  // the segment's leading command is still caught.
+  for (const body of extractCommandSubs(stripped)) {
+    const r = checkDirectPatterns(body, _depth + 1);
+    if (r) return r;
+  }
+
+  for (const seg of splitSegmentsQuoteAware(stripped)) {
+    const { exec, dashC } = segmentExecutable(seg);
+    if (dashC) {
+      const r = checkDirectPatterns(dashC, _depth + 1); // recurse into `sh -c "..."`
+      if (r) return r;
+    }
+    if (exec !== 'git') continue; // only scan segments that actually run git
+    const scan = blankQuotedValues(seg);
+    const norm = stripGitGlobalOpts(scan);
     for (const { pattern, reason } of DESTRUCTIVE_PATTERNS) {
-      // Test both the original and the global-opts-stripped form.
-      if (pattern.test(sub) || pattern.test(norm)) return reason;
+      if (pattern.test(scan) || pattern.test(norm)) return reason;
     }
   }
   return null;
