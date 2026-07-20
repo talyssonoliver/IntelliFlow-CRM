@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-17T08:33:38.775Z",
+  "generated_at": "2026-07-19T12:22:03.142Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 500,
-    "completed": 440,
+    "completed": 441,
     "partially_done": 2,
     "spec_only": 53,
-    "uncertain": 5
+    "uncertain": 4
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -15,6 +15,12 @@
     "UNCERTAIN": "Conflicting signals between evidence sources"
   },
   "issues": [
+    {
+      "task_id": "AUTOMATION-003",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
     {
       "task_id": "DOC-015",
       "severity": "MEDIUM",
@@ -270,11 +276,11 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "In Progress",
-      "metric_status": "IN_PROGRESS",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "BRAND-001",
