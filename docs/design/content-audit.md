@@ -11,13 +11,6 @@
 > filesystem total of `page.tsx` files under `apps/web/src/app/**` (route groups
 > stripped, `[id]` collapsed, `app/api/` excluded). Verified: 2026-07-21.
 
-> **Drift enforcement (DOC-016)**: these canonical counts, and the matching
-> totals in the six sibling design docs, are enforced on every PR by the
-> docs-integrity gate (`tools/scripts/docs-integrity-audit.ts`,
-> `.github/workflows/docs-integrity.yml`, and the `docs-integrity` pre-ship
-> step). Any doc that drifts from the live `runAudit()` total fails the gate.
-> See `docs/runbooks/docs-integrity-gate.md`.
-
 ## 1. Purpose and Scope
 
 This document defines the content-audit framework for IntelliFlow CRM's web
@@ -48,8 +41,8 @@ URL patterns if duplicate collapsed routes are introduced in future.
 
 Current verified state:
 
-- **209 page entries**
-- **209 distinct collapsed route patterns**
+- **211 page entries**
+- **211 distinct collapsed route patterns**
 
 ## 2. Methodology
 
@@ -288,12 +281,12 @@ current verified baseline is **0 unresolved ghost links**.
 
 ```json
 {
-  "total_routes": 209,
+  "total_routes": 211,
   "public_routes": 32,
-  "auth_gated_routes": 163,
+  "auth_gated_routes": 165,
   "developer_routes": 14,
   "routes_with_seo_score": 32,
-  "routes_pending_runtime_measurement": 209,
+  "routes_pending_runtime_measurement": 211,
   "average_seo_score_public": 80,
   "legal_pages_missing": [],
   "ghost_link_count": 0
@@ -401,7 +394,7 @@ but not necessarily trigger a route-count drift:
 | --------- | ------------------------------------------------------------ | --------- |
 | `DOC-014` | Automated content audit script and CI regeneration           | completed |
 | `DOC-015` | Cross-document route-total reconciliation across design docs | backlog   |
-| `DOC-016` | CI gate for cross-document route-total drift                 | backlog   |
+| `DOC-016` | CI gate for cross-document route-total drift                 | completed |
 
 ## 9. How to Regenerate
 
@@ -423,3 +416,44 @@ If the route-entry baseline changes, review:
 2. whether two files now collapse to the same public URL
 3. whether sitemap or data-driven route expansion also changed
 4. whether companion design docs need the same baseline refresh
+
+## 10. CI Integrity Gate (DOC-016)
+
+Where DOC-015 reconciled the design docs to a single canonical total, **DOC-016
+keeps them reconciled**. A dedicated gate —
+`tools/scripts/docs-integrity-audit.ts` — re-derives the canonical counts live
+from `runAudit()` and fails whenever a design doc's cited total or tier
+aggregate drifts from the filesystem.
+
+**What it checks** (against the live `runAudit().summary`):
+
+- The **canonical total** cited on any `Total Pages` / `Total Routes` /
+  `page.tsx entries` / `filesystem total` line across the seven target docs (see
+  the list in `route-total-consistency.test.ts`).
+- The **key summary aggregates** `<n> public entries`, `<n> auth-gated entries`,
+  `<n> developer entries`.
+- That each target doc cites the canonical total **at least once**
+  (`missing-citation` guard).
+
+**False-positive guardrails.** Only numbers introduced by one of those explicit
+labels are compared. Unrelated figures — flows, layouts, API routers, the
+bucketing "sum of category subtotals", the distinct-collapsed-pattern count, and
+dates — are ignored by construction, so editing them never trips the gate.
+
+**Where it runs:**
+
+- CI: `.github/workflows/docs-integrity.yml` — on any PR touching
+  `apps/web/src/app/**/page.tsx`, `docs/design/**`, or the audit scripts. Fails
+  the check and comments on the PR when drift is detected.
+- Local: the `docs-integrity` step in `scripts/pre-ship.mjs`, so drift is caught
+  before push.
+
+**Run it manually:**
+
+```bash
+pnpm tsx tools/scripts/docs-integrity-audit.ts
+pnpm exec vitest run tools/scripts/__tests__/docs-integrity-audit.test.ts
+```
+
+Full semantics and the fix procedure live in
+[`docs/runbooks/docs-integrity-gate.md`](../runbooks/docs-integrity-gate.md).

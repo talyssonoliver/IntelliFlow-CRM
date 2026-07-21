@@ -1,9 +1,15 @@
 {
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 75,
   "artifacts": {
     "created": [
-      "docs/design/content-audit.md"
+      "tools/scripts/docs-integrity-audit.ts",
+      "tools/scripts/__tests__/docs-integrity-audit.test.ts",
+      ".github/workflows/docs-integrity.yml",
+      "docs/design/content-audit.md",
+      "docs/runbooks/docs-integrity-gate.md",
+      ".specify/sprints/sprint-18/attestations/DOC-016/context_ack.json",
+      ".specify/sprints/sprint-18/attestations/DOC-016/attestation.json"
     ],
     "expected": [
       "tools/scripts/docs-integrity-audit.ts",
@@ -12,57 +18,71 @@
       "docs/design/content-audit.md",
       ".specify/sprints/sprint-18/attestations/DOC-016/context_ack.json"
     ],
-    "missing": [
-      "tools/scripts/docs-integrity-audit.ts",
-      "tools/scripts/__tests__/docs-integrity-audit.test.ts",
-      ".github/workflows/docs-integrity.yml",
-      ".specify/sprints/sprint-18/attestations/DOC-016/context_ack.json"
-    ]
+    "missing": []
   },
   "blockers": [
     {
       "description": "Depends on DOC-015 canonical reconciliation output to lock CI assertions and expected totals.",
       "raised_at": "2026-03-04T23:58:00Z",
-      "resolved_at": null
+      "resolved_at": "2026-07-21T22:52:00Z"
     }
   ],
-  "completed_at": null,
+  "completed_at": "2026-07-21T23:59:00Z",
   "dependencies_meta": {
-    "verified_at": "2026-04-29T21:54:51.854Z"
+    "verified_at": "2026-07-21T22:52:00Z"
   },
   "kpis": {
     "drift_detection_rate": {
-      "actual": "",
-      "met": false,
+      "actual": "100%",
+      "met": true,
       "target": "100%"
     },
     "false_positive_rate": {
-      "actual": "",
-      "met": false,
+      "actual": "0%",
+      "met": true,
       "target": "<=1%"
     },
     "script_runtime": {
-      "actual": "",
-      "met": false,
+      "actual": "85ms",
+      "met": true,
       "target": "<30s"
     },
     "test_coverage": {
-      "actual": "",
-      "met": false,
+      "actual": "92.15% statements / 90% functions / 91.57% lines",
+      "met": true,
       "target": ">=90%"
     }
   },
-  "notes": "Hardens R-023 mitigation by preventing future design-doc total drift. Extends DOC-014 automation with a dedicated cross-document integrity gate.",
+  "notes": "Hardens R-023 mitigation by preventing future design-doc total drift. Extends DOC-014 automation with a dedicated cross-document integrity gate. Implemented docs-integrity-audit.ts (canonical total + tier-aggregate checks, false-positive guardrails), CI workflow docs-integrity.yml, 21 regression tests, a pre-ship docs-integrity step, and the docs-integrity-gate runbook. Branched from the DOC-015 reconciliation state; lands only after DOC-015 reaches origin/main.",
   "phase": "phase-1-validation",
-  "started_at": null,
+  "started_at": "2026-07-21T22:48:00Z",
   "status_history": [
     {
       "at": "2026-03-04T23:58:00Z",
       "status": "Backlog"
+    },
+    {
+      "at": "2026-07-21T22:48:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-07-21T23:59:00Z",
+      "status": "Completed"
     }
   ],
   "stream": null,
   "target_duration_minutes": 120,
   "task_id": "DOC-016",
-  "validations": []
+  "validations": [
+    {
+      "name": "docs-integrity-audit",
+      "command": "npx tsx tools/scripts/docs-integrity-audit.ts",
+      "passed": true
+    },
+    {
+      "name": "regression-tests",
+      "command": "npx vitest run tools/scripts/__tests__/docs-integrity-audit.test.ts",
+      "passed": true
+    }
+  ]
 }

@@ -298,13 +298,13 @@ const STEPS = [
     required: true,
   },
   {
-    // DOC-016 docs-integrity gate. Mirrors .github/workflows/docs-integrity.yml
-    // so cross-document route-total / summary-aggregate drift fails locally, not
-    // after a CI round. Build-free + deterministic (live filesystem scan of
-    // page.tsx vs the design docs); no DB/infra needed.
+    // DOC-016: docs-integrity gate. Mirrors CI `.github/workflows/docs-integrity.yml`
+    // (`GATE:docs-integrity-pass`). Fails the gate when a design doc's canonical
+    // route total / tier aggregate drifts from the live filesystem audit, so a
+    // route-adding PR that forgets to reconcile the docs is caught locally.
     id: 'docs-integrity',
-    description: 'docs-integrity gate — design-doc route totals match the live filesystem audit',
-    cmd: ['pnpm', 'run', 'validate:docs-integrity'],
+    description: 'docs-integrity route-total consistency (design docs vs filesystem)',
+    cmd: ['pnpm', 'tsx', 'tools/scripts/docs-integrity-audit.ts'],
     required: true,
   },
   {
