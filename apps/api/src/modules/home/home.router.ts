@@ -15,14 +15,19 @@
 
 import { context as otelContext, propagation } from '@opentelemetry/api';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure, adminTenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
 import { loadBullMQ } from '../../lib/load-bullmq';
+import { RBACService } from '../../security/rbac';
+import { getAuditLogger } from '../../security/audit';
+import { type RoleName } from '../../security/types';
 import {
   pinItemInputSchema,
   unpinItemInputSchema,
   reorderPinnedItemsInputSchema,
   updateDailyGoalInputSchema,
+  setTeamMemberGoalInputSchema,
+  setOrgGoalDefaultInputSchema,
   getAllInsightsQuerySchema,
   GOAL_DEFAULTS,
   type WelcomeSummary,
@@ -1318,6 +1323,50 @@ async function resolveInsightById(
 // Router Implementation
 // =============================================================================
 
+type GoalConfig = { type: GoalType; targetValue: number; label?: string; customUnit?: string };
+
+/**
+ * IFC-211: Resolve the effective daily-goal config in the order
+ * user override → tenant default (TenantGoalDefault) → null (the caller then
+ * applies the hardcoded GOAL_DEFAULTS). Never throws — a missing table (P2021)
+ * or any lookup error falls through to null (AC-008/009).
+ */
+async function resolveDailyGoalConfig(
+  prismaWithTenant: NonNullable<Context['prismaWithTenant']>,
+  tenantId: string,
+  userOverride: GoalConfig | null
+): Promise<GoalConfig | null> {
+  if (userOverride) return userOverride;
+  try {
+    const tenantDefault = await prismaWithTenant.tenantGoalDefault.findUnique({
+      where: { tenantId },
+    });
+    if (!tenantDefault) return null;
+    return {
+      type: tenantDefault.goalType as GoalType,
+      targetValue: tenantDefault.targetValue,
+      label: tenantDefault.label ?? undefined,
+      customUnit: tenantDefault.customUnit ?? undefined,
+    };
+  } catch (err: unknown) {
+    const code =
+      typeof err === 'object' && err !== null && 'code' in err
+        ? (err as { code?: string }).code
+        : undefined;
+    if (code === 'P2021') {
+      console.debug(
+        '[home.getDailyGoal] tenant_goal_default table missing (P2021) — using hardcoded defaults'
+      );
+    } else {
+      console.warn(
+        '[home.getDailyGoal] tenant default lookup failed — using hardcoded defaults:',
+        err
+      );
+    }
+    return null;
+  }
+}
+
 export const homeRouter = createTRPCRouter({
   /**
    * Get welcome summary for authenticated home page
@@ -1696,12 +1745,18 @@ export const homeRouter = createTRPCRouter({
     });
     const parsed = goalPrefSchema.safeParse(prefs.dailyGoal);
 
-    const goalType: GoalType = parsed.success ? parsed.data.type : 'revenue';
+    // IFC-211: resolution order — user override → tenant default → hardcoded.
+    const resolved = await resolveDailyGoalConfig(
+      ctx.prismaWithTenant,
+      tenantId,
+      parsed.success ? parsed.data : null
+    );
+
+    const goalType: GoalType = resolved ? resolved.type : 'revenue';
     const defaults = GOAL_DEFAULTS[goalType];
-    const targetValue = parsed.success ? parsed.data.targetValue : defaults.targetValue;
-    const label = (parsed.success && parsed.data.label) || defaults.label;
-    const unit =
-      (parsed.success && goalType === 'custom' && parsed.data.customUnit) || defaults.unit;
+    const targetValue = resolved ? resolved.targetValue : defaults.targetValue;
+    const label = (resolved && resolved.label) || defaults.label;
+    const unit = (resolved && goalType === 'custom' && resolved.customUnit) || defaults.unit;
 
     // Compute currentValue based on goal type
     let currentValue = 0;
@@ -1798,29 +1853,243 @@ export const homeRouter = createTRPCRouter({
     .input(updateDailyGoalInputSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.tenant.userId;
-      const { type, targetValue, label, customUnit } = input;
+      const tenantId = ctx.tenant.tenantId;
+      const role = ctx.tenant.role as RoleName;
+      const rbac = new RBACService(ctx.prisma);
+      const auditLogger = getAuditLogger(ctx.prisma);
 
-      // Get current preferences
+      // IFC-211 (AC-003): self-write requires goal:write. Ownership (ABAC) is
+      // satisfied because resourceOwnerId === the caller, so USER/SALES_REP pass
+      // for their own goal while VIEWER (read-only on goal) is denied + audited.
+      const canWrite = await rbac.can({
+        userId,
+        userRole: role,
+        resourceType: 'goal',
+        action: 'write',
+        resourceOwnerId: userId,
+      });
+      if (!canWrite.granted) {
+        await auditLogger
+          .logPermissionDenied('goal', userId, 'goal:write', tenantId, { actorId: userId })
+          .catch(() => {});
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: canWrite.reason ?? 'Insufficient permissions to update goal',
+        });
+      }
+
+      const { type, targetValue, label, customUnit } = input;
       const user = await ctx.prismaWithTenant.user.findUnique({
         where: { id: userId },
         select: { preferences: true },
       });
+      const prefs = (user?.preferences as Record<string, unknown> | null) || {};
+      const beforeState = (prefs.dailyGoal as Record<string, unknown> | undefined) ?? undefined;
+      const afterState = { type, targetValue, label, customUnit };
 
-      const prefs = (user?.preferences as any) || {};
-
-      // Merge dailyGoal into preferences
+      // Merge dailyGoal into preferences (read-merge-write, same as pinItem)
       await ctx.prismaWithTenant.user.update({
         where: { id: userId },
         data: {
           preferences: {
             ...prefs,
-            dailyGoal: { type, targetValue, label, customUnit },
+            dailyGoal: afterState,
           },
         },
       });
 
+      // AC-010: audit every successful goal write (non-blocking per NF-002).
+      auditLogger
+        .logAction('UPDATE', 'goal', userId, tenantId, {
+          actorId: userId,
+          actorRole: role,
+          beforeState,
+          afterState,
+          metadata: { scope: 'self' },
+        })
+        .catch(() => {});
+
       return { success: true, message: 'Daily goal updated successfully' };
     }),
+
+  /**
+   * IFC-211 (AC-004/005/006): Manager or admin sets a team member's daily goal.
+   * A MANAGER must lead a team containing the target user (isUserOnManagerTeam,
+   * tenant-scoped); ADMIN bypasses the team-membership check. Setting your own
+   * goal via this path is rejected — use updateDailyGoal instead.
+   */
+  setTeamMemberGoal: tenantProcedure
+    .input(setTeamMemberGoalInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const actorId = ctx.tenant.userId;
+      const tenantId = ctx.tenant.tenantId;
+      const role = ctx.tenant.role as RoleName;
+      const { targetUserId, type, targetValue, label, customUnit } = input;
+
+      // AC-004: self-target must use the self-write endpoint.
+      if (targetUserId === actorId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Use updateDailyGoal to set your own goal.',
+        });
+      }
+
+      const rbac = new RBACService(ctx.prisma);
+      const auditLogger = getAuditLogger(ctx.prisma);
+
+      const canManage = await rbac.can({
+        userId: actorId,
+        userRole: role,
+        resourceType: 'goal',
+        action: 'manage',
+      });
+      // AC-005: ADMIN bypasses team check; MANAGER needs a real team relation.
+      const onTeam =
+        role === 'ADMIN' ? true : await rbac.isUserOnManagerTeam(actorId, targetUserId, tenantId);
+
+      if (!canManage.granted || !onTeam) {
+        await auditLogger
+          .logPermissionDenied('goal', targetUserId, 'goal:manage', tenantId, { actorId })
+          .catch(() => {});
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: !canManage.granted
+            ? (canManage.reason ?? 'Insufficient permissions to set team member goal')
+            : 'Target user is not on your team',
+        });
+      }
+
+      const target = await ctx.prismaWithTenant.user.findUnique({
+        where: { id: targetUserId },
+        select: { preferences: true },
+      });
+      const prefs = (target?.preferences as Record<string, unknown> | null) || {};
+      const beforeState = (prefs.dailyGoal as Record<string, unknown> | undefined) ?? undefined;
+      const afterState = { type, targetValue, label, customUnit };
+
+      await ctx.prismaWithTenant.user.update({
+        where: { id: targetUserId },
+        data: { preferences: { ...prefs, dailyGoal: afterState } },
+      });
+
+      auditLogger
+        .logAction('UPDATE', 'goal', targetUserId, tenantId, {
+          actorId,
+          actorRole: role,
+          beforeState,
+          afterState,
+          metadata: { scope: 'team' },
+        })
+        .catch(() => {});
+
+      return { success: true, message: 'Team member daily goal updated successfully' };
+    }),
+
+  /**
+   * IFC-211 (AC-007): Admin sets the tenant-wide default daily goal, applied by
+   * getDailyGoal when a user has no personal override. Admin-only via
+   * adminTenantProcedure (non-admins are rejected by the middleware).
+   */
+  setOrgGoalDefault: adminTenantProcedure
+    .input(setOrgGoalDefaultInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const actorId = ctx.tenant.userId;
+      const tenantId = ctx.tenant.tenantId;
+      const role = ctx.tenant.role as RoleName;
+      const auditLogger = getAuditLogger(ctx.prisma);
+      const { type, targetValue, label, customUnit } = input;
+
+      const before = await ctx.prismaWithTenant.tenantGoalDefault
+        .findUnique({ where: { tenantId } })
+        .catch(() => null);
+
+      await ctx.prismaWithTenant.tenantGoalDefault.upsert({
+        where: { tenantId },
+        create: {
+          tenantId,
+          goalType: type,
+          targetValue,
+          label: label ?? null,
+          customUnit: customUnit ?? null,
+          updatedBy: actorId,
+        },
+        update: {
+          goalType: type,
+          targetValue,
+          label: label ?? null,
+          customUnit: customUnit ?? null,
+          updatedBy: actorId,
+        },
+      });
+
+      auditLogger
+        .logAction('UPDATE', 'goal', tenantId, tenantId, {
+          actorId,
+          actorRole: role,
+          beforeState: before
+            ? {
+                type: before.goalType,
+                targetValue: before.targetValue,
+                label: before.label,
+                customUnit: before.customUnit,
+              }
+            : undefined,
+          afterState: { type, targetValue, label, customUnit },
+          metadata: { scope: 'org' },
+        })
+        .catch(() => {});
+
+      return { success: true, message: 'Organization goal default updated successfully' };
+    }),
+
+  /**
+   * IFC-211: Read the tenant-wide default goal (admin-settings surface).
+   * Returns null when no default is configured or the table is missing (P2021)
+   * — never throws to the caller (AC-009).
+   */
+  getOrgGoalDefault: tenantProcedure.query(async ({ ctx }): Promise<DailyGoalResponse | null> => {
+    const tenantId = ctx.tenant.tenantId;
+    try {
+      const row = await ctx.prismaWithTenant.tenantGoalDefault.findUnique({
+        where: { tenantId },
+      });
+      if (!row) return null;
+      const goalType = row.goalType as GoalType;
+      const defaults = GOAL_DEFAULTS[goalType];
+      const label = row.label || defaults.label;
+      const unit = (goalType === 'custom' && row.customUnit) || defaults.unit;
+      return {
+        goal: {
+          id: `tenant-default-${row.tenantId}`,
+          type: goalType,
+          label,
+          targetValue: row.targetValue,
+          currentValue: 0,
+          unit,
+          progress: 0,
+          remainingToTarget: row.targetValue,
+          remainingFormatted:
+            goalType === 'revenue'
+              ? `$${row.targetValue.toLocaleString('en-GB')}`
+              : `${row.targetValue} ${unit}`,
+        },
+        lastUpdated: row.updatedAt,
+      };
+    } catch (err: unknown) {
+      const code =
+        typeof err === 'object' && err !== null && 'code' in err
+          ? (err as { code?: string }).code
+          : undefined;
+      if (code === 'P2021') {
+        console.debug(
+          '[home.getOrgGoalDefault] tenant_goal_default table missing (P2021) — returning null'
+        );
+      } else {
+        console.warn('[home.getOrgGoalDefault] lookup failed — returning null:', err);
+      }
+      return null;
+    }
+  }),
 
   /**
    * Get pinned items
