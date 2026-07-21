@@ -1,6 +1,6 @@
 # Content Audit Framework
 
-> **Last verified**: 2026-04-26 **Generator**:
+> **Last verified**: 2026-07-21 **Generator**:
 > `npx tsx tools/scripts/content-audit.ts` **Machine output**:
 > `artifacts/reports/content-audit-results.json` **Tool version**: `1.2.0`
 
@@ -9,7 +9,7 @@
 > section below). The "Current baseline" numbers immediately below are
 > regenerated from a live `runAudit()` run at the verified date — they are the
 > filesystem total of `page.tsx` files under `apps/web/src/app/**` (route groups
-> stripped, `[id]` collapsed, `app/api/` excluded). Verified: 2026-04-26.
+> stripped, `[id]` collapsed, `app/api/` excluded). Verified: 2026-07-21.
 
 ## 1. Purpose and Scope
 
@@ -27,7 +27,7 @@ tracks navigation ghost-link status. It does not implement fixes by itself.
 - **Total Pages (filesystem total): 211** — `page.tsx` entries scanned from
   `apps/web/src/app`
 - **32 public entries** under `(public)/`
-- **163 auth-gated entries** outside `(public)/` and `(developer)/`
+- **165 auth-gated entries** outside `(public)/` and `(developer)/`
 - **14 developer entries** under `(developer)/`
 - **0 unresolved ghost links** after route-group-aware reconciliation
 - **80 average SEO score** across public routes

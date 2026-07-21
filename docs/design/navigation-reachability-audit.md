@@ -1,6 +1,6 @@
 # Navigation & Reachability Audit
 
-> **Generated**: 2026-02-22 | **Updated**: 2026-04-26 | **Sprint**: 6 (MVP
+> **Generated**: 2026-02-22 | **Updated**: 2026-07-21 | **Sprint**: 6 (MVP
 > Phase) **Trigger**: PG-030 shipped a complete subscription manager at
 > `/billing/subscriptions` with zero navigation entries — only discoverable by
 > typing the URL directly.
@@ -10,7 +10,7 @@
 > `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`
 > counts once; route groups stripped; `[id]` collapses; `app/api/` excluded. See
 > `docs/design/content-audit.md` for the full counting rule. Verified:
-> 2026-04-26.
+> 2026-07-21.
 
 ## Table of Contents
 
