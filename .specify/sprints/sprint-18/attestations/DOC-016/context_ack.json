@@ -1,0 +1,38 @@
+{
+  "task_id": "DOC-016",
+  "title": "Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement",
+  "sprint": 18,
+  "acknowledged_by": "Claude Opus 4.8 — autonomous DOC-016 build (STOA-Automation lens)",
+  "acknowledged_at": "2026-07-22T00:10:00Z",
+  "files_read": [
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan_G.csv",
+    "tools/scripts/content-audit.ts",
+    "tools/scripts/route-total-consistency.test.ts",
+    "tools/scripts/lib/validation-utils.ts",
+    "tools/scripts/__tests__/pg195.vitest.config.ts",
+    "vitest.config.ts",
+    "package.json",
+    "scripts/pre-ship.mjs",
+    ".github/workflows/content-audit.yml",
+    "docs/design/PAGE_MAP_AND_FLOWS.md",
+    "docs/design/information-architecture.md",
+    "docs/design/content-audit.md",
+    "docs/design/sitemap.md",
+    "docs/design/page-registry.md",
+    "docs/design/ui-flow-mapping.md",
+    "docs/design/navigation-reachability-audit.md",
+    "docs/runbooks/docker-ha.md",
+    ".specify/sprints/sprint-18/attestations/DOC-016/task-tracking.json"
+  ],
+  "invariants_acknowledged": [
+    "DEPENDENCY: DOC-016 depends on DOC-015's reconciliation. The canonical route total (211) is consistent on main, but the summary AGGREGATES (Protected/auth-gated = 165, was 162/163) were only fixed in the DOC-015 closure commit 58d4c99ed, not yet merged. This branch is based on 58d4c99ed so local tests + audit pass; it must be rebased onto origin/main AFTER DOC-015 lands, or the CI gate would (correctly) fail on stale aggregates.",
+    "ORACLE IS LIVE, NEVER HARDCODED: docs-integrity-audit.ts derives expected totals from runAudit(repoRoot).summary (a live page.tsx scan in content-audit.ts). Mirrors DOC-015's route-total-consistency.test.ts oracle. Canonical numbers self-update when routes change; no magic constants.",
+    "FALSE-POSITIVE GUARDRAIL (AC <=1%): each check is anchored to a specific line shape (Markdown table row `| Public Pages | N |` or the `**Total Pages**:` header), so decoy numbers — the `### Public Pages (27 routes)` section header, changelog 'Updated to 102 pages' — are NOT mistaken for the canonical figure. Unit tests assert these decoys produce zero findings.",
+    "DETECTION RATE (AC 100%): the test injects a wrong number into every one of the 14 checks and asserts a drift finding for each; missing-line and missing-doc cases are also covered.",
+    "BUILD-FREE CI: content-audit.ts and validation-utils.ts import only Node built-ins (no @intelliflow/* workspace packages), so the audit CLI and its dedicated vitest config (docs-integrity.vitest.config.ts, no setupFiles) run without a library build. The root unit project loads apps/api/src/test/setup.ts (needs @intelliflow/db dist); the dedicated config avoids it for a fast fail-first gate.",
+    "COVERAGE (AC >=90%): tools/** is excluded from the merged/Sonar coverage config, so the ≥90% gate is enforced via the dedicated docs-integrity.vitest.config.ts thresholds (statements/functions/lines 90, branches 85). Measured: statements 98.5%, branches 91.66%, functions 100%, lines 98.41%. Only the CLI entry guard (line 380) is uncovered.",
+    "RUNTIME (AC <30s): the audit is a single filesystem scan; measured wall-clock ~0.1s of compute (well under 30s).",
+    "TWO ENFORCEMENT SURFACES: .github/workflows/docs-integrity.yml (PR gate, comments the fix procedure on drift) and the `docs-integrity` step in scripts/pre-ship.mjs (local, build-free, no DB) — both call the same entry point so a green pre-ship implies a green CI gate. No pre-ship bypass used.",
+    "content-audit.md is DOC-015's canonical originating doc; DOC-016 does NOT change its numbers — it only enforces them. A short enforcement pointer to this gate was added without altering any count."
+  ]
+}

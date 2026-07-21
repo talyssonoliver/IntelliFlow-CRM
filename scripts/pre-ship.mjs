@@ -298,6 +298,16 @@ const STEPS = [
     required: true,
   },
   {
+    // DOC-016 docs-integrity gate. Mirrors .github/workflows/docs-integrity.yml
+    // so cross-document route-total / summary-aggregate drift fails locally, not
+    // after a CI round. Build-free + deterministic (live filesystem scan of
+    // page.tsx vs the design docs); no DB/infra needed.
+    id: 'docs-integrity',
+    description: 'docs-integrity gate — design-doc route totals match the live filesystem audit',
+    cmd: ['pnpm', 'run', 'validate:docs-integrity'],
+    required: true,
+  },
+  {
     id: 'unit-tests',
     description: 'vitest run --project unit',
     cmd: ['pnpm', 'run', 'test:unit'],

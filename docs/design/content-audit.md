@@ -11,6 +11,13 @@
 > filesystem total of `page.tsx` files under `apps/web/src/app/**` (route groups
 > stripped, `[id]` collapsed, `app/api/` excluded). Verified: 2026-07-21.
 
+> **Drift enforcement (DOC-016)**: these canonical counts, and the matching
+> totals in the six sibling design docs, are enforced on every PR by the
+> docs-integrity gate (`tools/scripts/docs-integrity-audit.ts`,
+> `.github/workflows/docs-integrity.yml`, and the `docs-integrity` pre-ship
+> step). Any doc that drifts from the live `runAudit()` total fails the gate.
+> See `docs/runbooks/docs-integrity-gate.md`.
+
 ## 1. Purpose and Scope
 
 This document defines the content-audit framework for IntelliFlow CRM's web
