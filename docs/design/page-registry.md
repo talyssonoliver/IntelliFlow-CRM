@@ -9,7 +9,7 @@
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
 > counts once; route groups stripped; `[id]` collapses; `app/api/` excluded).
 > See `docs/design/content-audit.md` for the full counting rule. Verified:
-> 2026-04-26.
+> 2026-07-21.
 
 ---
 

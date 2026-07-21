@@ -9,7 +9,7 @@
 > counts once; route groups stripped; `[id]` collapses; `app/api/` excluded).
 > The Section 8 summary table below uses the same canonical denominator. See
 > `docs/design/content-audit.md` for the full counting rule. Verified:
-> 2026-04-26.
+> 2026-07-21.
 
 ---
 
@@ -533,7 +533,7 @@ Four distinct layout patterns used across modules.
 | **Total Pages** | 211   |
 | Public Pages    | 32    |
 | Developer Pages | 14    |
-| Protected Pages | 162   |
+| Protected Pages | 165   |
 
 ### Flow Coverage
 
