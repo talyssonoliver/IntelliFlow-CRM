@@ -1067,4 +1067,21 @@ describe('Task Aggregate', () => {
       expect(task.getDomainEvents()).toHaveLength(0);
     });
   });
+
+  // ENG-OPS-002.R10 — terminal-task linkage guard (QUAL-002 / RACE-PURE-M2)
+  describe('Entity-linkage guards on terminal tasks', () => {
+    it('assignToLead() on a COMPLETED task throws', () => {
+      const task = Task.create({ title: 't', ownerId: 'owner-1', tenantId: 'T1' }).value;
+      task.complete('owner-1');
+      expect(() => task.assignToLead('lead-new', 'owner-1')).toThrow(
+        'Cannot change entity linkage on a terminal task'
+      );
+    });
+
+    it('assignToContact() on a CANCELLED task throws', () => {
+      const task = Task.create({ title: 't', ownerId: 'owner-1', tenantId: 'T1' }).value;
+      task.cancel('reason', 'owner-1');
+      expect(() => task.assignToContact('contact-new', 'owner-1')).toThrow();
+    });
+  });
 });
