@@ -1,0 +1,37 @@
+Task ID,Family,Priority,Status,Est_O,Est_M,Est_P,PERT_min,Remaining_PERT_min,Empirical_Actual_min,Weighted_Slots,Wave,S19_Decision,Notes
+IFC-033,feature,P0,Backlog,120,240,480,260,260,67,0.87,Wave 4,COMMIT S19,"Critical-path root; k6 load test; needs Docker/k6 infra"
+IFC-034,investment,P0,Backlog,60,120,180,120,120,31,0.4,Wave 5,COMMIT S19,"Critical-path terminal; Gate-3 £3000 decision; CFO/CEO sign-off"
+ENG-OPS-002,remediation,P0,In Progress,480,960,1440,960,96,25,0.32,Wave 0,COMMIT S19,"Parent audit 90% done (audit #599 + plan #600 merged); close-out"
+IFC-304,feature,P1,Backlog,90,180,360,195,195,50,0.65,Wave 1,COMMIT S19,"REOPENED phantom — build Article Analytics for real"
+IFC-306,feature,P1,Backlog,15,30,60,33,33,9,0.11,Wave 1,COMMIT S19,"REOPENED dead endpoint — fix timeline path + 7 stale statuses"
+PG-064,feature,P1,Backlog,90,180,360,195,195,50,0.65,Wave 2,COMMIT S19,"Contacts List; fan-out root"
+PG-065,feature,P1,Backlog,120,240,480,260,260,67,0.87,Wave 2,COMMIT S19,"Contact 360; fan-out root; coord shared file w/ IFC-305"
+PG-069,feature,P1,Backlog,90,180,360,195,195,50,0.65,Wave 2,COMMIT S19,"Accounts List"
+ENG-OPS-002.R13,remediation,P1,Backlog,60,90,150,95,95,25,0.32,Wave 3,COMMIT S19,"Flaky-test lint gate; quality baseline"
+ENG-OPS-002.R16,remediation,P1,Backlog,480,720,1080,740,740,191,2.47,Wave 3,COMMIT S19,"Attestation+provenance backfill; governance readiness (heaviest)"
+PG-066,feature,P2,Backlog,60,120,240,130,130,34,0.43,—,DEFER S20,"Edit Contact; dep PG-065"
+PG-067,feature,P2,Backlog,90,180,360,195,195,50,0.65,—,DEFER S20,"Import Contacts"
+PG-068,feature,P2,Backlog,90,180,360,195,195,50,0.65,—,DEFER S20,"Merge Contacts (dedup R02 done)"
+IFC-305,feature,P2,Backlog,180,360,720,390,390,101,1.3,—,DEFER S20,"Componentize detail pages; overlaps PG-065 file"
+PG-210,feature,P2,Backlog,180,360,540,360,360,93,1.2,—,DEFER S20,"IFC-311 reassign UI wiring follow-up"
+IFC-313,feature,P2,Backlog,180,360,540,360,360,93,1.2,—,DEFER S20,"draftReply real-thread resolver (IFC-312 F5)"
+ENG-OPS-002.R04,remediation,P3,Backlog,360,480,720,500,500,129,1.67,—,DEFER S20,"Lead->Deal atomicity; HELD design review"
+ENG-OPS-002.R07,remediation,P2,Backlog,180,240,360,250,250,65,0.83,—,DEFER S20,"Sanitizer consolidation; HELD design review"
+ENG-OPS-002.R11,remediation,P3,Backlog,240,360,540,370,370,95,1.23,—,DEFER S20,"Outbox atomicity; blocked by R04"
+ENG-OPS-002.R15,remediation,P2,Backlog,360,600,900,610,610,157,2.03,—,DEFER S20,"Schema-validation triage; not pre-ship-blocking"
+ENG-OPS-002.R18,remediation,P2,Backlog,240,480,960,520,520,134,1.73,—,DEFER S20,"Medium-batch triage; refs existing GH issues"
+PG-166,feature,P1,Completed,30,60,120,65,0,0,0,done,KEEP,"Lighthouse verified real (Perf/A11y 100, TTI 852ms)"
+IFC-312,remediation,P1,Completed,540,1080,1620,1080,0,0,0,done,KEEP,"AI chains verified; attestation w/ 92.97% coverage"
+ENG-OPS-002.R01,remediation,P0,Completed,30,45,90,50,0,0,0,done,KEEP,"SEC-001 tenant leak fixed (#602)"
+ENG-OPS-002.R02,remediation,P0,Completed,60,120,180,120,0,0,0,done,KEEP,"Dedup correctness (#603)"
+ENG-OPS-002.R03,remediation,P0,Completed,30,75,120,75,0,0,0,done,KEEP,"Stale-doc cleanup (#601)"
+ENG-OPS-002.R10,remediation,P1,Completed,240,360,540,370,0,0,0,done,KEEP,"Domain state-machine guards (#604)"
+
+# CAPACITY MODEL (real data — ENG-OPS-002 baseline git + task-tracking sampling 2026-07-22)
+# Throughput: mean 5.11 feat-PRs/week (8wk series 0-15); all-PR mean 20.78/week; max 21 PRs/single-day
+# Cycle time: median 45 min/task active work; estimate-accuracy ratio (actual/M) median 0.258 => PERT ~4x conservative
+# Lead-time cadence: median 0.47 day/feature; Change-failure proxy: 5/55 = 9.1%; Active days: 40/60
+# WIP cap: 3 concurrent executors (orchestrator); 1 heavy gate + 1 merge at a time; solo maintainer + AI fleet
+# DEMAND (committed S19): 2189 PERT-min remaining = 36.5h; empirical-adjusted 9.4h active; weighted 7.3 slots
+# SUPPLY (2-week sprint): 5.11 feat-PR/wk x 2 = 10.2 PR-equiv; minus 9.1% rework = 9.3; minus 20% buffer = 7.4 effective slots
+# VERDICT: demand 7.3 slots vs effective supply 7.4 slots => FITS with near-zero slack (CONDITIONALLY_READY). R16 (heaviest) is the slip candidate if velocity dips.

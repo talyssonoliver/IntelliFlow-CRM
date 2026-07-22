@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T12:22:03.146Z",
+  "generatedAt": "2026-07-22T21:15:35.347Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -326,6 +326,8 @@
       ".specify/sprints/sprint-17/attestations/PG-186/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-195/attestation.json",
       ".specify/sprints/sprint-18/attestations/AUTOMATION-003/attestation.json",
+      ".specify/sprints/sprint-18/attestations/DOC-015/attestation.json",
+      ".specify/sprints/sprint-18/attestations/DOC-016/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-032/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-078/attestation.json",
@@ -371,8 +373,14 @@
       ".specify/sprints/sprint-18/attestations/PG-190/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-191/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-200/attestation.json",
+      ".specify/sprints/sprint-19/attestations/ENG-OPS-002/attestation.json",
+      ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R01/attestation.json",
+      ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R02/attestation.json",
+      ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R03/attestation.json",
+      ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R10/attestation.json",
       ".specify/sprints/sprint-19/attestations/IFC-312/attestation.json",
       ".specify/sprints/sprint-19/attestations/PG-166/attestation.json",
+      ".specify/sprints/sprint-19/attestations/PM-OPS-003/attestation.json",
       ".specify/sprints/sprint-2/attestations/IFC-004/attestation.json",
       ".specify/sprints/sprint-2/attestations/IFC-005/attestation.json",
       ".specify/sprints/sprint-2/attestations/IFC-008/attestation.json",
@@ -501,14 +509,14 @@
   "overview": {
     "numberedSprintCount": 30,
     "numberedSprintRange": "0-29",
-    "totalTasks": 597,
-    "totalNumberedSprintTasks": 592,
-    "continuousTaskCount": 5,
-    "completedTasks": 449,
-    "backlogTasks": 147,
+    "totalTasks": 617,
+    "totalNumberedSprintTasks": 611,
+    "continuousTaskCount": 6,
+    "completedTasks": 460,
+    "backlogTasks": 155,
     "blockedTasks": 0,
-    "completionPercentage": 75.21,
-    "inProgressTasks": 1,
+    "completionPercentage": 74.55,
+    "inProgressTasks": 2,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -525,8 +533,6 @@
       "IFC-199",
       "IFC-201",
       "IFC-204",
-      "IFC-304",
-      "IFC-306",
       "PG-196",
       "PG-197",
       "PG-198",
@@ -539,14 +545,25 @@
       "PG-206",
       "PG-207",
       "PG-208",
-      "PG-209"
+      "PG-209",
+      "INFRA-TF-001",
+      "INFRA-TF-002",
+      "INFRA-TF-003",
+      "INFRA-TF-004",
+      "INFRA-TF-005"
     ],
     "attestedButNotCompletedInCsv": [
       {
-        "taskId": "IFC-212",
+        "taskId": "DOC-015",
         "status": "Backlog",
         "sprint": 18,
-        "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json"
+        "attestationPath": ".specify/sprints/sprint-18/attestations/DOC-015/attestation.json"
+      },
+      {
+        "taskId": "DOC-016",
+        "status": "Backlog",
+        "sprint": 18,
+        "attestationPath": ".specify/sprints/sprint-18/attestations/DOC-016/attestation.json"
       },
       {
         "taskId": "IFC-257",
@@ -555,16 +572,10 @@
         "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-257/attestation.json"
       },
       {
-        "taskId": "IFC-271",
-        "status": "Backlog",
-        "sprint": 18,
-        "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-271/attestation.json"
-      },
-      {
-        "taskId": "IFC-314",
-        "status": "Backlog",
-        "sprint": 18,
-        "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json"
+        "taskId": "ENG-OPS-002",
+        "status": "In Progress",
+        "sprint": 19,
+        "attestationPath": ".specify/sprints/sprint-19/attestations/ENG-OPS-002/attestation.json"
       }
     ],
     "duplicateCanonicalAttestations": [],
@@ -720,6 +731,38 @@
         "met": 0,
         "missed": 0
       }
+    },
+    {
+      "taskId": "ENG-OPS-002.R17",
+      "sprint": "Continuous",
+      "status": "Backlog",
+      "section": "Engineering Operations",
+      "title": "Remediation R17 [High/QUAL-013]: decide ERP/SAP connector — complete SAPAdapter to un-skip 19 tests OR formally mark deferred in sprint plan",
+      "description": "Remediation R17 [High/QUAL-013]: decide ERP/SAP connector — complete SAPAdapter to un-skip 19 tests OR formally mark deferred in sprint plan",
+      "summary": "SAP connector test suite executed OR ERP/SAP formally deferred with tracking",
+      "definitionOfDone": "SAP connector test suite executed OR ERP/SAP formally deferred with tracking; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "SAP connector test suite executed OR ERP/SAP formally deferred with tracking",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
     }
   ],
   "currentState": {
@@ -732,30 +775,30 @@
         "section": "Documentation",
         "title": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
         "description": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
-        "summary": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
+        "summary": "DOC-015 (Docs Integrity / route-total reconciliation, Issue #019 / R-023) closure. The substantive reconciliation was completed in a prior session but its uncommitted changes were stranded in the working tree on main after PR #590 merged.......",
         "definitionOfDone": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-architecture.md, and content-audit.md; stale references (68/101/103/118 mismatches) are removed or explicitly reconciled; each updated doc includes canonical counting rule and verification timestamp; verified by: npx tsx tools/scripts/content-audit.ts && pnpm lint",
-        "definitionOfDoneSnapshot": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
+        "definitionOfDoneSnapshot": "Reconcile conflicting route totals across all design docs to a single canonical value derived from the filesystem; Automated content-audit baseline available and passing (DOC-014 dependency);...",
         "dependencies": [
           "DOC-014",
           "IFC-209",
           "IFC-210"
         ],
         "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
+          "exists": true,
+          "path": ".specify/sprints/sprint-18/attestations/DOC-015/attestation.json",
+          "verdict": "COMPLETE",
+          "timestamp": "2026-07-21T22:30:00Z",
+          "sprintFolder": 18
         },
         "validationSummary": {
-          "total": 0,
-          "passed": 0,
+          "total": 4,
+          "passed": 4,
           "failed": 0,
           "failingNames": []
         },
         "kpiSummary": {
-          "total": 0,
-          "met": 0,
+          "total": 4,
+          "met": 4,
           "missed": 0
         }
       },
@@ -793,110 +836,19 @@
         }
       },
       {
-        "taskId": "IFC-212",
-        "sprint": 18,
+        "taskId": "ENG-OPS-002.R13",
+        "sprint": 19,
         "status": "Backlog",
-        "section": "AI/ML",
-        "title": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
-        "description": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
-        "summary": "IFC-212 exec phase complete with 5 audit findings remediated honestly (2026-04-27 audit-fix iteration): [HIGH-1 FIXED] tenantId='default' regression — extended AIServicePort.scoreLead/qualifyLead with optional `opts:......",
-        "definitionOfDone": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; lead scoring jobs are enqueued with correlation metadata and consumed by ai-scoring worker contract; retry and failure handling follow BullMQ defaults; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
-        "definitionOfDoneSnapshot": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; Lead scoring jobs enqueued with correlation metadata and consumed by ai-scoring worker contract",
+        "section": "Engineering Operations",
+        "title": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+        "description": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+        "summary": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
+        "definitionOfDone": "Skips blocked by lint unless issue-linked; existing 21 reconciled; verified by: pnpm lint",
+        "definitionOfDoneSnapshot": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
         "dependencies": [
-          "IFC-015",
-          "IFC-125",
-          "IFC-168"
+          "ENG-OPS-002.R02",
+          "ENG-OPS-002.R10"
         ],
-        "attestation": {
-          "exists": true,
-          "path": ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
-          "verdict": "COMPLETE",
-          "timestamp": "2026-04-27T20:55:00Z",
-          "sprintFolder": 18
-        },
-        "validationSummary": {
-          "total": 4,
-          "passed": 4,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 4,
-          "met": 1,
-          "missed": 3
-        }
-      },
-      {
-        "taskId": "IFC-271",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Core CRM",
-        "title": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
-        "description": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
-        "summary": "IFC-271 Account Domain Model Fixes — remediates four findings from docs/audit/account-detail-wiring-audit.md sections 11-13 (D-01, B-15, B-16, B-06) on a worktree branched from origin/main@d8d154230. D-01 (AccountDeletedEvent):......",
-        "definitionOfDone": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated; non-null assertion replaced with proper null check; tests >=90%",
-        "definitionOfDoneSnapshot": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated",
-        "dependencies": [],
-        "attestation": {
-          "exists": true,
-          "path": ".specify/sprints/sprint-18/attestations/IFC-271/attestation.json",
-          "verdict": "COMPLETE",
-          "timestamp": "2026-06-10T22:30:00Z",
-          "sprintFolder": 18
-        },
-        "validationSummary": {
-          "total": 4,
-          "passed": 4,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 4,
-          "met": 4,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "IFC-314",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Integration",
-        "title": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
-        "description": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
-        "summary": "IFC-314 — N+1 Query-Budget Detector + cross-context N+1 remediation, governed by ADR-053 (Accepted). DETECTOR (packages/db/src/query-budget/): AsyncLocalStorage request-scoped store (context.ts:... All 56 findings fixed-or-documented;...",
-        "definitionOfDone": "SetupInstalment + DeliveryTier + tenantSlug on Opportunity (migration applied); Stripe adapter createInvoiceItem/createInvoice/finalizeInvoice; StripeSubscription persisted on customer.subscription.*; PortalDeliverySync POSTs provision + delivery via the domain_events outbox; CloseDealWonUseCase creates 3 instalments + finalises instalment-1 + enqueues the push; events-worker handles opportunity.deal_won_enriched; ai-worker runs a daily portal-delivery-sweep job; handleSubscriptionWebhook verifies the Stripe signature; artifacts: packages/db, packages/adapters, packages/application, apps/api, apps/workers/events-worker, apps/ai-worker; targets: >=90% scoped coverage, idempotent push; verified by: pnpm typecheck/test/lint/build + pre-ship",
-        "definitionOfDoneSnapshot": "All 56 findings fixed-or-documented; Each fixed N+1 has a query-count regression test proving non-linear growth; Detector suite passes (counter, isolation, over/under budget, background no-throw, missing-context no-crash)",
-        "dependencies": [],
-        "attestation": {
-          "exists": true,
-          "path": ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json",
-          "verdict": "COMPLETE",
-          "timestamp": "2026-05-31T18:00:00Z",
-          "sprintFolder": 18
-        },
-        "validationSummary": {
-          "total": 4,
-          "passed": 4,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 4,
-          "met": 4,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "INFRA-TF-001",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Infrastructure",
-        "title": "Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deployment->railway_service source_image, default_environment object, and Vercel env->vercel_project_environment_variable / vercel_webhook / edge-config to the current provider schemas.",
-        "description": "Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deployment->railway_service source_image, default_environment object, and Vercel env->vercel_project_environment_variable / vercel_webhook / edge-config to the current provider schemas.",
-        "summary": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
-        "definitionOfDone": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
-        "definitionOfDoneSnapshot": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
-        "dependencies": [],
         "attestation": {
           "exists": false,
           "path": null,
@@ -950,17 +902,18 @@
         }
       },
       {
-        "taskId": "IFC-305",
+        "taskId": "IFC-304",
         "sprint": 19,
         "status": "Backlog",
-        "section": "Core CRM",
-        "title": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
-        "description": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
-        "summary": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
-        "definitionOfDone": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility; each component independently testable >=90% coverage; zero functional regression; verified by: pnpm typecheck + test + lint + build",
-        "definitionOfDoneSnapshot": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
+        "section": "Support",
+        "title": "Article Analytics Dashboard",
+        "description": "Article Analytics Dashboard",
+        "summary": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
+        "definitionOfDone": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
         "dependencies": [
-          "IFC-226"
+          "IFC-303",
+          "PG-180"
         ],
         "attestation": {
           "exists": false,
@@ -982,17 +935,17 @@
         }
       },
       {
-        "taskId": "IFC-313",
+        "taskId": "IFC-306",
         "sprint": 19,
         "status": "Backlog",
-        "section": "AI/Intelligence",
-        "title": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
-        "description": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
-        "summary": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
-        "definitionOfDone": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
-        "definitionOfDoneSnapshot": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+        "section": "Compliance",
+        "title": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
+        "description": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
+        "summary": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
+        "definitionOfDone": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026; timeline API serves updated data; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
         "dependencies": [
-          "IFC-312"
+          "IFC-073"
         ],
         "attestation": {
           "exists": false,
@@ -1025,6 +978,102 @@
         "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, search fast",
         "dependencies": [
           "IFC-089"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-065",
+        "sprint": 19,
+        "status": "Backlog",
+        "section": "Core CRM",
+        "title": "Contact 360",
+        "description": "Contact 360",
+        "summary": "response under 200ms, Lighthouse 90, data complete",
+        "definitionOfDone": "Response <200ms, Lighthouse ≥90, data complete; artifacts: page.tsx, contact-360.tsx, contact-insights.tsx",
+        "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, data complete",
+        "dependencies": [
+          "IFC-090"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-069",
+        "sprint": 19,
+        "status": "Backlog",
+        "section": "Core CRM",
+        "title": "Accounts List",
+        "description": "Accounts List",
+        "summary": "response under 200ms, Lighthouse 90, hierarchy shown",
+        "definitionOfDone": "Response <200ms, Lighthouse ≥90, hierarchy shown; artifacts: page.tsx, account-list.tsx, hierarchy-view.tsx",
+        "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, hierarchy shown",
+        "dependencies": [
+          "IFC-089"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "A11Y-REVIEW-001",
+        "sprint": 20,
+        "status": "Backlog",
+        "section": "Documentation",
+        "title": "Execute first quarterly accessibility documentation review using template",
+        "description": "Execute first quarterly accessibility documentation review using template",
+        "summary": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance-and-governance/compliance/quarterly-a11y-reviews/sprint-20-review.md",
+        "definitionOfDone": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance-and-governance/compliance/quarterly-a11y-reviews/sprint-20-review.md; verified by: template completeness review",
+        "definitionOfDoneSnapshot": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance-and-governance/compliance/quarterly-a11y-reviews/sprint-20-review.md",
+        "dependencies": [
+          "DOC-012"
         ],
         "attestation": {
           "exists": false,
@@ -17520,11 +17569,11 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 67,
-      "completedTasks": 55,
-      "backlogTasks": 11,
+      "completedTasks": 63,
+      "backlogTasks": 3,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 42,
+      "attestedCompletedTasks": 45,
       "missingCompletedAttestations": [
         "PG-196",
         "PG-197",
@@ -17538,7 +17587,12 @@
         "PG-206",
         "PG-207",
         "PG-208",
-        "PG-209"
+        "PG-209",
+        "INFRA-TF-001",
+        "INFRA-TF-002",
+        "INFRA-TF-003",
+        "INFRA-TF-004",
+        "INFRA-TF-005"
       ],
       "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
       "notableCompleted": [
@@ -17739,30 +17793,30 @@
           "section": "Documentation",
           "title": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
           "description": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
-          "summary": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
+          "summary": "DOC-015 (Docs Integrity / route-total reconciliation, Issue #019 / R-023) closure. The substantive reconciliation was completed in a prior session but its uncommitted changes were stranded in the working tree on main after PR #590 merged.......",
           "definitionOfDone": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-architecture.md, and content-audit.md; stale references (68/101/103/118 mismatches) are removed or explicitly reconciled; each updated doc includes canonical counting rule and verification timestamp; verified by: npx tsx tools/scripts/content-audit.ts && pnpm lint",
-          "definitionOfDoneSnapshot": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
+          "definitionOfDoneSnapshot": "Reconcile conflicting route totals across all design docs to a single canonical value derived from the filesystem; Automated content-audit baseline available and passing (DOC-014 dependency);...",
           "dependencies": [
             "DOC-014",
             "IFC-209",
             "IFC-210"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/DOC-015/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-21T22:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
@@ -17773,7 +17827,7 @@
           "section": "Documentation",
           "title": "Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement",
           "description": "Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement",
-          "summary": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift;...",
+          "summary": "DOC-016 (Docs Integrity CI Gate, R-023 mitigation) is the enforcement half of DOC-014 -> DOC-015 -> DOC-016.... TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs;...",
           "definitionOfDone": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift; tests cover mismatch scenarios and false-positive guardrails; verified by: npx tsx tools/scripts/docs-integrity-audit.ts && pnpm test",
           "definitionOfDoneSnapshot": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift;...",
           "dependencies": [
@@ -17781,21 +17835,21 @@
             "DOC-015"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/DOC-016/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-21T23:59:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
@@ -17831,48 +17885,14 @@
             "met": 0,
             "missed": 0
           }
-        },
-        {
-          "taskId": "IFC-212",
-          "sprint": 18,
-          "status": "Backlog",
-          "section": "AI/ML",
-          "title": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
-          "description": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
-          "summary": "IFC-212 exec phase complete with 5 audit findings remediated honestly (2026-04-27 audit-fix iteration): [HIGH-1 FIXED] tenantId='default' regression — extended AIServicePort.scoreLead/qualifyLead with optional `opts:......",
-          "definitionOfDone": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; lead scoring jobs are enqueued with correlation metadata and consumed by ai-scoring worker contract; retry and failure handling follow BullMQ defaults; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
-          "definitionOfDoneSnapshot": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; Lead scoring jobs enqueued with correlation metadata and consumed by ai-scoring worker contract",
-          "dependencies": [
-            "IFC-015",
-            "IFC-125",
-            "IFC-168"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-04-27T20:55:00Z",
-            "sprintFolder": 18
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 4,
-            "met": 1,
-            "missed": 3
-          }
         }
       ],
       "sectionSummary": [
         {
           "section": "Core CRM",
           "total": 27,
-          "completed": 24,
-          "open": 3
+          "completed": 25,
+          "open": 2
         },
         {
           "section": "Settings",
@@ -17883,14 +17903,14 @@
         {
           "section": "Infrastructure",
           "total": 6,
-          "completed": 1,
-          "open": 5
+          "completed": 6,
+          "open": 0
         },
         {
           "section": "AI/ML",
           "total": 3,
-          "completed": 2,
-          "open": 1
+          "completed": 3,
+          "open": 0
         },
         {
           "section": "Automation",
@@ -17925,8 +17945,8 @@
         {
           "section": "Integration",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         },
         {
           "section": "Migration",
@@ -18277,30 +18297,30 @@
           "section": "Documentation",
           "title": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
           "description": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
-          "summary": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
+          "summary": "DOC-015 (Docs Integrity / route-total reconciliation, Issue #019 / R-023) closure. The substantive reconciliation was completed in a prior session but its uncommitted changes were stranded in the working tree on main after PR #590 merged.......",
           "definitionOfDone": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-architecture.md, and content-audit.md; stale references (68/101/103/118 mismatches) are removed or explicitly reconciled; each updated doc includes canonical counting rule and verification timestamp; verified by: npx tsx tools/scripts/content-audit.ts && pnpm lint",
-          "definitionOfDoneSnapshot": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
+          "definitionOfDoneSnapshot": "Reconcile conflicting route totals across all design docs to a single canonical value derived from the filesystem; Automated content-audit baseline available and passing (DOC-014 dependency);...",
           "dependencies": [
             "DOC-014",
             "IFC-209",
             "IFC-210"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/DOC-015/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-21T22:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
@@ -18311,7 +18331,7 @@
           "section": "Documentation",
           "title": "Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement",
           "description": "Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement",
-          "summary": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift;...",
+          "summary": "DOC-016 (Docs Integrity CI Gate, R-023 mitigation) is the enforcement half of DOC-014 -> DOC-015 -> DOC-016.... TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs;...",
           "definitionOfDone": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift; tests cover mismatch scenarios and false-positive guardrails; verified by: npx tsx tools/scripts/docs-integrity-audit.ts && pnpm test",
           "definitionOfDoneSnapshot": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift;...",
           "dependencies": [
@@ -18319,21 +18339,21 @@
             "DOC-015"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/DOC-016/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-21T23:59:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
@@ -18373,7 +18393,7 @@
         {
           "taskId": "IFC-212",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "AI/ML",
           "title": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
           "description": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
@@ -18865,7 +18885,7 @@
         {
           "taskId": "IFC-271",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
           "description": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
@@ -19870,7 +19890,7 @@
         {
           "taskId": "INFRA-TF-001",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Infrastructure",
           "title": "Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deployment->railway_service source_image, default_environment object, and Vercel env->vercel_project_environment_variable / vercel_webhook / edge-config to the current provider schemas.",
           "description": "Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deployment->railway_service source_image, default_environment object, and Vercel env->vercel_project_environment_variable / vercel_webhook / edge-config to the current provider schemas.",
@@ -19900,7 +19920,7 @@
         {
           "taskId": "INFRA-TF-002",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Infrastructure",
           "title": "Provision the three apps/workers (events-worker, ingestion-worker, notifications-worker) as first-class Railway services in Terraform. Closes GH #230/#259/#270 (workers built/tested but never deployed).",
           "description": "Provision the three apps/workers (events-worker, ingestion-worker, notifications-worker) as first-class Railway services in Terraform. Closes GH #230/#259/#270 (workers built/tested but never deployed).",
@@ -19932,7 +19952,7 @@
         {
           "taskId": "INFRA-TF-003",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Infrastructure",
           "title": "Replace the Supabase null_resource + curl scaffolding with the official supabase/supabase Terraform provider so Supabase auth/storage/extensions config is genuinely drift-detected.",
           "description": "Replace the Supabase null_resource + curl scaffolding with the official supabase/supabase Terraform provider so Supabase auth/storage/extensions config is genuinely drift-detected.",
@@ -19964,7 +19984,7 @@
         {
           "taskId": "INFRA-TF-004",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Infrastructure",
           "title": "Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).",
           "description": "Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).",
@@ -19996,7 +20016,7 @@
         {
           "taskId": "INFRA-TF-005",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Infrastructure",
           "title": "CI + import + runbooks: add the three workers to build-images.yml and railway-deploy.yml; terraform import existing live Vercel/Railway/Supabase infra into state; update railway-deploy / workers / observability runbooks.",
           "description": "CI + import + runbooks: add the three workers to build-images.yml and railway-deploy.yml; terraform import existing live Vercel/Railway/Supabase infra into state; update railway-deploy / workers / observability runbooks.",
@@ -20029,7 +20049,7 @@
         {
           "taskId": "IFC-314",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Integration",
           "title": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
           "description": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
@@ -20092,17 +20112,14 @@
       "sprint": 19,
       "name": "Sprint 19",
       "summarySource": "specify",
-      "totalTasks": 15,
-      "completedTasks": 4,
-      "backlogTasks": 11,
+      "totalTasks": 17,
+      "completedTasks": 7,
+      "backlogTasks": 9,
       "blockedTasks": 0,
-      "inProgressTasks": 0,
-      "attestedCompletedTasks": 2,
-      "missingCompletedAttestations": [
-        "IFC-304",
-        "IFC-306"
-      ],
-      "context": "Primary focus areas: Core CRM (9), AI/Intelligence (2), Automation (1).",
+      "inProgressTasks": 1,
+      "attestedCompletedTasks": 7,
+      "missingCompletedAttestations": [],
+      "context": "Primary focus areas: Engineering Operations (7), Core CRM (4), AI/Intelligence (1).",
       "notableCompleted": [
         {
           "taskId": "IFC-312",
@@ -20171,72 +20188,138 @@
           }
         },
         {
-          "taskId": "IFC-306",
+          "taskId": "ENG-OPS-002.R10",
           "sprint": 19,
           "status": "Completed",
-          "section": "Compliance",
-          "title": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
-          "description": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
-          "summary": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
-          "definitionOfDone": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026; timeline API serves updated data; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
+          "section": "Engineering Operations",
+          "title": "Remediation R10 [High/QUAL-001+002]: ticket + task aggregate state-machine transition guards, un-skip the property tests",
+          "description": "Remediation R10 [High/QUAL-001+002]: ticket + task aggregate state-machine transition guards, un-skip the property tests",
+          "summary": "Scope: QUAL-001 (5 ticket state-machine bugs — changePriority/assign/unassign now guard closed+terminal via isClosed||isTerminalStatus; resumeSla clamps negative pause duration) FULLY fixed.... ticket+task terminal-state guards; property tests un-skipped",
+          "definitionOfDone": "Terminal-state mutations rejected by transition tables; property tests un-skipped and green; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "ticket+task terminal-state guards; property tests un-skipped",
           "dependencies": [
-            "IFC-073"
+            "ENG-OPS-002"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R10/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-22T15:15:00Z",
+            "sprintFolder": 19
           },
           "validationSummary": {
-            "total": 0,
+            "total": 3,
             "passed": 0,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
         {
-          "taskId": "IFC-304",
+          "taskId": "ENG-OPS-002.R01",
           "sprint": 19,
           "status": "Completed",
-          "section": "Support",
-          "title": "Article Analytics Dashboard",
-          "description": "Article Analytics Dashboard",
-          "summary": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
-          "definitionOfDone": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
+          "section": "Engineering Operations",
+          "title": "Remediation R01 [Critical/SEC-001]: tenant-isolation fix — scope email searchContacts query by tenantId (currently unscoped ctx.prisma, cross-tenant contact enumeration)",
+          "description": "Remediation R01 [Critical/SEC-001]: tenant-isolation fix — scope email searchContacts query by tenantId (currently unscoped ctx.prisma, cross-tenant contact enumeration)",
+          "summary": "SEC-001 Critical tenant-isolation fix. searchContacts previously queried unscoped ctx.prisma; now scoped by ctx.tenant.tenantId matching every other procedure in inbound.router.ts.... searchContacts where scoped by tenantId",
+          "definitionOfDone": "searchContacts where-clause scoped by tenantId (or ctx.prismaWithTenant); cross-tenant negative test added; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "searchContacts where scoped by tenantId",
           "dependencies": [
-            "IFC-303",
-            "PG-180"
+            "ENG-OPS-002"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R01/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-22T12:50:00Z",
+            "sprintFolder": 19
           },
           "validationSummary": {
-            "total": 0,
+            "total": 1,
             "passed": 0,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 1,
+            "met": 1,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R02",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "Engineering Operations",
+          "title": "Remediation R02 [Critical/QUAL-003+004]: dedup evaluator correctness — threshold nullish-coalescing (?? 100) + empty-composite guard, un-skip the 2 property tests",
+          "description": "Remediation R02 [Critical/QUAL-003+004]: dedup evaluator correctness — threshold nullish-coalescing (?? 100) + empty-composite guard, un-skip the 2 property tests",
+          "summary": "QUAL-003 (07a): resolveFloor stopped mapping threshold=0 to floor=100. QUAL-004 (07c):... threshold fix + empty-composite guard; 2 tests un-skipped green",
+          "definitionOfDone": "duplicate-rule-evaluator threshold uses ?? not ||; empty composite returns empty; 2 skipped dedup property tests un-skipped and green; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "threshold fix + empty-composite guard; 2 tests un-skipped green",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R02/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-22T13:35:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 2,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         }
       ],
       "openTasks": [
+        {
+          "taskId": "ENG-OPS-002",
+          "sprint": 19,
+          "status": "In Progress",
+          "section": "Engineering Operations",
+          "title": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
+          "description": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
+          "summary": "AUDIT ONLY — no correction code. Reconciliation self-corrected a 12-task phantom false-positive (PG-196..208 pages verified present under apps/web/src/app) => 0 true phantom completions. Real problem is evidence:... Verifiable baseline of S1-18 delivered state;...",
+          "definitionOfDone": "Verifiable S1-18 baseline: 408 tasks reconciled, 19 tools executed (failures recorded), 101 findings classified, real Sonar baseline, remediation plan, debt ledger reconciled; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Verifiable baseline of S1-18 delivered state; All required artifacts produced and reproducible; Failures registered, not suppressed",
+          "dependencies": [
+            "ENG-OPS-001",
+            "GOV-001",
+            "IFC-131",
+            "EXP-REPORTS-002"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-22T11:35:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 5,
+            "met": 5,
+            "missed": 0
+          }
+        },
         {
           "taskId": "IFC-033",
           "sprint": 19,
@@ -20365,52 +20448,26 @@
             "met": 0,
             "missed": 0
           }
-        },
-        {
-          "taskId": "PG-066",
-          "sprint": 19,
-          "status": "Backlog",
-          "section": "Core CRM",
-          "title": "Edit Contact",
-          "description": "Edit Contact",
-          "summary": "response under 200ms, Lighthouse 90, edits saved",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, edits saved; artifacts: page.tsx, contact-editor.tsx, duplicate-detector.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, edits saved",
-          "dependencies": [
-            "PG-065"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
         }
       ],
       "sectionSummary": [
         {
+          "section": "Engineering Operations",
+          "total": 7,
+          "completed": 4,
+          "open": 3
+        },
+        {
           "section": "Core CRM",
-          "total": 9,
+          "total": 4,
           "completed": 1,
-          "open": 8
+          "open": 3
         },
         {
           "section": "AI/Intelligence",
-          "total": 2,
+          "total": 1,
           "completed": 1,
-          "open": 1
+          "open": 0
         },
         {
           "section": "Automation",
@@ -20421,8 +20478,8 @@
         {
           "section": "Compliance",
           "total": 1,
-          "completed": 1,
-          "open": 0
+          "completed": 0,
+          "open": 1
         },
         {
           "section": "Investment Gate",
@@ -20431,10 +20488,16 @@
           "open": 1
         },
         {
-          "section": "Support",
+          "section": "Project Operations",
           "total": 1,
           "completed": 1,
           "open": 0
+        },
+        {
+          "section": "Support",
+          "total": 1,
+          "completed": 0,
+          "open": 1
         }
       ],
       "tasks": [
@@ -20568,102 +20631,6 @@
           }
         },
         {
-          "taskId": "PG-066",
-          "sprint": 19,
-          "status": "Backlog",
-          "section": "Core CRM",
-          "title": "Edit Contact",
-          "description": "Edit Contact",
-          "summary": "response under 200ms, Lighthouse 90, edits saved",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, edits saved; artifacts: page.tsx, contact-editor.tsx, duplicate-detector.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, edits saved",
-          "dependencies": [
-            "PG-065"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "PG-067",
-          "sprint": 19,
-          "status": "Backlog",
-          "section": "Core CRM",
-          "title": "Import Contacts",
-          "description": "Import Contacts",
-          "summary": "response under 200ms, Lighthouse 90, imports clean",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports clean; artifacts: page.tsx, contact-importer.tsx, deduplicator.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports clean",
-          "dependencies": [
-            "PG-064"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "PG-068",
-          "sprint": 19,
-          "status": "Backlog",
-          "section": "Core CRM",
-          "title": "Merge Contacts",
-          "description": "Merge Contacts",
-          "summary": "response under 200ms, Lighthouse 90, merges completed",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, merges completed; artifacts: page.tsx, merge-wizard.tsx, conflict-resolver.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, merges completed",
-          "dependencies": [
-            "PG-064"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
           "taskId": "PG-069",
           "sprint": 19,
           "status": "Backlog",
@@ -20730,7 +20697,7 @@
         {
           "taskId": "IFC-304",
           "sprint": 19,
-          "status": "Completed",
+          "status": "Backlog",
           "section": "Support",
           "title": "Article Analytics Dashboard",
           "description": "Article Analytics Dashboard",
@@ -20761,41 +20728,9 @@
           }
         },
         {
-          "taskId": "IFC-305",
-          "sprint": 19,
-          "status": "Backlog",
-          "section": "Core CRM",
-          "title": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
-          "description": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
-          "summary": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
-          "definitionOfDone": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility; each component independently testable >=90% coverage; zero functional regression; verified by: pnpm typecheck + test + lint + build",
-          "definitionOfDoneSnapshot": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
-          "dependencies": [
-            "IFC-226"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
           "taskId": "IFC-306",
           "sprint": 19,
-          "status": "Completed",
+          "status": "Backlog",
           "section": "Compliance",
           "title": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
           "description": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
@@ -20859,17 +20794,181 @@
           }
         },
         {
-          "taskId": "PG-210",
+          "taskId": "ENG-OPS-002",
+          "sprint": 19,
+          "status": "In Progress",
+          "section": "Engineering Operations",
+          "title": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
+          "description": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
+          "summary": "AUDIT ONLY — no correction code. Reconciliation self-corrected a 12-task phantom false-positive (PG-196..208 pages verified present under apps/web/src/app) => 0 true phantom completions. Real problem is evidence:... Verifiable baseline of S1-18 delivered state;...",
+          "definitionOfDone": "Verifiable S1-18 baseline: 408 tasks reconciled, 19 tools executed (failures recorded), 101 findings classified, real Sonar baseline, remediation plan, debt ledger reconciled; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Verifiable baseline of S1-18 delivered state; All required artifacts produced and reproducible; Failures registered, not suppressed",
+          "dependencies": [
+            "ENG-OPS-001",
+            "GOV-001",
+            "IFC-131",
+            "EXP-REPORTS-002"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-22T11:35:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 5,
+            "met": 5,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R01",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "Engineering Operations",
+          "title": "Remediation R01 [Critical/SEC-001]: tenant-isolation fix — scope email searchContacts query by tenantId (currently unscoped ctx.prisma, cross-tenant contact enumeration)",
+          "description": "Remediation R01 [Critical/SEC-001]: tenant-isolation fix — scope email searchContacts query by tenantId (currently unscoped ctx.prisma, cross-tenant contact enumeration)",
+          "summary": "SEC-001 Critical tenant-isolation fix. searchContacts previously queried unscoped ctx.prisma; now scoped by ctx.tenant.tenantId matching every other procedure in inbound.router.ts.... searchContacts where scoped by tenantId",
+          "definitionOfDone": "searchContacts where-clause scoped by tenantId (or ctx.prismaWithTenant); cross-tenant negative test added; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "searchContacts where scoped by tenantId",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R01/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-22T12:50:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 1,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 1,
+            "met": 1,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R02",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "Engineering Operations",
+          "title": "Remediation R02 [Critical/QUAL-003+004]: dedup evaluator correctness — threshold nullish-coalescing (?? 100) + empty-composite guard, un-skip the 2 property tests",
+          "description": "Remediation R02 [Critical/QUAL-003+004]: dedup evaluator correctness — threshold nullish-coalescing (?? 100) + empty-composite guard, un-skip the 2 property tests",
+          "summary": "QUAL-003 (07a): resolveFloor stopped mapping threshold=0 to floor=100. QUAL-004 (07c):... threshold fix + empty-composite guard; 2 tests un-skipped green",
+          "definitionOfDone": "duplicate-rule-evaluator threshold uses ?? not ||; empty composite returns empty; 2 skipped dedup property tests un-skipped and green; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "threshold fix + empty-composite guard; 2 tests un-skipped green",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R02/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-22T13:35:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 2,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 2,
+            "met": 2,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R03",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "Engineering Operations",
+          "title": "Remediation R03 [Critical/STALE-001+002]: stale-doc cleanup — fix CLAUDE.md sprint/task-count anchor and regenerate/deprecate sprint-18 _summary.json",
+          "description": "Remediation R03 [Critical/STALE-001+002]: stale-doc cleanup — fix CLAUDE.md sprint/task-count anchor and regenerate/deprecate sprint-18 _summary.json",
+          "summary": "Scope delivered: STALE-001 (CLAUDE.md root anchor no longer misleads on sprint/task-count; now points to the regenerated docs/SESSION_CONTEXT.md).... CLAUDE.md sprint/task-count anchor corrected + points to SESSION_CONTEXT.md",
+          "definitionOfDone": "CLAUDE.md no longer claims Sprint 6/316 tasks; sprint-18 _summary.json reflects reality or is removed with consumers repointed; verified by: pnpm validate:docs-integrity",
+          "definitionOfDoneSnapshot": "CLAUDE.md sprint/task-count anchor corrected + points to SESSION_CONTEXT.md",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R03/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-22T13:05:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 1,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R10",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "Engineering Operations",
+          "title": "Remediation R10 [High/QUAL-001+002]: ticket + task aggregate state-machine transition guards, un-skip the property tests",
+          "description": "Remediation R10 [High/QUAL-001+002]: ticket + task aggregate state-machine transition guards, un-skip the property tests",
+          "summary": "Scope: QUAL-001 (5 ticket state-machine bugs — changePriority/assign/unassign now guard closed+terminal via isClosed||isTerminalStatus; resumeSla clamps negative pause duration) FULLY fixed.... ticket+task terminal-state guards; property tests un-skipped",
+          "definitionOfDone": "Terminal-state mutations rejected by transition tables; property tests un-skipped and green; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "ticket+task terminal-state guards; property tests un-skipped",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R10/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-22T15:15:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 3,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 2,
+            "met": 2,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R13",
           "sprint": 19,
           "status": "Backlog",
-          "section": "Core CRM",
-          "title": "IFC-311 reassign UI wiring follow-up (contacts + accounts) — wire the four new tRPC procedures shipped by IFC-311 (api.contact.reassign, api.contact.bulkReassign, api.account.reassign, api.account.bulkReassign) into real UI so the notifyOnOwnerChange Cat-1 toggle is reachable for end users on both entities. Source: IFC-311 post-completion code review Finding 1 — all four procedures are dead-on-arrival at runtime (zero direct UI callers). The account SINGLE-reassign path is transitively reachable via AccountDetail.tsx:152 → api.account.assignOwner (refactored in IFC-311 to delegate to performAccountReassign, so the notification fires), but api.account.bulkReassign is fully orphaned and the account detail page still calls the legacy name. Scope: (a) contacts-list bulk-actions bar exposes a Reassign action that calls contact.bulkReassign; (b) contact detail page actions expose a Reassign option that calls contact.reassign; (c) accounts-list bulk-actions bar exposes a Reassign action that calls account.bulkReassign (brand-new UI surface — no legacy shim covers this); (d) migrate AccountDetail.tsx:152 from api.account.assignOwner.useMutation to api.account.reassign.useMutation so the canonical IFC-311 name is the production caller (assignOwner stays as a deprecated legacy alias); (e) one integration test per entity that exercises the toggle flipping the notification path end-to-end. Backend API surface is already shipped by IFC-311 — this task is UI + wiring + one cosmetic endpoint migration only.",
-          "description": "IFC-311 reassign UI wiring follow-up (contacts + accounts) — wire the four new tRPC procedures shipped by IFC-311 (api.contact.reassign, api.contact.bulkReassign, api.account.reassign, api.account.bulkReassign) into real UI so the notifyOnOwnerChange Cat-1 toggle is reachable for end users on both entities. Source: IFC-311 post-completion code review Finding 1 — all four procedures are dead-on-arrival at runtime (zero direct UI callers). The account SINGLE-reassign path is transitively reachable via AccountDetail.tsx:152 → api.account.assignOwner (refactored in IFC-311 to delegate to performAccountReassign, so the notification fires), but api.account.bulkReassign is fully orphaned and the account detail page still calls the legacy name. Scope: (a) contacts-list bulk-actions bar exposes a Reassign action that calls contact.bulkReassign; (b) contact detail page actions expose a Reassign option that calls contact.reassign; (c) accounts-list bulk-actions bar exposes a Reassign action that calls account.bulkReassign (brand-new UI surface — no legacy shim covers this); (d) migrate AccountDetail.tsx:152 from api.account.assignOwner.useMutation to api.account.reassign.useMutation so the canonical IFC-311 name is the production caller (assignOwner stays as a deprecated legacy alias); (e) one integration test per entity that exercises the toggle flipping the notification path end-to-end. Backend API surface is already shipped by IFC-311 — this task is UI + wiring + one cosmetic endpoint migration only.",
-          "summary": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src;...",
-          "definitionOfDone": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src; contacts-list bulk-actions Reassign calls contact.bulkReassign with selected ids + target owner; contact detail Reassign calls contact.reassign; accounts-list bulk-actions Reassign calls account.bulkReassign; AccountDetail.tsx migrated from account.assignOwner to account.reassign (canonical); two integration tests (one per entity) verify both parties receive the matching *_reassigned notification when notifyOnOwnerChange=true; Lighthouse >=90 on contacts-list and accounts-list",
-          "definitionOfDoneSnapshot": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src;...",
+          "section": "Engineering Operations",
+          "title": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+          "description": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+          "summary": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
+          "definitionOfDone": "Skips blocked by lint unless issue-linked; existing 21 reconciled; verified by: pnpm lint",
+          "definitionOfDoneSnapshot": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
           "dependencies": [
-            "IFC-311"
+            "ENG-OPS-002.R02",
+            "ENG-OPS-002.R10"
           ],
           "attestation": {
             "exists": false,
@@ -20891,17 +20990,17 @@
           }
         },
         {
-          "taskId": "IFC-313",
+          "taskId": "ENG-OPS-002.R16",
           "sprint": 19,
           "status": "Backlog",
-          "section": "AI/Intelligence",
-          "title": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
-          "description": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
-          "summary": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
-          "definitionOfDone": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
-          "definitionOfDoneSnapshot": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+          "section": "Engineering Operations",
+          "title": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger",
+          "description": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger",
+          "summary": "The 18 tasks (PG-196..209, INFRA-TF-001..005) have canonical attestation.json w/ git_commit; provenance gap tracked",
+          "definitionOfDone": "The 18 tasks (PG-196..209, INFRA-TF-001..005) have canonical attestation.json w/ git_commit; provenance gap tracked; verified by: pnpm validate:sprint-data",
+          "definitionOfDoneSnapshot": "The 18 tasks (PG-196..209, INFRA-TF-001..005) have canonical attestation.json w/ git_commit; provenance gap tracked",
           "dependencies": [
-            "IFC-312"
+            "ENG-OPS-002"
           ],
           "attestation": {
             "exists": false,
@@ -20921,6 +21020,38 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "PM-OPS-003",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "Project Operations",
+          "title": "Sprint 19 Rebaseline, Planning & Readiness Gate",
+          "description": "Sprint 19 rebaseline, planning & readiness gate — validate 4 completed tasks (reopen phantom completions), reassess 11 backlog, dependency+duplication scan across all 616 tasks/PRs/issues/specs/debt-ledger, real multi-factor capacity model, remediation-findings triage (0 net-new duplicates), P0-P3 prioritization, execution waves 0-5, readiness verdict",
+          "summary": "Referenced spec file (893da4bf-PMOPS003.md / docs/planning/tasks/PM-OPS-003.md) absent on disk; executed against task-brief scope + real repo state. No fabricated data. Sprint 19 rebaselined: committed vs deferred scope explicit; 0 missing deps;...",
+          "definitionOfDone": "Sprint 19 rebaselined: committed vs deferred scope explicit; 0 missing deps; 0 cycles in S19 subgraph; 0 duplicate/net-new remediation tasks; completed tasks validated with phantom completions reopened; real capacity (throughput+cycle+WIP+availability+rework+buffer); execution waves 0-5 with gates+rollback; readiness verdict recorded; verified by: pnpm validate:sprint-data",
+          "definitionOfDoneSnapshot": "Sprint 19 rebaselined: committed vs deferred scope explicit; 0 missing deps; 0 cycles in S19 subgraph; 0 duplicate/net-new remediation tasks; completed tasks validated with phantom completions reopened;...",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/PM-OPS-003/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": null,
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ]
     },
@@ -20928,9 +21059,9 @@
       "sprint": 20,
       "name": "Sprint 20",
       "summarySource": "specify",
-      "totalTasks": 34,
+      "totalTasks": 51,
       "completedTasks": 2,
-      "backlogTasks": 32,
+      "backlogTasks": 49,
       "blockedTasks": 0,
       "inProgressTasks": 0,
       "attestedCompletedTasks": 0,
@@ -20938,7 +21069,7 @@
         "PG-127",
         "IFC-204"
       ],
-      "context": "Primary focus areas: Core CRM (25), AI Foundation (2), Performance (2).",
+      "context": "Primary focus areas: Core CRM (30), Engineering Operations (11), AI Foundation (2).",
       "notableCompleted": [
         {
           "taskId": "IFC-204",
@@ -21073,17 +21204,17 @@
           }
         },
         {
-          "taskId": "PG-070",
+          "taskId": "PG-066",
           "sprint": 20,
           "status": "Backlog",
           "section": "Core CRM",
-          "title": "Account Detail",
-          "description": "Account Detail",
-          "summary": "response under 200ms, Lighthouse 90, complete view",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, complete view; artifacts: page.tsx, account-detail.tsx, subsidiary-list.tsx",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, complete view",
+          "title": "Edit Contact",
+          "description": "Edit Contact",
+          "summary": "response under 200ms, Lighthouse 90, edits saved",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, edits saved; artifacts: page.tsx, contact-editor.tsx, duplicate-detector.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, edits saved",
           "dependencies": [
-            "PG-069"
+            "PG-065"
           ],
           "attestation": {
             "exists": false,
@@ -21105,17 +21236,17 @@
           }
         },
         {
-          "taskId": "PG-071",
+          "taskId": "PG-067",
           "sprint": 20,
           "status": "Backlog",
           "section": "Core CRM",
-          "title": "Edit Account",
-          "description": "Edit Account",
-          "summary": "response under 200ms, Lighthouse 90, updates saved",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, updates saved; artifacts: page.tsx, account-editor.tsx, parent-selector.tsx",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, updates saved",
+          "title": "Import Contacts",
+          "description": "Import Contacts",
+          "summary": "response under 200ms, Lighthouse 90, imports clean",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports clean; artifacts: page.tsx, contact-importer.tsx, deduplicator.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports clean",
           "dependencies": [
-            "PG-070"
+            "PG-064"
           ],
           "attestation": {
             "exists": false,
@@ -21137,17 +21268,17 @@
           }
         },
         {
-          "taskId": "PG-072",
+          "taskId": "PG-068",
           "sprint": 20,
           "status": "Backlog",
           "section": "Core CRM",
-          "title": "Import Accounts",
-          "description": "Import Accounts",
-          "summary": "response under 200ms, Lighthouse 90, imports structured",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports structured; artifacts: page.tsx, account-importer.tsx, hierarchy-mapper.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports structured",
+          "title": "Merge Contacts",
+          "description": "Merge Contacts",
+          "summary": "response under 200ms, Lighthouse 90, merges completed",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, merges completed; artifacts: page.tsx, merge-wizard.tsx, conflict-resolver.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, merges completed",
           "dependencies": [
-            "PG-069"
+            "PG-064"
           ],
           "attestation": {
             "exists": false,
@@ -21172,9 +21303,15 @@
       "sectionSummary": [
         {
           "section": "Core CRM",
-          "total": 25,
+          "total": 30,
           "completed": 1,
-          "open": 24
+          "open": 29
+        },
+        {
+          "section": "Engineering Operations",
+          "total": 11,
+          "completed": 0,
+          "open": 11
         },
         {
           "section": "AI Foundation",
@@ -21187,6 +21324,12 @@
           "total": 2,
           "completed": 0,
           "open": 2
+        },
+        {
+          "section": "AI/Intelligence",
+          "total": 1,
+          "completed": 0,
+          "open": 1
         },
         {
           "section": "AI/ML",
@@ -21264,6 +21407,102 @@
           "definitionOfDoneSnapshot": "Critical paths on edge, <50ms response globally",
           "dependencies": [
             "IFC-014"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-066",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Core CRM",
+          "title": "Edit Contact",
+          "description": "Edit Contact",
+          "summary": "response under 200ms, Lighthouse 90, edits saved",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, edits saved; artifacts: page.tsx, contact-editor.tsx, duplicate-detector.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, edits saved",
+          "dependencies": [
+            "PG-065"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-067",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Core CRM",
+          "title": "Import Contacts",
+          "description": "Import Contacts",
+          "summary": "response under 200ms, Lighthouse 90, imports clean",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports clean; artifacts: page.tsx, contact-importer.tsx, deduplicator.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports clean",
+          "dependencies": [
+            "PG-064"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-068",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Core CRM",
+          "title": "Merge Contacts",
+          "description": "Merge Contacts",
+          "summary": "response under 200ms, Lighthouse 90, merges completed",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, merges completed; artifacts: page.tsx, merge-wizard.tsx, conflict-resolver.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, merges completed",
+          "dependencies": [
+            "PG-064"
           ],
           "attestation": {
             "exists": false,
@@ -22261,6 +22500,38 @@
           }
         },
         {
+          "taskId": "IFC-305",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Core CRM",
+          "title": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
+          "description": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
+          "summary": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
+          "definitionOfDone": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility; each component independently testable >=90% coverage; zero functional regression; verified by: pnpm typecheck + test + lint + build",
+          "definitionOfDoneSnapshot": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
+          "dependencies": [
+            "IFC-226"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
           "taskId": "PG-194",
           "sprint": 20,
           "status": "Backlog",
@@ -22274,6 +22545,422 @@
             "IFC-073",
             "IFC-100",
             "IFC-306"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-210",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Core CRM",
+          "title": "IFC-311 reassign UI wiring follow-up (contacts + accounts) — wire the four new tRPC procedures shipped by IFC-311 (api.contact.reassign, api.contact.bulkReassign, api.account.reassign, api.account.bulkReassign) into real UI so the notifyOnOwnerChange Cat-1 toggle is reachable for end users on both entities. Source: IFC-311 post-completion code review Finding 1 — all four procedures are dead-on-arrival at runtime (zero direct UI callers). The account SINGLE-reassign path is transitively reachable via AccountDetail.tsx:152 → api.account.assignOwner (refactored in IFC-311 to delegate to performAccountReassign, so the notification fires), but api.account.bulkReassign is fully orphaned and the account detail page still calls the legacy name. Scope: (a) contacts-list bulk-actions bar exposes a Reassign action that calls contact.bulkReassign; (b) contact detail page actions expose a Reassign option that calls contact.reassign; (c) accounts-list bulk-actions bar exposes a Reassign action that calls account.bulkReassign (brand-new UI surface — no legacy shim covers this); (d) migrate AccountDetail.tsx:152 from api.account.assignOwner.useMutation to api.account.reassign.useMutation so the canonical IFC-311 name is the production caller (assignOwner stays as a deprecated legacy alias); (e) one integration test per entity that exercises the toggle flipping the notification path end-to-end. Backend API surface is already shipped by IFC-311 — this task is UI + wiring + one cosmetic endpoint migration only.",
+          "description": "IFC-311 reassign UI wiring follow-up (contacts + accounts) — wire the four new tRPC procedures shipped by IFC-311 (api.contact.reassign, api.contact.bulkReassign, api.account.reassign, api.account.bulkReassign) into real UI so the notifyOnOwnerChange Cat-1 toggle is reachable for end users on both entities. Source: IFC-311 post-completion code review Finding 1 — all four procedures are dead-on-arrival at runtime (zero direct UI callers). The account SINGLE-reassign path is transitively reachable via AccountDetail.tsx:152 → api.account.assignOwner (refactored in IFC-311 to delegate to performAccountReassign, so the notification fires), but api.account.bulkReassign is fully orphaned and the account detail page still calls the legacy name. Scope: (a) contacts-list bulk-actions bar exposes a Reassign action that calls contact.bulkReassign; (b) contact detail page actions expose a Reassign option that calls contact.reassign; (c) accounts-list bulk-actions bar exposes a Reassign action that calls account.bulkReassign (brand-new UI surface — no legacy shim covers this); (d) migrate AccountDetail.tsx:152 from api.account.assignOwner.useMutation to api.account.reassign.useMutation so the canonical IFC-311 name is the production caller (assignOwner stays as a deprecated legacy alias); (e) one integration test per entity that exercises the toggle flipping the notification path end-to-end. Backend API surface is already shipped by IFC-311 — this task is UI + wiring + one cosmetic endpoint migration only.",
+          "summary": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src;...",
+          "definitionOfDone": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src; contacts-list bulk-actions Reassign calls contact.bulkReassign with selected ids + target owner; contact detail Reassign calls contact.reassign; accounts-list bulk-actions Reassign calls account.bulkReassign; AccountDetail.tsx migrated from account.assignOwner to account.reassign (canonical); two integration tests (one per entity) verify both parties receive the matching *_reassigned notification when notifyOnOwnerChange=true; Lighthouse >=90 on contacts-list and accounts-list",
+          "definitionOfDoneSnapshot": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src;...",
+          "dependencies": [
+            "IFC-311"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-313",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "AI/Intelligence",
+          "title": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
+          "description": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
+          "summary": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+          "definitionOfDone": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+          "definitionOfDoneSnapshot": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+          "dependencies": [
+            "IFC-312"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R04",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R04 [Critical/DDD-001][REVIEW]: Lead->Deal conversion transaction atomicity (unit-of-work across 4 aggregates) — HELD for design review",
+          "description": "Remediation R04 [Critical/DDD-001][REVIEW]: Lead->Deal conversion transaction atomicity (unit-of-work across 4 aggregates) — HELD for design review",
+          "summary": "Conversion commits/rolls back atomically; requires TransactionClient design",
+          "definitionOfDone": "Conversion commits/rolls back atomically; requires TransactionClient design; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Conversion commits/rolls back atomically; requires TransactionClient design",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R05",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R05 [Critical/HEX-001][REVIEW]: wire ticket port into composition root or delete orphan port — HELD for design decision",
+          "description": "Remediation R05 [Critical/HEX-001][REVIEW]: wire ticket port into composition root or delete orphan port — HELD for design decision",
+          "summary": "TicketService consumes TicketRepositoryPort OR orphan port removed",
+          "definitionOfDone": "TicketService consumes TicketRepositoryPort OR orphan port removed; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "TicketService consumes TicketRepositoryPort OR orphan port removed",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R06",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R06 [Critical/HEX-005][REVIEW]: appointments router use-case migration (~28 direct prisma sites) — HELD, 20+ file refactor",
+          "description": "Remediation R06 [Critical/HEX-005][REVIEW]: appointments router use-case migration (~28 direct prisma sites) — HELD, 20+ file refactor",
+          "summary": "Read/link/attendee surfaces routed through use cases",
+          "definitionOfDone": "Read/link/attendee surfaces routed through use cases; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Read/link/attendee surfaces routed through use cases",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R07",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R07 [Critical/QUAL-015][REVIEW]: consolidate diverging prompt-sanitizer into one canonical module — HELD, security design decision",
+          "description": "Remediation R07 [Critical/QUAL-015][REVIEW]: consolidate diverging prompt-sanitizer into one canonical module — HELD, security design decision",
+          "summary": "Single sanitizer source of truth re-exported to both call sites; architecture test guards duplication",
+          "definitionOfDone": "Single sanitizer source of truth re-exported to both call sites; architecture test guards duplication; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Single sanitizer source of truth re-exported to both call sites; architecture test guards duplication",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R08",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R08 [High/HEX-002+003]: ticket hexagonal extraction (TicketService/TicketRoutingService -> use cases behind port)",
+          "description": "Remediation R08 [High/HEX-002+003]: ticket hexagonal extraction (TicketService/TicketRoutingService -> use cases behind port)",
+          "summary": "Ticket orchestration + routing behind TicketRepositoryPort, unit-testable without Prisma",
+          "definitionOfDone": "Ticket orchestration + routing behind TicketRepositoryPort, unit-testable without Prisma; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Ticket orchestration + routing behind TicketRepositoryPort, unit-testable without Prisma",
+          "dependencies": [
+            "ENG-OPS-002.R05"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R09",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R09 [High/HEX-004]: LeadRoutingService depends on LeadRepositoryPort instead of raw PrismaClient",
+          "description": "Remediation R09 [High/HEX-004]: LeadRoutingService depends on LeadRepositoryPort instead of raw PrismaClient",
+          "summary": "LeadRoutingService uses PrismaLeadRepository via port",
+          "definitionOfDone": "LeadRoutingService uses PrismaLeadRepository via port; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "LeadRoutingService uses PrismaLeadRepository via port",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R11",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R11 [High/DDD-002]: persist domain events (outbox) inside the same transaction as aggregate state (ADR-011 zero-lost-events)",
+          "description": "Remediation R11 [High/DDD-002]: persist domain events (outbox) inside the same transaction as aggregate state (ADR-011 zero-lost-events)",
+          "summary": "Outbox rows written in the aggregate save transaction",
+          "definitionOfDone": "Outbox rows written in the aggregate save transaction; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Outbox rows written in the aggregate save transaction",
+          "dependencies": [
+            "ENG-OPS-002.R04"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R12",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R12 [High/DDD-003+004]: TenantId value object + move lead auto-qualify policy into the Lead aggregate",
+          "description": "Remediation R12 [High/DDD-003+004]: TenantId value object + move lead auto-qualify policy into the Lead aggregate",
+          "summary": "TenantId VO with Result.create; Lead.applyAiScore encapsulates auto-qualify",
+          "definitionOfDone": "TenantId VO with Result.create; Lead.applyAiScore encapsulates auto-qualify; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "TenantId VO with Result.create; Lead.applyAiScore encapsulates auto-qualify",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R14",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R14 [High/PERF-003]: enable pg_trgm + GIN trigram indexes for free-text search (kill ILIKE seq-scans)",
+          "description": "Remediation R14 [High/PERF-003]: enable pg_trgm + GIN trigram indexes for free-text search (kill ILIKE seq-scans)",
+          "summary": "pg_trgm migration + gin_trgm_ops indexes on searched columns",
+          "definitionOfDone": "pg_trgm migration + gin_trgm_ops indexes on searched columns; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "pg_trgm migration + gin_trgm_ops indexes on searched columns",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R15",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R15 [High/GOV-A-003]: triage 175/447 schema-validation failures (regenerate vs fix) and wire validate:schemas into pre-ship",
+          "description": "Remediation R15 [High/GOV-A-003]: triage 175/447 schema-validation failures (regenerate vs fix) and wire validate:schemas into pre-ship",
+          "summary": "validate:schemas green; wired as hard pre-ship gate",
+          "definitionOfDone": "validate:schemas green; wired as hard pre-ship gate; verified by: pnpm validate:schemas",
+          "definitionOfDoneSnapshot": "validate:schemas green; wired as hard pre-ship gate",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R18",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R18 [Medium batch]: triage the 39 Medium findings (ddd/hexagonal/security/perf/quality/stale) into focused Sprint-19 follow-ups",
+          "description": "Remediation R18 [Medium batch]: triage the 39 Medium findings (ddd/hexagonal/security/perf/quality/stale) into focused Sprint-19 follow-ups",
+          "summary": "All 39 Medium findings triaged and bucketed",
+          "definitionOfDone": "All 39 Medium findings triaged and bucketed; verified by: manual review",
+          "definitionOfDoneSnapshot": "All 39 Medium findings triaged and bucketed",
+          "dependencies": [
+            "ENG-OPS-002"
           ],
           "attestation": {
             "exists": false,

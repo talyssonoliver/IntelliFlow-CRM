@@ -1,0 +1,160 @@
+{
+  "meta": {
+    "task": "PM-OPS-003",
+    "artifact": "scope-delta.json",
+    "generatedAt": "2026-07-22",
+    "baseline": "Sprint 19 pre-rebaseline: 27 rows (15 feature/original + 12 ENG-OPS-002 family); prompt cited \"15 tasks, 4 Completed, 11 Backlog\" for the feature set only.",
+    "rule": "P0/P1 that block existing scope enter before the dependent task; P2/P3 do NOT auto-enter; insufficient capacity -> move to S20+."
+  },
+  "netNewTasks": 0,
+  "netNewTasksNote": "0 tasks created. All triaged findings were already registered as R01-R18 (merged #600). Creating duplicates is explicitly forbidden.",
+  "reclassifiedCompletions": [
+    {
+      "id": "IFC-304",
+      "from": "Completed",
+      "to": "Backlog",
+      "kind": "phantom-completion",
+      "evidence": "component + getAnalytics tRPC absent"
+    },
+    {
+      "id": "IFC-306",
+      "from": "Completed",
+      "to": "Backlog",
+      "kind": "dead-endpoint+stale-data",
+      "evidence": "timeline route reads non-existent artifacts/misc path; 7 stale statuses"
+    }
+  ],
+  "committedS19": [
+    {
+      "id": "IFC-033",
+      "prio": "P0",
+      "reason": "Critical path root (k6 load test). Deps IFC-030/IFC-032 Completed -> ready."
+    },
+    {
+      "id": "IFC-034",
+      "prio": "P0",
+      "reason": "Critical path terminal (Gate-3 £3000 investment review). Gated by IFC-033."
+    },
+    {
+      "id": "ENG-OPS-002",
+      "prio": "P0",
+      "reason": "Parent audit, In Progress 90% (audit #599 + plan #600 merged). Close-out under this task."
+    },
+    {
+      "id": "IFC-304",
+      "prio": "P1",
+      "reason": "Reopened phantom completion — Article Analytics feature must actually be built (component + getAnalytics tRPC + views/search-term tracking)."
+    },
+    {
+      "id": "IFC-306",
+      "prio": "P1",
+      "reason": "Reopened dead endpoint — fix timeline route path (artifacts/misc vs docs/planning) + refresh 7 stale event statuses. Live compliance feature currently serves empty data; unblocks PG-194 (S20)."
+    },
+    {
+      "id": "PG-064",
+      "prio": "P1",
+      "reason": "Contacts List — core CRM page, dep IFC-089 Completed. Fan-out root (unblocks PG-067/068)."
+    },
+    {
+      "id": "PG-065",
+      "prio": "P1",
+      "reason": "Contact 360 — core CRM page, dep IFC-090 Completed. Fan-out root (unblocks PG-066). Coordinate shared file with IFC-305 (deferred)."
+    },
+    {
+      "id": "PG-069",
+      "prio": "P1",
+      "reason": "Accounts List — core CRM page, dep IFC-089 Completed."
+    },
+    {
+      "id": "ENG-OPS-002.R13",
+      "prio": "P1",
+      "reason": "Flaky-test lint gate + reconcile 21 skips. Cheap, hardens quality baseline, prevents R02/R10 regression."
+    },
+    {
+      "id": "ENG-OPS-002.R16",
+      "prio": "P1",
+      "reason": "Attestation + provenance backfill (18 missing S18 + 177 gap). Governance readiness blocker; same class as IFC-304/IFC-306 gaps."
+    }
+  ],
+  "deferredToS20": [
+    {
+      "id": "PG-066",
+      "prio": "P2",
+      "to": "S20",
+      "reason": "Edit Contact — depends on PG-065; not fan-out; capacity trim."
+    },
+    {
+      "id": "PG-067",
+      "prio": "P2",
+      "to": "S20",
+      "reason": "Import Contacts — secondary contact op; capacity trim."
+    },
+    {
+      "id": "PG-068",
+      "prio": "P2",
+      "to": "S20",
+      "reason": "Merge Contacts — secondary; dedup dependency R02 already done; capacity trim."
+    },
+    {
+      "id": "IFC-305",
+      "prio": "P2",
+      "to": "S20",
+      "reason": "Componentize CRM detail pages — heavy 390m refactor overlapping PG-065 file; defer so pages stabilize first (RISK-S19-06)."
+    },
+    {
+      "id": "PG-210",
+      "prio": "P2",
+      "to": "S20",
+      "reason": "IFC-311 reassign UI wiring follow-up; non-blocking; capacity trim."
+    },
+    {
+      "id": "IFC-313",
+      "prio": "P2",
+      "to": "S20",
+      "reason": "draftReply real-thread resolver (IFC-312 F5 follow-up); non-blocking; capacity trim."
+    },
+    {
+      "id": "ENG-OPS-002.R04",
+      "prio": "P3",
+      "to": "S20",
+      "reason": "Lead->Deal atomicity — HELD for design sign-off; P3 no auto-enter."
+    },
+    {
+      "id": "ENG-OPS-002.R07",
+      "prio": "P2",
+      "to": "S20",
+      "reason": "Sanitizer consolidation — HELD for security design decision."
+    },
+    {
+      "id": "ENG-OPS-002.R11",
+      "prio": "P3",
+      "to": "S20",
+      "reason": "Outbox atomicity — blocked by R04."
+    },
+    {
+      "id": "ENG-OPS-002.R15",
+      "prio": "P2",
+      "to": "S20",
+      "reason": "Schema-validation triage — heavy 610m, not pre-ship-blocking."
+    },
+    {
+      "id": "ENG-OPS-002.R18",
+      "prio": "P2",
+      "to": "S20",
+      "reason": "Medium-batch triage — several items already GitHub-issue-tracked; defer."
+    }
+  ],
+  "csvMutationsApplied": [
+    "IFC-304 Status: Completed -> Backlog (flip)",
+    "IFC-306 Status: Completed -> Backlog (flip)",
+    "PG-066,PG-067,PG-068,IFC-305,PG-210,IFC-313 Target Sprint: 19 -> 20",
+    "ENG-OPS-002.R04,R07,R11,R15,R18 Target Sprint: 19 -> 20"
+  ],
+  "counts": {
+    "beforeRemainingS19": 19,
+    "afterCommittedS19": 10,
+    "deferredToS20": 11,
+    "genuinelyCompleted": 6,
+    "reopened": 2
+  }
+}

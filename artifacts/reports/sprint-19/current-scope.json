@@ -1,0 +1,369 @@
+{
+  "meta": {
+    "task": "PM-OPS-003",
+    "artifact": "current-scope.json",
+    "generatedAt": "2026-07-22",
+    "source": "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv @ origin/main (pmops003 worktree)",
+    "definition": "Sprint 19 = all rows with Target Sprint == '19' (feature tasks + registered ENG-OPS-002 remediation family).",
+    "csvTotalRows": 616,
+    "note": "Task prompt cited 597 tasks (pre-ENG-OPS-002); origin/main now has 616 rows after #599/#600 registered ENG-OPS-002 + R01-R18 (19 rows)."
+  },
+  "counts": {
+    "sprint19Total": 16,
+    "feature": 9,
+    "remediation": 7,
+    "completed": 6,
+    "remaining": 10,
+    "byStatus": {
+      "Backlog": 9,
+      "Completed": 6,
+      "In Progress": 1
+    }
+  },
+  "effort": {
+    "unit": "minutes (PERT = (O+4M+P)/6)",
+    "remainingTotalPert": 3053,
+    "remainingFeaturePert": 1258,
+    "remainingRemediationPert": 1795,
+    "remainingTotalHours": 50.9
+  },
+  "criticalPath": {
+    "chain": [
+      "IFC-033",
+      "IFC-034"
+    ],
+    "note": "IFC-033 (k6 load test) -> IFC-034 (Gate 3 £3000 review). Preserved. IFC-033 deps IFC-030 (Completed/S17) + IFC-032 (Completed/S18) both satisfied -> IFC-033 is READY."
+  },
+  "completedTasks": [
+    {
+      "id": "PG-166",
+      "section": "Core CRM",
+      "status": "Completed",
+      "targetSprint": "19",
+      "owner": "QA (STOA-Quality)",
+      "family": "feature",
+      "description": "Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90",
+      "dependencies": [
+        "PG-129"
+      ],
+      "dependencyTypes": "PG-129:FS",
+      "estimate": "30/60/120",
+      "pertMinutes": 65,
+      "dod": "Lighthouse CI audit on / route; Performance >=90, Accessibility >=90, TTI <1s; results saved to artifacts; ADR-027 verification confirmed",
+      "kpis": "Lighthouse Performance >=90, Accessibility >=90, TTI <1s",
+      "artifacts": "ARTIFACT:artifacts/benchmarks/home-page-lighthouse.json",
+      "validation": "VALIDATE:npx lighthouse http://localhost:3000 --output json",
+      "percentComplete": "100"
+    },
+    {
+      "id": "IFC-312",
+      "section": "AI/Intelligence",
+      "status": "Completed",
+      "targetSprint": "19",
+      "owner": "AI Eng (STOA-Intelligence)",
+      "family": "feature",
+      "description": "AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).",
+      "dependencies": [
+        "PG-182",
+        "PG-183",
+        "IFC-310"
+      ],
+      "dependencyTypes": "PG-182:FS,PG-183:FS,IFC-310:FS",
+      "estimate": "540/1080/1620",
+      "pertMinutes": 1080,
+      "dod": "Each AI toggle reads the tenant flag from the matching AutomationSetting before consuming the chain; aiEnrichment (contact+account) backfills empty fields on create via a shared enrichment adapter; aiTagSuggestions renders suggestions on both detail pages; aiInsightGeneration writes to {Contact,Account}AIInsight (both models already exist) and renders on the detail page; aiAutoReplyDrafting drafts contact inbox replies (review-before-send); aiIndustryInference classifies an account against AccountIndustryOption vocabulary; aiAccountScoring writes to Account score + records provenance; >=90% scoped coverage on chain orchestration; AI safety guardrails per stoa-intelligence",
+      "kpis": "Enrichment fill rate per entity; tag-suggestion acceptance rate; insight freshness (insights per active record); chain p95 <5s; Coverage >=90%",
+      "artifacts": "ARTIFACT:apps/ai-worker/src/contact-enrichment.chain.ts;ARTIFACT:apps/ai-worker/src/account-enrichment.chain.ts;ARTIFACT:apps/ai-worker/src/shared/enrichment-adapter.ts;ARTIFACT:apps/ai-worker/src/contact-tag-suggestion.chain.ts;ARTIFACT:apps/ai-worker/src/account-tag-suggestion.chain.ts;ARTIFACT:apps/ai-worker/src/contact-insight.chain.ts;ARTIFACT:apps/ai-worker/src/account-insight.chain.ts;ARTIFACT:apps/ai-worker/src/contact-reply-draft.chain.ts;ARTIFACT:apps/ai-worker/src/account-industry-inference.chain.ts;ARTIFACT:apps/ai-worker/src/account-scoring.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-duplicate.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-scoring.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-next-step.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-tag-suggestion.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-insight.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-win-loss-prediction.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-duplicate.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-categorization.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-sentiment.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-next-step.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-tag-suggestion.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-insight.chain.ts",
+      "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test --run;VALIDATE:pnpm lint;VALIDATE:pnpm build;GATE:coverage-gte-90",
+      "percentComplete": "100"
+    },
+    {
+      "id": "ENG-OPS-002.R01",
+      "section": "Engineering Operations",
+      "status": "Completed",
+      "targetSprint": "19",
+      "owner": "security-lead",
+      "family": "remediation",
+      "description": "Remediation R01 [Critical/SEC-001]: tenant-isolation fix — scope email searchContacts query by tenantId (currently unscoped ctx.prisma, cross-tenant contact enumeration)",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "dependencyTypes": "ENG-OPS-002:FS",
+      "estimate": "30/45/90",
+      "pertMinutes": 50,
+      "dod": "searchContacts where-clause scoped by tenantId (or ctx.prismaWithTenant); cross-tenant negative test added; verified by: pnpm test",
+      "kpis": "Finding remediated with reproducible before/after evidence; no new suppressions",
+      "artifacts": "ARTIFACT:apps/api/src/modules/email/inbound.router.ts;EVIDENCE:.specify/sprints/sprint-19/attestations/ENG-OPS-002.R01/attestation.json",
+      "validation": "VALIDATE:pnpm test",
+      "percentComplete": "0"
+    },
+    {
+      "id": "ENG-OPS-002.R02",
+      "section": "Engineering Operations",
+      "status": "Completed",
+      "targetSprint": "19",
+      "owner": "domain-expert",
+      "family": "remediation",
+      "description": "Remediation R02 [Critical/QUAL-003+004]: dedup evaluator correctness — threshold nullish-coalescing (?? 100) + empty-composite guard, un-skip the 2 property tests",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "dependencyTypes": "ENG-OPS-002:FS",
+      "estimate": "60/120/180",
+      "pertMinutes": 120,
+      "dod": "duplicate-rule-evaluator threshold uses ?? not ||; empty composite returns empty; 2 skipped dedup property tests un-skipped and green; verified by: pnpm test",
+      "kpis": "Finding remediated with reproducible before/after evidence; no new suppressions",
+      "artifacts": "ARTIFACT:packages;tests/property/unit/crm/dedup-evaluator.prop.test.ts;EVIDENCE:.specify/sprints/sprint-19/attestations/ENG-OPS-002.R02/attestation.json",
+      "validation": "VALIDATE:pnpm test",
+      "percentComplete": "0"
+    },
+    {
+      "id": "ENG-OPS-002.R03",
+      "section": "Engineering Operations",
+      "status": "Completed",
+      "targetSprint": "19",
+      "owner": "devops-lead",
+      "family": "remediation",
+      "description": "Remediation R03 [Critical/STALE-001+002]: stale-doc cleanup — fix CLAUDE.md sprint/task-count anchor and regenerate/deprecate sprint-18 _summary.json",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "dependencyTypes": "ENG-OPS-002:FS",
+      "estimate": "30/75/120",
+      "pertMinutes": 75,
+      "dod": "CLAUDE.md no longer claims Sprint 6/316 tasks; sprint-18 _summary.json reflects reality or is removed with consumers repointed; verified by: pnpm validate:docs-integrity",
+      "kpis": "Finding remediated with reproducible before/after evidence; no new suppressions",
+      "artifacts": "ARTIFACT:CLAUDE.md;.specify/sprints/sprint-18/_summary.json;EVIDENCE:.specify/sprints/sprint-19/attestations/ENG-OPS-002.R03/attestation.json",
+      "validation": "VALIDATE:pnpm test",
+      "percentComplete": "0"
+    },
+    {
+      "id": "ENG-OPS-002.R10",
+      "section": "Engineering Operations",
+      "status": "Completed",
+      "targetSprint": "19",
+      "owner": "domain-expert",
+      "family": "remediation",
+      "description": "Remediation R10 [High/QUAL-001+002]: ticket + task aggregate state-machine transition guards, un-skip the property tests",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "dependencyTypes": "ENG-OPS-002:FS",
+      "estimate": "240/360/540",
+      "pertMinutes": 370,
+      "dod": "Terminal-state mutations rejected by transition tables; property tests un-skipped and green; verified by: pnpm test",
+      "kpis": "Finding remediated with reproducible before/after evidence; no new suppressions",
+      "artifacts": "ARTIFACT:packages/domain;tests/property/unit/crm/ticket-domain.prop.test.ts;tests/property/unit/crm/task-domain.prop.test.ts",
+      "validation": "VALIDATE:pnpm test",
+      "percentComplete": "0"
+    }
+  ],
+  "remainingTasks": [
+    {
+      "id": "IFC-033",
+      "section": "Automation",
+      "status": "Backlog",
+      "targetSprint": "19",
+      "owner": "Performance Eng + DevOps (STOA-Quality)",
+      "family": "feature",
+      "description": "PHASE-005: Load Testing with k6",
+      "dependencies": [
+        "IFC-030",
+        "IFC-032"
+      ],
+      "dependencyTypes": "IFC-030:FS,IFC-032:FS",
+      "estimate": "120/240/480",
+      "pertMinutes": 260,
+      "dod": "System handles 5000 leads/hour with automation; artifacts: load-test-report.html, bottleneck-analysis.md, grafana-load-test.png; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+      "kpis": "Performance validated, bottlenecks identified",
+      "artifacts": "ARTIFACT:artifacts/reports/load-test-report.html;ARTIFACT:docs/shared/bottleneck-analysis.md;ARTIFACT:artifacts/misc/grafana-load-test.png;EVIDENCE:.specify/sprints/sprint-19/attestations/IFC-033/context_ack.json;ARTIFACT:docs/architecture/adr/ADR-017-workflow-reliability.md",
+      "validation": "GATE:real-benchmark-data;VALIDATE:pnpm test:load",
+      "percentComplete": "0"
+    },
+    {
+      "id": "IFC-034",
+      "section": "Investment Gate",
+      "status": "Backlog",
+      "targetSprint": "19",
+      "owner": "CFO + CEO (STOA-Leadership)",
+      "family": "feature",
+      "description": "PHASE-001: Gate 3 Review - £3000 Investment",
+      "dependencies": [
+        "IFC-033"
+      ],
+      "dependencyTypes": "IFC-033:FS",
+      "estimate": "60/120/180",
+      "pertMinutes": 120,
+      "dod": "Scale decision with modern stack validated; artifacts: automation-roi-analysis.xlsx, stability-report.pdf, scale-plan.pptx",
+      "kpis": "Clear path forward, investment justified",
+      "artifacts": "ARTIFACT:artifacts/reports/automation-roi-analysis.xlsx;ARTIFACT:artifacts/reports/stability-report.pdf;ARTIFACT:artifacts/misc/scale-plan.pptx;ARTIFACT:artifacts/misc/investment-recommendation.docx;EVIDENCE:.specify/sprints/sprint-19/attestations/IFC-034/context_ack.json",
+      "validation": "VALIDATE:pnpm lint",
+      "percentComplete": "0"
+    },
+    {
+      "id": "PG-064",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "targetSprint": "19",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "family": "feature",
+      "description": "Contacts List",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "dependencyTypes": "IFC-089:FS",
+      "estimate": "90/180/360",
+      "pertMinutes": 195,
+      "dod": "Response <200ms, Lighthouse ≥90, search fast; artifacts: page.tsx, contact-list.tsx, contact-search.ts",
+      "kpis": "Contacts listed, search working, segments functional",
+      "artifacts": "ARTIFACT:apps/web/src/app/contacts/(list)/page.tsx;ARTIFACT:apps/web/src/components/contacts/contact-list.tsx;ARTIFACT:apps/web/src/lib/contacts/contact-search.ts;EVIDENCE:.specify/sprints/sprint-19/attestations/PG-064/context_ack.json",
+      "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
+      "percentComplete": "0"
+    },
+    {
+      "id": "PG-065",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "targetSprint": "19",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "family": "feature",
+      "description": "Contact 360",
+      "dependencies": [
+        "IFC-090"
+      ],
+      "dependencyTypes": "IFC-090:FS",
+      "estimate": "120/240/480",
+      "pertMinutes": 260,
+      "dod": "Response <200ms, Lighthouse ≥90, data complete; artifacts: page.tsx, contact-360.tsx, contact-insights.tsx",
+      "kpis": "360 view complete, all data shown, insights displayed",
+      "artifacts": "ARTIFACT:apps/web/src/app/contacts/[id]/page.tsx;ARTIFACT:apps/web/src/components/contacts/contact-360.tsx;ARTIFACT:apps/web/src/components/contacts/contact-insights.tsx;EVIDENCE:.specify/sprints/sprint-19/attestations/PG-065/context_ack.json",
+      "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
+      "percentComplete": "0"
+    },
+    {
+      "id": "PG-069",
+      "section": "Core CRM",
+      "status": "Backlog",
+      "targetSprint": "19",
+      "owner": "CRM FE+BE (STOA-Foundation)",
+      "family": "feature",
+      "description": "Accounts List",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "dependencyTypes": "IFC-089:FS",
+      "estimate": "90/180/360",
+      "pertMinutes": 195,
+      "dod": "Response <200ms, Lighthouse ≥90, hierarchy shown; artifacts: page.tsx, account-list.tsx, hierarchy-view.tsx",
+      "kpis": "Accounts listed, hierarchy displayed, relationships linked",
+      "artifacts": "ARTIFACT:apps/web/src/app/accounts/(list)/page.tsx;ARTIFACT:apps/web/src/components/accounts/account-list.tsx;ARTIFACT:apps/web/src/components/accounts/hierarchy-view.tsx;EVIDENCE:.specify/sprints/sprint-19/attestations/PG-069/context_ack.json",
+      "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
+      "percentComplete": "0"
+    },
+    {
+      "id": "IFC-304",
+      "section": "Support",
+      "status": "Backlog",
+      "targetSprint": "19",
+      "owner": "Support Eng (STOA-Domain)",
+      "family": "feature",
+      "description": "Article Analytics Dashboard",
+      "dependencies": [
+        "IFC-303",
+        "PG-180"
+      ],
+      "dependencyTypes": "IFC-303:FS,PG-180:FS",
+      "estimate": "90/180/360",
+      "pertMinutes": 195,
+      "dod": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
+      "kpis": "Analytics render, data accurate, coverage >=90%",
+      "artifacts": "ARTIFACT:apps/web/src/components/support/article-analytics.tsx;ARTIFACT:apps/api/src/modules/help-article/help-article.router.ts;EVIDENCE:.specify/sprints/sprint-19/attestations/IFC-304/context_ack.json",
+      "validation": "VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm test;GATE:coverage-gte-90",
+      "percentComplete": "0"
+    },
+    {
+      "id": "IFC-306",
+      "section": "Compliance",
+      "status": "Backlog",
+      "targetSprint": "19",
+      "owner": "DPO + Legal (STOA-Foundation)",
+      "family": "feature",
+      "description": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
+      "dependencies": [
+        "IFC-073"
+      ],
+      "dependencyTypes": "IFC-073:FS",
+      "estimate": "15/30/60",
+      "pertMinutes": 33,
+      "dod": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026; timeline API serves updated data; verified by: pnpm test",
+      "kpis": "22 events; 0 stale statuses; 5 standards; 12-month forward coverage; API returns updated events",
+      "artifacts": "ARTIFACT:docs/planning/compliance-calendar.json;EVIDENCE:.specify/sprints/sprint-19/attestations/IFC-306/context_ack.json",
+      "validation": "VALIDATE:pnpm --filter web typecheck;VALIDATE:pnpm --filter web test --run",
+      "percentComplete": "0"
+    },
+    {
+      "id": "ENG-OPS-002",
+      "section": "Engineering Operations",
+      "status": "In Progress",
+      "targetSprint": "19",
+      "owner": "Tech Lead + QA + Security (STOA-Foundation)",
+      "family": "remediation",
+      "description": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
+      "dependencies": [
+        "ENG-OPS-001",
+        "GOV-001",
+        "IFC-131",
+        "EXP-REPORTS-002"
+      ],
+      "dependencyTypes": "ENG-OPS-001:FS,GOV-001:FS,IFC-131:FS,EXP-REPORTS-002:FS",
+      "estimate": "480/960/1440",
+      "pertMinutes": 960,
+      "dod": "Verifiable S1-18 baseline: 408 tasks reconciled, 19 tools executed (failures recorded), 101 findings classified, real Sonar baseline, remediation plan, debt ledger reconciled; verified by: pnpm test",
+      "kpis": "Finding remediated with reproducible before/after evidence; no new suppressions",
+      "artifacts": "ARTIFACT:docs/audit/sprints-1-18-current-state-audit.md;artifacts/reports/sprint-19/baseline/;EVIDENCE:.specify/sprints/sprint-19/attestations/ENG-OPS-002/attestation.json",
+      "validation": "VALIDATE:pnpm test",
+      "percentComplete": "90"
+    },
+    {
+      "id": "ENG-OPS-002.R13",
+      "section": "Engineering Operations",
+      "status": "Backlog",
+      "targetSprint": "19",
+      "owner": "devops-lead",
+      "family": "remediation",
+      "description": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+      "dependencies": [
+        "ENG-OPS-002.R02",
+        "ENG-OPS-002.R10"
+      ],
+      "dependencyTypes": "ENG-OPS-002.R02:FS,ENG-OPS-002.R10:FS",
+      "estimate": "60/90/150",
+      "pertMinutes": 95,
+      "dod": "Skips blocked by lint unless issue-linked; existing 21 reconciled; verified by: pnpm lint",
+      "kpis": "Finding remediated with reproducible before/after evidence; no new suppressions",
+      "artifacts": "ARTIFACT:eslint.config.mjs;docs/architecture/adr/ADR-054-property-based-race-condition-testing.md",
+      "validation": "VALIDATE:pnpm test",
+      "percentComplete": "0"
+    },
+    {
+      "id": "ENG-OPS-002.R16",
+      "section": "Engineering Operations",
+      "status": "Backlog",
+      "targetSprint": "19",
+      "owner": "devops-lead",
+      "family": "remediation",
+      "description": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger",
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "dependencyTypes": "ENG-OPS-002:FS",
+      "estimate": "480/720/1080",
+      "pertMinutes": 740,
+      "dod": "The 18 tasks (PG-196..209, INFRA-TF-001..005) have canonical attestation.json w/ git_commit; provenance gap tracked; verified by: pnpm validate:sprint-data",
+      "kpis": "Finding remediated with reproducible before/after evidence; no new suppressions",
+      "artifacts": "ARTIFACT:.specify/sprints/sprint-18/attestations;artifacts/metrics/debt-ledger.yaml",
+      "validation": "VALIDATE:pnpm test",
+      "percentComplete": "0"
+    }
+  ]
+}

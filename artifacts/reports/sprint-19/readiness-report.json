@@ -1,0 +1,104 @@
+{
+  "meta": {
+    "task": "PM-OPS-003",
+    "artifact": "readiness-report.json",
+    "generatedAt": "2026-07-22",
+    "sourceOfTruth": "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv @ origin/main (pmops003 worktree)"
+  },
+  "verdict": "CONDITIONALLY_READY",
+  "gates": {
+    "scopeDefined": {
+      "pass": true,
+      "detail": "10 committed (P0/P1), 11 deferred S20; scope-delta.json"
+    },
+    "dependencyIntegrity": {
+      "pass": true,
+      "detail": "0 missing deps across 27 S19 rows; S19 subgraph acyclic; dependency-validation.json"
+    },
+    "noCycles": {
+      "pass": true,
+      "detail": "S19 acyclic. 1 pre-existing cycle in Sprint 25 (IFC-040/115/071) logged out-of-scope (RISK-S19-07)"
+    },
+    "criticalPathPreserved": {
+      "pass": true,
+      "detail": "IFC-033 -> IFC-034 preserved; IFC-033 deps satisfied (ready)"
+    },
+    "duplicationScan": {
+      "pass": true,
+      "detail": "0 duplicate tasks; 0 net-new remediation tasks; findings already R01-R18; related items are existing GH issues"
+    },
+    "completedValidation": {
+      "pass": "partial",
+      "detail": "2/4 VALID (PG-166, IFC-312); 2/4 reopened (IFC-304 phantom, IFC-306 dead endpoint) — reclassified to Backlog, not falsely attested"
+    },
+    "capacityFits": {
+      "pass": "conditional",
+      "detail": "demand 7.3 slots vs effective supply 7.4 slots (near-zero slack); R16 slip candidate"
+    },
+    "qualityGatesDefined": {
+      "pass": true,
+      "detail": "TDD, 4 validations, coverage>=90 scoped, architecture tests, security scan, ADR-068 attestation, no-fake-data, pre-ship — per execution-plan §4"
+    },
+    "preShipReal": {
+      "pass": "pending",
+      "detail": "This planning PR (docs + JSON + CSV metadata) runs the real non-bypassed pre-ship gate before merge (Docker UP)."
+    }
+  },
+  "conditions": [
+    "Docker/k6 infra stays up for Wave 4 IFC-033 real load test (no template report).",
+    "Zero capacity slack: R16 (heaviest, ~2 slots) slips to S20 if feature velocity < ~5 PR/wk.",
+    "IFC-304/IFC-306 are genuine rebuilds this sprint, not re-attestations.",
+    "Accepted-and-tracked (not resolved): held Criticals R04/R07 (design sign-off, S20); validate:schemas RED on main advisory (R15 deferred); S25 dependency cycle."
+  ],
+  "scopeSummary": {
+    "committedS19": [
+      "IFC-033",
+      "IFC-034",
+      "ENG-OPS-002",
+      "IFC-304",
+      "IFC-306",
+      "PG-064",
+      "PG-065",
+      "PG-069",
+      "ENG-OPS-002.R13",
+      "ENG-OPS-002.R16"
+    ],
+    "deferredS20": [
+      "PG-066",
+      "PG-067",
+      "PG-068",
+      "IFC-305",
+      "PG-210",
+      "IFC-313",
+      "ENG-OPS-002.R04",
+      "ENG-OPS-002.R07",
+      "ENG-OPS-002.R11",
+      "ENG-OPS-002.R15",
+      "ENG-OPS-002.R18"
+    ],
+    "genuinelyCompleted": [
+      "PG-166",
+      "IFC-312",
+      "ENG-OPS-002.R01",
+      "ENG-OPS-002.R02",
+      "ENG-OPS-002.R03",
+      "ENG-OPS-002.R10"
+    ],
+    "reopened": [
+      "IFC-304",
+      "IFC-306"
+    ],
+    "netNewTasks": 0
+  },
+  "capacity": {
+    "throughputFeatPrPerWeek": 5.11,
+    "cycleMedianMin": 45,
+    "estimateAccuracyRatio": 0.258,
+    "changeFailureProxy": 0.091,
+    "wipCap": 3,
+    "demandWeightedSlots": 7.3,
+    "effectiveSupplySlots": 7.4,
+    "demandPertHours": 36.5
+  },
+  "waves": "0 audit close-out; 1 reopened-fix (IFC-304/306); 2 CRM pages (PG-064/065/069, WIP3); 3 governance (R13/R16); 4 load test (IFC-033, protected); 5 gate (IFC-034)"
+}
