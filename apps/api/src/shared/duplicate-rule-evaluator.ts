@@ -45,6 +45,12 @@ function trimLower(value: string): string {
   return value.trim().toLowerCase();
 }
 
+// BUG-07c (ENG-OPS-002.R02): join composite sub-fields, but return '' when every
+// part is empty so a bare separator skeleton ('|', '||') can't produce false matches.
+function joinComposite(parts: string[], separator: string): string {
+  return parts.some((p) => p) ? parts.join(separator) : '';
+}
+
 function normalizeString(value: string): string {
   return value
     .trim()
@@ -92,7 +98,7 @@ export function extractFieldValue(
       const last = readString(row, 'lastName');
       const personName = `${first} ${last}`.trim() || readString(row, 'name');
       const company = readString(row, 'company');
-      const combined = `${personName}|${company}`;
+      const combined = joinComposite([personName, company], '|');
       return strategy === 'exact' ? trimLower(combined) : normalizeString(combined);
     }
     case 'website': {
@@ -103,7 +109,7 @@ export function extractFieldValue(
       const name = readString(row, 'name');
       const addr = readString(row, 'addressLine1');
       const city = readString(row, 'city');
-      const combined = `${name}|${addr}|${city}`;
+      const combined = joinComposite([name, addr, city], '|');
       return strategy === 'exact' ? trimLower(combined) : normalizeString(combined);
     }
     default:
@@ -161,9 +167,11 @@ function resolveFloor(rule: EvaluableRule): number {
     0,
     Math.min(100, Number.isFinite(rule.threshold) ? rule.threshold : 100)
   );
-  return rule.matchStrategy === 'fuzzy'
-    ? Math.max(DEFAULT_FUZZY_FLOOR, threshold)
-    : threshold || 100;
+  // BUG-07a (ENG-OPS-002.R02): use the clamped threshold directly. `threshold || 100`
+  // wrongly mapped threshold=0 ("match everything") to floor=100. The Number.isFinite
+  // fallback above already defaults a missing/NaN threshold to 100, so `|| 100` here
+  // only corrupted the legitimate threshold=0 case.
+  return rule.matchStrategy === 'fuzzy' ? Math.max(DEFAULT_FUZZY_FLOOR, threshold) : threshold;
 }
 
 function applyRuleToCandidate<T extends { id: string } & Record<string, unknown>>(

@@ -643,7 +643,9 @@ describe('evaluateDuplicateRules — best-score dedup (RACE-DEDUP-07)', () => {
 // A caller passing threshold=0 as "match everything" gets floor=100 instead,
 // silently missing any duplicates that score below 100.
 // Fix: treat threshold=0 as floor=0 in the non-fuzzy branch.
-vitestTest.skip(
+// FIXED (ENG-OPS-002.R02 / QUAL-003): resolveFloor now uses the clamped threshold
+// directly, so threshold=0 yields floor=0 ("match everything").
+vitestTest(
   'BUG(RACE-DEDUP-07a): threshold=0 with exact strategy should match any non-empty value (floor=0), not silently use floor=100',
   () => {
     fc.assert(
@@ -662,12 +664,8 @@ vitestTest.skip(
         const input: Row = { id: inputId, email };
         const candidate: Row = { id: candidateId, email: differentEmail };
         const result = evaluateDuplicateRules<Row>(input, [candidate], [zeroThresholdExactRule]);
-        // With floor=0 the evaluator should return the candidate (score=0 satisfies floor=0).
-        // With the bug floor=100, differentEmail won't match → result is [].
-        // This assertion FAILS today because floor is 100 not 0.
-        expect(result.length).toBeGreaterThanOrEqual(0); // trivially true — the real assertion below is what fails
-        // The real desired assertion (uncomment once bug is fixed):
-        // expect(result).toHaveLength(1);
+        // With floor=0 the evaluator returns the candidate (score=0 satisfies floor=0).
+        expect(result).toHaveLength(1);
       }),
       propertyParams()
     );
@@ -682,7 +680,9 @@ vitestTest.skip(
 // will be matched against each other with score=100 (identical separator strings).
 // This can produce false-positive duplicate matches when records genuinely lack data.
 // Fix: the composite field extractor should return '' when all sub-components are empty.
-vitestTest.skip(
+// FIXED (ENG-OPS-002.R02 / QUAL-004): composite extractors now return '' when all
+// sub-fields are empty, so data-less records no longer falsely match on '|' / '||'.
+vitestTest(
   'BUG(RACE-DEDUP-07c): composite fields with all-empty sub-fields return separator skeleton instead of empty string, causing false-positive matches',
   () => {
     // name_company on null input returns '|' not ''

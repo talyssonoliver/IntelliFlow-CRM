@@ -1,0 +1,68 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENG-OPS-002.R02",
+  "run_id": "eng-ops-002-r02-2026-07-22",
+  "attestor": "Claude Code (claude-opus-4-8) — ENG-OPS-002.R02 remediation (chore/eng-ops-002-r02)",
+  "attestation_timestamp": "2026-07-22T13:35:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "finding": "QUAL-003,QUAL-004",
+    "severity": "Critical",
+    "artifacts_verified": 2,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/shared/duplicate-rule-evaluator.ts": "sha256:79f595e0d7c1e8f80a55dbcb248ed7900df1b528631822423039205c929c86cf",
+    "tests/property/unit/crm/dedup-evaluator.prop.test.ts": "sha256:6e87701038a42a6eacd26f01a0a2ab4b6ae4d4811baa2354d96bf9e870d87b71"
+  },
+  "validation_results": [
+    {
+      "name": "Property tests (dedup)",
+      "command": "pnpm test:property:standard",
+      "result": "PASS — 579 passed; the 2 previously-skipped BUG-07a/07c tests un-skipped and green"
+    },
+    {
+      "name": "Evaluator unit tests",
+      "command": "pnpm --filter @intelliflow/api exec vitest run src/shared/__tests__/duplicate-rule-evaluator.test.ts",
+      "result": "PASS — 29 passed"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "skipped-tests-reconciled",
+      "passed": true,
+      "log_path": "2 dedup skips removed + bugs fixed"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "threshold=0 gives floor=0",
+      "target": "match everything",
+      "actual": "resolveFloor returns the clamped threshold (07a)",
+      "met": true
+    },
+    {
+      "kpi": "empty composite no false match",
+      "target": "'' not separator skeleton",
+      "actual": "extractFieldValue returns '' when all sub-fields empty (07c)",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "threshold fix + empty-composite guard; 2 tests un-skipped green",
+      "met": true,
+      "evidence": "duplicate-rule-evaluator.ts + dedup-evaluator.prop.test.ts"
+    }
+  ],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "f1bbf915bff84a52055872b99c1faf43fc5a23df",
+    "branch": "chore/eng-ops-002-r02"
+  },
+  "notes": "QUAL-003 (07a): resolveFloor stopped mapping threshold=0 to floor=100. QUAL-004 (07c): name_company/name_address extractors return empty string when all sub-fields are empty, killing false-positive duplicate matches on the separator skeleton. Both property tests un-skipped and passing."
+}
