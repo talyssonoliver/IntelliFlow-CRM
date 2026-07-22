@@ -452,12 +452,36 @@ jobs:
         # Scope to the chromium project to match the chromium-only install
         # above. playwright.config.ts defines 6 projects (chromium, firefox,
         # webkit, mobile-chrome, mobile-safari, tablet); firefox/webkit/
-        # mobile-safari/tablet need browser engines we do NOT install here,
-        # Smoke suite only, chromium only (matches the chromium-only install).
+        # mobile-safari/tablet need browser engines we do NOT install here.
         # smoke.spec.ts is the fast critical-path set; backend-dependent
         # assertions inside it already self-skip without E2E_AUTH_ENABLED.
         # The full suite runs in e2e-full.yml (scheduled + manual).
-        run: pnpm exec playwright test --project=chromium tests/e2e/smoke.spec.ts
+        #
+        # SELECT BY TITLE, NOT BY POSITIONAL PATH. The previous invocation
+        # `playwright test --project=chromium tests/e2e/smoke.spec.ts` matched
+        # all 16 tests in every local run (PW 1.60) but resolved to ZERO on the
+        # ubuntu runner — "No tests found" AFTER globalSetup — a platform-specific
+        # positional-file-path-regex resolution gap that kept this job red for
+        # weeks with no real E2E signal. `--grep "Smoke Tests"` matches the
+        # top-level describe title (unique to smoke.spec.ts) and is independent
+        # of how Playwright resolves file paths across OSes. The --list guard
+        # fails LOUD with cwd + full discovery if the count is ever 0 again,
+        # so a regression is diagnosable in one run instead of a bare error.
+        run: |
+          echo "cwd=$(pwd)"
+          if [ ! -f tests/e2e/smoke.spec.ts ]; then
+            echo "::error::tests/e2e/smoke.spec.ts missing from checkout"; exit 1
+          fi
+          count=$(pnpm exec playwright test --project=chromium --grep "Smoke Tests" --list 2>&1 \
+            | grep -cE "smoke\.spec\.ts:[0-9]+" || true)
+          if [ "${count:-0}" -eq 0 ]; then
+            echo "::error::Playwright discovered 0 smoke tests for the chromium project."
+            echo "::error::Full chromium discovery follows (for diagnosis):"
+            pnpm exec playwright test --project=chromium --list 2>&1 | head -60 || true
+            exit 1
+          fi
+          echo "Discovered $count smoke tests — running."
+          pnpm exec playwright test --project=chromium --grep "Smoke Tests"
 
       - name: Upload E2E results
         uses: actions/upload-artifact@v7
