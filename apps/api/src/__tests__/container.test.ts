@@ -95,6 +95,12 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'analyticsRepo' };
     }
   },
+  PrismaTransactionManager: class {
+    // Mirrors the real TransactionPort: run the work with an opaque tx handle.
+    async run(work: (tx: unknown) => Promise<unknown>) {
+      return work({});
+    }
+  },
   InMemoryEventBus: class {
     constructor() {
       return { name: 'eventBus' };

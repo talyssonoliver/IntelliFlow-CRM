@@ -31,6 +31,7 @@ import {
   PrismaAppointmentRepository,
   PrismaConversationSearchRepository,
   InMemoryEventBus,
+  PrismaTransactionManager,
   MockAIService,
   InMemoryCache,
   RedisCacheAdapter,
@@ -364,6 +365,10 @@ const createAdapters = async (prismaClient: PrismaClient) => {
   // under production traffic. Handlers still fire; only the inspection buffer is off.
   const eventBus = new InMemoryEventBus({ record: false });
 
+  // Unit-of-Work boundary (ENG-OPS-002 DDD-001/002): lets use cases commit
+  // multiple aggregate saves (+ the event outbox) in one real DB transaction.
+  const transactionManager = new PrismaTransactionManager();
+
   // AI provider selection (IFC-212):
   //   AI_PROVIDER=ollama                       → OllamaAIService (offline / local dev escape hatch)
   //   AI_PROVIDER=mock (or unset in test env)  → MockAIService (deterministic, no network)
@@ -474,6 +479,7 @@ const createAdapters = async (prismaClient: PrismaClient) => {
     experimentRepository,
     appointmentRepository,
     eventBus,
+    transactionManager,
     aiService,
     cache,
     featureFlagProvider,
@@ -529,7 +535,8 @@ const createServices = async (prismaClient: PrismaClient) => {
     adapters.contactRepository,
     adapters.accountRepository,
     adapters.aiService,
-    adapters.eventBus
+    adapters.eventBus,
+    adapters.transactionManager
   );
 
   const contactService = new ContactService(
@@ -626,7 +633,8 @@ const createServices = async (prismaClient: PrismaClient) => {
     adapters.contactRepository,
     adapters.accountRepository,
     adapters.opportunityRepository,
-    adapters.eventBus
+    adapters.eventBus,
+    adapters.transactionManager
   );
 
   // IFC-065: Deal Won Closure Workflow

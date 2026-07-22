@@ -11,7 +11,7 @@
 
 import { PrismaClient, EventStatus, Prisma } from '@intelliflow/db';
 import { withTransaction, type TransactionClient } from '@intelliflow/db';
-import { DomainEvent } from '@intelliflow/domain';
+import { DomainEvent, type RepositoryTransaction } from '@intelliflow/domain';
 import { EventBusPort } from '@intelliflow/application';
 
 /**
@@ -105,14 +105,25 @@ export class OutboxEventBusAdapter implements EventBusPort {
   /**
    * Publish multiple events in a batch.
    *
-   * Uses a transaction to ensure all events are written atomically.
+   * When `externalTx` is supplied (DDD-002), the outbox rows are written inside
+   * the caller's transaction, so the aggregate save and its events commit or
+   * roll back together — no dual-write window (ADR-011 zero-lost-events).
+   * Without one, a dedicated transaction is opened so the batch is still atomic.
    */
-  async publishAll(events: readonly DomainEvent[]): Promise<void> {
+  async publishAll(
+    events: readonly DomainEvent[],
+    externalTx?: RepositoryTransaction
+  ): Promise<void> {
     if (events.length === 0) {
       return;
     }
 
-    await withTransaction(async (tx: TransactionClient) => {
+    const provided = externalTx as TransactionClient | undefined;
+    const run = provided
+      ? (fn: (tx: TransactionClient) => Promise<void>): Promise<void> => fn(provided)
+      : (fn: (tx: TransactionClient) => Promise<void>): Promise<void> => withTransaction(fn);
+
+    await run(async (tx: TransactionClient) => {
       // Compute idempotency keys for all events upfront
       const keyedEvents = events.map((event) => ({
         event,

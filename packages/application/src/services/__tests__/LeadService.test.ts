@@ -13,7 +13,13 @@ import { LeadService, LEAD_SCORE_THRESHOLDS } from '../LeadService';
 import { Lead, LeadId, Email, Account, Contact, Result, DomainError } from '@intelliflow/domain';
 import { LeadRepository, ContactRepository, AccountRepository } from '@intelliflow/domain';
 import { AIServicePort, EventBusPort, LeadScoringResult } from '../../ports';
+import type { TransactionPort } from '@intelliflow/application';
 import { ValidationError, PersistenceError } from '../../errors';
+
+// ENG-OPS-002: LeadService now requires a TransactionPort as its final
+// constructor arg. This fake just runs the callback — behaviour-neutral for
+// these tests, which don't assert on real transactional rollback.
+const makeTxManager = (): TransactionPort => ({ run: (work) => work({} as never) });
 
 // Mock implementations
 class MockLeadRepository implements LeadRepository {
@@ -223,7 +229,8 @@ describe('LeadService', () => {
       contactRepository,
       accountRepository,
       aiService,
-      eventBus
+      eventBus,
+      makeTxManager()
     );
   });
 

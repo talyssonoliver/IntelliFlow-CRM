@@ -1,5 +1,6 @@
 import { Account } from './Account';
 import { AccountId } from './AccountId';
+import { RepositoryTransaction } from '../../shared/RepositoryTransaction';
 
 /**
  * Raw account record with hierarchy data from persistence layer.
@@ -32,7 +33,7 @@ export interface AccountRepository {
    * Save an account (create or update)
    * tenantId is embedded in the Account entity — no separate param needed.
    */
-  save(account: Account): Promise<void>;
+  save(account: Account, tx?: RepositoryTransaction): Promise<void>;
 
   /**
    * Find an account by ID within a tenant (IFC-269 B-02: defense-in-depth)

@@ -55,6 +55,11 @@ vi.mock('@intelliflow/adapters', () => {
     PrismaActivityFeedRepository: named('activityFeedRepository'),
     PrismaTenantModuleRepository: named('tenantModuleRepository'),
     PrismaAnalyticsRepository: named('analyticsRepository'),
+    PrismaTransactionManager: class {
+      async run(work: (tx: unknown) => Promise<unknown>) {
+        return work({});
+      }
+    },
     PrismaFeedbackSurveyRepository: named('feedbackSurveyRepository'),
     PrismaPublicFeedbackRepository: named('publicFeedbackRepository'),
     PrismaCaseDocumentRepository: named('caseDocumentRepository'),

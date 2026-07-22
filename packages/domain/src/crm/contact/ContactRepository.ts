@@ -1,6 +1,7 @@
 import { Contact } from './Contact';
 import { ContactId } from './ContactId';
 import { Email } from '../lead/Email';
+import { RepositoryTransaction } from '../../shared/RepositoryTransaction';
 
 /**
  * Contact Repository Interface
@@ -14,7 +15,7 @@ export interface ContactRepository {
   /**
    * Save a contact (create or update)
    */
-  save(contact: Contact): Promise<void>;
+  save(contact: Contact, tx?: RepositoryTransaction): Promise<void>;
 
   /**
    * Find a contact by ID

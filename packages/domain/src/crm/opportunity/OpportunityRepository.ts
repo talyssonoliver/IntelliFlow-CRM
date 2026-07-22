@@ -2,6 +2,7 @@ import { Opportunity } from './Opportunity';
 import { OpportunityId } from './OpportunityId';
 import { OpportunityStage } from './OpportunityEvents';
 import { DateRange } from '../../shared/QueryTypes';
+import { RepositoryTransaction } from '../../shared/RepositoryTransaction';
 
 /**
  * Opportunity Repository Interface
@@ -15,7 +16,7 @@ export interface OpportunityRepository {
   /**
    * Save an opportunity (create or update)
    */
-  save(opportunity: Opportunity): Promise<void>;
+  save(opportunity: Opportunity, tx?: RepositoryTransaction): Promise<void>;
 
   /**
    * Find an opportunity by ID, optionally scoped to a tenant.

@@ -141,3 +141,7 @@ export * from './cache';
 
 // Public Feedback Adapters (PG-126)
 export * from './public-feedback';
+
+// Transaction managers (ENG-OPS-002 DDD-001/002 — Unit-of-Work boundary)
+export { PrismaTransactionManager } from './persistence/PrismaTransactionManager';
+export { InMemoryTransactionManager } from './persistence/InMemoryTransactionManager';

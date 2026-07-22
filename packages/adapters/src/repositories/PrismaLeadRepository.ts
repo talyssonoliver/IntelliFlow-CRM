@@ -1,4 +1,4 @@
-import { PrismaClient } from '@intelliflow/db';
+import { PrismaClient, type TransactionClient } from '@intelliflow/db';
 import {
   Lead,
   LeadId,
@@ -6,6 +6,7 @@ import {
   PhoneNumber,
   type LeadSource,
   type LeadStatus,
+  type RepositoryTransaction,
 } from '@intelliflow/domain';
 import { LeadRepository } from '@intelliflow/application';
 
@@ -87,7 +88,15 @@ function recordToLeadProps(record: LeadRecord) {
 export class PrismaLeadRepository implements LeadRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async save(lead: Lead, opts?: { note?: { content: string; author: string } }): Promise<void> {
+  async save(
+    lead: Lead,
+    opts?: { note?: { content: string; author: string } },
+    tx?: RepositoryTransaction
+  ): Promise<void> {
+    // Join the caller's transaction when supplied (DDD-001/002), else use our
+    // own client. The domain hands us an opaque RepositoryTransaction; the
+    // concrete value is a Prisma TransactionClient.
+    const db = (tx as TransactionClient | undefined) ?? this.prisma;
     const data = {
       id: lead.id.value,
       email: lead.email.value,
@@ -121,7 +130,7 @@ export class PrismaLeadRepository implements LeadRepository {
       updatedAt: lead.updatedAt,
     };
 
-    await this.prisma.lead.upsert({
+    await db.lead.upsert({
       where: { id: data.id },
       // Nest the initial note into the create so the lead + note commit in a
       // single transaction (Prisma nested write) — no orphaned lead if the note

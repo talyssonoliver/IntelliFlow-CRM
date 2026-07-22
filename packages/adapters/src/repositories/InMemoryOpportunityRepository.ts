@@ -3,6 +3,7 @@ import {
   OpportunityId,
   OpportunityStage,
   OpportunityRepository,
+  type RepositoryTransaction,
 } from '@intelliflow/domain';
 
 /**
@@ -12,7 +13,7 @@ import {
 export class InMemoryOpportunityRepository implements OpportunityRepository {
   private readonly opportunities: Map<string, Opportunity> = new Map();
 
-  async save(opportunity: Opportunity): Promise<void> {
+  async save(opportunity: Opportunity, tx?: RepositoryTransaction): Promise<void> {
     this.opportunities.set(opportunity.id.value, opportunity);
   }
 

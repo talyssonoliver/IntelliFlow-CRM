@@ -1,10 +1,11 @@
-import { PrismaClient, Decimal } from '@intelliflow/db';
+import { PrismaClient, Decimal, type TransactionClient } from '@intelliflow/db';
 import {
   Opportunity,
   OpportunityId,
   Money,
   Percentage,
   type OpportunityStage,
+  type RepositoryTransaction,
 } from '@intelliflow/domain';
 import { OpportunityRepository } from '@intelliflow/application';
 
@@ -94,7 +95,8 @@ function reconstituteOpportunity(record: {
 export class PrismaOpportunityRepository implements OpportunityRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async save(opportunity: Opportunity): Promise<void> {
+  async save(opportunity: Opportunity, tx?: RepositoryTransaction): Promise<void> {
+    const db = (tx as TransactionClient | undefined) ?? this.prisma;
     const data = {
       id: opportunity.id.value,
       name: opportunity.name,
@@ -113,7 +115,7 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
       sourceLeadId: opportunity.sourceLeadId ?? null,
     };
 
-    await this.prisma.opportunity.upsert({
+    await db.opportunity.upsert({
       where: { id: data.id },
       create: data,
       update: data,

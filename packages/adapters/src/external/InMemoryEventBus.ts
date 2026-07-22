@@ -1,4 +1,4 @@
-import { DomainEvent } from '@intelliflow/domain';
+import { DomainEvent, type RepositoryTransaction } from '@intelliflow/domain';
 import { EventBusPort } from '@intelliflow/application';
 
 /**
@@ -33,7 +33,7 @@ export class InMemoryEventBus implements EventBusPort {
     await Promise.all(handlers.map((handler) => handler(event)));
   }
 
-  async publishAll(events: DomainEvent[]): Promise<void> {
+  async publishAll(events: readonly DomainEvent[], tx?: RepositoryTransaction): Promise<void> {
     for (const event of events) {
       await this.publish(event);
     }

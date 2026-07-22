@@ -3,6 +3,7 @@ import {
   AccountId,
   AccountRepository,
   type AccountHierarchyRecord,
+  type RepositoryTransaction,
 } from '@intelliflow/domain';
 
 /**
@@ -15,7 +16,7 @@ import {
 export class InMemoryAccountRepository implements AccountRepository {
   private readonly accounts: Map<string, Account> = new Map();
 
-  async save(account: Account): Promise<void> {
+  async save(account: Account, tx?: RepositoryTransaction): Promise<void> {
     this.accounts.set(account.id.value, account);
   }
 

@@ -19,7 +19,13 @@ import { Lead, LeadId, Result, DomainError } from '@intelliflow/domain';
 import type { LeadRepository } from '@intelliflow/domain';
 import type { AIServicePort, EventBusPort, LeadScoringResult } from '../../ports';
 import type { ContactRepository, AccountRepository } from '../../ports/repositories';
+import type { TransactionPort } from '@intelliflow/application';
 import { PersistenceError, ValidationError, NotFoundError } from '../../errors';
+
+// ENG-OPS-002: LeadService now requires a TransactionPort as its final
+// constructor arg. This fake just runs the callback — behaviour-neutral for
+// these tests, which don't assert on real transactional rollback.
+const makeTxManager = (): TransactionPort => ({ run: (work) => work({} as never) });
 
 // ============================================================================
 // Mock implementations - simplified versions targeting uncovered paths
@@ -223,7 +229,8 @@ describe('LeadService - Additional Coverage', () => {
       contactRepository,
       accountRepository,
       aiService,
-      eventBus
+      eventBus,
+      makeTxManager()
     );
   });
 
@@ -574,7 +581,11 @@ describe('LeadService - Additional Coverage', () => {
   });
 
   describe('Event publishing error handling', () => {
-    it('should not fail operation when event publishing fails on createLead', async () => {
+    // DDD-002: event-publish failure now propagates (no swallow). createLead
+    // persists the lead + publishes its events inside ONE transaction, so a
+    // publish failure now fails the whole operation instead of being logged
+    // and ignored.
+    it('should fail operation when event publishing fails on createLead', async () => {
       eventBus.setShouldFail(true);
 
       const result = await leadService.createLead({
@@ -583,11 +594,12 @@ describe('LeadService - Additional Coverage', () => {
         ownerId: 'owner-123',
       });
 
-      // createLead should still succeed even if events fail
-      expect(result.isSuccess).toBe(true);
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(PersistenceError);
     });
 
-    it('should not fail operation when event publishing fails on scoreLead', async () => {
+    // DDD-002: event-publish failure now propagates (no swallow).
+    it('should fail operation when event publishing fails on scoreLead', async () => {
       const lead = createTestLead('event-fail-score@example.com');
       leadRepository.add(lead);
       aiService.setMockScore(50, 0.8);
@@ -595,10 +607,12 @@ describe('LeadService - Additional Coverage', () => {
 
       const result = await leadService.scoreLead(lead.id.value);
 
-      expect(result.isSuccess).toBe(true);
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(PersistenceError);
     });
 
-    it('should not fail operation when event publishing fails on convertLead', async () => {
+    // DDD-002: event-publish failure now propagates (no swallow).
+    it('should fail operation when event publishing fails on convertLead', async () => {
       const lead = createTestLead('event-fail-convert@example.com', {
         firstName: 'Fail',
         lastName: 'Events',
@@ -610,10 +624,12 @@ describe('LeadService - Additional Coverage', () => {
 
       const result = await leadService.convertLead(lead.id.value, null, 'sales-rep');
 
-      expect(result.isSuccess).toBe(true);
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(PersistenceError);
     });
 
-    it('should not fail when publishing account events fails during conversion', async () => {
+    // DDD-002: event-publish failure now propagates (no swallow).
+    it('should fail when publishing account events fails during conversion', async () => {
       const lead = createTestLead('event-fail-acct@example.com', {
         firstName: 'Fail',
         lastName: 'Account',
@@ -625,11 +641,12 @@ describe('LeadService - Additional Coverage', () => {
 
       const result = await leadService.convertLead(lead.id.value, 'Fail Corp', 'sales-rep');
 
-      // Should succeed even though event publishing fails
-      expect(result.isSuccess).toBe(true);
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(PersistenceError);
     });
 
-    it('should not fail qualifyLead when event publishing fails', async () => {
+    // DDD-002: event-publish failure now propagates (no swallow).
+    it('should fail qualifyLead when event publishing fails', async () => {
       const lead = createTestLead('event-fail-qualify@example.com');
       lead.updateScore(60, 0.8, 'test-v1');
       leadRepository.add(lead);
@@ -637,17 +654,24 @@ describe('LeadService - Additional Coverage', () => {
 
       const result = await leadService.qualifyLead(lead.id.value, 'sales', 'reason');
 
-      expect(result.isSuccess).toBe(true);
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(PersistenceError);
     });
 
-    it('should not fail changeLeadStatus when event publishing fails', async () => {
+    // DDD-002: event-publish failure now propagates (no swallow). Unlike
+    // createLead/scoreLead/qualifyLead/convertLead, changeLeadStatus's save +
+    // publishEvents are NOT wrapped in transactionManager.run/try-catch (that
+    // atomicity wrapping was only added to the four DDD-001/DDD-002 paths), so
+    // the publish failure surfaces as a rejected promise rather than a
+    // Result.fail here.
+    it('should reject changeLeadStatus when event publishing fails', async () => {
       const lead = createTestLead('event-fail-status@example.com');
       leadRepository.add(lead);
       eventBus.setShouldFail(true);
 
-      const result = await leadService.changeLeadStatus(lead.id.value, 'CONTACTED', 'user');
-
-      expect(result.isSuccess).toBe(true);
+      await expect(
+        leadService.changeLeadStatus(lead.id.value, 'CONTACTED', 'user')
+      ).rejects.toThrow('Event bus publishAll error');
     });
   });
 
