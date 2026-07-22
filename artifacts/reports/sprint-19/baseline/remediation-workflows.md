@@ -4,7 +4,9 @@
 **Scope of this doc:** the **21 actionable** CONFIRMED findings (19 open + SEC-002/HEX-005 corrected). Excludes SEC-001, QUAL-003, QUAL-004 (already remediated by #602/#603).
 **NOT added to `Sprint_plan.csv`** — this is a bounded-workflow proposal only.
 
-> ⚠️ **Reconciliation caveat:** These workflows are finding-driven. R01/R02/R03 are merged; **R04–R07 are held and R10 is owned by another session.** Before executing any workflow below, cross-check it does not overlap a held R-item — where it does, defer to that R-item's owner. The finding→R mapping is not in this doc.
+> ⚠️ **Reconciliation caveat:** These workflows are finding-driven. **R01/R02/R03/R10 are now MERGED** (#601/#602/#603/#604); **R04–R07 are held for design sign-off** (see `eng-ops-002-remediation-design-proposals.md`). `fix-ticket-domain-guards` is done and `fix-task-domain-guards` is partial (both via R10 — see their entries below). Before executing any workflow, cross-check it doesn't overlap a held/merged R-item.
+>
+> 🔎 **Independent Codex cross-check:** `codex-findings-review.md` — 0 false positives confirmed; **one open dispute: SEC-002 severity (Codex=High vs this doc's Medium)** → the `force-rls-on-tenant-tables` workflow may be P0, not P1, pending that call.
 
 Each workflow: **title** (kebab-case ≤6 words) · **findings** · **scope (files:lines)** · **verifiable DoD** · **effort** S/M/L · **hex layer** · **bounded context** · **dependency**.
 
@@ -90,17 +92,17 @@ Each workflow: **title** (kebab-case ≤6 words) · **findings** · **scope (fil
 - **DoD:** one canonical threshold/tier definition on the domain (`LeadScore`); the app service's auto-qualify delegates to it; the divergent 75/20 vs 80/50 boundaries reconciled; tests updated.
 - **Effort:** S · **Layer:** domain/application · **Context:** leads · **Dep:** none
 
-### `fix-ticket-domain-guards`
+### `fix-ticket-domain-guards` — ✅ DONE (R10 / #604)
 - **Findings:** QUAL-001
-- **Scope:** `packages/domain/src/crm/ticket/Ticket.ts:520/536/550`, `tests/property/unit/crm/ticket-domain.prop.test.ts:285/351/437/455/475`
-- **DoD:** `changePriority`/`assign`/`unassign` enforce terminal-status rules; the 5 `it.skip` property tests are un-skipped and pass.
-- **Effort:** M · **Layer:** domain · **Context:** tickets · **Dep:** none
+- **Status:** COMPLETE. `changePriority`/`assign`/`unassign` now guard `isClosed || isTerminalStatus`, `resumeSla` clamps; the 5 ticket property tests are un-skipped and green. No further action.
 
-### `fix-task-domain-guards`
+### `fix-task-domain-guards` — ⚠ PARTIAL (R10 / #604); scope reduced
 - **Findings:** QUAL-002
-- **Scope:** `packages/domain/src/crm/task/Task.ts:205/310-337`, `tests/property/unit/crm/task-domain.prop.test.ts:271…`
-- **DoD:** `changeStatus` enforces `VALID_TASK_TRANSITIONS`; `assignTo*` gain status guards; the `test.skip` cases un-skipped and green.
-- **Effort:** M · **Layer:** domain · **Context:** tasks · **Dep:** none
+- **Status:** terminal-linkage guards DONE — `Task.assertLinkable()` shipped, 3 RACE-PURE-M2 tests un-skipped (#604).
+- **Remaining scope (RACE-PURE-09 only):** `Task.changeStatus`/`complete()` do not enforce `VALID_TASK_TRANSITIONS` (the table exists; enforcement tightens the contract — `complete()` on a PENDING task would be rejected, which breaks the "complete on PENDING succeeds" property and needs service-caller verification). 2 tests still skipped.
+- **Scope:** `packages/domain/src/crm/task/Task.ts` (`changeStatus`/`complete`), `tests/property/unit/crm/task-domain.prop.test.ts:271/284`
+- **DoD:** `changeStatus`/`complete` consult `VALID_TASK_TRANSITIONS`; the 2 RACE-PURE-09 tests un-skipped and green; existing callers that complete un-started tasks audited/updated.
+- **Effort:** S-M · **Layer:** domain · **Context:** tasks · **Dep:** none
 
 ---
 
