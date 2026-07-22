@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-26T16:33:43.342Z",
+  "generated_at": "2026-07-21T21:24:23.822Z",
   "tool_version": "1.2.0",
   "routes": [
     {
@@ -2097,17 +2097,17 @@
     },
     {
       "route": "/analytics/report-templates",
-      "file_path": "apps/web/src/app/analytics/report-templates/page.tsx",
+      "file_path": "apps/web/src/app/analytics/(list)/report-templates/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Analytics",
-          "source": "layout"
+          "value": "Report Templates",
+          "source": "page"
         },
         "description": {
-          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
-          "source": "root-layout",
-          "length": 155
+          "value": "Create and manage saveable report layouts: filter set, columns, chart type, and default period.",
+          "source": "page",
+          "length": 95
         },
         "og_title": {
           "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
@@ -3235,13 +3235,13 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Billing",
-          "source": "layout"
+          "value": "Billing Settings — IntelliFlow",
+          "source": "page"
         },
         "description": {
-          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
-          "source": "root-layout",
-          "length": 155
+          "value": "Manage your billing information, tax ID, and invoice contact.",
+          "source": "page",
+          "length": 61
         },
         "og_title": {
           "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
@@ -11365,10 +11365,8 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "stale",
-        "patterns_found": [
-          "todo-marker"
-        ],
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],
@@ -12653,13 +12651,13 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Tasks",
-          "source": "layout"
+          "value": "Task Settings — IntelliFlow",
+          "source": "page"
         },
         "description": {
-          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
-          "source": "root-layout",
-          "length": 155
+          "value": "Configure default due-date offset, reminder defaults, and task templates for the Tasks module.",
+          "source": "page",
+          "length": 94
         },
         "og_title": {
           "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",

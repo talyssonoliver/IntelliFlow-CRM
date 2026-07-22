@@ -38,7 +38,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 | Total Pages                                     | 211   |
 | Public Pages                                    | 32    |
 | Developer Pages                                 | 14    |
-| Protected Pages                                 | 162   |
+| Protected Pages                                 | 165   |
 | Next.js API handlers (excluded from page total) | 19    |
 | Layouts                                         | 36    |
 
@@ -49,7 +49,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 > denominator). Query-parameter variants (e.g. `/leads?view=my`) are views
 > within the same page and are excluded from the page total. See
 > `docs/design/content-audit.md` for the full counting rule. Verified:
-> 2026-04-26.
+> 2026-07-21.
 
 ---
 

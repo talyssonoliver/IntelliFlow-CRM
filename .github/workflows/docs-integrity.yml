@@ -1,0 +1,118 @@
+name: Docs Integrity Gate
+
+# DOC-016 — Automated cross-document route-total + summary-aggregate drift
+# detection. Fails the PR when a design doc's canonical "Total Pages" figure or
+# summary aggregate (Public / Developer / Protected) drifts from the live
+# filesystem audit. Complements DOC-015's regression test by enforcing the same
+# invariant as a required PR gate.
+#
+# Deliberately build-free: the audit CLI and its test import only Node built-ins
+# (see tools/scripts/__tests__/docs-integrity.vitest.config.ts), so this gate
+# gives fast fail-first feedback without a library build.
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      # App routes drive the canonical numbers…
+      - 'apps/web/src/app/**/page.tsx'
+      # …and the design docs must track them.
+      - 'docs/design/sitemap.md'
+      - 'docs/design/page-registry.md'
+      - 'docs/design/PAGE_MAP_AND_FLOWS.md'
+      - 'docs/design/ui-flow-mapping.md'
+      - 'docs/design/navigation-reachability-audit.md'
+      - 'docs/design/information-architecture.md'
+      - 'docs/design/content-audit.md'
+      # The gate itself.
+      - 'tools/scripts/docs-integrity-audit.ts'
+      - 'tools/scripts/content-audit.ts'
+      - 'tools/scripts/__tests__/docs-integrity-audit.test.ts'
+      - 'tools/scripts/__tests__/docs-integrity.vitest.config.ts'
+      - '.github/workflows/docs-integrity.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.0'
+
+jobs:
+  docs-integrity:
+    name: Docs Integrity Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Primary gate: fail-first on any cross-document drift.
+      - name: Run docs-integrity audit
+        id: audit
+        run: |
+          pnpm tsx tools/scripts/docs-integrity-audit.ts 2>&1 | tee docs-integrity-output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      # Prove the gate itself is correct (drift detection + false-positive
+      # guardrails). Build-free via the dedicated config; enforces the ≥90% AC.
+      - name: Run docs-integrity gate tests
+        if: always()
+        run: pnpm test:docs-integrity
+
+      - name: Comment on PR if drift detected
+        if: failure() && steps.audit.outputs.exit_code != '0' && github.event_name == 'pull_request'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            let output = '';
+            try {
+              output = fs.readFileSync('docs-integrity-output.txt', 'utf-8');
+            } catch {
+              output = '(no audit output captured)';
+            }
+            const body = [
+              '## 📐 Docs Integrity Drift Detected',
+              '',
+              'A design doc no longer matches the canonical route totals from the live',
+              'filesystem audit. Reconcile the flagged docs before merging.',
+              '',
+              '```bash',
+              'pnpm tsx tools/scripts/content-audit.ts        # refresh canonical numbers',
+              '# update the flagged "Total Pages" / summary-table lines in each doc',
+              'pnpm tsx tools/scripts/docs-integrity-audit.ts # re-run the gate',
+              '```',
+              '',
+              'Full procedure: `docs/runbooks/docs-integrity-gate.md`',
+              '',
+              '<details><summary>Audit output</summary>',
+              '',
+              '```',
+              output,
+              '```',
+              '',
+              '</details>',
+            ].join('\n');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });
+
+      - name: Fail on drift
+        if: steps.audit.outputs.exit_code != '0'
+        run: exit 1

@@ -11,7 +11,7 @@
 > Inline references throughout this document use the same canonical number;
 > changelog entries below preserve historical state at the time they were
 > recorded and MUST NOT be rewritten. See `docs/design/content-audit.md` for the
-> full counting rule. Verified: 2026-04-26.
+> full counting rule. Verified: 2026-07-21.
 
 This document provides a comprehensive mapping between user flows, UI routes,
 and design system components to ensure consistent implementation across the

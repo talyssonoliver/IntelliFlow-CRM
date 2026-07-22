@@ -2,7 +2,7 @@
 
 **Total Pages**: 211 | **Flows**: 42 | **Layouts**: 37 | **API Routers**: 60
 
-_Location_: `docs/design/sitemap.md` · _Last Updated_: 2026-04-26 · _Procs_: 232
+_Location_: `docs/design/sitemap.md` · _Last Updated_: 2026-07-21 · _Procs_: 232
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`
@@ -10,7 +10,7 @@ _Location_: `docs/design/sitemap.md` · _Last Updated_: 2026-04-26 · _Procs_: 2
 > stripped from the URL; dynamic segments (`[id]`) collapse to one route;
 > `app/api/` is excluded. The category-bucket sum further down (257) uses a
 > different denominator and is NOT the filesystem total. See
-> `docs/design/content-audit.md` for the full rule. Verified: 2026-04-26.
+> `docs/design/content-audit.md` for the full rule. Verified: 2026-07-21.
 
 ---
 
