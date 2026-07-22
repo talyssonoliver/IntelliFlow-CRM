@@ -88,8 +88,12 @@ function dbStackUnavailable() {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
     shell: process.platform === 'win32',
+    // Bound the probe: a WEDGED daemon makes `docker ps` hang indefinitely, which
+    // would stall the whole gate before the SKIPPED_PRECONDITION logic runs. On
+    // timeout spawnSync returns a null status → treated as "db stack unavailable".
+    timeout: 10000,
   });
-  if (r.error || r.status !== 0) return true; // docker missing / daemon down
+  if (r.error || r.status !== 0) return true; // docker missing / daemon down / probe timed out
   const names = (r.stdout || '').toLowerCase();
   return !(names.includes('postgres') && names.includes('redis'));
 }
@@ -313,8 +317,9 @@ const STEPS = [
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe'],
         shell: process.platform === 'win32',
+        timeout: 10000, // wedged daemon: don't hang the gate on the probe (mirrors dbStackUnavailable)
       });
-      if (r.error || r.status !== 0) return true; // docker missing / daemon down → skip
+      if (r.error || r.status !== 0) return true; // docker missing / daemon down / probe timed out → skip
       const names = (r.stdout || '').toLowerCase();
       const hasPostgres = names.includes('postgres');
       const hasRedis = names.includes('redis');
