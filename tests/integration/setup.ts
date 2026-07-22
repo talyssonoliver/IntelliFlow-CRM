@@ -92,7 +92,9 @@ function displayInfrastructureAlert(reason: string): void {
  */
 async function isDockerAvailable(): Promise<boolean> {
   try {
-    await execAsync('docker info');
+    // Bound the probe: `docker info` blocks ~2min against a wedged daemon, which
+    // would hang beforeAll. Fail fast to the graceful "infra unavailable" path.
+    await execAsync('docker info', { timeout: 10000 });
     return true;
   } catch {
     return false;
@@ -214,19 +216,50 @@ export async function setupTestDatabase(): Promise<string> {
 }
 
 /**
- * Teardown test database - stops container if started
+ * Race a teardown step against a timeout so a wedged/unresponsive Docker daemon
+ * cannot hang the suite forever. The guard timer is unref'd (it never keeps the
+ * process alive on its own) and always cleared. On timeout we log and continue —
+ * testcontainers' ryuk reaper cleans up any container we couldn't stop in time.
+ */
+async function boundedTeardownStep(op: Promise<unknown>, ms: number, label: string): Promise<void> {
+  let timer: NodeJS.Timeout | undefined;
+  const guard = new Promise<void>((resolve) => {
+    timer = setTimeout(() => {
+      console.warn(
+        `⚠️  ${label} did not finish within ${ms}ms — continuing teardown (Docker may be unresponsive).`
+      );
+      resolve();
+    }, ms);
+    timer.unref?.();
+  });
+  try {
+    await Promise.race([
+      Promise.resolve(op)
+        .then(() => undefined)
+        .catch((err) => console.warn(`⚠️  ${label} errored during teardown:`, err)),
+      guard,
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/**
+ * Teardown test database - stops container if started.
+ * Every Docker-touching step is time-bounded so an unresponsive daemon cannot
+ * hang `afterAll` (and therefore the whole vitest process) indefinitely.
  */
 export async function teardownTestDatabase(): Promise<void> {
   if (testPrismaClient) {
-    await testPrismaClient.$disconnect();
+    await boundedTeardownStep(testPrismaClient.$disconnect(), 10000, 'Prisma $disconnect');
     testPrismaClient = null;
   }
 
   if (postgresContainer) {
     console.log('🛑 Stopping PostgreSQL container...');
-    await postgresContainer.stop();
+    await boundedTeardownStep(postgresContainer.stop(), 15000, 'PostgreSQL container stop');
     postgresContainer = null;
-    console.log('✅ PostgreSQL container stopped');
+    console.log('✅ PostgreSQL container teardown complete (or timed out).');
   }
 }
 
