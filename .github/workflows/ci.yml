@@ -469,15 +469,20 @@ jobs:
         # so a regression is diagnosable in one run instead of a bare error.
         run: |
           echo "cwd=$(pwd)"
-          if [ ! -f tests/e2e/smoke.spec.ts ]; then
-            echo "::error::tests/e2e/smoke.spec.ts missing from checkout"; exit 1
-          fi
-          count=$(pnpm exec playwright test --project=chromium --grep "Smoke Tests" --list 2>&1 \
-            | grep -cE "smoke\.spec\.ts:[0-9]+" || true)
+          echo "PW_VERSION=$(node -e "console.log(require('@playwright/test/package.json').version)")"
+          echo "--- ls -la tests/e2e (first 30) ---"
+          ls -la tests/e2e/ 2>&1 | head -30 || echo "tests/e2e NOT LISTABLE"
+          echo "--- find *.spec.ts under tests/ ---"
+          find tests -name '*.spec.ts' 2>/dev/null | head -20 || true
+          echo "--- realpath tests/e2e ---"
+          realpath tests/e2e 2>&1 || true
+          echo "--- UNFILTERED discovery (all projects) ---"
+          pnpm exec playwright test --list 2>&1 | tail -12 || true
+          echo "--- chromium + grep discovery ---"
+          pnpm exec playwright test --project=chromium --grep "Smoke Tests" --list 2>&1 | tee /tmp/pwlist.txt | tail -6 || true
+          count=$(grep -cE "smoke\.spec\.ts:[0-9]+" /tmp/pwlist.txt || true)
           if [ "${count:-0}" -eq 0 ]; then
-            echo "::error::Playwright discovered 0 smoke tests for the chromium project."
-            echo "::error::Full chromium discovery follows (for diagnosis):"
-            pnpm exec playwright test --project=chromium --list 2>&1 | head -60 || true
+            echo "::error::Playwright discovered 0 smoke tests for the chromium project (see diagnostics above)."
             exit 1
           fi
           echo "Discovered $count smoke tests — running."
