@@ -250,3 +250,27 @@ scope. Everything inside this session — scoping to the real gap (Gap A),
 catching the Gap-B false alarm before writing code, and the mechanical snags
 above — was handled in the cheap loops without burning a single 20-minute full
 pre-ship on a discoverable failure.
+
+## Follow-up — T-I3 flake fix attribution (2026-07-16)
+
+The `T-I3 outage fallback: TTL expiry -> source=db` integration test (in
+`tests/integration/ai-monitoring-redis-bridge.test.ts`) was later found to be
+flaky under Istanbul coverage instrumentation: the original `SET … EX 1` + real
+`setTimeout(2100)` race let per-statement counters drift the wall-clock window,
+so the key could still be present at read time (`source='redis'` instead of
+`'db'`). It was stabilized by replacing the timing-dependent path with a
+deterministic `redis.del(key)` miss (identical store-side state, zero timing
+dependency).
+
+- **Commit:** `17105de2d` —
+  `fix(ifc-214): stabilize T-I3 ttl-expiry test under coverage instrumentation`
+  (2026-07-16 16:02).
+- **Landed via:** PR #575 (`feat/pg-191`) → squashed onto `main` as `778635983`
+  on 2026-07-16. The fix rode along on the PG-191 merge rather than a dedicated
+  IFC-214 branch/PR.
+- **Verification:** `main`'s copy of the test file is byte-identical to the
+  fixed version (`git diff 17105de2d:… origin/main:…` is empty).
+- **Stale branches:** `origin/feat/ifc-214` (18 behind main) still carries the
+  pre-fix flaky version and is superseded; `origin/feat/ifc-214-rebased` is an
+  unrelated May-10 branch that predates the bridge test entirely. Both are
+  candidates for deletion.

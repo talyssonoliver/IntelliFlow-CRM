@@ -63,7 +63,7 @@
       "target": ">=90%"
     }
   },
-  "notes": "IFC-214 delta (test-only): relocated the DoD cross-process integration test into the CI Integration Tests lane and strengthened it to drive the REAL RedisMonitoringPublisher -> Redis -> real RedisAIMonitoringStore. The bridge itself was already on main under #59 (IFC-212 commit title); the residual gap was that the verification test ran in no gate. Gap B (drift/hallucination limit->DB) investigated and dropped as deliberate Lens-1 behavior. No production source changed.",
+  "notes": "IFC-214 delta (test-only): relocated the DoD cross-process integration test into the CI Integration Tests lane and strengthened it to drive the REAL RedisMonitoringPublisher -> Redis -> real RedisAIMonitoringStore. The bridge itself was already on main under #59 (IFC-212 commit title); the residual gap was that the verification test ran in no gate. Gap B (drift/hallucination limit->DB) investigated and dropped as deliberate Lens-1 behavior. No production source changed. T-I3 flake follow-up (2026-07-16): the T-I3 outage-fallback test (TTL expiry -> source=db) was later stabilized under Istanbul coverage instrumentation — the real setTimeout(2100)/EX 1 wall-clock race was replaced with a deterministic redis.del(key) miss. That fix landed as commit 17105de2d, bundled in PR #575 (feat/pg-191) on 2026-07-16, and is live on main (main's copy of tests/integration/ai-monitoring-redis-bridge.test.ts is byte-identical to the fixed version). No dedicated IFC-214 branch/PR carried it; the stale feat/ifc-214 branch still holds the pre-fix flaky version and is superseded.",
   "phase": "phase-5-attestation",
   "started_at": "2026-06-28T20:08:08.013Z",
   "status": "Completed",
