@@ -229,7 +229,15 @@ export function canonicalJsonStringify(value: unknown): string {
   }
   if (value !== null && typeof value === 'object') {
     const record = value as Record<string, unknown>;
-    const keys = Object.keys(record).sort();
+    // Deterministic, locale-INDEPENDENT key ordering (UTF-16 code-unit order,
+    // identical to a bare .sort() on strings). A canonical wire form must not
+    // depend on the runtime locale, so we do NOT use localeCompare here — an
+    // explicit comparator also satisfies sonar typescript:S2871.
+    const keys = Object.keys(record).sort((a, b) => {
+      if (a < b) return -1;
+      if (a > b) return 1;
+      return 0;
+    });
     const entries = keys.map(
       (key) => `${JSON.stringify(key)}:${canonicalJsonStringify(record[key])}`
     );
