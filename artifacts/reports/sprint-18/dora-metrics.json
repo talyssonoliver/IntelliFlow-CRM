@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "generated_at": "2026-07-22T20:53:07.544Z",
+    "task": "PM-OPS-002",
+    "sprint": "sprint-18",
+    "window_observed": {
+      "first_completion": "2026-02-23",
+      "last_delivery_commit": "2026-07-22",
+      "span_days_approx": 149
+    },
+    "principle": "Values are UNKNOWN unless an in-repo source exists. Proxies are labelled as proxies and never presented as the DORA metric itself. No estimation, no fabrication."
+  },
+  "deployment_frequency": {
+    "value": "UNKNOWN",
+    "reason": "No in-repo deployment log. Production deploys run on Railway/Vercel via merge-to-main triggers; deployment events are not recorded in the repository, so true deployment frequency cannot be measured here.",
+    "proxy": {
+      "name": "feature-class commits referencing a Sprint-18 task id merged to origin/main",
+      "value": 49,
+      "monthly": {
+        "2026-04": 9,
+        "2026-05": 2,
+        "2026-06": 34,
+        "2026-07": 3
+      },
+      "caveat": "Squash-merge workflow => ~1 mergeable unit per PR. A merge is a *potential* deploy, not a confirmed one.",
+      "source": "git log origin/main --grep=<id> (feat|fix|perf|refactor), 2026-07-22"
+    }
+  },
+  "lead_time_for_changes": {
+    "value": "UNKNOWN",
+    "reason": "Full commit-authored -> deployed-to-prod lead time is not measurable: (a) squash-merge collapses per-commit authoring timestamps, and (b) there is no deploy timestamp source. Per-task completion timestamps in the metrics cache are largely bulk-sync placeholders (28/63 identical shared timestamps), so they cannot stand in for lead time.",
+    "proxy": {
+      "name": "single-session exec duration (metrics cache)",
+      "note": "Even the non-placeholder subset (14 values, median ~145 min) measures one /exec session, not spec->prod lead time. Not a DORA lead-time value."
+    }
+  },
+  "change_failure_rate": {
+    "value": "UNKNOWN",
+    "reason": "CFR requires linkage between deployments and the failures they caused. No deployment log exists in-repo, and no deployment<->incident mapping exists.",
+    "proxy": {
+      "name": "revert commits on origin/main referencing a Sprint-18 id in window",
+      "value": 0,
+      "note": "Known production incidents from ops memory (DB-rotation outage; prod boot crash supabase/Node22) are real but are NOT timestamp-linked to a specific Sprint-18 deployment in-repo, so they cannot be attributed to a CFR numerator here."
+    }
+  },
+  "mttr": {
+    "value": "UNKNOWN",
+    "reason": "No incident open/resolve timestamps are recorded in the repository. MTTR cannot be computed from git or the metrics tree.",
+    "proxy": null
+  },
+  "classification_note": "By the DORA 2023 bands, \"UNKNOWN\" is the correct output for all four here: the instrumentation to measure them does not exist in this repo. Wiring deploy + incident telemetry (INFRA-TF-004 monitoring module / IFC-032 OTel) is the prerequisite and is itself a Sprint-18 residual."
+}

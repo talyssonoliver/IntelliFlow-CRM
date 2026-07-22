@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "generated_at": "2026-07-22T20:53:07.544Z",
+    "task": "PM-OPS-002",
+    "sprint": "sprint-18",
+    "method": "Scope-change events reconstructed from CSV-history birth commits (docs/audit/phantom-completed-2026-07-21.md birth-by-commit analysis) + live git. Only in-repo evidence; no estimation."
+  },
+  "committed_final": 67,
+  "scope_events": [
+    {
+      "date": "2026-03-06",
+      "commit": "c060bd40e",
+      "type": "scope_definition_bulk",
+      "detail": "Bulk task-registration commit created Sprint-18 task rows incl. DOC-015/016, IFC-211-287, PG-160. Tasks entered the plan via a project-tracker sync commit, not individual planning.",
+      "sprint18_rows_touched": "multiple"
+    },
+    {
+      "date": "2026-04-19",
+      "commit": "d726f6a34",
+      "type": "scope_injection_mid_window",
+      "detail": "13 Sprint-18 module-settings rows (PG-196,197,198,199,201,202,203,204,205,206,207,208,209) were born directly into the plan as Backlog via a bulk metrics/tracker sync — ~8 weeks after the first Sprint-18 completions (2026-02-23). Mid-sprint scope addition.",
+      "rows": [
+        "PG-196",
+        "PG-197",
+        "PG-198",
+        "PG-199",
+        "PG-201",
+        "PG-202",
+        "PG-203",
+        "PG-204",
+        "PG-205",
+        "PG-206",
+        "PG-207",
+        "PG-208",
+        "PG-209"
+      ],
+      "count": 13
+    }
+  ],
+  "scope_added_mid_window": 13,
+  "scope_removed_mid_window": 0,
+  "scope_churn_ratio_pct": 19.4,
+  "note": "At least 13 of 67 committed tasks (19.4%) were injected mid-window rather than committed at sprint planning. Combined with a null sprint start/end date, this means Sprint 18 had no fixed commitment baseline — scope was continuous. This is the structural driver behind the \"sprint\" spanning ~149 days."
+}

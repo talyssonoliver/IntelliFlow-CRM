@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "generated_at": "2026-07-22T20:53:07.544Z",
+    "task": "PM-OPS-002",
+    "sprint": "sprint-18"
+  },
+  "commitment_reliability": {
+    "committed_tasks": 67,
+    "delivered_in_fact": 65,
+    "csv_completed": 63,
+    "cleanly_attested": 36,
+    "delivered_in_fact_pct": 97,
+    "csv_completed_pct": 94,
+    "cleanly_attested_pct": 53.7,
+    "interpretation": "Delivery reliability is high (65/67 primary artifacts on disk). GOVERNANCE reliability is far lower (36/67 carry a clean canonical attestation). The gap between the two is the sprint's core debt."
+  },
+  "scope_churn": {
+    "see": "scope-churn.json"
+  },
+  "cycle_time": {
+    "value": "UNRELIABLE / effectively UNKNOWN",
+    "reason": "28 of 63 completed tasks share bulk-sync placeholder completion timestamps; 13 of the remaining recorded durations are the default 15-minute placeholder. Recorded durations measure a single /exec session, not spec->done cycle time.",
+    "non_placeholder_subset": {
+      "n": 14,
+      "median_minutes": 150,
+      "min": 25,
+      "max": 240,
+      "values": [
+        25,
+        40,
+        59,
+        90,
+        105,
+        110,
+        120,
+        150,
+        160,
+        180,
+        180,
+        190,
+        200,
+        240
+      ]
+    }
+  },
+  "wip_aging": {
+    "open_wip": 1,
+    "item": "IFC-257 (Contact Detail Action Button Wiring)",
+    "status": "In Progress (80%)",
+    "aging": "Open across the whole sprint window; SESSION_CONTEXT (2026-07-19) records it \"started 1mo ago\". WIP age >= ~5 weeks — well beyond a 2-week cadence.",
+    "wip_limit_policy": "none enforced"
+  },
+  "throughput": {
+    "completed_tasks": 63,
+    "window_days_approx": 149,
+    "note": "Delivery clustered heavily in June 2026 (34 of 49 feature commits) — burst rather than steady flow."
+  },
+  "sprint_duration": {
+    "nominal_days": 14,
+    "actual_days_approx": 149,
+    "overrun_factor_approx": 10.6,
+    "spi": 0.36,
+    "schedule_variance_minutes": -12290,
+    "schedule_status": "critical",
+    "source": "apps/project-tracker/docs/metrics/sprint-18/_summary.json (schedule block); sprint_start/end dates are null in-source."
+  },
+  "status_accuracy": {
+    "csv_vs_reality_mismatches": 20,
+    "stale_backlog_but_shipped": [
+      "DOC-015",
+      "IFC-211"
+    ],
+    "completed_without_canonical_attestation": [
+      "PG-196",
+      "PG-197",
+      "PG-198",
+      "PG-199",
+      "PG-201",
+      "PG-202",
+      "PG-203",
+      "PG-204",
+      "PG-205",
+      "PG-206",
+      "PG-207",
+      "PG-208",
+      "PG-209",
+      "INFRA-TF-001",
+      "INFRA-TF-002",
+      "INFRA-TF-003",
+      "INFRA-TF-004",
+      "INFRA-TF-005"
+    ],
+    "synthetic_completion_timestamps": 28,
+    "artifact_path_drift_rows": [
+      "IFC-248",
+      "PG-200",
+      "PG-204"
+    ]
+  }
+}
