@@ -10,7 +10,7 @@
  * - Idempotency handling
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   createPublicContext,
   createTestContext,
@@ -48,16 +48,43 @@ vi.mock('@intelliflow/adapters', async (importOriginal) => {
 });
 
 // Import after mock is set up
-import { inboundEmailRouter } from '../inbound.router';
+import { inboundEmailRouter, computeInboundEmailWebhookSignature } from '../inbound.router';
 
 describe('Inbound Email Router', () => {
-  // Public caller for webhook endpoint (no auth required)
-  const publicCaller = inboundEmailRouter.createCaller(createPublicContext());
+  // SEC-004: the webhook now requires a valid HMAC signature. Sign each call
+  // with a test secret and inject it as the x-inbound-email-signature header,
+  // reusing the router's own signer so sign/verify logic can't drift.
+  const INBOUND_WEBHOOK_TEST_SECRET = 'inbound-webhook-test-secret';
+  let inboundSecretBackup: string | undefined;
+
+  function callWebhook(payload: Record<string, unknown>) {
+    const signature = computeInboundEmailWebhookSignature(
+      payload as never,
+      INBOUND_WEBHOOK_TEST_SECRET
+    );
+    const caller = inboundEmailRouter.createCaller(
+      createPublicContext({
+        req: { headers: { 'x-inbound-email-signature': signature } } as never,
+      })
+    );
+    return caller.webhook(payload as never);
+  }
+
   // Authenticated caller for protected endpoints
   const protectedCaller = inboundEmailRouter.createCaller(createTestContext());
 
   beforeEach(() => {
     vi.clearAllMocks();
+    inboundSecretBackup = process.env.INBOUND_EMAIL_WEBHOOK_SECRET;
+    process.env.INBOUND_EMAIL_WEBHOOK_SECRET = INBOUND_WEBHOOK_TEST_SECRET;
+  });
+
+  afterEach(() => {
+    if (inboundSecretBackup === undefined) {
+      delete process.env.INBOUND_EMAIL_WEBHOOK_SECRET;
+    } else {
+      process.env.INBOUND_EMAIL_WEBHOOK_SECRET = inboundSecretBackup;
+    }
   });
 
   describe('webhook', () => {
@@ -72,7 +99,7 @@ describe('Inbound Email Router', () => {
           provider: 'sendgrid' as const,
         };
 
-        const result = await publicCaller.webhook(payload);
+        const result = await callWebhook(payload);
 
         expect(result.success).toBe(true);
         expect(result.emailId).toBeDefined();
@@ -88,7 +115,7 @@ describe('Inbound Email Router', () => {
           headers: 'From: sender@example.com\r\nTo: inbox@intelliflow.com',
         };
 
-        const result = await publicCaller.webhook(payload);
+        const result = await callWebhook(payload);
 
         expect(result.success).toBe(true);
         expect(result.emailId).toBeDefined();
@@ -104,7 +131,7 @@ describe('Inbound Email Router', () => {
           provider: 'sendgrid' as const,
         };
 
-        const result = await publicCaller.webhook(payload);
+        const result = await callWebhook(payload);
 
         expect(result.success).toBe(true);
       });
@@ -124,7 +151,7 @@ Hello World`;
           provider: 'raw' as const,
         };
 
-        const result = await publicCaller.webhook(payload);
+        const result = await callWebhook(payload);
 
         expect(result.success).toBe(true);
         expect(result.emailId).toBeDefined();
@@ -139,7 +166,7 @@ Hello World`;
         };
 
         // Router wraps the error in INTERNAL_SERVER_ERROR when re-throwing
-        await expect(publicCaller.webhook(payload as any)).rejects.toThrow();
+        await expect(callWebhook(payload as any)).rejects.toThrow();
       });
     });
 
@@ -156,7 +183,7 @@ Hello World`;
         };
 
         // Should process successfully
-        const result = await publicCaller.webhook(payload);
+        const result = await callWebhook(payload);
 
         expect(result.success).toBe(true);
         expect(result.emailId).toBeDefined();
