@@ -73,3 +73,39 @@ Priority = exploitability/data-integrity risk × (low effort first).
 | 10 | QUAL-002 | High | Task domain transition/linkage guards missing (hidden by `test.skip`); fix + un-skip. | M |
 
 Remaining CONFIRMED-open (not top-10): HEX-002/003/004 (routing/ticket services → ports), DDD-003 (TenantId VO), DDD-004 (unify score policy), QUAL-012 (fix/withdraw ADR-054 claim), QUAL-013 (SAP suite coverage), GOV-A-001/002/003 (attestation backfill + schema-drift), HEX-005 (de-mix appointments.router persistence).
+
+---
+
+## Reconciliation update — 2026-07-22, post-R10 + independent Codex cross-check
+
+This section updates the table above; the original #605 verdicts are preserved as-is.
+Full Codex verdict: `codex-findings-review.md`.
+
+**R10 (#604) landed after this validation was cut (`d12093fa2`), changing 2 rows:**
+
+- **QUAL-001 → CONFIRMED — already fixed (#604).** Ticket `changePriority`/`assign`/
+  `unassign` now guard `isClosed || isTerminalStatus`, `resumeSla` clamps; the 5
+  ticket property tests are un-skipped and green. No action.
+- **QUAL-002 → CONFIRMED — PARTIALLY fixed (#604).** Task `assertLinkable()` terminal-
+  linkage guards shipped (3 RACE-PURE-M2 tests un-skipped). **Still open:** RACE-PURE-09
+  — `Task.changeStatus`/`complete` do not enforce `VALID_TASK_TRANSITIONS` (2 tests
+  still skipped, deferred as a contract-tightening change). Remaining scope is
+  RACE-PURE-09 only.
+
+**Independent Codex second-opinion (task `mrw9341p`) — agreements & one dispute:**
+
+- **0 false positives (confirmed independently).** Codex reviewed all 29 C/H and
+  found none fabricated — converges with this validation. Remediation backlog is sound.
+- **SEC-002 severity DISPUTED.** This validation set SEC-002 to **Medium** (app-layer
+  mitigation); **Codex independently re-rated it HIGH**, arguing app-layer scoping is
+  not a substitute for the missing DB-level control (the codebase documents a
+  privileged role that bypasses RLS). **→ open decision for the owner: SEC-002 = High
+  (Codex) vs Medium (#605).**
+- **HEX-005 = Medium — Codex agrees** with the downgrade.
+- **GOV-A-003 citation drift.** Codex marked it NEEDS-INFO only because the finding
+  cites `tool-runs/validate-schemas.log`, which was renamed to `.txt` when the audit
+  committed raw logs. Evidence (272/175/447) is real; the finding stands — fix the
+  cited path `.log`→`.txt` in `governance-findings.json`.
+
+**Net:** confirmed-open drops by ~1.5 (QUAL-001 closed, QUAL-002 reduced to
+RACE-PURE-09). Everything else unchanged. One live severity call (SEC-002).
