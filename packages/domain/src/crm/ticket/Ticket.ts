@@ -364,7 +364,9 @@ export class Ticket extends AggregateRoot<TicketId> {
       return Result.fail(new TicketSlaNotPausedError());
     }
 
-    const pausedDuration = now.getTime() - this.props.slaPausedAt.getTime();
+    // RACE-PURE-11 (ENG-OPS-002.R10): clamp to 0 so a backward clock (now < pausedAt)
+    // cannot produce a negative accumulated pause duration.
+    const pausedDuration = Math.max(0, now.getTime() - this.props.slaPausedAt.getTime());
     this.props.slaPausedDuration += pausedDuration;
     this.props.slaPausedAt = undefined;
     this.props.slaStatus = 'ON_TRACK';
@@ -517,8 +519,14 @@ export class Ticket extends AggregateRoot<TicketId> {
    * Rejects assignment to ARCHIVED tickets (IFC-067).
    */
   assign(assigneeId: string, assignedBy: string): void {
-    if (this.props.status === 'ARCHIVED') {
-      throw new Error('Cannot assign an archived ticket');
+    // RACE-PURE-M1 (ENG-OPS-002.R10): reject assignment on any closed OR terminal
+    // ticket (was ARCHIVED-only, so CLOSED tickets could still be reassigned).
+    if (this.isClosed || isTerminalStatus(this.props.status)) {
+      throw new Error(
+        this.props.status === 'ARCHIVED'
+          ? 'Cannot assign an archived ticket'
+          : 'Cannot assign a closed ticket'
+      );
     }
 
     const previousAssigneeId = this.props.assigneeId ?? null;
@@ -534,6 +542,11 @@ export class Ticket extends AggregateRoot<TicketId> {
    * Unassigns the ticket
    */
   unassign(unassignedBy: string): void {
+    // RACE-PURE-M1 (ENG-OPS-002.R10): a closed/terminal ticket's assignment is frozen.
+    if (this.isClosed || isTerminalStatus(this.props.status)) {
+      throw new Error('Cannot unassign a terminal ticket');
+    }
+
     const previousAssigneeId = this.props.assigneeId!;
     this.props.assigneeId = undefined;
     this.props.updatedAt = new Date();
@@ -547,7 +560,9 @@ export class Ticket extends AggregateRoot<TicketId> {
    * Changes the ticket priority
    */
   changePriority(newPriority: TicketPriority, changedBy: string): Result<void, DomainError> {
-    if (this.isClosed) {
+    // RACE-PURE-10 (ENG-OPS-002.R10): ARCHIVED is terminal too — guard closed AND
+    // terminal states (was CLOSED-only), so an archived ticket's priority can't be mutated.
+    if (this.isClosed || isTerminalStatus(this.props.status)) {
       return Result.fail(new TicketAlreadyClosedError());
     }
 

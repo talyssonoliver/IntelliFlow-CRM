@@ -1,0 +1,75 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENG-OPS-002.R10",
+  "run_id": "eng-ops-002-r10-2026-07-22",
+  "attestor": "Claude Code (claude-opus-4-8) — ENG-OPS-002.R10 remediation (chore/eng-ops-002-r10)",
+  "attestation_timestamp": "2026-07-22T15:15:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "finding": "QUAL-001,QUAL-002",
+    "severity": "High",
+    "artifacts_verified": 4,
+    "validations_passed": 3,
+    "validations_failed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/domain/src/crm/ticket/Ticket.ts": "sha256:1370868502a0962093256b885e45ebc7c55b9ee97cabc6b8f1f7775dfe75c634",
+    "packages/domain/src/crm/task/Task.ts": "sha256:0d93f4b37c0551eb4ab507c3d173e20eca54c9ca06c652af2ddf1bda06f0f317",
+    "tests/property/unit/crm/ticket-domain.prop.test.ts": "sha256:d7bca3c18c0b4c7051dc1e8958ccfd050db86e4592623edb8fa666ebb5722319",
+    "tests/property/unit/crm/task-domain.prop.test.ts": "sha256:90d83c89de6df7cd48e0c4554e4aa6a629df257eb23bb85bf886257ddced8233"
+  },
+  "validation_results": [
+    {
+      "name": "Property tests",
+      "command": "pnpm test:property:standard",
+      "result": "PASS — 584 passed; 8 previously-skipped tests un-skipped (5 ticket RACE-PURE-10/11/M1 + 3 task RACE-PURE-M2)"
+    },
+    {
+      "name": "Domain unit tests",
+      "command": "pnpm --filter @intelliflow/domain test",
+      "result": "PASS — 2750 passed"
+    },
+    {
+      "name": "API ticket/task regression",
+      "command": "pnpm --filter @intelliflow/api exec vitest run src/modules/ticket src/modules/task src/services/TicketService",
+      "result": "PASS — 218 passed"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "terminal-state-guards",
+      "passed": true,
+      "log_path": "ticket assign/unassign/changePriority + task assignTo* now reject terminal entities"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "ticket terminal guards (RACE-PURE-10/11/M1)",
+      "target": "reject priority/assign/unassign on closed+archived; clamp SLA duration",
+      "actual": "fixed + 5 tests un-skipped",
+      "met": true
+    },
+    {
+      "kpi": "task terminal-linkage guards (RACE-PURE-M2)",
+      "target": "reject assignTo* on terminal tasks",
+      "actual": "assertLinkable() guard + 3 tests un-skipped",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "ticket+task terminal-state guards; property tests un-skipped",
+      "met": true,
+      "evidence": "Ticket.ts + Task.ts + 8 un-skipped property tests"
+    }
+  ],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "d12093fa2170033c80e181dd1d320328df0c1c84",
+    "branch": "chore/eng-ops-002-r10"
+  },
+  "notes": "Scope: QUAL-001 (5 ticket state-machine bugs — changePriority/assign/unassign now guard closed+terminal via isClosed||isTerminalStatus; resumeSla clamps negative pause duration) FULLY fixed. QUAL-002 terminal-linkage (RACE-PURE-M2, 3 tests) fixed via Task.assertLinkable(). 3 obsolete 'current broken behaviour' companion tests removed. DEFERRED: QUAL-002 RACE-PURE-09 (2 tests, complete-on-PENDING + changeStatus transition-table enforcement) — the VALID_TASK_TRANSITIONS table EXISTS, but enforcing it in changeStatus/complete tightens the contract (breaks the 'complete on PENDING succeeds' property + needs service-caller verification), so it is a separate focused change, tracked in the test file + this note. No regressions (domain 2750 + property 584 + api 218 all green)."
+}
