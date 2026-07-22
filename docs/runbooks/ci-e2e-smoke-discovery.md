@@ -86,13 +86,44 @@ on a genuine broken smoke path. The 16 tests are real and now actually run.
   proof is the first `main` run after this merges. The fail-loud guard
   guarantees that run is conclusive either way.
 
+## Iteration 2 (2026-07-22, post-merge of #608)
+
+The first fix (`--grep` title selection) **did not resolve it** — the post-merge
+main run (job 89002927429) still failed, but the fail-loud guard paid off. It
+proved:
+
+- `cwd=/home/runner/work/IntelliFlow-CRM/IntelliFlow-CRM` (correct repo root);
+- the guard's `test -f tests/e2e/smoke.spec.ts` **passed** — the file is on
+  disk;
+- yet `playwright test --project=chromium --list` returned
+  **`Total: 0 tests in 0 files`**.
+
+So the failure is **not a filter problem at all** — Playwright's chromium
+project globs **zero files** on the ubuntu runner, even though the spec is
+present on disk. Every locally-testable hypothesis was refuted on Windows
+(positional path, `HAS_QA_ENV`, relative-testDir-vs-cwd all still find 16). It
+is Linux-runner specific and not reproducible on this Windows host.
+
+Iteration-2 changes:
+
+1. `playwright.config.ts` — `testDir` is now `path.join(__dirname, 'tests/e2e')`
+   (absolute) instead of `'./tests/e2e'`, so discovery cannot depend on cwd.
+2. The `Run E2E tests` step now dumps rich diagnostics **before** running:
+   `PW_VERSION`, `ls -la tests/e2e`, `find tests -name '*.spec.ts'`,
+   `realpath tests/e2e`, and an **unfiltered** `playwright test --list` (all
+   projects). The next main run will show definitively whether the files are
+   where Playwright globs and whether ANY project discovers ANY test.
+
 ## If it is still red after merge
 
-The guard's diagnostic output (cwd + full chromium `--list`) will show whether
-Playwright now discovers the smoke tests on the runner. If discovery still
-returns 0, escalate to a Playwright positional/grep filter issue on Linux and
-consider pinning discovery via a dedicated `smoke` project
-(`testMatch: ['**/smoke.spec.ts']`).
+Read the iteration-2 diagnostics in the `Run E2E tests` step log:
+
+- If `ls tests/e2e` shows `smoke.spec.ts` but unfiltered `--list` is still 0 → a
+  Playwright/Linux glob or transform failure; pin discovery via a dedicated
+  `smoke` project (`testMatch: ['**/smoke.spec.ts']`) or `--config` with an
+  explicit absolute `testDir`.
+- If `ls tests/e2e` is empty/missing → the checkout or `download-artifact` step
+  is clobbering the tree; fix the artifact layout, not Playwright.
 
 ## Related (out of scope here)
 

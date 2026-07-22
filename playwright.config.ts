@@ -46,8 +46,10 @@ const HAS_QA_ENV = Boolean(
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  // Test directory
-  testDir: './tests/e2e',
+  // Test directory. Resolved absolutely from the config location (not a bare
+  // relative './tests/e2e') so discovery cannot depend on the process cwd —
+  // the CI E2E job globbed 0 files with the relative form on the ubuntu runner.
+  testDir: path.join(__dirname, 'tests/e2e'),
 
   // Test file pattern
   testMatch: '**/*.spec.ts',
