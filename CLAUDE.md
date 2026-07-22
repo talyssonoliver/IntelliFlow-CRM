@@ -1,8 +1,10 @@
 # CLAUDE.md
 
-**IntelliFlow CRM** — AI-powered CRM system. Sprint 6 (MVP phase). IFC-010
-Go/No-Go passed 2025-12-27. 316 tasks across 34 sprints tracked in
-`Sprint_plan.csv`.
+**IntelliFlow CRM** — AI-powered CRM system. 597 tasks across Sprints 0–29 (plus
+continuous tasks) tracked in `Sprint_plan.csv`; the IFC-010 Go/No-Go passed
+2025-12-27. For the **live sprint, phase, and completion status**, read
+`docs/SESSION_CONTEXT.md` (regenerated each session) — do not hardcode the
+active sprint here, or it goes stale (ENG-OPS-002 STALE-001).
 
 ## Task ID Conventions
 
