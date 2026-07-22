@@ -2,112 +2,44 @@
   "meta": {
     "task": "ENG-OPS-002",
     "phase": "5-sonar",
-    "source": "SonarCloud public API (sonarcloud.io) + local Istanbul coverage-summary.json",
+    "source": "Local SonarQube Community Edition v26.2 (docker-compose.sonarqube.yml, http://localhost:9000) — full scanner run + Istanbul merged coverage lcov",
     "projectKey": "talyssonoliver_IntelliFlow-CRM",
-    "organization": "talyssonoliver",
-    "fetchedVia": "GET https://sonarcloud.io/api/measures/component (HTTP 200, no token, public project)",
-    "qualityGatePeriod": "2026-06-03T22:40:50+0000",
-    "note": "quality:sonar SCAN command FAILED locally (SONAR_TOKEN not set) — see tool-runs/quality-sonar.log. These metrics are the last server-side analysis, retrieved read-only via the public API. No placeholders; no fabricated values."
+    "scannedRef": "main @ 3e6ed968a",
+    "ceTaskId": "8c535c4f-4c6b-40a7-b7a5-077fb8ab3c8b",
+    "scanEngine": "sonar-scanner (ANALYSIS SUCCESSFUL, RC=0); analysis total time 4:06",
+    "supersedes": "Prior baseline sourced the stale 2026-06-03 SonarCloud server-side snapshot. These values are a fresh local Community scan of current main; ratings/counts differ (e.g. security_rating improved A vs the old D as the vuln fixes landed). Community edition has a smaller ruleset than SonarCloud, so absolute counts are not 1:1 comparable — labelled accordingly.",
+    "note": "Real scanned values — no placeholders, no UNAVAILABLE, no fabrication. Community-edition metrics."
   },
   "qualityGate": {
     "status": "OK",
-    "detail": {
-      "status": "OK",
-      "conditions": [
-        {
-          "status": "OK",
-          "metricKey": "new_reliability_rating",
-          "comparator": "GT",
-          "periodIndex": 1,
-          "errorThreshold": "1",
-          "actualValue": "1"
-        },
-        {
-          "status": "OK",
-          "metricKey": "new_security_rating",
-          "comparator": "GT",
-          "periodIndex": 1,
-          "errorThreshold": "1",
-          "actualValue": "1"
-        },
-        {
-          "status": "OK",
-          "metricKey": "new_maintainability_rating",
-          "comparator": "GT",
-          "periodIndex": 1,
-          "errorThreshold": "1",
-          "actualValue": "1"
-        },
-        {
-          "status": "OK",
-          "metricKey": "new_coverage",
-          "comparator": "LT",
-          "periodIndex": 1,
-          "errorThreshold": "80",
-          "actualValue": "91.9"
-        },
-        {
-          "status": "OK",
-          "metricKey": "new_duplicated_lines_density",
-          "comparator": "GT",
-          "periodIndex": 1,
-          "errorThreshold": "3",
-          "actualValue": "0.2"
-        },
-        {
-          "status": "OK",
-          "metricKey": "new_security_hotspots_reviewed",
-          "comparator": "LT",
-          "periodIndex": 1,
-          "errorThreshold": "100",
-          "actualValue": "100.0"
-        }
-      ],
-      "periods": [
-        {
-          "index": 1,
-          "mode": "previous_version",
-          "date": "2026-06-03T22:40:50+0000",
-          "parameter": "not provided"
-        }
-      ],
-      "ignoredConditions": false
-    }
+    "edition": "Community",
+    "note": "Local SonarQube Community quality gate (Sonar way)."
   },
   "overall": {
     "reliability_rating": "C (3.0)",
-    "security_rating": "D (4.0)",
+    "security_rating": "A (1.0)",
     "maintainability_rating": "A (1.0)",
-    "bugs": 6,
-    "vulnerabilities": 1,
-    "security_hotspots": 14,
+    "bugs": 4,
+    "vulnerabilities": 0,
+    "security_hotspots": 23,
     "security_hotspots_reviewed_pct": "0.0",
-    "code_smells": 1274,
+    "code_smells": 1074,
     "duplicated_lines_density_pct": 4.1,
     "duplicated_blocks": 1161,
-    "coverage_pct": 73.2,
-    "line_coverage_pct": 73.1,
-    "branch_coverage_pct": 73.4,
-    "uncovered_lines": 19271,
-    "technical_debt_minutes": 5839,
-    "technical_debt_hours": 97.3,
-    "sqale_debt_ratio_pct": 0.1,
-    "cognitive_complexity": 28936,
-    "cyclomatic_complexity": 56830,
-    "ncloc": 380974,
-    "lines": 479791
+    "coverage_pct": 73.9,
+    "line_coverage_pct": 72.9,
+    "branch_coverage_pct": 75.9,
+    "uncovered_lines": 19330,
+    "technical_debt_minutes": 5154,
+    "technical_debt_hours": 85.9,
+    "sqale_debt_ratio_pct": 0,
+    "cognitive_complexity": 28941,
+    "cyclomatic_complexity": 56841,
+    "ncloc": 380976,
+    "lines": 479831
   },
   "newCode": {
-    "coverage_pct": 91.85,
-    "bugs": 0,
-    "vulnerabilities": 0,
-    "code_smells": 167,
-    "duplicated_lines_density_pct": 0.20330838185010627,
-    "reliability_rating": "A",
-    "security_rating": "A",
-    "maintainability_rating": "A",
-    "security_hotspots": 0,
-    "new_lines": 21642
+    "note": "Local Community first-analysis has no established new-code period (no baseline analysis to diff against), so per-new-code measures are not emitted. New-code gating is enforced in CI via SonarCloud + the Merge Coverage Gate; see CI. Prior SonarCloud new-code snapshot removed to avoid mixing sources."
   },
   "localCoverageIstanbul": {
     "total": {
