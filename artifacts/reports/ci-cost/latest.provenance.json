@@ -2,18 +2,18 @@
   "schema_version": "1.0.0",
   "artifact_file": "latest.json",
   "artifact_sha256": "cfa6509f65fc2b2af82eb32d02efeb2511d22691c62666f29e4f932ca52a620c",
-  "generated_at": "2026-05-25T23:30:24.219Z",
+  "generated_at": "2026-07-06T07:26:09.580Z",
   "git_head": "b512f399ffc4d60dc0ca87b0241574cb300c87df",
   "source_csv_path": "../usageReport_1_343f08b0632c43f6aecaf6613a27ffc0.csv",
   "source_csv_sha256": "6d2f3a42d08019e292d90712e84865c7b97b00313816d6fb265cb58133cca924",
   "source_csv_min_date": "2026-05-01",
   "source_csv_max_date": "2026-05-24",
   "source_csv_rows": 406,
-  "latest_observed_workflow_run_at": "2026-05-25T23:29:48Z",
+  "latest_observed_workflow_run_at": "2026-07-06T07:25:30Z",
   "collected_by": "tools/scripts/parse-actions-usage.mjs",
   "collection_method": "manual_csv_export",
   "confidence": "high",
   "staleness_threshold_days": 30,
   "is_stale": true,
-  "stale_reason": "CI has run since CSV export: most recent run 2026-05-25T23:29:48Z is 47h after CSV max date 2026-05-24. Re-export the usage CSV."
+  "stale_reason": "source CSV max date 2026-05-24 is 43 days old (threshold: 30 days)"
 }
