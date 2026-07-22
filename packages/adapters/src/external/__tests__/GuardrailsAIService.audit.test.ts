@@ -22,7 +22,7 @@ import type {
   AuditLogResult,
   TenantContext,
 } from '@intelliflow/application';
-import { resetRateLimit } from '../../shared/prompt-sanitizer';
+import { resetRateLimit } from '@intelliflow/domain';
 
 // Mock AIServicePort
 const createMockAIService = (): AIServicePort => ({
