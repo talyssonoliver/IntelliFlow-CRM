@@ -125,6 +125,32 @@ Read the iteration-2 diagnostics in the `Run E2E tests` step log:
 - If `ls tests/e2e` is empty/missing → the checkout or `download-artifact` step
   is clobbering the tree; fix the artifact layout, not Playwright.
 
+## ROOT CAUSE FOUND (iteration 3, 2026-07-22)
+
+The iteration-2 diagnostic dump (main run 29947499690, job 89018222356) was
+conclusive:
+
+- `PW_VERSION=1.60.0` (identical to local — not a version skew);
+- `ls -la tests/e2e` shows `smoke.spec.ts` present (9471 bytes);
+- **unfiltered `playwright test --list` → `Total: 868 tests in 25 files`** —
+  Playwright discovers the full suite fine, including smoke (listed under the
+  `[tablet]` project);
+- but `--project=chromium` → **0**.
+
+**Root cause:** the `tablet`/`mobile-*` projects use an **explicit `testMatch:
+['**/smoke.spec.ts']`** and discover `smoke.spec.ts`on the ubuntu runner. The`chromium`project has **no explicit`testMatch`** — it relies on the inherited global `testMatch:
+'**/\*.spec.ts'`plus a`testIgnore` array — and that combination globs **0
+files\*\* on Linux (`Total: 0 tests in 0 files`), even though the spec is on
+disk. Explicit `testMatch` works; inherited-global + `testIgnore` does not. Not
+reproducible on Windows — a Playwright 1.60 Linux-specific quirk.
+
+**Fix (iteration 3):** a dedicated `smoke` project with an **explicit
+`testMatch:
+['**/smoke.spec.ts']`** (Desktop Chrome engine, to match the chromium-only `playwright
+install`in CI), and the CI job runs`playwright test
+--project=smoke`. This mirrors the discovery form proven to work on the runner. Verified locally (16 tests, both `HAS_QA_ENV`
+modes). The diagnostic dump + fail-loud guard are retained.
+
 ## Related (out of scope here)
 
 The broader E2E suite (129 backend-dependent specs) is quarantined to

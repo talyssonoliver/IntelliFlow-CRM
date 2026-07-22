@@ -156,6 +156,25 @@ export default defineConfig({
         ]
       : []),
 
+    // Dedicated smoke project for the CI main-push gate. Uses an EXPLICIT
+    // testMatch — the ONLY discovery form that works on the ubuntu runner.
+    // The `chromium` project (global testMatch '**/*.spec.ts' + testIgnore)
+    // globs 0 files on Linux (Total: 0 tests in 0 files) even though the spec
+    // is on disk, while projects with an explicit testMatch (tablet/mobile)
+    // discover smoke.spec.ts fine there. Proven via the ci.yml diagnostic dump
+    // (run 29947499690). Desktop Chrome engine to match the chromium-only
+    // `playwright install` in CI. See docs/runbooks/ci-e2e-smoke-discovery.md.
+    {
+      name: 'smoke',
+      testMatch: ['**/smoke.spec.ts'],
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: ['--disable-dev-shm-usage'],
+        },
+      },
+    },
+
     // Desktop Browsers - Full suite on Chromium (baseline)
     {
       name: 'chromium',

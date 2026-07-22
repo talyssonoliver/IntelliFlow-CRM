@@ -479,14 +479,14 @@ jobs:
           echo "--- UNFILTERED discovery (all projects) ---"
           pnpm exec playwright test --list 2>&1 | tail -12 || true
           echo "--- chromium + grep discovery ---"
-          pnpm exec playwright test --project=chromium --grep "Smoke Tests" --list 2>&1 | tee /tmp/pwlist.txt | tail -6 || true
+          pnpm exec playwright test --project=smoke --list 2>&1 | tee /tmp/pwlist.txt | tail -6 || true
           count=$(grep -cE "smoke\.spec\.ts:[0-9]+" /tmp/pwlist.txt || true)
           if [ "${count:-0}" -eq 0 ]; then
             echo "::error::Playwright discovered 0 smoke tests for the chromium project (see diagnostics above)."
             exit 1
           fi
           echo "Discovered $count smoke tests — running."
-          pnpm exec playwright test --project=chromium --grep "Smoke Tests"
+          pnpm exec playwright test --project=smoke
 
       - name: Upload E2E results
         uses: actions/upload-artifact@v7
