@@ -15,7 +15,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, publicProcedure, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, publicProcedure, protectedProcedure, adminProcedure } from '../../trpc';
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
 import type { Context } from '../../context';
 
@@ -111,39 +111,40 @@ export const webhooksRouter = createTRPCRouter({
 
   /**
    * Register a new webhook source
-   * Protected endpoint - admin only
+   * Admin only (SEC-003): registering a webhook source configures how the
+   * platform trusts inbound callers, so it must be gated by adminProcedure
+   * (isAuthed + isAdmin), not merely protectedProcedure (any authed user).
    */
-  registerSource: protectedProcedure
-    .input(registerSourceSchema)
-    .mutation(async ({ ctx, input }) => {
-      const service = await getWebhookService(ctx);
+  registerSource: adminProcedure.input(registerSourceSchema).mutation(async ({ ctx, input }) => {
+    const service = await getWebhookService(ctx);
 
-      try {
-        service.registerSource({
-          name: input.name,
-          secret: input.secret,
-          signatureHeader: input.signatureHeader,
-          signatureVerifier: input.signatureVerifier,
-          enabled: input.enabled,
-          allowedEvents: input.allowedEvents,
-          metadata: input.metadata,
-        });
+    try {
+      service.registerSource({
+        name: input.name,
+        secret: input.secret,
+        signatureHeader: input.signatureHeader,
+        signatureVerifier: input.signatureVerifier,
+        enabled: input.enabled,
+        allowedEvents: input.allowedEvents,
+        metadata: input.metadata,
+      });
 
-        return {
-          success: true,
-          sourceName: input.name,
-          message: 'Webhook source registered successfully',
-        };
-      } catch (error) {
-        throw mapErrorToTRPCError(error);
-      }
-    }),
+      return {
+        success: true,
+        sourceName: input.name,
+        message: 'Webhook source registered successfully',
+      };
+    } catch (error) {
+      throw mapErrorToTRPCError(error);
+    }
+  }),
 
   /**
    * Unregister a webhook source
-   * Protected endpoint - admin only
+   * Admin only (SEC-003): mirrors registerSource — mutating the trusted webhook
+   * source registry is an admin operation, gated by adminProcedure.
    */
-  unregisterSource: protectedProcedure
+  unregisterSource: adminProcedure
     .input(z.object({ name: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const service = await getWebhookService(ctx);
