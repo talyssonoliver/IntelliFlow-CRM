@@ -1,22 +1,22 @@
 # Current State Report
-_Generated: 2026-07-19T12:22:03.146Z_
+_Generated: 2026-07-22T00:09:10.867Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 5 continuous tasks.
-- Overall progress: 449/597 tasks completed (75.21%), 147 backlog, 0 blocked, 1 in progress.
-- Numbered sprint progress alone: 444/592 tasks completed or attested inside numbered sprints.
+- Overall progress: 457/597 tasks completed (76.55%), 139 backlog, 0 blocked, 1 in progress.
+- Numbered sprint progress alone: 452/592 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
-- Ready-to-start work: DOC-015 (Sprint 18), IFC-211 (Sprint 18), IFC-212 (Sprint 18), IFC-271 (Sprint 18), IFC-314 (Sprint 18).
+- Ready-to-start work: DOC-015 (Sprint 18), IFC-211 (Sprint 18), IFC-033 (Sprint 19), IFC-305 (Sprint 19), IFC-313 (Sprint 19).
 - Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
 
 ## Source Health
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
-- CSV marks these tasks completed without a canonical attestation: IFC-043, IFC-052, IFC-071, PG-110, PG-114, PG-127, PG-147, IFC-199, IFC-201, IFC-204, IFC-304, IFC-306, PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209.
-- Attested but not completed in CSV: IFC-212 (Backlog), IFC-257 (In Progress), IFC-271 (Backlog), IFC-314 (Backlog).
+- CSV marks these tasks completed without a canonical attestation: IFC-043, IFC-052, IFC-071, PG-110, PG-114, PG-127, PG-147, IFC-199, IFC-201, IFC-204, IFC-304, IFC-306, PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209, INFRA-TF-001, INFRA-TF-002, INFRA-TF-003, INFRA-TF-004, INFRA-TF-005.
+- Attested but not completed in CSV: IFC-257 (In Progress).
 
 ## Continuous Work
 
@@ -264,10 +264,10 @@ _Generated: 2026-07-19T12:22:03.146Z_
 
 ## Sprint 18 - Sprint 18
 
-- Status: 55/67 completed, 11 backlog, 0 blocked, 1 in progress.
+- Status: 63/67 completed, 3 backlog, 0 blocked, 1 in progress.
 - Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).
-- Evidence coverage: 42/55 completed tasks have canonical `attestation.json` evidence.
-- Evidence gaps: completed in CSV but missing canonical attestation: PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209.
+- Evidence coverage: 45/63 completed tasks have canonical `attestation.json` evidence.
+- Evidence gaps: completed in CSV but missing canonical attestation: PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209, INFRA-TF-001, INFRA-TF-002, INFRA-TF-003, INFRA-TF-004, INFRA-TF-005.
 
 **Accomplished**
 - **IFC-070** — Data Migration from Legacy. IFC-070 Data Migration from Legacy completed via TDD. 13 steps across 4 phases (RED/GREEN/REFACTOR/VALIDATION). 66 tests, 98.88% statement coverage. All 6 completion gates PASS. Compliance check PASS. 100% data migrated, validation passed;...
@@ -281,7 +281,6 @@ _Generated: 2026-07-19T12:22:03.146Z_
 - **DOC-015** — Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth. All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...
 - **DOC-016** — Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement. TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift;...
 - **IFC-211** — Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults). Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes
-- **IFC-212** — Wire API container to QueueAIService for BullMQ-backed lead scoring. API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; Lead scoring jobs enqueued with correlation metadata and consumed by ai-scoring worker contract
 
 ## Sprint 19 - Sprint 19
 
