@@ -268,6 +268,8 @@ describe('Task status state-machine invariants', () => {
   // CANCELLED. The state-machine table (VALID_TASK_TRANSITIONS) says ARCHIVED
   // is not reachable from IN_PROGRESS, but changeStatus() does not consult the
   // table — it only checks isCompleted/isCancelled.
+  // DEFERRED (ENG-OPS-002.R10): enforcing VALID_TASK_TRANSITIONS in changeStatus/complete tightens the
+  // contract (breaks the 'complete on PENDING succeeds' property + needs service-caller verification) — tracked separately from the terminal-guard fixes.
   test.skip('RACE-PURE-09: changeStatus("ARCHIVED", user) on IN_PROGRESS task must be rejected (transition table not consulted)', () => {
     const task = Task.create({ title: 'test', ownerId: 'u1', tenantId: 't1' }).value;
     task.start('u1');
@@ -299,60 +301,30 @@ describe('RACE-PURE-M2 — entity linkage guards on terminal tasks', () => {
   // entity linkage changed without restriction.  The three skip blocks below
   // document the broken invariants.
 
-  test.skip('RACE-PURE-M2: assignToLead() on a COMPLETED task must be rejected', () => {
+  test('RACE-PURE-M2: assignToLead() on a COMPLETED task must be rejected', () => {
     const task = Task.create({ title: 't', ownerId: 'u', tenantId: 'T' }).value;
     task.complete('u');
     // Currently succeeds — no status guard.
     expect(() => task.assignToLead('lead-new', 'u')).toThrow();
   });
 
-  test.skip('RACE-PURE-M2: assignToContact() on a CANCELLED task must be rejected', () => {
+  test('RACE-PURE-M2: assignToContact() on a CANCELLED task must be rejected', () => {
     const task = Task.create({ title: 't', ownerId: 'u', tenantId: 'T' }).value;
     task.cancel('reason', 'u');
     expect(() => task.assignToContact('contact-new', 'u')).toThrow();
   });
 
-  test.skip('RACE-PURE-M2: assignToOpportunity() on an ARCHIVED task must be rejected', () => {
+  test('RACE-PURE-M2: assignToOpportunity() on an ARCHIVED task must be rejected', () => {
     const task = Task.create({ title: 't', ownerId: 'u', tenantId: 'T' }).value;
     task.complete('u');
     task.archive('u');
     expect(() => task.assignToOpportunity('opp-new', 'u')).toThrow();
   });
 
-  // Document current (broken) behaviour so regressions are caught:
-
-  test.prop([arbCreateProps, arbEntityId, arbUserId], propertyParams())(
-    'RACE-PURE-M2 (current broken behaviour): assignToLead on COMPLETED task currently succeeds',
-    (props, entityId, user) => {
-      const task = makeTask(props);
-      task.complete(user);
-      // No guard — this currently succeeds.  When RACE-PURE-M2 is fixed this
-      // property should be updated to expect failure.
-      task.assignToLead(entityId, user);
-      expect(task.leadId).toBe(entityId);
-    }
-  );
-
-  test.prop([arbCreateProps, arbEntityId, arbUserId], propertyParams())(
-    'RACE-PURE-M2 (current broken behaviour): assignToContact on CANCELLED task currently succeeds',
-    (props, entityId, user) => {
-      const task = makeTask(props);
-      task.cancel('reason', user);
-      task.assignToContact(entityId, user);
-      expect(task.contactId).toBe(entityId);
-    }
-  );
-
-  test.prop([arbCreateProps, arbEntityId, arbUserId], propertyParams())(
-    'RACE-PURE-M2 (current broken behaviour): assignToOpportunity on ARCHIVED task currently succeeds',
-    (props, entityId, user) => {
-      const task = makeTask(props);
-      task.complete(user);
-      task.archive(user);
-      task.assignToOpportunity(entityId, user);
-      expect(task.opportunityId).toBe(entityId);
-    }
-  );
+  // RACE-PURE-M2 is now FIXED (ENG-OPS-002.R10): assignTo* rejects terminal tasks.
+  // The three "current broken behaviour" companion properties that documented the
+  // pre-fix behaviour (linkage succeeding on terminal tasks) were removed — the
+  // three un-skipped tests above now assert the correct (throwing) behaviour.
 });
 
 // ---------------------------------------------------------------------------

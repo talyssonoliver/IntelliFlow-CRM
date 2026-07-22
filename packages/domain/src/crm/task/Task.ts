@@ -307,7 +307,16 @@ export class Task extends AggregateRoot<TaskId> {
     return Result.ok(undefined);
   }
 
+  // RACE-PURE-M2 (ENG-OPS-002.R10): CRM-entity linkage is frozen on a terminal task
+  // (COMPLETED / CANCELLED / ARCHIVED) — completed work must not have its links rewritten.
+  private assertLinkable(): void {
+    if (this.isCompleted || this.isCancelled || this.isArchived) {
+      throw new Error('Cannot change entity linkage on a terminal task');
+    }
+  }
+
   assignToLead(leadId: string, linkedBy: string): void {
+    this.assertLinkable();
     this.props.leadId = leadId;
     this.props.contactId = undefined;
     this.props.opportunityId = undefined;
@@ -317,6 +326,7 @@ export class Task extends AggregateRoot<TaskId> {
   }
 
   assignToContact(contactId: string, linkedBy: string): void {
+    this.assertLinkable();
     this.props.contactId = contactId;
     this.props.leadId = undefined;
     this.props.opportunityId = undefined;
@@ -326,6 +336,7 @@ export class Task extends AggregateRoot<TaskId> {
   }
 
   assignToOpportunity(opportunityId: string, linkedBy: string): void {
+    this.assertLinkable();
     this.props.opportunityId = opportunityId;
     this.props.leadId = undefined;
     this.props.contactId = undefined;

@@ -908,4 +908,28 @@ describe('Ticket Aggregate', () => {
       expect(ticket.getDomainEvents()).toHaveLength(0);
     });
   });
+
+  // ENG-OPS-002.R10 — terminal-state assignment guards (QUAL-001 / RACE-PURE-M1)
+  describe('Assignment guards on terminal tickets', () => {
+    it('assign() on a CLOSED ticket throws (was only guarded for ARCHIVED)', () => {
+      const ticket = Ticket.create(createDefaultTicketProps()).value;
+      ticket.changeStatus('CLOSED', 'admin');
+      expect(() => ticket.assign('new-agent', 'user')).toThrow('Cannot assign a closed ticket');
+    });
+
+    it('assign() on an ARCHIVED ticket throws with the archived message', () => {
+      const ticket = Ticket.create(createDefaultTicketProps()).value;
+      ticket.changeStatus('RESOLVED', 'agent');
+      ticket.changeStatus('ARCHIVED', 'agent');
+      expect(() => ticket.assign('new-agent', 'user')).toThrow('Cannot assign an archived ticket');
+    });
+
+    it('unassign() on a terminal (ARCHIVED) ticket throws', () => {
+      const ticket = Ticket.create(createDefaultTicketProps()).value;
+      ticket.assign('agent-1', 'user');
+      ticket.changeStatus('RESOLVED', 'agent');
+      ticket.changeStatus('ARCHIVED', 'agent');
+      expect(() => ticket.unassign('user')).toThrow('Cannot unassign a terminal ticket');
+    });
+  });
 });

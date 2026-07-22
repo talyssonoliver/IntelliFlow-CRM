@@ -282,7 +282,7 @@ describe('Ticket aggregate — domain property tests (RACE-PURE-10/11/M1)', () =
   // BUG(RACE-PURE-10): changePriority only guards isClosed (status==='CLOSED') but
   // ARCHIVED is also a terminal status per TicketConstants.ts:51. An ARCHIVED ticket's
   // priority can be mutated. Fix: use isTerminalStatus(this.props.status) in guard.
-  it.skip('RACE-PURE-10 BUG: changePriority on ARCHIVED ticket should fail but currently succeeds', () => {
+  it('RACE-PURE-10 BUG: changePriority on ARCHIVED ticket should fail but currently succeeds', () => {
     const ticket = makeTicket({});
     // Advance to ARCHIVED: OPEN → RESOLVED → ARCHIVED
     ticket.changeStatus('RESOLVED', 'agent');
@@ -348,7 +348,7 @@ describe('Ticket aggregate — domain property tests (RACE-PURE-10/11/M1)', () =
   // BUG(RACE-PURE-11): resumeSla computes pausedDuration = now.getTime() - slaPausedAt.getTime()
   // with no guard that now >= slaPausedAt. If a past timestamp is passed, the increment is
   // negative, resulting in slaPausedDuration < 0. Fix: guard pausedDuration >= 0 in resumeSla.
-  it.skip('RACE-PURE-11 BUG: resumeSla with now < pausedAt should clamp or reject but currently produces negative duration', () => {
+  it('RACE-PURE-11 BUG: resumeSla with now < pausedAt should clamp or reject but currently produces negative duration', () => {
     const ticket = makeTicket({});
     const pauseAt = new Date(1_700_000_000_000);
     const beforePause = new Date(pauseAt.getTime() - 5_000); // 5 seconds before pause
@@ -434,7 +434,7 @@ describe('Ticket aggregate — domain property tests (RACE-PURE-10/11/M1)', () =
   // BUG(RACE-PURE-M1): assign() at Ticket.ts:519-531 guards status === 'ARCHIVED' (throws
   // raw Error) but does NOT guard 'CLOSED'. A CLOSED ticket can be assigned a new agent.
   // Fix: use isTerminalStatus(this.props.status) or add CLOSED to the guard.
-  it.skip('RACE-PURE-M1 BUG: assign() on CLOSED ticket should fail but currently succeeds', () => {
+  it('RACE-PURE-M1 BUG: assign() on CLOSED ticket should fail but currently succeeds', () => {
     const ticket = makeTicket({});
     // Advance to CLOSED.
     ticket.changeStatus('CLOSED', 'agent');
@@ -452,7 +452,7 @@ describe('Ticket aggregate — domain property tests (RACE-PURE-10/11/M1)', () =
   // BUG(RACE-PURE-M1): assign() throws new Error('Cannot assign an archived ticket')
   // rather than returning Result.fail(new TicketAlreadyClosedError()). All other
   // mutators (changeStatus, changePriority, resolve, close, reopen) return Result<void, DomainError>.
-  it.skip('RACE-PURE-M1 BUG: assign() on ARCHIVED throws raw Error instead of returning Result', () => {
+  it('RACE-PURE-M1 BUG: assign() on ARCHIVED throws raw Error instead of returning Result', () => {
     const ticket = makeTicket({});
     ticket.changeStatus('RESOLVED', 'agent');
     ticket.changeStatus('ARCHIVED', 'agent');
@@ -472,7 +472,7 @@ describe('Ticket aggregate — domain property tests (RACE-PURE-10/11/M1)', () =
 
   // BUG(RACE-PURE-M1): unassign() at Ticket.ts:536-541 has zero status guard.
   // It succeeds even on ARCHIVED and CLOSED tickets. Fix: add isTerminalStatus guard.
-  it.skip('RACE-PURE-M1 BUG: unassign() on ARCHIVED ticket should fail but silently succeeds', () => {
+  it('RACE-PURE-M1 BUG: unassign() on ARCHIVED ticket should fail but silently succeeds', () => {
     const ticket = makeTicket({});
     ticket.assign('initial-agent', 'user');
 
