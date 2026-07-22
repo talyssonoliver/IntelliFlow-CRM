@@ -126,6 +126,9 @@ export * from './intelligence';
 // Security Domain - AI Security Event Types (IFC-125)
 export * from './security/AISecurityEventTypes';
 
+// Security Domain - Prompt/PII Sanitizer (IFC-125, consolidated QUAL-015)
+export * from './security/prompt-sanitizer';
+
 // Activity Feed Domain (IFC-069)
 export * from './activity-feed';
 

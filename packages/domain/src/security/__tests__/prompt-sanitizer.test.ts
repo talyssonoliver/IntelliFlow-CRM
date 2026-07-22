@@ -1,14 +1,33 @@
+/**
+ * Prompt Sanitizer Tests - IFC-125
+ *
+ * QUAL-015: canonical, merged test suite for the sanitizer that previously
+ * existed as two independently-maintained (and diverged) copies:
+ *   - apps/api/src/shared/prompt-sanitizer.ts
+ *   - packages/adapters/src/shared/prompt-sanitizer.ts
+ *
+ * Both files now re-export from this module. This suite is the union of the
+ * two prior test files plus a regression test for the specific way the
+ * copies diverged (the command-injection regex excluded only `\n` in the
+ * adapters copy but `\r` and `\n` in the apps/api copy).
+ */
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   sanitizePrompt,
   sanitizeOutput,
   checkRateLimit,
+  resetRateLimit,
   validateContentLength,
   sanitizationPipeline,
   safePromptSchema,
-} from './prompt-sanitizer';
+  sanitizedOutputSchema,
+} from '../prompt-sanitizer';
 
 describe('Prompt Sanitizer - IFC-125', () => {
+  beforeEach(() => {
+    resetRateLimit();
+  });
+
   describe('sanitizePrompt', () => {
     it('should accept valid prompts', () => {
       const input = {
@@ -37,6 +56,25 @@ describe('Prompt Sanitizer - IFC-125', () => {
     it('should block command injection attempts', () => {
       const input = {
         text: '; rm -rf / && echo "hacked"',
+        userId: '550e8400-e29b-41d4-a716-446655440000',
+        maxTokens: 500,
+      };
+
+      expect(() => sanitizePrompt(input)).toThrow(/dangerous patterns/i);
+    });
+
+    it('should block command injection attempts separated by a carriage return (\\r)', () => {
+      // Regression for QUAL-015: the two prior copies diverged on the
+      // command-injection regex's filler-gap exclusion class. Empirically
+      // verified (see comment in ../prompt-sanitizer.ts) that excluding only
+      // `\n` (the packages/adapters behavior) is the strict superset: it
+      // still catches everything the `[^\r\n]`-excluding apps/api copy did,
+      // PLUS this `\r`-delimited payload, which the apps/api copy's stricter
+      // -looking pattern actually missed (the bare `\r` broke its filler
+      // match before "rm" could be reached). The canonical module keeps the
+      // `[^\n]` behavior for exactly this reason.
+      const input = {
+        text: '; \rrm -rf /',
         userId: '550e8400-e29b-41d4-a716-446655440000',
         maxTokens: 500,
       };
@@ -114,6 +152,10 @@ describe('Prompt Sanitizer - IFC-125', () => {
       const result = sanitizePrompt(input);
       expect(result.sanitized.text).toBe('HelloWorld');
     });
+
+    it('should reject invalid input structure', () => {
+      expect(() => sanitizePrompt({ text: 'ok' })).toThrow(/Invalid prompt structure/i);
+    });
   });
 
   describe('sanitizeOutput', () => {
@@ -177,6 +219,16 @@ describe('Prompt Sanitizer - IFC-125', () => {
       expect(result.containsPII).toBe(true);
     });
 
+    it('should redact National Insurance numbers', () => {
+      const output = 'NINO on file: AB123456C.';
+      const result = sanitizeOutput(output, userId);
+
+      expect(result.safe).toBe(true);
+      expect(result.content).not.toContain('AB123456C');
+      expect(result.redactedFields).toContain('nino');
+      expect(result.containsPII).toBe(true);
+    });
+
     it('should block dangerous patterns in AI output', () => {
       const output = 'SELECT * FROM users WHERE admin = true';
       const result = sanitizeOutput(output, userId);
@@ -187,12 +239,25 @@ describe('Prompt Sanitizer - IFC-125', () => {
     });
   });
 
-  describe('checkRateLimit', () => {
-    beforeEach(() => {
-      // Reset rate limits between tests
-      // Note: In production, use a proper cache that can be cleared
+  describe('sanitizedOutputSchema', () => {
+    it('validates a well-formed sanitized output', () => {
+      const result = sanitizedOutputSchema.safeParse({
+        content: 'hello',
+        redactedFields: [],
+        containsPII: false,
+        safe: true,
+      });
+      expect(result.success).toBe(true);
     });
 
+    it('defaults redactedFields and containsPII when omitted', () => {
+      const result = sanitizedOutputSchema.parse({ content: 'hello', safe: true });
+      expect(result.redactedFields).toEqual([]);
+      expect(result.containsPII).toBe(false);
+    });
+  });
+
+  describe('checkRateLimit', () => {
     it('should allow requests within rate limit', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440001';
 
@@ -212,18 +277,37 @@ describe('Prompt Sanitizer - IFC-125', () => {
       // This should be blocked
       expect(checkRateLimit(userId, 10)).toBe(false);
     });
+  });
 
-    it('should reset rate limit after 1 minute', async () => {
+  describe('resetRateLimit', () => {
+    it('clears the limit for a single user', () => {
       const userId = '550e8400-e29b-41d4-a716-446655440003';
 
-      // Fill up the rate limit
       for (let i = 0; i < 10; i++) {
         checkRateLimit(userId, 10);
       }
-
-      // Mock time advancement (in real implementation, use fake timers)
-      // For now, just test the logic
       expect(checkRateLimit(userId, 10)).toBe(false);
+
+      resetRateLimit(userId);
+
+      expect(checkRateLimit(userId, 10)).toBe(true);
+    });
+
+    it('clears the limit for all users when called with no argument', () => {
+      const userA = '550e8400-e29b-41d4-a716-446655440004';
+      const userB = '550e8400-e29b-41d4-a716-446655440005';
+
+      for (let i = 0; i < 10; i++) {
+        checkRateLimit(userA, 10);
+        checkRateLimit(userB, 10);
+      }
+      expect(checkRateLimit(userA, 10)).toBe(false);
+      expect(checkRateLimit(userB, 10)).toBe(false);
+
+      resetRateLimit();
+
+      expect(checkRateLimit(userA, 10)).toBe(true);
+      expect(checkRateLimit(userB, 10)).toBe(true);
     });
   });
 
@@ -251,7 +335,7 @@ describe('Prompt Sanitizer - IFC-125', () => {
     it('should apply full sanitization pipeline', async () => {
       const input = {
         text: 'Score this lead: Jane Smith, CTO',
-        userId: '550e8400-e29b-41d4-a716-446655440004',
+        userId: '550e8400-e29b-41d4-a716-446655440006',
         context: { source: 'web_form' },
       };
 
@@ -263,7 +347,7 @@ describe('Prompt Sanitizer - IFC-125', () => {
     });
 
     it('should throw on rate limit exceeded', async () => {
-      const userId = '550e8400-e29b-41d4-a716-446655440005';
+      const userId = '550e8400-e29b-41d4-a716-446655440007';
 
       // Fill up the rate limit
       for (let i = 0; i < 10; i++) {
@@ -285,7 +369,7 @@ describe('Prompt Sanitizer - IFC-125', () => {
     it('should truncate long content', async () => {
       const input = {
         text: 'a'.repeat(5000),
-        userId: '550e8400-e29b-41d4-a716-446655440006',
+        userId: '550e8400-e29b-41d4-a716-446655440008',
       };
 
       const result = await sanitizationPipeline(input);
@@ -299,7 +383,7 @@ describe('Prompt Sanitizer - IFC-125', () => {
     it('should validate correct prompt structure', () => {
       const valid = {
         text: 'Hello world',
-        userId: '550e8400-e29b-41d4-a716-446655440007',
+        userId: '550e8400-e29b-41d4-a716-446655440009',
         maxTokens: 500,
       };
 
@@ -321,7 +405,7 @@ describe('Prompt Sanitizer - IFC-125', () => {
     it('should reject empty text', () => {
       const invalid = {
         text: '',
-        userId: '550e8400-e29b-41d4-a716-446655440008',
+        userId: '550e8400-e29b-41d4-a716-446655440010',
         maxTokens: 500,
       };
 
@@ -332,7 +416,7 @@ describe('Prompt Sanitizer - IFC-125', () => {
     it('should reject maxTokens out of range', () => {
       const invalid = {
         text: 'Hello',
-        userId: '550e8400-e29b-41d4-a716-446655440009',
+        userId: '550e8400-e29b-41d4-a716-446655440011',
         maxTokens: 3000, // Exceeds max of 2000
       };
 

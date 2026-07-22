@@ -459,8 +459,10 @@ export class GuardrailsAIService implements AIServicePort {
    * Sanitize lead scoring input
    */
   private async sanitizeInput(input: LeadScoringInput): Promise<LeadScoringInput> {
-    // Import sanitizer from shared utilities
-    const { sanitizationPipeline } = await import('../shared/prompt-sanitizer.js');
+    // Import sanitizer from the canonical domain module (QUAL-015: was a
+    // locally-duplicated ../shared/prompt-sanitizer.js that had diverged
+    // from apps/api's copy; both now live in @intelliflow/domain).
+    const { sanitizationPipeline } = await import('@intelliflow/domain');
 
     // Build prompt from input
     const promptText = this.buildPromptFromInput(input);
