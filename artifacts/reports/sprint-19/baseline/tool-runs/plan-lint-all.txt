@@ -1,0 +1,36 @@
+
+> intelliflow-crm@0.1.0 plan-lint:all C:\Users\talys\projects\iflow-eng-ops-002
+> cd tools/plan-linter && npm install --silent && node index.js --sprint=all
+
+========================================
+Plan Linter v1.0.0
+========================================
+
+Loaded config from C:\Users\talys\projects\iflow-eng-ops-002\tools\plan-linter\config.yaml
+Loaded Sprint plan from apps/project-tracker/docs/metrics/_global/Sprint_plan.csv
+Loaded overrides from apps/project-tracker/docs/metrics/plan-overrides.yaml
+Loaded validation rules from apps/project-tracker/docs/metrics/validation.yaml
+
+Parsed 597 tasks from Sprint plan
+Filtering to Sprint NaN: 0 tasks
+
+Running hard rules...
+Running soft rules...
+Generating review queue...
+
+========================================
+RESULTS
+========================================
+
+Total tasks (Sprint NaN): 0
+Tier breakdown: A=0, B=0, C=0
+Validation coverage: NaN%
+
+Errors: 0
+Warnings: 0
+Review queue items: 0
+
+Review queue written to apps/project-tracker/docs/metrics/review-queue.json
+Lint report written to artifacts/reports/plan-lint-report.json
+
+[PASSED] No hard rule violations

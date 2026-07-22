@@ -1,0 +1,13 @@
+
+> intelliflow-crm@0.1.0 test:architecture C:\Users\talys\projects\iflow-eng-ops-002
+> vitest run tests/architecture
+
+
+ RUN  v4.1.8 C:/Users/talys/projects/iflow-eng-ops-002
+
+
+ Test Files  5 passed (5)
+      Tests  34 passed (34)
+   Start at  11:09:49
+   Duration  846ms (transform 189ms, setup 0ms, import 295ms, tests 1.11s, environment 1ms)
+

@@ -1,0 +1,409 @@
+id,sprint,status,classification,achievement,evidenceStrength,residualGap
+ENV-017-AI,1,Completed,entregue-sem-evidencia,Automated Integration Testing,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+ENV-018-AI,1,Completed,entregue-sem-evidencia,Sprint Planning and Velocity Prediction,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-001,1,Completed,entregue-sem-evidencia,PHASE-001: Technical Architecture Spike - Modern Stack,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-002,1,Completed,entregue-sem-evidencia,PHASE-001: Domain Model Design (DDD),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-003,1,Completed,entregue-sem-evidencia,PHASE-001: tRPC API Foundation,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-004,2,Completed,entregue-sem-evidencia,PHASE-002: Next.js 16.0.10 Lead Capture UI,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-005,2,Completed,entregue-sem-evidencia,"FLOW-002, FLOW-011: LangChain AI Scoring Prototype",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-006,3,Completed,entregue-sem-evidencia,PHASE-002: Supabase Integration Test,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-007,3,Completed,entregue-comprovada,PHASE-003: Performance Benchmarks - Modern Stack,strong,
+IFC-008,2,Completed,entregue-sem-evidencia,PHASE-003: Security Assessment - OWASP + ISO 42001 Prep,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-009,4,Completed,entregue-sem-evidencia,"PHASE-002: Team Capability Assessment - Modern Stack (Next.js 16.0.10 App Router, Turbopack FS caching, Cache Components",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-010,6,Completed,entregue-sem-evidencia,PHASE-001: Phase 1 Go/No-Go Decision,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-011,3,Completed,entregue-sem-evidencia,PHASE-002: Supabase Free Tier Optimization,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-012,6,Completed,entregue-sem-evidencia,PHASE-002: Turborepo Monorepo Setup,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-013,6,Completed,entregue-sem-evidencia,PHASE-002: tRPC Router Implementation,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-014,6,Completed,entregue-comprovada,PHASE-002: Next.js 16.0.10 App Router UI,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-015,6,Completed,entregue-comprovada,PHASE-002: BullMQ Job Queue Setup,strong,
+IFC-016,6,Completed,entregue-comprovada,PHASE-002: Real-time Subscriptions,strong,
+IFC-017,6,Completed,entregue-sem-evidencia,PHASE-002: Prisma + Supabase Data Layer,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-018,6,Completed,entregue-comprovada,PHASE-002: Vitest Testing Suite,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-019,6,Completed,entregue-sem-evidencia,PHASE-001: Gate 1 Review - £500 Investment,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-020,6,Completed,entregue-comprovada,PHASE-011: LangChain Pipeline Design,strong,
+IFC-021,6,Completed,entregue-sem-evidencia,PHASE-011: CrewAI Agent Framework,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-022,6,Completed,entregue-sem-evidencia,PHASE-011: Structured AI Output Implementation,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-023,6,Completed,entregue-sem-evidencia,PHASE-011: AI Explainability UI,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-024,14,Completed,entregue-sem-evidencia,PHASE-011: Human-in-the-Loop Feedback,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-025,6,Completed,entregue-comprovada,PHASE-011: A/B Testing Framework,strong,
+IFC-026,15,Completed,entregue-comprovada,PHASE-011: Playwright E2E Testing,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-027,15,Completed,entregue-comprovada,PHASE-001: Gate 2 Review - £2000 Investment,strong,
+IFC-028,16,Completed,entregue-sem-evidencia,PHASE-005: Workflow Engine with LangGraph,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-029,16,Completed,entregue-sem-evidencia,PHASE-005: Auto-Response with Approval Gate,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-030,17,Completed,entregue-comprovada,PHASE-005: Smart Lead Routing,strong,
+IFC-031,17,Completed,entregue-sem-evidencia,PHASE-005: Workflow Builder UI (React Flow),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-032,18,Completed,entregue-comprovada,PHASE-005: OpenTelemetry Monitoring,strong,
+IFC-039,6,Completed,entregue-comprovada,Advanced AI Features (RAG),strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-042,12,Completed,entregue-comprovada,tRPC API Client SDK Docs,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-045,14,Completed,entregue-sem-evidencia,Integration Tests (Vitest + MSW),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-054,7,Completed,entregue-comprovada,Technical Complexity Monitoring,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-055,8,Completed,entregue-sem-evidencia,Budget Tracking with FinOps,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-056,9,Completed,entregue-sem-evidencia,Team Upskilling Program,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-057,9,Completed,entregue-sem-evidencia,Vendor Lock-in Mitigation,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-058,11,Completed,entregue-comprovada,"GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-061,14,Completed,entregue-comprovada,FLOW-006: Lead to Contact Conversion Logic,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-062,14,Completed,entregue-comprovada,FLOW-006: Lead to Deal Conversion Logic,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-063,14,Completed,entregue-comprovada,FLOW-007: Pipeline Stage Customization,strong,
+IFC-064,14,Completed,entregue-comprovada,FLOW-007: Kanban Drag-Drop Persistence,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-065,14,Completed,entregue-comprovada,FLOW-009: Deal Won Closure Workflow,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-066,14,Completed,entregue-comprovada,FLOW-009: Deal Lost Closure Workflow,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-067,14,Completed,entregue-sem-evidencia,FLOW-012: Automatic Ticket Routing Engine,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-068,14,Completed,entregue-comprovada,FLOW-015: Feedback Analytics Dashboard,strong,
+IFC-069,14,Completed,entregue-comprovada,FLOW-020: Unified Activity Feed Service,strong,
+IFC-070,18,Completed,entregue-comprovada,Data Migration from Legacy,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-072,2,Completed,entregue-comprovada,PHASE-040: Zero Trust Security Model,strong,
+IFC-073,2,Completed,entregue-sem-evidencia,PHASE-040: Privacy Impact Assessment,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-074,1,Completed,entregue-sem-evidencia,PHASE-040: Full Stack Observability,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-075,1,Completed,entregue-sem-evidencia,IaC with Terraform,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-076,10,Completed,entregue-sem-evidencia,Component Library (shadcn/ui),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-077,8,Completed,entregue-sem-evidencia,PHASE-035: API Rate Limiting (tRPC + Upstash),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-078,18,Completed,entregue-sem-evidencia,Platform Engineering Foundation,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-079,7,Completed,entregue-sem-evidencia,PHASE-041: Docusaurus Setup,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-080,7,Completed,entregue-sem-evidencia,PHASE-041: LLM-Friendly Documentation Templates,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-081,12,Completed,entregue-comprovada,API Documentation (tRPC + OpenAPI),strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-082,7,Completed,entregue-comprovada,Domain Knowledge Base,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-085,2,Completed,entregue-comprovada,PHASE-040: Ollama Local Development,strong,
+IFC-086,14,Completed,entregue-sem-evidencia,Model Versioning with Zep,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-088,14,Completed,entregue-sem-evidencia,Continuous Quality Metrics,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-089,5,Completed,entregue-sem-evidencia,"FLOW-005-A, FLOW-006, FLOW-014, FLOW-010-A: Contacts Module - Create/Edit/Search",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-090,6,Completed,entregue-sem-evidencia,Contact 360 Page - Full Detail View,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-091,6,Completed,entregue-comprovada,Deals Pipeline - Kanban Board,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-092,7,Completed,entregue-comprovada,Deal Forecasting & Reporting,strong,
+IFC-093,7,Completed,entregue-comprovada,Tickets Module - SLA Tracking,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-094,8,Completed,entregue-sem-evidencia,Documents Management - Upload & Sign,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-095,6,Completed,entregue-comprovada,Churn Risk & Next Best Action,strong,
+IFC-096,9,Completed,entregue-sem-evidencia,Custom Reports & Dashboards,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-097,9,Completed,entregue-sem-evidencia,Distributed Tracing & Logging,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-098,5,Completed,entregue-sem-evidencia,RBAC/ABAC & Audit Trail,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-099,10,Completed,entregue-sem-evidencia,ERP/Payment/Email Connectors,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-100,6,Completed,entregue-sem-evidencia,ADR Registry & Compliance Reporting,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-001,11,Completed,entregue-comprovada,Home Page (Public),strong,
+PG-002,11,Completed,entregue-comprovada,Features Page,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-003,11,Completed,entregue-comprovada,Pricing Page,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-004,11,Completed,entregue-comprovada,About Page,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-005,11,Completed,entregue-comprovada,Contact Page,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-006,11,Completed,entregue-comprovada,Partners Page,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-007,11,Completed,entregue-comprovada,Press Page,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-008,11,Completed,entregue-comprovada,Security Page,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-009,12,Completed,entregue-comprovada,Blog Index,strong,
+PG-010,12,Completed,entregue-comprovada,Blog Post,strong,
+PG-011,12,Completed,entregue-comprovada,Careers Page,strong,
+PG-012,12,Completed,entregue-comprovada,Career Detail,strong,
+PG-013,12,Completed,entregue-sem-evidencia,Landing Page Template,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-014,12,Completed,entregue-comprovada,Status Page,strong,
+PG-015,13,Completed,entregue-sem-evidencia,Sign In,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-016,13,Completed,entregue-comprovada,Sign Up,strong,
+PG-017,13,Completed,entregue-sem-evidencia,Sign Up Success,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-018,13,Completed,entregue-comprovada,Logout,strong,
+PG-019,13,Completed,entregue-comprovada,Forgot Password,strong,
+PG-020,13,Completed,entregue-comprovada,Reset Password,strong,
+PG-021,13,Completed,entregue-comprovada,MFA Setup,strong,
+PG-022,13,Completed,entregue-comprovada,MFA Verify,strong,
+PG-023,13,Completed,entregue-comprovada,Email Verification,strong,
+PG-024,13,Completed,entregue-comprovada,SSO Callback,strong,
+PG-025,14,Completed,entregue-comprovada,Billing Portal,strong,
+PG-026,14,Completed,entregue-comprovada,Checkout,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-027,14,Completed,entregue-comprovada,Invoices,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-028,14,Completed,entregue-comprovada,Invoice Detail,strong,
+PG-029,14,Completed,entregue-comprovada,Payment Methods,strong,
+PG-030,14,Completed,entregue-comprovada,Subscriptions,strong,
+PG-031,14,Completed,entregue-comprovada,Receipts,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-032,15,Completed,entregue-comprovada,Docs Index,strong,
+PG-033,15,Completed,entregue-comprovada,API Docs,strong,
+PG-034,15,Completed,entregue-comprovada,Webhooks Docs,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-035,15,Completed,entregue-comprovada,Changelog,strong,
+PG-036,15,Completed,entregue-comprovada,SDK Guides,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-037,15,Completed,entregue-comprovada,CLI Docs,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-038,15,Completed,entregue-comprovada,Auth Guides,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-039,15,Completed,entregue-sem-evidencia,Dev Apps,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='PASS') — pre-ADR-068 schema"
+PG-040,15,Completed,entregue-comprovada,New Dev App,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-041,15,Completed,entregue-comprovada,Dev App Detail,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-042,15,Completed,entregue-comprovada,Dev App Edit,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-043,16,Completed,entregue-comprovada,Help Center Index,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-044,16,Completed,entregue-sem-evidencia,Help Search,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-045,16,Completed,entregue-comprovada,Help Article,strong,
+PG-046,16,Completed,entregue-comprovada,Support Tickets,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-047,16,Completed,entregue-comprovada,New Ticket,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-048,16,Completed,entregue-comprovada,Ticket Detail,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-050,17,Completed,entregue-comprovada,Privacy Policy,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-051,17,Completed,entregue-sem-evidencia,Terms of Service,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-052,17,Completed,entregue-comprovada,Cookie Policy,strong,
+PG-053,17,Completed,entregue-sem-evidencia,Data Processing Addendum,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-054,17,Completed,entregue-sem-evidencia,Acceptable Use Policy,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-055,17,Completed,entregue-comprovada,404 Not Found,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-056,17,Completed,entregue-sem-evidencia,500 Error,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-057,17,Completed,entregue-sem-evidencia,Maintenance,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-058,18,Completed,entregue-comprovada,Dashboard,strong,
+PG-059,18,Completed,entregue-comprovada,Leads List,strong,
+PG-060,18,Completed,entregue-comprovada,New Lead,strong,
+PG-061,18,Completed,entregue-comprovada,Lead Detail,strong,
+PG-062,18,Completed,entregue-comprovada,Edit Lead,strong,
+PG-063,18,Completed,entregue-comprovada,Import Leads,strong,
+BRAND-002,1,Completed,entregue-sem-evidencia,Design Tokens Integration Plan (Tailwind/shadcn theme mapping),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+SALES-001,1,Completed,entregue-sem-evidencia,Commercial Narrative + Pitch Deck Outline + One-Pager,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+SALES-002,2,Completed,entregue-sem-evidencia,"Sales Motion Playbook (outreach sequences, discovery + demo scripts)",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+GOV-001,1,Completed,entregue-sem-evidencia,"Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-104,13,Completed,entregue-comprovada,Settings Home,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-101,2,Completed,entregue-sem-evidencia,PHASE-039: Lead Aggregate and Value Objects,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-102,2,Completed,entregue-sem-evidencia,PHASE-039: Contact Aggregate and Value Objects,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-103,2,Completed,entregue-sem-evidencia,PHASE-039: Account Aggregate and Value Objects,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-104,3,Completed,entregue-sem-evidencia,PHASE-039: Opportunity Aggregate and Value Objects,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-105,3,Completed,entregue-sem-evidencia,PHASE-039: Task Aggregate and Value Objects,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-106,1,Completed,entregue-sem-evidencia,PHASE-039: Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-107,3,Completed,entregue-sem-evidencia,PHASE-039: Implement Repositories and Factories,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-108,4,Completed,entregue-sem-evidencia,Implement Domain Services & Business Logic,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-109,2,Completed,entregue-sem-evidencia,"Define TDD Process, Coverage & Review Checklist",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-110,4,Completed,entregue-sem-evidencia,Write Unit & Integration Tests for Domain Entities,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-111,5,Completed,entregue-sem-evidencia,Set up SonarQube and integrate static analysis into CI/CD,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-112,5,Completed,entregue-sem-evidencia,Implement blue/green deployment and rollback strategy,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-113,10,Completed,entregue-sem-evidencia,Implement secrets management and encryption at rest and in transit,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-114,7,Completed,entregue-comprovada,Implement API rate limiting and DDoS protection,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-116,9,Completed,entregue-sem-evidencia,"Instrument application with OpenTelemetry, unify logs, metrics and traces",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-117,6,Completed,entregue-comprovada,"Monitor AI models for drift, latency, hallucination and ROI",strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-118,8,Completed,entregue-sem-evidencia,Establish and maintain a risk register with mitigation actions,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-119,1,Completed,entregue-sem-evidencia,"Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-120,14,Completed,entregue-comprovada,Implement password reset and email verification flows,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-124,15,Completed,entregue-comprovada,Implement SSO (SAML/OAuth) and social login providers,strong,
+PG-125,16,Completed,entregue-sem-evidencia,Add MFA using TOTP or SMS and allow users to enable/disable from security settings,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-121,10,Completed,entregue-sem-evidencia,Schedule periodic secret rotation and dependency vulnerability updates,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-122,7,Completed,entregue-comprovada,Implement circuit breaker and retry policies for external service calls,strong,
+IFC-124,9,Completed,entregue-sem-evidencia,Encrypt and aggregate audit logs; automate compliance reporting,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-126,17,Completed,entregue-comprovada,"Add in‑app onboarding, guided product tours and feedback collection",strong,
+IFC-125,6,Completed,entregue-comprovada,"Implement guardrails for prompt injection, data leakage, and monitor AI bias",strong,
+IFC-126,7,Completed,entregue-comprovada,Continuously maintain ADR registry and developer guide updates,strong,
+IFC-127,5,Completed,entregue-sem-evidencia,Implement tenant isolation at database and application layers,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-128,3,Completed,entregue-comprovada,Establish AI output review and manual fallback processes,strong,
+IFC-129,6,Completed,entregue-sem-evidencia,Write UI and contract tests for core pages and tRPC endpoints,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-130,5,Completed,entregue-sem-evidencia,"Release governance: staging auto-deploy, promotion policy, quality/security gates, rollback criteria",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-131,4,Completed,entregue-sem-evidencia,Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-132,6,Completed,entregue-sem-evidencia,Supply chain security: dependency pinning + SBOM generation in CI (npm/pnpm + container),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-133,7,Completed,entregue-comprovada,Supply chain security: artifact signing + provenance for build outputs (images + releases),strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-134,7,Completed,entregue-comprovada,Container/image scanning in CI and registry with fail-on-critical policy,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-135,1,Completed,entregue-sem-evidencia,Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit lo,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-136,3,Completed,entregue-sem-evidencia,Implement Case/Matter aggregate root with tasks; deadlines; parties; lawyer assignments,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-137,4,Completed,entregue-sem-evidencia,Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-138,5,Completed,entregue-sem-evidencia,Integrate external calendar providers (Google/Microsoft) with bidirectional sync; webhook handling; idempotency; reconci,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-139,6,Completed,entregue-sem-evidencia,Expose application services as agent tools and implement human approval flows with preview and rollback for high-risk ac,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-140,11,Completed,entregue-comprovada,Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key mana,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-141,10,Completed,entregue-sem-evidencia,Evaluate n8n; custom engine; and Temporal; document decision via ADR; build event-driven minimal rules engine and integr,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-142,8,Completed,entregue-sem-evidencia,Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacit,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-143,11,Completed,entregue-comprovada,Perform threat modeling and abuse-case analysis for multi-tenancy and agent tool-calling; design mitigations; schedule p,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-144,6,Completed,entregue-comprovada,Design and implement inbound/outbound email flows: SPF/DKIM/DMARC; inbound parsing; attachments; implement general webho,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-145,9,Completed,entregue-comprovada,Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehe,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-146,2,Completed,entregue-sem-evidencia,Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabili,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-147,5,Completed,entregue-comprovada,Develop Case timeline UI with deadline engine: display tasks; deadlines; events; implement deadline engine to compute le,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-148,7,Completed,entregue-comprovada,Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval;,strong,
+IFC-149,6,Completed,entregue-comprovada,Implement action preview and rollback UI for agent-initiated changes; integrated with approval flows,strong,
+IFC-150,5,Completed,entregue-comprovada,Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing,strong,
+IFC-151,6,Completed,entregue-sem-evidencia,Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-152,6,Completed,entregue-comprovada,"Case document model: storage metadata, versioning, ACL mapping (tenant + case + role), and audit hooks",strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-153,6,Completed,entregue-sem-evidencia,"Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction, storage, and ind",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-154,6,Completed,entregue-comprovada,OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG,strong,
+IFC-155,6,Completed,entregue-comprovada,Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters,strong,
+IFC-156,6,Completed,entregue-sem-evidencia,Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection h,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-157,11,Completed,entregue-comprovada,"Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit loggin",strong,
+IFC-158,11,Completed,entregue-comprovada,"Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and cal",strong,
+IFC-159,13,Completed,entregue-comprovada,"Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as ti",strong,
+IFC-163,13,Completed,entregue-sem-evidencia,"Standardize worker runtime under apps/workers (events, ingestion, notifications) with shared job framework, metrics, and",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+EXP-PLATFORM-001,12,Completed,entregue-comprovada,"Platform utilities package - feature flags, resilience patterns, job queues, workflow orchestration",strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+EXP-SCRIPTS-001,12,Completed,entregue-comprovada,"Utility scripts - task data cleanup, schema fixes, dev monitoring",strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+EXP-ARTIFACTS-002,14,Completed,entregue-sem-evidencia,Cookie Consent Component Implementation (GDPR),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+EXP-ARTIFACTS-003,14,Completed,entregue-sem-evidencia,Vulnerability Baseline Documentation,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+TRACK-001,14,Completed,entregue-comprovada,Status Snapshot UI - Real-time task status tracking with manual refresh button,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+TRACK-002,14,Completed,entregue-comprovada,Quality Metrics UI - Debt ledger coverage SonarQube with refresh buttons,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+TRACK-003,14,Completed,entregue-comprovada,Risk Register UI - View and update risks with mitigation tracking,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+TRACK-004,14,Completed,entregue-comprovada,AI Metrics UI - Model performance drift detection cost tracking,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+TRACK-005,14,Completed,entregue-comprovada,Security Dashboard UI - Vulnerability tracking scan results security posture,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+TRACK-006,14,Completed,entregue-comprovada,Build Health UI - Validation results build status test results,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-167,14,Completed,entregue-sem-evidencia,Wire workers to pnpm dev startup - Follow-up to IFC-163,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-168,14,Completed,entregue-sem-evidencia,Convert AI worker to BullMQ queue consumer - Follow-up to IFC-005/IFC-085,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-169,12,Completed,entregue-comprovada,Require Supabase env vars - Follow-up to IFC-006,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-170,12,Completed,entregue-sem-evidencia,Implement Twilio SMS channel - Follow-up to IFC-157,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-171,12,Completed,entregue-sem-evidencia,Implement webhook notification channel - Follow-up to IFC-157,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-172,13,Completed,entregue-sem-evidencia,Complete Microsoft Calendar integration - Follow-up to IFC-138,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-173,13,Completed,entregue-sem-evidencia,Complete inbound email parsing endpoint - Follow-up to IFC-144,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-174,14,Completed,entregue-comprovada,Run REAL Ollama benchmarks - Follow-up to IFC-085,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-128,14,Completed,entregue-comprovada,FLOW-045: AI Chain Versioning Admin UI - Wire IFC-086 Backend,strong,
+IFC-176,3,Completed,entregue-comprovada,AI Output Review - Validators Layer (Zod schemas for review inputs/outputs),strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-177,4,Completed,entregue-sem-evidencia,AI Output Review - Application Layer (use cases and ports),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-178,4,Completed,entregue-comprovada,AI Output Review - Database Schema (Prisma models),strong,
+IFC-179,5,Completed,entregue-comprovada,AI Output Review - Adapters Layer (repository implementation),strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-180,5,Completed,entregue-comprovada,AI Output Review - tRPC Router (API endpoints),strong,
+IFC-181,6,Completed,entregue-sem-evidencia,AI Output Review - Frontend UI (review queue page),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-182,13,Completed,entregue-comprovada,Home Page tRPC Router - Welcome summary activity feed AI insights pinned items daily goals,strong,
+IFC-183,13,Completed,entregue-comprovada,Notifications tRPC Router - List mark read preferences real-time subscription,strong,
+PG-129,14,Completed,entregue-comprovada,Authenticated Home Page - Welcome summary activity feed AI insights pinned items goals,strong,
+PG-130,14,Completed,entregue-sem-evidencia,Notifications Inbox Page - List mark read real-time updates filters,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-131,14,Completed,entregue-comprovada,Deal Forecast UI Pages - Probability gauge risk factors recommendations history,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-132,18,Completed,entregue-comprovada,Smart Lead Routing UI - Rules configuration assignment dashboard SLA monitoring,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-184,4,Completed,entregue-sem-evidencia,Contact tRPC Router - CRUD search relationship linking timeline integration,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-185,4,Completed,entregue-sem-evidencia,Account tRPC Router - CRUD hierarchy contacts opportunities activity feed,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-186,5,Completed,entregue-comprovada,Deal/Opportunity tRPC Router - CRUD pipeline stages probability history products,strong,
+IFC-187,5,Completed,entregue-comprovada,Task tRPC Router - CRUD assignment scheduling reminders timeline integration,strong,
+IFC-188,4,Completed,entregue-sem-evidencia,Ticket Domain Entity - Aggregate with SLA priority escalation categories customer linking,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-189,5,Completed,entregue-comprovada,Ticket tRPC Router - CRUD SLA tracking escalation assignment customer portal,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-190,14,Completed,entregue-comprovada,Analytics tRPC Router - Sales metrics conversion funnels time series exports,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-133,5,Completed,entregue-comprovada,Contact List & Detail Pages - Search filters relationship view activity timeline,strong,
+PG-134,5,Completed,entregue-comprovada,Account List & Detail Pages - Hierarchy view contacts opportunities revenue charts,strong,
+PG-135,6,Completed,entregue-comprovada,Deal Pipeline Page - Kanban board drag-drop stages value totals filtering,strong,
+PG-136,6,Completed,entregue-sem-evidencia,Task Management Page - List calendar view assignments reminders entity linking,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-137,6,Completed,entregue-comprovada,Ticket Management Page - List detail SLA indicators escalation customer portal view,strong,
+PG-138,7,Completed,entregue-comprovada,Case List & Detail Pages - Party management deadline tracking document links timeline,strong,
+PG-139,7,Completed,entregue-comprovada,Appointment Scheduling Page - Calendar view conflict detection case linking reminders,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-140,13,Completed,entregue-comprovada,Document Manager Page - Upload viewer version history ACL management search,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-141,11,Completed,entregue-comprovada,Email Compose & History Page - Thread view compose attachments templates,strong,
+PG-142,7,Completed,entregue-comprovada,Sentiment Analysis Dashboard at /agent-approvals/sentiment - Timeline badges trend visualization email sentiment preview,strong,
+PG-143,7,Completed,entregue-comprovada,Churn Risk Dashboard at /agent-approvals/churn-risk - Health scores risk indicators intervention triggers trend charts,strong,
+PG-144,7,Completed,entregue-comprovada,AI Search (RAG) Page at /agent-approvals/ai-search - Universal search bar AI-powered results citations source highlighti,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-146,8,Completed,entregue-comprovada,Drift Detection Dashboard at /agent-approvals/drift - Model performance drift alerts cost tracking error rates,strong,
+IFC-191,15,Completed,entregue-comprovada,User Timezone Support - Add timezone field to User model with preference UI and timezone-aware greeting,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-192,15,Completed,entregue-comprovada,Contact Activity Tracking - Add lastContactedAt field to Contact model with auto-update on interactions,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-193,16,Completed,entregue-sem-evidencia,Activity Feed Type Registry - Enum-based mapping from AuditLogEntry.eventType to ActivityFeedType with metadata,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-194,16,Completed,entregue-comprovada,Router Middleware Standardization - Migrate all routers from manual getTenantId to tenantProcedure,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-195,15,Completed,entregue-sem-evidencia,Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-196,17,Completed,entregue-sem-evidencia,Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-197,7,Completed,entregue-comprovada,AI Monitoring tRPC Router - Expose drift detection latency metrics hallucination checks ROI tracking and agent status vi,strong,
+PG-148,7,Completed,entregue-comprovada,Lead Scoring Dashboard at /agent-approvals/lead-scoring - Score distributions model accuracy top leads factor breakdown,strong,
+PG-149,7,Completed,entregue-comprovada,Experiments Dashboard at /agent-approvals/experiments - A/B test management experiment results statistical analysis vari,strong,
+PG-150,7,Completed,entregue-comprovada,AI Review History at /agent-approvals/history - Filterable history of all AI output reviews with timeline and audit trai,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-151,8,Completed,entregue-comprovada,Active Agents Dashboard at /agent-approvals/agents - Agent status monitoring active sessions task assignments health ind,strong,
+PG-152,8,Completed,entregue-comprovada,Agent Logs Viewer at /agent-approvals/logs - Conversation transcripts tool call records searchable log timeline,strong,
+PG-153,8,Completed,entregue-comprovada,Latency Monitor Dashboard at /agent-approvals/latency - SLO compliance latency percentiles chain performance phase-level,strong,
+IFC-198,13,Completed,entregue-comprovada,"Billing Domain Core - Invoice/Receipt aggregates, payment state machine, tax/refund rules",strong,
+IFC-200,13,Completed,entregue-comprovada,Analytics Adapter Layer - query builders and export pipeline for metrics router,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-202,16,Completed,entregue-sem-evidencia,Activity Feed Stats Endpoint - getStats aggregation with counts by type source and entity over time windows,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-203,16,Completed,entregue-sem-evidencia,Activity Feed Full-Text Search - search endpoint with text query across titles descriptions and actor names,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-205,6,Completed,entregue-comprovada,Ticket Full-Text Search - add search parameter to ticketQuerySchema and TicketService for subject ticketNumber contactNa,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-206,6,Completed,entregue-comprovada,Ticket Stats Enhancement - add SLA status breakdown time window filtering and sortBy sortOrder to ticket query schema,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-207,6,Completed,entregue-comprovada,Ticket Query Performance Tracking - add queryDurationMs to ticket list and stats endpoints using performance.now pattern,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-154,14,Completed,entregue-comprovada,Fix View Schedule 404 - Welcome Banner links to /calendar which does not exist,strong,
+PG-155,14,Completed,entregue-comprovada,Fix 6 broken Quick Action hrefs - /calls/new /emails/compose /calendar/new /tasks/new /deals/new /documents/upload all r,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-156,15,Completed,entregue-comprovada,Customizable Daily Goals - settings UI + home.updateDailyGoal mutation + read from User.preferences instead of hardcoded,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-157,15,Completed,entregue-sem-evidencia,Visible Pin to Home buttons on entity list items and detail page headers - not just hidden in 3-dot MoreActionsButton sh,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-158,15,Completed,entregue-comprovada,Drag and drop pinned items reorder - backend API exists (home.reorderPinnedItems) needs @dnd-kit frontend integration,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-159,15,Completed,entregue-comprovada,Stale pin handling - deleted or inaccessible pinned entities should show Item unavailable with unpin option,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-160,15,Completed,entregue-comprovada,View All AI Insights page - /insights route with getAllInsights endpoint pagination and filtering by insight type,strong,
+PG-161,16,Completed,entregue-sem-evidencia,Notifications integration on home page - bell icon header badge count IFC-183 Prisma model and notification router,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-162,16,Completed,entregue-comprovada,AI Insights from ML model - LangChain chain for generating daily insights with caching confidence scores and action reco,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-163,15,Completed,entregue-comprovada,Home page integration tests - test home.router endpoints against real database with seed data,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-164,15,Completed,entregue-comprovada,Home page E2E tests - 5 Playwright scenarios: public page auth redirect insight click quick action pin/unpin flow,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-165,14,Completed,entregue-comprovada,Update PRD checkboxes for home page - mark completed acceptance criteria and annotate deferred items with task reference,strong,
+PG-167,16,Completed,entregue-comprovada,Analytics tracking plan for home page - define and implement business metrics events for section interactions,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-169,15,Completed,entregue-sem-evidencia,Developer Guides Page,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-170,15,Completed,entregue-sem-evidencia,Architecture Docs Page,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='PASS') — pre-ADR-068 schema"
+PG-171,15,Completed,entregue-comprovada,Integration Resources Page,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-172,16,Completed,entregue-comprovada,Billing Ghost Pages - Usage Plans Upgrade Cancel and Settings,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-173,16,Completed,entregue-sem-evidencia,Ticket Configuration Pages - SLA Policies Types and Automations,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-174,16,Completed,entregue-comprovada,Notification Configuration Pages - Channels and Quiet Hours,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-175,16,Completed,entregue-sem-evidencia,Deals Trash Page - Soft-deleted deals list with restore and permanent delete,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-176,16,Completed,entregue-sem-evidencia,Governance Quality Report Sub-Pages - Lighthouse Coverage and Performance views,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-177,16,Completed,entregue-sem-evidencia,Analytics Saved Report Pages - Weekly Monthly and Quarterly views,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-178,16,Completed,entregue-sem-evidencia,Module Settings Pages - 11 per-module configuration pages at /settings/[module],weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+DOC-002,14,Completed,entregue-sem-evidencia,"Update sitemap.md to reflect actual 101 page.tsx files, add app/sitemap.ts XML generator, app/robots.ts, reconcile again",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+DOC-003,14,Completed,entregue-sem-evidencia,"Update PAGE_MAP_AND_FLOWS.md to reflect 103 pages and current flows, verify auth diagrams, update API integration checkl",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='PASS') — pre-ADR-068 schema"
+DOC-004,14,Completed,entregue-comprovada,"Update ui-flow-mapping.md cross-reference matrix to 103 routes, verify API router procedure counts (39 routers, 366 proc",strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+DOC-005,14,Completed,entregue-comprovada,"Complete overhaul of page-registry.md from 8 routes to all 101 routes with task ID, KPI targets, code file path, compone",strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+DOC-006,14,Completed,entregue-comprovada,"Create unified IA reference combining reachability audit route inventory with flow mapping user journey context, linking",strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+DOC-007,14,Completed,entregue-comprovada,"Conduct full accessibility compliance gap assessment: Lighthouse a11y audit on all 27 URLs, document WCAG 2.1 AA conform",strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+DOC-008,14,Completed,entregue-comprovada,"Create VPAT 2.5 document, WCAG 2.1 AA conformance statement, axe-core/pa11y test suite, enforce accessibility in CI (err",strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+DOC-009,14,Completed,entregue-comprovada,"Create content audit framework and perform initial audit: quantitative URL inventory (103 routes with HTTP status, respo",strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+DOC-010,15,Completed,entregue-comprovada,Create route reconciliation script comparing conformance-statement.md routes against apps/web/src/app/ directory tree,strong,
+DOC-011,15,Completed,entregue-sem-evidencia,Add compliance-check Section 11 requiring VPAT/conformance review when PG-*/IFC-* UI tasks add or modify routes,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+DOC-012,15,Completed,entregue-comprovada,Establish quarterly accessibility documentation review cadence with recurring sprint task template,strong,
+DOC-013,15,Completed,entregue-comprovada,Amend ADR-038 with Documentation Maintenance section mandating accessibility doc updates when scope changes,strong,
+PG-179,15,Completed,entregue-comprovada,Press Release Detail Page - dynamic /press/[id] route for individual press releases linked from /press index page (conte,strong,
+IFC-209,15,Completed,entregue-comprovada,"Fix sitemap.ts defects - replace new Date() lastModified with actual file modification timestamps, add all 6 blog post s",strong,
+IFC-210,15,Completed,entregue-comprovada,"Fill SEO metadata gaps on public pages - add description OG and Twitter tags to /pricing, complete OG tags on /about and",strong,
+DOC-014,15,Completed,entregue-sem-evidencia,"Automated content audit script - TypeScript CLI that scans page.tsx files, resolves metadata chains, calculates SEO scor",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+DOC-015,18,Backlog,status-desatualizado,Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of t,n/a,Backlog but has passing attestation (done-but-marked-backlog)
+DOC-016,18,Backlog,status-desatualizado,Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement,n/a,Backlog but has passing attestation (done-but-marked-backlog)
+IFC-211,18,Backlog,parcialmente-entregue,,n/a,Backlog but 4 commit / 4 PR references exist
+IFC-212,18,Completed,entregue-comprovada,Wire API container to QueueAIService for BullMQ-backed lead scoring,strong,
+IFC-213,14,Completed,entregue-sem-evidencia,Replace Math.random connector health checks with adapter-backed health checks in integrations router,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-214,18,Completed,entregue-comprovada,Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store,strong,
+IFC-215,18,Completed,entregue-comprovada,AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata,strong,
+IFC-220,16,Completed,entregue-sem-evidencia,AI Insight Null-State UX (Contact) - Add Run AI Analysis button when aiInsight is null on Contact detail page. Lead deta,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-222,14,Completed,entregue-comprovada,Implement real Twilio SMS SDK calls (Resolves R-006),strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-223,14,Completed,entregue-sem-evidencia,Wire actual Email Outbound Adapter (Resolves R-018) [2026-06-09 audit: shipped as Completed but was MOCK in prod — conta,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-224,14,Completed,entregue-comprovada,Implement Calendar Webhook Ingestion Routes (Resolves R-008),strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-225,16,Completed,entregue-sem-evidencia,Convert Lead UX Fix - Backend requires QUALIFIED status but Convert button always visible. Fix: (1) Disable/hide button ,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-226,16,Completed,entregue-sem-evidencia,Lead Detail Null-State UX - Fix engagement/churn/sentiment showing raw 'Unknown' string when aiInsight is null. Replace ,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-227,18,Completed,entregue-sem-evidencia,Company-to-Account Navigation Link - Lead detail page shows company name as plain <span> in profile card (line 1352) and,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-230,18,Completed,entregue-comprovada,"Unify Lead Create/Edit Form - Create page (leads/(list)/new/page.tsx, 1029 lines) and Edit page (leads/[id]/edit/page.ts",strong,
+IFC-232,16,Completed,entregue-sem-evidencia,Sidebar Broken Links Cleanup - 1 remaining broken navigation link: /deals/trash has no page.tsx (sidebar config deals.ts,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-234,18,Completed,entregue-sem-evidencia,"Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert In",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-236,16,Completed,entregue-sem-evidencia,Recent Activity Empty State CTA - Overview tab shows generic 'No activities yet' with no call to action. Add 'Log your f,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-237,16,Completed,entregue-sem-evidencia,Lead Router Security - Tenant Isolation & Domain Bypass. Fix 4 CRITICAL/MEDIUM security issues: (1) scoreWithAI fire-and,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-238,16,Completed,entregue-sem-evidencia,Lead Detail Status Type Fix + Auth Guard. Fix 2 CRITICAL issues: (1) LeadStatus type union at leads/[id]/page.tsx line 1,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-239,16,Completed,entregue-sem-evidencia,Lead Router Data Integrity Fixes. Fix 5 HIGH issues: (1) update procedure ambiguous status field handling - may silently,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-240,18,Completed,entregue-comprovada,Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant ope,strong,
+IFC-242,18,Completed,entregue-comprovada,"Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validation. Fix 3 HIGH issues: (1) BANT fields (Budget, Authority, ",strong,
+IFC-247,18,Completed,entregue-comprovada,Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [,strong,
+IFC-248,18,Completed,entregue-sem-evidencia,"Lead List & Create Page Tests. Two major pages with ZERO tests: (1) Lead list page with filtering, sorting, bulk operati",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-252,16,Completed,entregue-sem-evidencia,Contact Router Security — Tenant Isolation Fixes. CRITICAL: (1) search procedure has no createTenantWhereClause — cross-,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-253,16,Completed,entregue-sem-evidencia,Contact Detail NaN Fix + Auth Guard + Status Enum. CRITICAL: (1) NaN% division by zero — emailsOpened/emailsSent at line,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-254,16,Completed,entregue-comprovada,Contact Router Data Integrity Fixes. (1) Raw SQL in getTimeline has no tenant filter and .catch(() => []) swallows error,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-255,18,Completed,entregue-comprovada,Contact Audit Logging. (1) Zero audit logging in all 14 contact router procedures — no ctx.security.auditLogger calls (R,strong,
+IFC-256,18,Completed,entregue-comprovada,Contact Detail Hardcoded Tabs — Tickets & Documents. (1) Tickets tab fully hardcoded with 'TKT-1234' and static timestam,strong,
+IFC-257,18,In Progress,em-progresso,,n/a,has partial evidence
+IFC-265,18,Completed,entregue-comprovada,Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation N,strong,
+IFC-266,18,Completed,entregue-comprovada,Contact List/Create Page Tests + E2E. (1) Contact list page has ZERO page tests (T-02). (2) Contact create page has ZERO,strong,
+IFC-267,16,Completed,entregue-sem-evidencia,"Account Detail No-Op Action Buttons. Wire 6 non-functional buttons: (1) Create Deal button no onClick (F-05, AccountDeta",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-268,16,Completed,entregue-sem-evidencia,Account Owner Display & Assignment. (1) Owner card shows literal 'Owner Assigned' and 'Account Manager' text instead of ,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-269,16,Completed,entregue-sem-evidencia,Account Backend Tenant Isolation & Security. (1) CRITICAL: filterOptions uses raw ctx.prisma instead of prismaWithTenant,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-270,18,Completed,entregue-comprovada,Account Router Missing Procedures & Update Fix. (1) Update procedure silently drops revenue/employees/industry/parentAcc,strong,
+IFC-271,18,Completed,entregue-comprovada,Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping bu,strong,
+IFC-273,18,Completed,entregue-comprovada,"Account List Page Type Safety & Filter Enums. (1) serverStats cast to any loses type safety (L-01, AccountsPageClient.ts",strong,
+IFC-278,16,Completed,entregue-sem-evidencia,Deal Detail Page — Replace SAMPLE_DEAL with Real API Data. CRITICAL: Entire deal detail page (deals/[id]/page.tsx 792 li,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-279,16,Completed,entregue-sem-evidencia,Deal Create Form + /deals/new Route. No deal creation form exists — both 'New Deal' buttons (deals/(list)/page.tsx lines,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-280,18,Completed,entregue-comprovada,Deal Detail Action Buttons — Wire 14 No-Ops. (1) EntityHeader 6 no-ops all with onClick: () => {} (F-08): Won → moveStag,strong,
+IFC-281,16,Completed,entregue-sem-evidencia,Deal Backend Tenant Isolation & Audit Logging. (1) CRITICAL: PrismaOpportunityRepository.findById() (line 82) has NO ten,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-282,18,Completed,entregue-comprovada,"Deal Router Correctness Fixes. (1) Name updates silently dropped — service has TODO 'Add updateName method' (B-04, Oppor",strong,
+IFC-287,18,Completed,entregue-comprovada,Deal Filter Wiring & Type Safety. (1) DealFilters state (filters) captured in page but NEVER passed to trpc.opportunity.,strong,
+IFC-296,15,Completed,entregue-comprovada,Queue Scheduler Administration — Implement queuesAdmin tRPC router with live BullMQ stats and scheduler CRUD (list/pause,strong,
+IFC-297,16,Completed,entregue-sem-evidencia,"AI Monitoring Data Persistence — Replace in-memory singleton monitoring data (driftDetector, latencyMonitor, hallucinati",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-298,17,Completed,entregue-comprovada,HelpArticle Prisma Model + Migration,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-299,17,Completed,entregue-comprovada,Help Article CRUD tRPC Router,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+IFC-300,17,Completed,entregue-sem-evidencia,Help Article Seed Script — Static to DB Migration,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-303,17,Completed,entregue-comprovada,Article Feedback tRPC Mutation,strong,
+PG-180,18,Completed,entregue-comprovada,Help Article Admin List Page,strong,
+IFC-301,18,Completed,entregue-comprovada,Rich Text Editor Integration — Tiptap,strong,
+PG-181,18,Completed,entregue-comprovada,Help Article Editor Page,strong,
+IFC-302,18,Completed,entregue-comprovada,Refactor Help Article Page to Use Database,strong,
+PG-182,17,Completed,entregue-sem-evidencia,Module Settings - Contacts (/contacts/contact-settings),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-183,17,Completed,entregue-sem-evidencia,Module Settings - Accounts (/accounts/account-settings),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-184,17,Completed,entregue-sem-evidencia,Module Settings - Deals (/deals/deal-settings),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-185,17,Completed,entregue-sem-evidencia,Module Settings - Tickets (/tickets/sla-policies),weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-186,17,Completed,entregue-comprovada,Module Settings - Documents (/documents/document-settings),strong,
+PG-187,18,Completed,entregue-comprovada,Module Settings - Reports (/analytics/report-settings),strong,
+PG-188,18,Completed,entregue-comprovada,Module Settings - Billing (/billing/settings),strong,
+PG-189,18,Completed,entregue-comprovada,Module Settings - Appointments (/calendar/calendar-settings),strong,
+PG-190,18,Completed,entregue-comprovada,Module Settings - Cases (/cases/case-settings),strong,
+PG-191,18,Completed,entregue-comprovada,Module Settings - Tasks (/tasks/task-settings),strong,
+PG-192,16,Completed,entregue-comprovada,Fix missing /agent-approvals/logs page — PG-152 regression; AgentLogsViewer component exists at apps/web/src/components/,strong,"canonical attestation w/ provenance+PASS, but task-ID not found in commit/PR text"
+PG-193,16,Completed,entregue-sem-evidencia,Workflow Step Progress Panel — Add real-time N/N step progress tracker to /agent-approvals/agents and /agent-approvals/l,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+PG-195,17,Completed,entregue-sem-evidencia,Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 ,weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-309,18,Completed,entregue-sem-evidencia,"Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedA",weak,"attestation.json present but provenance incomplete (provenance=false, verdict='COMPLETE') — pre-ADR-068 schema"
+IFC-310,18,Completed,entregue-comprovada,Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-en,strong,
+IFC-311,18,Completed,entregue-comprovada,Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign,strong,
+PG-196,18,Completed,entregue-sem-evidencia,Module Settings - Account Tiers (/accounts/(list)/account-tiers),weak,deliverable exists (web route 'account') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-197,18,Completed,entregue-sem-evidencia,Module Settings - Territory Mapping (/accounts/(list)/territory-mapping),weak,deliverable exists (web route 'account') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-198,18,Completed,entregue-sem-evidencia,Module Settings - Approval Policies (/agent-approvals/approval-policies),weak,deliverable exists (web route 'agent-approvals') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-199,18,Completed,entregue-sem-evidencia,Module Settings - Model Config (/agent-approvals/model-config),weak,deliverable exists (web route 'agent-approvals') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-200,18,Completed,entregue-comprovada,Module Settings - Report Templates (/analytics/report-templates),strong,
+PG-201,18,Completed,entregue-sem-evidencia,Module Settings - Scheduled Reports (/analytics/scheduled-reports),weak,deliverable exists (web route 'reports') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-202,18,Completed,entregue-sem-evidencia,Module Settings - Availability (/calendar/availability),weak,deliverable exists (web route 'calendar-settings') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-203,18,Completed,entregue-sem-evidencia,Module Settings - Event Types (/calendar/event-types),weak,deliverable exists (web route 'calendar-settings') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-204,18,Completed,entregue-sem-evidencia,Module Settings - Case Types (/cases/case-types),weak,deliverable exists (web route 'cases') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-205,18,Completed,entregue-sem-evidencia,Module Settings - Contact Types (/contacts/(list)/contact-types),weak,deliverable exists (web route 'contact') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-206,18,Completed,entregue-sem-evidencia,Module Settings - Storage Policies (/documents/(list)/storage-policies),weak,deliverable exists (web route 'documents') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-207,18,Completed,entregue-sem-evidencia,Module Settings - Email (/email/email-settings),weak,deliverable exists (web route 'email') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-208,18,Completed,entregue-sem-evidencia,Module Settings - Task Automation (/tasks/(list)/automation),weak,deliverable exists (web route 'tasks') but NO attestation.json AND task-ID not in commit/PR text — provenance gap
+PG-209,18,Completed,entregue-sem-evidencia,Module Settings - Task Types (/tasks/(list)/task-types),weak,git/PR trace exists but NO canonical attestation.json
+INFRA-TF-001,18,Completed,entregue-sem-evidencia,Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deploym,weak,git/PR trace exists but NO canonical attestation.json
+INFRA-TF-002,18,Completed,entregue-sem-evidencia,"Provision the three apps/workers (events-worker, ingestion-worker, notifications-worker) as first-class Railway services",weak,git/PR trace exists but NO canonical attestation.json
+INFRA-TF-003,18,Completed,entregue-sem-evidencia,Replace the Supabase null_resource + curl scaffolding with the official supabase/supabase Terraform provider so Supabase,weak,git/PR trace exists but NO canonical attestation.json
+INFRA-TF-004,18,Completed,entregue-sem-evidencia,Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Te,weak,git/PR trace exists but NO canonical attestation.json
+INFRA-TF-005,18,Completed,entregue-sem-evidencia,CI + import + runbooks: add the three workers to build-images.yml and railway-deploy.yml; terraform import existing live,weak,git/PR trace exists but NO canonical attestation.json
+IFC-314,18,Completed,entregue-comprovada,"CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial d",strong,
+AUTOMATION-003,18,Completed,entregue-comprovada,Standardize attestation provenance fields (exec-attestation emits; schema declares; exec-preflight gate enforces; orches,strong,

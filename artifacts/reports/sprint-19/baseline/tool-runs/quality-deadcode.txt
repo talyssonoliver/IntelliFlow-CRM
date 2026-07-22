@@ -1,0 +1,280 @@
+
+> intelliflow-crm@0.1.0 quality:deadcode C:\Users\talys\projects\iflow-eng-ops-002
+> node scripts/run-soft.js knip --exclude unlisted,unresolved
+
+Unused files (10)
+apps/ai-worker/src/case-tag-suggestion.chain.ts                   
+apps/ai-worker/src/utils/openai-client.ts                         
+apps/api/src/modules/home/home.cache.bench.ts                     
+apps/api/src/security/audit-coverage-test.ts                      
+apps/web/src/app/settings/help-center/articles/actions.ts         
+apps/web/src/components/home/index.ts                             
+apps/web/src/components/workflows/admin/FieldDescriptorBuilder.tsx
+apps/web/src/lib/auth/auth-status-cache.ts                        
+packages/observability/src/required-url.ts                        
+tests/e2e/auth.setup.ts                                           
+Unused dependencies (9)
+mammoth                           apps/ai-worker/package.json:43:6               
+pdf-parse                         apps/ai-worker/package.json:44:6               
+@opentelemetry/winston-transport  apps/api/package.json:37:6                     
+jose                              apps/api/package.json:43:6                     
+mammoth                           apps/workers/ingestion-worker/package.json:23:6
+pdf-parse                         apps/workers/ingestion-worker/package.json:24:6
+jose                              package.json:280:6                             
+@langchain/core                   packages/ai/package.json:15:6                  
+zod                               packages/ai/package.json:16:6                  
+Unused devDependencies (4)
+tailwindcss      apps/project-tracker/package.json:39:6
+tailwindcss      apps/web/package.json:84:6            
+vitest           apps/workers/package.json:16:6        
+@storybook/test  packages/ui/package.json:64:6         
+Unlisted binaries (18)
+prisma             .github/workflows/migration.yml                         
+depcheck           apps/project-tracker/app/api/code-analysis/route.ts     
+lighthouse         apps/project-tracker/app/api/metrics/web-vitals/route.ts
+claude             apps/project-tracker/lib/claude-session-spawner.ts      
+rimraf             apps/workers/package.json                               
+pwsh               package.json                                            
+netstat            package.json                                            
+findstr            package.json                                            
+docker-compose     package.json                                            
+railway            package.json                                            
+terraform          package.json                                            
+gitleaks           scripts/pre-ship.mjs                                    
+codex              scripts/pre-ship.mjs                                    
+sonarqube-scanner  scripts/sonar-iterative.js                              
+sonarqube-scanner  scripts/sonarqube-helper.js                             
+ffmpeg             tools/scripts/build-usability-video.ts                  
+gh                 tools/scripts/parse-actions-usage.mjs                   
+gh                 tools/scripts/refresh-ci-cost-freshness.mjs             
+Unused exports (102)
+CASE_AI_AUTOMATION_QUEUE                          apps/ai-worker/src/jobs/case-ai-automation.job.ts:26:14              
+DEAL_AI_AUTOMATION_QUEUE                          apps/ai-worker/src/jobs/deal-ai-automation.job.ts:22:14              
+DEFAULT_SUMMARIZE_JOB_OPTIONS                     apps/ai-worker/src/jobs/summarize-conversation.job.ts:377:14         
+TICKET_AI_AUTOMATION_QUEUE                        apps/ai-worker/src/jobs/ticket-ai-automation.job.ts:21:14            
+_resetRetrainingTriggerCounters         function  apps/ai-worker/src/metrics/prometheus-exporter.ts:53:17              
+createAuthenticatedRateLimitMiddleware  function  apps/api/src/middleware/rate-limit.ts:175:17                         
+__resetSharedRedisLimiter               function  apps/api/src/middleware/rate-limit.ts:390:17                         
+caseDuplicateDetectionService                     apps/api/src/modules/legal/case-duplicate-detection.service.ts:429:14
+loadRequiredTicketFields                function  apps/api/src/modules/ticket/ticket-automation.ts:480:23              
+assertRequiredTicketFields              function  apps/api/src/modules/ticket/ticket-automation.ts:507:17              
+verifiedProcedure                                 apps/api/src/trpc.ts:445:14                                          
+CollapsibleSection                      function  apps/project-tracker/components/CollapsibleSection.tsx:37:17         
+DailyWorkflowSummary                    function  apps/project-tracker/components/DailyWorkflowSummary.tsx:220:17      
+readTaskTracking                        function  apps/project-tracker/lib/data-sync/task-json-builder.ts:54:17        
+buildSafeTaskFilename                   function  apps/project-tracker/lib/paths.ts:315:17                             
+buildSafeSessionFilename                function  apps/project-tracker/lib/paths.ts:331:17                             
+WidgetSkeleton                          function  apps/web/src/components/dashboard/WidgetSkeleton.tsx:27:17           
+default                                 function  apps/web/src/components/leads/csv-importer.tsx:533:16                
+resetConfigFormRegistry                 function  apps/web/src/components/workflows/config-forms/types.ts:34:17        
+workflowNodeTypes                                 apps/web/src/components/workflows/node-registry.tsx:46:14            
+getPaletteEntries                       function  apps/web/src/components/workflows/node-registry.tsx:62:17            
+registerConfigForm                      function  apps/web/src/components/workflows/node-registry.tsx:97:17            
+getConfigForm                           function  apps/web/src/components/workflows/node-registry.tsx:101:17           
+unregisterCustomNodeType                function  apps/web/src/components/workflows/node-registry.tsx:125:17           
+getCustomNodeTypeDescriptor             function  apps/web/src/components/workflows/node-registry.tsx:129:17           
+isCanonicalNodeType                     function  apps/web/src/components/workflows/node-registry.tsx:169:17           
+submitPublicFeedback                    function  apps/web/src/lib/public/feedback-service.ts:74:23                    
+PALETTE_ITEMS                                     apps/web/src/lib/workflow-types.ts:154:14                            
+shutdownOpenTelemetry                   function  apps/web/src/tracing/otel.ts:95:23                                   
+getSDKInstance                          function  apps/web/src/tracing/otel.ts:120:17                                  
+TEST_TENANT_ID_ALT                                packages/test-fixtures/src/ids.ts:17:14                              
+TEST_TENANT_ID_ALT2                               packages/test-fixtures/src/ids.ts:18:14                              
+TEST_OWNER_ID                                     packages/test-fixtures/src/ids.ts:20:14                              
+TEST_OWNER_ID_ALT                                 packages/test-fixtures/src/ids.ts:21:14                              
+TEST_OWNER_ID_ALT2                                packages/test-fixtures/src/ids.ts:22:14                              
+TEST_USER_ID                                      packages/test-fixtures/src/ids.ts:24:14                              
+TEST_USER_ID_ALT                                  packages/test-fixtures/src/ids.ts:25:14                              
+arbCurrency                                       tests/property/support/arbitraries/primitives.ts:18:14               
+arbCents                                          tests/property/support/arbitraries/primitives.ts:23:14               
+arbAmount                                         tests/property/support/arbitraries/primitives.ts:26:14               
+arbTenantId                                       tests/property/support/arbitraries/primitives.ts:31:14               
+arbId                                             tests/property/support/arbitraries/primitives.ts:34:14               
+arbEmail                                          tests/property/support/arbitraries/primitives.ts:37:14               
+arbNonEmptyString                                 tests/property/support/arbitraries/primitives.ts:40:14               
+arbCount                                          tests/property/support/arbitraries/primitives.ts:45:14               
+arbCapacity                                       tests/property/support/arbitraries/primitives.ts:48:14               
+arbInstant                                        tests/property/support/arbitraries/temporal.ts:24:14                 
+expectAtMostFulfilled                   function  tests/property/support/assertions.ts:27:17                           
+expectNeverNegative                     function  tests/property/support/assertions.ts:35:17                           
+expectWithinLimit                       function  tests/property/support/assertions.ts:40:17                           
+expectInvariant                         function  tests/property/support/assertions.ts:59:17                           
+defineAsyncCommand                      function  tests/property/support/commands/index.ts:9:17                        
+defineCommand                           function  tests/property/support/commands/index.ts:18:17                       
+commands                                          tests/property/support/model/index.ts:20:14                          
+modelRun                                          tests/property/support/model/index.ts:23:14                          
+asyncModelRun                                     tests/property/support/model/index.ts:26:14                          
+schedulerArb                            function  tests/property/support/scheduler.ts:30:17                            
+scheduleAll                             function  tests/property/support/scheduler.ts:39:17                            
+interleave                              function  tests/property/support/scheduler.ts:48:17                            
+drain                                   function  tests/property/support/scheduler.ts:53:23                            
+settle                                  function  tests/property/support/scheduler.ts:60:23                            
+activePath                              function  tests/property/support/seed-reporter.ts:26:17                        
+replayCommand                           function  tests/property/support/seed-reporter.ts:35:17                        
+default                                           tools/scripts/__tests__/pg195.vitest.config.ts:10:16                 
+default                                           tools/scripts/commitlint.config.js:2:18                              
+trackPageView                           function  tools/scripts/conversion-tracking.js:16:17                           
+trackFeatureView                        function  tools/scripts/conversion-tracking.js:32:17                           
+trackFeatureLearnMore                   function  tools/scripts/conversion-tracking.js:49:17                           
+trackCTAClick                           function  tools/scripts/conversion-tracking.js:66:17                           
+initScrollTracking                      function  tools/scripts/conversion-tracking.js:93:17                           
+trackTimeOnPage                         function  tools/scripts/conversion-tracking.js:123:17                          
+default                                           tools/scripts/docusaurus.config.js:232:18                            
+options                                           tools/scripts/k6/__tests__/auth-smoke.js:27:14                       
+default                                 function  tools/scripts/k6/__tests__/auth-smoke.js:60:16                       
+handleSummary                           function  tools/scripts/k6/__tests__/auth-smoke.js:196:17                      
+options                                           tools/scripts/k6/authenticated-load-test.js:42:14                    
+default                                 function  tools/scripts/k6/authenticated-load-test.js:329:16                   
+setup                                   function  tools/scripts/k6/authenticated-load-test.js:357:17                   
+teardown                                function  tools/scripts/k6/authenticated-load-test.js:403:17                   
+handleSummary                           function  tools/scripts/k6/authenticated-load-test.js:410:17                   
+options                                           tools/scripts/k6/comprehensive-load-test.js:28:12                    
+default                                 function  tools/scripts/k6/comprehensive-load-test.js:311:16                   
+setup                                   function  tools/scripts/k6/comprehensive-load-test.js:353:17                   
+teardown                                function  tools/scripts/k6/comprehensive-load-test.js:380:17                   
+handleSummary                           function  tools/scripts/k6/comprehensive-load-test.js:387:17                   
+options                                           tools/scripts/k6/gate2-benchmark.js:31:14                            
+setup                                   function  tools/scripts/k6/gate2-benchmark.js:48:17                            
+default                                 function  tools/scripts/k6/gate2-benchmark.js:86:16                            
+teardown                                function  tools/scripts/k6/gate2-benchmark.js:154:17                           
+options                                           tools/scripts/k6/load-test.js:28:14                                  
+default                                 function  tools/scripts/k6/load-test.js:300:16                                 
+setup                                   function  tools/scripts/k6/load-test.js:332:17                                 
+teardown                                function  tools/scripts/k6/load-test.js:347:17                                 
+handleSummary                           function  tools/scripts/k6/load-test.js:354:17                                 
+options                                           tools/scripts/k6/mvp-load-test.js:40:14                              
+default                                 function  tools/scripts/k6/mvp-load-test.js:61:16                              
+handleSummary                           function  tools/scripts/k6/mvp-load-test.js:72:17                              
+options                                           tools/scripts/k6/quick-test.js:22:12                                 
+default                                 function  tools/scripts/k6/quick-test.js:57:16                                 
+setup                                   function  tools/scripts/k6/quick-test.js:119:17                                
+teardown                                function  tools/scripts/k6/quick-test.js:138:17                                
+handleSummary                           function  tools/scripts/k6/quick-test.js:142:17                                
+Unused exported types (25)
+CalendarWebhooksRouter   type       apps/api/src/modules/calendar/calendar-webhook.router.ts:45:13           
+ContactDuplicateAction   type       apps/api/src/modules/contact/contact-duplicate-detection.service.ts:50:13
+InboundLeadInput         type       apps/api/src/modules/inbound/inbound.router.ts:66:13                     
+InboundCallBookingInput  type       apps/api/src/modules/inbound/inbound.router.ts:111:13                    
+CaseDuplicateAction      type       apps/api/src/modules/legal/case-duplicate-detection.service.ts:39:13     
+PmEventEnvelope          type       apps/api/src/modules/pm-events/pm-event-envelope.ts:33:13                
+OpportunityListItem      type       apps/web/src/components/deals/types.ts:19:13                             
+EmailLabelId             type       apps/web/src/components/sidebar/configs/EmailSidebarContent.tsx:14:13    
+CustomCalendarEntry      interface  apps/web/src/hooks/useCalendarVisibility.ts:48:18                        
+WorkflowStepDef          interface  apps/web/src/lib/ai-monitoring/workflow-types.ts:16:18                   
+WorkflowStepResult       interface  apps/web/src/lib/ai-monitoring/workflow-types.ts:25:18                   
+TermsMetadata            type       apps/web/src/lib/legal/acceptance-tracker.ts:11:13                       
+TermsSection             type       apps/web/src/lib/legal/acceptance-tracker.ts:12:13                       
+PrivacyPolicyMetadata    type       apps/web/src/lib/legal/consent-tracker.ts:11:13                          
+PrivacyPolicySection     type       apps/web/src/lib/legal/consent-tracker.ts:12:13                          
+CookiePolicyMetadata     type       apps/web/src/lib/legal/cookie-policy-tracker.ts:11:13                    
+CookiePolicySection      type       apps/web/src/lib/legal/cookie-policy-tracker.ts:12:13                    
+DpaMetadata              type       apps/web/src/lib/legal/signature-handler.ts:11:13                        
+DpaSection               type       apps/web/src/lib/legal/signature-handler.ts:12:13                        
+DpaSignatureRecord       type       apps/web/src/lib/legal/signature-handler.ts:15:13                        
+AupMetadata              type       apps/web/src/lib/legal/violation-tracker.ts:12:13                        
+AupSection               type       apps/web/src/lib/legal/violation-tracker.ts:13:13                        
+WorkflowNode             interface  apps/web/src/lib/workflow-types.ts:94:18                                 
+WorkflowEdge             interface  apps/web/src/lib/workflow-types.ts:104:18                                
+WorkflowDefinition       interface  apps/web/src/lib/workflow-types.ts:115:18                                
+Duplicate exports (23)
+DocumentIndexer|default                                         apps/ai-worker/src/services/document-indexer.ts         
+EmbeddingPurgeService|default                                   apps/ai-worker/src/services/embedding-purge.service.ts  
+RetrievalService|default                                        apps/ai-worker/src/services/retrieval-service.ts        
+OCRWorker|default                                               apps/ai-worker/src/workers/ocr-worker.ts                
+ReindexWorker|default                                           apps/ai-worker/src/workers/reindex-worker.ts            
+conversationRouter|default                                      apps/api/src/modules/agent/conversation.router.ts       
+TimelineCommunicationService|default                            apps/api/src/modules/misc/timeline.ts                   
+EncryptionService|default                                       apps/api/src/security/encryption.ts                     
+KeyRotationService|default                                      apps/api/src/security/key-rotation.ts                   
+subscriptionRouter|default                                      apps/api/src/shared/subscription-demo.ts                
+publicProcedure|loggedProcedure                                 apps/api/src/trpc.ts                                    
+CollapsibleSection|default                                      apps/project-tracker/components/CollapsibleSection.tsx  
+DailyWorkflowSummary|default                                    apps/project-tracker/components/DailyWorkflowSummary.tsx
+CsvImporter|default                                             apps/web/src/components/leads/csv-importer.tsx          
+rollbackService|default                                         apps/web/src/lib/agent/rollback-service.ts              
+GmailAdapter|default                                            packages/adapters/src/email/gmail/client.ts             
+OutlookAdapter|default                                          packages/adapters/src/email/outlook/client.ts           
+SAPAdapter|default                                              packages/adapters/src/erp/sap/client.ts                 
+TeamsAdapter|default                                            packages/adapters/src/messaging/teams/client.ts         
+EmptyState|SharedEmptyState                                     packages/ui/src/components/empty-state.tsx              
+bulkIdsSchema|bulkArchiveLeadsSchema|bulkDeleteLeadsSchema|bu…  packages/validators/src/bulk-operations.ts              
+caseSettingsSchema|updateCaseSettingsSchema                     packages/validators/src/case-settings.ts                
+updateDailyGoalInputSchema|setOrgGoalDefaultInputSchema         packages/validators/src/home.ts                         
+Configuration hints (46)
+**/dist/**                                                                knip.json  Remove from ignore                 
+**/coverage/**                                                            knip.json  Remove from ignore                 
+**/.next/**                                                               knip.json  Remove from ignore                 
+**/generated/**                                                           knip.json  Remove from ignore                 
+**/.tsup/**                                                               knip.json  Remove from ignore                 
+**/migrations/**                                                          knip.json  Remove from ignore                 
+artifacts/misc/**/*.ts                                                    knip.json  Remove from ignore                 
+…ckages/db/prisma/schema-audit.prisma                                     knip.json  Remove from ignore                 
+packages/db/prisma/seed-ids.ts                                            knip.json  Remove from ignore                 
+tests/integration/setup.ts                                                knip.json  Remove from ignore                 
+...1 more similar hints                                                                                                 
+@opentelemetry/sdk-trace-node                                             knip.json  Remove from ignoreDependencies     
+@prisma/adapter-pg                                                        knip.json  Remove from ignoreDependencies     
+@vitest/coverage-v8                                                       knip.json  Remove from ignoreDependencies     
+@vitejs/plugin-react                                                      knip.json  Remove from ignoreDependencies     
+postcss                                                                   knip.json  Remove from ignoreDependencies     
+license-checker                                                           knip.json  Remove from ignoreDependencies     
+dotenv                                                                    knip.json  Remove from ignoreDependencies     
+[src/index.ts]                         packages/typescript-config         knip.json  Refine entry pattern (no matches)  
+[src/**/*.{ts,tsx}]                    packages/typescript-config         knip.json  Refine project pattern (no matches)
+src/index.ts                           packages/sdk                       knip.json  Remove redundant entry pattern     
+src/app/not-found.tsx                  apps/web                           knip.json  Remove redundant entry pattern     
+src/app/global-error.tsx               apps/web                           knip.json  Remove redundant entry pattern     
+src/index.ts                           packages/api-client                knip.json  Remove redundant entry pattern     
+src/main.ts                            apps/workers/ingestion-worker      knip.json  Remove redundant entry pattern     
+src/index.ts                           apps/api                           knip.json  Remove redundant entry pattern     
+src/main.ts                            apps/api                           knip.json  Remove redundant entry pattern     
+src/ws-server.ts                       apps/api                           knip.json  Remove redundant entry pattern     
+src/main.ts                            apps/workers/notifications-worker  knip.json  Remove redundant entry pattern     
+src/main.ts                            apps/workers/events-worker         knip.json  Remove redundant entry pattern     
+...16 more similar hints                                                                                                
+Tag hints (44)
+Unused tag in packages/application/src/ports/external/AuthServicePort.ts: User → @knipignore
+Unused tag in packages/application/src/ports/external/AuthServicePort.ts: AuthServicePort → @knipignore
+Unused tag in packages/domain/src/crm/lead/LeadRepository.ts: LeadRepository → @knipignore
+Unused tag in packages/domain/src/crm/lead/LeadRepository.ts: LeadQueryService → @knipignore
+Unused tag in packages/domain/src/crm/lead/LeadRepository.ts: LeadSearchParams → @knipignore
+Unused tag in packages/domain/src/crm/lead/LeadRepository.ts: LeadSearchResult → @knipignore
+Unused tag in packages/domain/src/crm/lead/LeadRepository.ts: LeadStatistics → @knipignore
+Unused tag in packages/domain/src/crm/lead/LeadRepository.ts: FunnelMetrics → @knipignore
+Unused tag in packages/domain/src/crm/contact/ContactRepository.ts: ContactRepository → @knipignore
+Unused tag in packages/domain/src/crm/contact/ContactRepository.ts: LinkContactsByDomainInput → @knipignore
+Unused tag in packages/domain/src/crm/contact/ContactRepository.ts: LinkContactsByDomainResult → @knipignore
+Unused tag in packages/domain/src/crm/contact/ContactRepository.ts: MergeInTransactionInput → @knipignore
+Unused tag in packages/domain/src/crm/contact/ContactRepository.ts: MergeInTransactionResult → @knipignore
+Unused tag in packages/domain/src/crm/contact/ContactRepository.ts: ContactQueryService → @knipignore
+Unused tag in packages/domain/src/crm/contact/ContactRepository.ts: ContactSearchParams → @knipignore
+Unused tag in packages/domain/src/crm/contact/ContactRepository.ts: ContactSearchResult → @knipignore
+Unused tag in packages/domain/src/crm/contact/ContactRepository.ts: ContactStatistics → @knipignore
+Unused tag in packages/domain/src/crm/account/AccountRepository.ts: AccountHierarchyRecord → @knipignore
+Unused tag in packages/domain/src/crm/account/AccountRepository.ts: AccountRepository → @knipignore
+Unused tag in packages/domain/src/crm/account/AccountRepository.ts: AccountQueryService → @knipignore
+Unused tag in packages/domain/src/crm/account/AccountRepository.ts: AccountSearchParams → @knipignore
+Unused tag in packages/domain/src/crm/account/AccountRepository.ts: AccountSearchResult → @knipignore
+Unused tag in packages/domain/src/crm/account/AccountRepository.ts: AccountStatistics → @knipignore
+Unused tag in packages/domain/src/crm/opportunity/OpportunityRepository.ts: OpportunityRepository → @knipignore
+Unused tag in packages/domain/src/crm/opportunity/OpportunityRepository.ts: OpportunityQueryService → @knipignore
+Unused tag in packages/domain/src/crm/opportunity/OpportunityRepository.ts: OpportunitySearchParams → @knipignore
+Unused tag in packages/domain/src/crm/opportunity/OpportunityRepository.ts: OpportunitySearchResult → @knipignore
+Unused tag in packages/domain/src/crm/opportunity/OpportunityRepository.ts: OpportunityStatistics → @knipignore
+Unused tag in packages/domain/src/crm/opportunity/OpportunityRepository.ts: PipelineMetrics → @knipignore
+Unused tag in packages/domain/src/crm/opportunity/OpportunityRepository.ts: StageMetrics → @knipignore
+Unused tag in packages/domain/src/crm/opportunity/OpportunityRepository.ts: WinRateAnalysis → @knipignore
+Unused tag in packages/domain/src/crm/task/TaskRepository.ts: TaskRepository → @knipignore
+Unused tag in packages/domain/src/crm/task/TaskRepository.ts: TaskQueryService → @knipignore
+Unused tag in packages/domain/src/crm/task/TaskRepository.ts: TaskSearchParams → @knipignore
+Unused tag in packages/domain/src/crm/task/TaskRepository.ts: TaskSearchResult → @knipignore
+Unused tag in packages/domain/src/crm/task/TaskRepository.ts: TaskStatistics → @knipignore
+Unused tag in packages/domain/src/crm/billing/SetupInstalment.ts: SetupInstalmentRepository → @knipignore
+Unused tag in packages/domain/src/crm/billing/SubscriptionStatus.ts: StripeSubscriptionRepository → @knipignore
+Unused tag in packages/domain/src/crm/ticket/TicketRepository.ts: TicketRepository → @knipignore
+Unused tag in packages/domain/src/crm/ticket/TicketRepository.ts: TicketQueryService → @knipignore
+Unused tag in packages/domain/src/crm/ticket/TicketRepository.ts: TicketSearchParams → @knipignore
+Unused tag in packages/domain/src/crm/ticket/TicketRepository.ts: TicketSearchResult → @knipignore
+Unused tag in packages/domain/src/crm/ticket/TicketRepository.ts: TicketStatistics → @knipignore
+Unused tag in packages/domain/src/crm/ticket/TicketRepository.ts: SlaMetrics → @knipignore
+[WARN] Ignoring non-zero exit code (1) from: knip --exclude unlisted,unresolved

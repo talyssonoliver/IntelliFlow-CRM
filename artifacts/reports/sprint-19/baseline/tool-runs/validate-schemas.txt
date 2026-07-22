@@ -1,0 +1,1413 @@
+
+> intelliflow-crm@0.1.0 validate:schemas C:\Users\talys\projects\iflow-eng-ops-002
+> tsx tools/scripts/validate-schemas.ts
+
+Validating data files against Zod schemas...
+
+Checking: Vulnerability Baseline
+  ✓ .\infra\monitoring\vulnerability-baseline.json
+Checking: Attestation
+  ✗ .\.specify\sprints\sprint-9\attestations\IFC-145\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-9\attestations\IFC-124\attestation.json
+  - context_acknowledgment.files_read.0: Invalid input: expected object, received string
+  - context_acknowledgment.files_read.1: Invalid input: expected object, received string
+  - artifact_hashes.audit-encryption-module.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.retention-policy.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.attestation.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - validation_results.0.passed: Invalid input: expected boolean, received undefined
+  - validation_results.1.command: Invalid input: expected string, received undefined
+  - validation_results.1.exit_code: Invalid input: expected number, received undefined
+  - validation_results.1.passed: Invalid input: expected boolean, received undefined
+  - validation_results.2.command: Invalid input: expected string, received undefined
+  - validation_results.2.exit_code: Invalid input: expected number, received undefined
+  - validation_results.2.passed: Invalid input: expected boolean, received undefined
+  - validation_results.3.command: Invalid input: expected string, received undefined
+  - validation_results.3.exit_code: Invalid input: expected number, received undefined
+  - validation_results.3.passed: Invalid input: expected boolean, received undefined
+  - validation_results.4.command: Invalid input: expected string, received undefined
+  - validation_results.4.exit_code: Invalid input: expected number, received undefined
+  - validation_results.4.passed: Invalid input: expected boolean, received undefined
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  - gate_results.0.passed: Invalid input: expected boolean, received undefined
+  - kpi_results.0.kpi: Invalid input: expected string, received undefined
+  - kpi_results.1.kpi: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.0.met: Invalid input: expected boolean, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.met: Invalid input: expected boolean, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.met: Invalid input: expected boolean, received undefined
+  ✓ .\.specify\sprints\sprint-9\attestations\IFC-116\attestation.json
+  ✗ .\.specify\sprints\sprint-9\attestations\IFC-097\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.5.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.6.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/coverage/trace-coverage-report.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/shared/dashboard-catalog.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - validation_results.0.command: Invalid input: expected string, received undefined
+  - validation_results.0.exit_code: Invalid input: expected number, received undefined
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  - validation_results.1.command: Invalid input: expected string, received undefined
+  - validation_results.1.exit_code: Invalid input: expected number, received undefined
+  - validation_results.1.timestamp: Invalid input: expected string, received undefined
+  - validation_results.2.command: Invalid input: expected string, received undefined
+  - validation_results.2.exit_code: Invalid input: expected number, received undefined
+  - validation_results.2.timestamp: Invalid input: expected string, received undefined
+  - validation_results.3.command: Invalid input: expected string, received undefined
+  - validation_results.3.exit_code: Invalid input: expected number, received undefined
+  - validation_results.3.timestamp: Invalid input: expected string, received undefined
+  - validation_results.4.command: Invalid input: expected string, received undefined
+  - validation_results.4.exit_code: Invalid input: expected number, received undefined
+  - validation_results.4.timestamp: Invalid input: expected string, received undefined
+  - validation_results.5.command: Invalid input: expected string, received undefined
+  - validation_results.5.exit_code: Invalid input: expected number, received undefined
+  - validation_results.5.timestamp: Invalid input: expected string, received undefined
+  - validation_results.6.command: Invalid input: expected string, received undefined
+  - validation_results.6.exit_code: Invalid input: expected number, received undefined
+  - validation_results.6.timestamp: Invalid input: expected string, received undefined
+  - validation_results.7.command: Invalid input: expected string, received undefined
+  - validation_results.7.exit_code: Invalid input: expected number, received undefined
+  - validation_results.7.timestamp: Invalid input: expected string, received undefined
+  - validation_results.8.command: Invalid input: expected string, received undefined
+  - validation_results.8.exit_code: Invalid input: expected number, received undefined
+  - validation_results.8.timestamp: Invalid input: expected string, received undefined
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-9\attestations\IFC-096\attestation.json
+  ✓ .\.specify\sprints\sprint-9\attestations\IFC-057\attestation.json
+  ✓ .\.specify\sprints\sprint-9\attestations\IFC-056\attestation.json
+  ✓ .\.specify\sprints\sprint-8\attestations\PG-153\attestation.json
+  ✓ .\.specify\sprints\sprint-8\attestations\PG-152\attestation.json
+  ✓ .\.specify\sprints\sprint-8\attestations\PG-151\attestation.json
+  ✓ .\.specify\sprints\sprint-8\attestations\PG-146\attestation.json
+  ✓ .\.specify\sprints\sprint-8\attestations\IFC-142\attestation.json
+  ✓ .\.specify\sprints\sprint-8\attestations\IFC-118\attestation.json
+  ✓ .\.specify\sprints\sprint-8\attestations\IFC-094\attestation.json
+  ✗ .\.specify\sprints\sprint-8\attestations\IFC-077\attestation.json
+  - validation_results.0.command: Invalid input: expected string, received undefined
+  - validation_results.0.exit_code: Invalid input: expected number, received undefined
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  - validation_results.1.command: Invalid input: expected string, received undefined
+  - validation_results.1.exit_code: Invalid input: expected number, received undefined
+  - validation_results.1.timestamp: Invalid input: expected string, received undefined
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-8\attestations\IFC-055\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/weekly-cost-report.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/usage-alerts-config.yaml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/shared/cost-optimization-actions.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/invoice-tracker.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-7\attestations\PG-150\attestation.json
+  ✗ .\.specify\sprints\sprint-7\attestations\PG-149\attestation.json
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  - validation_results.1.timestamp: Invalid input: expected string, received undefined
+  - validation_results.2.timestamp: Invalid input: expected string, received undefined
+  - validation_results.3.timestamp: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-7\attestations\PG-148\attestation.json
+  ✓ .\.specify\sprints\sprint-7\attestations\PG-144\attestation.json
+  ✓ .\.specify\sprints\sprint-7\attestations\PG-143\attestation.json
+  ✓ .\.specify\sprints\sprint-7\attestations\PG-142\attestation.json
+  ✓ .\.specify\sprints\sprint-7\attestations\PG-139\attestation.json
+  ✓ .\.specify\sprints\sprint-7\attestations\PG-138\attestation.json
+  ✓ .\.specify\sprints\sprint-7\attestations\IFC-197\attestation.json
+  ✓ .\.specify\sprints\sprint-7\attestations\IFC-148\attestation.json
+  ✗ .\.specify\sprints\sprint-7\attestations\IFC-134\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/security/image-scanning.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes..github/workflows/image-scan.yml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-7\attestations\IFC-133\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/security/signing.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes..github/workflows/signing.yml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-7\attestations\IFC-126\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/dev-guide.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/adr-index.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-7\attestations\IFC-122\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/resilience/circuit-breaker.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/resilience/retry-policy.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/circuit-breaker.spec.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-7\attestations\IFC-093\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/lib/tickets/sla-service.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/lib/tickets/sla-badge.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/lib/tickets/sla-notifications.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/lib/tickets/sla-notification-test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/lib/tickets/index.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-7\attestations\IFC-092\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/api/src/shared/forecast-algorithm.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/metrics/accuracy-backtest.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-7\attestations\IFC-114\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/api/src/middleware/rate-limit.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/waf-config.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/ddos-test-report.txt: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-7\attestations\IFC-082\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/knowledge-graph.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/shared/context-map.puml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-7\attestations\IFC-080\attestation.json
+  ✗ .\.specify\sprints\sprint-7\attestations\IFC-079\attestation.json
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/sidebars.js: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/search-index.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-7\attestations\IFC-054\attestation.json
+  - artifact_hashes.artifacts/metrics/complexity-metrics.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/shared/refactoring-backlog.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/team-velocity.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-5\attestations\PG-134\attestation.json
+  ✓ .\.specify\sprints\sprint-5\attestations\PG-133\attestation.json
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-189\attestation.json
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-187\attestation.json
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-186\attestation.json
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-180\attestation.json
+  ✗ .\.specify\sprints\sprint-5\attestations\IFC-179\attestation.json
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-150\attestation.json
+  ✗ .\.specify\sprints\sprint-5\attestations\IFC-147\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-138\attestation.json
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-130\attestation.json
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-127\attestation.json
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-112\attestation.json
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-111\attestation.json
+  ✗ .\.specify\sprints\sprint-5\attestations\IFC-098\attestation.json
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-089\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\PG-137\attestation.json
+  ✗ .\.specify\sprints\sprint-6\attestations\PG-136\attestation.json
+  - dependencies_verified: Invalid input
+  - notes: Invalid input: expected string, received array
+  ✓ .\.specify\sprints\sprint-6\attestations\PG-135\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-207\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-206\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-205\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-181\attestation.json
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-156\attestation.json
+  - task_id: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-155\attestation.json
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-154\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/ai-worker/src/workers/ocr-worker.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/benchmarks/ocr-quality-benchmarks.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/extracted-text-schema.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-153\attestation.json
+  - notes: Invalid input: expected string, received array
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-152\attestation.json
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-151\attestation.json
+  - notes: Invalid input: expected string, received object
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-149\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/lib/agent/rollback-service.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-144\attestation.json
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-139\attestation.json
+  - kpi_results.0.met: Invalid input: expected boolean, received undefined
+  - kpi_results.1.met: Invalid input: expected boolean, received undefined
+  - kpi_results.2.met: Invalid input: expected boolean, received undefined
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-132\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-129\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-125\attestation.json
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-117\attestation.json
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  - validation_results.1.timestamp: Invalid input: expected string, received undefined
+  - validation_results.2.timestamp: Invalid input: expected string, received undefined
+  - validation_results.3.timestamp: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-100\attestation.json
+  - notes: Invalid input: expected string, received array
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-095\attestation.json
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-091\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-090\attestation.json
+  - kpi_results.0.met: Invalid input: expected boolean, received undefined
+  - kpi_results.1.met: Invalid input: expected boolean, received undefined
+  - kpi_results.2.met: Invalid input: expected boolean, received undefined
+  - kpi_results.3.met: Invalid input: expected boolean, received undefined
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-039\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-025\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-023\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-022\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-021\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-020\attestation.json
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-019\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/investment-gate-1-deck.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/metrics/week-1-metrics.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/roi-projection.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/cfo-approval.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-018\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.vitest.config.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/coverage/coverage-summary.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/test-report.html: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/ci-test-results.xml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  - gate_results.1.gate_id: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-017\attestation.json
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-016\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/hooks/use-subscription.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/hooks/use-subscription.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/websocket-test-results.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-015\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/queues/types.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/queues/connection.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/queues/retry-strategy.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/queues/queue-factory.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/queues/metrics-collector.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/queues/bull-board.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/metrics/job-metrics.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/bull-board-screenshot.png: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-014\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/web-vitals-report.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/axe-audit-results.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-013\attestation.json
+  ✗ .\.specify\sprints\sprint-6\attestations\IFC-012\attestation.json
+  - kpi_results.1.met: Invalid input: expected boolean, received string
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-010\attestation.json
+  ✓ .\.specify\sprints\sprint-4\attestations\IFC-188\attestation.json
+  ✗ .\.specify\sprints\sprint-4\attestations\IFC-185\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.1.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.2.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.3.sha256: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-4\attestations\IFC-184\attestation.json
+  ✗ .\.specify\sprints\sprint-4\attestations\IFC-178\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.1.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.2.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.3.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.4.sha256: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-4\attestations\IFC-177\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.1.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.2.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.3.sha256: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-4\attestations\IFC-131\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.5.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.6.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.7.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/architecture/domain-dependencies.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/architecture/application-dependencies.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/architecture/adapters-dependencies.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes..eslintrc.js: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes..github/workflows/ci.yml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/architecture/hex-boundaries.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/planning/adr/ADR-010-architecture-boundary-enforcement.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/architecture/README.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  - gate_results.0.passed: Invalid input: expected boolean, received undefined
+  - gate_results.1.gate_id: Invalid input: expected string, received undefined
+  - gate_results.1.passed: Invalid input: expected boolean, received undefined
+  - definition_of_done_items.0.evidence: Invalid input: expected string, received array
+  - definition_of_done_items.1.evidence: Invalid input: expected string, received array
+  - definition_of_done_items.2.evidence: Invalid input: expected string, received array
+  - definition_of_done_items.3.evidence: Invalid input: expected string, received array
+  ✓ .\.specify\sprints\sprint-4\attestations\IFC-137\attestation.json
+  ✓ .\.specify\sprints\sprint-4\attestations\IFC-110\attestation.json
+  ✓ .\.specify\sprints\sprint-4\attestations\IFC-108\attestation.json
+  ✓ .\.specify\sprints\sprint-4\attestations\IFC-009\attestation.json
+  ✓ .\.specify\sprints\sprint-3\attestations\IFC-176\attestation.json
+  ✓ .\.specify\sprints\sprint-3\attestations\IFC-136\attestation.json
+  ✗ .\.specify\sprints\sprint-3\attestations\IFC-128\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.1.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.2.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.3.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.4.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.5.sha256: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-3\attestations\IFC-107\attestation.json
+  ✗ .\.specify\sprints\sprint-3\attestations\IFC-105\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/domain/src/aggregates/task/Task.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/domain/src/aggregates/task/task.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-3\attestations\IFC-104\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/domain/src/aggregates/opportunity/Opportunity.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/domain/src/aggregates/opportunity/opportunity.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-3\attestations\IFC-011\attestation.json
+  ✓ .\.specify\sprints\sprint-3\attestations\IFC-007\attestation.json
+  ✓ .\.specify\sprints\sprint-3\attestations\IFC-006\attestation.json
+  ✗ .\.specify\sprints\sprint-2\attestations\SALES-002\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/sales/demo-script.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/demo-recordings.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/objection-handling.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-2\attestations\IFC-146\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/user-acceptance-test-plan.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/logs/uat-session-1.log: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/uat-findings.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-2\attestations\IFC-109\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/adapters/src/prisma/transaction-manager.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/integration/outbox.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-2\attestations\IFC-103\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/domain/src/aggregates/account/Account.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/domain/src/aggregates/account/account.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-2\attestations\IFC-102\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/domain/src/aggregates/contact/Contact.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/domain/src/aggregates/contact/contact.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-2\attestations\IFC-101\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/domain/src/aggregates/lead/Lead.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/domain/src/aggregates/lead/lead.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-2\attestations\IFC-085\attestation.json
+  ✗ .\.specify\sprints\sprint-2\attestations\IFC-073\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/gdpr-compliance.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/risk-matrix.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/security/dpia.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-2\attestations\IFC-072\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-2\attestations\IFC-008\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/compliance-report.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/security/owasp-checklist.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/planning/iso42001-gap-analysis.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/zap-scan-report.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-2\attestations\IFC-005\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/ai-worker/src/chains/scoring.chain.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/api/src/shared/scoring-output-schema.zod.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-2\attestations\IFC-004\attestation.json
+  ✗ .\.specify\sprints\sprint-18\attestations\PG-200\attestation.json
+  - artifact_hashes.apps/web/src/app/analytics/report-templates/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/analytics/report-templates/ReportTemplatesContent.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/api/src/modules/analytics/report-templates.router.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/validators/src/report-templates.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/db/prisma/migrations/20260629000000_add_report_templates/migration.sql: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-18\attestations\PG-191\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\PG-190\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\PG-189\attestation.json
+  ✗ .\.specify\sprints\sprint-18\attestations\PG-188\attestation.json
+  - artifact_hashes.packages/validators/src/billing.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/api/src/modules/billing/billing.router.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/billing/settings/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/billing/settings/loading.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/billing/billing-settings.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/billing/__tests__/billing-settings.test.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/test/fixtures/billing-data.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/adapters/src/payments/stripe/handlers/customers.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-18\attestations\PG-187\attestation.json
+  - evidence_summary: Invalid input: expected object, received string
+  ✓ .\.specify\sprints\sprint-18\attestations\PG-181\attestation.json
+  ✗ .\.specify\sprints\sprint-18\attestations\PG-180\attestation.json
+  - context_acknowledgment: Invalid input: expected object, received string
+  - evidence_summary: Invalid input: expected object, received string
+  - dependencies_verified: Invalid input
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-18\attestations\PG-132\attestation.json
+  ✗ .\.specify\sprints\sprint-18\attestations\PG-063\attestation.json
+  - context_acknowledgment.files_read: Invalid input: expected array, received number
+  - context_acknowledgment.invariants_acknowledged: Invalid input: expected array, received number
+  - evidence_summary: Invalid input: expected object, received string
+  - gate_results.10.passed: Invalid input: expected boolean, received null
+  - kpi_results.3.met: Invalid input: expected boolean, received null
+  - dependencies_verified: Invalid input
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.5.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.6.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.7.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.8.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.9.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.10.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.11.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.11.met: Invalid input: expected boolean, received null
+  ✗ .\.specify\sprints\sprint-18\attestations\PG-062\attestation.json
+  - context_acknowledgment.files_read: Invalid input: expected array, received number
+  - context_acknowledgment.invariants_acknowledged: Invalid input: expected array, received number
+  - evidence_summary: Invalid input: expected object, received string
+  - gate_results.10.passed: Invalid input: expected boolean, received null
+  - kpi_results.3.met: Invalid input: expected boolean, received null
+  - dependencies_verified: Invalid input
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.5.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.6.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.6.met: Invalid input: expected boolean, received null
+  ✗ .\.specify\sprints\sprint-18\attestations\PG-061\attestation.json
+  - context_acknowledgment.files_read: Invalid input: expected array, received number
+  - context_acknowledgment.invariants_acknowledged: Invalid input: expected array, received number
+  - evidence_summary: Invalid input: expected object, received string
+  - gate_results.10.passed: Invalid input: expected boolean, received null
+  - kpi_results.3.met: Invalid input: expected boolean, received null
+  - dependencies_verified: Invalid input
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.5.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.6.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.6.met: Invalid input: expected boolean, received null
+  ✗ .\.specify\sprints\sprint-18\attestations\PG-060\attestation.json
+  - context_acknowledgment.files_read: Invalid input: expected array, received number
+  - context_acknowledgment.invariants_acknowledged: Invalid input: expected array, received number
+  - evidence_summary: Invalid input: expected object, received string
+  - dependencies_verified: Invalid input
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-18\attestations\PG-059\attestation.json
+  - dependencies_verified: Invalid input
+  - definition_of_done_items.0: Invalid input: expected object, received string
+  - definition_of_done_items.1: Invalid input: expected object, received string
+  - definition_of_done_items.2: Invalid input: expected object, received string
+  - definition_of_done_items.3: Invalid input: expected object, received string
+  - definition_of_done_items.4: Invalid input: expected object, received string
+  ✓ .\.specify\sprints\sprint-18\attestations\PG-058\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-314\attestation.json
+  ✗ .\.specify\sprints\sprint-18\attestations\IFC-311\attestation.json
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.5.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.6.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.7.criterion: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-18\attestations\IFC-310\attestation.json
+  - kpi_results.0.target: Invalid input: expected string, received number
+  - kpi_results.0.actual: Invalid input: expected string, received number
+  - kpi_results.1.target: Invalid input: expected string, received number
+  - kpi_results.1.actual: Invalid input: expected string, received null
+  - kpi_results.2.target: Invalid input: expected string, received number
+  - kpi_results.2.actual: Invalid input: expected string, received number
+  - kpi_results.3.target: Invalid input: expected string, received number
+  - kpi_results.3.actual: Invalid input: expected string, received number
+  - kpi_results.4.target: Invalid input: expected string, received number
+  - kpi_results.4.actual: Invalid input: expected string, received number
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-309\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-302\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-301\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-287\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-282\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-280\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-273\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-271\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-270\attestation.json
+  ✗ .\.specify\sprints\sprint-18\attestations\IFC-266\attestation.json
+  - artifact_hashes.apps/web/src/app/contacts/(list)/__tests__/page.test.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/contacts/(list)/new/__tests__/page.test.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/e2e/contact-crud.spec.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-265\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-257\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-256\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-255\attestation.json
+  ✗ .\.specify\sprints\sprint-18\attestations\IFC-248\attestation.json
+  - evidence_summary: Invalid input: expected object, received string
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  - gate_results.0.passed: Invalid input: expected boolean, received undefined
+  - gate_results.1.gate_id: Invalid input: expected string, received undefined
+  - gate_results.1.passed: Invalid input: expected boolean, received undefined
+  - gate_results.2.gate_id: Invalid input: expected string, received undefined
+  - gate_results.2.passed: Invalid input: expected boolean, received undefined
+  - gate_results.3.gate_id: Invalid input: expected string, received undefined
+  - gate_results.3.passed: Invalid input: expected boolean, received undefined
+  - gate_results.4.gate_id: Invalid input: expected string, received undefined
+  - gate_results.4.passed: Invalid input: expected boolean, received undefined
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-247\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-242\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-240\attestation.json
+  ✗ .\.specify\sprints\sprint-18\attestations\IFC-234\attestation.json
+  - kpi_results: Invalid input: expected array, received object
+  - notes: Invalid input: expected string, received array
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-230\attestation.json
+  ✗ .\.specify\sprints\sprint-18\attestations\IFC-227\attestation.json
+  - evidence_summary: Invalid input: expected object, received string
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  - gate_results.0.passed: Invalid input: expected boolean, received undefined
+  - gate_results.1.gate_id: Invalid input: expected string, received undefined
+  - gate_results.1.passed: Invalid input: expected boolean, received undefined
+  - gate_results.2.gate_id: Invalid input: expected string, received undefined
+  - gate_results.2.passed: Invalid input: expected boolean, received undefined
+  - gate_results.3.gate_id: Invalid input: expected string, received undefined
+  - gate_results.3.passed: Invalid input: expected boolean, received undefined
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-215\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-214\attestation.json
+  ✗ .\.specify\sprints\sprint-18\attestations\IFC-212\attestation.json
+  - evidence_summary: Invalid input: expected object, received string
+  - dependencies_verified: Invalid input
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-078\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-070\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-032\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\DOC-016\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\DOC-015\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\AUTOMATION-003\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-195\attestation.json
+  ✗ .\.specify\sprints\sprint-17\attestations\PG-186\attestation.json
+  - kpi_results.0.target: Invalid input: expected string, received number
+  - kpi_results.0.actual: Invalid input: expected string, received number
+  - kpi_results.1.target: Invalid input: expected string, received number
+  - kpi_results.1.actual: Invalid input: expected string, received number
+  - kpi_results.2.target: Invalid input: expected string, received number
+  - kpi_results.2.actual: Invalid input: expected string, received number
+  - kpi_results.3.target: Invalid input: expected string, received number
+  - kpi_results.3.actual: Invalid input: expected string, received number
+  ✗ .\.specify\sprints\sprint-17\attestations\PG-185\attestation.json
+  - task_id: Invalid input: expected string, received undefined
+  - kpi_results.0.kpi: Invalid input: expected string, received undefined
+  - kpi_results.1.kpi: Invalid input: expected string, received undefined
+  - kpi_results.2.kpi: Invalid input: expected string, received undefined
+  - kpi_results.3.kpi: Invalid input: expected string, received undefined
+  - kpi_results.4.kpi: Invalid input: expected string, received undefined
+  - kpi_results.5.kpi: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-184\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-183\attestation.json
+  ✗ .\.specify\sprints\sprint-17\attestations\PG-182\attestation.json
+  - kpi_results.0.kpi: Invalid input: expected string, received undefined
+  - kpi_results.1.kpi: Invalid input: expected string, received undefined
+  - kpi_results.2.kpi: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-17\attestations\PG-126\attestation.json
+  - artifact_hashes: Invalid input: expected record, received array
+  - kpi_results.0.target: Invalid input: expected string, received number
+  - kpi_results.0.actual: Invalid input: expected string, received number
+  - kpi_results.1.target: Invalid input: expected string, received number
+  - kpi_results.1.actual: Invalid input: expected string, received number
+  - kpi_results.2.target: Invalid input: expected string, received number
+  - kpi_results.2.actual: Invalid input: expected string, received number
+  - kpi_results.3.target: Invalid input: expected string, received number
+  - kpi_results.3.actual: Invalid input: expected string, received number
+  - kpi_results.5.target: Invalid input: expected string, received number
+  - dependencies_verified: Invalid input
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-057\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-056\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-055\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-054\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-053\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-052\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-051\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-050\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-303\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-300\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-299\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-298\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-196\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-031\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-030\attestation.json
+  ✗ .\.specify\sprints\sprint-19\attestations\PG-166\attestation.json
+  - gate_results: Invalid input: expected array, received object
+  - kpi_results: Invalid input: expected array, received object
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-19\attestations\IFC-312\attestation.json
+  - artifact_hashes: Invalid input: expected record, received array
+  - dependencies_verified: Invalid input
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.5.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.6.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.7.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.8.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.9.criterion: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-16\attestations\PG-193\attestation.json
+  - gate_results: Invalid input: expected array, received object
+  - kpi_results: Invalid input: expected array, received object
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-16\attestations\PG-192\attestation.json
+  ✗ .\.specify\sprints\sprint-16\attestations\PG-178\attestation.json
+  - gate_results: Invalid input: expected array, received object
+  - kpi_results: Invalid input: expected array, received object
+  ✗ .\.specify\sprints\sprint-16\attestations\PG-177\attestation.json
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\PG-176\attestation.json
+  - evidence_summary: Invalid input: expected object, received string
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\PG-175\attestation.json
+  - kpi_results: Invalid input: expected array, received object
+  ✗ .\.specify\sprints\sprint-16\attestations\PG-173\attestation.json
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-16\attestations\PG-174\attestation.json
+  ✓ .\.specify\sprints\sprint-16\attestations\PG-172\attestation.json
+  ✓ .\.specify\sprints\sprint-16\attestations\PG-167\attestation.json
+  ✓ .\.specify\sprints\sprint-16\attestations\PG-162\attestation.json
+  ✗ .\.specify\sprints\sprint-16\attestations\PG-161\attestation.json
+  - evidence_summary: Invalid input: expected object, received string
+  - kpi_results.0.kpi: Invalid input: expected string, received undefined
+  - kpi_results.1.kpi: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-16\attestations\PG-125\attestation.json
+  ✗ .\.specify\sprints\sprint-16\attestations\PG-048\attestation.json
+  - artifact_hashes.created: Invalid input: expected string, received array
+  - artifact_hashes.modified: Invalid input: expected string, received array
+  - gate_results: Invalid input: expected array, received object
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-16\attestations\PG-047\attestation.json
+  ✗ .\.specify\sprints\sprint-16\attestations\PG-046\attestation.json
+  - verdict: Invalid option: expected one of "COMPLETE"|"INCOMPLETE"|"PARTIAL"|"BLOCKED"|"NEEDS_HUMAN"
+  - kpi_results: Invalid input: expected array, received object
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-16\attestations\PG-045\attestation.json
+  ✗ .\.specify\sprints\sprint-16\attestations\PG-044\attestation.json
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-16\attestations\PG-043\attestation.json
+  ✓ .\.specify\sprints\sprint-16\attestations\IFC-297\attestation.json
+  ✓ .\.specify\sprints\sprint-16\attestations\IFC-281\attestation.json
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-279\attestation.json
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-278\attestation.json
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-269\attestation.json
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-16\attestations\IFC-268\attestation.json
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-267\attestation.json
+  - task_id: Invalid input: expected string, received undefined
+  - evidence_summary: Invalid input: expected object, received string
+  - kpi_results.0.kpi: Invalid input: expected string, received undefined
+  - kpi_results.1.kpi: Invalid input: expected string, received undefined
+  - kpi_results.2.kpi: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-16\attestations\IFC-254\attestation.json
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-253\attestation.json
+  - task_id: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-252\attestation.json
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-16\attestations\IFC-239\attestation.json
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-238\attestation.json
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-237\attestation.json
+  - gate_results: Invalid input: expected array, received object
+  - kpi_results: Invalid input: expected array, received object
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-236\attestation.json
+  - kpi_results.0.kpi: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-232\attestation.json
+  - kpi_results.0.kpi: Invalid input: expected string, received undefined
+  - kpi_results.1.kpi: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-226\attestation.json
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-225\attestation.json
+  - kpi_results.0.kpi: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-220\attestation.json
+  - task_id: Invalid input: expected string, received undefined
+  - evidence_summary: Invalid input: expected object, received string
+  - kpi_results.0.kpi: Invalid input: expected string, received undefined
+  - kpi_results.1.kpi: Invalid input: expected string, received undefined
+  - kpi_results.2.kpi: Invalid input: expected string, received undefined
+  - kpi_results.3.kpi: Invalid input: expected string, received undefined
+  - kpi_results.4.kpi: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-203\attestation.json
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-202\attestation.json
+  - gate_results: Invalid input: expected array, received object
+  - kpi_results: Invalid input: expected array, received object
+  ✓ .\.specify\sprints\sprint-16\attestations\IFC-194\attestation.json
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-193\attestation.json
+  - gate_results: Invalid input: expected array, received object
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-16\attestations\IFC-029\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.1.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.2.sha256: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-16\attestations\IFC-028\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\TRACK-006\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\TRACK-005\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\TRACK-004\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\TRACK-003\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\TRACK-002\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\TRACK-001\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-165\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-155\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-154\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-131\attestation.json
+  ✗ .\.specify\sprints\sprint-14\attestations\PG-130\attestation.json
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-129\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-128\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-031\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-030\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-029\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-028\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-027\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-026\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\PG-025\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-224\attestation.json
+  ✗ .\.specify\sprints\sprint-14\attestations\IFC-223\attestation.json
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-222\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-213\attestation.json
+  ✗ .\.specify\sprints\sprint-14\attestations\IFC-190\attestation.json
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  - validation_results.1.timestamp: Invalid input: expected string, received undefined
+  - validation_results.2.timestamp: Invalid input: expected string, received undefined
+  - validation_results.3.timestamp: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-174\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-168\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-167\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-120\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-088\attestation.json
+  ✗ .\.specify\sprints\sprint-14\attestations\IFC-086\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.1.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.2.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.3.sha256: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-069\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-068\attestation.json
+  ✗ .\.specify\sprints\sprint-14\attestations\IFC-067\attestation.json
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  - validation_results.1.timestamp: Invalid input: expected string, received undefined
+  - validation_results.2.timestamp: Invalid input: expected string, received undefined
+  - validation_results.3.timestamp: Invalid input: expected string, received undefined
+  - kpi_results.0.target: Invalid input: expected string, received undefined
+  - kpi_results.1.target: Invalid input: expected string, received undefined
+  - kpi_results.2.target: Invalid input: expected string, received undefined
+  - kpi_results.3.target: Invalid input: expected string, received undefined
+  - kpi_results.4.target: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-066\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-065\attestation.json
+  ✗ .\.specify\sprints\sprint-14\attestations\IFC-064\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.5.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-063\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-062\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-061\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-045\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-024\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\EXP-ARTIFACTS-003\attestation.json
+  ✗ .\.specify\sprints\sprint-14\attestations\EXP-ARTIFACTS-002\attestation.json
+  - validation_results.0.command: Invalid input: expected string, received undefined
+  - validation_results.0.exit_code: Invalid input: expected number, received undefined
+  - validation_results.1.command: Invalid input: expected string, received undefined
+  - validation_results.1.exit_code: Invalid input: expected number, received undefined
+  - validation_results.2.command: Invalid input: expected string, received undefined
+  - validation_results.2.exit_code: Invalid input: expected number, received undefined
+  - validation_results.3.command: Invalid input: expected string, received undefined
+  - validation_results.3.exit_code: Invalid input: expected number, received undefined
+  - validation_results.3.timestamp: Invalid input: expected string, received undefined
+  - validation_results.4.command: Invalid input: expected string, received undefined
+  - validation_results.4.exit_code: Invalid input: expected number, received undefined
+  - validation_results.4.timestamp: Invalid input: expected string, received undefined
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  - kpi_results.1.target: Invalid input: expected string, received boolean
+  - kpi_results.1.actual: Invalid input: expected string, received boolean
+  ✓ .\.specify\sprints\sprint-14\attestations\DOC-009\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\DOC-007\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\DOC-008\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\DOC-006\attestation.json
+  ✗ .\.specify\sprints\sprint-14\attestations\DOC-005\attestation.json
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.5.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-14\attestations\DOC-004\attestation.json
+  ✗ .\.specify\sprints\sprint-14\attestations\DOC-003\attestation.json
+  - verdict: Invalid option: expected one of "COMPLETE"|"INCOMPLETE"|"PARTIAL"|"BLOCKED"|"NEEDS_HUMAN"
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  - validation_results.1.timestamp: Invalid input: expected string, received undefined
+  - validation_results.2.timestamp: Invalid input: expected string, received undefined
+  - validation_results.3.timestamp: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-14\attestations\DOC-002\attestation.json
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  - validation_results.1.timestamp: Invalid input: expected string, received undefined
+  - validation_results.2.timestamp: Invalid input: expected string, received undefined
+  - validation_results.3.timestamp: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-179\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-171\attestation.json
+  ✗ .\.specify\sprints\sprint-15\attestations\PG-170\attestation.json
+  - verdict: Invalid option: expected one of "COMPLETE"|"INCOMPLETE"|"PARTIAL"|"BLOCKED"|"NEEDS_HUMAN"
+  ✗ .\.specify\sprints\sprint-15\attestations\PG-169\attestation.json
+  - gate_results: Invalid input: expected array, received object
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-164\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-163\attestation.json
+  ✗ .\.specify\sprints\sprint-15\attestations\PG-160\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-159\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-158\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-157\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-156\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-124\attestation.json
+  ✗ .\.specify\sprints\sprint-15\attestations\PG-042\attestation.json
+  - verdict: Invalid option: expected one of "COMPLETE"|"INCOMPLETE"|"PARTIAL"|"BLOCKED"|"NEEDS_HUMAN"
+  - gate_results: Invalid input: expected array, received object
+  - kpi_results: Invalid input: expected array, received object
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-041\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-040\attestation.json
+  ✗ .\.specify\sprints\sprint-15\attestations\PG-039\attestation.json
+  - verdict: Invalid option: expected one of "COMPLETE"|"INCOMPLETE"|"PARTIAL"|"BLOCKED"|"NEEDS_HUMAN"
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  - validation_results.1.timestamp: Invalid input: expected string, received undefined
+  - validation_results.2.timestamp: Invalid input: expected string, received undefined
+  - validation_results.3.timestamp: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-15\attestations\PG-038\attestation.json
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-037\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-036\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-035\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-034\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-033\attestation.json
+  ✗ .\.specify\sprints\sprint-15\attestations\PG-032\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.5.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.6.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-15\attestations\IFC-296\attestation.json
+  ✗ .\.specify\sprints\sprint-15\attestations\IFC-210\attestation.json
+  - gate_results: Invalid input: expected array, received object
+  - kpi_results: Invalid input: expected array, received object
+  - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-15\attestations\IFC-209\attestation.json
+  - verdict: Invalid option: expected one of "COMPLETE"|"INCOMPLETE"|"PARTIAL"|"BLOCKED"|"NEEDS_HUMAN"
+  - gate_results: Invalid input: expected array, received object
+  ✗ .\.specify\sprints\sprint-15\attestations\IFC-195\attestation.json
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-15\attestations\IFC-192\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\IFC-191\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\IFC-027\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\IFC-026\attestation.json
+  ✗ .\.specify\sprints\sprint-15\attestations\DOC-014\attestation.json
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-15\attestations\DOC-013\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\DOC-012\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\DOC-011\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\DOC-010\attestation.json
+  ✗ .\.specify\sprints\sprint-12\attestations\PG-014\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/(public)/status/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/status/status-monitor.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/lib/status/incident-tracker.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-12\attestations\PG-013\attestation.json
+  ✓ .\.specify\sprints\sprint-12\attestations\PG-012\attestation.json
+  ✗ .\.specify\sprints\sprint-12\attestations\PG-010\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/(public)/blog/[slug]/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/blog/markdown-renderer.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/blog/comments-widget.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/blog/__tests__/markdown-renderer.test.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/blog/__tests__/comments-widget.test.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-12\attestations\PG-011\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/(public)/careers/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/shared/application-form.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/job-listings.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-12\attestations\PG-009\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/(public)/blog/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/blog/blog-pagination.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/logs/blog-categories.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-12\attestations\IFC-171\attestation.json
+  ✓ .\.specify\sprints\sprint-12\attestations\IFC-170\attestation.json
+  ✓ .\.specify\sprints\sprint-12\attestations\IFC-169\attestation.json
+  ✗ .\.specify\sprints\sprint-12\attestations\IFC-081\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/api/openapi.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/postman-collection.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-12\attestations\IFC-042\attestation.json
+  ✗ .\.specify\sprints\sprint-12\attestations\EXP-SCRIPTS-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tools/scripts/cleanup-task-data.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tools/scripts/fix-schema.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.scripts/monitor-dev.sh: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-12\attestations\EXP-PLATFORM-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/feature-flags/index.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/resilience/circuit-breaker.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/jobs/queue.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-13\attestations\PG-140\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\PG-104\attestation.json
+  ✗ .\.specify\sprints\sprint-13\attestations\PG-024\attestation.json
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  - validation_results.1.timestamp: Invalid input: expected string, received undefined
+  - validation_results.2.timestamp: Invalid input: expected string, received undefined
+  - validation_results.3.timestamp: Invalid input: expected string, received undefined
+  - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-13\attestations\PG-023\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\PG-022\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\PG-021\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\PG-020\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\PG-019\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\PG-018\attestation.json
+  ✗ .\.specify\sprints\sprint-13\attestations\PG-017\attestation.json
+  - validation_results.0.timestamp: Invalid input: expected string, received undefined
+  - validation_results.1.timestamp: Invalid input: expected string, received undefined
+  - validation_results.2.timestamp: Invalid input: expected string, received undefined
+  - validation_results.3.timestamp: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-13\attestations\PG-016\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\PG-015\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\IFC-200\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\IFC-198\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\IFC-183\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\IFC-182\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\IFC-173\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\IFC-172\attestation.json
+  ✓ .\.specify\sprints\sprint-13\attestations\IFC-163\attestation.json
+  ✗ .\.specify\sprints\sprint-13\attestations\IFC-159\attestation.json
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-11\attestations\PG-141\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\PG-008\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\PG-006\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\PG-007\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\PG-005\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\PG-004\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\PG-003\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\PG-002\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\PG-001\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\IFC-158\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\IFC-157\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\IFC-143\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\IFC-140\attestation.json
+  ✓ .\.specify\sprints\sprint-11\attestations\IFC-058\attestation.json
+  ✗ .\.specify\sprints\sprint-10\attestations\IFC-141\attestation.json
+  - notes: Invalid input: expected string, received array
+  ✗ .\.specify\sprints\sprint-10\attestations\IFC-121\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.1.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.2.sha256: Invalid input: expected string, received undefined
+  - context_acknowledgment.files_read.3.sha256: Invalid input: expected string, received undefined
+  - validation_results.1.exit_code: Invalid input: expected number, received undefined
+  - notes: Invalid input: expected string, received array
+  ✓ .\.specify\sprints\sprint-10\attestations\IFC-113\attestation.json
+  ✗ .\.specify\sprints\sprint-10\attestations\IFC-099\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.5.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.6.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.7.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.8.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.9.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.10.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.11.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.12.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/adapters/src/erp/sap/client.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/adapters/src/payments/stripe/client.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/adapters/src/payments/paypal/client.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/adapters/src/email/gmail/client.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/adapters/src/email/outlook/client.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/adapters/src/messaging/slack/client.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/adapters/src/messaging/teams/client.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/connector-status-dashboard.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/integration/connectors/erp.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/integration/connectors/payments.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/integration/connectors/email.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/integration/connectors/messaging.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/adapters/src/index.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-10\attestations\IFC-076\attestation.json
+  - notes: Invalid input: expected string, received array
+  ✗ .\.specify\sprints\sprint-1\attestations\SALES-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/sales/sales-motion-playbook.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/team-quiz-results.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/enablement-plan.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-1\attestations\IFC-135\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/accessibility-audit.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/wcag-compliance.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/axe-config.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-1\attestations\IFC-119\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/k6/scripts/load-test.js: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/benchmarks/load-test-results.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/capacity-plan.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-1\attestations\IFC-106\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/application/src/ports/LeadRepository.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/adapters/src/prisma/PrismaLeadRepository.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tests/architecture/hex-boundaries.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/architecture/hex-boundaries.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-1\attestations\IFC-075\attestation.json
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/drift-detection-config.yaml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/logs/destroy-rebuild-test.log: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-1\attestations\IFC-074\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/sentry-project-config.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/correlation-test.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/mttr-baseline.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-1\attestations\IFC-003\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/api/src/trpc.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/api/src/shared/e2e-type-safety-test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/api/src/shared/subscription-demo.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-1\attestations\IFC-002\attestation.json
+  ✗ .\.specify\sprints\sprint-1\attestations\IFC-001\attestation.json
+  - artifact_hashes.docs/planning/adr/ADR-001-modern-stack.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/benchmarks/performance-benchmark.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-1\attestations\GOV-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/architecture/adr/000-template.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/planning/adr/ADR-008-audit-logging.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-1\attestations\ENV-018-AI\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/velocity-prediction.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/capacity-model.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/risk-matrix.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-1\attestations\ENV-017-AI\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/test-orchestration.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/logs/bug-fixes.log: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/metrics/confidence-metrics.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-1\attestations\BRAND-002\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/company/brand/ui-kit.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/component-library.zip: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\PM-OPS-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/jira-project-export.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/delivery-dashboard-config.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/weekly-template.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\IFC-160\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/plan-lint-report.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\IFC-044\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/coverage/lcov.info: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/logs/test-execution-time.log: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/metrics/tdd-compliance.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/mutation-test.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-0\attestations\IFC-000\attestation.json
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/swot-analysis.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/financial-model.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/planning/ADR-000-feasibility.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\GTM-002\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/company/messaging/voice-guidelines.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/example-messaging.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/tone-matrix.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\GTM-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/company/messaging/positioning.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/competitive-analysis.xlsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/persona-cards.pdf: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-0\attestations\EXP-REPORTS-005\attestation.json
+  ✓ .\.specify\sprints\sprint-0\attestations\EXP-REPORTS-004\attestation.json
+  ✓ .\.specify\sprints\sprint-0\attestations\EXP-REPORTS-003\attestation.json
+  ✓ .\.specify\sprints\sprint-0\attestations\EXP-REPORTS-002\attestation.json
+  ✓ .\.specify\sprints\sprint-0\attestations\EXP-REPORTS-001\attestation.json
+  ✗ .\.specify\sprints\sprint-0\attestations\EXC-SEC-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/vault-config.yaml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/logs/vault-startup.log: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/security/secrets-playbook.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-0\attestations\EXC-INIT-001\attestation.json
+  ✗ .\.specify\sprints\sprint-0\attestations\EP-001-AI\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.5.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.6.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.infra/monitoring/otel-collector.yaml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.infra/monitoring/tempo-config.yml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.infra/monitoring/docker-compose.monitoring.yml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.infra/monitoring/prometheus.yml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.infra/monitoring/loki-config.yml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/monitoring-config-hashes.txt: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/operations/monitoring-runbook.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\ENV-016-AI\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/privacy-config.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/metrics/insights-accuracy.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/gdpr-compliance.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\ENV-015-AI\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/rollout-config.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/ab-test-results.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/metrics/prediction-accuracy.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\ENV-014-AI\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/profiling-results.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/logs/optimization-log.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/cache-config.yaml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\ENV-013-AI\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/security-scan-results.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/compliance-report.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/logs/patch-log.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\ENV-012-AI\attestation.json
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-0\attestations\ENV-011-AI\attestation.json
+  ✗ .\.specify\sprints\sprint-0\attestations\ENV-010-AI\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/coverage/index.html: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-0\attestations\ENV-009-AI\attestation.json
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-0\attestations\ENV-008-AI\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/otel-config.yaml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/anomaly-detection.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/self-healing-rules.yaml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\ENV-007-AI\attestation.json
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/lib/trpc.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\ENV-006-AI\attestation.json
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/db/prisma/seed.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-0\attestations\ENV-005-AI\attestation.json
+  ✗ .\.specify\sprints\sprint-0\attestations\ENV-004-AI\attestation.json
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.supabase/.gitignore: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-0\attestations\ENV-003-AI\attestation.json
+  ✓ .\.specify\sprints\sprint-0\attestations\ENV-002-AI\attestation.json
+  ✓ .\.specify\sprints\sprint-0\attestations\ENV-001-AI\attestation.json
+  ✗ .\.specify\sprints\sprint-0\attestations\ENG-OPS-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/operations/engineering-playbook.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/operations/incident-response.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/dora-metrics-config.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\DOC-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/shared/review-checklist.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/operations/quality-gates.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/operations/pr-checklist.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\BRAND-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/company/brand/visual-identity.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/logo-suite.zip: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\AUTOMATION-002\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/optimization-loop.yaml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/roi-tracking.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/metrics/metrics-realtime.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-0\attestations\AUTOMATION-001\attestation.json
+  ✗ .\.specify\sprints\sprint-0\attestations\ANALYTICS-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/analytics-dashboard-config.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/kpi-tracking.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/reports/web-vitals-report.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-0\attestations\AI-SETUP-003\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/sandbox-security.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/metrics/response-metrics.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - gate_results.0.gate_id: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-0\attestations\AI-SETUP-002\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.docs/shared/copilot-instructions.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/team-licenses.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/workflow-automation.yaml: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-0\attestations\AI-SETUP-001\attestation.json
+  ✓ .\.specify\sprints\sprint-18\attestations\PG-063\context_ack.json
+  ✓ .\.specify\sprints\sprint-18\attestations\PG-058\context_ack.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-301\context_ack.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-230\context_ack.json
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-214\context_ack.json
+  ✓ .\.specify\sprints\sprint-18\attestations\DOC-016\context_ack.json
+Checking: Task Status
+Checking: Phase Summary
+Checking: Sprint Summary
+Checking: Task Registry
+Checking: Dependency Graph
+Checking: KPI Definitions
+  ✓ .\apps\project-tracker\docs\metrics\_global\kpi-definitions.json
+Checking: Traceability
+  ✓ .\artifacts\reports\traceability-matrix.json
+Checking: Benchmark
+  ✓ .\artifacts\benchmarks\baseline.json
+  ✓ .\artifacts\benchmarks\accuracy-benchmarks.json
+Checking: CI Cost Metrics
+  ✓ .\artifacts\reports\ci-cost\latest.json
+  ✓ .\artifacts\reports\ci-cost\history\2026-05-25T21-35-16-224Z.json
+  ✓ .\artifacts\reports\ci-cost\history\2026-05-25T20-07-47-454Z.json
+  ✓ .\artifacts\reports\ci-cost\history\2026-05-25T19-43-59-273Z.json
+Checking: CI Cost Metrics Provenance
+  ✓ .\artifacts\reports\ci-cost\latest.provenance.json
+Checking: CI Failure Registry
+  ✓ .\artifacts\reports\ci-failures\registry.json
+
+=== Summary ===
+Passed: 272
+Failed: 175
+Total: 447
+
+❌ Schema validation failed!
+Fix the errors above or update the schema if the structure intentionally changed.
+To regenerate schemas: pnpm run generate:schemas
+ ELIFECYCLE  Command failed with exit code 1.

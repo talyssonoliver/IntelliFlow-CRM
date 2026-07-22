@@ -1,0 +1,10 @@
+
+> intelliflow-crm@0.1.0 lint:artifacts:audit C:\Users\talys\projects\iflow-eng-ops-002
+> tsx tools/lint/artifact-paths.ts --audit
+
+[36m🔍 IntelliFlow CRM - Artifact Path Linter[0m
+
+[36mRunning audit mode...[0m
+
+[32m✓ No misplaced artifacts found[0m
+

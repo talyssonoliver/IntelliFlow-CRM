@@ -1,0 +1,19 @@
+
+> intelliflow-crm@0.1.0 quality:sonar C:\Users\talys\projects\iflow-eng-ops-002
+> pnpm run sonar:prepare-coverage && node scripts/sonar-scan.js
+
+
+> intelliflow-crm@0.1.0 sonar:prepare-coverage C:\Users\talys\projects\iflow-eng-ops-002
+> node scripts/sonar-prepare-coverage.js
+
+Coverage source dir: artifacts\coverage
+Coverage summary: lines=86.39% statements=85.12% functions=82.4% branches=75.89%
+coverage-final entries: 1137
+lcov source files: 1137
+Canonical Sonar LCOV: artifacts\coverage\lcov.info
+(node:44004) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/talys/projects/iflow-eng-ops-002/scripts/sonar-prepare-coverage.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\talys\projects\iflow-eng-ops-002\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+SONAR_TOKEN not found. Set it in your environment or .env.local (do not commit tokens).
+ ELIFECYCLE  Command failed with exit code 1.

@@ -1,0 +1,26 @@
+
+> intelliflow-crm@0.1.0 lint C:\Users\talys\projects\iflow-eng-ops-002
+> turbo run lint
+
+
+   • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/notifications-worker, @intelliflow/observability, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+   • Running lint in 25 packages
+   • Remote caching disabled, using shared worktree cache
+
+@intelliflow/observability:build: cache hit, suppressing logs 92ff7113555b5642
+@intelliflow/domain:build: cache hit, suppressing logs 457fe6e99f4b580d
+@intelliflow/webhooks:build: cache hit, suppressing logs eca27df2e6af01f1
+@intelliflow/db:build: cache hit, suppressing logs bb1c4805a7e8668c
+@intelliflow/validators:build: cache hit, suppressing logs 319b58289f4a2dad
+@intelliflow/application:build: cache hit, suppressing logs a9d788fb1b1ed236
+@intelliflow/platform:build: cache hit, suppressing logs 1d9ec80e75106365
+@intelliflow/adapters:build: cache hit, suppressing logs 50b9de7fbc480473
+@intelliflow/worker-shared:build: cache hit, suppressing logs b281c65e45abe5c3
+@intelliflow/ai-worker:build: cache hit, suppressing logs 8cda5e772098c40d
+@intelliflow/api:build: cache hit, suppressing logs 5e5250e273402b6a
+@intelliflow/api-client:build: cache hit, suppressing logs e9f3fda8e103fd52
+
+ Tasks:    35 successful, 35 total
+Cached:    35 cached, 35 total
+  Time:    264ms >>> FULL TURBO
+

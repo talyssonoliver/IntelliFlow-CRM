@@ -1,0 +1,6 @@
+
+> intelliflow-crm@0.1.0 format:check C:\Users\talys\projects\iflow-eng-ops-002
+> prettier --check "**/*.{ts,tsx,md,json,yml,yaml}"
+
+Checking formatting...
+All matched files use Prettier code style!
