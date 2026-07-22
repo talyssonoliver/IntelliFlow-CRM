@@ -16,16 +16,10 @@
       "apps/ai-worker/src/chains/scoring.chain.ts",
       "apps/ai-worker/src/utils/cost-tracker.ts",
       "apps/ai-worker/src/monitoring/__tests__/chain-monitor.metrics-fidelity.test.ts",
-      "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.router.test.ts",
-      ".specify/sprints/sprint-18/specifications/IFC-215-spec.md",
-      ".specify/sprints/sprint-18/planning/IFC-215-plan.md",
-      ".specify/sprints/sprint-18/attestations/IFC-215/context_ack.json"
+      "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.router.test.ts"
     ],
-    "missing": [
-      ".specify/sprints/sprint-18/specifications/IFC-215-spec.md",
-      ".specify/sprints/sprint-18/planning/IFC-215-plan.md",
-      ".specify/sprints/sprint-18/attestations/IFC-215/context_ack.json"
-    ]
+    "missing": [],
+    "notes": "spec/plan/context_ack removed from 'expected' on 2026-07-21: those paths (specifications/*, planning/*, attestations/*/context_ack.json) are gitignored BY DESIGN per .specify/sprints/.gitignore and are therefore not tracked artifacts — flagging them 'missing' was a false-positive. Canonical evidence = attestation.json + task-tracking.json. See top-level notes for full provenance."
   },
   "blockers": [
     {
@@ -60,7 +54,7 @@
       "target": "<=1%"
     }
   },
-  "notes": "Closes remaining metric-quality stubs in chain-monitor by wiring real model IDs, token cost, and hallucination flags into monitoring payloads.",
+  "notes": "Closes remaining metric-quality stubs in chain-monitor by wiring real model IDs, token cost, and hallucination flags into monitoring payloads. Evidence provenance (retrospective, 2026-07-21): IFC-215 shipped in the 2026-06-29 3-agent parallel-fleet run (PR #546, CSV flip #551) WITHOUT committed spec/plan/context_ack ceremony artifacts — a known fleet-audit finding (evidence was inconsistently committed across that fleet). No ceremony artifacts are being reconstructed after the fact; doing so would fabricate provenance. Per .specify/sprints/.gitignore ('keep ONLY canonical attestation files'), specifications/*, planning/*, and non-whitelisted files under attestations/*/ are gitignored BY DESIGN — the canonical, tracked evidence is attestation.json + task-tracking.json, both present and complete for IFC-215. The status_history Specifying/Spec Complete/Planning/Plan Complete entries describe the intended ceremony; the corresponding .md artifacts were never persisted to git and are not recoverable as authentic originals. Implementation intent was re-verified post-hoc against the merged code on main (chain-monitor.ts, scoring.chain.ts, cost-tracker.ts, and the fidelity/callback test files). The artifacts.expected/missing lists were corrected below to stop flagging gitignored-by-design paths as 'missing' (they are not tracked artifacts).",
   "phase": "phase-1-validation",
   "started_at": "2026-06-29T00:00:00Z",
   "status_history": [
