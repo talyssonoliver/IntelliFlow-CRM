@@ -543,4 +543,34 @@ describe('getRelatedMessages', () => {
 
     expect(result).toEqual([]);
   });
+
+  // SEC-001 (ENG-OPS-002.R01): searchContacts must scope by tenantId so an
+  // authenticated user of one tenant cannot enumerate another tenant's contacts.
+  describe('searchContacts — tenant isolation (SEC-001)', () => {
+    it('scopes the contact query to the caller tenantId', async () => {
+      (prismaMock.contact.findMany as any).mockResolvedValue([]);
+
+      const caller = inboundEmailRouter.createCaller(createTestContext());
+      await caller.searchContacts({ query: 'ali' });
+
+      // Regression guard: the where clause MUST include the caller's tenantId.
+      // Before the fix the query had no tenantId → cross-tenant leak.
+      expect(prismaMock.contact.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ tenantId: TEST_UUIDS.tenant }),
+        })
+      );
+    });
+
+    it('returns [] for short queries without hitting the database', async () => {
+      (prismaMock.contact.findMany as any).mockClear();
+      (prismaMock.contact.findMany as any).mockResolvedValue([]);
+
+      const caller = inboundEmailRouter.createCaller(createTestContext());
+      const result = await caller.searchContacts({ query: 'a' });
+
+      expect(result).toEqual([]);
+      expect(prismaMock.contact.findMany).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -1198,8 +1198,14 @@ export const inboundEmailRouter = createTRPCRouter({
       > => {
         if (!input.query || input.query.length < 2) return [];
 
+        // SEC-001 (ENG-OPS-002.R01): scope by tenantId — without it, any
+        // authenticated user could enumerate contacts across ALL tenants.
+        // Same pattern as every other procedure in this router.
+        const tenantId = (ctx as any).tenant.tenantId;
+
         const contacts = await (ctx as any).prisma.contact.findMany({
           where: {
+            tenantId,
             OR: [
               { firstName: { contains: input.query, mode: 'insensitive' } },
               { lastName: { contains: input.query, mode: 'insensitive' } },
