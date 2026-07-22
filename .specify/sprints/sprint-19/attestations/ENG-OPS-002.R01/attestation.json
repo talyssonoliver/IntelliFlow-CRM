@@ -1,0 +1,57 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENG-OPS-002.R01",
+  "run_id": "eng-ops-002-r01-2026-07-22",
+  "attestor": "Claude Code (claude-opus-4-8) — ENG-OPS-002.R01 remediation (chore/eng-ops-002-r01)",
+  "attestation_timestamp": "2026-07-22T12:50:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "finding": "SEC-001",
+    "severity": "Critical",
+    "artifacts_verified": 2,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/email/inbound.router.ts": "sha256:5a0a6d566b35c4d6331859e145a43f9667e4e6b917ac02a09332502d241b2a70",
+    "apps/api/src/modules/email/__tests__/inbound.router.test.ts": "sha256:efc39c28e8652f5869563eddf47cdc66196a7c493c45c976192b5b1874ad3e8e"
+  },
+  "validation_results": [
+    {
+      "name": "Unit tests (inbound.router)",
+      "command": "pnpm --filter @intelliflow/api exec vitest run src/modules/email/__tests__/inbound.router.test.ts",
+      "result": "PASS — 30 passed (2 new SEC-001 tenant-isolation tests)"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "tenant-scoped-query",
+      "passed": true,
+      "log_path": "regression test asserts where.tenantId present"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "cross-tenant negative test",
+      "target": "present+green",
+      "actual": "searchContacts scopes by tenantId; short-query no-DB test",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "searchContacts where scoped by tenantId",
+      "met": true,
+      "evidence": "inbound.router.ts + regression test"
+    }
+  ],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "f4d2f0602b1177a9714801dc2382d4089d77e17b",
+    "branch": "chore/eng-ops-002-r01"
+  },
+  "notes": "SEC-001 Critical tenant-isolation fix. searchContacts previously queried unscoped ctx.prisma; now scoped by ctx.tenant.tenantId matching every other procedure in inbound.router.ts. Audit->remediation, shipped as separate PR (not mixed with audit #599)."
+}
