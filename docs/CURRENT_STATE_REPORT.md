@@ -1,22 +1,22 @@
 # Current State Report
-_Generated: 2026-07-22T00:09:10.867Z_
+_Generated: 2026-07-22T21:15:35.347Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
-- Numbered sprint scope: 30 sprints (0-29) plus 5 continuous tasks.
-- Overall progress: 457/597 tasks completed (76.55%), 139 backlog, 0 blocked, 1 in progress.
-- Numbered sprint progress alone: 452/592 tasks completed or attested inside numbered sprints.
+- Numbered sprint scope: 30 sprints (0-29) plus 6 continuous tasks.
+- Overall progress: 460/617 tasks completed (74.55%), 155 backlog, 0 blocked, 2 in progress.
+- Numbered sprint progress alone: 455/611 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
-- Ready-to-start work: DOC-015 (Sprint 18), IFC-211 (Sprint 18), IFC-033 (Sprint 19), IFC-305 (Sprint 19), IFC-313 (Sprint 19).
+- Ready-to-start work: DOC-015 (Sprint 18), IFC-211 (Sprint 18), ENG-OPS-002.R13 (Sprint 19), IFC-033 (Sprint 19), IFC-304 (Sprint 19).
 - Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
 
 ## Source Health
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
-- CSV marks these tasks completed without a canonical attestation: IFC-043, IFC-052, IFC-071, PG-110, PG-114, PG-127, PG-147, IFC-199, IFC-201, IFC-204, IFC-304, IFC-306, PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209, INFRA-TF-001, INFRA-TF-002, INFRA-TF-003, INFRA-TF-004, INFRA-TF-005.
-- Attested but not completed in CSV: IFC-257 (In Progress).
+- CSV marks these tasks completed without a canonical attestation: IFC-043, IFC-052, IFC-071, PG-110, PG-114, PG-127, PG-147, IFC-199, IFC-201, IFC-204, PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209, INFRA-TF-001, INFRA-TF-002, INFRA-TF-003, INFRA-TF-004, INFRA-TF-005.
+- Attested but not completed in CSV: DOC-015 (Backlog), DOC-016 (Backlog), IFC-257 (In Progress), ENG-OPS-002 (In Progress).
 
 ## Continuous Work
 
@@ -25,6 +25,7 @@ _Generated: 2026-07-22T00:09:10.867Z_
 - **EXP-REPORTS-003** — Risk Management & Compliance Tracking. Task completed and verified Risk register maintained; GDPR compliance tracked
 - **EXP-REPORTS-004** — Sprint Audit System (Continuous). Task completed and verified Sprint audits automated; validation results tracked
 - **EXP-REPORTS-005** — Build & Validation Reports (Continuous). Task completed and verified Build validation automated; audit reports generated
+- **ENG-OPS-002.R17** — Remediation R17 [High/QUAL-013]: decide ERP/SAP connector — complete SAPAdapter to un-skip 19 tests OR formally mark deferred in sprint plan. SAP connector test suite executed OR ERP/SAP formally deferred with tracking
 
 ## Sprint Summaries
 
@@ -278,34 +279,34 @@ _Generated: 2026-07-22T00:09:10.867Z_
 
 **Open Work**
 - **IFC-257** — Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.. Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation
-- **DOC-015** — Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth. All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...
+- **DOC-015** — Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth. Reconcile conflicting route totals across all design docs to a single canonical value derived from the filesystem; Automated content-audit baseline available and passing (DOC-014 dependency);...
 - **DOC-016** — Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement. TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift;...
 - **IFC-211** — Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults). Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes
 
 ## Sprint 19 - Sprint 19
 
-- Status: 4/15 completed, 11 backlog, 0 blocked.
-- Primary focus areas: Core CRM (9), AI/Intelligence (2), Automation (1).
-- Evidence coverage: 2/4 completed tasks have canonical `attestation.json` evidence.
-- Evidence gaps: completed in CSV but missing canonical attestation: IFC-304, IFC-306.
+- Status: 7/17 completed, 9 backlog, 0 blocked, 1 in progress.
+- Primary focus areas: Engineering Operations (7), Core CRM (4), AI/Intelligence (1).
+- Evidence coverage: 7/7 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
 - **IFC-312** — AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).. Originally attested 2026-04-22 with verdict COMPLETE, but a 2026-04-24 code audit (/task-code-audit) identified 7 findings (2 High, 4 Medium, 1 Low) that contradicted the attestation......
 - **PG-166** — Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90. All implementation code, tests, configs, and documentation are complete. 3 test regressions fixed this session (SVG role='img', heading text, EmptyState refactor). Pre-existing build blocker fixed (unused @ts-expect-error).... Lighthouse CI audit on / route;...
-- **IFC-306** — Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated. compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...
-- **IFC-304** — Article Analytics Dashboard. Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%
+- **ENG-OPS-002.R10** — Remediation R10 [High/QUAL-001+002]: ticket + task aggregate state-machine transition guards, un-skip the property tests. Scope: QUAL-001 (5 ticket state-machine bugs — changePriority/assign/unassign now guard closed+terminal via isClosed||isTerminalStatus; resumeSla clamps negative pause duration) FULLY fixed.... ticket+task terminal-state guards; property tests un-skipped
+- **ENG-OPS-002.R01** — Remediation R01 [Critical/SEC-001]: tenant-isolation fix — scope email searchContacts query by tenantId (currently unscoped ctx.prisma, cross-tenant contact enumeration). SEC-001 Critical tenant-isolation fix. searchContacts previously queried unscoped ctx.prisma; now scoped by ctx.tenant.tenantId matching every other procedure in inbound.router.ts.... searchContacts where scoped by tenantId
+- **ENG-OPS-002.R02** — Remediation R02 [Critical/QUAL-003+004]: dedup evaluator correctness — threshold nullish-coalescing (?? 100) + empty-composite guard, un-skip the 2 property tests. QUAL-003 (07a): resolveFloor stopped mapping threshold=0 to floor=100. QUAL-004 (07c):... threshold fix + empty-composite guard; 2 tests un-skipped green
 
 **Open Work**
+- **ENG-OPS-002** — Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan). Verifiable baseline of S1-18 delivered state; All required artifacts produced and reproducible; Failures registered, not suppressed
 - **IFC-033** — PHASE-005: Load Testing with k6. System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report
 - **IFC-034** — PHASE-001: Gate 3 Review - £3000 Investment. Scale decision with modern stack validated
 - **PG-064** — Contacts List. response under 200ms, Lighthouse 90, search fast
 - **PG-065** — Contact 360. response under 200ms, Lighthouse 90, data complete
-- **PG-066** — Edit Contact. response under 200ms, Lighthouse 90, edits saved
 
 ## Sprint 20 - Sprint 20
 
-- Status: 2/34 completed, 32 backlog, 0 blocked.
-- Primary focus areas: Core CRM (25), AI Foundation (2), Performance (2).
+- Status: 2/51 completed, 49 backlog, 0 blocked.
+- Primary focus areas: Core CRM (30), Engineering Operations (11), AI Foundation (2).
 - Evidence coverage: 0/2 completed tasks have canonical `attestation.json` evidence.
 - Evidence gaps: completed in CSV but missing canonical attestation: PG-127, IFC-204.
 
@@ -316,9 +317,9 @@ _Generated: 2026-07-22T00:09:10.867Z_
 **Open Work**
 - **IFC-035** — PHASE-006: WhatsApp Business API Research. Integration approach with Supabase webhooks validated
 - **IFC-087** — Edge Functions Optimization. Critical paths on edge, <50ms response globally
-- **PG-070** — Account Detail. response under 200ms, Lighthouse 90, complete view
-- **PG-071** — Edit Account. response under 200ms, Lighthouse 90, updates saved
-- **PG-072** — Import Accounts. response under 200ms, Lighthouse 90, imports structured
+- **PG-066** — Edit Contact. response under 200ms, Lighthouse 90, edits saved
+- **PG-067** — Import Contacts. response under 200ms, Lighthouse 90, imports clean
+- **PG-068** — Merge Contacts. response under 200ms, Lighthouse 90, merges completed
 
 ## Sprint 21 - Sprint 21
 

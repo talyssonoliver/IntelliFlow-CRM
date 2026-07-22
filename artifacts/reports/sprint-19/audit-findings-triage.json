@@ -1,0 +1,286 @@
+{
+  "meta": {
+    "task": "PM-OPS-003",
+    "artifact": "audit-findings-triage.json",
+    "generatedAt": "2026-07-22",
+    "source": "artifacts/reports/sprint-19/baseline/remediation-candidates.json (ENG-OPS-002, 101 findings: 8 Critical/21 High/39 Medium/25 Low/8 Info) + remediation-execution-plan.md",
+    "keyDecision": "All 29 Critical+High findings are ALREADY registered as ENG-OPS-002.R01-R18 (merged #600). PM-OPS-003 creates ZERO net-new remediation tasks (creating more would duplicate — constraint: 0 remediation tasks duplicadas). Triage here = which already-registered R-tasks are APPROVED to ENTER Sprint 19 vs deferred, per the P0/P1-block-scope-first rule."
+  },
+  "duplicationGuard": {
+    "netNewRemediationTasksCreated": 0,
+    "reason": "Findings already mapped 1:1 to R01-R18. Related runtime items already tracked as GitHub issues (#318 k6 nightly, #435 lead email-uniqueness tenant-scope, #576 ModuleSettingsShell OCP, #441 Sonar reliability-D triage, #452 CodeQL/CVE) — R18 must reference these, not re-create.",
+    "ifc305Overlap": "IFC-305 (componentize Leads+Contacts detail god-files: leads/[id]/page.tsx 2908L + contacts/[id]/page.tsx 2575L) overlaps PG-065 (Contact 360) at the file level. Boundary: PG-065 owns FUNCTIONAL completeness of Contact 360; IFC-305 owns STRUCTURAL componentization of the shared detail-page shell. IFC-305 deferred to S20 so the page tasks stabilize first, eliminating the concurrent-edit conflict. IFC-313 (draftReply backend) and PG-210 (reassign tRPC wiring) do NOT overlap IFC-305."
+  },
+  "completedValidation": {
+    "PG-166": {
+      "verdict": "VALID",
+      "action": "keep Completed",
+      "evidence": "artifacts/benchmarks/home-page-lighthouse.json: performance=100, accessibility=100, tti=852.57ms; 3 real LHCI runs (0.63/0.99/1.0 cold-start variance, representative=1.0); attestation.json verdict COMPLETE, all gates PASS."
+    },
+    "IFC-312": {
+      "verdict": "VALID",
+      "action": "keep Completed",
+      "evidence": "All 10 ai-worker chain/adapter files exist (contact/account enrichment, scoring, industry-inference, tag-suggestion, insight, reply-draft, shared adapter). attestation.json records 8 gates PASS + 4 validations exit0 + scoped coverage 92.97% stmts. Self-critical attestation documents a real pre-attestation audit catch-and-fix (dead aiEnrichment toggles wired via enqueueBestEffort). IFC-313 is a legit deferred follow-up."
+    },
+    "IFC-304": {
+      "verdict": "FAIL (phantom completion)",
+      "action": "reclassified Completed -> Backlog",
+      "evidence": "apps/web/src/components/support/article-analytics.tsx does NOT exist (ls: No such file). getAnalytics tRPC procedure absent (grep count = 0 in help-article.router.ts). Task own task-tracking.json lists the component under artifacts.missing, completed_at=null, validations=[]. Analytics DoD (views/most-least-helpful/search-terms) 0% implemented."
+    },
+    "IFC-306": {
+      "verdict": "GAP (dead endpoint)",
+      "action": "reclassified Completed -> Backlog",
+      "evidence": "Seed data authored (22 events, 5 standards, no ISO 14001) BUT (1) timeline route reads artifacts/misc/compliance-calendar.json which does NOT exist -> loadCalendarData returns [] (dead endpoint; DoD \"timeline API serves updated data\" is FALSE; mocked fs in tests hides it); (2) 7 past events (EVT-011..017, 2026-03-25..2026-07-15) still status=scheduled, violating \"all past events completed\". Downstream PG-194 (S20) depends on IFC-306."
+    }
+  },
+  "remediationTriage": [
+    {
+      "rtask": "ENG-OPS-002.R01",
+      "findings": [
+        "SEC-001"
+      ],
+      "sev": "Critical",
+      "status": "Completed",
+      "prio": "P0",
+      "decision": "DONE (shipped #602)",
+      "rationale": "Tenant-isolation leak in email searchContacts — fixed + negative test. Already merged."
+    },
+    {
+      "rtask": "ENG-OPS-002.R02",
+      "findings": [
+        "QUAL-003",
+        "QUAL-004"
+      ],
+      "sev": "Critical",
+      "status": "Completed",
+      "prio": "P0",
+      "decision": "DONE (shipped #603)",
+      "rationale": "Dedup threshold ?? + empty-composite guard; 2 property tests un-skipped. Unblocks PG-068 Merge Contacts quality (deferred S20). Merged."
+    },
+    {
+      "rtask": "ENG-OPS-002.R03",
+      "findings": [
+        "STALE-001",
+        "STALE-002"
+      ],
+      "sev": "Critical",
+      "status": "Completed",
+      "prio": "P0",
+      "decision": "DONE (shipped #601)",
+      "rationale": "CLAUDE.md anchor + sprint-18 _summary.json. Merged."
+    },
+    {
+      "rtask": "ENG-OPS-002.R10",
+      "findings": [
+        "QUAL-001",
+        "QUAL-002"
+      ],
+      "sev": "High",
+      "status": "Completed",
+      "prio": "P1",
+      "decision": "DONE (shipped #604)",
+      "rationale": "Ticket+task terminal-state guards; un-skipped property tests. Merged."
+    },
+    {
+      "rtask": "ENG-OPS-002.R13",
+      "findings": [
+        "QUAL-012"
+      ],
+      "sev": "High",
+      "status": "Backlog",
+      "sprint": 19,
+      "prio": "P1",
+      "decision": "COMMIT S19",
+      "rationale": "Flaky-test lint gate (no-disabled-tests) + reconcile 21 skips. Cheap (95m PERT), hardens the quality baseline and prevents regression of R02/R10 fixes. Blocks quality-gate readiness. Enters S19."
+    },
+    {
+      "rtask": "ENG-OPS-002.R16",
+      "findings": [
+        "GOV-A-001",
+        "GOV-A-002"
+      ],
+      "sev": "High",
+      "status": "Backlog",
+      "sprint": 19,
+      "prio": "P1",
+      "decision": "COMMIT S19",
+      "rationale": "Backfill 18 missing S18 attestations + ledger the 177-task provenance gap. Directly resolves the governance readiness blocker AND is the same class as the IFC-304/IFC-306 attestation gaps. Heavy (740m PERT ~= 2 slots) but readiness-critical. Enters S19."
+    },
+    {
+      "rtask": "ENG-OPS-002.R04",
+      "findings": [
+        "DDD-001"
+      ],
+      "sev": "Critical",
+      "status": "Backlog",
+      "sprint": "19->20",
+      "prio": "P3",
+      "decision": "DEFER S20",
+      "rationale": "Lead->Deal 4-aggregate transaction atomicity. HELD for design review (unit-of-work/TransactionClient design across 4 repos, design proposal in #606). Not a blocker of S19 feature scope. P2/P3 do NOT auto-enter; needs owner sign-off. Re-tagged S20."
+    },
+    {
+      "rtask": "ENG-OPS-002.R07",
+      "findings": [
+        "QUAL-015"
+      ],
+      "sev": "Critical",
+      "status": "Backlog",
+      "sprint": "19->20",
+      "prio": "P2",
+      "decision": "DEFER S20",
+      "rationale": "Consolidate 2 diverging security sanitizers. HELD for design review (which regex is canonical is a security decision). Not blocking S19 scope. Re-tagged S20."
+    },
+    {
+      "rtask": "ENG-OPS-002.R11",
+      "findings": [
+        "DDD-002"
+      ],
+      "sev": "High",
+      "status": "Backlog",
+      "sprint": "19->20",
+      "prio": "P3",
+      "decision": "DEFER S20",
+      "rationale": "Domain-event/outbox atomicity. Depends on R04 (deferred). Blocked -> S20."
+    },
+    {
+      "rtask": "ENG-OPS-002.R15",
+      "findings": [
+        "GOV-A-003"
+      ],
+      "sev": "High",
+      "status": "Backlog",
+      "sprint": "19->20",
+      "prio": "P2",
+      "decision": "DEFER S20",
+      "rationale": "Triage 175/447 schema-validation failures + wire validate:schemas gate. Heavy (610m). validate:schemas is NOT currently a pre-ship hard gate, so it does not block this PR or S19 delivery. Advisory until R15. Re-tagged S20."
+    },
+    {
+      "rtask": "ENG-OPS-002.R18",
+      "findings": [
+        "39 Medium batch"
+      ],
+      "sev": "Medium",
+      "status": "Backlog",
+      "sprint": "19->20",
+      "prio": "P2",
+      "decision": "DEFER S20",
+      "rationale": "Triage 39 Medium findings into focused follow-ups. Several already have GitHub issues (#318 k6, #435 tenant-leak, #576 module-shell, #441 Sonar) — must reference existing issues, NOT duplicate. Triage is planning work; deferred S20 per capacity."
+    },
+    {
+      "rtask": "ENG-OPS-002.R05",
+      "findings": [
+        "HEX-001"
+      ],
+      "sev": "Critical",
+      "status": "Backlog",
+      "sprint": 20,
+      "prio": "P2",
+      "decision": "S20 (already tagged)",
+      "rationale": "Orphan ticket port wire-or-delete. Design decision. Already S20."
+    },
+    {
+      "rtask": "ENG-OPS-002.R06",
+      "findings": [
+        "HEX-005"
+      ],
+      "sev": "Critical",
+      "status": "Backlog",
+      "sprint": 20,
+      "prio": "P3",
+      "decision": "S20 (already tagged)",
+      "rationale": "Appointments router 28-site use-case migration. 20+ file refactor. Already S20."
+    },
+    {
+      "rtask": "ENG-OPS-002.R08",
+      "findings": [
+        "HEX-002",
+        "HEX-003"
+      ],
+      "sev": "High",
+      "status": "Backlog",
+      "sprint": 20,
+      "prio": "P3",
+      "decision": "S20 (already tagged)",
+      "rationale": "Ticket hexagonal extraction. Already S20."
+    },
+    {
+      "rtask": "ENG-OPS-002.R09",
+      "findings": [
+        "HEX-004"
+      ],
+      "sev": "High",
+      "status": "Backlog",
+      "sprint": 20,
+      "prio": "P3",
+      "decision": "S20 (already tagged)",
+      "rationale": "Lead-routing hexagonal fix. Already S20."
+    },
+    {
+      "rtask": "ENG-OPS-002.R12",
+      "findings": [
+        "DDD-003",
+        "DDD-004"
+      ],
+      "sev": "High",
+      "status": "Backlog",
+      "sprint": 20,
+      "prio": "P3",
+      "decision": "S20 (already tagged)",
+      "rationale": "TenantId value object + lead domain policy (multi-sprint migration). Already S20."
+    },
+    {
+      "rtask": "ENG-OPS-002.R14",
+      "findings": [
+        "PERF-003"
+      ],
+      "sev": "High",
+      "status": "Backlog",
+      "sprint": 20,
+      "prio": "P2",
+      "decision": "S20 (already tagged)",
+      "rationale": "pg_trgm GIN indexes for search. Related to IFC-033 load-test findings; sequence after load test confirms the hotspot. Already S20."
+    },
+    {
+      "rtask": "ENG-OPS-002.R17",
+      "findings": [
+        "QUAL-013"
+      ],
+      "sev": "High",
+      "status": "Backlog",
+      "sprint": "backlog",
+      "prio": "P3",
+      "decision": "BACKLOG (already tagged)",
+      "rationale": "ERP/SAP disabled-suite decision. Already backlog."
+    }
+  ],
+  "summary": {
+    "criticalHighFindings": 29,
+    "allFindings": 101,
+    "rTasksShippedMerged": [
+      "R01",
+      "R02",
+      "R03",
+      "R10"
+    ],
+    "rTasksCommittedS19": [
+      "R13",
+      "R16"
+    ],
+    "rTasksDeferredS20": [
+      "R04",
+      "R05",
+      "R06",
+      "R07",
+      "R08",
+      "R09",
+      "R11",
+      "R12",
+      "R14",
+      "R15",
+      "R18"
+    ],
+    "rTasksBacklog": [
+      "R17"
+    ]
+  }
+}

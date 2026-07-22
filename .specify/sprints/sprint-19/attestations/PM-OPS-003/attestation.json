@@ -1,0 +1,102 @@
+{
+  "task_id": "PM-OPS-003",
+  "title": "Sprint 19 Rebaseline, Planning & Readiness Gate",
+  "sprint": 19,
+  "run_id": "pmops003-2026-07-22",
+  "created_at": "2026-07-22",
+  "branch": "pmops003",
+  "base_commit": "7f15fcaaf6bf30f956cab73c4b3cd5c3ee1ab560",
+  "verdict": "COMPLETE",
+  "provenance_version": "ADR-068",
+  "summary": "Rebaselined Sprint 19 against real repo state: validated 4 completed tasks (2 VALID, 2 phantom/dead reopened), reassessed 11 backlog tasks, validated dependencies (0 missing, S19 acyclic), duplication scan across 616 tasks + 11 PRs + 60 issues + specs + debt ledger (0 duplicates, 0 net-new remediation tasks), real multi-factor capacity model, prioritized P0-P3, execution waves 0-5, readiness verdict CONDITIONALLY_READY.",
+  "gate_results": [
+    {
+      "gate": "scope-defined",
+      "result": "PASS",
+      "detail": "10 committed / 11 deferred; scope-delta.json"
+    },
+    {
+      "gate": "dependency-integrity",
+      "result": "PASS",
+      "detail": "0 missing deps; S19 subgraph acyclic (dependency-validation.json)"
+    },
+    {
+      "gate": "no-cycles-in-scope",
+      "result": "PASS",
+      "detail": "S19 acyclic; 1 pre-existing S25 cycle logged out-of-scope"
+    },
+    {
+      "gate": "critical-path-preserved",
+      "result": "PASS",
+      "detail": "IFC-033 -> IFC-034; deps satisfied"
+    },
+    {
+      "gate": "duplication-scan",
+      "result": "PASS",
+      "detail": "0 duplicate tasks; 0 net-new remediation tasks (findings already R01-R18)"
+    },
+    {
+      "gate": "completed-validation",
+      "result": "PASS",
+      "detail": "evidence-based; 2 phantom completions reopened not falsely attested"
+    },
+    {
+      "gate": "capacity-real-multifactor",
+      "result": "PASS",
+      "detail": "throughput+cycle+WIP+availability+rework+buffer; 7.3 vs 7.4 slots"
+    },
+    {
+      "gate": "no-fabricated-data",
+      "result": "PASS",
+      "detail": "all numbers from git + committed artifacts + task-tracking sampling"
+    }
+  ],
+  "kpi_results": {
+    "committed_tasks": 10,
+    "deferred_tasks": 11,
+    "net_new_tasks": 0,
+    "genuinely_completed": 6,
+    "reopened_phantom": 2,
+    "missing_dependencies": 0,
+    "cycles_in_s19": 0,
+    "duplicate_tasks": 0,
+    "demand_weighted_slots": 7.3,
+    "effective_supply_slots": 7.4,
+    "readiness_verdict": "CONDITIONALLY_READY"
+  },
+  "artifacts": [
+    "docs/planning/sprint-19-rebaseline.md",
+    "docs/planning/sprint-19-execution-plan.md",
+    "docs/planning/sprint-19-capacity-plan.csv",
+    "docs/planning/sprint-19-critical-path.md",
+    "docs/planning/sprint-19-risk-register.md",
+    "docs/planning/sprint-19-waves.md",
+    "artifacts/reports/sprint-19/current-scope.json",
+    "artifacts/reports/sprint-19/audit-findings-triage.json",
+    "artifacts/reports/sprint-19/scope-delta.json",
+    "artifacts/reports/sprint-19/dependency-validation.json",
+    "artifacts/reports/sprint-19/readiness-report.json"
+  ],
+  "artifact_hashes": {
+    "docs/planning/sprint-19-rebaseline.md": "sha256:4674c32624ed4ac0a00a26cfd4d9ec191689e1e014c1d364034454c9d03ec714",
+    "docs/planning/sprint-19-execution-plan.md": "sha256:e47ae8a07f634fcfc0060604f8067d0c6b31dfa538b44684793126aa4b27a9be",
+    "docs/planning/sprint-19-capacity-plan.csv": "sha256:47307e224d677551b1b98a260a9b4e7942cd7956c63d6b9578ba786527f9ae05",
+    "docs/planning/sprint-19-critical-path.md": "sha256:18fabcb974ebb68c57050b106235a241409b91b7675077c759b36e7c58727cf0",
+    "docs/planning/sprint-19-risk-register.md": "sha256:3a381219e0aab778ec25163b940d562cd65a77ae5804a9c7580d4626fac9d105",
+    "docs/planning/sprint-19-waves.md": "sha256:3ca0252b3d14658eaa70fb7298045e080a26faac88ca14cc9bcc8f59b9954f8b",
+    "artifacts/reports/sprint-19/current-scope.json": "sha256:23ffcdaa7ebf99bc9713257ea44fd6df87f9c42411babcec55a910402087ca30",
+    "artifacts/reports/sprint-19/audit-findings-triage.json": "sha256:9cea626c8e31f79838db93727e6c975152c021d0f1b7158d105ad271286e4daf",
+    "artifacts/reports/sprint-19/scope-delta.json": "sha256:e8ed76234b578d13e5007a5f956dd699107b58a0b989f59dbed0b0fb209c30e8",
+    "artifacts/reports/sprint-19/dependency-validation.json": "sha256:1602b3e7051c48b3c42b9be525b95af1e16906e661be90414ffcd15c7e55c6e5",
+    "artifacts/reports/sprint-19/readiness-report.json": "sha256:b8caaccd667cc53d379fa59b52616ab90126825d783cc188bc6156f8b939e3f2"
+  },
+  "csv_mutations": [
+    "IFC-304 Status Completed->Backlog (phantom completion, evidence-verified)",
+    "IFC-306 Status Completed->Backlog (dead endpoint, evidence-verified)",
+    "PG-066/067/068,IFC-305,PG-210,IFC-313 Target Sprint 19->20 (capacity deferral)",
+    "ENG-OPS-002.R04/R07/R11/R15/R18 Target Sprint 19->20 (deferral/held-for-review)",
+    "PM-OPS-003 registered (Completed)"
+  ],
+  "validation_method": "pnpm validate:sprint-data",
+  "notes": "Referenced spec file (893da4bf-PMOPS003.md / docs/planning/tasks/PM-OPS-003.md) absent on disk; executed against task-brief scope + real repo state. No fabricated data."
+}

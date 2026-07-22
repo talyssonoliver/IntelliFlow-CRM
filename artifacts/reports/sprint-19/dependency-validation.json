@@ -1,0 +1,341 @@
+{
+  "meta": {
+    "task": "PM-OPS-003",
+    "artifact": "dependency-validation.json",
+    "generatedAt": "2026-07-22",
+    "method": "Parsed Dependencies column for every Sprint-19 row; resolved each against the CSV; ran DFS cycle detection over the full 616-row dependency graph and over the Sprint-19 subgraph."
+  },
+  "summary": {
+    "sprint19Rows": 16,
+    "rowsWithUnsatisfiedDeps": 6,
+    "missingDependencies": [],
+    "fullGraphCycles": [
+      "IFC-040 -> IFC-115 -> IFC-071 -> IFC-040"
+    ],
+    "sprint19SubgraphCycles": [],
+    "sprint19Acyclic": true
+  },
+  "perTask": [
+    {
+      "id": "IFC-033",
+      "status": "Backlog",
+      "deps": [
+        {
+          "dep": "IFC-030",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "17",
+          "satisfied": true,
+          "intraSprint19": false
+        },
+        {
+          "dep": "IFC-032",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "18",
+          "satisfied": true,
+          "intraSprint19": false
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": true
+    },
+    {
+      "id": "IFC-034",
+      "status": "Backlog",
+      "deps": [
+        {
+          "dep": "IFC-033",
+          "exists": true,
+          "status": "Backlog",
+          "targetSprint": "19",
+          "satisfied": false,
+          "intraSprint19": true
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": false
+    },
+    {
+      "id": "PG-064",
+      "status": "Backlog",
+      "deps": [
+        {
+          "dep": "IFC-089",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "5",
+          "satisfied": true,
+          "intraSprint19": false
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": true
+    },
+    {
+      "id": "PG-065",
+      "status": "Backlog",
+      "deps": [
+        {
+          "dep": "IFC-090",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "6",
+          "satisfied": true,
+          "intraSprint19": false
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": true
+    },
+    {
+      "id": "PG-069",
+      "status": "Backlog",
+      "deps": [
+        {
+          "dep": "IFC-089",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "5",
+          "satisfied": true,
+          "intraSprint19": false
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": true
+    },
+    {
+      "id": "PG-166",
+      "status": "Completed",
+      "deps": [
+        {
+          "dep": "PG-129",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "14",
+          "satisfied": true,
+          "intraSprint19": false
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": true
+    },
+    {
+      "id": "IFC-304",
+      "status": "Backlog",
+      "deps": [
+        {
+          "dep": "IFC-303",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "17",
+          "satisfied": true,
+          "intraSprint19": false
+        },
+        {
+          "dep": "PG-180",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "18",
+          "satisfied": true,
+          "intraSprint19": false
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": true
+    },
+    {
+      "id": "IFC-306",
+      "status": "Backlog",
+      "deps": [
+        {
+          "dep": "IFC-073",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "2",
+          "satisfied": true,
+          "intraSprint19": false
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": true
+    },
+    {
+      "id": "IFC-312",
+      "status": "Completed",
+      "deps": [
+        {
+          "dep": "PG-182",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "17",
+          "satisfied": true,
+          "intraSprint19": false
+        },
+        {
+          "dep": "PG-183",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "17",
+          "satisfied": true,
+          "intraSprint19": false
+        },
+        {
+          "dep": "IFC-310",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "18",
+          "satisfied": true,
+          "intraSprint19": false
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": true
+    },
+    {
+      "id": "ENG-OPS-002",
+      "status": "In Progress",
+      "deps": [
+        {
+          "dep": "ENG-OPS-001",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "0",
+          "satisfied": true,
+          "intraSprint19": false
+        },
+        {
+          "dep": "GOV-001",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "1",
+          "satisfied": true,
+          "intraSprint19": false
+        },
+        {
+          "dep": "IFC-131",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "4",
+          "satisfied": true,
+          "intraSprint19": false
+        },
+        {
+          "dep": "EXP-REPORTS-002",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "Continuous",
+          "satisfied": true,
+          "intraSprint19": false
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": true
+    },
+    {
+      "id": "ENG-OPS-002.R01",
+      "status": "Completed",
+      "deps": [
+        {
+          "dep": "ENG-OPS-002",
+          "exists": true,
+          "status": "In Progress",
+          "targetSprint": "19",
+          "satisfied": false,
+          "intraSprint19": true
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": false
+    },
+    {
+      "id": "ENG-OPS-002.R02",
+      "status": "Completed",
+      "deps": [
+        {
+          "dep": "ENG-OPS-002",
+          "exists": true,
+          "status": "In Progress",
+          "targetSprint": "19",
+          "satisfied": false,
+          "intraSprint19": true
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": false
+    },
+    {
+      "id": "ENG-OPS-002.R03",
+      "status": "Completed",
+      "deps": [
+        {
+          "dep": "ENG-OPS-002",
+          "exists": true,
+          "status": "In Progress",
+          "targetSprint": "19",
+          "satisfied": false,
+          "intraSprint19": true
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": false
+    },
+    {
+      "id": "ENG-OPS-002.R10",
+      "status": "Completed",
+      "deps": [
+        {
+          "dep": "ENG-OPS-002",
+          "exists": true,
+          "status": "In Progress",
+          "targetSprint": "19",
+          "satisfied": false,
+          "intraSprint19": true
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": false
+    },
+    {
+      "id": "ENG-OPS-002.R13",
+      "status": "Backlog",
+      "deps": [
+        {
+          "dep": "ENG-OPS-002.R02",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "19",
+          "satisfied": true,
+          "intraSprint19": true
+        },
+        {
+          "dep": "ENG-OPS-002.R10",
+          "exists": true,
+          "status": "Completed",
+          "targetSprint": "19",
+          "satisfied": true,
+          "intraSprint19": true
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": true
+    },
+    {
+      "id": "ENG-OPS-002.R16",
+      "status": "Backlog",
+      "deps": [
+        {
+          "dep": "ENG-OPS-002",
+          "exists": true,
+          "status": "In Progress",
+          "targetSprint": "19",
+          "satisfied": false,
+          "intraSprint19": true
+        }
+      ],
+      "allSatisfiedOrIntraSprint": true,
+      "ready": false
+    }
+  ],
+  "preExistingCycleNote": "Pre-existing cycle detected entirely within Sprint 25 tasks: IFC-040 -> IFC-115 -> IFC-071 -> IFC-040. IFC-071 (Completed/S25) depends on IFC-040 (Backlog/S25) which lists IFC-115 (Backlog/S25) -> IFC-071. OUTSIDE Sprint-19 scope; recorded as pre-existing data-integrity debt, does not affect the Sprint-19 execution graph (which is acyclic)."
+}
