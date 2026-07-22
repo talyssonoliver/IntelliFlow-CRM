@@ -1,0 +1,13 @@
+
+> intelliflow-crm@0.1.0 validate:docs-integrity C:\Users\talys\projects\iflow-eng-ops-002
+> tsx tools/scripts/docs-integrity-audit.ts
+
+Docs Integrity Audit (DOC-016)
+────────────────────────────────────────────────────────────
+Canonical (live filesystem): total=211 public=32 developer=14 protected=165
+Docs checked: 7/7
+Checks run: 14
+
+✓ PASS — every target doc cites the canonical totals and aggregates.
+
+Completed in 96ms.

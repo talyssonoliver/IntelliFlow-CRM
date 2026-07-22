@@ -1,0 +1,12 @@
+
+> intelliflow-crm@0.1.0 nplus1:scan C:\Users\talys\projects\iflow-eng-ops-002
+> node tools/scripts/nplus1-scan.mjs
+
+[nplus1-scan] 26 N+1 finding(s) across 21 site(s); 23 baselined.
+
+[nplus1-scan] 1 NEW high-confidence N+1 violation(s) (not in baseline):
+  - apps/api/src/modules/email/inbound.router.ts:946  [prisma-in-map]  prisma.emailRecord.count
+
+Fix by batching the per-element query (see docs/operations/nplus1-audit/NPLUS1_AUDIT.md),
+or, only with a documented owner + justification, run: node tools/scripts/nplus1-scan.mjs --update-baseline
+ ELIFECYCLE  Command failed with exit code 1.

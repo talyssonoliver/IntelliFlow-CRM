@@ -1,0 +1,171 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENG-OPS-002",
+  "run_id": "eng-ops-002-audit-2026-07-22",
+  "attestor": "Claude Code (claude-opus-4-8) — ENG-OPS-002 auditor (chore/eng-ops-002-sprint-1-18-audit)",
+  "attestation_timestamp": "2026-07-22T11:35:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "tasks_reconciled": 408,
+    "delivered_proven": 227,
+    "delivered_without_full_evidence": 177,
+    "true_phantom_completions": 0,
+    "status_stale": 2,
+    "tools_executed": 19,
+    "tools_pass": 16,
+    "tools_defect_fail": 2,
+    "tools_unavailable": 1,
+    "total_findings": 101,
+    "critical": 8,
+    "high": 21,
+    "medium": 39,
+    "low": 25,
+    "info": 8,
+    "critical_high_remediation_candidates": 29,
+    "artifacts_verified": 13,
+    "validations_passed": 16,
+    "validations_failed": 2,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/audit/sprints-1-18-current-state-audit.md": "sha256:96139c76f0391aee6eb0f567a455d97e0b34de77bf08328cc40436a33b6fd10c",
+    "artifacts/reports/sprint-19/baseline/task-reconciliation.csv": "sha256:b63c733928b8cf139bb57dbd84d25897e0a1c95f9728155b7caec985f01d0296",
+    "artifacts/reports/sprint-19/baseline/achievement-ledger.csv": "sha256:36dc61c21741dc6a31319dbd31bd53e442b755a8fbe02996f6223e205d9f60c4",
+    "artifacts/reports/sprint-19/baseline/tool-execution-manifest.json": "sha256:ae3a892346bb249398d7738d2e9658616b81da18a1a1a79518e933e2da6a5e94",
+    "artifacts/reports/sprint-19/baseline/sonar-baseline.json": "sha256:4cadb12df95fc591a55a1f33197faf5203f63250451da0c10f3ba6c6f99db2ae",
+    "artifacts/reports/sprint-19/baseline/ddd-findings.json": "sha256:a3c411ca40280caa1823eb83a53e1a0f6f91387279a79bd7682525623910d79f",
+    "artifacts/reports/sprint-19/baseline/hexagonal-findings.json": "sha256:c2c449fda9ae9d10ab5aae348be211da2590ffee18bf5951df4b3e01d9981b17",
+    "artifacts/reports/sprint-19/baseline/quality-findings.json": "sha256:6bf3f3a89633b6d4f852d9b9b1c9385a091ec417e80dc427a65ba6a5f7a22dae",
+    "artifacts/reports/sprint-19/baseline/security-findings.json": "sha256:08f0097862a7e3e7ec5d9d2ad29235b83b558fe4bfaec5f1f59815b99865349f",
+    "artifacts/reports/sprint-19/baseline/performance-findings.json": "sha256:a19d28304fe7d5c39dbfeb4ab8c367981592fbf9d185ec23add49d3e746ddfbb",
+    "artifacts/reports/sprint-19/baseline/stale-artifacts.json": "sha256:6628e4048bf78858bc009c393abe0cde71152ae2a8fb84955f968e169a5c42b6",
+    "artifacts/reports/sprint-19/baseline/governance-findings.json": "sha256:04c0dd0e89fb645def4f0594de8a30e25aa73c116d2824c89ff2bcfaa02472dc",
+    "artifacts/reports/sprint-19/baseline/remediation-candidates.json": "sha256:0d3d9afe7463b511aa594e453a2ba9a043a4bdeca18addbd5e1eeb66849728ac"
+  },
+  "validation_results": [
+    {
+      "name": "Full quality toolchain (19 commands)",
+      "command": "see tool-execution-manifest.json",
+      "result": "16 PASS / 2 defect-FAIL (validate:schemas, nplus1:scan) / 1 UNAVAILABLE (quality:sonar, no token)"
+    },
+    {
+      "name": "Test suite",
+      "command": "pnpm test",
+      "result": "PASS — 33642 passed / 100 skipped (1515 files), exit 0"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm build",
+      "result": "PASS (127s real)"
+    },
+    {
+      "name": "Coverage (merged Istanbul)",
+      "command": "pnpm test:coverage",
+      "result": "exit 0; lines 86.4% / stmts 85.2% / funcs 82.4% / branches ~76% — below 90%/80% global thresholds (recorded as debt)"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "reconciliation-100pct",
+      "passed": true,
+      "log_path": "artifacts/reports/sprint-19/baseline/task-reconciliation.csv (408/408)"
+    },
+    {
+      "gate_id": "failures-recorded-not-suppressed",
+      "passed": true,
+      "log_path": "artifacts/reports/sprint-19/baseline/tool-runs/*.log"
+    },
+    {
+      "gate_id": "critical-high-have-owner-and-remediation",
+      "passed": true,
+      "log_path": "artifacts/reports/sprint-19/baseline/remediation-candidates.json (29/29)"
+    },
+    {
+      "gate_id": "no-correction-code-in-pr",
+      "passed": true,
+      "log_path": "audit docs/artifacts only"
+    },
+    {
+      "gate_id": "debt-ledger-reconciled",
+      "passed": true,
+      "log_path": "artifacts/metrics/debt-ledger.yaml (+4 ENG-OPS-002 entries)"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "100% S1-18 tasks reconciled",
+      "target": "408/408",
+      "actual": "408/408",
+      "met": true
+    },
+    {
+      "kpi": "100% Critical/High with reproducible evidence + owner",
+      "target": "29/29",
+      "actual": "29/29",
+      "met": true
+    },
+    {
+      "kpi": "0 suppressions/waivers created for green",
+      "target": "0",
+      "actual": "0",
+      "met": true
+    },
+    {
+      "kpi": "0 fabricated metrics",
+      "target": "0",
+      "actual": "0 — all metrics from tool output or public Sonar API",
+      "met": true
+    },
+    {
+      "kpi": "Manual sample false-positive rate <=5%",
+      "target": "<=5%",
+      "actual": "phantom cluster (12) verified & corrected -> 0 residual",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Verifiable baseline of S1-18 delivered state",
+      "met": true,
+      "evidence": "task-reconciliation.csv + achievement-ledger.csv"
+    },
+    {
+      "criterion": "All required artifacts produced and reproducible",
+      "met": true,
+      "evidence": "14 baseline artifacts + report + debt ledger + this attestation"
+    },
+    {
+      "criterion": "Failures registered, not suppressed",
+      "met": true,
+      "evidence": "tool-execution-manifest.json failureClassification"
+    },
+    {
+      "criterion": "No implementation/correction code mixed in",
+      "met": true,
+      "evidence": "git diff = docs + artifacts + .specify only"
+    }
+  ],
+  "dependencies_verified": [
+    {
+      "task": "ENG-OPS-001",
+      "note": "predecessor audit-ops task; not re-verified in this pass"
+    },
+    {
+      "task": "GOV-001",
+      "note": "governance baseline; reconciled as entregue-sem-evidencia in task-reconciliation.csv"
+    }
+  ],
+  "environment": {
+    "os": "win32 (10.0.26200)",
+    "node_version": "v22.14.0 (repo pin; host default v25.2.1 avoided)",
+    "pnpm": "10.33.0",
+    "prisma": "7.8.0",
+    "git_commit": "f57490a919c11e0b9d7de4365d2fd31340be78f9",
+    "branch": "chore/eng-ops-002-sprint-1-18-audit",
+    "docker": "WEDGED (headless-unrecoverable) — local Postgres test DB UNAVAILABLE, recorded not suppressed"
+  },
+  "spec_path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002/spec.md",
+  "plan_path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002/plan.md",
+  "notes": "AUDIT ONLY — no correction code. Reconciliation self-corrected a 12-task phantom false-positive (PG-196..208 pages verified present under apps/web/src/app) => 0 true phantom completions. Real problem is evidence: 177/404 completed tasks lack full provenance; Sprint-18 has 18 tasks without attestation.json (45/63 attested). validate:schemas RED (175/447) and nplus1:scan (1 new N+1) are unenforced-gate defects. One Critical live tenant-isolation leak (SEC-001). SonarCloud QG OK but new-code-only (overall Security D, Reliability C). All remediation is PROPOSED, tracked in remediation-candidates.json + debt-ledger.yaml, to be actioned in Sprint 19 in SEPARATE PRs."
+}

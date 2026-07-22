@@ -1,0 +1,6 @@
+
+> intelliflow-crm@0.1.0 quality:security C:\Users\talys\projects\iflow-eng-ops-002
+> node scripts/pnpm-audit-report.js
+
+Wrote audit report: C:\Users\talys\projects\iflow-eng-ops-002\artifacts\reports\audit-report.json
+[WARN] pnpm audit exited with code 1 (report saved, exit ignored)

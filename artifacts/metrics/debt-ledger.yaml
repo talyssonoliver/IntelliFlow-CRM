@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-06-15
+last_updated: 2026-07-22
 maintainer: Tech Lead
 items:
   LEGAL-MERGED-LCOV-DEADZONE-001:
@@ -5392,3 +5392,83 @@ alerts:
       not require server-side version validation and adding it would require a new
       persistence/config layer. The UI always passes the RSC-read version, making
       the normal web path authoritative. gh issue #559.
+
+  ENG-OPS-002-S1-18-AUDIT-BASELINE:
+    origin_task: ENG-OPS-002
+    owner: Tech Lead + QA + Security (STOA-Foundation)
+    severity: high
+    description: >-
+      Sprint 1-18 current-state audit baseline (ENG-OPS-002). Reconciled all 408
+      S1-18 tasks against git log (1571 commits), 297 merged PRs, attestations and
+      actual deliverables; ran the full deterministic quality toolchain; and ran 6
+      specialist audits (DDD, hexagonal, security, performance, quality, stale-docs)
+      plus a governance pass. Result: 101 findings (8 Critical, 21 High, 39 Medium,
+      25 Low, 8 Info); 29 Critical+High remediation candidates, all with owner +
+      remediation. ZERO true phantom completions, but 177/404 completed tasks (44%)
+      lack full-provenance evidence. All artifacts under
+      artifacts/reports/sprint-19/baseline/. THIS IS AN AUDIT UMBRELLA — individual
+      remediation items are tracked in remediation-candidates.json and the child
+      ledger entries below.
+    created_at: 2026-07-22
+    expiry_date: 2026-10-22
+    remediation_sprint: 19
+    remediation_plan: >-
+      Triage remediation-candidates.json in Sprint 19 planning; open one issue per
+      Critical/High; DO NOT bundle fixes with this audit PR (audit-only per task
+      constraints). Re-run this baseline after Sprint-19 remediation to measure delta.
+    status: open
+    notes: 'Baseline reproducible: tool-execution-manifest.json records exact commands, exit codes, durations. Docker was wedged (test DB unavailable) — recorded, not suppressed.'
+  ENG-OPS-002-ATTESTATION-GAP-S18:
+    origin_task: ENG-OPS-002
+    owner: DevOps Lead
+    severity: high
+    description: >-
+      18 Sprint-18 tasks marked Completed lack a canonical attestation.json:
+      PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205,
+      PG-206, PG-207, PG-208, PG-209 (Module-Settings pages, code verified present
+      under apps/web/src/app) and INFRA-TF-001..005 (Terraform). Triple-corroborated
+      by task-reconciliation.csv, stale-artifacts.json (STALE-003) and
+      docs/CURRENT_STATE_REPORT.md. See finding GOV-A-001.
+    created_at: 2026-07-22
+    expiry_date: 2026-10-22
+    remediation_sprint: 19
+    remediation_plan: >-
+      Retro-attest the 18 tasks (backfill attestation.json with git_commit +
+      evidence against already-shipped code). Evidence backfill, not re-implementation.
+    status: open
+    notes: 'Sprint-18 canonical attestation coverage = 45/63 completed (71%).'
+  ENG-OPS-002-PROVENANCE-GAP-S1-18:
+    origin_task: ENG-OPS-002
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      177 of 404 completed Sprints 1-18 tasks (44%) lack full ADR-068 provenance
+      (run_id + timestamp + verdict + artifact_hashes|gate_results): 159 have an
+      attestation.json with incomplete provenance (mostly pre-ADR-068), 18 have
+      none. Only 227 tasks (56%) are 'delivered AND fully proven'. See GOV-A-002.
+    created_at: 2026-07-22
+    expiry_date: 2026-12-31
+    remediation_sprint: 19
+    remediation_plan: >-
+      Grandfather pre-ADR-068 attestations; enforce full provenance going forward
+      (ADR-068 default). Optionally backfill git_commit for the 17 present-but-
+      incomplete Sprint-18 attestations.
+    status: open
+    notes: 'Historical debt, NOT fabrication — every task has a real deliverable.'
+  ENG-OPS-002-SCHEMA-VALIDATION-RED:
+    origin_task: ENG-OPS-002
+    owner: STOA Automation
+    severity: high
+    description: >-
+      pnpm validate:schemas is RED on origin/main: 175 of 447 committed JSON
+      artifacts fail their own JSON-schema (Passed 272 / Failed 175). Raw log at
+      artifacts/reports/sprint-19/baseline/tool-runs/validate-schemas.log. See GOV-A-003.
+    created_at: 2026-07-22
+    expiry_date: 2026-10-22
+    remediation_sprint: 19
+    remediation_plan: >-
+      Triage 175 failures by schema; regenerate schemas where structure legitimately
+      changed, fix drifted artifacts; then wire validate:schemas into pre-ship as a
+      hard gate (see GOV-A-005). Separate remediation PR.
+    status: open
+    notes: 'Gate exists but not enforced in pre-ship/CI, so drift accumulated.'

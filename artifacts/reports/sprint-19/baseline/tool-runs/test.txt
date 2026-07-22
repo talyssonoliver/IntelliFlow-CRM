@@ -1,0 +1,831 @@
+
+> intelliflow-crm@0.1.0 test C:\Users\talys\projects\iflow-eng-ops-002
+> node scripts/run-tests.js
+
+
+ RUN  v4.1.8 C:/Users/talys/projects/iflow-eng-ops-002
+
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+{"level":50,"time":1784715166102,"pid":34336,"hostname":"Talysson","name":"base-agent","agentName":"Test Agent","taskId":"task-001","error":"[\n  {\n    \"expected\": \"number\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"response\"\n    ],\n    \"message\": \"Invalid input: expected number, received string\"\n  }\n]","msg":"Agent task failed"}
+{"level":50,"time":1784715166582,"pid":27672,"hostname":"Talysson","name":"followup-agent","leadId":"lead-123","error":"ZodError: parse failure","response":"Unparseable response from the LLM...","msg":"Failed to parse follow-up strategy response"}
+{"level":50,"time":1784715166586,"pid":27672,"hostname":"Talysson","name":"base-agent","agentName":"Follow-up Strategy Specialist","error":"Connection timeout","msg":"LLM invocation failed"}
+{"level":50,"time":1784715166585,"pid":27672,"hostname":"Talysson","name":"followup-agent","leadId":"lead-123","error":"ZodError: parse failure","response":"Bad response","msg":"Failed to parse follow-up strategy response"}
+{"level":50,"time":1784715166586,"pid":27672,"hostname":"Talysson","name":"base-agent","agentName":"Follow-up Strategy Specialist","taskId":"followup-lead-123-1784715166586","error":"Connection timeout","msg":"Agent task failed"}
+{"level":50,"time":1784715166763,"pid":34336,"hostname":"Talysson","name":"base-agent","taskId":"task-001","agentName":"Test Agent","error":"\nInvalid `any).aIOutputReview.create()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/agents/base.agent.ts:276:44\n\n  273   return;\n  274 }\n  275 \n→ 276 await (prisma as any).aIOutputReview.create(\n","msg":"Failed to enqueue rejected output — Prisma unavailable"}
+{"level":50,"time":1784715167329,"pid":13080,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","error":"Cannot read properties of undefined (reading 'groupBy')","msg":"Scheduled scoring dispatcher failed"}
+{"level":50,"time":1784715167331,"pid":13080,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","error":"Cannot read properties of undefined (reading 'groupBy')","msg":"Scheduled scoring dispatcher failed"}
+{"level":50,"time":1784715167971,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"contact","entityId":"23456789-0000-4000-8000-000023456789","error":"\nInvalid `prisma.contactAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:307:33\n\n  304 ): Promise<void> {\n  305   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  306 \n→ 307   await prisma.contactAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715167990,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715167995,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168002,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168010,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168016,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168024,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168027,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"contact","entityId":"23456789-0000-4000-8000-000023456789","error":"\nInvalid `prisma.contactAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:307:33\n\n  304 ): Promise<void> {\n  305   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  306 \n→ 307   await prisma.contactAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168033,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168038,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168042,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"contact","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.contactAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:307:33\n\n  304 ): Promise<void> {\n  305   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  306 \n→ 307   await prisma.contactAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168046,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168051,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168054,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168059,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168063,"pid":47596,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"56789012-0000-4000-8000-000056789012","entityType":"lead","entityId":"12345678-0000-4000-8000-000012345678","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715168066,"pid":28192,"hostname":"Talysson","name":"email-writer-agent","recipientEmail":"john@example.com","error":"ZodError: parse failure","response":"not valid json","msg":"Failed to parse email generation response"}
+{"level":50,"time":1784715168068,"pid":28192,"hostname":"Talysson","name":"base-agent","agentName":"Email Writer Specialist","error":"API rate limit","msg":"LLM invocation failed"}
+{"level":50,"time":1784715168068,"pid":28192,"hostname":"Talysson","name":"base-agent","agentName":"Email Writer Specialist","taskId":"email-john-1784715168068","error":"API rate limit","msg":"Agent task failed"}
+{"level":50,"time":1784715168439,"pid":11824,"hostname":"Talysson","name":"rag-context-chain","error":"RetrievalService not configured. Call setRetrievalService() or provide in constructor.","msg":"Context retrieval failed"}
+{"level":50,"time":1784715168745,"pid":11824,"hostname":"Talysson","name":"rag-context-chain","error":"[\n  {\n    \"origin\": \"string\",\n    \"code\": \"invalid_format\",\n    \"format\": \"uuid\",\n    \"pattern\": \"/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/\",\n    \"path\": [\n      \"tenantId\"\n    ],\n    \"message\": \"Invalid UUID\"\n  }\n]","msg":"Context retrieval failed"}
+{"level":50,"time":1784715168745,"pid":11824,"hostname":"Talysson","name":"rag-context-chain","error":"Database connection failed","msg":"Context retrieval failed"}
+{"level":50,"time":1784715170735,"pid":35052,"hostname":"Talysson","name":"base-agent","agentName":"Test Agent","taskId":"test-task-4","error":"Task failed","msg":"Agent task failed"}
+{"level":50,"time":1784715170743,"pid":35052,"hostname":"Talysson","name":"base-agent","agentName":"Test Agent","error":"LLM error","msg":"LLM invocation failed"}
+{"level":50,"time":1784715170937,"pid":47512,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440002","error":"API Error","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715170939,"pid":47512,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440003","error":"API Error","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715170941,"pid":47512,"hostname":"Talysson","name":"churn-risk-chain","entityId":"not-a-valid-uuid","error":"[\n  {\n    \"origin\": \"string\",\n    \"code\": \"invalid_format\",\n    \"format\": \"uuid\",\n    \"pattern\": \"/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/\",\n    \"path\": [\n      \"entityId\"\n    ],\n    \"message\": \"Invalid UUID\"\n  }\n]","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715170942,"pid":47512,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440005","error":"[\n  {\n    \"code\": \"invalid_value\",\n    \"values\": [\n      \"lead\",\n      \"contact\",\n      \"opportunity\",\n      \"account\"\n    ],\n    \"path\": [\n      \"entityType\"\n    ],\n    \"message\": \"Invalid option: expected one of \\\"lead\\\"|\\\"contact\\\"|\\\"opportunity\\\"|\\\"account\\\"\"\n  }\n]","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715170946,"pid":47512,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440010","error":"[vitest] No \"createLLMForTenant\" export is defined on the \"../lib/llm-factory.js\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715170948,"pid":47512,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440011","error":"[vitest] No \"createLLMForTenant\" export is defined on the \"../lib/llm-factory.js\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715170948,"pid":47512,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440012","error":"[vitest] No \"createLLMForTenant\" export is defined on the \"../lib/llm-factory.js\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715171489,"pid":18832,"hostname":"Talysson","name":"enrichment-job","err":{"type":"Error","message":"DB boom","stack":"Error: DB boom\n    at C:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/__tests__/ifc312-jobs-happy-path.test.ts:188:57\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64"},"entityType":"contact","entityId":"c-1","tenantId":"t-1","msg":"enrichment job failed"}
+{"level":50,"time":1784715171508,"pid":18832,"hostname":"Talysson","name":"entity-insight-job","err":{"type":"Error","message":"Redis down","stack":"Error: Redis down\n    at C:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/__tests__/ifc312-jobs-happy-path.test.ts:239:65\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64"},"entityType":"contact","entityId":"c-1","tenantId":"t-1","msg":"entity-insight job failed"}
+{"level":50,"time":1784715171525,"pid":18832,"hostname":"Talysson","name":"tag-suggestion-job","err":{"type":"Error","message":"boom","stack":"Error: boom\n    at C:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/__tests__/ifc312-jobs-happy-path.test.ts:366:65\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64"},"entityType":"contact","entityId":"c-1","tenantId":"t-1","msg":"tag-suggestion job failed"}
+{"level":50,"time":1784715171957,"pid":6460,"hostname":"Talysson","name":"qualification-agent","leadId":"lead-005","error":"Parse error","response":"{\"qualified\":true,\"qualificationLevel\":\"HIGH\",\"confidence\":0.9,\"reasoning\":\"Strong buying signals with decision-maker title and corporate email\",\"strengths\":[\"VP title indicates decision-making author","msg":"Failed to parse qualification response"}
+{"level":50,"time":1784715174564,"pid":44876,"hostname":"Talysson","name":"insight-generation-chain","error":"Cannot read properties of undefined (reading 'length')","executionTimeMs":3,"msg":"Insight generation failed, using fallback heuristics"}
+{"level":50,"time":1784715174566,"pid":44876,"hostname":"Talysson","name":"insight-generation-chain","error":"Request timeout","executionTimeMs":0,"msg":"Insight generation failed, using fallback heuristics"}
+{"level":50,"time":1784715174567,"pid":44876,"hostname":"Talysson","name":"insight-generation-chain","error":"ZodError: invalid JSON structure","executionTimeMs":0,"msg":"Insight generation failed, using fallback heuristics"}
+{"level":50,"time":1784715174569,"pid":44876,"hostname":"Talysson","name":"insight-generation-chain","error":"timeout","executionTimeMs":0,"msg":"Insight generation failed, using fallback heuristics"}
+{"level":50,"time":1784715174571,"pid":44876,"hostname":"Talysson","name":"insight-generation-chain","error":"Cannot read properties of undefined (reading 'length')","executionTimeMs":0,"msg":"Insight generation failed, using fallback heuristics"}
+{"level":50,"time":1784715174575,"pid":44876,"hostname":"Talysson","name":"insight-generation-chain","error":"Invalid prompt schema: (f-string) Missing value for input context\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langchain/errors/INVALID_PROMPT_INPUT/\n","executionTimeMs":0,"msg":"Insight generation failed, using fallback heuristics"}
+{"level":50,"time":1784715176609,"pid":37080,"hostname":"Talysson","name":"scoring-job","correlationId":"test-correlation","tenantId":"00000000-0000-4000-8000-000000000002","leadId":"00000000-0000-4000-8000-000000000001","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/scoring.job.ts:462:32\n\n  459 const prisma = rawPrisma as unknown as import('@intelliflow/db').PrismaClient;\n  460 const churnRisk = churnRiskFromTier(tier);\n  461 \n→ 462 await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist scoring result"}
+{"level":50,"time":1784715176627,"pid":37080,"hostname":"Talysson","name":"prediction-job","correlationId":"test-pred-1","tenantId":"00000000-0000-4000-8000-000000000002","entityType":"lead","entityId":"00000000-0000-4000-8000-000000000003","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715176629,"pid":37080,"hostname":"Talysson","name":"prediction-job","correlationId":"test-pred-1","tenantId":"00000000-0000-4000-8000-000000000002","entityType":"lead","entityId":"00000000-0000-4000-8000-000000000003","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715177202,"pid":33740,"hostname":"Talysson","name":"base-agent","agentName":"Failing Agent","taskId":"task-fail-001-Failing Agent","error":"Agent execution failed","msg":"Agent task failed"}
+{"level":50,"time":1784715177202,"pid":33740,"hostname":"Talysson","name":"crew","crewName":"Failing Crew","taskId":"task-fail-001","error":"Agent Failing Agent failed: Agent execution failed","msg":"Crew task failed"}
+[10:12:57 UTC] [31mERROR[39m (retry): [36mMax retry attempts reached[39m
+    [35mattempt[39m: 3
+    error: "Persistent error"
+[10:12:57 UTC] [31mERROR[39m (retry): [36mMax retry attempts reached[39m
+    [35mattempt[39m: 3
+    error: "Test error"
+[10:13:04 UTC] [31mERROR[39m (retry): [36mMax retry attempts reached[39m
+    [35mattempt[39m: 5
+    error: "Test error"
+{"level":50,"time":1784715178426,"pid":30320,"hostname":"Talysson","name":"sentiment-chain","textLength":23,"error":"[vitest] No \"createLLMForTenant\" export is defined on the \"../lib/llm-factory.js\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","msg":"Sentiment analysis failed"}
+{"level":50,"time":1784715178427,"pid":30320,"hostname":"Talysson","name":"sentiment-chain","textLength":23,"error":"[vitest] No \"createLLMForTenant\" export is defined on the \"../lib/llm-factory.js\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","msg":"Sentiment analysis failed"}
+{"level":50,"time":1784715178428,"pid":30320,"hostname":"Talysson","name":"sentiment-chain","textLength":21,"error":"[vitest] No \"createLLMForTenant\" export is defined on the \"../lib/llm-factory.js\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","msg":"Sentiment analysis failed"}
+{"level":50,"time":1784715178747,"pid":47056,"hostname":"Talysson","name":"cost-tracker","dailyCost":"0.40","dailyLimit":"0.05","msg":"Daily AI cost limit exceeded!"}
+(node:46812) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"level":50,"time":1784715182065,"pid":24676,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","error":"DB write failed","msg":"Failed to write retraining_trigger AIMonitoringEvent"}
+{"level":50,"time":1784715184623,"pid":46652,"hostname":"Talysson","name":"rag-context-chain","error":"RetrievalService not configured. Call setRetrievalService() or provide in constructor.","msg":"Context retrieval failed"}
+{"level":50,"time":1784715184626,"pid":46652,"hostname":"Talysson","name":"rag-context-chain","error":"[\n  {\n    \"origin\": \"string\",\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"inclusive\": true,\n    \"path\": [\n      \"query\"\n    ],\n    \"message\": \"Too small: expected string to have >=1 characters\"\n  }\n]","msg":"Context retrieval failed"}
+{"level":50,"time":1784715184626,"pid":46652,"hostname":"Talysson","name":"rag-context-chain","error":"[\n  {\n    \"origin\": \"string\",\n    \"code\": \"invalid_format\",\n    \"format\": \"uuid\",\n    \"pattern\": \"/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/\",\n    \"path\": [\n      \"tenantId\"\n    ],\n    \"message\": \"Invalid UUID\"\n  }\n]","msg":"Context retrieval failed"}
+{"level":50,"time":1784715184976,"pid":27288,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440000","error":"forced","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715184977,"pid":27288,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440000","error":"err","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715184978,"pid":27288,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440000","error":"err","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715184979,"pid":27288,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440000","error":"err","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715184980,"pid":27288,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440000","error":"err","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715184981,"pid":27288,"hostname":"Talysson","name":"churn-risk-chain","entityId":"550e8400-e29b-41d4-a716-446655440000","error":"err","msg":"Churn risk prediction failed"}
+{"level":50,"time":1784715186979,"pid":45704,"hostname":"Talysson","name":"embedding-chain","textLength":4,"error":"upstream 500","msg":"Embedding generation failed"}
+{"level":50,"time":1784715186982,"pid":45704,"hostname":"Talysson","name":"embedding-chain","count":1,"error":"batch down","msg":"Batch embedding generation failed"}
+{"level":50,"time":1784715187445,"pid":38012,"hostname":"Talysson","name":"chain-monitor","operationId":"mrvxcc1h-ps36ao","errorType":"Error","error":"ECONNREFUSED: Connection refused","msg":"Chain execution failed"}
+{"level":50,"time":1784715187446,"pid":38012,"hostname":"Talysson","name":"scoring-chain","leadEmail":"test@error.com","error":"ECONNREFUSED: Connection refused","msg":"Lead scoring failed"}
+{"level":50,"time":1784715188750,"pid":26460,"hostname":"Talysson","name":"ticket-routing-chain","error":{"codeFrame":"vi.mock(import(\"../lib/llm-factory.js\"), async (importOriginal) => {\n  const actual = await importOriginal()\n  return {\n    ...actual,\n    // your mocked methods\n  }\n})"},"ticketId":"ticket-001","msg":"LLM routing failed — using fallback"}
+{"level":50,"time":1784715188751,"pid":26460,"hostname":"Talysson","name":"ticket-routing-chain","error":{"codeFrame":"vi.mock(import(\"../lib/llm-factory.js\"), async (importOriginal) => {\n  const actual = await importOriginal()\n  return {\n    ...actual,\n    // your mocked methods\n  }\n})"},"ticketId":"ticket-001","msg":"LLM routing failed — using fallback"}
+{"level":50,"time":1784715188751,"pid":26460,"hostname":"Talysson","name":"ticket-routing-chain","error":{"codeFrame":"vi.mock(import(\"../lib/llm-factory.js\"), async (importOriginal) => {\n  const actual = await importOriginal()\n  return {\n    ...actual,\n    // your mocked methods\n  }\n})"},"ticketId":"ticket-001","msg":"LLM routing failed — using fallback"}
+{"level":50,"time":1784715188789,"pid":13916,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"550e8400-e29b-41d4-a716-446655440001","entityId":"550e8400-e29b-41d4-a716-446655440000","msg":"Missing userId - user context required"}
+{"level":50,"time":1784715188790,"pid":13916,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"550e8400-e29b-41d4-a716-446655440001","entityId":"550e8400-e29b-41d4-a716-446655440000","msg":"Missing userId - user context required"}
+{"level":50,"time":1784715188947,"pid":13916,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"550e8400-e29b-41d4-a716-446655440001","entityType":"lead","entityId":"550e8400-e29b-41d4-a716-446655440000","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715188955,"pid":13916,"hostname":"Talysson","name":"prediction-job","correlationId":"test-job-id","tenantId":"550e8400-e29b-41d4-a716-446655440001","entityType":"lead","entityId":"550e8400-e29b-41d4-a716-446655440000","error":"\nInvalid `prisma.leadAIInsight.upsert()` invocation in\nC:/Users/talys/projects/iflow-eng-ops-002/apps/ai-worker/src/jobs/prediction.job.ts:274:30\n\n  271 ): Promise<void> {\n  272   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);\n  273 \n→ 274   await prisma.leadAIInsight.upsert(\n","msg":"Failed to persist prediction result to DB"}
+{"level":50,"time":1784715189733,"pid":46420,"hostname":"Talysson","name":"portal-sweep-job","status":500,"body":"boom","msg":"[portal-sweep] sweep request failed"}
+(node:42516) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGTERM listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"level":30,"time":1784715290468,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290470,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290471,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":40,"time":1784715290472,"pid":38420,"hostname":"Talysson","name":"email-channel","error":{"code":"ESOCKET"},"host":"localhost","port":587,"msg":"Email SMTP verify failed — starting in degraded mode (email jobs will be attempted per-delivery and may fail until SMTP is configured)"}
+{"level":30,"time":1784715290473,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290476,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290477,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290478,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290478,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290479,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290479,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290480,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290481,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290481,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290482,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290482,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290483,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290484,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290485,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290485,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290486,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290486,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized and verified"}
+{"level":30,"time":1784715290486,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290487,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized (Resend HTTP API)"}
+{"level":30,"time":1784715290486,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290487,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized (Resend HTTP API)"}
+{"level":30,"time":1784715290487,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290488,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized (Resend HTTP API)"}
+{"level":30,"time":1784715290489,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized (Resend HTTP API)"}
+{"level":40,"time":1784715290490,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email provider is \"resend\" but no API key configured — starting in degraded mode (email jobs will fail until RESEND_API_KEY is set)"}
+{"level":30,"time":1784715290490,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290493,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290493,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter initialized (Resend HTTP API)"}
+{"level":30,"time":1784715290493,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290470,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290470,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290472,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290473,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290474,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"<test-message-id@localhost>","accepted":["test@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully"}
+{"level":30,"time":1784715290476,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290476,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"<test-message-id@localhost>","accepted":["test@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully"}
+{"level":30,"time":1784715290476,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290477,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"<test-message-id@localhost>","accepted":["test@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully"}
+{"level":30,"time":1784715290477,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290478,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"<test-message-id@localhost>","accepted":["test@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully"}
+{"level":30,"time":1784715290478,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290478,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"<test-message-id@localhost>","accepted":["test@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully"}
+{"level":30,"time":1784715290479,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290479,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"<test-message-id@localhost>","accepted":["test@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully"}
+{"level":30,"time":1784715290479,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290480,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290480,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"<test-message-id@localhost>","accepted":["test@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully"}
+{"level":30,"time":1784715290480,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290481,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"<test-message-id@localhost>","accepted":["test@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully"}
+{"level":30,"time":1784715290481,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290482,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290482,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290483,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290483,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"<test-message-id@localhost>","accepted":["test@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully"}
+{"level":30,"time":1784715290483,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"<test-message-id@localhost>","accepted":["test@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully"}
+{"level":30,"time":1784715290483,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290484,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290486,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":50,"time":1784715290485,"pid":38420,"hostname":"Talysson","name":"email-channel","error":"SMTP error","to":"recipient@example.com","deliveryTimeMs":0,"msg":"Email delivery failed"}
+{"level":50,"time":1784715290485,"pid":38420,"hostname":"Talysson","name":"email-channel","error":"SMTP error","to":"recipient@example.com","deliveryTimeMs":0,"msg":"Email delivery failed"}
+{"level":50,"time":1784715290485,"pid":38420,"hostname":"Talysson","name":"email-channel","error":"SMTP error","to":"recipient@example.com","deliveryTimeMs":0,"msg":"Email delivery failed"}
+{"level":50,"time":1784715290485,"pid":38420,"hostname":"Talysson","name":"email-channel","error":"SMTP error","to":"recipient@example.com","deliveryTimeMs":0,"msg":"Email delivery failed"}
+{"level":40,"time":1784715290485,"pid":38420,"hostname":"Talysson","name":"email-channel","failureCount":5,"msg":"Circuit breaker transitioning to OPEN"}
+{"level":50,"time":1784715290485,"pid":38420,"hostname":"Talysson","name":"email-channel","error":"SMTP error","to":"recipient@example.com","deliveryTimeMs":0,"msg":"Email delivery failed"}
+{"level":30,"time":1784715290485,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290486,"pid":38420,"hostname":"Talysson","name":"email-channel","msg":"Email transporter closed"}
+{"level":30,"time":1784715290487,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"resend-msg-123","to":["user@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully (Resend)"}
+{"level":30,"time":1784715290489,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"r-attach-1","to":["a@example.com","b@example.com"],"deliveryTimeMs":1,"msg":"Email sent successfully (Resend)"}
+{"level":50,"time":1784715290489,"pid":38420,"hostname":"Talysson","name":"email-channel","error":"Resend API error 422: invalid `from` field","to":["user@example.com"],"deliveryTimeMs":0,"msg":"Email delivery failed (Resend)"}
+{"level":50,"time":1784715290490,"pid":38420,"hostname":"Talysson","name":"email-channel","error":"Resend API key not configured","to":["user@example.com"],"deliveryTimeMs":0,"msg":"Email delivery failed (Resend)"}
+{"level":30,"time":1784715290493,"pid":38420,"hostname":"Talysson","name":"email-channel","messageId":"r-factory-1","to":["u@example.com"],"deliveryTimeMs":0,"msg":"Email sent successfully (Resend)"}
+{"level":30,"time":1784715290494,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290495,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290496,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290497,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290498,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290499,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290500,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290487,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290490,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290487_ecf5160d45856e34","statusCode":200,"deliveryTimeMs":3,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290490,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290491,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290490_74df6c6e91f93032","statusCode":200,"deliveryTimeMs":1,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290492,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290493,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290493_81a9ec4c757c9aba","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290493,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290493,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290493_d32175fe9ed99a43","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290494,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290494,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290494_012c2840d47e84d3","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290495,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290496,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290495_5fa5186860290688","statusCode":200,"deliveryTimeMs":1,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290496,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290497,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290496_8ab978a400c87c0e","statusCode":200,"deliveryTimeMs":1,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290497,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290498,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290498_26afadf0f7f6082f","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290498,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290498,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290498_57179992ece510f2","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290499,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290499,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290499_2b62d965ee132fc9","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290499,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":40,"time":1784715290500,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290500_a0dd7d12e763ce55","statusCode":500,"attempt":1,"nextRetryMs":1000,"msg":"Webhook delivery failed, retrying"}
+{"level":30,"time":1784715291500,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290500_a0dd7d12e763ce55","statusCode":200,"deliveryTimeMs":1000,"attempts":2,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290502,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290502,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":40,"time":1784715290502,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290502_17661760aa00bf19","statusCode":429,"attempt":1,"nextRetryMs":1000,"msg":"Webhook delivery failed, retrying"}
+{"level":30,"time":1784715291502,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290502_17661760aa00bf19","statusCode":200,"deliveryTimeMs":1000,"attempts":2,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290503,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290504,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290503,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":50,"time":1784715290503,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290503_48d64af137653c58","error":"HTTP 400: Bad Request","statusCode":400,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivery failed after all retries"}
+{"level":30,"time":1784715290504,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":40,"time":1784715290504,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290504_d2131c70a638510d","statusCode":500,"attempt":1,"nextRetryMs":1000,"msg":"Webhook delivery failed, retrying"}
+{"level":40,"time":1784715291504,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290504_d2131c70a638510d","statusCode":500,"attempt":2,"nextRetryMs":5000,"msg":"Webhook delivery failed, retrying"}
+{"level":40,"time":1784715296504,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290504_d2131c70a638510d","statusCode":500,"attempt":3,"nextRetryMs":30000,"msg":"Webhook delivery failed, retrying"}
+{"level":50,"time":1784715326504,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290504_d2131c70a638510d","error":"HTTP 500: Internal Server Error","statusCode":500,"deliveryTimeMs":36000,"attempts":4,"msg":"Webhook delivery failed after all retries"}
+{"level":30,"time":1784715290506,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290507,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290508,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290508,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290509,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290509,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel initialized"}
+{"level":30,"time":1784715290509,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290506,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290506,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290506_725f42f70c45b184","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290507,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290507,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290508,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290508_fc89a337782af42f","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290508,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290508_81ba9994ec5d859a","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290508,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290508,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290508_1cd5859d60db56e5","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290508,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290509,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290509_263cb1a63541daaa","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290509,"pid":13476,"hostname":"Talysson","name":"webhook-channel","requestId":"wh_1784715290509_fe35a0312e28aab9","statusCode":200,"deliveryTimeMs":0,"attempts":1,"msg":"Webhook delivered successfully"}
+{"level":30,"time":1784715290509,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290509,"pid":13476,"hostname":"Talysson","name":"webhook-channel","msg":"Webhook channel closed"}
+{"level":30,"time":1784715290818,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715290819,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715290820,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"mock","msg":"SMS channel initialized"}
+{"level":30,"time":1784715290821,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715290822,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"mock","msg":"SMS channel initialized"}
+{"level":30,"time":1784715290820,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715290876,"pid":6148,"hostname":"Talysson","name":"sms-channel","messageId":"mock-1784715290875","status":"delivered","deliveryTimeMs":54,"msg":"SMS sent successfully"}
+{"level":30,"time":1784715290877,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"mock","msg":"SMS channel initialized"}
+{"level":30,"time":1784715290876,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715290937,"pid":6148,"hostname":"Talysson","name":"sms-channel","messageId":"mock-1784715290937","status":"delivered","deliveryTimeMs":60,"msg":"SMS sent successfully"}
+{"level":30,"time":1784715290938,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"mock","msg":"SMS channel initialized"}
+{"level":30,"time":1784715290937,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715290998,"pid":6148,"hostname":"Talysson","name":"sms-channel","messageId":"mock-1784715290998","status":"delivered","deliveryTimeMs":60,"msg":"SMS sent successfully"}
+{"level":30,"time":1784715290999,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"mock","msg":"SMS channel initialized"}
+{"level":30,"time":1784715290998,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291059,"pid":6148,"hostname":"Talysson","name":"sms-channel","messageId":"mock-1784715291059","status":"delivered","deliveryTimeMs":60,"msg":"SMS sent successfully"}
+{"level":30,"time":1784715291060,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"mock","msg":"SMS channel initialized"}
+{"level":30,"time":1784715291062,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"mock","msg":"SMS channel initialized"}
+{"level":30,"time":1784715291063,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"mock","msg":"SMS channel initialized"}
+{"level":30,"time":1784715291063,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"twilio","msg":"SMS channel initialized"}
+{"level":30,"time":1784715291065,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291066,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"twilio","msg":"SMS channel initialized"}
+{"level":30,"time":1784715291066,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291066,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"twilio","msg":"SMS channel initialized"}
+{"level":30,"time":1784715291067,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291067,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"twilio","msg":"SMS channel initialized"}
+{"level":30,"time":1784715291067,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"twilio","msg":"SMS channel initialized"}
+{"level":30,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"twilio","msg":"SMS channel initialized"}
+{"level":30,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291069,"pid":6148,"hostname":"Talysson","name":"sms-channel","provider":"twilio","msg":"SMS channel initialized"}
+{"level":30,"time":1784715291069,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291069,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291069,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291070,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291070,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291060,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291061,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291062,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291063,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291063,"pid":6148,"hostname":"Talysson","name":"sms-channel","messageId":"SM1234567890abcdef1234567890abcdef","status":"queued","deliveryTimeMs":0,"msg":"SMS sent successfully"}
+{"level":30,"time":1784715291065,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":50,"time":1784715291066,"pid":6148,"hostname":"Talysson","name":"sms-channel","twilioCode":21211,"message":"Invalid phone number","moreInfo":"https://www.twilio.com/docs/errors/21211","msg":"Twilio API error"}
+{"level":50,"time":1784715291066,"pid":6148,"hostname":"Talysson","name":"sms-channel","error":"Invalid phone number","to":"+1555987****","deliveryTimeMs":0,"msg":"SMS delivery failed"}
+{"level":30,"time":1784715291066,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291066,"pid":6148,"hostname":"Talysson","name":"sms-channel","messageId":"SMfailed","status":"failed","deliveryTimeMs":0,"msg":"SMS sent successfully"}
+{"level":30,"time":1784715291067,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291067,"pid":6148,"hostname":"Talysson","name":"sms-channel","messageId":"SM1234567890abcdef1234567890abcdef","status":"queued","deliveryTimeMs":0,"msg":"SMS sent successfully"}
+{"level":30,"time":1784715291067,"pid":6148,"hostname":"Talysson","name":"sms-channel","messageId":"SM1234567890abcdef1234567890abcdef","status":"queued","deliveryTimeMs":0,"msg":"SMS sent successfully"}
+{"level":30,"time":1784715291067,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":50,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","message":"Provider down","msg":"Twilio API error"}
+{"level":50,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","error":"Provider down","to":"+1555987****","deliveryTimeMs":0,"msg":"SMS delivery failed"}
+{"level":50,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","message":"Provider down","msg":"Twilio API error"}
+{"level":50,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","error":"Provider down","to":"+1555987****","deliveryTimeMs":0,"msg":"SMS delivery failed"}
+{"level":50,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","message":"Provider down","msg":"Twilio API error"}
+{"level":50,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","error":"Provider down","to":"+1555987****","deliveryTimeMs":0,"msg":"SMS delivery failed"}
+{"level":50,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","message":"Provider down","msg":"Twilio API error"}
+{"level":50,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","error":"Provider down","to":"+1555987****","deliveryTimeMs":0,"msg":"SMS delivery failed"}
+{"level":50,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","message":"Provider down","msg":"Twilio API error"}
+{"level":40,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","failureCount":5,"msg":"SMS circuit breaker transitioning to OPEN"}
+{"level":50,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","error":"Provider down","to":"+1555987****","deliveryTimeMs":0,"msg":"SMS delivery failed"}
+{"level":30,"time":1784715291068,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":50,"time":1784715291069,"pid":6148,"hostname":"Talysson","name":"sms-channel","message":"Provider down","msg":"Twilio API error"}
+{"level":50,"time":1784715291069,"pid":6148,"hostname":"Talysson","name":"sms-channel","error":"Provider down","to":"+1555987****","deliveryTimeMs":0,"msg":"SMS delivery failed"}
+{"level":30,"time":1784715291069,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291070,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291070,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+{"level":30,"time":1784715291070,"pid":6148,"hostname":"Talysson","name":"sms-channel","msg":"SMS channel closed"}
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: navigation to another Document
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at processTimers (node:internal/timers:526:9)
+Error: getaddrinfo ENOTFOUND storage.example.com
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'storage.example.com'
+}
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": getaddrinfo ENOTFOUND storage.example.com
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at TLSSocket.socketErrorListener (node:_http_client:518:5)
+    at TLSSocket.emit (node:events:518:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[disconnectedFromNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:822:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at listOnTimeout (node:internal/timers:555:9)
+    at processTimers (node:internal/timers:529:7)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at TLSSocket.socketErrorListener (node:_http_client:518:5)
+    at TLSSocket.emit (node:events:518:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+Error: getaddrinfo ENOTFOUND storage.example.com
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'storage.example.com'
+}
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": getaddrinfo ENOTFOUND storage.example.com
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at TLSSocket.socketErrorListener (node:_http_client:518:5)
+    at TLSSocket.emit (node:events:518:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+Error: getaddrinfo ENOTFOUND storage.example.com
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'storage.example.com'
+}
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": getaddrinfo ENOTFOUND storage.example.com
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at TLSSocket.socketErrorListener (node:_http_client:518:5)
+    at TLSSocket.emit (node:events:518:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at TLSSocket.socketErrorListener (node:_http_client:518:5)
+    at TLSSocket.emit (node:events:518:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/page.html": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/iflow-eng-ops-002/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+{"level":30,"time":1784715645180,"pid":8728,"hostname":"Talysson","name":"composite-shutdown","step":"h1","msg":"Running cleanup step"}
+{"level":30,"time":1784715645180,"pid":8728,"hostname":"Talysson","name":"composite-shutdown","step":"h1","msg":"Cleanup step completed"}
+{"level":30,"time":1784715646151,"pid":23068,"hostname":"Talysson","name":"queue-connector","host":"localhost","port":6379,"msg":"Connecting to Redis"}
+{"level":30,"time":1784715646155,"pid":23068,"hostname":"Talysson","name":"queue-connector","host":"localhost","port":6379,"msg":"Connecting to Redis"}
+{"level":30,"time":1784715646151,"pid":23068,"hostname":"Talysson","name":"queue-connector","attempt":0,"msg":"Connected to Redis successfully"}
+{"level":40,"time":1784715646155,"pid":23068,"hostname":"Talysson","name":"queue-connector","attempt":1,"retryInMs":1000,"err":"ECONNREFUSED","msg":"Redis unavailable, retrying in 1000ms — worker will start once Redis is reachable"}
+{"level":40,"time":1784715647155,"pid":23068,"hostname":"Talysson","name":"queue-connector","attempt":2,"retryInMs":2000,"err":"ECONNREFUSED","msg":"Redis unavailable, retrying in 2000ms — worker will start once Redis is reachable"}
+{"level":40,"time":1784715649155,"pid":23068,"hostname":"Talysson","name":"queue-connector","attempt":3,"retryInMs":4000,"err":"ECONNREFUSED","msg":"Redis unavailable, retrying in 4000ms — worker will start once Redis is reachable"}
+{"level":30,"time":1784715653155,"pid":23068,"hostname":"Talysson","name":"queue-connector","attempt":3,"msg":"Connected to Redis successfully"}
+{"level":30,"time":1784715646157,"pid":23068,"hostname":"Talysson","name":"queue-connector","host":"localhost","port":6379,"msg":"Connecting to Redis"}
+{"level":40,"time":1784715646157,"pid":23068,"hostname":"Talysson","name":"queue-connector","attempt":1,"retryInMs":1000,"err":"Connection is closed","msg":"Redis unavailable, retrying in 1000ms — worker will start once Redis is reachable"}
+{"level":40,"time":1784715647157,"pid":23068,"hostname":"Talysson","name":"queue-connector","attempt":2,"retryInMs":2000,"err":"Connection is closed","msg":"Redis unavailable, retrying in 2000ms — worker will start once Redis is reachable"}
+{"level":30,"time":1784715649157,"pid":23068,"hostname":"Talysson","name":"queue-connector","attempt":2,"msg":"Connected to Redis successfully"}
+{"level":30,"time":1784715646158,"pid":23068,"hostname":"Talysson","name":"queue-connector","host":"localhost","port":6379,"msg":"Connecting to Redis"}
+{"level":40,"time":1784715646158,"pid":23068,"hostname":"Talysson","name":"queue-connector","attempt":1,"retryInMs":1000,"err":"ECONNREFUSED","msg":"Redis unavailable, retrying in 1000ms — worker will start once Redis is reachable"}
+{"level":30,"time":1784715647158,"pid":23068,"hostname":"Talysson","name":"queue-connector","attempt":1,"msg":"Connected to Redis successfully"}
+{"level":30,"time":1784715646160,"pid":23068,"hostname":"Talysson","name":"queue-connector","host":"localhost","port":6379,"msg":"Connecting to Redis"}
+{"level":30,"time":1784715646160,"pid":23068,"hostname":"Talysson","name":"queue-connector","attempt":0,"msg":"Connected to Redis successfully"}
+(node:21788) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  1510 passed | 5 skipped (1515)
+      Tests  33642 passed | 100 skipped (33742)
+   Start at  11:12:31
+   Duration  499.09s (transform 42.98s, setup 282.60s, import 477.32s, tests 422.66s, environment 465.92s)
+
+
+✅ Tests completed successfully (33642 passed)

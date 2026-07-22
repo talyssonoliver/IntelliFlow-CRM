@@ -1,0 +1,7 @@
+
+> intelliflow-crm@0.1.0 quality:deps C:\Users\talys\projects\iflow-eng-ops-002
+> node scripts/run-soft.js depcheck --ignores="@types/*,eslint-*,prettier,husky,lint-staged,turbo"
+
+'depcheck' is not recognized as an internal or external command,
+operable program or batch file.
+[WARN] Ignoring non-zero exit code (1) from: depcheck --ignores=@types/*,eslint-*,prettier,husky,lint-staged,turbo

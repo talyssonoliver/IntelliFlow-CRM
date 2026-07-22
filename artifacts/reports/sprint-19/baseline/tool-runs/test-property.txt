@@ -1,0 +1,13 @@
+
+> intelliflow-crm@0.1.0 test:property:standard C:\Users\talys\projects\iflow-eng-ops-002
+> dotenv -v FC_TIER=standard -- vitest run --project property
+
+
+ RUN  v4.1.8 C:/Users/talys/projects/iflow-eng-ops-002
+
+
+ Test Files  24 passed | 2 skipped (26)
+      Tests  577 passed | 24 skipped (601)
+   Start at  11:10:05
+   Duration  13.65s (transform 2.62s, setup 1.04s, import 33.73s, tests 10.10s, environment 3ms)
+

@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "task": "ENG-OPS-002",
+    "phase": "5-sonar",
+    "source": "SonarCloud public API (sonarcloud.io) + local Istanbul coverage-summary.json",
+    "projectKey": "talyssonoliver_IntelliFlow-CRM",
+    "organization": "talyssonoliver",
+    "fetchedVia": "GET https://sonarcloud.io/api/measures/component (HTTP 200, no token, public project)",
+    "qualityGatePeriod": "2026-06-03T22:40:50+0000",
+    "note": "quality:sonar SCAN command FAILED locally (SONAR_TOKEN not set) — see tool-runs/quality-sonar.log. These metrics are the last server-side analysis, retrieved read-only via the public API. No placeholders; no fabricated values."
+  },
+  "qualityGate": {
+    "status": "OK",
+    "detail": {
+      "status": "OK",
+      "conditions": [
+        {
+          "status": "OK",
+          "metricKey": "new_reliability_rating",
+          "comparator": "GT",
+          "periodIndex": 1,
+          "errorThreshold": "1",
+          "actualValue": "1"
+        },
+        {
+          "status": "OK",
+          "metricKey": "new_security_rating",
+          "comparator": "GT",
+          "periodIndex": 1,
+          "errorThreshold": "1",
+          "actualValue": "1"
+        },
+        {
+          "status": "OK",
+          "metricKey": "new_maintainability_rating",
+          "comparator": "GT",
+          "periodIndex": 1,
+          "errorThreshold": "1",
+          "actualValue": "1"
+        },
+        {
+          "status": "OK",
+          "metricKey": "new_coverage",
+          "comparator": "LT",
+          "periodIndex": 1,
+          "errorThreshold": "80",
+          "actualValue": "91.9"
+        },
+        {
+          "status": "OK",
+          "metricKey": "new_duplicated_lines_density",
+          "comparator": "GT",
+          "periodIndex": 1,
+          "errorThreshold": "3",
+          "actualValue": "0.2"
+        },
+        {
+          "status": "OK",
+          "metricKey": "new_security_hotspots_reviewed",
+          "comparator": "LT",
+          "periodIndex": 1,
+          "errorThreshold": "100",
+          "actualValue": "100.0"
+        }
+      ],
+      "periods": [
+        {
+          "index": 1,
+          "mode": "previous_version",
+          "date": "2026-06-03T22:40:50+0000",
+          "parameter": "not provided"
+        }
+      ],
+      "ignoredConditions": false
+    }
+  },
+  "overall": {
+    "reliability_rating": "C (3.0)",
+    "security_rating": "D (4.0)",
+    "maintainability_rating": "A (1.0)",
+    "bugs": 6,
+    "vulnerabilities": 1,
+    "security_hotspots": 14,
+    "security_hotspots_reviewed_pct": "0.0",
+    "code_smells": 1274,
+    "duplicated_lines_density_pct": 4.1,
+    "duplicated_blocks": 1161,
+    "coverage_pct": 73.2,
+    "line_coverage_pct": 73.1,
+    "branch_coverage_pct": 73.4,
+    "uncovered_lines": 19271,
+    "technical_debt_minutes": 5839,
+    "technical_debt_hours": 97.3,
+    "sqale_debt_ratio_pct": 0.1,
+    "cognitive_complexity": 28936,
+    "cyclomatic_complexity": 56830,
+    "ncloc": 380974,
+    "lines": 479791
+  },
+  "newCode": {
+    "coverage_pct": 91.85,
+    "bugs": 0,
+    "vulnerabilities": 0,
+    "code_smells": 167,
+    "duplicated_lines_density_pct": 0.20330838185010627,
+    "reliability_rating": "A",
+    "security_rating": "A",
+    "maintainability_rating": "A",
+    "security_hotspots": 0,
+    "new_lines": 21642
+  },
+  "localCoverageIstanbul": {
+    "total": {
+      "lines": 86.39,
+      "statements": 85.12,
+      "functions": 82.4,
+      "branches": 75.89
+    },
+    "perPackageLinePct": {
+      "apps/ai-worker": 88.19,
+      "apps/api": 85.89,
+      "apps/web": 82.26,
+      "packages/adapters": 89.38,
+      "packages/application": 90.74,
+      "packages/db": 98.1,
+      "packages/domain": 94.76,
+      "packages/validators": 98.44
+    },
+    "note": "Local merged Istanbul coverage (artifacts/coverage/coverage-summary.json). Differs from Sonar coverage due to different file scoping/exclusions."
+  },
+  "criticalObservations": [
+    "Quality Gate PASSES but only because all gate conditions target NEW code (clean-as-you-code). Overall-code security_rating is D and reliability C — these do NOT gate.",
+    "Overall security rating D with 1 vulnerability and 14 unreviewed-or-tracked hotspots — corroborates security-findings.json.",
+    "1274 code smells / 97h debt / cognitive complexity 28936 across 381k ncloc."
+  ]
+}
