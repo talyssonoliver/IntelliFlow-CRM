@@ -1,0 +1,98 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "PM-OPS-002",
+  "phase": "phase-1-validation",
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": 210,
+  "started_at": "2026-07-22T18:00:00Z",
+  "completed_at": "2026-07-22T21:30:00Z",
+  "stream": null,
+  "dependencies_meta": {
+    "verified_at": "2026-07-22T20:53:00Z"
+  },
+  "artifacts": {
+    "expected": [
+      "docs/audit/sprint-18-full-audit.md",
+      "artifacts/reports/sprint-18/plan-versus-delivered.csv",
+      "artifacts/reports/sprint-18/dora-metrics.json",
+      "artifacts/reports/sprint-18/flow-metrics.json",
+      "docs/planning/sprint-18-closure-decision.md",
+      ".specify/sprints/sprint-18/attestations/PM-OPS-002/attestation.json"
+    ],
+    "created": [
+      "docs/audit/sprint-18-full-audit.md",
+      "docs/planning/sprint-18-closure-decision.md",
+      "docs/planning/sprint-18-retrospective.md",
+      "docs/planning/sprint-18-improvement-actions.md",
+      "artifacts/reports/sprint-18/plan-versus-delivered.csv",
+      "artifacts/reports/sprint-18/dora-metrics.json",
+      "artifacts/reports/sprint-18/flow-metrics.json",
+      "artifacts/reports/sprint-18/task-evidence-matrix.json",
+      "artifacts/reports/sprint-18/root-causes.json",
+      "artifacts/reports/sprint-18/scope-churn.json",
+      ".specify/sprints/sprint-18/attestations/PM-OPS-002/context_ack.json",
+      ".specify/sprints/sprint-18/attestations/PM-OPS-002/attestation.json"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "kpis": {
+    "tasks_audited": {
+      "target": "67/67",
+      "actual": "67/67",
+      "met": true
+    },
+    "fabricated_metrics": {
+      "target": "0",
+      "actual": "0",
+      "met": true
+    },
+    "closure_verdict_rendered": {
+      "target": "1 of {CLOSED, CLOSED_WITH_RESIDUAL_ACTIONS, NOT_CLOSED}",
+      "actual": "CLOSED_WITH_RESIDUAL_ACTIONS",
+      "met": true
+    },
+    "evidence_gap_tasks_resolved": {
+      "target": "18/18",
+      "actual": "18/18 (classified, not fabricated — real present-tense evidence recorded per task)",
+      "met": true
+    }
+  },
+  "notes": "Full factual audit of Sprint 18 (67 tasks) anchored to origin/main @ 7f15fcaaf. Deterministic evidence collection + live git verification + an independent verification pass that corrected two false-negatives from the first collector run (DOC-016 CI-gate present on main -> C09->C04; the '28 synthetic timestamp' figure was generated-cache-derived and replaced with committed 34-null/5-missing evidence). Verdict: CLOSED_WITH_RESIDUAL_ACTIONS. Read-only over product; CSV status flips deferred to R-STATUS-2.",
+  "status_history": [
+    {
+      "at": "2026-03-06T00:00:00Z",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-07-22T18:00:00Z",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-07-22T21:30:00Z",
+      "status": "Completed"
+    }
+  ],
+  "validations": [
+    {
+      "name": "json-validity",
+      "command": "node -e JSON.parse over all artifacts/reports/sprint-18/*.json",
+      "passed": true
+    },
+    {
+      "name": "csv-integrity",
+      "command": "RFC4180 parse of plan-versus-delivered.csv — 21 cols x 67 data rows, category tally sums to 67",
+      "passed": true
+    },
+    {
+      "name": "git-ground-truth",
+      "command": "git ls-tree/log origin/main for DOC-015 #612, IFC-211 #597, DOC-016 #598 + docs-integrity.yml blob 23a19fcf",
+      "passed": true
+    },
+    {
+      "name": "attestation-count-reconcile",
+      "command": "find .specify/sprints/sprint-18/attestations -name attestation.json = 48; 19 without; reconciled to categories",
+      "passed": true
+    }
+  ]
+}

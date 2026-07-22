@@ -1,0 +1,113 @@
+{
+  "meta": {
+    "generated_at": "2026-07-22T20:53:07.544Z",
+    "task": "PM-OPS-002",
+    "sprint": "sprint-18"
+  },
+  "commitment_reliability": {
+    "committed_tasks": 67,
+    "delivered_in_fact": 66,
+    "csv_completed": 63,
+    "cleanly_attested": 36,
+    "delivered_in_fact_pct": 98.5,
+    "csv_completed_pct": 94,
+    "cleanly_attested_pct": 53.7,
+    "interpretation": "Delivery reliability is high (66/67 primary artifacts on disk; only IFC-257 partial). GOVERNANCE reliability is far lower (36/67 carry a clean canonical attestation among CSV-Completed rows; DOC-015 and DOC-016 add 2 more clean attestations that are stale at Backlog). The gap between delivery and governance is the sprint's core debt.",
+    "revision_note": "delivered_in_fact corrected 65 -> 66 on 2026-07-22: DOC-016's CI-gate limb (.github/workflows/docs-integrity.yml) was found present on origin/main (blob 23a19fcf, commit f57490a91 / #598), so DOC-016 is fully delivered, not partial."
+  },
+  "scope_churn": {
+    "see": "scope-churn.json"
+  },
+  "cycle_time": {
+    "value": "UNRELIABLE / effectively UNKNOWN",
+    "source_caveat": "Cycle-time, duration, SPI and schedule-variance below derive from the GENERATED, GITIGNORED metrics cache (apps/project-tracker/docs/metrics/sprint-18/_summary.json, ADR-067 Phase 2). That cache is NOT committed and NOT reproducible in a clean checkout, so these are SUPPORTING context, not committed evidence. Committed timing evidence (task-tracking.json) is summarized under status_accuracy.completion_timestamp_evidence_committed.",
+    "reason": "Recorded durations measure a single /exec session, not spec->done cycle time, and many completed tasks carry no committed completion timestamp at all (see status_accuracy). The generated cache additionally showed bulk-sync duplicate timestamp clusters, but those are not present in committed sources.",
+    "non_placeholder_subset": {
+      "n": 14,
+      "median_minutes": 150,
+      "min": 25,
+      "max": 240,
+      "values": [
+        25,
+        40,
+        59,
+        90,
+        105,
+        110,
+        120,
+        150,
+        160,
+        180,
+        180,
+        190,
+        200,
+        240
+      ]
+    }
+  },
+  "wip_aging": {
+    "open_wip": 1,
+    "item": "IFC-257 (Contact Detail Action Button Wiring)",
+    "status": "In Progress (80%)",
+    "aging": "Open across the whole sprint window; SESSION_CONTEXT (2026-07-19) records it \"started 1mo ago\". WIP age >= ~5 weeks — well beyond a 2-week cadence.",
+    "wip_limit_policy": "none enforced"
+  },
+  "throughput": {
+    "completed_tasks": 63,
+    "window_days_approx": 149,
+    "note": "Delivery clustered heavily in June 2026 (34 of 49 feature commits) — burst rather than steady flow."
+  },
+  "sprint_duration": {
+    "nominal_days": 14,
+    "actual_days_approx": 149,
+    "overrun_factor_approx": 10.6,
+    "spi": 0.36,
+    "schedule_variance_minutes": -12290,
+    "schedule_status": "critical",
+    "source": "apps/project-tracker/docs/metrics/sprint-18/_summary.json (schedule block); sprint_start/end dates are null in-source."
+  },
+  "status_accuracy": {
+    "csv_vs_reality_mismatches": 21,
+    "stale_backlog_but_shipped": [
+      "DOC-015",
+      "IFC-211",
+      "DOC-016"
+    ],
+    "completion_timestamp_evidence_committed": {
+      "source": ".specify/sprints/sprint-18/attestations/*/task-tracking.json (committed)",
+      "no_tracking_file": 5,
+      "no_tracking_file_ids": ["IFC-032", "IFC-078", "PG-063", "PG-132", "PG-188"],
+      "completed_at_null": 34,
+      "completed_at_populated": 28,
+      "duplicate_timestamp_pairs": 5,
+      "max_duplicate_cluster": 2,
+      "correction_note": "Replaces the prior 'synthetic_completion_timestamps: 28 (x16/x8 clusters)' claim, which was derived from the gitignored generated cache and is NOT reproducible from committed sources. Committed evidence shows NO cluster larger than x2; the real committed defect is timing ABSENCE (34 null + 5 missing files)."
+    },
+    "completed_without_canonical_attestation": [
+      "PG-196",
+      "PG-197",
+      "PG-198",
+      "PG-199",
+      "PG-201",
+      "PG-202",
+      "PG-203",
+      "PG-204",
+      "PG-205",
+      "PG-206",
+      "PG-207",
+      "PG-208",
+      "PG-209",
+      "INFRA-TF-001",
+      "INFRA-TF-002",
+      "INFRA-TF-003",
+      "INFRA-TF-004",
+      "INFRA-TF-005"
+    ],
+    "synthetic_completion_timestamps": "SUPERSEDED — see completion_timestamp_evidence_committed above. The prior integer 28 conflated 'tasks with a populated completed_at' with 'duplicated placeholders'; committed sources show 34 null + 28 populated with only 5 x2 pairs.",
+    "artifact_path_drift_rows": [
+      "IFC-248",
+      "PG-200",
+      "PG-204"
+    ]
+  }
+}

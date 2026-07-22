@@ -1,0 +1,75 @@
+{
+  "meta": {
+    "generated_at": "2026-07-22T20:53:07.544Z",
+    "task": "PM-OPS-002",
+    "sprint": "sprint-18",
+    "method": "Five Whys per defect class; each root cause tied to observed in-repo evidence. No speculation beyond evidence."
+  },
+  "defect_classes": [
+    {
+      "id": "RC-1",
+      "class": "Status staleness (CSV Backlog while shipped on main)",
+      "evidence": "DOC-015 (#612) and IFC-211 (#597) shipped to origin/main but CSV still reads Backlog; 8 of the 11 rows the 2026-07-21 backlog-truth-audit flagged were already flipped, 2 more shipped after it ran.",
+      "five_whys": [
+        "Why is the CSV stale? Because status is flipped manually after merge, in a separate step from the merge.",
+        "Why is it a separate step? Because merge (GitHub) and the source-of-truth CSV (repo file) are not linked by automation.",
+        "Why no link? Because there is no post-merge hook that reconciles a task id in a PR title to its CSV Status.",
+        "Why not? Because task tracking was retrofitted onto an existing PR flow; the CSV was treated as human-owned.",
+        "Root cause: No automated PR-merge -> CSV-status reconciliation; the single source of truth depends on manual, easily-skipped edits."
+      ],
+      "root_cause": "No automated merge->status reconciliation; CSV status is a manual after-thought decoupled from the merge event."
+    },
+    {
+      "id": "RC-2",
+      "class": "Missing / unverifiable completion evidence (absent or unmeasured timings)",
+      "evidence": "Committed-verifiable from task-tracking.json: 34 of 62 completed tasks record completed_at:null and 5 have no tracking file at all -- ~39 completed tasks carry no real committed completion timestamp. Of the 28 populated timestamps only 5 form x2 batch-session pairs (no larger cluster). (A separate GITIGNORED generated cache showed larger bulk-sync duplicate clusters e.g. 2026-06-27T23:53:49.694Z, but that cache is not committed and not reproducible in a clean checkout, so it is not treated as committed evidence.)",
+      "five_whys": [
+        "Why placeholder timestamps? Because completion time is written by a bulk sync, not captured at the moment work finished.",
+        "Why bulk sync? Because many tasks were marked Completed en-masse rather than through /exec, which stamps real timings.",
+        "Why en-masse? Because delivery outpaced governance; rows were reconciled in batches after the fact.",
+        "Why did governance lag? Because attestation is a manual /exec Phase-5 step with no gate blocking a Completed flip without it.",
+        "Root cause: \"Completed\" can be set without an attestation or a real timing capture; the tracker accepts unverified completion."
+      ],
+      "root_cause": "No enforcement that a Completed status carries a real, per-task attestation with measured timings; bulk sync can mint completion."
+    },
+    {
+      "id": "RC-3",
+      "class": "Ambiguous / unenforced Definition of Done (attestation gap)",
+      "evidence": "18 Completed tasks have no canonical attestation.json (13 PG module-settings + 5 INFRA-TF). 9 attested tasks carry an honest KPI gap (e.g. IFC-310 real-DB bench null; Lighthouse >=90 asserted but not CI-proven).",
+      "five_whys": [
+        "Why no attestation on 18 done tasks? Because they shipped via PR/batch without running /exec attestation.",
+        "Why skip attestation? Because DoD (\"Lighthouse >=90\", \">=90% coverage\", \"verified by: pnpm test\") is not machine-checked at merge.",
+        "Why not machine-checked? Because the gate that would check it (pre-ship/CI) does not assert attestation existence per task id.",
+        "Why not? Because attestation lives in .specify and is decoupled from the PR that delivers the code.",
+        "Root cause: DoD is prose, not an executable contract wired into the merge gate; attestation is optional in practice."
+      ],
+      "root_cause": "DoD is narrative and attestation is not a merge-blocking, per-task gate — so \"done\" is declared, not proven."
+    },
+    {
+      "id": "RC-4",
+      "class": "Deployment/telemetry gap (DORA unmeasurable)",
+      "evidence": "All four DORA metrics resolve to UNKNOWN: no deployment log, no deploy<->incident linkage in-repo. INFRA-TF-004 monitoring module and IFC-032 OTel wiring are themselves Sprint-18 items (delivered as code, but observability endpoints not confirmed live).",
+      "five_whys": [
+        "Why is DORA UNKNOWN? Because deployments and incidents are not recorded where the audit can read them.",
+        "Why not recorded? Because deploy events (Railway/Vercel) and incidents (ops) live outside the repo with no exported log.",
+        "Why no export? Because observability-as-code (monitoring module, OTel) was built this sprint but not verified live end-to-end.",
+        "Why unverified? Because \"provisioned in Terraform\" was accepted as done without a live-endpoint check.",
+        "Root cause: Delivery of telemetry infrastructure was not gated on a live-signal proof, so the org still cannot measure flow."
+      ],
+      "root_cause": "Telemetry was delivered as code but never verified as a live signal; DORA remains unmeasurable by construction."
+    },
+    {
+      "id": "RC-5",
+      "class": "No fixed commitment baseline (continuous scope)",
+      "evidence": "sprint_start_date/end_date are null; 13 tasks injected mid-window (2026-04-19); window spans ~149 days vs 14 nominal; SPI 0.36.",
+      "five_whys": [
+        "Why did the sprint span ~149 days? Because it had no end date and scope kept being added.",
+        "Why added continuously? Because new work (module-settings batch) was filed straight into the active sprint as Backlog.",
+        "Why into the active sprint? Because there is no \"sprint is closed to new scope\" control.",
+        "Why no control? Because the tracker treats a sprint as a label, not a time-boxed commitment with a locked backlog.",
+        "Root cause: Sprint is a bucket/label, not a time-boxed commitment; without start/end + backlog-lock, scope is unbounded."
+      ],
+      "root_cause": "Sprint modelled as an open label, not a time-boxed commitment with locked scope and dates."
+    }
+  ]
+}
