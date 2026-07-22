@@ -3,7 +3,7 @@
     "csv": "Sprint_plan.csv @ origin/main (worktree)",
     "attestations": ".specify/sprints/sprint-18/attestations/*/attestation.json @ origin/main",
     "artifact_existence": "checked on disk @ origin/main worktree",
-    "temporal": "apps/project-tracker/docs/metrics/sprint-18/_summary.json (generated cache, last synced 2026-07-19)",
+    "temporal": "apps/project-tracker/docs/metrics/sprint-18/_summary.json (GENERATED, GITIGNORED cache per ADR-067 Phase 2 — NOT committed, NOT reproducible in a clean checkout; used as SUPPORTING-ONLY, never as committed evidence). Committed timing evidence: .specify/sprints/sprint-18/attestations/*/task-tracking.json.",
     "prior_audits": [
       "artifacts/reports/backlog-truth-audit.json (2026-07-21)",
       "docs/audit/phantom-completed-2026-07-21.md"
@@ -30,22 +30,33 @@
     },
     "by_category": {
       "C01_DELIVERED_ATTESTED_CLEAN": 36,
-      "C04_DELIVERED_STALE_BACKLOG": 2,
-      "C09_PARTIALLY_DELIVERED": 1,
+      "C04_DELIVERED_STALE_BACKLOG": 3,
+      "C09_PARTIALLY_DELIVERED": 0,
       "C02_DELIVERED_ATTESTED_KPI_GAP": 9,
       "C07_IN_PROGRESS": 1,
       "C05_DELIVERED_ARTIFACT_ONLY": 14,
       "C03_DELIVERED_PR_EVIDENCED_NO_ATTEST": 4
     },
+    "delivered_in_fact": 66,
+    "delivered_in_fact_pct": 98.5,
     "canonical_attestations": 48,
     "completed_without_attestation": 18,
-    "synthetic_timestamps": 28,
+    "completion_timestamp_evidence_committed": {
+      "note": "Committed-verifiable from .specify/.../task-tracking.json (67 tasks; 62 have the file, 5 do not: IFC-032, IFC-078, PG-063, PG-132, PG-188).",
+      "no_tracking_file": 5,
+      "completed_at_null": 34,
+      "completed_at_populated": 28,
+      "duplicate_timestamp_pairs": 5,
+      "max_duplicate_cluster": 2,
+      "correction": "Prior value 28 with 'x16/x8 bulk-sync clusters' derived from the GITIGNORED generated _summary.json cache and is NOT reproducible from committed sources. Committed evidence shows NO cluster larger than x2. The honest committed defect is timing ABSENCE (34 null + 5 missing files), not synthetic duplication."
+    },
     "artifact_path_drift": 3
   },
   "key_findings": {
     "stale_shipped_backlog": [
       "DOC-015",
-      "IFC-211"
+      "IFC-211",
+      "DOC-016"
     ],
     "phantom_completed": [],
     "delivered_pr_evidenced_no_attest": [
@@ -534,8 +545,8 @@
       "owner": "PM (STOA-Automation)",
       "description": "Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement",
       "dod": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift; tests cover mismatch scenarios and false-positive guardrails; verified by: npx tsx tools/scripts/docs-integrity-audit.ts && pnpm test",
-      "category": "C09_PARTIALLY_DELIVERED",
-      "category_evidence": "#598 docs-integrity-audit.ts tool + test on main; .github/workflows/docs-integrity.yml NOT committed to origin/main (DoD CI-gate limb missing)",
+      "category": "C04_DELIVERED_STALE_BACKLOG",
+      "category_evidence": "CORRECTED 2026-07-22: #598 feat(DOC-016) shipped ALL DoD limbs to origin/main -- docs-integrity-audit.ts tool + test AND .github/workflows/docs-integrity.yml (blob 23a19fcf71b010dce4e0ff9f5627d9eb4c1062a3, added by commit f57490a91). Verified via git ls-tree/log origin/main. Prior C09 was a false negative: the collector's file-existence check ran against the ssite_map_docs working tree (workflow untracked there) instead of origin/main. DOC-016 carries a clean COMPLETE attestation (4/4 validations, 4/4 declared artifacts on disk). Sole residual: CSV status stale at Backlog.",
       "evidence": {
         "attestation_json": true,
         "attestation_verdict": "COMPLETE",

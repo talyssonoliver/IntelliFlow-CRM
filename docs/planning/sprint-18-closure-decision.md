@@ -10,18 +10,18 @@
 
 ## Decision rationale
 
-Sprint 18 is closed **because the work is real**: 65 of 67 committed tasks have
+Sprint 18 is closed **because the work is real**: 66 of 67 committed tasks have
 their primary deliverable verifiable on `origin/main`, with **zero phantom
 completions and zero genuinely-undelivered tasks**. It is closed **with residual
 actions** — not cleanly — **because the evidence trail lags the delivery**:
 
-| Reason it is not a clean CLOSE                         | Reason it is not NOT_CLOSED                            |
-| ------------------------------------------------------ | ------------------------------------------------------ |
-| Only 36/67 carry a clean canonical attestation         | 65/67 deliverables verifiable on disk                  |
-| 28 completion timestamps are synthetic placeholders    | 0 phantom, 0 undelivered                               |
-| 2 shipped rows still read "Backlog" (DOC-015, IFC-211) | 9 partials are honest & documented, not failures       |
-| DOC-016 CI-gate limb missing; IFC-257 at 80%           | The 2 "open" delivered items just need a CSV flip      |
-| DORA unmeasurable (no telemetry)                       | The residuals are governance debt, not missing product |
+| Reason it is not a clean CLOSE                                  | Reason it is not NOT_CLOSED                            |
+| --------------------------------------------------------------- | ------------------------------------------------------ |
+| Only 36/67 carry a clean canonical attestation                  | 66/67 deliverables verifiable on disk                  |
+| ~39 completed tasks carry no committed completion timestamp     | 0 phantom, 0 undelivered                               |
+| 3 shipped rows still read "Backlog" (DOC-015, IFC-211, DOC-016) | 9 partials are honest & documented, not failures       |
+| IFC-257 at 80% (the sole partial WIP)                           | The 3 "open" delivered items just need a CSV flip      |
+| DORA unmeasurable (no telemetry)                                | The residuals are governance debt, not missing product |
 
 A `NOT_CLOSED` verdict would be dishonest — it would imply the product isn't
 built. A clean `CLOSED` would be equally dishonest — it would imply the evidence
@@ -29,25 +29,29 @@ is trustworthy. `CLOSED_WITH_RESIDUAL_ACTIONS` is the only factual verdict.
 
 ## Definition-of-Done ledger (sprint level)
 
-| DoD dimension                               | State            | Note                                                |
-| ------------------------------------------- | ---------------- | --------------------------------------------------- |
-| All committed work delivered                | ✅ 65/67 on disk | IFC-257 (WIP), DOC-016 (partial) excepted           |
-| Every Completed row governed by attestation | ❌ 36/67 clean   | 18 gaps → R-ATTEST-18                               |
-| Status = reality                            | ⚠️ 2 stale       | DOC-015, IFC-211 → flipped in this PR               |
-| Timings/evidence authentic                  | ❌ 28 synthetic  | → AR-2 gate                                         |
-| Flow measurable (DORA)                      | ❌ UNKNOWN×4     | → AR-4 (telemetry liveness)                         |
-| No fabricated data in this audit            | ✅               | deterministic collector, live git, real hashes only |
+| DoD dimension                               | State                  | Note                                                |
+| ------------------------------------------- | ---------------------- | --------------------------------------------------- |
+| All committed work delivered                | ✅ 66/67 on disk       | only IFC-257 (WIP) excepted                         |
+| Every Completed row governed by attestation | ❌ 36/67 clean         | 18 gaps → R-ATTEST-18                               |
+| Status = reality                            | ⚠️ 3 stale             | DOC-015, IFC-211, DOC-016 → R-STATUS-2              |
+| Timings/evidence authentic                  | ❌ 34 null + 5 no-file | committed timing largely absent → AR-2 gate         |
+| Flow measurable (DORA)                      | ❌ UNKNOWN×4           | → AR-4 (telemetry liveness)                         |
+| No fabricated data in this audit            | ✅                     | deterministic collector, live git, real hashes only |
 
 ## Conditions carried into Sprint 19 (residual register)
 
 Tracked in `docs/planning/sprint-18-improvement-actions.md` §B:
 
-1. **R-STATUS-2** — flip DOC-015, IFC-211 → Completed. **Deliberately
-   deferred**, not actioned in this PR: flipping to Completed _without_ their
-   attestations would mint exactly the unattested-Completed defect this audit
-   condemns (AR-3). Execute the flip **together with** the attestation backfill
-   (R-ATTEST-18) so status and evidence move as one.
-2. **R-DOC016** — commit `docs-integrity.yml` to main.
+1. **R-STATUS-2** — flip DOC-015, IFC-211, **DOC-016** → Completed. DOC-015 and
+   DOC-016 already carry clean COMPLETE attestations, so their flip is safe now;
+   IFC-211 has no attestation yet, so its flip must ride **together with** the
+   attestation backfill (R-ATTEST-18) to avoid minting the unattested-Completed
+   defect this audit condemns (AR-3). **Deliberately deferred** out of this
+   read-only audit PR to the tracker-owning change.
+2. **~~R-DOC016~~ (already satisfied)** — `.github/workflows/docs-integrity.yml`
+   **is already on `origin/main`** (blob `23a19fcf`, #598). No action; the item
+   is retained here only to record that the prior "commit the workflow" residual
+   was based on a false-negative reading and is now closed.
 3. **R-ATTEST-18** — backfill 18 real attestations (re-hash + 4 validations).
 4. **R-CSVPATH-13** — correct 13 module-settings artifact paths.
 5. **R-WIP-257** — finish or formally carry IFC-257.
@@ -63,8 +67,8 @@ repeat this pattern).
 - Backfilling historical attestations for sprints < 18.
 - Any code change to product features — this audit is read-only over the
   product; its only writes are the audit artifacts and this task's own
-  attestation. (The 2 CSV status flips are deferred to ride with attestation
-  backfill — see R-STATUS-2.)
+  attestation. (The 3 CSV status flips — DOC-015, IFC-211, DOC-016 — are
+  deferred to the tracker-owning change; see R-STATUS-2.)
 
 ## Sign-off
 

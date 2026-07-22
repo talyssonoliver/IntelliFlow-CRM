@@ -9,7 +9,7 @@
 |                                 |                                                    |
 | ------------------------------- | -------------------------------------------------- |
 | Committed                       | 67 tasks                                           |
-| Delivered-in-fact               | **65 (97.0%)** — primary artifact on `origin/main` |
+| Delivered-in-fact               | **66 (98.5%)** — primary artifact on `origin/main` |
 | CSV-Completed                   | 63 (94.0%)                                         |
 | Cleanly attested                | **36 (53.7%)**                                     |
 | Phantom / genuinely undelivered | **0 / 0**                                          |
@@ -18,7 +18,7 @@
 
 ## What went well 🟢
 
-1. **The work actually shipped.** 65 of 67 primary deliverables are verifiable
+1. **The work actually shipped.** 66 of 67 primary deliverables are verifiable
    on `origin/main` today, and there are **zero phantoms** — a materially better
    result than the project-wide phantom rate (242/449 Completed rows across all
    sprints). Sprint 18's _delivery_ is trustworthy.
@@ -37,13 +37,17 @@
 
 ## What went badly 🔴
 
-1. **Governance lagged delivery by ~2×.** 65 delivered vs 36 cleanly-attested.
+1. **Governance lagged delivery by ~2×.** 66 delivered vs 36 cleanly-attested.
    Half the "done" work has no clean governance trail.
-2. **28 synthetic completion timestamps.** Bulk-sync minted completion
-   (`…19:20:18.041Z` ×8, `…23:53:49.694Z` ×16) instead of `/exec` capturing real
-   timings. The metric tree _looks_ precise and isn't.
-3. **Status drifted from reality.** DOC-015 and IFC-211 shipped weeks ago and
-   still read "Backlog." The CSV — our single source of truth — was wrong.
+2. **Completion timing is largely uncaptured.** In committed evidence, 34 tasks
+   record `completed_at: null` and 5 have no `task-tracking.json` at all —
+   completion was marked without recording when work finished. (A gitignored
+   generated cache showed bulk-sync duplicate clusters, but that is not
+   committed-reproducible; the committed defect is timing _absence_, not
+   synthetic duplication.) The tracker _looks_ precise and isn't.
+3. **Status drifted from reality.** DOC-015, IFC-211 and DOC-016 all shipped to
+   `origin/main` yet still read "Backlog." The CSV — our single source of truth
+   — was wrong on three rows.
 4. **The sprint never closed to scope.** Null start/end dates + 13 tasks
    injected on 2026-04-19 turned a 2-week box into a ~149-day rolling bucket.
    SPI 0.36 is the arithmetic of a plan that never froze.

@@ -21,8 +21,8 @@
     },
     {
       "id": "RC-2",
-      "class": "Fabricated / synthetic evidence (placeholder timestamps & durations)",
-      "evidence": "28 of 63 completed tasks share identical bulk-sync completion timestamps (e.g. 2026-06-26T19:20:18.041Z x8, 2026-06-27T23:53:49.694Z x16); 13 durations are the default 15 min. These are generator artifacts, not measured events.",
+      "class": "Missing / unverifiable completion evidence (absent or unmeasured timings)",
+      "evidence": "Committed-verifiable from task-tracking.json: 34 of 62 completed tasks record completed_at:null and 5 have no tracking file at all -- ~39 completed tasks carry no real committed completion timestamp. Of the 28 populated timestamps only 5 form x2 batch-session pairs (no larger cluster). (A separate GITIGNORED generated cache showed larger bulk-sync duplicate clusters e.g. 2026-06-27T23:53:49.694Z, but that cache is not committed and not reproducible in a clean checkout, so it is not treated as committed evidence.)",
       "five_whys": [
         "Why placeholder timestamps? Because completion time is written by a bulk sync, not captured at the moment work finished.",
         "Why bulk sync? Because many tasks were marked Completed en-masse rather than through /exec, which stamps real timings.",

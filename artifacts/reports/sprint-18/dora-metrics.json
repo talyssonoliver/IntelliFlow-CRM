@@ -28,7 +28,7 @@
   },
   "lead_time_for_changes": {
     "value": "UNKNOWN",
-    "reason": "Full commit-authored -> deployed-to-prod lead time is not measurable: (a) squash-merge collapses per-commit authoring timestamps, and (b) there is no deploy timestamp source. Per-task completion timestamps in the metrics cache are largely bulk-sync placeholders (28/63 identical shared timestamps), so they cannot stand in for lead time.",
+    "reason": "Full commit-authored -> deployed-to-prod lead time is not measurable: (a) squash-merge collapses per-commit authoring timestamps, and (b) there is no deploy timestamp source. Committed per-task completion evidence (task-tracking.json) is largely absent (34 of 62 record completed_at:null; 5 tasks have no tracking file), so it cannot stand in for lead time either.",
     "proxy": {
       "name": "single-session exec duration (metrics cache)",
       "note": "Even the non-placeholder subset (14 values, median ~145 min) measures one /exec session, not spec->prod lead time. Not a DORA lead-time value."

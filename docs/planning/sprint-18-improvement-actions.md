@@ -24,9 +24,11 @@
 - **Prevention:** Bulk sync must **never** write a `completed_at`/`duration` for
   a task that lacks a real `/exec` timing. Sync copies timings from
   `task-tracking.json`; if absent, it writes `null`, not a placeholder.
-- **Gate:** `no-placeholder-timestamps` — fails if >1 completed task in a sprint
-  shares an identical `completed_at`, or if `duration_minutes == 15` (the
-  default) co-occurs with a missing attestation.
+- **Gate:** `completion-timing-present` — fails if a CSV-`Completed` task has
+  `completed_at: null` (or no `task-tracking.json` at all), and separately warns
+  if >1 completed task shares an identical `completed_at` or `duration_minutes`
+  is the default 15. (Committed Sprint-18 evidence: 34 `null` + 5 missing files
+  — timing _absence_ is the dominant defect, not duplicate placeholders.)
 - **Owner:** project-tracker maintainer.
 - **Rollback:** Gate is data-only (reads metrics tree); revert the check file.
 
@@ -67,14 +69,14 @@
 
 ## B. Residual-action register (concrete, this sprint's debt)
 
-| ID               | Action                                                                          | Tasks                                    | Owner                   | Done-when                                   |
-| ---------------- | ------------------------------------------------------------------------------- | ---------------------------------------- | ----------------------- | ------------------------------------------- |
-| **R-STATUS-2**   | Flip CSV Backlog → Completed (couple with attestation backfill, not standalone) | DOC-015, IFC-211                         | project-tracker         | CSV reconciled + attestation present        |
-| **R-DOC016**     | Commit `.github/workflows/docs-integrity.yml` to main                           | DOC-016                                  | PM/DevOps               | Workflow on main + green run                |
-| **R-ATTEST-18**  | Backfill real `/exec` attestation (re-hash + 4 validations)                     | 13 PG module-settings + 5 INFRA-TF       | delivering squads       | 18 `attestation.json` present               |
-| **R-CSVPATH-13** | Fix CSV artifact paths to route-group-correct locations                         | PG-196–209                               | project-tracker         | `plan-lint` clean on the 13 rows            |
-| **R-WIP-257**    | Finish or explicitly carry IFC-257 to Sprint 19                                 | IFC-257                                  | Frontend (STOA-Quality) | wired + tests ≥90% **or** carried with note |
-| **R-KPI-CI**     | Run deferred Lighthouse + real-DB KPIs in CI                                    | IFC-212, PG-180, PG-189, PG-190, IFC-310 | DevOps + squads         | KPIs measured, not deferred                 |
+| ID               | Action                                                                                                                                                                        | Tasks                                    | Owner                   | Done-when                                   |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ----------------------- | ------------------------------------------- |
+| **R-STATUS-2**   | Flip CSV Backlog → Completed (DOC-015/DOC-016 safe now — clean attestations; IFC-211 rides attestation backfill)                                                              | DOC-015, DOC-016, IFC-211                | project-tracker         | CSV reconciled + attestation present        |
+| ~~**R-DOC016**~~ | **CLOSED (already satisfied)** — `docs-integrity.yml` is already on `origin/main` (blob `23a19fcf`, #598). Prior "commit the workflow" residual was a false-negative reading. | DOC-016                                  | —                       | ✅ already on main                          |
+| **R-ATTEST-18**  | Backfill real `/exec` attestation (re-hash + 4 validations)                                                                                                                   | 13 PG module-settings + 5 INFRA-TF       | delivering squads       | 18 `attestation.json` present               |
+| **R-CSVPATH-13** | Fix CSV artifact paths to route-group-correct locations                                                                                                                       | PG-196–209                               | project-tracker         | `plan-lint` clean on the 13 rows            |
+| **R-WIP-257**    | Finish or explicitly carry IFC-257 to Sprint 19                                                                                                                               | IFC-257                                  | Frontend (STOA-Quality) | wired + tests ≥90% **or** carried with note |
+| **R-KPI-CI**     | Run deferred Lighthouse + real-DB KPIs in CI                                                                                                                                  | IFC-212, PG-180, PG-189, PG-190, IFC-310 | DevOps + squads         | KPIs measured, not deferred                 |
 
 ## C. Sequencing
 
