@@ -73,6 +73,19 @@ jobs:
         env:
           VALIDATION_STRICT: '1'
 
+      # ENG-OPS-002.R13 / QUAL-012: ADR-054 flaky-test policy enforcement.
+      # Fails when a test.skip/it.skip/describe.skip/xit/xdescribe/xtest lacks
+      # an approved `// ADR-054: <reference>` annotation or allowlist entry.
+      # Mirrors scripts/pre-ship.mjs's `flaky-test-gate` step.
+      - name: Flaky-test skip gate (ADR-054)
+        run: pnpm run validate:flaky-test-gate
+
+      # Proves the gate itself is correct (detection + reconciliation +
+      # false-positive guardrails). Build-free via the dedicated config;
+      # enforces the ≥90% AC.
+      - name: Flaky-test skip gate tests
+        run: pnpm run test:flaky-test-gate
+
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest

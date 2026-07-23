@@ -314,6 +314,10 @@ describe('Opportunity — value-object invariants (property, RACE-PURE-03)', () 
   //    failing invariant as documented evidence.
   // -------------------------------------------------------------------------
 
+  // ADR-054: QUAL-007 (RACE-PURE-03) — confirmed float-precision bug in
+  // Opportunity.weightedValue; tracked in
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // dedicated fix task (out of scope for ENG-OPS-002.R13).
   it.skip(// BUG(RACE-PURE-03): Opportunity.weightedValue uses float arithmetic (value.amount * probability.asDecimal)
   // then calls Money.create(weightedAmount, currency). For inputs like cents=5, prob=70, the float path
   // computes (5/100)*(70/100)*100 = 0.034999....*100 = 3.499... which rounds DOWN to 3 cents, while the

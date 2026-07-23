@@ -99,12 +99,19 @@ describe('client.ts — production startup assertion', () => {
   // before the Zod validation runs, so it remains active. The two resolves
   // paths are integration-style and need a full env; skipping here with a
   // clear pointer rather than introducing test-only Zod bypass.
+  // ADR-054: QUAL-014 — requires a full env bootstrap (DATABASE_URL +
+  // @intelliflow/validators env schema) unavailable under vi.resetModules()
+  // isolation; see the NOTE above. Not a product bug — tracked as a test-coverage
+  // gap in artifacts/reports/sprint-19/baseline/quality-findings.json (Sprint 20).
   it.skip('does NOT throw in development when PRISMA_FIELD_ENCRYPTION_KEY is missing', async () => {
     vi.stubEnv('NODE_ENV', 'development');
     vi.stubEnv('PRISMA_FIELD_ENCRYPTION_KEY', '');
     await expect(import('../client.js')).resolves.toBeDefined();
   });
 
+  // ADR-054: QUAL-014 — same env-bootstrap limitation as above; see the NOTE above
+  // this describe block. Tracked in
+  // artifacts/reports/sprint-19/baseline/quality-findings.json (Sprint 20).
   it.skip('does NOT throw in production when PRISMA_FIELD_ENCRYPTION_KEY is set', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv(
@@ -119,6 +126,10 @@ describe('client.ts — production startup assertion', () => {
 // 3. fieldEncryptionExtension import (unit — verifies library is importable)
 // ---------------------------------------------------------------------------
 
+// ADR-054: QUAL-014 — DEFERRED: prisma-field-encryption is incompatible with Prisma
+// 7's DMMF shape (analyseDMMF helper); re-enable when a compatible release lands or
+// bespoke $extends fully replaces it. Tracked in
+// artifacts/reports/sprint-19/baseline/quality-findings.json (Sprint 20).
 describe.skip('prisma-field-encryption — library import (DEFERRED: Prisma 7 incompat)', () => {
   it('exports fieldEncryptionExtension as a function', async () => {
     // The library was removed from deps after we discovered its analyseDMMF

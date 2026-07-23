@@ -225,6 +225,10 @@ describe('PaymentTerms — value-object invariants (property, RACE-PURE-13)', ()
   // when issue date is in UTC+0 winter and due date falls in UTC+N summer (BST).
   // Counterexample: days=227, issue=2015-01-01T00:00:00.018Z → UTC dist=226 not 227.
   // Fix: replace with UTC arithmetic (Date.UTC(y, m, d + daysUntilDue)).
+  // ADR-054: QUAL-009 (RACE-PURE-13) — confirmed UTC-day-boundary bug in
+  // PaymentTerms.calculateDueDate; tracked in
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // dedicated fix task (out of scope for ENG-OPS-002.R13).
   it.skip('RACE-PURE-13: calculateDueDate returns exactly daysUntilDue UTC calendar days after issueDate', () => {
     fc.assert(
       fc.property(validDays, issueDate, (days, issue) => {
@@ -291,6 +295,10 @@ describe('PaymentTerms — value-object invariants (property, RACE-PURE-13)', ()
   // March 28 2026 + 5 days = April 2, which is in BST/UTC+1 → UTC dist = 4).
   // Counterexample: [28, 2 (March), 2026, 5] → UTC dist=4 not 5.
   // Fix: replace setDate() with UTC arithmetic in calculateDueDate().
+  // ADR-054: QUAL-009 (RACE-PURE-13) — same confirmed UTC-day-boundary bug
+  // (month-boundary variant); tracked in
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // dedicated fix task (out of scope for ENG-OPS-002.R13).
   it.skip('RACE-PURE-13 (month-boundary variant): UTC-day distance equals extraDays across month/year boundaries', () => {
     fc.assert(
       fc.property(
@@ -430,6 +438,9 @@ describe('PaymentTerms — value-object invariants (property, RACE-PURE-13)', ()
 
   // BUG(RACE-PURE-13): net30 variant — UTC day distance off by 1 when +30 days
   // crosses a DST spring-forward boundary (e.g. UK GMT→BST in late March).
+  // ADR-054: QUAL-009 (RACE-PURE-13) — same confirmed UTC-day-boundary bug (net30
+  // variant); tracked in artifacts/reports/sprint-19/baseline/quality-findings.json.
+  // Skip retained pending a dedicated fix task (out of scope for ENG-OPS-002.R13).
   it.skip('RACE-PURE-13 (net30 variant): net30().calculateDueDate produces a due date exactly 30 UTC days after issueDate', () => {
     fc.assert(
       fc.property(issueDate, (issue) => {

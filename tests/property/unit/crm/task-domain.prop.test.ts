@@ -270,6 +270,10 @@ describe('Task status state-machine invariants', () => {
   // table — it only checks isCompleted/isCancelled.
   // DEFERRED (ENG-OPS-002.R10): enforcing VALID_TASK_TRANSITIONS in changeStatus/complete tightens the
   // contract (breaks the 'complete on PENDING succeeds' property + needs service-caller verification) — tracked separately from the terminal-guard fixes.
+  // ADR-054: QUAL-002 (RACE-PURE-09) — VALID_TASK_TRANSITIONS enforcement in
+  // changeStatus/complete is a held, separate fix (see the ENG-OPS-002.R10 attestation
+  // notes above). Intentionally NOT implemented by ENG-OPS-002.R13 (scope boundary) —
+  // this annotation only reconciles the skip against the ADR-054 gate.
   test.skip('RACE-PURE-09: changeStatus("ARCHIVED", user) on IN_PROGRESS task must be rejected (transition table not consulted)', () => {
     const task = Task.create({ title: 'test', ownerId: 'u1', tenantId: 't1' }).value;
     task.start('u1');
@@ -283,6 +287,10 @@ describe('Task status state-machine invariants', () => {
   // before it ends.  The business rule is noted in race-condition-findings.json.
   // The property above documents this succeeds today; the skip below documents
   // what the stricter rule SHOULD enforce.
+  // ADR-054: QUAL-002 (RACE-PURE-09) — same held, separate fix as above (see the
+  // ENG-OPS-002.R10 attestation notes). Intentionally NOT implemented by
+  // ENG-OPS-002.R13 (scope boundary) — this annotation only reconciles the skip
+  // against the ADR-054 gate.
   test.skip('RACE-PURE-09: complete() on a PENDING task (not started) must be rejected per intended state machine', () => {
     const task = Task.create({ title: 'test', ownerId: 'u1', tenantId: 't1' }).value;
     const result = task.complete('u1');
