@@ -8,6 +8,7 @@ import {
   type MergeInTransactionResult,
   type LinkContactsByDomainInput,
   type LinkContactsByDomainResult,
+  type RepositoryTransaction,
 } from '@intelliflow/domain';
 
 /**
@@ -17,7 +18,7 @@ import {
 export class InMemoryContactRepository implements ContactRepository {
   private readonly contacts: Map<string, Contact> = new Map();
 
-  async save(contact: Contact): Promise<void> {
+  async save(contact: Contact, tx?: RepositoryTransaction): Promise<void> {
     this.contacts.set(contact.id.value, contact);
   }
 

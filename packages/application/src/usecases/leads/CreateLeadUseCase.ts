@@ -1,6 +1,7 @@
 import { Result, DomainError, Lead } from '@intelliflow/domain';
 import { LeadRepository } from '../../ports/repositories';
 import { EventBusPort } from '../../ports/external';
+import { TransactionPort } from '../../ports/TransactionPort';
 import { PersistenceError } from '../../errors';
 
 /**
@@ -42,7 +43,8 @@ export interface CreateLeadOutput {
 export class CreateLeadUseCase {
   constructor(
     private readonly leadRepository: LeadRepository,
-    private readonly eventBus: EventBusPort
+    private readonly eventBus: EventBusPort,
+    private readonly transactionManager: TransactionPort
   ) {}
 
   async execute(input: CreateLeadInput): Promise<Result<CreateLeadOutput, DomainError>> {
@@ -65,25 +67,24 @@ export class CreateLeadUseCase {
 
     const lead = leadResult.value;
 
-    // 2. Persist the lead
-    try {
-      await this.leadRepository.save(lead);
-    } catch {
-      return Result.fail(new PersistenceError('Failed to save lead'));
-    }
-
-    // 3. Publish domain events
+    // 2. Persist the lead AND its domain events atomically (DDD-002).
+    // The aggregate save and the outbox write share one transaction: either
+    // both commit or neither does, so a crash can never leave a persisted lead
+    // with no LeadCreated event (ADR-011 zero-lost-events). Event-publish
+    // failure now fails the whole use case rather than being swallowed.
     const events = lead.getDomainEvents();
-    if (events.length > 0) {
-      try {
-        await this.eventBus.publishAll(events);
-      } catch (error) {
-        // Log error but don't fail the operation
-        console.error('Failed to publish domain events:', error);
-      }
+    try {
+      await this.transactionManager.run(async (tx) => {
+        await this.leadRepository.save(lead, undefined, tx);
+        if (events.length > 0) {
+          await this.eventBus.publishAll(events, tx);
+        }
+      });
+    } catch {
+      return Result.fail(new PersistenceError('Failed to persist lead and its domain events'));
     }
 
-    // 4. Clear domain events
+    // 3. Clear domain events (state has been committed)
     lead.clearDomainEvents();
 
     // 5. Return output DTO

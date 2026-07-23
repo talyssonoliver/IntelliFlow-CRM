@@ -14,6 +14,7 @@ export * from './shared/PhoneNumber';
 export * from './shared/WebsiteUrl';
 export * from './shared/DateRange';
 export * from './shared/Percentage';
+export * from './shared/RepositoryTransaction';
 
 // CRM Domain - Leads
 export * from './crm/lead/Lead';

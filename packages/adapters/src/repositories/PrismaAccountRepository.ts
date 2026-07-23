@@ -1,5 +1,16 @@
-import { PrismaClient, Decimal, type Account as PrismaAccount } from '@intelliflow/db';
-import { Account, AccountId, WebsiteUrl, type AccountHierarchyRecord } from '@intelliflow/domain';
+import {
+  PrismaClient,
+  Decimal,
+  type Account as PrismaAccount,
+  type TransactionClient,
+} from '@intelliflow/db';
+import {
+  Account,
+  AccountId,
+  WebsiteUrl,
+  type AccountHierarchyRecord,
+  type RepositoryTransaction,
+} from '@intelliflow/domain';
 import { AccountRepository } from '@intelliflow/application';
 
 /**
@@ -53,7 +64,8 @@ export class PrismaAccountRepository implements AccountRepository {
     });
   }
 
-  async save(account: Account): Promise<void> {
+  async save(account: Account, tx?: RepositoryTransaction): Promise<void> {
+    const db = (tx as TransactionClient | undefined) ?? this.prisma;
     const data = {
       id: account.id.value,
       name: account.name,
@@ -75,13 +87,13 @@ export class PrismaAccountRepository implements AccountRepository {
 
     // F2 fix: tenant-guarded write. Use updateMany with tenantId to prevent
     // cross-tenant record overwrite, then create if nothing was updated.
-    const updated = await this.prisma.account.updateMany({
+    const updated = await db.account.updateMany({
       where: { id: data.id, tenantId: data.tenantId },
       data,
     });
 
     if (updated.count === 0) {
-      await this.prisma.account.create({ data });
+      await db.account.create({ data });
     }
   }
 

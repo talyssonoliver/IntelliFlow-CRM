@@ -11,9 +11,11 @@ import {
   Contact,
   Account,
   CreateLeadProps,
+  RepositoryTransaction,
 } from '@intelliflow/domain';
 import { AIServicePort, EventBusPort } from '../ports/external';
 import { ContactRepository, AccountRepository } from '../ports/repositories';
+import { TransactionPort } from '../ports/TransactionPort';
 import { PersistenceError, ValidationError, NotFoundError } from '../errors';
 
 /**
@@ -91,7 +93,8 @@ export class LeadService {
     private readonly contactRepository: ContactRepository,
     private readonly accountRepository: AccountRepository,
     private readonly aiService: AIServicePort,
-    private readonly eventBus: EventBusPort
+    private readonly eventBus: EventBusPort,
+    private readonly transactionManager: TransactionPort
   ) {}
 
   /**
@@ -120,16 +123,18 @@ export class LeadService {
 
     const lead = leadResult.value;
 
-    // Persist the lead — and, when supplied, its required initial note — in a
-    // single transaction via the repository (no best-effort second write).
+    // Persist the lead (plus its optional initial note) AND its domain events
+    // atomically (DDD-002): the aggregate save and the event outbox share one
+    // transaction, so a crash can never leave a persisted lead with no
+    // LeadCreated event (ADR-011 zero-lost-events).
     try {
-      await this.leadRepository.save(lead, opts);
+      await this.transactionManager.run(async (tx) => {
+        await this.leadRepository.save(lead, opts, tx);
+        await this.publishEvents(lead, tx);
+      });
     } catch {
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
-
-    // Publish events
-    await this.publishEvents(lead);
 
     return Result.ok(lead);
   }
@@ -243,15 +248,15 @@ export class LeadService {
       }
     }
 
-    // Persist changes
+    // Persist changes + events atomically (DDD-002 pattern)
     try {
-      await this.leadRepository.save(lead);
+      await this.transactionManager.run(async (tx) => {
+        await this.leadRepository.save(lead, undefined, tx);
+        await this.publishEvents(lead, tx);
+      });
     } catch {
       return Result.fail(new PersistenceError('Failed to save lead after scoring'));
     }
-
-    // Publish events
-    await this.publishEvents(lead);
 
     return Result.ok({
       leadId: lead.id.value,
@@ -297,12 +302,13 @@ export class LeadService {
     }
 
     try {
-      await this.leadRepository.save(lead);
+      await this.transactionManager.run(async (tx) => {
+        await this.leadRepository.save(lead, undefined, tx);
+        await this.publishEvents(lead, tx);
+      });
     } catch {
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
-
-    await this.publishEvents(lead);
 
     return Result.ok(lead);
   }
@@ -332,15 +338,14 @@ export class LeadService {
       );
     }
 
-    // Create or find account if provided
+    // Prepare account if provided (find existing or build new — NO write yet)
     let accountId: string | null = null;
+    let newAccount: Account | null = null;
     if (accountName) {
-      // Check if account already exists
       const existingAccounts = await this.accountRepository.findByName(accountName, lead.tenantId);
       if (existingAccounts.length > 0) {
         accountId = existingAccounts[0].id.value;
       } else {
-        // Create new account
         const accountResult = Account.create({
           name: accountName,
           website: undefined,
@@ -350,15 +355,13 @@ export class LeadService {
         });
 
         if (accountResult.isSuccess) {
-          const account = accountResult.value;
-          await this.accountRepository.save(account);
-          await this.publishAccountEvents(account);
-          accountId = account.id.value;
+          newAccount = accountResult.value;
+          accountId = newAccount.id.value;
         }
       }
     }
 
-    // Create contact from lead
+    // Create contact from lead (NO write yet)
     const contactResult = Contact.create({
       email: lead.email.value,
       firstName: lead.firstName ?? 'Unknown',
@@ -383,17 +386,26 @@ export class LeadService {
       return Result.fail(convertResult.error);
     }
 
-    // Persist all changes
+    // Persist Account + Contact + Lead and their events atomically (DDD-001):
+    // one transaction so a failure rolls the whole conversion back rather than
+    // orphaning an Account/Contact while the Lead stays QUALIFIED.
     try {
-      await this.contactRepository.save(contact);
-      await this.leadRepository.save(lead);
+      await this.transactionManager.run(async (tx) => {
+        if (newAccount) {
+          await this.accountRepository.save(newAccount, tx);
+        }
+        await this.contactRepository.save(contact, tx);
+        await this.leadRepository.save(lead, undefined, tx);
+
+        if (newAccount) {
+          await this.publishAccountEvents(newAccount, tx);
+        }
+        await this.publishContactEvents(contact, tx);
+        await this.publishEvents(lead, tx);
+      });
     } catch {
       return Result.fail(new PersistenceError('Failed to save conversion'));
     }
-
-    // Publish events
-    await this.publishEvents(lead);
-    await this.publishContactEvents(contact);
 
     return Result.ok({
       leadId: lead.id.value,
@@ -695,38 +707,30 @@ export class LeadService {
     };
   }
 
-  private async publishEvents(lead: Lead): Promise<void> {
+  // Event publishers accept the caller's transaction so events land in the
+  // outbox atomically with the aggregate save (DDD-002). Failures propagate —
+  // the swallow-and-log was removed so a lost event fails the whole operation
+  // (ADR-011 zero-lost-events) rather than being hidden in a console.error.
+  private async publishEvents(lead: Lead, tx?: RepositoryTransaction): Promise<void> {
     const events = lead.getDomainEvents();
     if (events.length > 0) {
-      try {
-        await this.eventBus.publishAll(events);
-      } catch (error) {
-        console.error('Failed to publish lead domain events:', error);
-      }
+      await this.eventBus.publishAll(events, tx);
     }
     lead.clearDomainEvents();
   }
 
-  private async publishContactEvents(contact: Contact): Promise<void> {
+  private async publishContactEvents(contact: Contact, tx?: RepositoryTransaction): Promise<void> {
     const events = contact.getDomainEvents();
     if (events.length > 0) {
-      try {
-        await this.eventBus.publishAll(events);
-      } catch (error) {
-        console.error('Failed to publish contact domain events:', error);
-      }
+      await this.eventBus.publishAll(events, tx);
     }
     contact.clearDomainEvents();
   }
 
-  private async publishAccountEvents(account: Account): Promise<void> {
+  private async publishAccountEvents(account: Account, tx?: RepositoryTransaction): Promise<void> {
     const events = account.getDomainEvents();
     if (events.length > 0) {
-      try {
-        await this.eventBus.publishAll(events);
-      } catch (error) {
-        console.error('Failed to publish account domain events:', error);
-      }
+      await this.eventBus.publishAll(events, tx);
     }
     account.clearDomainEvents();
   }

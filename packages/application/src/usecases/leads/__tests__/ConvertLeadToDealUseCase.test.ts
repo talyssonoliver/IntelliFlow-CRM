@@ -22,6 +22,12 @@ import {
   OpportunityRepository,
 } from '../../../ports/repositories';
 import { EventBusPort } from '../../../ports/external';
+import type { TransactionPort } from '@intelliflow/application';
+
+// ENG-OPS-002: ConvertLeadToDealUseCase now requires a TransactionPort as its
+// final constructor arg. This fake just runs the callback — behaviour-neutral
+// for these tests, which don't assert on real transactional rollback.
+const makeTxManager = (): TransactionPort => ({ run: (work) => work({} as never) });
 
 // =============================================================================
 // Mock Implementations
@@ -162,7 +168,8 @@ describe('ConvertLeadToDealUseCase', () => {
       contactRepository as any as ContactRepository,
       accountRepository as any as AccountRepository,
       opportunityRepository as any as OpportunityRepository,
-      eventBus
+      eventBus,
+      makeTxManager()
     );
   });
 
@@ -814,7 +821,11 @@ describe('ConvertLeadToDealUseCase', () => {
       const result = await useCase.execute(input);
 
       expect(result.isFailure).toBe(true);
-      expect(result.error.message).toContain('Failed to create account');
+      // ENG-OPS-002: account/contact/opportunity/lead saves + event publish
+      // now run inside ONE transactionManager.run call, so every failure
+      // inside it surfaces via the single unified 'Failed to save conversion'
+      // message rather than a per-step 'Failed to create account' message.
+      expect(result.error.message).toContain('Failed to save conversion');
     });
 
     it('should return PersistenceError when contactRepo.save throws', async () => {
@@ -844,7 +855,9 @@ describe('ConvertLeadToDealUseCase', () => {
       const result = await useCase.execute(input);
 
       expect(result.isFailure).toBe(true);
-      expect(result.error.message).toContain('Failed to create contact');
+      // ENG-OPS-002: same unified atomic-transaction message as the account
+      // save-failure case above — see comment there.
+      expect(result.error.message).toContain('Failed to save conversion');
     });
   });
 
@@ -992,7 +1005,12 @@ describe('ConvertLeadToDealUseCase', () => {
   });
 
   describe('Event Bus Resilience', () => {
-    it('should succeed even when eventBus.publishAll throws during account events', async () => {
+    // DDD-001: event-publish failure now propagates (no swallow). Account +
+    // Contact + Opportunity + Lead saves and the single event-outbox publish
+    // now run inside ONE transactionManager.run call, so a publishAll failure
+    // aborts and fails the whole conversion instead of being treated as
+    // best-effort.
+    it('should fail when eventBus.publishAll throws', async () => {
       const lead = createQualifiedLead({
         email: 'ebus-acc@example.com',
         firstName: 'Event',
@@ -1016,8 +1034,8 @@ describe('ConvertLeadToDealUseCase', () => {
       };
 
       const result = await useCase.execute(input);
-      // Should succeed because event publishing is best-effort
-      expect(result.isSuccess).toBe(true);
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('Failed to save conversion');
     });
 
     it('should succeed even when eventBus.publishAll throws during final events', async () => {

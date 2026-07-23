@@ -205,6 +205,30 @@ const SONAR_COVERAGE_EXCLUDE = [
   // false-negative as packages/validators/src/index.ts and packages/adapters/src/external/index.ts.
   // Mirror in sonar.coverage.exclusions. (PG-200)
   /^packages\/db\/src\/index\.ts$/,
+  // ENG-OPS-002 DDD-001/002 (Unit-of-Work / transactional integrity) added a
+  // set of pure-interface and re-export-barrel files. None emit executable code,
+  // so they never appear in lcov; the #382 "absent = 0%" rule would false-negative
+  // their added signature/JSDoc/export lines the same way it did for the already-
+  // excluded ContactRepository.ts (#427), PortalDeliverySyncPort.ts, and the
+  // domain/adapters index barrels. The real transactional LOGIC (LeadService,
+  // Convert/CreateLead use cases, the Prisma*Repository adapters, the container
+  // wiring, PrismaTransactionManager + InMemoryTransactionManager) is unit-tested
+  // and appears in lcov. Mirror in sonar.coverage.exclusions.
+  //   - adapters barrel (export { PrismaTransactionManager, InMemoryTransactionManager })
+  /^packages\/adapters\/src\/index\.ts$/,
+  //   - application ports barrel (export * from './TransactionPort')
+  /^packages\/application\/src\/ports\/index\.ts$/,
+  //   - TransactionPort: the Unit-of-Work interface (no executable code)
+  /^packages\/application\/src\/ports\/TransactionPort\.ts$/,
+  //   - EventBusPort: interface — publishAll gained an optional `tx` param
+  /^packages\/application\/src\/ports\/external\/EventBusPort\.ts$/,
+  //   - RepositoryTransaction: the opaque brand-type handle (interface only)
+  /^packages\/domain\/src\/shared\/RepositoryTransaction\.ts$/,
+  //   - domain repository interfaces — save() gained an optional `tx` param
+  //     (same nature as the already-excluded ContactRepository.ts)
+  /^packages\/domain\/src\/crm\/account\/AccountRepository\.ts$/,
+  /^packages\/domain\/src\/crm\/lead\/LeadRepository\.ts$/,
+  /^packages\/domain\/src\/crm\/opportunity\/OpportunityRepository\.ts$/,
 ];
 const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
 const isCoverableFile = (f) =>

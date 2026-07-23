@@ -1,4 +1,4 @@
-import { PrismaClient } from '@intelliflow/db';
+import { PrismaClient, type TransactionClient } from '@intelliflow/db';
 import {
   Contact,
   ContactId,
@@ -7,6 +7,7 @@ import {
   ContactStatus,
   ContactType,
   CrossTenantOrNotFoundError,
+  type RepositoryTransaction,
 } from '@intelliflow/domain';
 import {
   ContactRepository,
@@ -48,7 +49,8 @@ function toPhoneNumber(phone: string | null): PhoneNumber | undefined {
 export class PrismaContactRepository implements ContactRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async save(contact: Contact): Promise<void> {
+  async save(contact: Contact, tx?: RepositoryTransaction): Promise<void> {
+    const db = (tx as TransactionClient | undefined) ?? this.prisma;
     const data = {
       id: contact.id.value,
       email: contact.email.value,
@@ -75,7 +77,7 @@ export class PrismaContactRepository implements ContactRepository {
       contactNotes: contact.contactNotes ?? null,
     };
 
-    await this.prisma.contact.upsert({
+    await db.contact.upsert({
       where: { id: data.id },
       create: data,
       update: data,

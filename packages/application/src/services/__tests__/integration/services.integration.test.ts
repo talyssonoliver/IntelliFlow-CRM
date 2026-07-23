@@ -12,6 +12,12 @@ import { InMemoryTaskRepository } from '../../../../../adapters/src/repositories
 import { InMemoryEventBus } from '../../../../../adapters/src/external/InMemoryEventBus';
 import { MockAIService } from '../../../../../adapters/src/external/MockAIService';
 import { TEST_TENANT_ID } from '@intelliflow/test-fixtures';
+import type { TransactionPort } from '@intelliflow/application';
+
+// ENG-OPS-002: LeadService now requires a TransactionPort as its final
+// constructor arg. This fake just runs the callback — behaviour-neutral for
+// these tests, which don't assert on real transactional rollback.
+const makeTxManager = (): TransactionPort => ({ run: (work) => work({} as never) });
 
 /**
  * Integration tests for domain services
@@ -46,7 +52,8 @@ describe('Domain Services Integration', () => {
       contactRepository,
       accountRepository,
       aiService,
-      eventBus
+      eventBus,
+      makeTxManager()
     );
 
     contactService = new ContactService(

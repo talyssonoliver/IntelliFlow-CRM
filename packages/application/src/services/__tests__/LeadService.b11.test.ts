@@ -33,6 +33,13 @@ import {
 import type { AIServicePort, EventBusPort } from '../../ports/external';
 import type { ContactRepository, AccountRepository } from '../../ports/repositories';
 import type { LeadRepository } from '@intelliflow/domain';
+import type { TransactionPort } from '@intelliflow/application';
+import { PersistenceError } from '../../errors';
+
+// ENG-OPS-002: LeadService now requires a TransactionPort as its final
+// constructor arg. This fake just runs the callback — behaviour-neutral for
+// these tests, which don't assert on real transactional rollback.
+const makeTxManager = (): TransactionPort => ({ run: (work) => work({} as never) });
 
 // Create mock factories
 function createMockLeadRepo(): LeadRepository {
@@ -111,11 +118,22 @@ describe('LeadService - b11', () => {
     aiService = createMockAIService();
     eventBus = createMockEventBus();
 
-    service = new LeadService(leadRepo, contactRepo, accountRepo, aiService, eventBus);
+    service = new LeadService(
+      leadRepo,
+      contactRepo,
+      accountRepo,
+      aiService,
+      eventBus,
+      makeTxManager()
+    );
   });
 
   describe('publishAccountEvents error path', () => {
-    it('should handle eventBus.publishAll error for account events gracefully', async () => {
+    // DDD-002: event-publish failure now propagates (no swallow). All saves +
+    // event publishing for convertLead now share one transactionManager.run
+    // call, so a publishAll failure aborts the whole conversion and surfaces
+    // as Result.fail(PersistenceError) instead of a swallowed console.error.
+    it('should fail the conversion when eventBus.publishAll errors for account events', async () => {
       const lead = createLead({ email: 'convert@example.com' });
       // Set lead status to QUALIFIED for conversion
       lead.updateScore(80, 0.9, 'v1');
@@ -134,16 +152,10 @@ describe('LeadService - b11', () => {
         }
       });
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
       const result = await service.convertLead(lead.id.value, 'NewCo', 'user-1');
 
-      // Should still succeed despite event publishing failure
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to publish account domain events'),
-        expect.anything()
-      );
-      consoleSpy.mockRestore();
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(PersistenceError);
     });
   });
 

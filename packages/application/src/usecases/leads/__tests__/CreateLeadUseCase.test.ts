@@ -3,6 +3,12 @@ import { CreateLeadUseCase, CreateLeadInput } from '../CreateLeadUseCase';
 import { InMemoryLeadRepository } from '../../../../../adapters/src/repositories/InMemoryLeadRepository';
 import { InMemoryEventBus } from '../../../../../adapters/src/external/InMemoryEventBus';
 import { LeadCreatedEvent } from '@intelliflow/domain';
+import type { TransactionPort } from '@intelliflow/application';
+
+// ENG-OPS-002: CreateLeadUseCase now requires a TransactionPort as its final
+// constructor arg. This fake just runs the callback — behaviour-neutral for
+// these tests, which don't assert on real transactional rollback.
+const makeTxManager = (): TransactionPort => ({ run: (work) => work({} as never) });
 
 describe('CreateLeadUseCase', () => {
   let repository: InMemoryLeadRepository;
@@ -12,7 +18,7 @@ describe('CreateLeadUseCase', () => {
   beforeEach(() => {
     repository = new InMemoryLeadRepository();
     eventBus = new InMemoryEventBus();
-    useCase = new CreateLeadUseCase(repository, eventBus);
+    useCase = new CreateLeadUseCase(repository, eventBus, makeTxManager());
   });
 
   describe('execute()', () => {
@@ -234,15 +240,18 @@ describe('CreateLeadUseCase', () => {
       expect(result.value.phone).toBe('+442079460958');
     });
 
-    it('should not fail if event bus throws but still persist the lead', async () => {
+    // DDD-002: event-publish failure now propagates (no swallow). The
+    // aggregate save and the event-outbox publish share one transaction, so a
+    // publish failure now fails the whole use case instead of being logged
+    // and ignored.
+    it('should fail when the event bus throws (no more swallow-and-persist)', async () => {
       // Create a failing event bus
       const failingEventBus = new InMemoryEventBus();
-      const originalPublish = failingEventBus.publishAll.bind(failingEventBus);
       failingEventBus.publishAll = async () => {
         throw new Error('Event bus failure');
       };
 
-      const failingUseCase = new CreateLeadUseCase(repository, failingEventBus);
+      const failingUseCase = new CreateLeadUseCase(repository, failingEventBus, makeTxManager());
 
       const input: CreateLeadInput = {
         email: 'resilient@example.com',
@@ -251,13 +260,7 @@ describe('CreateLeadUseCase', () => {
 
       const result = await failingUseCase.execute(input);
 
-      // Operation should still succeed
-      expect(result.isSuccess).toBe(true);
-
-      // Lead should be persisted
-      const savedLeads = repository.getAll();
-      expect(savedLeads).toHaveLength(1);
-      expect(savedLeads[0].email.value).toBe('resilient@example.com');
+      expect(result.isFailure).toBe(true);
     });
   });
 });

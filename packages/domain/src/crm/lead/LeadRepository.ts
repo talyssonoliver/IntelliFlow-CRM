@@ -2,6 +2,7 @@ import { Lead } from './Lead';
 import { LeadId } from './LeadId';
 import { Email } from './Email';
 import { DateRange } from '../../shared/QueryTypes';
+import { RepositoryTransaction } from '../../shared/RepositoryTransaction';
 
 /**
  * Lead Repository Interface
@@ -20,7 +21,11 @@ export interface LeadRepository {
    * e.g. the New Lead form's "Other" source detail — is never left dangling
    * without its lead, or the lead without its required detail.
    */
-  save(lead: Lead, opts?: { note?: { content: string; author: string } }): Promise<void>;
+  save(
+    lead: Lead,
+    opts?: { note?: { content: string; author: string } },
+    tx?: RepositoryTransaction
+  ): Promise<void>;
 
   /**
    * Find a lead by ID

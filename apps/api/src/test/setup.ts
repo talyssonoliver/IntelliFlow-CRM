@@ -253,6 +253,9 @@ export const mockAdapters = {
   activityFeedRepository: mockDeep<any>(),
   analyticsRepository: mockDeep<any>(),
   eventBus: mockDeep<any>(),
+  // Pass-through unit-of-work: runs the callback so lead create/convert paths
+  // execute their saves in tests (typed `any` like the sibling mocks).
+  transactionManager: { run: (work: (tx: unknown) => Promise<unknown>) => work({}) } as any,
   aiService: mockDeep<any>(),
   cache: mockDeep<any>(),
   featureFlagProvider: mockDeep<any>(),

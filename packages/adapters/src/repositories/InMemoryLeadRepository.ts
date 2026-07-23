@@ -1,4 +1,4 @@
-import { Lead, LeadId, Email } from '@intelliflow/domain';
+import { Lead, LeadId, Email, type RepositoryTransaction } from '@intelliflow/domain';
 import { LeadRepository } from '@intelliflow/application';
 
 /**
@@ -10,7 +10,11 @@ export class InMemoryLeadRepository implements LeadRepository {
   /** Initial notes captured on save (opts.note), keyed by lead id. */
   private readonly leadNotes: Map<string, Array<{ content: string; author: string }>> = new Map();
 
-  async save(lead: Lead, opts?: { note?: { content: string; author: string } }): Promise<void> {
+  async save(
+    lead: Lead,
+    opts?: { note?: { content: string; author: string } },
+    tx?: RepositoryTransaction
+  ): Promise<void> {
     // Persist the lead and, per the repository contract, any initial note
     // together — atomic by construction here since both writes are synchronous
     // in-memory map mutations that cannot partially fail.

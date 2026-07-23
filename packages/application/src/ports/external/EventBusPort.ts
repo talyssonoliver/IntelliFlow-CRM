@@ -1,4 +1,4 @@
-import { DomainEvent } from '@intelliflow/domain';
+import { DomainEvent, RepositoryTransaction } from '@intelliflow/domain';
 
 /**
  * Event Bus Port
@@ -13,9 +13,14 @@ export interface EventBusPort {
   publish(event: DomainEvent): Promise<void>;
 
   /**
-   * Publish multiple domain events
+   * Publish multiple domain events.
+   *
+   * When a {@link RepositoryTransaction} is supplied, the events are written to
+   * the outbox inside that same transaction, so the aggregate save and its
+   * events commit or roll back together (ADR-011 zero-lost-events). Without a
+   * transaction the implementation manages its own (backward-compatible).
    */
-  publishAll(events: readonly DomainEvent[]): Promise<void>;
+  publishAll(events: readonly DomainEvent[], tx?: RepositoryTransaction): Promise<void>;
 
   /**
    * Subscribe to domain events
