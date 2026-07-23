@@ -20,8 +20,8 @@ overrides:
   eslint-plugin-sonarjs>minimatch: 10.2.3
   '@microsoft/tsdoc-config>ajv': 8.18.0
   '@rushstack/node-core-library>ajv': 8.18.0
-  hono: '>=4.12.25'
-  '@prisma/dev>hono': '>=4.12.25'
+  hono: '>=4.12.31'
+  '@prisma/dev>hono': '>=4.12.31'
   '@hono/node-server': '>=1.19.13'
   '@prisma/dev>@hono/node-server': '>=1.19.13'
   dompurify: '>=3.4.11'
@@ -54,7 +54,7 @@ overrides:
   effect: '>=3.20.0 <4'
   '@xmldom/xmldom': '>=0.9.10'
   defu: '>=6.1.5 <7'
-  protobufjs: '>=8.6.2'
+  protobufjs: '>=8.6.6'
   uuid@<14.0.0: '>=14.0.0'
   fast-uri: '>=3.1.4 <4'
   '@babel/plugin-transform-modules-systemjs': '>=7.29.4 <8'
@@ -2459,7 +2459,7 @@ packages:
     resolution: {integrity: sha512-Ut3y0dMMPWy6bZ2kVfx25EOVbZlm15dhF4mOsezMlhpNHy+4MkU1qN9Y6lnruYi4wPmFzimGX2X7LF/FwHli4A==}
     engines: {node: '>=20'}
     peerDependencies:
-      hono: '>=4.12.25'
+      hono: '>=4.12.31'
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -8684,8 +8684,8 @@ packages:
     resolution: {integrity: sha512-Xwwo44whKBVCYoliBQwaPvtd/2tYFkRQtXDWj1nackaV2JPXx3L0+Jvd8/qCJ2p+ML0/XVkJ2q+Mr+UVdpJK5w==}
     engines: {node: '>=12.0.0'}
 
-  hono@4.12.26:
-    resolution: {integrity: sha512-uyZtpnYxM9CmQ7QsQknM4zN8EftNqhON1qYeIKM0Se67CCEe2c44xyGURwB0axX2fBDu1dqHrHAc1hmNT8ITkw==}
+  hono@4.12.31:
+    resolution: {integrity: sha512-zJIHFrl6bq3RDd2YusFNCDlM8qUprxKswyi/OPzPyzKDdyBXDqWx8bZlZ7R+saTdSTatUmb3O7K4SspGPaEOQg==}
     engines: {node: '>=16.9.0'}
 
   hookable@6.1.1:
@@ -10586,8 +10586,8 @@ packages:
   prosemirror-view@1.41.9:
     resolution: {integrity: sha512-clTunTX+eaLbr87L1V1QPheRlEQJyTlL3gXe9x3jQIk3rL0RVWxviDGz8tFaydwIVm+hKhYCyr+R/zBtWr9s6A==}
 
-  protobufjs@8.6.3:
-    resolution: {integrity: sha512-alQyzT0j401LGBtwsqu6uprjR6pfNH1UJf9N6GBFMjIcd+HzTe0/HrjAbFCqun+zvnfLarrxAtMM2xvZ+kFZ5A==}
+  protobufjs@8.7.1:
+    resolution: {integrity: sha512-agdGHrXNTv0IrYscJPDou/PlEJk1c/hBZ9o/B5NH2i/nSPtPqacNxzgwf1CebXxFMjMrZH5sqv9uQuw96aGt/A==}
     engines: {node: '>=12.0.0'}
 
   proxy-addr@2.0.7:
@@ -13312,14 +13312,14 @@ snapshots:
     dependencies:
       lodash.camelcase: 4.3.0
       long: 5.3.2
-      protobufjs: 8.6.3
+      protobufjs: 8.7.1
       yargs: 17.7.2
 
   '@grpc/proto-loader@0.8.1':
     dependencies:
       lodash.camelcase: 4.3.0
       long: 5.3.2
-      protobufjs: 8.6.3
+      protobufjs: 8.7.1
       yargs: 17.7.2
 
   '@headlessui/tailwindcss@0.2.2(tailwindcss@4.3.0)':
@@ -13331,9 +13331,9 @@ snapshots:
       '@tanstack/vue-virtual': 3.13.29(vue@3.5.38(typescript@5.9.3))
       vue: 3.5.38(typescript@5.9.3)
 
-  '@hono/node-server@2.0.4(hono@4.12.26)':
+  '@hono/node-server@2.0.4(hono@4.12.31)':
     dependencies:
-      hono: 4.12.26
+      hono: 4.12.31
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -15028,13 +15028,13 @@ snapshots:
       '@electric-sql/pglite': 0.4.1
       '@electric-sql/pglite-socket': 0.1.1(@electric-sql/pglite@0.4.1)
       '@electric-sql/pglite-tools': 0.3.1(@electric-sql/pglite@0.4.1)
-      '@hono/node-server': 2.0.4(hono@4.12.26)
+      '@hono/node-server': 2.0.4(hono@4.12.31)
       '@prisma/get-platform': 7.2.0
       '@prisma/query-plan-executor': 7.2.0
       '@prisma/streams-local': 0.1.2
       foreground-child: 3.3.1
       get-port-please: 3.2.0
-      hono: 4.12.26
+      hono: 4.12.31
       http-status-codes: 2.3.0
       pathe: 2.0.3
       proper-lockfile: 4.1.2
@@ -19064,7 +19064,7 @@ snapshots:
       '@grpc/grpc-js': 1.14.4
       '@grpc/proto-loader': 0.7.15
       docker-modem: 5.0.7
-      protobufjs: 8.6.3
+      protobufjs: 8.7.1
       tar-fs: 2.1.4
     transitivePeerDependencies:
       - supports-color
@@ -20241,7 +20241,7 @@ snapshots:
 
   highlight.js@11.11.1: {}
 
-  hono@4.12.26: {}
+  hono@4.12.31: {}
 
   hookable@6.1.1: {}
 
@@ -22541,7 +22541,7 @@ snapshots:
       prosemirror-state: 1.4.4
       prosemirror-transform: 1.12.0
 
-  protobufjs@8.6.3:
+  protobufjs@8.7.1:
     dependencies:
       long: 5.3.2
 
