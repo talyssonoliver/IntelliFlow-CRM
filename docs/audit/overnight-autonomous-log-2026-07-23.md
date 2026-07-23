@@ -85,3 +85,34 @@ acting — corrections are recorded below rather than acted on blindly.
   `Security Scanning` green.
 - **No-op (documented):** Task 2 (release already green), Task 3 phantom
   critical/high counts (unreconcilable; escalated to user, not fabricated).
+
+### 1b. Next.js hotfix MERGED
+
+- PR #618 merged 2026-07-23 08:27:43Z (66 checks green, full real-integration
+  preship). Main Security Scanning red (4 Next.js advisories) cleared.
+
+### 2. Release pipeline
+
+- Verdict: GREEN. Last 3 Release runs success. The one failure (04:32,
+  622e331d6) was the known ioredis Build-Release test-flake (tests pass,
+  Redis-less unhandled error exits 1); self-recovered on later commits. No
+  action / no rerun needed.
+
+### 3. Snyk triage
+
+- BLOCKED: no Snyk report artifact, no Snyk MCP, no snyk baseline in the repo
+  (only tools/audit/waivers/snyk.json waivers). The 53-critical/302-high Snyk
+  data is not accessible from this sandbox; not fabricated.
+- Actionable substitute (pnpm audit moderates): protobufjs >=8.6.6 (->8.7.1) and
+  hono >=4.12.31 (both scoped overrides) clear 7 moderate advisories. Remaining
+  2 moderates are @hono/node-server (path-traversal + memory-leak) needing a
+  1.x->2.x major bump on a prisma DEV-tooling transitive — deliberately skipped
+  as high-risk / non-runtime. HIGH audit stays 0.
+
+### 4. Wave batches (P1)
+
+- Wave A: on remote as #617 (owner-pushed) — SonarCloud gate red; owner to
+  clear.
+- Wave B: preship-blocked at unit-tests (container.ai-provider-baseurl.lazy.test
+  2 fails — env base-URL sensitivity or code); Delta to fix + re-push.
+- Wave C/D/F + ddd003 + wc-splits: 0 committed work — squads to commit + push.

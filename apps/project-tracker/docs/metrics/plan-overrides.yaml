@@ -3491,6 +3491,31 @@ IFC-314:
     Root task (no deps) -> auto Tier A. CRM->portal delivery & billing sync
     (IFC-314). Portal side already shipped; this is the CRM-side return path.
 
+# ENG-OPS-002: auto Tier-A (security/high-fanout) but had no override entry, so
+# the plan-linter hard-failed (missing gate_profile/acceptance_owner/
+# evidence_required) and blocked the lint gate for every PR on main. This entry
+# supplies the required Tier-A governance fields. Evidence artifacts verified to
+# exist on main.
+ENG-OPS-002:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - architecture_test
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/reports/sprint-19/baseline/findings-validation.md
+    - artifacts/reports/sprint-19/baseline/sonar-baseline.json
+    - docs/audit/backlog-truth-audit-2026-07-21.md
+  notes: |
+    Sprint 1-18 technical/architectural audit (reconciliation + tooling +
+    DDD/hexagonal/security/perf/quality/docs findings + real local Sonar
+    Community baseline). Override added to supply required Tier-A governance
+    fields that were missing.
+
 _meta:
   description: 'Plan overrides for Sprint plan validation and governance'
   created: '2025-12-17'
