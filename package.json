@@ -273,7 +273,8 @@
       "shell-quote": ">=1.9.0",
       "linkify-it": ">=5.0.2 <6",
       "@opentelemetry/propagator-jaeger": ">=2.9.0 <3",
-      "sharp": ">=0.35.0 <0.36"
+      "sharp": ">=0.35.0 <0.36",
+      "next": ">=16.2.11 <16.3"
     }
   },
   "dependencies": {
