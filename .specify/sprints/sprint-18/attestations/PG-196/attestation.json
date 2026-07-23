@@ -1,0 +1,72 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-196",
+  "run_id": "eng-ops-002-r16-pg-196-2026-07-22",
+  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
+  "attestation_timestamp": "2026-07-25T17:18:29Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 1,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 1
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/accounts/(list)/account-tiers/page.tsx": "e1327b9ff48af2d0379f3114050324c4795958c9e30e52c60bec8ac981303201"
+  },
+  "validation_results": [],
+  "gate_results": [
+    {
+      "gate_id": "module-settings-dod-artifacts-present",
+      "passed": false,
+      "log_path": "Sprint_plan.csv row for PG-196 requires 4 ARTIFACT paths: page.tsx (exists), AccountTiersContent.tsx (MISSING), apps/api/src/modules/account/account-tiers.router.ts (MISSING), packages/validators/src/account-tiers.ts (MISSING). Also EVIDENCE:.specify/sprints/sprint-18/attestations/PG-196/context_ack.json (MISSING). No tRPC router or Zod validator for 'account-tiers' exists anywhere in apps/api or packages/validators (broad grep across both trees returned zero hits)."
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Route /accounts/(list)/account-tiers renders",
+      "met": true,
+      "evidence": "page.tsx exists and is a valid client component"
+    },
+    {
+      "criterion": "Tier definitions bronze/silver/gold/platinum, point thresholds, benefits matrix, default tier, upgrade/downgrade rules implemented",
+      "met": false,
+      "evidence": "page.tsx (16 lines) is a static placeholder: '<h1>Account Tiers</h1>...<p>Account tiers configuration coming soon.</p>'. No form, no data fetch, no tier logic of any kind."
+    },
+    {
+      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction on destructive writes; Zod superRefine; colorToken CHECK constraint; AI defaults FALSE; Boolean toggles wired to account-automation.ts",
+      "met": false,
+      "evidence": "None of these patterns appear in the file — it uses a bare div/h1/p, not the shadcn PageHeader or the project's canonical EmptyState component."
+    },
+    {
+      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "met": false,
+      "evidence": "No test file exists for this page or feature anywhere in the repo (grep for account-tiers across tests/ and __tests__ directories returns nothing)."
+    }
+  ],
+  "dependencies_verified": [],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
+    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+  },
+  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). This task is CSV-marked 'Completed' but on independent re-verification the deliverable does not substantiate that claim. Per the honesty protocol for this remediation task ('never fabricate evidence; honest partial progress beats fake completeness'), this attestation records verdict=INCOMPLETE rather than a passing attestation. What exists: a 16-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit 2e7bb135ada2108554f853ae04f99e16da4b98bd ('feat(web): add account, lead, contact, and deal subpages') as part of a 15-file batch of route scaffolds — independently confirmed via `git log --diff-filter=A` at the exact current path (unambiguous, single add event, no PR wraps this commit — it appears to have been pushed directly to main). What is missing, per the CSV's own DoD/ARTIFACT list: AccountTiersContent.tsx, apps/api/src/modules/account/account-tiers.router.ts, packages/validators/src/account-tiers.ts, and the context_ack.json ceremony evidence — none exist anywhere in the repository under any name (broad grep performed). No git history shows any subsequent commit implementing this feature past the initial stub. FLAGGED FOR HUMAN DECISION: either (a) revert this task's CSV status from Completed to Backlog/In-Progress and schedule the real implementation, or (b) if the placeholder-only scope was an intentional, later-descoped MVP decision, that decision should be documented and the DoD text in Sprint_plan.csv corrected to match — but that CSV edit is explicitly out of scope for this attestation-only backfill task (R16 forbids editing Sprint_plan.csv). This same pattern (stub-only, DoD unmet) was found across 12 PG-19x/20x Module-Settings tasks (PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-207, PG-208, PG-209) — tracked as issue #615. SCOPE CORRECTION 2026-07-25: the batch was originally 13 and included PG-206 (Storage Policies). PG-206 has since been genuinely implemented and attested COMPLETE by PR #626 (commit 2ec7d0e49, \"feat(documents): wire storage-policies retention UI to backend\"), so it is excluded here rather than carried forward on a now-stale INCOMPLETE verdict. Issue #615 still names 13 tasks and should be narrowed to these 12. RE-VERIFIED 2026-07-25 at origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5: the placeholder page.tsx SHA-256 recorded in artifact_hashes still matches the file in the tree byte-for-byte, and the Content component, tRPC router, Zod validator and context_ack.json are all still absent — so this verdict is current, not a stale claim inherited from the 2026-07-22 pass.",
+  "manual_verification": {
+    "performed_by": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 re-verification pass",
+    "performed_at": "2026-07-25T17:18:29Z",
+    "review_notes": "Independent re-verification against origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5 before merge. The recorded artifact SHA-256 still matches the on-disk page.tsx, and existence checks for the Content component, tRPC router, Zod validator and context_ack.json all still return nothing. Verdict INCOMPLETE confirmed current as of 2026-07-25.",
+    "items_checked": [
+      "artifact_hashes[page.tsx] recomputed and compared — match",
+      "*Content.tsx sibling component — absent",
+      "apps/api/src/modules/**/<feature>.router.ts — absent",
+      "packages/validators/src/<feature>.ts — absent",
+      ".specify/sprints/sprint-18/attestations/PG-196/context_ack.json — absent"
+    ]
+  }
+}
