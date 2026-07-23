@@ -259,9 +259,26 @@ A property test that fails on any seed in the smoke tier (50 runs) blocks merge
 identically to a unit test failure. The seed is always logged, so "flaky" is
 operationally defined as "fails on seed X but passes on seed Y with no code
 change" — treated as a genuine bug in either the production code or the test's
-arbitrary generation. Skipping (`test.skip`) requires a linked issue;
-commented-out tests are rejected by the `no-skipped-tests` ESLint rule already
-enforced in CI.
+arbitrary generation. Skipping (`test.skip`) requires a linked issue.
+
+**Enforcement (ENG-OPS-002.R13 / QUAL-012):** the paragraph above previously
+asserted this was enforced by a `no-skipped-tests` ESLint rule already shipped
+in CI — that was aspirational, not actual (no such rule existed in
+`eslint.config.mjs`; see QUAL-012 in
+`artifacts/reports/sprint-19/baseline/quality-findings.json`). The real gate is
+`tools/scripts/flaky-test-skip-gate.ts` (`pnpm run validate:flaky-test-gate`),
+wired into both `scripts/pre-ship.mjs` and the CI `lint` job
+(`.github/workflows/ci.yml`). It fails the build on any declarative
+`test.skip`/`it.skip`/`describe.skip`/`xit`/`xdescribe`/`xtest` call (including
+through import aliases) that lacks an approved `// ADR-054: <reference>`
+annotation or a matching entry in `tools/scripts/flaky-test-gate.allowlist.json`
+— a finding ID (`QUAL-006`, `RACE-PURE-09`, ...), a task ID (`ENG-OPS-002.R##`),
+a GitHub issue (`#123`), or the literal `DEFERRED`. It deliberately does not
+flag Playwright's imperative `test.skip(condition[, reason])` / `ctx.skip()`
+runtime-skip forms or the `describe.skipIf(...)` /
+`cond ? describe : describe.skip` infra-availability idioms used across
+`tests/integration/**` — those are a different, already-accepted pattern, not
+the bug-documenting hard skip this policy targets.
 
 ### 7. Prisma 7 constructor correction
 

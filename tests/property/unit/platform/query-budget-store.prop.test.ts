@@ -551,6 +551,10 @@ describe('budgetForRoute — fallback for unknown routes', () => {
 
   // BUG(PROTO-ROUTE-01): Object.prototype property names bypass the fallback.
   // The property below documents the bug — skip until fix is applied.
+  // ADR-054: QUAL-011 (PROTO-ROUTE-01) — confirmed Object.prototype collision bug in
+  // budgetForRoute (missing Object.hasOwn guard); tracked in
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // dedicated fix task (out of scope for ENG-OPS-002.R13).
   it.skip('// BUG(PROTO-ROUTE-01): budgetForRoute("toString", fallback) should return fallback but returns Object.prototype.toString instead — ROUTE_BUDGETS uses plain object indexing without hasOwn guard', () => {
     // Demonstrates the failure:
     const result = budgetForRoute('toString', 99);

@@ -712,6 +712,10 @@ vitestTest(
 // guard won't catch it. The description in race-condition-findings.json notes
 // this as an invalid state. Fix: skip when input has no id or add explicit
 // undefined guard on candidateId as well.
+// ADR-054: QUAL-005 (RACE-DEDUP-07b) — confirmed conceptually-incomplete self-match
+// guard in duplicate-rule-evaluator; tracked in
+// artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+// dedicated fix task (out of scope for ENG-OPS-002.R13).
 vitestTest.skip(
   'BUG(RACE-DEDUP-07b): self-match guard is logically absent when input.id is undefined — if candidate.id were also undefined both would match',
   () => {

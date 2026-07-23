@@ -308,6 +308,17 @@ const STEPS = [
     required: true,
   },
   {
+    // ENG-OPS-002.R13 / QUAL-012: flaky-test skip gate. Fails when a
+    // test.skip/it.skip/describe.skip/xit/xdescribe/xtest lacks an approved
+    // ADR-054 annotation or allowlist entry (docs/architecture/adr/ADR-054-
+    // property-based-race-condition-testing.md, section 6). Mirrors the CI
+    // `lint` job's flaky-test-gate step.
+    id: 'flaky-test-gate',
+    description: 'ADR-054 flaky-test skip gate (unannotated test.skip/it.skip/describe.skip)',
+    cmd: ['pnpm', 'tsx', 'tools/scripts/flaky-test-skip-gate.ts'],
+    required: true,
+  },
+  {
     id: 'unit-tests',
     description: 'vitest run --project unit',
     cmd: ['pnpm', 'run', 'test:unit'],

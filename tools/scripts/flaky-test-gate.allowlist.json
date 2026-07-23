@@ -1,0 +1,10 @@
+{
+  "$comment": "Flaky-test skip gate allowlist (ENG-OPS-002.R13 / QUAL-012, ADR-054 enforcement). Every entry's `reason` MUST satisfy the same ANNOTATION_PATTERN reference requirement as an inline `// ADR-054: <reference>` comment (see tools/scripts/flaky-test-skip-gate.ts) — this file is for skips that cannot be annotated in place, never a blanket bypass. Prefer an inline annotation over an allowlist entry whenever the file is safe to edit.",
+  "entries": [
+    {
+      "file": "tests/integration/connectors/erp.test.ts",
+      "match": "describe.skip('SAP ERP Adapter'",
+      "reason": "ADR-054: QUAL-013 — SAP ERP adapter suite is scheduled for deletion under ENG-OPS-002.R17, a parallel PR in the same remediation wave. Left untouched here (not annotated in-place) to avoid a merge conflict with R17. Remove this entry once R17 merges and deletes the file."
+    }
+  ]
+}

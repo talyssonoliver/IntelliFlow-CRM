@@ -619,6 +619,10 @@ describe('Lead aggregate — invariants (property, RACE-PURE-08)', () => {
   // or UNQUALIFIED→CONVERTED.  A transition table (VALID_LEAD_TRANSITIONS) should
   // be introduced and validated in changeStatus().  Until then this property would
   // fail on e.g. LOST→NEW, so it is skipped to keep the file green.
+  // ADR-054: QUAL-006 (RACE-PURE-08) — confirmed missing VALID_LEAD_TRANSITIONS table
+  // in Lead.changeStatus; tracked in
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // dedicated fix task (out of scope for ENG-OPS-002.R13).
   test.skip('BUG(RACE-PURE-08): changeStatus rejects illegal reverse transitions (e.g. LOST→NEW, UNQUALIFIED→CONVERTED)', () => {
     const illegalPairs: Array<[LeadStatus, LeadStatus]> = [
       ['LOST', 'NEW'],

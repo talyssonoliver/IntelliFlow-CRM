@@ -388,6 +388,10 @@ describe('RACE-WORKE-04 — enqueueAIScoring never calls consumeRetry (bug)', ()
    *   globalRetryBudget.consumeRetry(QUEUE_NAMES.AI_SCORING);
    * immediately after the canRetry guard passes (before the await queue.add(...)).
    */
+  // ADR-054: QUAL-010 (RACE-WORKE-04) — confirmed no-op retry-budget guard
+  // (consumeRetry never called by the production caller); tracked in
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // dedicated fix task (out of scope for ENG-OPS-002.R13).
   test.skip('RACE-WORKE-04: budget guard is a no-op — canRetry always true because consumeRetry is never called in production caller', () => {
     // It intentionally documents that the production caller violates this contract. // This test captures the REQUIRED behaviour (budget must enforce the ceiling).
     const budget = 5;
