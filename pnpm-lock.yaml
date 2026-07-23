@@ -1295,10 +1295,10 @@ importers:
     dependencies:
       '@bull-board/api':
         specifier: ^7.2.1
-        version: 7.2.1(@bull-board/ui@7.2.1)
+        version: 7.2.1(@bull-board/ui@8.2.0(bullmq@5.79.1))
       '@bull-board/ui':
-        specifier: ^7.2.1
-        version: 7.2.1
+        specifier: ^8.2.0
+        version: 8.2.0(bullmq@5.79.1)
       '@intelliflow/domain':
         specifier: workspace:*
         version: link:../domain
@@ -1791,11 +1791,26 @@ packages:
     peerDependencies:
       '@bull-board/ui': 7.2.1
 
+  '@bull-board/api@8.2.0':
+    resolution: {integrity: sha512-/IFAcjZhqwkL2dqA4jr/SGiZUMBGdEYUeJXebByKTKR3e7dYroJ+XFuKp/PSTY8NPtw+p7lina1tUJSaltlpBg==}
+    peerDependencies:
+      '@bull-board/ui': 8.2.0
+      bull: ^4.16.5
+      bullmq: ^5.79.2
+    peerDependenciesMeta:
+      bull:
+        optional: true
+      bullmq:
+        optional: true
+
   '@bull-board/express@7.2.1':
     resolution: {integrity: sha512-tBr/xV5letzKYPRGRkilTQZmfoCoy3mCuUo4M2dDoDKOhbrF360mK5v9/rIcSgYSyI9c7BgEgrve80LhmexNxQ==}
 
   '@bull-board/ui@7.2.1':
     resolution: {integrity: sha512-O4ykrXrl2UJNHnhJrCvJxrw1ar+DlUBgyZUeZ8Ci+Ne5Wbq6rBv1gfpQH54/eu3IFbLso0S/kjc6WUGb2HPqZw==}
+
+  '@bull-board/ui@8.2.0':
+    resolution: {integrity: sha512-Prys4qvyYKEXWwRJB7RPCVWNOCUbzIZu6nSQf+gvsh0FmQJXxI5df4FjxzQyr9qXEv4pt1fL4boRPQZFRENjBw==}
 
   '@cfworker/json-schema@4.1.1':
     resolution: {integrity: sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==}
@@ -4108,8 +4123,8 @@ packages:
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
 
-  '@preact/signals-core@1.14.3':
-    resolution: {integrity: sha512-m0K3vnbSLC5rHs2ZVfeAMvBtT1zIyq4mxx5OlNncSgMj5Iz6W5Rn3kPrDxAC+iIKmiVe0lSl6U37t5ZkEWoVAw==}
+  '@preact/signals-core@1.14.4':
+    resolution: {integrity: sha512-HNB6HYeYKhQbJ1aKl+YRjrS4+QWHLKX6qKoUsfS/m0vqzsVaEBiZiaKbG/e+NKk2ch5ALQr/ihWaMHxiCuuWHA==}
 
   '@preact/signals@2.8.1':
     resolution: {integrity: sha512-wX6U0SpcCukZTJBs5ChljvBZb3XmYzA5gd4vKHgX8wZZKaQCo2WHtmThdLx+mcVvlBa5u3XShC7ffbETJD4BiQ==}
@@ -8379,8 +8394,8 @@ packages:
   fs-constants@1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
 
-  fs-extra@11.3.5:
-    resolution: {integrity: sha512-eKpRKAovdpZtR1WopLHxlBWvAgPny3c4gX1G5Jhwmmw4XJj0ifSD5qB5TOo8hmA0wlRKDAOAhEE1yVPgs6Fgcg==}
+  fs-extra@11.3.6:
+    resolution: {integrity: sha512-w8ZNZr2mKIc7qeNaQ9AVPT1+iFaI+Avd4xudVOvdDJ8VytREi1Ft5Ih7hd9jjehod8vAM5GMsfQ/TpPf4EyoEA==}
     engines: {node: '>=14.14'}
 
   fs.realpath@1.0.0:
@@ -12674,6 +12689,18 @@ snapshots:
       '@bull-board/ui': 7.2.1
       redis-info: 3.1.0
 
+  '@bull-board/api@7.2.1(@bull-board/ui@8.2.0(bullmq@5.79.1))':
+    dependencies:
+      '@bull-board/ui': 8.2.0(bullmq@5.79.1)
+      redis-info: 3.1.0
+
+  '@bull-board/api@8.2.0(@bull-board/ui@8.2.0(bullmq@5.79.1))(bullmq@5.79.1)':
+    dependencies:
+      '@bull-board/ui': 8.2.0(bullmq@5.79.1)
+      redis-info: 3.1.0
+    optionalDependencies:
+      bullmq: 5.79.1
+
   '@bull-board/express@7.2.1':
     dependencies:
       '@bull-board/api': 7.2.1(@bull-board/ui@7.2.1)
@@ -12686,6 +12713,13 @@ snapshots:
   '@bull-board/ui@7.2.1':
     dependencies:
       '@bull-board/api': 7.2.1(@bull-board/ui@7.2.1)
+
+  '@bull-board/ui@8.2.0(bullmq@5.79.1)':
+    dependencies:
+      '@bull-board/api': 8.2.0(@bull-board/ui@8.2.0(bullmq@5.79.1))(bullmq@5.79.1)
+    transitivePeerDependencies:
+      - bull
+      - bullmq
 
   '@cfworker/json-schema@4.1.1': {}
 
@@ -14983,11 +15017,11 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@preact/signals-core@1.14.3': {}
+  '@preact/signals-core@1.14.4': {}
 
   '@preact/signals@2.8.1(preact@10.28.4)':
     dependencies:
-      '@preact/signals-core': 1.14.3
+      '@preact/signals-core': 1.14.4
       preact: 10.28.4
 
   '@prisma/adapter-pg@7.8.0':
@@ -15938,7 +15972,7 @@ snapshots:
       ajv: 8.18.0
       ajv-draft-04: 1.0.0(ajv@8.18.0)
       ajv-formats: 3.0.1(ajv@8.18.0)
-      fs-extra: 11.3.5
+      fs-extra: 11.3.6
       import-lazy: 4.0.0
       jju: 1.4.0
       resolve: 1.22.12
@@ -19856,7 +19890,7 @@ snapshots:
 
   fs-constants@1.0.0: {}
 
-  fs-extra@11.3.5:
+  fs-extra@11.3.6:
     dependencies:
       graceful-fs: 4.2.11
       jsonfile: 6.2.1
