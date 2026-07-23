@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-203",
+  "run_id": "eng-ops-002-r16-pg-203-2026-07-22",
+  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
+  "attestation_timestamp": "2026-07-22T22:46:00Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 1,
+    "kpis_met": 0,
+    "kpis_missed": 1,
+    "placeholders_found": 1
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/calendar/event-types/page.tsx": "21749b50c5c277bc50dcec7e89108063c81126f8bdf6adaceba9c46cd02a8789"
+  },
+  "validation_results": [],
+  "gate_results": [
+    {
+      "gate_id": "module-settings-dod-artifacts-present",
+      "passed": false,
+      "log_path": "Sprint_plan.csv row for PG-203 requires page.tsx (exists), EventTypesContent.tsx (MISSING), apps/api/src/modules/calendar/event-types.router.ts (MISSING), packages/validators/src/event-types.ts (MISSING), context_ack.json (MISSING). Broad grep for a dedicated calendar event-types router/validator across apps/api and packages/validators returned zero hits (the only 'event-types'-adjacent hits are the unrelated misc/timeline.router.ts generic timeline-event-type field)."
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Route /calendar/event-types renders",
+      "met": true,
+      "evidence": "page.tsx exists and is a valid client component"
+    },
+    {
+      "criterion": "Meeting type definitions: duration, color, default description, booking link slug, required form fields, location type implemented",
+      "met": false,
+      "evidence": "page.tsx (16 lines) is a static placeholder ('Event types configuration coming soon.'). No form, no data fetch, no event-type model."
+    },
+    {
+      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate booking slugs; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
+      "met": false,
+      "evidence": "None of these patterns present in the stub file."
+    },
+    {
+      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "met": false,
+      "evidence": "No test file exists for this feature anywhere in the repo."
+    }
+  ],
+  "dependencies_verified": [],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "e18a18a92e061d48ffc57916b85cec7f5837c985",
+    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+  },
+  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 16-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit e18a18a92e061d48ffc57916b85cec7f5837c985 ('feat(web): add email, calendar, and notification settings pages') — confirmed via `git log --diff-filter=A` at the exact current path (single unambiguous add event, no PR wraps this commit). Missing per the CSV's own ARTIFACT/DoD list: EventTypesContent.tsx, event-types.router.ts, event-types validators, context_ack.json — none exist anywhere under any name. No later commit implements this feature. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 13-task pattern."
+}

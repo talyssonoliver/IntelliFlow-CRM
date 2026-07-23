@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-197",
+  "run_id": "eng-ops-002-r16-pg-197-2026-07-22",
+  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
+  "attestation_timestamp": "2026-07-22T22:41:00Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 1,
+    "kpis_met": 0,
+    "kpis_missed": 1,
+    "placeholders_found": 1
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/accounts/(list)/territory-mapping/page.tsx": "187b00bccb7adc739ae9efad5d999eec8be3e2b47657c9a5e317f41f60985a7c"
+  },
+  "validation_results": [],
+  "gate_results": [
+    {
+      "gate_id": "module-settings-dod-artifacts-present",
+      "passed": false,
+      "log_path": "Sprint_plan.csv row for PG-197 requires page.tsx (exists), TerritoryMappingContent.tsx (MISSING), apps/api/src/modules/account/account-territories.router.ts (MISSING), packages/validators/src/account-territories.ts (MISSING), context_ack.json (MISSING). Broad grep for 'territory'/'territories' router or validator logic across apps/api and packages/validators returned zero hits."
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Route /accounts/(list)/territory-mapping renders",
+      "met": true,
+      "evidence": "page.tsx exists and is a valid client component"
+    },
+    {
+      "criterion": "Geographic territory rules by region/country/postcode, assignment strategies, overlap resolution, default territory implemented",
+      "met": false,
+      "evidence": "page.tsx (18 lines) is a static placeholder ('Territory mapping configuration coming soon.'). No form, no data fetch, no territory logic."
+    },
+    {
+      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate (region,country); colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
+      "met": false,
+      "evidence": "None of these patterns present in the stub file."
+    },
+    {
+      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "met": false,
+      "evidence": "No test file exists for this feature anywhere in the repo."
+    }
+  ],
+  "dependencies_verified": [],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "2e7bb135ada2108554f853ae04f99e16da4b98bd",
+    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+  },
+  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 18-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit 2e7bb135ada2108554f853ae04f99e16da4b98bd ('feat(web): add account, lead, contact, and deal subpages') — confirmed via `git log --diff-filter=A` at the exact current path (single unambiguous add event, no PR wraps this commit). Missing per the CSV's own ARTIFACT/DoD list: TerritoryMappingContent.tsx, account-territories.router.ts, account-territories validators, and context_ack.json — none exist anywhere under any name. No later commit implements this feature. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 13-task pattern across this batch of Module-Settings tasks."
+}

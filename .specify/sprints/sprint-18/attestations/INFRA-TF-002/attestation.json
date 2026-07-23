@@ -1,0 +1,56 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "INFRA-TF-002",
+  "run_id": "eng-ops-002-r16-infra-tf-002-2026-07-22",
+  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
+  "attestation_timestamp": "2026-07-22T22:31:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 1,
+    "gates_failed": 0,
+    "kpis_met": 1,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "infra/terraform/variables.tf": "732e8488ea4eac214df9b216823d0ed1a34b09c62a9407a513c065a2ad3ee5ac",
+    "infra/terraform/environments/production/terraform.tfvars": "0f965250e8a359f6d705c200504b562c4dfe3c1871187cb69165c7d984d0e5ac",
+    "infra/terraform/environments/dev/terraform.tfvars": "a848366417e347ecbf0c3da247b315a9e59ef291584d0b422d3cf34e530f12f1",
+    "infra/terraform/environments/staging/terraform.tfvars": "8a33905f889654d040ffadddbd5f3b6898e487749075fd82bf1527006b147d8c"
+  },
+  "validation_results": [
+    {
+      "name": "terraform validate",
+      "command": "cd infra/terraform && terraform init -backend=false -input=false && terraform validate",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-22T22:20:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "three-workers-provisioned-as-railway-services",
+      "passed": true,
+      "log_path": "grep -n 'events-worker|ingestion-worker|notifications-worker' infra/terraform/environments/production/terraform.tfvars -> all 3 present as railway_services map entries (lines 84,93,102) each with an image, replicas, memory, cpu. infra/terraform/main.tf:110 passes var.railway_services into the railway module; modules/railway/main.tf:35 does 'for_each = var.services' over that map — confirmed real for_each wiring, not a hardcoded stub."
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Workers present in variables.tf railway_services + covered by the module for_each; a reproducible Railway deploy path exists for each",
+      "met": true,
+      "evidence": "Note on literal wording: the 3 workers are declared in the per-environment tfvars (environments/{dev,staging,production}/terraform.tfvars), not hardcoded into variables.tf's own default map — variables.tf declares the railway_services type/schema and the module for_each consumes whatever map the active environment's tfvars supplies. This is the correct pattern for per-environment service sets and is functionally equivalent to the DoD's intent. All 3 workers (events-worker, ingestion-worker, notifications-worker) verified present in all 3 environment tfvars files."
+    }
+  ],
+  "dependencies_verified": ["INFRA-TF-001"],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "5289aa9a43a08305d1d42f1dd43c537386781115",
+    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+  },
+  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). No canonical attestation.json existed for this task in Sprint 18 (only task-tracking.json). Primary delivery evidence: PR #289 'feat(infra): events/ingestion/notifications workers + strictly-free cost guards (INFRA-TF-002)' (merged 2026-06-06, commit 5289aa9a43a08305d1d42f1dd43c537386781115) — task ID is literally in the PR title, independently confirmed MERGED via `gh pr view 289`. This closes the GH issues referenced in the task description (#230/#259/#270 — workers built/tested but never deployed) by giving each worker a first-class railway_services entry. Re-verified 2026-07-22 by grepping the current tfvars for all 3 worker names (present in all 3 environments) and confirming the module's for_each actually consumes var.railway_services (not a dead/unused variable). Did not independently re-run `terraform plan` against live Railway (would require live credentials/state access out of scope for an attestation-only backfill task); relied on `terraform validate` (structural correctness) plus static for_each wiring confirmation."
+}

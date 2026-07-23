@@ -1,0 +1,58 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "INFRA-TF-005",
+  "run_id": "eng-ops-002-r16-infra-tf-005-2026-07-22",
+  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
+  "attestation_timestamp": "2026-07-22T22:34:00Z",
+  "verdict": "PARTIAL",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 1,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    ".github/workflows/build-images.yml": "27267cc81c5c0cad4b8b0f60df386c86b53da33c6a51cb0c1e93815a59df1c8d",
+    ".github/workflows/deploy-workers.yml": "595c389b19be95bf28e8260735339c2a68d4d7dcf2017654d9290778386a7849",
+    "docs/operations/runbooks/railway-deploy.md": "1a6cab81ee47972d328a6382ccc0082527fe56e82b856e068c8ade64420eadf4",
+    "docs/operations/runbooks/workers-runbook.md": "9d2c1024245627b392718386b4d92637f405792677336ba2b1262e9684d5e18b"
+  },
+  "validation_results": [],
+  "gate_results": [
+    {
+      "gate_id": "workers-in-ci-and-import-tooling-present",
+      "passed": true,
+      "log_path": "build-images.yml matrix includes events-worker, ingestion-worker, notifications-worker (lines 38-43) each with a Dockerfile path under apps/workers/*. deploy-workers.yml service list includes all 3 (line 42). infra/terraform/imports.tf.example exists as the import-blocks template. docs/operations/runbooks/terraform-import.md + railway-deploy.md + workers-runbook.md all present."
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "build-images + railway-deploy cover the 3 workers",
+      "met": true,
+      "evidence": "build-images.yml and deploy-workers.yml (the CSV's literal 'railway-deploy.yml' filename does not exist; the equivalent gated deploy workflow is named deploy-workers.yml — same functional file, renamed at some point after the task's DoD was written) both enumerate events-worker/ingestion-worker/notifications-worker."
+    },
+    {
+      "criterion": "live infra imported into TF state (plan shows no spurious recreate)",
+      "met": false,
+      "evidence": "imports.tf.example (a TEMPLATE, not applied import blocks) and the terraform-import.md runbook exist, giving a documented, reproducible import procedure. I could NOT independently verify that the live Railway/Vercel/Supabase infrastructure has actually been imported into a real TF state file in this backfill — that requires live cloud credentials and remote state access, which is out of scope for a static, credential-less attestation backfill. This sub-criterion is left honestly unattested rather than assumed true."
+    },
+    {
+      "criterion": "runbooks updated",
+      "met": true,
+      "evidence": "docs/operations/runbooks/railway-deploy.md and workers-runbook.md both present and reference the 3 workers"
+    }
+  ],
+  "dependencies_verified": [],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "382b63a65d81d787fbcdad16a569b3a85c03678c",
+    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+  },
+  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). No canonical attestation.json existed (only task-tracking.json). Primary delivery evidence: PR #291 'ci(infra): build + push the 3 worker images (INFRA-TF-005)' (merged 2026-06-06, commit 382b63a65d81d787fbcdad16a569b3a85c03678c) and PR #296 'docs(infra): terraform import runbook + import-blocks template (INFRA-TF-005)' (merged 2026-06-06, commit f7df61d0a3472100fe6104aa249924c6325d6268) — both have the task ID literally in the PR title, independently confirmed MERGED via `gh pr view`. PR #298 (gated railway-deploy workflow) and #297 (buildx retry fix) are related follow-on CI hardening. HONEST PARTIAL: two of the three DoD sub-criteria (CI coverage, runbooks) are solidly verified; the third (live infra actually imported into TF state with a clean plan) cannot be verified without live cloud/remote-state access from this static backfill session, so it is marked met=false in definition_of_done_items. Verdict set to PARTIAL (not COMPLETE) to reflect that one of three DoD criteria is unverified rather than confirmed — the documented, tooled import procedure (imports.tf.example + terraform-import.md) exists, but whether it was actually RUN against live state is a claim only a human with cloud access, or a future CI run, can confirm. Flagging for human follow-up rather than rounding up to COMPLETE."
+}

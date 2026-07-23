@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-205",
+  "run_id": "eng-ops-002-r16-pg-205-2026-07-22",
+  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
+  "attestation_timestamp": "2026-07-22T22:48:00Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 1,
+    "kpis_met": 0,
+    "kpis_missed": 1,
+    "placeholders_found": 1
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/contacts/(list)/contact-types/page.tsx": "5730d6501a1bccfa4e9f24cf58d196087a5f82867195393c927b168062957204"
+  },
+  "validation_results": [],
+  "gate_results": [
+    {
+      "gate_id": "module-settings-dod-artifacts-present",
+      "passed": false,
+      "log_path": "Sprint_plan.csv row for PG-205 requires page.tsx (exists), ContactTypesContent.tsx (MISSING), apps/api/src/modules/contact/contact-types.router.ts (MISSING), packages/validators/src/contact-types.ts (MISSING), context_ack.json (MISSING). Broad grep for contact-types router/validator logic across apps/api and packages/validators returned zero hits."
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Route /contacts/(list)/contact-types renders",
+      "met": true,
+      "evidence": "page.tsx exists and is a valid client component"
+    },
+    {
+      "criterion": "Taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels implemented",
+      "met": false,
+      "evidence": "page.tsx (16 lines) is a static placeholder ('Contact types configuration coming soon.'). No form, no data fetch, no contact-type model."
+    },
+    {
+      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate type names; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
+      "met": false,
+      "evidence": "None of these patterns present in the stub file."
+    },
+    {
+      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "met": false,
+      "evidence": "No test file exists for this feature anywhere in the repo."
+    }
+  ],
+  "dependencies_verified": [],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "2e7bb135ada2108554f853ae04f99e16da4b98bd",
+    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+  },
+  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 16-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit 2e7bb135ada2108554f853ae04f99e16da4b98bd ('feat(web): add account, lead, contact, and deal subpages') — confirmed via `git log --diff-filter=A` at the exact current path (single unambiguous add event, no PR wraps this commit). Missing per the CSV's own ARTIFACT/DoD list: ContactTypesContent.tsx, contact-types.router.ts, contact-types validators, context_ack.json — none exist anywhere under any name. No later commit implements this feature. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 13-task pattern."
+}

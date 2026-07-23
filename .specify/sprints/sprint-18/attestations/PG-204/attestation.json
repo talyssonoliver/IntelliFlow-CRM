@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-204",
+  "run_id": "eng-ops-002-r16-pg-204-2026-07-22",
+  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
+  "attestation_timestamp": "2026-07-22T22:47:00Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 1,
+    "kpis_met": 0,
+    "kpis_missed": 1,
+    "placeholders_found": 1
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/cases/(list)/case-types/page.tsx": "f4d255a6c3d3910350f0444b17f7e7d6cca4cfb8c3e24ddb7adb41d094be4254"
+  },
+  "validation_results": [],
+  "gate_results": [
+    {
+      "gate_id": "module-settings-dod-artifacts-present",
+      "passed": false,
+      "log_path": "Sprint_plan.csv row for PG-204 requires page.tsx (exists), CaseTypesContent.tsx (MISSING), apps/api/src/modules/case/case-types.router.ts (MISSING), packages/validators/src/case-types.ts (MISSING), context_ack.json (MISSING). Broad grep for case-types router/validator logic across apps/api and packages/validators returned zero hits."
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Route /cases/case-types renders",
+      "met": true,
+      "evidence": "page.tsx exists and is a valid client component"
+    },
+    {
+      "criterion": "Taxonomy: category, default priority, default SLA, required fields, resolution workflow implemented",
+      "met": false,
+      "evidence": "page.tsx (20 lines) is a static placeholder ('Case types configuration coming soon.'). No form, no data fetch, no case-type model."
+    },
+    {
+      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate type names; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
+      "met": false,
+      "evidence": "None of these patterns present in the stub file."
+    },
+    {
+      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "met": false,
+      "evidence": "No test file exists for this feature anywhere in the repo."
+    }
+  ],
+  "dependencies_verified": [],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "463445d54eea1901a0980ae03c637b9b9521e65b",
+    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+  },
+  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 20-line 'coming soon' placeholder page.tsx. Its content was originally authored 2026-03-15 in commit 463445d54eea1901a0980ae03c637b9b9521e65b ('feat(web): add case, task, analytics, document, and agent-approval subpages') at path apps/web/src/app/cases/case-types/page.tsx, then moved unchanged (git-detected 100% rename, R100) into the current apps/web/src/app/cases/(list)/case-types/page.tsx path by an unrelated commit fa1dba47c104b0df15d29509b952ee6edd6f53a6 ('fix(security): upgrade next to 16.2.3...', 2026-04-20) during a broader Next.js route-group reorganization — confirmed by diffing that commit and finding an R100 (pure rename, zero content change) entry for this exact file. Neither commit added any feature logic. Missing per the CSV's own ARTIFACT/DoD list: CaseTypesContent.tsx, case-types.router.ts, case-types validators, context_ack.json — none exist anywhere under any name. environment.git_commit below cites the original content-authoring commit (2026-03-15), not the later path-move commit, since that is where the substantive (lack of) work actually happened. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 13-task pattern."
+}

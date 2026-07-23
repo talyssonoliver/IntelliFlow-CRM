@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-201",
+  "run_id": "eng-ops-002-r16-pg-201-2026-07-22",
+  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
+  "attestation_timestamp": "2026-07-22T22:44:00Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 1,
+    "kpis_met": 0,
+    "kpis_missed": 1,
+    "placeholders_found": 1
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/analytics/scheduled-reports/page.tsx": "3117c42cd0cf2b13a96bf3e2f7e2a227d51cafaf437911f3988eef5f6516de0f"
+  },
+  "validation_results": [],
+  "gate_results": [
+    {
+      "gate_id": "module-settings-dod-artifacts-present",
+      "passed": false,
+      "log_path": "Sprint_plan.csv row for PG-201 requires page.tsx (exists), ScheduledReportsContent.tsx (MISSING), apps/api/src/modules/analytics/scheduled-reports.router.ts (MISSING), packages/validators/src/scheduled-reports.ts (MISSING), context_ack.json (MISSING). Broad grep for scheduled-reports router/validator logic across apps/api and packages/validators returned zero hits."
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Route /analytics/scheduled-reports renders",
+      "met": true,
+      "evidence": "page.tsx exists and is a valid client component"
+    },
+    {
+      "criterion": "Cron schedules, recipient lists, delivery format, template ref implemented — schema must match the IFC-308 BullMQ cron job's expectations",
+      "met": false,
+      "evidence": "page.tsx (20 lines) is a static placeholder ('Scheduled reports configuration coming soon.'). No form, no data fetch, no schedule model — this also means the IFC-308 BullMQ cron dependency this task's own description calls out has no schema to read from."
+    },
+    {
+      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate schedule names; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
+      "met": false,
+      "evidence": "None of these patterns present in the stub file."
+    },
+    {
+      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "met": false,
+      "evidence": "No test file exists for this feature anywhere in the repo."
+    }
+  ],
+  "dependencies_verified": [],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "463445d54eea1901a0980ae03c637b9b9521e65b",
+    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+  },
+  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 20-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit 463445d54eea1901a0980ae03c637b9b9521e65b ('feat(web): add case, task, analytics, document, and agent-approval subpages') — confirmed via `git log --diff-filter=A` at the exact current path (single unambiguous add event, no PR wraps this commit). Missing per the CSV's own ARTIFACT/DoD list: ScheduledReportsContent.tsx, scheduled-reports.router.ts, scheduled-reports validators, context_ack.json — none exist anywhere under any name. No later commit implements this feature. WORTH ESCALATING: the task description explicitly notes IFC-308's BullMQ cron reads this schema — worth checking whether IFC-308 itself depends on a schema that was never built, which could indicate a broken/no-op scheduled-report cron in production; out of scope to investigate further in this attestation-only backfill. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 13-task pattern."
+}

@@ -5419,26 +5419,39 @@ alerts:
     status: open
     notes: 'Baseline reproducible: tool-execution-manifest.json records exact commands, exit codes, durations. Docker was wedged (test DB unavailable) — recorded, not suppressed.'
   ENG-OPS-002-ATTESTATION-GAP-S18:
-    origin_task: ENG-OPS-002
+    origin_task: ENG-OPS-002.R16
     owner: DevOps Lead
     severity: high
     description: >-
-      18 Sprint-18 tasks marked Completed lack a canonical attestation.json:
+      18 Sprint-18 tasks marked Completed lacked a canonical attestation.json:
       PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205,
       PG-206, PG-207, PG-208, PG-209 (Module-Settings pages, code verified present
       under apps/web/src/app) and INFRA-TF-001..005 (Terraform). Triple-corroborated
       by task-reconciliation.csv, stale-artifacts.json (STALE-003) and
-      docs/CURRENT_STATE_REPORT.md. See finding GOV-A-001.
+      docs/CURRENT_STATE_REPORT.md. See finding GOV-A-001. REMEDIATED 2026-07-22 by
+      ENG-OPS-002.R16: all 18 now have .specify/sprints/sprint-18/attestations/<id>/attestation.json
+      with real git_commit/PR evidence independently re-derived via git archaeology
+      (not the original reconciliation's commit-message grep, which under-attributed
+      several of these). RESULT WAS NOT UNIFORM: the 5 INFRA-TF-* tasks attest
+      COMPLETE (4) or PARTIAL (1, INFRA-TF-005 — import-application unverifiable
+      without live cloud access) with real merged-PR evidence. The 13 PG-19x/20x
+      Module-Settings tasks all attest INCOMPLETE — see ENG-OPS-002-FALSE-COMPLETION-PG19x20x
+      below for the new, more serious finding this backfill surfaced.
     created_at: 2026-07-22
     expiry_date: 2026-10-22
     remediation_sprint: 19
     remediation_plan: >-
       Retro-attest the 18 tasks (backfill attestation.json with git_commit +
       evidence against already-shipped code). Evidence backfill, not re-implementation.
-    status: open
-    notes: 'Sprint-18 canonical attestation coverage = 45/63 completed (71%).'
+      DONE for the attestation-existence gap; the 13 Module-Settings tasks need
+      real implementation work now, tracked separately.
+    status: remediated
+    notes: >-
+      Sprint-18 canonical attestation coverage = 63/63 completed tasks now have an
+      attestation.json (was 45/63, 71%). Coverage of the FILE now 100%; coverage of
+      TRUTHFUL COMPLETE verdicts is lower — see the new finding below.
   ENG-OPS-002-PROVENANCE-GAP-S1-18:
-    origin_task: ENG-OPS-002
+    origin_task: ENG-OPS-002.R16
     owner: DevOps Lead
     severity: medium
     description: >-
@@ -5446,15 +5459,89 @@ alerts:
       (run_id + timestamp + verdict + artifact_hashes|gate_results): 159 have an
       attestation.json with incomplete provenance (mostly pre-ADR-068), 18 have
       none. Only 227 tasks (56%) are 'delivered AND fully proven'. See GOV-A-002.
+      Reproducible via: awk -F',' 'NR>1 && $5=="entregue-sem-evidencia" {print $1}'
+      artifacts/reports/sprint-19/baseline/task-reconciliation.csv. Full 177-id list
+      (deterministic, reproduced 2026-07-22, unchanged from the original audit):
+      BRAND-002, DOC-002, DOC-003, DOC-011, DOC-014, ENV-017-AI, ENV-018-AI,
+      EXP-ARTIFACTS-002, EXP-ARTIFACTS-003, GOV-001, IFC-001, IFC-002, IFC-003,
+      IFC-004, IFC-005, IFC-006, IFC-008, IFC-009, IFC-010, IFC-011, IFC-012,
+      IFC-013, IFC-017, IFC-019, IFC-021, IFC-022, IFC-023, IFC-024, IFC-028,
+      IFC-029, IFC-031, IFC-045, IFC-055, IFC-056, IFC-057, IFC-067, IFC-073,
+      IFC-074, IFC-075, IFC-076, IFC-077, IFC-078, IFC-079, IFC-080, IFC-086,
+      IFC-088, IFC-089, IFC-090, IFC-094, IFC-096, IFC-097, IFC-098, IFC-099,
+      IFC-100, IFC-101, IFC-102, IFC-103, IFC-104, IFC-105, IFC-106, IFC-107,
+      IFC-108, IFC-109, IFC-110, IFC-111, IFC-112, IFC-113, IFC-116, IFC-118,
+      IFC-119, IFC-121, IFC-124, IFC-127, IFC-129, IFC-130, IFC-131, IFC-132,
+      IFC-135, IFC-136, IFC-137, IFC-138, IFC-139, IFC-141, IFC-142, IFC-146,
+      IFC-151, IFC-153, IFC-156, IFC-163, IFC-167, IFC-168, IFC-170, IFC-171,
+      IFC-172, IFC-173, IFC-177, IFC-181, IFC-184, IFC-185, IFC-188, IFC-193,
+      IFC-195, IFC-196, IFC-202, IFC-203, IFC-213, IFC-220, IFC-223, IFC-225,
+      IFC-226, IFC-227, IFC-232, IFC-234, IFC-236, IFC-237, IFC-238, IFC-239,
+      IFC-248, IFC-252, IFC-253, IFC-267, IFC-268, IFC-269, IFC-278, IFC-279,
+      IFC-281, IFC-297, IFC-300, IFC-309, INFRA-TF-001, INFRA-TF-002, INFRA-TF-003,
+      INFRA-TF-004, INFRA-TF-005, PG-013, PG-015, PG-017, PG-039, PG-044, PG-051,
+      PG-053, PG-054, PG-056, PG-057, PG-125, PG-130, PG-136, PG-157, PG-161,
+      PG-169, PG-170, PG-173, PG-175, PG-176, PG-177, PG-178, PG-182, PG-183,
+      PG-184, PG-185, PG-193, PG-195, PG-196, PG-197, PG-198, PG-199, PG-201,
+      PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209, SALES-001,
+      SALES-002.
     created_at: 2026-07-22
     expiry_date: 2026-12-31
     remediation_sprint: 19
     remediation_plan: >-
       Grandfather pre-ADR-068 attestations; enforce full provenance going forward
       (ADR-068 default). Optionally backfill git_commit for the 17 present-but-
-      incomplete Sprint-18 attestations.
+      incomplete Sprint-18 attestations. ENG-OPS-002.R16 (2026-07-22) closed the
+      18-no-attestation subset of this list (now all have attestation.json — see
+      ENG-OPS-002-ATTESTATION-GAP-S18) but did NOT attempt the remaining 159
+      thin-but-present pre-ADR-068 attestations within its time budget; that work
+      remains fully outstanding and is not claimed as done here.
     status: open
-    notes: 'Historical debt, NOT fabrication — every task has a real deliverable.'
+    notes: >-
+      Historical debt, NOT fabrication — every task has a real deliverable.
+      R16 status: 18/177 (10%) of this list closed (attestation now exists — 13 of
+      those 18 truthfully attest INCOMPLETE, not COMPLETE, per the new finding
+      below); 159/177 (90%) untouched, deliberately, given the time budget —
+      honest under-claiming preferred over a rushed mass-backfill of 159 files.
+  ENG-OPS-002-FALSE-COMPLETION-PG19x20x:
+    origin_task: ENG-OPS-002.R16
+    owner: Tech Lead
+    severity: critical
+    description: >-
+      NEW FINDING (surfaced while remediating GOV-A-001, not part of the original
+      audit): all 13 Module-Settings tasks PG-196, PG-197, PG-198, PG-199, PG-201,
+      PG-202, PG-203, PG-204, PG-205, PG-206, PG-207, PG-208, PG-209 are CSV-marked
+      Completed but are, on independent re-verification, only a 16-20 line static
+      "coming soon" placeholder page.tsx each (added in one of 3 batch commits on
+      2026-03-15: 2e7bb135, 463445d5, e18a18a9 — no PR wraps any of the three).
+      NONE of the CSV's own required ARTIFACT deliverables exist for any of the 13:
+      no *Content.tsx component, no tRPC router under apps/api/src/modules/*, no
+      Zod validator under packages/validators/src/, no context_ack.json. Confirmed
+      by exhaustive existence checks plus a broad content-grep across apps/api and
+      packages/validators for each feature's terminology (zero hits beyond
+      unrelated generic word matches). This is the Route-Conflict/Fake-Data page
+      anti-pattern (memory/feedback_new_static_page_gate_surfaces.md) and a
+      B-09 Dead-Endpoint-Policy violation at CSV-completion scale, not merely a
+      missing-attestation problem. Full per-task evidence in each task's
+      .specify/sprints/sprint-18/attestations/<id>/attestation.json (verdict=INCOMPLETE).
+    created_at: 2026-07-22
+    expiry_date: 2026-09-22
+    remediation_sprint: 19
+    remediation_plan: >-
+      Human decision required (out of scope for R16, which is attestation-only):
+      either (a) revert these 13 tasks' Sprint_plan.csv status from Completed to
+      Backlog/In-Progress and schedule real implementation of each Module-Settings
+      page (Content component + router + validators + tests + Lighthouse), or
+      (b) if a placeholder-only MVP scope was a deliberate, undocumented descope
+      decision, formally re-scope the DoD text and re-attest as COMPLETE against
+      the corrected DoD. Recommend (a) given the CSV DoD text is detailed and
+      specific (tier definitions, territory rules, etc.) with no descope note.
+    status: open
+    notes: >-
+      NOT fabrication by the original implementer either — the stub pages were
+      real scaffolding commits, just never followed up. Flagged loudly per the
+      R16 honesty protocol rather than silently attesting these as COMPLETE.
+      See PR body for ENG-OPS-002.R16 for the full per-task breakdown.
   ENG-OPS-002-SCHEMA-VALIDATION-RED:
     origin_task: ENG-OPS-002
     owner: STOA Automation

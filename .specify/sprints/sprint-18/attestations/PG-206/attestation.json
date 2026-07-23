@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-206",
+  "run_id": "eng-ops-002-r16-pg-206-2026-07-22",
+  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
+  "attestation_timestamp": "2026-07-22T22:49:00Z",
+  "verdict": "INCOMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 1,
+    "kpis_met": 0,
+    "kpis_missed": 1,
+    "placeholders_found": 1
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/documents/(list)/storage-policies/page.tsx": "82ea63c642ebcd749104031254357b03b013fa0a1f486e96d97a091147fb5e30"
+  },
+  "validation_results": [],
+  "gate_results": [
+    {
+      "gate_id": "module-settings-dod-artifacts-present",
+      "passed": false,
+      "log_path": "Sprint_plan.csv row for PG-206 requires page.tsx (exists), StoragePoliciesContent.tsx (MISSING), apps/api/src/modules/legal/storage-policies.router.ts (MISSING), packages/validators/src/storage-policies.ts (MISSING), context_ack.json (MISSING). Broad grep for storage-policies router/validator logic across apps/api and packages/validators returned zero hits."
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Route /documents/(list)/storage-policies renders",
+      "met": true,
+      "evidence": "page.tsx exists and is a valid client component"
+    },
+    {
+      "criterion": "Per-tenant retention periods by doc type, archival rules, cold-storage migration thresholds, legal hold exceptions implemented",
+      "met": false,
+      "evidence": "page.tsx (20 lines) is a static placeholder ('Storage policies configuration coming soon.'). No form, no data fetch, no retention-policy model — this is a compliance-relevant feature (legal hold exceptions) that does not exist."
+    },
+    {
+      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate (docType,retentionPeriod); colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
+      "met": false,
+      "evidence": "None of these patterns present in the stub file."
+    },
+    {
+      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "met": false,
+      "evidence": "No test file exists for this feature anywhere in the repo."
+    }
+  ],
+  "dependencies_verified": [],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "463445d54eea1901a0980ae03c637b9b9521e65b",
+    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+  },
+  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 20-line 'coming soon' placeholder page.tsx. Its content was originally authored 2026-03-15 in commit 463445d54eea1901a0980ae03c637b9b9521e65b ('feat(web): add case, task, analytics, document, and agent-approval subpages') at path apps/web/src/app/documents/storage-policies/page.tsx, then moved unchanged (git-detected 100% rename, R100) into the current apps/web/src/app/documents/(list)/storage-policies/page.tsx path by an unrelated commit be4652ee759d03951d9df8b08e421c54b8258834 ('feat(web): update components, pages, hooks, and lib modules', 2026-04-19) — confirmed by diffing that commit and finding an R100 (pure rename, zero content change) entry for this exact file. Neither commit added any feature logic. Missing per the CSV's own ARTIFACT/DoD list: StoragePoliciesContent.tsx, storage-policies.router.ts, storage-policies validators, context_ack.json — none exist anywhere under any name. Given this task's compliance framing (legal hold, retention), flagging with a slightly higher priority for human follow-up than the other stubs. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 13-task pattern."
+}

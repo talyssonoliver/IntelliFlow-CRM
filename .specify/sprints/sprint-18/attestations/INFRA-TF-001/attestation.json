@@ -1,0 +1,66 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "INFRA-TF-001",
+  "run_id": "eng-ops-002-r16-infra-tf-001-2026-07-22",
+  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
+  "attestation_timestamp": "2026-07-22T22:30:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 1,
+    "gates_failed": 0,
+    "kpis_met": 2,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "infra/terraform/modules/railway/main.tf": "5d2d8de55398c665fdae31eb86dba8bab2bacc4baa652d6503d5005b0d6b4954",
+    "infra/terraform/modules/vercel/main.tf": "1ba9bad6dc7f9a5565528787df46cd66095ebc65e08caad275d65a0f3ac1f940"
+  },
+  "validation_results": [
+    {
+      "name": "terraform validate",
+      "command": "cd infra/terraform && terraform init -backend=false -input=false && terraform validate",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-22T22:20:00Z"
+    },
+    {
+      "name": "terraform fmt -check",
+      "command": "cd infra/terraform && terraform fmt -check -recursive",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-22T22:21:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "terraform-validate-green",
+      "passed": true,
+      "log_path": "Independently re-run 2026-07-22 against current infra/terraform/ (terraform v1.15.4, init -backend=false): 'Success! The configuration is valid' (one pre-existing, unrelated warning about a redundant vercel_project ignore_changes entry, not a INFRA-TF-001 regression)."
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas",
+      "met": true,
+      "evidence": "terraform validate: Success (re-run 2026-07-22). infra/terraform/modules/railway/main.tf and modules/vercel/main.tf use railway_service (not the legacy railway_deployment), a default_environment object, and vercel_project_environment_variable / vercel_webhook resources consistent with the pinned provider versions in infra/terraform/providers.tf."
+    },
+    {
+      "criterion": "fmt clean",
+      "met": true,
+      "evidence": "terraform fmt -check -recursive exit 0 (re-run 2026-07-22)"
+    }
+  ],
+  "dependencies_verified": [],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "906430d0ae75ef4256b8d7495d7083575dce4f4f",
+    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+  },
+  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). This task shipped in Sprint 18 without a canonical attestation.json (only task-tracking.json existed). Original delivery evidence located via independent git archaeology (git log --follow on the actual module files, not just commit-message task-ID grep, which is why the earlier reconciliation pass under-attributed this task): PR #286 'feat(infra): terraform SSOT — HCP backend, schema fix, tfvars + monitoring (INFRA-TF-004)' (merged 2026-06-06, commit 906430d0ae75ef4256b8d7495d7083575dce4f4f) is where the railway/vercel provider-schema fix actually landed (bundled with the INFRA-TF-004 scaffold in the same PR); PR #284 'docs(infra): add ADR-064 terraform SSOT, INFRA-TF tasks + iac plan' (merged 2026-06-06, commit 4c3a3b205676cfa1d545a91d313b2b6d5efa95a1) is the preceding task-definition/ADR PR. Both PRs independently confirmed MERGED via `gh pr view`. The module files were further touched by PR #308 (supabase prod-import safety), #320 and #354 (later infra hardening) — normal iterative maintenance, not evidence of non-delivery. Re-verified 2026-07-22 by re-running `terraform validate` and `terraform fmt -check` against the current tree (both green) rather than trusting the historical claim alone. This attestation was authored after the fact by a documentation/provenance backfill agent, not by the original implementer running the /exec ceremony live — hence no spec_path/plan_path ceremony fields."
+}
