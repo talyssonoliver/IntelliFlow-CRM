@@ -58,7 +58,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@bull-board/api": "^7.2.1",
+    "@bull-board/api": "^8.2.0",
     "@bull-board/ui": "^7.2.1",
     "@intelliflow/domain": "workspace:*",
     "@intelliflow/validators": "workspace:*",
