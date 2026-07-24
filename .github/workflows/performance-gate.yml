@@ -296,3 +296,102 @@ jobs:
               repo: context.repo.repo,
               body
             });
+
+  # IFC-033: Sprint-19 critical-path load test (ADR-018 budget). Secret-free —
+  # authenticates via the dev-auth fallback (ALLOW_DEV_AUTH_FALLBACK) against a
+  # locally-seeded DB, so no Supabase secrets are required. k6's own thresholds
+  # (p95<200ms, error<0.1%) gate the job. `VALIDATE:pnpm test:load`.
+  ifc-033-critical-path:
+    name: IFC-033 k6 Critical-Path Load Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+      NODE_ENV: development
+      ALLOW_DEV_AUTH_FALLBACK: 'true'
+      PORT: '4000'
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+      - name: Generate Prisma client
+        run: pnpm run db:generate
+      - name: Bootstrap Supabase schemas + roles
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
+            CREATE SCHEMA IF NOT EXISTS extensions;
+            DO $$
+            BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN CREATE ROLE anon NOLOGIN; END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN CREATE ROLE authenticated NOLOGIN; END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN CREATE ROLE service_role NOLOGIN BYPASSRLS; END IF;
+            END
+            $$;
+            GRANT USAGE ON SCHEMA extensions TO postgres, anon, authenticated, service_role;
+          SQL
+      - name: Run migrations + seed
+        run: pnpm run db:migrate && pnpm run db:seed
+      - name: Build API server
+        run: pnpm --filter "@intelliflow/api..." build
+      - name: Seed QUALIFIED-lead conversion pool
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d intelliflow_test -v ON_ERROR_STOP=1 -c "
+            INSERT INTO leads (id, email, \"tenantId\", \"ownerId\", status, score, \"updatedAt\", company, \"firstName\", \"lastName\", source)
+            SELECT gen_random_uuid()::text, 'k6pool-'||g||'-'||floor(random()*1000000000)::bigint||'@loadtest.example.com',
+                   '00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000103','QUALIFIED',80,now(),'PoolCo '||g,'Pool','Lead'||g,'WEBSITE'
+            FROM generate_series(1,300) g;"
+          mkdir -p tools/scripts/k6/.data
+          PGPASSWORD=postgres psql -h localhost -U postgres -d intelliflow_test -tAc \
+            "select json_agg(id) from (select id from leads where email like 'k6pool-%' and status='QUALIFIED') t;" \
+            > tools/scripts/k6/.data/qualified-leads.json
+      - name: Start API server (dev-auth on :4000)
+        run: |
+          pnpm --filter @intelliflow/api start &
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:4000/health >/dev/null 2>&1; then echo "API ready"; break; fi
+            echo "waiting for API... ($i/30)"; sleep 2
+          done
+      - name: Run IFC-033 load test (pnpm test:load)
+        run: pnpm test:load
+        env:
+          BASE_URL: http://localhost:4000
+          # Keep aggregate single-user rate under the AUTHENTICATED tier (~16.7 req/s).
+          INGEST_RPS: '6'
+          CONVERT_RPS: '1'
+          DURATION: '2m'
+      - name: Upload IFC-033 evidence
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ifc-033-load-${{ github.run_id }}
+          path: |
+            artifacts/reports/load-test-report.html
+            artifacts/benchmarks/ifc-033-load-summary.json
+          retention-days: 30

@@ -40,6 +40,7 @@
     "test:property:standard": "dotenv -v FC_TIER=standard -- vitest run --project property",
     "test:property:stress": "dotenv -v FC_TIER=stress -- vitest run --project property",
     "test:concurrency": "dotenv -v FC_TIER=standard -v RUN_DB_PROPERTY_TESTS=1 -- vitest run --project property --passWithNoTests concurrency",
+    "test:load": "node tools/scripts/k6/run-ifc-033-load-test.mjs",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "lint:artifacts": "tsx tools/lint/artifact-paths.ts",

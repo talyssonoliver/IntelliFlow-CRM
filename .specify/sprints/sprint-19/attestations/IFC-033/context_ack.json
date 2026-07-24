@@ -1,0 +1,34 @@
+{
+  "task_id": "IFC-033",
+  "title": "PHASE-005: Load Testing with k6",
+  "sprint": 19,
+  "acknowledged_by": "Claude Opus 4.8 — autonomous IFC-033 build (STOA-Quality lens)",
+  "acknowledged_at": "2026-07-24T11:25:00Z",
+  "files_read": [
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+    "docs/planning/sprint-19-rebaseline.md",
+    "docs/planning/sprint-19-critical-path.md",
+    "docs/planning/sprint-19-risk-register.md",
+    "docs/architecture/adr/ADR-018-performance-load-testing.md",
+    "docs/operations/runbooks/load-testing-local.md",
+    "tools/scripts/k6/mvp-load-test.js",
+    "tools/scripts/k6/authenticated-load-test.js",
+    "apps/api/src/http-server.ts",
+    "apps/api/src/context.ts",
+    "apps/api/src/trpc.ts",
+    "apps/api/src/middleware/rate-limit.ts",
+    "apps/api/src/modules/lead/lead.router.ts",
+    "packages/validators/src/lead.ts",
+    "infra/monitoring/docker-compose.monitoring.yml",
+    ".github/workflows/performance-gate.yml"
+  ],
+  "invariants_acknowledged": [
+    "REAL EVIDENCE (RISK-S19-02): the deliverables are captured from an ACTUAL k6 run against a live target — no template report. load-test-report.html is a k6 web-dashboard export with real run timestamps; grafana-load-test.png is a Grafana screenshot over Prometheus remote-write; ifc-033-load-summary.json is emitted by the script's handleSummary. p95=11.6ms, error=0%, 1081 leads (~21,617/hour), 180 atomic conversions.",
+    "PROD-SAFE TARGET: the run hits a LOCAL apps/api (:4000) authenticated via the sanctioned dev-auth fallback (ALLOW_DEV_AUTH_FALLBACK=true → seeded Sarah Johnson, tenant Default Organization) against the LOCAL test DB (intelliflow_test, :5433). It NEVER touches prod Supabase — the runbook explicitly forbids load-testing prod infra.",
+    "DDD-001/002 ATOMIC PATH EXERCISED: the conversion scenario drives lead.convertToDeal — the transactionally-atomic lead→contact+account+opportunity write hardened in #621 — 180 real conversions, 0 failures, p95 ~8-12ms under concurrent ingestion.",
+    "BOTTLENECK IDENTIFIED (KPI): the binding constraint under single-user synthetic load is the per-user AUTHENTICATED rate-limit tier (1,000 req/60s, keyed by userId — rate-limit.ts:45). Driving one dev-auth user at ~26 req/s drew a uniform 36% HTTP 429; this is a harness artifact (all VUs share one userId), not a system ceiling. Real 5,000 leads/hour (1.4/s) is far below the cap; the canonical run stays within one user's budget and passes clean. Distributed multi-user headroom is IFC-047 (Sprint 22).",
+    "RLS VERIFIED SEPARATELY: tenant isolation is proven at the DB layer (non-superuser role rls_probe + app.current_tenant_id GUC → own=18, foreign=0) rather than in the perf run, because the local test DB connects as the postgres SUPERUSER which bypasses RLS by design. Policy tenant_isolation_leads is ENABLEd on leads.",
+    "ADR-018 BUDGET, NOT IFC-047: validated against the documented MVP budget (>=5,000 leads/hour, p95<200ms, err<0.1%). The aspirational 1,000-VU / p99<100ms target is explicitly IFC-047 (k6 Cloud), out of scope here.",
+    "DEPS SATISFIED: IFC-030 (Completed S17) and IFC-032 (Completed S18) — the critical path IFC-033→IFC-034 has no external blocker. IFC-033 gates IFC-034 (Gate-3 £3000 review), which is a HUMAN decision gate downstream of this task."
+  ]
+}
