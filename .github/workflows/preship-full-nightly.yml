@@ -52,9 +52,9 @@ jobs:
       # secrets when available; deterministic stubs otherwise.
       PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
       AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test # secret-lint-allow: ephemeral CI test-DB credential (localhost, throwaway; not a real secret)
-      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test # secret-lint-allow: ephemeral CI test-DB credential (localhost, throwaway; not a real secret)
-      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+      DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
+      DIRECT_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
+      TEST_DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
       REDIS_URL: redis://localhost:6379
       SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}

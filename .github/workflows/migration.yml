@@ -114,7 +114,7 @@ jobs:
         image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: test
-          POSTGRES_PASSWORD: test # secret-lint-allow: ephemeral CI service-container password (localhost, throwaway; not a real secret)
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
           POSTGRES_DB: intelliflow_test
         ports:
           - 5432:5432
@@ -147,7 +147,7 @@ jobs:
 
       - name: Bootstrap Supabase schemas + roles
         run: |
-          PGPASSWORD=test psql -h localhost -U test -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
+          PGPASSWORD=${{ secrets.CI_POSTGRES_PASSWORD }} psql -h localhost -U test -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
             CREATE SCHEMA IF NOT EXISTS extensions;
             DO $$
             BEGIN
@@ -177,7 +177,7 @@ jobs:
 
       - name: Setup test database
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test # secret-lint-allow: ephemeral CI test-DB credential (localhost, throwaway; not a real secret)
+          DATABASE_URL: postgresql://test:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
         run: |
           # db:migrate / db:seed scripts — NOT `prisma migrate deploy` / `prisma
           # db seed`, which pnpm reads as (nonexistent) script names.
@@ -186,7 +186,7 @@ jobs:
 
       - name: Run delta-sync dry-run
         env:
-          DATABASE_URL: ${{ inputs.target_url || 'postgresql://test:test@localhost:5432/intelliflow_test' }}
+          DATABASE_URL: ${{ inputs.target_url || format('postgresql://test:{0}@localhost:5432/intelliflow_test', secrets.CI_POSTGRES_PASSWORD) }}
           LEGACY_DB_URL: ${{ inputs.source_url || '' }}
         run: |
           echo "Running delta-sync in dry-run mode..."
@@ -212,7 +212,7 @@ jobs:
         image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: test
-          POSTGRES_PASSWORD: test # secret-lint-allow: ephemeral CI service-container password (localhost, throwaway; not a real secret)
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
           POSTGRES_DB: intelliflow_test
         ports:
           - 5432:5432
@@ -245,7 +245,7 @@ jobs:
 
       - name: Bootstrap Supabase schemas + roles
         run: |
-          PGPASSWORD=test psql -h localhost -U test -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
+          PGPASSWORD=${{ secrets.CI_POSTGRES_PASSWORD }} psql -h localhost -U test -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
             CREATE SCHEMA IF NOT EXISTS extensions;
             DO $$
             BEGIN
@@ -275,13 +275,13 @@ jobs:
 
       - name: Setup test database
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test # secret-lint-allow: ephemeral CI test-DB credential (localhost, throwaway; not a real secret)
+          DATABASE_URL: postgresql://test:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
         run: |
           pnpm --filter @intelliflow/db prisma migrate deploy
 
       - name: Generate reconciliation report
         env:
-          DATABASE_URL: ${{ inputs.target_url || 'postgresql://test:test@localhost:5432/intelliflow_test' }}
+          DATABASE_URL: ${{ inputs.target_url || format('postgresql://test:{0}@localhost:5432/intelliflow_test', secrets.CI_POSTGRES_PASSWORD) }}
         run: |
           echo "Running reconciliation..."
           mkdir -p artifacts/reports
@@ -319,7 +319,7 @@ jobs:
         image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: test
-          POSTGRES_PASSWORD: test # secret-lint-allow: ephemeral CI service-container password (localhost, throwaway; not a real secret)
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
           POSTGRES_DB: intelliflow_test
         ports:
           - 5432:5432
@@ -352,7 +352,7 @@ jobs:
 
       - name: Bootstrap Supabase schemas + roles
         run: |
-          PGPASSWORD=test psql -h localhost -U test -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
+          PGPASSWORD=${{ secrets.CI_POSTGRES_PASSWORD }} psql -h localhost -U test -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
             CREATE SCHEMA IF NOT EXISTS extensions;
             DO $$
             BEGIN
@@ -382,13 +382,13 @@ jobs:
 
       - name: Setup test database
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test # secret-lint-allow: ephemeral CI test-DB credential (localhost, throwaway; not a real secret)
+          DATABASE_URL: postgresql://test:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
         run: |
           pnpm --filter @intelliflow/db prisma migrate deploy
 
       - name: Run target validation
         env:
-          DATABASE_URL: ${{ inputs.target_url || 'postgresql://test:test@localhost:5432/intelliflow_test' }}
+          DATABASE_URL: ${{ inputs.target_url || format('postgresql://test:{0}@localhost:5432/intelliflow_test', secrets.CI_POSTGRES_PASSWORD) }}
         run: |
           echo "Running target validation..."
           mkdir -p artifacts/misc

@@ -172,7 +172,7 @@ jobs:
         image: pgvector/pgvector:pg15
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres # secret-lint-allow: ephemeral CI service-container password (localhost, throwaway; not a real secret)
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
           POSTGRES_DB: intelliflow_test
         ports:
           - 5432:5432
@@ -191,7 +191,7 @@ jobs:
           --health-timeout=5s
           --health-retries=5
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test # secret-lint-allow: ephemeral CI test-DB credential (localhost, throwaway; not a real secret)
+      DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
       REDIS_URL: redis://localhost:6379
       NODE_ENV: test
     steps:
@@ -204,7 +204,7 @@ jobs:
 
       - name: Bootstrap Supabase schemas + roles
         run: |
-          PGPASSWORD=postgres psql -h localhost -U postgres -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
+          PGPASSWORD=${{ secrets.CI_POSTGRES_PASSWORD }} psql -h localhost -U postgres -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
             CREATE SCHEMA IF NOT EXISTS extensions;
             DO $$
             BEGIN
@@ -226,12 +226,12 @@ jobs:
         run: |
           pnpm --filter @intelliflow/db db:push
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test # secret-lint-allow: ephemeral CI test-DB credential (localhost, throwaway; not a real secret)
+          DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
 
       - name: Run integration tests
         run: pnpm run test:integration
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test # secret-lint-allow: ephemeral CI test-DB credential (localhost, throwaway; not a real secret)
+          DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
           REDIS_URL: redis://localhost:6379
 
       - name: Upload integration test results
