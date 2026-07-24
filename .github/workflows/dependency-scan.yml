@@ -237,17 +237,27 @@ jobs:
       - name: Check for critical vulnerabilities
         id: check-critical
         run: |
-          # Check if any critical vulnerabilities exist
+          # Count Trivy findings by CVSS band via numeric `security-severity`, NOT the
+          # coarse SARIF `level`. Trivy maps BOTH high and critical to level "error", so
+          # the old `select(.level=="error") | length` over-reported (e.g. "9 critical"
+          # when the real split was 1 critical + 7 high + 1 medium). See the script.
           CRITICAL_COUNT=0
+          HIGH_COUNT=0
 
           if [ -f scan-results/trivy-results/trivy-results.sarif ]; then
-            CRITICAL_COUNT=$(jq '[.runs[].results[] | select(.level == "error")] | length' scan-results/trivy-results/trivy-results.sarif)
+            COUNTS=$(node tools/scripts/security/count-trivy-severity.mjs \
+              scan-results/trivy-results/trivy-results.sarif)
+            echo "$COUNTS" >> "$GITHUB_OUTPUT"
+            CRITICAL_COUNT=$(echo "$COUNTS" | sed -n 's/^critical_count=//p')
+            HIGH_COUNT=$(echo "$COUNTS" | sed -n 's/^high_count=//p')
+          else
+            echo "critical_count=0" >> "$GITHUB_OUTPUT"
           fi
 
-          echo "critical_count=$CRITICAL_COUNT" >> $GITHUB_OUTPUT
-
-          if [ "$CRITICAL_COUNT" -gt 0 ]; then
-            echo "::error::Found $CRITICAL_COUNT critical vulnerabilities!"
+          if [ "${CRITICAL_COUNT:-0}" -gt 0 ]; then
+            echo "::error::Found $CRITICAL_COUNT critical vulnerabilities (CVSS >= 9.0); $HIGH_COUNT high."
+          elif [ "${HIGH_COUNT:-0}" -gt 0 ]; then
+            echo "::warning::0 critical, $HIGH_COUNT high vulnerabilities (CVSS 7.0-8.9)."
           fi
 
       - name: Create or update issue for critical vulnerabilities
