@@ -53,3 +53,15 @@ secret:
     # Literal placeholder passwords used in test fixtures
     - name: 'Test passwords'
       match: '(password|Password|PASSWORD)'
+    # Ephemeral CI database credentials on localhost. The postgres/test service
+    # containers spun up per CI job use throwaway localhost-only credentials that
+    # are not real secrets (postgres image defaults). These repeatedly tripped
+    # GitGuardian as false positives (#622, #625, #627). Scoped to localhost so a
+    # real credential pointed at a reachable host is still flagged. The local
+    # pre-ship gate (workflow-secret-lint + the gitleaks rule
+    # `postgres-literal-in-workflow`) enforces the matching policy so these never
+    # reach a PR unannotated in the first place.
+    - name: 'Ephemeral CI Postgres credential (localhost)'
+      match: '(postgres|test):(postgres|test)@(localhost|127\.0\.0\.1)'
+    - name: 'Ephemeral CI POSTGRES_PASSWORD service-container literal'
+      match: 'POSTGRES_PASSWORD:\s*(postgres|test)\b'
