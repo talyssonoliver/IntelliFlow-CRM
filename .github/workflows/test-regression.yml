@@ -398,8 +398,16 @@ jobs:
     env:
       PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
       AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
-      DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
-      DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+      # Point at the LOCAL test DB served by the `postgres` service below on host
+      # port 5433. The authenticated `setup` project's seed fixture
+      # (tests/e2e/fixtures/provision.ts) refuses to seed unless DATABASE_URL is
+      # localhost:5433 — the previous stub :5432 tripped that guard
+      # ("Refusing to seed: DATABASE_URL port is 5432, expected the test DB 5433")
+      # and failed the whole authed matrix. Supabase admin creds come from the
+      # real repo secrets (present), so with a real :5433 DB the guard now passes.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5433/intelliflow_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5433/intelliflow_test
+      REDIS_URL: redis://localhost:6379
       SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}
@@ -407,12 +415,43 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
       # `next start` refuses to boot in production without an explicit app URL.
       NEXT_PUBLIC_APP_URL: http://localhost:3000
+    # A real local test DB (+ redis) so the authenticated `setup` project can seed
+    # the QA persona matrix. Postgres is published on host port 5433 (container
+    # 5432) to satisfy the provision.ts localhost:5433 guard.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-monorepo
         with:
           pnpm-version: ${{ env.PNPM_VERSION }}
           build-libs: 'true'
+
+      - name: Set up database schema
+        run: pnpm --filter @intelliflow/db db:push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5433/intelliflow_test
 
       - name: Resolve Playwright version
         id: pw
