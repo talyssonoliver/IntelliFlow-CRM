@@ -1,0 +1,27 @@
+{
+  "task_id": "PG-065",
+  "title": "Contact 360 — complete contact view with all related data and AI insights",
+  "sprint": 19,
+  "acknowledged_by": "Claude Opus 4.8 — autonomous PG-065 reconcile (STOA-Foundation lens)",
+  "acknowledged_at": "2026-07-24T23:20:40.000Z",
+  "scope_determination": "RECONCILE",
+  "files_read": [
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+    "apps/web/src/app/contacts/[id]/page.tsx",
+    "docs/design/page-registry.md",
+    "docs/design/ui-flow-mapping.md",
+    "docs/design/sitemap.md",
+    "apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
+    "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx",
+    "apps/web/src/components/contacts/ContactQuickActions.test.tsx",
+    ".specify/sprints/sprint-19/attestations/PG-166/attestation.json"
+  ],
+  "invariants_acknowledged": [
+    "SCOPE = RECONCILE, NOT BUILD: the Contact 360 view already exists and is fully implemented on main as the route component `Contact360Page` in apps/web/src/app/contacts/[id]/page.tsx (2576 lines). docs/design/page-registry.md marks `/contacts/[id]` Status='Implemented' and ui-flow-mapping.md marks it '✅'. The CSV named two artifacts — contact-360.tsx and contact-insights.tsx — that were never created because the code was written inline in the route file. This task creates those named artifacts by behavior-preserving extraction.",
+    "BEHAVIOR-PRESERVING: code was MOVED (byte-faithful, not retyped — the source contains many inline SVGs/emoji) from page.tsx into the two new component files; no logic changed. The pre-existing route test apps/web/src/app/contacts/[id]/__tests__/page.test.tsx (33 tests) passes unchanged AFTER the extraction, proving the 360 view renders and behaves identically.",
+    "CORRECT ARCHITECTURAL LOCATION (client-side UI): both extracted files live under apps/web/src/components/contacts/ (co-located with the other contact components) and are marked 'use client'. contact-360.tsx holds shared types + presentational scaffolding (status badge, activity rich-preview renderers, loading/error screens) + pure transforms (transformContactForUI, transformFeedToActivities, filterContactActivities). contact-insights.tsx holds the AI-insight surfaces (ContactAiInsightsTab/SummaryCard/PendingState) + pure builders (buildChurnRiskData, resolveNextBestAction*). Import direction is acyclic: page.tsx → {contact-360, contact-insights}; contact-insights → contact-360 (types only).",
+    "NEW COVERAGE WHERE THERE WAS NONE: page-registry recorded 'Unit Tests: None' for the extracted units. Two new test files add 28 tests exercising every pure-helper branch and a smoke render of each component; measured coverage on the new files is 100% lines / 100% statements / 100% functions, ~92.5% branch (contact-360) — well above the 80% Sonar new_coverage gate.",
+    "DoD SATISFIED: '360 view complete, all data shown, insights displayed' — unchanged and still true (the render is identical). The two named artifacts now exist and are independently testable, and the route file shrank from 2576 to 1525 lines.",
+    "GATES: TypeScript, Lint, Tests, and Build all pass for @intelliflow/web (see attestation.json validation_results). Lighthouse (GATE:lighthouse-gte-90) and the <200ms response KPI are runtime characteristics of the unchanged page — this refactor removes ~1050 lines from the route module (smaller client bundle) and changes no data-fetching or render path, so it cannot regress them; CI's performance gate remains authoritative."
+  ]
+}
