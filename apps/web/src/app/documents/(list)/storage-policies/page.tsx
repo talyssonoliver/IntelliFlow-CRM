@@ -1,20 +1,24 @@
-'use client';
+// Storage Policies Page — PG-206
+// Server component: metadata + Suspense boundary.
+// Content delegated to StoragePoliciesContent (client component).
+// Lives under documents/(list)/ so it inherits the Documents settings sidebar
+// (isDocumentSettingsPage covers /documents/storage-policies).
+
+import { Suspense } from 'react';
+import type { Metadata } from 'next';
+import StoragePoliciesContent from './StoragePoliciesContent';
+import StoragePoliciesLoading from './loading';
+
+export const metadata: Metadata = {
+  title: 'Storage Policies',
+  description:
+    'Configure per-category document retention periods, auto-archive rules, and legal-hold exceptions.',
+};
 
 export default function StoragePoliciesPage() {
   return (
-    <div className="flex flex-1 flex-col p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Storage Policies</h1>
-      <p className="text-muted-foreground mt-1">Configure retention and archival rules.</p>
-      <div className="mt-8 flex flex-1 items-center justify-center">
-        <div className="text-center">
-          <span className="material-symbols-outlined text-5xl text-muted-foreground/40">
-            cloud_sync
-          </span>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Storage policies configuration coming soon.
-          </p>
-        </div>
-      </div>
-    </div>
+    <Suspense fallback={<StoragePoliciesLoading />}>
+      <StoragePoliciesContent />
+    </Suspense>
   );
 }

@@ -2,21 +2,21 @@
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
   "artifacts": {
     "created": [
-      "apps/web/src/app/documents/(list)/storage-policies/page.tsx"
+      "apps/web/src/app/documents/(list)/storage-policies/page.tsx",
+      "apps/web/src/app/documents/(list)/storage-policies/StoragePoliciesContent.tsx",
+      "apps/web/src/app/documents/(list)/storage-policies/loading.tsx",
+      "apps/web/src/app/documents/(list)/storage-policies/__tests__/StoragePoliciesContent.test.tsx",
+      "apps/web/src/app/documents/(list)/storage-policies/__tests__/page.test.tsx",
+      ".specify/sprints/sprint-18/attestations/PG-206/context_ack.json"
     ],
     "expected": [
       "apps/web/src/app/documents/(list)/storage-policies/page.tsx",
       "apps/web/src/app/documents/(list)/storage-policies/StoragePoliciesContent.tsx",
-      "apps/api/src/modules/legal/storage-policies.router.ts",
-      "packages/validators/src/storage-policies.ts",
+      "apps/web/src/app/documents/(list)/storage-policies/loading.tsx",
       ".specify/sprints/sprint-18/attestations/PG-206/context_ack.json"
     ],
-    "missing": [
-      "apps/web/src/app/documents/(list)/storage-policies/StoragePoliciesContent.tsx",
-      "apps/api/src/modules/legal/storage-policies.router.ts",
-      "packages/validators/src/storage-policies.ts",
-      ".specify/sprints/sprint-18/attestations/PG-206/context_ack.json"
-    ]
+    "missing": [],
+    "note": "Backend already on main: documentSettings.retentionPolicies (getAll/updateAll/resetToDefaults) in apps/api/src/modules/legal/document-settings.router.ts + DocumentRetentionPolicy model. The originally-planned standalone apps/api/.../storage-policies.router.ts + packages/validators/src/storage-policies.ts were superseded by that existing surface — PG-206 is a UI-only wire-up replacing the coming-soon stub."
   },
   "blockers": [],
   "completed_at": null,

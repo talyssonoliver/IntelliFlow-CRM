@@ -1,0 +1,36 @@
+{
+  "task_id": "PG-206",
+  "title": "Module Settings - Storage Policies (/documents/storage-policies)",
+  "sprint": 18,
+  "acknowledged_by": "Claude Opus 4.8 — autonomous PG-206 build (STOA-Foundation / Frontend lens)",
+  "acknowledged_at": "2026-07-24T00:00:00Z",
+  "files_read": [
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+    "apps/api/src/modules/legal/document-settings.router.ts",
+    "packages/validators/src/document-settings.ts",
+    "packages/db/prisma/schema.prisma",
+    "apps/web/src/app/documents/(list)/storage-policies/page.tsx",
+    "apps/web/src/app/documents/(list)/document-settings/DocumentSettingsContent.tsx",
+    "apps/web/src/app/documents/(list)/document-settings/components/RetentionPoliciesTab.tsx",
+    "apps/web/src/app/documents/(list)/layout.tsx",
+    "apps/web/src/app/analytics/(list)/report-templates/page.tsx",
+    "apps/web/src/app/analytics/report-templates/ReportTemplatesContent.tsx",
+    "apps/web/src/app/analytics/report-templates/loading.tsx",
+    "apps/web/src/app/analytics/report-templates/__tests__/ReportTemplatesContent.test.tsx",
+    "apps/web/src/app/analytics/(list)/report-templates/__tests__/page.test.tsx",
+    "apps/web/src/components/shared/page-header.tsx",
+    "apps/web/src/components/sidebar/configs/documents.ts",
+    ".specify/sprints/sprint-18/attestations/PG-200/attestation.json",
+    ".specify/sprints/sprint-18/attestations/PG-206/task-tracking.json"
+  ],
+  "invariants_acknowledged": [
+    "SCOPE IS UI-ONLY: the backend already exists on main. Per-tenant document retention policies are served by documentSettings.retentionPolicies (getAll / updateAll / resetToDefaults) in apps/api/src/modules/legal/document-settings.router.ts, backed by the DocumentRetentionPolicy Prisma model. The CSV/task-tracking 'expected' artifacts (a NEW apps/api/.../storage-policies.router.ts + packages/validators/src/storage-policies.ts) are moot — that surface was implemented via document-settings instead. No new router, validator, or model is introduced; PG-206 only replaces the 'coming soon' UI stub.",
+    "ACTUAL ROUTER SHAPE IS BULK REPLACE-ALL, NOT list/create/update/delete: retentionPolicies exposes getAll (seeds a single 'default' policy on first read), updateAll (a $transaction deleteMany + createMany over the whole set, keyed by categoryKey), and resetToDefaults. The UI holds a dirty-tracked working copy and sends the full policy set on Save. The client-only `id` is stripped before mutating (updateAll replaces by categoryKey).",
+    "DRY REUSE: the standalone page reuses the existing controlled RetentionPoliciesTab component (add/edit/remove policy rows) and the same documentSettings.retentionPolicies sub-router that Document Settings drives. Behaviour is identical to the retention tab already shipped inside Document Settings — no divergent second implementation.",
+    "MODULE GATING: retentionPolicies procedures are moduleTenantProcedure('LEGAL'). A tenant without the LEGAL add-on gets a FORBIDDEN from getAll; the UI renders a graceful error state (role=alert 'Failed to load storage policies') and never a stub or fake data. This matches the existing Document Settings behaviour.",
+    "SERVER-COMPONENT + SUSPENSE PATTERN (mirrors PG-200): page.tsx is a server component exporting metadata and a Suspense boundary delegating to StoragePoliciesContent (client) with a loading.tsx skeleton fallback. page.test.tsx asserts no 'use client' in page.tsx.",
+    "NAVIGATION ALREADY WIRED: /documents/storage-policies is registered in DOCUMENT_SETTINGS_ITEMS and covered by isDocumentSettingsPage, so the settings sidebar already links here; only the destination body was a stub.",
+    "MIN-ONE-POLICY COMPLIANCE INVARIANT: updateDocumentRetentionPoliciesSchema requires >=1 policy (an empty set is a compliance hole) and superRefine-rejects duplicate categoryKey pairs. The UI disables Save when the working set is empty and swallows the mutation rejection after the onError toast to avoid an unhandled promise rejection.",
+    "PRE-EXISTING QUIRK NOT INTRODUCED HERE: RetentionPoliciesTab's number field labels 0 as 'forever' while the server schema enforces retentionDays >= 1. This behaviour is inherited unchanged from the existing Document Settings tab (reused as-is); PG-206 does not alter it, keeping the two surfaces consistent."
+  ]
+}
