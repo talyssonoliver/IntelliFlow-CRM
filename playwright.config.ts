@@ -21,6 +21,32 @@ const AUTHED_SPECS = [
 ];
 
 /**
+ * Unauthenticated specs — the exact set the `chromium` project runs (everything
+ * that is neither the auth setup, a matrix spec, nor an AUTHED_SPEC).
+ *
+ * Why an EXPLICIT allowlist instead of the global testMatch + testIgnore:
+ * on the ubuntu-latest CI runner the `chromium` project's inherited global
+ * recursive-spec glob combined with its (large) testIgnore globs ZERO files
+ * (`Total: 0 tests in 0 files`) even though the specs are on disk (proven in
+ * ci.yml diagnostic run 29947499690; the "E2E Full Suite" workflow's
+ * `--project=chromium` run then dies with `Error: No tests found`). Projects
+ * that use an explicit-array testMatch (smoke/tablet/mobile) discover fine on
+ * the same runner. So we give `chromium` an explicit-array testMatch too — the
+ * only discovery form proven to work on Linux. Keep this list in sync with
+ * AUTHED_SPECS (they partition the suite). See
+ * docs/runbooks/ci-e2e-smoke-discovery.md.
+ */
+const UNAUTH_SPECS = [
+  '**/auth-flow.spec.ts',
+  '**/signup.spec.ts',
+  '**/mfa.spec.ts',
+  '**/smoke.spec.ts',
+  '**/icons.spec.ts',
+  '**/features-tour.spec.ts',
+  '**/email/inbound-webhook.spec.ts',
+];
+
+/**
  * The auth fixture (setup) + authenticated project need Supabase-admin + a test
  * DB. When that env is absent (e.g. a CI job without the QA secrets) we omit both
  * projects entirely: the authed specs are already excluded from `chromium`, so
@@ -185,9 +211,15 @@ export default defineConfig({
         },
       },
       // Chromium runs the UNAUTHENTICATED specs (auth-flow, signup, mfa, smoke,
-      // icons, inbound webhook). The auth setup, matrix, and authenticated Journey
-      // specs run under their own projects above.
-      testIgnore: ['**/auth.setup.ts', '**/matrix/**', ...AUTHED_SPECS],
+      // icons, features-tour, inbound webhook). The auth setup, matrix, and
+      // authenticated Journey specs run under their own projects above.
+      //
+      // Uses an EXPLICIT-array testMatch (UNAUTH_SPECS) rather than the inherited
+      // global testMatch + a broad testIgnore: the latter globs 0 files on the
+      // ubuntu CI runner (see UNAUTH_SPECS note + docs/runbooks/
+      // ci-e2e-smoke-discovery.md), which is what made "E2E Full Suite"
+      // (`--project=chromium`) fail with `Error: No tests found`.
+      testMatch: UNAUTH_SPECS,
     },
 
     {
