@@ -514,6 +514,24 @@ const STEPS = [
     required: true,
   },
   {
+    // VENDORED-JS-IN-HTML GATE (2026-07-24, harness Gap #2 / IFC-033): block a
+    // tracked HTML file that embeds an oversized *inline* <script> bundle. IFC-033
+    // committed a k6 dashboard with ~168 KB of vendored JS inline; GitHub CodeQL
+    // "default-setup" ignores .github/codeql/codeql-config.yml and raised a wall
+    // of noise alerts on that third-party code. The repo now runs the config-
+    // respecting *advanced* CodeQL setup (security.yml) with default-setup off,
+    // but default-setup is a UI toggle any admin can re-enable — nothing in the
+    // tree stops the *pattern*. This gate does: it fails on any non-allowlisted
+    // tracked HTML with an inline <script> over the threshold, at commit time,
+    // independent of GitHub's CodeQL setup. Deterministic, no network, no infra —
+    // so it is REQUIRED. See docs/security/codeql-configuration.md.
+    id: 'vendored-js-lint',
+    description:
+      'vendored-JS-in-HTML lint: no oversized inline <script> bundles in tracked HTML (CodeQL noise / IFC-033)',
+    cmd: ['node', 'tools/scripts/security/vendored-js-lint.mjs'],
+    required: true,
+  },
+  {
     id: 'architecture',
     description: 'tests/architecture (hexagonal boundary checks — required to mirror CI)',
     cmd: ['pnpm', 'test'],
