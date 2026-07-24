@@ -1,0 +1,24 @@
+{
+  "task": "IFC-033",
+  "generatedAt": "2026-07-24T10:15:37.194Z",
+  "target": "http://localhost:4000",
+  "durationSeconds": 180,
+  "budget": {
+    "throughputPerHour": 5000,
+    "p95Ms": 200,
+    "errorRatePct": 0.1
+  },
+  "achieved": {
+    "leadsCreated": 1081,
+    "leadsPerHour": 21617,
+    "dealsConverted": 180,
+    "p95Ms": 11.6,
+    "errorRatePct": 0,
+    "totalRequests": 2343
+  },
+  "pass": {
+    "throughput": true,
+    "p95": true,
+    "errorRate": true
+  }
+}

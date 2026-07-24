@@ -1,0 +1,252 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 0,
+  "title": "IFC-033 k6 Load Test (ADR-018 budget)",
+  "uid": "ifc033-k6-load",
+  "tags": ["k6", "load-test", "ifc-033"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Leads created (total)",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(k6_leads_created_total)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Deals converted — atomic (total)",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(k6_deals_converted_total)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "p95 latency — ingestion (budget < 200ms)",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.2 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["max"] }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(k6_http_req_duration_p95{scenario=\"lead_ingestion\"})",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "HTTP error rate (budget < 0.1%)",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.001 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(k6_http_req_failed_rate)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "HTTP requests / sec (by scenario)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "drawStyle": "line", "fillOpacity": 15, "lineWidth": 2 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (scenario) (rate(k6_http_reqs_total[30s]))",
+          "legendFormat": "{{scenario}}",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "p95 latency by critical path (ms)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(k6_lead_create_latency_p95)",
+          "legendFormat": "lead.create p95",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        },
+        {
+          "refId": "B",
+          "expr": "max(k6_lead_read_latency_p95)",
+          "legendFormat": "lead read p95",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        },
+        {
+          "refId": "C",
+          "expr": "max(k6_lead_convert_latency_p95)",
+          "legendFormat": "lead.convertToDeal p95",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Virtual users (VUs)",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 15, "lineWidth": 2 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(k6_vus)",
+          "legendFormat": "active VUs",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Leads created & deals converted (cumulative)",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(k6_leads_created_total)",
+          "legendFormat": "leads created",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        },
+        {
+          "refId": "B",
+          "expr": "sum(k6_deals_converted_total)",
+          "legendFormat": "deals converted",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ]
+    }
+  ]
+}

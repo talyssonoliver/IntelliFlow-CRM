@@ -383,3 +383,4 @@ artifacts/codex-review/
 
 # Playwright QA persona auth state (real tokens — never commit)
 tests/e2e/.auth/
+tools/scripts/k6/.data/
