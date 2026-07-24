@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-07-24T11:15:56.809Z",
+  "generated_at": "2026-07-24T12:35:14.946Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 507,
-    "completed": 440,
+    "total_specs_analyzed": 508,
+    "completed": 441,
     "partially_done": 0,
     "spec_only": 61,
     "uncertain": 6
@@ -1813,6 +1813,23 @@
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-030"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-033",
+      "title": "Load Testing with k6",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-030",
+        "IFC-032"
       ],
       "real_status": "COMPLETED"
     },

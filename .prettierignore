@@ -25,3 +25,6 @@ pnpm-lock.yaml
 # doesn't fight the generator after every regen.
 docs/SESSION_CONTEXT.md
 docs/CURRENT_STATE_REPORT.md
+
+# IFC-033 committed load-test evidence bundle (generated reports, not source)
+docs/evidence/**/*.html

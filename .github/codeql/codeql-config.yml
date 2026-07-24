@@ -36,3 +36,6 @@ paths-ignore:
   # check for real secrets.
   - 'artifacts/benchmarks/**'
   - 'tests/**/fixtures/**'
+  # Committed evidence bundles (load-test reports, screenshots, JSON summaries).
+  # These are generated run artifacts committed for reproducibility, not source.
+  - 'docs/evidence/**'
