@@ -13,7 +13,7 @@
  * - reconstructSendGridEmail: minimal headers without each optional
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createPublicContext, createTestContext, prismaMock } from '../../../test/setup';
 
 // Track parse calls for controlling behavior
@@ -30,7 +30,7 @@ vi.mock('@intelliflow/adapters', () => ({
   }),
 }));
 
-import { inboundEmailRouter } from '../inbound.router';
+import { inboundEmailRouter, computeInboundEmailWebhookSignature } from '../inbound.router';
 
 function defaultParsedEmail(overrides: Record<string, any> = {}) {
   return {
@@ -54,17 +54,45 @@ function defaultParsedEmail(overrides: Record<string, any> = {}) {
 }
 
 describe('Inbound Email Router b11 - uncovered branches', () => {
-  const publicCaller = inboundEmailRouter.createCaller(createPublicContext());
+  // SEC-004: the webhook now requires a valid HMAC signature. Sign each call
+  // with a test secret and inject it as the x-inbound-email-signature header,
+  // reusing the router's own signer so sign/verify logic can't drift.
+  const INBOUND_WEBHOOK_TEST_SECRET = 'inbound-webhook-test-secret';
+  let inboundSecretBackup: string | undefined;
+
+  function callWebhook(payload: Record<string, unknown>) {
+    const signature = computeInboundEmailWebhookSignature(
+      payload as never,
+      INBOUND_WEBHOOK_TEST_SECRET
+    );
+    const caller = inboundEmailRouter.createCaller(
+      createPublicContext({
+        req: { headers: { 'x-inbound-email-signature': signature } } as never,
+      })
+    );
+    return caller.webhook(payload as never);
+  }
+
   const protectedCaller = inboundEmailRouter.createCaller(createTestContext());
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockParseFn.mockReturnValue(defaultParsedEmail());
+    inboundSecretBackup = process.env.INBOUND_EMAIL_WEBHOOK_SECRET;
+    process.env.INBOUND_EMAIL_WEBHOOK_SECRET = INBOUND_WEBHOOK_TEST_SECRET;
+  });
+
+  afterEach(() => {
+    if (inboundSecretBackup === undefined) {
+      delete process.env.INBOUND_EMAIL_WEBHOOK_SECRET;
+    } else {
+      process.env.INBOUND_EMAIL_WEBHOOK_SECRET = inboundSecretBackup;
+    }
   });
 
   describe('webhook - Mailgun provider', () => {
     it('should handle Mailgun with rawEmail', async () => {
-      const result = await publicCaller.webhook({
+      const result = await callWebhook({
         rawEmail: 'From: test@example.com\r\nSubject: Test\r\n\r\nBody',
         provider: 'mailgun',
       });
@@ -74,7 +102,7 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
     });
 
     it('should handle Mailgun without rawEmail (empty string fallback)', async () => {
-      const result = await publicCaller.webhook({
+      const result = await callWebhook({
         provider: 'mailgun',
       });
 
@@ -85,7 +113,7 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
 
   describe('webhook - SendGrid without headers (minimal headers)', () => {
     it('should build minimal headers from individual fields', async () => {
-      const result = await publicCaller.webhook({
+      const result = await callWebhook({
         from: 'sender@example.com',
         to: 'inbox@intelliflow.com',
         subject: 'Minimal Test',
@@ -107,7 +135,7 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
     });
 
     it('should use html body when text is not present', async () => {
-      const result = await publicCaller.webhook({
+      const result = await callWebhook({
         from: 'sender@example.com',
         html: '<p>HTML body</p>',
         provider: 'sendgrid',
@@ -124,7 +152,7 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
       mockParseFn.mockReturnValue(defaultParsedEmail({ spamScore: 85 }));
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const result = await publicCaller.webhook({
+      const result = await callWebhook({
         rawEmail: 'From: spam@example.com\r\n\r\nBuy now!',
         provider: 'raw',
       });
@@ -163,7 +191,7 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
         })
       );
 
-      const result = await publicCaller.webhook({
+      const result = await callWebhook({
         rawEmail: 'From: test@example.com\r\n\r\nWith attachments',
         provider: 'raw',
       });
@@ -190,7 +218,7 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
       });
 
       await expect(
-        publicCaller.webhook({
+        callWebhook({
           rawEmail: 'not a valid email',
           provider: 'raw',
         })
@@ -200,7 +228,7 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
 
   describe('webhook - SendGrid with only from (no to, subject, dkim, SPF)', () => {
     it('should build minimal headers with just from', async () => {
-      const result = await publicCaller.webhook({
+      const result = await callWebhook({
         from: 'only-from@example.com',
         text: 'Just from',
         provider: 'sendgrid',
