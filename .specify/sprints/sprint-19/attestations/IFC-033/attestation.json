@@ -1,0 +1,66 @@
+{
+  "task_id": "IFC-033",
+  "title": "PHASE-005: Load Testing with k6",
+  "sprint": 19,
+  "run_id": "ifc-033-2026-07-24",
+  "created_at": "2026-07-24",
+  "branch": "feat/ifc-033-k6-load-test",
+  "base_commit": "15c1b4dec431110287e729cdb334643efcbbaaa7",
+  "verdict": "COMPLETE",
+  "provenance_version": "ADR-068",
+  "summary": "Real k6 load test of Sprint-19 critical paths (lead ingestion, tRPC reads, and the DDD-001/002 atomic lead->deal conversion) against a local, prod-safe dev-auth target. Canonical 3-min run met the ADR-018 budget with margin: 1,081 leads created (~21,617/hour, 4.3x the 5,000/hour budget), p95 11.6ms (<200ms), 0% errors (<0.1%), 180 atomic conversions (0 failures). Identified bottleneck: per-user AUTHENTICATED rate-limit tier (1,000 req/60s, keyed by userId) — a single-user synthetic-harness artifact, not a system ceiling. Tenant isolation (RLS) verified at the DB layer under a non-superuser role. Evidence: real k6 HTML report (real timestamps), Grafana/Prometheus screenshot, summary JSON.",
+  "gate_results": [
+    { "gate": "real-benchmark-data", "result": "PASS", "detail": "load-test-report.html is a k6 web-dashboard export from an actual run (real timestamps); grafana-load-test.png captured from Grafana over Prometheus remote-write. No template report (RISK-S19-02)." },
+    { "gate": "throughput-5000-per-hour", "result": "PASS", "detail": "1,081 leads in 180s = ~21,617 leads/hour (4.3x the 5,000/hour budget)." },
+    { "gate": "p95-under-200ms", "result": "PASS", "detail": "p95 11.6ms (ingestion); per-path max ~21ms. k6 threshold http_req_duration{scenario:lead_ingestion} p(95)<200 held." },
+    { "gate": "error-rate-under-0.1pct", "result": "PASS", "detail": "0 errors / 2,343 requests (0%). k6 threshold http_req_failed rate<0.001 held; k6 exit 0, no threshold crossings." },
+    { "gate": "atomic-conversion-exercised", "result": "PASS", "detail": "180 lead.convertToDeal (DDD-001/002 atomic lead->contact+account+opportunity, #621), 0 failures." },
+    { "gate": "bottleneck-identified", "result": "PASS", "detail": "Per-user AUTHENTICATED rate limit (1,000/60s, userId-keyed): over-drive at ~26 req/s single-user drew uniform 36% 429 (harness artifact). Documented in bottleneck-analysis.md." },
+    { "gate": "prod-safe", "result": "PASS", "detail": "Local apps/api :4000 + dev-auth fallback + local test DB. Never hit prod Supabase." },
+    { "gate": "validate-pnpm-test-load", "result": "PASS", "detail": "`pnpm test:load` script added (run-ifc-033-load-test.mjs) and used for the canonical run; wired as a secret-free job in .github/workflows/performance-gate.yml." }
+  ],
+  "kpi_results": {
+    "leads_created": 1081,
+    "leads_per_hour": 21617,
+    "throughput_budget_per_hour": 5000,
+    "deals_converted_atomic": 180,
+    "p95_ms": 11.6,
+    "p95_budget_ms": 200,
+    "error_rate_pct": 0,
+    "error_budget_pct": 0.1,
+    "total_requests": 2343,
+    "duration_seconds": 180,
+    "rls_foreign_leads_visible_under_tenant_role": 0
+  },
+  "artifacts": [
+    "tools/scripts/k6/ifc-033-critical-path.js",
+    "tools/scripts/k6/run-ifc-033-load-test.mjs",
+    "docs/shared/bottleneck-analysis.md",
+    "artifacts/reports/load-test-report.html",
+    "artifacts/misc/grafana-load-test.png",
+    "infra/monitoring/grafana/provisioning/dashboards/k6-load-test.json",
+    "artifacts/benchmarks/ifc-033-load-summary.json",
+    ".github/workflows/performance-gate.yml",
+    "docs/evidence/ifc-033/load-test-report.html",
+    "docs/evidence/ifc-033/grafana-load-test.png",
+    "docs/evidence/ifc-033/ifc-033-load-summary.json"
+  ],
+  "artifact_hashes": {
+    "tools/scripts/k6/ifc-033-critical-path.js": "aa52445dca3271eb4a804cc3eadacc7f105a9c49",
+    "tools/scripts/k6/run-ifc-033-load-test.mjs": "928f1ccbd1c795ae69464ffa7ecd01feb1906896",
+    "docs/shared/bottleneck-analysis.md": "5f48aefb8f30f4db772b33853bb372b82e8afeac",
+    "artifacts/reports/load-test-report.html": "e35e0542205b42b30edc3bc8dd64859434183c6a",
+    "artifacts/misc/grafana-load-test.png": "226d009f565f7ad9cb41deabbb67645faef3d390",
+    "infra/monitoring/grafana/provisioning/dashboards/k6-load-test.json": "00f5b07dff227497488b6b6269e07e1d19ad938e",
+    "artifacts/benchmarks/ifc-033-load-summary.json": "e595cb7ee344be9a1bf90c59570290245d5e256d",
+    ".github/workflows/performance-gate.yml": "f0ceec8e97d3fb3be453ef593f0985bc885d1d0e",
+    "package.json": "83f92a3bcb0491114d42174aab845482885851e4",
+    ".specify/sprints/sprint-19/attestations/IFC-033/context_ack.json": "3b2bb578b85f1cc4c9cc97e28ba44e8dd0238ec5"
+  },
+  "csv_mutations": [
+    { "task_id": "IFC-033", "field": "Status", "from": "Backlog", "to": "Completed" },
+    { "task_id": "IFC-033", "field": "Percent Complete", "from": "0", "to": "100" }
+  ],
+  "validation_method": "GATE:real-benchmark-data;VALIDATE:pnpm test:load",
+  "notes": "5,000 leads/hour was validated against the ADR-018 MVP budget; the aspirational 1,000-VU/p99<100ms target remains IFC-047 (Sprint 22). Target ran under tsx (dev) — a compiled build would only be faster. IFC-034 (Gate-3 £3000 review) is the HUMAN decision gate downstream; this task supplies its evidence and does not itself require Gate-3 sign-off to merge."
+}
