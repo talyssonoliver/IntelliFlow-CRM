@@ -93,7 +93,25 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run full E2E suite (chromium)
-        run: pnpm exec playwright test --project=chromium
+        # Discovery guard: the `chromium` project globbed 0 files on the ubuntu
+        # runner for weeks (inherited global testMatch + broad testIgnore), so
+        # this job died with a bare `Error: No tests found`. The config now gives
+        # chromium an explicit-array testMatch (UNAUTH_SPECS); this `--list` guard
+        # fails LOUD with full diagnostics if discovery ever returns 0 again,
+        # instead of a silent zero-signal pass. See
+        # docs/runbooks/ci-e2e-smoke-discovery.md.
+        run: |
+          echo "cwd=$(pwd)"
+          echo "PW_VERSION=$(node -e "console.log(require('@playwright/test/package.json').version)")"
+          echo "--- chromium discovery ---"
+          pnpm exec playwright test --project=chromium --list 2>&1 | tee /tmp/pwlist.txt | tail -20 || true
+          count=$(grep -cE "\.spec\.ts:[0-9]+" /tmp/pwlist.txt || true)
+          if [ "${count:-0}" -eq 0 ]; then
+            echo "::error::Playwright discovered 0 tests for the chromium project (see diagnostics above)."
+            exit 1
+          fi
+          echo "Discovered $count chromium tests — running."
+          pnpm exec playwright test --project=chromium
 
       - name: Upload E2E results
         uses: actions/upload-artifact@v7
