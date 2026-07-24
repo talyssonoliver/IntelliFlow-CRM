@@ -94,6 +94,24 @@ describe('findMaxInlineScript', () => {
       blockCount: 0,
     });
   });
+
+  it('terminates on browser-honoured malformed end tags (js/bad-tag-filter)', () => {
+    // A naive `</script\s*>` would miss these forms and keep swallowing the
+    // rest of the document, letting an oversized bundle evade the lint.
+    for (const closeTag of ['</script >', '</script\t\n bar>', '</script foo="x">', '</script/>']) {
+      const html = `<script>${'a'.repeat(50)}${closeTag}<div>after</div>`;
+      const { maxBytes, blockCount } = findMaxInlineScript(html);
+      expect(blockCount).toBe(1);
+      expect(maxBytes).toBe(50); // body is exactly the 50 'a's, not the trailing markup
+    }
+  });
+
+  it('does not treat </scriptfoo> as a closing tag', () => {
+    // `</scriptfoo>` is a different tag name, not a script close — the block
+    // stays open, so no valid close is found and nothing is counted.
+    const html = `<script>${'a'.repeat(50)}</scriptfoo>`;
+    expect(findMaxInlineScript(html)).toEqual({ maxBytes: 0, blockCount: 0 });
+  });
 });
 
 describe('isAllowlisted', () => {

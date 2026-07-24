@@ -148,7 +148,14 @@ export function isAllowlisted(filePath, allowlist = ALLOWLIST) {
 export function findMaxInlineScript(html) {
   // Match a full <script ...>...</script>. `[^>]*` in the open tag is fine:
   // script open tags don't legally contain `>` in attribute values here.
-  const re = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
+  //
+  // The end tag must match the way the HTML parser actually terminates a
+  // script element: `</script` followed by a tag-name terminator (whitespace,
+  // `/`, or `>`) and then any junk up to `>`. A naive `</script\s*>` misses
+  // browser-honoured forms like `</script foo>` or `</script\t\n bar>`, which
+  // would let an oversized bundle evade this lint (CodeQL js/bad-tag-filter).
+  // The `(?=[\s/>])` lookahead keeps `</scriptfoo>` from counting as a close.
+  const re = /<script\b([^>]*)>([\s\S]*?)<\/script(?=[\s/>])[^>]*>/gi;
   let m;
   let maxBytes = 0;
   let blockCount = 0;
