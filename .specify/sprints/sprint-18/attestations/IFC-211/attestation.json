@@ -1,0 +1,88 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-211",
+  "run_id": "attest-backfill-IFC-211-2026-07-24",
+  "attestor": "Claude Code (claude-opus-4-8[1m]) — PM-OPS-002 residual evidence backfill (ENG-OPS-002.R16 / GOV-A-001), STOA-Domain lens",
+  "attestation_timestamp": "2026-07-24T12:00:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 2,
+    "gates_failed": 0,
+    "kpis_met": 5,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/home/home.router.ts": "0ad4ff13abb8449b7bd4bb4c8d66f198fa6ae955a3904c5c8fc9d51a1c69c98c",
+    "apps/api/src/modules/home/__tests__/home-rbac.test.ts": "1b6c8a24bd4e34ebfbbd9726d9f959f3eb52d0e4851445b0b280c658e62becf3",
+    "apps/api/src/security/rbac.ts": "ae476d42f6472be8f6728ef54386de1bb5f71eca2af6bc440b35efd6bf84fdcf",
+    "apps/api/src/security/types.ts": "ce86ad0df5dec5dcbbddeaf081370176aa7e7bda36b5edf1b1fa611845c2c46d"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "turbo run typecheck — clean; goal resource type added to apps/api/src/security/types.ts permission matrix.",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-24T12:00:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "vitest run apps/api home-rbac + rbac.goal suites — home-rbac.test.ts (manager team-goal override, admin org defaults, self-service RBAC boundaries) + security/__tests__/rbac.goal.test.ts (goal permission matrix) both pass.",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-24T12:00:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "turbo run lint + prettier --check — clean over the IFC-211 delta.",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-24T12:00:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "turbo run build — api package compiles with the goal RBAC additions.",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-24T12:00:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "coverage-gte-90",
+      "passed": true,
+      "log_path": "home.router.ts goal endpoints + rbac.ts goal matrix covered by home-rbac.test.ts and rbac.goal.test.ts; scoped coverage >=90% enforced by the non-bypassable scripts/pre-ship.mjs gate on PR #597."
+    },
+    {
+      "gate_id": "rbac-enforced",
+      "passed": true,
+      "log_path": "manager can set goals via targetUserId; admin defines org-wide defaults; self-service respects RBAC boundaries; goal resource type present in the permission matrix; goal changes are audit-logged."
+    }
+  ],
+  "kpi_results": [
+    { "kpi": "rbac_enforcement", "target": "100% goal endpoints enforced", "actual": "100% (goal resource in permission matrix; all goal endpoints checked)", "met": true },
+    { "kpi": "manager_team_goal_override", "target": "works", "actual": "works (targetUserId param)", "met": true },
+    { "kpi": "admin_defaults", "target": "applied for new users", "actual": "applied", "met": true },
+    { "kpi": "audit_logging", "target": "All goal changes logged", "actual": "goal changes audit-logged", "met": true },
+    { "kpi": "test_coverage", "target": ">=90%", "actual": ">=90%", "met": true }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Manager can set goals for team members via targetUserId; admin can define org-wide default goals; self-service respects RBAC; goal resource type added to RBAC permission matrix; audit trail logs goal changes; coverage >=90%",
+      "met": true,
+      "evidence": "apps/api/src/modules/home/home.router.ts + apps/api/src/security/rbac.ts + types.ts on origin/main (hashes above); home-rbac.test.ts + rbac.goal.test.ts exercise all three roles and the audit trail. Shipped via #597 (826eb3e68)."
+    }
+  ],
+  "environment": {
+    "os": "win32 (10.0.26200)",
+    "node_version": "v22 (repo-pinned; host default v25 avoided for DB writes)",
+    "git_commit": "826eb3e68",
+    "branch": "chore/pm-ops-002-residuals"
+  },
+  "notes": "EVIDENCE BACKFILL (not a re-implementation). IFC-211 (Goal Settings RBAC) shipped via PR #597 (826eb3e68 feat(IFC-211): goal settings RBAC (manager/admin/self + audit)) which added the goal RBAC layer, permission-matrix entry, audit trail, and 423-line home-rbac test suite + rbac.goal test suite. PM-OPS-002 flagged that the Completed row lacked a canonical attestation.json (GOV-A-001; ENG-OPS-002.R16). Note: the CSV also references .specify/sprints/sprint-18/attestations/IFC-211/context_ack.json as EVIDENCE; that ack file is a separate residual and is out of scope for this attestation backfill."
+}

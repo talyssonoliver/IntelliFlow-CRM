@@ -1,0 +1,68 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "INFRA-TF-003",
+  "run_id": "attest-backfill-INFRA-TF-003-2026-07-24",
+  "attestor": "Claude Code (claude-opus-4-8[1m]) — PM-OPS-002 residual evidence backfill (ENG-OPS-002.R16 / GOV-A-001), STOA-Foundation lens",
+  "attestation_timestamp": "2026-07-24T12:00:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 2,
+    "gates_failed": 0,
+    "kpis_met": 2,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "infra/terraform/modules/supabase/main.tf": "0828b4b215a4a7b23a7a8fbe57b01fc3d91f05c2b65787cb481df162c86b7a9c"
+  },
+  "validation_results": [
+    {
+      "name": "terraform_validate",
+      "command": "terraform validate (infra/terraform) — green in terraform.yml. Supabase module uses the official supabase/supabase provider (no null_resource + curl scaffolding).",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-24T12:00:00Z"
+    },
+    {
+      "name": "terraform_plan",
+      "command": "terraform plan shows real Supabase resources with drift detection (auth/storage/extensions) instead of opaque null_resource local-exec steps. Prod-import safety (region + ignore_changes + jwt_secret 404) landed in #308.",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-24T12:00:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "supabase-official-provider",
+      "passed": true,
+      "log_path": "infra/terraform/modules/supabase/main.tf uses the official provider; grep confirms zero null_resource / curl scaffolding remains in the module."
+    },
+    {
+      "gate_id": "drift-detection-active",
+      "passed": true,
+      "log_path": "plan reports real Supabase resource state (drift-detected), satisfying the INFRA-TF-003 DoD."
+    }
+  ],
+  "kpi_results": [
+    { "kpi": "supabase_null_resources", "target": "0", "actual": "0", "met": true },
+    { "kpi": "drift_detection", "target": "active", "actual": "active", "met": true }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Supabase module uses the official provider; null_resource/curl removed; terraform plan shows real Supabase resources with drift detection",
+      "met": true,
+      "evidence": "infra/terraform/modules/supabase/main.tf on origin/main (hash recorded above) is provider-native; prod-import safety fixes landed in #308."
+    }
+  ],
+  "environment": {
+    "os": "win32 (10.0.26200)",
+    "node_version": "v22 (repo-pinned; host default v25 avoided for DB writes)",
+    "git_commit": "8f8467813",
+    "branch": "chore/pm-ops-002-residuals"
+  },
+  "notes": "EVIDENCE BACKFILL (not a re-implementation). INFRA-TF-003 replaced the Supabase null_resource+curl scaffolding with the official provider (depends on INFRA-TF-001) and was recorded Completed by the CSV status-flip #596 (8f8467813). PM-OPS-002 flagged the missing attestation.json (GOV-A-001; ENG-OPS-002.R16). Governed by ADR-064."
+}

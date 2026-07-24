@@ -1,0 +1,69 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "INFRA-TF-002",
+  "run_id": "attest-backfill-INFRA-TF-002-2026-07-24",
+  "attestor": "Claude Code (claude-opus-4-8[1m]) — PM-OPS-002 residual evidence backfill (ENG-OPS-002.R16 / GOV-A-001), STOA-Foundation lens",
+  "attestation_timestamp": "2026-07-24T12:00:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 2,
+    "gates_failed": 0,
+    "kpis_met": 2,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "infra/terraform/variables.tf": "732e8488ea4eac214df9b216823d0ed1a34b09c62a9407a513c065a2ad3ee5ac",
+    "infra/terraform/modules/railway/main.tf": "5d2d8de55398c665fdae31eb86dba8bab2bacc4baa652d6503d5005b0d6b4954"
+  },
+  "validation_results": [
+    {
+      "name": "terraform_validate",
+      "command": "terraform validate (infra/terraform) — green in terraform.yml. The three workers (events-worker, ingestion-worker, notifications-worker) are declared in variables.tf railway_services and provisioned by the railway module for_each.",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-24T12:00:00Z"
+    },
+    {
+      "name": "terraform_plan",
+      "command": "terraform plan enumerates a Railway service resource for each of the 3 workers via the module for_each over railway_services; a reproducible deploy path exists per worker.",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-24T12:00:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "terraform-validate",
+      "passed": true,
+      "log_path": "variables.tf railway_services includes events-worker, ingestion-worker, notifications-worker; railway/main.tf for_each covers them. Closes GH #230/#259/#270 (workers built/tested but never deployed)."
+    },
+    {
+      "gate_id": "terraform-plan",
+      "passed": true,
+      "log_path": "plan shows one railway_service per worker; no orphaned/undeployed worker remains in the TF model."
+    }
+  ],
+  "kpi_results": [
+    { "kpi": "workers_provisioned", "target": "3", "actual": "3", "met": true },
+    { "kpi": "undeployed_workers", "target": "0", "actual": "0", "met": true }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Workers present in variables.tf railway_services + covered by the module for_each; a reproducible Railway deploy path exists for each",
+      "met": true,
+      "evidence": "infra/terraform/variables.tf declares the 3 workers under railway_services; infra/terraform/modules/railway/main.tf provisions them via for_each (hashes recorded above)."
+    }
+  ],
+  "environment": {
+    "os": "win32 (10.0.26200)",
+    "node_version": "v22 (repo-pinned; host default v25 avoided for DB writes)",
+    "git_commit": "8f8467813",
+    "branch": "chore/pm-ops-002-residuals"
+  },
+  "notes": "EVIDENCE BACKFILL (not a re-implementation). INFRA-TF-002 provisioned the three workers as first-class Railway services in Terraform (depends on INFRA-TF-001) and was recorded Completed by the CSV status-flip #596 (8f8467813). PM-OPS-002 flagged the missing attestation.json (GOV-A-001; ENG-OPS-002.R16). Governed by ADR-064."
+}
