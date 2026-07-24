@@ -13,11 +13,15 @@ import { GuardrailsAIService, type GuardrailsConfig } from '../GuardrailsAIServi
 const mockSanitizationPipeline = vi.fn();
 const mockDetectScoreBias = vi.fn();
 
-vi.mock('../../shared/prompt-sanitizer.js', () => ({
-  sanitizationPipeline: (...args: any[]) => mockSanitizationPipeline(...args),
-  resetRateLimit: () => {},
-  checkRateLimit: () => true,
-}));
+vi.mock('@intelliflow/domain', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@intelliflow/domain')>();
+  return {
+    ...actual,
+    sanitizationPipeline: (...args: any[]) => mockSanitizationPipeline(...args),
+    resetRateLimit: () => {},
+    checkRateLimit: () => true,
+  };
+});
 
 vi.mock('../../shared/bias-detector.js', () => ({
   detectScoreBias: (...args: any[]) => mockDetectScoreBias(...args),
