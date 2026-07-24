@@ -496,6 +496,24 @@ const STEPS = [
     required: false,
   },
   {
+    // WORKFLOW-YAML SECRET LINT (Harness hardening — Gap #1): parses every
+    // .github/workflows/*.yml and BLOCKS a hardcoded credential literal
+    // (POSTGRES_PASSWORD / DATABASE_URL / DIRECT_URL / PGPASSWORD / password /
+    // pw) that isn't a `${{ secrets.* }}` reference, a self-evident placeholder
+    // (stub/…), or a consciously-annotated `# secret-lint-allow: <reason>`
+    // throwaway. The `gitleaks` step above (and its default ruleset) has no rule
+    // for a bare `postgres:postgres` literal, so those passed the laptop gate and
+    // only reddened on GitGuardian in the cloud — three times (#622, #625, #627).
+    // This is the LOCAL parity gate for that class. No infra, fast, deterministic
+    // → required (unlike the optional/advisory scanners above, which skip when a
+    // binary is absent or mirror CI's continue-on-error jobs).
+    id: 'workflow-secret-lint',
+    description:
+      'workflow-YAML secret linter — no hardcoded credential literals in .github/workflows (GitGuardian parity, Gap #1)',
+    cmd: ['node', 'tools/scripts/security/workflow-secret-lint.mjs'],
+    required: true,
+  },
+  {
     id: 'architecture',
     description: 'tests/architecture (hexagonal boundary checks — required to mirror CI)',
     cmd: ['pnpm', 'test'],

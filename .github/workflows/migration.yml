@@ -114,7 +114,7 @@ jobs:
         image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
+          POSTGRES_PASSWORD: test # secret-lint-allow: ephemeral CI service-container password (localhost, throwaway; not a real secret)
           POSTGRES_DB: intelliflow_test
         ports:
           - 5432:5432
@@ -177,7 +177,7 @@ jobs:
 
       - name: Setup test database
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
+          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test # secret-lint-allow: ephemeral CI test-DB credential (localhost, throwaway; not a real secret)
         run: |
           # db:migrate / db:seed scripts — NOT `prisma migrate deploy` / `prisma
           # db seed`, which pnpm reads as (nonexistent) script names.
@@ -212,7 +212,7 @@ jobs:
         image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
+          POSTGRES_PASSWORD: test # secret-lint-allow: ephemeral CI service-container password (localhost, throwaway; not a real secret)
           POSTGRES_DB: intelliflow_test
         ports:
           - 5432:5432
@@ -275,7 +275,7 @@ jobs:
 
       - name: Setup test database
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
+          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test # secret-lint-allow: ephemeral CI test-DB credential (localhost, throwaway; not a real secret)
         run: |
           pnpm --filter @intelliflow/db prisma migrate deploy
 
@@ -319,7 +319,7 @@ jobs:
         image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
+          POSTGRES_PASSWORD: test # secret-lint-allow: ephemeral CI service-container password (localhost, throwaway; not a real secret)
           POSTGRES_DB: intelliflow_test
         ports:
           - 5432:5432
@@ -382,7 +382,7 @@ jobs:
 
       - name: Setup test database
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
+          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test # secret-lint-allow: ephemeral CI test-DB credential (localhost, throwaway; not a real secret)
         run: |
           pnpm --filter @intelliflow/db prisma migrate deploy
 

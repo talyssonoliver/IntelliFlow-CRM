@@ -3,6 +3,50 @@
 
 title = "IntelliFlow CRM Gitleaks Config"
 
+# Keep the full gitleaks default ruleset. This file previously carried only an
+# [allowlist] (no [[rules]]), which gitleaks merges on top of the built-in
+# defaults. Adding a custom [[rules]] entry below switches gitleaks to
+# "user rules only" UNLESS we explicitly opt back into the defaults here — so
+# this block is REQUIRED to avoid silently disabling all default secret
+# detection (Harness hardening — Gap #1).
+[extend]
+useDefault = true
+
+# ---------------------------------------------------------------------------
+# Custom rule: hardcoded postgres credential literal in a GitHub Actions workflow
+# ---------------------------------------------------------------------------
+# gitleaks' default ruleset has no rule for a bare `postgres:postgres` /
+# `password: postgres` literal, so it slipped past the local pre-ship secret scan
+# three times (#622, #625, #627) while GitGuardian (cloud) flagged it on the PR.
+# This rule gives local gitleaks parity with GitGuardian on that pattern.
+#
+# History-safe: the per-rule allowlist (regexTarget = "line") exempts the
+# legitimate ephemeral forms that already exist throughout the workflow corpus —
+# localhost CI service DBs and the standard `POSTGRES_PASSWORD: postgres|test`
+# service-container password — plus any line a developer has consciously marked
+# with `# secret-lint-allow:` / `# gitleaks:allow`. So a nightly full-history scan
+# stays green while a NEW postgres credential pointed at a real (non-localhost)
+# host, or an unmarked `password: postgres` in some other context, is caught.
+[[rules]]
+id = "postgres-literal-in-workflow"
+description = "Hardcoded postgres credential literal in a GitHub Actions workflow (use secrets refs or annotate an ephemeral CI credential with a secret-lint-allow comment)"
+regex = '''(?i)(?:password:\s*['"]?postgres|postgres:postgres)'''
+path = '''\.github/workflows/.*\.ya?ml$'''
+tags = ["postgres", "workflow", "ci", "database"]
+
+  [rules.allowlist]
+  description = "Exempt ephemeral localhost CI credentials and explicitly-marked lines"
+  regexTarget = "line"
+  regexes = [
+    # Ephemeral CI databases run on localhost — not a reachable/real secret.
+    '''(?i)(localhost|127\.0\.0\.1|0\.0\.0\.0|::1)''',
+    # Standard postgres service-container password used across CI jobs.
+    '''(?i)POSTGRES_PASSWORD:\s*(postgres|test)\b''',
+    # Lines a developer has consciously annotated as a safe throwaway credential.
+    '''secret-lint-allow''',
+    '''gitleaks:allow''',
+  ]
+
 [allowlist]
 description = "Allowlist for known false positives and test/example files"
 
@@ -13,6 +57,8 @@ paths = [
     '''\.env\.example$''',
     '''\.env\.local\.example$''',
     '''docs/setup/.*\.md$''',
+    # Secret-lint test fixtures deliberately contain trigger patterns.
+    '''tools/scripts/security/fixtures/.*''',
 ]
 
 # Allow specific test file patterns

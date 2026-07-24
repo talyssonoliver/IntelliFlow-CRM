@@ -1,0 +1,20 @@
+# Test fixture for the gitleaks rule `postgres-literal-in-workflow` and the
+# workflow-secret-lint linter. NOT a real workflow: it lives under `fixtures/`
+# (ignored by GitHub Actions — Actions only runs top-level files in
+# .github/workflows — by GitGuardian via `paths-ignore: **/fixtures/**`, and by
+# the repo gitleaks allowlist `tools/scripts/security/fixtures/.*`).
+#
+# Lines tagged TRIGGER must be caught; lines tagged ALLOW must be exempted by the
+# rule's per-line allowlist. `tools/scripts/security/__tests__/gitleaks-postgres-rule.test.ts`
+# asserts exactly this against the regex loaded from .gitleaks.toml.
+env:
+  # TRIGGER: postgres credential pointed at a real (non-localhost) host.
+  DATABASE_URL: postgresql://postgres:postgres@db.internal.example.net:5432/app
+  # TRIGGER: bare password literal for a non-postgres-service context.
+  password: postgres
+  # ALLOW: ephemeral CI database on localhost.
+  DIRECT_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+  # ALLOW: standard postgres service-container password.
+  POSTGRES_PASSWORD: postgres
+  # ALLOW: explicitly annotated throwaway credential.
+  OTHER_URL: postgres:postgres@cache.example.net # secret-lint-allow: fixture demo
