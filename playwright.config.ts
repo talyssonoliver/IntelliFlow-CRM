@@ -230,15 +230,24 @@ export default defineConfig({
         navigationTimeout: 45 * 1000,
       },
       timeout: 60 * 1000,
-      // Exclude VRT and mobile-specific tests
-      testIgnore: ['**/*.vrt.spec.ts', '**/*.mobile.spec.ts'],
+      // Cross-browser matrix (pre-ship --full / preship-full-nightly.yml): firefox
+      // runs the SAME unauthenticated specs as chromium so a regression that only
+      // reproduces on Gecko is caught. Uses the EXPLICIT UNAUTH_SPECS array rather
+      // than the inherited global '**/*.spec.ts' + testIgnore — the inherited form
+      // globs ZERO files on the ubuntu runner (see UNAUTH_SPECS note +
+      // docs/runbooks/ci-e2e-smoke-discovery.md), which would make a
+      // `--project=firefox` matrix run die with `Error: No tests found`.
+      testMatch: UNAUTH_SPECS,
     },
 
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      // Exclude VRT and mobile-specific tests
-      testIgnore: ['**/*.vrt.spec.ts', '**/*.mobile.spec.ts'],
+      // Cross-browser matrix (pre-ship --full / preship-full-nightly.yml): webkit
+      // runs the SAME unauthenticated specs as chromium so a WebKit-only regression
+      // is caught. Explicit UNAUTH_SPECS array for the same Linux-discovery reason
+      // as firefox above (the inherited global glob returns 0 files on ubuntu).
+      testMatch: UNAUTH_SPECS,
     },
 
     // Mobile Browsers - Only mobile-specific + smoke tests

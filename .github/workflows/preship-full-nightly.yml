@@ -1,0 +1,159 @@
+name: Pre-ship Full (Nightly Cross-Browser)
+
+# Harness hardening — Gap #4. Runs the FULL pre-ship gate against main once a
+# night, INCLUDING the cross-browser Playwright matrix (chromium + firefox +
+# webkit) that the per-push gate deliberately skips to stay under the ~45-min PR
+# budget. Goal: catch a regression that only reproduces on Gecko or WebKit here,
+# BEFORE it reaches (or masks) the e2e-full.yml nightly cross-browser CI job.
+#
+# This runs `pnpm preship:full` (= `node scripts/pre-ship.mjs --full`), so the
+# WHOLE required-check graph runs plus the E2E matrix. It fails loudly on any red
+# step. It is NOT wired into any push/PR trigger — the default push gate stays
+# single-browser. See docs/dev/preship-full.md.
+#
+# No preship bypass is used. The laptop-only gates that cannot exist on a CI
+# runner (codex-review needs a local OAuth session; gitleaks/terraform/osv-scanner
+# are optional local tools) degrade to an honest SKIP under CI=true — pre-ship.mjs
+# flips codex-review to non-required when process.env.CI is set (its own contract:
+# "There is NO CI enforcement — pre-push only"). Every runnable gate AND the E2E
+# matrix remain required and block. The Docker stack is started via `docker
+# compose` (container names intelliflow-postgres / intelliflow-redis) so the
+# gate's docker-name probes see it and the DB-backed steps (integration/coverage)
+# actually run rather than degrading to MISSING.
+
+on:
+  schedule:
+    # Nightly at 03:00 UTC — same slot as e2e-full.yml / system-audit-nightly.yml.
+    - cron: '0 3 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: preship-full-nightly
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.0'
+  # Prevent Next.js webpack build OOM on GitHub-hosted runners (7 GB RAM).
+  NODE_OPTIONS: --max-old-space-size=4096
+
+jobs:
+  preship-full:
+    name: Pre-ship Full (standard gate + cross-browser E2E)
+    runs-on: ubuntu-latest
+    # Standard gate (install/build/lint/typecheck/unit+integration/coverage/build)
+    # PLUS the 3-browser E2E matrix — budget ~2h+. Generous ceiling so a slow but
+    # healthy run is not killed mid-matrix.
+    timeout-minutes: 240
+    env:
+      # Same module-load env guards ci.yml's build/e2e jobs set — the pre-ship
+      # `build` step and the E2E `next start` need them satisfied at boot. Real
+      # secrets when available; deterministic stubs otherwise.
+      PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+      AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+      REDIS_URL: redis://localhost:6379
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
+      # `next start` (prod mode) refuses to boot without an explicit app URL. The
+      # E2E webServer runs locally, so point it at the Playwright base URL.
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      E2E_BASE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history so the pre-ship steps that diff against origin/main
+          # (commit-msg-lint, diff-coverage) can resolve the base ref.
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-monorepo
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          build-libs: 'true'
+
+      - name: Set up Python
+        # commit-msg-lint (an origin/main..HEAD commitlint gate) resolves
+        # python/python3; ubuntu-latest ships it, but pin it so a runner-image
+        # change can't silently turn that required step into a MISSING skip.
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Start Postgres + Redis (docker compose)
+        # Use `docker compose` (not GH `services:`) so the containers are named
+        # intelliflow-postgres / intelliflow-redis — the exact substrings the
+        # pre-ship docker-name probe looks for. With GH service containers the
+        # probe can miss the stack and degrade integration/coverage to MISSING.
+        run: docker compose -f docker-compose.yml up -d postgres redis
+
+      - name: Wait for Postgres
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec intelliflow-postgres pg_isready -U postgres >/dev/null 2>&1; then
+              echo "Postgres ready after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::Postgres did not become ready in 30s"; exit 1
+
+      - name: Set up database schema
+        run: pnpm --filter @intelliflow/db db:push
+
+      - name: Install Playwright browsers (chromium + firefox + webkit)
+        # All three engines — this is the whole point of the nightly matrix.
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+      - name: Run pre-ship (full mode — standard gate + cross-browser E2E)
+        # `pnpm preship:full` === `node scripts/pre-ship.mjs --full`. Fails loudly
+        # (non-zero) on ANY red required step OR any E2E-matrix failure. No
+        # PRESHIP_ALLOW_MISSING / KEEP_GOING — see the header note on the CI
+        # degrade path for laptop-only gates.
+        run: pnpm preship:full
+
+      - name: Upload pre-ship state + logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: preship-full-state-${{ github.run_id }}
+          path: artifacts/preship/
+          retention-days: 14
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: preship-full-e2e-report-${{ github.run_id }}
+          path: artifacts/misc/playwright-report/
+          retention-days: 14
+
+      - name: Notify on failure
+        # Fail-loud beyond the red run: a GH error annotation + step summary always,
+        # plus a Slack post when the webhook secret is configured (mirrors the
+        # migration.yml / cd.yml notify-failure pattern). The job's own non-zero
+        # exit is the primary signal (scheduled-run failures email repo watchers).
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          echo "::error::Nightly pre-ship:full FAILED on ${GITHUB_REF_NAME} (${GITHUB_SHA:0:8}). A required gate or the cross-browser E2E matrix went red."
+          {
+            echo "## 🚨 Nightly pre-ship:full failed"
+            echo ""
+            echo "- Branch: \`${GITHUB_REF_NAME}\`"
+            echo "- Commit: \`${GITHUB_SHA:0:8}\`"
+            echo "- Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo ""
+            echo "Download the \`preship-full-state\` and \`preship-full-e2e-report\` artifacts to triage."
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            curl -X POST "$SLACK_WEBHOOK_URL" \
+              -H 'Content-type: application/json' \
+              -d "{\"text\": \"🚨 Nightly pre-ship:full failed on \`${GITHUB_REF_NAME}\` (${GITHUB_SHA:0:8}) — cross-browser E2E or a required gate went red. <${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|View run>\"}"
+          fi
