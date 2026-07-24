@@ -37,12 +37,28 @@
  * developer can see what broke without re-running.
  *
  * Usage:
- *   node scripts/pre-ship.mjs            # run the full gate (cache hits)
+ *   node scripts/pre-ship.mjs            # run the standard gate (cache hits)
  *   node scripts/pre-ship.mjs --clean    # force re-run all steps
  *   node scripts/pre-ship.mjs --list     # show the step plan, exit 0
+ *   node scripts/pre-ship.mjs --help     # print usage + modes, exit 0
  *   node scripts/pre-ship.mjs --only=lint,typecheck  # run subset only
+ *   node scripts/pre-ship.mjs --full     # standard gate + FULL cross-browser E2E
+ *
+ * Modes:
+ *   standard (default) — the required-check graph mirrored locally. Single-browser
+ *                        E2E only (the fast `smoke`/`chromium` projects); the
+ *                        default push gate, kept under the ~45-min PR budget.
+ *   --full             — the standard gate PLUS Playwright against the FULL browser
+ *                        matrix (chromium + firefox + webkit). Opt-in: heavy
+ *                        (2+ hours), for pre-release / large-PR confidence and the
+ *                        `preship-full-nightly.yml` scheduled run against main. It
+ *                        is NOT the per-push default. Equivalent env: PRESHIP_MODE=full.
+ *                        The log prints the standard-gate verdict and the
+ *                        full-matrix-E2E verdict as SEPARATE lines. See
+ *                        docs/dev/preship-full.md.
  *
  * Env:
+ *   PRESHIP_MODE=full        same as passing --full
  *   PRESHIP_KEEP_GOING=1     don't hard-stop on first required FAIL
  *   PRESHIP_ALLOW_MISSING=1  let required+SKIPPED_PRECONDITION steps pass
  *                            (infra-unrunnable steps only; NOT a full bypass)
@@ -163,6 +179,15 @@ function resolveDepScanner() {
   return null;
 }
 const DEP_SCANNER = resolveDepScanner();
+
+// True when running inside any CI runner (GitHub Actions sets CI=true). Used to
+// flip laptop-ONLY required gates to non-required so they degrade to an honest
+// SKIP instead of a gate-failing MISSING when the tool structurally can't exist
+// on a CI runner (e.g. codex-review needs a local OAuth session — no API key, no
+// CI equivalent). Lets `preship-full-nightly.yml` run `preship:full` against main
+// without a bypass env, while every runnable gate (and the E2E matrix) still
+// blocks loudly.
+const IS_CI = process.env.CI === 'true' || process.env.CI === '1';
 
 // Step plan — fail-first token gate + steps from audit doc §8, plus the
 // OSV/Trivy dependency-scan parity gate (#485). Each step has:
@@ -529,16 +554,53 @@ const STEPS = [
       'Install codex CLI (`npm i -g @openai/codex`) and authenticate: `codex login`, ' +
       'OR have the Claude Code CLI (`claude`) on PATH as a fallback reviewer. ' +
       'Confirm codex with `codex login status` (uses local OAuth, no API key).',
+    // Pre-push-only gate: its own design has "There is NO CI enforcement" (above).
+    // codex-review needs a local OAuth session that cannot exist on a CI runner, so
+    // under CI it degrades to an honest SKIP rather than a gate-failing MISSING —
+    // this is the faithful encoding of that docstring, not a bypass. Required as
+    // ever on a developer laptop.
+    required: !IS_CI,
+  },
+  {
+    // FULL CROSS-BROWSER E2E (Gap #4, 2026-07-24): opt-in matrix run. Only executes
+    // when `--full` (or PRESHIP_MODE=full) is passed — the default push gate stays
+    // single-browser (smoke/chromium) to keep the PR gate under ~45 min. Runs the
+    // three desktop engines so a regression that only reproduces on Gecko (firefox)
+    // or WebKit (Safari) is caught BEFORE it reaches the nightly cross-browser CI
+    // job. firefox/webkit discover the same UNAUTH_SPECS as chromium (see
+    // playwright.config.ts) so this is a true apples-to-apples cross-browser check.
+    // Heavy (~2h with the standard gate); scheduled nightly via
+    // preship-full-nightly.yml. Playwright exits non-zero on "No tests found", so a
+    // discovery regression fails this step LOUD rather than passing on zero signal.
+    id: 'e2e-full-matrix',
+    description:
+      'FULL cross-browser E2E — Playwright chromium+firefox+webkit (opt-in --full; nightly)',
+    cmd: [
+      'pnpm',
+      'exec',
+      'playwright',
+      'test',
+      '--project=chromium',
+      '--project=firefox',
+      '--project=webkit',
+    ],
+    // Only runs in --full mode; harmlessly skipped (SKIPPED_NOT_FULL) otherwise.
+    full_only: true,
     required: true,
   },
 ];
 
 const args = process.argv.slice(2);
-const KNOWN_FLAGS = new Set(['--clean', '--list']);
+const KNOWN_FLAGS = new Set(['--clean', '--list', '--full', '--help']);
 const KNOWN_PREFIXES = ['--only='];
 const flags = {
   clean: args.includes('--clean'),
   list: args.includes('--list'),
+  help: args.includes('--help'),
+  // `--full` flag OR `PRESHIP_MODE=full` env — either opts into the cross-browser
+  // E2E matrix (steps marked full_only). The default (neither set) is the
+  // single-browser standard gate.
+  full: args.includes('--full') || process.env.PRESHIP_MODE === 'full',
   only: null,
 };
 for (const a of args) {
@@ -552,13 +614,43 @@ for (const a of args) {
   // ignoring (which previously made typos like `--cleen` look like a
   // successful full run).
   process.stderr.write(`pre-ship: unknown argument '${a}'.\n`);
-  process.stderr.write(`Known flags: --clean, --list, --only=<id,id,...>\n`);
+  process.stderr.write(`Known flags: --clean, --list, --full, --help, --only=<id,id,...>\n`);
   process.exit(2);
 }
 
+if (flags.help) {
+  process.stdout.write(
+    [
+      'pre-ship — local gate mirroring CI required checks.',
+      '',
+      'Usage: node scripts/pre-ship.mjs [--full] [--clean] [--only=<id,id,...>]',
+      '',
+      'Modes:',
+      '  (default)   standard gate — single-browser E2E (smoke/chromium). Push default.',
+      '  --full      standard gate PLUS full cross-browser E2E matrix',
+      '              (chromium+firefox+webkit). Opt-in, ~2h; nightly / pre-release.',
+      '              Equivalent: PRESHIP_MODE=full. Docs: docs/dev/preship-full.md',
+      '',
+      'Flags:',
+      '  --clean     force re-run all steps (ignore the cached-PASS state)',
+      '  --list      print the step plan and exit',
+      '  --help      print this help and exit',
+      '  --only=IDS  run only the comma-separated step ids',
+      '',
+      'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1',
+      '',
+    ].join('\n')
+  );
+  process.exit(0);
+}
+
 if (flags.list) {
+  process.stdout.write(`pre-ship step plan (mode: ${flags.full ? 'full' : 'standard'})\n`);
   for (const s of STEPS) {
-    console.log(`  ${s.id.padEnd(28)}  ${s.description}`);
+    // full_only steps only run under --full; tag them so `--list` (standard) makes
+    // the extra matrix step visibly opt-in rather than looking always-on.
+    const tag = s.full_only ? ' [--full only]' : '';
+    console.log(`  ${s.id.padEnd(28)}  ${s.description}${tag}`);
   }
   process.exit(0);
 }
@@ -596,6 +688,13 @@ function runStep(step, prev) {
 
   if (flags.only && !flags.only.includes(step.id)) {
     return { id: step.id, verdict: 'SKIPPED_NOT_SELECTED', duration_ms: 0 };
+  }
+
+  // full_only steps (the cross-browser E2E matrix) run ONLY under --full /
+  // PRESHIP_MODE=full. Outside full mode they are an honest skip — never a
+  // MISSING/FAIL — so the default push gate stays single-browser and fast.
+  if (step.full_only && !flags.full) {
+    return { id: step.id, verdict: 'SKIPPED_NOT_FULL', duration_ms: 0 };
   }
 
   if (step.skip_if && step.skip_if()) {
@@ -666,9 +765,21 @@ function emoji(v) {
       FAIL: '✗',
       SKIPPED_PRECONDITION: '·',
       SKIPPED_NOT_SELECTED: '-',
+      SKIPPED_NOT_FULL: '-',
+      NOT_RUN: ' ',
       MISSING: '!',
     }[v] || '?'
   );
+}
+
+// Verdict for a slice of results (standard-only or full-only), honouring the
+// PRESHIP_ALLOW_MISSING acknowledgement. A required FAIL or an unacknowledged
+// MISSING-required makes the slice FAIL. Used to print the standard-gate and
+// full-matrix-E2E verdicts as SEPARATE lines under --full.
+function sliceVerdict(list, allowMissing) {
+  const fails = list.filter((r) => r.verdict === 'FAIL' && r.required !== false);
+  const missing = allowMissing ? [] : list.filter(isMissingRequired);
+  return { fails, missing, verdict: fails.length === 0 && missing.length === 0 ? 'PASS' : 'FAIL' };
 }
 
 // A required step that was SKIPPED_PRECONDITION counts as MISSING — i.e.
@@ -692,15 +803,42 @@ function main() {
   }
   process.stdout.write('\n');
 
+  process.stdout.write(
+    `pre-ship: mode ${flags.full ? 'FULL (standard gate + cross-browser E2E)' : 'standard'}.\n\n`
+  );
+
   const results = [];
   const totalStart = Date.now();
   let aborted = false;
+  let boundaryPrinted = false;
 
   const allowMissing = process.env.PRESHIP_ALLOW_MISSING === '1';
 
   for (const step of STEPS) {
+    // Standard → full-matrix boundary (only meaningful under --full). The E2E
+    // matrix is the only full_only step and it comes last, so the first full_only
+    // step marks the end of the standard gate: print that gate's verdict on its
+    // OWN line, then start the E2E phase — the clear standard/full log separation.
+    if (step.full_only && !boundaryPrinted && flags.full) {
+      boundaryPrinted = true;
+      const std = sliceVerdict(results, allowMissing);
+      process.stdout.write(
+        `\n  ── standard gate ${std.verdict} ${'─'.repeat(Math.max(2, 40 - std.verdict.length))}\n`
+      );
+      process.stdout.write(`  ── full-matrix E2E (chromium+firefox+webkit) ──────\n`);
+      // Don't spend ~2h on the cross-browser matrix when the standard gate is
+      // already red — the developer must fix that first regardless.
+      if (std.verdict !== 'PASS' && !aborted) {
+        aborted = true;
+        process.stdout.write(`  (skipping full-matrix E2E — standard gate is not green.)\n`);
+      }
+    }
+
     if (aborted) {
-      results.push({ id: step.id, verdict: 'NOT_RUN', duration_ms: 0 });
+      // full_only step skipped-because-not-full is an HONEST skip, not a suppressed
+      // run; label it accordingly so a standard run's state file reads correctly.
+      const skippedVerdict = step.full_only && !flags.full ? 'SKIPPED_NOT_FULL' : 'NOT_RUN';
+      results.push({ id: step.id, verdict: skippedVerdict, duration_ms: 0 });
       continue;
     }
     process.stdout.write(`  ${step.id.padEnd(28)} `);
@@ -751,6 +889,20 @@ function main() {
   fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2));
 
   process.stdout.write('\n');
+  // Under --full, report the two phases as SEPARATE verdict lines so a green
+  // standard gate + red cross-browser matrix (or vice-versa) is unambiguous.
+  if (flags.full) {
+    const fullIds = new Set(STEPS.filter((s) => s.full_only).map((s) => s.id));
+    const stdResults = results.filter((r) => !fullIds.has(r.id));
+    const fullResults = results.filter((r) => fullIds.has(r.id));
+    const stdV = sliceVerdict(stdResults, allowMissing).verdict;
+    // A full-matrix step left NOT_RUN (standard gate was red) must not read as a
+    // spurious PASS — surface it as NOT RUN so the log is honest.
+    const fullRan = fullResults.some((r) => r.verdict === 'PASS' || r.verdict === 'FAIL');
+    const fullV = fullRan ? sliceVerdict(fullResults, allowMissing).verdict : 'NOT RUN';
+    process.stdout.write(`pre-ship: standard gate ${stdV}.\n`);
+    process.stdout.write(`pre-ship: full-matrix E2E ${fullV}.\n`);
+  }
   process.stdout.write(`pre-ship: ${verdict} in ${fmtDuration(totalDuration)}.\n`);
   if (fails.length > 0) {
     process.stdout.write(`  Failed required steps:\n`);

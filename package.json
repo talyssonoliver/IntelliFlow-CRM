@@ -128,6 +128,7 @@
     "pre-ship": "node scripts/pre-ship.mjs",
     "pre-ship:clean": "node scripts/pre-ship.mjs --clean",
     "pre-ship:list": "node scripts/pre-ship.mjs --list",
+    "preship:full": "node scripts/pre-ship.mjs --full",
     "preship:guards": "node tools/scripts/preship/index.mjs",
     "pr:create": "node tools/scripts/preship/safe-pr-create.mjs",
     "ci": "pnpm run lint && pnpm run typecheck && pnpm run test",
