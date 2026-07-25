@@ -67,8 +67,13 @@ test.describe('Sign Up Flow', () => {
     await page.fill('input[placeholder*="Create a password"]', 'short');
     await page.press('input[placeholder*="Create a password"]', 'Tab');
 
-    // Verify validation error
-    await expect(page.locator('text=at least 8 characters')).toBeVisible();
+    // Verify the field-level validation error. Scope to its role="alert" node so
+    // the assertion is not ambiguous with the password-strength hint ("Add: At
+    // least 8 characters, …"), which contains the same phrase and would trip
+    // Playwright strict mode.
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Password must be at least 8 characters' })
+    ).toBeVisible();
   });
 
   test('validates password match', async ({ page }) => {
@@ -243,17 +248,21 @@ test.describe('Accessibility', () => {
     await page.goto('/signup');
     await page.waitForLoadState('networkidle');
 
-    // Tab through form fields
+    // The root layout renders an accessibility "Skip to main content" link as the
+    // first focusable element (apps/web/src/app/layout.tsx), so the first Tab
+    // lands there — not on the OAuth buttons.
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('link', { name: 'Skip to main content' })).toBeFocused();
+
+    // The next Tab reaches the first interactive control inside the card: the
+    // Google OAuth button (SocialLoginGrid is the card's first child).
     await page.keyboard.press('Tab');
     await expect(page.locator('button:has-text("Google")')).toBeFocused();
 
-    // Continue tabbing through all interactive elements
+    // Continue tabbing through the remaining interactive elements; this verifies
+    // tab order keeps advancing without getting stuck.
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
-    await page.keyboard.press('Tab'); // Skip OAuth buttons
-
-    // Eventually reach the form fields
-    // This verifies tab order works without getting stuck
   });
 
   test('error messages are announced', async ({ page }) => {
