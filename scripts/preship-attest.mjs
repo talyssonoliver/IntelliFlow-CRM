@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Final-SHA pre-ship attestation — ENG-OPS-003.Gap13 (issue #644).
+ * Final-SHA pre-ship attestation — ENG-OPS-003.Gap14 (issue #644).
  *
  * WHAT THIS IS
  * ------------
@@ -98,7 +98,7 @@ export function assessState(state, headSha, preshipSha256) {
   const expected = state.expected_step_ids;
   if (!Array.isArray(expected) || expected.length === 0) {
     reasons.push(
-      'state file has no expected_step_ids — it predates ENG-OPS-003.Gap13; re-run the gate'
+      'state file has no expected_step_ids — it predates ENG-OPS-003.Gap14; re-run the gate'
     );
   }
   if (!Array.isArray(state.steps)) {
@@ -235,7 +235,7 @@ export function dirtyPaths(porcelain) {
 
 // ─── CLI ──────────────────────────────────────────────────────────────────
 
-const USAGE = `pre-ship attestation (ENG-OPS-003.Gap13, issue #644)
+const USAGE = `pre-ship attestation (ENG-OPS-003.Gap14, issue #644)
 
   node scripts/preship-attest.mjs --publish
       Publish an attestation for HEAD, if and only if artifacts/preship/last-run.json
