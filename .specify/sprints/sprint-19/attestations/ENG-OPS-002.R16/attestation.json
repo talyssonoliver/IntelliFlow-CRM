@@ -1,0 +1,131 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENG-OPS-002.R16",
+  "run_id": "eng-ops-002-r16-2026-07-25",
+  "attestor": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 attestation/provenance backfill (chore/eng-ops-002-r16-attestation-backfill)",
+  "attestation_timestamp": "2026-07-25T17:45:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 13,
+    "validations_passed": 29,
+    "validations_failed": 0,
+    "gates_passed": 4,
+    "gates_failed": 0,
+    "kpis_met": 2,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    ".specify/sprints/sprint-18/attestations/PG-196/attestation.json": "59053a8324936c82737a2aa4ba2d7256a072e575ab68740b37ce90d8f471bb12",
+    ".specify/sprints/sprint-18/attestations/PG-197/attestation.json": "ccb8cd48028fe5d4dfe9c82cb1bd1f220aa95e3c143ecd7d5bb75020956e9a43",
+    ".specify/sprints/sprint-18/attestations/PG-198/attestation.json": "e47035fb95ff51d0af23043480a17783abdc32d04a36eaf77db9ad6576a9f612",
+    ".specify/sprints/sprint-18/attestations/PG-199/attestation.json": "fb6a977d31f71db895abf8acd7a53d4b593e20fbab0d868db9a92221ca0cf39e",
+    ".specify/sprints/sprint-18/attestations/PG-201/attestation.json": "e1df7f729671a1961d1452c8998760cc41e28424e2e4ba98d291847a684bb8fa",
+    ".specify/sprints/sprint-18/attestations/PG-202/attestation.json": "3426834e7b01d31b78f12b20aff6bed082df1ef571661dfbb879fb16a090699f",
+    ".specify/sprints/sprint-18/attestations/PG-203/attestation.json": "9c0b007948967a644c8cf6570faaf136905d261b609bbe98c12b3877d2d8bf78",
+    ".specify/sprints/sprint-18/attestations/PG-204/attestation.json": "ba1115fa725d938d2e1af243f6bfa21b56764db4520be9a4daef22babab788a7",
+    ".specify/sprints/sprint-18/attestations/PG-205/attestation.json": "02db434628e16578d9baf3fefa3627349630a839de2ed204a7debec4c059417c",
+    ".specify/sprints/sprint-18/attestations/PG-207/attestation.json": "aea37ed46cffe7580146c56aa5d757b3b13180bfda70eb6f08e0e445566e6466",
+    ".specify/sprints/sprint-18/attestations/PG-208/attestation.json": "7b26f31a5b93c894218caeafcccf670f6ffdcd34bbeea1065079f7975f8ca28c",
+    ".specify/sprints/sprint-18/attestations/PG-209/attestation.json": "2fd60814bdf1643e64b9055b8b4c7da354fad59461c406e0c3028b4242a2ff71",
+    "artifacts/metrics/debt-ledger.yaml": "93690b4b23077a4ea74de54230a66f9cc691798ab28a1d90e03ca4eaafcb82e3"
+  },
+  "validation_results": [
+    {
+      "name": "pre-ship (standard mode, no bypass flags)",
+      "command": "node scripts/pre-ship.mjs",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T17:41:00Z",
+      "duration_ms": 1161000
+    },
+    {
+      "name": "attestation hash re-verification (12 tasks)",
+      "command": "sha256sum each attestation's recorded page.tsx and compare to artifact_hashes",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T17:15:00Z"
+    },
+    {
+      "name": "missing-deliverable re-verification (12 tasks x 4 checks)",
+      "command": "existence checks for *Content.tsx, apps/api/src/modules/**/<feature>.router.ts, packages/validators/src/<feature>.ts, context_ack.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T17:16:00Z"
+    },
+    {
+      "name": "sprint-18 attestation coverage",
+      "command": "git ls-tree -r origin/main .specify/sprints/sprint-18/attestations/ | grep -c '/attestation.json'",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T17:20:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "gov-a-001-attestation-existence",
+      "passed": true,
+      "log_path": "All 68 Sprint-18 attestation directories now contain an attestation.json. 56/68 were present on origin/main a14dfb43b (INFRA-TF-001..005 + IFC-211 landed 2026-07-24 via PR #624); this change adds the remaining 12 (PG-196..199, PG-201..205, PG-207..209). Coverage 68/68 = 100%."
+    },
+    {
+      "gate_id": "verdict-currency-recheck",
+      "passed": true,
+      "log_path": "Every one of the 12 INCOMPLETE verdicts re-derived against origin/main a14dfb43b on 2026-07-25, not inherited from the 2026-07-22 pass. All 12 recorded page.tsx SHA-256 hashes still match the tree byte-for-byte; all 4 missing-deliverable checks per task still return absent. Recorded per task under manual_verification."
+    },
+    {
+      "gate_id": "stale-verdict-exclusion",
+      "passed": true,
+      "log_path": "PG-206 was in the original 13-task INCOMPLETE batch but was genuinely implemented in the interim by PR #626 (commit 2ec7d0e49) — real StoragePoliciesContent.tsx wired to the existing retentionPolicies router, with tests — and attests COMPLETE on main. Its stale INCOMPLETE attestation was dropped during rebase rather than shipped. Batch rescoped 13 -> 12 across all 12 attestations, the debt ledger and the PR body."
+    },
+    {
+      "gate_id": "scope-discipline-no-csv-edits",
+      "passed": true,
+      "log_path": "R16 is attestation-only. Sprint_plan.csv, its splits, and the derived docs/SESSION_CONTEXT.md / docs/CURRENT_STATE_REPORT.md are deliberately NOT edited — the 12 tasks' Completed status is a human decision recorded in issue #615, and regenerating derived context files on a governance-only branch reintroduces the known rebase-race churn. Diff is exactly 12 attestations + 1 ledger + this attestation."
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "GOV-A-001 Sprint-18 attestation coverage",
+      "target": "68/68 attested tasks have a canonical attestation.json",
+      "actual": "68/68 (100%) after this change; was 45/63 at audit time and 56/68 immediately before",
+      "met": true
+    },
+    {
+      "kpi": "GOV-A-002 provenance-gap list recorded and reproducible",
+      "target": "full 177-id list captured in the debt ledger with a reproducible derivation command",
+      "actual": "recorded under ENG-OPS-002-PROVENANCE-GAP-S1-18 with the awk one-liner over task-reconciliation.csv",
+      "met": true
+    }
+  ],
+  "dependencies_verified": ["ENG-OPS-002", "PM-OPS-002"],
+  "definition_of_done_items": [
+    {
+      "criterion": "Backfill the 18 Sprint-18 tasks marked Completed with no canonical attestation.json",
+      "met": true,
+      "evidence": "6 landed via PR #624 (INFRA-TF-001..005 + IFC-211); the remaining 12 land here. Sprint-18 attestation-file coverage is now 68/68."
+    },
+    {
+      "criterion": "Attestations carry real, independently re-derived evidence — never fabricated completeness",
+      "met": true,
+      "evidence": "Each of the 12 records the exact scaffold commit that added the stub (2e7bb135 / 463445d5 / e18a18a9), the page.tsx SHA-256, the four specific missing deliverables, and a manual_verification block from the 2026-07-25 re-check. 12 of 12 attest INCOMPLETE rather than rounding up to COMPLETE."
+    },
+    {
+      "criterion": "Ledger the 177-task GOV-A-002 provenance gap",
+      "met": true,
+      "evidence": "artifacts/metrics/debt-ledger.yaml ENG-OPS-002-PROVENANCE-GAP-S1-18 holds the full reproducible 177-id list; status left open with 159/177 explicitly unclaimed."
+    },
+    {
+      "criterion": "TypeScript + Tests + Lint + Build all pass; pre-ship clean with no bypass",
+      "met": true,
+      "evidence": "pre-ship PASS in 19m21s at 5ce3defb under Node v22.14.0 — typecheck, lint, unit-tests, integration-tests, coverage, coverage-floor, diff-coverage and build all PASS. No PRESHIP_ALLOW_MISSING, no PRESHIP_KEEP_GOING, no --no-verify."
+    }
+  ],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
+    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+  },
+  "notes": "ENG-OPS-002.R16 (GOV-A-001 + GOV-A-002), attestation-only remediation — evidence backfill, not re-implementation. LANDED IN TWO PARTS: PR #624 (2026-07-24) carried INFRA-TF-001..005 and IFC-211; this change carries the remaining 12. The branch was originally cut on 2026-07-22 against cd82f0ae7 and was rebased onto a14dfb43b for this landing; the rebase surfaced 6 add/add conflicts, all resolved in favour of the already-merged origin/main versions. WHAT THIS TASK FOUND, AND WHY 12 OF 12 ATTEST INCOMPLETE: the Module-Settings pages PG-196..199, PG-201..205 and PG-207..209 are CSV-marked Completed but are each only a 16-20 line static 'coming soon' page.tsx, with no Content component, no tRPC router, no Zod validator, no test and no context_ack.json. Attesting them COMPLETE would have been fabrication, so each carries verdict=INCOMPLETE with per-task evidence; the underlying false-completion problem is issue #615 and debt-ledger finding ENG-OPS-002-FALSE-COMPLETION-PG19x20x. SCOPE CORRECTION MADE DURING THIS LANDING: the batch was 13 and included PG-206, which has since been genuinely built by PR #626 and attests COMPLETE — shipping its 2026-07-22 INCOMPLETE verdict would have introduced a false attestation, so it was dropped and the batch rescoped to 12 everywhere. Issue #615 still names 13 tasks and needs narrowing to 12; that edit is left to a human as it is outward-facing. WHAT THIS TASK DELIBERATELY DID NOT DO: (a) the 159 remaining thin-but-present pre-ADR-068 attestations are untouched and remain open in the ledger — under-claimed rather than mass-backfilled; (b) Sprint_plan.csv, its splits, and the derived SESSION_CONTEXT / CURRENT_STATE_REPORT files are not edited, because reverting 12 Completed rows is a human product decision (issue #615) and regenerating derived context on a governance branch reintroduces known rebase churn. GATE CAVEAT: pre-ship reported actionlint and gitleaks as SKIPPED_PRECONDITION because neither binary is installed on this host; both are required:false locally and both run in CI. This diff contains no workflow files and no credentials — it is 12 JSON attestations, 1 YAML ledger and this file."
+}
