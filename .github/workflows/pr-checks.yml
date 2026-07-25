@@ -144,6 +144,66 @@ jobs:
         if: github.event_name == 'merge_group'
         run: echo "merge_group event — PR validations already passed at PR review time. OK"
 
+  # ENG-OPS-003.Gap14 / issue #644 — final-SHA pre-ship enforcement.
+  #
+  # The local pre-ship gate (.husky/pre-push → scripts/pre-ship.mjs) is keyed to
+  # the SHA being pushed, but branch protection is strict:true, so
+  # `gh pr update-branch` is MANDATORY whenever main moves — and it builds that
+  # merge commit server-side, where no hook can see it. #637 merged at a head no
+  # local gate ever ran against, and nothing noticed. This job notices.
+  #
+  # It is an HONESTY check, not a security boundary: it asserts that a local
+  # pre-ship run was RECORDED for this exact SHA. Anyone with push access can
+  # forge that record, exactly as `git push --no-verify` already bypasses the
+  # hook. See docs/runbooks/preship-attestation.md.
+  #
+  # DELIBERATELY NO JOB-LEVEL `if:`. A skipped job reports no conclusion, and a
+  # required context that never reports blocks a PR forever. Every exemption is
+  # a step-level `if:` so this job always runs and always concludes — the same
+  # shape the pr-validation job above uses for its load-bearing checks.
+  preship-attestation:
+    name: Pre-ship Attestation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine whether this head SHA must carry an attestation
+        id: policy
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          exempt=""
+          if [ "$EVENT_NAME" = "merge_group" ]; then
+            exempt="merge_group: the queue ref is built server-side; the PR head it was built from carries its own attestation."
+          elif [ "${PR_AUTHOR:-}" = "dependabot[bot]" ] || [ "${PR_AUTHOR:-}" = "github-actions[bot]" ]; then
+            exempt="bot author ${PR_AUTHOR}: this branch is created server-side and no developer machine ever runs the gate for it. Full CI is its gate."
+          elif [ -n "${HEAD_REPO:-}" ] && [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            exempt="fork PR (${HEAD_REPO}): a fork has no push access to ${BASE_REPO} and cannot publish an attestation. A maintainer must gate it locally before merge."
+          fi
+          if [ -n "$exempt" ]; then
+            echo "EXEMPT — ${exempt}"
+            echo "::notice title=Pre-ship attestation exempt::${exempt}"
+            echo "exempt=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "This PR must carry a pre-ship attestation for its head SHA."
+            echo "exempt=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.policy.outputs.exempt == 'false'
+        with:
+          fetch-depth: 0
+
+      - name: Verify a local pre-ship ran against this exact SHA
+        if: steps.policy.outputs.exempt == 'false'
+        env:
+          # github.event.merge_group.head_sha — NOT pull_request.head.sha, which
+          # is null on merge_group. (Unused on the exempt path, but correct.)
+          HEAD_SHA: ${{ github.event_name == 'merge_group' && github.event.merge_group.head_sha || github.event.pull_request.head.sha }}
+        run: node scripts/preship-attest.mjs --verify --sha="$HEAD_SHA"
+
   # `quality-checks` was removed as part of Recommendation E of
   # docs/operations/ci-cost-audit-2026-05-25.md. It duplicated coverage
   # already provided by ci.yml:
