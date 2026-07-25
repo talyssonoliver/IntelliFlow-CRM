@@ -21,7 +21,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
-import { assessState, PAYLOAD_VERSION } from '../preship-attest.mjs';
+import { assessState, dirtyPaths, PAYLOAD_VERSION } from '../preship-attest.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '../..');
@@ -244,6 +244,44 @@ describe('assessState — refuses laundering a degraded run', () => {
     // silently never fire. This asserts the on-disk signal is what is checked.
     const src = fs.readFileSync(ATTEST, 'utf8');
     expect(src).not.toMatch(/===\s*'MISSING'|===\s*"MISSING"/);
+  });
+});
+
+describe('dirtyPaths — what counts as a dirty tree', () => {
+  it('treats an unmodified tree as attestable', () => {
+    expect(dirtyPaths('')).toEqual([]);
+  });
+
+  it('IGNORES the gate’s own tracked output under artifacts/', () => {
+    // Regression: running pre-ship rewrites these TRACKED files every time, so
+    // treating them as dirty made --publish unusable after any genuine run.
+    // Found by dogfooding this tool on its own PR.
+    const porcelain = [
+      ' M artifacts/coverage/coverage-final.json',
+      ' M artifacts/coverage/coverage-summary.json',
+      ' M artifacts/coverage/lcov.info',
+      ' M artifacts/reports/a11y-route-reconcile.json',
+    ].join('\n');
+    expect(dirtyPaths(porcelain)).toEqual([]);
+  });
+
+  it('still refuses modified source', () => {
+    const porcelain = [
+      ' M artifacts/coverage/lcov.info',
+      ' M scripts/pre-ship.mjs',
+      '?? scripts/sneaky.mjs',
+    ].join('\n');
+    expect(dirtyPaths(porcelain)).toEqual(['scripts/pre-ship.mjs', 'scripts/sneaky.mjs']);
+  });
+
+  it('reports the destination path of a rename', () => {
+    expect(dirtyPaths('R  scripts/old.mjs -> scripts/new.mjs')).toEqual(['scripts/new.mjs']);
+  });
+
+  it('does not treat a path merely CONTAINING artifacts/ as generated', () => {
+    expect(dirtyPaths(' M apps/web/src/artifacts/thing.ts')).toEqual([
+      'apps/web/src/artifacts/thing.ts',
+    ]);
   });
 });
 
