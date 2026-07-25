@@ -67,4 +67,23 @@ if ! pnpm run pre-ship; then
   exit 1
 fi
 
+# --- (3) publish the final-SHA attestation (ENG-OPS-003.Gap13, issue #644) ---
+# The gate is green for HEAD, so record that fact where CI can read it: an
+# annotated tag object at refs/preship/<sha>. This is what lets the
+# "Pre-ship Attestation" check tell a SHA a human gated from one GitHub
+# manufactured server-side (`gh pr update-branch` — mandatory here, branch
+# protection is strict:true — never passes through this hook).
+#
+# WARN-ONLY, deliberately: a network blip must not fail a push whose gate
+# passed. The required CI check is the real enforcement point. Note the nested
+# push cannot recurse — its target is not under refs/heads/, so the awk gate at
+# the top of this hook exits 0 immediately. The `|| { ...; }` form is safe under
+# the `sh -e` this hook runs beneath (.husky/_/husky.sh re-execs `sh -e "$0"`):
+# a non-final command in an || list is exempt from set -e.
+node scripts/preship-attest.mjs --publish || {
+  echo "warn [pre-push]: could not publish the pre-ship attestation." >&2
+  echo "  The push continues. Publish it before merging with: pnpm preship:attest" >&2
+  echo "  See docs/runbooks/preship-attestation.md" >&2
+}
+
 exit 0
