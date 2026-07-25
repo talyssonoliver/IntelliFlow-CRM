@@ -162,7 +162,11 @@ export function findMaxInlineScript(html) {
   while ((m = re.exec(html)) !== null) {
     const attrs = m[1];
     // Skip external scripts (governed by <script src>): not an inline bundle.
-    if (/\bsrc\s*=/i.test(attrs)) continue;
+    // Match `src=` only as a real attribute name (preceded by start-of-string or
+    // whitespace). A bare `\bsrc` also matches inside `data-src=`, which would let
+    // a huge inline body on `<script data-src="…">…</script>` be misread as an
+    // external script and silently skipped — defeating the gate.
+    if (/(^|\s)src\s*=/i.test(attrs)) continue;
     const body = m[2];
     const bytes = Buffer.byteLength(body, 'utf8');
     blockCount++;

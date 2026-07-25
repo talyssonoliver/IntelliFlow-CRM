@@ -75,6 +75,23 @@ describe('findMaxInlineScript', () => {
     expect(blockCount).toBe(0);
   });
 
+  it('still flags an oversized inline body when a non-src attr merely contains "src" (data-src)', () => {
+    // Regression: a bare `\bsrc` also matches inside `data-src=`, which would let a
+    // vendored bundle on `<script data-src="…">…</script>` be misread as external
+    // and silently skipped. It must be counted as an inline block.
+    const html = `<script data-src="x">${'z'.repeat(4000)}</script>`;
+    const { maxBytes, blockCount } = findMaxInlineScript(html);
+    expect(maxBytes).toBe(4000);
+    expect(blockCount).toBe(1);
+  });
+
+  it('matches uppercase / mixed-case <SCRIPT> tags (case-insensitive)', () => {
+    const html = `<SCRIPT>${'y'.repeat(2500)}</SCRIPT>`;
+    const { maxBytes, blockCount } = findMaxInlineScript(html);
+    expect(maxBytes).toBe(2500);
+    expect(blockCount).toBe(1);
+  });
+
   it('handles attributes on the inline tag (type, nonce)', () => {
     const html = `<script type="text/javascript" nonce="abc">${'x'.repeat(3000)}</script>`;
     const { maxBytes, blockCount } = findMaxInlineScript(html);
@@ -260,5 +277,35 @@ describe('CLI end-to-end', () => {
     });
     const r = runGate(dir);
     expect(r.status).toBe(0);
+  });
+
+  const runGateArgs = (cwd: string, args: string[]) =>
+    spawnSync('node', [GATE, ...args], {
+      cwd,
+      env: cleanEnv(),
+      encoding: 'utf8',
+      shell: process.platform === 'win32',
+    });
+
+  it('--threshold= overrides the default ceiling', () => {
+    // ~4 KB inline body: under the 8 KB default (clean) but over a 2 KB override.
+    const dir = makeRepo({ 'page.html': `<html>${inlineScript(4096)}</html>` });
+    expect(runGate(dir).status).toBe(0);
+    const r = runGateArgs(dir, ['--threshold=2048']);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain('page.html');
+  });
+
+  it('--json emits a parseable report with threshold/scanned/violations', () => {
+    const dir = makeRepo({
+      'docs/evidence/report.html': `<html>${inlineScript(200_000)}</html>`,
+    });
+    const r = runGateArgs(dir, ['--json']);
+    expect(r.status).toBe(1);
+    const report = JSON.parse(r.stdout);
+    expect(report.threshold).toBe(DEFAULT_THRESHOLD_BYTES);
+    expect(report.scanned).toBeGreaterThanOrEqual(1);
+    expect(Array.isArray(report.violations)).toBe(true);
+    expect(report.violations[0].file).toBe('docs/evidence/report.html');
   });
 });
