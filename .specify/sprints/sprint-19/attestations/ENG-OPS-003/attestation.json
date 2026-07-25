@@ -1,0 +1,130 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENG-OPS-003",
+  "run_id": "eng-ops-003-retro-governance-2026-07-25",
+  "attestor": "Claude Code (claude-opus-5) — ENG-OPS-003 retrospective governance backfill (chore/retro-governance-backfill)",
+  "attestation_timestamp": "2026-07-25T00:00:00Z",
+  "verdict": "COMPLETE",
+  "spec_path": ".specify/sprints/sprint-19/specifications/ENG-OPS-003-spec.md",
+  "plan_path": ".specify/sprints/sprint-19/planning/ENG-OPS-003-plan.md",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 5,
+    "validations_failed": 0,
+    "gates_passed": 7,
+    "gates_failed": 0,
+    "kpis_met": 2,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/operations/harness-hardening-ledger-2026-07-25.md": "sha256:a76f4fd8afa2afe16e8a8bfee4fe54393d7b812027e3eb9c2aa751203c91ac73",
+    "docs/operations/governance-retro-audit-2026-07-25.md": "sha256:159fd7d487df2442a4c826421ef5946d3a30bd87242cfa522a3e83bfdf1722d0",
+    ".specify/sprints/sprint-19/specifications/ENG-OPS-003-spec.md": "sha256:196cafee36591486b471a67ef60bfaab6f4c6a8aa27a53e85630b47ebbe9fd6c",
+    ".specify/sprints/sprint-19/planning/ENG-OPS-003-plan.md": "sha256:51c84dd53c06c586282a29df50cabbb481a062e0bc023bf30857212970a59f96"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T07:25:52.283Z",
+      "duration_ms": 101110
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T07:25:52.283Z",
+      "duration_ms": 63218
+    },
+    {
+      "name": "Tests (unit)",
+      "command": "pnpm run test:unit",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T07:25:52.283Z",
+      "duration_ms": 793191
+    },
+    {
+      "name": "Tests (integration)",
+      "command": "pnpm run test:integration",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T07:25:52.283Z",
+      "duration_ms": 13264
+    },
+    {
+      "name": "Build",
+      "command": "pnpm run build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T07:25:52.283Z",
+      "duration_ms": 320815
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "ledger-reconciles-all-merges",
+      "passed": true,
+      "log_path": "8/8 untracked PRs recorded with merge SHA in docs/operations/harness-hardening-ledger-2026-07-25.md. Set derived by independently enumerating the merge window via `gh pr list --state merged` rather than the supplied list, which surfaced #627 (fd8f78c2f) as a 8th, previously unlisted PR."
+    },
+    {
+      "gate_id": "zero-production-code-changed",
+      "passed": true,
+      "log_path": "git diff --stat limited to .specify/**, docs/**, apps/project-tracker/docs/metrics/_global/Sprint_plan*.csv. No .ts/.tsx/.js production source touched."
+    },
+    {
+      "gate_id": "attestation-claims-verified-against-code",
+      "passed": true,
+      "log_path": "PG-206: documentSettings.retentionPolicies verified at apps/api/src/modules/legal/document-settings.router.ts:414 (mounted :474), $transaction on all destructive writes :438/:450, tenantProcedure + prismaWithTenant, Zod superRefine at packages/validators/src/document-settings.ts:198-215, cross-tenant tests at document-settings.router.test.ts:562/848. IFC-033: 2 k6 scenarios at tools/scripts/k6/ifc-033-critical-path.js:95-116, in-script thresholds :117, all 11 attested artifacts present on disk."
+    },
+    {
+      "gate_id": "csv-single-source-of-truth-respected",
+      "passed": true,
+      "log_path": "Sprint_plan.csv edited directly; Sprint_plan_[A-J].csv regenerated via tools/scripts/split-sprint-plan.ts, never hand-edited. Python csv round-trip proven byte-identical before editing; resulting diff is 2 lines."
+    },
+    {
+      "gate_id": "retrospective-artifacts-honestly-labelled",
+      "passed": true,
+      "log_path": "PG-206 and IFC-033 spec/plan each open with an explicit RETROSPECTIVE banner stating they were authored after the merge and that checked steps reflect verification of merged code, not execution history. No timestamps were backdated."
+    },
+    {
+      "gate_id": "owner-ledger-respected",
+      "passed": true,
+      "log_path": "Global Rule 11: ../iflow-r16-attest-backfill holds a stranded commit (51ba1261f) touching sprint-18/attestations/PG-206/attestation.json. Not modified. Collision recorded in the audit doc for its owner to reconcile."
+    },
+    {
+      "gate_id": "compliance-check-pg-206",
+      "passed": true,
+      "log_path": "/compliance-check PG-206: check-attestation-phrases OK (no Guard 6/8 phrases); check-nav-wiring OK and substantively verified — sidebar/configs/documents.ts:22 href /documents/storage-policies; tests/typecheck/lint covered by the full pre-ship run. check-lighthouse-evidence returned OK only because it scans kpi_results while PG-206 records lighthouse-gte-90 in gate_results with NO artifact — Guard 9 blind spot filed as #640. This audit does NOT ratify that Lighthouse claim; PG-206 reads 6/7 DoD verified + 1 unevidenced. The CSV flip stands on the independently verified implementation."
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Every harness/security PR merged 2026-07-24 without a registered task ID is recorded in a PR -> merge-SHA -> gap ledger with its verification basis",
+      "met": true,
+      "evidence": "8-row ledger table: #623 a88b9d804, #625 c1c41546c, #627 fd8f78c2f, #628 d44e8a67d, #629 baf69d823, #630 1ce7055bc, #631 f645d34c3, #634 f4ec0b0cb."
+    },
+    {
+      "criterion": "The ledger is linked from the sprint-19 attestation",
+      "met": true,
+      "evidence": "Recorded in artifact_hashes and cross-linked from both operations docs."
+    },
+    {
+      "criterion": "No code change is implied (all 8 PRs are already merged green on main)",
+      "met": true,
+      "evidence": "Docs/CSV/.specify only. Gate zero-production-code-changed."
+    }
+  ],
+  "environment": {
+    "os": "win32",
+    "node_version": "v22.14.0",
+    "git_commit": "f4ec0b0cb24dfe73a909d8fa1bdf2137cc660edf",
+    "branch": "chore/retro-governance-backfill"
+  },
+  "notes": "RETROSPECTIVE GOVERNANCE BACKFILL for the 2026-07-24 merge window, whose PRs skipped the documented orchestrator pipeline (docs/operations/sprint-18-orchestrator-prompt.md). Root cause: the orchestrator never read that document. Findings: (1) 8 PRs — not the 7 originally supplied — merged with no registered task ID; #627 was found only by re-enumerating the window. (2) PG-206 was fully implemented and attested COMPLETE by #626 (2ec7d0e49) yet its CSV row still read Backlog, because #624 correctly reconciled it to Backlog at 12:13 while it was still a stub and #626 landed the implementation at 15:29 without flipping it; this PR closes that. (3) IFC-033 shipped a complete ADR-068 attestation and CSV flip in #622 and needed only spec+plan. (4) An earlier pass of this audit was WRONG because it read the working checkout (branch ssite_map_docs, db590826e) instead of origin/main, and treated the gitignored apps/project-tracker/docs/metrics/sprint-*/ tree as evidence of absence; the correction is recorded in the audit doc so the method error is not repeated. (5) COLLISION: the stranded, never-PR'd ENG-OPS-002.R16 commit 51ba1261f asserts verdict INCOMPLETE for PG-206 — true on 2026-07-22, false now — and duplicates 5 INFRA-TF attestations already landed by #624. Landing R16 unrebased would overwrite a substantiated COMPLETE with a stale INCOMPLETE. Its scope shrinks 18 -> 12 and it must be re-verified before landing. Not fixed here: that branch has a separate owner per Global Rule 11. PRE-SHIP: full standard-mode gate run at git_head f4ec0b0cb24dfe73a909d8fa1bdf2137cc660edf, verdict PASS in 36.4min. All 4 mandatory validations PASS (TypeScript, Tests, Lint, Build). Two steps did not run: actionlint and gitleaks reported SKIPPED_PRECONDITION (binaries absent — the gate own degrade path, not a bypass); e2e-full-matrix is full_only. One non-required step FAILED and was NOT masked: audit (pnpm audit --audit-level=high, exit 1, required=false, advisory to match CI security-scan continue-on-error) reports 1 high — brace-expansion GHSA-mh99-v99m-4gvg via the dev-only path @lhci/cli>chrome-launcher>rimraf>glob>minimatch. Pre-existing on main: this PR changes no dependency files. Root cause is an off-by-one override (brace-expansion@<5.0.7 -> >=5.0.7 while the advisory covers <=5.0.7, patched >=5.0.8). Filed as issue #636 per Global Rule 8 rather than fixed here, because this PR is docs-only by instruction. No PRESHIP_ALLOW_MISSING, no --no-verify, no SKIP of any required step. GATE 4 (/compliance-check) was run for PG-206 and its results recorded in the audit doc. It surfaced a NEW defect: Guard 9 (check-lighthouse-evidence.mjs) inspects kpi_results only, so PG-206 self-attesting lighthouse-gte-90 in gate_results with no artifacts/lighthouse/PG-206/ report and no lighthouse hash in artifact_hashes passes as clean OK. Filed #640 with the fix (scan both collections; emit SKIP not OK when no claim exists). Also filed #639: system-audit is chronically red on main (f4ec0b0cb, 04:03) because its tier-1 gitleaks runs detect --source . across 1493 commits and reports 823 historical leaks, so it can never pass; the PR-scoped gitleaks check passes. Neither #639 nor #636 is a required check and both fail on main HEAD independently of this PR."
+}
