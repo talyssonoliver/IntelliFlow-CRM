@@ -114,15 +114,47 @@ terraform output railway_worker_url
 
 ## 4. Ongoing deploys
 
-### Path A — Image refresh (production-grade)
+### Path A — Image refresh (production-grade, digest-pinned)
 
-1. Push to `main` (or tag `vX.Y.Z`) — triggers `build-images.yml`.
-2. New tags `:latest` and `:sha-<short>` land on GHCR.
-3. Either:
-   - **Auto:** if Railway services were created with
-     `RAILWAY_DEPLOY_ON_IMAGE_UPDATE=true`, Railway pulls automatically.
-   - **Manual:** re-run `terraform apply` so the `railway_deployment` resource
-     sees the new `image` tag.
+**Production `api` is pinned to an immutable digest** (ENG-OPS-003.Gap8), NOT
+the mutable `:latest` tag.
+`infra/terraform/environments/production/terraform.tfvars` sets
+`api_image_digest = "sha256:…"`, and `main.tf` rewrites the api service's
+`source_image` to `<repo>@<digest>`. This means:
+
+- `terraform plan` **detects** an api image change (the digest string changes),
+  so promotions are explicit and reviewable — no silent `:latest` drift.
+- Railway **cannot auto-pull** a newer `:latest` onto a digest-pinned service,
+  so every production api deploy is reproducible and intentional.
+  (Belt-and-braces: the community railway provider `~> 0.3` does not expose an
+  auto-deploy toggle, so also confirm "Deploy on image update / watch" is
+  **off** for `api` in the Railway dashboard — one-time.)
+
+**Promotion procedure (production api):**
+
+1. Push to `main` (or tag `vX.Y.Z`) — triggers `build-images.yml`, which lands
+   `:latest` and `:sha-<short>` on GHCR.
+2. Read the new image's immutable digest:
+   ```bash
+   docker buildx imagetools inspect \
+     ghcr.io/<owner>/intelliflow-crm-api:sha-<short> | grep '^Digest:'
+   ```
+3. Update the pin — either edit `api_image_digest` in
+   `environments/production/terraform.tfvars`, or pass it at apply time:
+   ```bash
+   terraform apply -var api_image_digest=sha256:<new-digest>
+   ```
+   ⚠️ **Production `terraform apply` requires owner approval** (see the
+   escalation note in this repo's infra discipline) — never apply autonomously.
+4. `terraform plan` first; confirm the only api change is `source_image`
+   `…@sha256:<old>` → `…@sha256:<new>`, then apply. **This apply is a live
+   redeploy of the api replicas, not a metadata-only change** — the railway
+   provider calls `redeployAllInstances()` on any `source_image` diff, so even
+   re-pinning to the same-content digest restarts the instances. Apply in a
+   low-traffic window and run the §5 health checks immediately afterward.
+
+dev/staging leave `api_image_digest` empty and keep their `:latest` tag behavior
+(the digest pin is opt-in per environment).
 
 ### Path B — Direct `railway up` (hot-fix or local-only changes)
 

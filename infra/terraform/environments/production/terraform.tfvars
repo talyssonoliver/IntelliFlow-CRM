@@ -14,6 +14,21 @@ environment  = "production"
 project_name = "intelliflow-crm"
 region       = "iad1"
 
+# ENG-OPS-003.Gap8: immutable digest pin for the Railway `api` service. main.tf
+# rewrites api's source_image to `<repo>@${api_image_digest}` (the tag in
+# railway_services.api.image below is ignored while this is set). This makes
+# production api deploys reproducible and stops Railway auto-pulling an
+# unreviewed `:latest`. Current value = digest of api:latest == api:sha-0cba18d
+# (verified 2026-07-25). NOTE: this is a no-op in image CONTENT (same bytes are
+# already deployed) but NOT in EFFECT — the railway provider calls
+# redeployAllInstances() on any source_image diff, so the first apply WILL
+# redeploy the production api replicas. Treat it as a real deploy event: apply in
+# a low-traffic window and run the runbook §5 health checks immediately after.
+# PROMOTION: push a new image, read its digest
+#   (`docker buildx imagetools inspect ghcr.io/<owner>/intelliflow-crm-api:sha-<short>`),
+# then `terraform apply -var api_image_digest=sha256:<new>` (or update this line).
+api_image_digest = "sha256:193f09a8202819979c09223ca9f5c97780ca520779bc28fcf8b01ad0563a8f07"
+
 tags = {
   Project    = "IntelliFlow-CRM"
   ManagedBy  = "Terraform"

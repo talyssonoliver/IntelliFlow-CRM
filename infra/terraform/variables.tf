@@ -177,6 +177,25 @@ variable "railway_services" {
   }
 }
 
+# ENG-OPS-003.Gap8: immutable image digest for the Railway `api` service.
+# When non-empty, main.tf pins the api service's source_image to
+# `<repo>@<api_image_digest>` (the repo comes from railway_services["api"].image;
+# its tag/digest is ignored). This replaces the mutable `:latest` tag so
+# `terraform plan` detects image changes and deploys are reproducible, and a
+# service pinned to a fixed digest cannot be auto-pulled to a newer `:latest`.
+# Leave empty ("") to keep the tag from railway_services (dev/staging default).
+# Promote: `terraform apply -var api_image_digest=sha256:<64-hex>`.
+variable "api_image_digest" {
+  description = "Immutable sha256 digest (e.g. sha256:abc...) to pin the Railway api service. Empty = use the tag from railway_services (no digest pin)."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.api_image_digest == "" || can(regex("^sha256:[0-9a-f]{64}$", var.api_image_digest))
+    error_message = "api_image_digest must be empty or a full digest of the form sha256:<64 lowercase hex chars>."
+  }
+}
+
 # Database Configuration
 variable "enable_pgvector" {
   description = "Enable pgvector extension for vector similarity search"
