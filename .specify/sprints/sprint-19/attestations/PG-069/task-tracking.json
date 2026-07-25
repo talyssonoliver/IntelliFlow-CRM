@@ -1,0 +1,102 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "artifacts": {
+    "created": [
+      "apps/web/src/components/accounts/AccountHierarchy.tsx",
+      "apps/web/src/components/accounts/__tests__/AccountHierarchy.test.tsx"
+    ],
+    "expected": [
+      "apps/web/src/app/accounts/(list)/AccountsPageClient.tsx",
+      "apps/web/src/components/accounts/AccountHierarchy.tsx",
+      "apps/api/src/modules/account/account.router.ts",
+      "apps/web/src/components/accounts/__tests__/AccountHierarchy.test.tsx"
+    ],
+    "missing": []
+  },
+  "blockers": [],
+  "completed_at": "2026-07-25T09:10:00Z",
+  "actual_duration_minutes": 460,
+  "dependencies_meta": {
+    "verified_at": "2026-07-25T01:00:00Z"
+  },
+  "execution": {
+    "last_error": null,
+    "retry_count": 0,
+    "started_at": "2026-07-25T01:30:00Z",
+    "completed_at": "2026-07-25T09:10:00Z",
+    "executor": "Claude Code /exec",
+    "agents": [
+      "frontend-lead",
+      "test-engineer",
+      "a11y-expert"
+    ]
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Tests (web account suite)",
+      "command": "pnpm --filter @intelliflow/web test --run page.test.tsx AccountHierarchy.test.tsx AccountCard.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "note": "35/35"
+    },
+    {
+      "name": "Tests (api account suite)",
+      "command": "pnpm --filter @intelliflow/api test --run account.router.test.ts account.router.hierarchy.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "note": "94/94"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "kpis": {},
+  "notes": "PG-069 Accounts List — RECONCILIATION: feature already shipped (AccountsPageClient.tsx, AccountHierarchy.tsx, account.router.{list,getById,stats,getHierarchy}) + tested. Exec closes the one real gap the Plan-Reviewer found (untested keyboard navigation in AccountHierarchy: handleKeyDown:277, role=tree:364) with a keyboard-nav regression test, runs the validation matrix, and reconciles the CSV artifact drift (account-list.tsx/hierarchy-view.tsx never existed).",
+  "phase": "completed",
+  "started_at": "2026-07-25T01:30:00Z",
+  "status_history": [
+    {
+      "at": "2026-07-25T00:50:00Z",
+      "note": "Task created — Accounts List (reconciliation via /full-pipeline)",
+      "status": "Backlog"
+    },
+    {
+      "at": "2026-07-25T01:05:00Z",
+      "note": "Spec complete — reconciliation scope + file:line evidence",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-07-25T01:25:00Z",
+      "note": "Plan complete — Plan-Reviewer subagent (a473c74fa95b14736) surfaced untested keyboard nav; plan revised",
+      "status": "Plan Complete"
+    },
+    {
+      "at": "2026-07-25T01:30:00Z",
+      "note": "Exec session start — add keyboard-nav test (GREEN), run validation matrix, reconcile tracking",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-07-25T09:10:00Z",
+      "note": "Exec complete — keyboard-nav test added; real onFocus-bubbling a11y defect found+fixed; 5/5 validations green; a11y-expert review PASS (0 blockers, 2 pre-existing should-fix filed as fast-follow task_26d77df8); attestation written; CSV artifact drift reconciled.",
+      "status": "Completed"
+    }
+  ],
+  "stream": null,
+  "task_id": "PG-069",
+  "status": "Completed"
+}

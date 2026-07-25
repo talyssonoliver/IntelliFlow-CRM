@@ -268,4 +268,97 @@ describe('AccountHierarchy', () => {
 
     expect(screen.getByText('(current)')).toBeInTheDocument();
   });
+
+  // AC-9 (PG-069): keyboard navigation on the role="tree" was implemented
+  // (AccountHierarchy.tsx handleKeyDown / <ul role="tree" onKeyDown>) but had
+  // zero test coverage. These regression tests exercise arrow/Home/End/Enter.
+  describe('keyboard navigation (AC-9)', () => {
+    const ACCOUNT_ID = '00000000-0000-4000-8000-000000000001';
+
+    function renderTwoLevelTree() {
+      useQueryMock.mockReturnValue({
+        data: {
+          ancestors: [],
+          current: {
+            id: ACCOUNT_ID,
+            name: 'Parent Corp',
+            _count: { contacts: 1, opportunities: 1 },
+            children: [
+              {
+                id: 'child-1',
+                name: 'Child One',
+                _count: { contacts: 0, opportunities: 0 },
+                children: [],
+              },
+              {
+                id: 'child-2',
+                name: 'Child Two',
+                _count: { contacts: 0, opportunities: 0 },
+                children: [],
+              },
+            ],
+          },
+          rootAccount: null,
+        },
+        isLoading: false,
+        error: null,
+      });
+      // Root (accountId) is expanded by default → visible order: Parent, Child One, Child Two.
+      return render(<AccountHierarchy accountId={ACCOUNT_ID} />);
+    }
+
+    // The focused node is the sole treeitem with tabIndex 0 (isFocused ? 0 : -1).
+    function focusedItem() {
+      return (
+        screen.getAllByRole('treeitem').find((el) => el.getAttribute('tabindex') === '0') ?? null
+      );
+    }
+
+    it('ArrowDown moves focus to the next visible node', () => {
+      renderTwoLevelTree();
+      const [root] = screen.getAllByRole('treeitem');
+      fireEvent.focus(root); // seed focus on Parent Corp (onFocus → focusedNodeId)
+      fireEvent.keyDown(screen.getByRole('tree'), { key: 'ArrowDown' });
+      // Leaf li text is exact; the root li would contain BOTH children's text, so
+      // the negative assertion fails if focus wrongly bubbled back to the root.
+      expect(focusedItem()).toHaveTextContent('Child One');
+      expect(focusedItem()).not.toHaveTextContent('Child Two');
+    });
+
+    it('ArrowUp moves focus to the previous visible node', () => {
+      renderTwoLevelTree();
+      const items = screen.getAllByRole('treeitem');
+      fireEvent.focus(items[1]); // Child One
+      fireEvent.keyDown(screen.getByRole('tree'), { key: 'ArrowUp' });
+      expect(focusedItem()).toHaveTextContent('Parent Corp');
+    });
+
+    it('End jumps to the last node and Home to the first', () => {
+      renderTwoLevelTree();
+      const items = screen.getAllByRole('treeitem');
+      fireEvent.focus(items[1]); // start in the middle (Child One)
+      fireEvent.keyDown(screen.getByRole('tree'), { key: 'End' });
+      expect(focusedItem()).toHaveTextContent('Child Two');
+      expect(focusedItem()).not.toHaveTextContent('Child One');
+      fireEvent.keyDown(screen.getByRole('tree'), { key: 'Home' });
+      expect(focusedItem()).toHaveTextContent('Parent Corp');
+    });
+
+    it('Enter activates (navigates to) the focused node', () => {
+      renderTwoLevelTree();
+      const items = screen.getAllByRole('treeitem');
+      fireEvent.focus(items[1]); // Child One
+      fireEvent.keyDown(screen.getByRole('tree'), { key: 'Enter' });
+      expect(mockPush).toHaveBeenCalledWith('/accounts/child-1');
+    });
+
+    it('ignores non-navigation keys (focus unchanged)', () => {
+      renderTwoLevelTree();
+      const [root] = screen.getAllByRole('treeitem');
+      fireEvent.focus(root);
+      fireEvent.keyDown(screen.getByRole('tree'), { key: 'a' });
+      expect(focusedItem()).toHaveTextContent('Parent Corp');
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+  });
 });

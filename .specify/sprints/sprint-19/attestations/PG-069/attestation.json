@@ -1,0 +1,125 @@
+{
+  "task_id": "PG-069",
+  "sprint": 19,
+  "run_id": "20260725-pg069-reconciliation",
+  "verdict": "COMPLETE",
+  "timestamp": "2026-07-25T09:05:00Z",
+  "dependencies_verified": true,
+  "blocker": null,
+  "nature": "RECONCILIATION",
+  "scoping_correction": {
+    "reason": "Feature already implemented and live on main (IFC-273 bc8b1afac #415). CSV Artifacts To Track cited component filenames that never existed (same drift pattern as PG-064).",
+    "corrections": [
+      {
+        "csv_artifact": "apps/web/src/components/accounts/account-list.tsx",
+        "real_artifact": "apps/web/src/app/accounts/(list)/AccountsPageClient.tsx",
+        "status": "never_existed_renamed_to_real"
+      },
+      {
+        "csv_artifact": "apps/web/src/components/accounts/hierarchy-view.tsx",
+        "real_artifact": "apps/web/src/components/accounts/AccountHierarchy.tsx",
+        "status": "never_existed_renamed_to_real"
+      },
+      {
+        "csv_artifact": "apps/web/src/app/accounts/(list)/page.tsx",
+        "real_artifact": "apps/web/src/app/accounts/(list)/page.tsx",
+        "status": "already_correct"
+      }
+    ],
+    "no_shims_created": true
+  },
+  "artifact_hashes": {
+    "apps/web/src/components/accounts/AccountHierarchy.tsx": "351309f60b14ef48366829bb869bf1398a1a0be8499a954806e80fbb47177afe",
+    "apps/web/src/components/accounts/__tests__/AccountHierarchy.test.tsx": "fb61644e94c2b9e37d59cb4063b864afa536f0dd1c51af0fa571673713cf00b7",
+    ".specify/sprints/sprint-19/execution/PG-069/PG-069-delivery.md": "e378e2314d42a13c1e50162e18d03de504a751914892dca7ceced7fa25b75f68",
+    ".specify/sprints/sprint-19/attestations/PG-069/context_ack.json": "908bdc053ae10a525afb53c03fcd0ad5b216ba66ae7ab95b0c67832affd29edb"
+  },
+  "changed_source_files": {
+    "created": [],
+    "modified": [
+      "apps/web/src/components/accounts/AccountHierarchy.tsx",
+      "apps/web/src/components/accounts/__tests__/AccountHierarchy.test.tsx"
+    ],
+    "note": "Only two source files changed: a 6-line a11y fix (onFocus bubbling guard) + a 5-test keyboard-nav regression block. All other listed artifacts are pre-existing production code covered by the reconciliation."
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T08:44:00Z",
+      "note": "Clean after rebuilding stale workspace dist (packages/*)."
+    },
+    {
+      "name": "Tests (web account suite)",
+      "command": "pnpm --filter @intelliflow/web test --run src/app/accounts/__tests__/page.test.tsx src/components/accounts/__tests__/AccountHierarchy.test.tsx src/components/accounts/__tests__/AccountCard.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T08:44:00Z",
+      "note": "35/35 (3 files). AccountHierarchy: 15/15 (10 pre-existing + 5 new keyboard-nav)."
+    },
+    {
+      "name": "Tests (api account suite)",
+      "command": "pnpm --filter @intelliflow/api test --run src/modules/account/__tests__/account.router.test.ts src/modules/account/__tests__/account.router.hierarchy.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T08:44:00Z",
+      "note": "94/94 (2 files) — list/getById/stats + getHierarchy/setParent."
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T08:52:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T09:05:00Z",
+      "note": "next build --webpack — production build succeeded."
+    }
+  ],
+  "evidence_summary": {
+    "tests_passing": 129,
+    "regression_tests_passing": 124,
+    "new_tests_added": 5,
+    "files_created": 0,
+    "files_modified": 2,
+    "completed_acceptance_criteria": ["AC-1", "AC-2", "AC-3", "AC-4", "AC-5", "AC-6", "AC-7", "AC-8", "AC-9", "AC-10"],
+    "blocked_acceptance_criteria": []
+  },
+  "a11y_review": {
+    "required": true,
+    "reviewer": "a11y-expert subagent",
+    "verdict": "PASS",
+    "blockers": 0,
+    "onfocus_fix_confirmed": "correct and sufficient for the onFocus-bubbling defect; tests would catch a regression",
+    "fast_follow_task": "task_26d77df8 (2 pre-existing should-fix roving-tabIndex items; not DoD-breaking)"
+  },
+  "kpi_results": {
+    "scoped_coverage_AccountHierarchy_tsx": {
+      "lines": 63.88,
+      "functions": 48.38,
+      "branches": 66.66,
+      "note": "After-change scoped coverage (istanbul). handleKeyDown + arrow handlers went from zero invoking tests to exercised. Remaining uncovered paths (ArrowLeft/Right expand-collapse, set-parent picker) are pre-existing and out of scope for this reconciliation.",
+      "diff_coverage_gate": "enforced by pre-ship on changed lines"
+    },
+    "lighthouse": "not re-measured (no Lighthouse KPI claimed); GATE:lighthouse-gte-90 enforced for /accounts via lighthouserc.js in CI"
+  },
+  "gate_results": {
+    "plan_checkboxes": { "verdict": "PASS", "note": "GREEN (G1) + validation (V1-V5) + reconcile (R1-R4) steps executed; R2/R3/R4 completed in Phase 5." },
+    "artifact_verification": "PASS",
+    "import_reachability": "PASS",
+    "runtime_wiring": "PASS",
+    "build_validation": "PASS",
+    "coverage_measurement": "PASS",
+    "nav_wiring": "PASS",
+    "accessibility_doc_gate": "PASS",
+    "a11y_expert_review": "PASS"
+  },
+  "notes": "PG-069 Accounts List RECONCILIATION. The feature shipped on main (IFC-273 bc8b1afac #415); this task corrects CSV artifact drift (account-list.tsx/hierarchy-view.tsx never existed -> AccountsPageClient.tsx/AccountHierarchy.tsx), produces the missing spec/plan/exec/attestation evidence, and closes the one genuine gap surfaced by the Plan-Reviewer: untested keyboard navigation in AccountHierarchy. Writing that regression test exposed a real production a11y defect (React onFocus bubbling collapsed keyboard focus onto the root treeitem, so arrow keys could not advance past the root); fixed with an e.target===e.currentTarget guard. All 5 mandatory validations pass; mandatory a11y-expert review PASS (0 blockers); two pre-existing should-fix roving-tabIndex items filed as fast-follow task_26d77df8. No shims, no renames, no false-path attestations, no fabricated Lighthouse score."
+}

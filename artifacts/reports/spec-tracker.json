@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-24T12:35:14.946Z",
+  "generated_at": "2026-07-25T07:25:44.419Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 508,
+    "total_specs_analyzed": 509,
     "completed": 441,
     "partially_done": 0,
     "spec_only": 61,
-    "uncertain": 6
+    "uncertain": 7
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -242,6 +242,12 @@
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "PG-206",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-206 when ready for implementation."
     }
   ],
   "tasks": [
@@ -6992,6 +6998,22 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-069",
+      "title": "Accounts List",
+      "sprint": 19,
+      "spec_path": ".specify/sprints/sprint-19/specifications/PG-069-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "Plan Complete",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-089"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "PG-104",
       "title": "Settings Home",
       "sprint": 13,
@@ -8296,7 +8318,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
@@ -8304,7 +8326,7 @@
         "PG-178",
         "PG-186"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "UNCERTAIN"
     },
     {
       "task_id": "PG-207",

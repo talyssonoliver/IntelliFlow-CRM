@@ -1,0 +1,7 @@
+{
+  "task_id": "PG-069",
+  "note": "Reconciliation. Before-capture of AccountHierarchy.tsx (keyboard nav untested pre-change). Full feature already shipped + covered elsewhere (page.test.tsx, account.router tests).",
+  "captured_at": "2026-07-25T01:35:00Z",
+  "scope": "apps/web/src/components/accounts/AccountHierarchy.tsx",
+  "coverage": null
+}
