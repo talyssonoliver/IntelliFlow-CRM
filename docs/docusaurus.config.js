@@ -37,7 +37,23 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          // The docs content lives directly under `docs/` (this directory),
+          // NOT the Docusaurus default of `docs/docs/`. Without an explicit
+          // `path` the preset silently looked for `docs/docs/` and failed with
+          // "The docs folder does not exist for version current". See #647.
+          path: '.',
           routeBasePath: '/',
+          // `path: '.'` makes the whole `docs/` tree the content root, so the
+          // build tooling and non-page trees must be excluded explicitly.
+          // (Content curation of the remaining Markdown is tracked in #647.)
+          exclude: [
+            '**/node_modules/**',
+            'src/**',
+            '**/_*.{js,jsx,ts,tsx,md,mdx}',
+            '**/_*/**',
+            '**/*.test.{js,jsx,ts,tsx}',
+            '**/__tests__/**',
+          ],
           sidebarPath: require.resolve('./sidebars.js'),
           // Edit URL for GitHub
           editUrl: 'https://github.com/intelliflow/intelliflow-crm/tree/main/docs/',
