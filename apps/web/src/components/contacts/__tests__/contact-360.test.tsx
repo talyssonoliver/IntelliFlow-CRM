@@ -266,4 +266,31 @@ describe('contact-360 — transforms', () => {
     expect(filterContactActivities(acts, 'all', 'all', 'nomatch')).toHaveLength(0);
     expect(filterContactActivities(acts, 'all', 'all', '')).toHaveLength(2);
   });
+
+  it('filterContactActivities matches a query found ONLY in metadata (subject/preview/notes)', () => {
+    // Guards user-facing activity search: title/description/user do NOT contain the
+    // query — only the rich metadata does. Exercises the metadata OR-branch of
+    // filterContactActivities, which is otherwise never truthy in the suite.
+    const acts: Activity[] = [
+      baseActivity({
+        id: 'm1',
+        title: 'Untitled',
+        description: 'no keywords here',
+        user: 'Zara',
+        metadata: {
+          subject: 'Renewal proposal',
+          preview: 'quarterly draft',
+          notes: 'follow-up plan',
+        },
+      }),
+    ];
+    // 'renewal' appears ONLY in metadata.subject
+    expect(filterContactActivities(acts, 'all', 'all', 'renewal')).toHaveLength(1);
+    // 'quarterly' appears ONLY in metadata.preview
+    expect(filterContactActivities(acts, 'all', 'all', 'quarterly')).toHaveLength(1);
+    // 'follow-up' appears ONLY in metadata.notes
+    expect(filterContactActivities(acts, 'all', 'all', 'follow-up')).toHaveLength(1);
+    // absent from every field including metadata → no match
+    expect(filterContactActivities(acts, 'all', 'all', 'zzz-none')).toHaveLength(0);
+  });
 });

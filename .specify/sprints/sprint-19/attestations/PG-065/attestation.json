@@ -1,16 +1,16 @@
 {
   "task_id": "PG-065",
   "sprint": 19,
-  "run_id": "20260724T232040-pg065-reconcile",
+  "run_id": "20260725T005500-pg065-reconcile",
   "verdict": "COMPLETE",
-  "timestamp": "2026-07-24T23:20:40.000Z",
+  "timestamp": "2026-07-25T00:55:00.000Z",
   "scope": "RECONCILE",
   "dependencies_verified": true,
   "blocker": null,
   "artifact_hashes": {
     "apps/web/src/components/contacts/contact-360.tsx": "c3a5482606c6d6fee07a2579de4d7b4c2afabe2ed5b065759e67356615615cec",
     "apps/web/src/components/contacts/contact-insights.tsx": "16ed49c9d0a57d51f61222911b1b92b8064e856334b5531f53ac5ee94a518306",
-    "apps/web/src/components/contacts/__tests__/contact-360.test.tsx": "bc1865909a47b760bc1a10801cadeed0d299f9afbb377923c4d727634a64fb6f",
+    "apps/web/src/components/contacts/__tests__/contact-360.test.tsx": "2d3bad1454daa31a7d944c8f81fd3840cd9a684a54471cda0ccb8eab05dcd898",
     "apps/web/src/components/contacts/__tests__/contact-insights.test.tsx": "91ea5b1362121c0e3802e69d6e43b17719edaf87b574a69459c195a79b9cfd69",
     "apps/web/src/app/contacts/[id]/page.tsx": "9246a1afc6d6b41fbe27a61b3474ee979b48c96d75d0626d38f0e9b03c69fa01"
   },
@@ -45,13 +45,13 @@
     }
   ],
   "evidence_summary": {
-    "tests_passing": 61,
-    "new_tests_added": 28,
+    "tests_passing": 62,
+    "new_tests_added": 29,
     "regression_tests_passing": 33,
     "files_created": 4,
     "files_modified": 1,
     "route_file_lines_before": 2576,
-    "route_file_lines_after": 1525,
+    "route_file_lines_after": 1498,
     "completed_acceptance_criteria": [
       "360 view complete",
       "all data shown",
@@ -82,7 +82,8 @@
     "runtime_wiring": "PASS",
     "build_validation": "PASS",
     "coverage_measurement": "PASS",
-    "behavior_preservation": "PASS"
+    "behavior_preservation": "PASS",
+    "plan_reviewer": "PASS (REQUEST-CHANGES resolved: R4 test implemented + attestation evidence corrected)"
   },
-  "notes": "RECONCILE: the Contact 360 view already existed on main (route-registry Status='Implemented'), implemented inline in the 2576-line route component Contact360Page. This task creates the two CSV-named artifacts — contact-360.tsx and contact-insights.tsx — by byte-faithful, behavior-preserving extraction, and adds the unit tests the page-registry recorded as missing ('Unit Tests: None'). The pre-existing route test (33 tests) passes unchanged after the move, proving identical behavior; 28 new tests give the extracted files 100% line coverage. No logic changed; the route file shrank by ~1050 lines. No pre-ship bypass used."
+  "notes": "RECONCILE via full pipeline (spec-session + plan-session + exec). The Contact 360 view already existed on main (route-registry Status=Implemented), implemented inline in the 2576-line Contact360Page. This creates the two CSV-named artifacts (contact-360.tsx, contact-insights.tsx) by byte-faithful, behavior-preserving extraction; the route file is now 1498 lines. The pre-existing route test (33) passes unchanged (behavior-preservation gate). 29 new tests give the extracted files 100% line / 92.51% branch coverage. Plan-reviewer subagent (a0dab11c9a8e2b4f5) flagged two blocking gaps which THIS exec resolved: (1) the filterContactActivities metadata-only search test (spec T-3 / plan R4) was missing — now added; (2) route_file_lines_after was 1525 vs actual 1498 — corrected here with fresh hashes. Pre-existing a11y findings + lower-priority coverage gaps filed as follow-ups (out of scope for a behavior-preserving reconcile). No pre-ship bypass used."
 }
