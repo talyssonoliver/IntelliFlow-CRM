@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 // Use relative paths since vitest aliases don't work consistently in tests/integration
 import { PrismaClient } from '../../../packages/db/src';
+// Prisma 7 requires a driver adapter — the legacy `datasources.db.url` constructor
+// throws PrismaClientConstructorValidationError under Prisma 7 (see
+// tests/integration/setup.ts). @prisma/adapter-pg is a first-class dependency.
+import { PrismaPg } from '@prisma/adapter-pg';
 import { IngestionOrchestrator } from '../../../packages/application/src';
 import { PrismaCaseDocumentRepository } from '../../../packages/adapters/src';
 import {
@@ -121,14 +125,12 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
 
     console.log('\n✅ File Ingestion E2E: Infrastructure available, running tests\n');
 
-    // Initialize test database
-    prisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: process.env.DATABASE_TEST_URL || process.env.DATABASE_URL,
-        },
-      },
+    // Initialize test database (Prisma 7: construct with the pg driver adapter,
+    // NOT the removed `datasources.db.url` constructor option).
+    const adapter = new PrismaPg({
+      connectionString: process.env.DATABASE_TEST_URL || process.env.DATABASE_URL,
     });
+    prisma = new PrismaClient({ adapter });
 
     // Initialize components
     repository = new PrismaCaseDocumentRepository(prisma);
