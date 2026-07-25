@@ -458,6 +458,27 @@ const STEPS = [
     required: false,
   },
   {
+    // SECOND-LOCKFILE AUDIT (ENG-OPS-003.Gap6, #642): docs/ is a Docusaurus site
+    // that is NOT a pnpm workspace member, so it has its own pnpm-lock.yaml that
+    // the root `pnpm.overrides` and the `audit` step above BOTH miss. That blind
+    // spot let a CRITICAL (websocket-driver, CVE-2026-54466) sit there since
+    // 2026-07-16, visible only as a Trivy code-scanning alert.
+    //
+    // `--ignore-workspace` is REQUIRED: without it pnpm walks up, finds the root
+    // pnpm-workspace.yaml and audits the root project instead — reporting clean
+    // while docs/ is vulnerable. Note also that `pnpm audit` here is only
+    // meaningful once docs/ deps are installed; on an uninstalled docs/ it
+    // reports "No known vulnerabilities found" vacuously.
+    id: 'docs-audit',
+    description:
+      'pnpm audit --audit-level=high in docs/ (second lockfile, outside the root workspace)',
+    cmd: ['pnpm', 'audit', '--audit-level=high', '--ignore-workspace'],
+    cwd: path.join(REPO_ROOT, 'docs'),
+    // Advisory, mirroring the root `audit` step's required:false so the two
+    // lockfiles are gated consistently.
+    required: false,
+  },
+  {
     // OSV / TRIVY PARITY GATE (2026-06-15, #485): mirror CI's dependency-scan +
     // security workflows (osv-scanner + Trivy `fs`) LOCALLY so a newly-published
     // transitive CVE surfaces here instead of as a post-merge code-scanning alert
