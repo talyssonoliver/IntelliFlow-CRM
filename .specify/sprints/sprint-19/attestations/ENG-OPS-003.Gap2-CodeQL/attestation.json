@@ -9,7 +9,7 @@
   "blocker": null,
   "artifact_hashes": {
     ".github/codeql/codeql-config.yml": "81bc1c266d6ab1948ffab6110e0e00dd4a6006d2d5bccad09162e4634edda0b9",
-    "tools/scripts/security/vendored-js-lint.mjs": "c03d841f7484bbe0a1b2542cdc3b30a3eb722c31cfb6f10303abddac61183cbd",
+    "tools/scripts/security/vendored-js-lint.mjs": "de3c5c75448f010040d0ba593075fb951473b393161531f418b28aa418f110f4",
     "tools/scripts/__tests__/vendored-js-lint.test.ts": "3beb5aa7abbb1e77cde3608b3f1a2951984298394088f9a73f7c9749cba2d2ab",
     "docs/security/codeql-configuration.md": "92e5dcd6f2b535ba59da30ba648d3e91742102657685a2281f33a1d9be2f3778",
     "scripts/pre-ship.mjs": "0b8b42259e60d12a1533072bf0a2fcbfe4c00f47921a3203f9f2a4fd345ea6d3"

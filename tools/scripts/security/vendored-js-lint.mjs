@@ -150,12 +150,17 @@ export function findMaxInlineScript(html) {
   // script open tags don't legally contain `>` in attribute values here.
   //
   // The end tag must match the way the HTML parser actually terminates a
-  // script element: `</script` followed by a tag-name terminator (whitespace,
-  // `/`, or `>`) and then any junk up to `>`. A naive `</script\s*>` misses
-  // browser-honoured forms like `</script foo>` or `</script\t\n bar>`, which
-  // would let an oversized bundle evade this lint (CodeQL js/bad-tag-filter).
-  // The `(?=[\s/>])` lookahead keeps `</scriptfoo>` from counting as a close.
-  const re = /<script\b([^>]*)>([\s\S]*?)<\/script(?=[\s/>])[^>]*>/gi;
+  // script element: `</script` followed by a tag-name terminator (whitespace or
+  // `/`) plus any junk up to `>`, OR a bare `</script>`. A naive `</script\s*>`
+  // misses browser-honoured forms like `</script foo>` or `</script\t\n bar>`,
+  // which would let an oversized bundle evade this lint (the CodeQL
+  // js/bad-tag-filter class). The optional `([\s/][^>]*)?` group requires a real
+  // terminator before any trailing junk, so `</scriptfoo>` does NOT count as a
+  // close. This is written WITHOUT a lookahead: CodeQL's js/bad-tag-filter model
+  // mis-analyses `(?=[\s/>])` and false-positives on it even though it matches
+  // every form (verified), so the equivalent consuming form keeps the scanner
+  // and the parser in agreement.
+  const re = /<script\b([^>]*)>([\s\S]*?)<\/script([\s/][^>]*)?>/gi;
   let m;
   let maxBytes = 0;
   let blockCount = 0;
