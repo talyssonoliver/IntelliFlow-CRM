@@ -9,6 +9,11 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { CONTACT_STATUSES } from '@intelliflow/domain';
 import { useContactFilterOptions, isValidUUID } from '@/hooks/use-dynamic-filters';
+import {
+  SORT_OPTIONS,
+  buildContactListQuery,
+  isDefaultContactQuery,
+} from '@/lib/contacts/contact-search';
 import { invalidateContactsCache } from './actions';
 import { revalidateContactCaches } from '../actions';
 
@@ -37,44 +42,6 @@ function useDebounce<T>(value: T, delay: number): T {
 
   return debouncedValue;
 }
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-function getSortParams(sortOrder: string): {
-  sortBy:
-    | 'createdAt'
-    | 'updatedAt'
-    | 'firstName'
-    | 'lastName'
-    | 'email'
-    | 'status'
-    | 'company'
-    | 'department'
-    | 'lastContactedAt';
-  sortOrder: 'asc' | 'desc';
-} {
-  switch (sortOrder) {
-    case 'oldest':
-      return { sortBy: 'createdAt', sortOrder: 'asc' };
-    case 'name':
-      return { sortBy: 'lastName', sortOrder: 'asc' };
-    case 'newest':
-    default:
-      return { sortBy: 'createdAt', sortOrder: 'desc' };
-  }
-}
-
-// =============================================================================
-// Filter Options (Sort options only - status/department/account are dynamic)
-// =============================================================================
-
-const SORT_OPTIONS = [
-  { value: 'newest', label: 'Newest First' },
-  { value: 'oldest', label: 'Oldest First' },
-  { value: 'name', label: 'Name A-Z' },
-];
 
 // =============================================================================
 // Page Component
@@ -151,30 +118,24 @@ export default function ContactsPageClient({
     }
   }, [accountOptions, companyFilter]);
 
-  // Build query parameters
-  const sortParams = getSortParams(sortOrder);
+  // Build query parameters from the current filter state (shared with the
+  // server-prefetch default-view check below).
+  const filterState = {
+    page: currentPage,
+    limit: pageSize,
+    search: debouncedSearch,
+    departmentFilter,
+    statusFilter,
+    companyFilter,
+    sortOrder,
+  };
 
   // Use server-prefetched data for initial render (page 1, no filters, newest sort)
-  const isDefaultQuery =
-    currentPage === 1 &&
-    !debouncedSearch &&
-    !departmentFilter &&
-    !statusFilter &&
-    !companyFilter &&
-    sortOrder === 'newest';
+  const isDefaultQuery = isDefaultContactQuery(filterState);
 
   // Main data query - only run when authenticated
   const { data, isLoading, error, refetch } = api.contact.list.useQuery(
-    {
-      page: currentPage,
-      limit: pageSize,
-      search: debouncedSearch || undefined,
-      department: departmentFilter || undefined,
-      status: statusFilter ? (statusFilter as (typeof CONTACT_STATUSES)[number]) : undefined,
-      accountId: companyFilter && isValidUUID(companyFilter) ? companyFilter : undefined,
-      sortBy: sortParams.sortBy,
-      sortOrder: sortParams.sortOrder,
-    },
+    buildContactListQuery(filterState),
     {
       enabled: isAuthenticated && !authLoading,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
