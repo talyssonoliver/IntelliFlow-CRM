@@ -98,6 +98,28 @@ module "vercel" {
   tags = local.common_tags
 }
 
+# ENG-OPS-003.Gap8: pin the Railway `api` service to an IMMUTABLE image digest
+# instead of the mutable `:latest` tag. With `:latest`, `terraform plan` never
+# detects an image change (the string is unchanged) and Railway may auto-pull an
+# unreviewed image — deploys are non-reproducible. Referencing `<repo>@sha256:...`
+# makes the deployed image explicit and reproducible, and a service pinned to a
+# fixed digest cannot be auto-pulled to a newer `:latest`.
+# The repo path is taken from railway_services["api"].image (tag/digest stripped);
+# the digest comes from var.api_image_digest. When the digest is empty, the api
+# image is left untouched (dev/staging keep their tag). Promote with:
+#   terraform apply -var api_image_digest=sha256:<new-digest>
+locals {
+  # Bare repo, e.g. ghcr.io/<owner>/intelliflow-crm-api — split on "@" first
+  # (drop any digest), then ":" (drop any tag). ghcr.io host has no port/colon.
+  api_image_repo = split(":", split("@", var.railway_services["api"].image)[0])[0]
+
+  railway_services_pinned = var.api_image_digest == "" ? var.railway_services : merge(var.railway_services, {
+    api = merge(var.railway_services["api"], {
+      image = "${local.api_image_repo}@${var.api_image_digest}"
+    })
+  })
+}
+
 # Railway Module
 # Manages backend services (API, AI Worker)
 module "railway" {
@@ -106,8 +128,8 @@ module "railway" {
   project_name = var.railway_project_name
   environment  = var.environment
 
-  # Services configuration
-  services = var.railway_services
+  # Services configuration (api image digest-pinned via locals — Gap8)
+  services = local.railway_services_pinned
 
   # Shared environment variables + observability (monitoring module)
   shared_env_vars = merge({
