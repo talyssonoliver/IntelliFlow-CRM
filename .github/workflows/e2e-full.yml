@@ -48,6 +48,12 @@ jobs:
       # (the config guard will not fall back to localhost). The E2E web server
       # runs locally, so point it at the Playwright base URL.
       NEXT_PUBLIC_APP_URL: http://localhost:3000
+      # ENG-OPS-003.Gap12: tell playwright.config.ts to also start the
+      # @intelliflow/api backend (built above) as a managed webServer, so the
+      # tRPC-dependent specs resolve instead of 404ing to web-origin HTML. The
+      # API's runtime env (DATABASE_URL/REDIS_URL/SUPABASE_*/keys) is inherited
+      # from this block.
+      E2E_START_API: '1'
     # A real backend so data/auth specs can actually pass — the missing piece
     # that made these specs fail in the per-push job.
     services:
@@ -88,6 +94,21 @@ jobs:
 
       - name: Build web app
         run: pnpm --filter @intelliflow/web build
+        env:
+          # ENG-OPS-003.Gap12: bake the API origin into the CLIENT bundle at build
+          # time. `next build` runs in production mode, where next.config.js falls
+          # back to '' unless this is set explicitly — leaving tRPC calls pointed
+          # at the web origin (404 HTML). The API runs on :4000 (started below via
+          # E2E_START_API). Value is consistent with playwright.config.ts + the
+          # preship-full-nightly job. See the Gap12 spec/ADR-063 Option 3.
+          NEXT_PUBLIC_API_URL: http://localhost:4000
+
+      - name: Build API server
+        # ENG-OPS-003.Gap12: the standalone tRPC backend the E2E specs call. The
+        # recursive `...` filter builds the API plus its workspace deps in order
+        # (precedent: performance-gate.yml), so it is self-contained regardless of
+        # what the setup-monorepo library pre-build already produced.
+        run: pnpm --filter "@intelliflow/api..." build
 
       - name: Install Playwright (chromium)
         run: pnpm exec playwright install --with-deps chromium

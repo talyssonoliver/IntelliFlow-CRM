@@ -65,6 +65,15 @@ jobs:
       # E2E webServer runs locally, so point it at the Playwright base URL.
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       E2E_BASE_URL: http://localhost:3000
+      # ENG-OPS-003.Gap12: the cross-browser E2E matrix (pre-ship.mjs --full)
+      # renders API-dependent specs, so start the @intelliflow/api backend and
+      # bake its origin into the web bundle. `pnpm run build` (turbo, all pkgs)
+      # runs before the matrix — it produces apps/api/dist/main.js AND, via
+      # turbo.json's NEXT_PUBLIC_API_URL passthrough, bakes this into the web
+      # client bundle. Set job-wide (harmless for non-E2E steps — the API only
+      # starts when Playwright runs); the docker-compose postgres provides its DB.
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      E2E_START_API: '1'
     steps:
       - uses: actions/checkout@v7
         with:

@@ -60,6 +60,20 @@ const HAS_QA_ENV = Boolean(
 );
 
 /**
+ * ENG-OPS-003.Gap12: opt-in flag to also start the `@intelliflow/api` tRPC
+ * backend as a Playwright-managed webServer. Since ADR-063 Option 3 the browser
+ * (and SSR) call the API *cross-origin* at `${NEXT_PUBLIC_API_URL}/api/trpc`
+ * (see apps/web/src/app/providers.tsx + apps/web/src/lib/trpc-server.ts), so any
+ * spec that renders a page issuing tRPC needs the API running AND
+ * `NEXT_PUBLIC_API_URL` baked into the web bundle at build time (the workflows
+ * set both). This `webServer` config is shared by EVERY Playwright invocation —
+ * including the per-PR smoke job (ci.yml) which has no test DB — so the API
+ * entry is gated OFF by default and only the API-provisioning nightly jobs
+ * (e2e-full.yml, preship-full-nightly.yml) set E2E_START_API=1.
+ */
+const E2E_START_API = process.env.E2E_START_API === '1';
+
+/**
  * Playwright E2E Testing Configuration for IntelliFlow CRM
  *
  * This configuration enables comprehensive end-to-end testing with:
@@ -284,26 +298,73 @@ export default defineConfig({
   // pre-built `.next` directory.
   //
   // Dev: keep `pnpm run dev` for the local watch experience.
-  webServer: {
-    command: process.env.CI ? 'pnpm --filter @intelliflow/web start' : 'pnpm run dev',
-    url: process.env.E2E_BASE_URL || 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    // 180s is comfortable for `next start` cold boot on a GH Actions
-    // ubuntu-latest runner; the previous 300s was sized for the
-    // (broken) `build && start` path and is no longer needed.
-    timeout: 180 * 1000,
-    stdout: 'pipe',
-    stderr: 'pipe',
-    env: {
-      NODE_ENV: 'test',
-      DATABASE_URL: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || '',
-      NEXT_PUBLIC_API_URL: process.env.E2E_BASE_URL || 'http://localhost:3000',
-      // #278: the web app's module-init guard hard-fails `next start` (prod mode)
-      // unless NEXT_PUBLIC_APP_URL is set, so the E2E webServer refused to boot and
-      // every spec failed. Provide it to the webServer process.
-      NEXT_PUBLIC_APP_URL: process.env.E2E_BASE_URL || 'http://localhost:3000',
+  webServer: [
+    // ENG-OPS-003.Gap12: the `@intelliflow/api` tRPC backend. Gated behind
+    // E2E_START_API so it starts ONLY for the API-provisioning nightly jobs and
+    // never for the backend-free per-PR smoke job (see E2E_START_API note above).
+    // Playwright manages its lifecycle: start -> poll /health (200, DB-free) ->
+    // teardown. CORS already allows the localhost:3000 web origin -> :4000
+    // (apps/api/src/http-server.ts buildAllowedOrigins), so no extra CORS env.
+    ...(E2E_START_API
+      ? [
+          {
+            command: process.env.CI
+              ? 'pnpm --filter @intelliflow/api start'
+              : 'pnpm --filter @intelliflow/api dev',
+            url: 'http://localhost:4000/health',
+            reuseExistingServer: !process.env.CI,
+            timeout: 120 * 1000,
+            stdout: 'pipe' as const,
+            stderr: 'pipe' as const,
+            env: {
+              PORT: '4000',
+              // Tracing is noise in E2E and slows cold boot; disable it.
+              OTEL_ENABLED: 'false',
+              // The API process inherits the job env, but pass the vars it needs
+              // explicitly so readiness never depends on Playwright's env-merge.
+              DATABASE_URL: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || '',
+              DIRECT_URL:
+                process.env.DIRECT_URL ||
+                process.env.TEST_DATABASE_URL ||
+                process.env.DATABASE_URL ||
+                '',
+              REDIS_URL: process.env.REDIS_URL || '',
+              PRISMA_FIELD_ENCRYPTION_KEY: process.env.PRISMA_FIELD_ENCRYPTION_KEY || '',
+              AI_AUDIT_SIGNING_KEY: process.env.AI_AUDIT_SIGNING_KEY || '',
+              SUPABASE_URL: process.env.SUPABASE_URL || '',
+              SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+              SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
+            },
+          },
+        ]
+      : []),
+    {
+      command: process.env.CI ? 'pnpm --filter @intelliflow/web start' : 'pnpm run dev',
+      url: process.env.E2E_BASE_URL || 'http://localhost:3000',
+      reuseExistingServer: !process.env.CI,
+      // 180s is comfortable for `next start` cold boot on a GH Actions
+      // ubuntu-latest runner; the previous 300s was sized for the
+      // (broken) `build && start` path and is no longer needed.
+      timeout: 180 * 1000,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      env: {
+        NODE_ENV: 'test',
+        DATABASE_URL: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || '',
+        // ENG-OPS-003.Gap12: the browser's tRPC base URL is baked into the CLIENT
+        // bundle at BUILD time (the workflows set NEXT_PUBLIC_API_URL on the web
+        // build step). This runtime value only affects SSR tRPC fetches made from
+        // this `next start`/`dev` process (apps/web/src/lib/trpc-server.ts), so it
+        // must point at the API origin (:4000), NOT the web origin — the previous
+        // `:3000` value 404'd to the web app's HTML (no /api/trpc handler there).
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+        // #278: the web app's module-init guard hard-fails `next start` (prod mode)
+        // unless NEXT_PUBLIC_APP_URL is set, so the E2E webServer refused to boot and
+        // every spec failed. Provide it to the webServer process.
+        NEXT_PUBLIC_APP_URL: process.env.E2E_BASE_URL || 'http://localhost:3000',
+      },
     },
-  },
+  ],
 
   // Global setup and teardown
   globalSetup: path.join(__dirname, 'tests/e2e/global-setup.ts'),
