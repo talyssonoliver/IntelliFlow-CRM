@@ -54,6 +54,11 @@ jobs:
       # API's runtime env (DATABASE_URL/REDIS_URL/SUPABASE_*/keys) is inherited
       # from this block.
       E2E_START_API: '1'
+      # ENG-OPS-003.Gap12: inbound-webhook.spec.ts POSTs directly to the API via
+      # Playwright's `request` fixture at `${E2E_API_URL || :3001}/trpc/...`
+      # (bypassing the browser). Point it at the API we start on :4000, else it
+      # hits a dead :3001. Same origin the browser bundle is baked against.
+      E2E_API_URL: http://localhost:4000
     # A real backend so data/auth specs can actually pass — the missing piece
     # that made these specs fail in the per-push job.
     services:

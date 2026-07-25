@@ -74,6 +74,9 @@ jobs:
       # starts when Playwright runs); the docker-compose postgres provides its DB.
       NEXT_PUBLIC_API_URL: http://localhost:4000
       E2E_START_API: '1'
+      # inbound-webhook.spec.ts POSTs directly to the API (bypassing the browser)
+      # at `${E2E_API_URL || :3001}/trpc/...`; point it at the started API.
+      E2E_API_URL: http://localhost:4000
     steps:
       - uses: actions/checkout@v7
         with:
