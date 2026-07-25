@@ -11,3 +11,12 @@ packages:
 
   # Infrastructure tooling
   - 'tools/*'
+
+  # NOTE: docs/ (Docusaurus) is deliberately NOT a workspace member.
+  # Adding it was tried and reverted: `docs` has a `build` script, so
+  # `turbo run build` (root `build`, which CI's required Build job runs) picks
+  # it up — and `docusaurus build` currently fails because the content preset
+  # has no `path` and looks for docs/docs/ while the markdown lives at docs/.
+  # Folding docs in therefore breaks a required gate. docs/ keeps its own
+  # lockfile and carries its own `pnpm.overrides` mirroring the root set.
+  # See the docs-site follow-up issue before revisiting.

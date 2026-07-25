@@ -12,12 +12,18 @@ on:
     branches: [main]
     paths:
       - 'pnpm-lock.yaml'
+      # docs/ is outside the pnpm workspace and keeps its OWN lockfile, which
+      # the root scan misses (ENG-OPS-003.Gap6, #642).
+      - '**/pnpm-lock.yaml'
       - 'package.json'
       - '**/package.json'
   pull_request:
     branches: [main]
     paths:
       - 'pnpm-lock.yaml'
+      # docs/ is outside the pnpm workspace and keeps its OWN lockfile, which
+      # the root scan misses (ENG-OPS-003.Gap6, #642).
+      - '**/pnpm-lock.yaml'
       - 'package.json'
       - '**/package.json'
   workflow_dispatch:
