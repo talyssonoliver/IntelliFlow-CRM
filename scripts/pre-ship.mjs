@@ -937,6 +937,15 @@ function main() {
 
   const state = {
     git_head: head,
+    // Run provenance — consumed by scripts/preship-attest.mjs (ENG-OPS-003.Gap13).
+    // Without these, a `--only=lint` or PRESHIP_ALLOW_MISSING=1 run is
+    // indistinguishable on disk from a full green gate: both write
+    // verdict:"PASS". expected_step_ids is the step set this mode SHOULD have
+    // covered, so a subset run cannot masquerade as a complete one.
+    mode: flags.full ? 'full' : 'standard',
+    allow_missing: allowMissing,
+    only: flags.only ?? null,
+    expected_step_ids: STEPS.filter((s) => !s.full_only || flags.full).map((s) => s.id),
     started_at: new Date(totalStart).toISOString(),
     completed_at: new Date().toISOString(),
     duration_ms: totalDuration,
