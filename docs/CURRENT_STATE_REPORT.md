@@ -1,13 +1,13 @@
 # Current State Report
-_Generated: 2026-07-25T06:41:52.466Z_
+_Generated: 2026-07-25T09:02:30.149Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 6 continuous tasks.
-- Overall progress: 453/618 tasks completed (73.3%), 163 backlog, 0 blocked, 2 in progress.
-- Numbered sprint progress alone: 448/612 tasks completed or attested inside numbered sprints.
+- Overall progress: 454/618 tasks completed (73.46%), 162 backlog, 0 blocked, 2 in progress.
+- Numbered sprint progress alone: 449/612 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
 - Ready-to-start work: PG-196 (Sprint 18), PG-197 (Sprint 18), PG-198 (Sprint 18), PG-199 (Sprint 18), PG-201 (Sprint 18).
 - Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
@@ -285,23 +285,23 @@ _Generated: 2026-07-25T06:41:52.466Z_
 
 ## Sprint 19 - Sprint 19
 
-- Status: 9/18 completed, 8 backlog, 0 blocked, 1 in progress.
+- Status: 10/18 completed, 7 backlog, 0 blocked, 1 in progress.
 - Primary focus areas: Engineering Operations (8), Core CRM (4), AI/Intelligence (1).
-- Evidence coverage: 9/9 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 10/10 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
 - **IFC-312** — AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).. Originally attested 2026-04-22 with verdict COMPLETE, but a 2026-04-24 code audit (/task-code-audit) identified 7 findings (2 High, 4 Medium, 1 Low) that contradicted the attestation......
 - **ENG-OPS-003** — Harness hardening Gaps #1-#4 + OSV PRs A/B: retroactive umbrella for the 8 untracked CI/security/E2E-harness PRs merged 2026-07-24 (#623, #625, #627, #628, #629, #630, #631, #634). RETROSPECTIVE GOVERNANCE BACKFILL for the 2026-07-24 merge window, whose PRs skipped the documented orchestrator pipeline (docs/operations/sprint-18-orchestrator-prompt.md). Root cause: the orchestrator never read that document. Findings:......
 - **PG-166** — Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90. All implementation code, tests, configs, and documentation are complete. 3 test regressions fixed this session (SVG role='img', heading text, EmptyState refactor). Pre-existing build blocker fixed (unused @ts-expect-error).... Lighthouse CI audit on / route;...
 - **ENG-OPS-002.R10** — Remediation R10 [High/QUAL-001+002]: ticket + task aggregate state-machine transition guards, un-skip the property tests. Scope: QUAL-001 (5 ticket state-machine bugs — changePriority/assign/unassign now guard closed+terminal via isClosed||isTerminalStatus; resumeSla clamps negative pause duration) FULLY fixed.... ticket+task terminal-state guards; property tests un-skipped
-- **ENG-OPS-002.R01** — Remediation R01 [Critical/SEC-001]: tenant-isolation fix — scope email searchContacts query by tenantId (currently unscoped ctx.prisma, cross-tenant contact enumeration). SEC-001 Critical tenant-isolation fix. searchContacts previously queried unscoped ctx.prisma; now scoped by ctx.tenant.tenantId matching every other procedure in inbound.router.ts.... searchContacts where scoped by tenantId
+- **PG-069** — Accounts List. PG-069 Accounts List RECONCILIATION. The feature shipped on main (IFC-273 bc8b1afac #415);... response under 200ms, Lighthouse 90, hierarchy shown
 
 **Open Work**
 - **ENG-OPS-002** — Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan). Verifiable baseline of S1-18 delivered state; All required artifacts produced and reproducible; Failures registered, not suppressed
 - **IFC-034** — PHASE-001: Gate 3 Review - £3000 Investment. Scale decision with modern stack validated
 - **PG-064** — Contacts List. response under 200ms, Lighthouse 90, search fast
 - **PG-065** — Contact 360. response under 200ms, Lighthouse 90, data complete
-- **PG-069** — Accounts List. response under 200ms, Lighthouse 90, hierarchy shown
+- **IFC-304** — Article Analytics Dashboard. Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%
 
 ## Sprint 20 - Sprint 20
 

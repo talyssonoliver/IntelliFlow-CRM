@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-25T06:41:52.466Z",
+  "generatedAt": "2026-07-25T09:02:30.149Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -389,6 +389,7 @@
       ".specify/sprints/sprint-19/attestations/ENG-OPS-003/attestation.json",
       ".specify/sprints/sprint-19/attestations/IFC-033/attestation.json",
       ".specify/sprints/sprint-19/attestations/IFC-312/attestation.json",
+      ".specify/sprints/sprint-19/attestations/PG-069/attestation.json",
       ".specify/sprints/sprint-19/attestations/PG-166/attestation.json",
       ".specify/sprints/sprint-19/attestations/PM-OPS-003/attestation.json",
       ".specify/sprints/sprint-2/attestations/IFC-004/attestation.json",
@@ -522,10 +523,10 @@
     "totalTasks": 618,
     "totalNumberedSprintTasks": 612,
     "continuousTaskCount": 6,
-    "completedTasks": 453,
-    "backlogTasks": 163,
+    "completedTasks": 454,
+    "backlogTasks": 162,
     "blockedTasks": 0,
-    "completionPercentage": 73.3,
+    "completionPercentage": 73.46,
     "inProgressTasks": 2,
     "otherTasks": 0
   },
@@ -20119,11 +20120,11 @@
       "name": "Sprint 19",
       "summarySource": "specify",
       "totalTasks": 18,
-      "completedTasks": 9,
-      "backlogTasks": 8,
+      "completedTasks": 10,
+      "backlogTasks": 7,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 9,
+      "attestedCompletedTasks": 10,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Engineering Operations (8), Core CRM (4), AI/Intelligence (1).",
       "notableCompleted": [
@@ -20182,8 +20183,8 @@
             "sprintFolder": 19
           },
           "validationSummary": {
-            "total": 4,
-            "passed": 4,
+            "total": 5,
+            "passed": 5,
             "failed": 0,
             "failingNames": []
           },
@@ -20258,34 +20259,34 @@
           }
         },
         {
-          "taskId": "ENG-OPS-002.R01",
+          "taskId": "PG-069",
           "sprint": 19,
           "status": "Completed",
-          "section": "Engineering Operations",
-          "title": "Remediation R01 [Critical/SEC-001]: tenant-isolation fix — scope email searchContacts query by tenantId (currently unscoped ctx.prisma, cross-tenant contact enumeration)",
-          "description": "Remediation R01 [Critical/SEC-001]: tenant-isolation fix — scope email searchContacts query by tenantId (currently unscoped ctx.prisma, cross-tenant contact enumeration)",
-          "summary": "SEC-001 Critical tenant-isolation fix. searchContacts previously queried unscoped ctx.prisma; now scoped by ctx.tenant.tenantId matching every other procedure in inbound.router.ts.... searchContacts where scoped by tenantId",
-          "definitionOfDone": "searchContacts where-clause scoped by tenantId (or ctx.prismaWithTenant); cross-tenant negative test added; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "searchContacts where scoped by tenantId",
+          "section": "Core CRM",
+          "title": "Accounts List",
+          "description": "Accounts List",
+          "summary": "PG-069 Accounts List RECONCILIATION. The feature shipped on main (IFC-273 bc8b1afac #415);... response under 200ms, Lighthouse 90, hierarchy shown",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, hierarchy shown; artifacts: page.tsx, account-list.tsx, hierarchy-view.tsx",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, hierarchy shown",
           "dependencies": [
-            "ENG-OPS-002"
+            "IFC-089"
           ],
           "attestation": {
             "exists": true,
-            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R01/attestation.json",
+            "path": ".specify/sprints/sprint-19/attestations/PG-069/attestation.json",
             "verdict": "COMPLETE",
-            "timestamp": "2026-07-22T12:50:00Z",
+            "timestamp": "2026-07-25T09:05:00Z",
             "sprintFolder": 19
           },
           "validationSummary": {
-            "total": 1,
-            "passed": 0,
+            "total": 5,
+            "passed": 5,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
             "total": 1,
-            "met": 1,
+            "met": 0,
             "missed": 0
           }
         }
@@ -20423,17 +20424,18 @@
           }
         },
         {
-          "taskId": "PG-069",
+          "taskId": "IFC-304",
           "sprint": 19,
           "status": "Backlog",
-          "section": "Core CRM",
-          "title": "Accounts List",
-          "description": "Accounts List",
-          "summary": "response under 200ms, Lighthouse 90, hierarchy shown",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, hierarchy shown; artifacts: page.tsx, account-list.tsx, hierarchy-view.tsx",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, hierarchy shown",
+          "section": "Support",
+          "title": "Article Analytics Dashboard",
+          "description": "Article Analytics Dashboard",
+          "summary": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
+          "definitionOfDone": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
           "dependencies": [
-            "IFC-089"
+            "IFC-303",
+            "PG-180"
           ],
           "attestation": {
             "exists": false,
@@ -20465,8 +20467,8 @@
         {
           "section": "Core CRM",
           "total": 4,
-          "completed": 1,
-          "open": 3
+          "completed": 2,
+          "open": 2
         },
         {
           "section": "AI/Intelligence",
@@ -20638,31 +20640,31 @@
         {
           "taskId": "PG-069",
           "sprint": 19,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Accounts List",
           "description": "Accounts List",
-          "summary": "response under 200ms, Lighthouse 90, hierarchy shown",
+          "summary": "PG-069 Accounts List RECONCILIATION. The feature shipped on main (IFC-273 bc8b1afac #415);... response under 200ms, Lighthouse 90, hierarchy shown",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, hierarchy shown; artifacts: page.tsx, account-list.tsx, hierarchy-view.tsx",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, hierarchy shown",
           "dependencies": [
             "IFC-089"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/PG-069/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-25T09:05:00Z",
+            "sprintFolder": 19
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 5,
+            "passed": 5,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
+            "total": 1,
             "met": 0,
             "missed": 0
           }
@@ -21047,8 +21049,8 @@
             "sprintFolder": 19
           },
           "validationSummary": {
-            "total": 4,
-            "passed": 4,
+            "total": 5,
+            "passed": 5,
             "failed": 0,
             "failingNames": []
           },
