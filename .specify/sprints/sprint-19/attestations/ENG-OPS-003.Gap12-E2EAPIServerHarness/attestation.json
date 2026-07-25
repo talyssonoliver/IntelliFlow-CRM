@@ -1,0 +1,90 @@
+{
+  "task_id": "ENG-OPS-003.Gap12-E2EAPIServerHarness",
+  "sprint": 19,
+  "run_id": "20260725T201500-eng-ops-003-gap12",
+  "verdict": "COMPLETE",
+  "timestamp": "2026-07-25T20:15:00.000Z",
+  "scope": "CI/TEST-INFRA",
+  "dependencies_verified": true,
+  "blocker": null,
+  "artifact_hashes": {
+    "playwright.config.ts": "2851046038a00d0b15ce1defebadfc71cb66d4364bd37e372810e44c915122b1",
+    ".github/workflows/e2e-full.yml": "e7d4903c02b95d934aae6d85cd5976cf6a282ec6f34119ce09ae150a55742ed5",
+    ".github/workflows/preship-full-nightly.yml": "3104efc00322170f390edf5b6d7656ba25db9544b6a006ee56f9f5866ec5c680"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "node scripts/pre-ship.mjs (typecheck step, turbo run typecheck)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:05:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "node scripts/pre-ship.mjs (unit-tests + integration-tests steps, vitest)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:05:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "node scripts/pre-ship.mjs (lint step, turbo run lint) + eslint playwright.config.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:05:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "node scripts/pre-ship.mjs (build step, pnpm run build)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:05:00Z"
+    },
+    {
+      "name": "Config parse (gate on/off)",
+      "command": "E2E_START_API= | E2E_START_API=1 pnpm exec playwright test --project=chromium --list",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T18:40:00Z",
+      "note": "Array webServer parses; API entry present only when E2E_START_API=1 (AC5)."
+    },
+    {
+      "name": "Full pre-ship gate",
+      "command": "node scripts/pre-ship.mjs (all required steps) at final SHA 04c3f838a",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:05:00Z",
+      "note": "PASS in 24m52s under Node 22 + test DB :5433. actionlint + gitleaks SKIPPED_PRECONDITION (tools not installed locally; CI runs them). No PRESHIP_ALLOW_MISSING, no --no-verify."
+    }
+  ],
+  "evidence_summary": {
+    "tests_passing": 39,
+    "new_tests_added_this_exec": 0,
+    "files_created": 0,
+    "files_modified": 3,
+    "product_code_changed": false,
+    "completed_acceptance_criteria": [
+      "AC1 API-server-harness root cause eliminated: signup + home resolve tRPC; inbound-webhook reaches the running API (real endpoint response, not 404-HTML)",
+      "AC2 zero 'Failed to parse URL from /api/trpc' / 'Unexpected token <' in run 30172223720; '[API] HTTP server listening on http://localhost:4000' present",
+      "AC3 NEXT_PUBLIC_API_URL resolution consistent + documented across playwright.config.ts + e2e-full.yml + preship-full-nightly.yml (single canonical :4000)",
+      "AC4 API startup centralized + env-gated (E2E_START_API); e2e-full + preship-full-nightly adopt it; smoke per-PR job + test-regression e2e-cross-browser explicitly excluded",
+      "AC5 no regression: backend-free per-PR smoke e2e job unchanged (no API webServer starts without the flag); PR #651 required checks green"
+    ],
+    "out_of_scope_residuals": [
+      "icons.spec.ts (~10) Material Symbols font-loading — carved out by Gap7",
+      "features-tour.spec.ts:85 + signup.spec.ts:155 flaky rendering/timing (locator actionability / ~30s cold-render timeouts)",
+      "email/inbound-webhook.spec.ts (3) SEC-004 HMAC signature 401 — spec sends no x-inbound-email-signature; needs secret config + spec signing, independent of the API-server harness"
+    ],
+    "follow_up_task": "task_42358454 (green up residual E2E specs post-Gap12)"
+  },
+  "gate_results": {
+    "artifact_verification": "PASS (3 tracked files, hashes above)",
+    "import_reachability": "N/A (CI/config change, no product code imports)",
+    "runtime_wiring": "PASS (playwright.config.ts webServer array gated by E2E_START_API; consumed by e2e-full.yml + preship-full-nightly.yml)",
+    "build_validation": "PASS (full pre-ship build step at 04c3f838a)",
+    "behavioural_verification": "PASS (e2e-full workflow_dispatch run 30172223720 @ 04c3f838a: API boots on :4000, ZERO tRPC parse errors, signup + home + 39 specs green, inbound-webhook reaches the API. Residual red is entirely out-of-scope per out_of_scope_residuals. Run: https://github.com/talyssonoliver/IntelliFlow-CRM/actions/runs/30172223720)",
+    "plan_reviewer": "PASS (subagent a8476894f9d97def4; APPROVE-WITH-CHANGES — ERROR-1 4th-consumer, WARN-2 recursive-build, INFO-3 env-scope all resolved)"
+  },
+  "notes": "ENG-OPS-003 governance Gap #12 (attestation-tracked, NOT a Sprint_plan.csv row — like Gaps #1/#2/#5/#6/#7; no CSV flip). Root cause (spec-draft handoff from Gap #7): the E2E env started only the web server, never @intelliflow/api, and NEXT_PUBLIC_API_URL was baked empty at web-build time, so browser + SSR tRPC calls 404'd to web-origin HTML ('Failed to parse URL from /api/trpc'). Fix (ADR-063 Option 3, prod-faithful): playwright.config.ts webServer -> array with an @intelliflow/api entry gated behind E2E_START_API=1 (health-gated on :4000/health) + reconciled the dead/wrong :300 runtime NEXT_PUBLIC_API_URL (:3000 -> :4000 for SSR); e2e-full.yml bakes NEXT_PUBLIC_API_URL into the web build, builds the API (recursive filter), sets E2E_START_API=1, and sets E2E_API_URL=:4000 so the direct-POST inbound-webhook spec reaches the API; preship-full-nightly.yml sets the same env. Gating keeps the backend-free per-PR smoke job (no DB) from booting an API. Behavioural run 30172223720 PROVES the harness: API listening on :4000, zero parse errors, signup/home green, inbound-webhook now reaches the endpoint (401 SEC-004 HMAC, not a parse error). The dominant failure mode is eliminated. Residual e2e-full red is three independent, out-of-scope concerns (fonts, flake, SEC-004 webhook signing) filed as follow-up task_42358454. No pre-ship bypass, no --no-verify, no destructive git; all DB/build steps run under Node 22 (host default node v25 hangs pg writes). Two out-of-scope Playwright consumers explicitly documented and left untouched: the per-PR smoke e2e job (ci.yml, backend-free by design) and test-regression.yml e2e-cross-browser (non-gating continue-on-error, entangled with the out-of-scope authenticated project)."
+}
