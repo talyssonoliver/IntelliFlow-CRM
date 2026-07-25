@@ -85,8 +85,14 @@ const PLACEHOLDER_TOKENS = new Set([
 
 // Line regex: a YAML mapping declaration for a sensitive key. Captures the key
 // and the remainder of the line (value + any trailing inline comment).
+//
+// The value capture is deliberately `(.*)` with no leading `\s*`: `\s` and `.`
+// both match a space, so `\s*(.*)` is an ambiguous pair that lets the engine
+// split a run of spaces many ways (sonarjs/slow-regex). `extractValue()` starts
+// with `rest.trim()`, so leading whitespace is discarded there anyway and this
+// is behaviour-identical.
 const DECL_RE =
-  /^\s*(POSTGRES_PASSWORD|DATABASE_URL|DIRECT_URL|PGPASSWORD|password|pw)\s*:\s*(.*)$/i;
+  /^[ \t]*(POSTGRES_PASSWORD|DATABASE_URL|DIRECT_URL|PGPASSWORD|password|pw)[ \t]*:(.*)$/i;
 
 // Inline allow markers. `secret-lint-allow` requires a non-empty reason.
 const SECRET_LINT_ALLOW_RE = /#\s*secret-lint-allow:\s*\S+/i;
