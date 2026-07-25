@@ -1,0 +1,167 @@
+# .gitleaksignore - audited baseline of pre-existing findings
+#
+# WHY THIS FILE EXISTS
+# Until #630 this repo's .gitleaks.toml declared an [allowlist] but no [[rules]]
+# and no [extend] block. gitleaks therefore loaded ZERO rules and detected
+# nothing: every nightly full-history scan was green because secret scanning was
+# effectively switched off. #630 added "[extend] useDefault = true", enabling the
+# default ruleset for the first time. That surfaced 823 accumulated historical
+# findings at once and turned the nightly scan plus every PR's Tier-1
+# system-audit red.
+#
+# ~757 of those were generated or vendored corpora (sprint-audit JSON reports,
+# attestation file-hash maps, the vendored Sonar rule corpus) and are handled by
+# path entries in .gitleaks.toml. The 66 fingerprints below are the audited
+# remainder.
+#
+# WHAT WAS VERIFIED (2026-07-25)
+# Every one of the 66 was decoded and classified before being baselined:
+#   - 18 JWTs issued by the real Supabase project ref, role=authenticated,
+#     captured into k6 benchmark artifacts by load-test runs.
+#     ALL EXPIRED (latest exp 2026-02-28).
+#   -  3 Supabase local-dev demo anon keys (iss=supabase-demo; public, documented)
+#   -  4 canonical jwt.io sample tokens (sub=1234567890)
+#   -  6 Stripe TEST literals (sk_test_1234567890, pk_test_abc123, pi_test123_...)
+#   - remainder: sequential/synthetic fixtures (ifc_live_1234567890abcdef,
+#     abc123def456), UUIDs, SHA-256 attestation hashes, a base32 TOTP test seed,
+#     and SonarQube's default admin:admin in local monitoring compose config.
+# No live credential was found. No rotation was required.
+#
+# DELIBERATELY NOT PATH-ALLOWLISTED
+# artifacts/benchmarks/ is baselined by fingerprint, NOT added to the
+# .gitleaks.toml path allowlist. Future k6 runs mint NEW tokens with NEW
+# fingerprints, so they will still be caught. A path allowlist there would
+# silently swallow them - the same fake-green failure mode this file documents.
+# Follow-up: stop persisting auth tokens into k6 summary artifacts.
+#
+# MAINTENANCE
+# Do not append to this file to make a scan pass. A new fingerprint means a new
+# secret reached history: triage it, rotate if real, then regenerate this
+# baseline deliberately.
+
+
+# apps/api/src/lib/supabase.ts (1)
+8f63c23069f407fe35704bd8b3b47d95ae708bfa:apps/api/src/lib/supabase.ts:jwt:20
+
+# apps/api/src/middleware/__tests__/auth.test.ts (3)
+58d1bfcb82911be4a851bf1a0a4c2d97e74bd1ed:apps/api/src/middleware/__tests__/auth.test.ts:generic-api-key:421
+58d1bfcb82911be4a851bf1a0a4c2d97e74bd1ed:apps/api/src/middleware/__tests__/auth.test.ts:jwt:496
+8f63c23069f407fe35704bd8b3b47d95ae708bfa:apps/api/src/middleware/__tests__/auth.test.ts:jwt:528
+
+# apps/api/src/modules/auth/__tests__/email-verification.test.ts (2)
+2de623466717ab69515d0dac08efed47491000f5:apps/api/src/modules/auth/__tests__/email-verification.test.ts:generic-api-key:107
+2de623466717ab69515d0dac08efed47491000f5:apps/api/src/modules/auth/__tests__/email-verification.test.ts:generic-api-key:113
+
+# apps/api/src/shared/auth-flow.test.ts (1)
+8f63c23069f407fe35704bd8b3b47d95ae708bfa:apps/api/src/shared/auth-flow.test.ts:generic-api-key:222
+
+# apps/web/hooks/use-subscription.ts (2)
+56682578ddb041e122978b5aefac309bcae46b0b:apps/web/hooks/use-subscription.ts:jwt:82
+8f63c23069f407fe35704bd8b3b47d95ae708bfa:apps/web/hooks/use-subscription.ts:jwt:56
+
+# apps/web/src/app/(public)/reset-password/__tests__/page.test.tsx (1)
+4775cb4461683db6655846aee6cd7764efdff0ea:apps/web/src/app/(public)/reset-password/__tests__/page.test.tsx:generic-api-key:23
+
+# apps/web/src/components/shared/mfa-qr-generator.stories.tsx (1)
+fd11f5a2d9602f6440e244f5ffeba65ab5a5c054:apps/web/src/components/shared/mfa-qr-generator.stories.tsx:generic-api-key:67
+
+# apps/web/src/lib/billing/__tests__/stripe-client.test.ts (2)
+3e571e72d02b439b6199c90c56980c9e6702edbb:apps/web/src/lib/billing/__tests__/stripe-client.test.ts:generic-api-key:31
+3e571e72d02b439b6199c90c56980c9e6702edbb:apps/web/src/lib/billing/__tests__/stripe-client.test.ts:generic-api-key:38
+
+# apps/web/src/lib/developer/demo-data.ts (9)
+27e3dadb1e5cd55b7e0d68a101be857218f147f2:apps/web/src/lib/developer/demo-data.ts:generic-api-key:37
+27e3dadb1e5cd55b7e0d68a101be857218f147f2:apps/web/src/lib/developer/demo-data.ts:generic-api-key:46
+27e3dadb1e5cd55b7e0d68a101be857218f147f2:apps/web/src/lib/developer/demo-data.ts:generic-api-key:79
+36e6134ad404b235992145942a92b95bad4bc056:apps/web/src/lib/developer/demo-data.ts:generic-api-key:37
+36e6134ad404b235992145942a92b95bad4bc056:apps/web/src/lib/developer/demo-data.ts:generic-api-key:46
+36e6134ad404b235992145942a92b95bad4bc056:apps/web/src/lib/developer/demo-data.ts:generic-api-key:79
+ea9fd8c09714a555b204a8c98c1dfe96cd16416e:apps/web/src/lib/developer/demo-data.ts:generic-api-key:37
+ea9fd8c09714a555b204a8c98c1dfe96cd16416e:apps/web/src/lib/developer/demo-data.ts:generic-api-key:46
+ea9fd8c09714a555b204a8c98c1dfe96cd16416e:apps/web/src/lib/developer/demo-data.ts:generic-api-key:79
+
+# apps/web/src/lib/shared/__tests__/account-activation.test.ts (1)
+3b4663183701c039767c42f52a823670ee726377:apps/web/src/lib/shared/__tests__/account-activation.test.ts:generic-api-key:338
+
+# apps/web/src/test/fixtures/developer-data.ts (3)
+36e6134ad404b235992145942a92b95bad4bc056:apps/web/src/test/fixtures/developer-data.ts:generic-api-key:15
+36e6134ad404b235992145942a92b95bad4bc056:apps/web/src/test/fixtures/developer-data.ts:generic-api-key:43
+36e6134ad404b235992145942a92b95bad4bc056:apps/web/src/test/fixtures/developer-data.ts:generic-api-key:49
+
+# artifacts/attestations/IFC-140/attestation-20251231-133730.json (1)
+104c213d756d324c75f3f5fffc6886d45779819b:artifacts/attestations/IFC-140/attestation-20251231-133730.json:generic-api-key:22
+
+# artifacts/attestations/IFC-140/attestation-20251231-135527.json (1)
+104c213d756d324c75f3f5fffc6886d45779819b:artifacts/attestations/IFC-140/attestation-20251231-135527.json:generic-api-key:22
+
+# artifacts/attestations/IFC-140/attestation-latest.json (1)
+104c213d756d324c75f3f5fffc6886d45779819b:artifacts/attestations/IFC-140/attestation-latest.json:generic-api-key:22
+
+# artifacts/benchmarks/k6-auth-summary-2026-01-29T23-56-13-735Z.json (2)
+182bdd67b000cbb99789ef88891013a316cfa51c:artifacts/benchmarks/k6-auth-summary-2026-01-29T23-56-13-735Z.json:jwt:528
+5d43359d7d7d25ee0c6920af122d3c3809af9a1d:artifacts/benchmarks/k6-auth-summary-2026-01-29T23-56-13-735Z.json:jwt:528
+
+# artifacts/benchmarks/k6-auth-summary-2026-01-29T23-59-15-270Z.json (2)
+182bdd67b000cbb99789ef88891013a316cfa51c:artifacts/benchmarks/k6-auth-summary-2026-01-29T23-59-15-270Z.json:jwt:536
+5d43359d7d7d25ee0c6920af122d3c3809af9a1d:artifacts/benchmarks/k6-auth-summary-2026-01-29T23-59-15-270Z.json:jwt:536
+
+# artifacts/benchmarks/k6-auth-summary-2026-01-30T21-33-11-476Z.json (2)
+182bdd67b000cbb99789ef88891013a316cfa51c:artifacts/benchmarks/k6-auth-summary-2026-01-30T21-33-11-476Z.json:jwt:528
+5d43359d7d7d25ee0c6920af122d3c3809af9a1d:artifacts/benchmarks/k6-auth-summary-2026-01-30T21-33-11-476Z.json:jwt:528
+
+# artifacts/benchmarks/k6-auth-summary-2026-02-05T22-23-41-408Z.json (2)
+182bdd67b000cbb99789ef88891013a316cfa51c:artifacts/benchmarks/k6-auth-summary-2026-02-05T22-23-41-408Z.json:jwt:319
+e3dce8808ed823bb5d7e747eaec8b3ff18484bd6:artifacts/benchmarks/k6-auth-summary-2026-02-05T22-23-41-408Z.json:jwt:319
+
+# artifacts/benchmarks/k6-auth-summary-2026-02-27T23-45-55-616Z.json (2)
+182bdd67b000cbb99789ef88891013a316cfa51c:artifacts/benchmarks/k6-auth-summary-2026-02-27T23-45-55-616Z.json:jwt:535
+65b35d0bacdd63441f4b92061d99550763b2d544:artifacts/benchmarks/k6-auth-summary-2026-02-27T23-45-55-616Z.json:jwt:535
+
+# artifacts/benchmarks/k6-comprehensive-2026-01-30T00-21-10-461Z.json (2)
+182bdd67b000cbb99789ef88891013a316cfa51c:artifacts/benchmarks/k6-comprehensive-2026-01-30T00-21-10-461Z.json:jwt:839
+5d43359d7d7d25ee0c6920af122d3c3809af9a1d:artifacts/benchmarks/k6-comprehensive-2026-01-30T00-21-10-461Z.json:jwt:839
+
+# artifacts/benchmarks/k6-comprehensive-2026-01-30T18-43-22-917Z.json (2)
+182bdd67b000cbb99789ef88891013a316cfa51c:artifacts/benchmarks/k6-comprehensive-2026-01-30T18-43-22-917Z.json:jwt:952
+5d43359d7d7d25ee0c6920af122d3c3809af9a1d:artifacts/benchmarks/k6-comprehensive-2026-01-30T18-43-22-917Z.json:jwt:952
+
+# artifacts/benchmarks/k6-latest.json (4)
+3119fb6b7236d723927c2a7458a7771cc2c373a0:artifacts/benchmarks/k6-latest.json:jwt:535
+5d43359d7d7d25ee0c6920af122d3c3809af9a1d:artifacts/benchmarks/k6-latest.json:jwt:529
+d3d4b892cc3c6d80b522e8c81d1a40a9ccab8c11:artifacts/benchmarks/k6-latest.json:jwt:535
+ea020464ebd58dc8d815540b11621d58e584f118:artifacts/benchmarks/k6-latest.json:jwt:260
+
+# artifacts/misc/ci-sonar.yml (1)
+8f63c23069f407fe35704bd8b3b47d95ae708bfa:artifacts/misc/ci-sonar.yml:curl-auth-user:256
+
+# docs/planning/prd-public-site-auth.md (2)
+9abf567670e361c9ff181f88c4d826c2bf362af9:docs/planning/prd-public-site-auth.md:generic-api-key:7
+d09e61a3a1fec2bc6628cf4822c228bde8571fb9:docs/planning/prd-public-site-auth.md:generic-api-key:7
+
+# infra/monitoring/ci-sonar.yml (1)
+5f166eb382c10945201745e0c696ae73f85ddabc:infra/monitoring/ci-sonar.yml:curl-auth-user:256
+
+# packages/adapters/src/payments/__tests__/stripe.adapter.test.ts (2)
+c4fe52872dcdc5ca284c70220687734e0951b0f4:packages/adapters/src/payments/__tests__/stripe.adapter.test.ts:stripe-access-token:18
+c4fe52872dcdc5ca284c70220687734e0951b0f4:packages/adapters/src/payments/__tests__/stripe.adapter.test.ts:generic-api-key:151
+
+# packages/adapters/src/repositories/__tests__/CaseDocumentLifecycle.integration.test.ts (5)
+ce17008bc0546ae39379eaa123f8bcb2959b1d4d:packages/adapters/src/repositories/__tests__/CaseDocumentLifecycle.integration.test.ts:generic-api-key:49
+ce17008bc0546ae39379eaa123f8bcb2959b1d4d:packages/adapters/src/repositories/__tests__/CaseDocumentLifecycle.integration.test.ts:generic-api-key:220
+ce17008bc0546ae39379eaa123f8bcb2959b1d4d:packages/adapters/src/repositories/__tests__/CaseDocumentLifecycle.integration.test.ts:generic-api-key:223
+ce17008bc0546ae39379eaa123f8bcb2959b1d4d:packages/adapters/src/repositories/__tests__/CaseDocumentLifecycle.integration.test.ts:generic-api-key:226
+ce17008bc0546ae39379eaa123f8bcb2959b1d4d:packages/adapters/src/repositories/__tests__/CaseDocumentLifecycle.integration.test.ts:generic-api-key:274
+
+# packages/validators/src/__tests__/auth.test.ts (4)
+fc019315fb5aab81e72c1669e522955123fafc2d:packages/validators/src/__tests__/auth.test.ts:generic-api-key:549
+fc019315fb5aab81e72c1669e522955123fafc2d:packages/validators/src/__tests__/auth.test.ts:generic-api-key:557
+fc019315fb5aab81e72c1669e522955123fafc2d:packages/validators/src/__tests__/auth.test.ts:generic-api-key:565
+fc019315fb5aab81e72c1669e522955123fafc2d:packages/validators/src/__tests__/auth.test.ts:generic-api-key:596
+
+# tests/integration/connectors/payment-stripe.test.ts (3)
+365d6b310e6587edba6b339ba95a56890f669f41:tests/integration/connectors/payment-stripe.test.ts:generic-api-key:22
+365d6b310e6587edba6b339ba95a56890f669f41:tests/integration/connectors/payment-stripe.test.ts:generic-api-key:87
+365d6b310e6587edba6b339ba95a56890f669f41:tests/integration/connectors/payment-stripe.test.ts:generic-api-key:137
+
+# tests/integration/webhook/webhook.test.ts (1)
+365d6b310e6587edba6b339ba95a56890f669f41:tests/integration/webhook/webhook.test.ts:generic-api-key:66
