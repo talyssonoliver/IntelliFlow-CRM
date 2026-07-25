@@ -201,6 +201,38 @@ export function tagMessage(catFileOutput) {
   return idx === -1 ? '' : catFileOutput.slice(idx + 2);
 }
 
+/**
+ * Tracked paths that running the gate is EXPECTED to rewrite. `artifacts/` holds
+ * the gate's own generated output — merged coverage, the a11y route reconcile
+ * report — and several of those files are tracked, so a real pre-ship run always
+ * leaves them modified. Treating that as a dirty tree would make --publish
+ * unusable after every genuine run (found by dogfooding this tool on its own PR).
+ *
+ * Everything else still counts: the check exists to catch attesting a SHA whose
+ * SOURCE differs from what the gate actually ran against.
+ */
+const GENERATED_PREFIXES = ['artifacts/'];
+
+/**
+ * Working-tree changes that invalidate an attestation.
+ * @param {string} porcelain output of `git status --porcelain`
+ * @returns {string[]} offending paths (empty === attestable)
+ */
+export function dirtyPaths(porcelain) {
+  return porcelain
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((l) => {
+      // "XY path" — and for renames, "XY old -> new". Take the destination.
+      const p = l.slice(2).trim();
+      const arrow = p.indexOf(' -> ');
+      return arrow === -1 ? p : p.slice(arrow + 4);
+    })
+    .map((p) => p.replace(/^"|"$/g, '').replace(/\\/g, '/'))
+    .filter((p) => !GENERATED_PREFIXES.some((prefix) => p.startsWith(prefix)));
+}
+
 // ─── CLI ──────────────────────────────────────────────────────────────────
 
 const USAGE = `pre-ship attestation (ENG-OPS-003.Gap13, issue #644)
@@ -290,11 +322,13 @@ function main(argv) {
 function doPublish(flags, repoRoot, statePath, preshipFile) {
   const head = git(['rev-parse', 'HEAD']).stdout.trim();
 
-  const dirty = git(['status', '--porcelain']);
-  if (dirty.stdout.trim() !== '') {
+  const dirty = dirtyPaths(git(['status', '--porcelain']).stdout);
+  if (dirty.length > 0) {
     fail([
-      'REFUSED: the working tree is dirty — uncommitted changes mean the gate did',
-      `  not run against ${head.slice(0, 9)} as committed.`,
+      'REFUSED: the working tree has uncommitted source changes, so the gate did',
+      `  not run against ${head.slice(0, 9)} as committed:`,
+      ...dirty.slice(0, 10).map((p) => `    ${p}`),
+      ...(dirty.length > 10 ? [`    ...and ${dirty.length - 10} more`] : []),
       '  Commit (or set aside) your changes, re-run: pnpm run pre-ship',
     ]);
   }

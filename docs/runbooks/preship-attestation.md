@@ -131,8 +131,10 @@ up — and then, per the policy above, a fresh local attestation at the new head
   uncached credential fails fast instead of hanging a non-interactive hook. If
   publishing fails this way, cache your credentials and re-run
   `pnpm preship:attest`.
-- **A dirty working tree is refused.** Uncommitted changes mean the gate did not
-  run against the commit as committed.
+- **A dirty working tree is refused** — but only for _source_. Running the gate
+  rewrites tracked files under `artifacts/` (merged coverage, the a11y route
+  reconcile report) every single time, so those are excluded; anything else
+  uncommitted means the gate did not run against the commit as committed.
 - **A stale `last-run.json` is refused.** The recorded `git_head` must equal the
   SHA being attested.
 - **The gate version is pinned.** The payload carries the sha256 of the

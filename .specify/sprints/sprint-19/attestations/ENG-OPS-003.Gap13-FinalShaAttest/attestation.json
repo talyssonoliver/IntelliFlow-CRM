@@ -9,12 +9,12 @@
   "blocker": null,
   "issue": 644,
   "artifact_hashes": {
-    "scripts/preship-attest.mjs": "6d5aa4645bca594caa2d237bc490c690f171fb689883c0501a466c522d82d9f2",
-    "scripts/__tests__/preship-attest.test.ts": "742aa6066d241ef2824ed7309acd47f5883af282e18229d3b802864f0bbc078f",
+    "scripts/preship-attest.mjs": "d2502b5c1efde8364ed92b396ab652386acb42fbe63ec67d463a4bff8dde79b9",
+    "scripts/__tests__/preship-attest.test.ts": "cf7117d9b9aab19dc5ed32613e65c810ebd61d5b31cc3cf1af24eaf01d3271ac",
     "scripts/pre-ship.mjs": "7c028e54d7176bcbf8e16e923feb09f0e63500abed916f297f73b1d5966f1592",
     ".husky/pre-push": "98cfe2681219c81f9d0e8102d639c19e03e462d3e4136090df0b50a8e0a9511e",
     ".github/workflows/pr-checks.yml": "3a2f71cc75f223267a2ddb1534381453bc064e2101107e7e9a148e40be4ce6b9",
-    "docs/runbooks/preship-attestation.md": "ce64e8b4fc45cf994a40fe3fe07a2d116a7fb3821a32b1b324eef8260dd4e9c8",
+    "docs/runbooks/preship-attestation.md": "52249b2fddc8f35e257835f54112f12fc9605b7d17bb1a82fdc5619a5c133ba0",
     "package.json": "1c08c30614f691055b69c4d780419effedbd3ec725fa89ec1bb9d0bd09078ce0"
   },
   "validation_results": [
@@ -31,7 +31,7 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-07-25T20:38:53Z",
-      "note": "37 tests, all new in this exec."
+      "note": "42 tests, all new in this exec."
     },
     {
       "name": "Lint",
@@ -62,12 +62,12 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-07-25T21:00:00Z",
-      "note": "assessState accepted the real 31/31 state file produced by the gate; the attestation for this PR's own head SHA was published with the tool this PR adds."
+      "note": "The dogfood run FOUND A REAL BUG in this tool and it was fixed before merge: the dirty-tree guard compared the whole working tree, but running the gate always rewrites TRACKED files under artifacts/ (merged coverage, a11y route reconcile), so --publish refused after every genuine pre-ship run. dirtyPaths() now excludes artifacts/ while still refusing any modified source; 5 regression tests cover it, including that a path merely CONTAINING artifacts/ is not excluded."
     }
   ],
   "evidence_summary": {
-    "tests_passing": 37,
-    "new_tests_added_this_exec": 37,
+    "tests_passing": 42,
+    "new_tests_added_this_exec": 42,
     "files_created": 4,
     "files_modified": 4,
     "preship_expected_steps": 31,
