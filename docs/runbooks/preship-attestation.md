@@ -2,8 +2,8 @@
 
 > Closes the gap reported in
 > [#644](https://github.com/talyssonoliver/IntelliFlow-CRM/issues/644)
-> (ENG-OPS-003.Gap13). Spec:
-> `.specify/sprints/sprint-19/specifications/ENG-OPS-003.Gap13-FinalShaAttest-spec.md`.
+> (ENG-OPS-003.Gap14). Spec:
+> `.specify/sprints/sprint-19/specifications/ENG-OPS-003.Gap14-FinalShaAttest-spec.md`.
 
 ## The problem this solves
 

@@ -1,6 +1,6 @@
 /**
  * Tests for scripts/preship-attest.mjs — the final-SHA pre-ship attestation
- * tool (ENG-OPS-003.Gap13, issue #644).
+ * tool (ENG-OPS-003.Gap14, issue #644).
  *
  * Two layers:
  *   1. `assessState()` imported directly — every laundering vector, pure, fast.
@@ -128,7 +128,7 @@ describe('assessState — refuses malformed input', () => {
     expect(r.reasons.join(' ')).toMatch(/steps/i);
   });
 
-  it('refuses a state with no expected_step_ids (pre-Gap13 state file)', () => {
+  it('refuses a state with no expected_step_ids (pre-Gap14 state file)', () => {
     const r = assess(goodState({ expected_step_ids: undefined }));
     expect(r.ok).toBe(false);
     expect(r.reasons.join(' ')).toMatch(/expected_step_ids|older|re-run/i);

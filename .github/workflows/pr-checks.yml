@@ -144,7 +144,7 @@ jobs:
         if: github.event_name == 'merge_group'
         run: echo "merge_group event — PR validations already passed at PR review time. OK"
 
-  # ENG-OPS-003.Gap13 / issue #644 — final-SHA pre-ship enforcement.
+  # ENG-OPS-003.Gap14 / issue #644 — final-SHA pre-ship enforcement.
   #
   # The local pre-ship gate (.husky/pre-push → scripts/pre-ship.mjs) is keyed to
   # the SHA being pushed, but branch protection is strict:true, so

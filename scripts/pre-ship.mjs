@@ -937,7 +937,7 @@ function main() {
 
   const state = {
     git_head: head,
-    // Run provenance — consumed by scripts/preship-attest.mjs (ENG-OPS-003.Gap13).
+    // Run provenance — consumed by scripts/preship-attest.mjs (ENG-OPS-003.Gap14).
     // Without these, a `--only=lint` or PRESHIP_ALLOW_MISSING=1 run is
     // indistinguishable on disk from a full green gate: both write
     // verdict:"PASS". expected_step_ids is the step set this mode SHOULD have

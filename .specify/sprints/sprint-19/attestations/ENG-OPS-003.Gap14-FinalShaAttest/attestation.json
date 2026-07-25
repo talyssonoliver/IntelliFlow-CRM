@@ -1,7 +1,7 @@
 {
-  "task_id": "ENG-OPS-003.Gap13-FinalShaAttest",
+  "task_id": "ENG-OPS-003.Gap14-FinalShaAttest",
   "sprint": 19,
-  "run_id": "20260725T210000-eng-ops-003-gap13",
+  "run_id": "20260725T223000-eng-ops-003-gap14",
   "verdict": "COMPLETE",
   "timestamp": "2026-07-25T21:00:00.000Z",
   "scope": "CI/HARNESS-GOVERNANCE",
@@ -9,13 +9,13 @@
   "blocker": null,
   "issue": 644,
   "artifact_hashes": {
-    "scripts/preship-attest.mjs": "d2502b5c1efde8364ed92b396ab652386acb42fbe63ec67d463a4bff8dde79b9",
-    "scripts/__tests__/preship-attest.test.ts": "cf7117d9b9aab19dc5ed32613e65c810ebd61d5b31cc3cf1af24eaf01d3271ac",
-    "scripts/pre-ship.mjs": "7c028e54d7176bcbf8e16e923feb09f0e63500abed916f297f73b1d5966f1592",
+    "scripts/preship-attest.mjs": "71f810c974cd2fe040d9238cb026ae4c1735af1e73b9ff325959fe8c682effd2",
+    "scripts/__tests__/preship-attest.test.ts": "d783170a1265ad599062151b77863d2cefecd0a737c1ec33fbc831e457b5ad94",
+    "scripts/pre-ship.mjs": "58bee794e60b4a2ad8cb5159732d67727f3715d1d7e8a8297ae125a7eafab8e8",
     ".husky/pre-push": "98cfe2681219c81f9d0e8102d639c19e03e462d3e4136090df0b50a8e0a9511e",
-    ".github/workflows/pr-checks.yml": "3a2f71cc75f223267a2ddb1534381453bc064e2101107e7e9a148e40be4ce6b9",
-    "docs/runbooks/preship-attestation.md": "52249b2fddc8f35e257835f54112f12fc9605b7d17bb1a82fdc5619a5c133ba0",
-    "package.json": "1c08c30614f691055b69c4d780419effedbd3ec725fa89ec1bb9d0bd09078ce0"
+    ".github/workflows/pr-checks.yml": "65c618ca0bdb6acf7b175ac6577e6264724b2501e447382625c0849e73899eca",
+    "docs/runbooks/preship-attestation.md": "68d5853543faaa19fc0006064910c20166a97612645bb597fe0c6f65ad02341f",
+    "package.json": "9574301e365599b2c6a2731f1eeec67785caad83ab9b6a49cd4e3ced793a42b1"
   },
   "validation_results": [
     {
@@ -100,5 +100,5 @@
     "D5_exemptions": "dependabot[bot] / github-actions[bot] authors, fork PRs, and merge_group events, each as a step-level if: that logs an explicit ::notice.",
     "D6_rollout": "The 'Pre-ship Attestation' context is NOT added to branch protection in this PR. Adding it before the workflow file is on main would leave it permanently pending on every open PR whose base predates it, which the bot exemption cannot rescue because the job does not exist on those branches. The exact gh api PATCH ships in the runbook and requires the owner's approval."
   },
-  "notes": "Harness Gap #13, closing issue #644 (self-reported during Gap5/#637, where clean pre-ship runs at 05d61a3a2/32477c0a7/f5fe247bd were followed by a merged head of 319b8df26 built by two server-side update-branch merges — L4 unsatisfied and undetected). Addresses all three of the issue's suggested fixes: publish the passing SHA (D1), add a check that fails when head_sha has no record (D3), and decide the update-branch policy explicitly (D4). The control is deliberately scoped and labelled as an HONESTY gate: anyone with push access can forge an attestation, exactly as git push --no-verify already bypasses the hook; what it reliably catches is the accidental case where a merge moved the SHA out from under a developer who genuinely ran the gate, plus accidental laundering of a --only or PRESHIP_ALLOW_MISSING run. Known limitations are recorded rather than hidden: forgeable by design (a test asserts the boundary by accepting a consistently-forged state), refs/preship/* growth is unswept (follow-up), fork PRs can never self-attest, core.hooksPath is absolute so worktree pushes do not auto-publish (which is why THIS PR was attested with the manual pnpm preship:attest path), and re-attesting after update-branch needs one gh run rerun because a ref push fires no synchronize event. ENG-OPS-003 Gap tasks are attestation-tracked, not Sprint_plan.csv rows (same as #632/#637/#638) — no CSV flip. scripts/** is outside sonar.sources and outside SONAR_SOURCE_ROOTS in check-diff-coverage.mjs:53-69, so the new script is exempt from the diff-coverage gate and Sonar new_coverage; the 37 tests were written anyway precisely because no coverage gate would catch a regression here. No pre-ship bypass, no --no-verify, no destructive git."
+  "notes": "Harness Gap #14 (renumbered from Gap13 mid-flight: #652 landed on main claiming ENG-OPS-003.Gap13-DocsBuildNoop while this PR was open, so two different tasks would have shared the Gap13 number in the sprint-19 attestation tree; renamed here rather than leaving a permanently ambiguous governance record), closing issue #644 (self-reported during Gap5/#637, where clean pre-ship runs at 05d61a3a2/32477c0a7/f5fe247bd were followed by a merged head of 319b8df26 built by two server-side update-branch merges — L4 unsatisfied and undetected). Addresses all three of the issue's suggested fixes: publish the passing SHA (D1), add a check that fails when head_sha has no record (D3), and decide the update-branch policy explicitly (D4). The control is deliberately scoped and labelled as an HONESTY gate: anyone with push access can forge an attestation, exactly as git push --no-verify already bypasses the hook; what it reliably catches is the accidental case where a merge moved the SHA out from under a developer who genuinely ran the gate, plus accidental laundering of a --only or PRESHIP_ALLOW_MISSING run. Known limitations are recorded rather than hidden: forgeable by design (a test asserts the boundary by accepting a consistently-forged state), refs/preship/* growth is unswept (follow-up), fork PRs can never self-attest, core.hooksPath is absolute so worktree pushes do not auto-publish (which is why THIS PR was attested with the manual pnpm preship:attest path), and re-attesting after update-branch needs one gh run rerun because a ref push fires no synchronize event. ENG-OPS-003 Gap tasks are attestation-tracked, not Sprint_plan.csv rows (same as #632/#637/#638) — no CSV flip. scripts/** is outside sonar.sources and outside SONAR_SOURCE_ROOTS in check-diff-coverage.mjs:53-69, so the new script is exempt from the diff-coverage gate and Sonar new_coverage; the 37 tests were written anyway precisely because no coverage gate would catch a regression here. No pre-ship bypass, no --no-verify, no destructive git."
 }
