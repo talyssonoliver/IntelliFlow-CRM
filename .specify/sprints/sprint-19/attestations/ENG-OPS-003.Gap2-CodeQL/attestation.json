@@ -1,0 +1,78 @@
+{
+  "task_id": "ENG-OPS-003.Gap2-CodeQL",
+  "sprint": 19,
+  "run_id": "20260725T121611-eng-ops-003-gap2",
+  "verdict": "COMPLETE",
+  "timestamp": "2026-07-25T12:16:11.000Z",
+  "scope": "CI/SECURITY-INFRA",
+  "dependencies_verified": true,
+  "blocker": null,
+  "artifact_hashes": {
+    ".github/codeql/codeql-config.yml": "81bc1c266d6ab1948ffab6110e0e00dd4a6006d2d5bccad09162e4634edda0b9",
+    "tools/scripts/security/vendored-js-lint.mjs": "de3c5c75448f010040d0ba593075fb951473b393161531f418b28aa418f110f4",
+    "tools/scripts/__tests__/vendored-js-lint.test.ts": "3beb5aa7abbb1e77cde3608b3f1a2951984298394088f9a73f7c9749cba2d2ab",
+    "docs/security/codeql-configuration.md": "92e5dcd6f2b535ba59da30ba648d3e91742102657685a2281f33a1d9be2f3778",
+    "scripts/pre-ship.mjs": "0b8b42259e60d12a1533072bf0a2fcbfe4c00f47921a3203f9f2a4fd345ea6d3"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T11:50:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm exec vitest run --project root tools/scripts/__tests__/vendored-js-lint.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T11:55:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T11:52:00Z"
+    },
+    {
+      "name": "Gate self-run",
+      "command": "node tools/scripts/security/vendored-js-lint.mjs",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T12:10:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "node scripts/pre-ship.mjs (build step)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T12:16:00Z",
+      "note": "Validated by the full pre-ship gate at the final SHA before push."
+    }
+  ],
+  "evidence_summary": {
+    "tests_passing": 30,
+    "new_tests_added_this_exec": 4,
+    "files_created": 4,
+    "files_modified": 1,
+    "tracked_html_scanned_clean": 64,
+    "completed_acceptance_criteria": [
+      "AC-1 artifacts exist",
+      "AC-2 gate clean on live corpus (64 files)",
+      "AC-3 TS/Lint/Test/Build + required pre-ship gate",
+      "AC-4 default query suites preserved + data-src false-negative fixed"
+    ],
+    "blocked_acceptance_criteria": []
+  },
+  "gate_results": {
+    "artifact_verification": "PASS",
+    "import_reachability": "PASS",
+    "runtime_wiring": "PASS (scripts/pre-ship.mjs required step; security.yml config-file)",
+    "build_validation": "PASS",
+    "security_review": "PASS (security-lead + test-engineer panel; adequate to ship)",
+    "plan_reviewer": "PASS (subagent a374a2ed015960caa; REQUEST-CHANGES resolved — structural only, no code change)"
+  },
+  "notes": "Harness Gap #2 (sibling to Gap #1 workflow-secret-lint, #630). Closes the IFC-033 vector: CodeQL default-setup ignores codeql-config.yml and flags vendored inline JS as noise. Adds an expanded codeql-config.yml paths-ignore (default query suites security-extended + security-and-quality PRESERVED) + a durable REQUIRED pre-ship gate (vendored-js-lint.mjs) that blocks oversized inline <script> in tracked HTML regardless of which CodeQL setup GitHub runs. Runs clean on the live 64-file tracked-HTML corpus. The pipeline security-review found + fixed a real false-negative in THIS exec: the external-script skip /\\bsrc\\s*=/i also matched inside data-src=, so an oversized inline body on <script data-src> was misread as external and skipped; tightened to /(^|\\s)src\\s*=/i with a regression test; also added uppercase-<SCRIPT> + CLI --threshold=/--json tests (26->30). Deferred follow-ups (documented, security-review decision): the sum-of-blocks bypass (max-single-block comparison; sum-based risks mockup false positives) and the CI-mirror gap (pre-ship-only, shared with Gap #1). ENG-OPS-003 Gap tasks are attestation-tracked (not Sprint_plan.csv rows), like #637/#638 — no CSV flip. No pre-ship bypass, no --no-verify, no destructive git."
+}
