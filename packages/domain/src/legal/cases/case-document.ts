@@ -130,6 +130,21 @@ export interface AccessControlEntry {
 // Zod Schemas
 // ============================================================================
 
+/**
+ * Identifier of another entity (tenant, user, case, contact, document).
+ *
+ * Prisma issues `@default(cuid())` ids for Tenant/User/Case/Contact, while the
+ * deterministic seed data uses UUIDs — so both formats are live in the same
+ * database. Validating these as `z.uuid()` rejected every cuid-issued tenant and
+ * broke document ingestion for tenants created through normal onboarding
+ * (ENG-OPS-003.Gap9). Mirrors `idSchema` in `@intelliflow/validators`, which
+ * cannot be imported here because validators depends on domain, not vice versa.
+ */
+export const entityIdSchema = z.union([
+  z.uuid(),
+  z.string().check(z.regex(/^c[a-z0-9]{8,}$/, 'Invalid CUID')),
+]);
+
 export const documentVersionSchema = z.object({
   major: z.number().int().min(1),
   minor: z.number().int().min(0),
@@ -137,10 +152,10 @@ export const documentVersionSchema = z.object({
 });
 
 export const accessControlEntrySchema = z.object({
-  principalId: z.uuid(),
+  principalId: entityIdSchema,
   principalType: z.enum(['USER', 'ROLE', 'TENANT']),
   accessLevel: z.enum(AccessLevel),
-  grantedBy: z.uuid(),
+  grantedBy: entityIdSchema,
   grantedAt: z.date(),
   expiresAt: z.date().optional(),
 });
@@ -152,13 +167,13 @@ export const caseDocumentMetadataSchema = z.object({
   documentTypeLabel: z.string().trim().min(1).max(100).optional(),
   classification: z.enum(DocumentClassification),
   tags: z.array(z.string().max(50)).max(20).default([]),
-  relatedCaseId: z.uuid().optional(),
-  relatedContactId: z.uuid().optional(),
+  relatedCaseId: entityIdSchema.optional(),
+  relatedContactId: entityIdSchema.optional(),
 });
 
 export const caseDocumentSchema = z.object({
-  id: z.uuid(),
-  tenantId: z.uuid(),
+  id: entityIdSchema,
+  tenantId: entityIdSchema,
   version: documentVersionSchema,
   status: z.enum(DocumentStatus),
   metadata: caseDocumentMetadataSchema,
@@ -167,17 +182,17 @@ export const caseDocumentSchema = z.object({
   mimeType: z.string().min(1),
   sizeBytes: z.number().int().positive(),
   acl: z.array(accessControlEntrySchema).default([]),
-  createdBy: z.uuid(),
+  createdBy: entityIdSchema,
   createdAt: z.date(),
-  updatedBy: z.uuid(),
+  updatedBy: entityIdSchema,
   updatedAt: z.date(),
-  parentVersionId: z.uuid().optional(), // For version history
+  parentVersionId: entityIdSchema.optional(), // For version history
   isLatestVersion: z.boolean().default(true),
   retentionUntil: z.date().optional(), // Legal hold or retention policy
   deletedAt: z.date().optional(), // Soft delete
   eSignature: z
     .object({
-      signedBy: z.uuid(),
+      signedBy: entityIdSchema,
       signedAt: z.date(),
       signatureHash: z.string().check(z.regex(/^[a-f0-9]{64}$/)),
       ipAddress: z.string().min(1),
@@ -272,6 +287,14 @@ export class CaseDocument {
 
   get contentHash(): string {
     return this.data.contentHash;
+  }
+
+  get mimeType(): string {
+    return this.data.mimeType;
+  }
+
+  get sizeBytes(): number {
+    return this.data.sizeBytes;
   }
 
   get acl(): AccessControlEntry[] {
