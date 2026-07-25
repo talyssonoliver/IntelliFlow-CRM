@@ -1,13 +1,13 @@
 # Current State Report
-_Generated: 2026-07-25T09:02:30.149Z_
+_Generated: 2026-07-25T21:36:21.310Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 6 continuous tasks.
-- Overall progress: 454/618 tasks completed (73.46%), 162 backlog, 0 blocked, 2 in progress.
-- Numbered sprint progress alone: 449/612 tasks completed or attested inside numbered sprints.
+- Overall progress: 456/618 tasks completed (73.79%), 160 backlog, 0 blocked, 2 in progress.
+- Numbered sprint progress alone: 451/612 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
 - Ready-to-start work: PG-196 (Sprint 18), PG-197 (Sprint 18), PG-198 (Sprint 18), PG-199 (Sprint 18), PG-201 (Sprint 18).
 - Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
@@ -16,7 +16,7 @@ _Generated: 2026-07-25T09:02:30.149Z_
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
 - CSV marks these tasks completed without a canonical attestation: IFC-043, IFC-052, IFC-071, PG-110, PG-114, PG-127, PG-147, IFC-199, IFC-201, IFC-204.
-- Attested but not completed in CSV: IFC-257 (In Progress), ENG-OPS-002 (In Progress).
+- Attested but not completed in CSV: IFC-257 (In Progress), PG-196 (Backlog), PG-197 (Backlog), PG-198 (Backlog), PG-199 (Backlog), PG-201 (Backlog), PG-202 (Backlog), PG-203 (Backlog), PG-204 (Backlog), PG-205 (Backlog), PG-207 (Backlog), PG-208 (Backlog), PG-209 (Backlog), ENG-OPS-002 (In Progress), ENG-OPS-002.R16 (Backlog).
 
 ## Continuous Work
 
@@ -278,30 +278,30 @@ _Generated: 2026-07-25T09:02:30.149Z_
 
 **Open Work**
 - **IFC-257** — Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.. Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation
-- **PG-196** — Module Settings - Account Tiers (/accounts/(list)/account-tiers). Account tiers at /accounts/(list)/account-tiers (tier definitions bronze/silver/gold/platinum, point thresholds, benefits matrix, default tier, upgrade/downgrade rules). MUST follow docs/planning/module-settings-playbook.md:...
-- **PG-197** — Module Settings - Territory Mapping (/accounts/(list)/territory-mapping). Territory mapping at /accounts/(list)/territory-mapping (geographic territory rules by region/country/postcode, assignment strategies round-robin/load-balance/manual, overlap resolution priority, default territory)....
-- **PG-198** — Module Settings - Approval Policies (/agent-approvals/approval-policies). Approval policies at /agent-approvals/approval-policies (policy rules: auto-approve thresholds, required reviewers, escalation paths, approval timeout SLAs, per-agent overrides). MUST follow docs/planning/module-settings-playbook.md:...
-- **PG-199** — Module Settings - Model Config (/agent-approvals/model-config). Model config at /agent-approvals/model-config (per-agent model selection, temperature, max tokens, fallback chain, per-agent cost ceilings). Respect Never-Downgrade rule for model IDs (memory/feedback_never_downgrade_without_approval.md)....
+- **PG-196** — Module Settings - Account Tiers (/accounts/(list)/account-tiers). Route /accounts/(list)/account-tiers renders; Tier definitions bronze/silver/gold/platinum, point thresholds, benefits matrix, default tier, upgrade/downgrade rules implemented; PageHeader+bento grid; canonical EmptyState; TagsTab;...
+- **PG-197** — Module Settings - Territory Mapping (/accounts/(list)/territory-mapping). Route /accounts/(list)/territory-mapping renders; Geographic territory rules by region/country/postcode, assignment strategies, overlap resolution, default territory implemented; PageHeader+bento grid; canonical EmptyState; TagsTab;...
+- **PG-198** — Module Settings - Approval Policies (/agent-approvals/approval-policies). Route /agent-approvals/approval-policies renders; Policy rules: auto-approve thresholds, required reviewers, escalation paths, SLAs, per-agent overrides implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...
+- **PG-199** — Module Settings - Model Config (/agent-approvals/model-config). Route /agent-approvals/model-config renders; Per-agent model selection, temperature, max tokens, fallback chain, cost ceilings implemented; Never-Downgrade rule respected; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...
 
 ## Sprint 19 - Sprint 19
 
-- Status: 10/18 completed, 7 backlog, 0 blocked, 1 in progress.
+- Status: 12/18 completed, 5 backlog, 0 blocked, 1 in progress.
 - Primary focus areas: Engineering Operations (8), Core CRM (4), AI/Intelligence (1).
-- Evidence coverage: 10/10 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 12/12 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
 - **IFC-312** — AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).. Originally attested 2026-04-22 with verdict COMPLETE, but a 2026-04-24 code audit (/task-code-audit) identified 7 findings (2 High, 4 Medium, 1 Low) that contradicted the attestation......
+- **PG-064** — Contacts List. PG-064 (Contacts List) reconcile. RECON-FIRST (3rd attempt; prior two slipped on data-model assumptions and spec ambiguity): read the actual code before scoping. Finding... Contacts listed; Search working; Segments functional
 - **ENG-OPS-003** — Harness hardening Gaps #1-#4 + OSV PRs A/B: retroactive umbrella for the 8 untracked CI/security/E2E-harness PRs merged 2026-07-24 (#623, #625, #627, #628, #629, #630, #631, #634). RETROSPECTIVE GOVERNANCE BACKFILL for the 2026-07-24 merge window, whose PRs skipped the documented orchestrator pipeline (docs/operations/sprint-18-orchestrator-prompt.md). Root cause: the orchestrator never read that document. Findings:......
+- **PG-065** — Contact 360. RECONCILE via full pipeline (spec-session + plan-session + exec). The Contact 360 view already existed on main (route-registry Status=Implemented), implemented inline in the 2576-line Contact360Page.... response under 200ms, Lighthouse 90, data complete
 - **PG-166** — Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90. All implementation code, tests, configs, and documentation are complete. 3 test regressions fixed this session (SVG role='img', heading text, EmptyState refactor). Pre-existing build blocker fixed (unused @ts-expect-error).... Lighthouse CI audit on / route;...
-- **ENG-OPS-002.R10** — Remediation R10 [High/QUAL-001+002]: ticket + task aggregate state-machine transition guards, un-skip the property tests. Scope: QUAL-001 (5 ticket state-machine bugs — changePriority/assign/unassign now guard closed+terminal via isClosed||isTerminalStatus; resumeSla clamps negative pause duration) FULLY fixed.... ticket+task terminal-state guards; property tests un-skipped
-- **PG-069** — Accounts List. PG-069 Accounts List RECONCILIATION. The feature shipped on main (IFC-273 bc8b1afac #415);... response under 200ms, Lighthouse 90, hierarchy shown
 
 **Open Work**
 - **ENG-OPS-002** — Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan). Verifiable baseline of S1-18 delivered state; All required artifacts produced and reproducible; Failures registered, not suppressed
 - **IFC-034** — PHASE-001: Gate 3 Review - £3000 Investment. Scale decision with modern stack validated
-- **PG-064** — Contacts List. response under 200ms, Lighthouse 90, search fast
-- **PG-065** — Contact 360. response under 200ms, Lighthouse 90, data complete
 - **IFC-304** — Article Analytics Dashboard. Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%
+- **IFC-306** — Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated. compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...
+- **ENG-OPS-002.R13** — Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests. Skips blocked by lint unless issue-linked; existing 21 reconciled
 
 ## Sprint 20 - Sprint 20
 

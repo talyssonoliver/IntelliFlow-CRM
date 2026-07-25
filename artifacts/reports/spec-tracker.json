@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-25T09:02:30.145Z",
+  "generated_at": "2026-07-25T21:36:21.305Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 510,
-    "completed": 447,
-    "partially_done": 0,
-    "spec_only": 60,
-    "uncertain": 3
+    "total_specs_analyzed": 515,
+    "completed": 449,
+    "partially_done": 12,
+    "spec_only": 48,
+    "uncertain": 6
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -56,6 +56,12 @@
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "ENG-OPS-002.R16",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec ENG-OPS-002.R16 when ready for implementation."
     },
     {
       "task_id": "IFC-211",
@@ -202,6 +208,12 @@
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
+      "task_id": "PG-064",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
       "task_id": "PG-181",
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
@@ -220,10 +232,82 @@
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
+      "task_id": "PG-196",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-196 when ready for implementation."
+    },
+    {
+      "task_id": "PG-197",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-197 when ready for implementation."
+    },
+    {
+      "task_id": "PG-198",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-198 when ready for implementation."
+    },
+    {
+      "task_id": "PG-199",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-199 when ready for implementation."
+    },
+    {
       "task_id": "PG-200",
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "PG-201",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-201 when ready for implementation."
+    },
+    {
+      "task_id": "PG-202",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-202 when ready for implementation."
+    },
+    {
+      "task_id": "PG-203",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-203 when ready for implementation."
+    },
+    {
+      "task_id": "PG-204",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-204 when ready for implementation."
+    },
+    {
+      "task_id": "PG-205",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-205 when ready for implementation."
+    },
+    {
+      "task_id": "PG-207",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-207 when ready for implementation."
+    },
+    {
+      "task_id": "PG-208",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-208 when ready for implementation."
+    },
+    {
+      "task_id": "PG-209",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-209 when ready for implementation."
     }
   ],
   "tasks": [
@@ -734,6 +818,22 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "ENG-OPS-002.R16",
+      "title": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Backlog",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENG-OPS-002"
+      ],
+      "real_status": "UNCERTAIN"
+    },
+    {
       "task_id": "ENG-OPS-003",
       "title": "Harness hardening Gaps #1-#4 + OSV PRs A/B: retroactive umbrella for the 8 untracked CI/security/E2E-harness PRs merged 2026-07-24 (#623, #625, #627, #628, #629, #630, #631, #634)",
       "sprint": 19,
@@ -748,6 +848,34 @@
         "ENG-OPS-002"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENG-OPS-003.Gap13-DocsBuildNoop",
+      "title": "ENG-OPS-003.Gap13-DocsBuildNoop",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "NOT_IN_CSV",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "ENG-OPS-003.Gap2-CodeQL",
+      "title": "ENG-OPS-003.Gap2-CodeQL",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "NOT_IN_CSV",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "UNCERTAIN"
     },
     {
       "task_id": "ENV-001-AI",
@@ -6990,6 +7118,38 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-064",
+      "title": "Contacts List",
+      "sprint": 19,
+      "spec_path": ".specify/sprints/sprint-19/specifications/PG-064-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-089"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-065",
+      "title": "Contact 360",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-090"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "PG-069",
       "title": "Accounts List",
       "sprint": 19,
@@ -8138,7 +8298,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8146,7 +8306,7 @@
         "PG-178",
         "PG-183"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-197",
@@ -8155,7 +8315,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8163,7 +8323,7 @@
         "PG-178",
         "PG-183"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-198",
@@ -8172,7 +8332,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8181,7 +8341,7 @@
         "PG-152",
         "PG-192"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-199",
@@ -8190,7 +8350,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8199,7 +8359,7 @@
         "PG-152",
         "PG-192"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-200",
@@ -8225,7 +8385,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8233,7 +8393,7 @@
         "PG-178",
         "PG-187"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-202",
@@ -8242,7 +8402,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8250,7 +8410,7 @@
         "PG-178",
         "PG-189"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-203",
@@ -8259,7 +8419,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8267,7 +8427,7 @@
         "PG-178",
         "PG-189"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-204",
@@ -8276,7 +8436,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8284,7 +8444,7 @@
         "PG-178",
         "PG-190"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-205",
@@ -8293,7 +8453,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8301,7 +8461,7 @@
         "PG-178",
         "PG-182"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-206",
@@ -8327,7 +8487,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8335,7 +8495,7 @@
         "PG-178",
         "PG-182"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-208",
@@ -8344,7 +8504,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8352,7 +8512,7 @@
         "PG-178",
         "PG-191"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-209",
@@ -8361,7 +8521,7 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Backlog",
       "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
@@ -8369,7 +8529,7 @@
         "PG-178",
         "PG-191"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PM-OPS-001",
