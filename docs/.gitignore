@@ -1,0 +1,4 @@
+# Docusaurus build + cache output (docs:build now runs a real build — #647)
+/build
+.docusaurus
+.cache-loader

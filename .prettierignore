@@ -28,3 +28,9 @@ docs/CURRENT_STATE_REPORT.md
 
 # IFC-033 committed load-test evidence bundle (generated reports, not source)
 docs/evidence/**/*.html
+
+# Docusaurus generated build output + cache (docs:build now produces these —
+# #647). Never source; mirrors docs/.gitignore so prettier --check doesn't lint
+# the hundreds of emitted JSON chunks a local docs build leaves behind.
+docs/.docusaurus/**
+docs/build/**

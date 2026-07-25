@@ -15,8 +15,10 @@ packages:
   # NOTE: docs/ (Docusaurus) is deliberately NOT a workspace member.
   # Adding it was tried and reverted: `docs` has a `build` script, so
   # `turbo run build` (root `build`, which CI's required Build job runs) picks
-  # it up — and `docusaurus build` currently fails because the content preset
-  # has no `path` and looks for docs/docs/ while the markdown lives at docs/.
-  # Folding docs in therefore breaks a required gate. docs/ keeps its own
-  # lockfile and carries its own `pnpm.overrides` mirroring the root set.
-  # See the docs-site follow-up issue before revisiting.
+  # it up. The content-preset path was fixed in #647 (it now points at docs/
+  # instead of the nonexistent docs/docs/), but `docusaurus build` still fails
+  # because the Markdown under docs/ has not been curated for MDX (malformed
+  # front matter, JSX-hostile syntax). Folding docs in would therefore still
+  # break the required Build gate. docs/ keeps its own lockfile and carries its
+  # own `pnpm.overrides` mirroring the root set. Revisit only once the docs
+  # site builds clean — tracked as the content-curation follow-up to #647.

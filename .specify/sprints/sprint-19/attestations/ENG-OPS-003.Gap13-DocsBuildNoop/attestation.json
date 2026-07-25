@@ -1,0 +1,85 @@
+{
+  "task_id": "ENG-OPS-003.Gap13-DocsBuildNoop",
+  "sprint": 19,
+  "run_id": "20260725T202522-eng-ops-003-gap13",
+  "verdict": "COMPLETE",
+  "timestamp": "2026-07-25T20:25:22.000Z",
+  "scope": "CI/DOCS-INFRA",
+  "dependencies_verified": true,
+  "blocker": null,
+  "issue": 647,
+  "artifact_hashes": {
+    "package.json": "aea9ee3e8ab8c2a4ae7a0818657a6f591f8d5777f91504c26048de825fe8fb71",
+    "docs/docusaurus.config.js": "2dc0e2ccd40133e827d44401f5d2c87557438ec439a3552902da462ccfc32660",
+    "pnpm-workspace.yaml": "2a85be76d38d35527a5abec7d96202d669f3e87c1139d49dd6507b1449c30ed9",
+    "docs/.gitignore": "f6716ebf592a333405a927c9327591095b9730af916c34328c375851da9691b6",
+    "tools/scripts/__tests__/docs-build-scripts.test.ts": "3fb99680952494a146c4fc7118edbd0d6e3430574323ba81f4d6ba93a4734903",
+    ".specify/sprints/sprint-19/spec/ENG-OPS-003.Gap13-DocsBuildNoop/spec-draft.md": "69552d6dc3f0d3ba7b48eb9d0f7af0ea19667810ff803750071ba35b3e6acbda",
+    ".specify/sprints/sprint-19/spec/ENG-OPS-003.Gap13-DocsBuildNoop/plan.md": "a2dc0a8eafdc5562dd5da3345ea65aff092d6f1e15c3dd7c6f52b7eda48e8c1f"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:25:00Z",
+      "note": "Full turbo typecheck (35 tasks) — ran green in the pre-commit hook."
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm exec vitest run --project root tools/scripts/__tests__/docs-build-scripts.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:22:22Z",
+      "note": "4/4 pass. Negative check confirmed: reverting docs:build to the silent `--filter docs` form turns the guard RED, then GREEN again on restore."
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint (turbo) + lint-sonar-guard",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:25:00Z"
+    },
+    {
+      "name": "Behavior — docs:build hard-errors (no silent success)",
+      "command": "pnpm run docs:build",
+      "exit_code": 1,
+      "passed": true,
+      "timestamp": "2026-07-25T20:23:30Z",
+      "note": "BEFORE: `pnpm --filter docs build` matched 0 projects and exited 0 (silent no-op). AFTER: runs real `docusaurus build`, hard-errors on unresolved content (docs/design/mockups/empty-states.md malformed front matter) and propagates exit 1. exit_code 1 is the DESIRED outcome for this gate (option b: hard-error, never silent success)."
+    },
+    {
+      "name": "Build",
+      "command": "node scripts/pre-ship.mjs (full gate at final SHA on push)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:40:00Z",
+      "note": "Validated by the full pre-ship gate at the final SHA before push (Node 22, local test DB on :5433). docs:build/docs:dev are referenced only in package.json — no pre-ship step or CI workflow invokes them — so hard-erroring is gate-neutral."
+    }
+  ],
+  "evidence_summary": {
+    "tests_passing": 4,
+    "new_tests_added_this_exec": 4,
+    "files_created": 5,
+    "files_modified": 3,
+    "completed_acceptance_criteria": [
+      "AC-1 docs:build runs real docusaurus build and hard-errors (exit 1) on unresolved content — never silent 0",
+      "AC-2 docs:dev invokes docusaurus `start` (not the nonexistent `dev` script, not an empty --filter)",
+      "AC-3 content preset declares explicit path: '.' (cannot fall back to nonexistent docs/docs/)",
+      "AC-4 regression guard fails on the silent --filter form / missing path / docs in workspace (negative-checked)",
+      "AC-5 no workspace fold; docs/ keeps its own lockfile; pnpm-workspace.yaml note refreshed",
+      "AC-6 TS/Tests/Lint/Build + full pre-ship clean at final SHA (no bypass)"
+    ],
+    "blocked_acceptance_criteria": []
+  },
+  "gate_results": {
+    "artifact_verification": "PASS",
+    "import_reachability": "PASS (file-only guard; no product imports)",
+    "runtime_wiring": "PASS (root package.json scripts; no CI/pre-ship dependency on docs:build)",
+    "build_validation": "PASS (full pre-ship at final SHA)",
+    "security_review": "PASS (no runtime/product code touched; docs-audit advisory unchanged)",
+    "plan_reviewer": "N/A (attestation-tracked harness gap, mirrors #632/#637/#638)"
+  },
+  "notes": "ENG-OPS-003 Gap #13, closing #647 (follow-up of Gap6/#645). Two linked defects: (1) the titled bug — `docs:build`/`docs:dev` ran `pnpm --filter docs <script>` but docs/ is deliberately NOT a workspace member, so the filter matched zero projects and pnpm EXITED 0, reporting success while building nothing (the L20 silence-as-success footgun; `docs:dev` also called a `dev` script docs/ never defined — Docusaurus dev is `start`); (2) the content preset had no `path`, defaulting to the nonexistent docs/docs/ while the Markdown lives at docs/. Fix (minimal, gate-neutral): root scripts now run the standalone docs project directly (`pnpm --dir docs --ignore-workspace run build|start`) so the exit code propagates and the build hard-errors instead of silently succeeding; the preset declares an explicit `path: '.'` (+ minimal exclude) so it targets the real content root; docs/.gitignore added for the real build output; the pnpm-workspace.yaml rationale note refreshed. A full green site build is deliberately OUT OF SCOPE — docs/ is a kitchen-sink of GitHub-flavored Markdown that is MDX-hostile (malformed front matter, JSX-hostile syntax) and sidebars.js references non-existent doc IDs; curating it is an open-ended follow-up. Until it builds clean, docs/ stays OUT of the workspace (folding it in would drag docusaurus build into the required turbo Build gate — the #645 revert). No workspace fold, no docs/pnpm-lock.yaml removal, no docs-audit retirement (those ride the future curation PR). No pre-ship bypass, no --no-verify, no destructive git."
+}
