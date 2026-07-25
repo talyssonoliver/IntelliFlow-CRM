@@ -48,19 +48,19 @@ generated path as evidence of absence.**
 
 ## Findings (corrected, verified against `origin/main` @ `f4ec0b0cb`)
 
-| PR       | SHA         | Task ID    | Gates 1/4/5 (attestation, compliance, merged green)    | Gate 2 (spec+plan)  | Gate 6 (CSV)         | Classification              |
-| -------- | ----------- | ---------- | ------------------------------------------------------ | ------------------- | -------------------- | --------------------------- |
-| **#622** | `1235bcee1` | IFC-033    | ✅ ADR-068 attestation, 8/8 gates PASS                 | ❌ missing          | ✅ Completed / 100 % | Needed spec+plan only       |
-| **#626** | `2ec7d0e49` | PG-206     | ✅ attestation, 7/7 DoD, 4/4 validations, Lighthouse   | ❌ missing          | ❌ **still Backlog** | Needed CSV flip + spec+plan |
-| #623     | `a88b9d804` | —          | n/a — merged green                                     | ❌                  | ❌                   | No registered task ID       |
-| #625     | `c1c41546c` | —          | n/a — merged green                                     | ❌                  | ❌                   | No registered task ID       |
-| #627     | `fd8f78c2f` | —          | n/a — merged green                                     | ❌                  | ❌                   | No registered task ID       |
-| #628     | `d44e8a67d` | —          | n/a — merged green                                     | ❌                  | ❌                   | No registered task ID       |
-| #629     | `baf69d823` | —          | n/a — merged green                                     | ❌                  | ❌                   | No registered task ID       |
-| #630     | `1ce7055bc` | —          | n/a — merged green                                     | ❌                  | ❌                   | No registered task ID       |
-| #631     | `f645d34c3` | —          | n/a — merged green                                     | ❌                  | ❌                   | No registered task ID       |
-| #634     | `f4ec0b0cb` | —          | n/a — merged green                                     | ❌                  | ❌                   | No registered task ID       |
-| #624     | `2333b7bbb` | PM-OPS-002 | ✅ landed 6 attestations (IFC-211 + INFRA-TF-001..005) | n/a (governance PR) | ✅                   | Compliant                   |
+| PR       | SHA         | Task ID    | Gates 1/4/5 (attestation, compliance, merged green)                                       | Gate 2 (spec+plan)  | Gate 6 (CSV)         | Classification              |
+| -------- | ----------- | ---------- | ----------------------------------------------------------------------------------------- | ------------------- | -------------------- | --------------------------- |
+| **#622** | `1235bcee1` | IFC-033    | ✅ ADR-068 attestation, 8/8 gates PASS                                                    | ❌ missing          | ✅ Completed / 100 % | Needed spec+plan only       |
+| **#626** | `2ec7d0e49` | PG-206     | ⚠️ attestation, 4/4 validations, **6/7 DoD verified + 1 unevidenced** (Lighthouse — #640) | ❌ missing          | ❌ **still Backlog** | Needed CSV flip + spec+plan |
+| #623     | `a88b9d804` | —          | n/a — merged green                                                                        | ❌                  | ❌                   | No registered task ID       |
+| #625     | `c1c41546c` | —          | n/a — merged green                                                                        | ❌                  | ❌                   | No registered task ID       |
+| #627     | `fd8f78c2f` | —          | n/a — merged green                                                                        | ❌                  | ❌                   | No registered task ID       |
+| #628     | `d44e8a67d` | —          | n/a — merged green                                                                        | ❌                  | ❌                   | No registered task ID       |
+| #629     | `baf69d823` | —          | n/a — merged green                                                                        | ❌                  | ❌                   | No registered task ID       |
+| #630     | `1ce7055bc` | —          | n/a — merged green                                                                        | ❌                  | ❌                   | No registered task ID       |
+| #631     | `f645d34c3` | —          | n/a — merged green                                                                        | ❌                  | ❌                   | No registered task ID       |
+| #634     | `f4ec0b0cb` | —          | n/a — merged green                                                                        | ❌                  | ❌                   | No registered task ID       |
+| #624     | `2333b7bbb` | PM-OPS-002 | ✅ landed 6 attestations (IFC-211 + INFRA-TF-001..005)                                    | n/a (governance PR) | ✅                   | Compliant                   |
 
 **Counts**: 11 merges audited · 1 compliant (#624) · 2 real tasks needing
 backfill (IFC-033, PG-206) · 8 with no registered task ID.
@@ -168,8 +168,50 @@ decision to make in `.specify/sprints/.gitignore` rather than by accumulating
 
 ---
 
+## Gate 4 — `/compliance-check` results
+
+Run for PG-206 against `origin/main` @ `f4ec0b0cb`.
+
+| Guard                                      | Result                                      | Basis                                                                                                                                                   |
+| ------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check-attestation-phrases` (Guards 6 + 8) | ✅ OK                                       | No "runtime-ready" / "deferred to CI" self-justifying phrases                                                                                           |
+| `check-nav-wiring` (Guard 7)               | ✅ OK                                       | Verified **substantively**, not just by the guard: `sidebar/configs/documents.ts:22` has `href: '/documents/storage-policies'` — the route is reachable |
+| `check-lighthouse-evidence` (Guard 9)      | ⚠️ **passed on a technicality** — see below |
+| Tests / typecheck / lint                   | ✅ OK                                       | Covered by the full pre-ship run (all packages, not a focused subset)                                                                                   |
+
+### ⚠️ Guard 9 blind spot — filed as #640
+
+`check-lighthouse-evidence.mjs` returned
+`OK — no Lighthouse KPI in attestation. N/A.` That is **not** a clean bill of
+health. PG-206's attestation _does_ claim a Lighthouse gate:
+
+```json
+"gate_results": [{ "gate_id": "lighthouse-gte-90", "passed": true }]
+```
+
+with **no supporting artifact** — no `artifacts/lighthouse/PG-206/`, and no
+Lighthouse report in `artifact_hashes`. The guard passed only because it
+inspects `kpi_results` and PG-206 recorded the claim in `gate_results`. **The
+field choice, not the evidence, decided whether the guard fired** — so any task
+can bypass Guard 9 by recording Lighthouse as a gate rather than a KPI, and gets
+a clean `OK` rather than a skip.
+
+This is the Build/Coverage self-attestation anti-pattern (same shape as PG-184's
+false PASS) reaching `main` through a hole in the gate built to stop it.
+
+**This does not invalidate PG-206's CSV flip.** The implementation is genuinely
+complete and was verified against real code. But the "7/7 DoD met" figure in its
+attestation should be read as **6/7 verified + 1 unevidenced**, and this audit
+declines to ratify the Lighthouse claim.
+
+---
+
 ## Residual (not fixed here)
 
+- **PG-206's `lighthouse-gte-90` claim is unevidenced** — #640. Needs either a
+  real report (`docs/claude-refs/lighthouse-playbook.md`; PG-195 proved the
+  recipe works on this host) or a human-approved waiver. The guard fix is the
+  more important half.
 - **R16 must be reconciled before landing** — see above. Not fixed here because
   that branch has a separate owner (orchestrator Global Rule 11: a
   branch/worktree is an exclusive single-writer resource).
