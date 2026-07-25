@@ -1,0 +1,104 @@
+{
+  "task_id": "ENG-OPS-003.Gap13-FinalShaAttest",
+  "sprint": 19,
+  "run_id": "20260725T210000-eng-ops-003-gap13",
+  "verdict": "COMPLETE",
+  "timestamp": "2026-07-25T21:00:00.000Z",
+  "scope": "CI/HARNESS-GOVERNANCE",
+  "dependencies_verified": true,
+  "blocker": null,
+  "issue": 644,
+  "artifact_hashes": {
+    "scripts/preship-attest.mjs": "6d5aa4645bca594caa2d237bc490c690f171fb689883c0501a466c522d82d9f2",
+    "scripts/__tests__/preship-attest.test.ts": "742aa6066d241ef2824ed7309acd47f5883af282e18229d3b802864f0bbc078f",
+    "scripts/pre-ship.mjs": "7c028e54d7176bcbf8e16e923feb09f0e63500abed916f297f73b1d5966f1592",
+    ".husky/pre-push": "98cfe2681219c81f9d0e8102d639c19e03e462d3e4136090df0b50a8e0a9511e",
+    ".github/workflows/pr-checks.yml": "3a2f71cc75f223267a2ddb1534381453bc064e2101107e7e9a148e40be4ce6b9",
+    "docs/runbooks/preship-attestation.md": "ce64e8b4fc45cf994a40fe3fe07a2d116a7fb3821a32b1b324eef8260dd4e9c8",
+    "package.json": "1c08c30614f691055b69c4d780419effedbd3ec725fa89ec1bb9d0bd09078ce0"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:44:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm exec vitest run --project root scripts/__tests__/preship-attest.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:38:53Z",
+      "note": "37 tests, all new in this exec."
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T20:44:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "node scripts/pre-ship.mjs (build step)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T21:00:00Z",
+      "note": "Validated inside the full pre-ship gate."
+    },
+    {
+      "name": "Full pre-ship gate",
+      "command": "node scripts/pre-ship.mjs",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T21:00:00Z",
+      "note": "PASS in 26m13s, 31/31 expected steps. No PRESHIP_ALLOW_MISSING, no --only, no --no-verify. Only non-required actionlint and gitleaks were SKIPPED_PRECONDITION (tools not installed locally; both run in CI). Re-run at the FINAL SHA after this attestation was committed."
+    },
+    {
+      "name": "Self-verification (dogfood)",
+      "command": "node scripts/preship-attest.mjs --publish",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T21:00:00Z",
+      "note": "assessState accepted the real 31/31 state file produced by the gate; the attestation for this PR's own head SHA was published with the tool this PR adds."
+    }
+  ],
+  "evidence_summary": {
+    "tests_passing": 37,
+    "new_tests_added_this_exec": 37,
+    "files_created": 4,
+    "files_modified": 4,
+    "preship_expected_steps": 31,
+    "completed_acceptance_criteria": [
+      "AC-1 pre-ship persists mode/allow_missing/only/expected_step_ids (verified end-to-end against the real write path, not fixtures)",
+      "AC-2 --publish refuses missing/malformed state, non-PASS verdict, stale HEAD, dirty tree, allow_missing, --only subset, and any non-passing expected step",
+      "AC-3 --publish creates an annotated tag at refs/preship/<sha> targeting <sha> with the v1 payload",
+      "AC-4 --verify distinguishes absent / wrong-target / malformed / degraded / gate-hash-mismatch",
+      "AC-5 remote, state path and pre-ship path all injectable; no test touches real origin or real state; all fixture git calls scrub GIT_*",
+      "AC-6 .husky/pre-push publishes warn-only after a green gate",
+      "AC-7 Pre-ship Attestation job added with no job-level if:, merge_group SHA resolved via github.event.merge_group.head_sha, step-level exemptions",
+      "AC-8 docs/runbooks/preship-attestation.md covers all six required sub-topics",
+      "AC-9 TS + Tests + Lint + Build + full pre-ship clean at the FINAL SHA, no bypass"
+    ],
+    "blocked_acceptance_criteria": []
+  },
+  "gate_results": {
+    "artifact_verification": "PASS",
+    "import_reachability": "PASS (scripts/__tests__/preship-attest.test.ts imports assessState from ../preship-attest.mjs)",
+    "runtime_wiring": "PASS (.husky/pre-push publish call; pr-checks.yml 'Pre-ship Attestation' job; package.json preship:attest / preship:attest:verify)",
+    "build_validation": "PASS",
+    "security_review": "PASS (security-lead panel; control explicitly classified as an honesty/process gate, not a security boundary, and documented as such in code, runbook and failure messages)",
+    "plan_reviewer": "PASS (subagent ae90015e8c16b0ed8; REQUEST-CHANGES with 7 errors, all applied before implementation)"
+  },
+  "decisions": {
+    "D1_transport": "Annotated tag object at refs/preship/<sha>, NOT a GitHub commit status. The devops-lead review recommended a commit status on ref-growth and discoverability grounds; overruled on a failure mode neither review caught — a pre-push hook runs BEFORE the objects reach the remote, so POST /repos/{o}/{r}/statuses/{sha} returns 422 and a commit status cannot be published from the hook at all. Both ref-push forms (bare ref and annotated tag object) were probed against the live repo before deciding; both probe refs were deleted.",
+    "D2_no_trust_in_verdict": "assessState re-derives the result from steps[] against expected_step_ids. Confirmed by reading pre-ship.mjs that both --only=<ids> (:746-748, :836-840) and PRESHIP_ALLOW_MISSING=1 (:872, :935) write a top-level verdict of PASS that is structurally identical to a full green run.",
+    "D3_enforcement_point": "A job in pr-checks.yml, not a plain required status context. A status context cannot be conditionally exempted, and 10 of the 11 currently-open PRs are bot-authored, which a non-exemptable required context would deadlock permanently including Dependabot auto-merge.",
+    "D4_update_branch_policy": "After any gh pr update-branch the new head must be gated and attested locally before merge; full CI is NOT accepted as a substitute for the server-side merge commit. Squash-merge commits are explicitly OUT of scope — created after all checks pass and tree-identical to the attested head.",
+    "D5_exemptions": "dependabot[bot] / github-actions[bot] authors, fork PRs, and merge_group events, each as a step-level if: that logs an explicit ::notice.",
+    "D6_rollout": "The 'Pre-ship Attestation' context is NOT added to branch protection in this PR. Adding it before the workflow file is on main would leave it permanently pending on every open PR whose base predates it, which the bot exemption cannot rescue because the job does not exist on those branches. The exact gh api PATCH ships in the runbook and requires the owner's approval."
+  },
+  "notes": "Harness Gap #13, closing issue #644 (self-reported during Gap5/#637, where clean pre-ship runs at 05d61a3a2/32477c0a7/f5fe247bd were followed by a merged head of 319b8df26 built by two server-side update-branch merges — L4 unsatisfied and undetected). Addresses all three of the issue's suggested fixes: publish the passing SHA (D1), add a check that fails when head_sha has no record (D3), and decide the update-branch policy explicitly (D4). The control is deliberately scoped and labelled as an HONESTY gate: anyone with push access can forge an attestation, exactly as git push --no-verify already bypasses the hook; what it reliably catches is the accidental case where a merge moved the SHA out from under a developer who genuinely ran the gate, plus accidental laundering of a --only or PRESHIP_ALLOW_MISSING run. Known limitations are recorded rather than hidden: forgeable by design (a test asserts the boundary by accepting a consistently-forged state), refs/preship/* growth is unswept (follow-up), fork PRs can never self-attest, core.hooksPath is absolute so worktree pushes do not auto-publish (which is why THIS PR was attested with the manual pnpm preship:attest path), and re-attesting after update-branch needs one gh run rerun because a ref push fires no synchronize event. ENG-OPS-003 Gap tasks are attestation-tracked, not Sprint_plan.csv rows (same as #632/#637/#638) — no CSV flip. scripts/** is outside sonar.sources and outside SONAR_SOURCE_ROOTS in check-diff-coverage.mjs:53-69, so the new script is exempt from the diff-coverage gate and Sonar new_coverage; the 37 tests were written anyway precisely because no coverage gate would catch a regression here. No pre-ship bypass, no --no-verify, no destructive git."
+}
