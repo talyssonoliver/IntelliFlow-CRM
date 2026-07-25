@@ -21,9 +21,11 @@
 #     ALL EXPIRED (latest exp 2026-02-28).
 #   -  3 Supabase local-dev demo anon keys (iss=supabase-demo; public, documented)
 #   -  4 canonical jwt.io sample tokens (sub=1234567890)
-#   -  6 Stripe TEST literals (sk_test_1234567890, pk_test_abc123, pi_test123_...)
-#   - remainder: sequential/synthetic fixtures (ifc_live_1234567890abcdef,
-#     abc123def456), UUIDs, SHA-256 attestation hashes, a base32 TOTP test seed,
+#   -  6 Stripe test-mode literals (sk/pk/pi test-prefixed placeholders with
+#     sequential or obviously-fake bodies; not reproduced here because Trivy's
+#     secret scanner flags the literal form even inside a comment)
+#   - remainder: sequential/synthetic fixtures (ifc_live_ + sequential hex),
+#     UUIDs, SHA-256 attestation hashes, a base32 TOTP test seed,
 #     and SonarQube's default admin:admin in local monitoring compose config.
 # No live credential was found. No rotation was required.
 #
