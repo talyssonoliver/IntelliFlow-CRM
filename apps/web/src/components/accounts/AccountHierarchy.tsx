@@ -73,7 +73,11 @@ function TreeNode({
       aria-selected={isCurrent}
       tabIndex={isFocused ? 0 : -1}
       className={`outline-none ${level > 0 ? 'ml-6 border-l border-border pl-3' : ''}`}
-      onFocus={() => onFocus(node.id)}
+      // React's onFocus bubbles, so guard against a descendant treeitem's focus
+      // event overwriting this node's id with an ancestor's (breaks arrow-key nav).
+      onFocus={(e) => {
+        if (e.target === e.currentTarget) onFocus(node.id);
+      }}
     >
       {/* Row — div intentionally avoids nesting buttons; individual buttons handle their own interactions */}
       <div
