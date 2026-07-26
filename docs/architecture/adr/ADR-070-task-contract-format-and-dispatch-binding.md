@@ -1,7 +1,7 @@
 # ADR-070 — Task-Contract Format, Dispatch-Binding Enforcement, and Lease Ledger Architecture
 
-**Status**: Accepted **Date**: 2026-07-26 **Author**: Tech Lead (ORCH-002 lease)
-**Related**: ADR-067 (metrics harness), ADR-068 (attestation provenance),
+**Status**: Accepted **Date**: 2026-07-26 **Author**: Tech Lead (AUTOMATION-004
+lease) **Related**: ADR-067 (metrics harness), ADR-068 (attestation provenance),
 ADR-069 (rolling-wave rebaselining)
 
 ---
@@ -87,8 +87,8 @@ before the agent begins any file writes.
 
 ```sh
 npx tsx tools/scripts/orchestration/verify-dispatch-binding.ts \
-  --contract .specify/sprints/sprint-19/spec/ORCH-002/contract.json \
-  --task-id ORCH-002-task-contract-schema-and-dispatch-guard \
+  --contract .specify/sprints/sprint-19/spec/AUTOMATION-004/contract.json \
+  --task-id AUTOMATION-004-task-contract-schema-and-dispatch-guard \
   --session-id local_28109fae \
   --branch fix/orch-002-task-contract-and-dispatch-guard \
   --worktree /c/Users/talys/projects/iflow-orch-002-contract-and-guard
