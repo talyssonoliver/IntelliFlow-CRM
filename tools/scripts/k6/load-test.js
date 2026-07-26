@@ -10,6 +10,7 @@ import http from 'k6/http';
 import { check, sleep, group } from 'k6';
 import { Rate, Trend, Counter } from 'k6/metrics';
 import { randomString, randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
+import { sanitizeSummaryData } from './lib/redact.js';
 
 // Custom metrics
 const errorRate = new Rate('errors');
@@ -28,15 +29,15 @@ const TRPC_PATH = '/trpc';
 export const options = {
   stages: [
     // Ramp up phase
-    { duration: '30s', target: 100 },   // Warm up to 100 users
-    { duration: '1m', target: 250 },    // Ramp to 250 users
-    { duration: '2m', target: 500 },    // Ramp to 500 users
-    { duration: '3m', target: 1000 },   // Ramp to 1000 users (target)
-    { duration: '5m', target: 1000 },   // Sustain 1000 users
+    { duration: '30s', target: 100 }, // Warm up to 100 users
+    { duration: '1m', target: 250 }, // Ramp to 250 users
+    { duration: '2m', target: 500 }, // Ramp to 500 users
+    { duration: '3m', target: 1000 }, // Ramp to 1000 users (target)
+    { duration: '5m', target: 1000 }, // Sustain 1000 users
     // Ramp down phase
-    { duration: '2m', target: 500 },    // Ramp down to 500
-    { duration: '1m', target: 100 },    // Ramp down to 100
-    { duration: '30s', target: 0 },     // Cool down
+    { duration: '2m', target: 500 }, // Ramp down to 500
+    { duration: '1m', target: 100 }, // Ramp down to 100
+    { duration: '30s', target: 0 }, // Cool down
   ],
   thresholds: {
     // Primary KPI: p99 < 100ms
@@ -60,7 +61,7 @@ function trpcQuery(procedure, input = {}) {
   const params = {
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'X-Request-ID': `k6-${randomString(16)}`,
     },
     tags: { procedure, type: 'query' },
@@ -76,7 +77,7 @@ function trpcMutation(procedure, input = {}) {
   const params = {
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'X-Request-ID': `k6-${randomString(16)}`,
     },
     tags: { procedure, type: 'mutation' },
@@ -111,7 +112,7 @@ function testLeadQueries() {
       limit: 20,
       offset: 0,
       sortBy: 'createdAt',
-      sortOrder: 'desc'
+      sortOrder: 'desc',
     });
     leadQueryLatency.add(Date.now() - start);
 
@@ -139,7 +140,7 @@ function testLeadQueries() {
     // Get single lead
     const getStart = Date.now();
     const getRes = trpcQuery('lead.getById', {
-      id: `lead-${randomIntBetween(1, 1000)}`
+      id: `lead-${randomIntBetween(1, 1000)}`,
     });
     leadQueryLatency.add(Date.now() - getStart);
 
@@ -158,7 +159,7 @@ function testLeadQueries() {
       filters: {
         status: ['new', 'qualified', 'contacted'],
       },
-      limit: 10
+      limit: 10,
     });
     leadQueryLatency.add(Date.now() - searchStart);
 
@@ -297,7 +298,7 @@ function testAnalytics() {
 }
 
 // Main test execution
-export default function() {
+export default function () {
   // Distribute load across different endpoint groups
   const scenario = randomIntBetween(1, 100);
 
@@ -355,8 +356,12 @@ export function handleSummary(data) {
   const timestamp = new Date().toISOString().replaceAll(/[:.]/g, '-');
 
   return {
-    'stdout': textSummary(data, { indent: ' ', enableColors: true }),
-    [`artifacts/benchmarks/k6-summary-${timestamp}.json`]: JSON.stringify(data, null, 2),
+    stdout: textSummary(data, { indent: ' ', enableColors: true }),
+    [`artifacts/benchmarks/k6-summary-${timestamp}.json`]: JSON.stringify(
+      sanitizeSummaryData(data),
+      null,
+      2
+    ),
   };
 }
 

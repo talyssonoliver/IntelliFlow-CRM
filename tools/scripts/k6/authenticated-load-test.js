@@ -14,6 +14,7 @@ import { check, sleep, group } from 'k6';
 import { Rate, Trend, Counter } from 'k6/metrics';
 import { randomString, randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 import { SharedArray } from 'k6/data';
+import { sanitizeSummaryData } from './lib/redact.js';
 
 // Custom metrics
 const errorRate = new Rate('errors');
@@ -50,10 +51,10 @@ export const options = {
   },
   thresholds: {
     // Primary KPI: p95 < 200ms for API calls (using correct syntax)
-    'http_req_duration': ['p(95)<200', 'p(99)<500'],
-    'trpc_latency': ['p(95)<150'],
+    http_req_duration: ['p(95)<200', 'p(99)<500'],
+    trpc_latency: ['p(95)<150'],
     // Error rate < 10% (higher tolerance for dev environment)
-    'errors': ['rate<0.1'],
+    errors: ['rate<0.1'],
   },
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(50)', 'p(90)', 'p(95)', 'p(99)'],
 };
@@ -71,7 +72,7 @@ function authenticate(email, password) {
   const params = {
     headers: {
       'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
+      apikey: SUPABASE_ANON_KEY,
     },
     tags: { name: 'auth' },
     timeout: '10s', // Add timeout for slow connections
@@ -113,12 +114,24 @@ function authenticate(email, password) {
   return null;
 }
 
+// Resolve the auth token: prefer a persisted K6_AUTH_TOKEN from the environment
+// (acquired once, reused across runs) and fall back to a live Supabase password
+// grant. Env-only; the token is NEVER written to a summary artifact (#643).
+function resolveAuthToken() {
+  const envToken = __ENV.K6_AUTH_TOKEN;
+  if (envToken && envToken.length > 0) {
+    console.log('Auth: using persisted K6_AUTH_TOKEN from environment (no re-auth)');
+    return envToken;
+  }
+  return authenticate('admin@intelliflow.dev', 'TestPassword123!');
+}
+
 // tRPC request helper with auth
 function trpcQuery(procedure, input = {}, accessToken = null) {
   const url = `${BASE_URL}${TRPC_PATH}/${procedure}`;
   const headers = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
     'X-Request-ID': `k6-${randomString(16)}`,
   };
 
@@ -140,7 +153,7 @@ function trpcMutation(procedure, input = {}, accessToken = null) {
   const payload = JSON.stringify({ json: input });
   const headers = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
     'X-Request-ID': `k6-${randomString(16)}`,
   };
 
@@ -186,10 +199,14 @@ function testLeadQueries(accessToken) {
   group('Lead Queries (Authenticated)', () => {
     // List leads
     const start = Date.now();
-    const listRes = trpcQuery('lead.list', {
-      limit: 20,
-      offset: 0,
-    }, accessToken);
+    const listRes = trpcQuery(
+      'lead.list',
+      {
+        limit: 20,
+        offset: 0,
+      },
+      accessToken
+    );
     leadQueryLatency.add(Date.now() - start);
 
     const listSuccess = check(listRes, {
@@ -326,7 +343,7 @@ function testTicketQueries(accessToken) {
 }
 
 // Main test execution - uses cached token from setup()
-export default function(data) {
+export default function (data) {
   // Use cached token from setup() to avoid Supabase rate limits
   const accessToken = data.authToken;
 
@@ -385,7 +402,7 @@ export function setup() {
 
   // Authenticate ONCE and cache token for all VUs
   console.log('Authenticating with seed user...');
-  const authToken = authenticate('admin@intelliflow.dev', 'TestPassword123!');
+  const authToken = resolveAuthToken();
   if (authToken) {
     console.log('Authentication: PASSED - token cached for all VUs');
   } else {
@@ -395,7 +412,7 @@ export function setup() {
 
   return {
     startTime: new Date().toISOString(),
-    authToken: authToken
+    authToken: authToken,
   };
 }
 
@@ -432,16 +449,23 @@ export function handleSummary(data) {
       error_rate: errorsRate * 100, // Convert to percentage
       total_requests: httpReqs.count || null,
     },
-    thresholds_passed: !(data.root_group && data.root_group.checks) ? true :
-      Object.values(data.root_group.checks).every(function(c) { return c.passes > 0; }),
-    raw_data: data,
+    thresholds_passed: !(data.root_group && data.root_group.checks)
+      ? true
+      : Object.values(data.root_group.checks).every(function (c) {
+          return c.passes > 0;
+        }),
+    raw_data: sanitizeSummaryData(data),
   };
 
   var result = {
-    'stdout': textSummary(data),
+    stdout: textSummary(data),
     'artifacts/benchmarks/k6-latest.json': JSON.stringify(summary, null, 2),
   };
-  result['artifacts/benchmarks/k6-auth-summary-' + timestamp + '.json'] = JSON.stringify(summary, null, 2);
+  result['artifacts/benchmarks/k6-auth-summary-' + timestamp + '.json'] = JSON.stringify(
+    summary,
+    null,
+    2
+  );
   return result;
 }
 
@@ -504,8 +528,9 @@ function textSummary(data) {
         totalFails += checks[name].fails;
       }
     }
-    var pct = ((totalPasses/(totalPasses+totalFails))*100).toFixed(1);
-    summary += '  Total: ' + totalPasses + '/' + (totalPasses + totalFails) + ' passed (' + pct + '%)\n';
+    var pct = ((totalPasses / (totalPasses + totalFails)) * 100).toFixed(1);
+    summary +=
+      '  Total: ' + totalPasses + '/' + (totalPasses + totalFails) + ' passed (' + pct + '%)\n';
   }
 
   return summary;
