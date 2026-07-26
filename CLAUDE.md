@@ -180,6 +180,44 @@ after a CI round.
 Always edit CSV for task updates. Run sync after changes. Never edit derived
 JSON files directly.
 
+**Rolling-wave rebaselining (Category A/B/C — full policy:
+`docs/operations/agent-autonomy-policy.md`, ADR-069):** the roadmap is a living
+plan. **Category A** (implementation adaptation — status, evidence,
+split/estimate, dependency corrections) and **Category B** (roadmap rebaseline
+**inside the approved outcome envelope**) are **autonomous**. Category B
+requires the full envelope: never delete the outcome, never silently drop
+acceptance criteria, record old→new + evidence + impact, edit only canonical
+`Sprint_plan.csv`, regenerate splits + reports, run plan validation, get
+independent review. **Category C is human-only** — removing/materially altering
+an approved outcome, weakening security/tenant/privacy/compliance, external
+spend, or permanently abandoning a capability.
+
+### Database Migration Risk Classes (A/B/C)
+
+Replaces the old blanket "all production migrations are manual" rule (full
+policy: `docs/operations/agent-autonomy-policy.md`, ADR-069). Migrations are
+classified by what they do to **existing production data**:
+
+- **Class A — autonomous through production** (additive, backward-compatible,
+  non-destructive: new tables, nullable/defaulted columns, tenant-safe
+  relations, non-blocking indexes, isolation-preserving RLS, new event/aggregate
+  storage; no data deletion/rewrite). Autonomous **only after all 10 gates
+  pass** — incl. independent SQL review, staging verification, tenant-isolation
+  tests, documented recovery plan, and the prod command being
+  `prisma migrate deploy` (**never** `db push` / `db reset` / `migrate dev`).
+- **Class B — prepare autonomously, one escalation before the prod mutation**
+  (backfills/row rewrites, `NOT NULL`/uniqueness on populated data, large-table
+  or meaningful-locking ops, type narrowing, contract-phase removal, coordinated
+  downtime).
+- **Class C — human-only, never autonomous** (drop/truncate/reset/irreversible
+  deletion, destructive schema replacement, weakening RLS/tenant isolation,
+  ad-hoc prod DML, unknown target DB or missing recovery evidence).
+
+The Class C floor / Class A gate 9 is enforced in code by
+`.claude/hooks/db-destructive-guard.mjs` and `tools/scripts/guard-db-target.mjs`
+(destructive Prisma commands hitting a non-local DB are blocked without
+`ALLOW_PROD_DB_OPS=1`). **NEVER bypass those guards.**
+
 ### Co-Dependent Changes Ride the Feature Branch
 
 If a change exists **only** to make another change's CI pass — a commitlint

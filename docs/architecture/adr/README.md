@@ -252,6 +252,17 @@ Previously missing from the index — added 2026-06-05:
 | [ADR-065](./ADR-065-crm-portal-delivery-sync.md)                     | CRM → Portal delivery & billing sync                              | 🚧 Proposed | 2026-06-07 | IFC-314                 |
 | [ADR-066](./ADR-066-metrics-tracking-cascade-and-derived-surface.md) | Metrics tracking: collapse write cascade + shrink derived surface | 🚧 Proposed | 2026-06-14 | Sprint-18 metrics retro |
 
+### Sprint 18+ Governance ADRs (2026-07)
+
+| ADR                                                                          | Title                                              | Status      | Date       | Technical Story        |
+| ---------------------------------------------------------------------------- | -------------------------------------------------- | ----------- | ---------- | ---------------------- |
+| [ADR-069](./ADR-069-rolling-wave-rebaselining-and-migration-risk-classes.md) | Rolling-wave rebaselining + migration risk classes | ✅ Accepted | 2026-07-26 | Agent autonomy scoping |
+
+> **Note on ADR-055:** the number is **claimed** (search-package type-stubs,
+> IFC-155) even though the file is absent from this directory — it is **not**
+> free to reuse. The next sequential ID is **069**. ADRs 067–068 exist as files
+> but predate this index section.
+
 ### Consolidated / Removed ADRs
 
 - **ADR-014 (Workflow Engine Selection)** — merged into ADR-005 on 2026-04-15.
