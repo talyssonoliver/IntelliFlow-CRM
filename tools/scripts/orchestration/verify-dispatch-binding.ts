@@ -12,8 +12,8 @@
  *
  * Usage:
  *   npx tsx tools/scripts/orchestration/verify-dispatch-binding.ts \
- *     --contract .specify/sprints/sprint-19/spec/ORCH-002/contract.json \
- *     --task-id   ORCH-002-task-contract-schema-and-dispatch-guard \
+ *     --contract .specify/sprints/sprint-19/spec/AUTOMATION-004/contract.json \
+ *     --task-id   AUTOMATION-004-task-contract-schema-and-dispatch-guard \
  *     --session-id local_28109fae \
  *     --branch    fix/orch-002-task-contract-and-dispatch-guard \
  *     --worktree  /c/Users/talys/projects/iflow-orch-002-contract-and-guard
