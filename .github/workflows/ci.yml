@@ -240,7 +240,13 @@ jobs:
           printf '{"headSha":"%s","startedAt":"%s"}\n' \
             "$(git rev-parse HEAD)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             > artifacts/coverage-parts/RUN_ID.json
-          pnpm run test:integration -- \
+          # Invoke vitest directly rather than `pnpm run test:integration -- <flags>`:
+          # pnpm forwards the `--` verbatim, so vitest received
+          # `run --project integration -- --reporter=json ...` and treated the
+          # flags as positional test-name filters. The suite still ran, the
+          # reporters were silently ignored, and no manifest was written — which
+          # the gate then (correctly) refused to certify.
+          pnpm exec vitest run --project integration \
             --reporter=default --reporter=json \
             --outputFile.json=artifacts/coverage-parts/integration/vitest-result.json
         env:
