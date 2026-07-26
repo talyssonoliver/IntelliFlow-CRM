@@ -10,6 +10,7 @@ import http from 'k6/http';
 import { check, sleep, group } from 'k6';
 import { Rate, Trend, Counter } from 'k6/metrics';
 import { randomString } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
+import { sanitizeSummaryData } from './lib/redact.js';
 
 // Custom metrics
 var errorRate = new Rate('errors');
@@ -34,9 +35,9 @@ export var options = {
     },
   },
   thresholds: {
-    'http_req_duration': ['p(95)<300', 'p(99)<500'],
-    'trpc_latency': ['p(95)<250'],
-    'errors': ['rate<0.5'],
+    http_req_duration: ['p(95)<300', 'p(99)<500'],
+    trpc_latency: ['p(95)<250'],
+    errors: ['rate<0.5'],
   },
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(50)', 'p(90)', 'p(95)', 'p(99)'],
 };
@@ -53,7 +54,7 @@ function authenticate(email, password) {
   var params = {
     headers: {
       'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
+      apikey: SUPABASE_ANON_KEY,
     },
     tags: { name: 'auth' },
   };
@@ -63,7 +64,9 @@ function authenticate(email, password) {
   authLatency.add(Date.now() - start);
 
   var success = check(res, {
-    'auth status 200': function(r) { return r.status === 200; },
+    'auth status 200': function (r) {
+      return r.status === 200;
+    },
   });
 
   if (success) {
@@ -77,13 +80,25 @@ function authenticate(email, password) {
   return null;
 }
 
+// Resolve the auth token: prefer a persisted K6_AUTH_TOKEN from the environment
+// (acquired once, reused across runs) and fall back to a live Supabase password
+// grant. Env-only; the token is NEVER written to a summary artifact (#643).
+function resolveAuthToken() {
+  var envToken = __ENV.K6_AUTH_TOKEN;
+  if (envToken && envToken.length > 0) {
+    console.log('Auth: using persisted K6_AUTH_TOKEN from environment (no re-auth)');
+    return envToken;
+  }
+  return authenticate('admin@intelliflow.dev', 'TestPassword123!');
+}
+
 // tRPC query helper with auth
 function trpcQuery(procedure, input, accessToken) {
   input = input || {};
   var url = BASE_URL + TRPC_PATH + '/' + procedure;
   var headers = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
     'X-Request-ID': 'k6-' + randomString(16),
   };
 
@@ -110,7 +125,9 @@ function testQueryEndpoint(name, procedure, input, accessToken) {
   var res = trpcQuery(procedure, input, accessToken);
 
   var success = check(res, {
-    [name + ' status 200']: function(r) { return r.status === 200; },
+    [name + ' status 200']: function (r) {
+      return r.status === 200;
+    },
   });
 
   if (success) {
@@ -129,7 +146,7 @@ function testQueryEndpoint(name, procedure, input, accessToken) {
 // ============================================
 
 function testHealthEndpoints() {
-  group('Health Router', function() {
+  group('Health Router', function () {
     testQueryEndpoint('health.ping', 'health.ping', {}, null);
     testQueryEndpoint('health.check', 'health.check', {}, null);
     testQueryEndpoint('health.ready', 'health.ready', {}, null);
@@ -138,17 +155,22 @@ function testHealthEndpoints() {
 }
 
 function testLeadEndpoints(accessToken) {
-  group('Lead Router', function() {
+  group('Lead Router', function () {
     testQueryEndpoint('lead.list', 'lead.list', { limit: 10 }, accessToken);
     testQueryEndpoint('lead.stats', 'lead.stats', {}, accessToken);
     testQueryEndpoint('lead.filterOptions', 'lead.filterOptions', {}, accessToken);
     testQueryEndpoint('lead.getHotLeads', 'lead.getHotLeads', { limit: 5 }, accessToken);
-    testQueryEndpoint('lead.getReadyForQualification', 'lead.getReadyForQualification', { limit: 5 }, accessToken);
+    testQueryEndpoint(
+      'lead.getReadyForQualification',
+      'lead.getReadyForQualification',
+      { limit: 5 },
+      accessToken
+    );
   });
 }
 
 function testContactEndpoints(accessToken) {
-  group('Contact Router', function() {
+  group('Contact Router', function () {
     testQueryEndpoint('contact.list', 'contact.list', { limit: 10 }, accessToken);
     testQueryEndpoint('contact.stats', 'contact.stats', {}, accessToken);
     testQueryEndpoint('contact.filterOptions', 'contact.filterOptions', {}, accessToken);
@@ -157,7 +179,7 @@ function testContactEndpoints(accessToken) {
 }
 
 function testAccountEndpoints(accessToken) {
-  group('Account Router', function() {
+  group('Account Router', function () {
     testQueryEndpoint('account.list', 'account.list', { limit: 10 }, accessToken);
     testQueryEndpoint('account.stats', 'account.stats', {}, accessToken);
     testQueryEndpoint('account.filterOptions', 'account.filterOptions', {}, accessToken);
@@ -165,7 +187,7 @@ function testAccountEndpoints(accessToken) {
 }
 
 function testOpportunityEndpoints(accessToken) {
-  group('Opportunity Router', function() {
+  group('Opportunity Router', function () {
     testQueryEndpoint('opportunity.list', 'opportunity.list', { limit: 10 }, accessToken);
     testQueryEndpoint('opportunity.stats', 'opportunity.stats', {}, accessToken);
     testQueryEndpoint('opportunity.forecast', 'opportunity.forecast', {}, accessToken);
@@ -173,7 +195,7 @@ function testOpportunityEndpoints(accessToken) {
 }
 
 function testTicketEndpoints(accessToken) {
-  group('Ticket Router', function() {
+  group('Ticket Router', function () {
     testQueryEndpoint('ticket.list', 'ticket.list', { limit: 10 }, accessToken);
     testQueryEndpoint('ticket.stats', 'ticket.stats', {}, accessToken);
     testQueryEndpoint('ticket.filterOptions', 'ticket.filterOptions', {}, accessToken);
@@ -181,23 +203,33 @@ function testTicketEndpoints(accessToken) {
 }
 
 function testTaskEndpoints(accessToken) {
-  group('Task Router', function() {
+  group('Task Router', function () {
     testQueryEndpoint('task.list', 'task.list', { limit: 10 }, accessToken);
     testQueryEndpoint('task.stats', 'task.stats', {}, accessToken);
   });
 }
 
 function testTimelineEndpoints(accessToken) {
-  group('Timeline Router', function() {
+  group('Timeline Router', function () {
     testQueryEndpoint('timeline.getEvents', 'timeline.getEvents', { limit: 10 }, accessToken);
     testQueryEndpoint('timeline.getStats', 'timeline.getStats', {}, accessToken);
-    testQueryEndpoint('timeline.getUpcomingDeadlines', 'timeline.getUpcomingDeadlines', { days: 7 }, accessToken);
-    testQueryEndpoint('timeline.getPendingAgentActions', 'timeline.getPendingAgentActions', {}, accessToken);
+    testQueryEndpoint(
+      'timeline.getUpcomingDeadlines',
+      'timeline.getUpcomingDeadlines',
+      { days: 7 },
+      accessToken
+    );
+    testQueryEndpoint(
+      'timeline.getPendingAgentActions',
+      'timeline.getPendingAgentActions',
+      {},
+      accessToken
+    );
   });
 }
 
 function testBillingEndpoints(accessToken) {
-  group('Billing Router', function() {
+  group('Billing Router', function () {
     testQueryEndpoint('billing.getSubscription', 'billing.getSubscription', {}, accessToken);
     testQueryEndpoint('billing.listInvoices', 'billing.listInvoices', { limit: 5 }, accessToken);
     testQueryEndpoint('billing.getPaymentMethods', 'billing.getPaymentMethods', {}, accessToken);
@@ -206,7 +238,7 @@ function testBillingEndpoints(accessToken) {
 }
 
 function testAgentEndpoints(accessToken) {
-  group('Agent Router', function() {
+  group('Agent Router', function () {
     testQueryEndpoint('agent.listTools', 'agent.listTools', {}, accessToken);
     testQueryEndpoint('agent.getPendingApprovals', 'agent.getPendingApprovals', {}, accessToken);
     testQueryEndpoint('agent.getPendingCount', 'agent.getPendingCount', {}, accessToken);
@@ -214,43 +246,63 @@ function testAgentEndpoints(accessToken) {
 }
 
 function testConversationEndpoints(accessToken) {
-  group('Conversation Router', function() {
-    testQueryEndpoint('conversation.search', 'conversation.search', { query: 'test', limit: 5 }, accessToken);
-    testQueryEndpoint('conversation.getPendingApprovals', 'conversation.getPendingApprovals', {}, accessToken);
+  group('Conversation Router', function () {
+    testQueryEndpoint(
+      'conversation.search',
+      'conversation.search',
+      { query: 'test', limit: 5 },
+      accessToken
+    );
+    testQueryEndpoint(
+      'conversation.getPendingApprovals',
+      'conversation.getPendingApprovals',
+      {},
+      accessToken
+    );
   });
 }
 
 function testAnalyticsEndpoints(accessToken) {
-  group('Analytics Router', function() {
+  group('Analytics Router', function () {
     testQueryEndpoint('analytics.dealsWonTrend', 'analytics.dealsWonTrend', {}, accessToken);
     testQueryEndpoint('analytics.growthTrends', 'analytics.growthTrends', {}, accessToken);
     testQueryEndpoint('analytics.trafficSources', 'analytics.trafficSources', {}, accessToken);
-    testQueryEndpoint('analytics.recentActivity', 'analytics.recentActivity', { limit: 10 }, accessToken);
+    testQueryEndpoint(
+      'analytics.recentActivity',
+      'analytics.recentActivity',
+      { limit: 10 },
+      accessToken
+    );
     testQueryEndpoint('analytics.leadStats', 'analytics.leadStats', {}, accessToken);
   });
 }
 
 function testAppointmentsEndpoints(accessToken) {
-  group('Appointments Router', function() {
+  group('Appointments Router', function () {
     testQueryEndpoint('appointments.list', 'appointments.list', { limit: 10 }, accessToken);
-    testQueryEndpoint('appointments.checkAvailability', 'appointments.checkAvailability', { date: new Date().toISOString().split('T')[0] }, accessToken);
+    testQueryEndpoint(
+      'appointments.checkAvailability',
+      'appointments.checkAvailability',
+      { date: new Date().toISOString().split('T')[0] },
+      accessToken
+    );
   });
 }
 
 function testDocumentsEndpoints(accessToken) {
-  group('Documents Router', function() {
+  group('Documents Router', function () {
     testQueryEndpoint('documents.list', 'documents.list', { limit: 10 }, accessToken);
   });
 }
 
 function testExperimentEndpoints(accessToken) {
-  group('Experiment Router', function() {
+  group('Experiment Router', function () {
     testQueryEndpoint('experiment.list', 'experiment.list', { limit: 10 }, accessToken);
   });
 }
 
 function testChainVersionEndpoints(accessToken) {
-  group('ChainVersion Router', function() {
+  group('ChainVersion Router', function () {
     testQueryEndpoint('chainVersion.list', 'chainVersion.list', { limit: 10 }, accessToken);
     testQueryEndpoint('chainVersion.getActive', 'chainVersion.getActive', {}, accessToken);
     testQueryEndpoint('chainVersion.getStats', 'chainVersion.getStats', {}, accessToken);
@@ -258,40 +310,50 @@ function testChainVersionEndpoints(accessToken) {
 }
 
 function testFeedbackEndpoints(accessToken) {
-  group('Feedback Router', function() {
+  group('Feedback Router', function () {
     testQueryEndpoint('feedback.getAnalytics', 'feedback.getAnalytics', {}, accessToken);
   });
 }
 
 function testPipelineConfigEndpoints(accessToken) {
-  group('PipelineConfig Router', function() {
+  group('PipelineConfig Router', function () {
     testQueryEndpoint('pipelineConfig.getAll', 'pipelineConfig.getAll', {}, accessToken);
     testQueryEndpoint('pipelineConfig.getStats', 'pipelineConfig.getStats', {}, accessToken);
   });
 }
 
 function testInboundEndpoints(accessToken) {
-  group('Inbound Router', function() {
+  group('Inbound Router', function () {
     testQueryEndpoint('inbound.listEmails', 'inbound.listEmails', { limit: 10 }, accessToken);
   });
 }
 
 function testIntegrationsEndpoints(accessToken) {
-  group('Integrations Router', function() {
-    testQueryEndpoint('integrations.getAllConnectorsHealth', 'integrations.getAllConnectorsHealth', {}, accessToken);
-    testQueryEndpoint('integrations.getDashboardConfig', 'integrations.getDashboardConfig', {}, accessToken);
+  group('Integrations Router', function () {
+    testQueryEndpoint(
+      'integrations.getAllConnectorsHealth',
+      'integrations.getAllConnectorsHealth',
+      {},
+      accessToken
+    );
+    testQueryEndpoint(
+      'integrations.getDashboardConfig',
+      'integrations.getDashboardConfig',
+      {},
+      accessToken
+    );
   });
 }
 
 function testAuditEndpoints(accessToken) {
-  group('Audit Router', function() {
+  group('Audit Router', function () {
     testQueryEndpoint('audit.search', 'audit.search', { limit: 10 }, accessToken);
     testQueryEndpoint('audit.getMyActivity', 'audit.getMyActivity', { limit: 10 }, accessToken);
   });
 }
 
 function testSystemEndpoints() {
-  group('System Router', function() {
+  group('System Router', function () {
     testQueryEndpoint('system.version', 'system.version', {}, null);
     testQueryEndpoint('system.info', 'system.info', {}, null);
     testQueryEndpoint('system.features', 'system.features', {}, null);
@@ -299,7 +361,7 @@ function testSystemEndpoints() {
 }
 
 function testAuthEndpoints() {
-  group('Auth Router', function() {
+  group('Auth Router', function () {
     testQueryEndpoint('auth.getStatus', 'auth.getStatus', {}, null);
   });
 }
@@ -308,7 +370,7 @@ function testAuthEndpoints() {
 // MAIN TEST EXECUTION
 // ============================================
 
-export default function(data) {
+export default function (data) {
   var accessToken = data.authToken;
 
   // Test public endpoints (no auth needed)
@@ -362,8 +424,8 @@ export function setup() {
     console.log('Health check passed');
   }
 
-  // Authenticate
-  var authToken = authenticate('admin@intelliflow.dev', 'TestPassword123!');
+  // Authenticate (env-first: reuse a persisted K6_AUTH_TOKEN when present)
+  var authToken = resolveAuthToken();
   if (authToken) {
     console.log('Authentication successful');
   } else {
@@ -372,7 +434,7 @@ export function setup() {
 
   return {
     startTime: new Date().toISOString(),
-    authToken: authToken
+    authToken: authToken,
   };
 }
 
@@ -403,7 +465,7 @@ export function handleSummary(data) {
           testedEndpoints.push({
             name: check.name.replaceAll(' status 200', ''),
             passes: check.passes,
-            fails: check.fails
+            fails: check.fails,
           });
         }
       }
@@ -434,14 +496,18 @@ export function handleSummary(data) {
       total_requests: httpReqs.count || null,
     },
     thresholds_passed: true,
-    raw_data: data,
+    raw_data: sanitizeSummaryData(data),
   };
 
   var result = {
-    'stdout': textSummary(data, testedEndpoints),
+    stdout: textSummary(data, testedEndpoints),
     'artifacts/benchmarks/k6-latest.json': JSON.stringify(summary, null, 2),
   };
-  result['artifacts/benchmarks/k6-comprehensive-' + timestamp + '.json'] = JSON.stringify(summary, null, 2);
+  result['artifacts/benchmarks/k6-comprehensive-' + timestamp + '.json'] = JSON.stringify(
+    summary,
+    null,
+    2
+  );
   return result;
 }
 
@@ -467,7 +533,10 @@ function textSummary(data, testedEndpoints) {
   }
 
   if (metrics.http_reqs) {
-    summary += 'Request Rate: ' + (metrics.http_reqs.values.rate ? metrics.http_reqs.values.rate.toFixed(2) : 'N/A') + ' req/s\n';
+    summary +=
+      'Request Rate: ' +
+      (metrics.http_reqs.values.rate ? metrics.http_reqs.values.rate.toFixed(2) : 'N/A') +
+      ' req/s\n';
     summary += 'Total Requests: ' + (metrics.http_reqs.values.count || 'N/A') + '\n\n';
   }
 
@@ -478,8 +547,10 @@ function textSummary(data, testedEndpoints) {
   for (var i = 0; i < testedEndpoints.length; i++) {
     var ep = testedEndpoints[i];
     var status = ep.fails === 0 ? 'PASS' : 'FAIL';
-    if (ep.fails === 0) passed++; else failed++;
-    summary += '  ' + ep.name + ': ' + status + ' (' + ep.passes + '/' + (ep.passes + ep.fails) + ')\n';
+    if (ep.fails === 0) passed++;
+    else failed++;
+    summary +=
+      '  ' + ep.name + ': ' + status + ' (' + ep.passes + '/' + (ep.passes + ep.fails) + ')\n';
   }
   summary += '\nTotal: ' + passed + ' passed, ' + failed + ' failed\n';
 

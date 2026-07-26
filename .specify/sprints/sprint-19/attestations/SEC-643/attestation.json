@@ -1,0 +1,84 @@
+{
+  "task_id": "SEC-643",
+  "title": "security(k6): stop persisting Supabase auth tokens into k6 summary artifacts",
+  "sprint": 19,
+  "run_id": "sec-643-2026-07-26",
+  "created_at": "2026-07-26",
+  "branch": "fix/k6-token-persistence-643",
+  "base_commit": "a8de69b0b8a398a3c69f5115de430f990b6f4433",
+  "issue": 643,
+  "verdict": "COMPLETE",
+  "provenance_version": "ADR-068",
+  "summary": "Closes the recurring secret-exposure mechanism behind #643: k6 load-test summary handlers serialized the full run data object (including setup_data, which caches the Supabase auth token) into committed artifacts/benchmarks/ JSON, writing a live role=authenticated JWT at raw_data.setup_data.authToken on every run. A new runtime-agnostic redaction module (tools/scripts/k6/lib/redact.js, 13 Vitest cases) now sanitizes every summary before write — dropping setup_data and deep-redacting secret-keyed values and JWT-shaped strings — across authenticated-, comprehensive-, quick- and load-test scripts. Adds persistent-token acquisition (K6_AUTH_TOKEN env, reused across runs to avoid Supabase auth rate-limit flakiness) via an env-first setup() path and a stdout-only get-auth-token.mjs helper; the token is never written to a committed file (.env.k6.local is gitignored, .env.example carries the empty shape). The 18 expired historical fingerprints in .gitleaksignore are retained (they pin immutable history for the nightly full-history scan; dropping them would red it with no history rewrite) and the follow-up note records the source is now fixed.",
+  "gate_results": [
+    {
+      "gate": "redact-at-source",
+      "result": "PASS",
+      "detail": "sanitizeSummaryData(data) wired into every summary-writing handler (authenticated-load-test.js, comprehensive-load-test.js, quick-test.js, load-test.js). Drops setup_data + deep-redacts secret keys and JWT strings."
+    },
+    {
+      "gate": "no-token-in-summary",
+      "result": "PASS",
+      "detail": "Unit test asserts JSON.stringify(sanitizeSummaryData(realisticSummaryWithSetupData)) contains no 'eyJ' and no 'setup_data' while retaining metrics (p(95))."
+    },
+    {
+      "gate": "redaction-unit-tested",
+      "result": "PASS",
+      "detail": "tools/scripts/k6/lib/redact.test.ts — 13 cases: secret-key masking (all spellings), nested/array JWT redaction, setup_data stripping, non-object input, input immutability. Module has zero k6 imports (Vitest-runnable)."
+    },
+    {
+      "gate": "persistent-token-env-first",
+      "result": "PASS",
+      "detail": "resolveAuthToken() returns __ENV.K6_AUTH_TOKEN when set (logs 'no re-auth'), else the live Supabase grant. setup() in all three authenticating scripts uses it. get-auth-token.mjs acquires once, prints to stdout only."
+    },
+    {
+      "gate": "no-secret-in-diff",
+      "result": "PASS",
+      "detail": "No JWT/token literal in the diff: test JWTs are base64url-built at runtime; helper never writes a committed path; .env.example K6_AUTH_TOKEN is empty; .env.k6.local ignored via .env*.local. gitleaks + trivy green on the PR."
+    },
+    {
+      "gate": "fingerprints-retained-with-rationale",
+      "result": "PASS",
+      "detail": "The 18 historical k6 JWT fingerprints stay in .gitleaksignore (immutable history, nightly full-history scan, no rewrite, all expired). Follow-up note updated to record the source is fixed."
+    },
+    {
+      "gate": "typecheck-tests-lint-build",
+      "result": "PASS",
+      "detail": "ESLint clean on all changed JS/TS + the .mjs helper; redact.test.ts green (13/13); full pre-ship run at the final SHA (see notes)."
+    },
+    {
+      "gate": "prod-safe",
+      "result": "PASS",
+      "detail": "Isolated worktree, Node 22, local test DB intelliflow_test :5433. No prod Supabase, no key rotation, no destructive migration."
+    }
+  ],
+  "artifacts": [
+    "tools/scripts/k6/lib/redact.js",
+    "tools/scripts/k6/lib/redact.test.ts",
+    "tools/scripts/k6/get-auth-token.mjs",
+    "tools/scripts/k6/README.md",
+    "tools/scripts/k6/authenticated-load-test.js",
+    "tools/scripts/k6/comprehensive-load-test.js",
+    "tools/scripts/k6/quick-test.js",
+    "tools/scripts/k6/load-test.js",
+    ".env.example",
+    ".gitleaksignore",
+    ".specify/sprints/sprint-19/attestations/SEC-643/context_ack.json"
+  ],
+  "artifact_hashes": {
+    "tools/scripts/k6/lib/redact.js": "72a1ebc2f14fbcc8022c5cad11b0703650297570",
+    "tools/scripts/k6/lib/redact.test.ts": "32f78c6b5eadb98bb65259e963f01d39b0a14f09",
+    "tools/scripts/k6/get-auth-token.mjs": "e5314ecc04e5df87d15ac6f7fdc89c4f550837fc",
+    "tools/scripts/k6/README.md": "4052280533a5656c449ccb0d01dbae52dd47eafc",
+    "tools/scripts/k6/authenticated-load-test.js": "0c5d79c82643149dcf0976ddd5f3b2a53e665619",
+    "tools/scripts/k6/comprehensive-load-test.js": "4908259b2574a02125aaddec868339cf8b704029",
+    "tools/scripts/k6/quick-test.js": "1fbcaf4056f43fdcc2d3f3837c3e3fcb28e429c6",
+    "tools/scripts/k6/load-test.js": "11f1087b1db1b5b600e1adbb43848bed677e34d2",
+    ".env.example": "b1ae791bb111e9bf75d0e2b4acf025a272fe8feb",
+    ".gitleaksignore": "870f292760ec2a158a7c9c002aece1fb906fc72c",
+    ".specify/sprints/sprint-19/attestations/SEC-643/context_ack.json": "e34ed3298c00bb8e647430cfbc4f26d3c87d487e"
+  },
+  "csv_mutations": [],
+  "validation_method": "GATE:redact-at-source;GATE:no-token-in-summary;VALIDATE:vitest tools/scripts/k6/lib/redact.test.ts;VALIDATE:pre-ship",
+  "notes": "SEC-643 is a security follow-up to #637 (found during ENG-OPS-003.Gap5-AuditsUnblock) and is tracked attestation-only, like the other ENG-OPS-003 gaps — no Sprint_plan.csv row, so csv_mutations is empty. Issue fix option 1 (redact at source) is implemented; option 3 (drop fingerprints) is deliberately NOT taken because the fingerprints pin immutable historical commits and dropping them would red the nightly full-history scan without a forbidden history rewrite — the tokens are all expired so this is safe. spec.md/plan.md live beside this file but are gitignored (.specify spec/plan pattern); this attestation is the committed record."
+}

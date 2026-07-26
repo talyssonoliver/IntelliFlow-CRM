@@ -34,7 +34,13 @@
 # .gitleaks.toml path allowlist. Future k6 runs mint NEW tokens with NEW
 # fingerprints, so they will still be caught. A path allowlist there would
 # silently swallow them - the same fake-green failure mode this file documents.
-# Follow-up: stop persisting auth tokens into k6 summary artifacts.
+#
+# SOURCE NOW FIXED (#643): k6 summary handlers redact tokens before writing
+# (tools/scripts/k6/lib/redact.js strips setup_data + JWT-shaped strings), so no
+# NEW token fingerprints will accrue here. The 18 historical fingerprints below
+# STAY: they pin immutable historical commits scanned by the nightly full-history
+# job; dropping them would red that scan (no history rewrite is performed, and
+# all 18 are expired — no rotation required).
 #
 # MAINTENANCE
 # Do not append to this file to make a scan pass. A new fingerprint means a new

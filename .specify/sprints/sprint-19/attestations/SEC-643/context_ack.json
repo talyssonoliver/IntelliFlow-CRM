@@ -1,0 +1,33 @@
+{
+  "task_id": "SEC-643",
+  "title": "security(k6): stop persisting Supabase auth tokens into k6 summary artifacts",
+  "sprint": 19,
+  "acknowledged_by": "Claude Opus 4.8 — autonomous SEC-643 build (STOA-Security lens)",
+  "acknowledged_at": "2026-07-26T00:00:00Z",
+  "issue": 643,
+  "files_read": [
+    "tools/scripts/k6/authenticated-load-test.js",
+    "tools/scripts/k6/comprehensive-load-test.js",
+    "tools/scripts/k6/quick-test.js",
+    "tools/scripts/k6/load-test.js",
+    "tools/scripts/k6/ifc-033-critical-path.js",
+    "tools/scripts/k6/gate2-benchmark.js",
+    "tools/scripts/k6/mvp-load-test.js",
+    ".gitleaks.toml",
+    ".gitleaksignore",
+    ".github/workflows/secret-scan.yml",
+    ".env.example",
+    ".gitignore",
+    "vitest.config.ts",
+    "artifacts/benchmarks/k6-latest.json"
+  ],
+  "invariants_acknowledged": [
+    "LEAK VECTOR: recent k6 passes setup_data (the return of setup()) inside the summary `data` object. authenticated-load-test.js, comprehensive-load-test.js and quick-test.js each write `raw_data: data`, and setup() returns { authToken }. The live JWT lands at raw_data.setup_data.authToken — confirmed by decoding artifacts/benchmarks/k6-latest.json. load-test.js dumps full `data` too (no token today, redacted defensively).",
+    "REDACT AT SOURCE (preferred fix, issue option 1): all summary handlers now pass data through tools/scripts/k6/lib/redact.js -> sanitizeSummaryData(), which drops setup_data and deep-redacts secret-keyed values + JWT-shaped strings. The module has ZERO k6 imports and is unit-tested (13 cases) under Vitest.",
+    "FINGERPRINTS STAY (issue option 3 is UNSAFE as literally stated): the 18 historical fingerprints in .gitleaksignore pin IMMUTABLE historical commits scanned by the nightly full-history gitleaks job. Dropping them would red that scan — no history rewrite is performed. All 18 are EXPIRED (latest exp 2026-02-28); no rotation required (verified in #637). The follow-up note now records the source is fixed so no NEW fingerprints accrue.",
+    "NO SECRET IN DIFF: JWTs in the unit test are built at runtime via base64url (no eyJ literal committed); the helper prints the token to stdout ONLY and never writes a committed file; .env.example carries the K6_AUTH_TOKEN shape with an empty value; .env.k6.local is gitignored via .env*.local. gitleaks + trivy stay green on the PR.",
+    "PERSISTENCE (stability): setup() now reuses __ENV.K6_AUTH_TOKEN when present (no re-auth), else falls back to the live Supabase password grant. Acquiring a token once and reusing it across runs removes the per-run re-auth that triggered Supabase auth rate-limit flakiness, making runs reproducible.",
+    "PROD-SAFE: implementation and validation ran in an isolated worktree against the LOCAL test DB (intelliflow_test, :5433) under Node 22. No prod Supabase, no key rotation, no destructive migration.",
+    "NOT A CSV ROW: SEC-643 is a security follow-up to #637 (found during ENG-OPS-003.Gap5), tracked attestation-only like the other ENG-OPS-003 gaps. No Sprint_plan.csv Status flip."
+  ]
+}

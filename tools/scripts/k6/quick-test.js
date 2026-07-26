@@ -7,6 +7,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend, Counter } from 'k6/metrics';
+import { sanitizeSummaryData } from './lib/redact.js';
 
 var errorRate = new Rate('errors');
 var trpcLatency = new Trend('trpc_latency', true);
@@ -35,7 +36,7 @@ function authenticate(email, password) {
   var params = {
     headers: {
       'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
+      apikey: SUPABASE_ANON_KEY,
     },
   };
 
@@ -54,14 +55,28 @@ function authenticate(email, password) {
   return null;
 }
 
-export default function(data) {
+// Resolve the auth token: prefer a persisted K6_AUTH_TOKEN from the environment
+// (acquired once, reused across runs) and fall back to a live Supabase password
+// grant. Env-only; the token is NEVER written to a summary artifact (#643).
+function resolveAuthToken() {
+  var envToken = __ENV.K6_AUTH_TOKEN;
+  if (envToken && envToken.length > 0) {
+    console.log('Auth: using persisted K6_AUTH_TOKEN from environment (no re-auth)');
+    return envToken;
+  }
+  return authenticate('admin@intelliflow.dev', 'TestPassword123!');
+}
+
+export default function (data) {
   // Use cached token from setup()
   var token = data.authToken;
 
   // Health check (no auth needed)
   var healthRes = http.get(BASE_URL + TRPC_PATH + '/health.ping');
   var healthOk = check(healthRes, {
-    'health status 200': function(r) { return r.status === 200; },
+    'health status 200': function (r) {
+      return r.status === 200;
+    },
   });
   trpcLatency.add(healthRes.timings.duration);
 
@@ -82,7 +97,7 @@ export default function(data) {
 
   // Make authenticated request to lead.list
   var headers = {
-    'Authorization': 'Bearer ' + token,
+    Authorization: 'Bearer ' + token,
     'Content-Type': 'application/json',
   };
 
@@ -90,7 +105,9 @@ export default function(data) {
   var leadRes = http.get(BASE_URL + TRPC_PATH + '/lead.list?input=' + input, { headers: headers });
 
   var leadOk = check(leadRes, {
-    'lead.list status 200': function(r) { return r.status === 200; },
+    'lead.list status 200': function (r) {
+      return r.status === 200;
+    },
   });
   trpcLatency.add(leadRes.timings.duration);
 
@@ -103,9 +120,17 @@ export default function(data) {
   }
 
   // Also test contact.list
-  var contactRes = http.get(BASE_URL + TRPC_PATH + '/contact.list?input=' + encodeURIComponent(JSON.stringify({ json: { limit: 10 } })), { headers: headers });
+  var contactRes = http.get(
+    BASE_URL +
+      TRPC_PATH +
+      '/contact.list?input=' +
+      encodeURIComponent(JSON.stringify({ json: { limit: 10 } })),
+    { headers: headers }
+  );
   check(contactRes, {
-    'contact.list status 200': function(r) { return r.status === 200; },
+    'contact.list status 200': function (r) {
+      return r.status === 200;
+    },
   });
   trpcLatency.add(contactRes.timings.duration);
   if (contactRes.status === 200) {
@@ -126,12 +151,13 @@ export function setup() {
   console.log('Health check: ' + healthRes.status);
 
   // Authenticate ONCE and share token with all VUs
-  var token = authenticate('admin@intelliflow.dev', 'TestPassword123!');
+  // (env-first: reuse a persisted K6_AUTH_TOKEN when present)
+  var token = resolveAuthToken();
   console.log('Auth test: ' + (token ? 'SUCCESS - token cached for all VUs' : 'FAILED'));
 
   return {
     startTime: new Date().toISOString(),
-    authToken: token
+    authToken: token,
   };
 }
 
@@ -172,7 +198,7 @@ export function handleSummary(data) {
       total_requests: count || null,
     },
     thresholds_passed: true,
-    raw_data: data,
+    raw_data: sanitizeSummaryData(data),
   };
 
   // Pretty print summary
