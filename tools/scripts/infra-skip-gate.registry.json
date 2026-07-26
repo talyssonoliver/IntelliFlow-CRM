@@ -23,6 +23,13 @@
       "reason": "ADR-054: #658 — skips whenever createIsolatedTestPrismaClient() returns null (tests/integration/setup.ts), which happens even with DATABASE_URL set if the integration harness has no usable client. Runs where the harness resolves; the ceiling keeps it honest either way."
     },
     {
+      "file": "apps/ai-worker/src/chains/__tests__/ollama-benchmark.integration.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 8,
+      "reviewBy": "2026-10-31",
+      "reason": "ADR-054: #658 — IFC-174 accuracy benchmark. Double-gated on RUN_INTEGRATION_TESTS=true AND a live Ollama instance serving mistral at localhost:11434, neither of which exists on a dev box or in CI. Found by this gate's first full 16-project run, not by the original issue triage."
+    },
+    {
       "file": "tests/integration/connectors/erp.test.ts",
       "kind": "pending-deletion",
       "maxSkipped": 19,
