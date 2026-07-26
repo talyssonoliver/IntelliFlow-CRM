@@ -1,0 +1,26 @@
+{
+  "task_id": "IFC-306",
+  "title": "Fix Compliance Calendar Seed Data",
+  "sprint": 19,
+  "acknowledged_by": "Claude Opus 4.8 — autonomous IFC-306 build (compliance / DPO+Legal lens)",
+  "acknowledged_at": "2026-07-26T10:24:00Z",
+  "files_read": [
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+    "docs/planning/compliance-calendar.json",
+    "apps/web/src/app/api/compliance/timeline/route.ts",
+    "apps/web/src/app/api/compliance/types.ts",
+    "apps/web/src/app/api/compliance/risks/route.ts",
+    "apps/web/src/app/api/compliance/[standardId]/route.ts",
+    "apps/web/src/app/api/compliance/__tests__/compliance-api.test.ts"
+  ],
+  "invariants_acknowledged": [
+    "PREMISE CORRECTED (RECON FIRST, PG-064): the task was dispatched as a 'phantom rebuild vs a CSV Completed claim', but the CSV status for IFC-306 is 'Backlog' (Sprint_plan.csv row 567, col 8) — NOT Completed. It is genuinely unbuilt/stale work, not a false-green phantom. The seed file already existed and already satisfied most of the DoD (22 events, 5 standards, no ISO 14001, Oct 2025-Dec 2026). Scope taken verbatim from the CSV Definition of Done; no invented scope.",
+    "REAL GAP 1 (dead data path): timeline/route.ts read artifacts/misc/compliance-calendar.json, which does not exist and no script generates it (artifacts/misc holds 4 unrelated files). loadCalendarData() therefore returned [] and the timeline API served ZERO events — the DoD 'timeline API serves updated data' was unmet. Fixed by pointing the route at the maintained, DoD-tracked file docs/planning/compliance-calendar.json (single-line change).",
+    "REAL GAP 2 (stale statuses): as of 2026-07-26, EVT-011..EVT-017 (dates 2026-03-25 through 2026-07-15) were past-dated but still status=scheduled. The file was internally consistent at its old lastUpdated (2026-03-17) but had rotted with the passage of real time. Fixed by flipping those 7 to 'completed' and bumping metadata.lastUpdated to 2026-07-26 (version 1.1.0 -> 1.2.0). EVT-018..EVT-022 (2026-08-15..2026-12-01) remain 'scheduled' — genuinely future.",
+    "NO FABRICATION: only status fields were flipped (per the DoD). Event descriptions were NOT rewritten — inventing 'completed' outcome text would fabricate audit data, which the repo 'Never Mock/Simulate Data' rule forbids. The file is planning/seed data under docs/planning by design.",
+    "FRESHNESS INVARIANT IS ROT-PROOF: the new integrity test anchors 'stale' to the file's own metadata.lastUpdated, NOT wall-clock today(). This avoids a time-bomb test that would spontaneously red once the next event date passes with no code change (RISK-S19-306-01).",
+    "TEST GUARDS REALITY: the existing compliance-api.test.ts fully mocks node:fs, so it passed while the real path was broken and data stale. The new compliance-calendar.integrity.test.ts does NOT mock fs — it reads the real seed file and drives the real timeline GET, so a broken path or stale seed fails CI here. Both suites green (35 tests).",
+    "OUT OF SCOPE (tracked, untouched): risks/route.ts reads a similarly-nonexistent artifacts/misc/risk-register.json — that is IFC-100/PG-194 scope, not IFC-306, and was left alone (L1 MINIMAL). The /governance/compliance dashboard UI is PG-194.",
+    "DEP SATISFIED: IFC-073:FS (compliance data foundation) — the calendar + compliance API routes already exist on origin/main @ a8de69b0b."
+  ]
+}

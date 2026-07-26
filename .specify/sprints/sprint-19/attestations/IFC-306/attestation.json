@@ -1,0 +1,111 @@
+{
+  "task_id": "IFC-306",
+  "title": "Fix Compliance Calendar Seed Data",
+  "sprint": 19,
+  "run_id": "ifc-306-2026-07-26",
+  "created_at": "2026-07-26",
+  "branch": "ifc-306-compliance-calendar",
+  "base_commit": "a8de69b0b8a398a3c69f5115de430f990b6f4433",
+  "verdict": "COMPLETE",
+  "provenance_version": "ADR-068",
+  "summary": "Fixed the compliance-calendar seed data and wired the timeline API to actually serve it. RECON corrected the dispatch premise: IFC-306 was CSV 'Backlog', not a false-green 'Completed' phantom, and docs/planning/compliance-calendar.json already held 22 events across 5 SaaS-relevant standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP), no ISO 14001, spanning Oct 2025-Dec 2026. Two genuine DoD gaps remained: (1) apps/web timeline/route.ts read a nonexistent artifacts/misc/compliance-calendar.json, so the API served 0 events; (2) 7 events (EVT-011..EVT-017, 2026-03-25..2026-07-15) had rotted to stale 'scheduled' as real time passed their old lastUpdated of 2026-03-17. Fix: repoint the route at the maintained docs/planning file (1 line), flip the 7 stale events to 'completed', bump metadata (1.1.0 -> 1.2.0, lastUpdated -> 2026-07-26), and add a real-file (unmocked-fs) integrity + functional test that guards event count, standard set, date range, freshness (anchored to the file's own lastUpdated, not wall-clock), and that GET /api/compliance/timeline returns all 22 events. 4 validations pass under Node 22; scoped coverage on the compliance route dir meets thresholds.",
+  "gate_results": [
+    {
+      "gate": "event-count-22",
+      "result": "PASS",
+      "detail": "docs/planning/compliance-calendar.json has exactly 22 events (integrity test AC1)."
+    },
+    {
+      "gate": "five-standards-no-iso14001",
+      "result": "PASS",
+      "detail": "Standard set is exactly {GDPR, SOC 2, ISO 27001, ISO 42001, OWASP}; zero events match /14001/ (integrity test AC2)."
+    },
+    {
+      "gate": "zero-stale-statuses",
+      "result": "PASS",
+      "detail": "No event dated before metadata.lastUpdated (2026-07-26) is still 'scheduled'. EVT-011..EVT-017 flipped scheduled->completed; now 17 completed / 5 scheduled. Verified: stale(past&scheduled)=[] (integrity test AC3)."
+    },
+    {
+      "gate": "future-events-remain-scheduled",
+      "result": "PASS",
+      "detail": "EVT-018..EVT-022 (2026-08-15..2026-12-01) remain 'scheduled' — not prematurely marked completed (integrity test AC3b)."
+    },
+    {
+      "gate": "date-range-oct2025-dec2026",
+      "result": "PASS",
+      "detail": "min date 2025-10-15 (<=2025-10-31), max date 2026-12-01 (>=2026-12-01) — >12-month forward coverage (integrity test AC4)."
+    },
+    {
+      "gate": "timeline-api-serves-data",
+      "result": "PASS",
+      "detail": "route.ts path changed artifacts/misc -> docs/planning/compliance-calendar.json. Unmocked-fs functional test: real GET /api/compliance/timeline returns data.events.length === 22 (integrity test AC5). Previously served 0 (RED proven before fix)."
+    },
+    {
+      "gate": "metadata-updated",
+      "result": "PASS",
+      "detail": "metadata.version 1.1.0 -> 1.2.0; metadata.lastUpdated 2026-03-17 -> 2026-07-26T12:00:00Z (integrity test AC6)."
+    },
+    {
+      "gate": "validate-web-typecheck-test",
+      "result": "PASS",
+      "detail": "pnpm --filter @intelliflow/web typecheck exit 0 (after building web dep chain for domain dist); pnpm exec vitest run src/app/api/compliance = 35 passed (3 files incl new integrity test). Existing fs-mocked compliance-api.test.ts unchanged and green."
+    },
+    {
+      "gate": "validate-web-lint-build",
+      "result": "PASS",
+      "detail": "pnpm --filter @intelliflow/web lint exit 0 (new test file lints clean); pnpm --filter @intelliflow/web build exit 0 (full Next production build)."
+    },
+    {
+      "gate": "scoped-coverage-thresholds",
+      "result": "PASS",
+      "detail": "vitest --coverage --coverage.include='src/app/api/compliance/**': Stmts 91.3% (>=90), Branches 84.37% (>=80), Functions 100% (>=90), Lines 91.95% (>=90)."
+    },
+    {
+      "gate": "no-fabricated-data",
+      "result": "PASS",
+      "detail": "Only status fields flipped per the DoD; event descriptions untouched. No fabricated outcome text (repo 'Never Mock/Simulate Data' rule). Seed lives under docs/planning by design."
+    }
+  ],
+  "kpi_results": {
+    "total_events": 22,
+    "standards_count": 5,
+    "iso_14001_events": 0,
+    "stale_statuses": 0,
+    "completed_events": 17,
+    "scheduled_events": 5,
+    "forward_coverage_months": 12,
+    "timeline_api_events_served": 22,
+    "coverage_statements_pct": 91.3,
+    "coverage_branches_pct": 84.37,
+    "coverage_functions_pct": 100,
+    "coverage_lines_pct": 91.95
+  },
+  "artifacts": [
+    "apps/web/src/app/api/compliance/timeline/route.ts",
+    "docs/planning/compliance-calendar.json",
+    "apps/web/src/app/api/compliance/__tests__/compliance-calendar.integrity.test.ts",
+    ".specify/sprints/sprint-19/attestations/IFC-306/context_ack.json"
+  ],
+  "artifact_hashes": {
+    "apps/web/src/app/api/compliance/timeline/route.ts": "3dd8eeb2bcaaed22f81283d907b09e8d9d82fa50",
+    "docs/planning/compliance-calendar.json": "c04b271c0d30140da155b264b901191875a3618f",
+    "apps/web/src/app/api/compliance/__tests__/compliance-calendar.integrity.test.ts": "aa4b7a3279053c5bc724a024411a74010df5875f",
+    ".specify/sprints/sprint-19/attestations/IFC-306/context_ack.json": "f94d6084e7b59395194d0fa1cab77c55815bdef5"
+  },
+  "csv_mutations": [
+    {
+      "task_id": "IFC-306",
+      "field": "Status",
+      "from": "Backlog",
+      "to": "Completed"
+    },
+    {
+      "task_id": "IFC-306",
+      "field": "Percent Complete",
+      "from": "0",
+      "to": "100"
+    }
+  ],
+  "validation_method": "VALIDATE:pnpm --filter web typecheck;VALIDATE:pnpm --filter web test --run",
+  "notes": "Premise correction is load-bearing and stated plainly (L31/L36 attestation honesty): the dispatch framing ('phantom -> real vs CSV Completed claim') was factually wrong — CSV was Backlog — but the underlying task was genuinely incomplete (dead API path + stale seed), so the pipeline proceeded on DoD-verbatim scope rather than reporting BLOCKED. RISK-S19-306-02 (docs/ outside the Next build root in a fully standalone deploy) is accepted and unchanged: the fix matches the EXISTING runtime-fs pattern (risks/route + the original timeline route both read repo-relative files via findProjectRoot) and points at the file that actually exists and is version-controlled; changing the deployment bundling model is out of scope for a seed-data fix. Out of scope, tracked: risks/route.ts reads a similarly-nonexistent artifacts/misc/risk-register.json (IFC-100/PG-194)."
+}
