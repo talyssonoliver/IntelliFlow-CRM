@@ -11,6 +11,7 @@ import {
 } from '../validate-task-contract.js';
 import {
   verifyDispatchBinding,
+  lookupStoredLeaseForTask,
   resolveCurrentBranch,
   parseArgs,
   runBindingCli,
@@ -506,6 +507,103 @@ describe('verifyDispatchBinding', () => {
     expect(result.ok).toBe(false);
     expect(result.mismatches[0].dimension).toBe('taskId');
     expect(result.mismatches[0].actual).toMatch(/Error reading/);
+  });
+
+  // ─── Stored-lease authority check ───────────────────────────────────────────
+
+  it('passes when stored lease agentLeaseId matches contract', () => {
+    const leasesFile = path.join(tmpDir, 'active-leases.jsonl');
+    fs.writeFileSync(
+      leasesFile,
+      JSON.stringify({
+        agentLeaseId: 'local_28109fae',
+        taskId: 'AUTOMATION-004-task-contract-schema-and-dispatch-guard',
+        status: 'active',
+      }) + '\n'
+    );
+    const contractPath = writeContract(tmpDir);
+    const result = verifyDispatchBinding({
+      ...validInput(),
+      contractPath,
+      leasesFilePath: leasesFile,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.mismatches).toHaveLength(0);
+  });
+
+  it('returns ok=false with agentLeaseId mismatch when stored lease disagrees (hard stop)', () => {
+    const leasesFile = path.join(tmpDir, 'active-leases.jsonl');
+    fs.writeFileSync(
+      leasesFile,
+      JSON.stringify({
+        agentLeaseId: 'local_DIFFERENT_LEASE',
+        taskId: 'AUTOMATION-004-task-contract-schema-and-dispatch-guard',
+        status: 'active',
+      }) + '\n'
+    );
+    const contractPath = writeContract(tmpDir);
+    // Contract carries local_28109fae, stored record has local_DIFFERENT_LEASE
+    const result = verifyDispatchBinding({
+      ...validInput(),
+      contractPath,
+      leasesFilePath: leasesFile,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.mismatches.some((m) => m.dimension === 'agentLeaseId')).toBe(true);
+    const mismatch = result.mismatches.find((m) => m.dimension === 'agentLeaseId');
+    expect(mismatch?.expected).toBe('local_DIFFERENT_LEASE');
+    expect(mismatch?.actual).toBe('local_28109fae');
+  });
+
+  it('allows dispatch when no stored lease file exists (no check performed)', () => {
+    // Absent leases file → lookupStoredLeaseForTask returns null → no stored-lease check
+    const contractPath = writeContract(tmpDir);
+    const result = verifyDispatchBinding({
+      ...validInput(),
+      contractPath,
+      leasesFilePath: path.join(tmpDir, 'nonexistent-leases.jsonl'),
+    });
+    expect(result.ok).toBe(true);
+    expect(result.mismatches).toHaveLength(0);
+  });
+});
+
+// ─── lookupStoredLeaseForTask ─────────────────────────────────────────────────
+
+describe('lookupStoredLeaseForTask', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'orch-lease-lookup-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('returns null when the leases file does not exist', () => {
+    const result = lookupStoredLeaseForTask('T-1', path.join(tmpDir, 'missing.jsonl'));
+    expect(result).toBeNull();
+  });
+
+  it('returns the active lease record for a matching taskId', () => {
+    const leasesFile = path.join(tmpDir, 'leases.jsonl');
+    fs.writeFileSync(
+      leasesFile,
+      JSON.stringify({ agentLeaseId: 'lease-abc', taskId: 'T-1', status: 'active' }) + '\n'
+    );
+    const result = lookupStoredLeaseForTask('T-1', leasesFile);
+    expect(result).not.toBeNull();
+    expect(result?.agentLeaseId).toBe('lease-abc');
+  });
+
+  it('returns null for a released record (not active)', () => {
+    const leasesFile = path.join(tmpDir, 'leases.jsonl');
+    fs.writeFileSync(
+      leasesFile,
+      JSON.stringify({ agentLeaseId: 'lease-abc', taskId: 'T-1', status: 'released' }) + '\n'
+    );
+    expect(lookupStoredLeaseForTask('T-1', leasesFile)).toBeNull();
   });
 });
 

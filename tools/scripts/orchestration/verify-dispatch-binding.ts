@@ -25,6 +25,14 @@ import * as fs from 'node:fs';
 import { execSync } from 'node:child_process';
 import * as path from 'node:path';
 
+// ─── Stored lease record (per-machine JSONL cache) ───────────────────────────
+
+interface StoredLease {
+  agentLeaseId: string;
+  taskId: string;
+  status: 'active' | 'released' | 'expired';
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface BindingCheckInput {
@@ -33,6 +41,7 @@ export interface BindingCheckInput {
   sessionId: string;
   branch: string;
   worktree: string;
+  leasesFilePath?: string;
 }
 
 export interface BindingMismatch {
@@ -45,6 +54,45 @@ export interface BindingCheckResult {
   ok: boolean;
   mismatches: BindingMismatch[];
   contract?: Record<string, unknown>;
+}
+
+// ─── Stored-lease lookup ──────────────────────────────────────────────────────
+
+/**
+ * Looks up the stored active lease for a given taskId in the per-machine JSONL
+ * cache (`.orchestration/active-leases.jsonl`). Returns null if no active
+ * lease record exists for the task, or if the file is absent.
+ *
+ * This prevents circular self-validation: a fabricated contract cannot pass the
+ * binding check if a stored lease for the same taskId says otherwise.
+ *
+ * Limitation: per-machine only. Cross-environment atomic enforcement requires
+ * AUTOMATION-005 durable distributed lock (Upstash Redis SET NX EX).
+ */
+export function lookupStoredLeaseForTask(
+  taskId: string,
+  leasesFilePath?: string
+): StoredLease | null {
+  const filePath =
+    leasesFilePath ?? path.join(process.cwd(), '.orchestration', 'active-leases.jsonl');
+
+  if (!fs.existsSync(filePath)) return null;
+
+  const lines = fs.readFileSync(filePath, 'utf-8').split('\n').filter(Boolean);
+
+  for (const line of lines) {
+    let record: StoredLease;
+    try {
+      record = JSON.parse(line) as StoredLease;
+    } catch {
+      continue;
+    }
+    if (record.taskId === taskId && record.status === 'active') {
+      return record;
+    }
+  }
+
+  return null;
 }
 
 // ─── Core binding check ───────────────────────────────────────────────────────
@@ -69,6 +117,20 @@ export function verifyDispatchBinding(input: BindingCheckInput): BindingCheckRes
 
   const mismatches: BindingMismatch[] = [];
 
+  // 0. Stored-lease authority check (prevents circular self-validation).
+  // If a stored lease exists for this taskId, the contract's agentLeaseId must
+  // match the stored record — a fabricated contract cannot pass simply by
+  // carrying a matching sessionId when the stored record says otherwise.
+  const contractLeaseIdRaw = String(contract.agentLeaseId ?? '');
+  const storedLease = lookupStoredLeaseForTask(String(contract.taskId ?? ''), input.leasesFilePath);
+  if (storedLease !== null && storedLease.agentLeaseId !== contractLeaseIdRaw) {
+    mismatches.push({
+      dimension: 'agentLeaseId',
+      expected: storedLease.agentLeaseId,
+      actual: contractLeaseIdRaw,
+    });
+  }
+
   // 1. taskId binding
   const contractTaskId = String(contract.taskId ?? '');
   if (contractTaskId !== input.intendedTaskId) {
@@ -80,12 +142,11 @@ export function verifyDispatchBinding(input: BindingCheckInput): BindingCheckRes
   }
 
   // 2. agentLeaseId binding (must match the sessionId of the executing agent)
-  const contractLeaseId = String(contract.agentLeaseId ?? '');
-  if (contractLeaseId !== input.sessionId) {
+  if (contractLeaseIdRaw !== input.sessionId) {
     mismatches.push({
       dimension: 'agentLeaseId',
       expected: input.sessionId,
-      actual: contractLeaseId,
+      actual: contractLeaseIdRaw,
     });
   }
 
