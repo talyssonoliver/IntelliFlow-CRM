@@ -207,6 +207,25 @@ A mismatch on ANY dimension is a hard stop. The supervisor MUST see exit 0 from
 the guard before the agent writes any file. This prevents L48-class mid-task
 containment incidents (see ADR-070 context).
 
+### Stored-lease authority check (anti-circular-validation)
+
+Before the 4-way comparison, the guard looks up the active lease record for
+`contract.taskId` in the per-machine JSONL cache
+(`.orchestration/active-leases.jsonl`). If a stored record exists and its
+`agentLeaseId` differs from the contract's `agentLeaseId`, the guard adds an
+`agentLeaseId` mismatch and exits 1 — even if the caller-supplied `--session-id`
+matches the contract.
+
+This prevents circular self-validation: a fabricated contract cannot pass by
+carrying a matching `sessionId` when the stored lease record for the same task
+says otherwise. If no stored lease exists for the task, the check is skipped
+(safe: false-negatives possible but no false-positives on valid dispatches).
+
+**Limitation**: per-machine only. Two supervisors on different machines both
+reading their own absent JSONL files would both proceed. Cross-environment
+atomic enforcement requires AUTOMATION-005 durable distributed lock (Upstash
+Redis `SET NX EX`).
+
 ### Guard usage
 
 ```sh
