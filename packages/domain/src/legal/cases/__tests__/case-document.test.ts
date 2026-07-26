@@ -35,6 +35,9 @@ import {
 const VALID_UUID = '00000000-0000-4000-8000-000000000001';
 const VALID_UUID_2 = '00000000-0000-4000-8000-000000000002';
 const VALID_UUID_3 = '00000000-0000-4000-8000-000000000003';
+// Prisma `@default(cuid())` shape — what real Tenant/User rows actually carry.
+const VALID_CUID = 'cmqjf6orv0000vwp57bsecutg';
+const VALID_CUID_2 = 'cmqji5v7700008sp5my09eanw';
 const VALID_CONTENT_HASH = 'a'.repeat(64);
 const VALID_CONTENT_HASH_2 = 'b'.repeat(64);
 const VALID_SIGNATURE_HASH = 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce';
@@ -398,6 +401,38 @@ describe('CaseDocument', () => {
 
       expect(doc.metadata.description).toBe('Detailed description');
       expect(doc.metadata.tags).toEqual(['urgent', 'review']);
+    });
+
+    // ENG-OPS-003.Gap9 regression: identity fields were validated as `z.uuid()`,
+    // but Prisma issues `@default(cuid())` ids for Tenant and User — so every
+    // tenant created through normal onboarding got "Invalid UUID" and
+    // `documents.upload` returned a 500.
+    it('should accept cuid-issued tenant and user ids', () => {
+      const doc = CaseDocument.create({
+        tenantId: VALID_CUID,
+        metadata: makeMetadata({ relatedCaseId: VALID_CUID_2 }),
+        storageKey: 'documents/cuid-tenant.pdf',
+        contentHash: VALID_CONTENT_HASH,
+        mimeType: 'application/pdf',
+        sizeBytes: 1024,
+        createdBy: VALID_CUID_2,
+      });
+
+      expect(doc.tenantId).toBe(VALID_CUID);
+      expect(doc.metadata.relatedCaseId).toBe(VALID_CUID_2);
+      // `createdBy` has no getter (pre-existing, out of scope) — read the snapshot.
+      expect(doc.toJSON().createdBy).toBe(VALID_CUID_2);
+    });
+
+    it('should still reject an id that is neither a UUID nor a cuid', () => {
+      expect(() => createDoc({ tenantId: 'tenant-1' })).toThrow();
+    });
+
+    it('should expose mimeType and sizeBytes from the aggregate', () => {
+      const doc = createDoc({ mimeType: 'image/png', sizeBytes: 4096 });
+
+      expect(doc.mimeType).toBe('image/png');
+      expect(doc.sizeBytes).toBe(4096);
     });
   });
 
