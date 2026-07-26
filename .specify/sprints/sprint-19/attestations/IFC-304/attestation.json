@@ -1,0 +1,107 @@
+{
+  "task_id": "IFC-304",
+  "title": "Article Analytics Dashboard — PR A: analytics foundation + instrumentation",
+  "sprint": 19,
+  "run_id": "ifc-304-pr-a-2026-07-26",
+  "created_at": "2026-07-26",
+  "branch": "fix/ifc-304-pr-a-analytics-foundation",
+  "base_commit": "bdb0dbb5332f0973459825607134ff5b24e93349",
+  "verdict": "COMPLETE",
+  "scope": "PR A (write-side foundation + instrumentation). IFC-304 overall remains IN PROGRESS — PR B (helpArticle.getAnalytics read-side + article-analytics.tsx admin dashboard) follows and consumes these tables.",
+  "provenance_version": "ADR-068",
+  "summary": "Write-side foundation for help-article analytics. Adds 3 additive Prisma tables (HelpArticleViewDaily, HelpArticleSearchNoResultDaily, HelpArticleAnalyticsDedup), a privacy-preserving domain normalizer (PII redaction + length limit + no identity), a HelpArticleAnalyticsRepository port, its PrismaHelpArticleAnalyticsRepository adapter (atomic upsert-increment + optional idempotency guard), two tenantProcedure mutations (helpArticle.recordView / recordSearchNoResult), and retention-purge wiring. Views/no-result searches are stored ONLY as per-tenant, per-UTC-day aggregate counters — no user/session identity, no raw search string. Writes are atomic and idempotent-per-key (increment-first, guard-last, so a P2002 rolls the whole transaction back). Migration is Class A (additive, backward-compatible, non-destructive) with zero schema/DB drift verified.",
+  "gate_results": [
+    {
+      "gate": "spec-plan-change-record",
+      "result": "PASS",
+      "detail": "docs/planning/ifc-304-pr-a-analytics-foundation.md (design + DB Class A gate evidence + snapshot/recovery plan) and context_ack.json committed. Spec/plan working artifacts are gitignored per repo convention; the committed record is the design doc + this attestation."
+    },
+    {
+      "gate": "typescript",
+      "result": "PASS",
+      "detail": "tsup DTS build succeeded across the api dependency chain (db, domain, application, adapters, api, ai-worker). apps/web typecheck (tsc --noEmit + next typegen) also passed — the additive router procedures do not break the web tRPC client."
+    },
+    {
+      "gate": "lint",
+      "result": "PASS",
+      "detail": "eslint clean on packages/domain, packages/application, packages/adapters, apps/api. The search-term normalizer regexes were rewritten to be provably linear (no ReDoS) after sonarjs/slow-regex flagged the initial nested-quantifier version; email redaction uses plain string ops (no regex)."
+    },
+    {
+      "gate": "tests",
+      "result": "PASS",
+      "detail": "domain normalizer 12/12; adapter unit 11/11; api help-article.router.analytics 9/9 (incl. cross-tenant NOT_FOUND guard + PII redaction); retention-purge 6/6 (incl. analytics purge folded into total)."
+    },
+    {
+      "gate": "integration-real-db",
+      "result": "PASS",
+      "detail": "tests/integration/help-article-analytics.test.ts 5/5 against real Postgres at localhost:5433 (intelliflow_test) — atomic increment, transaction-rollback idempotency (dup key => deduped, count unchanged), two-tenant isolation, PII-redacted term storage, batched retention purge. Located in tests/integration/ so it actually runs in the CI Integration Tests lane + pre-ship."
+    },
+    {
+      "gate": "build",
+      "result": "PASS",
+      "detail": "pnpm --filter @intelliflow/api... build succeeded (all workspace deps + api bundles + DTS)."
+    },
+    {
+      "gate": "coverage-gte-90",
+      "result": "PASS",
+      "detail": "New executable code >=90%: adapter file lines 94.1% / statements 92.7% / functions 94.1% from unit tests alone; the 5 integration tests additionally cover the real transaction and purge paths. Domain normalizer fully exercised (12 cases incl. redaction, truncation, UTC bucketing, retention cutoff). The application port is interface-only (no executable statements)."
+    },
+    {
+      "gate": "cross-tenant-isolation",
+      "result": "PASS",
+      "detail": "Every repository method filters by explicit tenantId. Unit: recordView rejects a foreign article with NOT_FOUND and never increments. Integration: tenant B's views/searches never appear under tenant A and vice-versa. DB-level RLS policies added on all 3 tables (defense in depth)."
+    },
+    {
+      "gate": "atomic-idempotent-write",
+      "result": "PASS",
+      "detail": "Single $transaction; increment via upsert { increment: 1 } (no read-modify-write race); optional idempotency guard inserted last so a duplicate key (P2002) rolls the transaction back. Verified against real DB."
+    },
+    {
+      "gate": "migration-additive-class-a",
+      "result": "PASS",
+      "detail": "20260726120000_help_article_analytics creates 3 NEW tables only (no existing-table column changes, no data rewrite, no destructive DDL). Applied to the test DB via the intended path (psql/db execute, never db push / reset / migrate dev). prisma migrate diff (schema vs DB) reports NO drift on the new tables. RLS enabled + explicit tenant_isolation policies. Rollback = DROP the 3 tables; feature disables at the call site without reverting schema."
+    },
+    {
+      "gate": "retention-purge",
+      "result": "PASS",
+      "detail": "purgeExpiredRecords extended to purge expired idempotency guards (48h TTL) and out-of-retention aggregates (400-day window) with the same batched deleteMany discipline as AuditLogEntry; folded into PurgeResult.totalPurged."
+    },
+    {
+      "gate": "pre-ship-final-sha",
+      "result": "PENDING",
+      "detail": "scripts/pre-ship.mjs runs on the pre-push hook at the final SHA (no PRESHIP_ALLOW_MISSING, no --no-verify). The canonical pre-ship evidence is the annotated tag at refs/preship/<final-sha> published via `pnpm preship:attest --publish` immediately after push (ENG-OPS-003.Gap14). Recorded here as PENDING because the attestation.json is authored before the push."
+    }
+  ],
+  "kpi_results": {
+    "new_tables": 3,
+    "new_migrations": 1,
+    "schema_db_drift": 0,
+    "domain_tests": 12,
+    "adapter_unit_tests": 11,
+    "api_router_tests": 9,
+    "retention_tests": 6,
+    "integration_tests_real_db": 5,
+    "adapter_new_file_line_coverage_pct": 94.1,
+    "adapter_new_file_statement_coverage_pct": 92.7,
+    "cross_tenant_foreign_rows_visible": 0,
+    "search_term_max_length": 120,
+    "dedup_ttl_hours": 48,
+    "aggregate_retention_days": 400
+  },
+  "artifacts": [
+    "packages/db/prisma/schema.prisma",
+    "packages/db/prisma/migrations/20260726120000_help_article_analytics/migration.sql",
+    "packages/domain/src/support/help-article-analytics.ts",
+    "packages/domain/src/support/__tests__/help-article-analytics.test.ts",
+    "packages/application/src/ports/repositories/HelpArticleAnalyticsRepositoryPort.ts",
+    "packages/adapters/src/repositories/PrismaHelpArticleAnalyticsRepository.ts",
+    "packages/adapters/src/repositories/__tests__/PrismaHelpArticleAnalyticsRepository.test.ts",
+    "apps/api/src/modules/help-article/help-article.router.ts",
+    "apps/api/src/modules/help-article/__tests__/help-article.router.analytics.test.ts",
+    "apps/api/src/services/retention-purge.service.ts",
+    "apps/api/src/services/__tests__/retention-purge.service.test.ts",
+    "tests/integration/help-article-analytics.test.ts",
+    "docs/planning/ifc-304-pr-a-analytics-foundation.md",
+    ".specify/sprints/sprint-19/attestations/IFC-304/context_ack.json"
+  ]
+}
