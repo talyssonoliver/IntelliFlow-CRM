@@ -173,6 +173,16 @@ describe('validateTaskContract — missing required fields', () => {
     const result = validateTaskContract('not a contract');
     expect(result.valid).toBe(false);
   });
+
+  it('rejects contract with unknown fields (additionalProperties: false)', () => {
+    const result = validateTaskContract(
+      makeValidContract({ extraField: 'evil', anotherExtra: 42 })
+    );
+    expect(result.valid).toBe(false);
+    expect(result.errors[0].field).toBe('(root)');
+    expect(result.errors[0].message).toMatch(/additionalProperties: false/);
+    expect(result.errors[0].message).toMatch(/extraField/);
+  });
 });
 
 // ─── validateTaskContract — wrong-type fields ─────────────────────────────────
