@@ -35,6 +35,13 @@
       "maxSkipped": 19,
       "reviewBy": "2026-10-31",
       "reason": "ADR-054: ENG-OPS-002.R17 — the SAP ERP adapter suite is scheduled for deletion under R17 and is already declared in tools/scripts/flaky-test-gate.allowlist.json for the same reason. Remove this entry together with that one when R17 lands."
+    },
+    {
+      "file": "apps/api/src/modules/contact/__tests__/contact-merge.bench.test.ts",
+      "kind": "ci-inverse",
+      "maxSkipped": 4,
+      "reviewBy": "2026-10-31",
+      "reason": "ADR-054: IFC-310 — p95 latency benchmark (NF-001/AC-013/NF-002). Uses describe.skipIf(CI=true) because the bench loop is flaky under shared CI runners (comment in file header). Run manually: pnpm --filter @intelliflow/api test contact-merge.bench. Flagged by infra-skip-gate on first run with CI=true env (AUTOMATION-004 pre-ship)."
     }
   ]
 }
