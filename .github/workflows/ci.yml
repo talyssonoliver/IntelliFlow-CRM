@@ -228,11 +228,33 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
 
+      # Emit the per-test JSON alongside the normal console output so the
+      # silent-skip gate below has something to audit. This job is NOT sharded,
+      # so it sees the whole integration project and no file-subset problem
+      # arises (the 20-way unit matrix is deliberately not wired to this gate).
+      # The RUN_ID marker pins the manifest to this commit; the gate refuses to
+      # reconcile against a run it cannot tie to HEAD.
       - name: Run integration tests
-        run: pnpm run test:integration
+        run: |
+          mkdir -p artifacts/coverage-parts/integration
+          printf '{"headSha":"%s","startedAt":"%s"}\n' \
+            "$(git rev-parse HEAD)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            > artifacts/coverage-parts/RUN_ID.json
+          pnpm run test:integration -- \
+            --reporter=default --reporter=json \
+            --outputFile.json=artifacts/coverage-parts/integration/vitest-result.json
         env:
           DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
           REDIS_URL: redis://localhost:6379
+
+      # Fails when a suite executed 0 of N collected tests without a declaration
+      # in tools/scripts/infra-skip-gate.registry.json, and writes a per-file
+      # executed/skipped table to the job summary so a skip is visible even when
+      # the gate passes. `if: always()` so a red test run still reports WHY the
+      # suite was empty rather than hiding it behind the earlier failure.
+      - name: Silent-skip gate (#658)
+        if: always()
+        run: pnpm run validate:infra-skip-gate
 
       - name: Upload integration test results
         uses: actions/upload-artifact@v7
