@@ -252,6 +252,17 @@ for duplicate-lease detection — the simplest enforcement that prevents the mos
 common class of same-machine duplicate-lease bugs without requiring the full
 AUTOMATION-005 live store.
 
+**Limitation of the per-machine JSONL cache**: `checkDuplicateLease` and
+`lookupStoredLeaseForTask` read from disk on every call — they are NOT
+in-memory-only and DO survive process restarts. However, they provide no
+cross-environment atomic acquisition. Two supervisors on different machines (or
+two concurrent processes on the same machine before either writes its lease
+record) can both pass the local cache check and both proceed. The JSONL cache
+catches the common case (same-machine sequential dispatches) but does NOT
+guarantee exactly-one-winner under concurrent access. Cross-environment atomic
+enforcement requires AUTOMATION-005 durable distributed lock (Upstash Redis
+`SET NX EX`).
+
 ---
 
 ## Consequences
