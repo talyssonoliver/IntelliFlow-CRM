@@ -197,6 +197,13 @@ function validateLeaseExpiryField(c: Record<string, unknown>, errors: Validation
   }
 }
 
+// ─── Unknown-field detection (additionalProperties: false) ───────────────────
+
+function findUnknownFields(c: Record<string, unknown>): string[] {
+  const known = new Set<string>(REQUIRED_FIELDS as string[]);
+  return Object.keys(c).filter((k) => !known.has(k));
+}
+
 // ─── Validator ────────────────────────────────────────────────────────────────
 
 export function validateTaskContract(contract: unknown): ValidationResult {
@@ -210,6 +217,19 @@ export function validateTaskContract(contract: unknown): ValidationResult {
   }
 
   const c = contract as Record<string, unknown>;
+
+  const unknownFields = findUnknownFields(c);
+  if (unknownFields.length > 0) {
+    return {
+      valid: false,
+      errors: [
+        {
+          field: '(root)',
+          message: `unknown field(s) not permitted (additionalProperties: false): ${unknownFields.join(', ')}`,
+        },
+      ],
+    };
+  }
 
   for (const field of REQUIRED_FIELDS) {
     if (!(field in c) || c[field] === undefined || c[field] === null) {
