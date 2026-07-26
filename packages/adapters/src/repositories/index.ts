@@ -24,6 +24,9 @@ export { PrismaAIOutputReviewRepository } from './PrismaAIOutputReviewRepository
 export * from './PrismaChainVersionRepository';
 export * from './PrismaChainVersionAuditRepository';
 
+// Help Article Analytics (IFC-304 PR A)
+export * from './PrismaHelpArticleAnalyticsRepository';
+
 // Activity Feed Repository (IFC-069)
 export * from './PrismaActivityFeedRepository';
 

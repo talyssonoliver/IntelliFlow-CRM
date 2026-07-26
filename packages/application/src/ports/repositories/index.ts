@@ -13,6 +13,9 @@ export * from './AnalyticsRepositoryPort';
 export * from './TicketRepositoryPort';
 export * from './LeadConversionAuditRepositoryPort';
 export * from './AIOutputReviewRepositoryPort';
+
+// Help Article Analytics Repository Port (IFC-304 PR A)
+export * from './HelpArticleAnalyticsRepositoryPort';
 export * from './ActivityFeedRepositoryPort';
 export * from './BillingRepositoryPort';
 export * from './ModuleAccessPort';

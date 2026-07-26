@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-07-21T23:38:38.297Z",
+  "timestamp": "2026-07-26T12:57:55.623Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 65,
-    "total_endpoints": 539,
+    "total_endpoints": 541,
     "total_queries": 245,
-    "total_mutations": 294,
+    "total_mutations": 296,
     "routers": [
       {
         "name": "contact",
@@ -1093,6 +1093,12 @@
         "mutations": 10
       },
       {
+        "name": "helpArticle",
+        "endpoints": 14,
+        "queries": 6,
+        "mutations": 8
+      },
+      {
         "name": "home",
         "endpoints": 14,
         "queries": 7,
@@ -1115,12 +1121,6 @@
         "endpoints": 13,
         "queries": 6,
         "mutations": 7
-      },
-      {
-        "name": "helpArticle",
-        "endpoints": 12,
-        "queries": 6,
-        "mutations": 6
       },
       {
         "name": "cases",
@@ -1413,16 +1413,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 177,
-    "total_fields": 2589,
-    "total_indexes": 822,
-    "total_relations": 249,
+    "total_tables": 180,
+    "total_fields": 2616,
+    "total_indexes": 835,
+    "total_relations": 253,
     "tables_with_embeddings": 4,
     "enums": 74,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 155,
+        "fields": 158,
         "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
@@ -1645,6 +1645,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "HelpArticle",
+        "fields": 18,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "AccountAutomationSetting",
         "fields": 17,
         "indexes": 2,
@@ -1697,13 +1704,6 @@
         "name": "NotificationDLQ",
         "fields": 17,
         "indexes": 4,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "HelpArticle",
-        "fields": 17,
-        "indexes": 6,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -2422,6 +2422,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "HelpArticleViewDaily",
+        "fields": 9,
+        "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "DocumentTypeDefinition",
         "fields": 9,
         "indexes": 3,
@@ -2496,6 +2503,13 @@
         "fields": 8,
         "indexes": 2,
         "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "HelpArticleSearchNoResultDaily",
+        "fields": 8,
+        "indexes": 4,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2622,6 +2636,13 @@
         "fields": 6,
         "indexes": 1,
         "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "HelpArticleAnalyticsDedup",
+        "fields": 6,
+        "indexes": 4,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -4675,6 +4696,16 @@
         "name": "helpArticle.getFeedbackStats",
         "method": "GET",
         "description": "Get feedback stats"
+      },
+      {
+        "name": "helpArticle.recordView",
+        "method": "POST",
+        "description": "Record view"
+      },
+      {
+        "name": "helpArticle.recordSearchNoResult",
+        "method": "POST",
+        "description": "Record search no result"
       }
     ],
     "home": [

@@ -10,7 +10,9 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { Prisma } from '@intelliflow/db';
+import { Prisma, type PrismaClient } from '@intelliflow/db';
+import { PrismaHelpArticleAnalyticsRepository } from '@intelliflow/adapters';
+import { normalizeSearchTerm, IDEMPOTENCY_KEY_MAX_LENGTH } from '@intelliflow/domain';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { z } from 'zod';
 import {
@@ -32,6 +34,19 @@ const submitFeedbackSchema = z.object({
 
 const getFeedbackStatsSchema = z.object({
   articleId: z.string().min(1),
+});
+
+// ─── Analytics Instrumentation Schemas (IFC-304 PR A) ───────────────────────
+
+const recordViewSchema = z.object({
+  articleId: z.string().min(1),
+  /** Opaque per-render nonce enabling idempotent retries. */
+  idempotencyKey: z.string().min(1).max(IDEMPOTENCY_KEY_MAX_LENGTH).optional(),
+});
+
+const recordSearchNoResultSchema = z.object({
+  term: z.string().min(1).max(200),
+  idempotencyKey: z.string().min(1).max(IDEMPOTENCY_KEY_MAX_LENGTH).optional(),
 });
 
 // ─── Role Guards ─────────────────────────────────────────────────────────────
@@ -553,4 +568,60 @@ export const helpArticleRouter = createTRPCRouter({
 
     return { helpful, notHelpful: total - helpful, total };
   }),
+
+  // ─── Analytics Instrumentation (IFC-304 PR A) ────────────────────────────
+
+  /**
+   * Record a single article view.
+   * Privacy-preserving: increments a per-tenant, per-day aggregate; no user or
+   * session identity is retained. Atomic, and idempotent when an
+   * `idempotencyKey` is supplied. Verifies the article belongs to the tenant so
+   * bogus/cross-tenant ids cannot inflate counts.
+   */
+  recordView: tenantProcedure.input(recordViewSchema).mutation(async ({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
+
+    const article = await ctx.prismaWithTenant.helpArticle.findFirst({
+      where: { id: input.articleId, tenantId },
+      select: { id: true },
+    });
+    if (!article) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+    }
+
+    const repo = new PrismaHelpArticleAnalyticsRepository(
+      ctx.prismaWithTenant as unknown as PrismaClient
+    );
+    return repo.recordArticleView({
+      tenantId,
+      articleId: input.articleId,
+      idempotencyKey: input.idempotencyKey,
+    });
+  }),
+
+  /**
+   * Record a search that returned no results.
+   * The term is normalized + PII-redacted before storage (never the raw input);
+   * terms that normalize to empty are silently ignored. Atomic, and idempotent
+   * when an `idempotencyKey` is supplied.
+   */
+  recordSearchNoResult: tenantProcedure
+    .input(recordSearchNoResultSchema)
+    .mutation(async ({ ctx, input }) => {
+      const tenantId = ctx.tenant.tenantId;
+
+      const normalizedTerm = normalizeSearchTerm(input.term);
+      if (!normalizedTerm) {
+        return { recorded: false, deduped: false };
+      }
+
+      const repo = new PrismaHelpArticleAnalyticsRepository(
+        ctx.prismaWithTenant as unknown as PrismaClient
+      );
+      return repo.recordSearchNoResult({
+        tenantId,
+        normalizedTerm,
+        idempotencyKey: input.idempotencyKey,
+      });
+    }),
 });
