@@ -302,7 +302,13 @@ describe('assessState — documented boundary of the honesty gate', () => {
 
 // ─── CLI end-to-end against a real bare-repo remote ───────────────────────
 
-describe('preship-attest CLI', () => {
+// Each case here builds a throwaway git workspace (init + commit + tag + a bare
+// remote) and then shells out to the CLI — ~29 git subprocesses per test. Under
+// the full 20-way parallel suite on Windows that routinely exceeds the global 5s
+// default, which made this file flake in pre-ship with a different test timing
+// out on each run while passing 42/42 in isolation. The work is genuinely
+// subprocess-bound, so it needs a subprocess-shaped budget, not a faster test.
+describe('preship-attest CLI', { timeout: 60_000 }, () => {
   const tmpDirs: string[] = [];
   afterAll(() => {
     for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true });
@@ -547,7 +553,9 @@ describe('preship-attest CLI', () => {
 
 // ─── The real pre-ship.mjs write path (AC-1) ──────────────────────────────
 
-describe('pre-ship.mjs persists run provenance (AC-1)', () => {
+// Same subprocess-bound shape as the CLI block above — real git workspaces plus
+// a spawned pre-ship run.
+describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () => {
   const tmpDirs: string[] = [];
   afterAll(() => {
     for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true });
