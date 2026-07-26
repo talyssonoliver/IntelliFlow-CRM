@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-25T22:11:44.065Z",
+  "generated_at": "2026-07-26T09:34:54.515Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 515,
-    "completed": 449,
+    "total_specs_analyzed": 518,
+    "completed": 450,
     "partially_done": 12,
     "spec_only": 48,
-    "uncertain": 6
+    "uncertain": 8
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -850,8 +850,36 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "ENG-OPS-003.Gap12-E2EAPIServerHarness",
+      "title": "ENG-OPS-003.Gap12-E2EAPIServerHarness",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "NOT_IN_CSV",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "UNCERTAIN"
+    },
+    {
       "task_id": "ENG-OPS-003.Gap13-DocsBuildNoop",
       "title": "ENG-OPS-003.Gap13-DocsBuildNoop",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "NOT_IN_CSV",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "ENG-OPS-003.Gap14-FinalShaAttest",
+      "title": "ENG-OPS-003.Gap14-FinalShaAttest",
       "sprint": 19,
       "spec_path": null,
       "has_spec": false,
@@ -5881,6 +5909,22 @@
       "real_status": "SPEC_ONLY"
     },
     {
+      "task_id": "IFC-306",
+      "title": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
+      "sprint": 19,
+      "spec_path": ".specify/sprints/sprint-19/specifications/IFC-306-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-073"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-307",
       "title": "Contact Enrichment Pipeline — Automated background job that periodically enriches contact/lead data from external providers (Clearbit, Apollo). Includes: BullMQ queue intelliflow-contact-enrichment, enrichment adapter with rate limiting, on-create trigger in contact.router.ts, periodic cron sweep for stale profiles (>30 days), cost tracking via CostTracker, field updates (company, title, social profiles, industry)",
       "sprint": 22,
@@ -7121,9 +7165,9 @@
       "task_id": "PG-064",
       "title": "Contacts List",
       "sprint": 19,
-      "spec_path": ".specify/sprints/sprint-19/specifications/PG-064-spec.md",
-      "has_spec": true,
-      "has_plan": true,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",

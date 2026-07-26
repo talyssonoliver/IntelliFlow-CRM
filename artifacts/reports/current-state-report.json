@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-25T21:36:21.310Z",
+  "generatedAt": "2026-07-26T09:34:54.525Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -400,9 +400,12 @@
       ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R10/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R16/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-003/attestation.json",
+      ".specify/sprints/sprint-19/attestations/ENG-OPS-003.Gap12-E2EAPIServerHarness/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-003.Gap13-DocsBuildNoop/attestation.json",
+      ".specify/sprints/sprint-19/attestations/ENG-OPS-003.Gap14-FinalShaAttest/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-003.Gap2-CodeQL/attestation.json",
       ".specify/sprints/sprint-19/attestations/IFC-033/attestation.json",
+      ".specify/sprints/sprint-19/attestations/IFC-306/attestation.json",
       ".specify/sprints/sprint-19/attestations/IFC-312/attestation.json",
       ".specify/sprints/sprint-19/attestations/PG-064/attestation.json",
       ".specify/sprints/sprint-19/attestations/PG-065/attestation.json",
@@ -540,10 +543,10 @@
     "totalTasks": 618,
     "totalNumberedSprintTasks": 612,
     "continuousTaskCount": 6,
-    "completedTasks": 456,
-    "backlogTasks": 160,
+    "completedTasks": 457,
+    "backlogTasks": 159,
     "blockedTasks": 0,
-    "completionPercentage": 73.79,
+    "completionPercentage": 73.95,
     "inProgressTasks": 2,
     "otherTasks": 0
   },
@@ -20215,11 +20218,11 @@
       "name": "Sprint 19",
       "summarySource": "specify",
       "totalTasks": 18,
-      "completedTasks": 12,
-      "backlogTasks": 5,
+      "completedTasks": 13,
+      "backlogTasks": 4,
       "blockedTasks": 0,
       "inProgressTasks": 1,
-      "attestedCompletedTasks": 12,
+      "attestedCompletedTasks": 13,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Engineering Operations (8), Core CRM (4), AI/Intelligence (1).",
       "notableCompleted": [
@@ -20488,38 +20491,6 @@
           }
         },
         {
-          "taskId": "IFC-306",
-          "sprint": 19,
-          "status": "Backlog",
-          "section": "Compliance",
-          "title": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
-          "description": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
-          "summary": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
-          "definitionOfDone": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026; timeline API serves updated data; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
-          "dependencies": [
-            "IFC-073"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
           "taskId": "ENG-OPS-002.R13",
           "sprint": 19,
           "status": "Backlog",
@@ -20549,6 +20520,38 @@
           "kpiSummary": {
             "total": 0,
             "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "ENG-OPS-002.R16",
+          "sprint": 19,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger",
+          "description": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger",
+          "summary": "ENG-OPS-002.R16 (GOV-A-001 + GOV-A-002), attestation-only remediation — evidence backfill, not re-implementation. LANDED IN TWO PARTS: PR #624 (2026-07-24) carried INFRA-TF-001..005 and IFC-211; this change carries the remaining 12.......",
+          "definitionOfDone": "The 18 tasks (PG-196..209, INFRA-TF-001..005) have canonical attestation.json w/ git_commit; provenance gap tracked; verified by: pnpm validate:sprint-data",
+          "definitionOfDoneSnapshot": "Backfill the 18 Sprint-18 tasks marked Completed with no canonical attestation.json; Attestations carry real, independently re-derived evidence — never fabricated completeness; Ledger the 177-task GOV-A-002 provenance gap",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R16/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-07-25T17:45:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         }
@@ -20581,8 +20584,8 @@
         {
           "section": "Compliance",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         },
         {
           "section": "Investment Gate",
@@ -20833,22 +20836,22 @@
         {
           "taskId": "IFC-306",
           "sprint": 19,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Compliance",
-          "title": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
+          "title": "Fix Compliance Calendar Seed Data",
           "description": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
-          "summary": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
+          "summary": "Premise correction is load-bearing and stated plainly (L31/L36 attestation honesty): the dispatch framing ('phantom -> real vs CSV Completed claim') was factually wrong — CSV was Backlog......",
           "definitionOfDone": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026; timeline API serves updated data; verified by: pnpm test",
           "definitionOfDoneSnapshot": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
           "dependencies": [
             "IFC-073"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/IFC-306/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 19
           },
           "validationSummary": {
             "total": 0,

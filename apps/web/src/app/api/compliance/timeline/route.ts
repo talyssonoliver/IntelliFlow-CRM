@@ -23,7 +23,7 @@ function findProjectRoot(startDir: string): string {
 
 function loadCalendarData(): ComplianceEvent[] {
   const projectRoot = findProjectRoot(process.cwd());
-  const calendarPath = path.join(projectRoot, 'artifacts', 'misc', 'compliance-calendar.json');
+  const calendarPath = path.join(projectRoot, 'docs', 'planning', 'compliance-calendar.json');
 
   try {
     if (fs.existsSync(calendarPath)) {
