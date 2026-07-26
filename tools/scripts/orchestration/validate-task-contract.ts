@@ -7,7 +7,7 @@
  *
  * Usage (CLI):
  *   npx tsx tools/scripts/orchestration/validate-task-contract.ts \
- *     --contract .specify/sprints/sprint-19/spec/ORCH-002/contract.json \
+ *     --contract .specify/sprints/sprint-19/spec/AUTOMATION-004/contract.json \
  *     [--leases-file .orchestration/active-leases.jsonl]
  */
 

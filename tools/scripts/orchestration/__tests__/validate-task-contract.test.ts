@@ -22,7 +22,7 @@ import { runValidateCli } from '../validate-task-contract.js';
 
 function makeValidContract(overrides: Partial<Record<string, unknown>> = {}): TaskContract {
   return {
-    taskId: 'ORCH-002-task-contract-schema-and-dispatch-guard',
+    taskId: 'AUTOMATION-004-task-contract-schema-and-dispatch-guard',
     approvedOutcome: 'Deliver task-contract JSON schema + dispatch-binding guard',
     acceptanceCriteria: [
       'JSON Schema covers all 20 fields',
@@ -48,7 +48,7 @@ function makeValidContract(overrides: Partial<Record<string, unknown>> = {}): Ta
     agentLeaseId: 'local_28109fae',
     leaseExpiry: '2026-07-26T22:00:00Z',
     allowedMutationScope: [
-      '.specify/sprints/sprint-19/spec/ORCH-002/**',
+      '.specify/sprints/sprint-19/spec/AUTOMATION-004/**',
       'tools/scripts/orchestration/**',
       'docs/architecture/adr/ADR-070*.md',
     ],
@@ -418,7 +418,7 @@ describe('verifyDispatchBinding', () => {
 
   function writeContract(dir: string, overrides: Partial<Record<string, unknown>> = {}): string {
     const contract = {
-      taskId: 'ORCH-002-task-contract-schema-and-dispatch-guard',
+      taskId: 'AUTOMATION-004-task-contract-schema-and-dispatch-guard',
       agentLeaseId: 'local_28109fae',
       branch: 'fix/orch-002-task-contract-and-dispatch-guard',
       worktree: '/c/Users/talys/projects/iflow-orch-002-contract-and-guard',
@@ -431,7 +431,7 @@ describe('verifyDispatchBinding', () => {
 
   const validInput = (): BindingCheckInput => ({
     contractPath: '', // set per test
-    intendedTaskId: 'ORCH-002-task-contract-schema-and-dispatch-guard',
+    intendedTaskId: 'AUTOMATION-004-task-contract-schema-and-dispatch-guard',
     sessionId: 'local_28109fae',
     branch: 'fix/orch-002-task-contract-and-dispatch-guard',
     worktree: '/c/Users/talys/projects/iflow-orch-002-contract-and-guard',
@@ -760,7 +760,7 @@ describe('runBindingCli', () => {
 
   function writeContract(overrides: Partial<Record<string, unknown>> = {}): string {
     const c = {
-      taskId: 'ORCH-002-task-contract-schema-and-dispatch-guard',
+      taskId: 'AUTOMATION-004-task-contract-schema-and-dispatch-guard',
       agentLeaseId: 'local_28109fae',
       branch: 'fix/orch-002-task-contract-and-dispatch-guard',
       worktree: '/c/Users/talys/projects/iflow-orch-002-contract-and-guard',
@@ -783,7 +783,7 @@ describe('runBindingCli', () => {
       '--contract',
       p,
       '--task-id',
-      'ORCH-002-task-contract-schema-and-dispatch-guard',
+      'AUTOMATION-004-task-contract-schema-and-dispatch-guard',
       '--session-id',
       'local_28109fae',
       '--branch',
@@ -801,7 +801,7 @@ describe('runBindingCli', () => {
       '--contract',
       p,
       '--task-id',
-      'ORCH-002-task-contract-schema-and-dispatch-guard',
+      'AUTOMATION-004-task-contract-schema-and-dispatch-guard',
       '--session-id',
       'local_28109fae',
       '--branch',
