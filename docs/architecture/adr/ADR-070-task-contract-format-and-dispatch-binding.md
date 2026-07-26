@@ -146,32 +146,29 @@ recommended hybrid.
 ### Option B — GitHub Issues API (free tier)
 
 One GitHub Issue per task; issue state + labels represent lease state. Label
-`lease:active` + assignee = the holding agent. Server-side transitions are
-serialised by GitHub.
+`lease:active` + assignee = the holding agent.
 
-| Req | Result | Reason                                                        |
-| --- | ------ | ------------------------------------------------------------- |
-| R1  | ✓      | GitHub server serialises label transitions; first writer wins |
-| R2  | ✓      | Exactly one issue per task; one `lease:active` label          |
-| R3  | ✓      | Comments append events idempotently                           |
-| R4  | ✓      | GitHub persists; network reconnect resumes                    |
-| R5  | ✓      | Any environment with HTTPS + GITHUB_TOKEN                     |
-| R6  | ✓      | Server-side transactions for label changes                    |
-| R7  | ✓      | Issues API export; GitHub archive                             |
-| R8  | ✓      | Only task IDs and status in issue body (no credentials)       |
-| R9  | ✓      | Free tier; private repo                                       |
+| Req | Result | Reason                                                                                                                      |
+| --- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
+| R1  | ✗      | Label add (`POST /issues/{n}/labels`) is NOT atomic CAS — two concurrent calls can both return HTTP 200; no "add if absent" |
+| R2  | ✗      | Without R1, exactly-one-active cannot be enforced; last writer wins on label state                                          |
+| R3  | ✓      | Comments append events idempotently                                                                                         |
+| R4  | ✓      | GitHub persists; network reconnect resumes                                                                                  |
+| R5  | ✓      | Any environment with HTTPS + GITHUB_TOKEN                                                                                   |
+| R6  | ✗      | Issue label mutations are not transactional; concurrent PATCH/POST requests are not serialised with CAS semantics           |
+| R7  | ✓      | Issues API export; GitHub archive                                                                                           |
+| R8  | ✓      | Only task IDs and status in issue body (no credentials)                                                                     |
+| R9  | ✓      | Free tier; private repo                                                                                                     |
 
-**Verdict: PASSES all 9 requirements.** Main considerations:
+**Verdict: REJECTED** as authoritative live lease store. R1, R2, and R6 fail:
+the GitHub Issues REST API uses last-writer-wins semantics for label updates.
+Two supervisors racing to acquire a lease would both see success; there is no
+server-side compare-and-set primitive on issue labels or assignees.
 
-- Requires network access (acceptable — no dispatch is possible without network
-  anyway)
-- Requires GITHUB_TOKEN (already needed for pre-ship attestation push and PRs)
-- Rate limit: 5,000 requests/hour for authenticated requests (safe for ≤20
-  active leases)
-
-**This is the recommended architecture for ORCH-003** (the next ORCH increment,
-when a live lease store is implemented). Not implemented in this task — ORCH-002
-scope is the contract schema and dispatch-binding guard only.
+**Acceptable role**: audit / control projection — post a comment on the task
+Issue on lease acquire/release, after the fact, for human review. This gives
+observability without relying on the API for atomicity. This is the role Option
+B plays in the hybrid recommendation below.
 
 ### Option C — Local SQLite file in `.orchestration/` (git-ignored, per-machine)
 
@@ -218,18 +215,42 @@ machines. Further, Windows agents (`flock` is not natively available in
 PowerShell; Git Bash has it, but interoperability with a Linux orchestrator
 flock is not guaranteed across NFS or SMB shares).
 
+### Summary of verdicts
+
+| Option            | R1 (CAS) | R2 (one-active) | R5 (cross-env) | R6 (transactional) | Verdict               |
+| ----------------- | -------- | --------------- | -------------- | ------------------ | --------------------- |
+| A (git JSONL)     | ✗        | ✗               | ✓              | ✗                  | REJECTED (live lease) |
+| B (GitHub Issues) | ✗        | ✗               | ✓              | ✗                  | REJECTED (live lease) |
+| C (SQLite local)  | ✓        | ✓               | ✗              | ✓                  | REJECTED (live lease) |
+| D (flock+JSONL)   | ✓        | ✓               | ✗              | ✓                  | REJECTED (live lease) |
+
+**No evaluated option satisfies all 9 requirements for cross-environment use.**
+Options A and B fail on atomic acquisition (R1/R2/R6). Options C and D fail on
+cross-environment reach (R5). The root tension is: options with true atomicity
+rely on per-machine OS primitives (SQLite WAL, flock); options that span
+environments lack atomic primitives.
+
 ### Recommendation
 
-| Layer                             | Store                                               | Rationale                                                                 |
-| --------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------- |
-| Authoritative live lease store    | GitHub Issues API (Option B)                        | Only option meeting all 9 requirements                                    |
-| Per-machine duplicate-lease cache | Local JSONL in `.orchestration/active-leases.jsonl` | Fast local check before the network call; reconstructible from Issues API |
-| Audit export                      | Git-tracked JSONL snapshot (Option A, reduced role) | Human-readable history; no CAS dependency                                 |
+| Layer                             | Store                                               | Rationale                                                                  |
+| --------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------- |
+| Authoritative live lease store    | **Not decided — AUTOMATION-005 scope**              | Requires a cross-env distributed lock primitive (see AUTOMATION-005)       |
+| Per-machine duplicate-lease cache | Local JSONL in `.orchestration/active-leases.jsonl` | Fast local check on the same machine; does NOT guarantee cross-env CAS     |
+| Audit/control projection          | GitHub Issues comments (Option B, reduced role)     | Human-readable history; observability only — never relied on for atomicity |
+| Audit export                      | Git-tracked JSONL snapshot (Option A, reduced role) | Append-only history for human review; no CAS dependency                    |
 
-**ORCH-003 scope**: implement GitHub Issues API lease store. ORCH-002 (this
-task) implements only the per-machine local JSONL cache for duplicate-lease
-detection — the simplest enforcement that prevents the most common class of
-duplicate-lease bugs without requiring the full ORCH-003 live store.
+**AUTOMATION-005 scope**: evaluate and implement a cross-env distributed lock
+service. The project already runs **Upstash Redis** (confirmed in codebase
+inventory: `"Cache enabled: true, Provider: Redis (Upstash)"`). Redis
+`SET NX EX` provides atomic CAS, exactly-one-active enforcement, TTL-based lease
+expiry, transactional concurrency, and cross-environment reach — satisfying all
+9 requirements. This is the leading candidate. AUTOMATION-005 will evaluate this
+and any alternatives before committing.
+
+**AUTOMATION-004 (this task)** implements only the per-machine local JSONL cache
+for duplicate-lease detection — the simplest enforcement that prevents the most
+common class of same-machine duplicate-lease bugs without requiring the full
+AUTOMATION-005 live store.
 
 ---
 
@@ -241,8 +262,10 @@ duplicate-lease bugs without requiring the full ORCH-003 live store.
   longer causes phantom completions.
 - 4-way binding guard catches binding violations at dispatch time, eliminating
   L48-class mid-task containment.
-- ADR-070 provides the architectural decision record so ORCH-003 can implement
-  the GitHub Issues API lease store without re-litigating the ledger evaluation.
+- ADR-070 provides the architectural decision record so AUTOMATION-005 can
+  implement the durable cross-env lease store without re-litigating the
+  evaluation. Upstash Redis SET NX EX is the leading candidate for
+  AUTOMATION-005 scope.
 
 ### Negative
 
@@ -266,6 +289,6 @@ duplicate-lease bugs without requiring the full ORCH-003 live store.
 - **Prose-only contracts (status quo)**: already rejected by ENG-OPS-002/003
   hardening. The L48 incident and ghost-completion rate are the evidence.
 - **Monolithic task-contract enforcement in a single PR**: splitting contract
-  schema (ORCH-002) from live lease store (ORCH-003) keeps each PR independently
-  reviewable and revertable. See ADR-070 rationale pattern from ADR-066 and
-  ADR-068.
+  schema (AUTOMATION-004) from live lease store (AUTOMATION-005) keeps each PR
+  independently reviewable and revertable. See ADR-070 rationale pattern from
+  ADR-066 and ADR-068.
