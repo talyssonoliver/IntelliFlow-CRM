@@ -173,6 +173,7 @@ enforced that is only manual is a false attestation.
 | Class A migration gates 1–8, 10 (SQL review, staging, recovery plan, etc.)                                                     | **Reviewed discipline** — evidence attached to the PR/attestation                  | this doc + [`quality-gates.md`](./quality-gates.md)                           |
 | Category B envelope (old→new + evidence, no silent criteria removal, independent review)                                       | **Reviewed discipline** — recorded in PR body / plan change log                    | this doc                                                                      |
 | Class B production escalation; all Class C / Category C items                                                                  | **Human gate** — agent stops and hands off                                         | this doc                                                                      |
+| 4-way dispatch binding (taskId + sessionId + branch + worktree) verified before execution                                      | **Code (supervisor-invoked CLI guard)**                                            | `tools/scripts/orchestration/verify-dispatch-binding.ts`                      |
 
 **Why no new "Category B envelope" CI linter?** A generic grep for `db push` /
 `migrate dev` / `db reset` in the repo produces false positives — those strings
@@ -185,10 +186,61 @@ in the ADR.
 
 ---
 
+## Dispatch-Binding Enforcement
+
+Defined by
+[ADR-070](../architecture/adr/ADR-070-task-contract-format-and-dispatch-binding.md).
+Every autonomous task dispatch MUST have a machine-readable task contract (JSON
+Schema at `tools/scripts/orchestration/schemas/task-contract.schema.json`) and a
+verified 4-way binding before execution begins.
+
+### What the 4-way binding enforces
+
+| Dimension        | Contract field | Must equal                              |
+| ---------------- | -------------- | --------------------------------------- |
+| Task identity    | `taskId`       | Supervisor's intended task ID           |
+| Session identity | `agentLeaseId` | Executing Claude Code session ID        |
+| Branch           | `branch`       | HEAD branch of the executing worktree   |
+| Worktree         | `worktree`     | Absolute path of the executing worktree |
+
+A mismatch on ANY dimension is a hard stop. The supervisor MUST see exit 0 from
+the guard before the agent writes any file. This prevents L48-class mid-task
+containment incidents (see ADR-070 context).
+
+### Guard usage
+
+```sh
+npx tsx tools/scripts/orchestration/verify-dispatch-binding.ts \
+  --contract .specify/sprints/sprint-19/spec/ORCH-002/contract.json \
+  --task-id   ORCH-002-task-contract-schema-and-dispatch-guard \
+  --session-id local_28109fae \
+  --branch    fix/orch-002-task-contract-and-dispatch-guard \
+  --worktree  /c/Users/talys/projects/iflow-orch-002-contract-and-guard
+```
+
+Exit 0 = binding verified, proceed. Exit 1 = binding mismatch — diagnostics
+printed to stderr; do NOT begin execution.
+
+### Contract validation
+
+```sh
+npx tsx tools/scripts/orchestration/validate-task-contract.ts \
+  --contract <path-to-contract.json> \
+  [--leases-file .orchestration/active-leases.jsonl]
+```
+
+Validates all 20 required fields and checks for duplicate `agentLeaseId` in the
+per-machine active-leases log (`.orchestration/active-leases.jsonl`). Absence of
+the leases file is safe — treated as no prior leases.
+
+---
+
 ## See also
 
+- [ADR-070](../architecture/adr/ADR-070-task-contract-format-and-dispatch-binding.md)
+  — task-contract format, dispatch-binding, and ledger architecture decision
 - [ADR-069](../architecture/adr/ADR-069-rolling-wave-rebaselining-and-migration-risk-classes.md)
-  — the decision record
+  — rolling-wave rebaselining and migration risk classes
 - [ADR-012](../architecture/adr/ADR-012-csv-source-of-truth.md) — CSV as source
   of truth
 - [`release-rollback.md`](./release-rollback.md) — blue/green deploy + rollback
