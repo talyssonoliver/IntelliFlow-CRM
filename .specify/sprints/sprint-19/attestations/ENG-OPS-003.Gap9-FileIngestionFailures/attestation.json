@@ -1,0 +1,106 @@
+{
+  "task_id": "ENG-OPS-003.Gap9-FileIngestionFailures",
+  "sprint": 19,
+  "run_id": "20260725T235300-eng-ops-003-gap9",
+  "verdict": "COMPLETE",
+  "timestamp": "2026-07-25T23:53:00.000Z",
+  "scope": "PRODUCT/DOMAIN + TEST",
+  "dependencies_verified": true,
+  "blocker": null,
+  "artifact_hashes": {
+    "packages/domain/src/legal/cases/case-document.ts": "6fd5927201f7373f495c6828aaf8e0f096d8d20dedf9652dfc97b5c4eebdf484",
+    "packages/domain/src/legal/cases/__tests__/case-document.test.ts": "285b7251031ce3fb83676c6b6b9804c57b33f7b36726563b39570e2fcbb35bea",
+    "tests/integration/ingestion/file-ingestion.e2e.test.ts": "d08713a54e052854fcb78ced12d8885b9e921d736abd7a9bd86d4f297ee643b4"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "turbo run typecheck (husky pre-commit) + pre-ship typecheck step",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T23:45:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "vitest run --project domain --project application --project adapters",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T23:40:00Z",
+      "note": "7127 tests / 256 files, zero failures. No regression from the caseDocumentSchema change."
+    },
+    {
+      "name": "Lint",
+      "command": "eslint on staged .ts (husky pre-commit) + pre-ship lint step",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T23:45:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pre-ship library-build + build steps",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T23:45:00Z"
+    },
+    {
+      "name": "Target suite (the 8 nightly failures)",
+      "command": "vitest run --project integration ingestion/file-ingestion.e2e (stub-storage harness, Postgres :5433)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T23:38:00Z",
+      "note": "11 passed / 1 skipped / 0 failed. All 8 previously-failing specs GREEN and none skipped. The 1 skip is the pre-existing 'should retry on transient storage failures' context.skip(), untouched by this change."
+    },
+    {
+      "name": "Root-cause reproduction (pre-fix)",
+      "command": "IngestionOrchestrator.ingestFile with a real cuid tenant row from the test DB",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-25T23:20:00Z",
+      "note": "tenantId=cmqjf6orv0000vwp57bsecutg -> success=false, error='Invalid UUID' on tenantId. Proves the production defect, not merely the test failure."
+    },
+    {
+      "name": "Full pre-ship gate",
+      "command": "node scripts/pre-ship.mjs (all required steps) at code SHA 1a627b5dd",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-07-26T00:52:00Z",
+      "note": "PASS in 25m37s, exit 0, under Node 22 + test DB :5433. No PRESHIP_ALLOW_MISSING, no PRESHIP_KEEP_GOING, no --no-verify. actionlint + gitleaks SKIPPED_PRECONDITION (tools not installed locally; CI runs both) — same precedent as ENG-OPS-003.Gap12. e2e-full-matrix SKIPPED_NOT_FULL (standard mode). This run validated code SHA 1a627b5dd; the attestation commit that follows changes the SHA, so the pre-push hook re-runs the gate and writes the authoritative refs/preship/<final-sha> tag (ENG-OPS-003.Gap14, PR #654). An earlier run at 8b88cda49 FAILED on diff-coverage (33.3%, 1/3 new lines) and was fixed by the unit tests in 1a627b5dd — recorded here because a gate failure that gets fixed is still part of the evidence trail."
+    }
+  ],
+  "evidence_summary": {
+    "tests_passing": 7130,
+    "new_tests_added_this_exec": 3,
+    "files_created": 0,
+    "files_modified": 3,
+    "product_code_changed": true,
+    "completed_acceptance_criteria": [
+      "AC1 all 8 nightly file-ingestion failures pass, none skipped (11 pass / 1 pre-existing skip / 0 fail)",
+      "AC2 root cause identified as a PRODUCT defect, not test infrastructure: caseDocumentSchema validated tenantId/createdBy/updatedBy/principalId/grantedBy/signedBy/relatedCaseId/relatedContactId/id/parentVersionId as z.uuid() while Prisma issues @default(cuid()) ids for Tenant and User",
+      "AC3 blast radius confirmed reachable: documents.upload (upload.router.ts:125) and email-inbound (email-inbound.router.ts:67) pass ctx.user.tenantId / ctx.user.userId straight into ingestFile, so every cuid-issued tenant got a 500 on document upload",
+      "AC4 fix is idiomatic and layering-correct: entityIdSchema = union(uuid, cuid) defined in domain, mirroring idSchema in @intelliflow/validators (which cannot be imported here because validators depends on domain, not vice versa)",
+      "AC5 CaseDocument.mimeType / .sizeBytes getters added — fields were persisted and schema-validated but read back undefined from the aggregate",
+      "AC6 no regression: 7127 domain/application/adapters tests pass; caseDocumentSchema was the only domain schema validating tenantId as a UUID"
+    ],
+    "test_defects_corrected": [
+      "tenant-1 / tenant-2 / user-123 matched no id format AND had no tenants row to satisfy case_documents_tenant_id_fkey; replaced with cuid-shaped ids plus real tenant rows upserted in beforeAll and cascade-deleted in afterAll",
+      "failure-event assertions used the class name 'DocumentIngestionFailedEvent' instead of the domain eventType 'document.ingestion_failed' (2 sites); the success-path assertion already used the correct dotted form, confirming drift",
+      "the antivirus spec uploaded application/x-msdownload, which validateFile() rejects before the scanner runs, so it asserted 'virus detected' against a MIME-rejection message; now uses an allowed MIME type",
+      "events[0].data.documentId read a property DomainEvent does not expose; now events[0].toPayload().documentId",
+      "the infected-file spec now uses a dedicated uploader so its 'document was NOT saved' assertion stays meaningful once the earlier specs genuinely persist documents"
+    ],
+    "out_of_scope_residuals": [
+      "issue #658: tests/integration/ingestion/file-ingestion.e2e.test.ts only executes when Supabase storage buckets are reachable, so it effectively runs in the nightly only — the structural reason eight real defects accumulated undetected. The same gating also suppressed coverage of this fix (pre-ship diff-coverage failed at 33.3% until the changed lines were covered in the domain unit suite). Deliberately NOT folded into this single-purpose PR; #658 also flags rls-tenant-isolation.test.ts (5 tests, 5 skipped in the same nightly) for the same audit.",
+      "CaseDocument still exposes no createdBy getter (pre-existing). Not widened here — the cuid regression test reads toJSON().createdBy instead.",
+      "apps/api/src/test/integration-setup.ts:87 still uses the Prisma-7-removed datasources constructor (carried over from PR #646's out-of-scope note; does not affect this suite)."
+    ]
+  },
+  "gate_results": {
+    "artifact_verification": "PASS (2 tracked files, sha256 above)",
+    "import_reachability": "PASS (caseDocumentSchema is consumed by CaseDocument.create/fromPersistence, reached from IngestionOrchestrator via documents.upload and email-inbound routers)",
+    "runtime_wiring": "PASS (IngestionOrchestrator wired in apps/api/src/container.ts:669; both call sites verified)",
+    "build_validation": "PASS (turbo library-build + full pre-ship build at final SHA)",
+    "behavioural_verification": "PASS with a stated limit. Pre-fix reproduction against a real cuid tenant row returned 'Invalid UUID'; post-fix the same path persists the document and the suite is 11 pass / 1 pre-existing skip / 0 fail. IMPORTANT: local pre-ship's integration-tests step (8.0s) did NOT execute these 8 specs — without Supabase buckets the suite skips (issue #658), which is exactly the masking defect. The green result above comes from a stub-storage harness exercising the real orchestrator, real PrismaCaseDocumentRepository and real domain against Postgres :5433; only the Supabase storage round-trip is stubbed, and that path was never among the 8 failures. Definitive end-to-end proof is the next scheduled preship-full-nightly, which provisions the buckets. Additionally the changed lines are covered by domain unit tests (diff-coverage 100%, 3/3).",
+    "plan_reviewer": "NOT RUN (no multi-step TDD plan to review — this is a single-commit defect reconciliation whose root cause was established by runtime reproduction rather than design. Recorded as not-run rather than claimed; PR review is the compensating control.)"
+  },
+  "notes": "ENG-OPS-003 governance Gap #9 (attestation-tracked, NOT a Sprint_plan.csv row — like Gaps #1/#2/#5/#6/#7/#12/#13/#14; no CSV flip). PR #646 fixed the Prisma 7 driver-adapter constructor in this suite, which unmasked 8 real failures on the 2026-07-25 nightly (run 30160486859, integration-tests FAIL at 0cba18d9). Those 8 were NOT test-infrastructure noise: seven reported only 'expected false to be true' because the spec discarded result.error, hiding the actual cause. Reproducing the pipeline locally against Postgres :5433 with a stub storage adapter surfaced it immediately — CaseDocument.create() threw a Zod 'Invalid UUID' on tenantId, because caseDocumentSchema demanded UUIDs for identity fields that Prisma issues as cuids. Confirmed with a real tenant row (cmqjf6orv0000vwp57bsecutg, 'Talysson Oliveira's Organization'), so document upload was broken in production for every tenant created through normal onboarding, not just for the test's synthetic ids. packages/validators/src/common.ts already documents this exact hazard and ships idSchema = union(uuid, cuid); caseDocumentSchema simply never adopted it. Fix redefines that union locally as entityIdSchema because the dependency runs validators -> domain. A second latent product gap surfaced once ingestion succeeded: CaseDocument exposed no mimeType/sizeBytes getters, so both read undefined off the aggregate despite being persisted and validated; getters added. The remaining four corrections are genuine test-fixture and contract drift, enumerated in evidence_summary.test_defects_corrected. Static reading of the specs pointed at a foreign-key violation; that hypothesis was wrong and only running the pipeline disproved it — the FK is real but the domain schema rejected the input before any SQL was issued. No pre-ship bypass, no --no-verify, no destructive git. All DB work under Node 22 (host default node v25 hangs pg writes). A prod-Supabase .env copied into the worktree during setup was removed before any test ran, because Vitest auto-loads .env and it would have pointed writes at production."
+}
