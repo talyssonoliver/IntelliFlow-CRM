@@ -57,7 +57,7 @@
     "react-error-boundary": "^6.1.2",
     "recharts": "^3.8.1",
     "server-only": "^0.0.1",
-    "temporal-polyfill": "^0.3.2",
+    "temporal-polyfill": "^1.0.1",
     "use-debounce": "^10.1.1"
   },
   "devDependencies": {
