@@ -36,11 +36,54 @@ function makePrismaMock(expiredRows: { id: string }[]) {
     return Promise.resolve({ count });
   });
 
+  // Empty analytics models so the IFC-304 analytics purge is a no-op here.
+  const emptyModel = () => ({
+    findMany: vi.fn(() => Promise.resolve([])),
+    deleteMany: vi.fn(() => Promise.resolve({ count: 0 })),
+  });
+
   const prisma = {
     auditLogEntry: { findMany, deleteMany },
+    helpArticleAnalyticsDedup: emptyModel(),
+    helpArticleViewDaily: emptyModel(),
+    helpArticleSearchNoResultDaily: emptyModel(),
   } as unknown as import('@intelliflow/db').PrismaClient;
 
   return { prisma, findMany, deleteMany };
+}
+
+/**
+ * Prisma mock where the help-article analytics models have expired rows to purge.
+ */
+function makeAnalyticsPrismaMock(counts: {
+  dedup: number;
+  viewDaily: number;
+  searchNoResult: number;
+}) {
+  const model = (n: number) => {
+    let rows = Array.from({ length: n }, (_, i) => ({ id: `x-${i}` }));
+    return {
+      findMany: vi.fn(({ take }: { take: number }) => Promise.resolve(rows.slice(0, take))),
+      deleteMany: vi.fn(({ where }: { where: { id: { in: string[] } } }) => {
+        const ids = new Set(where.id.in);
+        const count = rows.filter((r) => ids.has(r.id)).length;
+        rows = rows.filter((r) => !ids.has(r.id));
+        return Promise.resolve({ count });
+      }),
+    };
+  };
+
+  const prisma = {
+    auditLogEntry: {
+      findMany: vi.fn(() => Promise.resolve([])),
+      deleteMany: vi.fn(() => Promise.resolve({ count: 0 })),
+    },
+    helpArticleAnalyticsDedup: model(counts.dedup),
+    helpArticleViewDaily: model(counts.viewDaily),
+    helpArticleSearchNoResultDaily: model(counts.searchNoResult),
+  } as unknown as import('@intelliflow/db').PrismaClient;
+
+  return { prisma };
 }
 
 // ------------------------------------------------
@@ -61,7 +104,18 @@ describe('purgeExpiredRecords', () => {
 
     expect(result.auditLogEntriesPurged).toBe(0);
     expect(result.securityEventsPurged).toBe(0);
+    expect(result.helpArticleAnalyticsPurged).toBe(0);
     expect(result.totalPurged).toBe(0);
+  });
+
+  it('purges expired help-article analytics rows and folds them into the total', async () => {
+    const { prisma } = makeAnalyticsPrismaMock({ dedup: 2, viewDaily: 3, searchNoResult: 1 });
+
+    const result = await purgeExpiredRecords(prisma, logger, { batchSize: 100 });
+
+    expect(result.helpArticleAnalyticsPurged).toBe(6);
+    expect(result.auditLogEntriesPurged).toBe(0);
+    expect(result.totalPurged).toBe(6);
   });
 
   it('purges all expired AuditLogEntry records in a single batch', async () => {

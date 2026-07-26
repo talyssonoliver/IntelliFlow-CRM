@@ -8,6 +8,7 @@
  */
 
 import type { PrismaClient } from '@intelliflow/db';
+import { PrismaHelpArticleAnalyticsRepository } from '@intelliflow/adapters';
 
 /**
  * Minimal logger interface — compatible with pino, console, and test stubs.
@@ -21,6 +22,8 @@ export interface Logger {
 export interface PurgeResult {
   auditLogEntriesPurged: number;
   securityEventsPurged: number;
+  /** Expired dedup guards + out-of-retention help-article analytics aggregates (IFC-304). */
+  helpArticleAnalyticsPurged: number;
   totalPurged: number;
 }
 
@@ -101,17 +104,31 @@ export async function purgeExpiredRecords(
   );
   const securityEventsPurged = 0;
 
-  const totalPurged = auditLogEntriesPurged + securityEventsPurged;
+  // Purge help-article analytics: expired idempotency guards + out-of-retention
+  // daily aggregates (IFC-304 PR A). Same batched-delete discipline.
+  const analyticsRepo = new PrismaHelpArticleAnalyticsRepository(prisma);
+  const analytics = await analyticsRepo.purgeExpired(new Date(), batchSize);
+  const helpArticleAnalyticsPurged = analytics.totalPurged;
+
+  logger.info('[RetentionPurge] Purged help-article analytics', {
+    dedupPurged: analytics.dedupPurged,
+    viewDailyPurged: analytics.viewDailyPurged,
+    searchNoResultPurged: analytics.searchNoResultPurged,
+  });
+
+  const totalPurged = auditLogEntriesPurged + securityEventsPurged + helpArticleAnalyticsPurged;
 
   logger.info('[RetentionPurge] Purge complete', {
     auditLogEntriesPurged,
     securityEventsPurged,
+    helpArticleAnalyticsPurged,
     totalPurged,
   });
 
   return {
     auditLogEntriesPurged,
     securityEventsPurged,
+    helpArticleAnalyticsPurged,
     totalPurged,
   };
 }

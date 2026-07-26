@@ -87,6 +87,8 @@ export * from './legal/deadlines/deadline-engine';
 
 // Support Domain - Tickets
 export * from './support/TicketConstants';
+// Support Domain - Help Article analytics (IFC-304)
+export * from './support/help-article-analytics';
 
 // Notifications Domain
 export * from './notifications';

@@ -134,6 +134,9 @@ model Tenant {
   helpArticles         HelpArticle[]              @ignore
   articleSections      ArticleSection[]           @ignore
   articleFeedback      ArticleFeedback[]          @ignore
+  helpArticleViewDaily            HelpArticleViewDaily[]            @ignore
+  helpArticleSearchNoResultDaily  HelpArticleSearchNoResultDaily[]  @ignore
+  helpArticleAnalyticsDedup       HelpArticleAnalyticsDedup[]       @ignore
   leadStageConfigs       LeadStageConfig[]        @ignore
   leadScoringRules       LeadScoringRule[]        @ignore
   leadCustomFields       LeadCustomField[]        @ignore
@@ -5395,6 +5398,7 @@ model HelpArticle {
   // Relations
   sections          ArticleSection[]
   feedback          ArticleFeedback[]
+  viewDaily         HelpArticleViewDaily[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -5449,6 +5453,91 @@ model ArticleFeedback {
   @@index([articleId])
   @@index([tenantId])
   @@map("article_feedback")
+}
+
+// ─── Help Article Analytics (IFC-304 PR A) ──────────────────────────────────
+// Privacy-preserving daily aggregates. No user/session identity is retained.
+// Writes are atomic (DB-side `{ increment: 1 }` under upsert) and idempotent
+// when the caller supplies an opaque `idempotencyKey` (see the dedup guard).
+
+/// Per-article, per-UTC-day view rollup.
+model HelpArticleViewDaily {
+  id         String       @id @default(cuid())
+
+  // Aggregated subject
+  articleId  String
+  article    HelpArticle  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  /// UTC day bucket (date-only) this count aggregates.
+  day        DateTime     @db.Date
+  /// Per-day view counter, incremented atomically.
+  viewCount  Int          @default(0)
+
+  // Multi-tenancy
+  tenantId   String
+  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@unique([tenantId, articleId, day])
+  @@index([tenantId])
+  @@index([tenantId, day])
+  @@index([articleId])
+  @@map("help_article_view_daily")
+}
+
+/// Per-normalized-term, per-UTC-day rollup of searches that returned no results.
+model HelpArticleSearchNoResultDaily {
+  id             String    @id @default(cuid())
+
+  /// Normalized term: trimmed, whitespace-collapsed, lowercased, PII-redacted,
+  /// length-limited. Never the raw user input; never tied to a user.
+  normalizedTerm String    @db.VarChar(120)
+  /// UTC day bucket (date-only).
+  day            DateTime  @db.Date
+  /// Per-day no-result search counter, incremented atomically.
+  searchCount    Int       @default(0)
+
+  // Multi-tenancy
+  tenantId       String
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Explicit index name: the default (table + 3 fields + _key) exceeds
+  // Postgres's 63-char identifier limit, so name it deterministically.
+  @@unique([tenantId, normalizedTerm, day], map: "help_article_search_noresult_daily_term_day_key")
+  @@index([tenantId])
+  @@index([tenantId, day])
+  @@map("help_article_search_noresult_daily")
+}
+
+/// Short-lived idempotency guard so client retries / double-fires do not
+/// double-count. Holds an opaque caller-supplied key only (no identity) and is
+/// purged after `expiresAt` by the retention job.
+model HelpArticleAnalyticsDedup {
+  id             String   @id @default(cuid())
+
+  /// Namespaced opaque nonce (`view:<key>` / `search:<key>`). Not an identity.
+  idempotencyKey String   @db.VarChar(128)
+  /// When this guard row becomes eligible for purge.
+  expiresAt      DateTime
+
+  // Multi-tenancy
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Timestamp (immutable — no updatedAt)
+  createdAt      DateTime @default(now())
+
+  @@unique([tenantId, idempotencyKey])
+  @@index([tenantId])
+  @@index([expiresAt])
+  @@map("help_article_analytics_dedup")
 }
 
 // ─── Lead Settings (PG-178) ─────────────────────────────────────────────────

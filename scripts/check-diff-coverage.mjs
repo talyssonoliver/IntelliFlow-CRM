@@ -229,6 +229,19 @@ const SONAR_COVERAGE_EXCLUDE = [
   /^packages\/domain\/src\/crm\/account\/AccountRepository\.ts$/,
   /^packages\/domain\/src\/crm\/lead\/LeadRepository\.ts$/,
   /^packages\/domain\/src\/crm\/opportunity\/OpportunityRepository\.ts$/,
+  // IFC-304 PR A analytics foundation added pure-interface + re-export-barrel
+  // files with no executable code — they never emit lcov, so the "absent = 0%"
+  // rule false-negatives their signature/export lines (same nature as
+  // PortalDeliverySyncPort.ts / the ports & adapters index barrels above). The
+  // real LOGIC (PrismaHelpArticleAnalyticsRepository, the domain normalizer, the
+  // router mutations, the retention wiring) is unit + integration tested and
+  // appears in lcov at >=94%. Mirror in sonar.coverage.exclusions.
+  //   - HelpArticleAnalyticsRepositoryPort: the write-side interface (no code)
+  /^packages\/application\/src\/ports\/repositories\/HelpArticleAnalyticsRepositoryPort\.ts$/,
+  //   - application repositories barrel (export * from the port)
+  /^packages\/application\/src\/ports\/repositories\/index\.ts$/,
+  //   - adapters repositories barrel (export * from the Prisma adapter)
+  /^packages\/adapters\/src\/repositories\/index\.ts$/,
 ];
 const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
 const isCoverableFile = (f) =>

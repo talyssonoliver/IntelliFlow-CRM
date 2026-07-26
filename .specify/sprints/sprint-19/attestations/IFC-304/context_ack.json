@@ -1,0 +1,35 @@
+{
+  "task_id": "IFC-304",
+  "title": "Article Analytics Dashboard — PR A: analytics foundation + instrumentation",
+  "sprint": 19,
+  "acknowledged_by": "Claude Opus 4.8 — autonomous IFC-304 PR A build (STOA-Domain lens)",
+  "acknowledged_at": "2026-07-26T13:00:00Z",
+  "files_read": [
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+    "apps/api/src/modules/help-article/help-article.router.ts",
+    "apps/api/src/trpc.ts",
+    "apps/api/src/context.ts",
+    "apps/api/src/services/retention-purge.service.ts",
+    "apps/api/src/security/public-rate-limiter.ts",
+    "packages/db/prisma/schema.prisma",
+    "packages/db/prisma/migrations/20260629000001_add_report_templates/migration.sql",
+    "packages/adapters/src/repositories/PrismaChainVersionAuditRepository.ts",
+    "packages/adapters/src/repositories/PrismaAnalyticsRepository.ts",
+    "packages/application/src/ports/repositories/AnalyticsRepositoryPort.ts",
+    "packages/domain/src/security/prompt-sanitizer.ts",
+    "tests/integration/setup.ts",
+    "tests/integration/rls-tenant-isolation.test.ts"
+  ],
+  "invariants_acknowledged": [
+    "SCOPE (Option 2, PO 2026-07-26): IFC-304 is delivered in full during Sprint 19; this is PR A (write-side foundation + instrumentation). PR B ships the read-side helpArticle.getAnalytics + the article-analytics.tsx admin dashboard that consumes these tables. No scope reduction.",
+    "PRIVACY-PRESERVING AGGREGATES, NO IDENTITY: views and no-result searches are stored ONLY as per-tenant, per-UTC-day counters (HelpArticleViewDaily, HelpArticleSearchNoResultDaily). No user id, session id, IP, or raw search string is retained. Search terms are normalized (trim + whitespace-collapse), PII-redacted (email tokens + >=7-digit phone/card/SSN-like runs -> [redacted]), lowercased, and length-limited to 120 chars before persistence.",
+    "NO RACE-PRONE naked viewCount: there is NO counter column on HelpArticle. Counts live in dedicated daily-aggregate rows incremented atomically via a single upsert with { increment: 1 } (no read-modify-write). Confirmed by recon that this matches the repo's GrowthMetric/DealsWonMetric rollup convention and the LeadRoutingService atomic-increment idiom.",
+    "ATOMIC + IDEMPOTENT: each record runs in one $transaction with the increment FIRST and an optional idempotency-guard insert LAST; a duplicate key (P2002) rolls back the whole transaction, so a retried event is never double-counted. Without a key, counting is at-least-once by design (the privacy tradeoff of retaining no session identity). Verified by a real-DB integration test (dup key -> deduped:true, count unchanged).",
+    "TENANT ISOLATION (defense in depth): every repository method filters by an explicit tenantId (primary app-level guarantee, exercised by cross-tenant negative tests at unit + real-DB layers); the 3 new tables also ENABLE ROW LEVEL SECURITY with an explicit tenant_isolation USING policy on app.current_tenant_id, matching the current report_templates convention. Test DB connects as postgres (BYPASSRLS), so integration proves the app-level filter; DB RLS is proven separately by rls-tenant-isolation.test.ts.",
+    "DB CLASS A (additive, backward-compatible, non-destructive): migration 20260726120000_help_article_analytics creates 3 NEW tables only — no columns changed on existing tables, no data rewrite, no destructive DDL. CREATE TABLE + CREATE INDEX on empty tables => no lock on existing tables, no backfill. Applied via the intended path (never db push / db reset / migrate dev). Zero drift verified: prisma migrate diff (schema vs test DB) reports no difference on the new tables. Rollback = DROP the 3 new tables; feature disables at the call site without reverting schema.",
+    "RETENTION consistent with existing telemetry: purgeExpiredRecords (retention-purge.service.ts) is extended to also purge expired idempotency guards (48h TTL) and out-of-retention aggregates (400-day window) using the same batched deleteMany discipline as AuditLogEntry.",
+    "INTEGRATION TEST PLACEMENT: the real-DB test lives in tests/integration/ (the only lane the CI Integration Tests job + pre-ship actually run via `pnpm run test:integration`). An apps/api/**/*.integration.test.ts file would be excluded from every gate and verify nothing.",
+    "GATES: TypeScript + build pass across the api dependency chain; lint clean on all touched packages; domain (12), adapter unit (11), api router (9), retention (5), and real-DB integration (5) tests pass; coverage on new executable code >=90% (adapter lines 94%, statements 93% unit-only; integration covers real transaction/purge paths). Real test DB at localhost:5433 (intelliflow_test), never .env.local / prod Supabase. Node 22 (host default v25 breaks pg writes).",
+    "DEPS SATISFIED: IFC-303 (article feedback) and PG-180 both Completed. This PR reuses the IFC-303 ArticleFeedback shape/patterns and adds the missing views + no-result-search data sources IFC-304's dashboard requires."
+  ]
+}
