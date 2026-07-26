@@ -105,6 +105,23 @@ const describeOrSkip = hasBasicConfig ? describe : describe.skip;
 // Track infrastructure availability for detailed check in beforeAll
 let infrastructureStatus: { available: boolean; reason?: string } = { available: false };
 
+/**
+ * Tenant/user ids are deliberately **cuid-shaped**, matching what Prisma's
+ * `@default(cuid())` issues for real tenants created through onboarding.
+ * The previous `'tenant-1'` / `'user-123'` literals satisfied no id format at
+ * all, so every ingest failed domain validation before it reached the database
+ * — which is what masked ENG-OPS-003.Gap9. Keeping them cuid-shaped also makes
+ * this suite a regression guard for the UUID-only schema bug it uncovered.
+ */
+const TENANT_1 = 'cgap9tenantaaaaaaaaaaaaa1';
+const TENANT_2 = 'cgap9tenantaaaaaaaaaaaaa2';
+const USER_1 = 'cgap9useraaaaaaaaaaaaaaa1';
+/** Dedicated uploader so the "infected file was not saved" assertion stays
+ *  meaningful now that the earlier ingest tests genuinely persist documents. */
+const USER_AV = 'cgap9useravaaaaaaaaaaaaa1';
+const USER_TENANT_1 = 'cgap9usertenantaaaaaaaaa1';
+const USER_TENANT_2 = 'cgap9usertenantaaaaaaaaa2';
+
 describeOrSkip('File Ingestion Pipeline E2E', () => {
   let prisma: PrismaClient;
   let orchestrator: IngestionOrchestrator;
@@ -142,6 +159,19 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
     avScanner = new MockAVScanner();
 
     orchestrator = new IngestionOrchestrator(repository, eventBus, storage, avScanner);
+
+    // `case_documents.tenant_id` is a FK to `tenants` — the suite must own real
+    // tenant rows or every save fails with a constraint violation.
+    for (const [id, name] of [
+      [TENANT_1, 'Gap9 Ingestion Tenant 1'],
+      [TENANT_2, 'Gap9 Ingestion Tenant 2'],
+    ] as const) {
+      await prisma.tenant.upsert({
+        where: { id },
+        create: { id, name, slug: id },
+        update: {},
+      });
+    }
   });
 
   beforeEach(() => {
@@ -154,10 +184,10 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
   afterAll(async () => {
     if (!infrastructureStatus.available || !prisma) return;
     try {
-      // Clean up test documents created during this suite
-      await prisma.caseDocument
+      // Deleting the tenants cascades to their case documents and ACL rows.
+      await prisma.tenant
         .deleteMany({
-          where: { tenantId: { in: ['tenant-1', 'tenant-2'] } },
+          where: { id: { in: [TENANT_1, TENANT_2] } },
         })
         .catch(() => {});
     } finally {
@@ -174,10 +204,10 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
 
       const fileContent = Buffer.from('%PDF-1.4\nTest PDF content');
       const metadata = {
-        tenantId: 'tenant-1',
+        tenantId: TENANT_1,
         filename: 'contract.pdf',
         mimeType: 'application/pdf',
-        uploadedBy: 'user-123',
+        uploadedBy: USER_1,
       };
 
       const result = await orchestrator.ingestFile(fileContent, metadata);
@@ -201,7 +231,8 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       const events = eventBus.getPublishedEvents();
       expect(events).toHaveLength(1);
       expect(events[0].eventType).toBe('document.ingestion.created');
-      expect(events[0].data.documentId).toBe(result.documentId);
+      // `DomainEvent` exposes its payload via `toPayload()` — there is no `.data`.
+      expect(events[0].toPayload().documentId).toBe(result.documentId);
     });
 
     it('should handle DOCX files', async (context) => {
@@ -212,10 +243,10 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
 
       const fileContent = Buffer.from('PK\\x03\\x04'); // DOCX magic number
       const metadata = {
-        tenantId: 'tenant-1',
+        tenantId: TENANT_1,
         filename: 'report.docx',
         mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        uploadedBy: 'user-123',
+        uploadedBy: USER_1,
       };
 
       const result = await orchestrator.ingestFile(fileContent, metadata);
@@ -235,10 +266,10 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
 
       const fileContent = Buffer.from('Confidential legal document');
       const metadata = {
-        tenantId: 'tenant-1',
+        tenantId: TENANT_1,
         filename: 'attorney-client-privileged.pdf',
         mimeType: 'application/pdf',
-        uploadedBy: 'user-123',
+        uploadedBy: USER_1,
       };
 
       const result = await orchestrator.ingestFile(fileContent, metadata);
@@ -259,12 +290,15 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
 
       avScanner.setInfected(true);
 
+      // Must be an ALLOWED MIME type: `validateFile()` runs before the AV scan,
+      // so an `application/x-msdownload` fixture is rejected on MIME grounds and
+      // never exercises the scanner. Disallowed MIME types have their own test.
       const fileContent = Buffer.from('Infected content');
       const metadata = {
-        tenantId: 'tenant-1',
-        filename: 'malware.exe',
-        mimeType: 'application/x-msdownload',
-        uploadedBy: 'user-123',
+        tenantId: TENANT_1,
+        filename: 'malware.pdf',
+        mimeType: 'application/pdf',
+        uploadedBy: USER_AV,
       };
 
       const result = await orchestrator.ingestFile(fileContent, metadata);
@@ -273,13 +307,13 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       expect(result.error).toContain('virus detected');
 
       // Verify document was NOT saved
-      const documents = await repository.findAccessibleByUser('user-123', 'tenant-1');
+      const documents = await repository.findAccessibleByUser(USER_AV, TENANT_1);
       expect(documents).toHaveLength(0);
 
       // Verify failure event was emitted
       const events = eventBus.getPublishedEvents();
       expect(events).toHaveLength(1);
-      expect(events[0].eventType).toBe('DocumentIngestionFailedEvent');
+      expect(events[0].eventType).toBe('document.ingestion_failed');
     });
 
     it('should detect EICAR test virus', async (context) => {
@@ -291,10 +325,10 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       const eicarString = 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*';
 
       const result = await orchestrator.ingestFile(Buffer.from(eicarString), {
-        tenantId: 'tenant-1',
+        tenantId: TENANT_1,
         filename: 'eicar.txt',
         mimeType: 'text/plain',
-        uploadedBy: 'user-123',
+        uploadedBy: USER_1,
       });
 
       expect(result.success).toBe(false);
@@ -313,10 +347,10 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       const largeFile = { length: 55 * 1024 * 1024 } as any; // fake buffer — only .length is checked by validateFile()
 
       const result = await orchestrator.ingestFile(largeFile, {
-        tenantId: 'tenant-1',
+        tenantId: TENANT_1,
         filename: 'large.pdf',
         mimeType: 'application/pdf',
-        uploadedBy: 'user-123',
+        uploadedBy: USER_1,
       });
 
       expect(result.success).toBe(false);
@@ -332,10 +366,10 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       const fileContent = Buffer.from('Executable content');
 
       const result = await orchestrator.ingestFile(fileContent, {
-        tenantId: 'tenant-1',
+        tenantId: TENANT_1,
         filename: 'malware.exe',
         mimeType: 'application/x-msdownload',
-        uploadedBy: 'user-123',
+        uploadedBy: USER_1,
       });
 
       expect(result.success).toBe(false);
@@ -352,10 +386,10 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
 
       const fileContent = Buffer.from('Same content');
       const metadata = {
-        tenantId: 'tenant-1',
+        tenantId: TENANT_1,
         filename: 'duplicate.pdf',
         mimeType: 'application/pdf',
-        uploadedBy: 'user-123',
+        uploadedBy: USER_1,
       };
 
       // First upload
@@ -391,16 +425,16 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       avScanner.setShouldFail(true);
 
       const result = await orchestrator.ingestFile(Buffer.from('test'), {
-        tenantId: 'tenant-1',
+        tenantId: TENANT_1,
         filename: 'test.pdf',
         mimeType: 'application/pdf',
-        uploadedBy: 'user-123',
+        uploadedBy: USER_1,
       });
 
       expect(result.success).toBe(false);
 
       const events = eventBus.getPublishedEvents();
-      expect(events.some((e) => e.eventType === 'DocumentIngestionFailedEvent')).toBe(true);
+      expect(events.some((e) => e.eventType === 'document.ingestion_failed')).toBe(true);
     });
   });
 
@@ -412,10 +446,10 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       }
 
       const result = await orchestrator.ingestFile(Buffer.from('test content'), {
-        tenantId: 'tenant-1',
+        tenantId: TENANT_1,
         filename: 'test.pdf',
         mimeType: 'application/pdf',
-        uploadedBy: 'user-123',
+        uploadedBy: USER_1,
       });
 
       expect(result.success).toBe(true);
@@ -424,7 +458,7 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       expect(document).toBeDefined();
 
       // Check ACL
-      const userAccess = document!.acl.find((ace) => ace.principalId === 'user-123');
+      const userAccess = document!.acl.find((ace) => ace.principalId === USER_1);
       expect(userAccess).toBeDefined();
       expect(userAccess!.accessLevel).toBe('ADMIN');
     });
@@ -437,18 +471,18 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
 
       // Upload document for tenant-1
       const result1 = await orchestrator.ingestFile(Buffer.from('tenant1 doc'), {
-        tenantId: 'tenant-1',
+        tenantId: TENANT_1,
         filename: 'tenant1.pdf',
         mimeType: 'application/pdf',
-        uploadedBy: 'user-tenant1',
+        uploadedBy: USER_TENANT_1,
       });
 
       // Try to access from tenant-2
-      const tenant2Docs = await repository.findAccessibleByUser('user-tenant2', 'tenant-2');
+      const tenant2Docs = await repository.findAccessibleByUser(USER_TENANT_2, TENANT_2);
       expect(tenant2Docs).toHaveLength(0);
 
       // Verify tenant-1 can access
-      const tenant1Docs = await repository.findAccessibleByUser('user-tenant1', 'tenant-1');
+      const tenant1Docs = await repository.findAccessibleByUser(USER_TENANT_1, TENANT_1);
       expect(tenant1Docs.length).toBeGreaterThan(0);
     });
   });
