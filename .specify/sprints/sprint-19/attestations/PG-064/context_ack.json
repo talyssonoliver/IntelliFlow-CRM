@@ -1,0 +1,26 @@
+{
+  "task_id": "PG-064",
+  "title": "Contacts List",
+  "sprint": 19,
+  "acknowledged_by": "Claude Opus 4.8 — autonomous PG-064 reconcile (frontend-lead lens)",
+  "acknowledged_at": "2026-07-25T21:32:53Z",
+  "files_read": [
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+    "apps/web/src/app/contacts/(list)/page.tsx",
+    "apps/web/src/app/contacts/(list)/ContactsPageClient.tsx",
+    "apps/web/src/components/contacts/ContactList.tsx",
+    "apps/web/src/components/contacts/index.ts",
+    "apps/web/src/hooks/use-dynamic-filters.ts",
+    "apps/web/src/components/shared/search-filter-bar.tsx",
+    "apps/api/src/modules/contact/contact.router.ts",
+    "packages/domain/src/crm/contact/Contact.ts"
+  ],
+  "invariants_acknowledged": [
+    "SCOPE IS 'CONTACTS LIST', NOT DEDUP: PG-064 per the CSV is 'Contacts List' with acceptance 'Contacts listed, search working, segments functional'. The dispatch framing's 'ingestion + dedup + reconciliation' conflates it with PG-067 (Import Contacts, deduplication) and PG-068 (Merge Contacts), which DEPEND ON PG-064 (dep 'PG-064:FS'). Dedup/import/merge are explicitly OUT OF SCOPE — inventing them is the exact error the two prior attempts made.",
+    "FEATURE ALREADY BUILT: the three acceptance criteria are already satisfied on main — list via api.contact.list.useQuery + <ContactList> + <Pagination>; search via useDebounce(300ms) + SearchFilterBar → contact.list.search; segments via dynamic status/company/department filters (useContactFilterOptions) + sort. Dependency IFC-089 (Contacts Module Create/Edit/Search) = Completed.",
+    "THE ONLY GAP WAS A DECLARED ARTIFACT: of the three CSV-declared artifacts, page.tsx exists and contact-list.tsx exists as ContactList.tsx (PascalCase, repo standard, exported via index.ts), but apps/web/src/lib/contacts/contact-search.ts did NOT exist. This reconcile creates it honestly by extracting the inline query/sort/filter logic — not a fake-green attestation of a missing file.",
+    "BEHAVIOR-PRESERVING: the extraction is 1:1 with the prior inline logic (getSortParams switch, empty-string→undefined collapsing, companyFilter&&isValidUUID accountId guard, six-way isDefaultQuery predicate). 17 new unit tests assert exact param shapes; the existing (list)/__tests__/page.test.tsx integration suite (29 tests) stays green. No backend/Prisma/tRPC/migration change; no new route.",
+    "PRIOR ATTEMPT WAS STALE: branch feat/pg-064-module-settings had zero commits ahead of origin/main (misidentified PG-064 as a module-settings task). Started clean off origin/main c0f48f2eb.",
+    "UUID GUARD INLINED DELIBERATELY: the app's isValidUUID lives in a React/tRPC hook module (use-dynamic-filters.ts); importing it would couple the pure lib to React and heavy the unit test. The identical regex is inlined in contact-search.ts to keep it dependency-light (spec R3 sanctioned)."
+  ]
+}
