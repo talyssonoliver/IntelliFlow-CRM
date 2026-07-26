@@ -31,10 +31,40 @@
 
 ### Database
 
-- [ ] Migrations tested in staging
-- [ ] Down migrations available and tested
-- [ ] Data backup completed
-- [ ] Performance impact assessed
+First **classify the migration** per
+[`../agent-autonomy-policy.md`](../agent-autonomy-policy.md) (ADR-069):
+
+- **Class A** (additive/backward-compatible/non-destructive) — an agent may run
+  it through production autonomously, but **only** after every gate below
+  passes.
+- **Class B** (backfills, `NOT NULL`/uniqueness on populated data, large-table
+  or locking ops, type narrowing, contract-phase removal, coordinated downtime)
+  — prepare and test autonomously, then **escalate for a human go/no-go before
+  the production mutation**.
+- **Class C** (drop/truncate/reset/irreversible deletion, destructive schema
+  replacement, weakening RLS/tenant isolation, ad-hoc prod DML, unknown target
+  DB or missing recovery evidence) — **human-only, never autonomous. Stop.**
+
+Class A required gates:
+
+- [ ] Independent SQL review completed
+- [ ] Expand/contract compatibility verified (old + new code both run)
+- [ ] Local + real-DB integration tests pass (test DB `localhost:5433`, never
+      `.env.local` prod URL)
+- [ ] Migrations tested in staging (application verified against the migrated
+      DB)
+- [ ] Tenant isolation + auth tests pass
+- [ ] Lock / query-plan / performance impact assessed
+- [ ] Snapshot / forward-recovery plan documented
+- [ ] Feature can be disabled **without** reverting the schema
+- [ ] Post-migration schema + smoke verification pass
+
+**Production command:** use `prisma migrate deploy`
+(`pnpm --filter @intelliflow/db db:migrate`) **only**. **Never** run `db push`,
+`db reset`, or `migrate dev` against production — these are blocked against a
+non-local database by `.claude/hooks/db-destructive-guard.mjs` and
+`tools/scripts/guard-db-target.mjs` unless the deliberate `ALLOW_PROD_DB_OPS=1`
+flag is set.
 
 ### Documentation
 

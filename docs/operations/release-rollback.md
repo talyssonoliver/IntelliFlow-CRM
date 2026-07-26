@@ -97,6 +97,29 @@ sequenceDiagram
    - Watch error rates and latency for 15 minutes
    - Keep previous environment running for quick rollback
 
+### Database Migrations During Deploy
+
+Blue/green requires **expand-first, backward-compatible** schema changes so both
+the old (active) and new (inactive) environments run against the same database
+during the traffic switch. Classify every migration per
+[`./agent-autonomy-policy.md`](./agent-autonomy-policy.md) (ADR-069):
+
+- **Class A** (additive/non-destructive) — compatible with blue/green; an agent
+  may run it autonomously after all Class A gates pass (see
+  [`./runbooks/release-checklist.md`](./runbooks/release-checklist.md)
+  §Database).
+- **Class B** (backfills, `NOT NULL`/uniqueness on populated data, large-table
+  or locking ops, type narrowing, contract-phase removal) — **escalate for a
+  human go/no-go before the production mutation.**
+- **Class C** (drop/truncate/reset, destructive replacement, weakening tenant
+  isolation, ad-hoc prod DML) — **human-only. Stop.**
+
+**Production command:** `prisma migrate deploy`
+(`pnpm --filter @intelliflow/db db:migrate`) **only** — never `db push`,
+`db reset`, or `migrate dev` against production (blocked by the DB guards absent
+`ALLOW_PROD_DB_OPS=1`). Contract-phase column/table drops are a **separate,
+later** Class B/C release, never bundled with the expand.
+
 ## Rollback Procedures
 
 ### Automatic Rollback Triggers
