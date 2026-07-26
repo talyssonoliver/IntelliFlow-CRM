@@ -1,0 +1,40 @@
+{
+  "$comment": "Runtime silent-skip registry (issue #658 — ADR-054 section 9, enforced by tools/scripts/infra-skip-gate.ts). A suite listed here executes ZERO of its collected tests in at least one environment and is therefore reporting green without running. Listing it does not make that acceptable — it makes it VISIBLE and BOUNDED. Every entry needs: a `kind` from the closed enum (infra-gated | nightly-only | ci-inverse | pending-deletion — never claim a kind that isn't true, a dishonest reason is worse than a missing one), a `maxSkipped` CEILING (running more tests than declared is always fine; skipping more than declared fails), a `reviewBy` ISO date after which the entry FAILS the build, and a `reason` carrying a concrete reference in the same grammar ADR-054 annotations use. A reason without a real reference is decoration, not evidence, and is itself a violation. Prefer fixing the infrastructure over adding an entry.",
+  "entries": [
+    {
+      "file": "tests/integration/ingestion/file-ingestion.e2e.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 12,
+      "reviewBy": "2026-10-31",
+      "reason": "ADR-054: #658 — needs a reachable Supabase storage API with the case-documents and case-documents-quarantine buckets. Truly executes only in preship-full-nightly. Eight real defects (incl. a production 500 on documents.upload) accumulated behind this skip; #658 tracks running the orchestration assertions on every PR via a non-Supabase StorageServicePort double."
+    },
+    {
+      "file": "tests/integration/rls-tenant-isolation.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 5,
+      "reviewBy": "2026-10-31",
+      "reason": "ADR-054: #658 — needs a Supabase-style runtime (the `authenticated` role with table GRANTs and active RLS policies). A bare `prisma db push` test DB has neither, so the suite probes and skips rather than failing with 'permission denied for table accounts'."
+    },
+    {
+      "file": "tests/integration/tier-module-gating.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 9,
+      "reviewBy": "2026-10-31",
+      "reason": "ADR-054: #658 — skips whenever createIsolatedTestPrismaClient() returns null (tests/integration/setup.ts), which happens even with DATABASE_URL set if the integration harness has no usable client. Runs where the harness resolves; the ceiling keeps it honest either way."
+    },
+    {
+      "file": "apps/ai-worker/src/chains/__tests__/ollama-benchmark.integration.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 8,
+      "reviewBy": "2026-10-31",
+      "reason": "ADR-054: #658 — IFC-174 accuracy benchmark. Double-gated on RUN_INTEGRATION_TESTS=true AND a live Ollama instance serving mistral at localhost:11434, neither of which exists on a dev box or in CI. Found by this gate's first full 16-project run, not by the original issue triage."
+    },
+    {
+      "file": "tests/integration/connectors/erp.test.ts",
+      "kind": "pending-deletion",
+      "maxSkipped": 19,
+      "reviewBy": "2026-10-31",
+      "reason": "ADR-054: ENG-OPS-002.R17 — the SAP ERP adapter suite is scheduled for deletion under R17 and is already declared in tools/scripts/flaky-test-gate.allowlist.json for the same reason. Remove this entry together with that one when R17 lands."
+    }
+  ]
+}

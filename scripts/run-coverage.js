@@ -16,7 +16,7 @@
  *   node scripts/run-coverage.js --merge-only  # skip test runs, just merge
  */
 
-import { spawn } from 'node:child_process';
+import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -285,6 +285,30 @@ async function mergeCoverage() {
   console.log(`\n✅ Canonical coverage written to: artifacts/coverage/`);
 }
 
+/**
+ * Stamp `artifacts/coverage-parts/RUN_ID.json` with the commit this run measured.
+ * Consumed by `tools/scripts/infra-skip-gate.ts` to prove the per-project manifests
+ * belong to the current HEAD before trusting them. Best-effort: a marker failure
+ * must not break the coverage run — the gate simply degrades to "no verified run".
+ */
+function writeRunIdMarker() {
+  let headSha = null;
+  try {
+    headSha = execSync('git rev-parse HEAD', { cwd: ROOT, encoding: 'utf8' }).trim();
+  } catch {
+    // Not a git checkout (or git unavailable) — leave headSha null; the gate will
+    // treat the manifests as unverifiable rather than silently trusting them.
+  }
+  try {
+    fs.writeFileSync(
+      path.join(PARTS_DIR, 'RUN_ID.json'),
+      JSON.stringify({ headSha, startedAt: new Date().toISOString() }, null, 2)
+    );
+  } catch (err) {
+    console.warn(`  ⚠ could not write RUN_ID.json: ${err.message}`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -298,6 +322,15 @@ async function main() {
       fs.rmSync(PARTS_DIR, { recursive: true, force: true });
     }
     fs.mkdirSync(PARTS_DIR, { recursive: true });
+
+    // Freshness marker for the runtime silent-skip gate (#658,
+    // tools/scripts/infra-skip-gate.ts). This directory is only wiped when THIS
+    // script runs, so a later push with Docker down leaves the previous run's
+    // manifests on disk. Without a marker tying them to a commit, the gate could
+    // reconcile against a stale run and report PASS with no run behind it — the
+    // exact silence-as-success failure it exists to catch. The gate refuses to
+    // read any manifest whose marker does not match the current HEAD.
+    writeRunIdMarker();
 
     console.log(`🧪 Running coverage for ${PROJECTS.length} projects sequentially…`);
 

@@ -119,6 +119,36 @@ function lcovMissing() {
   return !fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/lcov.info'));
 }
 
+// The silent-skip gate (#658) reads the per-project vitest JSON the `coverage`
+// step writes. Same shape as lcovMissing: a pure downstream-artifact check, NOT a
+// second docker probe — if `coverage` was skipped the manifest is absent and this
+// gate degrades to an honest MISSING rather than hard-failing a Docker-down push
+// (a gate that hard-fails when infra is down is a gate people learn to bypass).
+// The RUN_ID marker additionally pins the manifest to a commit; the gate itself
+// re-validates it against HEAD and refuses to reconcile against a stale run.
+function skipManifestMissing() {
+  const marker = path.join(REPO_ROOT, 'artifacts/coverage-parts/RUN_ID.json');
+  if (!fs.existsSync(marker)) return true;
+  // A marker from an EARLIER commit means `coverage` did not run this time (its
+  // output survives because only run-coverage.js wipes coverage-parts/). Treat
+  // that as "no manifest" so the step degrades to an honest MISSING. Without this
+  // the gate would run against a stale manifest — and the gate itself refuses to
+  // return a verdict in that case, which would surface as a hard FAIL on a
+  // Docker-down push instead of the acknowledgeable MISSING we want.
+  try {
+    const { headSha } = JSON.parse(fs.readFileSync(marker, 'utf8'));
+    const head = spawnSync('git', ['rev-parse', 'HEAD'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      shell: process.platform === 'win32',
+    });
+    if (head.status !== 0) return true;
+    return headSha !== head.stdout.trim();
+  } catch {
+    return true;
+  }
+}
+
 // Probe whether an optional IaC CLI (terraform / actionlint) is installed.
 // Missing -> the step SKIPs locally (CI still enforces it). Spawned with a shell
 // on win32 so PATH .exe/.cmd resolution works. NOTE: these local IaC gates catch
@@ -413,6 +443,22 @@ const STEPS = [
     // Depends on the lcov from `coverage`; if that was skipped, skip too.
     skip_if: lcovMissing,
     skip_remediation: 'Run the `coverage` step first (needs the local test DB).',
+    required: true,
+  },
+  {
+    // Issue #658 / ADR-054 §8: runtime complement to the static `flaky-test-gate`
+    // above. That gate is AST-based and deliberately exempts the infra-gating
+    // idioms (`cond ? describe : describe.skip`, `describe.skipIf`, `ctx.skip()`)
+    // because whether they actually skipped is a runtime fact. This one reads the
+    // per-project vitest JSON and fails when a suite executed 0 of N collected
+    // tests without being declared — the state file-ingestion.e2e sat in while
+    // eight real defects (one a production 500) accumulated behind it.
+    id: 'infra-skip-gate',
+    description: 'runtime silent-skip gate (a suite that executed 0 of N collected tests)',
+    cmd: ['pnpm', 'tsx', 'tools/scripts/infra-skip-gate.ts'],
+    skip_if: skipManifestMissing,
+    skip_remediation:
+      'Run the `coverage` step first (needs the local test DB) so the per-project vitest JSON exists.',
     required: true,
   },
   {
