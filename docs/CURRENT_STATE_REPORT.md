@@ -1,13 +1,13 @@
 # Current State Report
-_Generated: 2026-07-25T21:36:21.310Z_
+_Generated: 2026-07-26T10:27:33.769Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 6 continuous tasks.
-- Overall progress: 456/618 tasks completed (73.79%), 160 backlog, 0 blocked, 2 in progress.
-- Numbered sprint progress alone: 451/612 tasks completed or attested inside numbered sprints.
+- Overall progress: 457/618 tasks completed (73.95%), 159 backlog, 0 blocked, 2 in progress.
+- Numbered sprint progress alone: 452/612 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
 - Ready-to-start work: PG-196 (Sprint 18), PG-197 (Sprint 18), PG-198 (Sprint 18), PG-199 (Sprint 18), PG-201 (Sprint 18).
 - Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
@@ -285,9 +285,9 @@ _Generated: 2026-07-25T21:36:21.310Z_
 
 ## Sprint 19 - Sprint 19
 
-- Status: 12/18 completed, 5 backlog, 0 blocked, 1 in progress.
+- Status: 13/18 completed, 4 backlog, 0 blocked, 1 in progress.
 - Primary focus areas: Engineering Operations (8), Core CRM (4), AI/Intelligence (1).
-- Evidence coverage: 12/12 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 13/13 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
 - **IFC-312** — AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).. Originally attested 2026-04-22 with verdict COMPLETE, but a 2026-04-24 code audit (/task-code-audit) identified 7 findings (2 High, 4 Medium, 1 Low) that contradicted the attestation......
@@ -300,8 +300,8 @@ _Generated: 2026-07-25T21:36:21.310Z_
 - **ENG-OPS-002** — Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan). Verifiable baseline of S1-18 delivered state; All required artifacts produced and reproducible; Failures registered, not suppressed
 - **IFC-034** — PHASE-001: Gate 3 Review - £3000 Investment. Scale decision with modern stack validated
 - **IFC-304** — Article Analytics Dashboard. Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%
-- **IFC-306** — Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated. compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...
 - **ENG-OPS-002.R13** — Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests. Skips blocked by lint unless issue-linked; existing 21 reconciled
+- **ENG-OPS-002.R16** — Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger. Backfill the 18 Sprint-18 tasks marked Completed with no canonical attestation.json; Attestations carry real, independently re-derived evidence — never fabricated completeness; Ledger the 177-task GOV-A-002 provenance gap
 
 ## Sprint 20 - Sprint 20
 
