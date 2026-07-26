@@ -345,6 +345,23 @@ describe('checkDuplicateLease', () => {
     fs.writeFileSync(p, 'not-json\n{"agentLeaseId":"local_abc123","status":"active"}\n');
     expect(checkDuplicateLease('local_abc123', p)).toBe(true);
   });
+
+  it('reads lease state from disk (restart-persistence): detects a lease written before this call', () => {
+    // Proves disk-read semantics: write the JSONL externally (simulating a
+    // prior process), then call checkDuplicateLease in a fresh call.
+    // If the function were in-memory-only it would miss the record; disk-read
+    // finds it, proving the function survives process restarts.
+    const p = path.join(tmpDir, 'active-leases.jsonl');
+    const record: LeaseRecord = {
+      agentLeaseId: 'local_restart_test',
+      taskId: 'T-restart',
+      acquiredAt: '2026-07-26T12:00:00Z',
+      status: 'active',
+    };
+    fs.writeFileSync(p, JSON.stringify(record) + '\n');
+    // No in-memory state was set — only the on-disk file was written.
+    expect(checkDuplicateLease('local_restart_test', p)).toBe(true);
+  });
 });
 
 // ─── validateContractWithLeaseCheck — duplicate-lease rejection ───────────────
