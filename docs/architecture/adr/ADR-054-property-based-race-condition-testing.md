@@ -311,6 +311,77 @@ Added to root `package.json`:
 "test:concurrency":     "vitest run --project=concurrency"
 ```
 
+### 9. Runtime silent-skip visibility (issue #658)
+
+Section 6 above establishes the _static_ skip policy and closes with a
+deliberate carve-out:
+
+> It deliberately does not flag Playwright's imperative
+> `test.skip(condition[, reason])` / `ctx.skip()` runtime-skip forms or the
+> `describe.skipIf(...)` / `cond ? describe : describe.skip` infra-availability
+> idioms used across `tests/integration/**` — those are a different,
+> already-accepted pattern, not the bug-documenting hard skip this policy
+> targets.
+
+That carve-out is **correct and stands**: whether a conditional gate actually
+skipped is a _runtime_ fact, unknowable from the AST, so a static gate cannot
+judge it. What went wrong is that nothing else judged it either.
+
+**The failure it allowed.**
+`tests/integration/ingestion/file-ingestion.e2e.test.ts` gates on a reachable
+Supabase storage API with the `case-documents` and `case-documents-quarantine`
+buckets. Local dev and per-PR CI have neither, so the suite passed in seconds
+having executed nothing, and truly ran only in `preship-full-nightly`. When
+ENG-OPS-003.Gap9 forced it to run it surfaced **eight real failures**, including
+a production defect — `caseDocumentSchema` validated
+`tenantId`/`createdBy`/`updatedBy`/`principalId` as `z.uuid()` while Prisma
+issues `@default(cuid())` ids, so `documents.upload` returned 500 for every
+tenant created through normal onboarding. A suite that silently skips is worse
+than no suite: it reports green **and** suppresses the signal. A repo-wide sweep
+found **four** suites in that state, not the two the issue named.
+
+**Decision.** These idioms remain accepted, but from now on they must be
+**disclosed and bounded**. `tools/scripts/infra-skip-gate.ts`
+(`pnpm run validate:infra-skip-gate`) is a _runtime_ complement to the static
+gate, wired into `scripts/pre-ship.mjs` and the CI `integration` job. It reads
+the per-project Vitest JSON that `scripts/run-coverage.js` already emits and
+fails when a test file **collected more than zero tests but executed none**,
+unless declared in `tools/scripts/infra-skip-gate.registry.json`.
+
+Division of labour: **section 6 governs whether a skip is _explained_; section 9
+governs whether a skip is _disclosed_.**
+
+Each declaration carries a `kind` (`infra-gated` | `nightly-only` | `ci-inverse`
+| `pending-deletion` — a closed enum, because forcing a nightly-only suite to
+claim "infra-gated" would be a dishonest reason, and a dishonest reason is worse
+than a missing one), a `maxSkipped` **ceiling**, a mandatory `reviewBy` date
+after which the entry fails the build, and a `reason` in the same reference
+grammar section 6 requires. As there, **a reason that carries no concrete
+reference is itself a violation** — a comment that "documents" a skip without
+linking to anything checkable is decoration, not evidence.
+
+Two design points worth recording, because both are load-bearing:
+
+1. **The declaration is a ceiling, not an expected value.** The skip set is
+   environment-dependent — the same registry is evaluated on a laptop, in PR CI,
+   and in the nightly. `file-ingestion` legitimately runs _fully_ in the
+   nightly, which is where it is supposed to run. A rule of "declared suite now
+   runs fully → fail" would therefore fail the one environment the suite works
+   in. Running more tests than declared is always an improvement and never
+   fails; `reviewBy` supplies the burn-down pressure instead.
+2. **The gate never trusts an unverified run.** `run-coverage.js` only wipes
+   `artifacts/coverage-parts/` when it actually runs, so a Docker-down push can
+   leave a previous run's manifests on disk. Reconciling against those would
+   report PASS with no run behind it — precisely the silence-as-success bug this
+   section exists to eliminate. Every run is therefore pinned by
+   `artifacts/coverage-parts/RUN_ID.json` (`{headSha, startedAt}`) and anything
+   unverifiable degrades to an honest MISSING, never to a PASS.
+
+**Scope limit, stated plainly.** This changes _visibility and governance_, not
+_execution frequency_. The gated suites still run only where their
+infrastructure exists; making the orchestration assertions run on every PR (via
+a non-Supabase `StorageServicePort` double) remains open under issue #658.
+
 ### Positive Consequences
 
 - The six Critical races (RACE-AUDIT-01, RACE-RBAC-M1, RACE-ENTIT-03,
