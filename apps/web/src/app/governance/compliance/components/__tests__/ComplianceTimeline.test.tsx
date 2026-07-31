@@ -86,7 +86,8 @@ describe('ComplianceTimeline', () => {
       render(<ComplianceTimeline />);
 
       await waitFor(() => {
-        expect(screen.getByText(/\d+ upcoming events?/)).toBeInTheDocument();
+        // Anchored + bounded: sonarjs/slow-regex flags the unbounded `\d+` form.
+        expect(screen.getByText(/^\d{1,4} upcoming events?$/)).toBeInTheDocument();
       });
     });
   });
@@ -126,7 +127,8 @@ describe('ComplianceTimeline', () => {
       await waitFor(() => {
         // Should show month name and year
         const heading = screen.getByRole('heading', { level: 3 });
-        expect(heading.textContent).toMatch(/\w+ \d{4}/);
+        // Anchored + bounded: sonarjs/slow-regex flags the unbounded `\w+` form.
+        expect(heading.textContent).toMatch(/^[A-Za-z]{3,12} \d{4}$/);
       });
     });
 
@@ -150,29 +152,38 @@ describe('ComplianceTimeline', () => {
       });
     });
 
-    it('should navigate to previous month when clicking prev button', async () => {
-      const user = userEvent.setup();
-      render(<ComplianceTimeline />);
+    // Pinned to the 31st on purpose. This assertion used to run against the real
+    // clock, so it only exercised the end-of-month `setMonth` overflow on the
+    // ~3 days a month where it reproduces — it passed by luck for weeks and then
+    // reddened the nightly on 2026-07-31. Stepping back from July 31 sets June 31,
+    // which JS normalises to July 1, so the month never changed.
+    it.each([
+      ['2026-07-31T12:00:00Z', 'July 2026', 'June 2026'],
+      ['2026-03-31T12:00:00Z', 'March 2026', 'February 2026'],
+      ['2026-07-15T12:00:00Z', 'July 2026', 'June 2026'],
+    ])('navigates back from %s even when the day overflows', async (now, from, to) => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      vi.setSystemTime(new Date(now));
+      try {
+        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+        render(<ComplianceTimeline />);
 
-      await waitFor(() => {
-        expect(screen.getByText('Compliance Timeline')).toBeInTheDocument();
-      });
+        await waitFor(() => {
+          expect(screen.getByText('Compliance Timeline')).toBeInTheDocument();
+        });
 
-      const currentHeading = screen.getByRole('heading', { level: 3 });
-      const initialMonth = currentHeading.textContent;
+        expect(screen.getByRole('heading', { level: 3 }).textContent).toBe(from);
 
-      // Click prev button - find button containing chevron_left
-      const chevronLeft = screen.getByText('chevron_left');
-      const prevButton = chevronLeft.closest('button');
-      if (prevButton) {
-        await user.click(prevButton);
+        const prevButton = screen.getByText('chevron_left').closest('button');
+        expect(prevButton).not.toBeNull();
+        await user.click(prevButton!);
+
+        await waitFor(() => {
+          expect(screen.getByRole('heading', { level: 3 }).textContent).toBe(to);
+        });
+      } finally {
+        vi.useRealTimers();
       }
-
-      await waitFor(() => {
-        const newHeading = screen.getByRole('heading', { level: 3 });
-        // Month should have changed
-        expect(newHeading.textContent).not.toBe(initialMonth);
-      });
     });
   });
 
