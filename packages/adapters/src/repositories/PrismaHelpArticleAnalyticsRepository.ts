@@ -24,6 +24,28 @@ import type {
 /** Minimal transaction-client shape used by the increment callbacks. */
 type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
+/**
+ * Is this P2002 the idempotency guard firing, or a different unique violation?
+ *
+ * Only the dedup table's unique index carries `idempotencyKey`
+ * (`help_article_analytics_dedup_tenantId_idempotencyKey_key`); the daily
+ * aggregates are keyed on tenant/article/day and tenant/term/day. Treating ANY
+ * P2002 as "already counted" is unsafe: the increment is a Prisma `upsert`,
+ * which is not atomic against a concurrent insert, so two racing upserts on the
+ * same aggregate key can raise P2002 from the create branch. That would report
+ * a successful dedup while the increment was actually lost — silently
+ * undercounting, with no error and no log, which is precisely the failure this
+ * class exists to prevent.
+ *
+ * `meta.target` is a string[] on some drivers and the raw constraint name on
+ * others (the pg driver adapter reports the index name), so match both shapes.
+ */
+function isDedupGuardConflict(err: Prisma.PrismaClientKnownRequestError): boolean {
+  const target = err.meta?.target;
+  const parts = Array.isArray(target) ? target : [target];
+  return parts.some((p) => typeof p === 'string' && /idempotency_?key/i.test(p));
+}
+
 export class PrismaHelpArticleAnalyticsRepository implements HelpArticleAnalyticsRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -173,7 +195,8 @@ export class PrismaHelpArticleAnalyticsRepository implements HelpArticleAnalytic
       if (
         namespacedKey &&
         err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002'
+        err.code === 'P2002' &&
+        isDedupGuardConflict(err)
       ) {
         return { recorded: false, deduped: true };
       }
