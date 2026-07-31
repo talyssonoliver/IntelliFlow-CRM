@@ -37,13 +37,35 @@ type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
  * undercounting, with no error and no log, which is precisely the failure this
  * class exists to prevent.
  *
- * `meta.target` is a string[] on some drivers and the raw constraint name on
- * others (the pg driver adapter reports the index name), so match both shapes.
+ * The shape of `err.meta` differs by driver, so gather every place the offending
+ * constraint can surface. Under Prisma 7's pg driver adapter there is NO
+ * `meta.target` at all — it reports:
+ *
+ *   meta.modelName = 'HelpArticleAnalyticsDedup'
+ *   meta.driverAdapterError.cause.constraint.fields = ['"tenantId"', '"idempotencyKey"']
+ *   ...cause.originalMessage = 'duplicate key value violates unique constraint
+ *                               "help_article_analytics_dedup_tenantId_idempotencyKey_key"'
+ *
+ * while other drivers populate `meta.target` as a field array or a raw index
+ * name. Matching only `meta.target` silently rethrew every genuine replay on the
+ * real database.
  */
 function isDedupGuardConflict(err: Prisma.PrismaClientKnownRequestError): boolean {
-  const target = err.meta?.target;
-  const parts = Array.isArray(target) ? target : [target];
-  return parts.some((p) => typeof p === 'string' && /idempotency_?key/i.test(p));
+  const meta = (err.meta ?? {}) as Record<string, any>;
+
+  // Most reliable signal when present: the failing write's own model.
+  if (meta.modelName === 'HelpArticleAnalyticsDedup') return true;
+
+  const cause = meta.driverAdapterError?.cause;
+  const candidates: unknown[] = [
+    ...(Array.isArray(meta.target) ? meta.target : [meta.target]),
+    ...(Array.isArray(cause?.constraint?.fields) ? cause.constraint.fields : []),
+    cause?.constraint?.name,
+    cause?.constraint,
+    cause?.originalMessage,
+  ];
+
+  return candidates.some((c) => typeof c === 'string' && /idempotency_?key/i.test(c));
 }
 
 export class PrismaHelpArticleAnalyticsRepository implements HelpArticleAnalyticsRepository {
