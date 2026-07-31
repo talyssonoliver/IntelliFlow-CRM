@@ -30,6 +30,14 @@
       "reason": "ADR-054: #658 — IFC-174 accuracy benchmark. Double-gated on RUN_INTEGRATION_TESTS=true AND a live Ollama instance serving mistral at localhost:11434, neither of which exists on a dev box or in CI. Found by this gate's first full 16-project run, not by the original issue triage."
     },
     {
+      "file": "apps/api/src/modules/contact/__tests__/contact-merge.bench.test.ts",
+      "kind": "ci-inverse",
+      "maxSkipped": 4,
+      "reviewBy": "2026-10-31",
+      "reason": "ADR-054: IFC-310 Step 9.5 — the NF-002 merge p95 benchmark is gated behind describe.skipIf(IS_CI) because the timing loop is flaky on shared CI runners, so it executes only on a developer machine via `pnpm --filter @intelliflow/api test contact-merge.bench`. Declared rather than forced to run: making a wall-clock benchmark gate CI would reintroduce exactly the flake the skip exists to avoid. Results land in artifacts/benchmarks/IFC-310-merge.json.",
+      "$comment": "Surfaced by this gate on the 2026-07-28..07-30 nightlies (runs 30327556629 / 30421163884 / 30512699969) as the only R1 violation."
+    },
+    {
       "file": "tests/integration/connectors/erp.test.ts",
       "kind": "pending-deletion",
       "maxSkipped": 19,
