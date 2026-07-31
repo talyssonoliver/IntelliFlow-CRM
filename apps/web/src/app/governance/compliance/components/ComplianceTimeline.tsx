@@ -199,7 +199,13 @@ export function ComplianceTimeline() {
   }, [fetchEvents]);
 
   const navigateMonth = (direction: number) => {
+    // Anchor to the 1st BEFORE shifting the month. `setMonth` keeps the current
+    // day-of-month, so stepping back from the 31st lands on e.g. June 31, which
+    // JS normalises forward to July 1 — the month never changes and the button
+    // appears dead. Only reproducible on the 29th-31st, which is why it stayed
+    // hidden until a nightly happened to run on July 31.
     const newDate = new Date(currentDate);
+    newDate.setDate(1);
     newDate.setMonth(newDate.getMonth() + direction);
     setCurrentDate(newDate);
   };
