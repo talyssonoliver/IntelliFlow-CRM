@@ -11,10 +11,38 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Prisma, type PrismaClient } from '@intelliflow/db';
 import { PrismaHelpArticleAnalyticsRepository } from '../PrismaHelpArticleAnalyticsRepository';
 
-function p2002(): Prisma.PrismaClientKnownRequestError {
+/** The dedup guard's own unique index — what the pg driver reports on retry. */
+const DEDUP_INDEX = 'help_article_analytics_dedup_tenantId_idempotencyKey_key';
+/** The view aggregate's unique key — a DIFFERENT constraint, not a dedup hit. */
+const VIEW_DAILY_INDEX = 'help_article_view_daily_tenantId_articleId_day_key';
+
+function p2002(meta: Record<string, unknown>): Prisma.PrismaClientKnownRequestError {
   return new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
     code: 'P2002',
     clientVersion: 'test',
+    meta,
+  });
+}
+
+/**
+ * The EXACT meta Prisma 7's pg driver adapter produces — captured from a real
+ * duplicate insert against the test database, not invented. Note there is no
+ * `meta.target`: an earlier fix matched only that field, passed these unit
+ * tests because the mock asserted the same wrong assumption, and then rethrew
+ * every genuine replay on the real DB. Keep this fixture faithful to the driver.
+ */
+function driverP2002(indexName: string, fields: string[], modelName?: string) {
+  return p2002({
+    ...(modelName ? { modelName } : {}),
+    driverAdapterError: {
+      name: 'DriverAdapterError',
+      cause: {
+        originalCode: '23505',
+        originalMessage: `duplicate key value violates unique constraint "${indexName}"`,
+        kind: 'UniqueConstraintViolation',
+        constraint: { fields: fields.map((f) => `"${f}"`) },
+      },
+    },
   });
 }
 
@@ -81,8 +109,10 @@ describe('PrismaHelpArticleAnalyticsRepository', () => {
       expect(m.dedupCreate.mock.calls[0][0].data.idempotencyKey).toBe('view:abc');
     });
 
-    it('returns deduped when the guard hits a unique violation (P2002)', async () => {
-      m.dedupCreate.mockRejectedValueOnce(p2002());
+    it('returns deduped on the pg driver adapter shape (no meta.target)', async () => {
+      m.dedupCreate.mockRejectedValueOnce(
+        driverP2002(DEDUP_INDEX, ['tenantId', 'idempotencyKey'], 'HelpArticleAnalyticsDedup')
+      );
       const res = await m.repo.recordArticleView({
         tenantId: 't1',
         articleId: 'a1',
@@ -90,6 +120,58 @@ describe('PrismaHelpArticleAnalyticsRepository', () => {
         occurredAt,
       });
       expect(res).toEqual({ recorded: false, deduped: true });
+    });
+
+    it('returns deduped from the constraint fields alone, without modelName', async () => {
+      m.dedupCreate.mockRejectedValueOnce(driverP2002(DEDUP_INDEX, ['tenantId', 'idempotencyKey']));
+      const res = await m.repo.recordArticleView({
+        tenantId: 't1',
+        articleId: 'a1',
+        idempotencyKey: 'abc',
+        occurredAt,
+      });
+      expect(res).toEqual({ recorded: false, deduped: true });
+    });
+
+    it('accepts the legacy field-array form of meta.target', async () => {
+      m.dedupCreate.mockRejectedValueOnce(p2002({ target: ['tenantId', 'idempotencyKey'] }));
+      const res = await m.repo.recordArticleView({
+        tenantId: 't1',
+        articleId: 'a1',
+        idempotencyKey: 'abc',
+        occurredAt,
+      });
+      expect(res).toEqual({ recorded: false, deduped: true });
+    });
+
+    // A P2002 from the AGGREGATE key is a lost increment, not a replay: Prisma's
+    // `upsert` is not atomic against a concurrent insert, so two racing writers
+    // on the same tenant/article/day can hit this. Swallowing it as "deduped"
+    // would silently undercount with no error and no log.
+    it('rethrows a P2002 raised by the aggregate key, not the dedup guard', async () => {
+      m.viewUpsert.mockRejectedValueOnce(
+        driverP2002(VIEW_DAILY_INDEX, ['tenantId', 'articleId', 'day'], 'HelpArticleViewDaily')
+      );
+      await expect(
+        m.repo.recordArticleView({
+          tenantId: 't1',
+          articleId: 'a1',
+          idempotencyKey: 'abc',
+          occurredAt,
+        })
+      ).rejects.toMatchObject({ code: 'P2002' });
+    });
+
+    it('rethrows a P2002 carrying no identifiable constraint', async () => {
+      m.dedupCreate.mockRejectedValueOnce(p2002({}));
+      await expect(
+        m.repo.recordArticleView({
+          tenantId: 't1',
+          articleId: 'a1',
+          idempotencyKey: 'abc',
+          occurredAt,
+        })
+      ).rejects.toMatchObject({ code: 'P2002' });
     });
 
     it('rethrows non-P2002 errors', async () => {

@@ -24,6 +24,50 @@ import type {
 /** Minimal transaction-client shape used by the increment callbacks. */
 type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
+/**
+ * Is this P2002 the idempotency guard firing, or a different unique violation?
+ *
+ * Only the dedup table's unique index carries `idempotencyKey`
+ * (`help_article_analytics_dedup_tenantId_idempotencyKey_key`); the daily
+ * aggregates are keyed on tenant/article/day and tenant/term/day. Treating ANY
+ * P2002 as "already counted" is unsafe: the increment is a Prisma `upsert`,
+ * which is not atomic against a concurrent insert, so two racing upserts on the
+ * same aggregate key can raise P2002 from the create branch. That would report
+ * a successful dedup while the increment was actually lost — silently
+ * undercounting, with no error and no log, which is precisely the failure this
+ * class exists to prevent.
+ *
+ * The shape of `err.meta` differs by driver, so gather every place the offending
+ * constraint can surface. Under Prisma 7's pg driver adapter there is NO
+ * `meta.target` at all — it reports:
+ *
+ *   meta.modelName = 'HelpArticleAnalyticsDedup'
+ *   meta.driverAdapterError.cause.constraint.fields = ['"tenantId"', '"idempotencyKey"']
+ *   ...cause.originalMessage = 'duplicate key value violates unique constraint
+ *                               "help_article_analytics_dedup_tenantId_idempotencyKey_key"'
+ *
+ * while other drivers populate `meta.target` as a field array or a raw index
+ * name. Matching only `meta.target` silently rethrew every genuine replay on the
+ * real database.
+ */
+function isDedupGuardConflict(err: Prisma.PrismaClientKnownRequestError): boolean {
+  const meta = (err.meta ?? {}) as Record<string, any>;
+
+  // Most reliable signal when present: the failing write's own model.
+  if (meta.modelName === 'HelpArticleAnalyticsDedup') return true;
+
+  const cause = meta.driverAdapterError?.cause;
+  const candidates: unknown[] = [
+    ...(Array.isArray(meta.target) ? meta.target : [meta.target]),
+    ...(Array.isArray(cause?.constraint?.fields) ? cause.constraint.fields : []),
+    cause?.constraint?.name,
+    cause?.constraint,
+    cause?.originalMessage,
+  ];
+
+  return candidates.some((c) => typeof c === 'string' && /idempotency_?key/i.test(c));
+}
+
 export class PrismaHelpArticleAnalyticsRepository implements HelpArticleAnalyticsRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -173,7 +217,8 @@ export class PrismaHelpArticleAnalyticsRepository implements HelpArticleAnalytic
       if (
         namespacedKey &&
         err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002'
+        err.code === 'P2002' &&
+        isDedupGuardConflict(err)
       ) {
         return { recorded: false, deduped: true };
       }
