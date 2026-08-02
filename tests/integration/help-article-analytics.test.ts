@@ -16,7 +16,7 @@
  * Skips cleanly when DATABASE_URL is not set.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
 // Relative source imports: the top-level `resolve.alias` is not inherited by the
 // `integration` vitest project, so `@intelliflow/*` package names don't resolve
@@ -46,9 +46,33 @@ const OCCURRED = new Date('2026-07-20T12:00:00Z');
 describeDb('HelpArticleAnalytics integration (real DB)', () => {
   let prisma: any;
   let repo: PrismaHelpArticleAnalyticsRepository;
+  // Set once the fixtures are in place. Gates both the tests and the cleanup:
+  // without it, a failed beforeAll makes afterAll throw a second, noisier error
+  // against a connection that was never usable.
+  let dbReady = false;
+
+  beforeEach((ctx) => {
+    if (!dbReady) ctx.skip();
+  });
 
   beforeAll(async () => {
     prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: DB_URL! }) });
+
+    // A set DATABASE_URL does NOT mean a reachable database. `release.yml` runs
+    // this lane with a deliberate stub URL (postgresql://stub:stub@localhost/stub)
+    // and provisions no Postgres, so gating on `DB_URL` alone made every hook
+    // throw PrismaClientKnownRequestError and reddened the Release workflow.
+    // Probe the connection and skip cleanly instead — same shape as
+    // rls-tenant-isolation.test.ts.
+    try {
+      await prisma.$queryRawUnsafe('SELECT 1');
+    } catch {
+      console.log('⏭️  Skipping help-article-analytics integration test: database unreachable');
+      await prisma.$disconnect().catch(() => {});
+      prisma = null;
+      return; // beforeEach skips every test
+    }
+
     repo = new PrismaHelpArticleAnalyticsRepository(prisma);
 
     for (const [id, slug] of [
@@ -78,10 +102,15 @@ describeDb('HelpArticleAnalytics integration (real DB)', () => {
       });
     await mkArticle(ARTICLE_A, TENANT_A, `${RUN}-art-a`);
     await mkArticle(ARTICLE_B, TENANT_B, `${RUN}-art-b`);
+    dbReady = true;
   });
 
   afterAll(async () => {
     if (!prisma) return;
+    if (!dbReady) {
+      await prisma.$disconnect().catch(() => {});
+      return;
+    }
     // Cascades remove analytics rows tied to these articles/tenants.
     await prisma.helpArticle.deleteMany({ where: { id: { in: [ARTICLE_A, ARTICLE_B] } } });
     await prisma.helpArticleSearchNoResultDaily.deleteMany({
