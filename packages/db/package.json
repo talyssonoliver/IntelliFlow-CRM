@@ -54,12 +54,12 @@
   },
   "dependencies": {
     "@intelliflow/domain": "workspace:*",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0"
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1"
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
-    "@supabase/supabase-js": "^2.108.2",
+    "@supabase/supabase-js": "^2.111.0",
     "@types/node": "^25.9.2",
     "prisma": "^7.8.0",
     "prisma-field-encryption": "^1.6.0",

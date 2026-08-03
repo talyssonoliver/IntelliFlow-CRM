@@ -162,7 +162,7 @@
     "@fast-check/vitest": "0.4.1",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.60.0",
-    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/adapter-pg": "^7.9.1",
     "@testcontainers/postgresql": "^12.0.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -170,8 +170,8 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^25.9.2",
     "@types/papaparse": "^5.3.14",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "@typescript-eslint/eslint-plugin": "^8.61.0",
     "@typescript-eslint/parser": "^8.61.0",
     "@vitest/coverage-istanbul": "4.1.8",
@@ -179,7 +179,7 @@
     "axe-core": "^4.12.0",
     "concurrently": "^10.0.3",
     "cspell": "^10.0.1",
-    "csv-parse": "^7.0.0",
+    "csv-parse": "^7.0.1",
     "dependency-cruiser": "^17.4.3",
     "dotenv-cli": "^11.0.0",
     "eslint": "^10.4.1",
@@ -205,8 +205,8 @@
     "papaparse": "^5.5.4",
     "prettier": "^3.8.3",
     "puppeteer": "^25.1.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "subset-font": "^2.5.0",
     "tsx": "^4.22.4",
     "turbo": "^2.9.16",
@@ -289,6 +289,6 @@
     }
   },
   "dependencies": {
-    "jose": "^6.2.3"
+    "jose": "^6.2.5"
   }
 }
