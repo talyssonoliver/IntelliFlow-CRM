@@ -165,7 +165,7 @@ jobs:
 
       - name: Run OSV Scanner
         # H0 gate — see NPM Audit job for rationale.
-        uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
+        uses: google/osv-scanner-action/osv-scanner-action@v2.5.0
         with:
           scan-args: |-
             --lockfile=pnpm-lock.yaml
