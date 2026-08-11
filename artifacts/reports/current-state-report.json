@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-26T10:27:33.769Z",
+  "generatedAt": "2026-08-11T19:28:03.381Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -398,13 +398,16 @@
       ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R02/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R03/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R10/attestation.json",
+      ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R13/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R16/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-003/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-003.Gap12-E2EAPIServerHarness/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-003.Gap13-DocsBuildNoop/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-003.Gap14-FinalShaAttest/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-003.Gap2-CodeQL/attestation.json",
+      ".specify/sprints/sprint-19/attestations/ENG-OPS-003.Gap9-FileIngestionFailures/attestation.json",
       ".specify/sprints/sprint-19/attestations/IFC-033/attestation.json",
+      ".specify/sprints/sprint-19/attestations/IFC-304/attestation.json",
       ".specify/sprints/sprint-19/attestations/IFC-306/attestation.json",
       ".specify/sprints/sprint-19/attestations/IFC-312/attestation.json",
       ".specify/sprints/sprint-19/attestations/PG-064/attestation.json",
@@ -544,11 +547,11 @@
     "totalTasks": 618,
     "totalNumberedSprintTasks": 612,
     "continuousTaskCount": 6,
-    "completedTasks": 457,
-    "backlogTasks": 159,
+    "completedTasks": 458,
+    "backlogTasks": 157,
     "blockedTasks": 0,
-    "completionPercentage": 73.95,
-    "inProgressTasks": 2,
+    "completionPercentage": 74.11,
+    "inProgressTasks": 3,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -572,6 +575,12 @@
         "status": "In Progress",
         "sprint": 18,
         "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-257/attestation.json"
+      },
+      {
+        "taskId": "IFC-304",
+        "status": "In Progress",
+        "sprint": 19,
+        "attestationPath": ".specify/sprints/sprint-19/attestations/IFC-304/attestation.json"
       },
       {
         "taskId": "PG-196",
@@ -20219,14 +20228,47 @@
       "name": "Sprint 19",
       "summarySource": "specify",
       "totalTasks": 18,
-      "completedTasks": 13,
-      "backlogTasks": 4,
+      "completedTasks": 14,
+      "backlogTasks": 2,
       "blockedTasks": 0,
-      "inProgressTasks": 1,
-      "attestedCompletedTasks": 13,
+      "inProgressTasks": 2,
+      "attestedCompletedTasks": 14,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Engineering Operations (8), Core CRM (4), AI/Intelligence (1).",
       "notableCompleted": [
+        {
+          "taskId": "ENG-OPS-002.R13",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "Engineering Operations",
+          "title": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+          "description": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+          "summary": "R13's actual implementation shipped in commit b8ed885c9 (PR #619, merged 2026-07-23) but was never attested and the Sprint_plan.csv row was left at Backlog/0% — a pure evidence/CSV sync gap, not missing engineering work.......",
+          "definitionOfDone": "Skips blocked by lint unless issue-linked; existing 21 reconciled; verified by: pnpm lint",
+          "definitionOfDoneSnapshot": "eslint no-disabled-tests gate added (allow-list w/ linked issue); 21 skipped property tests reconciled",
+          "dependencies": [
+            "ENG-OPS-002.R02",
+            "ENG-OPS-002.R10"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R13/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-08-11T20:20:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 3,
+            "met": 3,
+            "missed": 0
+          }
+        },
         {
           "taskId": "IFC-312",
           "sprint": 19,
@@ -20356,41 +20398,42 @@
             "met": 0,
             "missed": 0
           }
-        },
+        }
+      ],
+      "openTasks": [
         {
-          "taskId": "PG-166",
+          "taskId": "IFC-304",
           "sprint": 19,
-          "status": "Completed",
-          "section": "Core CRM",
-          "title": "Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90",
-          "description": "Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90",
-          "summary": "All implementation code, tests, configs, and documentation are complete. 3 test regressions fixed this session (SVG role='img', heading text, EmptyState refactor). Pre-existing build blocker fixed (unused @ts-expect-error).... Lighthouse CI audit on / route;...",
-          "definitionOfDone": "Lighthouse CI audit on / route; Performance >=90, Accessibility >=90, TTI <1s; results saved to artifacts; ADR-027 verification confirmed",
-          "definitionOfDoneSnapshot": "Lighthouse CI audit on / route; Performance >=90, Accessibility >=90, TTI under 1s; results saved to artifacts; ADR-027 verification confirmed",
+          "status": "In Progress",
+          "section": "Support",
+          "title": "Article Analytics Dashboard — PR A: analytics foundation + instrumentation",
+          "description": "Article Analytics Dashboard",
+          "summary": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
+          "definitionOfDone": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
           "dependencies": [
-            "PG-129"
+            "IFC-303",
+            "PG-180"
           ],
           "attestation": {
             "exists": true,
-            "path": ".specify/sprints/sprint-19/attestations/PG-166/attestation.json",
+            "path": ".specify/sprints/sprint-19/attestations/IFC-304/attestation.json",
             "verdict": "COMPLETE",
-            "timestamp": "2026-04-11T17:00:00.000Z",
+            "timestamp": null,
             "sprintFolder": 19
           },
           "validationSummary": {
-            "total": 4,
-            "passed": 4,
+            "total": 0,
+            "passed": 0,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 1,
+            "total": 0,
             "met": 0,
             "missed": 0
           }
-        }
-      ],
-      "openTasks": [
+        },
         {
           "taskId": "ENG-OPS-002",
           "sprint": 19,
@@ -20459,72 +20502,6 @@
           }
         },
         {
-          "taskId": "IFC-304",
-          "sprint": 19,
-          "status": "Backlog",
-          "section": "Support",
-          "title": "Article Analytics Dashboard",
-          "description": "Article Analytics Dashboard",
-          "summary": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
-          "definitionOfDone": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
-          "dependencies": [
-            "IFC-303",
-            "PG-180"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "ENG-OPS-002.R13",
-          "sprint": 19,
-          "status": "Backlog",
-          "section": "Engineering Operations",
-          "title": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
-          "description": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
-          "summary": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
-          "definitionOfDone": "Skips blocked by lint unless issue-linked; existing 21 reconciled; verified by: pnpm lint",
-          "definitionOfDoneSnapshot": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
-          "dependencies": [
-            "ENG-OPS-002.R02",
-            "ENG-OPS-002.R10"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
           "taskId": "ENG-OPS-002.R16",
           "sprint": 19,
           "status": "Backlog",
@@ -20561,8 +20538,8 @@
         {
           "section": "Engineering Operations",
           "total": 8,
-          "completed": 5,
-          "open": 3
+          "completed": 6,
+          "open": 2
         },
         {
           "section": "Core CRM",
@@ -20804,9 +20781,9 @@
         {
           "taskId": "IFC-304",
           "sprint": 19,
-          "status": "Backlog",
+          "status": "In Progress",
           "section": "Support",
-          "title": "Article Analytics Dashboard",
+          "title": "Article Analytics Dashboard — PR A: analytics foundation + instrumentation",
           "description": "Article Analytics Dashboard",
           "summary": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
           "definitionOfDone": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
@@ -20816,11 +20793,11 @@
             "PG-180"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/IFC-304/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 19
           },
           "validationSummary": {
             "total": 0,
@@ -21066,33 +21043,33 @@
         {
           "taskId": "ENG-OPS-002.R13",
           "sprint": 19,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Engineering Operations",
           "title": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
           "description": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
-          "summary": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
+          "summary": "R13's actual implementation shipped in commit b8ed885c9 (PR #619, merged 2026-07-23) but was never attested and the Sprint_plan.csv row was left at Backlog/0% — a pure evidence/CSV sync gap, not missing engineering work.......",
           "definitionOfDone": "Skips blocked by lint unless issue-linked; existing 21 reconciled; verified by: pnpm lint",
-          "definitionOfDoneSnapshot": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
+          "definitionOfDoneSnapshot": "eslint no-disabled-tests gate added (allow-list w/ linked issue); 21 skipped property tests reconciled",
           "dependencies": [
             "ENG-OPS-002.R02",
             "ENG-OPS-002.R10"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R13/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-08-11T20:20:00Z",
+            "sprintFolder": 19
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 3,
+            "passed": 3,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 3,
+            "met": 3,
             "missed": 0
           }
         },

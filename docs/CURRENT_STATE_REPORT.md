@@ -1,13 +1,13 @@
 # Current State Report
-_Generated: 2026-07-26T10:27:33.769Z_
+_Generated: 2026-08-11T19:28:03.381Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 6 continuous tasks.
-- Overall progress: 457/618 tasks completed (73.95%), 159 backlog, 0 blocked, 2 in progress.
-- Numbered sprint progress alone: 452/612 tasks completed or attested inside numbered sprints.
+- Overall progress: 458/618 tasks completed (74.11%), 157 backlog, 0 blocked, 3 in progress.
+- Numbered sprint progress alone: 453/612 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
 - Ready-to-start work: PG-196 (Sprint 18), PG-197 (Sprint 18), PG-198 (Sprint 18), PG-199 (Sprint 18), PG-201 (Sprint 18).
 - Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
@@ -16,7 +16,7 @@ _Generated: 2026-07-26T10:27:33.769Z_
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
 - CSV marks these tasks completed without a canonical attestation: IFC-043, IFC-052, IFC-071, PG-110, PG-114, PG-127, PG-147, IFC-199, IFC-201, IFC-204.
-- Attested but not completed in CSV: IFC-257 (In Progress), PG-196 (Backlog), PG-197 (Backlog), PG-198 (Backlog), PG-199 (Backlog), PG-201 (Backlog), PG-202 (Backlog), PG-203 (Backlog), PG-204 (Backlog), PG-205 (Backlog), PG-207 (Backlog), PG-208 (Backlog), PG-209 (Backlog), ENG-OPS-002 (In Progress), ENG-OPS-002.R16 (Backlog).
+- Attested but not completed in CSV: IFC-257 (In Progress), IFC-304 (In Progress), PG-196 (Backlog), PG-197 (Backlog), PG-198 (Backlog), PG-199 (Backlog), PG-201 (Backlog), PG-202 (Backlog), PG-203 (Backlog), PG-204 (Backlog), PG-205 (Backlog), PG-207 (Backlog), PG-208 (Backlog), PG-209 (Backlog), ENG-OPS-002 (In Progress), ENG-OPS-002.R16 (Backlog).
 
 ## Continuous Work
 
@@ -285,22 +285,21 @@ _Generated: 2026-07-26T10:27:33.769Z_
 
 ## Sprint 19 - Sprint 19
 
-- Status: 13/18 completed, 4 backlog, 0 blocked, 1 in progress.
+- Status: 14/18 completed, 2 backlog, 0 blocked, 2 in progress.
 - Primary focus areas: Engineering Operations (8), Core CRM (4), AI/Intelligence (1).
-- Evidence coverage: 13/13 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 14/14 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
+- **ENG-OPS-002.R13** — Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests. R13's actual implementation shipped in commit b8ed885c9 (PR #619, merged 2026-07-23) but was never attested and the Sprint_plan.csv row was left at Backlog/0% — a pure evidence/CSV sync gap, not missing engineering work.......
 - **IFC-312** — AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).. Originally attested 2026-04-22 with verdict COMPLETE, but a 2026-04-24 code audit (/task-code-audit) identified 7 findings (2 High, 4 Medium, 1 Low) that contradicted the attestation......
 - **PG-064** — Contacts List. PG-064 (Contacts List) reconcile. RECON-FIRST (3rd attempt; prior two slipped on data-model assumptions and spec ambiguity): read the actual code before scoping. Finding... Contacts listed; Search working; Segments functional
 - **ENG-OPS-003** — Harness hardening Gaps #1-#4 + OSV PRs A/B: retroactive umbrella for the 8 untracked CI/security/E2E-harness PRs merged 2026-07-24 (#623, #625, #627, #628, #629, #630, #631, #634). RETROSPECTIVE GOVERNANCE BACKFILL for the 2026-07-24 merge window, whose PRs skipped the documented orchestrator pipeline (docs/operations/sprint-18-orchestrator-prompt.md). Root cause: the orchestrator never read that document. Findings:......
 - **PG-065** — Contact 360. RECONCILE via full pipeline (spec-session + plan-session + exec). The Contact 360 view already existed on main (route-registry Status=Implemented), implemented inline in the 2576-line Contact360Page.... response under 200ms, Lighthouse 90, data complete
-- **PG-166** — Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90. All implementation code, tests, configs, and documentation are complete. 3 test regressions fixed this session (SVG role='img', heading text, EmptyState refactor). Pre-existing build blocker fixed (unused @ts-expect-error).... Lighthouse CI audit on / route;...
 
 **Open Work**
+- **IFC-304** — Article Analytics Dashboard — PR A: analytics foundation + instrumentation. Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%
 - **ENG-OPS-002** — Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan). Verifiable baseline of S1-18 delivered state; All required artifacts produced and reproducible; Failures registered, not suppressed
 - **IFC-034** — PHASE-001: Gate 3 Review - £3000 Investment. Scale decision with modern stack validated
-- **IFC-304** — Article Analytics Dashboard. Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%
-- **ENG-OPS-002.R13** — Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests. Skips blocked by lint unless issue-linked; existing 21 reconciled
 - **ENG-OPS-002.R16** — Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger. Backfill the 18 Sprint-18 tasks marked Completed with no canonical attestation.json; Attestations carry real, independently re-derived evidence — never fabricated completeness; Ledger the 177-task GOV-A-002 provenance gap
 
 ## Sprint 20 - Sprint 20

@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-26T10:27:33.762Z",
+  "generated_at": "2026-08-11T19:28:03.361Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 519,
-    "completed": 450,
+    "total_specs_analyzed": 521,
+    "completed": 451,
     "partially_done": 12,
-    "spec_only": 48,
-    "uncertain": 9
+    "spec_only": 47,
+    "uncertain": 11
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -818,6 +818,23 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "ENG-OPS-002.R13",
+      "title": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENG-OPS-002.R02",
+        "ENG-OPS-002.R10"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "ENG-OPS-002.R16",
       "title": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger",
       "sprint": 19,
@@ -894,6 +911,20 @@
     {
       "task_id": "ENG-OPS-003.Gap2-CodeQL",
       "title": "ENG-OPS-003.Gap2-CodeQL",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "NOT_IN_CSV",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "ENG-OPS-003.Gap9-FileIngestionFailures",
+      "title": "ENG-OPS-003.Gap9-FileIngestionFailures",
       "sprint": 19,
       "spec_path": null,
       "has_spec": false,
@@ -5882,15 +5913,15 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "has_attestation": true,
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-303",
         "PG-180"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "UNCERTAIN"
     },
     {
       "task_id": "IFC-305",
