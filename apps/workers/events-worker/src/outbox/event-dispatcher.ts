@@ -247,6 +247,8 @@ export const DOMAIN_EVENT_TYPES = {
   OPPORTUNITY_STAGE_CHANGED: 'opportunity.stage_changed',
   OPPORTUNITY_WON: 'opportunity.won',
   OPPORTUNITY_LOST: 'opportunity.lost',
+  // IFC-283 W-02: description changes now emit a domain event
+  OPPORTUNITY_DESCRIPTION_UPDATED: 'opportunity.description_updated',
   // IFC-314: enriched deal-won event → portal delivery/billing sync
   DEAL_WON_ENRICHED: 'opportunity.deal_won_enriched',
 
