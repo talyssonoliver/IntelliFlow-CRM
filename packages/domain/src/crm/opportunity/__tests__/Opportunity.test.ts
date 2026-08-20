@@ -690,6 +690,19 @@ describe('Opportunity Aggregate', () => {
         updatedBy: 'user-123',
       });
     });
+
+    // codex-review finding on IFC-283: setting the same description back
+    // must not falsely signal a change to downstream consumers.
+    it('should not emit an event or bump updatedAt when the description is unchanged', () => {
+      const updatedAtBefore = opportunity.updatedAt;
+      opportunity.clearDomainEvents();
+
+      opportunity.updateDescription('Original description', 'user-123');
+
+      expect(opportunity.description).toBe('Original description');
+      expect(opportunity.updatedAt).toBe(updatedAtBefore);
+      expect(opportunity.getDomainEvents()).toHaveLength(0);
+    });
   });
 
   // IFC-282 B-04: name updates were silently dropped (no domain command existed).

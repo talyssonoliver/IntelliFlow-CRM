@@ -467,9 +467,15 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
    * IFC-283 W-02: now emits OpportunityDescriptionUpdatedEvent so downstream
    * consumers (audit trail, search re-index) have a signal. `updatedBy` is
    * required for the event's actor field, unlike the no-op prior signature.
+   * Guarded on an actual change (codex-review finding): setting the same
+   * description back would otherwise still mutate updatedAt and emit an
+   * event whose previous/new values are identical, falsely signalling a
+   * change to those downstream consumers.
    */
   updateDescription(description: string, updatedBy: string): void {
     const previousDescription = this.props.description;
+    if (previousDescription === description) return;
+
     this.props.description = description;
     this.props.updatedAt = new Date();
 
