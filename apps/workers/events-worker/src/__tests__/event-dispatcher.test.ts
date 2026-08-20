@@ -253,6 +253,9 @@ describe('DOMAIN_EVENT_TYPES', () => {
     expect(DOMAIN_EVENT_TYPES.OPPORTUNITY_STAGE_CHANGED).toBe('opportunity.stage_changed');
     expect(DOMAIN_EVENT_TYPES.OPPORTUNITY_WON).toBe('opportunity.won');
     expect(DOMAIN_EVENT_TYPES.OPPORTUNITY_LOST).toBe('opportunity.lost');
+    expect(DOMAIN_EVENT_TYPES.OPPORTUNITY_DESCRIPTION_UPDATED).toBe(
+      'opportunity.description_updated'
+    );
   });
 
   it('should export task event types', () => {
