@@ -5,8 +5,9 @@
  *
  * Atomic + idempotent write model: the counter increment and the idempotency
  * guard insert run in a single interactive transaction, with the guard insert
- * LAST. On a retry the guard insert raises a unique violation (P2002) which
- * rolls the whole transaction back, so the increment is never applied twice.
+ * FIRST. On a retry the guard insert raises a unique violation (P2002) before
+ * the increment ever runs, aborting the transaction with no partial writes —
+ * see recordWithDedup() for why the guard runs first rather than last.
  * When no idempotency key is supplied, counting is at-least-once by design
  * (the privacy tradeoff of retaining no session identity).
  */
@@ -25,34 +26,12 @@ import type {
 type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
 /**
- * Discriminate a P2002 raised by the idempotency guard's own unique
- * constraint (HelpArticleAnalyticsDedup: tenantId+idempotencyKey) from a
- * P2002 raised by anything else in the same transaction — in particular the
- * aggregate upsert (HelpArticleViewDaily / HelpArticleSearchNoResultDaily),
- * whose own compound unique key does NOT include `idempotencyKey`.
- *
- * codex-review (IFC-304 PR A): the previous catch treated *any* P2002 in the
- * transaction as "duplicate idempotency key, skip" based only on `err.code`.
- * That could not distinguish an aggregate-side conflict (which should
- * propagate — the write genuinely failed and must not be misreported as an
- * intentional dedup) from the dedup guard's own conflict (the expected,
- * safe-to-swallow replay case). `err.code` alone cannot tell them apart;
- * only `err.meta?.target` (Prisma's conflicting-column/constraint info)
- * names the constraint that actually fired.
- *
- * On Postgres, `target` is normally the array of conflicting column names.
- * When Prisma cannot report a target at all (`meta` absent — older engines,
- * or some connectors), fail open toward the existing idempotent-replay
- * behaviour: the guard's own conflict is by far the common case, and this
- * only matters for callers that do supply an idempotencyKey.
+ * Sentinel thrown internally (never escapes recordWithDedup) to unwind
+ * $transaction's callback when the idempotency guard's OWN insert hits a
+ * unique-constraint replay. See recordWithDedup() for why this exists
+ * instead of inspecting the P2002's error metadata.
  */
-function isDedupGuardConflict(err: Prisma.PrismaClientKnownRequestError): boolean {
-  const target = err.meta?.target;
-  if (target === undefined) return true;
-  if (Array.isArray(target)) return target.includes('idempotencyKey');
-  if (typeof target === 'string') return target.toLowerCase().includes('idempotencykey');
-  return false;
-}
+const DEDUP_REPLAY = Symbol('help-article-analytics:dedup-replay');
 
 export class PrismaHelpArticleAnalyticsRepository implements HelpArticleAnalyticsRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -177,8 +156,25 @@ export class PrismaHelpArticleAnalyticsRepository implements HelpArticleAnalytic
   }
 
   /**
-   * Run one increment in a transaction, appending the idempotency guard last so
-   * a duplicate key rolls the whole transaction back (no double count).
+   * Run one increment in a transaction, with the idempotency guard insert
+   * FIRST: a duplicate key aborts the transaction (no partial writes, no
+   * double count) before `increment` ever runs.
+   *
+   * codex-review (IFC-304 PR A, two passes) on the earlier "guard last"
+   * design: it decided "this P2002 is a replay, skip it" by inspecting
+   * `err.code`/`err.meta`, which cannot reliably tell the guard's own
+   * conflict apart from an unrelated P2002 elsewhere in the transaction. A
+   * fix attempt tried discriminating on `err.meta?.target` — which does not
+   * even exist in this project's actual runtime shape (Prisma 7.8.0 +
+   * `@prisma/adapter-pg`); reproduced against the real test DB, a P2002
+   * there carries `err.meta.modelName` + a nested `driverAdapterError`, not
+   * `target`. Chasing the driver's error shape is exactly the kind of
+   * inference that keeps breaking. This makes the property structural
+   * instead: only a P2002 thrown by THIS specific statement (the guard's
+   * own insert) is ever treated as a replay — identified by WHERE it was
+   * thrown (guard-first, its own try/catch), never by inspecting what the
+   * error claims. A P2002 from `increment` is never caught here and
+   * propagates naturally, because nothing in this function wraps it.
    */
   private async recordWithDedup(
     tenantId: string,
@@ -187,25 +183,27 @@ export class PrismaHelpArticleAnalyticsRepository implements HelpArticleAnalytic
   ): Promise<RecordAnalyticsResult> {
     try {
       await this.prisma.$transaction(async (tx) => {
-        await increment(tx);
         if (namespacedKey) {
-          await tx.helpArticleAnalyticsDedup.create({
-            data: {
-              tenantId,
-              idempotencyKey: namespacedKey,
-              expiresAt: dedupExpiry(new Date()),
-            },
-          });
+          try {
+            await tx.helpArticleAnalyticsDedup.create({
+              data: {
+                tenantId,
+                idempotencyKey: namespacedKey,
+                expiresAt: dedupExpiry(new Date()),
+              },
+            });
+          } catch (err) {
+            if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+              throw DEDUP_REPLAY;
+            }
+            throw err;
+          }
         }
+        await increment(tx);
       });
       return { recorded: true, deduped: false };
     } catch (err) {
-      if (
-        namespacedKey &&
-        err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002' &&
-        isDedupGuardConflict(err)
-      ) {
+      if (err === DEDUP_REPLAY) {
         return { recorded: false, deduped: true };
       }
       throw err;

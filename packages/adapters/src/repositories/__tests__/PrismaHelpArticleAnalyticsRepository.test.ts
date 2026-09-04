@@ -83,6 +83,35 @@ describe('PrismaHelpArticleAnalyticsRepository', () => {
     });
 
     it('returns deduped when the guard hits a unique violation (P2002)', async () => {
+      m.dedupCreate.mockRejectedValueOnce(p2002(['tenantId', 'idempotencyKey']));
+      const res = await m.repo.recordArticleView({
+        tenantId: 't1',
+        articleId: 'a1',
+        idempotencyKey: 'abc',
+        occurredAt,
+      });
+      expect(res).toEqual({ recorded: false, deduped: true });
+      // The guard runs BEFORE increment — a replay must never touch the
+      // aggregate at all, not just avoid double-counting via rollback.
+      expect(m.viewUpsert).not.toHaveBeenCalled();
+    });
+
+    // codex-review, three passes on this function (IFC-304 PR A):
+    //   1. any P2002 in the transaction was treated as a replay, decided
+    //      from err.code alone.
+    //   2. a fix discriminated via err.meta?.target, but failed OPEN when
+    //      target was absent.
+    //   3. err.meta?.target does not exist AT ALL in this project's real
+    //      Prisma 7.8.0 + @prisma/adapter-pg error shape (reproduced against
+    //      the live test DB: the actual meta is
+    //      { modelName, driverAdapterError: {...} }) — so pass 2's fix could
+    //      never have discriminated correctly regardless of which branch it
+    //      chose. The guard-first restructure removes the need to inspect
+    //      P2002 metadata at all: this test proves the guard-conflict path
+    //      is detected by WHERE it was thrown, not by what it claims — an
+    //      empty/absent meta on the dedup guard's own P2002 must still
+    //      dedup correctly.
+    it('treats any P2002 from the guard insert as a replay regardless of its metadata shape', async () => {
       m.dedupCreate.mockRejectedValueOnce(p2002());
       const res = await m.repo.recordArticleView({
         tenantId: 't1',
@@ -95,7 +124,7 @@ describe('PrismaHelpArticleAnalyticsRepository', () => {
 
     // codex-review finding (IFC-304 PR A): the original catch treated ANY
     // P2002 raised inside the transaction as an idempotency replay, based
-    // only on err.code — it never checked WHICH constraint fired. If the
+    // only on err.code — it never checked WHICH statement threw it. If the
     // aggregate's own upsert ever raises P2002 (e.g. a concurrent-write edge
     // case outside the atomic ON CONFLICT path), that would be misreported
     // as "duplicate, skip" and the increment would be silently lost instead
@@ -110,8 +139,11 @@ describe('PrismaHelpArticleAnalyticsRepository', () => {
           occurredAt,
         })
       ).rejects.toMatchObject({ code: 'P2002' });
-      // The idempotency guard write must never have been reached.
-      expect(m.dedupCreate).not.toHaveBeenCalled();
+      // The guard insert (which runs first) still happened and succeeded —
+      // it's the LATER increment that failed. Only a P2002 from the guard's
+      // own statement is ever converted to {deduped:true}; this one, from
+      // increment, must propagate untouched.
+      expect(m.dedupCreate).toHaveBeenCalledTimes(1);
     });
 
     it('rethrows non-P2002 errors', async () => {
