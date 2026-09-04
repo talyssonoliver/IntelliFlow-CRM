@@ -11,10 +11,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Prisma, type PrismaClient } from '@intelliflow/db';
 import { PrismaHelpArticleAnalyticsRepository } from '../PrismaHelpArticleAnalyticsRepository';
 
-function p2002(): Prisma.PrismaClientKnownRequestError {
+function p2002(target?: string[]): Prisma.PrismaClientKnownRequestError {
   return new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
     code: 'P2002',
     clientVersion: 'test',
+    meta: target ? { target } : undefined,
   });
 }
 
@@ -90,6 +91,27 @@ describe('PrismaHelpArticleAnalyticsRepository', () => {
         occurredAt,
       });
       expect(res).toEqual({ recorded: false, deduped: true });
+    });
+
+    // codex-review finding (IFC-304 PR A): the original catch treated ANY
+    // P2002 raised inside the transaction as an idempotency replay, based
+    // only on err.code — it never checked WHICH constraint fired. If the
+    // aggregate's own upsert ever raises P2002 (e.g. a concurrent-write edge
+    // case outside the atomic ON CONFLICT path), that would be misreported
+    // as "duplicate, skip" and the increment would be silently lost instead
+    // of surfacing as an error.
+    it('does NOT treat a P2002 from the aggregate upsert itself as a dedup replay', async () => {
+      m.viewUpsert.mockRejectedValueOnce(p2002(['tenantId', 'articleId', 'day']));
+      await expect(
+        m.repo.recordArticleView({
+          tenantId: 't1',
+          articleId: 'a1',
+          idempotencyKey: 'abc',
+          occurredAt,
+        })
+      ).rejects.toMatchObject({ code: 'P2002' });
+      // The idempotency guard write must never have been reached.
+      expect(m.dedupCreate).not.toHaveBeenCalled();
     });
 
     it('rethrows non-P2002 errors', async () => {

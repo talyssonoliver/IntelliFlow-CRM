@@ -24,6 +24,36 @@ import type {
 /** Minimal transaction-client shape used by the increment callbacks. */
 type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
+/**
+ * Discriminate a P2002 raised by the idempotency guard's own unique
+ * constraint (HelpArticleAnalyticsDedup: tenantId+idempotencyKey) from a
+ * P2002 raised by anything else in the same transaction — in particular the
+ * aggregate upsert (HelpArticleViewDaily / HelpArticleSearchNoResultDaily),
+ * whose own compound unique key does NOT include `idempotencyKey`.
+ *
+ * codex-review (IFC-304 PR A): the previous catch treated *any* P2002 in the
+ * transaction as "duplicate idempotency key, skip" based only on `err.code`.
+ * That could not distinguish an aggregate-side conflict (which should
+ * propagate — the write genuinely failed and must not be misreported as an
+ * intentional dedup) from the dedup guard's own conflict (the expected,
+ * safe-to-swallow replay case). `err.code` alone cannot tell them apart;
+ * only `err.meta?.target` (Prisma's conflicting-column/constraint info)
+ * names the constraint that actually fired.
+ *
+ * On Postgres, `target` is normally the array of conflicting column names.
+ * When Prisma cannot report a target at all (`meta` absent — older engines,
+ * or some connectors), fail open toward the existing idempotent-replay
+ * behaviour: the guard's own conflict is by far the common case, and this
+ * only matters for callers that do supply an idempotencyKey.
+ */
+function isDedupGuardConflict(err: Prisma.PrismaClientKnownRequestError): boolean {
+  const target = err.meta?.target;
+  if (target === undefined) return true;
+  if (Array.isArray(target)) return target.includes('idempotencyKey');
+  if (typeof target === 'string') return target.toLowerCase().includes('idempotencykey');
+  return false;
+}
+
 export class PrismaHelpArticleAnalyticsRepository implements HelpArticleAnalyticsRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -173,7 +203,8 @@ export class PrismaHelpArticleAnalyticsRepository implements HelpArticleAnalytic
       if (
         namespacedKey &&
         err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2002'
+        err.code === 'P2002' &&
+        isDedupGuardConflict(err)
       ) {
         return { recorded: false, deduped: true };
       }
