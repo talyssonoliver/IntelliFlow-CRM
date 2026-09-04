@@ -1060,3 +1060,27 @@ waivers:
     author: talyssonoliver
     date: '2026-06-29'
     expires: '2026-12-31'
+  - fingerprint: '23cffe12edc208c90cfebbcb02c7106bf2e096c55ab83b8a6003aabd25558e72'
+    reason: >-
+      Verified false positive — codex is describing pre-fix code that no longer exists
+      at PrismaHelpArticleAnalyticsRepository.ts, commit 7c6434a8d. Codex's evidence
+      claims "the same try block executes await increment(tx) and
+      helpArticleAnalyticsDedup.create(...), but the catch checks only
+      err.code === 'P2002'". Neither is true of the current recordWithDedup(): (1) the
+      guard's tx.helpArticleAnalyticsDedup.create() sits in its OWN inner try/catch, and
+      await increment(tx) runs AFTER that block closes, outside it — they are not in the
+      same try; (2) the inner catch does not check err.code and return a dedup result
+      directly — it throws a module-level sentinel (const DEDUP_REPLAY = Symbol(...));
+      (3) the outer catch does not inspect err.code at all — it checks `err ===
+      DEDUP_REPLAY`, an identity comparison against a value only the guard's own inner
+      catch ever throws. There is therefore no code path from a P2002 raised by
+      increment(tx) to `{recorded:false, deduped:true}` — exactly what codex's own Fix
+      line asked for ("rethrow all other P2002 errors"), achieved structurally (by WHICH
+      statement threw) rather than by inspecting P2002 metadata. Behavioural proof:
+      tests/integration/help-article-analytics.test.ts > "is idempotent per key (the
+      retry transaction rolls back)" passes against the real test DB on this commit.
+      Verified independently against the source at 7c6434a8d, not against codex's
+      report. Source-anchored: re-blocks if recordWithDedup() changes.
+    author: talyssonoliver
+    date: '2026-09-05'
+    expires: '2027-03-05'
