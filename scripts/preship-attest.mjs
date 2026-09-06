@@ -127,6 +127,13 @@ export function assessState(state, headSha, preshipSha256) {
 
   const byId = new Map(state.steps.map((s) => [s?.id, s]));
   let ok = 0;
+  /**
+   * Non-required steps that did not pass, as `id:verdict`. Covers both honest
+   * optional skips (actionlint/gitleaks not installed) and advisory FAILs
+   * (audit/osv-scan). Recorded so the attestation never reads cleaner than the
+   * run actually was.
+   */
+  const advisoryNotPassed = [];
   for (const id of expected) {
     const rec = byId.get(id);
     if (!rec) {
@@ -137,9 +144,23 @@ export function assessState(state, headSha, preshipSha256) {
       ok += 1;
       continue;
     }
-    // A NON-required step whose precondition was unmet is an honest skip
-    // (e.g. actionlint or terraform not installed). A REQUIRED one is not.
-    if (rec.verdict === 'SKIPPED_PRECONDITION' && rec.required === false) {
+    // A NON-required step is ADVISORY. pre-ship.mjs does not fail the gate on
+    // one, so this tool must use the SAME required-ness semantics — otherwise a
+    // run pre-ship reports as PASS cannot be attested.
+    //
+    // This previously exempted only SKIPPED_PRECONDITION, so a non-required step
+    // that SKIPPED was attestable while one that FAILED was not. That asymmetry
+    // made the gate unsatisfiable in precisely the situation `required: false`
+    // exists to survive: `audit`, `docs-audit` and `osv-scan` mirror CI's
+    // continue-on-error security scans, so a single outstanding HIGH advisory
+    // blocked EVERY owner PR's attestation until it rode through the Dependabot
+    // queue — the exact outcome pre-ship.mjs's `audit` step comment rejects.
+    // Found by dogfooding this on #670: a full-gate PASS with 3 advisory FAILs
+    // could not be published.
+    //
+    // A REQUIRED step still blocks on any non-passing verdict.
+    if (rec.required === false) {
+      advisoryNotPassed.push(`${id}:${rec.verdict}`);
       ok += 1;
       continue;
     }
@@ -159,6 +180,9 @@ export function assessState(state, headSha, preshipSha256) {
       only: null,
       steps_ok: ok,
       steps_expected: expected.length,
+      // Advisory (`required: false`) steps that did not pass, as `id:verdict`.
+      // The attestation states what the gate tolerated rather than reading clean.
+      advisory_not_passed: advisoryNotPassed,
       preship_sha256: preshipSha256,
       node: process.version,
       attested_at: new Date().toISOString(),
