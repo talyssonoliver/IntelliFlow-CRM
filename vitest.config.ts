@@ -193,8 +193,19 @@ export default defineConfig({
           // runs so Istanbul can finish writing coverage-final.json before exit)
           forceExit: process.env['COVERAGE_RUN'] !== '1',
 
-          // Disable caching to prevent stale state accumulation
-          cache: false,
+          // NOTE: a `cache: false` used to sit here, commented "Disable caching to
+          // prevent stale state accumulation". It was removed because it did
+          // nothing. `cache` is not a Vitest 4 project option — it is absent from
+          // the v4.1.8 config typings, and the only remaining handling is a
+          // deprecation path for `cache.dir`. Proof it was inert: with `cache: false`
+          // set, `node_modules/.vite/vitest` was still being written on every run.
+          //
+          // Measured before removing it, same 12 files, warm runs: transform 1.42s
+          // with the flag vs 1.32s without — noise. It was never buying or costing
+          // anything, and the comment misdescribed both the mechanism (Vitest's cache
+          // memoises file transforms by content hash; it cannot carry test state) and
+          // the effect. Mock/env isolation is handled by
+          // restoreMocks/clearMocks/resetMocks + unstubGlobals/unstubEnvs above.
 
           // Explicit reporters to avoid vitest 4.x 'basic' reporter issue
           reporters: ['default'],
