@@ -61,7 +61,7 @@
     "@intelliflow/typescript-config": "workspace:*",
     "@supabase/supabase-js": "^2.108.2",
     "@types/node": "^25.9.2",
-    "prisma": "^7.8.0",
+    "prisma": "^7.10.0",
     "prisma-field-encryption": "^1.6.0",
     "tsup": "^8.0.0",
     "tsx": "^4.22.4",
