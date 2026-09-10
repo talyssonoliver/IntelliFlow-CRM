@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://intelliflow.local/schemas/task-contract/v1",
+  "title": "IntelliFlow Autonomous Delivery Task Contract",
+  "description": "Machine-readable contract governing a single autonomous task dispatch. Every dispatch MUST produce a valid instance of this schema before execution begins. Defined by ADR-070.",
+  "type": "object",
+  "required": [
+    "taskId",
+    "approvedOutcome",
+    "acceptanceCriteria",
+    "baselineMainSha",
+    "specHash",
+    "policyVersion",
+    "dependencySnapshot",
+    "riskClass",
+    "priority",
+    "estimatedEffort",
+    "timeBudget",
+    "retryBudget",
+    "validationProfile",
+    "expectedArtifacts",
+    "branch",
+    "worktree",
+    "agentLeaseId",
+    "leaseExpiry",
+    "allowedMutationScope",
+    "humanEscalationConditions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "taskId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Z][A-Z0-9_-]+-[0-9]",
+      "description": "Unique task identifier matching the Sprint_plan.csv Task ID column, e.g. 'ORCH-002' or 'ORCH-002-task-contract-schema-and-dispatch-guard'."
+    },
+    "approvedOutcome": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable statement of what this task delivers, verbatim from the supervisor lease directive. Not a summary — must faithfully reproduce the approved outcome scope."
+    },
+    "acceptanceCriteria": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      ],
+      "description": "Acceptance criteria for this task. May be a single string (semicolon-delimited) or an ordered array. Each criterion must be independently verifiable."
+    },
+    "baselineMainSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$",
+      "description": "The full or abbreviated SHA of origin/main at the time of dispatch. Used for freshness checks: the worktree must be based on this SHA."
+    },
+    "specHash": {
+      "type": "string",
+      "minLength": 1,
+      "description": "SHA-256 (or abbreviated) hash of the spec file at dispatch time. Guards against spec drift between contract authoring and execution."
+    },
+    "policyVersion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identifies which policy revision governs this dispatch, e.g. 'ADR-069-v1' or 'ADR-070-v1'. Must reference an existing ADR."
+    },
+    "dependencySnapshot": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference to the dependency snapshot valid at dispatch time, e.g. a lockfile hash ('pnpm-lock.yaml@sha256:abc123') or 'baseline-1810a937' for the full package state."
+    },
+    "riskClass": {
+      "type": "string",
+      "enum": ["Low", "Medium", "High", "Critical"],
+      "description": "Risk classification per ADR-069. Low = new files, no migrations. Medium = existing file edits, no DB. High = DB migrations, shared infra. Critical = production data mutations."
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Dispatch priority determining queue position when multiple tasks compete for an agent slot."
+    },
+    "estimatedEffort": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable effort estimate in O/M/P format (e.g. '4/8/16') or a single value (e.g. '4h'). Optimistic / Most-likely / Pessimistic in hours."
+    },
+    "timeBudget": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[0-9]+(m|h|d)$",
+      "description": "Maximum wall-clock time before the lease expires and the supervisor is notified. Format: integer followed by 'm' (minutes), 'h' (hours), or 'd' (days). Example: '2h'."
+    },
+    "retryBudget": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Maximum number of retries permitted on gate failure before the task is escalated to a human. 0 = no retries (fail → escalate immediately)."
+    },
+    "validationProfile": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      ],
+      "description": "Required validation gates before merge. Examples: 'full-preship' (all 12 required CI contexts), 'scoped-unit-tests-only' (lane-constrained), or an explicit list of gate names."
+    },
+    "expectedArtifacts": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "description": "Ordered list of repo-relative paths of expected output artifacts. The validator and post-execution checks confirm these exist before attesting completion."
+    },
+    "branch": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_./-]*$",
+      "description": "Git branch name for this task. Must match the branch the executing agent has checked out in the worktree. Part of the 4-way dispatch binding."
+    },
+    "worktree": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute filesystem path of the isolated worktree for this task. Must match the agent's actual working directory. Part of the 4-way dispatch binding."
+    },
+    "agentLeaseId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this dispatch instance. Format: '<sessionId>' or '<sessionId>-<taskId>' (e.g. 'local_28109fae'). MUST be unique across all active leases. Part of the 4-way dispatch binding."
+    },
+    "leaseExpiry": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 datetime (UTC) when this lease expires. On expiry, the supervisor is notified and the task may be re-dispatched or escalated."
+    },
+    "allowedMutationScope": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "description": "Glob patterns or explicit repo-relative paths defining the allowed mutation boundary for this task. Mutations outside this scope are a contract violation. Example: ['.specify/**', 'tools/scripts/orchestration/**', 'docs/architecture/adr/ADR-070*.md']."
+    },
+    "humanEscalationConditions": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      ],
+      "description": "Conditions under which the agent MUST stop and hand off to a human. May be a prose string or an ordered list. At minimum must include 'any Category C decision' and 'any gate failure exceeding retryBudget'."
+    }
+  }
+}
