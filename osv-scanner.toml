@@ -1,0 +1,34 @@
+# OSV Scanner configuration.
+#
+# WHY THIS FILE EXISTS. `pnpm audit` and OSV Scanner are separate tools reading
+# separate databases, and they do not share configuration. Two advisories with
+# no fixed version were ignored for pnpm in `pnpm.auditConfig.ignoreGhsas`;
+# OSV does not read that, so it kept failing the `OSV Scanner` check on the
+# same two. This mirrors that decision in the one place OSV reads.
+#
+# THE ENTRIES BELOW EXPIRE ON PURPOSE. `ignoreUntil` makes each one lapse and
+# the finding return, rather than becoming a permanent hole nobody revisits. An
+# exemption with no end date is how a real advisory hides in plain sight — the
+# two unauthenticated Next.js RCEs that sat in this repo behind a version
+# override are the same shape of mistake.
+
+[[IgnoredVulns]]
+id = "GHSA-jmr9-qjv8-65gv"
+ignoreUntil = 2026-12-10
+reason = """
+extract-zip unvalidated symlink path traversal. Reports patched: <0.0.0 — no
+fixed version exists anywhere as of 10/09/2026. Reached only through
+@lhci/cli > lighthouse > puppeteer-core > @puppeteer/browsers > extract-zip:
+Lighthouse CI, a dev/CI-only tool, extracting a browser archive at install
+time. Exploiting it needs a hostile archive from that source; it is not in the
+production runtime. Re-check on expiry — if a patched extract-zip has shipped
+by then, take it and delete this entry.
+"""
+
+[[IgnoredVulns]]
+id = "GHSA-7pqw-9j4j-h8q3"
+ignoreUntil = 2026-12-10
+reason = """
+extract-zip arbitrary file write. Same package, same dev-only path, also
+patched: <0.0.0. Same reasoning and same expiry as the entry above.
+"""
