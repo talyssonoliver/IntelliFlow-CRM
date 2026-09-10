@@ -169,11 +169,33 @@ jobs:
     name: Merge Coverage Gate
     # Also needs project-guard so the coverage gate cannot pass while a vitest
     # project is silently missing from the shard set (drift). Guard runs in
-    # parallel with the shards — no added wall-clock — but its failure blocks
-    # the gate here.
+    # parallel with the shards — no added wall-clock.
     needs: [unit-shards, project-guard]
+    # `if: always()` IS LOAD-BEARING. Without it, a job with `needs` is SKIPPED
+    # when a dependency fails — and GitHub branch protection treats a skipped
+    # required context as SATISFIED. This context is required, so the net effect
+    # was that a failing unit shard could not block a merge: shard red -> this job
+    # skipped -> required check "satisfied" -> mergeable.
+    #
+    # Observed on PR #709 (2026-09-07): "Unit Shard 14/20" FAILED, this job
+    # reported SKIPPED, and the PR read 11/12 required passing with the shard
+    # failure invisible to branch protection. The previous comment here claimed a
+    # dependency failure "blocks the gate" — it did the opposite.
+    #
+    # So: always run, and fail explicitly on any upstream failure (below). Note
+    # `shard-balance` already used `always()` for the same reason.
+    if: always()
     runs-on: ubuntu-latest
     steps:
+      # MUST be first — before checkout/setup — so an upstream failure costs
+      # seconds and reports as a FAILED required check rather than a skipped one.
+      - name: Enforce upstream shard + drift-guard results
+        if: needs.unit-shards.result != 'success' || needs.project-guard.result != 'success'
+        run: |
+          echo "::error title=Unit suite did not pass::Merge Coverage Gate is failing because an upstream job did not succeed. unit-shards=${{ needs.unit-shards.result }} project-guard=${{ needs.project-guard.result }}"
+          echo "A failing shard used to SKIP this job, and a skipped required check counts as satisfied — so red tests did not block merges. This step closes that hole."
+          exit 1
+
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-monorepo
         with:
