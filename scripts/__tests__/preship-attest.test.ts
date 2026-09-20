@@ -90,6 +90,64 @@ describe('assessState — accepts an honest full run', () => {
     expect(r.ok).toBe(true);
   });
 
+  it('accepts a NON-required step recorded as FAIL (advisory, mirrors pre-ship)', () => {
+    // audit / docs-audit / osv-scan are `required: false` in pre-ship.mjs because
+    // they mirror CI's continue-on-error security scans. Refusing to attest on
+    // them made every owner PR unmergeable while any HIGH advisory was open.
+    const r = assess(
+      goodState({
+        expected_step_ids: ['lint', 'typecheck', 'build', 'audit'],
+        steps: [
+          { id: 'lint', verdict: 'PASS', required: true },
+          { id: 'typecheck', verdict: 'PASS', required: true },
+          { id: 'build', verdict: 'PASS', required: true },
+          { id: 'audit', verdict: 'FAIL', required: false },
+        ],
+      })
+    );
+    expect(r.ok).toBe(true);
+    expect(r.reasons).toEqual([]);
+  });
+
+  it('records advisory non-passes in the payload instead of dropping them', () => {
+    const { payload } = assess(
+      goodState({
+        expected_step_ids: ['lint', 'typecheck', 'build', 'audit', 'osv-scan'],
+        steps: [
+          { id: 'lint', verdict: 'PASS', required: true },
+          { id: 'typecheck', verdict: 'PASS', required: true },
+          { id: 'build', verdict: 'PASS', required: true },
+          { id: 'audit', verdict: 'FAIL', required: false },
+          { id: 'osv-scan', verdict: 'FAIL', required: false },
+        ],
+      })
+    );
+    expect(payload?.advisory_not_passed).toEqual(['audit:FAIL', 'osv-scan:FAIL']);
+  });
+
+  it('leaves advisory_not_passed empty when every step genuinely passed', () => {
+    const { payload } = assess(goodState());
+    expect(payload?.advisory_not_passed).toEqual([]);
+  });
+
+  it('still refuses a REQUIRED step recorded as FAIL alongside an advisory one', () => {
+    // The exemption must key on required-ness only — never widen to all FAILs.
+    const r = assess(
+      goodState({
+        expected_step_ids: ['lint', 'typecheck', 'build', 'audit'],
+        steps: [
+          { id: 'lint', verdict: 'PASS', required: true },
+          { id: 'typecheck', verdict: 'PASS', required: true },
+          { id: 'build', verdict: 'FAIL', required: true },
+          { id: 'audit', verdict: 'FAIL', required: false },
+        ],
+      })
+    );
+    expect(r.ok).toBe(false);
+    expect(r.reasons.join(' ')).toMatch(/build/);
+    expect(r.reasons.join(' ')).not.toMatch(/audit/);
+  });
+
   it('builds a payload pinning sha, mode and the pre-ship hash', () => {
     const { payload } = assess(goodState());
     expect(payload).toMatchObject({

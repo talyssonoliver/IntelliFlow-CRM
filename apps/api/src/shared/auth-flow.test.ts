@@ -34,6 +34,42 @@ const TEST_USER = {
   password: 'TestPassword123!',
 };
 
+/**
+ * LOCAL-ONLY GUARD — these suites have real side effects.
+ *
+ * They create a real user, sign it in, and call `resetPasswordForEmail`, which
+ * makes the Supabase project send a real "Reset your IntelliFlow CRM password"
+ * email. That is harmless against a LOCAL stack (see the file header:
+ * `supabase start`), where inbucket captures mail and nothing leaves the box.
+ *
+ * It was NOT harmless in CI. `test-regression.yml` and
+ * `preship-full-nightly.yml` both pass
+ * `SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}`.
+ * The `|| stub` reads like a safety net, but the secret IS set, so the fallback
+ * never fired and both nightlies ran this file against the HOSTED project —
+ * two genuine password-reset emails per night to `test-<epoch>@intelliflow.test`.
+ *
+ * `.test` is a reserved TLD (RFC 2606) that can never resolve, so every one of
+ * those was a guaranteed HARD bounce — the category that wrecks sender
+ * reputation and gets real transactional mail throttled. `afterAll` deletes the
+ * user, but deleting a user does not unsend an email.
+ *
+ * So: require a demonstrably local Supabase. A hosted URL, the CI stub, or an
+ * unset variable all skip. Fail closed — never infer "local" from absence.
+ */
+const SUPABASE_URL = process.env.SUPABASE_URL ?? '';
+const IS_LOCAL_SUPABASE = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i.test(
+  SUPABASE_URL
+);
+
+if (!IS_LOCAL_SUPABASE) {
+  console.log(
+    `[auth-flow.test] SKIPPED side-effecting suites: SUPABASE_URL is not local ` +
+      `(${SUPABASE_URL || 'unset'}). These tests send real email; run them against ` +
+      `a local stack (\`supabase start\`) only.`
+  );
+}
+
 // Store session data between tests
 let testUserSession: {
   accessToken: string;
@@ -58,7 +94,7 @@ describe('Supabase Authentication Flow E2E Tests', () => {
     });
   });
 
-  describe('Sign Up Flow', () => {
+  describe.skipIf(!IS_LOCAL_SUPABASE)('Sign Up Flow', () => {
     it('should create a new user account', async () => {
       const result = await signUp(TEST_USER.email, TEST_USER.password);
 
@@ -109,7 +145,7 @@ describe('Supabase Authentication Flow E2E Tests', () => {
     });
   });
 
-  describe('Sign In Flow', () => {
+  describe.skipIf(!IS_LOCAL_SUPABASE)('Sign In Flow', () => {
     it('should authenticate existing user', async () => {
       // Skip if no user was created
       if (!testUserSession) {
@@ -161,7 +197,7 @@ describe('Supabase Authentication Flow E2E Tests', () => {
     });
   });
 
-  describe('Session Management', () => {
+  describe.skipIf(!IS_LOCAL_SUPABASE)('Session Management', () => {
     it('should retrieve current session', async () => {
       if (!testUserSession) {
         console.log('Skipping session test - no user session');
@@ -190,7 +226,7 @@ describe('Supabase Authentication Flow E2E Tests', () => {
     });
   });
 
-  describe('Token Verification', () => {
+  describe.skipIf(!IS_LOCAL_SUPABASE)('Token Verification', () => {
     it('should verify valid JWT token', async () => {
       if (!testUserSession?.accessToken) {
         console.log('Skipping token verification - no access token');
@@ -228,7 +264,7 @@ describe('Supabase Authentication Flow E2E Tests', () => {
     });
   });
 
-  describe('Sign Out Flow', () => {
+  describe.skipIf(!IS_LOCAL_SUPABASE)('Sign Out Flow', () => {
     it('should sign out authenticated user', async () => {
       if (!testUserSession) {
         console.log('Skipping sign out test - no user session');
@@ -260,7 +296,7 @@ describe('Supabase Authentication Flow E2E Tests', () => {
     });
   });
 
-  describe('Auth State Changes', () => {
+  describe.skipIf(!IS_LOCAL_SUPABASE)('Auth State Changes', () => {
     it('should emit auth state change events', async () => {
       const authStates: string[] = [];
 
@@ -283,7 +319,7 @@ describe('Supabase Authentication Flow E2E Tests', () => {
     });
   });
 
-  describe('Password Reset Flow', () => {
+  describe.skipIf(!IS_LOCAL_SUPABASE)('Password Reset Flow', () => {
     it('should initiate password reset', async () => {
       const { data, error } = await supabase.auth.resetPasswordForEmail(TEST_USER.email, {
         redirectTo: 'http://localhost:3000/reset-password',

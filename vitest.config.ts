@@ -158,6 +158,23 @@ export default defineConfig({
           environment: 'node',
           passWithNoTests: true,
 
+          // Vitest PROJECTS DO NOT INHERIT the root-level `test` options, so the
+          // `testTimeout: 30000` set further up applied to this project not at all —
+          // it silently fell back to Vitest's 5000ms default. That is far too tight
+          // for what lives here: `tools/scripts/**` and `scripts/**` suites shell out
+          // via spawnSync (`node <gate>`, `bash -n`, `git`), and a cold Node start on
+          // Windows under load routinely exceeds 5s.
+          //
+          // The symptom was a gate nobody could trust: `vendored-js-lint`,
+          // `ci-cost-artifacts-schema` and `check-diff-coverage` failed with
+          // "Test timed out in 5000ms" on a loaded machine, then passed 56/56 in
+          // isolation. Four pre-ship runs (~100 min) were lost to it on 2026-09-06/07,
+          // and since attestation requires a full local PASS, it blocked every owner
+          // PR. These were never flaky tests — the timeout budget never matched the
+          // work. Mirrors the root block's intent (30s) rather than inventing a value.
+          testTimeout: 30000,
+          hookTimeout: 30000,
+
           // Memory optimization: Auto-cleanup mocks after each test
           restoreMocks: true,
           clearMocks: true,
@@ -176,8 +193,19 @@ export default defineConfig({
           // runs so Istanbul can finish writing coverage-final.json before exit)
           forceExit: process.env['COVERAGE_RUN'] !== '1',
 
-          // Disable caching to prevent stale state accumulation
-          cache: false,
+          // NOTE: a `cache: false` used to sit here, commented "Disable caching to
+          // prevent stale state accumulation". It was removed because it did
+          // nothing. `cache` is not a Vitest 4 project option — it is absent from
+          // the v4.1.8 config typings, and the only remaining handling is a
+          // deprecation path for `cache.dir`. Proof it was inert: with `cache: false`
+          // set, `node_modules/.vite/vitest` was still being written on every run.
+          //
+          // Measured before removing it, same 12 files, warm runs: transform 1.42s
+          // with the flag vs 1.32s without — noise. It was never buying or costing
+          // anything, and the comment misdescribed both the mechanism (Vitest's cache
+          // memoises file transforms by content hash; it cannot carry test state) and
+          // the effect. Mock/env isolation is handled by
+          // restoreMocks/clearMocks/resetMocks + unstubGlobals/unstubEnvs above.
 
           // Explicit reporters to avoid vitest 4.x 'basic' reporter issue
           reporters: ['default'],
