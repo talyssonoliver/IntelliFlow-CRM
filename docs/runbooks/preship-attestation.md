@@ -43,6 +43,33 @@ executed. `scripts/preship-attest.mjs` therefore ignores the top-level verdict
 and re-derives the result from `steps[]` against the run's recorded
 `expected_step_ids`, refusing both cases.
 
+### Required vs advisory steps
+
+The re-derivation uses the **same required-ness semantics as the gate itself**.
+A step marked `required: false` in `pre-ship.mjs` is advisory: it does not fail
+the gate, so it does not block the attestation either. That covers honest
+optional skips (`actionlint`, `gitleaks` — binary not installed) and the
+advisory security scans (`audit`, `docs-audit`, `osv-scan`) which mirror CI's
+`continue-on-error` jobs. A **required** step still blocks on any non-passing
+verdict.
+
+This is not a loophole — it is the gate's own contract. Until 2026-09-06 the
+tool exempted only `SKIPPED_PRECONDITION`, so a non-required step that _failed_
+blocked attestation while one that _skipped_ did not. That asymmetry made the
+check unsatisfiable whenever any HIGH advisory was open — every owner PR stuck
+at "Pre-ship Attestation" red with a full-gate PASS on disk — which is precisely
+the outcome `required: false` was chosen to avoid (see the `audit` step's
+comment).
+
+Advisory non-passes are **recorded, not hidden**: the payload carries
+`advisory_not_passed` as a list of `id:verdict`, so an attestation never reads
+cleaner than the run actually was. Inspect it with:
+
+```bash
+git fetch origin "refs/preship/<sha>:refs/preship/<sha>"
+git cat-file -p "refs/preship/<sha>"
+```
+
 ## Normal flow
 
 Nothing to do. The `pre-push` hook publishes the attestation automatically after
