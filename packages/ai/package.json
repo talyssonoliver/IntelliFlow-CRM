@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@intelliflow/db": "workspace:*",
-    "@langchain/core": "^1.2.0",
-    "zod": "^4.4.3"
+    "@langchain/core": "^1.2.11",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
