@@ -68,7 +68,7 @@ describe('InMemoryOpportunityRepository', () => {
     it('should overwrite existing opportunity with same ID', async () => {
       await repository.save(testOpportunity);
 
-      testOpportunity.updateDescription('Updated description');
+      testOpportunity.updateDescription('Updated description', 'user-123');
       await repository.save(testOpportunity);
 
       const allOpps = repository.getAll();

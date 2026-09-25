@@ -183,7 +183,7 @@ describe('Opportunity aggregate - additional', () => {
   describe('updateDescription', () => {
     it('should update', () => {
       const opp = createOpp().value;
-      opp.updateDescription('New desc');
+      opp.updateDescription('New desc', 'user-123');
       expect(opp.description).toBe('New desc');
     });
   });

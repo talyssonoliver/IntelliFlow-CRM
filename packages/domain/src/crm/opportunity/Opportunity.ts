@@ -10,6 +10,7 @@ import {
   OpportunityValueUpdatedEvent,
   OpportunityWonEvent,
   OpportunityLostEvent,
+  OpportunityDescriptionUpdatedEvent,
   OpportunityProbabilityUpdatedEvent,
   OpportunityCloseDateChangedEvent,
   OpportunityReopenedEvent,
@@ -384,8 +385,9 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   /**
    * IFC-280: clear the expected close date. Closed-guarded like
    * updateExpectedCloseDate. Emits no domain event (the close-date-changed event
-   * models a new Date; a clear is a metadata reset, consistent with how
-   * updateDescription emits none) — no subscriber consumes a clear.
+   * models a new Date; a clear is a metadata reset) — no subscriber consumes a
+   * clear. Unlike this, updateDescription now emits (IFC-283 W-02) since a
+   * description update is never a "clear", always a new value.
    */
   clearExpectedCloseDate(_changedBy: string): Result<void, OpportunityAlreadyClosedError> {
     if (this.isClosed) {
@@ -461,9 +463,25 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return Result.ok(undefined);
   }
 
-  updateDescription(description: string): void {
+  /**
+   * IFC-283 W-02: now emits OpportunityDescriptionUpdatedEvent so downstream
+   * consumers (audit trail, search re-index) have a signal. `updatedBy` is
+   * required for the event's actor field, unlike the no-op prior signature.
+   * Guarded on an actual change (codex-review finding): setting the same
+   * description back would otherwise still mutate updatedAt and emit an
+   * event whose previous/new values are identical, falsely signalling a
+   * change to those downstream consumers.
+   */
+  updateDescription(description: string, updatedBy: string): void {
+    const previousDescription = this.props.description;
+    if (previousDescription === description) return;
+
     this.props.description = description;
     this.props.updatedAt = new Date();
+
+    this.addDomainEvent(
+      new OpportunityDescriptionUpdatedEvent(this.id, previousDescription, description, updatedBy)
+    );
   }
 
   /**

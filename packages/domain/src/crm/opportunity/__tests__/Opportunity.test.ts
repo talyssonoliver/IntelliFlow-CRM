@@ -23,6 +23,7 @@ import {
   OpportunityValueUpdatedEvent,
   OpportunityWonEvent,
   OpportunityLostEvent,
+  OpportunityDescriptionUpdatedEvent,
   OpportunityProbabilityUpdatedEvent,
   OpportunityCloseDateChangedEvent,
 } from '../OpportunityEvents';
@@ -663,17 +664,44 @@ describe('Opportunity Aggregate', () => {
     });
 
     it('should update description successfully', () => {
-      opportunity.updateDescription('Updated description');
+      opportunity.updateDescription('Updated description', 'user-123');
 
       expect(opportunity.description).toBe('Updated description');
     });
 
-    it('should not emit domain event for description update', () => {
+    // IFC-283 W-02: was "should not emit" — description changes now emit
+    // OpportunityDescriptionUpdatedEvent so audit trail / search re-index have
+    // a signal.
+    it('should emit OpportunityDescriptionUpdatedEvent with previous and new values', () => {
       opportunity.clearDomainEvents();
-      opportunity.updateDescription('New description');
+      opportunity.updateDescription('New description', 'user-123');
 
       const events = opportunity.getDomainEvents();
-      expect(events).toHaveLength(0);
+      expect(events).toHaveLength(1);
+      expect(events[0]).toBeInstanceOf(OpportunityDescriptionUpdatedEvent);
+      const event = events[0] as OpportunityDescriptionUpdatedEvent;
+      expect(event.previousDescription).toBe('Original description');
+      expect(event.newDescription).toBe('New description');
+      expect(event.updatedBy).toBe('user-123');
+      expect(event.toPayload()).toEqual({
+        opportunityId: opportunity.id.value,
+        previousDescription: 'Original description',
+        newDescription: 'New description',
+        updatedBy: 'user-123',
+      });
+    });
+
+    // codex-review finding on IFC-283: setting the same description back
+    // must not falsely signal a change to downstream consumers.
+    it('should not emit an event or bump updatedAt when the description is unchanged', () => {
+      const updatedAtBefore = opportunity.updatedAt;
+      opportunity.clearDomainEvents();
+
+      opportunity.updateDescription('Original description', 'user-123');
+
+      expect(opportunity.description).toBe('Original description');
+      expect(opportunity.updatedAt).toBe(updatedAtBefore);
+      expect(opportunity.getDomainEvents()).toHaveLength(0);
     });
   });
 
