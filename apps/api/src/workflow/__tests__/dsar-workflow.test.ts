@@ -237,7 +237,9 @@ describe('DSARWorkflow', () => {
 
       const now = new Date();
       const expectedDeadline = new Date();
-      expectedDeadline.setDate(expectedDeadline.getDate() + 30);
+      // UTC, like the implementation: local setDate() drifts an hour when the
+      // 30-day window crosses a DST change (e.g. UK clocks back on 25/10).
+      expectedDeadline.setUTCDate(expectedDeadline.getUTCDate() + 30);
 
       // Check within a few seconds tolerance
       expect(result.slaDeadline.getTime()).toBeCloseTo(expectedDeadline.getTime(), -4);
