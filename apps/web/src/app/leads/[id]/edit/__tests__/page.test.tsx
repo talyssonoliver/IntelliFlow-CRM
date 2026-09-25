@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 
 // ---------------------------------------------------------------------------
 // vi.hoisted — variables available inside vi.mock factories
@@ -145,11 +145,19 @@ vi.mock('@intelliflow/ui', async () => {
   };
 });
 
+import { invalidateLeadsCache } from '@/app/leads/(list)/actions';
 import EditLeadPage from '../page';
 
 describe('EditLeadPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // vitest.config.ts sets mockReset: true (resets implementations, not
+    // just call history, before every test) — the module mock's
+    // .mockResolvedValue(undefined) above only applies on first import, so
+    // it must be re-armed here for every test that exercises the onSuccess
+    // path (page.tsx calls invalidateLeadsCache().catch(...), which throws
+    // on an undefined return otherwise).
+    vi.mocked(invalidateLeadsCache).mockResolvedValue(undefined);
   });
 
   it('pre-populates form from getById data', () => {
@@ -236,5 +244,62 @@ describe('EditLeadPage', () => {
 
     const tagsInput = screen.getByLabelText('Tags') as HTMLInputElement;
     expect(tagsInput.value).toBe('enterprise, saas');
+  });
+
+  // IFC-249 (T9): the update mutation's onSuccess/onError callbacks were
+  // captured by the mock above but never actually invoked by a test —
+  // meaning the success-toast/cache-invalidation/navigation path and the
+  // error-toast path were both unverified. mockUpdateMutation exposes the
+  // captured callbacks via the `_onSuccess`/`_onError` getters specifically
+  // so tests can drive them directly, the same way the real
+  // `api.lead.update.useMutation({ onSuccess, onError })` call in page.tsx
+  // would invoke them after a real mutation settles.
+  describe('update mutation callbacks', () => {
+    it('onSuccess: shows a success toast, invalidates caches, and navigates to the detail page', async () => {
+      vi.useFakeTimers();
+      render(<EditLeadPage />);
+
+      const { _onSuccess } = mockUpdateMutation.mock.results[0]!.value as {
+        _onSuccess: () => void | Promise<void>;
+      };
+      await act(async () => {
+        await _onSuccess();
+      });
+
+      expect(mockInvalidateGetById).toHaveBeenCalledWith({ id: 'test-lead-id' });
+      expect(mockInvalidateList).toHaveBeenCalled();
+      expect(mockInvalidateStats).toHaveBeenCalled();
+
+      expect(screen.getByTestId('toast-title').textContent).toBe('Lead updated');
+      expect(screen.getByTestId('toast-description').textContent).toBe(
+        'Changes saved successfully.'
+      );
+
+      expect(mockPush).not.toHaveBeenCalled();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+      expect(mockPush).toHaveBeenCalledWith('/leads/test-lead-id');
+
+      vi.useRealTimers();
+    });
+
+    it('onError: shows a destructive toast with the mutation error message and does not navigate', () => {
+      render(<EditLeadPage />);
+
+      const { _onError } = mockUpdateMutation.mock.results[0]!.value as {
+        _onError: (err: { message: string }) => void;
+      };
+      act(() => {
+        _onError({ message: 'Lead was updated by someone else' });
+      });
+
+      expect(screen.getByTestId('toast-title').textContent).toBe('Failed to update lead');
+      expect(screen.getByTestId('toast-description').textContent).toBe(
+        'Lead was updated by someone else'
+      );
+      expect(mockPush).not.toHaveBeenCalled();
+      expect(mockInvalidateGetById).not.toHaveBeenCalled();
+    });
   });
 });

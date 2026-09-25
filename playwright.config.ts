@@ -14,6 +14,7 @@ const AUTHED_SPECS = [
   '**/contact-crud.spec.ts',
   '**/forms.spec.ts',
   '**/home/**/*.spec.ts',
+  '**/lead-crud.spec.ts',
   '**/navigation.spec.ts',
   '**/pipeline-settings.spec.ts',
   '**/tasks.spec.ts',
