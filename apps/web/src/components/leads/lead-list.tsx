@@ -21,6 +21,7 @@ import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { invalidateLeadsCache } from '@/app/leads/(list)/actions';
 import { revalidateLeadCaches, revalidateLeadConversionCaches } from '@/app/leads/actions';
 import type { Lead } from '@/lib/leads/lead-types';
+import { LeadStatusBadge } from '@/components/leads/lead-detail';
 import {
   LEAD_STATUS_OPTIONS,
   LEAD_SORT_OPTIONS,
@@ -133,7 +134,7 @@ function createColumns(
       accessorKey: 'status',
       header: 'Status',
       size: 120,
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }) => <LeadStatusBadge status={row.original.status} />,
     },
     {
       accessorKey: 'createdAt',
@@ -774,47 +775,6 @@ function LeadAvatar({ lead }: Readonly<{ lead: Lead }>) {
       aria-label={`Avatar for ${lead.firstName} ${lead.lastName}`}
     >
       {initials}
-    </span>
-  );
-}
-
-function StatusBadge({ status }: Readonly<{ status: LeadStatus }>) {
-  const config: Record<LeadStatus, { label: string; className: string }> = {
-    NEW: {
-      label: 'New',
-      className: 'bg-slate-100 text-slate-700 dark:bg-slate-700/50 dark:text-slate-300',
-    },
-    CONTACTED: {
-      label: 'Contacted',
-      className: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300',
-    },
-    QUALIFIED: {
-      label: 'Qualified',
-      className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
-    },
-    NEGOTIATING: {
-      label: 'Negotiating',
-      className: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
-    },
-    UNQUALIFIED: {
-      label: 'Unqualified',
-      className: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
-    },
-    CONVERTED: {
-      label: 'Converted',
-      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    },
-    LOST: {
-      label: 'Lost',
-      className: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-500',
-    },
-  };
-  const { label, className } = config[status];
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${className}`}
-    >
-      {label}
     </span>
   );
 }
