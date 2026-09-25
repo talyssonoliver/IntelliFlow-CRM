@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "typecheck": {
+      "dependsOn": [
+        "^build",
+        "@intelliflow/events-worker#build",
+        "@intelliflow/ingestion-worker#build",
+        "@intelliflow/notifications-worker#build"
+      ]
+    }
+  }
+}
