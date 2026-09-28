@@ -93,25 +93,154 @@ const LOG_DIR = path.join(OUT_DIR, 'logs');
 const STATE_PATH = path.join(OUT_DIR, 'last-run.json');
 
 // Shared skip_if probes. The DB-backed steps (integration, coverage, and the
-// two coverage gates that consume the lcov) can't run without a local test DB.
-// Since the SKIP_PRESHIP full-bypass was removed, these degrade to
-// MISSING-required (acknowledge with PRESHIP_ALLOW_MISSING=1) instead of
-// hard-failing — so a DB-less env can still push the rest of the gate without a
-// wholesale skip. NOTE: this only detects "no DB stack"; pointing DATABASE_URL
-// at the correct (non-prod) DB remains the developer's responsibility.
-function dbStackUnavailable() {
+// two coverage gates that consume the lcov) can't run without THIS repo's own
+// test stack (#704 — NOT "any postgres/redis on the machine": every worktree
+// of this repo shares one Docker daemon with every OTHER project checked out
+// on the same machine, and a raw substring match on `docker ps` names matched
+// an unrelated project's `cao-postgres`/`cao-redis` containers while this
+// repo's own `intelliflow-postgres-test`/`intelliflow-redis-test` were
+// stopped — the gate ran integration tests anyway and failed 4 files deep
+// into Prisma calls). Since the SKIP_PRESHIP full-bypass was removed, these
+// degrade to MISSING-required (acknowledge with PRESHIP_ALLOW_MISSING=1)
+// instead of hard-failing — so a DB-less env can still push the rest of the
+// gate without a wholesale skip. NOTE: this only detects "no test stack";
+// pointing DATABASE_URL at the correct (non-prod) DB remains the developer's
+// responsibility.
+const TEST_POSTGRES_CONTAINER = 'intelliflow-postgres-test';
+const TEST_REDIS_CONTAINER = 'intelliflow-redis-test';
+
+// Parse a `postgresql://`/`redis://` connection string into {host, port}.
+// Returns null for a missing/unparseable URL so callers can tell "not
+// configured" apart from "configured but unreachable".
+export function parseHostPort(connectionUrl, defaultPort) {
+  if (!connectionUrl) return null;
+  try {
+    const u = new URL(connectionUrl);
+    return { host: u.hostname || 'localhost', port: u.port ? Number(u.port) : defaultPort };
+  } catch {
+    return null;
+  }
+}
+
+// Minimal .env parser (KEY=VALUE, `#` comments, optional quotes, no
+// interpolation) — good enough for reading this repo's own `.env.test`
+// without pulling in a dependency just for the pre-ship gate.
+export function readEnvFile(filePath) {
+  const vars = {};
+  let content;
+  try {
+    content = fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return vars;
+  }
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const eq = line.indexOf('=');
+    if (eq === -1) continue;
+    const key = line.slice(0, eq).trim();
+    let value = line.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    vars[key] = value;
+  }
+  return vars;
+}
+
+// This repo's OWN configured test-stack endpoints (#704): TEST_DATABASE_URL /
+// TEST_REDIS_URL, read from the committed `.env.test` (the source of truth
+// for the integration-test env) with a real `process.env` override so
+// CI/a developer can point at a different stack without editing the file.
+// `env`/`envFilePath` are injectable purely for unit testing.
+export function getConfiguredTestEndpoints({ envFilePath, env } = {}) {
+  const fileVars = readEnvFile(envFilePath ?? path.join(REPO_ROOT, '.env.test'));
+  const e = env ?? process.env;
+  const dbUrl = e.TEST_DATABASE_URL || fileVars.TEST_DATABASE_URL;
+  const redisUrl = e.TEST_REDIS_URL || fileVars.TEST_REDIS_URL || e.REDIS_URL || fileVars.REDIS_URL;
+  return { dbUrl, redisUrl };
+}
+
+// Synchronous TCP reachability probe. `spawnSync` has no async equivalent, so
+// the actual connect attempt runs in a throwaway `node -e` child (exit 0 on
+// connect, 1 on error/timeout) and `spawnSync` blocks on THAT exit the normal
+// way — same synchronous-probe shape as every other skip_if in this file.
+// Ground truth for "is the configured test DB/Redis actually reachable",
+// independent of Docker (also covers a non-Docker test stack).
+export function tcpPortOpen(host, port, timeoutMs = 3000) {
+  if (!host || !port) return false;
+  const probe = [
+    "const net = require('node:net');",
+    `const s = net.createConnection({ host: ${JSON.stringify(String(host))}, port: ${Number(port)} });`,
+    `s.setTimeout(${timeoutMs});`,
+    'const done = (ok) => { try { s.destroy(); } catch {} process.exit(ok ? 0 : 1); };',
+    "s.once('connect', () => done(true));",
+    "s.once('timeout', () => done(false));",
+    "s.once('error', () => done(false));",
+  ].join('\n');
+  const r = spawnSync(process.execPath, ['-e', probe], {
+    stdio: 'ignore',
+    timeout: timeoutMs + 2000,
+  });
+  return r.status === 0;
+}
+
+// Docker verdict for THIS repo's exact test containers — not a substring
+// match against every container on the machine (that was #704's bug: any
+// OTHER project's `*postgres*`/`*redis*` containers made the old probe say
+// "available"). `container_name:` in docker-compose.yml fixes these names
+// regardless of COMPOSE_PROJECT_NAME, so an exact (case-insensitive) match is
+// exactly this repo's stack. Returns true/false, or null when Docker itself
+// couldn't be asked (missing / daemon down / probe timed out) — null means
+// "unknown", not "unavailable", so the caller can fall back to a direct TCP
+// check instead of hard-failing when Docker isn't the whole story.
+// Pure exact-match core of the Docker probe, split out from
+// dockerTestContainersRunning() so the fix's actual logic — exact names, not
+// substrings — is unit-testable against a fabricated container list without
+// needing a real Docker daemon (e.g. the #704 repro: ['cao-postgres',
+// 'cao-redis'] present, this repo's own test containers absent).
+export function hasExactTestContainers(names) {
+  const lower = (names || []).map((n) => String(n).trim().toLowerCase()).filter(Boolean);
+  return lower.includes(TEST_POSTGRES_CONTAINER) && lower.includes(TEST_REDIS_CONTAINER);
+}
+
+export function dockerTestContainersRunning() {
   const r = spawnSync('docker', ['ps', '--format', '{{.Names}}'], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
     shell: process.platform === 'win32',
-    // Bound the probe: a WEDGED daemon makes `docker ps` hang indefinitely, which
-    // would stall the whole gate before the SKIPPED_PRECONDITION logic runs. On
-    // timeout spawnSync returns a null status → treated as "db stack unavailable".
+    // Bound the probe: a WEDGED daemon makes `docker ps` hang indefinitely,
+    // which would stall the whole gate before the SKIPPED_PRECONDITION logic
+    // runs. On timeout spawnSync returns a null status → treated as "unknown".
     timeout: 10000,
   });
-  if (r.error || r.status !== 0) return true; // docker missing / daemon down / probe timed out
-  const names = (r.stdout || '').toLowerCase();
-  return !(names.includes('postgres') && names.includes('redis'));
+  if (r.error || r.status !== 0) return null;
+  return hasExactTestContainers((r.stdout || '').split(/\r?\n/));
+}
+
+// The unified probe (#704): checks THIS repo's actual configured test stack —
+// the exact container names docker-compose.yml assigns it — falling back to a
+// TCP reachability check of the host:port its OWN TEST_DATABASE_URL /
+// TEST_REDIS_URL resolve to when Docker can't answer. `probeContainers` /
+// `endpoints` are injectable purely for unit testing each branch.
+export function testStackUnavailable({
+  probeContainers = dockerTestContainersRunning,
+  endpoints,
+} = {}) {
+  const dockerVerdict = probeContainers();
+  if (dockerVerdict === true) return false; // exact test containers confirmed running
+  if (dockerVerdict === false) return true; // Docker reachable, exact containers confirmed absent
+
+  // Docker itself couldn't answer — fall back to a direct TCP check of this
+  // repo's configured test endpoints (also covers a non-Docker test stack).
+  const { dbUrl, redisUrl } = endpoints ?? getConfiguredTestEndpoints();
+  const db = parseHostPort(dbUrl, 5433);
+  const redis = parseHostPort(redisUrl, 6380);
+  if (!db || !redis) return true; // can't even resolve a target → unavailable
+  return !(tcpPortOpen(db.host, db.port) && tcpPortOpen(redis.host, redis.port));
 }
 // The coverage gates need the merged lcov the `coverage` step produces; if that
 // step was skipped (no DB), they have nothing to read.
@@ -218,6 +347,151 @@ const DEP_SCANNER = resolveDepScanner();
 // without a bypass env, while every runnable gate (and the E2E matrix) still
 // blocks loudly.
 const IS_CI = process.env.CI === 'true' || process.env.CI === '1';
+
+// ─── DB-stack exclusivity lock (#704) ─────────────────────────────────────
+// `intelliflow-postgres-test`/`intelliflow-redis-test` are singleton
+// containers PER MACHINE (fixed `container_name:` + fixed host port in
+// docker-compose.yml) — every worktree of this repo shares them, but nothing
+// enforced "only one gate run touches this DB at a time". Two concurrent
+// `pre-ship.mjs` runs (different worktrees) could interleave DB-mutating
+// integration-test runs against the SAME database, each PASSing against a
+// state neither run alone actually produced — a false PASS that gets merged,
+// which is worse than a wasted run that gets caught. Steps flagged
+// `db_lock: true` (integration-tests, coverage) take an exclusive lock for
+// the duration of their subprocess.
+//
+// Lock location: the repo's SHARED `.git` directory
+// (`git rev-parse --git-common-dir`), not inside any one worktree — the one
+// filesystem location every worktree of this repo already shares. Acquired
+// with Node's exclusive-create flag (`wx`) — EEXIST *is* the lock,
+// atomically, no separate check-then-act race (same pattern as this
+// codebase's orchestrator sibling's `MaterialiseFs.writeExclusive` in
+// `src/inbox/materialiselocal.ts`).
+function gitCommonDir() {
+  const r = spawnSync('git', ['rev-parse', '--git-common-dir'], {
+    cwd: REPO_ROOT,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: process.platform === 'win32',
+  });
+  if (r.status !== 0 || !r.stdout) return path.join(REPO_ROOT, '.git'); // best-effort fallback
+  return path.resolve(REPO_ROOT, r.stdout.trim());
+}
+const DB_LOCK_PATH = path.join(gitCommonDir(), 'preship-db.lock');
+// A lock older than this is treated as abandoned even if its PID looks
+// alive — covers the harness-level failure mode #704 also hit: a wrapper
+// reports its task dead while the CHILD process (and the containers it was
+// using) keep running. Comfortably longer than the ~30 min a full gate takes.
+const DB_LOCK_STALE_MS = 45 * 60 * 1000;
+// How long a run waits for someone else's lock before giving up and FAILING
+// the step (naming the holder) rather than hanging the gate forever, or —
+// worse — silently skipping it (this gate refuses to let a DB step silently
+// skip; see the SKIP_PRESHIP-removal note at the top of this file).
+const DB_LOCK_WAIT_MS = Number(process.env.PRESHIP_DB_LOCK_WAIT_MS) || 30 * 60 * 1000;
+const DB_LOCK_POLL_MS = 15000;
+
+export function isPidAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return Boolean(err && err.code === 'EPERM'); // exists, just not ours to signal
+  }
+}
+
+export function readDbLockFile(lockPath = DB_LOCK_PATH) {
+  try {
+    return JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+// Reap an abandoned lock (dead PID or past the staleness ceiling) so a
+// crashed holder doesn't wedge every future gate run. Logs loudly per #704's
+// own design ("treat as abandoned, log loudly, and take it over"). `lockPath`/
+// `staleMs` are overridable purely for unit testing — production callers use
+// the module defaults (the real shared-.git lock, 45 min ceiling).
+export function reapStaleDbLock(lockPath = DB_LOCK_PATH, staleMs = DB_LOCK_STALE_MS) {
+  const holder = readDbLockFile(lockPath);
+  if (!holder) return true; // gone already — a race with the holder's own release
+  const age = Date.now() - (holder.startedAt || 0);
+  const abandoned = !isPidAlive(holder.pid) || age > staleMs;
+  if (!abandoned) return false;
+  process.stderr.write(
+    `pre-ship: reaping abandoned DB lock (pid ${holder.pid}, worktree ${holder.worktree}, ` +
+      `held ${fmtDuration(age)}) — taking over.\n`
+  );
+  try {
+    fs.unlinkSync(lockPath);
+  } catch {
+    /* another run already reaped it */
+  }
+  return true;
+}
+
+// Blocks (polling) until the lock is acquired or `waitMs` elapses. Returns a
+// release() function on success, or null on timeout. A timeout is surfaced as
+// an honest FAIL naming the holder — never a silent skip. All options are
+// overridable purely for unit testing; production callers use the module
+// defaults (the real shared-.git lock path, 30 min wait, 15s poll).
+export function acquireDbLock({
+  lockPath = DB_LOCK_PATH,
+  waitMs = DB_LOCK_WAIT_MS,
+  staleMs = DB_LOCK_STALE_MS,
+  pollMs = DB_LOCK_POLL_MS,
+} = {}) {
+  const deadline = Date.now() + waitMs;
+  for (;;) {
+    fs.mkdirSync(path.dirname(lockPath), { recursive: true });
+    try {
+      const fd = fs.openSync(lockPath, 'wx');
+      const branch = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        shell: process.platform === 'win32',
+      }).stdout;
+      fs.writeFileSync(
+        fd,
+        JSON.stringify(
+          {
+            pid: process.pid,
+            worktree: REPO_ROOT,
+            branch: (branch || '').trim(),
+            startedAt: Date.now(),
+          },
+          null,
+          2
+        )
+      );
+      fs.closeSync(fd);
+      return () => {
+        try {
+          fs.unlinkSync(lockPath);
+        } catch {
+          /* already gone — fine */
+        }
+      };
+    } catch (err) {
+      if (err.code !== 'EEXIST') throw err;
+    }
+    if (reapStaleDbLock(lockPath, staleMs)) continue; // retry immediately, don't burn a poll cycle
+    if (Date.now() >= deadline) {
+      const holder = readDbLockFile(lockPath);
+      process.stderr.write(
+        `pre-ship: timed out after ${fmtDuration(waitMs)} waiting for the DB lock held ` +
+          `by pid ${holder?.pid ?? '?'} in ${holder?.worktree ?? '?'} (branch ${holder?.branch ?? '?'}). ` +
+          'Another gate run is using intelliflow-postgres-test/intelliflow-redis-test.\n'
+      );
+      return null;
+    }
+    // Synchronous sleep (spawnSync has no async event loop to block on) —
+    // matches this script's synchronous-probe style throughout.
+    spawnSync(process.execPath, ['-e', `setTimeout(() => {}, ${pollMs})`], {
+      stdio: 'ignore',
+    });
+  }
+}
 
 // Step plan — fail-first token gate + steps from audit doc §8, plus the
 // OSV/Trivy dependency-scan parity gate (#485). Each step has:
@@ -382,39 +656,34 @@ const STEPS = [
   {
     id: 'integration-tests',
     description:
-      'vitest run --project integration (FAILS the gate if Docker postgres/redis not up — override with PRESHIP_ALLOW_MISSING=1)',
+      'vitest run --project integration (FAILS the gate if the intelliflow-*-test stack is not up — override with PRESHIP_ALLOW_MISSING=1)',
     cmd: ['pnpm', 'run', 'test:integration'],
-    skip_if: () => {
-      // Probe Docker for postgres AND redis. `docker ps --filter name=X
-      // --filter name=Y` combines filters with AND, so no single container
-      // can match both — that probe is permanently empty. List ALL running
-      // container names once and require both substrings to appear.
-      const r = spawnSync('docker', ['ps', '--format', '{{.Names}}'], {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-        shell: process.platform === 'win32',
-        timeout: 10000, // wedged daemon: don't hang the gate on the probe (mirrors dbStackUnavailable)
-      });
-      if (r.error || r.status !== 0) return true; // docker missing / daemon down / probe timed out → skip
-      const names = (r.stdout || '').toLowerCase();
-      const hasPostgres = names.includes('postgres');
-      const hasRedis = names.includes('redis');
-      return !(hasPostgres && hasRedis);
-    },
+    // #704: checks THIS repo's exact intelliflow-postgres-test/redis-test
+    // containers (falling back to a TCP check of the configured
+    // TEST_DATABASE_URL/TEST_REDIS_URL) — NOT a substring match against every
+    // container on the machine. See testStackUnavailable() above.
+    skip_if: testStackUnavailable,
     skip_remediation:
-      'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.',
+      'Start the local stack: `docker compose -f docker-compose.yml up -d postgres-test redis-test`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.',
+    // #704: intelliflow-postgres-test/redis-test are shared, machine-wide
+    // singletons across every worktree — serialize this step against any
+    // other gate run's DB-touching steps so two concurrent runs never
+    // interleave mutations against the same database.
+    db_lock: true,
     required: true,
   },
   {
     id: 'coverage',
     description: 'pnpm run test:coverage (merged Istanbul output)',
     cmd: ['pnpm', 'run', 'test:coverage'],
-    // Needs a local test DB (the merged run includes the integration project).
-    // Without one, degrade to MISSING-required rather than hard-fail against a
-    // possibly-wrong/prod DB.
-    skip_if: dbStackUnavailable,
+    // Needs THIS repo's own local test stack (the merged run includes the
+    // integration project). Without one, degrade to MISSING-required rather
+    // than hard-fail against a possibly-wrong/prod DB. See #704.
+    skip_if: testStackUnavailable,
     skip_remediation:
-      'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis` and point DATABASE_URL at the LOCAL test DB (never prod). Then re-run, or set PRESHIP_ALLOW_MISSING=1 to acknowledge the gap for this push.',
+      'Start the local stack: `docker compose -f docker-compose.yml up -d postgres-test redis-test` and point DATABASE_URL at the LOCAL test DB (never prod). Then re-run, or set PRESHIP_ALLOW_MISSING=1 to acknowledge the gap for this push.',
+    // #704: same shared-DB exclusivity requirement as integration-tests.
+    db_lock: true,
     required: true,
   },
   {
@@ -693,7 +962,16 @@ const STEPS = [
   },
 ];
 
-const args = process.argv.slice(2);
+// True only when this file is executed directly as the pre-ship CLI (the
+// husky pre-push hook, or a developer running it by hand) — false when it's
+// imported as an ES module (e.g. by scripts/__tests__/pre-ship.test.ts to
+// exercise the pure probe/lock functions exported above). Guards every
+// argv-driven / process.exit side effect below so `import` never runs the
+// actual gate. Mirrors the same guard in scripts/preship-attest.mjs.
+const invokedDirectly = Boolean(
+  process.argv[1] && path.resolve(process.argv[1]).endsWith('pre-ship.mjs')
+);
+const args = invokedDirectly ? process.argv.slice(2) : [];
 const KNOWN_FLAGS = new Set(['--clean', '--list', '--full', '--help']);
 const KNOWN_PREFIXES = ['--only='];
 const flags = {
@@ -823,6 +1101,33 @@ function runStep(step, prev) {
     };
   }
 
+  if (!step.db_lock) return executeStepProcess(step, logPath);
+
+  // #704: intelliflow-postgres-test/redis-test are shared, machine-wide
+  // singletons across every worktree of this repo — serialize DB-touching
+  // steps so two concurrent gate runs never interleave mutations against the
+  // same database (which can otherwise produce a PASS that nothing supports).
+  const lockStart = Date.now();
+  const release = acquireDbLock();
+  if (!release) {
+    return {
+      id: step.id,
+      description: step.description,
+      duration_ms: Date.now() - lockStart,
+      exit_code: -1,
+      verdict: 'FAIL',
+      required: step.required !== false,
+      failure_reason: 'db-lock-timeout',
+    };
+  }
+  try {
+    return executeStepProcess(step, logPath);
+  } finally {
+    release();
+  }
+}
+
+function executeStepProcess(step, logPath) {
   const start = Date.now();
   const env = { ...process.env, ...(step.env || {}) };
   // shell:true on Windows so the PATH resolves .cmd/.exe extensions for
@@ -1035,4 +1340,6 @@ function main() {
   process.exit(verdict === 'PASS' ? 0 : 1);
 }
 
-main();
+if (invokedDirectly) {
+  main();
+}
