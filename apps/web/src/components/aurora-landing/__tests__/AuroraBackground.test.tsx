@@ -455,6 +455,19 @@ describe('AuroraBackground', () => {
     expect(renderer.render.mock.calls.length).toBe(before + 2);
   });
 
+  it('holds 30 fps on a real 60 Hz cadence with coarsened timestamps', async () => {
+    mediaMatches['(pointer: coarse)'] = true;
+    const renderer = makeRenderer();
+    createAuroraRenderer.mockReturnValue(renderer);
+    render(<AuroraBackground />);
+    await loadArtwork();
+
+    const before = renderer.render.mock.calls.length;
+    // 60 frames at 60 Hz, timestamps rounded to 0.1 ms as Chrome does.
+    for (let i = 0; i < 60; i++) runFrame(Math.round(((i * 1000) / 60) * 10) / 10);
+    expect(renderer.render.mock.calls.length - before).toBe(30);
+  });
+
   it('uses the window device pixel ratio on desktops', async () => {
     vi.stubGlobal('devicePixelRatio', 2);
     createAuroraRenderer.mockReturnValue(makeRenderer());

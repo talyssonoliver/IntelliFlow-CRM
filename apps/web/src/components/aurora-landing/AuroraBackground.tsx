@@ -13,6 +13,11 @@ import {
 
 /** Phones get a lighter frame budget: 30 fps is indistinguishable for a slow drift. */
 const COARSE_POINTER_FRAME_MS = 1000 / 30;
+/**
+ * Slack for rAF timestamp rounding: two 60 Hz frames arrive ~33.3 ms apart,
+ * a hair under 1000/30, and without it every second draw slips to ~20 fps.
+ */
+const FRAME_SLACK_MS = 2;
 
 /**
  * 'static'   the still images (first paint, or WebGL unavailable / lost)
@@ -170,7 +175,7 @@ export function AuroraBackground({ className }: { className?: string }) {
       if (last !== null) time += Math.min(now - last, 100) / 1000;
       last = now;
       const current = sceneRef.current;
-      if (renderer && current && now - lastDraw >= minFrameMs) {
+      if (renderer && current && now - lastDraw >= minFrameMs - FRAME_SLACK_MS) {
         renderer.render(time, current);
         lastDraw = now;
       }

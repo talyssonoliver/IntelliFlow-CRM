@@ -49,7 +49,7 @@ beforeAll(async () => {
 
 describe('Sitemap Reconciliation', () => {
   // TC-25
-  it('total page.tsx count equals 209 (regression guard)', () => {
+  it('total page.tsx count equals 212 (regression guard)', () => {
     // Updated by PG-186: document-settings, document-types, storage-policies moved to (list)/.
     // Net count increased by 2 from PG-182/PG-183/PG-186 work (was 205 before sprint-17).
     // 208 = 207 baseline + 3 newly-tracked under agent-approvals/logs/*, governance/quality-reports/coverage/
@@ -59,8 +59,9 @@ describe('Sitemap Reconciliation', () => {
     // PG-063: +1 for the new Import Leads route apps/web/src/app/leads/(list)/import/page.tsx → 209.
     // PG-181: +2 for the Help Article Editor routes
     //   settings/help-center/articles/new/page.tsx and .../[id]/edit/page.tsx → 211.
+    // Aurora rebrand: +1 for the unlinked, noindex design preview preview/aurora/page.tsx → 212.
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(211);
+    expect(pageFiles.length).toBe(212);
   });
 
   // TC-26
