@@ -4,38 +4,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   AURORA_FRAGMENT_SHADER,
-  buildRibbonFrame,
   computeRenderSize,
   createAuroraRenderer,
-  MIN_FRAGMENT_UNIFORM_VECTORS,
-  RENDER_SCALE,
-  RIBBON_SAMPLES,
-  RIBBONS,
-  WIDE_BREAKPOINT_PX,
-  type RibbonSpec,
+  rampAt,
 } from '../aurora-renderer';
+import { ARTWORK, computeAuroraScene } from '../aurora-scene';
 
 type FakeGl = ReturnType<typeof makeFakeGl>;
 
 function makeFakeGl(
-  options: {
-    compileOk?: boolean;
-    linkOk?: boolean;
-    shader?: boolean;
-    uniformVectors?: number;
-    highPrecision?: number;
-  } = {}
+  options: { compileOk?: boolean; linkOk?: boolean; shader?: boolean; highPrecision?: number } = {}
 ) {
-  const {
-    compileOk = true,
-    linkOk = true,
-    shader = true,
-    uniformVectors = 221,
-    highPrecision = 23,
-  } = options;
+  const { compileOk = true, linkOk = true, shader = true, highPrecision = 23 } = options;
   return {
-    MAX_FRAGMENT_UNIFORM_VECTORS: 9,
-    HIGH_FLOAT: 10,
     VERTEX_SHADER: 1,
     FRAGMENT_SHADER: 2,
     COMPILE_STATUS: 3,
@@ -44,7 +25,14 @@ function makeFakeGl(
     STATIC_DRAW: 6,
     FLOAT: 7,
     TRIANGLES: 8,
-    getParameter: vi.fn(() => uniformVectors),
+    HIGH_FLOAT: 10,
+    TEXTURE_2D: 11,
+    TEXTURE0: 12,
+    TEXTURE1: 13,
+    UNPACK_FLIP_Y_WEBGL: 14,
+    UNPACK_PREMULTIPLY_ALPHA_WEBGL: 15,
+    RGBA: 16,
+    UNSIGNED_BYTE: 17,
     getShaderPrecisionFormat: vi.fn(() => ({ precision: highPrecision })),
     createShader: vi.fn(() => (shader ? {} : null)),
     shaderSource: vi.fn(),
@@ -52,7 +40,7 @@ function makeFakeGl(
     getShaderParameter: vi.fn(() => compileOk),
     getShaderInfoLog: vi.fn(() => 'compile log'),
     deleteShader: vi.fn(),
-    createProgram: vi.fn(() => ({})),
+    createProgram: vi.fn((): object | null => ({})),
     attachShader: vi.fn(),
     linkProgram: vi.fn(),
     getProgramParameter: vi.fn(() => linkOk),
@@ -64,19 +52,29 @@ function makeFakeGl(
     getAttribLocation: vi.fn(() => 0),
     enableVertexAttribArray: vi.fn(),
     vertexAttribPointer: vi.fn(),
+    activeTexture: vi.fn(),
+    createTexture: vi.fn(() => ({})),
+    bindTexture: vi.fn(),
+    pixelStorei: vi.fn(),
+    texImage2D: vi.fn(),
+    texParameteri: vi.fn(),
     getUniformLocation: vi.fn((_program: unknown, name: string) => ({ name })),
     viewport: vi.fn(),
+    uniform1i: vi.fn(),
     uniform1f: vi.fn(),
     uniform2f: vi.fn(),
     uniform3f: vi.fn(),
-    uniform4fv: vi.fn(),
+    uniform4f: vi.fn(),
+    uniform3fv: vi.fn(),
     drawArrays: vi.fn(),
+    isContextLost: vi.fn(() => false),
     deleteBuffer: vi.fn(),
+    deleteTexture: vi.fn(),
     deleteProgram: vi.fn(),
   };
 }
 
-function makeCanvas(gl: FakeGl | null, cssWidth = 1440, cssHeight = 900) {
+function makeCanvas(gl: FakeGl | null, cssWidth = 1440, cssHeight = 1000) {
   const canvas = document.createElement('canvas');
   Object.defineProperty(canvas, 'clientWidth', { configurable: true, get: () => cssWidth });
   Object.defineProperty(canvas, 'clientHeight', { configurable: true, get: () => cssHeight });
@@ -84,25 +82,37 @@ function makeCanvas(gl: FakeGl | null, cssWidth = 1440, cssHeight = 900) {
   return canvas;
 }
 
+const images = {
+  ribbon: document.createElement('img'),
+  veil: document.createElement('img'),
+};
+
 describe('computeRenderSize', () => {
-  it('renders at half resolution of the CSS box times the device pixel ratio', () => {
-    expect(computeRenderSize(1440, 900, 2)).toEqual({ width: 1440, height: 900, wide: true });
-    expect(RENDER_SCALE).toBe(0.5);
-    expect(WIDE_BREAKPOINT_PX).toBe(1024);
+  it('matches the device pixel ratio, capped at 1.5 and floored at 1', () => {
+    expect(computeRenderSize(1440, 1000, 1)).toEqual({ width: 1440, height: 1000 });
+    expect(computeRenderSize(390, 1000, 3)).toEqual({ width: 585, height: 1500 });
+    expect(computeRenderSize(400, 200, 0)).toEqual({ width: 400, height: 200 });
   });
 
-  it('caps the device pixel ratio at 2 and floors it at 1', () => {
-    expect(computeRenderSize(390, 1000, 3)).toEqual({ width: 390, height: 1000, wide: false });
-    expect(computeRenderSize(400, 200, 0)).toEqual({ width: 200, height: 100, wide: false });
+  it('shrinks the buffer to stay within the GPU side and pixel budgets', () => {
+    // A very tall page: 1.5x would be 585 x 12000, past the 4096 side limit.
+    expect(computeRenderSize(390, 8000, 1.5).height).toBeLessThanOrEqual(4096);
+    // A huge desktop: capped near 4 megapixels.
+    const big = computeRenderSize(2560, 1600, 1.5);
+    expect(big.width * big.height).toBeLessThanOrEqual(4_000_100);
   });
 
   it('never returns an empty drawing buffer', () => {
-    expect(computeRenderSize(0, 0, 1)).toEqual({ width: 1, height: 1, wide: false });
+    expect(computeRenderSize(0, 0, 1)).toEqual({ width: 1, height: 1 });
   });
+});
 
-  it('switches to the wide composition at the tablet breakpoint', () => {
-    expect(computeRenderSize(WIDE_BREAKPOINT_PX - 1, 800, 1).wide).toBe(false);
-    expect(computeRenderSize(WIDE_BREAKPOINT_PX, 800, 1).wide).toBe(true);
+describe('rampAt', () => {
+  it('holds the first frame still and eases the motion in', () => {
+    expect(rampAt(0)).toBe(0);
+    expect(rampAt(-5)).toBe(0);
+    expect(rampAt(1.2)).toBeCloseTo(1 - Math.exp(-1), 6);
+    expect(rampAt(30)).toBeCloseTo(1, 6);
   });
 });
 
@@ -111,28 +121,35 @@ describe('fragment shader source', () => {
     expect(AURORA_FRAGMENT_SHADER).not.toMatch(/\bpow\s*\(/);
   });
 
-  it('declares every uniform the renderer sets', () => {
-    for (const name of [
-      'u_resolution',
-      'u_time',
-      'u_wide',
-      'u_left',
-      'u_right',
-      'u_leftBand',
-      'u_rightBand',
-    ]) {
-      expect(AURORA_FRAGMENT_SHADER).toMatch(new RegExp(`uniform \\w+ ${name}\\b`));
-    }
-  });
-
   it('uses no GLSL ES reserved words as identifiers', () => {
     expect(AURORA_FRAGMENT_SHADER).not.toMatch(/\b(half|fixed|input|output|filter|sample)\b/);
   });
 
-  it('packs every path sample into the uniform arrays', () => {
-    const slots = Math.ceil(RIBBON_SAMPLES / 2);
-    expect(AURORA_FRAGMENT_SHADER).toContain(`uniform vec4 u_left[${slots}]`);
-    expect(AURORA_FRAGMENT_SHADER).toContain(`uniform vec4 u_right[${slots}]`);
+  it('contains no backticks, which would end the JS template literal', () => {
+    expect(AURORA_FRAGMENT_SHADER).not.toContain('`');
+  });
+
+  it('declares every uniform the renderer sets', () => {
+    for (const name of [
+      'u_res',
+      'u_time',
+      'u_ramp',
+      'u_ribbon',
+      'u_veil',
+      'u_ribbonAt',
+      'u_veilAt',
+      'u_groundAt',
+      'u_ribbonRect',
+      'u_veilRect',
+      'u_grad',
+      'u_wave',
+      'u_wavePeriod',
+      'u_waveColor',
+      'u_circle',
+      'u_circleColor',
+    ]) {
+      expect(AURORA_FRAGMENT_SHADER).toMatch(new RegExp(`uniform \\w+ ${name}\\b`));
+    }
   });
 });
 
@@ -145,198 +162,169 @@ describe('createAuroraRenderer', () => {
 
   afterEach(() => {
     warn.mockRestore();
+    vi.unstubAllGlobals();
   });
 
   it('returns null when the browser has no WebGL', () => {
-    expect(createAuroraRenderer(makeCanvas(null), () => 1)).toBeNull();
+    expect(createAuroraRenderer(makeCanvas(null), images, () => 1)).toBeNull();
   });
 
   it('returns null on GPUs without highp fragment precision', () => {
-    expect(createAuroraRenderer(makeCanvas(makeFakeGl({ highPrecision: 0 })), () => 1)).toBeNull();
+    const gl = makeFakeGl({ highPrecision: 0 });
+    expect(createAuroraRenderer(makeCanvas(gl), images, () => 1)).toBeNull();
     expect(warn).toHaveBeenCalledWith(
-      '[AuroraBackground] no highp in fragment shaders; keeping the CSS fallback.'
+      '[AuroraBackground] no highp in fragment shaders; keeping the still images.'
     );
+    expect(gl.createShader).not.toHaveBeenCalled();
   });
 
-  it('returns null on GPUs too small to hold both ribbons', () => {
-    const gl = makeFakeGl({ uniformVectors: MIN_FRAGMENT_UNIFORM_VECTORS - 1 });
-    expect(createAuroraRenderer(makeCanvas(gl), () => 1)).toBeNull();
-    expect(gl.createShader).not.toHaveBeenCalled();
+  it('returns null when the context cannot create shaders', () => {
+    expect(
+      createAuroraRenderer(makeCanvas(makeFakeGl({ shader: false })), images, () => 1)
+    ).toBeNull();
   });
 
   it('returns null and logs the reason when a shader fails to compile', () => {
     const gl = makeFakeGl({ compileOk: false });
-    expect(createAuroraRenderer(makeCanvas(gl), () => 1)).toBeNull();
+    expect(createAuroraRenderer(makeCanvas(gl), images, () => 1)).toBeNull();
     expect(warn).toHaveBeenCalledWith('[AuroraBackground] shader compile failed:', 'compile log');
     expect(gl.deleteShader).toHaveBeenCalled();
   });
 
-  it('returns null when the context cannot create shaders', () => {
-    expect(createAuroraRenderer(makeCanvas(makeFakeGl({ shader: false })), () => 1)).toBeNull();
-  });
-
   it('returns null when the program cannot be created', () => {
     const gl = makeFakeGl();
-    gl.createProgram.mockReturnValue(null as unknown as object);
-    expect(createAuroraRenderer(makeCanvas(gl), () => 1)).toBeNull();
+    gl.createProgram.mockReturnValue(null);
+    expect(createAuroraRenderer(makeCanvas(gl), images, () => 1)).toBeNull();
   });
 
   it('returns null and logs the reason when the program fails to link', () => {
     const gl = makeFakeGl({ linkOk: false });
-    expect(createAuroraRenderer(makeCanvas(gl), () => 1)).toBeNull();
+    expect(createAuroraRenderer(makeCanvas(gl), images, () => 1)).toBeNull();
     expect(warn).toHaveBeenCalledWith('[AuroraBackground] program link failed:', 'link log');
   });
 
-  it('sizes the canvas on creation and draws one full-screen triangle per frame', () => {
+  it('uploads both images premultiplied, unflipped and clamped', () => {
     const gl = makeFakeGl();
-    const canvas = makeCanvas(gl, 1440, 900);
-    const renderer = createAuroraRenderer(canvas, () => 2);
+    createAuroraRenderer(makeCanvas(gl), images, () => 1);
 
-    expect(renderer).not.toBeNull();
-    expect(canvas.width).toBe(1440);
-    expect(canvas.height).toBe(900);
-    expect(gl.viewport).toHaveBeenCalledWith(0, 0, 1440, 900);
+    expect(gl.texImage2D).toHaveBeenCalledWith(11, 0, 16, 16, 17, images.ribbon);
+    expect(gl.texImage2D).toHaveBeenCalledWith(11, 0, 16, 16, 17, images.veil);
+    expect(gl.pixelStorei).toHaveBeenCalledWith(gl.UNPACK_FLIP_Y_WEBGL, false);
+    expect(gl.pixelStorei).toHaveBeenCalledWith(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    expect(gl.uniform1i).toHaveBeenCalledWith({ name: 'u_ribbon' }, 0);
+    expect(gl.uniform1i).toHaveBeenCalledWith({ name: 'u_veil' }, 1);
+  });
 
-    renderer!.render(3.5, [0.25, 0.75, 1]);
-    expect(gl.uniform2f).toHaveBeenCalledWith({ name: 'u_resolution' }, 1440, 900);
-    expect(gl.uniform1f).toHaveBeenCalledWith({ name: 'u_time' }, 3.5);
-    expect(gl.uniform1f).toHaveBeenCalledWith({ name: 'u_wide' }, 1);
-    expect(gl.uniform4fv).toHaveBeenCalledWith({ name: 'u_left' }, expect.any(Float32Array));
-    expect(gl.uniform4fv).toHaveBeenCalledWith({ name: 'u_right' }, expect.any(Float32Array));
-    // Desktop: the left ribbon stacks outward (-1), the right toward its corner (+1).
-    expect(gl.uniform3f).toHaveBeenCalledWith({ name: 'u_leftBand' }, 34, 52, -1);
-    expect(gl.uniform3f).toHaveBeenCalledWith({ name: 'u_rightBand' }, 36, 54, 1);
+  it('sets the mockup constants once: artwork rectangles and ground', () => {
+    const gl = makeFakeGl();
+    createAuroraRenderer(makeCanvas(gl), images, () => 1);
+
+    const { ribbon, veil } = ARTWORK;
+    expect(gl.uniform4f).toHaveBeenCalledWith(
+      { name: 'u_ribbonRect' },
+      ribbon.x,
+      ribbon.y,
+      ribbon.width,
+      ribbon.height
+    );
+    expect(gl.uniform4f).toHaveBeenCalledWith(
+      { name: 'u_veilRect' },
+      veil.x,
+      veil.y,
+      veil.width,
+      veil.height
+    );
+    expect(gl.uniform3fv).toHaveBeenCalledWith({ name: 'u_grad' }, expect.any(Float32Array));
+    expect((gl.uniform3fv.mock.calls[0]![1] as Float32Array).length).toBe(18);
+  });
+
+  it('draws the scene with every placement converted to canvas pixels', () => {
+    const gl = makeFakeGl();
+    const canvas = makeCanvas(gl, 1440, 1000);
+    const renderer = createAuroraRenderer(canvas, images, () => 1.5)!;
+    const scene = computeAuroraScene(1440, 1000);
+
+    expect(canvas.width).toBe(2160);
+    renderer.render(4, scene);
+
+    expect(gl.uniform2f).toHaveBeenCalledWith({ name: 'u_res' }, 2160, 1500);
+    expect(gl.uniform1f).toHaveBeenCalledWith({ name: 'u_time' }, 4);
+    expect(gl.uniform1f).toHaveBeenCalledWith({ name: 'u_ramp' }, rampAt(4));
+    expect(gl.uniform3f).toHaveBeenCalledWith(
+      { name: 'u_ribbonAt' },
+      scene.ribbon.offsetX * 1.5,
+      scene.ribbon.offsetY * 1.5,
+      scene.ribbon.scale * 1.5
+    );
+    expect(gl.uniform3f).toHaveBeenCalledWith(
+      { name: 'u_veilAt' },
+      scene.veil.offsetX * 1.5,
+      scene.veil.offsetY * 1.5,
+      scene.veil.scale * 1.5
+    );
+    expect(gl.uniform3f).toHaveBeenCalledWith(
+      { name: 'u_groundAt' },
+      scene.ground.offsetX * 1.5,
+      scene.ground.offsetY * 1.5,
+      scene.ground.scale * 1.5
+    );
     expect(gl.drawArrays).toHaveBeenCalledWith(gl.TRIANGLES, 0, 3);
   });
 
-  it('switches to the phone composition after a resize below the breakpoint', () => {
+  it('follows the canvas when it is resized', () => {
     const gl = makeFakeGl();
     let width = 1440;
     const canvas = makeCanvas(gl);
     Object.defineProperty(canvas, 'clientWidth', { configurable: true, get: () => width });
-    const renderer = createAuroraRenderer(canvas, () => 1)!;
+    const renderer = createAuroraRenderer(canvas, images, () => 1)!;
 
     width = 390;
     renderer.resize();
-    renderer.render(0, [0.5, 0.5, 0]);
+    renderer.render(0, computeAuroraScene(390, 1000));
 
-    expect(canvas.width).toBe(195);
-    expect(gl.uniform1f).toHaveBeenCalledWith({ name: 'u_wide' }, 0);
+    expect(canvas.width).toBe(390);
+    expect(gl.viewport).toHaveBeenLastCalledWith(0, 0, 390, 1000);
+  });
+
+  it('copes with an unmeasured canvas', () => {
+    const gl = makeFakeGl();
+    const renderer = createAuroraRenderer(makeCanvas(gl, 0, 0), images, () => 1)!;
+    renderer.render(0, computeAuroraScene(390, 1000));
+    expect(gl.drawArrays).toHaveBeenCalled();
+  });
+
+  it("reads the window's device pixel ratio by default", () => {
+    vi.stubGlobal('devicePixelRatio', 1.25);
+    const canvas = makeCanvas(makeFakeGl(), 800, 400);
+    createAuroraRenderer(canvas, images);
+    expect(canvas.width).toBe(1000);
+  });
+
+  it('reports when the GPU has dropped the context', () => {
+    const gl = makeFakeGl();
+    const renderer = createAuroraRenderer(makeCanvas(gl), images, () => 1)!;
+    expect(renderer.isContextLost()).toBe(false);
+    gl.isContextLost.mockReturnValue(true);
+    expect(renderer.isContextLost()).toBe(true);
   });
 
   it('releases its GL objects on dispose', () => {
     const gl = makeFakeGl();
-    createAuroraRenderer(makeCanvas(gl), () => 1)!.dispose();
+    createAuroraRenderer(makeCanvas(gl), images, () => 1)!.dispose();
 
     expect(gl.deleteBuffer).toHaveBeenCalledTimes(1);
+    expect(gl.deleteTexture).toHaveBeenCalledTimes(2);
     expect(gl.deleteProgram).toHaveBeenCalledTimes(1);
     expect(gl.deleteShader).toHaveBeenCalledTimes(2);
   });
 
-  it("reads the window's device pixel ratio by default", () => {
-    vi.stubGlobal('devicePixelRatio', 2);
-    const canvas = makeCanvas(makeFakeGl(), 800, 400);
-    createAuroraRenderer(canvas);
-    vi.unstubAllGlobals();
-
-    expect(canvas.width).toBe(800);
-    expect(canvas.height).toBe(400);
-  });
-
   it('asks for a cheap, opaque context', () => {
-    const gl = makeFakeGl();
-    const canvas = makeCanvas(gl);
-    createAuroraRenderer(canvas, () => 1);
+    const canvas = makeCanvas(makeFakeGl());
+    createAuroraRenderer(canvas, images, () => 1);
 
     expect(canvas.getContext).toHaveBeenCalledWith(
       'webgl',
       expect.objectContaining({ alpha: false, antialias: false, powerPreference: 'low-power' })
     );
-  });
-});
-
-describe('buildRibbonFrame', () => {
-  const spec: RibbonSpec = {
-    refWidth: 1000,
-    anchor: 'left',
-    maxScale: 1.2,
-    points: [
-      [0, 0],
-      [500, 0],
-      [1000, 0],
-    ],
-    spacing: 10,
-    width: 20,
-    side: 'left',
-  };
-  const still = [0, 0, 0] as const;
-
-  function samples(frame: { packed: Float32Array }) {
-    return Array.from({ length: RIBBON_SAMPLES }, (_, i) => [
-      frame.packed[i * 2]!,
-      frame.packed[i * 2 + 1]!,
-    ]);
-  }
-
-  it('samples the path from its first control point to its last', () => {
-    // Control points drift by at most 10 reference px on each axis.
-    const points = samples(buildRibbonFrame(spec, 1000, 1000, 0, still, 500));
-    expect(points).toHaveLength(RIBBON_SAMPLES);
-    expect(Math.abs(points[0]![0]! - 0)).toBeLessThanOrEqual(10);
-    expect(Math.abs(points.at(-1)![0]! - 1000)).toBeLessThanOrEqual(10);
-    for (const [, y] of points) expect(Math.abs(y!)).toBeLessThanOrEqual(10.5);
-  });
-
-  it('scales with the layout and converts to canvas pixels', () => {
-    const frame = buildRibbonFrame(spec, 500, 250, 0, still, 100);
-    expect(Math.abs(samples(frame).at(-1)![0]! - 250)).toBeLessThanOrEqual(2.5);
-    expect(frame.band).toEqual([2.5, 5, 1]);
-  });
-
-  it('stops growing past its maximum scale', () => {
-    const frame = buildRibbonFrame(spec, 3000, 3000, 0, still, 1000);
-    expect(frame.band[0]).toBeCloseTo(12, 5);
-  });
-
-  it('pins right-anchored ribbons to the right edge on wider screens', () => {
-    const right: RibbonSpec = { ...spec, anchor: 'right', side: 'right' };
-    const frame = buildRibbonFrame(right, 2000, 2000, 0, still, 1000);
-    expect(Math.abs(samples(frame).at(-1)![0]! - 2000)).toBeLessThanOrEqual(12);
-    expect(frame.band[2]).toBe(-1);
-  });
-
-  it('bends the path toward the pointer and leaves far parts alone', () => {
-    const base = samples(buildRibbonFrame(spec, 1000, 1000, 0, still, 1000));
-    const pulled = samples(buildRibbonFrame(spec, 1000, 1000, 0, [0.5, 0.2, 1], 1000));
-    const middle = Math.floor(RIBBON_SAMPLES / 2);
-    expect(pulled[middle]![1]).toBeGreaterThan(base[middle]![1]!);
-    expect(pulled[0]![1]).toBeCloseTo(base[0]![1]!, 3);
-  });
-
-  it('ignores a pointer sitting exactly on a sample', () => {
-    const base = samples(buildRibbonFrame(spec, 1000, 1000, 0, still, 1000));
-    const onPath = samples(buildRibbonFrame(spec, 1000, 1000, 0, [0, 0.01, 1], 1000));
-    expect(onPath[0]![0]).toBeCloseTo(base[0]![0]!, 4);
-    expect(onPath[0]![1]).toBeCloseTo(base[0]![1]!, 4);
-  });
-
-  it('drifts over time', () => {
-    const a = samples(buildRibbonFrame(spec, 1000, 1000, 0, still, 1000));
-    const b = samples(buildRibbonFrame(spec, 1000, 1000, 2, still, 1000));
-    expect(a).not.toEqual(b);
-  });
-
-  it('copes with an unmeasured canvas', () => {
-    expect(buildRibbonFrame(spec, 0, 0, 0, still, 0).band).toEqual([0, 0, 1]);
-  });
-
-  it('keeps the desktop hero copy clear of the left ribbon', () => {
-    // The copy starts at x=168 in the 1440 layout. On the vertical run the folds
-    // stack outward, so only the inner half-fold plus the drift reaches inward.
-    const { points, width, side } = RIBBONS.wide.left;
-    expect(side).toBe('right');
-    for (const [x, y] of points) {
-      if (y > 60 && y < 620) expect(x + 10 + width / 2).toBeLessThan(168);
-    }
   });
 });

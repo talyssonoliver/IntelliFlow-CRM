@@ -2,249 +2,402 @@
 
 import * as React from 'react';
 import { createAuroraRenderer, type AuroraRenderer } from './aurora-renderer';
+import {
+  ARTWORK,
+  GROUND,
+  computeAuroraScene,
+  wavePath,
+  type AuroraScene,
+  type Placement,
+} from './aurora-scene';
 
-/** Animation seconds advanced per real second. The ribbon should drift, not swim. */
-const TIME_SCALE = 0.6;
-/** The single frame drawn when the visitor asks for reduced motion. */
-const STILL_FRAME_TIME = 8;
-/** How quickly the ribbon follows the pointer, per frame (0..1). */
-const POINTER_EASE = 0.05;
-
-export type AuroraBackgroundState = 'fallback' | 'still' | 'animated';
+/** Phones get a lighter frame budget: 30 fps is indistinguishable for a slow drift. */
+const COARSE_POINTER_FRAME_MS = 1000 / 30;
 
 /**
- * Painted until the first WebGL frame lands, and kept for good when WebGL is
- * unavailable. It approximates the shader's composition so nothing jumps.
+ * 'static'   the still images (first paint, or WebGL unavailable / lost)
+ * 'still'    the still images on purpose: the visitor asked for reduced motion
+ * 'animated' the live WebGL canvas, faded in over the still images
+ * 'paused'   the live canvas, held on its current frame by the visitor
  */
-const FALLBACK_STYLE: React.CSSProperties = {
-  backgroundColor: '#F3F4FB',
-  backgroundImage: [
-    'radial-gradient(38% 32% at 0% 48%, rgba(56, 189, 248, 0.38), transparent 70%)',
-    'radial-gradient(34% 28% at 22% 70%, rgba(124, 77, 245, 0.22), transparent 70%)',
-    'radial-gradient(32% 26% at 100% 0%, rgba(139, 92, 246, 0.34), transparent 70%)',
-  ].join(', '),
-};
+export type AuroraBackgroundState = 'static' | 'still' | 'animated' | 'paused';
 
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
+const SPARKLE_PATH = 'M0 -10 C1 -3 3 -1 10 0 C3 1 1 3 0 10 C-1 3 -3 1 -10 0 C-3 -1 -1 -3 0 -10 Z';
+
+// Measure before paint in the browser; plain effect on the server (no warning).
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
+
+function mediaQuery(query: string): MediaQueryList | null {
+  return typeof window.matchMedia === 'function' ? window.matchMedia(query) : null;
 }
 
-function hasFinePointer(): boolean {
-  return typeof window.matchMedia === 'function' && window.matchMedia('(pointer: fine)').matches;
+/** Tracks `prefers-reduced-motion` live, so a change mid-visit takes effect. */
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = React.useState(false);
+  React.useEffect(() => {
+    const query = mediaQuery('(prefers-reduced-motion: reduce)');
+    if (!query) return;
+    setReduced(query.matches);
+    if (typeof query.addEventListener !== 'function') return;
+    const onChange = () => setReduced(query.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+  return reduced;
+}
+
+/** Position a cut-out image exactly where the shader draws it at t=0. */
+function layerStyle(
+  placement: Placement,
+  art: { x: number; y: number; width: number; height: number }
+): React.CSSProperties {
+  return {
+    position: 'absolute',
+    left: placement.offsetX + placement.scale * art.x,
+    top: placement.offsetY + placement.scale * art.y,
+    width: placement.scale * art.width,
+    height: placement.scale * art.height,
+    maxWidth: 'none',
+  };
+}
+
+/** Resolves once `image` has decoded; rejects if it failed, even before we started listening. */
+function waitForImage(image: HTMLImageElement): Promise<void> {
+  if (image.complete) {
+    return image.naturalWidth > 0
+      ? Promise.resolve()
+      : Promise.reject(new Error(`failed to load ${image.src}`));
+  }
+  return new Promise((resolve, reject) => {
+    const done = () => {
+      image.removeEventListener('load', onLoad);
+      image.removeEventListener('error', onError);
+    };
+    const onLoad = () => {
+      done();
+      resolve();
+    };
+    const onError = () => {
+      done();
+      reject(new Error(`failed to load ${image.src}`));
+    };
+    image.addEventListener('load', onLoad);
+    image.addEventListener('error', onError);
+  });
+}
+
+interface LoopControls {
+  setPaused(paused: boolean): void;
+  /** Redraw the current frame when the loop is not running (paused or off-screen). */
+  repaint(): void;
 }
 
 /**
- * Live aurora ribbon behind the landing hero. Purely decorative: the content
- * above it never depends on it having rendered, and it stops drawing whenever
- * it is off-screen or the tab is hidden.
+ * The live Aurora ribbon behind the landing hero. It paints the mockup as still
+ * images first, then fades a WebGL canvas in over them and lets the folds drift.
+ * It stops drawing whenever it is off-screen or the tab is hidden, never animates
+ * for visitors who ask for reduced motion, and offers a pause button (WCAG 2.2.2).
  */
 export function AuroraBackground({ className }: { className?: string }) {
+  const rootRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const [state, setState] = React.useState<AuroraBackgroundState>('fallback');
+  const ribbonRef = React.useRef<HTMLImageElement>(null);
+  const veilRef = React.useRef<HTMLImageElement>(null);
+  const loopRef = React.useRef<LoopControls | null>(null);
+  const pausedRef = React.useRef(false);
+  const [size, setSize] = React.useState<{ width: number; height: number } | null>(null);
+  const [state, setState] = React.useState<AuroraBackgroundState>('static');
+  const [paused, setPaused] = React.useState(false);
+  const reduced = useReducedMotion();
 
-  React.useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const scene = React.useMemo<AuroraScene | null>(
+    () => (size ? computeAuroraScene(size.width, size.height) : null),
+    [size]
+  );
+  const sceneRef = React.useRef<AuroraScene | null>(scene);
+  sceneRef.current = scene;
 
-    let renderer: AuroraRenderer | null = null;
-    try {
-      renderer = createAuroraRenderer(canvas);
-    } catch (error) {
-      console.warn('[AuroraBackground] WebGL setup threw; keeping the CSS fallback.', error);
+  // Measure the box the background fills, before the first paint.
+  useIsomorphicLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const measure = () => {
+      const width = root.clientWidth;
+      const height = root.clientHeight;
+      setSize((prev) =>
+        prev && prev.width === width && prev.height === height ? prev : { width, height }
+      );
+    };
+    measure();
+    if (typeof ResizeObserver === 'function') {
+      const observer = new ResizeObserver(measure);
+      observer.observe(root);
+      return () => observer.disconnect();
     }
-    if (!renderer) return;
-    const active = renderer;
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
 
-    const reduced = prefersReducedMotion();
-    const pointer: [number, number, number] = [0.5, 0.5, 0];
-    const target: [number, number, number] = [0.5, 0.5, 0];
+  const measured = scene !== null;
+
+  // Start WebGL once the layout is known and both images have loaded.
+  React.useEffect(() => {
+    if (!measured) return;
+    if (reduced) {
+      setState('still');
+      return;
+    }
+    setState('static');
+    const canvas = canvasRef.current;
+    const ribbon = ribbonRef.current;
+    const veil = veilRef.current;
+    if (!canvas || !ribbon || !veil) return;
+
+    let cancelled = false;
+    let renderer: AuroraRenderer | null = null;
     let frame = 0;
     let visible = true;
     let pageVisible = document.visibilityState !== 'hidden';
-    let animationTime = STILL_FRAME_TIME;
-    let lastTimestamp: number | null = null;
+    let time = 0;
+    let last: number | null = null;
+    let lastDraw = -Infinity;
+    const coarse = mediaQuery('(pointer: coarse)')?.matches ?? false;
+    const minFrameMs = coarse ? COARSE_POINTER_FRAME_MS : 0;
+    const cleanups: Array<() => void> = [];
 
-    const drawStill = () => active.render(STILL_FRAME_TIME, [0.5, 0.5, 0]);
-
-    const tick = (timestamp: number) => {
-      if (lastTimestamp !== null) {
-        animationTime += (Math.min(timestamp - lastTimestamp, 100) / 1000) * TIME_SCALE;
+    const tick = (now: number) => {
+      if (last !== null) time += Math.min(now - last, 100) / 1000;
+      last = now;
+      const current = sceneRef.current;
+      if (renderer && current && now - lastDraw >= minFrameMs) {
+        renderer.render(time, current);
+        lastDraw = now;
       }
-      lastTimestamp = timestamp;
-      for (let i = 0; i < 3; i++) pointer[i] += (target[i] - pointer[i]) * POINTER_EASE;
-      active.render(animationTime, pointer);
       frame = requestAnimationFrame(tick);
     };
-
     const start = () => {
-      if (reduced || frame || !visible || !pageVisible) return;
-      lastTimestamp = null;
+      if (!renderer || frame || !visible || !pageVisible || pausedRef.current) return;
+      last = null;
       frame = requestAnimationFrame(tick);
     };
-
     const stop = () => {
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
     };
-
-    drawStill();
-    setState(reduced ? 'still' : 'animated');
-    start();
-
-    const resizeObserver =
-      typeof ResizeObserver === 'function'
-        ? new ResizeObserver(() => {
-            active.resize();
-            if (reduced || !frame) drawStill();
-          })
-        : null;
-    resizeObserver?.observe(canvas);
-
-    const intersectionObserver =
-      typeof IntersectionObserver === 'function'
-        ? new IntersectionObserver(([entry]) => {
-            visible = entry?.isIntersecting ?? true;
-            if (visible) start();
-            else stop();
-          })
-        : null;
-    intersectionObserver?.observe(canvas);
-
-    const onVisibility = () => {
-      pageVisible = document.visibilityState !== 'hidden';
-      if (pageVisible) start();
-      else stop();
+    const repaint = () => {
+      const latest = sceneRef.current;
+      if (renderer && !frame && latest) renderer.render(time, latest);
     };
-    document.addEventListener('visibilitychange', onVisibility);
 
-    const trackPointer = !reduced && hasFinePointer();
-    const onPointerMove = (event: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
-      const x = (event.clientX - rect.left) / rect.width;
-      const y = (event.clientY - rect.top) / rect.height;
-      const inside = x >= 0 && x <= 1 && y >= 0 && y <= 1;
-      target[0] = x;
-      target[1] = y;
-      target[2] = inside ? 1 : 0;
-    };
-    if (trackPointer) window.addEventListener('pointermove', onPointerMove, { passive: true });
-
+    // Listen for context loss before any GPU allocation can trigger it.
     const onContextLost = (event: Event) => {
       event.preventDefault();
       stop();
-      setState('fallback');
+      renderer = null; // every GL object is gone; never draw with it again
+      setState('static');
     };
     canvas.addEventListener('webglcontextlost', onContextLost);
+    cleanups.push(() => canvas.removeEventListener('webglcontextlost', onContextLost));
+
+    Promise.all([waitForImage(ribbon), waitForImage(veil)])
+      .then(() => {
+        if (cancelled) return;
+        try {
+          renderer = createAuroraRenderer(canvas, { ribbon, veil }, () =>
+            coarse ? 1 : window.devicePixelRatio
+          );
+        } catch (error) {
+          console.warn('[AuroraBackground] WebGL setup threw; keeping the still images.', error);
+        }
+        if (!renderer) return;
+        const current = sceneRef.current;
+        if (current) renderer.render(0, current);
+        if (renderer.isContextLost()) {
+          renderer = null;
+          return;
+        }
+        loopRef.current = {
+          setPaused(next) {
+            if (next) stop();
+            else start();
+          },
+          repaint,
+        };
+        setState(pausedRef.current ? 'paused' : 'animated');
+        start();
+
+        const active = renderer;
+        const onResize = () => {
+          active.resize();
+          repaint();
+        };
+        if (typeof ResizeObserver === 'function') {
+          const observer = new ResizeObserver(onResize);
+          observer.observe(canvas);
+          cleanups.push(() => observer.disconnect());
+        } else {
+          window.addEventListener('resize', onResize);
+          cleanups.push(() => window.removeEventListener('resize', onResize));
+        }
+        if (typeof IntersectionObserver === 'function') {
+          const observer = new IntersectionObserver(([entry]) => {
+            visible = entry?.isIntersecting ?? true;
+            if (visible) start();
+            else stop();
+          });
+          observer.observe(canvas);
+          cleanups.push(() => observer.disconnect());
+        }
+        const onVisibility = () => {
+          pageVisible = document.visibilityState !== 'hidden';
+          if (pageVisible) start();
+          else stop();
+        };
+        document.addEventListener('visibilitychange', onVisibility);
+        cleanups.push(() => document.removeEventListener('visibilitychange', onVisibility));
+      })
+      .catch((error: unknown) => {
+        console.warn('[AuroraBackground] artwork failed to load; keeping the still layers.', error);
+      });
 
     return () => {
+      cancelled = true;
       stop();
-      resizeObserver?.disconnect();
-      intersectionObserver?.disconnect();
-      document.removeEventListener('visibilitychange', onVisibility);
-      if (trackPointer) window.removeEventListener('pointermove', onPointerMove);
-      canvas.removeEventListener('webglcontextlost', onContextLost);
-      active.dispose();
+      loopRef.current = null;
+      for (const cleanup of cleanups) cleanup();
+      renderer?.dispose();
     };
-  }, []);
+  }, [measured, reduced]);
+
+  // A new layout while the loop is stopped still has to reach the canvas.
+  React.useEffect(() => {
+    loopRef.current?.repaint();
+  }, [scene]);
+
+  const togglePaused = () => {
+    const next = !paused;
+    pausedRef.current = next;
+    setPaused(next);
+    loopRef.current?.setPaused(next);
+    const liveState: AuroraBackgroundState = next ? 'paused' : 'animated';
+    setState((current) => (current === 'animated' || current === 'paused' ? liveState : current));
+  };
+
+  const live = state === 'animated' || state === 'paused';
 
   return (
     <div
-      aria-hidden="true"
+      ref={rootRef}
       data-testid="aurora-background"
       data-state={state}
-      className={`pointer-events-none absolute inset-0 overflow-hidden ${className ?? ''}`}
-      style={FALLBACK_STYLE}
+      className={`pointer-events-none absolute inset-0 ${className ?? ''}`}
     >
-      <canvas
-        ref={canvasRef}
-        className={`absolute inset-0 h-full w-full transition-opacity duration-700 ${
-          state === 'fallback' ? 'opacity-0' : 'opacity-100'
-        }`}
-      />
-      <AuroraDecorations />
-    </div>
-  );
-}
-
-const SPARKLE_PATH = 'M0 -10 C1 -3 3 -1 10 0 C3 1 1 3 0 10 C-1 3 -3 1 -10 0 C-3 -1 -1 -3 0 -10 Z';
-
-/** A four-point star, `size` px across. Purely decorative. */
-function Sparkle({
-  size,
-  color,
-  style,
-}: {
-  size: number;
-  color: string;
-  style: React.CSSProperties;
-}) {
-  return (
-    <svg width={size} height={size} viewBox="-10 -10 20 20" className="absolute" style={style}>
-      <path d={SPARKLE_PATH} fill={color} />
-    </svg>
-  );
-}
-
-/** A rows x cols grid of small dots. Purely decorative. */
-function DotGrid({
-  cols,
-  rows,
-  style,
-}: {
-  cols: number;
-  rows: number;
-  style: React.CSSProperties;
-}) {
-  const gap = 18;
-  return (
-    <svg
-      width={(cols - 1) * gap + 6}
-      height={(rows - 1) * gap + 6}
-      className="absolute opacity-60"
-      style={style}
-    >
-      {Array.from({ length: cols * rows }, (_, i) => (
-        <circle
-          key={i}
-          cx={3 + (i % cols) * gap}
-          cy={3 + Math.floor(i / cols) * gap}
-          r={2.5}
-          fill="#7C83E8"
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 overflow-hidden bg-[#EFF0F9] bg-[linear-gradient(160deg,#F2F3FB_0%,#EEEFF9_55%,#EBE9F7_100%)]"
+      >
+        {scene && (
+          <>
+            <svg
+              className="absolute inset-0"
+              width={scene.width}
+              height={scene.height}
+              viewBox={`0 0 ${scene.width} ${scene.height}`}
+            >
+              <path d={wavePath(scene, 96)} fill="#FBF9FC" />
+            </svg>
+            <div
+              className="absolute rounded-full"
+              style={{
+                left:
+                  scene.ground.offsetX +
+                  scene.ground.scale * (GROUND.circle.x - GROUND.circle.radius),
+                top:
+                  scene.ground.offsetY +
+                  scene.ground.scale * (GROUND.circle.y - GROUND.circle.radius),
+                width: scene.ground.scale * GROUND.circle.radius * 2,
+                height: scene.ground.scale * GROUND.circle.radius * 2,
+                backgroundColor: `rgba(${GROUND.circle.color.map((c) => Math.round(c * 255)).join(', ')}, ${GROUND.circle.alpha})`,
+              }}
+            />
+            {/* Plain img elements on purpose: WebGL uploads these exact elements as textures. */}
+            <img
+              ref={veilRef}
+              src={ARTWORK.veil.src}
+              alt=""
+              decoding="async"
+              style={layerStyle(scene.veil, ARTWORK.veil)}
+            />
+            <img
+              ref={ribbonRef}
+              src={ARTWORK.ribbon.src}
+              alt=""
+              decoding="async"
+              style={layerStyle(scene.ribbon, ARTWORK.ribbon)}
+            />
+          </>
+        )}
+        <canvas
+          ref={canvasRef}
+          className={`absolute inset-0 h-full w-full transition-opacity duration-700 ${
+            live ? 'opacity-100' : 'opacity-0'
+          }`}
         />
-      ))}
-    </svg>
-  );
-}
-
-const CYAN = '#38BDF8';
-const VIOLET = '#8B5CF6';
-
-/**
- * The mockup's sparkles and dot grids. Positions mirror the shader's two
- * compositions: the desktop set shows from the lg breakpoint, the phone set
- * below it, and both stay clear of the hero copy.
- */
-function AuroraDecorations() {
-  return (
-    <>
-      <div className="hidden lg:block">
-        <Sparkle size={26} color={CYAN} style={{ left: 104, top: 22 }} />
-        <Sparkle size={14} color={CYAN} style={{ left: 136, top: 52 }} />
-        <Sparkle size={20} color="#60A5FA" style={{ right: 44, top: 318 }} />
-        <Sparkle size={30} color={VIOLET} style={{ right: 58, top: 420 }} />
-        <DotGrid cols={3} rows={6} style={{ right: 28, top: 500 }} />
-        <DotGrid cols={3} rows={3} style={{ left: 36, top: 860 }} />
+        {scene && (
+          <>
+            {scene.sparkles.map((sparkle, index) => (
+              <svg
+                key={index}
+                className="absolute"
+                width={sparkle.size}
+                height={sparkle.size}
+                viewBox="-10 -10 20 20"
+                style={{ left: sparkle.x - sparkle.size / 2, top: sparkle.y - sparkle.size / 2 }}
+              >
+                <path d={SPARKLE_PATH} fill="#4FA3E8" />
+              </svg>
+            ))}
+            <svg
+              className="absolute opacity-80"
+              width={(scene.dots.cols - 1) * scene.dots.gap + 6}
+              height={(scene.dots.rows - 1) * scene.dots.gap + 6}
+              style={{ left: scene.dots.x, top: scene.dots.y }}
+            >
+              {Array.from({ length: scene.dots.cols * scene.dots.rows }, (_, i) => (
+                <circle
+                  key={i}
+                  cx={3 + (i % scene.dots.cols) * scene.dots.gap}
+                  cy={3 + Math.floor(i / scene.dots.cols) * scene.dots.gap}
+                  r={2.5}
+                  fill="#7F8CE6"
+                />
+              ))}
+            </svg>
+            <div
+              className="absolute rounded-full bg-[#E3DEF6]"
+              style={{
+                left: scene.smallCircle.x - scene.smallCircle.radius,
+                top: scene.smallCircle.y - scene.smallCircle.radius,
+                width: scene.smallCircle.radius * 2,
+                height: scene.smallCircle.radius * 2,
+              }}
+            />
+          </>
+        )}
       </div>
-      <div className="lg:hidden">
-        <Sparkle size={20} color={CYAN} style={{ left: 18, top: 18 }} />
-        <Sparkle size={12} color={CYAN} style={{ left: 44, top: 44 }} />
-        <Sparkle size={18} color={VIOLET} style={{ right: 16, top: 640 }} />
-        <DotGrid cols={3} rows={4} style={{ right: 14, top: 700 }} />
-      </div>
-    </>
+      {live && (
+        <button
+          type="button"
+          onClick={togglePaused}
+          aria-label={paused ? 'Play background animation' : 'Pause background animation'}
+          className="pointer-events-auto absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full border border-[#D6D8F2] bg-white/85 text-[#11175B] shadow-sm backdrop-blur transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2A78F6] focus-visible:ring-offset-2"
+        >
+          <span className="material-symbols-outlined text-xl" aria-hidden="true">
+            {paused ? 'play_arrow' : 'pause'}
+          </span>
+        </button>
+      )}
+    </div>
   );
 }
