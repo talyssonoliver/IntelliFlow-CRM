@@ -2,7 +2,7 @@
 
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
-> Guide Components **Total Pages**: 211 implemented **Total Flows**: 42 **API
+> Guide Components **Total Pages**: 212 implemented **Total Flows**: 42 **API
 > Routers**: 64 (369 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
