@@ -82,13 +82,18 @@ describe('computeAuroraScene: phone', () => {
     expect(computeAuroraScene(WIDE_BREAKPOINT_PX - 1, 1500).wide).toBe(false);
   });
 
-  it('starts the ribbon below the tour link and keeps the veil above the headline', () => {
+  it('starts the ribbon below the tour link and sweeps the right ribbon in beside the headline', () => {
     const scene = computeAuroraScene(390, 1500);
     // Crest top (frame y 213) sits just under the "Take the tour" link.
     expect(at(scene.ribbon, 0, 213).y).toBeCloseTo(646, 6);
-    // The veil's bottom edge ends above the headline (which starts near y=100).
-    const veilBottom = at(scene.veil, 0, ARTWORK.veil.y + ARTWORK.veil.height).y;
-    expect(veilBottom).toBeLessThan(120);
+    // As in the phone mockup: the right ribbon's whole body shows just under the
+    // header (the background starts there), about a third of the screen width tall, pinned to the right edge.
+    const top = at(scene.veil, 0, ARTWORK.veil.y).y;
+    const bottom = at(scene.veil, 0, ARTWORK.veil.y + ARTWORK.veil.height).y;
+    expect(top).toBeGreaterThanOrEqual(0);
+    expect(top).toBeLessThan(10);
+    expect(bottom - top).toBeGreaterThan(110);
+    expect(bottom).toBeLessThan(140);
     expect(at(scene.veil, ARTWORK.veil.x + ARTWORK.veil.width, 0).x).toBeCloseTo(390, 6);
     expect(scene.sparkles).toHaveLength(2);
   });
