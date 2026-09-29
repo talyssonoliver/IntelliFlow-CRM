@@ -26,7 +26,30 @@ vi.mock('../AuroraBackground', () => ({
 
 import { AuroraLandingPage } from '../AuroraLandingPage';
 import { AuroraHeader } from '../AuroraHeader';
-import AuroraPreviewPage, { metadata } from '@/app/preview/aurora/page';
+import AuroraPreviewPage, { metadata, revalidate } from '@/app/preview/aurora/page';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
+/** Every route with a page.tsx, route groups like (public) stripped. */
+function appRoutes(): Set<string> {
+  const root = path.resolve(__dirname, '../../../app');
+  const routes = new Set<string>();
+  const walk = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name === 'page.tsx') {
+        const rel = path
+          .relative(root, dir)
+          .split(path.sep)
+          .filter((s) => !/^\(.*\)$/.test(s));
+        routes.add('/' + rel.join('/'));
+      }
+    }
+  };
+  walk(root);
+  return routes;
+}
 
 describe('AuroraLandingPage', () => {
   it('leads with the Aurora value proposition over the live background', () => {
@@ -84,6 +107,17 @@ describe('AuroraLandingPage', () => {
     expect(screen.getByRole('main')).toHaveAttribute('id', 'aurora-main');
     // The root layout already owns #main-content; a second one breaks its skip link.
     expect(container.querySelector('#main-content')).toBeNull();
+  });
+
+  it('links only to pages that exist', () => {
+    const { container } = render(<AuroraLandingPage />);
+    const routes = appRoutes();
+    const hrefs = [...container.querySelectorAll('a[href^="/"]')].map(
+      (a) => a.getAttribute('href')!.split(/[?#]/)[0]!
+    );
+
+    expect(hrefs.length).toBeGreaterThan(10);
+    for (const href of new Set(hrefs)) expect(routes, `${href} has no page`).toContain(href);
   });
 
   it('has one main landmark, a closing call to action and the Aurora brand', () => {
@@ -144,6 +178,10 @@ describe('AuroraHeader', () => {
 });
 
 describe('/preview/aurora route', () => {
+  it('re-renders daily so the copyright year never goes stale', () => {
+    expect(revalidate).toBe(86400);
+  });
+
   it('renders the landing page and stays out of search indexes', () => {
     render(<AuroraPreviewPage />);
 
