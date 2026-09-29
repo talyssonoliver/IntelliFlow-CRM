@@ -8,6 +8,9 @@ import { AuroraLandingPage } from '@/components/aurora-landing/AuroraLandingPage
  * its header, footer and metadata stay untouched until the owner signs this
  * design off. Not linked from anywhere and kept out of search indexes.
  */
+// Prerendered, so re-render daily to keep the footer's copyright year current.
+export const revalidate = 86400;
+
 export const metadata: Metadata = {
   title: { absolute: 'Aurora — the AI-native CRM (preview)' },
   description:
