@@ -169,11 +169,12 @@ export function computeAuroraScene(width: number, height: number): AuroraScene {
   const scale = 0.55 * unit;
   const ribbon = { offsetX: 0, offsetY: 646 - 213 * scale, scale };
 
-  const veilScale = 0.15 * unit;
-  // Tucked into the top-right corner, clear of the headline.
+  const veilScale = 0.19 * unit;
+  // As in the phone mockup: sweeping in from the right edge just under the
+  // header, beside the badge and headline, its faint tail reaching toward them.
   const veil = {
     offsetX: width - ARTWORK.veilFrameWidth * veilScale,
-    offsetY: -20 * unit,
+    offsetY: 2 * unit,
     scale: veilScale,
   };
 
