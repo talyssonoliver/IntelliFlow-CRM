@@ -1,9 +1,10 @@
 /**
  * Where each piece of the Aurora background sits, for any container size.
  *
- * The artwork comes from the approved mockup (a 1320x1370 frame). The left
- * ribbon and right veil are cut out of it as images; the page gradient, white
- * wave and big circle are regenerated from measurements of it. Each piece gets
+ * The left ribbon comes from the approved mockup (a 1320x1370 frame); the right
+ * ribbon (`veil`) from the owner's full-width composition (a 2556 px wide
+ * frame). Both are cut-out images; the page gradient, white wave and big circle
+ * are regenerated from measurements of the mockup. Each piece gets
  * its own placement here, so the ribbon can stay beside the hero copy instead
  * of behind it (brand rule: no ribbon behind critical UI text) while keeping
  * the mockup's proportions.
@@ -41,7 +42,9 @@ export interface AuroraScene {
 /** The cut-out layers: file, intrinsic size and where they sat in the mockup frame. */
 export const ARTWORK = {
   ribbon: { src: '/brand/aurora/bg/ribbon-left.webp', x: 0, y: 185, width: 741, height: 675 },
-  veil: { src: '/brand/aurora/bg/veil-right.webp', x: 900, y: 230, width: 420, height: 430 },
+  /** The right-hand ribbon, in its own frame: the owner's full-width composition, 2556 px wide. */
+  veil: { src: '/brand/aurora/bg/ribbon-right.webp', x: 1211, y: 0, width: 1345, height: 660 },
+  veilFrameWidth: 2556,
   frameWidth: 1320,
   frameHeight: 1370,
 } as const;
@@ -126,10 +129,11 @@ export function computeAuroraScene(width: number, height: number): AuroraScene {
       scale,
     };
 
-    const veilScale = clamp(width / 1440, 0.75, 1.15) * 0.95;
+    // As in the owner's composition: from the top-right corner, sized to the page.
+    const veilScale = clamp(width / ARTWORK.veilFrameWidth, 0.45, 0.75);
     const veil = {
-      offsetX: width - ARTWORK.frameWidth * veilScale,
-      offsetY: 12 - ARTWORK.veil.y * veilScale,
+      offsetX: width - ARTWORK.veilFrameWidth * veilScale,
+      offsetY: 0,
       scale: veilScale,
     };
 
@@ -165,11 +169,11 @@ export function computeAuroraScene(width: number, height: number): AuroraScene {
   const scale = 0.55 * unit;
   const ribbon = { offsetX: 0, offsetY: 646 - 213 * scale, scale };
 
-  const veilScale = 0.36 * unit;
+  const veilScale = 0.15 * unit;
   // Tucked into the top-right corner, clear of the headline.
   const veil = {
-    offsetX: width - ARTWORK.frameWidth * veilScale,
-    offsetY: -44 - ARTWORK.veil.y * veilScale,
+    offsetX: width - ARTWORK.veilFrameWidth * veilScale,
+    offsetY: -20 * unit,
     scale: veilScale,
   };
 
