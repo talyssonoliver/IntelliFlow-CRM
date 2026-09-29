@@ -508,3 +508,149 @@ describe('AuroraBackground', () => {
     expect(renderer.render).toHaveBeenLastCalledWith(0, computeAuroraScene(390, 1500));
   });
 });
+
+describe('AuroraBackground touch strokes', () => {
+  const scene = () => computeAuroraScene(1440, 1100);
+  /** A CSS point on the painted left ribbon (frame point well inside its image). */
+  const onRibbon = () => {
+    const p = scene().ribbon;
+    return { x: p.offsetX + p.scale * 100, y: p.offsetY + p.scale * (ARTWORK.ribbon.y + 100) };
+  };
+  let getContext: ReturnType<typeof vi.spyOn>;
+
+  /** One stir at `point` (x, y, dx, dy; float-tolerant) with the painted colour. */
+  function expectStir(stir: ReturnType<typeof vi.fn>, point: number[]) {
+    expect(stir).toHaveBeenCalledTimes(1);
+    const [args] = stir.mock.calls as unknown as [[number, number, number, number, number[]]];
+    args.slice(0, 4).forEach((value, i) => expect(value).toBeCloseTo(point[i]!, 6));
+    expect(args[4]).toEqual([0.2, 0.4, 0.8, 1]);
+  }
+
+  function makeInteractiveRenderer() {
+    return { ...makeRenderer(), interactive: true, stir: vi.fn(() => true) };
+  }
+
+  function move(x: number, y: number, timeStamp: number, pointerType = 'mouse') {
+    const event = new MouseEvent('pointermove', { clientX: x, clientY: y });
+    Object.defineProperty(event, 'pointerType', { value: pointerType });
+    Object.defineProperty(event, 'timeStamp', { value: timeStamp });
+    act(() => {
+      window.dispatchEvent(event);
+    });
+  }
+
+  function touch(x: number, y: number, timeStamp: number) {
+    const event = new Event('touchmove');
+    Object.defineProperty(event, 'touches', { value: [{ clientX: x, clientY: y }] });
+    Object.defineProperty(event, 'timeStamp', { value: timeStamp });
+    act(() => {
+      window.dispatchEvent(event);
+    });
+  }
+
+  beforeEach(() => {
+    // Opaque artwork everywhere inside the images: every point on them is ribbon.
+    vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(4);
+    vi.spyOn(HTMLImageElement.prototype, 'naturalHeight', 'get').mockReturnValue(4);
+    const data = new Uint8ClampedArray(4 * 4 * 4).fill(255);
+    for (let i = 0; i < data.length; i += 4) data.set([51, 102, 204, 255], i);
+    getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockImplementation(((kind: string) =>
+        kind === '2d'
+          ? { drawImage: vi.fn(), getImageData: () => ({ width: 4, height: 4, data }) }
+          : null) as unknown as HTMLCanvasElement['getContext']);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('stirs the ribbon under a mouse stroke, with its painted colour', async () => {
+    const renderer = makeInteractiveRenderer();
+    createAuroraRenderer.mockReturnValue(renderer);
+    render(<AuroraBackground />);
+    await loadArtwork();
+
+    const { x, y } = onRibbon();
+    move(x, y, 1000); // the first move only starts the stroke
+    expect(renderer.stir).not.toHaveBeenCalled();
+    move(x + 6, y + 3, 1016);
+    expectStir(renderer.stir, [x + 6, y + 3, 6, 3]);
+  });
+
+  it('stirs under a finger too, and ignores pointer events for touches', async () => {
+    const renderer = makeInteractiveRenderer();
+    createAuroraRenderer.mockReturnValue(renderer);
+    render(<AuroraBackground />);
+    await loadArtwork();
+
+    const { x, y } = onRibbon();
+    move(x, y, 1000, 'touch');
+    move(x + 5, y, 1016, 'touch');
+    expect(renderer.stir).not.toHaveBeenCalled();
+    touch(x, y, 1030);
+    touch(x + 5, y - 5, 1046);
+    expectStir(renderer.stir, [x + 5, y - 5, 5, -5]);
+  });
+
+  it('starts a new stroke after a pause instead of jumping, and ignores bare background', async () => {
+    const renderer = makeInteractiveRenderer();
+    createAuroraRenderer.mockReturnValue(renderer);
+    render(<AuroraBackground />);
+    await loadArtwork();
+
+    const { x, y } = onRibbon();
+    move(x, y, 1000);
+    move(x + 40, y, 1500); // 500 ms later: a new stroke, no splat
+    expect(renderer.stir).not.toHaveBeenCalled();
+    move(720, -400, 1510); // off both images
+    move(724, -396, 1520);
+    expect(renderer.stir).not.toHaveBeenCalled();
+  });
+
+  it('does not stir while the visitor has paused the animation', async () => {
+    const renderer = makeInteractiveRenderer();
+    createAuroraRenderer.mockReturnValue(renderer);
+    render(<AuroraBackground />);
+    await loadArtwork();
+    act(() => screen.getByRole('button', { name: 'Pause background animation' }).click());
+
+    const { x, y } = onRibbon();
+    move(x, y, 1000);
+    move(x + 6, y, 1016);
+    expect(renderer.stir).not.toHaveBeenCalled();
+  });
+
+  it('listens for strokes only when the GPU can run the fluid, and stops on unmount', async () => {
+    const add = vi.spyOn(window, 'addEventListener');
+    const remove = vi.spyOn(window, 'removeEventListener');
+    createAuroraRenderer.mockReturnValue(makeRenderer());
+    const first = render(<AuroraBackground />);
+    await loadArtwork();
+    expect(add).not.toHaveBeenCalledWith('pointermove', expect.anything(), expect.anything());
+    first.unmount();
+
+    createAuroraRenderer.mockReturnValue(makeInteractiveRenderer());
+    const second = render(<AuroraBackground />);
+    await loadArtwork();
+    expect(add).toHaveBeenCalledWith('pointermove', expect.any(Function), { passive: true });
+    expect(add).toHaveBeenCalledWith('touchmove', expect.any(Function), { passive: true });
+    second.unmount();
+    expect(remove).toHaveBeenCalledWith('pointermove', expect.any(Function));
+    expect(remove).toHaveBeenCalledWith('touchmove', expect.any(Function));
+  });
+
+  it('skips the touch effect when the artwork pixels cannot be read', async () => {
+    getContext.mockImplementation((() => {
+      throw new Error('tainted');
+    }) as unknown as HTMLCanvasElement['getContext']);
+    const add = vi.spyOn(window, 'addEventListener');
+    createAuroraRenderer.mockReturnValue(makeInteractiveRenderer());
+    render(<AuroraBackground />);
+    await loadArtwork();
+
+    expect(root()).toHaveAttribute('data-state', 'animated');
+    expect(add).not.toHaveBeenCalledWith('pointermove', expect.anything(), expect.anything());
+  });
+});

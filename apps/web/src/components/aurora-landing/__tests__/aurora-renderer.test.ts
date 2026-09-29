@@ -4,11 +4,32 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   AURORA_FRAGMENT_SHADER,
+  AURORA_VERTEX_SHADER,
+  DYE_FRAGMENT_SHADER,
+  DYE_VERTEX_SHADER,
+  RIBBON_FRAGMENT_SHADER,
+  RIBBON_VERTEX_SHADER,
   computeRenderSize,
   createAuroraRenderer,
   rampAt,
 } from '../aurora-renderer';
-import { ARTWORK, computeAuroraScene } from '../aurora-scene';
+import { FLUID_SHADERS, FLUID_VERTEX_SHADER } from '../aurora-fluid';
+import { RIBBON_SPECS } from '../aurora-ribbon-mesh';
+import { computeAuroraScene } from '../aurora-scene';
+
+const fluid = {
+  resize: vi.fn(),
+  splat: vi.fn(),
+  step: vi.fn(),
+  velocity: vi.fn(() => ({ texture: 'velocity' })),
+  dye: vi.fn(() => ({ texture: 'dye' })),
+  dispose: vi.fn(),
+};
+const createAuroraFluid = vi.fn((..._args: unknown[]): typeof fluid | null => null);
+vi.mock('../aurora-fluid', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../aurora-fluid')>()),
+  createAuroraFluid: (...args: unknown[]) => createAuroraFluid(...args),
+}));
 
 type FakeGl = ReturnType<typeof makeFakeGl>;
 
@@ -16,6 +37,7 @@ function makeFakeGl(
   options: { compileOk?: boolean; linkOk?: boolean; shader?: boolean; highPrecision?: number } = {}
 ) {
   const { compileOk = true, linkOk = true, shader = true, highPrecision = 23 } = options;
+  let programs = 0;
   return {
     VERTEX_SHADER: 1,
     FRAGMENT_SHADER: 2,
@@ -33,6 +55,10 @@ function makeFakeGl(
     UNPACK_PREMULTIPLY_ALPHA_WEBGL: 15,
     RGBA: 16,
     UNSIGNED_BYTE: 17,
+    FRAMEBUFFER: 18,
+    BLEND: 19,
+    ONE: 20,
+    ONE_MINUS_SRC_ALPHA: 21,
     getShaderPrecisionFormat: vi.fn(() => ({ precision: highPrecision })),
     createShader: vi.fn(() => (shader ? {} : null)),
     shaderSource: vi.fn(),
@@ -40,7 +66,7 @@ function makeFakeGl(
     getShaderParameter: vi.fn(() => compileOk),
     getShaderInfoLog: vi.fn(() => 'compile log'),
     deleteShader: vi.fn(),
-    createProgram: vi.fn((): object | null => ({})),
+    createProgram: vi.fn((): object | null => ({ id: programs++ })),
     attachShader: vi.fn(),
     linkProgram: vi.fn(),
     getProgramParameter: vi.fn(() => linkOk),
@@ -67,6 +93,10 @@ function makeFakeGl(
     uniform4f: vi.fn(),
     uniform3fv: vi.fn(),
     drawArrays: vi.fn(),
+    bindFramebuffer: vi.fn(),
+    enable: vi.fn(),
+    disable: vi.fn(),
+    blendFunc: vi.fn(),
     isContextLost: vi.fn(() => false),
     deleteBuffer: vi.fn(),
     deleteTexture: vi.fn(),
@@ -86,6 +116,10 @@ const images = {
   ribbon: document.createElement('img'),
   veil: document.createElement('img'),
 };
+
+/** Every call of `mock` whose first argument is the uniform `name`. */
+const callsFor = (mock: { mock: { calls: unknown[][] } }, name: string) =>
+  mock.mock.calls.filter((call) => (call[0] as { name?: string } | null)?.name === name);
 
 describe('computeRenderSize', () => {
   it('matches the device pixel ratio, capped at 1.5 and floored at 1', () => {
@@ -111,36 +145,37 @@ describe('rampAt', () => {
   it('holds the first frame still and eases the motion in', () => {
     expect(rampAt(0)).toBe(0);
     expect(rampAt(-5)).toBe(0);
-    expect(rampAt(1.2)).toBeCloseTo(1 - Math.exp(-1), 6);
+    expect(rampAt(0.6)).toBeCloseTo(1 - Math.exp(-1), 6);
     expect(rampAt(30)).toBeCloseTo(1, 6);
   });
 });
 
-describe('fragment shader source', () => {
-  it('never calls pow(), which is undefined for negative bases in GLSL', () => {
-    expect(AURORA_FRAGMENT_SHADER).not.toMatch(/\bpow\s*\(/);
-  });
+describe('shader sources', () => {
+  const sources: Record<string, string> = {
+    AURORA_VERTEX_SHADER,
+    AURORA_FRAGMENT_SHADER,
+    RIBBON_VERTEX_SHADER,
+    RIBBON_FRAGMENT_SHADER,
+    DYE_VERTEX_SHADER,
+    DYE_FRAGMENT_SHADER,
+    FLUID_VERTEX_SHADER,
+    ...Object.fromEntries(Object.entries(FLUID_SHADERS).map(([k, v]) => [`fluid ${k}`, v])),
+  };
 
-  it('uses no GLSL ES reserved words as identifiers', () => {
-    expect(AURORA_FRAGMENT_SHADER).not.toMatch(/\b(half|fixed|input|output|filter|sample)\b/);
-  });
+  for (const [name, source] of Object.entries(sources)) {
+    it(`${name}: no pow() (undefined for negative bases), no reserved words, no backticks`, () => {
+      expect(source).not.toMatch(/\bpow\s*\(/);
+      expect(source).not.toMatch(/\b(half|fixed|input|output|filter|sample)\b/);
+      expect(source).not.toContain('`');
+    });
+  }
 
-  it('contains no backticks, which would end the JS template literal', () => {
-    expect(AURORA_FRAGMENT_SHADER).not.toContain('`');
-  });
-
-  it('declares every uniform the renderer sets', () => {
+  it('declares every uniform the renderer sets on the ground', () => {
     for (const name of [
       'u_res',
       'u_time',
       'u_ramp',
-      'u_ribbon',
-      'u_veil',
-      'u_ribbonAt',
-      'u_veilAt',
       'u_groundAt',
-      'u_ribbonRect',
-      'u_veilRect',
       'u_grad',
       'u_wave',
       'u_wavePeriod',
@@ -151,6 +186,34 @@ describe('fragment shader source', () => {
       expect(AURORA_FRAGMENT_SHADER).toMatch(new RegExp(`uniform \\w+ ${name}\\b`));
     }
   });
+
+  it('declares every uniform the renderer sets on the ribbons and the dye', () => {
+    const ribbon = RIBBON_VERTEX_SHADER + RIBBON_FRAGMENT_SHADER;
+    for (const name of [
+      'u_res',
+      'u_at',
+      'u_image',
+      'u_velocity',
+      'u_art',
+      'u_anchor',
+      'u_time',
+      'u_ramp',
+      'u_light',
+      'u_phase',
+      'u_fluid',
+    ]) {
+      expect(ribbon).toMatch(new RegExp(`uniform \\w+ ${name}\\b`));
+    }
+    for (const name of ['u_dye', 'u_strength']) {
+      expect(DYE_FRAGMENT_SHADER).toMatch(new RegExp(`uniform \\w+ ${name}\\b`));
+    }
+  });
+
+  it('gates every ribbon motion term by the ramp, so the first frame is the artwork', () => {
+    expect(RIBBON_FRAGMENT_SHADER).toMatch(/float amp = AMP \* wave \* env \* u_ramp;/);
+    expect(RIBBON_FRAGMENT_SHADER).toMatch(/line \*= .*\* u_ramp;/);
+    expect(RIBBON_FRAGMENT_SHADER).toMatch(/\* u_fluid \*/);
+  });
 });
 
 describe('createAuroraRenderer', () => {
@@ -158,6 +221,9 @@ describe('createAuroraRenderer', () => {
 
   beforeEach(() => {
     warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    createAuroraFluid.mockReset();
+    createAuroraFluid.mockReturnValue(null);
+    for (const fn of Object.values(fluid)) fn.mockClear();
   });
 
   afterEach(() => {
@@ -203,6 +269,15 @@ describe('createAuroraRenderer', () => {
     expect(warn).toHaveBeenCalledWith('[AuroraBackground] program link failed:', 'link log');
   });
 
+  it('frees the programs already built when a later one fails', () => {
+    const gl = makeFakeGl();
+    // ground links, the ribbon program does not
+    gl.getProgramParameter.mockReturnValueOnce(true).mockReturnValueOnce(false);
+    expect(createAuroraRenderer(makeCanvas(gl), images, () => 1)).toBeNull();
+    expect(gl.deleteProgram).toHaveBeenCalledTimes(1);
+    expect(gl.deleteShader).toHaveBeenCalledTimes(2);
+  });
+
   it('uploads both images premultiplied, unflipped and clamped', () => {
     const gl = makeFakeGl();
     createAuroraRenderer(makeCanvas(gl), images, () => 1);
@@ -211,34 +286,19 @@ describe('createAuroraRenderer', () => {
     expect(gl.texImage2D).toHaveBeenCalledWith(11, 0, 16, 16, 17, images.veil);
     expect(gl.pixelStorei).toHaveBeenCalledWith(gl.UNPACK_FLIP_Y_WEBGL, false);
     expect(gl.pixelStorei).toHaveBeenCalledWith(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-    expect(gl.uniform1i).toHaveBeenCalledWith({ name: 'u_ribbon' }, 0);
-    expect(gl.uniform1i).toHaveBeenCalledWith({ name: 'u_veil' }, 1);
   });
 
-  it('sets the mockup constants once: artwork rectangles and ground', () => {
+  it('sets the ground constants measured from the mockup once', () => {
     const gl = makeFakeGl();
     createAuroraRenderer(makeCanvas(gl), images, () => 1);
 
-    const { ribbon, veil } = ARTWORK;
-    expect(gl.uniform4f).toHaveBeenCalledWith(
-      { name: 'u_ribbonRect' },
-      ribbon.x,
-      ribbon.y,
-      ribbon.width,
-      ribbon.height
-    );
-    expect(gl.uniform4f).toHaveBeenCalledWith(
-      { name: 'u_veilRect' },
-      veil.x,
-      veil.y,
-      veil.width,
-      veil.height
-    );
     expect(gl.uniform3fv).toHaveBeenCalledWith({ name: 'u_grad' }, expect.any(Float32Array));
     expect((gl.uniform3fv.mock.calls[0]![1] as Float32Array).length).toBe(18);
+    expect(callsFor(gl.uniform4f, 'u_wave')).toHaveLength(1);
+    expect(callsFor(gl.uniform4f, 'u_circleColor')).toHaveLength(1);
   });
 
-  it('draws the scene with every placement converted to canvas pixels', () => {
+  it('draws ground, then the right ribbon, then the left ribbon, in canvas pixels', () => {
     const gl = makeFakeGl();
     const canvas = makeCanvas(gl, 1440, 1000);
     const renderer = createAuroraRenderer(canvas, images, () => 1.5)!;
@@ -251,24 +311,36 @@ describe('createAuroraRenderer', () => {
     expect(gl.uniform1f).toHaveBeenCalledWith({ name: 'u_time' }, 4);
     expect(gl.uniform1f).toHaveBeenCalledWith({ name: 'u_ramp' }, rampAt(4));
     expect(gl.uniform3f).toHaveBeenCalledWith(
-      { name: 'u_ribbonAt' },
-      scene.ribbon.offsetX * 1.5,
-      scene.ribbon.offsetY * 1.5,
-      scene.ribbon.scale * 1.5
-    );
-    expect(gl.uniform3f).toHaveBeenCalledWith(
-      { name: 'u_veilAt' },
-      scene.veil.offsetX * 1.5,
-      scene.veil.offsetY * 1.5,
-      scene.veil.scale * 1.5
-    );
-    expect(gl.uniform3f).toHaveBeenCalledWith(
       { name: 'u_groundAt' },
       scene.ground.offsetX * 1.5,
       scene.ground.offsetY * 1.5,
       scene.ground.scale * 1.5
     );
-    expect(gl.drawArrays).toHaveBeenCalledWith(gl.TRIANGLES, 0, 3);
+    expect(callsFor(gl.uniform3f, 'u_at')).toEqual([
+      [
+        { name: 'u_at' },
+        scene.veil.offsetX * 1.5,
+        scene.veil.offsetY * 1.5,
+        scene.veil.scale * 1.5,
+      ],
+      [
+        { name: 'u_at' },
+        scene.ribbon.offsetX * 1.5,
+        scene.ribbon.offsetY * 1.5,
+        scene.ribbon.scale * 1.5,
+      ],
+    ]);
+    const { veil, ribbon } = RIBBON_SPECS;
+    expect(callsFor(gl.uniform4f, 'u_art')).toEqual([
+      [{ name: 'u_art' }, veil.art.x, veil.art.y, veil.art.width, veil.art.height],
+      [{ name: 'u_art' }, ribbon.art.x, ribbon.art.y, ribbon.art.width, ribbon.art.height],
+    ]);
+    // Ground first as one triangle, then one mesh per ribbon, blended premultiplied.
+    expect(gl.drawArrays.mock.calls[0]).toEqual([gl.TRIANGLES, 0, 3]);
+    expect(gl.drawArrays).toHaveBeenCalledTimes(3);
+    expect(gl.blendFunc).toHaveBeenCalledWith(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    // No fluid on this GPU: the ribbons ignore it.
+    expect(gl.uniform1f).toHaveBeenCalledWith({ name: 'u_fluid' }, 0);
   });
 
   it('follows the canvas when it is resized', () => {
@@ -312,10 +384,10 @@ describe('createAuroraRenderer', () => {
     const gl = makeFakeGl();
     createAuroraRenderer(makeCanvas(gl), images, () => 1)!.dispose();
 
-    expect(gl.deleteBuffer).toHaveBeenCalledTimes(1);
+    expect(gl.deleteBuffer).toHaveBeenCalledTimes(3); // triangle + two ribbon meshes
     expect(gl.deleteTexture).toHaveBeenCalledTimes(2);
-    expect(gl.deleteProgram).toHaveBeenCalledTimes(1);
-    expect(gl.deleteShader).toHaveBeenCalledTimes(2);
+    expect(gl.deleteProgram).toHaveBeenCalledTimes(3);
+    expect(gl.deleteShader).toHaveBeenCalledTimes(6);
   });
 
   it('asks for a cheap, opaque context', () => {
@@ -326,5 +398,82 @@ describe('createAuroraRenderer', () => {
       'webgl',
       expect.objectContaining({ alpha: false, antialias: false, powerPreference: 'low-power' })
     );
+  });
+
+  describe('touch fluid', () => {
+    it('is off, and strokes are refused, when the GPU cannot run it', () => {
+      const renderer = createAuroraRenderer(makeCanvas(makeFakeGl()), images, () => 1)!;
+      expect(renderer.interactive).toBe(false);
+      expect(renderer.stir(10, 10, 2, 2, [1, 0, 0, 1])).toBe(false);
+    });
+
+    it('keeps the ribbons animating when the fluid setup throws', () => {
+      createAuroraFluid.mockImplementation(() => {
+        throw new Error('no float targets');
+      });
+      const renderer = createAuroraRenderer(makeCanvas(makeFakeGl()), images, () => 1);
+      expect(renderer).not.toBeNull();
+      expect(renderer!.interactive).toBe(false);
+      expect(warn).toHaveBeenCalledWith(
+        '[AuroraBackground] touch fluid unavailable:',
+        expect.any(Error)
+      );
+    });
+
+    it('turns a CSS stroke into a canvas-pixel splat of the ribbon colour', () => {
+      createAuroraFluid.mockReturnValue(fluid);
+      const gl = makeFakeGl();
+      const renderer = createAuroraRenderer(makeCanvas(gl, 1440, 1000), images, () => 1.5)!;
+      expect(renderer.interactive).toBe(true);
+      expect(createAuroraFluid).toHaveBeenCalledWith(gl, 2160, 1500);
+
+      expect(renderer.stir(100, 200, 4, -2, [0.5, 1, 0.25, 0.5])).toBe(true);
+      const [x, y, dx, dy, colour] = fluid.splat.mock.calls[0]!;
+      expect([x, y, dx, dy]).toEqual([150, 300, 6, -3]);
+      // A light wash: 0.07 of the colour, times the ribbon's alpha.
+      expect(colour[0]).toBeCloseTo(0.5 * 0.07 * 0.5, 9);
+      expect(colour[1]).toBeCloseTo(1 * 0.07 * 0.5, 9);
+      expect(colour[2]).toBeCloseTo(0.25 * 0.07 * 0.5, 9);
+    });
+
+    it('steps only after a stroke, then lets go and stops stepping', () => {
+      createAuroraFluid.mockReturnValue(fluid);
+      const gl = makeFakeGl();
+      const renderer = createAuroraRenderer(makeCanvas(gl), images, () => 1)!;
+      const scene = computeAuroraScene(1440, 1000);
+
+      renderer.render(0, scene);
+      renderer.render(0.05, scene);
+      expect(fluid.step).not.toHaveBeenCalled(); // idle: the fluid costs nothing
+
+      renderer.stir(10, 10, 3, 3, [1, 1, 1, 1]);
+      renderer.render(0.1, scene);
+      expect(fluid.step).toHaveBeenCalledWith(0.05);
+      expect(callsFor(gl.uniform1f, 'u_fluid').at(-1)![1]).toBeGreaterThan(0.9);
+      // The stirred colour is washed over the scene: ground + two ribbons + dye.
+      expect(gl.drawArrays).toHaveBeenCalledTimes(3 * 3 + 1);
+
+      // A long frame gap is clamped, and ~3.5 s later everything has settled.
+      renderer.render(10, scene);
+      expect(fluid.step).toHaveBeenLastCalledWith(0.05);
+      for (let t = 10; t < 14; t += 0.05) renderer.render(t, scene);
+      const steps = fluid.step.mock.calls.length;
+      renderer.render(14.1, scene);
+      expect(fluid.step.mock.calls.length).toBe(steps);
+      expect(callsFor(gl.uniform1f, 'u_fluid').at(-1)![1]).toBe(0);
+    });
+
+    it('resizes and frees the fluid with the canvas', () => {
+      createAuroraFluid.mockReturnValue(fluid);
+      let width = 1440;
+      const canvas = makeCanvas(makeFakeGl());
+      Object.defineProperty(canvas, 'clientWidth', { configurable: true, get: () => width });
+      const renderer = createAuroraRenderer(canvas, images, () => 1)!;
+      width = 800;
+      renderer.resize();
+      expect(fluid.resize).toHaveBeenLastCalledWith(800, 1000);
+      renderer.dispose();
+      expect(fluid.dispose).toHaveBeenCalled();
+    });
   });
 });

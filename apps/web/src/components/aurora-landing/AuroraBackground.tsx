@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { createAuroraRenderer, type AuroraRenderer } from './aurora-renderer';
+import { ribbonColourAt, type ArtworkPixels } from './aurora-ribbon-mesh';
 import {
   ARTWORK,
   GROUND,
@@ -92,6 +93,24 @@ function waitForImage(image: HTMLImageElement): Promise<void> {
   });
 }
 
+/** A pointer that has not moved for this long starts a new stroke instead of jumping. */
+const STROKE_GAP_MS = 120;
+
+/** The decoded pixels of `image`, for hit-testing the painted ribbon; null if unreadable. */
+function readPixels(image: HTMLImageElement): ArtworkPixels | null {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    if (!context || canvas.width === 0 || canvas.height === 0) return null;
+    context.drawImage(image, 0, 0);
+    return context.getImageData(0, 0, canvas.width, canvas.height);
+  } catch {
+    return null;
+  }
+}
+
 interface LoopControls {
   setPaused(paused: boolean): void;
   /** Redraw the current frame when the loop is not running (paused or off-screen). */
@@ -99,8 +118,9 @@ interface LoopControls {
 }
 
 /**
- * The live Aurora ribbon behind the landing hero. It paints the mockup as still
- * images first, then fades a WebGL canvas in over them and lets the folds drift.
+ * The live Aurora ribbons behind the landing hero. It paints the artwork as still
+ * images first, then fades a WebGL canvas in over them: the sheets turn and
+ * slide, and a stroke across a ribbon stirs it like a fluid.
  * It stops drawing whenever it is off-screen or the tab is hidden, never animates
  * for visitors who ask for reduced motion, and offers a pause button (WCAG 2.2.2).
  */
@@ -262,6 +282,46 @@ export function AuroraBackground({ className }: { className?: string }) {
         };
         document.addEventListener('visibilitychange', onVisibility);
         cleanups.push(() => document.removeEventListener('visibilitychange', onVisibility));
+
+        // Touch: a stroke across a painted ribbon stirs it (the page content above
+        // stays fully interactive, so the strokes are read from the window).
+        const pixels = active.interactive
+          ? { ribbon: readPixels(ribbon), veil: readPixels(veil) }
+          : null;
+        if (pixels?.ribbon && pixels.veil) {
+          const art = { ribbon: pixels.ribbon, veil: pixels.veil };
+          const root = rootRef.current;
+          let last: { x: number; y: number; at: number } | null = null;
+          const stroke = (clientX: number, clientY: number, at: number) => {
+            const latest = sceneRef.current;
+            if (!root || !latest || !frame) {
+              last = null;
+              return;
+            }
+            const box = root.getBoundingClientRect();
+            const x = clientX - box.left;
+            const y = clientY - box.top;
+            const previous = last && at - last.at < STROKE_GAP_MS ? last : null;
+            last = { x, y, at };
+            if (!previous) return;
+            const colour = ribbonColourAt(latest, art, x, y);
+            if (colour) active.stir(x, y, x - previous.x, y - previous.y, colour);
+          };
+          const onPointerMove = (event: PointerEvent) => {
+            if (event.pointerType === 'touch') return; // touches arrive as touchmove, even mid-scroll
+            stroke(event.clientX, event.clientY, event.timeStamp);
+          };
+          const onTouchMove = (event: TouchEvent) => {
+            const touch = event.touches[0];
+            if (touch) stroke(touch.clientX, touch.clientY, event.timeStamp);
+          };
+          window.addEventListener('pointermove', onPointerMove, { passive: true });
+          window.addEventListener('touchmove', onTouchMove, { passive: true });
+          cleanups.push(() => {
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('touchmove', onTouchMove);
+          });
+        }
       })
       .catch((error: unknown) => {
         console.warn('[AuroraBackground] artwork failed to load; keeping the still layers.', error);
