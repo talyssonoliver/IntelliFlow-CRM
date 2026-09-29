@@ -397,7 +397,7 @@ export function AuroraBackground({ className }: { className?: string }) {
           type="button"
           onClick={togglePaused}
           aria-label={paused ? 'Play background animation' : 'Pause background animation'}
-          className="pointer-events-auto absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full border border-[#D6D8F2] bg-white/85 text-[#11175B] shadow-sm backdrop-blur transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2A78F6] focus-visible:ring-offset-2"
+          className="pointer-events-auto absolute bottom-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-[#D6D8F2] bg-white/85 text-[#11175B] shadow-sm backdrop-blur transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2A78F6] focus-visible:ring-offset-2"
         >
           <span className="material-symbols-outlined text-xl" aria-hidden="true">
             {paused ? 'play_arrow' : 'pause'}
