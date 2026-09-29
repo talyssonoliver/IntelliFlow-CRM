@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-25T21:52:48.293Z",
+  "timestamp": "2026-09-29T07:33:13.510Z",
   "docRoutes": [
     "/",
     "/404",
@@ -134,6 +134,7 @@
     "/notifications/settings",
     "/partners",
     "/press",
+    "/preview/aurora",
     "/pricing",
     "/privacy",
     "/profile",
@@ -317,6 +318,7 @@
     "/notifications/settings",
     "/partners",
     "/press",
+    "/preview/aurora",
     "/pricing",
     "/privacy",
     "/profile",
@@ -500,6 +502,7 @@
     "/notifications/settings",
     "/partners",
     "/press",
+    "/preview/aurora",
     "/pricing",
     "/privacy",
     "/profile",
@@ -555,12 +558,12 @@
     {
       "name": "PARSE_OK",
       "severity": "PASS",
-      "message": "Parsed 181 routes from conformance statement"
+      "message": "Parsed 182 routes from conformance statement"
     },
     {
       "name": "COUNT_MATCH",
       "severity": "PASS",
-      "message": "Doc routes: 181, FS routes: 181"
+      "message": "Doc routes: 182, FS routes: 182"
     },
     {
       "name": "STATEMENT_COVERS_DISK",
@@ -575,7 +578,7 @@
     {
       "name": "TOTAL_COUNT",
       "severity": "INFO",
-      "message": "Total: 181 matched, 0 doc-only, 0 fs-only"
+      "message": "Total: 182 matched, 0 doc-only, 0 fs-only"
     }
   ],
   "exitCode": 0
