@@ -286,6 +286,19 @@ describe('AuroraBackground', () => {
     expect(renderer.render).toHaveBeenLastCalledWith(0, computeAuroraScene(390, 1500));
   });
 
+  it('acts on the newest entry when visibility changes arrive batched', async () => {
+    createAuroraRenderer.mockReturnValue(makeRenderer());
+    render(<AuroraBackground />);
+    await loadArtwork();
+
+    // Scrolled out and back in within one observer tick: still visible, keep drawing.
+    act(() => intersectionCallback?.([{ isIntersecting: false }, { isIntersecting: true }]));
+    expect(rafCallbacks.size).toBe(1);
+    // Scrolled in and back out: off-screen, stop.
+    act(() => intersectionCallback?.([{ isIntersecting: true }, { isIntersecting: false }]));
+    expect(rafCallbacks.size).toBe(0);
+  });
+
   it('pauses while the tab is hidden', async () => {
     createAuroraRenderer.mockReturnValue(makeRenderer());
     render(<AuroraBackground />);
