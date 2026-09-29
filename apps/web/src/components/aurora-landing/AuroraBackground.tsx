@@ -246,8 +246,9 @@ export function AuroraBackground({ className }: { className?: string }) {
           cleanups.push(() => window.removeEventListener('resize', onResize));
         }
         if (typeof IntersectionObserver === 'function') {
-          const observer = new IntersectionObserver(([entry]) => {
-            visible = entry?.isIntersecting ?? true;
+          const observer = new IntersectionObserver((entries) => {
+            // Entries arrive oldest first; only the newest reflects where the canvas is now.
+            visible = entries[entries.length - 1]?.isIntersecting ?? true;
             if (visible) start();
             else stop();
           });

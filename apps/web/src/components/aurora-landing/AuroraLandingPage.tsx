@@ -220,9 +220,17 @@ export function AuroraLandingPage() {
 
   return (
     <div className={`${jakarta.className} min-h-screen bg-[#F3F4FB] text-[#0C1238]`}>
+      {/* The root layout's skip link lands above this page's own header, so
+          this one skips past it. Its id must not repeat the layout's #main-content. */}
+      <a
+        href="#aurora-main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#11175B] focus:shadow-lg"
+      >
+        Skip to content
+      </a>
       <AuroraHeader />
 
-      <main id="main-content">
+      <main id="aurora-main" tabIndex={-1} className="outline-none">
         <div className="relative overflow-hidden">
           <AuroraBackground />
 

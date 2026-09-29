@@ -76,6 +76,16 @@ describe('AuroraLandingPage', () => {
     expect(screen.getByText('Follow up on time')).toBeInTheDocument();
   });
 
+  it('skips past its own header without repeating the layout id', () => {
+    const { container } = render(<AuroraLandingPage />);
+
+    const skip = screen.getByRole('link', { name: 'Skip to content' });
+    expect(skip).toHaveAttribute('href', '#aurora-main');
+    expect(screen.getByRole('main')).toHaveAttribute('id', 'aurora-main');
+    // The root layout already owns #main-content; a second one breaks its skip link.
+    expect(container.querySelector('#main-content')).toBeNull();
+  });
+
   it('has one main landmark, a closing call to action and the Aurora brand', () => {
     render(<AuroraLandingPage />);
 
