@@ -53,14 +53,6 @@ describe('drawFace', () => {
       expect(written).toEqual(expect.arrayContaining([column, ...cards.map(([amount]) => amount)]));
   });
 
-  it('prints the confidence and SLA meta line under a row that has one', () => {
-    const { g, texts } = recorder();
-    drawFace(g, 'control', '#28D9D4', fonts);
-    const written = texts.map((t) => t.text);
-
-    for (const row of FACES.control.rows ?? []) if (row.meta) expect(written).toContain(row.meta);
-  });
-
   it('draws a probability bar under every pipeline card, sized to its win chance', () => {
     const { g, texts } = recorder();
     const rects: Array<{ x: number; y: number; w: number; h: number }> = [];
@@ -70,8 +62,8 @@ describe('drawFace', () => {
     drawFace(g, 'pipeline', '#2A78F6', fonts);
     void texts;
 
-    // Every card draws a track rect then a fill rect on top of it, both 8px tall.
-    const bars = rects.filter((r) => r.h === 8);
+    // Every card draws a track rect then a fill rect on top of it, both 16px tall.
+    const bars = rects.filter((r) => r.h === 16);
     const totalCards = FACES.pipeline.board!.reduce((n, [, , cards]) => n + cards.length, 0);
     expect(bars.length).toBe(totalCards * 2);
     for (let i = 0; i < bars.length; i += 2) {
@@ -90,13 +82,13 @@ describe('drawFace', () => {
     expect(texts.find((t) => t.text === 'AI agents')?.font).toContain('Manrope');
   });
 
-  it('draws the approval row as a primary button with white text, and colours a breached SLA red', () => {
+  it('draws the approval row as a primary button with white text, and escalates a breached SLA in red', () => {
     const { g, texts } = recorder();
     drawFace(g, 'control', '#28D9D4', fonts);
 
     expect(texts.find((t) => t.text === 'Approve')?.fill).toBe('#FFFFFF');
     expect(texts.find((t) => t.text === 'Review')?.fill).toBe('#C27C00');
-    expect(texts.find((t) => t.text === 'SLA breached')?.fill).toBe('#C43B3B');
+    expect(texts.find((t) => t.text === 'Escalate')?.fill).toBe('#C43B3B');
   });
 
   it('keeps every word inside the panel', () => {
@@ -117,5 +109,24 @@ describe('drawFace', () => {
     const all = JSON.stringify(FACES);
     expect(all).not.toMatch(/SAP|SOC ?2|GDPR|ISO/);
     expect(all).not.toMatch(/\bprotects every account\b/i);
+  });
+});
+
+describe('face legibility', () => {
+  it('draws every word at 46px or more on the 1400px face, so it reads at an angle', () => {
+    for (const id of ids) {
+      const { g, texts } = recorder();
+      drawFace(g, id, '#7655F6', fonts);
+      for (const t of texts) {
+        const size = Number(t.font.split('px')[0]!.split(' ').pop());
+        expect(size, `${id}: "${t.text}" at ${size}px`).toBeGreaterThanOrEqual(46);
+      }
+    }
+  });
+
+  it('keeps every row label short enough to sit clear of its value', () => {
+    for (const face of Object.values(FACES)) {
+      for (const row of face.rows ?? []) expect(row.label.length).toBeLessThanOrEqual(18);
+    }
   });
 });

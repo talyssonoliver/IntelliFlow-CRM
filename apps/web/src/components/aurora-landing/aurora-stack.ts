@@ -28,6 +28,8 @@ const GAP = 0.92;
 const VIEW = 5.1;
 /** Where the camera looks when no layer is active: the middle of the whole stack. */
 const REST_Y = 2.35;
+/** Camera height above the rest point; 9 across and 9 deep. */
+const CAMERA_HEIGHT = 15;
 const MIST = new THREE.Color('#F5F7FF');
 
 export const baseY = (index: number) => index * (H + GAP);
@@ -63,12 +65,19 @@ export function cameraFrame(
   return { y: baseY(activeIndex) + 0.15, zoom: Math.min(size.w < 600 ? 1.6 : 1.3, fit) };
 }
 
+/** The face canvas is drawn at this multiple of its layout size. */
+const FACE_SCALE = 2;
+
 function faceTexture(id: LayerId, colour: string, fonts: FaceFonts): THREE.CanvasTexture {
+  // Drawn at twice the layout size, so the words stay sharp when the camera closes in.
   const canvas = document.createElement('canvas');
-  canvas.width = FACE_SIZE.width;
-  canvas.height = FACE_SIZE.height;
+  canvas.width = FACE_SIZE.width * FACE_SCALE;
+  canvas.height = FACE_SIZE.height * FACE_SCALE;
   const g = canvas.getContext('2d');
-  if (g) drawFace(g, id, colour, fonts);
+  if (g) {
+    g.scale(FACE_SCALE, FACE_SCALE);
+    drawFace(g, id, colour, fonts);
+  }
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 16;
@@ -242,7 +251,8 @@ export function createStack(
     const k = reducedMotion ? 1 : 1 - Math.pow(0.02, dt);
     cam.y += (aim.y - cam.y) * k;
     cam.zoom += (aim.zoom - cam.zoom) * k;
-    camera.position.set(9, 11 + cam.y - REST_Y, 9);
+    // A steep view (about 50 degrees down), so the printed faces read rather than lie flat.
+    camera.position.set(9, CAMERA_HEIGHT + cam.y - REST_Y, 9);
     camera.lookAt(0, cam.y, 0);
     camera.zoom = cam.zoom;
     camera.updateProjectionMatrix();

@@ -13,15 +13,10 @@ export interface FaceFonts {
   icons: string;
 }
 
-/**
- * A row: its icon, label and value; `button` draws the value as a primary button.
- * `meta`, when present, is a smaller second line under the label — used for the
- * approval queue's confidence + SLA countdown, mirroring the real review card.
- */
+/** A row: its icon, label and value; `button` draws the value as a primary button. */
 interface Row {
   icon: string;
   label: string;
-  meta?: string;
   value: string;
   accent: string;
   button?: boolean;
@@ -43,19 +38,15 @@ interface Face {
 const AGENT_TYPE_COUNT = 15;
 
 export const FACES: Record<LayerId, Face> = {
+  // Short labels on purpose: the slab is seen at an angle, so every word is drawn large.
   agents: {
     icon: 'smart_toy',
     title: 'AI agents',
     pill: [`${AGENT_TYPE_COUNT} types`, '#7655F6'],
     rows: [
-      { icon: 'insights', label: 'Lead scored · Acme Ltd', value: '92', accent: '#2A78F6' },
-      {
-        icon: 'edit_note',
-        label: 'Follow-up drafted · Maya Chen',
-        value: 'Ready',
-        accent: '#7655F6',
-      },
-      { icon: 'trending_down', label: 'Churn risk · Contoso', value: 'High', accent: '#D14A45' },
+      { icon: 'insights', label: 'Lead scored', value: '92', accent: '#2A78F6' },
+      { icon: 'edit_note', label: 'Follow-up drafted', value: 'Ready', accent: '#7655F6' },
+      { icon: 'trending_down', label: 'Churn risk flagged', value: 'High', accent: '#C43B3B' },
     ],
   },
   control: {
@@ -65,26 +56,13 @@ export const FACES: Record<LayerId, Face> = {
     rows: [
       {
         icon: 'edit_note',
-        label: 'Auto-response · Maya Chen',
-        meta: '92% confidence · 1h 40m left',
+        label: 'Reply to Maya',
         value: 'Approve',
         accent: '#2A78F6',
         button: true,
       },
-      {
-        icon: 'insights',
-        label: 'Lead score · Acme Ltd',
-        meta: '88% confidence · 4h left',
-        value: 'Review',
-        accent: '#C27C00',
-      },
-      {
-        icon: 'trending_down',
-        label: 'Churn risk · Contoso',
-        meta: 'SLA breached',
-        value: 'Escalate',
-        accent: '#C43B3B',
-      },
+      { icon: 'insights', label: 'Score Acme Ltd', value: 'Review', accent: '#C27C00' },
+      { icon: 'trending_down', label: 'SLA breached', value: 'Escalate', accent: '#C43B3B' },
     ],
   },
   pipeline: {
@@ -98,7 +76,6 @@ export const FACES: Record<LayerId, Face> = {
         [
           ['£24k', 0.2],
           ['£18k', 0.15],
-          ['£12k', 0.1],
         ],
       ],
       [
@@ -109,14 +86,7 @@ export const FACES: Record<LayerId, Face> = {
           ['£21k', 0.4],
         ],
       ],
-      [
-        'Proposal',
-        '#7655F6',
-        [
-          ['£32k', 0.7],
-          ['£19k', 0.65],
-        ],
-      ],
+      ['Proposal', '#7655F6', [['£32k', 0.7]]],
       ['Won', '#28D9D4', [['£46k', 1]]],
     ],
   },
@@ -125,8 +95,8 @@ export const FACES: Record<LayerId, Face> = {
     title: 'Tickets & SLAs',
     pill: ['On track', '#0A8F8A'],
     rows: [
-      { icon: 'timer', label: 'Northwind · Billing', value: '2h 14m', accent: '#0A8F8A' },
-      { icon: 'timer', label: 'Fabrikam · Access', value: '38m', accent: '#C27C00' },
+      { icon: 'timer', label: 'Northwind', value: '2h 14m', accent: '#0A8F8A' },
+      { icon: 'timer', label: 'Fabrikam', value: '38m', accent: '#C27C00' },
       {
         icon: 'sentiment_satisfied',
         label: 'Tone this week',
@@ -140,13 +110,8 @@ export const FACES: Record<LayerId, Face> = {
     title: 'Foundation',
     pill: ['Protected', '#0A8F8A'],
     rows: [
-      { icon: 'lock', label: 'Workspace data isolated', value: 'On', accent: '#0A8F8A' },
-      {
-        icon: 'verified_user',
-        label: 'Multi-factor sign-in',
-        value: 'Available',
-        accent: '#0A8F8A',
-      },
+      { icon: 'lock', label: 'Data isolated', value: 'On', accent: '#0A8F8A' },
+      { icon: 'verified_user', label: 'MFA', value: 'Available', accent: '#0A8F8A' },
       { icon: 'history', label: 'Audit log', value: 'Recording', accent: '#2A78F6' },
     ],
   },
@@ -209,59 +174,53 @@ export function drawFace(
   const x0 = pad + 56;
   const x1 = w - pad - 56;
 
-  // Header: the layer's colour chip, its title and a status pill.
-  rr(x0, 96, 104, 104, 28, colour);
-  icon(f.icon, x0 + 22, 148, 60, '#FFFFFF');
-  text(f.title, x0 + 136, 150, 64, 800, NAVY);
+  // Header: the layer's colour chip, its title and a status pill. Everything is
+  // drawn large: the slab is seen at an angle and the face is only ~500px wide.
+  rr(x0, 84, 128, 128, 32, colour);
+  icon(f.icon, x0 + 24, 148, 80, '#FFFFFF');
+  text(f.title, x0 + 160, 150, 84, 800, NAVY);
   const [pill, pillColour] = f.pill;
-  const pw = widthOf(pill, 38) + 56;
-  rr(x1 - pw, 120, pw, 60, 30, `${pillColour}22`);
-  text(pill, x1 - pw / 2, 151, 38, 800, pillColour, 'center');
+  const pw = widthOf(pill, 48) + 64;
+  rr(x1 - pw, 112, pw, 76, 38, `${pillColour}22`);
+  text(pill, x1 - pw / 2, 151, 48, 800, pillColour, 'center');
   g.fillStyle = LINE;
-  g.fillRect(x0, 236, x1 - x0, 3);
+  g.fillRect(x0, 244, x1 - x0, 4);
 
   if (f.board) {
-    const cw = (x1 - x0 - 3 * 24) / 4;
+    const cw = (x1 - x0 - 3 * 28) / 4;
     f.board.forEach(([name, dot, cards], i) => {
-      const x = x0 + i * (cw + 24);
-      rr(x, 272, 18, 18, 9, dot);
-      text(name, x + 30, 282, 36, 800, NAVY);
+      const x = x0 + i * (cw + 28);
+      rr(x, 282, 24, 24, 12, dot);
+      text(name, x + 36, 295, 46, 800, NAVY);
       cards.forEach(([amount, probability], j) => {
-        const y = 324 + j * 128;
-        rr(x, y, cw, 108, 20, i === 3 ? 'rgba(40,217,212,0.16)' : '#F3F5FC');
-        rr(x + 20, y + 22, cw * 0.55, 16, 8, 'rgba(17,23,91,0.18)');
-        text(amount, x + 20, y + 68, 38, 800, NAVY);
+        const y = 350 + j * 236;
+        rr(x, y, cw, 212, 28, i === 3 ? 'rgba(40,217,212,0.16)' : '#F3F5FC');
+        text(amount, x + 28, y + 84, 72, 800, NAVY);
         // A probability bar under the amount, the real board's "how likely to win" read.
-        const barW = cw - 40;
-        rr(x + 20, y + 86, barW, 8, 4, 'rgba(17,23,91,0.12)');
-        rr(x + 20, y + 86, Math.max(8, barW * probability), 8, 4, dot);
+        const barW = cw - 56;
+        rr(x + 28, y + 150, barW, 16, 8, 'rgba(17,23,91,0.12)');
+        rr(x + 28, y + 150, Math.max(16, barW * probability), 16, 8, dot);
       });
     });
     return;
   }
 
-  let rowY = 272;
-  (f.rows ?? []).forEach(({ icon: ic, label, meta, value, accent, button }, i) => {
-    const y = rowY;
-    rowY += meta ? 140 : 128;
+  (f.rows ?? []).forEach(({ icon: ic, label, value, accent, button }, i) => {
+    const y = 272 + i * 208;
     if (i) {
       g.fillStyle = LINE;
-      g.fillRect(x0, y - 6, x1 - x0, 2);
+      g.fillRect(x0, y - 8, x1 - x0, 3);
     }
-    rr(x0, y + 18, 80, 80, 22, `${accent}1F`);
-    icon(ic, x0 + 16, y + 58, 48, accent);
-    text(label, x0 + 108, y + (meta ? 46 : 58), 44, 700, NAVY);
-    if (meta) {
-      const metaColour = meta === 'SLA breached' ? '#C43B3B' : 'rgba(20,24,51,0.52)';
-      text(meta, x0 + 108, y + 92, 32, 600, metaColour);
-    }
-    const vw = widthOf(value, 38) + 48;
+    rr(x0, y + 28, 128, 128, 32, `${accent}1F`);
+    icon(ic, x0 + 28, y + 92, 72, accent);
+    text(label, x0 + 160, y + 92, 64, 700, NAVY);
+    const vw = widthOf(value, 52) + 64;
     if (button) {
-      rr(x1 - vw, y + 28, vw, 60, 16, '#2A78F6');
-      text(value, x1 - vw / 2, y + 59, 38, 800, '#FFFFFF', 'center');
+      rr(x1 - vw, y + 50, vw, 84, 22, '#2A78F6');
+      text(value, x1 - vw / 2, y + 93, 52, 800, '#FFFFFF', 'center');
     } else {
-      rr(x1 - vw, y + 28, vw, 60, 30, `${accent}1F`);
-      text(value, x1 - vw / 2, y + 59, 38, 800, accent, 'center');
+      rr(x1 - vw, y + 50, vw, 84, 42, `${accent}1F`);
+      text(value, x1 - vw / 2, y + 93, 52, 800, accent, 'center');
     }
   });
 }
