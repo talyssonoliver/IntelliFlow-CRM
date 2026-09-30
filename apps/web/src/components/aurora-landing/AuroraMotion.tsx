@@ -210,9 +210,15 @@ function hideAtStageEnd(
   // to leave its pinned band regardless, so there is no "settled" look
   // to preserve mid-transition here, only a single moment to clear
   // before un-stick begins.
-  const stackVisual = root.querySelector<HTMLElement>('.stage-object.stack-visual');
-  // getComputedStyle, not a live rect: the pinned band's position is
-  // fixed by CSS, whether or not it has stuck yet when this runs.
+  // The pinned band is whichever element is sticky: the whole stage object on a
+  // phone, its inner frame on desktop (the outer column is as tall as the stage,
+  // which would fire the hide at load). getComputedStyle, not a live rect: the
+  // band's position is fixed by CSS, whether or not it has stuck yet.
+  const stackVisual =
+    [
+      root.querySelector<HTMLElement>('.stage-object.stack-visual'),
+      root.querySelector<HTMLElement>('.object-sticky'),
+    ].find((el) => el && getComputedStyle(el).position === 'sticky') ?? null;
   const stackStyle = stackVisual ? getComputedStyle(stackVisual) : null;
   const canvasBottomPx = stackStyle
     ? Math.ceil(parseFloat(stackStyle.top) + parseFloat(stackStyle.height))
@@ -221,7 +227,7 @@ function hideAtStageEnd(
     triggers.push(
       ScrollTrigger.create({
         trigger: end,
-        start: `top top+=${canvasBottomPx}`,
+        start: `bottom top+=${canvasBottomPx}`,
         onEnter: () => s.hide(),
         onLeaveBack: () => s.show(),
       })
