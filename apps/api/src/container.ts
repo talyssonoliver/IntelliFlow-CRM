@@ -20,6 +20,7 @@ import {
   PrismaChainVersionAuditRepository,
   PrismaActivityFeedRepository,
   PrismaTenantModuleRepository,
+  PrismaQuotaRepository,
   PrismaAnalyticsRepository,
   PrismaFeedbackSurveyRepository,
   PrismaPublicFeedbackRepository,
@@ -67,6 +68,7 @@ import {
   TaskService,
   ChainVersionService,
   ActivityFeedService,
+  QuotaService,
   AnalyticsAggregationService,
   FeedbackSurveyAnalyticsService,
   InternalSignatureProvider,
@@ -329,6 +331,7 @@ const createAdapters = async (prismaClient: PrismaClient) => {
   const publicFeedbackRepository = new PrismaPublicFeedbackRepository(prismaClient);
   const caseDocumentRepository = new PrismaCaseDocumentRepository(prismaClient);
   const tenantModuleRepository = new PrismaTenantModuleRepository(prismaClient);
+  const quotaRepository = new PrismaQuotaRepository(prismaClient);
   const notificationRepository = new PrismaNotificationRepository(prismaClient);
   const notificationPreferenceRepository = new PrismaNotificationPreferenceRepository(prismaClient);
   const notificationAuditLogger = new PrismaNotificationAuditLogger(prismaClient);
@@ -473,6 +476,7 @@ const createAdapters = async (prismaClient: PrismaClient) => {
     publicFeedbackRepository,
     caseDocumentRepository,
     tenantModuleRepository,
+    quotaRepository,
     notificationRepository,
     notificationPreferenceRepository,
     notificationAuditLogger,
@@ -673,6 +677,9 @@ const createServices = async (prismaClient: PrismaClient) => {
     adapters.avScanner
   );
 
+  // Per-tenant metering: plan quotas + usage counters (cost control for free tiers)
+  const quotaService = new QuotaService(adapters.quotaRepository, adapters.tenantModuleRepository);
+
   // IFC-297: AI Monitoring persistence service
   const aiMonitoringService = new AIMonitoringService(prismaClient);
 
@@ -813,6 +820,8 @@ const createServices = async (prismaClient: PrismaClient) => {
     security,
     // Also expose adapters for direct access when needed
     adapters,
+    // Per-tenant metering
+    quotaService,
     // IFC-297: AI Monitoring persistence service
     aiMonitoringService,
     // IFC-214: Redis-backed live snapshot store

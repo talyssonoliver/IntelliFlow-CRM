@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-07-26T12:57:55.623Z",
+  "timestamp": "2026-09-30T16:36:51.865Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,8 +1016,8 @@
   },
   "api_inventory": {
     "total_routers": 65,
-    "total_endpoints": 541,
-    "total_queries": 245,
+    "total_endpoints": 542,
+    "total_queries": 246,
     "total_mutations": 296,
     "routers": [
       {
@@ -1297,6 +1297,12 @@
         "mutations": 0
       },
       {
+        "name": "subscription",
+        "endpoints": 4,
+        "queries": 3,
+        "mutations": 1
+      },
+      {
         "name": "user",
         "endpoints": 4,
         "queries": 2,
@@ -1319,12 +1325,6 @@
         "endpoints": 3,
         "queries": 1,
         "mutations": 2
-      },
-      {
-        "name": "subscription",
-        "endpoints": 3,
-        "queries": 2,
-        "mutations": 1
       },
       {
         "name": "taskSettings",
@@ -1413,16 +1413,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 180,
-    "total_fields": 2616,
-    "total_indexes": 835,
-    "total_relations": 253,
+    "total_tables": 182,
+    "total_fields": 2632,
+    "total_indexes": 841,
+    "total_relations": 255,
     "tables_with_embeddings": 4,
     "enums": 74,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 158,
+        "fields": 160,
         "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
@@ -2612,6 +2612,20 @@
       },
       {
         "name": "DocumentRequiredField",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TenantQuotaOverride",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TenantUsageCounter",
         "fields": 7,
         "indexes": 3,
         "relations": 1,
@@ -5894,6 +5908,11 @@
         "name": "subscription.getPlans",
         "method": "GET",
         "description": "Get plans"
+      },
+      {
+        "name": "subscription.getUsage",
+        "method": "GET",
+        "description": "Get usage"
       },
       {
         "name": "subscription.toggleModule",

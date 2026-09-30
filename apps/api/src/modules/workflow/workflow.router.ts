@@ -25,6 +25,7 @@ import {
 } from '@intelliflow/domain';
 import { getCustomNodeTypeRegistry } from '../../workflow/registries/custom-node-type-registry';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { assertQuota } from '../../shared/quota-guard';
 
 // ---------------------------------------------------------------------------
 // Zod schemas for JSON columns
@@ -578,6 +579,9 @@ export const workflowRouter = createTRPCRouter({
   /** Create a new workflow definition. */
   create: tenantProcedure.input(workflowCreateInput).mutation(async ({ ctx, input }) => {
     try {
+      // New definitions are created active (column default), so they consume the active quota.
+      await assertQuota(ctx, ctx.tenant.tenantId, 'workflowsActive');
+
       // Server-side topology validation (AC-008)
       const topologyErrors = validateWorkflowGraph({
         steps: input.steps,
@@ -732,6 +736,11 @@ export const workflowRouter = createTRPCRouter({
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Workflow not found' });
+      }
+
+      // Only an inactive -> active flip adds to the tenant's active-workflow count.
+      if (input.isActive && !existing.isActive) {
+        await assertQuota(ctx, tenantId, 'workflowsActive');
       }
 
       return ctx.prismaWithTenant.workflowDefinition.update({

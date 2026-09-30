@@ -22,6 +22,7 @@ import {
   verifiedTenantProcedure,
 } from '../../trpc';
 import { MarkAsReadInputSchema, GetUnreadCountsInputSchema } from '@intelliflow/validators';
+import { assertQuota, recordUsage } from '../../shared/quota-guard';
 // Import from adapters - using any cast for module resolution compatibility
 import * as adapters from '@intelliflow/adapters';
 const InboundEmailParser = (adapters as any).InboundEmailParser;
@@ -719,6 +720,10 @@ export const inboundEmailRouter = createTRPCRouter({
         const userId = (ctx as any).user.userId;
         const fromEmail = (ctx as any).user.email ?? 'noreply@intelliflow.com';
 
+        // Per-tenant metering: every recipient is a billable message.
+        const recipientCount = input.to.length + (input.cc?.length ?? 0) + (input.bcc?.length ?? 0);
+        await assertQuota(ctx as any, tenantId, 'emailsPerMonth', recipientCount);
+
         const record = await (ctx as any).prisma.emailRecord.create({
           data: {
             subject: input.subject,
@@ -785,6 +790,10 @@ export const inboundEmailRouter = createTRPCRouter({
             sentAt: finalStatus === 'SENT' ? new Date() : null,
           },
         });
+
+        if (finalStatus === 'SENT') {
+          await recordUsage(ctx as any, tenantId, 'emailsPerMonth', recipientCount);
+        }
 
         return { id: record.id, status: finalStatus };
       }

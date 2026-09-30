@@ -19,6 +19,7 @@ export * from './HelpArticleAnalyticsRepositoryPort';
 export * from './ActivityFeedRepositoryPort';
 export * from './BillingRepositoryPort';
 export * from './ModuleAccessPort';
+export * from './QuotaRepositoryPort';
 
 // Feedback Survey Repository Port (IFC-068)
 export * from './FeedbackSurveyRepositoryPort';

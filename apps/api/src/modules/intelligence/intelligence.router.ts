@@ -26,6 +26,7 @@ import {
   aiInsightsSummarySchema,
 } from '@intelliflow/validators';
 import { getTenantContext } from '../../security/tenant-context';
+import { assertQuota } from '../../shared/quota-guard';
 import { SIGNIFICANCE_LEVELS, requiresHumanReview } from '@intelliflow/domain';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
@@ -926,6 +927,9 @@ export const intelligenceRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const { entityType, entityId, predictionType, priority } = input;
+
+      // Per-tenant metering: the queued prediction is AI spend. Assert only; cost is recorded elsewhere.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiSpendCentsPerMonth');
 
       // Verify entity exists
       if (entityType === 'lead') {

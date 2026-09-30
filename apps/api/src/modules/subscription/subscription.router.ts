@@ -9,7 +9,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure, adminProcedure } from '../../trpc';
+import { createTRPCRouter, protectedProcedure, adminProcedure, tenantProcedure } from '../../trpc';
 import { toggleModuleInputSchema } from '@intelliflow/validators';
 import {
   CRM_MODULES,
@@ -66,12 +66,39 @@ export const moduleAccessRouter = createTRPCRouter({
    * Used by upgrade/paywall UI.
    */
   getPlans: protectedProcedure.query(() => {
-    return PLAN_TIERS.map((tier) => ({
+    // PARTNER_FREE is granted, never purchased: keep it off the upgrade/paywall listing.
+    return PLAN_TIERS.filter((tier) => tier !== 'PARTNER_FREE').map((tier) => ({
       tier,
       label: tier.charAt(0) + tier.slice(1).toLowerCase(),
       modules: [...MODULE_PLAN_MAP[tier]],
       moduleDetails: MODULE_PLAN_MAP[tier].map((m) => MODULE_METADATA[m]),
     }));
+  }),
+
+  /**
+   * Plan, quota limits and current usage for the caller's tenant.
+   * `limit: null` means unlimited. Used by the UI to show metering.
+   */
+  getUsage: tenantProcedure.query(async ({ ctx }) => {
+    const tenantId = ctx.tenant.tenantId;
+
+    const quota = ctx.services?.quota;
+    const moduleAccess =
+      ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+    if (!quota || !moduleAccess) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Quota service not available',
+      });
+    }
+
+    const [plan, limits, usage] = await Promise.all([
+      moduleAccess.getTenantPlan(tenantId),
+      quota.getLimits(tenantId),
+      quota.getUsage(tenantId),
+    ]);
+
+    return { plan, limits, usage };
   }),
 
   /**
