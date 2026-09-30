@@ -27,7 +27,7 @@ overrides:
   dompurify: '>=3.4.13'
   body-parser@<1.20.6: '>=1.20.6 <2'
   body-parser@>=2.0.0 <2.3.0: '>=2.3.0'
-  nodemailer: '>=9.1.0'
+  nodemailer: '>=10.0.6'
   markdown-it: '>=14.2.0'
   js-yaml: '>=4.3.2 <5'
   '@babel/core': '>=7.29.6 <8'
@@ -921,8 +921,8 @@ importers:
         specifier: ^4.0.1
         version: 4.0.1
       nodemailer:
-        specifier: '>=9.1.0'
-        version: 10.0.3
+        specifier: '>=10.0.6'
+        version: 10.0.13
       pino:
         specifier: ^10.3.1
         version: 10.3.1
@@ -10074,8 +10074,8 @@ packages:
     resolution: {integrity: sha512-3VW/8JpPqPvnJvseXowjZcirPisssnBuDikk6JIZ8jQzF7KJQX52iPFX4RYYxLycYH7IbMRSPUOga/esVjy5Yg==}
     engines: {node: '>=18'}
 
-  nodemailer@10.0.3:
-    resolution: {integrity: sha512-h5c8ypcMoOIh44bIcVROvTDbjRdOJX8AXTkxMht2C92HlSjkG+/8kjoqmNPypfjQaVNaUHWyZ3tqs5I3K91F3g==}
+  nodemailer@10.0.13:
+    resolution: {integrity: sha512-SzG86OlvcW/NNhUFC6uROMwRTL4n7MswfQqC/T8mhkmnY1YVa23zUEMYi4ijSeXSl9GLz9ZeTJDUatEDuY5FeQ==}
     engines: {node: '>=20.0.0'}
 
   nopt@4.0.3:
@@ -21898,7 +21898,7 @@ snapshots:
     dependencies:
       '@babel/parser': 7.29.7
 
-  nodemailer@10.0.3: {}
+  nodemailer@10.0.13: {}
 
   nopt@4.0.3:
     dependencies:
