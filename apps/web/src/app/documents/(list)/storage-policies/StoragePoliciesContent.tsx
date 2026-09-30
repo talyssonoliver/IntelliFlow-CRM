@@ -39,7 +39,7 @@ export default function StoragePoliciesContent() {
   });
   const updateMutation = trpc.documentSettings.retentionPolicies.updateAll.useMutation({
     onSuccess: () => {
-      utils.documentSettings.retentionPolicies.getAll.invalidate();
+      void utils.documentSettings.retentionPolicies.getAll.invalidate();
       toast({ title: 'Storage policies saved', description: 'Retention rules were updated.' });
       setIsDirty(false);
     },
@@ -49,7 +49,7 @@ export default function StoragePoliciesContent() {
   });
   const resetMutation = trpc.documentSettings.retentionPolicies.resetToDefaults.useMutation({
     onSuccess: () => {
-      utils.documentSettings.retentionPolicies.getAll.invalidate();
+      void utils.documentSettings.retentionPolicies.getAll.invalidate();
       toast({ title: 'Storage policies reset', description: 'Restored factory defaults.' });
       setResetOpen(false);
       setIsDirty(false);
