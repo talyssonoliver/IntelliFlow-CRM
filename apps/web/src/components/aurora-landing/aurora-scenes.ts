@@ -31,6 +31,10 @@ function byId<T extends Element = HTMLElement>(root: ParentNode, id: string): T 
   return root.querySelector<T & Element>(`#${id}`);
 }
 
+/** Runs a function so any animation it creates belongs to the scenes' gsap context. */
+type Within = (fn: () => void) => void;
+const direct: Within = (fn) => fn();
+
 /** Wires the scenes under `root`. Returns a cleanup that kills every tween and trigger it made. */
 export function playScenes(
   root: HTMLElement,
@@ -38,7 +42,12 @@ export function playScenes(
   ScrollTrigger: ScrollTriggerStatic,
   reduced: boolean
 ): () => void {
-  const ctx = gsap.context(() => {
+  // Scene beats are built later, from ScrollTrigger and onComplete callbacks,
+  // after gsap.context has stopped recording. Running them through ctx.add
+  // keeps them in the context, so the cleanup's revert kills them too.
+  let ctx: ReturnType<GsapType['context']> | null = null;
+  const within: Within = (fn) => (ctx ? void ctx.add(fn) : fn());
+  ctx = gsap.context(() => {
     // Windows start tilted in space and settle flat as they come into view.
     root.querySelectorAll<HTMLElement>('.app.tilt, .app.tilt-soft').forEach((app) => {
       if (reduced) {
@@ -54,8 +63,8 @@ export function playScenes(
       });
     });
 
-    playApprovalScene(root, gsap, ScrollTrigger, reduced);
-    playPipelineScene(root, gsap, ScrollTrigger, reduced);
+    playApprovalScene(root, gsap, ScrollTrigger, reduced, within);
+    playPipelineScene(root, gsap, ScrollTrigger, reduced, within);
   }, root);
   return () => ctx.revert();
 }
@@ -141,7 +150,8 @@ export function playApprovalScene(
   root: HTMLElement,
   gsap: GsapType,
   ScrollTrigger: ScrollTriggerStatic,
-  reduced: boolean
+  reduced: boolean,
+  within: Within = direct
 ): void {
   const scene = byId(root, 'approval-scene');
   if (!scene) return;
@@ -163,13 +173,16 @@ export function playApprovalScene(
     trigger: scene,
     start: 'top 55%',
     once: true,
-    onEnter: () => {
-      const reveal = revealReasoning(scene, gsap);
-      reveal?.eventCallback('onComplete', () => {
-        const type = typeDraft(scene, gsap);
-        type?.eventCallback('onComplete', () => confirmApproval(scene, gsap));
-      });
-    },
+    onEnter: () =>
+      within(() => {
+        const reveal = revealReasoning(scene, gsap);
+        reveal?.eventCallback('onComplete', () =>
+          within(() => {
+            const type = typeDraft(scene, gsap);
+            type?.eventCallback('onComplete', () => within(() => confirmApproval(scene, gsap)));
+          })
+        );
+      }),
   });
 }
 
@@ -245,7 +258,8 @@ export function playPipelineScene(
   root: HTMLElement,
   gsap: GsapType,
   ScrollTrigger: ScrollTriggerStatic,
-  reduced: boolean
+  reduced: boolean,
+  within: Within = direct
 ): void {
   const board = byId(root, 'board-scene');
   if (!board) return;
@@ -261,9 +275,10 @@ export function playPipelineScene(
     trigger: board,
     start: 'top 55%',
     once: true,
-    onEnter: () => {
-      const flag = flagStalledDeal(board, gsap);
-      flag?.eventCallback('onComplete', () => moveDealForward(board, gsap));
-    },
+    onEnter: () =>
+      within(() => {
+        const flag = flagStalledDeal(board, gsap);
+        flag?.eventCallback('onComplete', () => within(() => moveDealForward(board, gsap)));
+      }),
   });
 }

@@ -141,6 +141,28 @@ describe('playScenes', () => {
     expect(mover.classList.contains('moving')).toBe(false);
   });
 
+  it('keeps scene beats that start later inside the context, so cleanup can revert them', () => {
+    const root = page();
+    const { gsap, ScrollTrigger } = fakeGsap();
+    const added: Array<() => void> = [];
+    const revert = vi.fn();
+    gsap.context = (fn: () => void) => {
+      fn();
+      return { revert, add: (f: () => void) => (added.push(f), f()) } as never;
+    };
+    const entries: Array<() => void> = [];
+    ScrollTrigger.create = vi.fn((opts: { onEnter?: () => void }) => {
+      if (opts.onEnter) entries.push(opts.onEnter);
+    }) as never;
+    const cleanup = playScenes(root, gsap as never, ScrollTrigger as never, false);
+
+    entries.forEach((enter) => enter());
+    expect(added.length).toBeGreaterThanOrEqual(2);
+    expect(document.getElementById('review-q1-state')!.textContent).toBe('Approved');
+    cleanup();
+    expect(revert).toHaveBeenCalled();
+  });
+
   it('settles tilted windows as they scroll in', () => {
     const root = page();
     const { gsap, ScrollTrigger, tweens } = fakeGsap();
