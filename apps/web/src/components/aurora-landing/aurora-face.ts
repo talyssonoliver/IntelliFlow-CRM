@@ -13,15 +13,22 @@ export interface FaceFonts {
   icons: string;
 }
 
-/** A row: its icon, label and value; `button` draws the value as a primary button. */
+/**
+ * A row: its icon, label and value; `button` draws the value as a primary button.
+ * `meta`, when present, is a smaller second line under the label — used for the
+ * approval queue's confidence + SLA countdown, mirroring the real review card.
+ */
 interface Row {
   icon: string;
   label: string;
+  meta?: string;
   value: string;
   accent: string;
   button?: boolean;
 }
-type Column = readonly [string, string, readonly string[]];
+/** A kanban column: name, accent dot colour, and its cards (amount + win probability). */
+type Card = readonly [amount: string, probability: number];
+type Column = readonly [name: string, dot: string, cards: readonly Card[]];
 
 interface Face {
   icon: string;
@@ -31,14 +38,23 @@ interface Face {
   board?: readonly Column[];
 }
 
+// 15 named agent types exist (apps/web/src/lib/active-agents/agent-utils.ts); the pill
+// on the slab must print a number the product can back, never a guess.
+const AGENT_TYPE_COUNT = 15;
+
 export const FACES: Record<LayerId, Face> = {
   agents: {
     icon: 'smart_toy',
     title: 'AI agents',
-    pill: ['10 at work', '#7655F6'],
+    pill: [`${AGENT_TYPE_COUNT} types`, '#7655F6'],
     rows: [
       { icon: 'insights', label: 'Lead scored · Acme Ltd', value: '92', accent: '#2A78F6' },
-      { icon: 'edit_note', label: 'Follow-up drafted', value: 'Ready', accent: '#7655F6' },
+      {
+        icon: 'edit_note',
+        label: 'Follow-up drafted · Maya Chen',
+        value: 'Ready',
+        accent: '#7655F6',
+      },
       { icon: 'trending_down', label: 'Churn risk · Contoso', value: 'High', accent: '#D14A45' },
     ],
   },
@@ -48,14 +64,27 @@ export const FACES: Record<LayerId, Face> = {
     pill: ['3 waiting', '#C27C00'],
     rows: [
       {
-        icon: 'mail',
-        label: 'Follow-up to Maya Chen',
+        icon: 'edit_note',
+        label: 'Auto-response · Maya Chen',
+        meta: '92% confidence · 1h 40m left',
         value: 'Approve',
         accent: '#2A78F6',
         button: true,
       },
-      { icon: 'star', label: 'Re-score 12 new leads', value: 'Pending', accent: '#C27C00' },
-      { icon: 'reply', label: 'Reply to Adatum', value: 'Pending', accent: '#C27C00' },
+      {
+        icon: 'insights',
+        label: 'Lead score · Acme Ltd',
+        meta: '88% confidence · 4h left',
+        value: 'Review',
+        accent: '#C27C00',
+      },
+      {
+        icon: 'trending_down',
+        label: 'Churn risk · Contoso',
+        meta: 'SLA breached',
+        value: 'Escalate',
+        accent: '#C43B3B',
+      },
     ],
   },
   pipeline: {
@@ -63,15 +92,37 @@ export const FACES: Record<LayerId, Face> = {
     title: 'Deal board',
     pill: ['£283k open', '#2A78F6'],
     board: [
-      ['New', '#BCA8FF', ['£24k', '£18k', '£12k']],
-      ['Qualified', '#2A78F6', ['£40k', '£21k']],
-      ['Proposal', '#7655F6', ['£32k', '£19k']],
-      ['Won', '#28D9D4', ['£46k']],
+      [
+        'New',
+        '#BCA8FF',
+        [
+          ['£24k', 0.2],
+          ['£18k', 0.15],
+          ['£12k', 0.1],
+        ],
+      ],
+      [
+        'Qualified',
+        '#2A78F6',
+        [
+          ['£40k', 0.45],
+          ['£21k', 0.4],
+        ],
+      ],
+      [
+        'Proposal',
+        '#7655F6',
+        [
+          ['£32k', 0.7],
+          ['£19k', 0.65],
+        ],
+      ],
+      ['Won', '#28D9D4', [['£46k', 1]]],
     ],
   },
   service: {
     icon: 'support_agent',
-    title: 'Cases & SLAs',
+    title: 'Tickets & SLAs',
     pill: ['On track', '#0A8F8A'],
     rows: [
       { icon: 'timer', label: 'Northwind · Billing', value: '2h 14m', accent: '#0A8F8A' },
@@ -90,7 +141,12 @@ export const FACES: Record<LayerId, Face> = {
     pill: ['Protected', '#0A8F8A'],
     rows: [
       { icon: 'lock', label: 'Workspace data isolated', value: 'On', accent: '#0A8F8A' },
-      { icon: 'verified_user', label: 'Multi-factor sign-in', value: 'On', accent: '#0A8F8A' },
+      {
+        icon: 'verified_user',
+        label: 'Multi-factor sign-in',
+        value: 'Available',
+        accent: '#0A8F8A',
+      },
       { icon: 'history', label: 'Audit log', value: 'Recording', accent: '#2A78F6' },
     ],
   },
@@ -170,25 +226,35 @@ export function drawFace(
       const x = x0 + i * (cw + 24);
       rr(x, 272, 18, 18, 9, dot);
       text(name, x + 30, 282, 36, 800, NAVY);
-      cards.forEach((amount, j) => {
-        const y = 324 + j * 116;
-        rr(x, y, cw, 100, 20, i === 3 ? 'rgba(40,217,212,0.16)' : '#F3F5FC');
+      cards.forEach(([amount, probability], j) => {
+        const y = 324 + j * 128;
+        rr(x, y, cw, 108, 20, i === 3 ? 'rgba(40,217,212,0.16)' : '#F3F5FC');
         rr(x + 20, y + 22, cw * 0.55, 16, 8, 'rgba(17,23,91,0.18)');
         text(amount, x + 20, y + 68, 38, 800, NAVY);
+        // A probability bar under the amount, the real board's "how likely to win" read.
+        const barW = cw - 40;
+        rr(x + 20, y + 86, barW, 8, 4, 'rgba(17,23,91,0.12)');
+        rr(x + 20, y + 86, Math.max(8, barW * probability), 8, 4, dot);
       });
     });
     return;
   }
 
-  (f.rows ?? []).forEach(({ icon: ic, label, value, accent, button }, i) => {
-    const y = 272 + i * 128;
+  let rowY = 272;
+  (f.rows ?? []).forEach(({ icon: ic, label, meta, value, accent, button }, i) => {
+    const y = rowY;
+    rowY += meta ? 140 : 128;
     if (i) {
       g.fillStyle = LINE;
       g.fillRect(x0, y - 6, x1 - x0, 2);
     }
     rr(x0, y + 18, 80, 80, 22, `${accent}1F`);
     icon(ic, x0 + 16, y + 58, 48, accent);
-    text(label, x0 + 108, y + 58, 44, 700, NAVY);
+    text(label, x0 + 108, y + (meta ? 46 : 58), 44, 700, NAVY);
+    if (meta) {
+      const metaColour = meta === 'SLA breached' ? '#C43B3B' : 'rgba(20,24,51,0.52)';
+      text(meta, x0 + 108, y + 92, 32, 600, metaColour);
+    }
     const vw = widthOf(value, 38) + 48;
     if (button) {
       rr(x1 - vw, y + 28, vw, 60, 16, '#2A78F6');

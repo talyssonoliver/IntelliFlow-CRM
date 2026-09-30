@@ -1,3 +1,6 @@
+import type { CSSProperties } from 'react';
+import './faq-section.css';
+
 const FAQ = [
   {
     question: 'Will the AI ever act without my approval?',
@@ -30,18 +33,27 @@ const FAQ = [
 export function FaqSection() {
   return (
     <>
-      <section className="faq">
-        <div className="wrap narrow reveal">
+      <section
+        className="faq aurora-faq"
+        id="faq"
+        data-bridge-section
+        style={{ '--bridge-accent': 'var(--violet)' } as CSSProperties}
+      >
+        <div className="wrap narrow reveal" data-reveal>
           <h2>Questions buyers ask.</h2>
-          {FAQ.map(({ question, answer }) => (
-            <details key={question}>
-              <summary>
-                {question}
-                <span className="material-symbols-outlined">expand_more</span>
-              </summary>
-              <p>{answer}</p>
-            </details>
-          ))}
+          <div data-reveal-stagger>
+            {FAQ.map(({ question, answer }) => (
+              <details key={question}>
+                <summary>
+                  {question}
+                  <span className="material-symbols-outlined">expand_more</span>
+                </summary>
+                <div className="faq-content">
+                  <p>{answer}</p>
+                </div>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
     </>

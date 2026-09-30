@@ -1,10 +1,16 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
+import './final-cta.css';
 
-/** Closing call to action. */
+/** Closing call to action, on Navy, with the ribbon artwork rising from the bottom. */
 export function FinalCta() {
   return (
     <>
-      <section className="final">
+      <section
+        className="final aurora-final"
+        data-bridge-section
+        style={{ '--bridge-accent': 'var(--navy)' } as CSSProperties}
+      >
         <img
           src="/brand/aurora/bg/ribbon-left.webp"
           className="final-ribbon left"
@@ -17,7 +23,7 @@ export function FinalCta() {
           alt=""
           aria-hidden="true"
         />
-        <div className="wrap final-inner reveal">
+        <div className="wrap final-inner reveal" data-reveal>
           <h2>Give your team back the hours they lose to busywork.</h2>
           <p>Aurora prepares the work. Your people make the calls.</p>
           <div className="cta-row center-row">

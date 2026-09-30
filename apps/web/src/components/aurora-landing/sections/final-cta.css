@@ -1,0 +1,32 @@
+/*
+ * FinalCta — the ribbon artwork rises from the bottom on both sides, and the
+ * section hands off to the footer as one continuous Navy block. Every rule
+ * scoped under .aurora-page. `.aurora-final` is a second class added only on
+ * this section's root so these overrides win regardless of stylesheet import
+ * order, without editing aurora-landing.css directly.
+ */
+
+.aurora-page .final.aurora-final {
+  --shadow: 0 1px 2px rgba(17, 23, 91, 0.05), 0 8px 24px -12px rgba(17, 23, 91, 0.18);
+  --shadow-lg: 0 2px 4px rgba(17, 23, 91, 0.05), 0 30px 60px -24px rgba(17, 23, 91, 0.28);
+  padding: 128px 0;
+}
+
+/* Was top:-60px (aurora-landing.css:735-738) — the right ribbon fell from the
+   top, fighting the brief's "rises from the bottom" on both sides. Now both
+   ribbons anchor to the section's own bottom edge and read as one artwork. */
+.aurora-page .final.aurora-final .final-ribbon.right {
+  top: auto;
+  bottom: -160px;
+}
+
+@media (max-width: 960px) {
+  /* Fixes the mobile dead-gap audit found before the final CTA (M1).
+     aurora-landing.css:700-705 has no mobile override for .final. */
+  .aurora-page .final.aurora-final {
+    padding: 80px 0;
+  }
+  .aurora-page .final.aurora-final .final-ribbon.right {
+    bottom: -90px;
+  }
+}

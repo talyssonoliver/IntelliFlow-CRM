@@ -1,3 +1,20 @@
+import type { CSSProperties } from 'react';
+import './integrations-section.css';
+
+/** The 6 connectors that are actually registered and ready today, plus the two
+ * OAuth sign-in providers. SAP is registered in code but not ready and must
+ * never appear here (see product-truth.md §3.1 / §6). */
+const CONNECTORS: ReadonlyArray<{ label: string; logo: string; status: string }> = [
+  { label: 'Gmail', logo: '/brand/aurora/logos/gmail.svg', status: 'Ready' },
+  { label: 'Outlook', logo: '/brand/aurora/logos/microsoftoutlook.svg', status: 'Ready' },
+  { label: 'Slack', logo: '/brand/aurora/logos/slack.svg', status: 'Ready' },
+  { label: 'Microsoft Teams', logo: '/brand/aurora/logos/microsoftteams.svg', status: 'Ready' },
+  { label: 'Stripe', logo: '/brand/aurora/logos/stripe.svg', status: 'Ready' },
+  { label: 'PayPal', logo: '/brand/aurora/logos/paypal.svg', status: 'Ready' },
+  { label: 'Google sign-in', logo: '/brand/aurora/logos/google.svg', status: 'Sign-in' },
+  { label: 'Azure sign-in', logo: '/brand/aurora/logos/microsoftazure.svg', status: 'Sign-in' },
+];
+
 /** Developer surfaces: ready unless marked beta (built, not final) or soon (not built yet). */
 const DEV_CHIPS: ReadonlyArray<{
   label: string;
@@ -15,13 +32,18 @@ const DEV_CHIPS: ReadonlyArray<{
   { label: 'API keys', icon: 'vpn_key', status: 'soon' },
 ];
 
-/** Ready integrations and developer surfaces. */
+/** Ready integrations and developer surfaces, wired to one Aurora core rather than a flat logo grid. */
 export function IntegrationsSection() {
   return (
     <>
-      <section className="integrations">
+      <section
+        className="integrations aurora-integrations"
+        id="integrations"
+        data-bridge-section
+        style={{ '--bridge-accent': 'var(--cyan)' } as CSSProperties}
+      >
         <div className="wrap">
-          <div className="center reveal">
+          <div className="center reveal" data-reveal>
             <p className="eyebrow">Integrations</p>
             <h2>Plugs into the tools your team already lives in.</h2>
             <p className="section-lede">
@@ -29,52 +51,41 @@ export function IntegrationsSection() {
               hooks and a CLI.
             </p>
           </div>
-          <div className="logos reveal">
-            <div className="logo">
-              <img src="/brand/aurora/logos/gmail.svg" alt="" />
-              <span>Gmail</span>
+
+          <div className="integration-system reveal" data-reveal>
+            <div className="core-node">
+              <span className="core-ring" aria-hidden="true" />
+              <img src="/brand/aurora/aurora-wave.webp" className="core-mark" alt="" />
+              <span>Aurora core</span>
             </div>
-            <div className="logo">
-              <img src="/brand/aurora/logos/microsoftoutlook.svg" alt="" />
-              <span>Outlook</span>
-            </div>
-            <div className="logo">
-              <img src="/brand/aurora/logos/slack.svg" alt="" />
-              <span>Slack</span>
-            </div>
-            <div className="logo">
-              <img src="/brand/aurora/logos/microsoftteams.svg" alt="" />
-              <span>Microsoft Teams</span>
-            </div>
-            <div className="logo">
-              <img src="/brand/aurora/logos/stripe.svg" alt="" />
-              <span>Stripe</span>
-            </div>
-            <div className="logo">
-              <img src="/brand/aurora/logos/paypal.svg" alt="" />
-              <span>PayPal</span>
-            </div>
-            <div className="logo">
-              <img src="/brand/aurora/logos/google.svg" alt="" />
-              <span>Google sign-in</span>
-            </div>
-            <div className="logo">
-              <img src="/brand/aurora/logos/microsoftazure.svg" alt="" />
-              <span>Azure sign-in</span>
+            <span className="core-stem" aria-hidden="true" />
+
+            <div className="logos" data-reveal-stagger>
+              {CONNECTORS.map(({ label, logo, status }) => (
+                <div className="logo" key={label}>
+                  <img src={logo} alt="" />
+                  <span>{label}</span>
+                  <span className="wire-status">{status}</span>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="dev-row reveal">
-            {DEV_CHIPS.map(({ label, icon, logo, status }) => (
-              <span key={label} className={status ? `dev ${status}` : 'dev'}>
-                {logo ? (
-                  <img src={logo} alt="" />
-                ) : (
-                  <span className="material-symbols-outlined">{icon}</span>
-                )}
-                {label}
-                {status && <em>{status === 'beta' ? 'Beta' : 'Coming soon'}</em>}
-              </span>
-            ))}
+
+          <div className="dev-panel reveal" data-reveal>
+            <p className="dev-label">Build your own on the same connectors</p>
+            <div className="dev-row" data-reveal-stagger>
+              {DEV_CHIPS.map(({ label, icon, logo, status }) => (
+                <span key={label} className={status ? `dev ${status}` : 'dev'}>
+                  {logo ? (
+                    <img src={logo} alt="" />
+                  ) : (
+                    <span className="material-symbols-outlined">{icon}</span>
+                  )}
+                  {label}
+                  {status && <em>{status === 'beta' ? 'Beta' : 'Coming soon'}</em>}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>

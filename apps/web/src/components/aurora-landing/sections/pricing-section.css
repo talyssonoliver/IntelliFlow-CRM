@@ -1,0 +1,169 @@
+/*
+ * PricingSection — the card straddles the Navy/Mist boundary, and carries a
+ * real, accessible "tell us about your team" form. Every rule scoped under
+ * .aurora-page. `.aurora-pricing` is a second class added only on this
+ * section's root so these overrides win regardless of stylesheet import
+ * order, without editing aurora-landing.css directly.
+ */
+
+.aurora-page .pricing.aurora-pricing {
+  --shadow: 0 1px 2px rgba(17, 23, 91, 0.05), 0 8px 24px -12px rgba(17, 23, 91, 0.18);
+  --shadow-lg: 0 2px 4px rgba(17, 23, 91, 0.05), 0 30px 60px -24px rgba(17, 23, 91, 0.28);
+  padding: 128px 0;
+  /* SiteNav's "Pricing" link jumps to #pricing (this section) — see
+     approval-section.css for the same fix and why. */
+  scroll-margin-top: 90px;
+  /* The section itself carries the Navy-to-Mist handoff from Security above
+     it; the transition band sits where the card's own vertical centre falls
+     (equal top/bottom padding keeps that true at any card height), so the
+     white card visually straddles the boundary, half on each colour. */
+  background: linear-gradient(
+    180deg,
+    var(--navy) 0%,
+    var(--navy) 42%,
+    var(--mist) 58%,
+    var(--mist) 100%
+  );
+}
+
+.aurora-page .pricing.aurora-pricing .price-card {
+  position: relative;
+}
+
+.aurora-page .price-copy {
+  min-width: 0;
+}
+
+/* The form */
+.aurora-page .team-form {
+  margin-top: 28px;
+  display: grid;
+  gap: 18px;
+}
+.aurora-page .field {
+  display: grid;
+  gap: 6px;
+}
+.aurora-page .field label,
+.aurora-page .chips-field legend {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.aurora-page .field input[type='email'],
+.aurora-page .field select {
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 0;
+  background: var(--mist);
+  box-shadow: 0 0 0 1px var(--line-2) inset;
+  font:
+    15px/1 var(--font-manrope),
+    system-ui,
+    sans-serif;
+  color: var(--ink);
+}
+.aurora-page .field select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink-3) 50%),
+    linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
+  background-position:
+    calc(100% - 20px) center,
+    calc(100% - 15px) center;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+.aurora-page .field input[type='email']:focus-visible,
+.aurora-page .field select:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.aurora-page .field-hint {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+/* Inline validation: a native, JS-free signal once the visitor has typed
+   something that is not yet a valid email address. */
+.aurora-page .field input[type='email']:invalid:not(:placeholder-shown) {
+  box-shadow: 0 0 0 1.5px #c43b3b inset;
+}
+.aurora-page .field input[type='email']:invalid:not(:placeholder-shown) ~ .field-hint {
+  color: #c43b3b;
+  font-weight: 600;
+}
+.aurora-page .field input[type='email']:invalid:not(:placeholder-shown) ~ .field-hint::before {
+  content: 'Enter a work email address. ';
+}
+
+.aurora-page .chips-field {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.aurora-page .chip-options {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.aurora-page .chip-option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--mist);
+  box-shadow: 0 0 0 1px var(--line-2) inset;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+.aurora-page .chip-option input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.aurora-page .chip-option:has(input:checked) {
+  background: rgba(42, 120, 246, 0.12);
+  box-shadow: 0 0 0 1.5px var(--blue) inset;
+  color: var(--blue-press);
+}
+.aurora-page .chip-option:has(input:focus-visible) {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.aurora-page .team-form .cta-row {
+  margin-top: 8px;
+}
+.aurora-page .team-form button.btn {
+  font: inherit;
+}
+
+@media (max-width: 960px) {
+  /* Fixes the mobile dead-gap audit found before Security/Final (M1); the
+     brief's 80px phone rhythm. */
+  .aurora-page .pricing.aurora-pricing {
+    padding: 80px 0;
+    background: linear-gradient(
+      180deg,
+      var(--navy) 0%,
+      var(--navy) 46%,
+      var(--mist) 60%,
+      var(--mist) 100%
+    );
+  }
+  .aurora-page .team-form {
+    margin-top: 22px;
+    gap: 16px;
+  }
+}

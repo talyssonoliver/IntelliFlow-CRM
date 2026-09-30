@@ -1,12 +1,20 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
+import './security-section.css';
 
-/** Security and governance on navy. */
+/** Security and governance on Navy, entered through the Mist-to-Navy bridge. */
 export function SecuritySection() {
   return (
     <>
-      <section className="security dark" id="security">
+      <section
+        className="security dark aurora-security"
+        id="security"
+        data-bridge-section
+        style={{ '--bridge-accent': 'var(--navy)' } as CSSProperties}
+      >
+        <div className="bridge-top" aria-hidden="true" />
         <div className="wrap feature-grid">
-          <div className="feature-copy reveal">
+          <div className="feature-copy reveal" data-reveal>
             <p className="eyebrow on-dark">Security and governance</p>
             <h2>Built for teams that answer to someone.</h2>
             <p className="section-lede">
@@ -17,7 +25,7 @@ export function SecuritySection() {
               Request the compliance roadmap
             </Link>
           </div>
-          <div className="controls reveal">
+          <div className="controls reveal" data-reveal-stagger>
             <div className="control">
               <span className="material-symbols-outlined">task_alt</span>
               <b>Human approval</b>
@@ -31,7 +39,7 @@ export function SecuritySection() {
             <div className="control">
               <span className="material-symbols-outlined">verified_user</span>
               <b>Multi-factor sign-in</b>
-              <p>MFA protects every account.</p>
+              <p>MFA is available on every account.</p>
             </div>
             <div className="control">
               <span className="material-symbols-outlined">history</span>

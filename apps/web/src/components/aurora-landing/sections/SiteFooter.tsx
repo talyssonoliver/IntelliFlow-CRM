@@ -1,10 +1,16 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
+import './site-footer.css';
 
-/** Site footer. */
+/** Site footer, continuing the Final CTA's Navy with no seam. */
 export function SiteFooter() {
   return (
     <>
-      <footer className="footer">
+      <footer
+        className="footer aurora-footer"
+        data-bridge-section
+        style={{ '--bridge-accent': 'var(--navy)' } as CSSProperties}
+      >
         <div className="wrap foot-row">
           <div>
             <img src="/brand/aurora/aurora-wordmark.webp" alt="Aurora" className="foot-word" />
