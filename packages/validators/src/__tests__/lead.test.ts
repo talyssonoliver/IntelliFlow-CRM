@@ -170,3 +170,47 @@ describe('Lead BANT validators (IFC-242)', () => {
     });
   });
 });
+
+describe('Lead attribution validators (ADR-070)', () => {
+  const attribution = {
+    utmSource: 'google',
+    utmMedium: 'cpc',
+    utmCampaign: 'spring',
+    utmContent: 'a',
+    utmTerm: 'crm',
+    clickId: 'gclid123',
+    referrer: 'https://www.google.com/',
+    landingPath: '/pricing',
+  };
+
+  it('accepts every attribution field on create and keeps them', () => {
+    const result = createLeadSchema.safeParse({ email: 'a@b.co', ...attribution });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toMatchObject(attribution);
+  });
+
+  it('keeps them optional on create and update', () => {
+    expect(createLeadSchema.safeParse({ email: 'a@b.co' }).success).toBe(true);
+    expect(updateLeadSchema.safeParse({ id: '3f2b8c1e-5a7d-4e29-9b64-0c1d2e3f4a5b' }).success).toBe(
+      true
+    );
+    const upd = updateLeadSchema.safeParse({
+      id: '3f2b8c1e-5a7d-4e29-9b64-0c1d2e3f4a5b',
+      utmCampaign: 'autumn',
+    });
+    expect(upd.success).toBe(true);
+    if (upd.success) expect(upd.data.utmCampaign).toBe('autumn');
+  });
+
+  it('rejects over-long attribution values', () => {
+    expect(
+      createLeadSchema.safeParse({ email: 'a@b.co', utmSource: 'x'.repeat(201) }).success
+    ).toBe(false);
+    expect(createLeadSchema.safeParse({ email: 'a@b.co', clickId: 'x'.repeat(501) }).success).toBe(
+      false
+    );
+    expect(
+      createLeadSchema.safeParse({ email: 'a@b.co', referrer: 'x'.repeat(2001) }).success
+    ).toBe(false);
+  });
+});
