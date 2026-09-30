@@ -79,20 +79,11 @@ CREATE INDEX "leads_tenantId_utmCampaign_idx" ON "leads"("tenantId", "utmCampaig
 -- AddForeignKey
 ALTER TABLE "partner_api_keys" ADD CONSTRAINT "partner_api_keys_partnerId_fkey" FOREIGN KEY ("partnerId") REFERENCES "partners"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- Backfill tenants.plan from the previous authoritative source (workspaces.plan reached via
--- workspace_members -> users.tenantId). Tenants with no workspace keep the STARTER default,
--- which is what the old lookup resolved them to. One deterministic row per tenant.
-UPDATE "tenants" t
-SET "plan" = src."plan"
-FROM (
-    SELECT DISTINCT ON (u."tenantId") u."tenantId" AS "tenantId", w."plan" AS "plan"
-    FROM "workspaces" w
-    INNER JOIN "workspace_members" wm ON wm."workspaceId" = w."id"
-    INNER JOIN "users" u ON u."id" = wm."userId"
-    WHERE u."tenantId" IS NOT NULL
-    ORDER BY u."tenantId", wm."isDefault" DESC, wm."joinedAt" ASC, w."id" ASC
-) src
-WHERE t."id" = src."tenantId";
+-- No backfill of tenants.plan: on 2026-09-30 production had 0 rows in "workspaces" and
+-- "workspace_members" (3 tenants), so the old workspace-derived lookup resolved every
+-- tenant to STARTER, which is the new column default. Keeping this migration additive
+-- (Class A). If a workspace-derived plan ever needs restoring, do it as a separate
+-- Class B migration.
 
 -- Row Level Security: partner credentials are never reachable through the Supabase
 -- anon/authenticated roles. RLS is enabled with NO policy (deny by default); the API
