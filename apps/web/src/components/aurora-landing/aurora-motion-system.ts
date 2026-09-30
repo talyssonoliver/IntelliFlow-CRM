@@ -201,9 +201,12 @@ export function setupSmoothScroll(
   lenis.on('scroll', onScroll);
   const tick = (time: number) => lenis.raf(time * 1000);
   gsap.ticker.add(tick);
+  // Lenis drives the ticker, so GSAP must not skip time after a slow frame.
+  // The ticker is global: put GSAP's default back when this page unmounts.
   gsap.ticker.lagSmoothing(0);
   return () => {
     gsap.ticker.remove(tick);
+    gsap.ticker.lagSmoothing(500, 33);
     lenis.destroy();
   };
 }

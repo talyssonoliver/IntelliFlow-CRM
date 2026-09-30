@@ -181,6 +181,8 @@ describe('setupSmoothScroll', () => {
 
     cleanup();
     expect(gsap.ticker.remove).toHaveBeenCalled();
+    // The ticker is global: leaving the page puts GSAP's default lag smoothing back.
+    expect(gsap.ticker.lagSmoothing).toHaveBeenLastCalledWith(500, 33);
     expect(lenis.destroy).toHaveBeenCalled();
   });
 });
