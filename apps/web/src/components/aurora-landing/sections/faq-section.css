@@ -1,0 +1,42 @@
+/*
+ * FaqSection — smooth open/close instead of the browser's instant <details>
+ * snap. Every rule scoped under .aurora-page. `.aurora-faq` is a second class
+ * added only on this section's root so these overrides win regardless of
+ * stylesheet import order, without editing aurora-landing.css directly.
+ */
+
+.aurora-page .faq.aurora-faq {
+  padding: 0 0 128px;
+}
+
+/* Height-animates a <details> without JS: closed <details> content gets
+   content-visibility:hidden (not display:none) in evergreen browsers, so a
+   grid-rows transition on this wrapper still runs. Falls back to an instant
+   open/close in engines that don't support it — content is never hidden. */
+.aurora-page .faq-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.aurora-page details[open] .faq-content {
+  grid-template-rows: 1fr;
+}
+.aurora-page .faq-content > p {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 960px) {
+  /* Fixes the mobile dead-gap audit found before the final CTA (M1): .faq's
+     bottom padding plus .final's top padding went un-reduced on a 390px
+     screen. aurora-landing.css:671-673 has no mobile override. */
+  .aurora-page .faq.aurora-faq {
+    padding: 0 0 80px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-page .faq-content {
+    transition: none;
+  }
+}

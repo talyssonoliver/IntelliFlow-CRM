@@ -1,0 +1,235 @@
+/*
+ * ServiceSection — service & insights bento (White background per the design contract).
+ * Every rule scoped under .aurora-page; overrides shared bento/sla/tone rules locally
+ * instead of touching aurora-landing.css.
+ */
+
+.aurora-page .service-section {
+  background: #fff;
+  border-top: 1px solid var(--line);
+}
+
+/* Small "Sample workspace" tag sat inline with a card's own tag row, so the
+   label lives on the panel itself, not just once at the foot of the grid. */
+.aurora-page .mini-sample {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.aurora-page .bcard .btag-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- Insights feed (replaces the invented KPI + bar-chart panel) ---------- */
+.aurora-page .insight-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: -6px;
+}
+.aurora-page .insight-toolbar .search {
+  margin-left: auto;
+  height: 30px;
+  min-width: 148px;
+}
+.aurora-page .insight-feed {
+  display: grid;
+  gap: 4px;
+}
+.aurora-page .insight-row {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 12px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  align-items: start;
+}
+.aurora-page .insight-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--icbg);
+  color: var(--ic);
+}
+.aurora-page .insight-icon .material-symbols-outlined {
+  font-size: 18px;
+}
+.aurora-page .insight-copy b {
+  display: block;
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--navy);
+}
+.aurora-page .insight-copy p {
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.aurora-page .insight-action {
+  font-weight: 700;
+  color: var(--blue);
+}
+.aurora-page .insight-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ic);
+  margin-top: 5px;
+}
+
+/* ---------- Tickets: real SLA-status stat strip + countdown rows ---------- */
+.aurora-page .ticket-stats {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.aurora-page .ticket-stats .kpi {
+  padding: 10px 12px;
+  position: relative;
+}
+.aurora-page .ticket-stats .kpi b {
+  font-size: 20px;
+}
+.aurora-page .ticket-stats .kpi small {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.aurora-page .ticket-stats .kpi.breached::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 2px;
+  background: #c43b3b;
+}
+.aurora-page .ticket-stats .kpi.resolved::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 2px;
+  background: #0a726d;
+}
+.aurora-page .ticket-card .sla-list {
+  margin-top: 4px;
+}
+
+/* ---------- Case workflow: balances the taller Customer health card beside it ---------- */
+.aurora-page .case-stats {
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 8px;
+}
+.aurora-page .case-stats .kpi {
+  padding: 12px 14px;
+}
+.aurora-page .case-stats .kpi small {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Customer health: gauge + risk bars + a short sentiment read ---------- */
+.aurora-page .health-gauge-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.aurora-page .health-gauge {
+  flex: none;
+  display: block;
+}
+.aurora-page .health-gauge-copy b {
+  display: block;
+  font-size: 14px;
+  color: var(--navy);
+}
+.aurora-page .health-gauge-copy .score {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.aurora-page .health-gauge-copy small {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.aurora-page .risk-bars {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+.aurora-page .risk-bar {
+  display: grid;
+  grid-template-columns: 52px 1fr 34px;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+.aurora-page .risk-bar-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(17, 23, 91, 0.07);
+  overflow: hidden;
+}
+.aurora-page .risk-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--rc);
+}
+.aurora-page .tone-mini {
+  margin-top: 2px;
+  display: grid;
+  gap: 8px;
+}
+.aurora-page .tone-mini .tone-row {
+  padding: 9px 12px;
+  font-size: 12.5px;
+}
+.aurora-page .tone-mini .tone-row b {
+  font-size: 12.5px;
+}
+
+@media (max-width: 960px) {
+  .aurora-page .insight-toolbar .search {
+    min-width: 0;
+    flex: 1 1 100%;
+    order: 3;
+  }
+  .aurora-page .ticket-stats,
+  .aurora-page .case-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .aurora-page .health-gauge-row {
+    gap: 12px;
+  }
+  /* Design contract floor: UI-in-panel text never below 12px on a phone. */
+  .aurora-page .mini-sample,
+  .aurora-page .case-stats .kpi small {
+    font-size: 12px;
+  }
+}

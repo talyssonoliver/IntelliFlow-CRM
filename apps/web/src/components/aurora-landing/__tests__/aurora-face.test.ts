@@ -50,7 +50,35 @@ describe('drawFace', () => {
     for (const row of face.rows ?? [])
       expect(written).toEqual(expect.arrayContaining([row.label, row.value]));
     for (const [column, , cards] of face.board ?? [])
-      expect(written).toEqual(expect.arrayContaining([column, ...cards]));
+      expect(written).toEqual(expect.arrayContaining([column, ...cards.map(([amount]) => amount)]));
+  });
+
+  it('prints the confidence and SLA meta line under a row that has one', () => {
+    const { g, texts } = recorder();
+    drawFace(g, 'control', '#28D9D4', fonts);
+    const written = texts.map((t) => t.text);
+
+    for (const row of FACES.control.rows ?? []) if (row.meta) expect(written).toContain(row.meta);
+  });
+
+  it('draws a probability bar under every pipeline card, sized to its win chance', () => {
+    const { g, texts } = recorder();
+    const rects: Array<{ x: number; y: number; w: number; h: number }> = [];
+    g.roundRect = ((x: number, y: number, w: number, h: number) => {
+      rects.push({ x, y, w, h });
+    }) as CanvasRenderingContext2D['roundRect'];
+    drawFace(g, 'pipeline', '#2A78F6', fonts);
+    void texts;
+
+    // Every card draws a track rect then a fill rect on top of it, both 8px tall.
+    const bars = rects.filter((r) => r.h === 8);
+    const totalCards = FACES.pipeline.board!.reduce((n, [, , cards]) => n + cards.length, 0);
+    expect(bars.length).toBe(totalCards * 2);
+    for (let i = 0; i < bars.length; i += 2) {
+      const [track, fill] = [bars[i]!, bars[i + 1]!];
+      expect(fill.w).toBeLessThanOrEqual(track.w);
+      expect(fill.w).toBeGreaterThan(0);
+    }
   });
 
   it('draws icons in the icon font and words in the text font', () => {
@@ -62,12 +90,13 @@ describe('drawFace', () => {
     expect(texts.find((t) => t.text === 'AI agents')?.font).toContain('Manrope');
   });
 
-  it('draws the approval row as a primary button with white text', () => {
+  it('draws the approval row as a primary button with white text, and colours a breached SLA red', () => {
     const { g, texts } = recorder();
     drawFace(g, 'control', '#28D9D4', fonts);
 
     expect(texts.find((t) => t.text === 'Approve')?.fill).toBe('#FFFFFF');
-    expect(texts.find((t) => t.text === 'Pending')?.fill).toBe('#C27C00');
+    expect(texts.find((t) => t.text === 'Review')?.fill).toBe('#C27C00');
+    expect(texts.find((t) => t.text === 'SLA breached')?.fill).toBe('#C43B3B');
   });
 
   it('keeps every word inside the panel', () => {
@@ -81,9 +110,12 @@ describe('drawFace', () => {
     }
   });
 
-  it('claims nothing the product cannot back: ten agents, sample names only', () => {
-    expect(FACES.agents.pill[0]).toBe('10 at work');
+  it('claims nothing the product cannot back: 15 agent types, sample names only', () => {
+    // apps/web/src/lib/active-agents/agent-utils.ts defines 15 named agent types —
+    // the pill must print that real, verifiable number, never a guessed "at work" count.
+    expect(FACES.agents.pill[0]).toBe('15 types');
     const all = JSON.stringify(FACES);
     expect(all).not.toMatch(/SAP|SOC ?2|GDPR|ISO/);
+    expect(all).not.toMatch(/\bprotects every account\b/i);
   });
 });

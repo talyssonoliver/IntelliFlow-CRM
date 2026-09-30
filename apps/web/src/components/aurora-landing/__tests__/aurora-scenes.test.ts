@@ -2,11 +2,23 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { playScenes } from '../aurora-scenes';
+import {
+  playScenes,
+  playApprovalScene,
+  playPipelineScene,
+  revealReasoning,
+  typeDraft,
+  confirmApproval,
+  flagStalledDeal,
+  moveDealForward,
+} from '../aurora-scenes';
 
 /**
- * A GSAP stand-in that plays everything at once: tweens jump to their end values,
- * timeline callbacks run in order, and a scroll trigger fires as soon as it is made.
+ * A GSAP stand-in that plays everything at once: tweens jump to their end
+ * values, timeline callbacks (including `eventCallback('onComplete', ...)`,
+ * fired synchronously since this fake has already "finished" every tween by
+ * the time it is registered) run in order, and a scroll trigger fires as
+ * soon as it is made.
  */
 function fakeGsap() {
   const tweens: Array<{ target: unknown; vars: Record<string, unknown> }> = [];
@@ -30,6 +42,10 @@ function fakeGsap() {
       fromTo: (t: unknown, _from: unknown, v: Record<string, unknown>) => (apply(t, v), tl),
       add: (fn: () => void) => (fn(), tl),
       play: vi.fn(),
+      eventCallback: (name: string, cb: () => void) => {
+        if (name === 'onComplete') cb();
+        return tl;
+      },
     };
     return tl;
   };
@@ -55,19 +71,19 @@ function page() {
     <div id="root">
       <div class="app tilt">window</div>
       <div id="approval-scene">
-        <h3 class="d-title">Follow up</h3>
+        <h3 class="review-title">Follow up</h3>
         <div class="why" id="why-renewal">Renewal</div><div class="why">No reply</div>
-        <div id="fsource">Source</div>
-        <p id="typed">Hi Maya, ahead of your renewal</p>
-        <button id="approve-btn">Approve</button>
-        <span id="q1-state" class="state pending">Pending</span>
-        <div id="toast">Approved by you</div>
-        <svg id="cursor"></svg>
+        <div id="review-source">Source</div>
+        <p id="review-draft-text">Hi Maya, ahead of your renewal</p>
+        <button id="review-approve-btn">Approve</button>
+        <span id="review-q1-state" class="state review">In review</span>
+        <div id="review-toast">Approved by you</div>
+        <svg id="review-cursor"></svg>
       </div>
       <div id="board-scene">
-        <div data-stage="new"><div class="deal" id="mover"><span class="tag cold">No reply</span></div></div>
+        <div data-stage="new"><div class="deal" id="deal-mover"><span class="tag cold">No reply</span></div></div>
         <div data-stage="proposal"><div class="deal">Existing</div></div>
-        <div id="nba">Next best action</div>
+        <div id="deal-nba">Next best action</div>
       </div>
     </div>`;
   return document.getElementById('root')!;
@@ -83,11 +99,33 @@ describe('playScenes', () => {
     const { gsap, ScrollTrigger } = fakeGsap();
     playScenes(root, gsap as never, ScrollTrigger as never, false);
 
-    expect(document.getElementById('typed')!.textContent).toBe('Hi Maya, ahead of your renewal');
-    expect(document.getElementById('q1-state')!.textContent).toBe('Approved');
-    expect(document.getElementById('q1-state')!.className).toBe('state done');
+    expect(document.getElementById('review-draft-text')!.textContent).toBe(
+      'Hi Maya, ahead of your renewal'
+    );
+    expect(document.getElementById('review-q1-state')!.textContent).toBe('Approved');
+    expect(document.getElementById('review-q1-state')!.className).toBe('state done');
     expect(document.getElementById('why-renewal')!.classList.contains('hover')).toBe(false);
-    expect(document.getElementById('approve-btn')!.classList.contains('pressed')).toBe(false);
+    expect(document.getElementById('review-approve-btn')!.classList.contains('pressed')).toBe(
+      false
+    );
+  });
+
+  it('never blanks the draft text: it is present before, during and after the scene', () => {
+    const root = page();
+    const draft = document.getElementById('review-draft-text')!;
+    const before = draft.textContent;
+    expect(before).not.toBe('');
+
+    const { gsap, ScrollTrigger } = fakeGsap();
+    const seen: string[] = [];
+    const observer = new MutationObserver(() => seen.push(draft.textContent ?? ''));
+    observer.observe(draft, { characterData: true, childList: true, subtree: true });
+    playScenes(root, gsap as never, ScrollTrigger as never, false);
+    observer.disconnect();
+
+    // textContent is never mutated by the scene -- only a clip-path paint is animated.
+    expect(seen.every((s) => s === before)).toBe(true);
+    expect(draft.textContent).toBe(before);
   });
 
   it('moves the stalled deal to Proposal once its recap is sent', () => {
@@ -95,7 +133,7 @@ describe('playScenes', () => {
     const { gsap, ScrollTrigger } = fakeGsap();
     playScenes(root, gsap as never, ScrollTrigger as never, false);
 
-    const mover = document.getElementById('mover')!;
+    const mover = document.getElementById('deal-mover')!;
     expect(mover.parentElement!.dataset.stage).toBe('proposal');
     expect(mover.parentElement!.firstElementChild).toBe(mover);
     expect(mover.querySelector('.tag')!.className).toBe('tag sent');
@@ -117,10 +155,15 @@ describe('playScenes', () => {
     const { gsap, ScrollTrigger } = fakeGsap();
     playScenes(root, gsap as never, ScrollTrigger as never, true);
 
-    expect(document.getElementById('q1-state')!.textContent).toBe('Approved');
+    expect(document.getElementById('review-q1-state')!.textContent).toBe('Approved');
     expect((root.querySelector('.app.tilt') as HTMLElement).style.transform).toBe('none');
     expect(ScrollTrigger.create).not.toHaveBeenCalled();
-    expect(document.getElementById('mover')!.parentElement!.dataset.stage).toBe('new');
+    // The pipeline scene settles to its end state too -- the stalled deal already
+    // moved -- rather than freezing mid-story the way a one-shot toggle would.
+    expect(document.getElementById('deal-mover')!.parentElement!.dataset.stage).toBe('proposal');
+    expect(document.getElementById('review-draft-text')!.textContent).toBe(
+      'Hi Maya, ahead of your renewal'
+    );
   });
 
   it('does nothing for a scene whose markup is missing', () => {
@@ -138,5 +181,80 @@ describe('playScenes', () => {
     const cleanup = playScenes(root, gsap as never, ScrollTrigger as never, false);
     cleanup();
     expect(reverts[0]).toHaveBeenCalled();
+  });
+});
+
+describe('individual moments (driveable from any ScrollTrigger)', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('revealReasoning fades in the why-list and the source card only', () => {
+    page();
+    const { gsap } = fakeGsap();
+    const scene = document.getElementById('approval-scene')!;
+    const tl = revealReasoning(scene, gsap as never);
+    expect(tl).toBeDefined();
+    expect(document.getElementById('review-draft-text')!.textContent).toBe(
+      'Hi Maya, ahead of your renewal'
+    );
+  });
+
+  it('typeDraft never clears textContent and returns undefined when the draft is missing', () => {
+    page();
+    const { gsap } = fakeGsap();
+    const scene = document.getElementById('approval-scene')!;
+    typeDraft(scene, gsap as never);
+    expect(document.getElementById('review-draft-text')!.textContent).toBe(
+      'Hi Maya, ahead of your renewal'
+    );
+
+    document.getElementById('review-draft-text')!.remove();
+    expect(typeDraft(scene, gsap as never)).toBeUndefined();
+  });
+
+  it('confirmApproval marks the row approved and returns undefined when an element is missing', () => {
+    page();
+    const { gsap } = fakeGsap();
+    const scene = document.getElementById('approval-scene')!;
+    confirmApproval(scene, gsap as never);
+    expect(document.getElementById('review-q1-state')!.textContent).toBe('Approved');
+
+    document.getElementById('review-toast')!.remove();
+    expect(confirmApproval(scene, gsap as never)).toBeUndefined();
+  });
+
+  it('flagStalledDeal reveals the next-best-action panel without moving the card', () => {
+    page();
+    const { gsap } = fakeGsap();
+    const board = document.getElementById('board-scene')!;
+    flagStalledDeal(board, gsap as never);
+    expect(document.getElementById('deal-mover')!.parentElement!.dataset.stage).toBe('new');
+  });
+
+  it('moveDealForward moves the card and returns undefined when the target column is missing', () => {
+    page();
+    const { gsap } = fakeGsap();
+    const board = document.getElementById('board-scene')!;
+    moveDealForward(board, gsap as never);
+    expect(document.getElementById('deal-mover')!.parentElement!.dataset.stage).toBe('proposal');
+
+    document.body.innerHTML =
+      '<div id="board-scene"><div class="deal" id="deal-mover"></div></div>';
+    const board2 = document.getElementById('board-scene')!;
+    expect(moveDealForward(board2, gsap as never)).toBeUndefined();
+  });
+
+  it('playApprovalScene and playPipelineScene no-op when their scene root is missing', () => {
+    document.body.innerHTML = '<div id="root"></div>';
+    const root = document.getElementById('root')!;
+    const { gsap, ScrollTrigger } = fakeGsap();
+    expect(() =>
+      playApprovalScene(root, gsap as never, ScrollTrigger as never, false)
+    ).not.toThrow();
+    expect(() =>
+      playPipelineScene(root, gsap as never, ScrollTrigger as never, false)
+    ).not.toThrow();
+    expect(ScrollTrigger.create).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,65 @@
+/*
+ * aurora-motion-system.css — companion rules for aurora-motion-system.ts.
+ * Imported once by AuroraLandingPage.tsx, after aurora-landing.css.
+ *
+ * The `--reading` background-recede rule and the `.layer-step` opacity
+ * ownership live directly in aurora-landing.css (the integrator owns that
+ * file already) rather than being duplicated here. This file only adds the
+ * two contracts that are new to the page: the section-bridge wash, and a
+ * belt-and-braces reduced-motion safety net for [data-reveal] content.
+ */
+
+/* ---------------------------------------------------------------------- */
+/* Section bridge (Primitive 3)                                           */
+/* `--bridge` is set by createSectionBridge(), 0 → 1, over the shared      */
+/* boundary of two [data-bridge-section] elements.                        */
+/* ---------------------------------------------------------------------- */
+
+.aurora-page [data-bridge-section] {
+  --bridge: 0;
+  position: relative;
+}
+
+/* A hairline colour wash that arrives from the incoming section's own
+   accent (set per-section via --bridge-accent) and fades as --bridge
+   completes, so the seam reads as "the next thing is already here," not a
+   hard background-colour cut. Zero cost when --bridge is 0. */
+.aurora-page [data-bridge-section]::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 22vh;
+  pointer-events: none;
+  z-index: 1;
+  opacity: calc(var(--bridge) * 0.55);
+  background: linear-gradient(180deg, transparent 0%, var(--bridge-accent, var(--navy)) 100%);
+  mix-blend-mode: soft-light;
+}
+
+/* The incoming section's first fold settles in rather than just appearing:
+   a 1% scale + 6px rise tied to the same --bridge value used for the wash
+   above, so the two read as one continuous move. Opt-in per section via a
+   `.bridge-anchor` class on the element that should settle. */
+.aurora-page [data-bridge-section] > .bridge-anchor {
+  transform: translateY(calc((1 - var(--bridge)) * 6px)) scale(calc(0.994 + var(--bridge) * 0.006));
+  opacity: calc(0.85 + var(--bridge) * 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-page [data-bridge-section]::before {
+    display: none;
+  }
+  .aurora-page [data-bridge-section] > .bridge-anchor {
+    transform: none;
+    opacity: 1;
+  }
+  /* Belt-and-braces: createReveal() already short-circuits to visible under
+     reduced motion, but this guarantees it even if a script error stops
+     the primitive from ever setting the inline style. */
+  .aurora-page .reveal,
+  .aurora-page [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}

@@ -1,0 +1,201 @@
+/*
+ * IntegrationsSection — connectors read as one system wired to an Aurora
+ * core, not a flat logo grid. Every rule scoped under .aurora-page.
+ *
+ * `.aurora-integrations` is a second class added only on this section's root
+ * so these overrides win regardless of stylesheet import order, without
+ * editing aurora-landing.css directly (see final report "requests" for the
+ * shared rules this supersedes).
+ */
+
+.aurora-page .integrations.aurora-integrations {
+  /* Contract shadow tokens (design brief §Shape), scoped to this section only
+     — aurora-landing.css:20-21 defines --shadow/--shadow-lg slightly off the
+     brief's values; flagged to the integrator to fix at the root instead. */
+  --shadow: 0 1px 2px rgba(17, 23, 91, 0.05), 0 8px 24px -12px rgba(17, 23, 91, 0.18);
+  --shadow-lg: 0 2px 4px rgba(17, 23, 91, 0.05), 0 30px 60px -24px rgba(17, 23, 91, 0.28);
+  padding: 128px 0;
+  /* Was #fff (aurora-landing.css:619-623). The approved background sequence
+     runs Integrations on Mist, continuing out of the white service/inbox
+     band rather than resetting to white. */
+  background: var(--mist);
+  border-top: 1px solid var(--line);
+}
+
+.aurora-page .integration-system {
+  margin-top: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* The hub: everything below reads as wired into this. */
+.aurora-page .core-node {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 24px 0 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    var(--shadow),
+    0 0 0 1px var(--line);
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--navy);
+  z-index: 1;
+}
+.aurora-page .core-ring {
+  position: absolute;
+  inset: -9px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(40, 217, 212, 0.45);
+  animation: aurora-io-ring 2.6s ease-out infinite;
+}
+@keyframes aurora-io-ring {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.94);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.16);
+  }
+}
+.aurora-page .core-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.aurora-page .core-stem {
+  display: block;
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(var(--line-2), var(--cyan));
+}
+
+/* The bus: a horizontal line the stem lands on and every connector taps into. */
+.aurora-page .integrations.aurora-integrations .logos {
+  position: relative;
+  margin-top: 0;
+  padding-top: 37px;
+}
+.aurora-page .integrations.aurora-integrations .logos::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 4%;
+  right: 4%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--line-2) 10%,
+    var(--line-2) 90%,
+    transparent
+  );
+}
+.aurora-page .integrations.aurora-integrations .logo {
+  position: relative;
+  gap: 10px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+.aurora-page .integrations.aurora-integrations .logo::before {
+  content: '';
+  position: absolute;
+  left: 33px;
+  top: -37px;
+  width: 1px;
+  height: 37px;
+  background: var(--line-2);
+}
+.aurora-page .integrations.aurora-integrations .logo:hover::before {
+  background: var(--cyan);
+}
+.aurora-page .integrations.aurora-integrations .logo span:first-of-type {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Design contract floor: UI-in-panel text never below 11px on desktop (the
+   shared .wire-status pill, aurora-landing.css, is 10px). */
+.aurora-page .wire-status {
+  margin-left: auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: rgba(40, 217, 212, 0.16);
+  color: #0a726d;
+  flex: none;
+  white-space: nowrap;
+}
+
+/* The developer platform reads as one more thing wired to the same core. */
+.aurora-page .dev-panel {
+  margin-top: 48px;
+  padding-top: 40px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.aurora-page .dev-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-3);
+  margin-bottom: 16px;
+}
+
+@media (max-width: 960px) {
+  /* Fixes the mobile dead-gap audit found before Security (M1): .integrations
+     kept a desktop 120-140px pad on a 390px screen. aurora-landing.css:619-623
+     has no mobile override for this selector at all. */
+  .aurora-page .integrations.aurora-integrations {
+    padding: 80px 0;
+  }
+  .aurora-page .integration-system {
+    margin-top: 40px;
+  }
+  .aurora-page .integrations.aurora-integrations .logo::before {
+    left: 26px;
+  }
+  .aurora-page .integrations.aurora-integrations .logo {
+    padding: 0 12px;
+  }
+  /* The wire-stub already reads as "connected" at this width; the pill text
+     would crowd a 14px/72px-tall card next to an 8-14 character label. */
+  .aurora-page .wire-status {
+    display: none;
+  }
+  /* "Microsoft Teams" (17 chars) is the only one of the 8 connector labels
+     that truncates inside the 2-column mobile grid's ~155px card
+     (aurora-landing.css's mobile .logos is 2 columns); wrap it onto two
+     lines instead of an ellipsis — wire-status is already hidden above, so
+     there is vertical room in the card. */
+  .aurora-page .integrations.aurora-integrations .logo span:first-of-type {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.15;
+  }
+  .aurora-page .dev-panel {
+    margin-top: 36px;
+    padding-top: 32px;
+  }
+  .aurora-page .dev-row .dev em {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-page .core-ring {
+    animation: none;
+    opacity: 0.35;
+  }
+}

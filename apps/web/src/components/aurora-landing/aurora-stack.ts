@@ -95,6 +95,25 @@ function shadowTexture(): THREE.CanvasTexture {
 
 export interface AuroraStack {
   setActive(id: LayerId | null): void;
+  /** Stops the render loop (off-screen, or the tab is hidden). Idempotent. */
+  pause(): void;
+  /** Restarts the render loop after pause(). Idempotent. */
+  resume(): void;
+  /**
+   * Clears the canvas to fully transparent on the next frame instead of
+   * drawing the scene, and keeps doing so every frame until `show()`. A CSS
+   * opacity of 0 on the canvas's DOM wrapper does NOT do this: the canvas
+   * element keeps its last-rendered, fully-opaque WebGL pixels in its own
+   * backing buffer regardless of the wrapper's CSS, and anything that reads
+   * that buffer directly — e.g. a 2D `drawImage(canvas, ...)` readback —
+   * still sees the slab artwork sitting there. Needed for the one moment the
+   * pinned canvas un-sticks and slides up through the fixed nav's band on
+   * its way off-screen (see AuroraMotion.tsx): the slab must actually be
+   * gone by then, not just invisible-by-CSS (fixer 2026-09-30).
+   */
+  hide(): void;
+  /** Resumes drawing the scene every frame after hide(). Idempotent. */
+  show(): void;
   dispose(): void;
 }
 
@@ -195,8 +214,15 @@ export function createStack(
   };
 
   let raf = 0;
+  let running = false;
+  let hidden = false;
   let last = performance.now();
   const frame = (now: number) => {
+    if (hidden) {
+      renderer.clear();
+      if (running) raf = requestAnimationFrame(frame);
+      return;
+    }
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     const ease = reducedMotion ? 1 : 1 - Math.pow(0.0015, dt);
@@ -227,20 +253,44 @@ export function createStack(
       root.rotation.x = pointer.y * 0.03;
     }
     renderer.render(scene, camera);
+    if (running) raf = requestAnimationFrame(frame);
+  };
+  const start = () => {
+    if (running) return;
+    running = true;
+    last = performance.now();
     raf = requestAnimationFrame(frame);
+  };
+  const stop = () => {
+    if (!running) return;
+    running = false;
+    cancelAnimationFrame(raf);
   };
 
   resize();
   window.addEventListener('resize', resize);
   window.addEventListener('pointermove', onPointer, { passive: true });
-  raf = requestAnimationFrame(frame);
+  start();
 
   return {
     setActive(id) {
       activeIndex = id ? LAYERS.findIndex((l) => l.id === id) : -1;
     },
+    pause: stop,
+    resume: start,
+    hide() {
+      hidden = true;
+      // Force one clear immediately even if the render loop happens to be
+      // paused right now (e.g. the canvas is currently off-screen per the
+      // IntersectionObserver in AuroraMotion.tsx) — otherwise the buffer
+      // would keep whatever was drawn last until the loop next runs.
+      renderer.clear();
+    },
+    show() {
+      hidden = false;
+    },
     dispose() {
-      cancelAnimationFrame(raf);
+      stop();
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointer);
       items.forEach((item) => {

@@ -1,0 +1,31 @@
+/*
+ * SiteFooter — continues the Final CTA's Navy with no seam, and gives its
+ * links real 44px touch targets. Every rule scoped under .aurora-page.
+ * `.aurora-footer` is a second class added only on this section's root so
+ * these overrides win regardless of stylesheet import order, without
+ * editing aurora-landing.css directly.
+ */
+
+.aurora-page .footer.aurora-footer {
+  /* Was #0c1047 (aurora-landing.css:740-745) — a different navy than
+     --navy (#11175b), the exact shade FinalCta sits on. Two different navies
+     back to back is the seam the brief calls out; this makes them the same
+     colour, so the two sections read as one continuous block. */
+  background: var(--navy);
+}
+
+/* Audit M2: footer <a> measured ~24px tall, under the 44px guideline.
+   padding-block grows the tap target without touching the 15px type or its
+   line-height; the grid gap drops to 0 since the padding now carries the
+   spacing between links. */
+.aurora-page .footer.aurora-footer .foot-cols div {
+  gap: 0;
+}
+.aurora-page .footer.aurora-footer .foot-cols a {
+  display: flex;
+  align-items: center;
+  padding-block: 10px;
+}
+.aurora-page .footer.aurora-footer .foot-cols b {
+  padding-bottom: 10px;
+}

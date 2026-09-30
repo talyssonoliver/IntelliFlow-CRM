@@ -10,10 +10,232 @@ function cssVar(el: Element, name: string, fallback: string): string {
   return getComputedStyle(el).getPropertyValue(name).trim() || fallback;
 }
 
+type Gsap = typeof import('gsap').gsap;
+type ScrollTriggerStatic = typeof import('gsap/ScrollTrigger').ScrollTrigger;
+type Motion = typeof import('./aurora-motion-system');
+type Stack = ReturnType<typeof import('./aurora-stack').createStack>;
+type Scenes = typeof import('./aurora-scenes').playScenes;
+interface Wiring {
+  root: HTMLElement;
+  gsap: Gsap;
+  ScrollTrigger: ScrollTriggerStatic;
+  motion: Motion;
+  triggers: Array<{ kill(): void }>;
+  cleanups: Array<() => void>;
+}
+
+/** Nav background, reveals, section hand-offs, the product scenes and the wave's recede. */
+function wirePage(
+  { root, gsap, ScrollTrigger, motion, triggers, cleanups }: Wiring,
+  playScenes: Scenes,
+  reduced: boolean
+) {
+  const nav = root.querySelector('.nav');
+  triggers.push(
+    ScrollTrigger.create({
+      start: 40,
+      onUpdate: (self) => nav?.classList.toggle('scrolled', self.scroll() > 40),
+    })
+  );
+
+  // Entrance reveals: enter AND exit, reversible on scroll-back. A fast,
+  // fixed duration (not MOTION.duration.md's 0.62s default) — a wall-
+  // clock tween that is still running when a visitor stops scrolling
+  // leaves real copy sitting at some mid-fade opacity for as long as it
+  // takes to finish, which reads as a rendering glitch, not motion (owner
+  // 2026-09-30, reproduced sitewide by the step-judge: "reveals left at
+  // 0.7"). MOTION.duration.xs (0.22s) reliably finishes inside a normal
+  // scroll-and-settle pause; nothing here needed the longer flourish.
+  cleanups.push(
+    motion.createReveal(root, gsap, ScrollTrigger, '.reveal, [data-reveal]', {
+      duration: motion.MOTION.duration.xs,
+    })
+  );
+  // Staggered groups: every direct child of a [data-reveal-stagger]
+  // container reveals in sequence — same fast duration, and a tight
+  // stagger (not MOTION.stagger.normal's 0.08s) so a 6-item group's last
+  // child still starts well inside the settle window above, rather than
+  // queuing behind up to 0.4s of cumulative delay before its own tween
+  // even begins.
+  root.querySelectorAll<HTMLElement>('[data-reveal-stagger]').forEach((group) => {
+    cleanups.push(
+      motion.createReveal(group, gsap, ScrollTrigger, ':scope > *', {
+        stagger: motion.MOTION.stagger.tight,
+        duration: motion.MOTION.duration.xs,
+      })
+    );
+  });
+
+  // Section hand-offs: each consecutive pair of [data-bridge-section]
+  // elements gets a scrubbed colour-wash seam instead of a stacked cut.
+  const sections = gsap.utils.toArray<HTMLElement>('[data-bridge-section]', root);
+  for (let i = 0; i < sections.length - 1; i += 1) {
+    cleanups.push(motion.createSectionBridge(sections[i]!, sections[i + 1]!, gsap, ScrollTrigger));
+  }
+
+  cleanups.push(playScenes(root, gsap, ScrollTrigger, reduced));
+
+  // The wave recedes to Mist as the visitor reads into the stack walk,
+  // scrubbed to scroll position — never a class-toggle + wall-clock fade.
+  const heroBg = root.querySelector<HTMLElement>('.hero-bg');
+  const walk = root.querySelector<HTMLElement>('.walk');
+  const stageEndForRecede = root.querySelector<HTMLElement>('.stage-end');
+  if (heroBg && walk && stageEndForRecede) {
+    cleanups.push(
+      motion.createBackgroundRecede(heroBg, walk, stageEndForRecede, gsap, ScrollTrigger)
+    );
+  }
+}
+
+/** The render loop never spends a frame off-screen or in a hidden tab. */
+function pauseWhenHidden(canvas: HTMLCanvasElement, s: Stack, cleanups: Array<() => void>) {
+  // The render loop never spends a frame off-screen or in a hidden tab.
+  if (typeof IntersectionObserver === 'function') {
+    const io = new IntersectionObserver((entries) => {
+      // Entries arrive oldest first; only the newest reflects where the canvas is now.
+      const visible = entries[entries.length - 1]?.isIntersecting ?? true;
+      if (visible && document.visibilityState !== 'hidden') s.resume();
+      else s.pause();
+    });
+    io.observe(canvas);
+    cleanups.push(() => io.disconnect());
+  }
+  const onVisibility = () => {
+    if (document.visibilityState === 'hidden') s.pause();
+    else s.resume();
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+  cleanups.push(() => document.removeEventListener('visibilitychange', onVisibility));
+}
+
+/** Points the stack at the layer being read, and back to rest at the hero and the stage end. */
+function followLayers({ root, gsap, ScrollTrigger, motion, triggers, cleanups }: Wiring, s: Stack) {
+  // The stack points at whichever layer is being read, scrubbed 1:1 to
+  // scroll position (one number driving both the DOM opacity and the
+  // WebGL camera, replacing the old binary onToggle → setActive call).
+  // `.walk.walk-card` (the "Five layers..." intro, no `data-layer`) is
+  // included first: it is the first thing in `.stage-copy` to transit
+  // the pinned canvas's band on mobile, so it needs the exact same
+  // measured-geometry snap the five layer cards get below — see
+  // stack-stage.css. `steps[index]?.dataset.layer` is undefined for it,
+  // which the onStep guard below treats as "no active layer".
+  const steps = gsap.utils.toArray<HTMLElement>('.walk.walk-card, .layer-step', root);
+
+  if (window.matchMedia(motion.MOBILE_QUERY).matches) {
+    // Phone stepper (stack-stage.css): every card pins beneath the stack
+    // at the same place and the newest one covers the last. The layer on
+    // top of the stack is the layer of the last card that has pinned.
+    const stickAt = steps.map((step) => parseFloat(getComputedStyle(step).top) || 0);
+    const copy = root.querySelector('.stage-copy');
+    if (copy) {
+      triggers.push(
+        ScrollTrigger.create({
+          trigger: copy,
+          start: 'top bottom',
+          end: 'bottom top',
+          onUpdate: () => {
+            let active: LayerId | null = null;
+            steps.forEach((step, i) => {
+              if (step.getBoundingClientRect().top <= stickAt[i]! + 1) {
+                active = (step.dataset.layer as LayerId | undefined) ?? null;
+              }
+            });
+            s.setActive(active);
+          },
+        })
+      );
+    }
+  } else {
+    cleanups.push(
+      motion.createScrubSteps(steps, gsap, ScrollTrigger, {
+        getFadeTarget: (step) => step.querySelector<HTMLElement>('.layer-step-inner') ?? step,
+        // The layer whose card is moving through its range is the one on
+        // top; the hero and stage-end triggers return the stack to rest.
+        onStep: (index, progress) => {
+          const layer = steps[index]?.dataset.layer as LayerId | undefined;
+          if (layer && progress > 0 && progress < 1) s.setActive(layer);
+        },
+      })
+    );
+  }
+  const hero = root.querySelector('.hero');
+  if (hero) {
+    triggers.push(
+      ScrollTrigger.create({
+        trigger: hero,
+        start: 'top top',
+        end: 'bottom 55%',
+        onToggle: (self) => self.isActive && s.setActive(null),
+      })
+    );
+  }
+  const end = root.querySelector('.stage-end');
+  if (end) {
+    triggers.push(
+      ScrollTrigger.create({
+        trigger: end,
+        start: 'top 55%',
+        onEnter: () => s.setActive(null),
+        onLeaveBack: () => s.setActive('foundation'),
+      })
+    );
+  }
+  return end;
+}
+
+/** Clears the canvas before the unstuck stack slides up under the fixed nav. */
+function hideAtStageEnd(
+  { root, ScrollTrigger, triggers, cleanups }: Wiring,
+  s: Stack,
+  end: Element | null
+) {
+  // The pinned canvas un-sticks once its grid row's own bottom edge
+  // (`.stage-end`, the row's last child) scrolls up to the canvas's
+  // stuck-bottom position — ordinary `position: sticky` behaviour, not
+  // a bug in itself. But once unstuck it continues in normal flow
+  // attached near the top of that row, so it then slides UP through
+  // y:0-72 on its way fully off-screen — straight through the fixed
+  // nav's own band, including its "Get started" button — before
+  // finally clearing the viewport. Measured live (fixer 2026-09-30):
+  // the isometric slab's own painted pixels sat under the nav CTA's
+  // text for several hundred px of scroll there.
+  //
+  // A CSS opacity fade on `stackVisual` does NOT fix this: the
+  // `<canvas>`'s WebGL backing buffer keeps its last-rendered, fully-
+  // opaque pixels regardless of the wrapper's CSS (confirmed by
+  // measuring the step-judge's canvas readback unchanged either way).
+  // `s.hide()`/`s.show()` (aurora-stack.ts) actually clear the buffer
+  // to transparent, so the slab is genuinely gone, not just invisible-
+  // by-CSS. A plain threshold toggle, not a scrub: the canvas is about
+  // to leave its pinned band regardless, so there is no "settled" look
+  // to preserve mid-transition here, only a single moment to clear
+  // before un-stick begins.
+  const stackVisual = root.querySelector<HTMLElement>('.stage-object.stack-visual');
+  // getComputedStyle, not a live rect: the pinned band's position is
+  // fixed by CSS, whether or not it has stuck yet when this runs.
+  const stackStyle = stackVisual ? getComputedStyle(stackVisual) : null;
+  const canvasBottomPx = stackStyle
+    ? Math.ceil(parseFloat(stackStyle.top) + parseFloat(stackStyle.height))
+    : 0;
+  if (end && stackVisual && canvasBottomPx > 0) {
+    triggers.push(
+      ScrollTrigger.create({
+        trigger: end,
+        start: `top top+=${canvasBottomPx}`,
+        onEnter: () => s.hide(),
+        onLeaveBack: () => s.show(),
+      })
+    );
+    cleanups.push(() => s.show());
+  }
+}
+
 /**
- * Wires the motion on the Aurora landing page to the server-rendered markup under
- * `#aurora-page`: the stack walkthrough, the acted-out scenes, the nav background
- * and the entrance reveals. Renders nothing itself.
+ * Wires the single motion system (aurora-motion-system.ts) onto the
+ * server-rendered markup under `#aurora-page`: entrance reveals (enter AND
+ * exit, reversible), the section hand-offs, the wave's background recede,
+ * the scrubbed stack walkthrough, the acted-out product scenes, and the nav
+ * background. Renders nothing itself.
  *
  * The first screen (hero, waves and stack) is hidden by the `boot` class until the
  * fonts and the stack are ready, then shown in one move, so nothing reflows or pops in.
@@ -38,54 +260,38 @@ export function AuroraMotion() {
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Entrance reveals, one shared pattern.
-    const io = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add('revealed');
-            io.unobserve(e.target);
-          }
-        }),
-      { rootMargin: '0px 0px -10% 0px' }
-    );
-    root
-      .querySelectorAll('.reveal')
-      .forEach((el) => (reduced ? el.classList.add('revealed') : io.observe(el)));
-    cleanups.push(() => io.disconnect());
-
     void (async () => {
-      const [{ gsap }, { ScrollTrigger }, { playScenes }] = await Promise.all([
+      const [{ gsap }, { ScrollTrigger }, { playScenes }, motion] = await Promise.all([
         import('gsap'),
         import('gsap/ScrollTrigger'),
         import('./aurora-scenes'),
+        import('./aurora-motion-system'),
       ]);
       if (cancelled) return;
       gsap.registerPlugin(ScrollTrigger);
+      motion.configureScrollTrigger(ScrollTrigger);
+
+      // Smooth scroll: desktop, fine-pointer only, never under reduced motion.
+      // Lenis's own defaults leave touch scroll untouched even un-gated, but
+      // there is no reason to pay for its rAF loop on a device that never
+      // sends a wheel event (see aurora-motion-system.ts's docblock).
+      if (motion.hasFinePointer() && !reduced) {
+        try {
+          const { default: Lenis } = await import('lenis');
+          if (cancelled) return;
+          cleanups.push(
+            motion.setupSmoothScroll(gsap, ScrollTrigger, () => new Lenis({ anchors: true }))
+          );
+        } catch (error) {
+          console.warn('[aurora] smooth scroll unavailable', error);
+        }
+      }
+
       const triggers: Array<{ kill(): void }> = [];
       cleanups.push(() => triggers.forEach((t) => t.kill()));
 
-      const nav = root.querySelector('.nav');
-      triggers.push(
-        ScrollTrigger.create({
-          start: 40,
-          onUpdate: (self) => nav?.classList.toggle('scrolled', self.scroll() > 40),
-        })
-      );
-      const heroBg = root.querySelector('.hero-bg');
-      const walk = root.querySelector('.walk');
-      if (heroBg && walk) {
-        triggers.push(
-          ScrollTrigger.create({
-            trigger: walk,
-            start: 'top 70%',
-            endTrigger: root.querySelector('.stage') ?? walk,
-            end: 'bottom top',
-            onToggle: (self) => heroBg.classList.toggle('reading', self.isActive),
-          })
-        );
-      }
-      cleanups.push(playScenes(root, gsap, ScrollTrigger, reduced));
+      const wiring: Wiring = { root, gsap, ScrollTrigger, motion, triggers, cleanups };
+      wirePage(wiring, playScenes, reduced);
 
       // The stack: its faces print text and icons, so the fonts come first.
       const canvas = root.querySelector<HTMLCanvasElement>('#stack');
@@ -111,41 +317,10 @@ export function AuroraMotion() {
       if (stack) {
         const s = stack;
         cleanups.push(() => s.dispose());
-        root.querySelectorAll<HTMLElement>('.layer-step').forEach((step) => {
-          triggers.push(
-            ScrollTrigger.create({
-              trigger: step,
-              start: 'top 55%',
-              end: 'bottom 55%',
-              onToggle: (self) => {
-                step.classList.toggle('on', self.isActive);
-                if (self.isActive) s.setActive(step.dataset.layer as LayerId);
-              },
-            })
-          );
-        });
-        const hero = root.querySelector('.hero');
-        if (hero) {
-          triggers.push(
-            ScrollTrigger.create({
-              trigger: hero,
-              start: 'top top',
-              end: 'bottom 55%',
-              onToggle: (self) => self.isActive && s.setActive(null),
-            })
-          );
-        }
-        const end = root.querySelector('.stage-end');
-        if (end) {
-          triggers.push(
-            ScrollTrigger.create({
-              trigger: end,
-              start: 'top 55%',
-              onEnter: () => s.setActive(null),
-              onLeaveBack: () => s.setActive('foundation'),
-            })
-          );
-        }
+
+        pauseWhenHidden(canvas, s, cleanups);
+        const end = followLayers(wiring, s);
+        hideAtStageEnd(wiring, s, end);
       }
       requestAnimationFrame(() => requestAnimationFrame(reveal));
     })().catch((error: unknown) => {

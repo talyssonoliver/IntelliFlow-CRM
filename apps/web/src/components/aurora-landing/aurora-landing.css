@@ -347,11 +347,12 @@
   flex-direction: column;
   justify-content: center;
   max-width: 480px;
-  opacity: 0.35;
-  transition: opacity 0.45s ease;
-}
-.aurora-page .layer-step.on {
-  opacity: 1;
+  /* No opacity/transition here on purpose: createScrubSteps() (aurora-motion-
+     system.ts) drives opacity/transform every frame from scroll position, so
+     a CSS transition racing that JS-driven value would reintroduce the pop
+     this system exists to remove. Reduced motion is handled in JS too (the
+     primitive sets autoAlpha: 1 directly), so this rule stays visible by
+     default either way — content truth without a script. */
 }
 .aurora-page .layer-step h3 {
   margin-top: 6px;
@@ -618,7 +619,10 @@
 }
 .aurora-page .integrations {
   padding: 120px 0 140px;
-  background: #fff;
+  /* background: integrations-section.css's .integrations.aurora-integrations
+     always wins this at equal source order (extra class = higher
+     specificity), so the section's real background (Mist, per the approved
+     hand-off sequence) is set there, not here. */
   border-top: 1px solid var(--line);
 }
 .aurora-page .security {
@@ -734,11 +738,14 @@
 }
 .aurora-page .final-ribbon.right {
   right: -200px;
-  top: -60px;
+  /* top: final-cta.css's .final-ribbon.right on .aurora-final sets
+     top:auto; bottom:-160px so both ribbons rise from the section's bottom
+     edge as one artwork, per the design contract. */
   width: 760px;
 }
 .aurora-page .footer {
-  background: #0c1047;
+  /* background: site-footer.css's .footer.aurora-footer sets var(--navy) so
+     the Final CTA → Footer seam is one continuous navy, not two. */
   color: rgba(255, 255, 255, 0.7);
   padding: 72px 0 32px;
   font-size: 15px;
@@ -773,110 +780,21 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 13px;
 }
-.aurora-page .reveal {
-  opacity: 0;
-  transform: translateY(24px);
-}
-.aurora-page .revealed {
+/* [data-reveal] / .reveal: fully visible by default (content truth). The
+   motion system (createReveal in aurora-motion-system.ts) sets the hidden
+   "from" state via JS only once it mounts, and short-circuits to visible
+   under prefers-reduced-motion — so this selector never hides content on
+   its own if the client script fails to run at all. */
+.aurora-page .reveal,
+.aurora-page [data-reveal] {
   opacity: 1;
-  transform: none;
-  transition:
-    opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
-    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 @media (prefers-reduced-motion: reduce) {
-  .aurora-page .reveal {
-    opacity: 1;
-    transform: none;
-  }
   .aurora-page .pulse {
     animation: none;
   }
 }
-@media (max-width: 960px) {
-  .aurora-page .nav-links {
-    display: none;
-  }
-  .aurora-page .nav-cta .link {
-    display: none;
-  }
-  .aurora-page .stage-grid {
-    grid-template-columns: 1fr;
-  }
-  .aurora-page .stage-object {
-    position: sticky;
-    top: 72px;
-    height: 46vh;
-    order: -1;
-    z-index: 1;
-    margin: 0 -24px;
-  }
-  .aurora-page .object-sticky {
-    position: relative;
-    top: 0;
-    height: 46vh;
-  }
-  .aurora-page .stack-label {
-    display: none;
-  }
-  .aurora-page .hero {
-    min-height: auto;
-    padding: 8px 0 56px;
-  }
-  .aurora-page .layer-step {
-    min-height: 60vh;
-  }
-  .aurora-page .proof-row {
-    grid-template-columns: 1fr 1fr;
-  }
-  .aurora-page .stat {
-    padding: 28px 16px;
-  }
-  .aurora-page .stat:nth-child(3) {
-    border-left: 0;
-    padding-left: 0;
-  }
-  .aurora-page .stat:nth-child(n + 3) {
-    border-top: 1px solid var(--line);
-  }
-  .aurora-page .stat b {
-    font-size: 36px;
-  }
-  .aurora-page .feature,
-  .aurora-page .security {
-    padding: 88px 0;
-  }
-  .aurora-page .feature-grid {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-  .aurora-page .board {
-    grid-template-columns: repeat(4, 150px);
-    overflow-x: auto;
-  }
-  .aurora-page .controls {
-    grid-template-columns: 1fr;
-  }
-  .aurora-page .row {
-    grid-template-columns: 1.3fr 1fr;
-  }
-  .aurora-page .row > :nth-child(3),
-  .aurora-page .row > :nth-child(4) {
-    display: none;
-  }
-  .aurora-page .foot-row {
-    flex-direction: column;
-  }
-  .aurora-page .foot-cols {
-    gap: 40px;
-  }
-  .aurora-page .final-ribbon.left {
-    width: 380px;
-  }
-  .aurora-page .final-ribbon.right {
-    width: 420px;
-  }
-}
+
 .aurora-page .sr-only {
   position: absolute !important;
   width: 1px;
@@ -1131,13 +1049,6 @@
     0 0 0 1px rgba(42, 120, 246, 0.28),
     0 6px 16px -10px rgba(42, 120, 246, 0.5);
 }
-.aurora-page .qdot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--c);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 18%, transparent);
-}
 .aurora-page .state {
   font-size: 10.5px;
   font-weight: 800;
@@ -1307,16 +1218,6 @@
   font-size: 12px;
   font-weight: 700;
   color: var(--ink-3);
-}
-.aurora-page #approve-btn {
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.2s ease,
-    background 0.15s;
-}
-.aurora-page #approve-btn.pressed {
-  transform: scale(0.95);
-  box-shadow: 0 0 0 5px rgba(42, 120, 246, 0.25);
 }
 .aurora-page .float {
   position: absolute;
@@ -1489,15 +1390,6 @@
   background: rgba(255, 170, 0, 0.13);
   color: #93600a;
 }
-.aurora-page #mover {
-  z-index: 5;
-  transition: box-shadow 0.3s ease;
-}
-.aurora-page #mover.moving {
-  box-shadow:
-    0 0 0 1.5px rgba(42, 120, 246, 0.55),
-    0 22px 40px -14px rgba(17, 23, 91, 0.35);
-}
 .aurora-page .f-nba {
   right: -38px;
   bottom: -58px;
@@ -1663,61 +1555,7 @@
   height: 2px;
   background: repeating-linear-gradient(90deg, var(--line-2) 0 4px, transparent 4px 7px);
 }
-@media (max-width: 960px) {
-  .aurora-page .wide-grid {
-    grid-template-columns: 1fr;
-  }
-  .aurora-page .tilt {
-    transform: none;
-  }
-  .aurora-page .app {
-    grid-template-columns: 1fr;
-  }
-  .aurora-page .rail {
-    display: none;
-  }
-  .aurora-page .ap-grid {
-    grid-template-columns: 1fr;
-  }
-  .aurora-page .queue {
-    display: none;
-  }
-  .aurora-page .detail {
-    padding: 18px 18px 22px 40px;
-  }
-  .aurora-page .f-source {
-    display: none;
-  }
-  .aurora-page .f-toast {
-    right: 8px;
-    bottom: -8px;
-  }
-  .aurora-page .f-nba {
-    position: relative;
-    right: auto;
-    bottom: auto;
-    width: auto;
-    margin-top: 14px;
-  }
-  .aurora-page .board2 {
-    grid-template-columns: repeat(4, 170px);
-    overflow-x: auto;
-  }
-  .aurora-page .search,
-  .aurora-page .seg {
-    display: none;
-  }
-  .aurora-page .flow2 {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-  .aurora-page .fnode:not(:last-child)::after {
-    display: none;
-  }
-  .aurora-page .kpis {
-    grid-template-columns: 1fr;
-  }
-}
+
 @media (prefers-reduced-motion: reduce) {
   .aurora-page .caret {
     animation: none;
@@ -2052,13 +1890,6 @@
   border-radius: 3px;
   background: var(--c);
 }
-.aurora-page .mini-app {
-  display: grid;
-  gap: 8px;
-}
-.aurora-page .mini-app .row {
-  grid-template-columns: 1.2fr 0.7fr 1.2fr 1fr;
-}
 .aurora-page .sla-list,
 .aurora-page .tone {
   display: grid;
@@ -2102,39 +1933,6 @@
   background: rgba(40, 217, 212, 0.14);
   color: #0a726d;
 }
-.aurora-page .insights {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 20px;
-  align-items: end;
-}
-.aurora-page .insights .kpis {
-  grid-template-columns: 1fr;
-}
-.aurora-page .chart .bars {
-  height: 150px;
-  align-items: flex-end;
-  gap: 12px;
-}
-.aurora-page .chart .bars > div {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-  height: 100%;
-  justify-content: flex-end;
-}
-.aurora-page .chart .bars span {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--ink-3);
-  text-align: center;
-}
-.aurora-page .chart .bars i {
-  flex: none;
-  border-radius: 8px 8px 3px 3px;
-}
 .aurora-page .bento-note {
   margin-top: 16px;
   text-align: right;
@@ -2147,7 +1945,12 @@
 .aurora-page .logos {
   margin-top: 52px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* minmax(0, 1fr), not 1fr: a bare `1fr` track's minimum is its content's
+     min-content width by default, so a long unwrapped label (e.g. "Microsoft
+     Teams") can force the whole grid — and its ancestors — wider than the
+     viewport instead of letting the track (and each .logo's own text-
+     overflow: ellipsis rule) do its job. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
 .aurora-page .logo {
@@ -2335,70 +2138,7 @@
 .aurora-page details[open] summary .material-symbols-outlined {
   transform: rotate(180deg);
 }
-@media (max-width: 960px) {
-  .aurora-page .hero-bg {
-    height: 70vh;
-  }
-  .aurora-page .stage-violet::after,
-  .aurora-page .stage-violet::before {
-    inset: 20px -12px 20px 20px;
-  }
-  .aurora-page .stage-blue::after,
-  .aurora-page .stage-blue::before {
-    inset: 40px -12px 10px -12px;
-  }
-  .aurora-page .tilt-soft {
-    transform: none;
-  }
-  .aurora-page .board2 {
-    grid-template-columns: repeat(5, 160px);
-  }
-  .aurora-page .filters {
-    display: none;
-  }
-  .aurora-page .url {
-    min-width: 0;
-    transform: none;
-  }
-  .aurora-page .bento {
-    grid-template-columns: 1fr;
-  }
-  .aurora-page .bcard.span2,
-  .aurora-page .bcard.span3 {
-    grid-column: auto;
-  }
-  .aurora-page .mini-app .row {
-    grid-template-columns: 1.2fr 0.8fr;
-  }
-  .aurora-page .mini-app .row > :nth-child(3),
-  .aurora-page .mini-app .row > :nth-child(4) {
-    display: none;
-  }
-  .aurora-page .insights {
-    grid-template-columns: 1fr;
-  }
-  .aurora-page .logos {
-    grid-template-columns: 1fr 1fr;
-  }
-  .aurora-page .logo {
-    height: 72px;
-    font-size: 14px;
-    padding: 0 14px;
-    gap: 10px;
-  }
-  .aurora-page .price-card {
-    grid-template-columns: 1fr;
-    padding: 32px 22px;
-  }
-  .aurora-page .f-source {
-    display: none;
-  }
-  .aurora-page .f-toast {
-    right: 6px;
-    top: auto;
-    bottom: -10px;
-  }
-}
+
 @media (min-width: 961px) {
   .aurora-page .ap-grid {
     grid-template-columns: 248px 1fr;
@@ -2469,126 +2209,28 @@
     transition: none;
   }
 }
-@media (max-width: 960px) {
-  .aurora-page .stage-object {
-    height: 44vh;
-    margin: 0 -24px;
-    background: rgba(245, 247, 255, 0.66);
-    -webkit-backdrop-filter: blur(18px) saturate(1.2);
-    backdrop-filter: blur(18px) saturate(1.2);
-    -webkit-mask-image: linear-gradient(180deg, #000 86%, transparent);
-    mask-image: linear-gradient(180deg, #000 86%, transparent);
-  }
-  .aurora-page .object-sticky {
-    height: 44vh;
-  }
-  .aurora-page .walk {
-    padding-top: 24px;
-  }
-  .aurora-page .walk h2 {
-    font-size: 30px;
-  }
-  .aurora-page .layer-step {
-    min-height: 56vh;
-    justify-content: flex-start;
-    padding-top: 28px;
-    opacity: 0.25;
-  }
-  .aurora-page .layer-step h3 {
-    font-size: 24px;
-  }
-  .aurora-page .layer-step p {
-    font-size: 16px;
-  }
-  .aurora-page .chips li {
-    height: 32px;
-    font-size: 13px;
-  }
-  .aurora-page .hero h1 {
-    font-size: 40px;
-  }
-  .aurora-page .lede {
-    font-size: 17px;
-  }
-  .aurora-page .hero-trust {
-    gap: 10px 18px;
-    font-size: 13px;
-  }
-  .aurora-page .flow2 {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    padding: 8px 0;
-  }
-  .aurora-page .fnode {
-    margin: 0;
-    padding: 12px 6px;
-    font-size: 11.5px;
-  }
-  .aurora-page .scene .app {
-    width: 100%;
-    max-width: 100%;
-  }
-  .aurora-page .detail {
-    min-width: 0;
-  }
-  .aurora-page .d-actions {
-    flex-wrap: wrap;
-    row-gap: 8px;
-  }
-  .aurora-page .d-actions .hint {
-    display: none;
-  }
-  .aurora-page .section-lede {
-    font-size: 16px;
-  }
-  .aurora-page .showcase,
-  .aurora-page .bento-sec,
-  .aurora-page .pricing {
-    padding: 88px 0;
-  }
-  .aurora-page .logos {
-    gap: 10px;
-  }
-  .aurora-page .logo img {
-    width: 26px;
-    height: 26px;
-  }
-  .aurora-page .security.dark .controls {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .aurora-page .security.dark .control {
-    padding: 18px 16px;
-  }
-  .aurora-page .security.dark .control p {
-    font-size: 13px;
-  }
+
+.aurora-page .hero-bg {
+  --reading: 0;
 }
 .aurora-page .hero-bg::after {
   content: '';
   position: absolute;
   inset: 0;
-  opacity: 0;
-  transition: opacity 0.7s ease;
+  pointer-events: none;
+  /* Driven by createBackgroundRecede() (aurora-motion-system.ts), scrubbed
+     1:1 to how far the visitor has walked into the stack section — not a
+     class toggle + wall-clock transition, so there is nothing to catch up
+     on. If JS never attaches, --reading stays at its 0 default and the
+     wave is simply never dimmed, which is the safe failure (content/visual
+     truth over an unplayed flourish). */
+  opacity: var(--reading, 0);
   background: linear-gradient(
     90deg,
     rgba(245, 247, 255, 0.9) 0,
     rgba(245, 247, 255, 0.72) 34%,
     rgba(245, 247, 255, 0) 52%
   );
-}
-.aurora-page .hero-bg.reading::after {
-  opacity: 1;
-}
-@media (max-width: 960px) {
-  .aurora-page .hero-bg::after {
-    background: linear-gradient(
-      180deg,
-      rgba(245, 247, 255, 0) 0,
-      rgba(245, 247, 255, 0) 42%,
-      rgba(245, 247, 255, 0.88) 60%
-    );
-  }
 }
 
 /* If the client script never runs, the first screen still appears. */
@@ -2676,7 +2318,309 @@
 .aurora-page .nav-menu nav a:hover {
   background: var(--mist);
 }
+
+/* The one mobile breakpoint for this file — every previous @media
+   (max-width: 960px) block above has been consolidated into this single one
+   (was 6 separate blocks, several genuinely conflicting: a scene float like
+   .f-toast had an unconditional desktop position declared AFTER an earlier
+   mobile override, which always won regardless of viewport since equal-
+   specificity ties resolve by source order, not by which media query
+   matched — a real cause of the reported mobile horizontal-scroll bug).
+   This block is placed LAST in the file, after every unconditional rule
+   that shares a selector with something here, so on a matching viewport it
+   always wins the cascade. Keep it last when adding to this file. */
 @media (max-width: 960px) {
+  .aurora-page .nav-links {
+    display: none;
+  }
+  .aurora-page .nav-cta .link {
+    display: none;
+  }
+  .aurora-page .stage-grid {
+    grid-template-columns: 1fr;
+  }
+  .aurora-page .stage-object {
+    position: sticky;
+    top: 72px;
+    height: 46vh;
+    order: -1;
+    z-index: 1;
+    margin: 0 -24px;
+  }
+  .aurora-page .object-sticky {
+    position: relative;
+    top: 0;
+    height: 46vh;
+  }
+  .aurora-page .stack-label {
+    display: none;
+  }
+  .aurora-page .hero {
+    min-height: auto;
+    padding: 8px 0 56px;
+  }
+  .aurora-page .layer-step {
+    min-height: 60vh;
+  }
+  .aurora-page .proof-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .aurora-page .stat {
+    padding: 28px 16px;
+  }
+  .aurora-page .stat:nth-child(3) {
+    border-left: 0;
+    padding-left: 0;
+  }
+  .aurora-page .stat:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+  .aurora-page .stat b {
+    font-size: 36px;
+  }
+  .aurora-page .feature,
+  .aurora-page .security {
+    padding: 88px 0;
+  }
+  .aurora-page .feature-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .aurora-page .board {
+    grid-template-columns: repeat(4, 150px);
+    overflow-x: auto;
+  }
+  .aurora-page .controls {
+    grid-template-columns: 1fr;
+  }
+  .aurora-page .row {
+    grid-template-columns: 1.3fr 1fr;
+  }
+  .aurora-page .row > :nth-child(3),
+  .aurora-page .row > :nth-child(4) {
+    display: none;
+  }
+  .aurora-page .foot-row {
+    flex-direction: column;
+  }
+  .aurora-page .foot-cols {
+    gap: 40px;
+  }
+  .aurora-page .final-ribbon.left {
+    width: 380px;
+  }
+  .aurora-page .final-ribbon.right {
+    width: 420px;
+  }
+  .aurora-page .wide-grid {
+    grid-template-columns: 1fr;
+  }
+  .aurora-page .tilt {
+    transform: none;
+  }
+  .aurora-page .app {
+    grid-template-columns: 1fr;
+  }
+  .aurora-page .rail {
+    display: none;
+  }
+  .aurora-page .ap-grid {
+    grid-template-columns: 1fr;
+  }
+  .aurora-page .queue {
+    display: none;
+  }
+  .aurora-page .detail {
+    padding: 18px 18px 22px 40px;
+  }
+  .aurora-page .f-source {
+    display: none;
+  }
+  .aurora-page .f-toast {
+    right: 8px;
+    bottom: -8px;
+  }
+  .aurora-page .f-nba {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: auto;
+    margin-top: 14px;
+  }
+  .aurora-page .board2 {
+    grid-template-columns: repeat(4, 170px);
+    overflow-x: auto;
+  }
+  .aurora-page .search,
+  .aurora-page .seg {
+    display: none;
+  }
+  .aurora-page .flow2 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .aurora-page .fnode:not(:last-child)::after {
+    display: none;
+  }
+  .aurora-page .kpis {
+    grid-template-columns: 1fr;
+  }
+  .aurora-page .hero-bg {
+    height: 70vh;
+  }
+  .aurora-page .stage-violet::after,
+  .aurora-page .stage-violet::before {
+    inset: 20px -12px 20px 20px;
+  }
+  .aurora-page .stage-blue::after,
+  .aurora-page .stage-blue::before {
+    inset: 40px -12px 10px -12px;
+  }
+  .aurora-page .tilt-soft {
+    transform: none;
+  }
+  .aurora-page .board2 {
+    grid-template-columns: repeat(5, 160px);
+  }
+  .aurora-page .filters {
+    display: none;
+  }
+  .aurora-page .url {
+    min-width: 0;
+    transform: none;
+  }
+  .aurora-page .bento {
+    grid-template-columns: 1fr;
+  }
+  .aurora-page .bcard.span2,
+  .aurora-page .bcard.span3 {
+    grid-column: auto;
+  }
+  .aurora-page .logos {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .aurora-page .logo {
+    height: 72px;
+    font-size: 14px;
+    padding: 0 14px;
+    gap: 10px;
+  }
+  .aurora-page .price-card {
+    grid-template-columns: 1fr;
+    padding: 32px 22px;
+  }
+  .aurora-page .f-source {
+    display: none;
+  }
+  .aurora-page .f-toast {
+    right: 6px;
+    top: auto;
+    bottom: -10px;
+  }
+  /* .stage-object/.object-sticky's real mobile treatment (height, background,
+     no blur/wash) lives in stack-stage.css's higher-specificity
+     .stage-object.stack-visual / .object-sticky.stack-inner — this is the
+     fix for the reported "shaders hide the wave on mobile" bug: there is no
+     frosted panel over the live canvas anywhere in this file any more. */
+  .aurora-page .walk {
+    padding-top: 24px;
+  }
+  .aurora-page .walk h2 {
+    font-size: 30px;
+  }
+  .aurora-page .layer-step {
+    min-height: 56vh;
+    justify-content: flex-start;
+    padding-top: 28px;
+    /* opacity: owned by createScrubSteps() (aurora-motion-system.ts), not
+       CSS — see the note on the base .layer-step rule above. */
+  }
+  .aurora-page .layer-step h3 {
+    font-size: 24px;
+  }
+  .aurora-page .layer-step p {
+    font-size: 16px;
+  }
+  .aurora-page .chips li {
+    height: 32px;
+    font-size: 13px;
+  }
+  /* Design contract floor: UI-in-panel text never below 12px on a phone.
+     .label's 11px base (a valid 11px floor on desktop) is too small once a
+     panel is the size of a phone screen — e.g. PipelineSection's floating
+     "Lead scoring" panel, which stays visible on mobile. */
+  .aurora-page .label,
+  .aurora-page .sample,
+  .aurora-page .bento-note {
+    font-size: 12px;
+  }
+  .aurora-page .hero h1 {
+    font-size: 40px;
+  }
+  .aurora-page .lede {
+    font-size: 17px;
+  }
+  .aurora-page .hero-trust {
+    gap: 10px 18px;
+    font-size: 13px;
+  }
+  .aurora-page .flow2 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 8px 0;
+  }
+  .aurora-page .fnode {
+    margin: 0;
+    padding: 12px 6px;
+    font-size: 11.5px;
+  }
+  .aurora-page .scene .app {
+    width: 100%;
+    max-width: 100%;
+  }
+  .aurora-page .detail {
+    min-width: 0;
+  }
+  .aurora-page .d-actions {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .aurora-page .d-actions .hint {
+    display: none;
+  }
+  .aurora-page .section-lede {
+    font-size: 16px;
+  }
+  .aurora-page .showcase,
+  .aurora-page .bento-sec,
+  .aurora-page .pricing {
+    padding: 88px 0;
+  }
+  .aurora-page .logos {
+    gap: 10px;
+  }
+  .aurora-page .logo img {
+    width: 26px;
+    height: 26px;
+  }
+  .aurora-page .security.dark .controls {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .aurora-page .security.dark .control {
+    padding: 18px 16px;
+  }
+  .aurora-page .security.dark .control p {
+    font-size: 13px;
+  }
+  .aurora-page .hero-bg::after {
+    background: linear-gradient(
+      180deg,
+      rgba(245, 247, 255, 0) 0,
+      rgba(245, 247, 255, 0) 42%,
+      rgba(245, 247, 255, 0.88) 60%
+    );
+  }
   .aurora-page .nav-menu {
     display: block;
   }
@@ -2686,4 +2630,21 @@
   .aurora-page .nav-row {
     gap: 12px;
   }
+}
+
+/* People in the sample workspace are shown by portrait, not initials. */
+.aurora-page :is(.rail-me, .who, .ic-msg-who, .ic-event-who) {
+  overflow: hidden;
+  padding: 0;
+  background: #e9edf8;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 1px 3px rgba(17, 23, 91, 0.25);
+}
+.aurora-page :is(.rail-me, .who, .ic-msg-who, .ic-event-who) img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
