@@ -36,6 +36,7 @@ import {
   type PortalSyncClient,
   type PortalSyncPrismaLike,
 } from './handlers/portal-delivery-sync.handler';
+import { createSubscriptionPortalSyncHandler } from './handlers/subscription-portal-sync.handler';
 import { invoiceSetupInstalments } from './handlers/setup-fee-invoicing';
 import {
   createPrismaOpportunityCustomers,
@@ -842,6 +843,20 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
       'portal-delivery-sync-handler'
     );
     this.logger.info('Portal delivery sync handler registered');
+
+    // Engine-subscription status pushes enqueued by the API's Stripe webhook.
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.SUBSCRIPTION_PORTAL_SYNC_REQUESTED,
+      this.createHandler(
+        'subscription.portal_sync_requested',
+        createSubscriptionPortalSyncHandler({
+          portalSync: new HttpPortalDeliverySyncAdapter({ baseUrl, secret }) as never,
+          logger: this.logger,
+        })
+      ),
+      'subscription-portal-sync-handler'
+    );
+    this.logger.info('Subscription portal sync handler registered');
   }
 
   /**

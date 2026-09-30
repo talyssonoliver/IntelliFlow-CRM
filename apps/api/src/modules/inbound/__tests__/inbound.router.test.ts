@@ -185,3 +185,131 @@ describe('inboundRouter — portal /discover intake', () => {
     });
   });
 });
+
+describe('inboundRouter.createLead — submission persistence', () => {
+  beforeEach(() => {
+    vi.stubEnv('PORTAL_INTERNAL_SECRET', SECRET);
+    vi.stubEnv('LEANGENCY_TENANT_ID', TENANT_ID);
+    vi.stubEnv('LEANGENCY_SYSTEM_USER_ID', SYSTEM_USER_ID);
+  });
+
+  const ATTRIBUTION = { utmSource: 'google', utmCampaign: 'spring', clickId: 'gclid_1' };
+  const PAYLOAD = { brandName: 'Acme', goals: ['sales'] };
+
+  it('persists submissionPayload and attribution as a NOTE activity on create', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null);
+    (mockServices.lead.createLead as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      isFailure: false,
+      value: { id: { value: 'lead_new_2' } },
+    });
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await caller.createLead({
+      ...BASE_INPUT,
+      submissionPayload: PAYLOAD,
+      attribution: ATTRIBUTION,
+    });
+
+    const arg = prismaMock.leadActivity.create.mock.calls[0]![0] as {
+      data: Record<string, unknown>;
+    };
+    expect(arg.data).toMatchObject({
+      type: 'NOTE',
+      leadId: 'lead_new_2',
+      tenantId: TENANT_ID,
+      metadata: {
+        submissionId: BASE_INPUT.submissionId,
+        repeat: false,
+        submissionPayload: PAYLOAD,
+        attribution: ATTRIBUTION,
+      },
+    });
+  });
+
+  it('writes no activity when neither payload nor attribution is supplied', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null);
+    (mockServices.lead.createLead as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      isFailure: false,
+      value: { id: { value: 'lead_new_3' } },
+    });
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await caller.createLead(BASE_INPUT);
+
+    expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+  });
+
+  it('records a repeat submission on the existing lead (duplicate email)', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null);
+    (mockServices.lead.createLead as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      isFailure: true,
+      error: { message: 'Lead with email jane@acme.example already exists' },
+    });
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ id: 'lead_dup_2' } as never);
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.createLead({ ...BASE_INPUT, attribution: ATTRIBUTION });
+
+    expect(result.created).toBe(false);
+    const arg = prismaMock.leadActivity.create.mock.calls[0]![0] as {
+      data: Record<string, unknown>;
+    };
+    expect(arg.data).toMatchObject({
+      type: 'NOTE',
+      leadId: 'lead_dup_2',
+      metadata: { submissionId: BASE_INPUT.submissionId, repeat: true, attribution: ATTRIBUTION },
+    });
+  });
+
+  it('does not fail the call when the submission record cannot be written', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null);
+    (mockServices.lead.createLead as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      isFailure: false,
+      value: { id: { value: 'lead_new_4' } },
+    });
+    prismaMock.leadActivity.create.mockRejectedValueOnce(new Error('db down'));
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.createLead({ ...BASE_INPUT, submissionPayload: PAYLOAD });
+
+    expect(result.created).toBe(true);
+    expect(warn).toHaveBeenCalled();
+  });
+
+  it('rejects attribution values over 512 chars', async () => {
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(
+      caller.createLead({ ...BASE_INPUT, attribution: { utmSource: 'x'.repeat(513) } })
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+  });
+
+  it('accepts an externalRef uuid and still binds the env tenant (ADR-070 TODO)', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null);
+    (mockServices.lead.createLead as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      isFailure: false,
+      value: { id: { value: 'lead_new_5' } },
+    });
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.createLead({
+      ...BASE_INPUT,
+      externalRef: '3f1c2b7e-5d0a-4c53-9a54-6f7a9b1d2e34',
+    });
+
+    expect(result.tenantId).toBe(TENANT_ID);
+  });
+
+  it('rejects a non-uuid externalRef', async () => {
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(
+      caller.createLead({ ...BASE_INPUT, externalRef: 'not-a-uuid' })
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+  });
+
+  it('rejects a same-length wrong bearer (constant-time compare)', async () => {
+    const wrong = 'Y'.repeat(SECRET.length);
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${wrong}`) as never);
+    await expect(caller.createLead(BASE_INPUT)).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+  });
+});

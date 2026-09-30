@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-09-30T18:31:59.786Z",
+  "timestamp": "2026-09-30T20:39:21.762Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 65,
-    "total_endpoints": 529,
+    "total_endpoints": 530,
     "total_queries": 233,
-    "total_mutations": 296,
+    "total_mutations": 297,
     "routers": [
       {
         "name": "contact",
@@ -1309,6 +1309,12 @@
         "mutations": 1
       },
       {
+        "name": "inbound",
+        "endpoints": 3,
+        "queries": 0,
+        "mutations": 3
+      },
+      {
         "name": "appointmentSettings",
         "endpoints": 3,
         "queries": 1,
@@ -1343,12 +1349,6 @@
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
-      },
-      {
-        "name": "inbound",
-        "endpoints": 2,
-        "queries": 0,
-        "mutations": 2
       },
       {
         "name": "termsAcceptance",
@@ -4467,6 +4467,11 @@
         "name": "inbound.logCallBooking",
         "method": "POST",
         "description": "Log call booking"
+      },
+      {
+        "name": "inbound.logSupportTicket",
+        "method": "POST",
+        "description": "Log support ticket"
       }
     ],
     "experiment": [

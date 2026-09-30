@@ -81,7 +81,8 @@ describe('createPortalDeliverySyncHandler', () => {
       slug: 'acme',
       name: 'Acme Ltd',
       authorizedEmails: ['owner@acme.com'],
-      sourceLeadId: null,
+      crmDealId: OPP,
+      sourceLeadId: OPP,
     });
 
     const pushArg = h.pushDelivery.mock.calls[0][0];

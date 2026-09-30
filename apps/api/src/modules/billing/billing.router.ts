@@ -35,7 +35,11 @@ import {
 } from '@intelliflow/validators';
 import { callStripeAPI } from '../../shared/external-service-wrapper';
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
-import { createSubscriptionSyncHandler } from './subscription-sync';
+import {
+  createSubscriptionSyncHandler,
+  createOutboxPortalPushEnqueuer,
+  PortalPushEnqueueError,
+} from './subscription-sync';
 import { buildReceiptEmail } from './receipt-email';
 import {
   PLAN_TIERS,
@@ -341,6 +345,70 @@ export function invalidateBillingCache(customerId: string): void {
  */
 export function clearBillingCache(): void {
   billingCache.clear();
+}
+
+interface SubscriptionWebhookPayload {
+  type: string;
+  data: {
+    object: {
+      id: string;
+      customer: string;
+      status?: string;
+      current_period_end?: number;
+      cancel_at_period_end?: boolean;
+      metadata?: Record<string, string>;
+    };
+  };
+}
+
+/**
+ * IFC-314: persist Stripe subscription status (offline-reliable) and — for ENGINE
+ * subscriptions (metadata.tenantSlug present) — enqueue the portal push on the
+ * transactional outbox (events-worker retries it). Persist errors are logged, not
+ * thrown; a failed enqueue rethrows so Stripe redelivers the webhook.
+ */
+async function syncSubscriptionFromWebhook(
+  ctx: import('../../context').Context,
+  input: SubscriptionWebhookPayload
+): Promise<void> {
+  try {
+    const adapters = ctx.container?.get<{
+      stripeSubscriptionRepository: import('@intelliflow/domain').StripeSubscriptionRepository;
+      portalDeliverySync?: unknown;
+    }>('adapters');
+    const subscriptionRepository = adapters?.stripeSubscriptionRepository;
+    if (!subscriptionRepository) return;
+
+    const obj = input.data.object;
+    await createSubscriptionSyncHandler({
+      repo: subscriptionRepository,
+      // Gated on the portal sync being configured, as the inline push was.
+      enqueuePortalPush: adapters?.portalDeliverySync
+        ? createOutboxPortalPushEnqueuer(ctx.prisma)
+        : undefined,
+      logger: {
+        info: (o, m) => console.log(m ?? '', o),
+        warn: (o, m) => console.warn(m ?? '', o),
+        error: (o, m) => console.error(m ?? '', o),
+      },
+    })({
+      type: input.type,
+      subscriptionId: obj.id,
+      customerId: obj.customer,
+      status: obj.status ?? 'active',
+      currentPeriodEnd: obj.current_period_end ?? null,
+      cancelAtPeriodEnd: obj.cancel_at_period_end ?? false,
+      tenantId: obj.metadata?.tenantId,
+      tenantSlug: obj.metadata?.tenantSlug,
+    });
+  } catch (err) {
+    if (err instanceof PortalPushEnqueueError) {
+      // Nothing durable holds the portal push: fail the webhook so Stripe redelivers.
+      console.error('[Billing Webhook] Portal push enqueue failed:', err);
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.message });
+    }
+    console.error('[Billing Webhook] Subscription sync failed (non-fatal):', err);
+  }
 }
 
 // ============================================
@@ -1576,46 +1644,7 @@ export const billingRouter = createTRPCRouter({
       // Invalidate cache for this customer on any billing event
       invalidateBillingCache(customerId);
 
-      // IFC-314: persist Stripe subscription status (offline-reliable) and — for
-      // ENGINE subscriptions (metadata.tenantSlug present) — reflect it on the
-      // portal. Best-effort: never let this fail the Stripe webhook. Covers
-      // created/updated/deleted (the sync handler ignores other types).
-      try {
-        const adapters = ctx.container?.get<{
-          stripeSubscriptionRepository: import('@intelliflow/domain').StripeSubscriptionRepository;
-          portalDeliverySync?: {
-            pushDelivery(input: {
-              slug: string;
-              subscriptionStatus?: import('@intelliflow/domain').PortalSubscriptionStatus;
-              subscriptionRenewsAt?: string | null;
-            }): Promise<{ isFailure: boolean; error?: { message: string } }>;
-          } | null;
-        }>('adapters');
-        const subscriptionRepository = adapters?.stripeSubscriptionRepository;
-        if (subscriptionRepository) {
-          const obj = input.data.object;
-          await createSubscriptionSyncHandler({
-            repo: subscriptionRepository,
-            portalSync: adapters?.portalDeliverySync ?? undefined,
-            logger: {
-              info: (o, m) => console.log(m ?? '', o),
-              warn: (o, m) => console.warn(m ?? '', o),
-              error: (o, m) => console.error(m ?? '', o),
-            },
-          })({
-            type: input.type,
-            subscriptionId: obj.id,
-            customerId,
-            status: obj.status ?? 'active',
-            currentPeriodEnd: obj.current_period_end ?? null,
-            cancelAtPeriodEnd: obj.cancel_at_period_end ?? false,
-            tenantId: obj.metadata?.tenantId,
-            tenantSlug: obj.metadata?.tenantSlug,
-          });
-        }
-      } catch (err) {
-        console.error('[Billing Webhook] Subscription sync failed (non-fatal):', err);
-      }
+      await syncSubscriptionFromWebhook(ctx, input);
 
       if (
         input.type !== 'customer.subscription.updated' &&
