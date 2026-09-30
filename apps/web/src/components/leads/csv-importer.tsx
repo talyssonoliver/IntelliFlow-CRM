@@ -468,9 +468,9 @@ export function CsvImporter() {
     // state — the leads are already created and a stale list self-heals on refetch.
     if (imported > 0) {
       try {
-        utils.lead.list.invalidate();
-        utils.lead.stats.invalidate();
-        invalidateLeadsCache();
+        void utils.lead.list.invalidate();
+        void utils.lead.stats.invalidate();
+        await invalidateLeadsCache();
         if (user?.id) await revalidateLeadCaches(user.id);
       } catch {
         // ignore — imported rows exist; the list refetches on its own

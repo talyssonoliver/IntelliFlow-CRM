@@ -73,6 +73,14 @@ export interface ReindexJobProgress {
 // Worker Implementation
 // ============================================
 
+/**
+ * Progress reporting is best-effort: a failed updateProgress (e.g. Redis blip)
+ * must not fail the reindex or become an unhandled rejection, but it must be logged.
+ */
+function reportProgressFailure(error: unknown): void {
+  console.error('[ReindexWorker] Failed to update job progress:', error);
+}
+
 export class ReindexWorker {
   private worker: Worker<ReindexJobData, ReindexJobResult> | null = null;
   private queue: Queue<ReindexJobData, ReindexJobResult> | null = null;
@@ -285,11 +293,13 @@ export class ReindexWorker {
           ? (progress.processed / progress.total) * 50
           : (progress.processed / progress.total) * 100;
 
-      job.updateProgress({
-        stage: 'documents',
-        documents: progress,
-        overallProgress,
-      } as ReindexJobProgress);
+      job
+        .updateProgress({
+          stage: 'documents',
+          documents: progress,
+          overallProgress,
+        } as ReindexJobProgress)
+        .catch(reportProgressFailure);
     });
   }
 
@@ -314,11 +324,13 @@ export class ReindexWorker {
       const baseProgress = data.indexType === 'all' ? 50 : 0;
       const overallProgress = baseProgress + (progress.processed / progress.total) * 50;
 
-      job.updateProgress({
-        stage: 'notes',
-        notes: progress,
-        overallProgress,
-      } as ReindexJobProgress);
+      job
+        .updateProgress({
+          stage: 'notes',
+          notes: progress,
+          overallProgress,
+        } as ReindexJobProgress)
+        .catch(reportProgressFailure);
     });
   }
 
