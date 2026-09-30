@@ -58,3 +58,38 @@ export function mapAttributionToLeadFields(
   }
   return fields;
 }
+
+/**
+ * Derive the acquisition channel. `clickId` carries the click-id VALUE (no parameter name),
+ * so it is recognised by shape. Order: click id, utmMedium, referrer host, 'direct'.
+ *
+ * - gclid values start with `Cj0K`/`Cj`/`EAIaIQ`/`CL`   -> 'paid-search'
+ * - fbclid values start with `IwAR`/`IwY`/`IwZ`/`Iw`     -> 'paid-social'
+ * - a `gclid=` / `fbclid=` prefix is honoured if a caller sends the pair
+ * - `referrer` may be a full URL or a bare host
+ */
+export function deriveLeadChannel(attribution: LeadAttributionInput | null | undefined): string {
+  const fields = mapAttributionToLeadFields(attribution);
+
+  const clickId = fields.clickId;
+  if (clickId) {
+    if (/^fbclid=/i.test(clickId) || clickId.startsWith('Iw')) return 'paid-social';
+    if (/^gclid=/i.test(clickId) || /^(Cj|EAIaIQ|CL)/.test(clickId)) return 'paid-search';
+  }
+
+  if (fields.utmMedium) return fields.utmMedium.toLowerCase();
+
+  const host = referrerHost(fields.referrer);
+  return host ?? 'direct';
+}
+
+function referrerHost(referrer: string | undefined): string | null {
+  if (!referrer) return null;
+  const candidate = referrer.includes('://') ? referrer : `https://${referrer}`;
+  try {
+    const host = new URL(candidate).hostname.toLowerCase();
+    return host.startsWith('www.') ? host.slice(4) : host || null;
+  } catch {
+    return null;
+  }
+}
