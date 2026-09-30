@@ -62,14 +62,14 @@ describe('Prisma migration RLS coverage', () => {
     }
   });
 
-  it('backfills tenants.plan from the legacy workspace join in the same migration', () => {
+  it('adds tenants.plan without a backfill (production had no workspace rows; Class A)', () => {
     const sql = readFileSync(
       path.join(migrationsDir, '20260930120000_tenant_provenance_partner', 'migration.sql'),
       'utf8'
     );
 
-    expect(sql).toMatch(/UPDATE "tenants" t\s+SET "plan" = src\."plan"/);
-    expect(sql).toContain('INNER JOIN "workspace_members" wm');
-    expect(sql).toContain('INNER JOIN "users" u');
+    expect(sql).toMatch(/ADD COLUMN\s+"plan"\s+"PlanTier"\s+NOT NULL\s+DEFAULT 'STARTER'/);
+    expect(sql).not.toMatch(/UPDATE "tenants"/);
+    expect(sql).toContain('No backfill of tenants.plan');
   });
 });
