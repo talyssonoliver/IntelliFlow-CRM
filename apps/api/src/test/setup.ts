@@ -178,6 +178,9 @@ export const mockServices = {
   // fall back to direct Prisma mocks. Tests that need orchestrator behavior
   // should override via createTestContext({ services: { notificationOrchestrator: ... } }).
   notificationOrchestrator: undefined as any,
+  // Per-tenant metering — undefined so router tests skip quota guards;
+  // guard tests override via createTestContext({ services: { quota: ... } }).
+  quota: undefined as any,
   aiMonitoringService: mockDeep<any>(),
   // IFC-214: aiMonitoringStore wraps aiMonitoringService with a Redis cache layer.
   // The router unwraps `.value` on the response, so the mock returns
@@ -274,6 +277,7 @@ export const mockAdapters = {
   notificationAuditLogger: mockDeep<any>(),
   experimentRepository: mockDeep<any>(),
   appointmentRepository: mockDeep<any>(),
+  quotaRepository: mockDeep<any>(),
 };
 
 /**

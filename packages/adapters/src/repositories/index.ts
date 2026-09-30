@@ -33,6 +33,7 @@ export * from './PrismaActivityFeedRepository';
 // Tenant Module Repository (IFC-209)
 export * from './PrismaTenantModuleRepository';
 export * from './PrismaTenantUsageAdapter';
+export * from './PrismaQuotaRepository';
 
 // Outbox pattern (domain events)
 export * from './PrismaOutboxRepository';

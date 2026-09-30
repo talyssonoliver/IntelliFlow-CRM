@@ -41,6 +41,7 @@ import {
 } from '../../security/tenant-context';
 // IFC-240: fire-and-forget audit logging for lead mutations + single-record reads
 import { getAuditLogger } from '../../security/audit-logger';
+import { assertQuota } from '../../shared/quota-guard';
 import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapters';
 import { createNotification } from '../notifications/notifications.router';
 import { deriveLeadInsights } from '../../shared/lead-insight-deriver';
@@ -1019,6 +1020,9 @@ export const leadRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const leadService = getLeadService(ctx);
 
+    // Conversion creates a contact: count it against the tenant's contact quota.
+    await assertQuota(ctx, typedCtx.tenant.tenantId, 'contacts');
+
     const result = await leadService.convertLead(
       input.leadId,
       input.createAccount ? (input.accountName ?? null) : null,
@@ -1090,6 +1094,11 @@ export const leadRouter = createTRPCRouter({
    */
   convertToDeal: tenantProcedure.input(convertLeadToDealSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
+
+    // The contact is optional here; only a conversion that creates one consumes contact quota.
+    if (input.createContact) {
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'contacts');
+    }
     const useCase = ctx.services?.convertLeadToDeal;
     if (!useCase) {
       throw new TRPCError({
@@ -1526,6 +1535,9 @@ export const leadRouter = createTRPCRouter({
   bulkConvert: tenantProcedure.input(bulkConvertLeadsSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const { ids, createAccounts } = input;
+
+    // Upper bound: every requested lead may become a contact (already-converted ones will not).
+    await assertQuota(ctx, typedCtx.tenant.tenantId, 'contacts', ids.length);
 
     // IFC-007: Use batch operation via transaction
     // Replaces O(n) sequential calls with O(1) batch queries

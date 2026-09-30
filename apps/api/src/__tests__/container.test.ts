@@ -196,6 +196,11 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'tenantUsageAdapter' };
     }
   },
+  PrismaQuotaRepository: class {
+    constructor() {
+      return { name: 'quotaRepo' };
+    }
+  },
   PrismaNotificationRepository: class {
     constructor() {
       return { name: 'notificationRepo' };
@@ -312,6 +317,11 @@ vi.mock('@intelliflow/application', () => ({
   ActivityFeedService: class {
     constructor() {
       return { name: 'activityFeedService' };
+    }
+  },
+  QuotaService: class {
+    constructor() {
+      return { name: 'quotaService' };
     }
   },
   AnalyticsAggregationService: class {
@@ -645,6 +655,7 @@ describe('Container', () => {
       'notificationOrchestrator',
       'moduleAccess',
       'tenantUsage',
+      'quotaService',
       'security',
       'adapters',
       'aiMonitoringService',
@@ -681,6 +692,7 @@ describe('Container', () => {
         'notificationPreferenceRepository',
         'experimentRepository',
         'appointmentRepository',
+        'quotaRepository',
         'eventBus',
         'aiService',
         'cache',

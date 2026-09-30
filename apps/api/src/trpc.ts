@@ -24,6 +24,7 @@ import {
   type PartnerContext,
   type PartnerScope,
 } from './security/partner-auth';
+import { isQuotaExceeded } from './shared/quota-guard';
 
 /**
  * Initialize tRPC with context type
@@ -40,6 +41,15 @@ const t = initTRPC.context<Context>().create({
       data: {
         ...shape.data,
         zodError: error.cause instanceof ZodError ? error.cause.flatten() : null,
+        // Per-tenant metering: lets the UI tell "quota reached" apart from other preconditions.
+        quota: isQuotaExceeded(error.cause)
+          ? {
+              code: error.cause.code,
+              key: error.cause.key,
+              used: error.cause.used,
+              limit: error.cause.limit,
+            }
+          : null,
       },
     };
   },

@@ -75,6 +75,7 @@ import { deriveContactInsights } from '../../shared/contact-insight-deriver';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 // IFC-255: fire-and-forget audit logging for contact mutations + single-record reads
 import { getAuditLogger } from '../../security/audit-logger';
+import { assertQuota } from '../../shared/quota-guard';
 
 /**
  * IFC-255: shared fire-and-forget audit-failure handler. Audit logging must
@@ -595,6 +596,9 @@ export const contactRouter = createTRPCRouter({
   create: tenantProcedure.input(createContactSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const contactService = getContactService(ctx);
+
+    // Per-tenant metering: reject before any hygiene/duplicate work when the plan is full.
+    await assertQuota(ctx, typedCtx.tenant.tenantId, 'contacts');
 
     // PG-182: apply tenant hygiene policy + required-field enforcement
     // before handing off to the domain service.

@@ -52,6 +52,9 @@ export * from './CalendarWebhookService';
 // Conversation Search Service (IFC-148)
 export * from './ConversationSearchService';
 
+// Quota Service (per-tenant metering)
+export * from './QuotaService';
+
 // Feedback Service
 export * from './FeedbackService';
 
