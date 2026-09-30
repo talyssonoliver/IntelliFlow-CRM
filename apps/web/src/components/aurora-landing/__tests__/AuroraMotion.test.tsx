@@ -35,7 +35,14 @@ const stopScenes = vi.fn();
 const playScenes = vi.fn((..._args: unknown[]) => stopScenes);
 vi.mock('../aurora-scenes', () => ({ playScenes: (...a: unknown[]) => playScenes(...a) }));
 
-const stack = { setActive: vi.fn(), pause: vi.fn(), resume: vi.fn(), dispose: vi.fn() };
+const stack = {
+  setActive: vi.fn(),
+  pause: vi.fn(),
+  resume: vi.fn(),
+  hide: vi.fn(),
+  show: vi.fn(),
+  dispose: vi.fn(),
+};
 const createStack = vi.fn((..._args: unknown[]) => stack);
 vi.mock('../aurora-stack', () => ({ createStack: (...a: unknown[]) => createStack(...a) }));
 
@@ -384,5 +391,31 @@ describe('AuroraMotion', () => {
     place(control!, 420);
     stepper.onUpdate!({ scroll: () => 0 });
     expect(stack.setActive).toHaveBeenLastCalledWith('control');
+  });
+
+  it('clears the stack only when the pinned frame is about to unstick, measuring the sticky frame on desktop', async () => {
+    const root = mountPage();
+    const object = document.createElement('div');
+    object.className = 'stage-object stack-visual';
+    object.style.cssText = 'position: relative; top: 0px; height: 6000px';
+    const frame = document.createElement('div');
+    frame.className = 'object-sticky';
+    frame.style.cssText = 'position: sticky; top: 72px; height: 828px';
+    object.append(frame);
+    root.querySelector('.stage')!.append(object);
+    render(<AuroraMotion />);
+    const end = root.querySelector('.stage-end')!;
+    await waitFor(() =>
+      expect(scrollTrigger.create).toHaveBeenCalledWith(
+        expect.objectContaining({ trigger: end, start: 'bottom top+=900' })
+      )
+    );
+    const clear = triggers.find(
+      (t) => t.trigger === end && (t as { start?: string }).start === 'bottom top+=900'
+    )!;
+    clear.onEnter!();
+    expect(stack.hide).toHaveBeenCalled();
+    clear.onLeaveBack!();
+    expect(stack.show).toHaveBeenCalled();
   });
 });
