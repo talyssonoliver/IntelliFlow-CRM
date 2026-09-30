@@ -1195,19 +1195,12 @@ export const inboundEmailRouter = createTRPCRouter({
 
       const usedBytes = bodyBytes + attachmentBytes;
 
-      // 3. Look up workspace plan tier via the user's workspace membership
-      const userId = (ctx as any).tenant.userId;
-      let planTier = 'STARTER';
-
-      const membership = await prisma.workspaceMember.findFirst({
-        where: { userId },
-        select: { workspace: { select: { plan: true } } },
-        orderBy: { joinedAt: 'desc' },
+      // 3. Plan tier lives on Tenant (ADR-070); Workspace is deprecated.
+      const tenantRow = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        select: { plan: true },
       });
-
-      if (membership?.workspace?.plan) {
-        planTier = membership.workspace.plan;
-      }
+      const planTier: string = tenantRow?.plan ?? 'STARTER';
 
       const limitBytes = STORAGE_LIMITS[planTier] ?? STORAGE_LIMITS.STARTER;
 

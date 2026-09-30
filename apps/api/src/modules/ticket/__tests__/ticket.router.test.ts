@@ -11,6 +11,19 @@ import { ticketRouter } from '../ticket.router';
 import type { UserSession } from '../../../context';
 import type { TenantContext } from '../../../security/tenant-context';
 
+// ADR-070: the module-entitlement gate resolves `moduleAccess` from ctx.container, which
+// these hand-built contexts do not carry. Grant it unless the test supplies its own container.
+const ticketRouterEntitled = {
+  createCaller: (ctx: any) =>
+    ticketRouter.createCaller({
+      ...ctx,
+      container: ctx.container ?? {
+        get: (name: string) =>
+          name === 'moduleAccess' ? { isModuleEnabled: async () => true } : undefined,
+      },
+    }),
+};
+
 // Valid RFC 4122 v4 UUIDs for testing
 // Format: xxxxxxxx-xxxx-4xxx-[89ab]xxx-xxxxxxxxxxxx
 const TICKET_UUID = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
@@ -177,7 +190,7 @@ describe('ticketRouter', () => {
       ]);
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -215,7 +228,7 @@ describe('ticketRouter', () => {
 
     it('should create a new ticket', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -232,7 +245,7 @@ describe('ticketRouter', () => {
       mockTicketService.create.mockRejectedValueOnce(new Error('Creation failed'));
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -244,7 +257,7 @@ describe('ticketRouter', () => {
         ...createMockContext(),
         services: {},
       };
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -259,7 +272,7 @@ describe('ticketRouter', () => {
   describe('getById', () => {
     it('should return ticket by ID', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -273,7 +286,7 @@ describe('ticketRouter', () => {
       mockTicketService.findById.mockResolvedValueOnce(null);
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -289,7 +302,7 @@ describe('ticketRouter', () => {
   describe('list', () => {
     it('should return paginated tickets', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -307,7 +320,7 @@ describe('ticketRouter', () => {
 
     it('should filter by status', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -324,7 +337,7 @@ describe('ticketRouter', () => {
 
     it('should filter by priority', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -341,7 +354,7 @@ describe('ticketRouter', () => {
 
     it('should filter by assignee', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -359,7 +372,7 @@ describe('ticketRouter', () => {
 
     it('should use default pagination values', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -381,7 +394,7 @@ describe('ticketRouter', () => {
   describe('update', () => {
     it('should update ticket', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -405,7 +418,7 @@ describe('ticketRouter', () => {
       mockTicketService.update.mockRejectedValueOnce(new Error('Update failed'));
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -425,7 +438,7 @@ describe('ticketRouter', () => {
   describe('delete', () => {
     it('should delete ticket', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -439,7 +452,7 @@ describe('ticketRouter', () => {
       mockTicketService.delete.mockRejectedValueOnce(new Error('Delete failed'));
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -454,7 +467,7 @@ describe('ticketRouter', () => {
   describe('stats', () => {
     it('should return ticket statistics', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -476,7 +489,7 @@ describe('ticketRouter', () => {
   describe('addResponse', () => {
     it('should add response to ticket', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -500,7 +513,7 @@ describe('ticketRouter', () => {
       mockTicketService.addResponse.mockRejectedValueOnce(new Error('Failed to add response'));
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -522,7 +535,7 @@ describe('ticketRouter', () => {
   describe('bulkAssign', () => {
     it('should bulk assign tickets', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -543,7 +556,7 @@ describe('ticketRouter', () => {
         .mockResolvedValueOnce(mockTicket);
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -560,7 +573,7 @@ describe('ticketRouter', () => {
   describe('bulkUpdateStatus', () => {
     it('should bulk update ticket status', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -579,7 +592,7 @@ describe('ticketRouter', () => {
   describe('bulkResolve', () => {
     it('should bulk resolve tickets', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -596,7 +609,7 @@ describe('ticketRouter', () => {
   describe('bulkEscalate', () => {
     it('should bulk escalate tickets to critical priority', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -613,7 +626,7 @@ describe('ticketRouter', () => {
   describe('bulkClose', () => {
     it('should bulk close tickets', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -651,7 +664,7 @@ describe('ticketRouter', () => {
 
     it('should return filter options with counts', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -672,7 +685,7 @@ describe('ticketRouter', () => {
         .mockResolvedValueOnce([]);
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -712,7 +725,7 @@ describe('ticketRouter', () => {
           tenantId: undefined as any, // test-only mock: simulates missing tenantId
         },
       };
-      const caller = ticketRouter.createCaller(
+      const caller = ticketRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 

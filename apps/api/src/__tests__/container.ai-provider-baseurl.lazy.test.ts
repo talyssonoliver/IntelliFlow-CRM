@@ -54,6 +54,7 @@ vi.mock('@intelliflow/adapters', () => {
     PrismaChainVersionAuditRepository: named('chainVersionAuditRepository'),
     PrismaActivityFeedRepository: named('activityFeedRepository'),
     PrismaTenantModuleRepository: named('tenantModuleRepository'),
+    PrismaTenantUsageAdapter: named('tenantUsageAdapter'),
     PrismaAnalyticsRepository: named('analyticsRepository'),
     PrismaTransactionManager: class {
       async run(work: (tx: unknown) => Promise<unknown>) {

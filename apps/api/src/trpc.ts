@@ -18,6 +18,12 @@ import { tracingMiddleware } from './tracing/middleware';
 import { createDistributedRateLimitMiddleware, RATE_LIMIT_TIERS } from './middleware/rate-limit';
 import { createTenantScopedPrisma } from './security/tenant-context';
 import { runWithLogContext } from '@intelliflow/observability';
+import {
+  authenticatePartner,
+  isPlatformAdmin,
+  type PartnerContext,
+  type PartnerScope,
+} from './security/partner-auth';
 
 /**
  * Initialize tRPC with context type
@@ -256,6 +262,52 @@ const isAdmin = t.middleware(({ ctx, next }) => {
 export const adminProcedure = t.procedure.use(isAuthed).use(isAdmin).use(tracingMiddleware);
 
 /**
+ * Middleware: platform operator only (ADR-070).
+ *
+ * A tenant `ADMIN` is NOT a platform operator — every sign-up becomes ADMIN of its
+ * own tenant. Operators are the verified emails listed in PLATFORM_ADMIN_EMAILS
+ * (comma-separated). Fail-closed: unset or empty allows nobody.
+ */
+const isPlatformAdminMiddleware = t.middleware(({ ctx, next }) => {
+  if (!isPlatformAdmin(ctx.user)) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Platform administrator access required.',
+    });
+  }
+  return next();
+});
+
+/** Platform-operator procedure: authenticated + verified email on PLATFORM_ADMIN_EMAILS. */
+export const platformAdminProcedure = protectedProcedure.use(isPlatformAdminMiddleware);
+
+/**
+ * Partner procedure (ADR-070): authenticated by `Authorization: Bearer pk_<...>`
+ * instead of a user session. Adds `ctx.partner = { id, slug, scopes }`.
+ * Not CSRF-checked: it is bearer-only and never uses ambient cookies.
+ */
+const partnerAuthMiddleware = t.middleware(async ({ ctx, next }) => {
+  const partner = await authenticatePartner(ctx.prisma, ctx.req);
+  return next({ ctx: { ...ctx, partner } });
+});
+
+export const partnerProcedure = t.procedure.use(tracingMiddleware).use(partnerAuthMiddleware);
+
+/** Require a scope on `ctx.partner`; FORBIDDEN otherwise. Use after `partnerProcedure`. */
+export function requirePartnerScope(scope: PartnerScope) {
+  return t.middleware(({ ctx, next }) => {
+    const partner = (ctx as { partner?: PartnerContext }).partner;
+    if (!partner?.scopes.includes(scope)) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: `This API key lacks the "${scope}" scope.`,
+      });
+    }
+    return next();
+  });
+}
+
+/**
  * Tenant-aware procedure - requires authentication and enforces tenant isolation
  *
  * SECURITY (IFC-127): This is the REQUIRED procedure for all multi-tenant endpoints.
@@ -342,8 +394,9 @@ export const tenantProcedure = protectedProcedure.use(tenantMiddleware);
  * Policy:
  * - **Plan-based, NOT role-based.** There is deliberately no tenant-role bypass:
  *   a tenant's own `ADMIN` is still bound by the tenant's plan, so a STARTER
- *   tenant admin must not reach a LEGAL endpoint. (Cross-tenant/platform
- *   super-admin is a separate concept this codebase does not currently model.)
+ *   tenant admin must not reach a LEGAL endpoint. Platform operators (see
+ *   `platformAdminProcedure`, PLATFORM_ADMIN_EMAILS) change entitlements through
+ *   `subscription.toggleModule`; they are not exempted from this guard either.
  * - **Fail CLOSED.** If the entitlement service is unavailable or the lookup
  *   throws, deny — never grant a gated module on error.
  * - Only an explicit `false` from the port denies. The real adapter returns a

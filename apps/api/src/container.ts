@@ -20,6 +20,7 @@ import {
   PrismaChainVersionAuditRepository,
   PrismaActivityFeedRepository,
   PrismaTenantModuleRepository,
+  PrismaTenantUsageAdapter,
   PrismaAnalyticsRepository,
   PrismaFeedbackSurveyRepository,
   PrismaPublicFeedbackRepository,
@@ -329,6 +330,8 @@ const createAdapters = async (prismaClient: PrismaClient) => {
   const publicFeedbackRepository = new PrismaPublicFeedbackRepository(prismaClient);
   const caseDocumentRepository = new PrismaCaseDocumentRepository(prismaClient);
   const tenantModuleRepository = new PrismaTenantModuleRepository(prismaClient);
+  // ADR-070: partner usage read-model (contacts, seats, emails vs plan)
+  const tenantUsageAdapter = new PrismaTenantUsageAdapter(prismaClient, tenantModuleRepository);
   const notificationRepository = new PrismaNotificationRepository(prismaClient);
   const notificationPreferenceRepository = new PrismaNotificationPreferenceRepository(prismaClient);
   const notificationAuditLogger = new PrismaNotificationAuditLogger(prismaClient);
@@ -473,6 +476,7 @@ const createAdapters = async (prismaClient: PrismaClient) => {
     publicFeedbackRepository,
     caseDocumentRepository,
     tenantModuleRepository,
+    tenantUsageAdapter,
     notificationRepository,
     notificationPreferenceRepository,
     notificationAuditLogger,
@@ -809,6 +813,8 @@ const createServices = async (prismaClient: PrismaClient) => {
     notificationOrchestrator,
     // IFC-209: Module Access Service
     moduleAccess: adapters.tenantModuleRepository,
+    // ADR-070: Partner API usage read-model
+    tenantUsage: adapters.tenantUsageAdapter,
     // Security services (IFC-098, IFC-113, IFC-127)
     security,
     // Also expose adapters for direct access when needed

@@ -17,7 +17,7 @@ import { context as otelContext, propagation } from '@opentelemetry/api';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import { loadBullMQ } from '../../lib/load-bullmq';
 import {
   churnRiskLevelSchema,
@@ -28,6 +28,10 @@ import {
 import { getTenantContext } from '../../security/tenant-context';
 import { SIGNIFICANCE_LEVELS, requiresHumanReview } from '@intelliflow/domain';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
+
+// ADR-070: server-side AI_INTELLIGENCE entitlement — intelligence router
+// (a tenant on a plan without it must not reach these endpoints directly).
+const tenantProcedure = moduleTenantProcedure('AI_INTELLIGENCE');
 
 // ── Structured sentiment data stored inside the Json `recommendations` field ──
 

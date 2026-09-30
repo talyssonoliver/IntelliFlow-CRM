@@ -7,7 +7,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import {
   createSlaPolicySchema,
   updateSlaPolicySchema,
@@ -15,6 +15,10 @@ import {
   updateTicketCategorySchema,
   reorderTicketCategorySchema,
 } from '@intelliflow/validators';
+
+// ADR-070: server-side SUPPORT entitlement — ticket routers
+// (a tenant on a plan without it must not reach these endpoints directly).
+const tenantProcedure = moduleTenantProcedure('SUPPORT');
 
 export const slaPolicyRouter = createTRPCRouter({
   list: tenantProcedure.query(async ({ ctx }) => {

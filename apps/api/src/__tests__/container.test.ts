@@ -191,6 +191,11 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'tenantModuleRepo' };
     }
   },
+  PrismaTenantUsageAdapter: class {
+    constructor() {
+      return { name: 'tenantUsageAdapter' };
+    }
+  },
   PrismaNotificationRepository: class {
     constructor() {
       return { name: 'notificationRepo' };
@@ -639,6 +644,7 @@ describe('Container', () => {
       'experimentService',
       'notificationOrchestrator',
       'moduleAccess',
+      'tenantUsage',
       'security',
       'adapters',
       'aiMonitoringService',

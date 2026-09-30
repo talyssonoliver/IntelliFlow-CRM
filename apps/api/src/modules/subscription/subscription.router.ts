@@ -9,7 +9,8 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure, adminProcedure } from '../../trpc';
+import { z } from 'zod';
+import { createTRPCRouter, protectedProcedure, platformAdminProcedure } from '../../trpc';
 import { toggleModuleInputSchema } from '@intelliflow/validators';
 import {
   CRM_MODULES,
@@ -75,43 +76,47 @@ export const moduleAccessRouter = createTRPCRouter({
   }),
 
   /**
-   * Toggle a module on/off for the current tenant.
-   * Only available to Enterprise plan admins.
+   * Toggle a module on/off for a tenant (the caller's own tenant unless `tenantId` is given).
+   *
+   * Platform operators only (ADR-070, PLATFORM_ADMIN_EMAILS): entitlements are what a
+   * tenant pays for, so a tenant's own `ADMIN` must not be able to grant themselves modules.
    */
-  toggleModule: adminProcedure.input(toggleModuleInputSchema).mutation(async ({ ctx, input }) => {
-    const tenantId = ctx.user?.tenantId;
-    if (!tenantId) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Tenant context required',
-      });
-    }
+  toggleModule: platformAdminProcedure
+    .input(toggleModuleInputSchema.extend({ tenantId: z.string().min(1).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const tenantId = input.tenantId ?? ctx.user?.tenantId;
+      if (!tenantId) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Tenant context required',
+        });
+      }
 
-    if (input.moduleId === 'CORE_CRM') {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Core CRM module cannot be disabled',
-      });
-    }
+      if (input.moduleId === 'CORE_CRM') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Core CRM module cannot be disabled',
+        });
+      }
 
-    const moduleAccess =
-      ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
-    if (!moduleAccess) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Module access service not available',
-      });
-    }
+      const moduleAccess =
+        ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+      if (!moduleAccess) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Module access service not available',
+        });
+      }
 
-    if (input.enabled) {
-      await moduleAccess.enableModule(tenantId, input.moduleId);
-    } else {
-      await moduleAccess.disableModule(tenantId, input.moduleId);
-    }
+      if (input.enabled) {
+        await moduleAccess.enableModule(tenantId, input.moduleId);
+      } else {
+        await moduleAccess.disableModule(tenantId, input.moduleId);
+      }
 
-    // Return updated module list
-    const modules = await moduleAccess.getEnabledModules(tenantId);
-    const plan = await moduleAccess.getTenantPlan(tenantId);
-    return { modules, plan };
-  }),
+      // Return updated module list
+      const modules = await moduleAccess.getEnabledModules(tenantId);
+      const plan = await moduleAccess.getTenantPlan(tenantId);
+      return { modules, plan };
+    }),
 });

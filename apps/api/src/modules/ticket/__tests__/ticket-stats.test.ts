@@ -10,6 +10,19 @@ import { ticketRouter } from '../ticket.router';
 import type { UserSession } from '../../../context';
 import type { TenantContext } from '../../../security/tenant-context';
 
+// ADR-070: the module-entitlement gate resolves `moduleAccess` from ctx.container, which
+// these hand-built contexts do not carry. Grant it unless the test supplies its own container.
+const ticketRouterEntitled = {
+  createCaller: (ctx: any) =>
+    ticketRouter.createCaller({
+      ...ctx,
+      container: ctx.container ?? {
+        get: (name: string) =>
+          name === 'moduleAccess' ? { isModuleEnabled: async () => true } : undefined,
+      },
+    }),
+};
+
 const TENANT_UUID = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
 const USER_UUID = 'c3d4e5f6-a7b8-9012-cdef-123456789012';
 
@@ -80,7 +93,7 @@ describe('ticketRouter - stats and sort (IFC-206)', () => {
 
   // Stats with SLA breakdown
   it('stats returns bySLAStatus from service', async () => {
-    const caller = ticketRouter.createCaller(createMockContext() as any);
+    const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
 
     const result = await caller.stats({});
 
@@ -94,7 +107,7 @@ describe('ticketRouter - stats and sort (IFC-206)', () => {
   });
 
   it('stats without input calls getStats with default timeWindow', async () => {
-    const caller = ticketRouter.createCaller(createMockContext() as any);
+    const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
 
     await caller.stats({});
 
@@ -103,7 +116,7 @@ describe('ticketRouter - stats and sort (IFC-206)', () => {
 
   // Stats with time window
   it('stats with timeWindow 24h passes timeWindow to service', async () => {
-    const caller = ticketRouter.createCaller(createMockContext() as any);
+    const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
 
     await caller.stats({ timeWindow: '24h' });
 
@@ -111,7 +124,7 @@ describe('ticketRouter - stats and sort (IFC-206)', () => {
   });
 
   it('stats with timeWindow 7d passes timeWindow to service', async () => {
-    const caller = ticketRouter.createCaller(createMockContext() as any);
+    const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
 
     await caller.stats({ timeWindow: '7d' });
 
@@ -119,7 +132,7 @@ describe('ticketRouter - stats and sort (IFC-206)', () => {
   });
 
   it('stats with timeWindow all passes timeWindow to service', async () => {
-    const caller = ticketRouter.createCaller(createMockContext() as any);
+    const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
 
     await caller.stats({ timeWindow: 'all' });
 
@@ -128,7 +141,7 @@ describe('ticketRouter - stats and sort (IFC-206)', () => {
 
   // List with sort
   it('list with sortBy updatedAt passes sortBy to service', async () => {
-    const caller = ticketRouter.createCaller(createMockContext() as any);
+    const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
 
     await caller.list({ sortBy: 'updatedAt' });
 
@@ -140,7 +153,7 @@ describe('ticketRouter - stats and sort (IFC-206)', () => {
   });
 
   it('list with sortBy priority and sortOrder asc passes both to service', async () => {
-    const caller = ticketRouter.createCaller(createMockContext() as any);
+    const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
 
     await caller.list({ sortBy: 'priority', sortOrder: 'asc' });
 
@@ -153,7 +166,7 @@ describe('ticketRouter - stats and sort (IFC-206)', () => {
   });
 
   it('list without sortBy passes default createdAt to service', async () => {
-    const caller = ticketRouter.createCaller(createMockContext() as any);
+    const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
 
     await caller.list({});
 

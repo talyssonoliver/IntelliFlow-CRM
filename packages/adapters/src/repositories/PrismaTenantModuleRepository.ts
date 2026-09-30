@@ -66,19 +66,16 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
   }
 
   async getTenantPlan(tenantId: string): Promise<PlanTier> {
-    // Look up workspace associated with this tenant in ONE query.
-    // WorkspaceMember has no Prisma relation to User, so we use $queryRaw
-    // to join workspaces -> workspace_members -> users in a single round-trip.
-    const rows = await this.prisma.$queryRaw<Array<{ plan: string }>>`
-      SELECT w.plan
-      FROM workspaces w
-      INNER JOIN workspace_members wm ON wm."workspaceId" = w.id
-      INNER JOIN users u ON u.id = wm."userId"
-      WHERE u."tenantId" = ${tenantId}
-      LIMIT 1
-    `;
+    // ADR-070: the plan lives on Tenant (Workspace is deprecated and nothing populates it).
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { plan: true },
+    });
 
-    return (rows[0]?.plan as PlanTier) ?? 'STARTER';
+    // Fail-safe: an unknown or missing plan resolves to the smallest known tier,
+    // never to an undefined MODULE_PLAN_MAP lookup.
+    const plan = tenant?.plan;
+    return plan && plan in MODULE_PLAN_MAP ? (plan as PlanTier) : 'STARTER';
   }
 
   async enableModule(tenantId: string, moduleId: ModuleId): Promise<TenantModuleRecord> {

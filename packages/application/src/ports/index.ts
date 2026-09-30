@@ -7,3 +7,4 @@ export * from './repositories';
 export * from './external';
 export * from './output';
 export * from './TransactionPort';
+export * from './TenantUsagePort';

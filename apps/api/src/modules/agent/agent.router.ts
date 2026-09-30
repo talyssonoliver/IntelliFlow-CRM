@@ -17,7 +17,11 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import {
+  createTRPCRouter,
+  protectedProcedure as baseProtectedProcedure,
+  requireModule,
+} from '../../trpc';
 import {
   getAvailableToolNames,
   getAgentTool,
@@ -33,6 +37,9 @@ import { agentLogger } from '../../agent/logger';
 import { hasPermission } from '../../lib/rbac';
 import type { Context } from '../../context';
 import type { AgentAuthContext, PendingAction } from '../../agent/types';
+
+// ADR-070: server-side AI_INTELLIGENCE entitlement (plan gate, not role gate).
+const protectedProcedure = baseProtectedProcedure.use(requireModule('AI_INTELLIGENCE'));
 
 /**
  * Fetch a pending action and assert it belongs to the caller's tenant.

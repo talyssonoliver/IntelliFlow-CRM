@@ -10,6 +10,19 @@ import { ticketRouter } from '../ticket.router';
 import type { UserSession } from '../../../context';
 import type { TenantContext } from '../../../security/tenant-context';
 
+// ADR-070: the module-entitlement gate resolves `moduleAccess` from ctx.container, which
+// these hand-built contexts do not carry. Grant it unless the test supplies its own container.
+const ticketRouterEntitled = {
+  createCaller: (ctx: any) =>
+    ticketRouter.createCaller({
+      ...ctx,
+      container: ctx.container ?? {
+        get: (name: string) =>
+          name === 'moduleAccess' ? { isModuleEnabled: async () => true } : undefined,
+      },
+    }),
+};
+
 // Valid UUIDs — same as ticket.router.test.ts
 const TENANT_UUID = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
 const USER_UUID = 'c3d4e5f6-a7b8-9012-cdef-123456789012';
@@ -78,7 +91,7 @@ describe('ticketRouter - search (IFC-205)', () => {
   });
 
   it('should pass search parameter to TicketService.findMany', async () => {
-    const caller = ticketRouter.createCaller(createMockContext() as any);
+    const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
 
     await caller.list({ search: 'login problem' });
 
@@ -91,7 +104,7 @@ describe('ticketRouter - search (IFC-205)', () => {
   });
 
   it('should combine search with pagination', async () => {
-    const caller = ticketRouter.createCaller(createMockContext() as any);
+    const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
 
     await caller.list({ search: 'urgent', page: 2, limit: 10 });
 
@@ -105,7 +118,7 @@ describe('ticketRouter - search (IFC-205)', () => {
   });
 
   it('should handle empty search string gracefully', async () => {
-    const caller = ticketRouter.createCaller(createMockContext() as any);
+    const caller = ticketRouterEntitled.createCaller(createMockContext() as any);
 
     await expect(caller.list({ search: '' })).resolves.toBeDefined();
   });
