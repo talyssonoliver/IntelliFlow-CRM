@@ -2,12 +2,17 @@ import { describe, it, expect, vi } from 'vitest';
 import { createTenantAiSpendRecorder } from './tenant-ai-spend';
 import { tenantContextStore } from '../tracing/tenant-context';
 
-function setup(tenantId: string | undefined, increment = vi.fn().mockResolvedValue(undefined)) {
+function setup(
+  tenantId: string | undefined,
+  increment = vi.fn().mockResolvedValue(undefined),
+  extra: { maxCarryCents?: number } = {}
+) {
   const logger = { warn: vi.fn() };
   const record = createTenantAiSpendRecorder({
     quota: { increment },
     getTenantId: () => tenantId,
     logger,
+    ...extra,
   });
   return { record, increment, logger };
 }
@@ -56,6 +61,21 @@ describe('createTenantAiSpendRecorder', () => {
       expect(increment).not.toHaveBeenCalled();
     }
   );
+
+  it('records a single large cost in full, without clamping to maxCarryCents', async () => {
+    const { record, increment } = setup('tenant-1');
+    await record({ cost: 1500 }); // 150,000 cents, above the 100,000 default carry bound
+    expect(increment).toHaveBeenCalledWith('tenant-1', 'aiSpendCentsPerMonth', 150_000);
+  });
+
+  it('still bounds the cents held back after failed writes', async () => {
+    const increment = vi.fn().mockRejectedValue(new Error('db down'));
+    const { record } = setup('tenant-1', increment, { maxCarryCents: 10 });
+    await record({ cost: 0.5 }); // 50 cents fail; carry is clamped to 10
+    increment.mockResolvedValue(undefined);
+    await record({ cost: 0.01 });
+    expect(increment).toHaveBeenLastCalledWith('tenant-1', 'aiSpendCentsPerMonth', 11);
+  });
 
   it('ignores zero, negative and NaN costs', async () => {
     const { record, increment } = setup('tenant-1');

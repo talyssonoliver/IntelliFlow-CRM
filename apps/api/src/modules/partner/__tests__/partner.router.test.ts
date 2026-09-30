@@ -51,7 +51,13 @@ const ALL_SCOPES = [
 ];
 
 function callerWith(
-  opts: { scopes?: string[]; usage?: unknown; header?: string | null; quota?: unknown } = {}
+  opts: {
+    scopes?: string[];
+    usage?: unknown;
+    header?: string | null;
+    quota?: unknown;
+    moduleAccess?: unknown;
+  } = {}
 ) {
   const ctx = createTestContext({
     req: (opts.header === null
@@ -60,9 +66,15 @@ function callerWith(
   });
   if (opts.quota) (ctx as any).services = { ...(ctx as any).services, quota: opts.quota };
   const usagePort = 'usage' in opts ? opts.usage : { getUsage: vi.fn() };
-  (ctx.container.get as any).mockImplementation((name: string) =>
-    name === 'tenantUsage' ? (usagePort ?? undefined) : undefined
-  );
+  const moduleAccess =
+    'moduleAccess' in opts
+      ? opts.moduleAccess
+      : { syncModulesToPlan: vi.fn().mockResolvedValue([]) };
+  (ctx.container.get as any).mockImplementation((name: string) => {
+    if (name === 'tenantUsage') return usagePort ?? undefined;
+    if (name === 'moduleAccess') return moduleAccess ?? undefined;
+    return undefined;
+  });
   prismaMock.partnerApiKey.findUnique.mockResolvedValue({
     id: 'key-1',
     isActive: true,
@@ -71,7 +83,11 @@ function callerWith(
     partner: { id: 'partner-1', slug: 'leangency', status: 'ACTIVE' },
   } as never);
   prismaMock.partnerApiKey.update.mockResolvedValue({} as never);
-  return { caller: (partnerRouter as any).createCaller(ctx), usagePort: usagePort as any };
+  return {
+    caller: (partnerRouter as any).createCaller(ctx),
+    usagePort: usagePort as any,
+    moduleAccess: moduleAccess as any,
+  };
 }
 
 async function expectCode(promise: Promise<unknown>, code: string) {
@@ -561,18 +577,33 @@ describe('tenant ownership checks (setPlan, inviteMember, issueLoginLink, getUsa
 });
 
 describe('partner.setPlan', () => {
-  it('updates Tenant.plan for an owned tenant', async () => {
-    const { caller } = callerWith();
-    prismaMock.tenant.findUnique.mockResolvedValue({ id: 't1', partnerId: 'partner-1' } as never);
-    prismaMock.tenant.update.mockResolvedValue({ id: 't1', plan: 'PROFESSIONAL' } as never);
+  const owned = { id: 't1', partnerId: 'partner-1' };
+
+  it('syncs modules and plan through the module-access port for an owned tenant', async () => {
+    const { caller, moduleAccess } = callerWith();
+    prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
 
     expect(await caller.setPlan({ tenantId: 't1', plan: 'PROFESSIONAL' })).toEqual({
       tenantId: 't1',
       plan: 'PROFESSIONAL',
     });
-    expect(prismaMock.tenant.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 't1' }, data: { plan: 'PROFESSIONAL' } })
-    );
+    expect(moduleAccess.syncModulesToPlan).toHaveBeenCalledWith('t1', 'PROFESSIONAL');
+    // The port owns the Tenant.plan write (same transaction as the module rows).
+    expect(prismaMock.tenant.update).not.toHaveBeenCalled();
+  });
+
+  it('delegates a downgrade so modules outside the new plan are removed', async () => {
+    const { caller, moduleAccess } = callerWith();
+    prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
+    await caller.setPlan({ tenantId: 't1', plan: 'PARTNER_FREE' });
+    expect(moduleAccess.syncModulesToPlan).toHaveBeenCalledWith('t1', 'PARTNER_FREE');
+  });
+
+  it('fails loudly when the module-access port is not wired', async () => {
+    const { caller } = callerWith({ moduleAccess: null });
+    prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
+    await expectCode(caller.setPlan({ tenantId: 't1', plan: 'STARTER' }), 'INTERNAL_SERVER_ERROR');
+    expect(prismaMock.tenant.update).not.toHaveBeenCalled();
   });
 });
 

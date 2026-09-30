@@ -731,6 +731,8 @@ export const inboundEmailRouter = createTRPCRouter({
           recipientCount
         );
 
+        // Set once the provider accepted the send: from then on the units are consumed.
+        let delivered = false;
         try {
           const record = await (ctx as any).prisma.emailRecord.create({
             data: {
@@ -784,6 +786,8 @@ export const inboundEmailRouter = createTRPCRouter({
             if (sendResult.status === 'failed') {
               finalStatus = 'FAILED';
               console.error('Email send failed', { recordId: record.id, error: sendResult.error });
+            } else {
+              delivered = true;
             }
           } catch (error) {
             finalStatus = 'FAILED';
@@ -805,8 +809,10 @@ export const inboundEmailRouter = createTRPCRouter({
 
           return { id: record.id, status: finalStatus };
         } catch (error) {
-          // Nothing was delivered (or the outcome is unknown and recorded as failed): give back.
-          await releaseQuota();
+          // Give the units back only when nothing was delivered. If the send succeeded and a
+          // later step (e.g. the record update) threw, the recipients got the email: keep the
+          // charge and propagate the error.
+          if (!delivered) await releaseQuota();
           throw error;
         }
       }

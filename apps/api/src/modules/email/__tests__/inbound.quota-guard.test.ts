@@ -87,6 +87,27 @@ describe('email.sendEmail quota guard', () => {
     expect(quota.release).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the reservation and rethrows when the send succeeded but the record update fails', async () => {
+    sendEmailMock.mockResolvedValue({ status: 'sent', messageId: 'm1' });
+    (prismaMock.emailRecord.update as any).mockRejectedValue(new Error('db blip'));
+    const quota = underQuota();
+    const ctx = createTestContext({ services: { ...mockServices, quota: quota as never } });
+
+    await expect(inboundEmailRouter.createCaller(ctx).sendEmail(input)).rejects.toThrow('db blip');
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
+    expect(quota.release).not.toHaveBeenCalled();
+  });
+
+  it('releases the reservation and rethrows when the send failed and the record update fails', async () => {
+    sendEmailMock.mockResolvedValue({ status: 'failed', error: 'bounced', messageId: 'm1' });
+    (prismaMock.emailRecord.update as any).mockRejectedValue(new Error('db blip'));
+    const quota = underQuota();
+    const ctx = createTestContext({ services: { ...mockServices, quota: quota as never } });
+
+    await expect(inboundEmailRouter.createCaller(ctx).sendEmail(input)).rejects.toThrow('db blip');
+    expect(quota.release).toHaveBeenCalledTimes(1);
+  });
+
   it('does not mask the send outcome when the release itself fails', async () => {
     sendEmailMock.mockResolvedValue({ status: 'failed', error: 'bounced', messageId: 'm1' });
     const quota = underQuota();

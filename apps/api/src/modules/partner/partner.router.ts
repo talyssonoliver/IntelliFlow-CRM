@@ -14,7 +14,7 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import type { PrismaClient } from '@intelliflow/db';
-import type { TenantUsagePort } from '@intelliflow/application';
+import type { ModuleAccessPort, TenantUsagePort } from '@intelliflow/application';
 import { createTRPCRouter, partnerProcedure, requirePartnerScope } from '../../trpc';
 import { supabaseAdmin } from '../../lib/supabase';
 import { getPlatformAdminEmails, type PartnerContext } from '../../security/partner-auth';
@@ -395,12 +395,18 @@ export const partnerRouter = createTRPCRouter({
     .output(setPlanOutput)
     .mutation(async ({ ctx, input }) => {
       await loadPartnerTenant(ctx.prisma, ctx.partner, input.tenantId);
-      const updated = await ctx.prisma.tenant.update({
-        where: { id: input.tenantId },
-        data: { plan: input.plan },
-        select: { id: true, plan: true },
-      });
-      return { tenantId: updated.id, plan: updated.plan as Plan };
+      const moduleAccess = ctx.container?.get<ModuleAccessPort>('moduleAccess');
+      if (!moduleAccess) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Module access service not available.',
+        });
+      }
+      // One transaction: records Tenant.plan AND reconciles TenantModule rows, so a downgrade
+      // removes modules the new plan does not include (writing only Tenant.plan would leave
+      // the old paid module rows enabled).
+      await moduleAccess.syncModulesToPlan(input.tenantId, input.plan);
+      return { tenantId: input.tenantId, plan: input.plan };
     }),
 
   inviteMember: partnerProcedure

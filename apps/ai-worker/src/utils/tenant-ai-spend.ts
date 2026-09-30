@@ -46,7 +46,9 @@ export function createTenantAiSpendRecorder(options: TenantAiSpendRecorderOption
     const tenantId = getTenantId();
     if (!isBillableTenant(tenantId) || !(usage.cost > 0)) return Promise.resolve();
 
-    const pending = Math.min((carry.get(tenantId) ?? 0) + usage.cost * 100, maxCarryCents);
+    // Never clamp here: the newly reported cost is written in full. maxCarryCents only bounds
+    // the cents held back after failed writes (below).
+    const pending = (carry.get(tenantId) ?? 0) + usage.cost * 100;
     const whole = Math.floor(pending);
     carry.set(tenantId, pending - whole);
     if (whole < 1) return Promise.resolve();
