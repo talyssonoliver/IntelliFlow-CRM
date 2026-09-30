@@ -695,7 +695,9 @@ export const createContext = async (opts?: {
   // Extract and verify token from Authorization header
   const token = extractBearerToken(opts?.req);
 
-  if (token) {
+  // Partner API keys (`pk_...`, ADR-070) are authenticated by partnerProcedure, never
+  // by Supabase — skip the JWT round-trip for them.
+  if (token && !token.startsWith('pk_')) {
     try {
       user = await resolveUserFromToken(token);
     } catch (err) {
