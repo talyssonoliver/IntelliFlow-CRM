@@ -1,408 +1,1140 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Manrope } from 'next/font/google';
 import { AuroraBackground } from './AuroraBackground';
-import { AuroraHeader } from './AuroraHeader';
-import { AuroraLogo } from './AuroraLogo';
+import { AuroraMotion } from './AuroraMotion';
+import './aurora-landing.css';
 
-const jakarta = Plus_Jakarta_Sans({
+const manrope = Manrope({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
+  variable: '--font-manrope',
 });
 
-const features = [
+/** Developer surfaces: ready unless marked beta (built, not final) or soon (not built yet). */
+const DEV_CHIPS: ReadonlyArray<{
+  label: string;
+  icon?: string;
+  logo?: string;
+  status?: 'beta' | 'soon';
+}> = [
+  { label: 'Inbound webhooks', icon: 'call_received' },
+  { label: 'Outbound webhooks', icon: 'call_made' },
+  { label: 'React hooks', logo: '/brand/aurora/logos/react.svg' },
+  { label: 'CLI', icon: 'terminal' },
+  { label: 'JWT', logo: '/brand/aurora/logos/jsonwebtokens.svg' },
+  { label: 'MFA', icon: 'verified_user' },
+  { label: 'TypeScript SDK', logo: '/brand/aurora/logos/typescript.svg', status: 'beta' },
+  { label: 'API keys', icon: 'vpn_key', status: 'soon' },
+];
+
+const FAQ = [
   {
-    title: 'Score every lead',
-    description:
-      "Aurora reads each lead's activity and ranks who is ready to talk, so the first call goes to the right person.",
-    icon: 'target',
-    tint: 'bg-[#EFEAFE] text-[#6D3FE8]',
+    question: 'Will the AI ever act without my approval?',
+    answer:
+      'No. Every action an agent proposes goes to the approval queue first, with its reasoning and sources attached. You approve, edit or dismiss it.',
   },
   {
-    title: 'See the whole pipeline',
-    description:
-      'Every deal by stage, owner and next step, on one board that updates as your team works.',
-    icon: 'bar_chart',
-    tint: 'bg-[#E6EEFE] text-[#1D5FD8]',
+    question: 'How is this different from the AI in my current CRM?',
+    answer:
+      'Aurora was built around its agents from the start, and around a person approving what they do. The agents prepare the work across leads, deals and cases; the approval queue keeps your team in charge of every step.',
   },
   {
-    title: 'Follow up on time',
-    description:
-      'When a deal goes quiet, Aurora drafts the next email and reminds its owner before the moment passes.',
-    icon: 'mail',
-    tint: 'bg-[#E1F6F7] text-[#0E7F8A]',
+    question: 'What does it connect to?',
+    answer:
+      'Gmail, Outlook, Slack, Microsoft Teams, Stripe, PayPal and Google or Azure sign-in today, plus webhooks, React hooks and a CLI. The TypeScript SDK is in beta.',
+  },
+  {
+    question: 'Where is my data kept separate?',
+    answer:
+      'Each workspace is isolated in the database with row-level security, and every change is written to an audit log.',
+  },
+  {
+    question: 'What does it cost?',
+    answer:
+      'Plans are built around your team and the parts of Aurora you use. Ask for a tailored plan and we will walk you through it.',
   },
 ];
 
-const workspacePoints = [
-  'Contacts and companies with their full history',
-  'Emails and meetings logged to the right deal',
-  'Reports built from the same data your team works in',
-];
-
-const pipelineStages = [
-  {
-    label: 'New',
-    cards: [
-      ['80%', '55%', 'bg-[#CFF5F9]'],
-      ['70%', '45%', 'bg-[#DCE6FD]'],
-      ['75%', '50%', ''],
-    ],
-  },
-  {
-    label: 'Qualified',
-    cards: [
-      ['85%', '60%', 'focus'],
-      ['65%', '40%', 'bg-[#DCE6FD]'],
-    ],
-  },
-  {
-    label: 'Proposal',
-    cards: [
-      ['78%', '50%', 'bg-[#E7DEFD]'],
-      ['60%', '42%', ''],
-    ],
-  },
-  { label: 'Won', cards: [['72%', '48%', 'bg-[#CDEFE3]']] },
-] as const;
-
-const footerColumns = [
-  {
-    title: 'Product',
-    links: [
-      { label: 'Features', href: '/features' },
-      { label: 'Pricing', href: '/pricing' },
-      { label: 'Integrations', href: '/docs/integrations' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { label: 'About', href: '/about' },
-      { label: 'Blog', href: '/blog' },
-      { label: 'Contact', href: '/contact' },
-    ],
-  },
-  {
-    title: 'Legal',
-    links: [
-      { label: 'Privacy', href: '/privacy' },
-      { label: 'Terms', href: '/terms' },
-      { label: 'Cookies', href: '/cookies' },
-    ],
-  },
-];
-
-const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D3FE8] focus-visible:ring-offset-2';
-const primaryButton = `inline-flex h-14 items-center justify-center rounded-2xl sm:rounded-full bg-gradient-to-r from-[#1570C8] to-[#6D3FE8] px-8 text-lg font-bold text-white shadow-[0_14px_30px_-12px_rgba(76,63,232,0.75)] transition-[filter] hover:brightness-110 ${focusRing}`;
-const secondaryButton = `inline-flex h-14 items-center justify-center rounded-2xl sm:rounded-full border-[1.5px] border-[#5B5FD9] bg-white/85 px-8 text-lg font-bold text-[#3438C4] transition-colors hover:bg-white ${focusRing}`;
-
-function Skeleton({ className }: { className: string }) {
-  return <div className={`rounded-full ${className}`} />;
-}
-
-/** Decorative pipeline board: shape only, no invented deals or numbers. */
-function PipelinePreview() {
-  return (
-    <div
-      aria-hidden="true"
-      className="relative mx-auto w-full max-w-[620px] pb-10 pl-4 pt-4 sm:pl-6 sm:pt-6"
-    >
-      <div className="rounded-[26px] border border-white/95 bg-white/80 p-4 shadow-[0_40px_80px_-30px_rgba(40,50,130,0.35)] backdrop-blur-sm sm:p-6">
-        <div className="mb-4 flex items-center gap-2 pl-10 sm:pl-0">
-          <span className="hidden h-2.5 w-2.5 rounded-full bg-[#E1E3EF] sm:block" />
-          <span className="hidden h-2.5 w-2.5 rounded-full bg-[#E1E3EF] sm:block" />
-          <span className="hidden h-2.5 w-2.5 rounded-full bg-[#E1E3EF] sm:block" />
-          <Skeleton className="ml-0 h-7 flex-1 bg-[#EEF0F7] sm:ml-3" />
-          <span className="h-7 w-7 rounded-full bg-gradient-to-br from-[#7DEBF5] to-[#6D3FE8]" />
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {pipelineStages.map((stage, stageIndex) => (
-            <div
-              key={stage.label}
-              className={`flex-col gap-2.5 ${stageIndex > 1 ? 'hidden sm:flex' : 'flex'}`}
-            >
-              <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#5C6386] sm:text-xs">
-                {stage.label}
-              </div>
-              {stage.cards.map(([w1, w2, chip], cardIndex) => (
-                <div
-                  key={cardIndex}
-                  className={`flex flex-col gap-2 rounded-xl bg-white p-3 ${
-                    chip === 'focus'
-                      ? 'border-[1.5px] border-[#8FA8F8] shadow-[0_8px_18px_-10px_rgba(59,108,246,0.6)]'
-                      : 'border border-[#ECEEF6]'
-                  }`}
-                >
-                  <div className="h-2 rounded-full bg-[#D9DCEB]" style={{ width: w1 }} />
-                  <div className="h-1.5 rounded-full bg-[#E9EBF4]" style={{ width: w2 }} />
-                  {chip === 'focus' && (
-                    <div className="h-3.5 w-10 rounded-full bg-gradient-to-r from-[#38BDF8] to-[#6D3FE8]" />
-                  )}
-                  {chip !== 'focus' && chip !== '' && (
-                    <div className={`h-3.5 w-8 rounded-full ${chip}`} />
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="absolute left-0 top-0 flex h-[58px] w-[58px] items-center justify-center rounded-full bg-white shadow-[0_12px_28px_-10px_rgba(76,63,232,0.5)] sm:h-[68px] sm:w-[68px]">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#3B82F6] to-[#7C4DF5] sm:h-[52px] sm:w-[52px]">
-          <span className="material-symbols-outlined text-2xl text-white">auto_awesome</span>
-        </div>
-      </div>
-
-      <div className="absolute bottom-0 right-0 flex w-[210px] flex-col gap-2.5 rounded-2xl bg-white p-3.5 shadow-[0_24px_50px_-20px_rgba(40,50,130,0.45)] sm:left-0 sm:right-auto sm:w-[260px] sm:p-4">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-gradient-to-br from-[#38BDF8] to-[#6D3FE8]">
-            <span className="material-symbols-outlined text-base text-white">auto_awesome</span>
-          </span>
-          <span className="text-sm font-bold text-[#0C1238]">Next best action</span>
-        </div>
-        <Skeleton className="h-1.5 w-[90%] bg-[#E3E5F0]" />
-        <Skeleton className="h-1.5 w-[62%] bg-[#E3E5F0]" />
-        <span className="hidden self-start rounded-full bg-[#EEF0FF] px-3 py-1.5 text-xs font-bold text-[#3438C4] sm:inline-block">
-          Draft follow-up
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/** Decorative phone showing a contact timeline, again shape only. */
-function WorkspacePreview() {
-  return (
-    <div
-      aria-hidden="true"
-      className="relative h-[380px] w-full overflow-hidden rounded-[28px] bg-gradient-to-br from-[#2F7CF6] via-[#5B5CF2] to-[#7C4DF5] sm:h-[500px] sm:rounded-[32px] lg:w-[560px] lg:flex-shrink-0"
-    >
-      <div className="absolute -left-10 top-16 h-16 w-[130%] -rotate-6 rounded-full bg-white/10 blur-sm" />
-      <div className="absolute -left-10 bottom-16 h-20 w-[130%] rotate-3 rounded-full bg-[#7DEBF5]/25 blur-sm" />
-      <div className="absolute left-1/2 top-11 flex h-[440px] w-[210px] -translate-x-1/2 flex-col gap-3 rounded-[36px] border-[8px] border-[#11163A] bg-[#F7F8FD] px-3.5 pt-8 sm:top-[60px] sm:w-[250px] sm:px-[18px]">
-        <div className="absolute left-1/2 top-2 h-3.5 w-16 -translate-x-1/2 rounded-full bg-[#11163A]" />
-        <div className="flex items-center gap-2.5">
-          <span className="h-10 w-10 rounded-full bg-gradient-to-br from-[#7DEBF5] to-[#6D3FE8]" />
-          <div className="flex flex-1 flex-col gap-1.5">
-            <Skeleton className="h-2 w-4/5 bg-[#CDD1E4]" />
-            <Skeleton className="h-1.5 w-1/2 bg-[#E1E4F0]" />
-          </div>
-        </div>
-        <div className="flex gap-1.5">
-          <Skeleton className="h-5 w-14 bg-[#E6EEFE]" />
-          <Skeleton className="h-5 w-11 bg-[#EFEAFE]" />
-        </div>
-        {['bg-[#38BDF8]', 'bg-[#7C4DF5]', 'bg-[#2563EB]'].map((dot) => (
-          <div key={dot} className="flex gap-2 rounded-xl border border-[#ECEEF6] bg-white p-2.5">
-            <span className={`mt-0.5 h-2.5 w-2.5 flex-shrink-0 rounded-full ${dot}`} />
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Skeleton className="h-1.5 w-[85%] bg-[#D9DCEB]" />
-              <Skeleton className="h-1.5 w-[55%] bg-[#E9EBF4]" />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="absolute bottom-10 left-6 hidden w-[180px] flex-col gap-2.5 rounded-2xl bg-white/95 p-3.5 shadow-[0_20px_40px_-18px_rgba(12,18,56,0.5)] sm:flex">
-        <span className="text-xs font-bold text-[#0C1238]">Deal moved to Proposal</span>
-        <Skeleton className="h-1.5 w-[85%] bg-[#E3E5F0]" />
-        <Skeleton className="h-1.5 w-[55%] bg-[#E3E5F0]" />
-      </div>
-    </div>
-  );
-}
-
+/**
+ * The Aurora landing page (preview). Server-rendered markup; AuroraMotion wires the
+ * stack walkthrough and the product scenes onto it once it is on the client.
+ * Every product panel shows a labelled sample workspace, never customer data.
+ */
 export function AuroraLandingPage() {
-  const year = new Date().getFullYear();
-
   return (
-    <div className={`${jakarta.className} min-h-screen bg-[#F3F4FB] text-[#0C1238]`}>
-      {/* The root layout's skip link lands above this page's own header, so
-          this one skips past it. Its id must not repeat the layout's #main-content. */}
-      <a
-        href="#aurora-main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#11175B] focus:shadow-lg"
-      >
+    <div id="aurora-page" className={`aurora-page boot ${manrope.variable}`}>
+      <a className="skip" href="#aurora-main">
         Skip to content
       </a>
-      <AuroraHeader />
-
-      <main id="aurora-main" tabIndex={-1} className="outline-none">
-        <div className="relative overflow-hidden">
-          <AuroraBackground />
-
-          <section
-            aria-labelledby="hero-heading"
-            data-testid="aurora-hero"
-            className="relative mx-auto grid max-w-6xl items-center gap-10 px-6 pb-8 pt-10 text-center lg:grid-cols-2 lg:gap-12 lg:pb-14 lg:pt-20 lg:text-left"
-          >
-            <div className="flex flex-col items-center gap-5 lg:items-start lg:gap-6">
-              <span className="inline-flex h-9 items-center gap-2 rounded-full border border-[#D6D8F2] bg-white/80 px-4 text-sm font-semibold text-[#3438C4]">
-                <span className="material-symbols-outlined text-base" aria-hidden="true">
-                  auto_awesome
-                </span>{' '}
-                AI-native CRM
-              </span>
-              <h1
-                id="hero-heading"
-                className="text-[38px] font-extrabold leading-[1.1] tracking-[-0.02em] text-[#0C1238] sm:text-5xl lg:text-[62px] lg:leading-[1.06]"
-              >
-                Close more deals with a CRM that{' '}
-                <span className="bg-gradient-to-r from-[#1570C8] to-[#6D3FE8] bg-clip-text text-transparent">
-                  thinks ahead
-                </span>
-              </h1>
-              <p className="max-w-xl text-[17px] leading-relaxed text-[#474E72] lg:text-[19px]">
-                Aurora scores your leads, keeps your pipeline current and drafts the next follow-up,
-                so your team spends its day selling instead of updating records.
-              </p>
-              <div className="flex w-full flex-col gap-3 pt-2 sm:w-auto sm:flex-row">
-                <Link href="/signup" className={primaryButton}>
-                  Get started
-                </Link>
-                <Link href="/contact" className={secondaryButton}>
-                  Book a demo
-                </Link>
-              </div>
-              <Link
-                href="/features?tour=1"
-                data-testid="tour-trigger-link"
-                data-tour-id="features-v1"
-                className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-1 text-base font-semibold text-[#3438C4] hover:text-[#1F2296] ${focusRing}`}
-              >
-                <span className="material-symbols-outlined text-xl" aria-hidden="true">
-                  play_circle
-                </span>{' '}
-                Take the tour
-              </Link>
-            </div>
-
-            <PipelinePreview />
-          </section>
-
-          <section
-            aria-labelledby="features-heading"
-            className="relative mx-auto max-w-6xl px-6 pb-16 pt-6 lg:pb-28"
-          >
-            <h2 id="features-heading" className="sr-only">
-              What Aurora does for your team
-            </h2>
-            <ul className="grid gap-3.5 md:grid-cols-3 md:gap-7">
-              {features.map((feature) => (
-                <li key={feature.title} data-testid="feature-card">
-                  <Link
-                    href="/features"
-                    className={`group flex h-full items-center gap-4 rounded-[20px] border border-[#E6E8F3] bg-white/90 p-4 shadow-[0_18px_40px_-28px_rgba(40,50,130,0.4)] transition-shadow hover:shadow-[0_24px_50px_-24px_rgba(40,50,130,0.45)] md:flex-col md:items-start md:gap-4 md:rounded-[22px] md:p-8 ${focusRing}`}
-                  >
-                    <span
-                      className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl md:h-[60px] md:w-[60px] ${feature.tint}`}
-                    >
-                      <span className="material-symbols-outlined text-[28px]" aria-hidden="true">
-                        {feature.icon}
-                      </span>
-                    </span>
-                    <span className="flex flex-1 flex-col gap-1 text-left md:gap-3">
-                      <span className="text-lg font-bold text-[#0C1238] md:text-[22px]">
-                        {feature.title}
-                      </span>
-                      <span className="text-[15px] leading-normal text-[#474E72] md:text-base md:leading-relaxed">
-                        {feature.description}
-                      </span>
-                      <span className="hidden items-center gap-1.5 pt-2 text-[15px] font-bold text-[#3438C4] md:inline-flex">
-                        Learn more{' '}
-                        <span
-                          className="material-symbols-outlined text-lg transition-transform group-hover:translate-x-0.5"
-                          aria-hidden="true"
-                        >
-                          arrow_forward
-                        </span>
-                      </span>
-                    </span>
-                    {/* The icon font sets its own display, so hide a wrapper instead. */}
-                    <span
-                      className="flex flex-shrink-0 text-[#5C6386] md:hidden"
-                      aria-hidden="true"
-                    >
-                      <span className="material-symbols-outlined">chevron_right</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </div>
-
-        <section
-          aria-labelledby="workspace-heading"
-          className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-16 lg:flex-row lg:items-center lg:justify-between lg:gap-20 lg:pb-28"
-        >
-          <div className="flex max-w-[520px] flex-col gap-5">
-            <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#4B3FD6] lg:text-[13px]">
-              One workspace
-            </span>
-            <h2
-              id="workspace-heading"
-              className="text-[30px] font-extrabold leading-[1.15] tracking-[-0.02em] lg:text-[46px] lg:leading-[1.12]"
-            >
-              Every contact, deal and conversation in one place
-            </h2>
-            <p className="text-[17px] leading-relaxed text-[#474E72] lg:text-lg">
-              Stop stitching together spreadsheets, inboxes and notes. Aurora keeps the record
-              complete, on your desk and in your pocket.
-            </p>
-            <ul className="flex flex-col gap-3.5 pt-1">
-              {workspacePoints.map((point) => (
-                <li
-                  key={point}
-                  className="flex items-start gap-3 text-base font-medium lg:text-[17px]"
-                >
-                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#E6EEFE] text-[#1D5FD8]">
-                    <span className="material-symbols-outlined text-base" aria-hidden="true">
-                      check
-                    </span>
-                  </span>
-                  <span className="pt-0.5">{point}</span>
-                </li>
-              ))}
-            </ul>
+      <header className="nav" id="nav">
+        <div className="wrap nav-row">
+          <a className="brand" href="#aurora-main" aria-label="Aurora home">
+            <img src="/brand/aurora/aurora-wave.webp" alt="" className="brand-mark" />
+            <img src="/brand/aurora/aurora-wordmark.webp" alt="Aurora" className="brand-word" />
+          </a>
+          <nav className="nav-links" aria-label="Primary">
+            <a href="#platform">Platform</a>
+            <a href="#agents">AI agents</a>
+            <a href="#security">Security</a>
+            <a href="#pricing">Pricing</a>
+          </nav>
+          <div className="nav-cta">
+            <Link href="/login" className="link">
+              Log in
+            </Link>
+            <Link href="/signup" className="btn btn-primary btn-sm">
+              Get started
+            </Link>
           </div>
-          <WorkspacePreview />
+          <details className="nav-menu">
+            <summary aria-label="Menu">
+              <span className="material-symbols-outlined">menu</span>
+            </summary>
+            <nav aria-label="Mobile">
+              <a href="#platform">Platform</a>
+              <a href="#agents">AI agents</a>
+              <a href="#security">Security</a>
+              <a href="#pricing">Pricing</a>
+              <Link href="/login">Log in</Link>
+            </nav>
+          </details>
+        </div>
+      </header>
+
+      <main id="aurora-main" tabIndex={-1}>
+        <section className="stage">
+          <div className="hero-bg">
+            <AuroraBackground />
+          </div>
+          <div className="wrap stage-grid">
+            <div className="stage-copy">
+              <div className="hero">
+                <p className="eyebrow">
+                  <span className="pulse"></span>The AI-native CRM
+                </p>
+                <h1>The CRM that works your pipeline for you.</h1>
+                <p className="lede">
+                  Aurora&apos;s AI agents score every lead, draft every follow-up and flag every
+                  deal going quiet. Then they wait for your yes. Your team spends the day selling,
+                  not updating records.
+                </p>
+                <div className="cta-row">
+                  <Link href="/signup" className="btn btn-primary">
+                    Get started
+                  </Link>
+                  <Link href="/contact" className="btn btn-secondary">
+                    Book a demo
+                  </Link>
+                </div>
+                <ul className="hero-trust">
+                  <li>
+                    <span className="material-symbols-outlined">task_alt</span>Human approval on
+                    every AI action
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">lock</span>Isolated workspace data
+                  </li>
+                </ul>
+              </div>
+
+              <div className="walk" id="platform">
+                <p className="eyebrow">How Aurora is built</p>
+                <h2>Five layers. One system. You on top.</h2>
+                <p className="section-lede">
+                  Scroll through the stack. The agents do the heavy lifting, and nothing they
+                  prepare goes out without a person&apos;s approval.
+                </p>
+              </div>
+              <article className="layer-step" data-layer="agents">
+                <p className="layer-tag" style={{ '--c': '#7655F6' } as CSSProperties}>
+                  <span></span>01 · AI agents
+                </p>
+                <h3>Ten agents working every record, all day.</h3>
+                <p>
+                  They score leads and accounts, spot churn risk, read the tone of every
+                  conversation, summarise cases and draft the next email. Your team starts each
+                  morning with the work already prepared.
+                </p>
+                <ul className="chips">
+                  <li>
+                    <span className="material-symbols-outlined">insights</span>Lead scoring
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">trending_down</span>Churn risk
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">edit_note</span>Email drafting
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">mood</span>Sentiment
+                  </li>
+                </ul>
+              </article>
+              <article className="layer-step" data-layer="control">
+                <p className="layer-tag" style={{ '--c': '#12A6A1' } as CSSProperties}>
+                  <span style={{ '--c': '#28D9D4' } as CSSProperties}></span>02 · Human approval
+                </p>
+                <h3>Nothing goes out until you say yes.</h3>
+                <p>
+                  Every action an agent proposes lands in one approval queue, with its reasoning and
+                  sources attached. Approve it, edit it or dismiss it. The AI never acts on its own.
+                </p>
+                <ul className="chips">
+                  <li>
+                    <span className="material-symbols-outlined">task_alt</span>Approve
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">edit</span>Edit
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">close</span>Dismiss
+                  </li>
+                </ul>
+              </article>
+              <article className="layer-step" data-layer="pipeline">
+                <p className="layer-tag" style={{ '--c': '#2A78F6' } as CSSProperties}>
+                  <span></span>03 · Pipeline
+                </p>
+                <h3>Every deal, and the next move for each.</h3>
+                <p>
+                  Leads, accounts and a deal board from first touch to signed contract, with the
+                  deals that need you today pinned to the top.
+                </p>
+                <ul className="chips">
+                  <li>
+                    <span className="material-symbols-outlined">view_kanban</span>Deal board
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">person_search</span>Leads
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">apartment</span>Accounts
+                  </li>
+                </ul>
+              </article>
+              <article className="layer-step" data-layer="service">
+                <p className="layer-tag" style={{ '--c': '#7E6BD9' } as CSSProperties}>
+                  <span style={{ '--c': '#BCA8FF' } as CSSProperties}></span>04 · Service &amp;
+                  insight
+                </p>
+                <h3>Customers looked after long after the sale.</h3>
+                <p>
+                  Cases and tickets run on service-level clocks, and the insights hub turns activity
+                  across the business into a short list of what to do next.
+                </p>
+                <ul className="chips">
+                  <li>
+                    <span className="material-symbols-outlined">support_agent</span>Cases
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">timer</span>SLAs
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">monitoring</span>Insights hub
+                  </li>
+                </ul>
+              </article>
+              <article className="layer-step" data-layer="foundation">
+                <p className="layer-tag" style={{ '--c': '#11175B' } as CSSProperties}>
+                  <span></span>05 · Foundation
+                </p>
+                <h3>Enterprise-grade underneath.</h3>
+                <p>
+                  Each workspace is isolated in the database, sign-in is protected with multi-factor
+                  authentication, and every change is written to an audit log.
+                </p>
+                <ul className="chips">
+                  <li>
+                    <span className="material-symbols-outlined">lock</span>Tenant isolation
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">verified_user</span>MFA
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">history</span>Audit log
+                  </li>
+                </ul>
+              </article>
+              <div className="stage-end"></div>
+            </div>
+            <div className="stage-object">
+              <div className="object-sticky">
+                <canvas id="stack" aria-hidden="true"></canvas>
+                <p className="sr-only">
+                  The Aurora platform as five stacked layers: AI agents, human approval, pipeline,
+                  service and insight, and the foundation underneath.
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <section
-          data-testid="cta-section"
-          aria-labelledby="cta-heading"
-          className="relative mx-4 overflow-hidden rounded-[28px] bg-[#0C1238] px-6 py-12 text-center sm:mx-6 lg:mx-auto lg:max-w-6xl lg:rounded-[36px] lg:px-20 lg:py-20"
-        >
-          <Image
-            src="/brand/aurora/aurora-wave.webp"
-            alt=""
-            width={460}
-            height={174}
-            className="pointer-events-none absolute -right-24 -top-8 w-[280px] opacity-35 lg:-right-20 lg:w-[460px]"
-          />
-          <div className="relative mx-auto flex max-w-xl flex-col items-center gap-4 lg:gap-5">
-            <h2
-              id="cta-heading"
-              className="text-[30px] font-extrabold leading-[1.15] tracking-[-0.02em] text-white lg:text-[44px]"
+        <section className="proof">
+          <div className="wrap proof-row">
+            <div className="stat">
+              <b>10</b>
+              <span>AI agents built in, from lead scoring to email drafting</span>
+            </div>
+            <div className="stat">
+              <b>1</b>
+              <span>approval queue where every AI action waits for a person</span>
+            </div>
+            <div className="stat">
+              <b>13</b>
+              <span>integrations ready today, from Gmail to Stripe</span>
+            </div>
+            <div className="stat">
+              <b>212</b>
+              <span>product screens, from first lead to closed case</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="feature wide" id="agents">
+          <div className="wrap feature-grid wide-grid">
+            <div className="feature-copy reveal">
+              <p className="eyebrow">Approval queue</p>
+              <h2>See why before you say yes.</h2>
+              <p className="section-lede">
+                An agent spots a renewal at risk and drafts the follow-up. You see what it noticed
+                and exactly where it looked. Then you decide.
+              </p>
+              <ol className="callouts">
+                <li>
+                  <b>1</b>The suggestion, in plain words
+                </li>
+                <li>
+                  <b>2</b>What it noticed, with sources you can check
+                </li>
+                <li>
+                  <b>3</b>Your call: approve, edit or dismiss
+                </li>
+              </ol>
+            </div>
+            <div
+              className="scene stage-violet"
+              id="approval-scene"
+              aria-label="Approval queue in a sample workspace"
             >
-              Put Aurora on your pipeline
-            </h2>
-            <p className="text-base leading-relaxed text-[#C9CDEA] lg:text-lg">
-              Bring your contacts and deals across, and see which leads Aurora puts at the top of
-              your list.
-            </p>
-            <div className="flex w-full flex-col gap-3 pt-2 sm:w-auto sm:flex-row">
-              <Link href="/signup" className={primaryButton}>
+              <div className="app tilt">
+                <div className="titlebar">
+                  <span className="lights">
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                  </span>
+                  <span className="url">
+                    <span className="material-symbols-outlined">lock</span>app.aurora.io/approvals
+                  </span>
+                </div>
+                <aside className="rail" aria-hidden="true">
+                  <img src="/brand/aurora/aurora-wave.webp" alt="" className="rail-logo" />
+                  <span className="material-symbols-outlined">home</span>
+                  <span className="material-symbols-outlined">view_kanban</span>
+                  <span className="material-symbols-outlined on">task_alt</span>
+                  <span className="material-symbols-outlined">support_agent</span>
+                  <span className="material-symbols-outlined">monitoring</span>
+                  <span className="rail-me">TO</span>
+                </aside>
+                <div className="app-main">
+                  <header className="topbar">
+                    <span className="crumb">
+                      Approvals <i>/</i> <b>Waiting for you</b>
+                      <em className="count">3</em>
+                    </span>
+                    <span className="search">
+                      <span className="material-symbols-outlined">search</span>Search<kbd>⌘K</kbd>
+                    </span>
+                    <span className="avatars">
+                      <i style={{ '--a': '#7655F6' } as CSSProperties}>MC</i>
+                      <i style={{ '--a': '#2A78F6' } as CSSProperties}>JP</i>
+                      <i style={{ '--a': '#1BAFAA' } as CSSProperties}>SK</i>
+                    </span>
+                  </header>
+                  <div className="ap-grid">
+                    <ul className="queue">
+                      <li className="q active urgent" id="q1">
+                        <span className="qdot" style={{ '--c': '#7655F6' } as CSSProperties}></span>
+                        <div>
+                          <b>Follow up with Maya Chen</b>
+                          <small>Follow-up agent · 2m</small>
+                        </div>
+                        <span className="state pending" id="q1-state">
+                          Pending
+                        </span>
+                      </li>
+                      <li className="q">
+                        <span className="qdot" style={{ '--c': '#2A78F6' } as CSSProperties}></span>
+                        <div>
+                          <b>Re-score 12 new leads</b>
+                          <small>Lead scoring · 8m</small>
+                        </div>
+                        <span className="state pending">Pending</span>
+                      </li>
+                      <li className="q">
+                        <span className="qdot" style={{ '--c': '#7655F6' } as CSSProperties}></span>
+                        <div>
+                          <b>Draft reply to Adatum</b>
+                          <small>Email writer · 12m</small>
+                        </div>
+                        <span className="state pending">Pending</span>
+                      </li>
+                      <li className="q">
+                        <span className="qdot" style={{ '--c': '#28D9D4' } as CSSProperties}></span>
+                        <div>
+                          <b>Summarise case 4821</b>
+                          <small>Case summary · 21m</small>
+                        </div>
+                        <span className="state done">Approved</span>
+                      </li>
+                      <li className="q">
+                        <span className="qdot" style={{ '--c': '#BCA8FF' } as CSSProperties}></span>
+                        <div>
+                          <b>Flag Contoso as at risk</b>
+                          <small>Churn risk · 1h</small>
+                        </div>
+                        <span className="state done">Approved</span>
+                      </li>
+                      <li className="q">
+                        <span className="qdot" style={{ '--c': '#2A78F6' } as CSSProperties}></span>
+                        <div>
+                          <b>Qualify Tailspin lead</b>
+                          <small>Qualification · 2h</small>
+                        </div>
+                        <span className="state done">Approved</span>
+                      </li>
+                      <li className="q">
+                        <span className="qdot" style={{ '--c': '#7655F6' } as CSSProperties}></span>
+                        <div>
+                          <b>Next step for Litware</b>
+                          <small>Next best action · 3h</small>
+                        </div>
+                        <span className="state edited">Edited</span>
+                      </li>
+                    </ul>
+                    <div className="detail">
+                      <div className="d-head">
+                        <span className="agent-badge">
+                          <span className="material-symbols-outlined">auto_awesome</span>Follow-up
+                          agent
+                        </span>
+                        <span className="conf">
+                          <span className="conf-bar">
+                            <i></i>
+                          </span>
+                          <span>High confidence</span>
+                        </span>
+                      </div>
+                      <p className="d-title">
+                        <i className="marker">1</i>Follow up with Maya Chen at Northwind before the
+                        renewal.
+                      </p>
+                      <div className="d-why">
+                        <i className="marker">2</i>
+                        <p className="label">What it noticed</p>
+                        <ul>
+                          <li className="why" id="why-renewal">
+                            <span className="material-symbols-outlined">event</span>Renewal date is
+                            in 14 days<em>Contract</em>
+                          </li>
+                          <li className="why">
+                            <span className="material-symbols-outlined">mark_email_unread</span>No
+                            reply to the last two emails<em>Inbox</em>
+                          </li>
+                          <li className="why">
+                            <span className="material-symbols-outlined">trending_down</span>Account
+                            score dropped this week<em>Scoring</em>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="d-draft">
+                        <p className="label">Draft</p>
+                        <p>
+                          <span id="typed">
+                            Hi Maya, ahead of your renewal on the 14th I wanted to check the new
+                            reporting is working for your team.
+                          </span>
+                          <span className="caret"></span>
+                        </p>
+                      </div>
+                      <div className="d-actions">
+                        <i className="marker">3</i>
+                        <button className="btn btn-primary btn-sm" id="approve-btn" tabIndex={-1}>
+                          <span className="material-symbols-outlined">check</span>Approve
+                        </button>
+                        <button className="btn btn-secondary btn-sm" tabIndex={-1}>
+                          Edit
+                        </button>
+                        <button className="btn btn-ghost btn-sm" tabIndex={-1}>
+                          Dismiss
+                        </button>
+                        <span className="hint">You decide</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="float f-source" id="fsource">
+                <p className="label">Source</p>
+                <b>Northwind contract</b>
+                <span>Renews 14 Oct · auto-renew off</span>
+              </div>
+              <div className="float f-toast" id="toast">
+                <span className="material-symbols-outlined">check_circle</span>
+                <div>
+                  <b>Approved by you</b>
+                  <small>Email sent to Maya Chen · 09:14</small>
+                </div>
+              </div>
+              <svg className="cursor" id="cursor" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M4 2l15 9-6.5 1.6L9.8 19z"
+                  fill="#11175B"
+                  stroke="#fff"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span className="sample">Sample workspace</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="feature alt showcase">
+          <div className="wrap">
+            <div className="center reveal">
+              <p className="eyebrow">Pipeline</p>
+              <h2>Start every morning with the deals that need you.</h2>
+              <p className="section-lede">
+                Aurora flags the deals going quiet and suggests the next move for each. Review the
+                draft, send it, and watch the deal move forward.
+              </p>
+            </div>
+            <div
+              className="scene stage-blue board-stage"
+              id="board-scene"
+              aria-label="Deal board in a sample workspace"
+            >
+              <div className="app tilt-soft">
+                <div className="titlebar">
+                  <span className="lights">
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                  </span>
+                  <span className="url">
+                    <span className="material-symbols-outlined">lock</span>app.aurora.io/pipeline
+                  </span>
+                </div>
+                <aside className="rail" aria-hidden="true">
+                  <img src="/brand/aurora/aurora-wave.webp" alt="" className="rail-logo" />
+                  <span className="material-symbols-outlined">home</span>
+                  <span className="material-symbols-outlined on">view_kanban</span>
+                  <span className="material-symbols-outlined">task_alt</span>
+                  <span className="material-symbols-outlined">support_agent</span>
+                  <span className="material-symbols-outlined">monitoring</span>
+                  <span className="rail-me">TO</span>
+                </aside>
+                <div className="app-main">
+                  <header className="topbar">
+                    <span className="crumb">
+                      Pipeline <i>/</i> <b>This quarter</b>
+                    </span>
+                    <span className="filters">
+                      <span className="fchip">
+                        <span className="material-symbols-outlined">person</span>All owners
+                      </span>
+                      <span className="fchip on">
+                        <span className="material-symbols-outlined">bolt</span>Needs you today · 2
+                      </span>
+                    </span>
+                    <span className="seg">
+                      <b>Board</b>
+                      <span>List</span>
+                      <span>Forecast</span>
+                    </span>
+                  </header>
+                  <div className="board2" id="board">
+                    <div className="col2" data-stage="new">
+                      <h4>
+                        <span className="sd" style={{ '--c': '#BCA8FF' } as CSSProperties}></span>
+                        {'New'}
+                        <em>£71.9k</em>
+                      </h4>
+                      <div className="deal">
+                        <b>Northwind</b>
+                        <small>£24,000</small>
+                        <div className="prob">
+                          <i style={{ width: '20%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#7655F6' } as CSSProperties}>
+                          MC
+                        </span>
+                      </div>
+                      <div className="deal">
+                        <b>Fabrikam</b>
+                        <small>£9,500</small>
+                        <div className="prob">
+                          <i style={{ width: '15%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#2A78F6' } as CSSProperties}>
+                          JP
+                        </span>
+                      </div>
+                      <div className="deal">
+                        <b>Tailspin</b>
+                        <small>£14,200</small>
+                        <div className="prob">
+                          <i style={{ width: '18%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#1BAFAA' } as CSSProperties}>
+                          SK
+                        </span>
+                      </div>
+                      <div className="deal">
+                        <b>Coho Winery</b>
+                        <small>£24,200</small>
+                        <div className="prob">
+                          <i style={{ width: '22%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#7655F6' } as CSSProperties}>
+                          MC
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col2" data-stage="qualified">
+                      <h4>
+                        <span className="sd" style={{ '--c': '#2A78F6' } as CSSProperties}></span>
+                        {'Qualified'}
+                        <em>£75.3k</em>
+                      </h4>
+                      <div className="deal urgent" id="mover">
+                        <b>Contoso</b>
+                        <small>£41,000</small>
+                        <div className="prob">
+                          <i style={{ width: '45%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#1BAFAA' } as CSSProperties}>
+                          SK
+                        </span>
+                        <em className="tag cold">
+                          <span className="material-symbols-outlined">schedule</span>No reply in 9
+                          days
+                        </em>
+                      </div>
+                      <div className="deal">
+                        <b>Litware</b>
+                        <small>£12,800</small>
+                        <div className="prob">
+                          <i style={{ width: '40%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#2A78F6' } as CSSProperties}>
+                          JP
+                        </span>
+                      </div>
+                      <div className="deal">
+                        <b>Woodgrove</b>
+                        <small>£21,500</small>
+                        <div className="prob">
+                          <i style={{ width: '38%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#7655F6' } as CSSProperties}>
+                          MC
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col2" data-stage="proposal">
+                      <h4>
+                        <span className="sd" style={{ '--c': '#7655F6' } as CSSProperties}></span>
+                        {'Proposal'}
+                        <em>£51.5k</em>
+                      </h4>
+                      <div className="deal">
+                        <b>Adatum</b>
+                        <small>£33,500</small>
+                        <div className="prob">
+                          <i style={{ width: '65%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#7655F6' } as CSSProperties}>
+                          MC
+                        </span>
+                      </div>
+                      <div className="deal">
+                        <b>Proseware</b>
+                        <small>£18,000</small>
+                        <div className="prob">
+                          <i style={{ width: '60%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#1BAFAA' } as CSSProperties}>
+                          SK
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col2" data-stage="negotiation">
+                      <h4>
+                        <span className="sd" style={{ '--c': '#11175B' } as CSSProperties}></span>
+                        {'Negotiation'}
+                        <em>£38.0k</em>
+                      </h4>
+                      <div className="deal">
+                        <b>Blue Yonder</b>
+                        <small>£38,000</small>
+                        <div className="prob">
+                          <i style={{ width: '80%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#2A78F6' } as CSSProperties}>
+                          JP
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col2" data-stage="won">
+                      <h4>
+                        <span className="sd" style={{ '--c': '#28D9D4' } as CSSProperties}></span>
+                        {'Won'}
+                        <em>£46.5k</em>
+                      </h4>
+                      <div className="deal won">
+                        <b>Wingtip</b>
+                        <small>£27,000</small>
+                        <div className="prob">
+                          <i style={{ width: '100%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#2A78F6' } as CSSProperties}>
+                          JP
+                        </span>
+                      </div>
+                      <div className="deal won">
+                        <b>Lucerne</b>
+                        <small>£19,500</small>
+                        <div className="prob">
+                          <i style={{ width: '100%' } as CSSProperties}></i>
+                        </div>
+                        <span className="who" style={{ '--a': '#1BAFAA' } as CSSProperties}>
+                          SK
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="float f-nba" id="nba">
+                <span className="agent-badge">
+                  <span className="material-symbols-outlined">auto_awesome</span>Next best action
+                </span>
+                <b>Send Contoso a pricing recap</b>
+                <small>They opened the proposal twice this week and haven&apos;t replied.</small>
+                <span className="nba-actions">
+                  <span className="mini primary">Review draft</span>
+                  <span className="mini">Later</span>
+                </span>
+              </div>
+              <span className="sample">Sample workspace</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="bento-sec">
+          <div className="wrap">
+            <div className="center reveal">
+              <p className="eyebrow">Beyond the pipeline</p>
+              <h2>The whole customer, covered.</h2>
+              <p className="section-lede">
+                The same agents keep watch after the deal closes, so nothing slips between sales and
+                service.
+              </p>
+            </div>
+            <div className="bento reveal">
+              <article className="bcard span2">
+                <div className="bcard-copy">
+                  <p className="btag" style={{ '--c': '#7655F6' } as CSSProperties}>
+                    Churn risk
+                  </p>
+                  <h3>Spot the accounts slipping away, weeks early.</h3>
+                </div>
+                <div className="mini-app">
+                  <div className="row head">
+                    <span>Account</span>
+                    <span>Risk</span>
+                    <span>Why</span>
+                    <span>Usage, 8 weeks</span>
+                  </div>
+                  <div className="row">
+                    <span className="who2">
+                      <i style={{ '--a': '#1BAFAA' } as CSSProperties}>C</i>
+                      <b>Contoso</b>
+                    </span>
+                    <span className="pill high">High</span>
+                    <span>Usage down 3 weeks</span>
+                    <svg className="spark" viewBox="0 0 100 30" preserveAspectRatio="none">
+                      <polyline
+                        points="0,4 14,4 28,7 42,7 57,11 71,18 85,22 100,26"
+                        fill="none"
+                        stroke="#d64541"
+                        strokeWidth="2"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </svg>
+                  </div>
+                  <div className="row">
+                    <span className="who2">
+                      <i style={{ '--a': '#2A78F6' } as CSSProperties}>L</i>
+                      <b>Litware</b>
+                    </span>
+                    <span className="pill mid">Medium</span>
+                    <span>Support tickets up</span>
+                    <svg className="spark" viewBox="0 0 100 30" preserveAspectRatio="none">
+                      <polyline
+                        points="0,12 14,8 28,12 42,8 57,12 71,12 85,16 100,16"
+                        fill="none"
+                        stroke="#b7790d"
+                        strokeWidth="2"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </svg>
+                  </div>
+                  <div className="row">
+                    <span className="who2">
+                      <i style={{ '--a': '#11175B' } as CSSProperties}>W</i>
+                      <b>Wingtip</b>
+                    </span>
+                    <span className="pill low">Low</span>
+                    <span>Weekly logins steady</span>
+                    <svg className="spark" viewBox="0 0 100 30" preserveAspectRatio="none">
+                      <polyline
+                        points="0,24 14,21 28,21 42,17 57,17 71,13 85,13 100,9"
+                        fill="none"
+                        stroke="#10a39d"
+                        strokeWidth="2"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </article>
+              <article className="bcard">
+                <div className="bcard-copy">
+                  <p className="btag" style={{ '--c': '#d64541' } as CSSProperties}>
+                    Ticket SLAs
+                  </p>
+                  <h3>Never miss a first response.</h3>
+                </div>
+                <div className="sla-list">
+                  <div className="sla">
+                    <span
+                      className="ring"
+                      style={{ '--c': '#d64541', '--p': '82' } as CSSProperties}
+                    ></span>
+                    <div>
+                      <b>Login loop on mobile</b>
+                      <small>Urgent · 38 min left</small>
+                    </div>
+                  </div>
+                  <div className="sla">
+                    <span
+                      className="ring"
+                      style={{ '--c': '#b7790d', '--p': '45' } as CSSProperties}
+                    ></span>
+                    <div>
+                      <b>Export missing columns</b>
+                      <small>High · 4 h left</small>
+                    </div>
+                  </div>
+                  <div className="sla">
+                    <span
+                      className="ring"
+                      style={{ '--c': '#10a39d', '--p': '100' } as CSSProperties}
+                    ></span>
+                    <div>
+                      <b>Invite email delayed</b>
+                      <small>Normal · met</small>
+                    </div>
+                  </div>
+                </div>
+              </article>
+              <article className="bcard">
+                <div className="bcard-copy">
+                  <p className="btag" style={{ '--c': '#2A78F6' } as CSSProperties}>
+                    Sentiment
+                  </p>
+                  <h3>Know which conversations need a reply first.</h3>
+                </div>
+                <div className="tone">
+                  <div className="tone-row">
+                    <b>Contoso · billing thread</b>
+                    <span className="pill high">Negative</span>
+                  </div>
+                  <div className="tone-row">
+                    <b>Adatum · onboarding</b>
+                    <span className="pill mid">Mixed</span>
+                  </div>
+                  <div className="tone-row">
+                    <b>Fabrikam · renewal call</b>
+                    <span className="pill low">Positive</span>
+                  </div>
+                </div>
+              </article>
+              <article className="bcard span2">
+                <div className="bcard-copy">
+                  <p className="btag" style={{ '--c': '#12A6A1' } as CSSProperties}>
+                    Case workflows
+                  </p>
+                  <h3>Cases routed, prioritised and summarised, with you signing off.</h3>
+                </div>
+                <div className="flow2">
+                  <div className="fnode">
+                    <span className="material-symbols-outlined">inbox</span>Case opened
+                  </div>
+                  <div className="fnode ai">
+                    <span className="material-symbols-outlined">auto_awesome</span>Priority
+                    predicted
+                  </div>
+                  <div className="fnode">
+                    <span className="material-symbols-outlined">person</span>Routed to owner
+                  </div>
+                  <div className="fnode ai">
+                    <span className="material-symbols-outlined">summarize</span>Summary drafted
+                  </div>
+                  <div className="fnode done">
+                    <span className="material-symbols-outlined">task_alt</span>Resolved
+                  </div>
+                </div>
+              </article>
+              <article className="bcard span3 insights-card">
+                <div className="bcard-copy">
+                  <p className="btag" style={{ '--c': '#7655F6' } as CSSProperties}>
+                    Insights hub
+                  </p>
+                  <h3>A short list of what to do next, read from everything above.</h3>
+                </div>
+                <div className="insights">
+                  <div className="kpis">
+                    <div className="kpi">
+                      <b>3</b>
+                      <small>Accounts showing churn signals</small>
+                    </div>
+                    <div className="kpi">
+                      <b>Proposal</b>
+                      <small>Stage where deals stall most</small>
+                    </div>
+                    <div className="kpi">
+                      <b>Billing</b>
+                      <small>Top case topic this week</small>
+                    </div>
+                  </div>
+                  <div className="chart">
+                    <p className="label">Days deals spend in each stage</p>
+                    <div className="bars">
+                      <div>
+                        <i style={{ height: '30%' } as CSSProperties}></i>
+                        <span>New</span>
+                      </div>
+                      <div>
+                        <i style={{ height: '44%' } as CSSProperties}></i>
+                        <span>Qualified</span>
+                      </div>
+                      <div>
+                        <i className="hi" style={{ height: '90%' } as CSSProperties}></i>
+                        <span>Proposal</span>
+                      </div>
+                      <div>
+                        <i style={{ height: '52%' } as CSSProperties}></i>
+                        <span>Negotiation</span>
+                      </div>
+                      <div>
+                        <i style={{ height: '20%' } as CSSProperties}></i>
+                        <span>Won</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <p className="bento-note">Sample workspace data</p>
+          </div>
+        </section>
+
+        <section className="integrations">
+          <div className="wrap">
+            <div className="center reveal">
+              <p className="eyebrow">Integrations</p>
+              <h2>Plugs into the tools your team already lives in.</h2>
+              <p className="section-lede">
+                Email, chat, payments and sign-in on day one. Build your own with webhooks, React
+                hooks and a CLI.
+              </p>
+            </div>
+            <div className="logos reveal">
+              <div className="logo">
+                <img src="/brand/aurora/logos/gmail.svg" alt="" />
+                <span>Gmail</span>
+              </div>
+              <div className="logo">
+                <img src="/brand/aurora/logos/microsoftoutlook.svg" alt="" />
+                <span>Outlook</span>
+              </div>
+              <div className="logo">
+                <img src="/brand/aurora/logos/slack.svg" alt="" />
+                <span>Slack</span>
+              </div>
+              <div className="logo">
+                <img src="/brand/aurora/logos/microsoftteams.svg" alt="" />
+                <span>Microsoft Teams</span>
+              </div>
+              <div className="logo">
+                <img src="/brand/aurora/logos/stripe.svg" alt="" />
+                <span>Stripe</span>
+              </div>
+              <div className="logo">
+                <img src="/brand/aurora/logos/paypal.svg" alt="" />
+                <span>PayPal</span>
+              </div>
+              <div className="logo">
+                <img src="/brand/aurora/logos/google.svg" alt="" />
+                <span>Google sign-in</span>
+              </div>
+              <div className="logo">
+                <img src="/brand/aurora/logos/microsoftazure.svg" alt="" />
+                <span>Azure sign-in</span>
+              </div>
+            </div>
+            <div className="dev-row reveal">
+              {DEV_CHIPS.map(({ label, icon, logo, status }) => (
+                <span key={label} className={status ? `dev ${status}` : 'dev'}>
+                  {logo ? (
+                    <img src={logo} alt="" />
+                  ) : (
+                    <span className="material-symbols-outlined">{icon}</span>
+                  )}
+                  {label}
+                  {status && <em>{status === 'beta' ? 'Beta' : 'Coming soon'}</em>}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="security dark" id="security">
+          <div className="wrap feature-grid">
+            <div className="feature-copy reveal">
+              <p className="eyebrow on-dark">Security and governance</p>
+              <h2>Built for teams that answer to someone.</h2>
+              <p className="section-lede">
+                Control, isolation and a record of every change: the basics your security review
+                asks for, built in from day one. Our compliance roadmap is yours on request.
+              </p>
+              <Link href="/contact" className="btn btn-onDark">
+                Request the compliance roadmap
+              </Link>
+            </div>
+            <div className="controls reveal">
+              <div className="control">
+                <span className="material-symbols-outlined">task_alt</span>
+                <b>Human approval</b>
+                <p>No AI action runs until a person approves it.</p>
+              </div>
+              <div className="control">
+                <span className="material-symbols-outlined">database</span>
+                <b>Tenant isolation</b>
+                <p>Row-level security keeps every workspace&apos;s data apart.</p>
+              </div>
+              <div className="control">
+                <span className="material-symbols-outlined">verified_user</span>
+                <b>Multi-factor sign-in</b>
+                <p>MFA protects every account.</p>
+              </div>
+              <div className="control">
+                <span className="material-symbols-outlined">history</span>
+                <b>Audit log</b>
+                <p>Who changed what, and when, for every record.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="pricing" id="pricing">
+          <div className="wrap">
+            <div className="price-card reveal">
+              <div>
+                <p className="eyebrow">Pricing</p>
+                <h2>A plan built around how your team sells.</h2>
+                <p className="section-lede">
+                  Tell us your team size and the parts of Aurora you need. We will put together a
+                  plan and walk you through it.
+                </p>
+                <div className="cta-row">
+                  <Link href="/contact" className="btn btn-primary">
+                    Get a tailored plan
+                  </Link>
+                  <Link href="/contact" className="btn btn-secondary">
+                    Book a demo
+                  </Link>
+                </div>
+              </div>
+              <ul className="includes">
+                <li>
+                  <span className="material-symbols-outlined">check</span>All ten AI agents
+                </li>
+                <li>
+                  <span className="material-symbols-outlined">check</span>Approval queue and audit
+                  log
+                </li>
+                <li>
+                  <span className="material-symbols-outlined">check</span>Pipeline, leads and
+                  accounts
+                </li>
+                <li>
+                  <span className="material-symbols-outlined">check</span>Cases, tickets and SLAs
+                </li>
+                <li>
+                  <span className="material-symbols-outlined">check</span>Insights hub
+                </li>
+                <li>
+                  <span className="material-symbols-outlined">check</span>Gmail, Outlook, Slack and
+                  Teams
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section className="faq">
+          <div className="wrap narrow reveal">
+            <h2>Questions buyers ask.</h2>
+            {FAQ.map(({ question, answer }) => (
+              <details key={question}>
+                <summary>
+                  {question}
+                  <span className="material-symbols-outlined">expand_more</span>
+                </summary>
+                <p>{answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <section className="final">
+          <img
+            src="/brand/aurora/bg/ribbon-left.webp"
+            className="final-ribbon left"
+            alt=""
+            aria-hidden="true"
+          />
+          <img
+            src="/brand/aurora/bg/ribbon-right.webp"
+            className="final-ribbon right"
+            alt=""
+            aria-hidden="true"
+          />
+          <div className="wrap final-inner reveal">
+            <h2>Give your team back the hours they lose to busywork.</h2>
+            <p>Aurora prepares the work. Your people make the calls.</p>
+            <div className="cta-row center-row">
+              <Link href="/signup" className="btn btn-primary">
                 Get started
               </Link>
-              <Link
-                href="/contact"
-                className={`inline-flex h-14 items-center justify-center rounded-2xl border-[1.5px] border-white/60 px-8 text-lg font-bold text-white transition-colors hover:bg-white/10 sm:rounded-full ${focusRing} focus-visible:ring-offset-[#0C1238]`}
-              >
+              <Link href="/contact" className="btn btn-onDark">
                 Book a demo
               </Link>
             </div>
@@ -410,35 +1142,34 @@ export function AuroraLandingPage() {
         </section>
       </main>
 
-      <footer className="mx-auto max-w-6xl px-6 pb-10 pt-14 lg:pb-12 lg:pt-20">
-        <div className="flex flex-col gap-9 lg:flex-row lg:justify-between">
-          <div className="flex flex-col gap-3">
-            <AuroraLogo height={30} />
-            <p className="text-[15px] text-[#474E72]">The AI-native CRM.</p>
+      <footer className="footer">
+        <div className="wrap foot-row">
+          <div>
+            <img src="/brand/aurora/aurora-wordmark.webp" alt="Aurora" className="foot-word" />
+            <p>The AI CRM that asks before it acts.</p>
           </div>
-          <div className="grid grid-cols-3 gap-4 lg:gap-24">
-            {footerColumns.map((column) => (
-              <nav key={column.title} aria-label={column.title} className="flex flex-col gap-1">
-                <h2 className="pb-1 text-xs font-bold uppercase tracking-[0.1em] text-[#0C1238] lg:text-[13px]">
-                  {column.title}
-                </h2>
-                {column.links.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="flex min-h-9 items-center text-[15px] text-[#474E72] hover:text-[#3438C4]"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </nav>
-            ))}
+          <div className="foot-cols">
+            <div>
+              <b>Product</b>
+              <a href="#platform">Platform</a>
+              <a href="#agents">AI agents</a>
+              <a href="#pricing">Pricing</a>
+            </div>
+            <div>
+              <b>Trust</b>
+              <a href="#security">Security</a>
+              <Link href="/privacy">Privacy</Link>
+            </div>
+            <div>
+              <b>Company</b>
+              <Link href="/about">About</Link>
+              <Link href="/contact">Contact</Link>
+            </div>
           </div>
         </div>
-        <p className="mt-10 border-t border-[#E1E3EF] pt-5 text-sm text-[#5C6386]">
-          © {year} Aurora. All rights reserved.
-        </p>
+        <div className="wrap foot-legal">© {new Date().getFullYear()} Aurora</div>
       </footer>
+      <AuroraMotion />
     </div>
   );
 }

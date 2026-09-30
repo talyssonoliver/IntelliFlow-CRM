@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
@@ -12,20 +12,17 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-vi.mock('next/image', () => ({
-  default: ({ priority: _priority, alt, ...props }: any) => <img alt={alt} {...props} />,
-}));
-
 vi.mock('next/font/google', () => ({
-  Plus_Jakarta_Sans: () => ({ className: 'font-jakarta' }),
+  Manrope: () => ({ variable: 'font-manrope' }),
 }));
 
 vi.mock('../AuroraBackground', () => ({
   AuroraBackground: () => <div data-testid="aurora-background" />,
 }));
 
+vi.mock('../AuroraMotion', () => ({ AuroraMotion: () => <div data-testid="aurora-motion" /> }));
+
 import { AuroraLandingPage } from '../AuroraLandingPage';
-import { AuroraHeader } from '../AuroraHeader';
 import AuroraPreviewPage, { metadata, revalidate } from '@/app/preview/aurora/page';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -52,23 +49,21 @@ function appRoutes(): Set<string> {
 }
 
 describe('AuroraLandingPage', () => {
-  it('leads with the Aurora value proposition over the live background', () => {
-    render(<AuroraLandingPage />);
+  it('leads with the value proposition over the live waves, hidden until the first screen is ready', () => {
+    const { container } = render(<AuroraLandingPage />);
 
     expect(
-      screen.getByRole('heading', {
-        level: 1,
-        name: /close more deals with a crm that thinks ahead/i,
-      })
+      screen.getByRole('heading', { level: 1, name: 'The CRM that works your pipeline for you.' })
     ).toBeInTheDocument();
-    expect(
-      within(screen.getByTestId('aurora-hero').parentElement!).getByTestId('aurora-background')
-    ).toBeInTheDocument();
+    const page = container.querySelector('#aurora-page')!;
+    expect(page).toHaveClass('aurora-page', 'boot', 'font-manrope');
+    expect(page.querySelector('.stage .hero-bg [data-testid="aurora-background"]')).toBeTruthy();
+    expect(screen.getByTestId('aurora-motion')).toBeInTheDocument();
   });
 
-  it('sends the primary actions to signup and contact', () => {
+  it('sends the primary actions to signup, contact and login', () => {
     render(<AuroraLandingPage />);
-    const hero = screen.getByTestId('aurora-hero');
+    const hero = screen.getByRole('heading', { level: 1 }).parentElement!;
 
     expect(within(hero).getByRole('link', { name: 'Get started' })).toHaveAttribute(
       'href',
@@ -78,102 +73,102 @@ describe('AuroraLandingPage', () => {
       'href',
       '/contact'
     );
+    const cta = screen.getByRole('navigation', { name: 'Primary' })
+      .nextElementSibling as HTMLElement;
+    expect(within(cta).getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
   });
 
-  it('keeps the product tour entry point the tour e2e relies on', () => {
-    render(<AuroraLandingPage />);
+  it('walks the five layers top-down, each paired with the stack', () => {
+    const { container } = render(<AuroraLandingPage />);
 
-    expect(screen.getByTestId('tour-trigger-link')).toHaveAttribute('href', '/features?tour=1');
+    const layers = [...container.querySelectorAll<HTMLElement>('.layer-step')].map(
+      (s) => s.dataset.layer
+    );
+    expect(layers).toEqual(['agents', 'control', 'pipeline', 'service', 'foundation']);
+    expect(container.querySelector('#stack')).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByText(/five stacked layers/i)).toHaveClass('sr-only');
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'Nothing goes out until you say yes.' })
+    ).toBeInTheDocument();
   });
 
-  it('shows three feature cards linking to the features page', () => {
+  it('gives phones a menu with the same destinations as the desktop nav', () => {
     render(<AuroraLandingPage />);
+    const primary = within(screen.getByRole('navigation', { name: 'Primary' }))
+      .getAllByRole('link')
+      .map((a) => a.getAttribute('href'));
+    const mobile = within(screen.getByRole('navigation', { name: 'Mobile' }))
+      .getAllByRole('link')
+      .map((a) => a.getAttribute('href'));
 
-    const cards = screen.getAllByTestId('feature-card');
-    expect(cards).toHaveLength(3);
-    for (const card of cards) {
-      expect(within(card).getByRole('link')).toHaveAttribute('href', '/features');
-    }
-    expect(screen.getByText('Score every lead')).toBeInTheDocument();
-    expect(screen.getByText('See the whole pipeline')).toBeInTheDocument();
-    expect(screen.getByText('Follow up on time')).toBeInTheDocument();
+    expect(mobile).toEqual([...primary, '/login']);
   });
 
   it('skips past its own header without repeating the layout id', () => {
     const { container } = render(<AuroraLandingPage />);
 
-    const skip = screen.getByRole('link', { name: 'Skip to content' });
-    expect(skip).toHaveAttribute('href', '#aurora-main');
+    expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveAttribute(
+      'href',
+      '#aurora-main'
+    );
     expect(screen.getByRole('main')).toHaveAttribute('id', 'aurora-main');
     // The root layout already owns #main-content; a second one breaks its skip link.
     expect(container.querySelector('#main-content')).toBeNull();
   });
 
-  it('links only to pages that exist', () => {
+  it('links only to pages and sections that exist', () => {
     const { container } = render(<AuroraLandingPage />);
     const routes = appRoutes();
     const hrefs = [...container.querySelectorAll('a[href^="/"]')].map(
       (a) => a.getAttribute('href')!.split(/[?#]/)[0]!
     );
-
     expect(hrefs.length).toBeGreaterThan(10);
     for (const href of new Set(hrefs)) expect(routes, `${href} has no page`).toContain(href);
+
+    for (const a of container.querySelectorAll('a[href^="#"]')) {
+      const id = a.getAttribute('href')!.slice(1);
+      expect(container.querySelector(`#${id}`), `#${id} is missing`).toBeTruthy();
+    }
   });
 
-  it('has one main landmark, a closing call to action and the Aurora brand', () => {
-    render(<AuroraLandingPage />);
+  it('labels every product panel as a sample workspace', () => {
+    const { container } = render(<AuroraLandingPage />);
+    const scenes = container.querySelectorAll('.scene');
 
-    expect(screen.getAllByRole('main')).toHaveLength(1);
-    expect(screen.getByTestId('cta-section')).toHaveTextContent('Put Aurora on your pipeline');
-    expect(screen.getAllByAltText('Aurora').length).toBeGreaterThanOrEqual(2);
-    expect(screen.queryByText(/intelliflow/i)).not.toBeInTheDocument();
+    expect(scenes.length).toBeGreaterThanOrEqual(2);
+    for (const scene of scenes)
+      expect(scene).toHaveAttribute('aria-label', expect.stringMatching(/sample workspace/i));
+    expect(screen.getAllByText(/sample workspace/i).length).toBeGreaterThanOrEqual(2);
   });
 
-  it('uses Material Symbols for icons and states no figures it cannot back', () => {
+  it('claims only what the product can back', () => {
+    const { container } = render(<AuroraLandingPage />);
+    const text = container.textContent!;
+
+    expect(text).not.toMatch(/\bSAP\b|SOC ?2|GDPR|ISO ?27001/);
+    expect(text).not.toMatch(/\b0 agents\b/i);
+    expect(text).not.toMatch(/intelliflow/i);
+    // The TypeScript SDK is beta and API keys are not built yet.
+    expect(container.querySelector('.dev.beta')).toHaveTextContent(/TypeScript SDK\s*Beta/i);
+    expect(container.querySelector('.dev.soon')).toHaveTextContent(/API keys\s*Coming soon/i);
+  });
+
+  it('names the ready integrations', () => {
+    const { container } = render(<AuroraLandingPage />);
+    const names = [...container.querySelectorAll('.logo span')].map((s) => s.textContent);
+
+    expect(names).toEqual(
+      expect.arrayContaining(['Gmail', 'Outlook', 'Slack', 'Microsoft Teams', 'Stripe', 'PayPal'])
+    );
+  });
+
+  it('uses Material Symbols for icons and keeps the copyright year current', () => {
     const { container } = render(<AuroraLandingPage />);
 
     expect(container.querySelector('.material-symbols-outlined')).toBeTruthy();
-    expect(container.textContent).not.toContain('%');
-  });
-});
-
-describe('AuroraHeader', () => {
-  it('opens and closes the phone menu', () => {
-    render(<AuroraHeader />);
-
-    const toggle = screen.getByRole('button', { name: 'Open menu' });
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByRole('navigation', { name: 'Mobile' })).not.toBeInTheDocument();
-
-    fireEvent.click(toggle);
-    const menu = screen.getByRole('navigation', { name: 'Mobile' });
-    expect(screen.getByRole('button', { name: 'Close menu' })).toHaveAttribute(
-      'aria-expanded',
-      'true'
+    expect(container.querySelector('.foot-legal')).toHaveTextContent(
+      `© ${new Date().getFullYear()} Aurora`
     );
-
-    fireEvent.click(within(menu).getByRole('link', { name: 'Pricing' }));
-    expect(screen.queryByRole('navigation', { name: 'Mobile' })).not.toBeInTheDocument();
-  });
-
-  it('closes the phone menu from its log in and get started links', () => {
-    render(<AuroraHeader />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
-    fireEvent.click(
-      within(screen.getByRole('navigation', { name: 'Mobile' })).getByRole('link', {
-        name: 'Log in',
-      })
-    );
-    expect(screen.queryByRole('navigation', { name: 'Mobile' })).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
-    fireEvent.click(
-      within(screen.getByRole('navigation', { name: 'Mobile' })).getByRole('link', {
-        name: 'Get started',
-      })
-    );
-    expect(screen.queryByRole('navigation', { name: 'Mobile' })).not.toBeInTheDocument();
   });
 });
 
