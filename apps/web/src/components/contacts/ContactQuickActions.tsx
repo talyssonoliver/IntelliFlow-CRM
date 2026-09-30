@@ -44,9 +44,9 @@ export function ContactQuickActions({ contact }: Readonly<ContactQuickActionsPro
   const logActivity = api.contact.logActivity.useMutation({
     onSuccess: () => {
       toast({ title: 'Activity logged', description: 'Activity has been recorded.' });
-      utils.contact.getById.invalidate({ id: contact.id });
-      utils.activityFeed.getUnifiedFeed.invalidate();
-      utils.activityFeed.getEntityFeed.invalidate();
+      void utils.contact.getById.invalidate({ id: contact.id });
+      void utils.activityFeed.getUnifiedFeed.invalidate();
+      void utils.activityFeed.getEntityFeed.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Failed to log activity', description: err.message, variant: 'destructive' });

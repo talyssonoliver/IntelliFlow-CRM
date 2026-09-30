@@ -477,8 +477,8 @@ export function ArticleEditor({ mode, articleId }: Readonly<ArticleEditorProps>)
 
   const invalidate = useCallback(
     (id?: string) => {
-      utils.helpArticle.list.invalidate();
-      if (id) utils.helpArticle.getById.invalidate({ id });
+      void utils.helpArticle.list.invalidate();
+      if (id) void utils.helpArticle.getById.invalidate({ id });
     },
     [utils]
   );
