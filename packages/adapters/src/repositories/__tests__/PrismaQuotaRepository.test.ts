@@ -13,6 +13,8 @@ describe('PrismaQuotaRepository', () => {
       user: { count: vi.fn() },
       workflowDefinition: { count: vi.fn() },
       $queryRaw: vi.fn(),
+      $executeRaw: vi.fn(),
+      $transaction: vi.fn(),
     };
     repo = new PrismaQuotaRepository(prisma as never);
   });
@@ -71,5 +73,59 @@ describe('PrismaQuotaRepository', () => {
     await expect(repo.incrementCounter('t1', 'aiSpendCentsPerMonth', '2026-09', 1)).resolves.toBe(
       0
     );
+  });
+
+  it('reserves with one conditional upsert guarding both the insert and the update branch', async () => {
+    prisma.$queryRaw.mockResolvedValue([{ value: 7 }]);
+    await expect(repo.reserveCounter('t1', 'emailsPerMonth', '2026-09', 2, 500)).resolves.toBe(7);
+    const [strings, ...values] = prisma.$queryRaw.mock.calls[0];
+    const sql = strings.join('?');
+    expect(sql).toContain('ON CONFLICT ("tenantId", "key", "period")');
+    // Insert branch: SELECT ... WHERE by <= limit. Update branch: DO UPDATE ... WHERE value + by <= limit.
+    expect(sql).toMatch(/SELECT[\s\S]*WHERE \?::int <= \?::int/);
+    expect(sql).toMatch(
+      /DO UPDATE SET[\s\S]*WHERE tenant_usage_counters\."value" \+ \?::int <= \?::int/
+    );
+    expect(values).toEqual(expect.arrayContaining(['t1', 'emailsPerMonth', '2026-09', 2, 500]));
+  });
+
+  it('reports null when the reservation would exceed the limit (no row returned)', async () => {
+    prisma.$queryRaw.mockResolvedValue([]);
+    await expect(
+      repo.reserveCounter('t1', 'emailsPerMonth', '2026-09', 2, 500)
+    ).resolves.toBeNull();
+  });
+
+  it('decrements with a floor at zero, scoped to the tenant, key and period', async () => {
+    prisma.$executeRaw.mockResolvedValue(1);
+    await repo.decrementCounter('t1', 'emailsPerMonth', '2026-09', 2);
+    const [strings, ...values] = prisma.$executeRaw.mock.calls[0];
+    expect(strings.join('?')).toContain('GREATEST("value" - ?::int, 0)');
+    expect(values).toEqual([2, 't1', 'emailsPerMonth', '2026-09']);
+  });
+
+  it('runs fn inside a transaction that first takes the (tenant, key) advisory lock', async () => {
+    const order: string[] = [];
+    const tx = {
+      $queryRaw: vi.fn(async (strings: string[], ...values: unknown[]) => {
+        order.push(`lock:${strings.join('?')}:${values.join(',')}`);
+        return [];
+      }),
+    };
+    prisma.$transaction.mockImplementation(async (fn: (t: unknown) => unknown, opts: unknown) => {
+      order.push(`tx:${JSON.stringify(opts)}`);
+      return fn(tx);
+    });
+
+    const out = await repo.runExclusive('t1', 'contacts', async () => {
+      order.push('fn');
+      return 42;
+    });
+
+    expect(out).toBe(42);
+    expect(order[0]).toContain('"timeout":30000');
+    expect(order[1]).toContain('pg_advisory_xact_lock');
+    expect(order[1]).toContain('quota:t1:contacts');
+    expect(order[2]).toBe('fn');
   });
 });

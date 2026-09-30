@@ -13,6 +13,11 @@ export function underQuota() {
   return {
     assertWithinQuota: vi.fn().mockResolvedValue(undefined),
     increment: vi.fn().mockResolvedValue(undefined),
+    reserve: vi.fn().mockResolvedValue(undefined),
+    release: vi.fn().mockResolvedValue(undefined),
+    withinQuota: vi.fn(
+      async (_t: string, _k: QuotaKey, _n: number, create: () => Promise<unknown>) => create()
+    ),
   };
 }
 
@@ -23,6 +28,17 @@ export function overQuota(key: QuotaKey, used: number, limit: number) {
       if (k === key) throw new QuotaExceededError(k, used, limit, increment);
     }),
     increment: vi.fn().mockResolvedValue(undefined),
+    reserve: vi.fn(async (_t: string, k: QuotaKey, by = 1) => {
+      if (k === key) throw new QuotaExceededError(k, used, limit, by);
+    }),
+    release: vi.fn().mockResolvedValue(undefined),
+    withinQuota: vi.fn(
+      async (_t: string, k: QuotaKey, n: number, create: () => Promise<unknown>) => {
+        // An increment of 0 takes the lock only; the caller asserts the real count itself.
+        if (k === key && n > 0) throw new QuotaExceededError(k, used, limit, n);
+        return create();
+      }
+    ),
   };
 }
 

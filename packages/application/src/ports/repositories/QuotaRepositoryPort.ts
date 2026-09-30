@@ -31,4 +31,26 @@ export interface QuotaRepositoryPort {
 
   /** Atomically add `by` to the counter (creating it at 0 first); returns the new value. */
   incrementCounter(tenantId: string, key: QuotaKey, period: string, by: number): Promise<number>;
+
+  /**
+   * Atomically add `by` to the counter only if the result stays within `limit`
+   * (insert-if-missing included). Returns the new value, or null when it would exceed the limit.
+   */
+  reserveCounter(
+    tenantId: string,
+    key: QuotaKey,
+    period: string,
+    by: number,
+    limit: number
+  ): Promise<number | null>;
+
+  /** Subtract `by` from the counter, never going below 0 (compensation for a failed action). */
+  decrementCounter(tenantId: string, key: QuotaKey, period: string, by: number): Promise<void>;
+
+  /**
+   * Run `fn` while holding a per-(tenant, key) exclusive lock, so a live-count check and the
+   * create that follows it cannot interleave with another request for the same tenant and key.
+   * The lock is released when `fn` settles.
+   */
+  runExclusive<T>(tenantId: string, key: QuotaKey, fn: () => Promise<T>): Promise<T>;
 }

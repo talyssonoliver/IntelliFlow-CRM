@@ -22,7 +22,7 @@ import {
   verifiedTenantProcedure,
 } from '../../trpc';
 import { MarkAsReadInputSchema, GetUnreadCountsInputSchema } from '@intelliflow/validators';
-import { assertQuota, recordUsage } from '../../shared/quota-guard';
+import { reserveQuota } from '../../shared/quota-guard';
 // Import from adapters - using any cast for module resolution compatibility
 import * as adapters from '@intelliflow/adapters';
 const InboundEmailParser = (adapters as any).InboundEmailParser;
@@ -722,80 +722,93 @@ export const inboundEmailRouter = createTRPCRouter({
 
         // Per-tenant metering: every recipient is a billable message.
         const recipientCount = input.to.length + (input.cc?.length ?? 0) + (input.bcc?.length ?? 0);
-        await assertQuota(ctx as any, tenantId, 'emailsPerMonth', recipientCount);
+        // Atomic reserve-then-compensate: the check and the increment are one statement, so two
+        // requests at limit-1 cannot both send. Released below if nothing was actually sent.
+        const releaseQuota = await reserveQuota(
+          ctx as any,
+          tenantId,
+          'emailsPerMonth',
+          recipientCount
+        );
 
-        const record = await (ctx as any).prisma.emailRecord.create({
-          data: {
-            subject: input.subject,
-            body: input.htmlBody,
-            fromEmail,
-            toEmail: input.to.join(', '),
-            ccEmails: input.cc?.join(', ') ?? null,
-            bccEmails: input.bcc?.join(', ') ?? null,
-            status: 'PENDING',
-            tenantId,
-            userId,
-            templateId: input.templateId ?? null,
-            metadata: {
-              isHtml: true,
-              textBody: input.textBody,
-              threadId: input.threadId,
-            },
-          },
-        });
-
-        // Create attachment records if provided
-        if (input.attachments?.length) {
-          await (ctx as any).prisma.emailAttachment.createMany({
-            data: input.attachments.map((a) => ({
-              emailId: record.id,
-              tenantId,
-              fileName: a.fileName,
-              fileSize: a.fileSize,
-              fileType: 'application/octet-stream',
-              fileUrl: a.fileUrl,
-            })),
-          });
-        }
-
-        // Attempt to send via the outbound email service (SendGrid in production, mock in dev)
-        let finalStatus: 'SENT' | 'FAILED' = 'SENT';
         try {
-          const sendResult = await outboundEmailService.sendEmail({
-            from: { email: fromEmail, type: 'to' },
-            recipients: [
-              ...input.to.map((email) => ({ email, type: 'to' as const })),
-              ...(input.cc ?? []).map((email) => ({ email, type: 'cc' as const })),
-              ...(input.bcc ?? []).map((email) => ({ email, type: 'bcc' as const })),
-            ],
-            subject: input.subject,
-            htmlBody: input.htmlBody,
-            textBody: input.textBody,
+          const record = await (ctx as any).prisma.emailRecord.create({
+            data: {
+              subject: input.subject,
+              body: input.htmlBody,
+              fromEmail,
+              toEmail: input.to.join(', '),
+              ccEmails: input.cc?.join(', ') ?? null,
+              bccEmails: input.bcc?.join(', ') ?? null,
+              status: 'PENDING',
+              tenantId,
+              userId,
+              templateId: input.templateId ?? null,
+              metadata: {
+                isHtml: true,
+                textBody: input.textBody,
+                threadId: input.threadId,
+              },
+            },
           });
 
-          if (sendResult.status === 'failed') {
-            finalStatus = 'FAILED';
-            console.error('Email send failed', { recordId: record.id, error: sendResult.error });
+          // Create attachment records if provided
+          if (input.attachments?.length) {
+            await (ctx as any).prisma.emailAttachment.createMany({
+              data: input.attachments.map((a) => ({
+                emailId: record.id,
+                tenantId,
+                fileName: a.fileName,
+                fileSize: a.fileSize,
+                fileType: 'application/octet-stream',
+                fileUrl: a.fileUrl,
+              })),
+            });
           }
+
+          // Attempt to send via the outbound email service (SendGrid in production, mock in dev)
+          let finalStatus: 'SENT' | 'FAILED' = 'SENT';
+          try {
+            const sendResult = await outboundEmailService.sendEmail({
+              from: { email: fromEmail, type: 'to' },
+              recipients: [
+                ...input.to.map((email) => ({ email, type: 'to' as const })),
+                ...(input.cc ?? []).map((email) => ({ email, type: 'cc' as const })),
+                ...(input.bcc ?? []).map((email) => ({ email, type: 'bcc' as const })),
+              ],
+              subject: input.subject,
+              htmlBody: input.htmlBody,
+              textBody: input.textBody,
+            });
+
+            if (sendResult.status === 'failed') {
+              finalStatus = 'FAILED';
+              console.error('Email send failed', { recordId: record.id, error: sendResult.error });
+            }
+          } catch (error) {
+            finalStatus = 'FAILED';
+            console.error('Email send threw unexpectedly', { recordId: record.id, error });
+          }
+
+          // Update the persisted record with the final delivery status
+          await (ctx as any).prisma.emailRecord.update({
+            where: { id: record.id },
+            data: {
+              status: finalStatus,
+              sentAt: finalStatus === 'SENT' ? new Date() : null,
+            },
+          });
+
+          if (finalStatus !== 'SENT') {
+            await releaseQuota();
+          }
+
+          return { id: record.id, status: finalStatus };
         } catch (error) {
-          finalStatus = 'FAILED';
-          console.error('Email send threw unexpectedly', { recordId: record.id, error });
+          // Nothing was delivered (or the outcome is unknown and recorded as failed): give back.
+          await releaseQuota();
+          throw error;
         }
-
-        // Update the persisted record with the final delivery status
-        await (ctx as any).prisma.emailRecord.update({
-          where: { id: record.id },
-          data: {
-            status: finalStatus,
-            sentAt: finalStatus === 'SENT' ? new Date() : null,
-          },
-        });
-
-        if (finalStatus === 'SENT') {
-          await recordUsage(ctx as any, tenantId, 'emailsPerMonth', recipientCount);
-        }
-
-        return { id: record.id, status: finalStatus };
       }
     ),
 

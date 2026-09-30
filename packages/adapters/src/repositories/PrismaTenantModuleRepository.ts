@@ -152,7 +152,10 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
     // higher-plan (paid) module access. Running both in one transaction means
     // the enabled set can never be observed in a half-synced state. CORE_CRM is
     // part of every plan, so `notIn planModules` never disables it.
+    // The same transaction records the plan on Tenant (the source of truth for getTenantPlan
+    // and quota limits), so a Stripe plan change can never leave modules and plan disagreeing.
     await this.prisma.$transaction([
+      this.prisma.tenant.update({ where: { id: tenantId }, data: { plan } }),
       ...planModules.map((moduleId) =>
         this.prisma.tenantModule.upsert({
           where: { tenantId_moduleId: { tenantId, moduleId } },

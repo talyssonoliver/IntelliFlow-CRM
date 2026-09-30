@@ -47,4 +47,29 @@ describe('Prisma migration RLS coverage', () => {
 
     expect(missingRls).toEqual([]);
   });
+
+  it('locks the partner credential tables away from anon and authenticated', () => {
+    const sql = readFileSync(
+      path.join(migrationsDir, '20260930120000_tenant_provenance_partner', 'migration.sql'),
+      'utf8'
+    );
+
+    for (const table of ['partners', 'partner_api_keys']) {
+      expect(sql).toContain(`ALTER TABLE "${table}" ENABLE ROW LEVEL SECURITY;`);
+      expect(sql).toContain(`REVOKE ALL ON TABLE "${table}" FROM anon, authenticated;`);
+      // Deny by default: no permissive policy may be created for these tables.
+      expect(sql).not.toMatch(new RegExp(`CREATE POLICY[^;]*ON "${table}"`, 'i'));
+    }
+  });
+
+  it('backfills tenants.plan from the legacy workspace join in the same migration', () => {
+    const sql = readFileSync(
+      path.join(migrationsDir, '20260930120000_tenant_provenance_partner', 'migration.sql'),
+      'utf8'
+    );
+
+    expect(sql).toMatch(/UPDATE "tenants" t\s+SET "plan" = src\."plan"/);
+    expect(sql).toContain('INNER JOIN "workspace_members" wm');
+    expect(sql).toContain('INNER JOIN "users" u');
+  });
 });

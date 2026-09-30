@@ -15,6 +15,7 @@ function makeRepo(
   } = {}
 ) {
   const counters = new Map<string, number>(Object.entries(init.counters ?? {}));
+  const locks = new Map<string, Promise<void>>();
   return {
     getOverrides: vi.fn(async () => init.overrides ?? []),
     countContacts: vi.fn(async () => init.contacts ?? 0),
@@ -28,7 +29,32 @@ function makeRepo(
       counters.set(`${key}:${period}`, next);
       return next;
     }),
-  } satisfies QuotaRepositoryPort;
+    // Conditional add in one synchronous step, like the single SQL statement it stands for.
+    reserveCounter: vi.fn(
+      async (_t: string, key: QuotaKey, period: string, by: number, limit: number) => {
+        const next = (counters.get(`${key}:${period}`) ?? 0) + by;
+        if (next > limit) return null;
+        counters.set(`${key}:${period}`, next);
+        return next;
+      }
+    ),
+    decrementCounter: vi.fn(async (_t: string, key: QuotaKey, period: string, by: number) => {
+      counters.set(`${key}:${period}`, Math.max((counters.get(`${key}:${period}`) ?? 0) - by, 0));
+    }),
+    // A per-key mutex, like the advisory lock it stands for.
+    runExclusive: vi.fn(async (_t: string, key: QuotaKey, fn: () => Promise<unknown>) => {
+      const previous = locks.get(key) ?? Promise.resolve();
+      const run = previous.then(fn, fn);
+      locks.set(
+        key,
+        run.then(
+          () => undefined,
+          () => undefined
+        )
+      );
+      return run;
+    }),
+  } as unknown as QuotaRepositoryPort & Record<string, ReturnType<typeof vi.fn>>;
 }
 
 function makeService(
@@ -214,6 +240,131 @@ describe('QuotaService', () => {
       await expect(
         second.service.assertWithinQuota(TENANT, 'emailsPerMonth')
       ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('reserve / release', () => {
+    it('reserves within the limit and records it on the counter', async () => {
+      const { service } = makeService('STARTER', repo);
+      await service.reserve(TENANT, 'emailsPerMonth', 3);
+      expect(repo.reserveCounter).toHaveBeenCalledWith(TENANT, 'emailsPerMonth', '2026-09', 3, 500);
+      expect(await repo.getCounter(TENANT, 'emailsPerMonth', '2026-09')).toBe(3);
+    });
+
+    it('throws QuotaExceededError with the current usage when it does not fit', async () => {
+      repo = makeRepo({ counters: { 'emailsPerMonth:2026-09': 499 } });
+      const { service } = makeService('STARTER', repo);
+      await expect(service.reserve(TENANT, 'emailsPerMonth', 2)).rejects.toMatchObject({
+        code: 'QUOTA_EXCEEDED',
+        key: 'emailsPerMonth',
+        used: 499,
+        limit: 500,
+      });
+      expect(await repo.getCounter(TENANT, 'emailsPerMonth', '2026-09')).toBe(499);
+    });
+
+    it('lets exactly one of two concurrent reservations take the last unit', async () => {
+      repo = makeRepo({ counters: { 'emailsPerMonth:2026-09': 499 } });
+      const { service } = makeService('STARTER', repo);
+      const results = await Promise.allSettled([
+        service.reserve(TENANT, 'emailsPerMonth', 1),
+        service.reserve(TENANT, 'emailsPerMonth', 1),
+      ]);
+      expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+      expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
+      expect(await repo.getCounter(TENANT, 'emailsPerMonth', '2026-09')).toBe(500);
+    });
+
+    it('blocks a limit of 0 outright', async () => {
+      const { service } = makeService('PARTNER_FREE', repo);
+      await expect(service.reserve(TENANT, 'emailsPerMonth', 1)).rejects.toBeInstanceOf(
+        QuotaExceededError
+      );
+    });
+
+    it('still counts usage when the limit is unlimited', async () => {
+      const { service } = makeService('ENTERPRISE', repo);
+      await service.reserve(TENANT, 'emailsPerMonth', 4);
+      expect(repo.incrementCounter).toHaveBeenCalledWith(TENANT, 'emailsPerMonth', '2026-09', 4);
+      expect(repo.reserveCounter).not.toHaveBeenCalled();
+    });
+
+    it('rejects live-count keys, which have no counter to reserve against', async () => {
+      const { service } = makeService('STARTER', repo);
+      await expect(service.reserve(TENANT, 'contacts')).rejects.toThrow(/monthly/);
+    });
+
+    it('release gives the units back and never goes below zero', async () => {
+      repo = makeRepo({ counters: { 'emailsPerMonth:2026-09': 2 } });
+      const { service } = makeService('STARTER', repo);
+      await service.release(TENANT, 'emailsPerMonth', 1);
+      expect(await repo.getCounter(TENANT, 'emailsPerMonth', '2026-09')).toBe(1);
+      await service.release(TENANT, 'emailsPerMonth', 5);
+      expect(await repo.getCounter(TENANT, 'emailsPerMonth', '2026-09')).toBe(0);
+    });
+
+    it('release is a no-op for live-count keys and non-positive amounts', async () => {
+      const { service } = makeService('STARTER', repo);
+      await service.release(TENANT, 'contacts', 1);
+      await service.release(TENANT, 'emailsPerMonth', 0);
+      expect(repo.decrementCounter).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('withinQuota (live-count keys)', () => {
+    it('runs create under the lock after asserting', async () => {
+      repo = makeRepo({ contacts: 10 });
+      const { service } = makeService('STARTER', repo);
+      const create = vi.fn(async () => 'made');
+      await expect(service.withinQuota(TENANT, 'contacts', 1, create)).resolves.toBe('made');
+      expect(repo.runExclusive).toHaveBeenCalledWith(TENANT, 'contacts', expect.any(Function));
+    });
+
+    it('does not create when the quota is exhausted', async () => {
+      repo = makeRepo({ contacts: 2000 });
+      const { service } = makeService('STARTER', repo);
+      const create = vi.fn();
+      await expect(service.withinQuota(TENANT, 'contacts', 1, create)).rejects.toBeInstanceOf(
+        QuotaExceededError
+      );
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it('serializes count-and-create so two requests cannot both take the last slot', async () => {
+      let contacts = 1999;
+      repo = makeRepo();
+      repo.countContacts.mockImplementation(async () => contacts);
+      const { service } = makeService('STARTER', repo);
+      const create = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        contacts += 1;
+      };
+      const results = await Promise.allSettled([
+        service.withinQuota(TENANT, 'contacts', 1, create),
+        service.withinQuota(TENANT, 'contacts', 1, create),
+      ]);
+      expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+      expect(contacts).toBe(2000);
+    });
+
+    it('an increment of 0 takes the lock without asserting', async () => {
+      repo = makeRepo({ contacts: 5000 });
+      const { service } = makeService('STARTER', repo);
+      const create = vi.fn(async () => 'ok');
+      await expect(service.withinQuota(TENANT, 'contacts', 0, create)).resolves.toBe('ok');
+      expect(repo.countContacts).not.toHaveBeenCalled();
+    });
+
+    it('releases the lock when create fails so later requests proceed', async () => {
+      const { service } = makeService('STARTER', repo);
+      await expect(
+        service.withinQuota(TENANT, 'contacts', 1, async () => {
+          throw new Error('db down');
+        })
+      ).rejects.toThrow('db down');
+      await expect(service.withinQuota(TENANT, 'contacts', 1, async () => 'ok')).resolves.toBe(
+        'ok'
+      );
     });
   });
 });

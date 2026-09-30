@@ -75,7 +75,7 @@ import { deriveContactInsights } from '../../shared/contact-insight-deriver';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 // IFC-255: fire-and-forget audit logging for contact mutations + single-record reads
 import { getAuditLogger } from '../../security/audit-logger';
-import { assertQuota } from '../../shared/quota-guard';
+import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
 
 /**
  * IFC-255: shared fire-and-forget audit-failure handler. Audit logging must
@@ -665,11 +665,15 @@ export const contactRouter = createTRPCRouter({
       }
     }
 
-    const result = await contactService.createContact({
-      ...hygieneInput,
-      ownerId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-    });
+    // The assertion above is a cheap early reject; this one re-checks the live count and
+    // creates under a per-tenant lock so concurrent creates cannot both take the last slot.
+    const result = await withQuotaLock(ctx, typedCtx.tenant.tenantId, 'contacts', 1, () =>
+      contactService.createContact({
+        ...hygieneInput,
+        ownerId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+      })
+    );
 
     if (result.isFailure) {
       throwContactCreateError(result.error.message);

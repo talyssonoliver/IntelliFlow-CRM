@@ -1,6 +1,7 @@
 -- ADR-070: tenant provenance + plan on Tenant, partner tables, lead attribution.
 -- Class A (additive): new enum values/types, new nullable or defaulted columns,
--- new tables, new indexes. No existing data is deleted or rewritten.
+-- new tables, new indexes. No existing data is deleted or rewritten; the plan
+-- backfill below only sets the column this migration adds.
 
 -- AlterEnum
 ALTER TYPE "PlanTier" ADD VALUE IF NOT EXISTS 'PARTNER_FREE';
@@ -77,3 +78,27 @@ CREATE INDEX "leads_tenantId_utmCampaign_idx" ON "leads"("tenantId", "utmCampaig
 
 -- AddForeignKey
 ALTER TABLE "partner_api_keys" ADD CONSTRAINT "partner_api_keys_partnerId_fkey" FOREIGN KEY ("partnerId") REFERENCES "partners"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Backfill tenants.plan from the previous authoritative source (workspaces.plan reached via
+-- workspace_members -> users.tenantId). Tenants with no workspace keep the STARTER default,
+-- which is what the old lookup resolved them to. One deterministic row per tenant.
+UPDATE "tenants" t
+SET "plan" = src."plan"
+FROM (
+    SELECT DISTINCT ON (u."tenantId") u."tenantId" AS "tenantId", w."plan" AS "plan"
+    FROM "workspaces" w
+    INNER JOIN "workspace_members" wm ON wm."workspaceId" = w."id"
+    INNER JOIN "users" u ON u."id" = wm."userId"
+    WHERE u."tenantId" IS NOT NULL
+    ORDER BY u."tenantId", wm."isDefault" DESC, wm."joinedAt" ASC, w."id" ASC
+) src
+WHERE t."id" = src."tenantId";
+
+-- Row Level Security: partner credentials are never reachable through the Supabase
+-- anon/authenticated roles. RLS is enabled with NO policy (deny by default); the API
+-- connects as the table owner, which bypasses RLS. The baseline default privileges grant
+-- ALL on new tables to anon and authenticated, so revoke explicitly as well.
+ALTER TABLE "partners" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "partner_api_keys" ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE "partners" FROM anon, authenticated;
+REVOKE ALL ON TABLE "partner_api_keys" FROM anon, authenticated;

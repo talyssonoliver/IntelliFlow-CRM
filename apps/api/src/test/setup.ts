@@ -9,6 +9,11 @@
  */
 
 import { beforeEach, afterAll, vi } from 'vitest';
+
+// Quota guards fail closed when the QuotaService is not wired. Most router unit tests build
+// partial contexts without it, so the test process opts in to skipping explicitly. The
+// quota-guard tests flip this off to prove the production behaviour.
+process.env.QUOTA_GUARD_ALLOW_MISSING_SERVICE = '1';
 import type { PrismaClient, Prisma as PrismaNamespace } from '@intelliflow/db';
 import { Prisma } from '@intelliflow/db';
 import { mockDeep, mockReset } from 'vitest-mock-extended';

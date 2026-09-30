@@ -78,6 +78,59 @@ export class QuotaService {
     await this.repository.incrementCounter(tenantId, key, getQuotaPeriod(key, this.now()), by);
   }
 
+  /**
+   * Atomically reserve `by` units of a monthly key before performing the action
+   * (check and increment are one statement, so concurrent callers cannot both take the
+   * last unit). Throws `QuotaExceededError` when it does not fit. Pair with `release` when
+   * the action then fails.
+   */
+  async reserve(tenantId: string, key: QuotaKey, by = 1): Promise<void> {
+    if (!isMonthlyQuotaKey(key)) {
+      throw new Error(`reserve() only supports monthly quota keys, got "${key}"`);
+    }
+    if (by <= 0) return;
+
+    const limits = await this.getLimits(tenantId);
+    const limit = limits[key];
+    const period = getQuotaPeriod(key, this.now());
+
+    if (limit === null) {
+      await this.repository.incrementCounter(tenantId, key, period, by);
+      return;
+    }
+
+    const reserved = await this.repository.reserveCounter(tenantId, key, period, by, limit);
+    if (reserved === null) {
+      const used = await this.repository.getCounter(tenantId, key, period);
+      throw new QuotaExceededError(key, used, limit, by);
+    }
+  }
+
+  /** Give back units taken by `reserve` (the action failed). Floors at 0. */
+  async release(tenantId: string, key: QuotaKey, by = 1): Promise<void> {
+    if (!isMonthlyQuotaKey(key) || by <= 0) return;
+    await this.repository.decrementCounter(tenantId, key, getQuotaPeriod(key, this.now()), by);
+  }
+
+  /**
+   * Live-count keys (contacts, seats, workflowsActive): assert the quota and run `create`
+   * under a per-(tenant, key) lock so two requests cannot both pass the count at `limit - 1`.
+   * `create` must have committed its row by the time it resolves. An `increment` of 0 takes the
+   * lock without asserting, for callers that only learn the real count inside `create` (they
+   * then call `assertWithinQuota` themselves).
+   */
+  async withinQuota<T>(
+    tenantId: string,
+    key: QuotaKey,
+    increment: number,
+    create: () => Promise<T>
+  ): Promise<T> {
+    return this.repository.runExclusive(tenantId, key, async () => {
+      if (increment > 0) await this.assertWithinQuota(tenantId, key, increment);
+      return create();
+    });
+  }
+
   private async getUsed(tenantId: string, key: QuotaKey): Promise<number> {
     switch (key) {
       case 'contacts':

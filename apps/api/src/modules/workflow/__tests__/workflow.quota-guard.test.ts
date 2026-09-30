@@ -43,7 +43,13 @@ describe('workflow.setActive quota guard', () => {
       .setActive({ id: workflowId, isActive: true });
 
     expect(result.isActive).toBe(true);
-    expect(quota.assertWithinQuota).toHaveBeenCalledWith(TEST_UUIDS.tenant, 'workflowsActive', 1);
+    // Count and update run together under the per-tenant lock.
+    expect(quota.withinQuota).toHaveBeenCalledWith(
+      TEST_UUIDS.tenant,
+      'workflowsActive',
+      1,
+      expect.any(Function)
+    );
   });
 
   it('never blocks deactivation, even when the tenant is over its limit', async () => {

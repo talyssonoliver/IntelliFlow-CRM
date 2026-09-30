@@ -333,8 +333,12 @@ const createAdapters = async (prismaClient: PrismaClient) => {
   const caseDocumentRepository = new PrismaCaseDocumentRepository(prismaClient);
   const tenantModuleRepository = new PrismaTenantModuleRepository(prismaClient);
   // ADR-070: partner usage read-model (contacts, seats, emails vs plan)
-  const tenantUsageAdapter = new PrismaTenantUsageAdapter(prismaClient, tenantModuleRepository);
   const quotaRepository = new PrismaQuotaRepository(prismaClient);
+  // Built from the enforcing QuotaService so partner-visible limits/usage equal enforcement.
+  const tenantUsageAdapter = new PrismaTenantUsageAdapter(
+    tenantModuleRepository,
+    new QuotaService(quotaRepository, tenantModuleRepository)
+  );
   const notificationRepository = new PrismaNotificationRepository(prismaClient);
   const notificationPreferenceRepository = new PrismaNotificationPreferenceRepository(prismaClient);
   const notificationAuditLogger = new PrismaNotificationAuditLogger(prismaClient);

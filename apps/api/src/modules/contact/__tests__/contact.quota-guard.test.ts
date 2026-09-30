@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
+import { QuotaExceededError } from '@intelliflow/domain';
 import { contactRouter } from '../contact.router';
 import { createTestContext, mockServices, TEST_UUIDS } from '../../../test/setup';
 import { overQuota, quotaRejection, underQuota } from '../../../test/quota';
@@ -76,5 +77,31 @@ describe('contact.create quota guard', () => {
     expect(result.email).toBe(input.email);
     expect(quota.assertWithinQuota).toHaveBeenCalledWith(TEST_UUIDS.tenant, 'contacts', 1);
     expect(createContact).toHaveBeenCalledTimes(1);
+    // The create itself runs under the per-tenant lock.
+    expect(quota.withinQuota).toHaveBeenCalledWith(
+      TEST_UUIDS.tenant,
+      'contacts',
+      1,
+      expect.any(Function)
+    );
+  });
+
+  it('rejects at the locked re-check when a concurrent create took the last slot', async () => {
+    // The early assertion passes (count was 499), but by the time this request holds the lock
+    // the other request has created its contact, so the locked re-check sees the tenant full.
+    const quota = {
+      ...underQuota(),
+      withinQuota: vi.fn().mockRejectedValue(new QuotaExceededError('contacts', 500, 500)),
+    };
+    const createContact = vi.fn();
+    const ctx = createTestContext({
+      services: { ...mockServices, contact: { createContact } as never, quota: quota as never },
+    });
+
+    await expect(contactRouter.createCaller(ctx).create(input)).rejects.toMatchObject(
+      quotaRejection('contacts', 500, 500)
+    );
+    expect(quota.assertWithinQuota).toHaveBeenCalled();
+    expect(createContact).not.toHaveBeenCalled();
   });
 });

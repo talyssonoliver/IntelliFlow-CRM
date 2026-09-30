@@ -16,7 +16,7 @@ import { PrismaTenantModuleRepository } from '../PrismaTenantModuleRepository';
 function createMockPrisma(): Record<string, any> {
   return {
     $queryRaw: vi.fn(),
-    tenant: { findUnique: vi.fn() },
+    tenant: { findUnique: vi.fn(), update: vi.fn().mockResolvedValue({}) },
     // Array-form transaction used by syncModulesToPlan: the operation promises
     // are already created when the array is built, so just await them.
     $transaction: vi.fn().mockImplementation(async (ops: Promise<unknown>[]) => Promise.all(ops)),
@@ -341,6 +341,23 @@ describe('PrismaTenantModuleRepository.syncModulesToPlan', () => {
       expect(call[0].create.enabled).toBe(true);
       expect(call[0].update.enabled).toBe(true);
     }
+  });
+
+  it('persists the plan on Tenant in the same transaction as the module sync', async () => {
+    mockPrisma.tenantModule.upsert.mockResolvedValue({} as any);
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'ENTERPRISE' });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+
+    await repo.syncModulesToPlan(TENANT_ID, 'ENTERPRISE');
+
+    expect(mockPrisma.tenant.update).toHaveBeenCalledWith({
+      where: { id: TENANT_ID },
+      data: { plan: 'ENTERPRISE' },
+    });
+    // One $transaction call carries the tenant update together with the module writes.
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    const ops = mockPrisma.$transaction.mock.calls[0][0] as unknown[];
+    expect(ops.length).toBeGreaterThan(mockPrisma.tenantModule.upsert.mock.calls.length);
   });
 
   it('returns enabled modules after sync', async () => {

@@ -25,7 +25,7 @@ import {
 } from '@intelliflow/domain';
 import { getCustomNodeTypeRegistry } from '../../workflow/registries/custom-node-type-registry';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
-import { assertQuota } from '../../shared/quota-guard';
+import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
 
 // ---------------------------------------------------------------------------
 // Zod schemas for JSON columns
@@ -614,18 +614,22 @@ export const workflowRouter = createTRPCRouter({
         nodes: input.steps,
         edges: input.edges ?? [],
       };
-      return await ctx.prismaWithTenant.workflowDefinition.create({
-        data: {
-          name: input.name,
-          description: input.description,
-          category: input.category,
-          triggerType: input.triggerType,
-          triggerConfig: input.triggerConfig as Prisma.InputJsonValue,
-          steps: graphPayload as unknown as Prisma.InputJsonValue,
-          tenantId,
-          createdBy,
-        },
-      });
+      // Re-check the live count and create under a per-tenant lock (the assertion at the top
+      // is only an early reject and cannot stop two concurrent creates taking the last slot).
+      return await withQuotaLock(ctx, tenantId, 'workflowsActive', 1, () =>
+        ctx.prismaWithTenant.workflowDefinition.create({
+          data: {
+            name: input.name,
+            description: input.description,
+            category: input.category,
+            triggerType: input.triggerType,
+            triggerConfig: input.triggerConfig as Prisma.InputJsonValue,
+            steps: graphPayload as unknown as Prisma.InputJsonValue,
+            tenantId,
+            createdBy,
+          },
+        })
+      );
     } catch (error: unknown) {
       // Re-throw TRPCErrors (e.g. BAD_REQUEST from topology validation) as-is
       if (error instanceof TRPCError) throw error;
@@ -739,14 +743,15 @@ export const workflowRouter = createTRPCRouter({
       }
 
       // Only an inactive -> active flip adds to the tenant's active-workflow count.
+      const activate = () =>
+        ctx.prismaWithTenant.workflowDefinition.update({
+          where: { id: input.id },
+          data: { isActive: input.isActive },
+        });
       if (input.isActive && !existing.isActive) {
-        await assertQuota(ctx, tenantId, 'workflowsActive');
+        return withQuotaLock(ctx, tenantId, 'workflowsActive', 1, activate);
       }
-
-      return ctx.prismaWithTenant.workflowDefinition.update({
-        where: { id: input.id },
-        data: { isActive: input.isActive },
-      });
+      return activate();
     }),
 
   /** List workflow definitions with cursor pagination (excludes soft-deleted). */

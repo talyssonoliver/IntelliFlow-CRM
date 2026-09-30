@@ -73,6 +73,20 @@ export function resolvePriceId(planId: string, billingCycle: 'monthly' | 'annual
   return priceId;
 }
 
+/**
+ * Reverse of resolvePriceId: the plan tier a configured Stripe price ID belongs to, or
+ * undefined when the price is not one of the STRIPE_PRICE_<TIER>_<CYCLE> env prices.
+ */
+export function planTierForPriceId(priceId: string): PlanTier | undefined {
+  for (const tier of PLAN_TIERS) {
+    for (const cycle of ['MONTHLY', 'ANNUAL']) {
+      const configured = process.env[`STRIPE_PRICE_${tier}_${cycle}`];
+      if (configured && configured === priceId) return tier;
+    }
+  }
+  return undefined;
+}
+
 // ============================================
 // Local Type Definitions (from StripeAdapter)
 // ============================================
@@ -750,9 +764,17 @@ export const billingRouter = createTRPCRouter({
           const moduleAccess =
             ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
           if (moduleAccess) {
-            // Map Stripe priceId to PlanTier (lookup from workspace or metadata)
-            const plan = await moduleAccess.getTenantPlan(user.tenantId);
-            await moduleAccess.syncModulesToPlan(user.tenantId, plan);
+            // Sync to the tier the NEW price belongs to (syncModulesToPlan also records it on
+            // Tenant.plan). Re-reading the current plan here would be a no-op sync.
+            const plan = planTierForPriceId(input.priceId);
+            if (plan) {
+              await moduleAccess.syncModulesToPlan(user.tenantId, plan);
+            } else {
+              console.warn(
+                `[Billing] Price ${input.priceId} is not a configured plan price; ` +
+                  'Tenant.plan will be synced by the subscription webhook.'
+              );
+            }
           }
         } catch (err) {
           // Module sync failure should not block subscription update

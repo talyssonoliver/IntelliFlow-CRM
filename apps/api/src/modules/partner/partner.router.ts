@@ -18,6 +18,7 @@ import type { TenantUsagePort } from '@intelliflow/application';
 import { createTRPCRouter, partnerProcedure, requirePartnerScope } from '../../trpc';
 import { supabaseAdmin } from '../../lib/supabase';
 import { getPlatformAdminEmails, type PartnerContext } from '../../security/partner-auth';
+import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
 
 // ============================================================================
 // Contract
@@ -187,10 +188,20 @@ async function ensureAuthUser(email: string, name?: string): Promise<EnsuredAuth
   });
 }
 
-/** Best-effort removal of an Auth user this request created, after the CRM write failed. */
-async function discardAuthUser(user: EnsuredAuthUser): Promise<void> {
+/**
+ * Best-effort removal of an Auth user this request created, after the CRM write failed.
+ * Never deletes an Auth user that a committed CRM user row already references: another
+ * request may have adopted the same Supabase identity, and deleting it would lock that
+ * tenant's owner out.
+ */
+async function discardAuthUser(prisma: PrismaClient, user: EnsuredAuthUser): Promise<void> {
   if (!user.created) return;
   try {
+    const referenced = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true },
+    });
+    if (referenced) return;
     await supabaseAdmin.auth.admin.deleteUser(user.id);
   } catch (err) {
     console.warn('[partner] Failed to clean up Auth user after a failed write:', err);
@@ -253,47 +264,92 @@ export const partnerRouter = createTRPCRouter({
       }
 
       assertNotOperatorEmail(ownerEmail);
-      if (await prisma.user.findUnique({ where: { email: ownerEmail }, select: { id: true } })) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: 'The owner email already belongs to an existing account.',
-        });
-      }
 
-      const slug = await resolveSlug(prisma, input.slug, input.name, input.externalRef);
-      const authUser = await ensureAuthUser(ownerEmail, input.ownerName);
-
+      // Serialize provisioning per (partner, externalRef). Without this, two concurrent calls
+      // can both reach Supabase for the same owner email and share one Auth user, and the
+      // loser's cleanup would delete the identity the winner committed. The transaction-scoped
+      // advisory lock is held until commit/rollback; the Auth call and the CRM writes all run
+      // inside it on the same connection.
+      const refLockKey = `partner-provision:${partner.id}:${input.externalRef}`;
+      const emailLockKey = `partner-provision-email:${ownerEmail}`;
+      let authUser: EnsuredAuthUser | undefined;
       try {
-        const tenant = await prisma.$transaction(async (tx) => {
-          const created = await tx.tenant.create({
-            data: {
-              name: input.name,
-              slug,
-              status: 'ACTIVE',
-              source: 'PARTNER',
-              partnerId: partner.id,
-              externalRef: input.externalRef,
-              plan: input.plan,
-            },
-            select: { id: true, slug: true, plan: true },
-          });
-          await tx.user.create({
-            data: {
-              id: authUser.id,
-              email: ownerEmail,
-              name: input.ownerName ?? ownerEmail.split('@')[0],
-              role: 'ADMIN',
+        return await prisma.$transaction(
+          async (tx) => {
+            await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${refLockKey}, 0))`;
+
+            // A second lock on the owner email serializes different tenants racing for the same
+            // Auth identity. Lock order is always (ref, email), so the two cannot deadlock.
+            await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${emailLockKey}, 0))`;
+
+            // A call that waited on the lock finds the winner's committed tenant here.
+            const winner = await tx.tenant.findUnique({
+              where: {
+                partnerId_externalRef: { partnerId: partner.id, externalRef: input.externalRef },
+              },
+              select: { id: true, slug: true, plan: true },
+            });
+            if (winner) {
+              return {
+                tenantId: winner.id,
+                slug: winner.slug,
+                plan: winner.plan as Plan,
+                created: false,
+              };
+            }
+
+            if (await tx.user.findUnique({ where: { email: ownerEmail }, select: { id: true } })) {
+              throw new TRPCError({
+                code: 'CONFLICT',
+                message: 'The owner email already belongs to an existing account.',
+              });
+            }
+
+            const slug = await resolveSlug(
+              tx as PrismaClient,
+              input.slug,
+              input.name,
+              input.externalRef
+            );
+            authUser = await ensureAuthUser(ownerEmail, input.ownerName);
+
+            const created = await tx.tenant.create({
+              data: {
+                name: input.name,
+                slug,
+                status: 'ACTIVE',
+                source: 'PARTNER',
+                partnerId: partner.id,
+                externalRef: input.externalRef,
+                plan: input.plan,
+              },
+              select: { id: true, slug: true, plan: true },
+            });
+            await tx.user.create({
+              data: {
+                id: authUser.id,
+                email: ownerEmail,
+                name: input.ownerName ?? ownerEmail.split('@')[0],
+                role: 'ADMIN',
+                tenantId: created.id,
+                provider: 'partner',
+              },
+            });
+            return {
               tenantId: created.id,
-              provider: 'partner',
-            },
-          });
-          return created;
-        });
-        return { tenantId: tenant.id, slug: tenant.slug, plan: tenant.plan as Plan, created: true };
+              slug: created.slug,
+              plan: created.plan as Plan,
+              created: true,
+            };
+          },
+          { maxWait: 10_000, timeout: 30_000 }
+        );
       } catch (error) {
-        await discardAuthUser(authUser);
+        // The transaction rolled back, so no CRM row references the Auth user we created.
+        if (authUser) await discardAuthUser(prisma, authUser);
         if (isUniqueViolation(error)) {
-          // A concurrent call with the same (partner, externalRef) won the race: idempotent.
+          // The (partner, externalRef) race is excluded by the lock, so this is the slug or the
+          // owner email colliding with another tenant.
           const winner = await find();
           if (winner) {
             return {
@@ -371,22 +427,29 @@ export const partnerRouter = createTRPCRouter({
       }
 
       assertNotOperatorEmail(email);
+
+      // Reject before any Auth user exists when the plan has no free seat...
+      await assertQuota(ctx, input.tenantId, 'seats');
       const authUser = await ensureAuthUser(email, input.name);
       try {
-        const user = await prisma.user.create({
-          data: {
-            id: authUser.id,
-            email,
-            name: input.name ?? email.split('@')[0],
-            role: input.role === 'ADMIN' ? 'ADMIN' : 'USER',
-            tenantId: input.tenantId,
-            provider: 'partner',
-          },
-          select: { id: true },
-        });
+        // ...and re-check the live count under the per-tenant lock when creating, so concurrent
+        // invitations cannot both take the last seat.
+        const user = await withQuotaLock(ctx, input.tenantId, 'seats', 1, () =>
+          prisma.user.create({
+            data: {
+              id: authUser.id,
+              email,
+              name: input.name ?? email.split('@')[0],
+              role: input.role === 'ADMIN' ? 'ADMIN' : 'USER',
+              tenantId: input.tenantId,
+              provider: 'partner',
+            },
+            select: { id: true },
+          })
+        );
         return { userId: user.id, created: true };
       } catch (error) {
-        await discardAuthUser(authUser);
+        await discardAuthUser(prisma, authUser);
         if (isUniqueViolation(error)) {
           throw new TRPCError({ code: 'CONFLICT', message: 'This email is already registered.' });
         }

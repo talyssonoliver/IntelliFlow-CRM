@@ -64,4 +64,58 @@ export class PrismaQuotaRepository implements QuotaRepositoryPort {
     `;
     return Number(rows[0]?.value ?? 0);
   }
+
+  /**
+   * Conditional single-statement upsert. The SELECT ... WHERE guards the insert branch
+   * (a fresh row must fit too) and the DO UPDATE ... WHERE guards the existing-row branch;
+   * no row is returned when either guard fails, which is how "over the limit" is reported.
+   */
+  async reserveCounter(
+    tenantId: string,
+    key: QuotaKey,
+    period: string,
+    by: number,
+    limit: number
+  ): Promise<number | null> {
+    const rows = await this.prisma.$queryRaw<Array<{ value: number }>>`
+      INSERT INTO tenant_usage_counters ("id", "tenantId", "key", "period", "value", "updatedAt")
+      SELECT ${randomUUID()}::text, ${tenantId}::text, ${key}::text, ${period}::text, ${by}::int, NOW()
+      WHERE ${by}::int <= ${limit}::int
+      ON CONFLICT ("tenantId", "key", "period")
+      DO UPDATE SET "value" = tenant_usage_counters."value" + ${by}::int, "updatedAt" = NOW()
+      WHERE tenant_usage_counters."value" + ${by}::int <= ${limit}::int
+      RETURNING "value"
+    `;
+    return rows.length === 0 ? null : Number(rows[0]!.value);
+  }
+
+  async decrementCounter(
+    tenantId: string,
+    key: QuotaKey,
+    period: string,
+    by: number
+  ): Promise<void> {
+    await this.prisma.$executeRaw`
+      UPDATE tenant_usage_counters
+      SET "value" = GREATEST("value" - ${by}::int, 0), "updatedAt" = NOW()
+      WHERE "tenantId" = ${tenantId} AND "key" = ${key} AND "period" = ${period}
+    `;
+  }
+
+  /**
+   * Transaction-scoped advisory lock keyed on (tenant, key). `fn` runs on its own pooled
+   * connection and must commit before it resolves; the lock only orders the critical sections.
+   * The API pool must therefore have spare connections (a locker holds one while waiting for
+   * a second); the timeouts below turn pool starvation into an error instead of a hang.
+   */
+  runExclusive<T>(tenantId: string, key: QuotaKey, fn: () => Promise<T>): Promise<T> {
+    const lockKey = `quota:${tenantId}:${key}`;
+    return this.prisma.$transaction(
+      async (tx) => {
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+        return fn();
+      },
+      { maxWait: 10_000, timeout: 30_000 }
+    );
+  }
 }

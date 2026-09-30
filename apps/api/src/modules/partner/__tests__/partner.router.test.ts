@@ -11,6 +11,7 @@ import { TRPCError } from '@trpc/server';
 import * as sdk from '@intelliflow/partner-sdk';
 import { createTestContext, prismaMock } from '../../../test/setup';
 import { hashPartnerKey } from '../../../security/partner-auth';
+import { overQuota, underQuota, quotaRejection } from '../../../test/quota';
 
 const supabaseAdminMock = vi.hoisted(() => ({
   auth: {
@@ -49,12 +50,15 @@ const ALL_SCOPES = [
   'usage:read',
 ];
 
-function callerWith(opts: { scopes?: string[]; usage?: unknown; header?: string | null } = {}) {
+function callerWith(
+  opts: { scopes?: string[]; usage?: unknown; header?: string | null; quota?: unknown } = {}
+) {
   const ctx = createTestContext({
     req: (opts.header === null
       ? { headers: {} }
       : { headers: { authorization: opts.header ?? `Bearer ${KEY}` } }) as never,
   });
+  if (opts.quota) (ctx as any).services = { ...(ctx as any).services, quota: opts.quota };
   const usagePort = 'usage' in opts ? opts.usage : { getUsage: vi.fn() };
   (ctx.container.get as any).mockImplementation((name: string) =>
     name === 'tenantUsage' ? (usagePort ?? undefined) : undefined
@@ -275,7 +279,8 @@ describe('partner.provisionTenant', () => {
   it('uses a requested slug when free and rejects it with CONFLICT when taken', async () => {
     const { caller } = callerWith();
     prismaMock.tenant.findUnique
-      .mockResolvedValueOnce(null) // by (partner, externalRef)
+      .mockResolvedValueOnce(null) // by (partner, externalRef), before the lock
+      .mockResolvedValueOnce(null) // by (partner, externalRef), inside the lock
       .mockResolvedValueOnce({ id: 'other' } as never); // by slug
     prismaMock.user.findUnique.mockResolvedValue(null);
 
@@ -399,9 +404,78 @@ describe('partner.provisionTenant', () => {
     warn.mockRestore();
   });
 
-  it('resolves a concurrent duplicate (unique violation) to the winner with created:false', async () => {
+  it('serializes on an advisory lock keyed on (partner, externalRef) and the owner email', async () => {
     const { caller } = callerWith();
+    prismaMock.tenant.findUnique.mockResolvedValue(null);
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    supabaseAdminMock.auth.admin.createUser.mockResolvedValue({
+      data: { user: { id: 'sb-1' } },
+      error: null,
+    });
+    prismaMock.tenant.create.mockResolvedValue({
+      id: 't',
+      slug: 's',
+      plan: 'PARTNER_FREE',
+    } as never);
+    prismaMock.user.create.mockResolvedValue({} as never);
+
+    await caller.provisionTenant(input);
+
+    const locks = (prismaMock.$queryRaw as any).mock.calls.filter(([strings]: [string[]]) =>
+      strings.join('?').includes('pg_advisory_xact_lock')
+    );
+    expect(locks).toHaveLength(2);
+    expect(locks[0].slice(1)).toEqual([`partner-provision:partner-1:${EXTERNAL_REF}`]);
+    expect(locks[1].slice(1)).toEqual(['partner-provision-email:owner@acme.test']);
+    // The lock is taken before the Auth user is created.
+    expect(locks[0]).toBeDefined();
+    expect(prismaMock.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      supabaseAdminMock.auth.admin.createUser.mock.invocationCallOrder[0]
+    );
+  });
+
+  it('a call that waited on the lock returns the winner without touching Supabase', async () => {
+    const { caller } = callerWith();
+    // Pre-lock lookup misses, the lookup inside the lock finds the winner's committed tenant.
     prismaMock.tenant.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 'winner', slug: 'w', plan: 'STARTER' } as never);
+
+    const out = await caller.provisionTenant(input);
+
+    expect(out).toEqual({ tenantId: 'winner', slug: 'w', plan: 'STARTER', created: false });
+    expect(supabaseAdminMock.auth.admin.createUser).not.toHaveBeenCalled();
+    expect(supabaseAdminMock.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('never deletes an Auth user that a committed CRM user references', async () => {
+    const { caller } = callerWith();
+    prismaMock.tenant.findUnique.mockResolvedValue(null);
+    // 1st lookup: owner email is free. 2nd lookup (cleanup guard): the id is now referenced.
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 'sb-1' } as never);
+    supabaseAdminMock.auth.admin.createUser.mockResolvedValue({
+      data: { user: { id: 'sb-1' } },
+      error: null,
+    });
+    prismaMock.tenant.create.mockRejectedValue(
+      Object.assign(new Error('unique'), { code: 'P2002' })
+    );
+
+    await expectCode(caller.provisionTenant(input), 'CONFLICT');
+
+    expect(prismaMock.user.findUnique).toHaveBeenLastCalledWith(
+      expect.objectContaining({ where: { id: 'sb-1' } })
+    );
+    expect(supabaseAdminMock.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('resolves a unique violation to the tenant that already exists, with created:false', async () => {
+    const { caller } = callerWith();
+    // pre-lock miss, in-lock miss, then the post-rollback lookup finds the winner.
+    prismaMock.tenant.findUnique
+      .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({ id: 'winner', slug: 'w', plan: 'STARTER' } as never);
     prismaMock.user.findUnique.mockResolvedValue(null);
@@ -551,6 +625,36 @@ describe('partner.inviteMember', () => {
         data: expect.objectContaining({ id: 'sb-9', role: mapped, tenantId: 't1', name: 'New' }),
       })
     );
+  });
+
+  it('rejects with PRECONDITION_FAILED before creating any Auth user when seats are full', async () => {
+    const { caller } = callerWith({ quota: overQuota('seats', 3, 3) });
+    prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
+    prismaMock.user.findUnique.mockResolvedValue(null);
+
+    await expect(
+      caller.inviteMember({ tenantId: 't1', email: 'new@b.co', role: 'MEMBER' })
+    ).rejects.toMatchObject(quotaRejection('seats', 3, 3));
+
+    expect(supabaseAdminMock.auth.admin.createUser).not.toHaveBeenCalled();
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+  });
+
+  it('creates the member under the per-tenant seats lock when a seat is free', async () => {
+    const quota = underQuota();
+    const { caller } = callerWith({ quota });
+    prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    supabaseAdminMock.auth.admin.createUser.mockResolvedValue({
+      data: { user: { id: 'sb-9' } },
+      error: null,
+    });
+    prismaMock.user.create.mockResolvedValue({ id: 'sb-9' } as never);
+
+    await caller.inviteMember({ tenantId: 't1', email: 'new@b.co', role: 'MEMBER' });
+
+    expect(quota.assertWithinQuota).toHaveBeenCalledWith('t1', 'seats', 1);
+    expect(quota.withinQuota).toHaveBeenCalledWith('t1', 'seats', 1, expect.any(Function));
   });
 
   it('refuses operator emails, cleans up on failure and maps a unique violation to CONFLICT', async () => {
