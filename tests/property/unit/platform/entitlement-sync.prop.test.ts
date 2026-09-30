@@ -108,11 +108,9 @@ function createMockPrisma(
     $queryRaw: vi.fn().mockImplementation(async () => [{ plan: planForTenant }]),
     tenant: {
       findUnique: vi.fn().mockImplementation(async () => ({ plan: planForTenant })),
-      update: vi
-        .fn()
-        .mockImplementation(async ({ data }: { data: { plan: PlanTier } }) => ({
-          plan: data.plan,
-        })),
+      update: vi.fn().mockImplementation(async ({ data }: { data: { plan: PlanTier } }) => ({
+        plan: data.plan,
+      })),
     },
     tenantModule: {
       findMany: vi.fn().mockImplementation(async ({ where }: { where: { tenantId: string } }) => {
@@ -325,11 +323,9 @@ describe('getTenantPlan — stale-plan read (RACE-ENTIT-05)', () => {
         $queryRaw: vi.fn().mockResolvedValue([]),
         tenant: {
           findUnique: vi.fn().mockImplementation(async () => ({ plan: 'STARTER' })),
-          update: vi
-            .fn()
-            .mockImplementation(async ({ data }: { data: { plan: PlanTier } }) => ({
-              plan: data.plan,
-            })),
+          update: vi.fn().mockImplementation(async ({ data }: { data: { plan: PlanTier } }) => ({
+            plan: data.plan,
+          })),
         },
         tenantModule: {
           findMany: vi.fn().mockResolvedValue([]),
@@ -503,11 +499,9 @@ describe('isModuleEnabled — falls back to plan-membership correctly', () => {
         $queryRaw: vi.fn().mockResolvedValue([{ plan }]),
         tenant: {
           findUnique: vi.fn().mockImplementation(async () => ({ plan: plan })),
-          update: vi
-            .fn()
-            .mockImplementation(async ({ data }: { data: { plan: PlanTier } }) => ({
-              plan: data.plan,
-            })),
+          update: vi.fn().mockImplementation(async ({ data }: { data: { plan: PlanTier } }) => ({
+            plan: data.plan,
+          })),
         },
         tenantModule: {
           findUnique: vi.fn().mockResolvedValue(null), // no override
