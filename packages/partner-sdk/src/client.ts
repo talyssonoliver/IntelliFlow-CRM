@@ -10,7 +10,9 @@
  */
 
 import {
+  MEMBERSHIP_ERROR_REASONS,
   PROCEDURES,
+  type MembershipErrorReason,
   type ProcedureInput,
   type ProcedureName,
   type ProcedureOutput,
@@ -29,7 +31,9 @@ export class PartnerApiError extends Error {
   constructor(
     message: string,
     readonly code: PartnerErrorCode,
-    readonly httpStatus: number
+    readonly httpStatus: number,
+    /** ADR-071 machine-readable reason (e.g. ACCOUNT_IN_OTHER_TENANT), when the API sent one. */
+    readonly reason: MembershipErrorReason | null = null
   ) {
     super(message);
     this.name = 'PartnerApiError';
@@ -55,6 +59,20 @@ function toErrorCode(raw: unknown): PartnerErrorCode {
   return typeof raw === 'string' && KNOWN_CODES.has(raw as PartnerErrorCode)
     ? (raw as PartnerErrorCode)
     : 'UNKNOWN';
+}
+
+const KNOWN_REASONS = new Set<string>(MEMBERSHIP_ERROR_REASONS);
+
+/** Reason from `error.data.reason`, else from a `REASON: ...` message prefix. */
+export function toErrorReason(message: unknown, dataReason: unknown): MembershipErrorReason | null {
+  if (typeof dataReason === 'string' && KNOWN_REASONS.has(dataReason)) {
+    return dataReason as MembershipErrorReason;
+  }
+  if (typeof message === 'string') {
+    const m = /^([A-Z_]+):/.exec(message);
+    if (m && KNOWN_REASONS.has(m[1]!)) return m[1] as MembershipErrorReason;
+  }
+  return null;
 }
 
 export type PartnerClient = {
@@ -107,7 +125,8 @@ export function createPartnerClient(options: PartnerClientOptions): PartnerClien
       throw new PartnerApiError(
         String(body.error.message ?? 'Partner API error'),
         toErrorCode(body.error.data?.code),
-        res.status
+        res.status,
+        toErrorReason(body.error.message, body.error.data?.reason)
       );
     }
     if (!res.ok || body?.result === undefined) {
