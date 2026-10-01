@@ -67,22 +67,34 @@ interface Grant {
   issuedAt: Date;
   expiresAt: Date;
   claimedSessionId: string | null;
+  /** Defaults to true (a staff grant). */
+  pinned?: boolean;
 }
 
 function makeDb(rows: Row[], grants: Grant[] = []) {
   const db = {
     tenantMembership: { findMany: vi.fn().mockResolvedValue(rows) },
     partnerLoginGrant: {
-      findFirst: vi.fn(async ({ where }: { where: { claimedSessionId: string } }) => {
-        const g = grants.find((x) => x.claimedSessionId === where.claimedSessionId);
-        return g ? { id: g.id, tenantId: g.tenantId, sessionExpiresAt: g.sessionExpiresAt } : null;
-      }),
+      findFirst: vi.fn(
+        async ({ where }: { where: { claimedSessionId: string; pinned?: boolean } }) => {
+          const g = grants.find(
+            (x) =>
+              x.claimedSessionId === where.claimedSessionId &&
+              (where.pinned === undefined || (x.pinned ?? true) === where.pinned)
+          );
+          return g
+            ? { id: g.id, tenantId: g.tenantId, sessionExpiresAt: g.sessionExpiresAt }
+            : null;
+        }
+      ),
       findMany: vi.fn(async () =>
-        grants.map((g) => ({
-          issuedAt: g.issuedAt,
-          expiresAt: g.expiresAt,
-          claimedSessionId: g.claimedSessionId,
-        }))
+        grants
+          .filter((g) => g.pinned ?? true)
+          .map((g) => ({
+            issuedAt: g.issuedAt,
+            expiresAt: g.expiresAt,
+            claimedSessionId: g.claimedSessionId,
+          }))
       ),
     },
   };
@@ -455,6 +467,27 @@ describe('resolveActiveTenant: PIN_PENDING', () => {
         claims: { sessionId: SESSION, amr: [otpAt(NOW)] },
       }
     );
+    expect(r.pinPending).toBe(true);
+  });
+
+  it('does not lock a session that claimed its own non-pinned grant inside a pinned grant window', async () => {
+    // G1: pinned staff grant claimed by S1. G3: non-pinned home-tenant grant claimed by S3,
+    // opened inside G1's window. S3 owns a claimed grant, so it must not be PIN_PENDING.
+    const g1 = unclaimed({ id: 'G1', claimedSessionId: 'session-S1' });
+    const g3 = unclaimed({ id: 'G3', tenantId: HOME, claimedSessionId: SESSION, pinned: false });
+    const r = await resolve(makeDb([staff(CLIENT)], [g1, g3]), {
+      claims: { sessionId: SESSION, amr: [otpAt(NOW)] },
+    });
+    expect(r.pinPending).toBe(false);
+    expect(r.pinned).toBe(false);
+    expect(r.activeTenantId).toBe(HOME);
+  });
+
+  it('still locks a session that claimed nothing inside a pinned grant window', async () => {
+    const g1 = unclaimed({ id: 'G1', claimedSessionId: 'session-S1' });
+    const r = await resolve(makeDb([staff(CLIENT)], [g1]), {
+      claims: { sessionId: SESSION, amr: [otpAt(NOW)] },
+    });
     expect(r.pinPending).toBe(true);
   });
 

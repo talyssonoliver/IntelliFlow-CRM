@@ -313,6 +313,17 @@ async function isPinPending(
     .map((e) => e.timestamp * 1000);
   if (linkTimes.length === 0) return false;
 
+  // A session that has claimed ANY grant is not waiting for a pin: a pinned claim was resolved in
+  // step 1, and a non-pinned claim (a staff member's own home-tenant link opened inside another
+  // grant's window) must not stay locked behind somebody else's pinned grant.
+  if (claims.sessionId) {
+    const own = await prisma.partnerLoginGrant.findFirst({
+      where: { userId, claimedSessionId: claims.sessionId },
+      select: { id: true },
+    });
+    if (own) return false;
+  }
+
   const candidates = await prisma.partnerLoginGrant.findMany({
     where: {
       userId,
