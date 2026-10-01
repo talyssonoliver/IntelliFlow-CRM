@@ -185,6 +185,26 @@ function followLayers({ root, gsap, ScrollTrigger, motion, triggers, cleanups }:
     // lifts out of the stack to the top of the frame and turns to face the
     // reader; it stays there while the card scrolls past, and dissolves as the
     // next card fills the bottom fifth of the screen.
+    // Act 0: the stack waits below the fold, then arrives stacked tight and
+    // turned, opening out as the hero scrolls away.
+    const hero = root.querySelector('.hero');
+    const frame = root.querySelector<HTMLElement>('.stage-object.stack-visual');
+    const show = (progress: number) => {
+      s.setIntro(progress);
+      // Hidden on the first screen; fades in over the first stretch of scrolling.
+      if (frame) frame.style.opacity = String(Math.min(1, progress * 6));
+    };
+    if (hero) {
+      const intro = ScrollTrigger.create({
+        trigger: hero,
+        start: 'top top',
+        end: 'bottom 15%',
+        onUpdate: (self) => show(self.progress),
+      });
+      triggers.push(intro);
+      cleanups.push(() => frame?.style.removeProperty('opacity'));
+      show((intro as { progress?: number }).progress ?? 0);
+    }
     const copy = root.querySelector('.stage-copy');
     if (copy) {
       const cards = steps.filter((step) => step.dataset.layer);
@@ -313,6 +333,7 @@ function wireStack(wiring: Wiring, s: Stack): void {
     teardown();
     s.setPresentation(null);
     s.setActive(null);
+    s.setIntro(1);
     const scoped: Wiring = { ...wiring, triggers, cleanups: local };
     hideAtStageEnd(scoped, s, followLayers(scoped, s));
   };
