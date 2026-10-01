@@ -154,17 +154,21 @@
     position: relative;
     display: block;
     min-height: 0;
-    margin: 0 0 78vh;
-    margin: 0 0 78svh;
+    /* A screen and a third between cards: the last card's layer peels away
+       after the card has left, before the next card appears. */
+    margin: 0 0 135vh;
+    margin: 0 0 135svh;
     opacity: 1;
   }
   .aurora-page .walk.walk-card {
     margin-top: 62vh;
     margin-top: 62svh;
   }
+  /* The stack clears when the stage ends, so the last card needs room for its
+     layer to peel away after the card has left the screen. */
   .aurora-page .layer-step.layer-card:last-of-type {
-    margin-bottom: 46vh;
-    margin-bottom: 46svh;
+    margin-bottom: 130vh;
+    margin-bottom: 130svh;
   }
   .aurora-page .layer-step-inner {
     box-sizing: border-box;

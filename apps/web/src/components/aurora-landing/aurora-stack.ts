@@ -264,7 +264,8 @@ export function createStack(
     const rings = [0, 1].map(() => {
       const material = new THREE.MeshBasicMaterial({
         map: rippleMap,
-        color: colour,
+        // Navy reads as a dark box, not a glow: the bottom layer ripples in Violet.
+        color: index === 0 ? new THREE.Color('#7655F6') : colour,
         transparent: true,
         opacity: 0,
         depthWrite: false,
@@ -288,6 +289,10 @@ export function createStack(
     };
   });
   const turn = new THREE.Quaternion();
+  /** Lays a ripple ring flat on its slab's face (rings are planes facing +Z). */
+  const flat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
+  const peelTurn = new THREE.Quaternion();
+  const peelAxis = new THREE.Vector3(1, 0, 0);
   const follow = new THREE.Quaternion();
   const followEuler = new THREE.Euler();
 
@@ -327,6 +332,7 @@ export function createStack(
       z: up.z * offset + towards.z * 6,
       quaternion: presented,
       scale,
+      up,
     };
   };
   /** The last time the page scrolled or the active layer changed. */
@@ -404,27 +410,47 @@ export function createStack(
       item.group.quaternion.copy(turn).multiply(follow.setFromEuler(followEuler));
       item.group.scale.set(1, 1, 1);
 
-      // Phone story: the layer lifts out to the top of the frame, faces the
-      // viewer while its card scrolls past, then dissolves.
+      // Phone story: the layer lifts out to the top of the frame and faces the
+      // viewer while its card scrolls past. Once the card has left the screen
+      // it peels away as layers always have: it drifts up, wobbles and fades,
+      // leaving a ripple where it was.
       const shown = presentation[index];
-      if (pose && shown && shown.present > 0) {
+      const presented = !!(pose && shown && shown.present > 0);
+      let ripple = s.peel;
+      let ringAt = { x: 0, y: baseY(index) + H / 2, z: 0 };
+      let ringScale = 1;
+      if (pose && shown && presented) {
         const e = smooth(shown.present);
+        const d = reducedMotion ? 0 : shown.dissolve;
         const p = item.group.position;
         p.set(p.x + (pose.x - p.x) * e, p.y + (pose.y - p.y) * e, p.z + (pose.z - p.z) * e);
+        ringAt = { x: p.x, y: p.y, z: p.z };
+        const rise = d * 2.4 * pose.scale;
+        p.set(p.x + pose.up.x * rise, p.y + pose.up.y * rise, p.z + pose.up.z * rise);
         item.group.quaternion.slerp(pose.quaternion, e);
-        const grow = (1 + (pose.scale - 1) * e) * (1 + shown.dissolve * 0.08);
-        item.group.scale.set(grow, grow, grow);
+        if (d > 0 && d < 1) {
+          item.group.quaternion.multiply(
+            peelTurn.setFromAxisAngle(peelAxis, Math.sin(d * Math.PI * 2) * 0.08)
+          );
+        }
+        ringScale = 1 + (pose.scale - 1) * e;
+        item.group.scale.set(ringScale, ringScale, ringScale);
         const alpha = 1 - smooth(shown.dissolve);
         item.group.visible = alpha > 0.015;
         item.slab.opacity = alpha;
         item.face.opacity = alpha;
         item.slab.emissiveIntensity = 0.12;
+        ripple = shown.dissolve;
       }
 
-      rippleRings(reducedMotion ? 0 : s.peel).forEach(({ scale, opacity }, r) => {
+      rippleRings(reducedMotion ? 0 : ripple).forEach(({ scale, opacity }, r) => {
         const ring = item.rings[r]!;
-        ring.visible = !shown?.present && opacity > 0.01;
-        ring.scale.set(scale, scale, 1);
+        ring.visible = opacity > 0.01;
+        ring.position.set(ringAt.x, ringAt.y, ringAt.z);
+        // On the slab's face: flat in the stack, square to the viewer when presented.
+        if (presented) ring.quaternion.copy(item.group.quaternion).multiply(flat);
+        else ring.quaternion.copy(flat);
+        ring.scale.set(scale * ringScale, scale * ringScale, 1);
         ring.material.opacity = opacity;
       });
     });
