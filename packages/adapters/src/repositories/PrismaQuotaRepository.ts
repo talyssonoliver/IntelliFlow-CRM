@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { PrismaClient } from '@intelliflow/db';
+import { seatUserWhere, type PrismaClient } from '@intelliflow/db';
 import { isQuotaKey, type QuotaKey } from '@intelliflow/domain';
 import type { QuotaRepositoryPort, TenantQuotaOverrideRecord } from '@intelliflow/application';
 
@@ -28,8 +28,12 @@ export class PrismaQuotaRepository implements QuotaRepositoryPort {
     return this.prisma.contact.count({ where: { tenantId } });
   }
 
+  /**
+   * Seats (ADR-071): home users plus live non-pinned members attached from elsewhere, each user
+   * once. Pinned staff memberships never take a seat. See `seatUserWhere`.
+   */
   countUsers(tenantId: string): Promise<number> {
-    return this.prisma.user.count({ where: { tenantId } });
+    return this.prisma.user.count({ where: seatUserWhere(tenantId) });
   }
 
   countActiveWorkflows(tenantId: string): Promise<number> {
