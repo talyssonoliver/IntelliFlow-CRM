@@ -345,3 +345,33 @@ describe('user.claimLoginGrant', () => {
     expect(error.code).toBe('UNAUTHORIZED');
   });
 });
+
+describe('user.list (assignee picker) sees visiting members', () => {
+  it('combines the tenant filter and the search filter instead of overwriting one with the other', async () => {
+    const prisma = { ...makePrisma(), user: { findUnique: vi.fn(), findMany: vi.fn() } };
+    prisma.user.findMany.mockResolvedValue([]);
+
+    await caller(prisma as never, {
+      user: { ...sessionUser, tenantId: CLIENT },
+    }).list({ search: 'ann', limit: 5 });
+
+    const where = prisma.user.findMany.mock.calls[0]![0].where;
+    expect(where.AND).toHaveLength(2);
+    // First: home users of CLIENT or live members of CLIENT.
+    expect(where.AND[0].OR).toEqual([
+      expect.objectContaining({ tenantId: CLIENT }),
+      { memberships: { some: expect.objectContaining({ tenantId: CLIENT }) } },
+    ]);
+    // Second: the free-text search, untouched.
+    expect(where.AND[1].OR).toHaveLength(4);
+  });
+
+  it('applies only the tenant filter when there is no search', async () => {
+    const prisma = { ...makePrisma(), user: { findUnique: vi.fn(), findMany: vi.fn() } };
+    prisma.user.findMany.mockResolvedValue([]);
+
+    await caller(prisma as never, { user: sessionUser }).list({ limit: 5 });
+
+    expect(prisma.user.findMany.mock.calls[0]![0].where.AND).toHaveLength(1);
+  });
+});

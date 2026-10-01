@@ -8,6 +8,7 @@
  */
 
 import type { Context } from '../../context';
+import { tenantUserWhere } from '@intelliflow/db';
 import { getTenantContext } from '../../security/tenant-context';
 import { getAuditLogger } from '../../security/audit-logger';
 import {
@@ -57,7 +58,7 @@ export async function performDealReassign(
 
   return typedCtx.prismaWithTenant.$transaction(async (tx) => {
     const targetUser = await tx.user.findFirst({
-      where: { id: input.ownerId, tenantId },
+      where: { id: input.ownerId, ...tenantUserWhere(tenantId) },
       select: { id: true },
     });
     if (!targetUser) return { kind: 'TARGET_USER_NOT_FOUND' as const };
