@@ -4,14 +4,13 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NavSheet } from '@/components/aurora-landing/sections/NavSheet';
+import { NAV_LINKS, hrefFromElsewhere } from '@/components/aurora-landing/sections/footer-links';
 
-/** The header's destinations: the landing's sections, then the pages with their own routes. */
-export const SITE_LINKS: ReadonlyArray<{ href: string; label: string }> = [
-  { href: '/#platform', label: 'Platform' },
-  { href: '/#agents', label: 'AI agents' },
-  { href: '/security', label: 'Security' },
-  { href: '/pricing', label: 'Pricing' },
-];
+/** The landing header's links, addressed from another page. */
+export const SITE_LINKS: ReadonlyArray<{ href: string; label: string }> = NAV_LINKS.map((link) => ({
+  href: hrefFromElsewhere(link),
+  label: link.label,
+}));
 
 /**
  * The fixed Aurora header every public page shares with the landing page:

@@ -1,46 +1,18 @@
 import Link from 'next/link';
 import { SectionCurve } from '@/components/aurora-landing/sections/SectionCurve';
+import {
+  FOOTER_COLUMNS as SHARED_COLUMNS,
+  hrefFromElsewhere,
+} from '@/components/aurora-landing/sections/footer-links';
 
-/** Every footer link goes to a page that exists and is open to visitors. */
+/** The landing footer's columns, addressed from another page. */
 export const FOOTER_COLUMNS: ReadonlyArray<{
   title: string;
   links: ReadonlyArray<{ href: string; label: string }>;
-}> = [
-  {
-    title: 'Product',
-    links: [
-      { href: '/#platform', label: 'Platform' },
-      { href: '/#agents', label: 'AI agents' },
-      { href: '/features', label: 'Features' },
-      { href: '/pricing', label: 'Pricing' },
-    ],
-  },
-  {
-    title: 'Trust',
-    links: [
-      { href: '/security', label: 'Security' },
-      { href: '/status', label: 'Status' },
-      { href: '/privacy', label: 'Privacy' },
-      { href: '/terms', label: 'Terms' },
-      { href: '/cookies', label: 'Cookies' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { href: '/about', label: 'About' },
-      { href: '/contact', label: 'Contact' },
-      { href: '/blog', label: 'Blog' },
-      { href: '/careers', label: 'Careers' },
-      { href: '/press', label: 'Press' },
-      { href: '/partners', label: 'Partners' },
-    ],
-  },
-  {
-    title: 'Help',
-    links: [{ href: '/help-center', label: 'Help centre' }],
-  },
-];
+}> = SHARED_COLUMNS.map(({ title, links }) => ({
+  title,
+  links: links.map((link) => ({ href: hrefFromElsewhere(link), label: link.label })),
+}));
 
 /** The Aurora footer: Navy under a ribbon-traced curve, with the aurora ribbons rising behind it. */
 export function AuroraSiteFooter() {
