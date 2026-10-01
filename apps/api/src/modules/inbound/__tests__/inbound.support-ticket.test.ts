@@ -84,15 +84,19 @@ describe('inbound.logSupportTicket', () => {
     const result = await caller.logSupportTicket(PORTAL_PAYLOAD);
 
     expect(result).toEqual({ ticketId: 'ticket_1', created: true });
-    expect(mockServices.ticket.create).toHaveBeenCalledWith({
-      subject: 'Checkout button broken',
-      description: 'The pay button does nothing on mobile.',
-      priority: 'HIGH',
-      contactName: 'Ana Silva',
-      contactEmail: 'client@acme.example',
-      slaPolicyId: 'sla_default',
-      tenantId: TENANT_ID,
-    });
+    expect(mockServices.ticket.create).toHaveBeenCalledWith(
+      {
+        subject: 'Checkout button broken',
+        description: 'The pay button does nothing on mobile.',
+        priority: 'HIGH',
+        contactName: 'Ana Silva',
+        contactEmail: 'client@acme.example',
+        slaPolicyId: 'sla_default',
+        tenantId: TENANT_ID,
+      },
+      // The transaction client: the ticket must commit together with its marker.
+      prismaMock
+    );
     const marker = prismaMock.ticketActivity.create.mock.calls[0]![0] as {
       data: Record<string, unknown>;
     };
@@ -157,7 +161,8 @@ describe('inbound.logSupportTicket', () => {
         contactName: 'solo@acme.example',
         priority: 'MEDIUM',
         slaPolicyId: undefined,
-      })
+      }),
+      prismaMock
     );
   });
 
@@ -194,7 +199,7 @@ describe('inbound.logSupportTicket', () => {
     });
   });
 
-  it('still returns the ticket when the idempotency marker write fails', async () => {
+  it('rolls the ticket back (rethrows) when the idempotency marker write fails', async () => {
     prismaMock.ticketActivity.findFirst.mockResolvedValueOnce(null);
     prismaMock.sLAPolicy.findFirst.mockResolvedValueOnce(null);
     (mockServices.ticket.create as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
@@ -204,9 +209,12 @@ describe('inbound.logSupportTicket', () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
     const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
-    const result = await caller.logSupportTicket(PORTAL_PAYLOAD);
-
-    expect(result).toEqual({ ticketId: 'ticket_3', created: true });
+    // The transaction callback must reject so Prisma rolls the ticket back with the
+    // marker; a ticket without a marker would be duplicated by the portal's retry.
+    await expect(caller.logSupportTicket(PORTAL_PAYLOAD)).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    expect(mockServices.ticket.create).toHaveBeenCalledTimes(1);
     expect(errSpy).toHaveBeenCalled();
   });
 });

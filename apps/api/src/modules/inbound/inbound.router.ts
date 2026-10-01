@@ -680,7 +680,10 @@ export const inboundRouter = createTRPCRouter({
       }
 
       // Serialize per requestId: without the lock two concurrent retries both miss the lookup
-      // and create duplicate tickets. The lock is released at commit, after the marker insert.
+      // and create duplicate tickets. The ticket and its marker are written on the SAME
+      // transaction client, so they commit or roll back together; the lock is released at
+      // commit. A marker failure therefore rethrows (rolling the ticket back) instead of
+      // leaving a ticket with no marker for the next retry to duplicate.
       const lockKey = `support:${input.requestId}`;
       return ctx.prisma.$transaction(
         async (tx): Promise<InboundSupportTicketOutput> => {
@@ -707,15 +710,18 @@ export const inboundRouter = createTRPCRouter({
 
           let ticket: { id: string };
           try {
-            ticket = await ticketService.create({
-              subject: input.subject.slice(0, 200),
-              description: input.message,
-              priority: input.category === 'bug' ? 'HIGH' : 'MEDIUM',
-              contactName: contactName.slice(0, 100),
-              contactEmail: input.email,
-              slaPolicyId: defaultSla?.id,
-              tenantId,
-            });
+            ticket = await ticketService.create(
+              {
+                subject: input.subject.slice(0, 200),
+                description: input.message,
+                priority: input.category === 'bug' ? 'HIGH' : 'MEDIUM',
+                contactName: contactName.slice(0, 100),
+                contactEmail: input.email,
+                slaPolicyId: defaultSla?.id,
+                tenantId,
+              },
+              tx
+            );
           } catch (err) {
             throw new TRPCError({
               code: 'BAD_REQUEST',
@@ -744,11 +750,16 @@ export const inboundRouter = createTRPCRouter({
               },
             });
           } catch (err) {
-            // Without this marker a retry would create a duplicate ticket.
+            // Without this marker a retry would create a duplicate ticket, so the ticket
+            // must not survive on its own: rethrow and let the transaction roll back.
             console.error('[inbound.logSupportTicket] idempotency marker failed:', {
               ticketId: ticket.id,
               requestId: input.requestId,
               error: err instanceof Error ? err.message : err,
+            });
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to record the support request; please retry',
             });
           }
 

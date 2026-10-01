@@ -15,6 +15,16 @@ import type {
  * - Statistics and aggregations
  * - Status transitions
  */
+/**
+ * The subset of the Prisma client `create()` writes through. Callers that must
+ * commit the ticket atomically with their own rows (e.g. an idempotency marker)
+ * pass the interactive-transaction client here.
+ */
+export type TicketWriteClient = Pick<
+  PrismaClient,
+  'ticket' | 'sLAPolicy' | 'ticketActivity' | 'ticketNextStep'
+>;
+
 export class TicketService {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -327,25 +337,28 @@ export class TicketService {
   /**
    * Create a new ticket
    */
-  async create(data: {
-    subject: string;
-    description?: string;
-    priority: TicketPriority;
-    contactName: string;
-    contactEmail: string;
-    contactId?: string;
-    assigneeId?: string;
-    slaPolicyId?: string;
-    tenantId: string;
-  }) {
+  async create(
+    data: {
+      subject: string;
+      description?: string;
+      priority: TicketPriority;
+      contactName: string;
+      contactEmail: string;
+      contactId?: string;
+      assigneeId?: string;
+      slaPolicyId?: string;
+      tenantId: string;
+    },
+    db: TicketWriteClient = this.prisma
+  ) {
     // Generate ticket number
-    const ticketCount = await this.prisma.ticket.count();
+    const ticketCount = await db.ticket.count();
     const ticketNumber = `T-${String(ticketCount + 1).padStart(5, '0')}`;
 
     // Get SLA policy to calculate due times — auto-select default if not provided
     const slaPolicy = data.slaPolicyId
-      ? await this.prisma.sLAPolicy.findUnique({ where: { id: data.slaPolicyId } })
-      : await this.prisma.sLAPolicy.findFirst({ orderBy: { createdAt: 'asc' } });
+      ? await db.sLAPolicy.findUnique({ where: { id: data.slaPolicyId } })
+      : await db.sLAPolicy.findFirst({ orderBy: { createdAt: 'asc' } });
 
     if (!slaPolicy) {
       throw new Error('SLA policy not found');
@@ -385,7 +398,7 @@ export class TicketService {
       now.getTime() + getResolutionMinutes(data.priority) * 60 * 1000
     );
 
-    const ticket = await this.prisma.ticket.create({
+    const ticket = await db.ticket.create({
       data: {
         ticketNumber,
         subject: data.subject,
@@ -408,7 +421,7 @@ export class TicketService {
     });
 
     // Create initial activity
-    await this.prisma.ticketActivity.create({
+    await db.ticketActivity.create({
       data: {
         ticketId: ticket.id,
         tenantId: data.tenantId,
@@ -423,7 +436,7 @@ export class TicketService {
     // Generate default next steps based on priority
     const defaultNextSteps = this.getDefaultNextSteps(data.priority);
     if (defaultNextSteps.length > 0) {
-      await this.prisma.ticketNextStep.createMany({
+      await db.ticketNextStep.createMany({
         data: defaultNextSteps.map((step) => ({
           ticketId: ticket.id,
           title: step.title,
