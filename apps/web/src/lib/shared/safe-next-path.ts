@@ -21,7 +21,7 @@ export function safeNextPath(raw: string | null | undefined, fallback = DEFAULT_
   }
   if (hasControlChar(raw)) return fallback;
   try {
-    const base = 'http://safe-next.invalid';
+    const base = 'https://safe-next.invalid'; // sentinel origin only; never fetched
     const resolved = new URL(raw, base);
     if (resolved.origin !== base) return fallback;
     return `${resolved.pathname}${resolved.search}${resolved.hash}`;

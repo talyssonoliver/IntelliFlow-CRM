@@ -18,7 +18,7 @@
  *   skipped (an existing session must not win over the link) and the user lands on `next`
  */
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AuthBackground } from '@/components/shared/auth-background';
 import { OAuthCallback } from '@/components/shared/oauth-callback';
@@ -87,8 +87,13 @@ function MagicLinkCallbackContent({ next }: Readonly<{ next: string }>) {
 
 function CallbackRouter() {
   const searchParams = useSearchParams();
-  if (searchParams?.get('token_hash')) {
-    return <MagicLinkCallbackContent next={safeNextPath(searchParams.get('next'))} />;
+  // Latch the mode on first render: the callback strips token_hash from the address bar, and a
+  // later re-render must not flip a magic-link visit into the OAuth branch (redirect hook).
+  const [magicNext] = useState<string | null>(() =>
+    searchParams?.get('token_hash') ? safeNextPath(searchParams.get('next')) : null
+  );
+  if (magicNext !== null) {
+    return <MagicLinkCallbackContent next={magicNext} />;
   }
   return <SSOCallbackContent />;
 }

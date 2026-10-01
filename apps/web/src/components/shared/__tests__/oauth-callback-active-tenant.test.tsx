@@ -10,6 +10,7 @@
  */
 
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   ACTIVE_TENANT_STORAGE_KEY,
@@ -23,6 +24,7 @@ const h = vi.hoisted(() => ({
   verifyOtp: vi.fn(),
   storeSessionTokens: vi.fn(),
   clearSessionTokens: vi.fn(),
+  getStoredAccessToken: vi.fn(),
   storeSessionFingerprint: vi.fn(),
   clearSupabaseLocalStorage: vi.fn(),
   syncTokenToCookie: vi.fn(),
@@ -46,6 +48,7 @@ vi.mock('@/lib/supabase-browser', () => ({
 vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: h.storeSessionTokens,
   clearSessionTokens: h.clearSessionTokens,
+  getStoredAccessToken: h.getStoredAccessToken,
 }));
 vi.mock('@/lib/shared/session-cleanup', () => ({
   syncTokenToCookie: h.syncTokenToCookie,
@@ -90,6 +93,7 @@ describe('OAuthCallback active tenant', () => {
     sessionStorage.clear();
     localStorage.clear();
     h.order.length = 0;
+    h.getStoredAccessToken.mockReturnValue(null);
     vi.stubEnv(FLAG, '1');
     vi.stubGlobal('fetch', h.fetch);
     h.query.value = FULL_LINK;
@@ -107,6 +111,34 @@ describe('OAuthCallback active tenant', () => {
     h.fetch.mockImplementation(async () => {
       h.order.push('claim');
       return trpcOk({ tenantId: 'tenant_client', pinned: true, sessionExpiresAt: null });
+    });
+  });
+
+  describe('with an existing session', () => {
+    it('keeps the grant and tenant in memory and claims them only after Continue', async () => {
+      h.getStoredAccessToken.mockReturnValue('x.e30.y');
+      const onSuccess = vi.fn();
+      render(<OAuthCallback onSuccess={onSuccess} />);
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+
+      expect(h.order).toEqual(['signOut', 'verifyOtp', 'claim', 'storeSessionTokens']);
+      expect(JSON.parse((h.fetch.mock.calls[0][1] as RequestInit).body as string)).toEqual({
+        grant: 'grant_1',
+      });
+      expect(getActiveTenantId()).toBe('tenant_client');
+    });
+
+    it('claims nothing and stores no tenant when the user stays signed in', async () => {
+      h.getStoredAccessToken.mockReturnValue('x.e30.y');
+      render(<OAuthCallback onSuccess={vi.fn()} />);
+
+      await userEvent.click(await screen.findByRole('button', { name: /stay signed in/i }));
+
+      expect(h.fetch).not.toHaveBeenCalled();
+      expect(h.verifyOtp).not.toHaveBeenCalled();
+      expect(getActiveTenantId()).toBeNull();
     });
   });
 

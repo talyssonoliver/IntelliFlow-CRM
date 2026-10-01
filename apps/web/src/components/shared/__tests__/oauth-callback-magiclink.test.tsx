@@ -21,6 +21,7 @@ const h = vi.hoisted(() => ({
   getUser: vi.fn(),
   storeSessionTokens: vi.fn(),
   clearSessionTokens: vi.fn(),
+  getStoredAccessToken: vi.fn(),
   storeSessionFingerprint: vi.fn(),
   clearSupabaseLocalStorage: vi.fn(),
   syncTokenToCookie: vi.fn(),
@@ -48,6 +49,7 @@ vi.mock('@/lib/supabase-browser', () => ({
 vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: h.storeSessionTokens,
   clearSessionTokens: h.clearSessionTokens,
+  getStoredAccessToken: h.getStoredAccessToken,
 }));
 vi.mock('@/lib/shared/session-cleanup', () => ({
   syncTokenToCookie: h.syncTokenToCookie,
@@ -67,6 +69,7 @@ describe('OAuthCallback magic link', () => {
     vi.clearAllMocks();
     sessionStorage.clear();
     h.order.length = 0;
+    h.getStoredAccessToken.mockReturnValue(null);
     h.query.value = 'token_hash=hash123&type=magiclink&next=/dashboard';
     h.signOut.mockImplementation(async () => {
       h.order.push('signOut');
@@ -154,5 +157,89 @@ describe('OAuthCallback magic link', () => {
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     expect(h.verifyOtp).toHaveBeenCalled();
+  });
+});
+
+describe('OAuthCallback magic link with an existing session (login CSRF guard)', () => {
+  // header.payload.signature with payload {"email":"victim@example.com"}
+  const VICTIM_JWT = `x.${btoa(JSON.stringify({ email: 'victim@example.com' }))}.y`;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessionStorage.clear();
+    h.query.value = 'token_hash=hash123&type=magiclink&next=/leads';
+    h.getStoredAccessToken.mockReturnValue(VICTIM_JWT);
+    h.signOut.mockResolvedValue({ error: null });
+    h.verifyOtp.mockResolvedValue({
+      data: { session: SESSION, user: { id: 'u1', email: 'a@b.co' } },
+      error: null,
+    });
+  });
+
+  it('asks first: no signOut and no verifyOtp until the user confirms', async () => {
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+
+    expect(await screen.findByText('Switch account?')).toBeInTheDocument();
+    expect(screen.getByText(/signed in as victim@example\.com/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /stay signed in/i })).toBeInTheDocument();
+    expect(h.signOut).not.toHaveBeenCalled();
+    expect(h.verifyOtp).not.toHaveBeenCalled();
+    expect(h.clearSessionTokens).not.toHaveBeenCalled();
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  it('removes the token from the address bar before showing the prompt', async () => {
+    window.history.replaceState(null, '', '/auth/callback?token_hash=hash123&type=magiclink');
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+
+    await screen.findByText('Switch account?');
+    expect(window.location.search).toBe('');
+    expect(window.location.href).not.toContain('hash123');
+  });
+
+  it('Continue runs signOut then verifyOtp with the in-memory token, then signs in', async () => {
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(h.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(h.verifyOtp).toHaveBeenCalledWith({ type: 'magiclink', token_hash: 'hash123' });
+    expect(h.signOut.mock.invocationCallOrder[0]).toBeLessThan(
+      h.verifyOtp.mock.invocationCallOrder[0]
+    );
+    expect(h.storeSessionTokens).toHaveBeenCalledWith('acc', 'ref');
+  });
+
+  it('Continue navigates to the sanitised next path', async () => {
+    render(<OAuthCallback />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => expect(h.push).toHaveBeenCalledWith('/leads'), { timeout: 2000 });
+  });
+
+  it('Stay signed in keeps the session, never touches the token, and goes to /dashboard', async () => {
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await userEvent.click(await screen.findByRole('button', { name: /stay signed in/i }));
+
+    expect(h.push).toHaveBeenCalledWith('/dashboard');
+    expect(h.signOut).not.toHaveBeenCalled();
+    expect(h.verifyOtp).not.toHaveBeenCalled();
+    expect(h.clearSessionTokens).not.toHaveBeenCalled();
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  it('an invalid token after Continue shows the error and Back to Sign In', async () => {
+    h.verifyOtp.mockResolvedValue({
+      data: { session: null, user: null },
+      error: { message: 'expired' },
+    });
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    expect(await screen.findByText('Authentication Failed')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /back to sign in/i })).toBeInTheDocument();
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
   });
 });

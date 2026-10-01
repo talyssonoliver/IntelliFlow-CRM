@@ -28,7 +28,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, cn } from '@intelliflow/ui';
 import { getSupabaseBrowserClient, clearSupabaseLocalStorage } from '@/lib/supabase-browser';
 import { storeSessionFingerprint } from '@/lib/shared/login-security';
-import { storeSessionTokens, clearSessionTokens } from '@/lib/shared/token-exchange';
+import {
+  storeSessionTokens,
+  clearSessionTokens,
+  getStoredAccessToken,
+} from '@/lib/shared/token-exchange';
 import {
   syncTokenToCookie,
   clearTokenCookie,
@@ -42,7 +46,7 @@ import { claimLoginGrant, ClaimLoginGrantError } from '@/lib/tenant/claim-grant'
 // Types
 // ============================================
 
-export type OAuthCallbackStatus = 'loading' | 'exchanging' | 'success' | 'error';
+export type OAuthCallbackStatus = 'loading' | 'exchanging' | 'confirm' | 'success' | 'error';
 
 export interface OAuthCallbackProps {
   /** Callback when authentication succeeds */
@@ -64,8 +68,25 @@ interface StatusConfig {
   animate?: boolean;
 }
 
-function flowOf(params: URLSearchParams): 'oauth' | 'magiclink' {
-  return params.get('token_hash') ? 'magiclink' : 'oauth';
+/** Best-effort email of the current local session, read from the stored access token. */
+function currentSessionEmail(): string | null {
+  try {
+    const token = getStoredAccessToken();
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split('.')[1].replaceAll('-', '+').replaceAll('_', '/')));
+    return typeof payload.email === 'string' ? payload.email : null;
+  } catch {
+    return null;
+  }
+}
+
+interface PendingMagicLink {
+  tokenHash: string;
+  next: string;
+  /** ADR-071 `tenant` hint, validated on arrival. */
+  tenantHint: string | null;
+  /** ADR-071 `grant` to claim with the new session's token. */
+  grant: string | null;
 }
 
 // ============================================
@@ -82,7 +103,13 @@ export function OAuthCallback({
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<OAuthCallbackStatus>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [currentEmail, setCurrentEmail] = useState<string | null>(null);
   const hasCalledRef = useRef(false);
+  // The magic-link token lives only in memory: it is stripped from the address bar on arrival
+  // and never re-read from the URL, so it cannot be replayed from history or a stale render.
+  const pendingLinkRef = useRef<PendingMagicLink | null>(null);
+  const pendingNextRef = useRef<string | null>(null);
+  const flowRef = useRef<'oauth' | 'magiclink'>('oauth');
   const backToLoginRef = useRef<HTMLButtonElement>(null);
 
   // Shared post-login steps for the OAuth and magic-link paths.
@@ -135,89 +162,141 @@ export function OAuthCallback({
       }
 
       // Redirect after brief success state (300ms per NF-004)
-      const target = flow === 'magiclink' ? safeNextPath(searchParams.get('next')) : redirectUrl;
+      const target = flow === 'magiclink' ? (pendingNextRef.current ?? '/dashboard') : redirectUrl;
       setTimeout(() => {
         router.push(target);
       }, 300);
     },
-    [onSuccess, router, redirectUrl, searchParams]
+    [onSuccess, router, redirectUrl]
   );
 
-  // Magic-link flow (partner Portal -> CRM): /auth/callback?token_hash=…&type=magiclink&next=…
+  const reportError = useCallback(
+    (err: unknown) => {
+      setStatus('error');
+      recordAuthBreadcrumb(`${flowRef.current}:error`);
+      let errorMsg: string;
+      if (err instanceof Error) {
+        errorMsg =
+          err.message === 'TIMEOUT'
+            ? 'Authentication is taking too long. Please try again.'
+            : err.message;
+      } else {
+        errorMsg = 'An unexpected error occurred';
+      }
+      setErrorMessage(errorMsg);
+      onError?.(errorMsg);
+    },
+    [onError]
+  );
+
+  // Exchange the in-memory hashed OTP. Any existing local session is signed out FIRST so a
+  // different user's session can never win. Only ever reached automatically when there is no
+  // session, or after the user explicitly confirmed the account switch.
+  const exchangeMagicLink = useCallback(async () => {
+    const pending = pendingLinkRef.current;
+    pendingLinkRef.current = null; // single use
+    if (!pending) throw new Error('This sign-in link has already been used.');
+    setStatus('exchanging');
+
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      throw new Error('Failed to initialize authentication client');
+    }
+
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      // Nothing to sign out, or the call failed: our own token cleanup below still applies.
+    }
+    clearSessionTokens();
+    clearTokenCookie();
+    clearSupabaseLocalStorage();
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('TIMEOUT')), 10_000);
+    });
+    const { data, error } = await Promise.race([
+      supabase.auth.verifyOtp({ type: 'magiclink', token_hash: pending.tokenHash }),
+      timeoutPromise,
+    ]);
+
+    if (error || !data?.session) {
+      throw new Error(
+        'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
+      );
+    }
+
+    // ADR-071: the link carries `tenant` and `grant` as HINTS. The grant is claimed FIRST, with
+    // the new session's token: for a pinned (agency staff) link this is what binds the session
+    // to the client tenant, and until it is claimed the API refuses everything else. The
+    // tenant the server returns wins over the `tenant` hint. A failed claim fails CLOSED:
+    // the session is dropped rather than left half signed in.
+    let activeTenantId = pending.tenantHint;
+    if (pending.grant) {
+      try {
+        const claim = await Promise.race([
+          claimLoginGrant(data.session.access_token, pending.grant),
+          timeoutPromise,
+        ]);
+        activeTenantId = claim.tenantId;
+      } catch (claimError) {
+        try {
+          await supabase.auth.signOut({ scope: 'local' });
+        } catch {
+          // The local cleanup below still applies.
+        }
+        clearSessionTokens();
+        clearTokenCookie();
+        clearSupabaseLocalStorage();
+        throw claimError instanceof ClaimLoginGrantError ||
+          (claimError instanceof Error && claimError.message === 'TIMEOUT')
+          ? claimError
+          : new Error(
+              'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
+            );
+      }
+    }
+
+    pendingNextRef.current = pending.next;
+    finishSignIn(data.session, data.user ?? undefined, 'magiclink', activeTenantId);
+  }, [finishSignIn]);
+
+  // Magic-link flow (partner Portal -> CRM): /auth/callback?token_hash=...&type=magiclink&next=...
   //
-  // The hashed OTP is exchanged with verifyOtp, which needs no prior session or PKCE verifier.
-  // Any existing local session is signed out FIRST so a different user's session can never win.
+  // Anyone can mint a link for their own account and send it to a signed-in victim (login CSRF),
+  // so when a local session already exists we do NOT swap accounts silently: the user must
+  // confirm on an interstitial. With no session the exchange runs automatically.
   const handleMagicLink = useCallback(
     async (tokenHash: string, linkType: string | null) => {
+      // Capture every link parameter BEFORE the URL is stripped below.
+      const rawNext = searchParams.get('next');
+      const tenantParam = searchParams.get('tenant');
+      const grant = searchParams.get('grant');
+      flowRef.current = 'magiclink';
+      // Keep the token out of the address bar / history before anything is rendered.
+      try {
+        globalThis.history.replaceState(null, '', globalThis.location.pathname);
+      } catch {
+        // History API unavailable: the token is still only used from memory below.
+      }
       if (linkType !== 'magiclink') {
         throw new Error('This sign-in link is not valid. Please request a new one.');
       }
-      setStatus('exchanging');
+      pendingLinkRef.current = {
+        tokenHash,
+        next: safeNextPath(rawNext),
+        tenantHint: isValidTenantId(tenantParam) ? tenantParam : null,
+        grant,
+      };
 
-      const supabase = getSupabaseBrowserClient();
-      if (!supabase) {
-        throw new Error('Failed to initialize authentication client');
+      if (getStoredAccessToken()) {
+        setCurrentEmail(currentSessionEmail());
+        setStatus('confirm');
+        return;
       }
-
-      try {
-        await supabase.auth.signOut({ scope: 'local' });
-      } catch {
-        // Nothing to sign out, or the call failed: our own token cleanup below still applies.
-      }
-      clearSessionTokens();
-      clearTokenCookie();
-      clearSupabaseLocalStorage();
-
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('TIMEOUT')), 10_000);
-      });
-      const { data, error } = await Promise.race([
-        supabase.auth.verifyOtp({ type: 'magiclink', token_hash: tokenHash }),
-        timeoutPromise,
-      ]);
-
-      if (error || !data?.session) {
-        throw new Error(
-          'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
-        );
-      }
-
-      // ADR-071: the link carries `tenant` and `grant` as HINTS. The grant is claimed FIRST, with
-      // the new session's token: for a pinned (agency staff) link this is what binds the session
-      // to the client tenant, and until it is claimed the API refuses everything else. The
-      // tenant the server returns wins over the `tenant` hint. A failed claim fails CLOSED:
-      // the session is dropped rather than left half signed in.
-      const tenantHint = searchParams.get('tenant');
-      let activeTenantId = isValidTenantId(tenantHint) ? tenantHint : null;
-      const grant = searchParams.get('grant');
-      if (grant) {
-        try {
-          const claim = await Promise.race([
-            claimLoginGrant(data.session.access_token, grant),
-            timeoutPromise,
-          ]);
-          activeTenantId = claim.tenantId;
-        } catch (claimError) {
-          try {
-            await supabase.auth.signOut({ scope: 'local' });
-          } catch {
-            // The local cleanup below still applies.
-          }
-          clearSessionTokens();
-          clearTokenCookie();
-          clearSupabaseLocalStorage();
-          throw claimError instanceof ClaimLoginGrantError ||
-            (claimError instanceof Error && claimError.message === 'TIMEOUT')
-            ? claimError
-            : new Error(
-                'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
-              );
-        }
-      }
-
-      finishSignIn(data.session, data.user ?? undefined, 'magiclink', activeTenantId);
+      await exchangeMagicLink();
     },
-    [finishSignIn, searchParams]
+    [exchangeMagicLink, searchParams]
   );
 
   // Handle the OAuth callback flow.
@@ -304,21 +383,9 @@ export function OAuthCallback({
       const { data: userData } = await supabase.auth.getUser(session.access_token);
       finishSignIn(session, userData?.user ?? undefined, 'oauth');
     } catch (err) {
-      setStatus('error');
-      recordAuthBreadcrumb(`${flowOf(searchParams)}:error`);
-      let errorMsg: string;
-      if (err instanceof Error) {
-        errorMsg =
-          err.message === 'TIMEOUT'
-            ? 'Authentication is taking too long. Please try again.'
-            : err.message;
-      } else {
-        errorMsg = 'An unexpected error occurred';
-      }
-      setErrorMessage(errorMsg);
-      onError?.(errorMsg);
+      reportError(err);
     }
-  }, [searchParams, handleMagicLink, finishSignIn, onError]);
+  }, [searchParams, handleMagicLink, finishSignIn, onError, reportError]);
 
   // Run callback on mount — hasCalledRef prevents double-execution in StrictMode
   // (PKCE authorization codes are single-use)
@@ -339,6 +406,7 @@ export function OAuthCallback({
   // Status Configurations
   // ==========================================
 
+  const signedInAs = currentEmail ? 'You are signed in as ' + currentEmail : 'You are signed in';
   const statusConfig: Record<OAuthCallbackStatus, StatusConfig> = {
     loading: {
       icon: 'progress_activity',
@@ -355,6 +423,13 @@ export function OAuthCallback({
       iconColor: 'text-[#7cc4ff]',
       bgColor: 'bg-[#137fec]/20',
       animate: true,
+    },
+    confirm: {
+      icon: 'swap_horiz',
+      title: 'Switch account?',
+      description: `${signedInAs}. This link signs in to a different account through the Leangency Portal. Continue and switch accounts?`,
+      iconColor: 'text-amber-300',
+      bgColor: 'bg-amber-500/20',
     },
     success: {
       icon: 'check_circle',
@@ -377,6 +452,15 @@ export function OAuthCallback({
   // ==========================================
   // Handlers
   // ==========================================
+
+  const handleConfirmSwitch = () => {
+    exchangeMagicLink().catch(reportError);
+  };
+
+  const handleStaySignedIn = () => {
+    pendingLinkRef.current = null;
+    router.push('/dashboard');
+  };
 
   const handleBackToLogin = () => {
     router.push('/login');
@@ -450,6 +534,24 @@ export function OAuthCallback({
                     refresh
                   </span>{' '}
                   Try Again
+                </button>
+              </div>
+            )}
+
+            {/* Account-switch confirmation (magic link while already signed in) */}
+            {status === 'confirm' && (
+              <div className="pt-4 space-y-3">
+                <button
+                  onClick={handleConfirmSwitch}
+                  className="w-full px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]"
+                >
+                  Continue
+                </button>
+                <button
+                  onClick={handleStaySignedIn}
+                  className="w-full px-6 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-200 font-medium hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]"
+                >
+                  Stay signed in
                 </button>
               </div>
             )}
