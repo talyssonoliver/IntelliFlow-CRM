@@ -20,6 +20,7 @@ const scrollTrigger = {
     triggers.push(t);
     return t;
   }),
+  refresh: vi.fn(),
 };
 vi.mock('gsap', () => ({
   gsap: {
@@ -431,17 +432,45 @@ describe('AuroraMotion', () => {
     root.querySelector('.stage')!.append(object);
     render(<AuroraMotion />);
     const end = root.querySelector('.stage-end')!;
+    const start = (t: unknown) => (t as { start?: unknown }).start;
     await waitFor(() =>
-      expect(scrollTrigger.create).toHaveBeenCalledWith(
-        expect.objectContaining({ trigger: end, start: 'bottom top+=900' })
-      )
+      expect(triggers.some((t) => t.trigger === end && typeof start(t) === 'function')).toBe(true)
     );
-    const clear = triggers.find(
-      (t) => t.trigger === end && (t as { start?: string }).start === 'bottom top+=900'
-    )!;
+    const clear = triggers.find((t) => t.trigger === end && typeof start(t) === 'function')!;
+    const measure = start(clear) as () => string;
+    expect(measure()).toBe('bottom top+=900');
+
+    // Re-measured on every refresh: a shorter band after a resize moves the clear point.
+    frame.style.height = '700px';
+    expect(measure()).toBe('bottom top+=772');
+
     clear.onEnter!();
     expect(stack.hide).toHaveBeenCalled();
     clear.onLeaveBack!();
     expect(stack.show).toHaveBeenCalled();
+  });
+
+  it('rebuilds the stack wiring when the screen crosses the phone breakpoint', async () => {
+    const listeners: Array<() => void> = [];
+    let phone = false;
+    vi.stubGlobal('matchMedia', (q: string) => ({
+      matches: q === '(max-width: 960px)' ? phone : false,
+      media: q,
+      addEventListener: (_: string, fn: () => void) => listeners.push(fn),
+      removeEventListener: vi.fn(),
+    }));
+    const root = mountPage();
+    const copy = document.createElement('div');
+    copy.className = 'stage-copy';
+    root.querySelector('.walk')!.before(copy);
+    render(<AuroraMotion />);
+    await waitFor(() => expect(createScrubSteps).toHaveBeenCalled());
+    expect(triggers.some((t) => t.trigger === copy)).toBe(false);
+
+    phone = true;
+    listeners.forEach((fn) => fn());
+    expect(scrollTrigger.refresh).toHaveBeenCalled();
+    expect(triggers.some((t) => t.trigger === copy)).toBe(true);
+    expect(stack.setPresentation).toHaveBeenCalledWith(null);
   });
 });
