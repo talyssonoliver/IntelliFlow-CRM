@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
+import { SectionCurve } from './SectionCurve';
 import './security-section.css';
 
 /** Security and governance on Navy, entered through the Mist-to-Navy bridge. */
@@ -12,14 +13,15 @@ export function SecuritySection() {
         data-bridge-section
         style={{ '--bridge-accent': 'var(--navy)' } as CSSProperties}
       >
-        <div className="bridge-top" aria-hidden="true" />
+        <SectionCurve above="#F5F7FF" id="curve-security" />
         <div className="wrap feature-grid">
           <div className="feature-copy reveal" data-reveal>
-            <p className="eyebrow on-dark">Security and governance</p>
-            <h2>Built for teams that answer to someone.</h2>
+            <p className="eyebrow on-dark">Security</p>
+            <h2>Enterprise security, on from day one.</h2>
             <p className="section-lede">
-              Control, isolation and a record of every change: the basics your security review asks
-              for, built in from day one. Our compliance roadmap is yours on request.
+              No AI action goes out without a person&apos;s approval. Each workspace&apos;s data is
+              kept apart, multi-factor sign-in is available on every account, and every change is
+              logged.
             </p>
             <Link href="/contact" className="btn btn-onDark">
               Request the compliance roadmap

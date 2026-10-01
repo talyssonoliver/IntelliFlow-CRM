@@ -70,7 +70,7 @@ describe('StackStage', () => {
 
     expect(text).toMatch(/15 agent types/i);
     expect(text).toMatch(/six kinds of AI work/i);
-    expect(text).toMatch(/multi-factor authentication is available on every account/i);
+    expect(text).toMatch(/multi-factor sign-in is available on every account/i);
     expect(text).not.toMatch(/\bten agents\b/i);
     expect(text).not.toMatch(/\b10 agents\b/i);
     expect(text).not.toMatch(/protects every account/i);

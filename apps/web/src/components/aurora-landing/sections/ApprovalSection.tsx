@@ -174,10 +174,10 @@ export function ApprovalSection() {
                       <span className="material-symbols-outlined">route</span>
                     </span>
                     <div>
-                      <b>Next step for Litware</b>
-                      <small>Next best action · Litware</small>
+                      <b>Pricing recap for Fabrikam</b>
+                      <small>Next best action · Fabrikam</small>
                     </div>
-                    <span className="state edited">Edited</span>
+                    <span className="state pending">Pending</span>
                   </li>
                 </ul>
                 <div className="detail review-detail" id="review-detail">
@@ -223,8 +223,14 @@ export function ApprovalSection() {
                     <p className="label">Draft</p>
                     <p>
                       <span id="review-draft-text">
-                        Hi Maya, ahead of your renewal on the 14th I wanted to check the new
-                        reporting is working for your team.
+                        {`Hi Maya,
+
+Ahead of your renewal on the 14th, I wanted to check the new reporting is working for your team. Your managers' weekly exports have been lighter for two weeks, so I've put together a short guide to the scheduled reports they asked about in March.
+
+Would 20 minutes on Thursday suit you to walk through it together?
+
+Best,
+Tom`}
                       </span>
                       <span className="caret" id="review-caret"></span>
                     </p>

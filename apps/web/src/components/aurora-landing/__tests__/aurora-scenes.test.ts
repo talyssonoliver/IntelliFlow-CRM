@@ -42,14 +42,22 @@ function fakeGsap() {
       fromTo: (t: unknown, _from: unknown, v: Record<string, unknown>) => (apply(t, v), tl),
       add: (fn: () => void) => (fn(), tl),
       play: vi.fn(),
+      // Deferred, so a looping scene runs one beat per flush() instead of forever.
       eventCallback: (name: string, cb: () => void) => {
-        if (name === 'onComplete') cb();
+        if (name === 'onComplete') pending.push(cb);
         return tl;
       },
+      pause: vi.fn(),
+      resume: vi.fn(),
     };
     return tl;
   };
   const reverts: Array<() => void> = [];
+  const pending: Array<() => void> = [];
+  /** Runs queued onComplete callbacks, at most `steps` of them. */
+  const flush = (steps = 3) => {
+    for (let i = 0; i < steps && pending.length; i++) pending.shift()!();
+  };
   const gsap = {
     set: vi.fn(),
     to: (t: unknown, v: Record<string, unknown>) => apply(t, v),
@@ -59,11 +67,18 @@ function fakeGsap() {
       fn();
       const revert = vi.fn();
       reverts.push(revert);
-      return { revert };
+      return { revert, add: (f: () => void) => f() };
     },
   };
-  const ScrollTrigger = { create: vi.fn((opts: { onEnter?: () => void }) => opts.onEnter?.()) };
-  return { gsap, ScrollTrigger, tweens, reverts };
+  const ScrollTrigger = {
+    create: vi.fn(
+      (opts: { onEnter?: () => void; onToggle?: (self: { isActive: boolean }) => void }) => {
+        opts.onEnter?.();
+        opts.onToggle?.({ isActive: true });
+      }
+    ),
+  };
+  return { gsap, ScrollTrigger, tweens, reverts, flush, pending };
 }
 
 function page() {
@@ -96,12 +111,11 @@ describe('playScenes', () => {
 
   it('acts out the approval: the draft types out and the item ends approved', () => {
     const root = page();
-    const { gsap, ScrollTrigger } = fakeGsap();
+    const { gsap, ScrollTrigger, flush } = fakeGsap();
     playScenes(root, gsap as never, ScrollTrigger as never, false);
+    flush();
 
-    expect(document.getElementById('review-draft-text')!.textContent).toBe(
-      'Hi Maya, ahead of your renewal'
-    );
+    expect(document.getElementById('review-draft-text')!.textContent).toContain('renewal');
     expect(document.getElementById('review-q1-state')!.textContent).toBe('Approved');
     expect(document.getElementById('review-q1-state')!.className).toBe('state done');
     expect(document.getElementById('why-renewal')!.classList.contains('hover')).toBe(false);
@@ -116,22 +130,25 @@ describe('playScenes', () => {
     const before = draft.textContent;
     expect(before).not.toBe('');
 
-    const { gsap, ScrollTrigger } = fakeGsap();
+    const { gsap, ScrollTrigger, flush } = fakeGsap();
     const seen: string[] = [];
     const observer = new MutationObserver(() => seen.push(draft.textContent ?? ''));
     observer.observe(draft, { characterData: true, childList: true, subtree: true });
     playScenes(root, gsap as never, ScrollTrigger as never, false);
+    flush();
     observer.disconnect();
 
-    // textContent is never mutated by the scene -- only a clip-path paint is animated.
-    expect(seen.every((s) => s === before)).toBe(true);
-    expect(draft.textContent).toBe(before);
+    // The scene swaps whole drafts as it moves through the queue, but the draft is
+    // never blank: typing is a clip-path paint over text that is already there.
+    expect(seen.every((s) => s.trim().length > 0)).toBe(true);
+    expect(draft.textContent).toContain('renewal');
   });
 
   it('moves the stalled deal to Proposal once its recap is sent', () => {
     const root = page();
-    const { gsap, ScrollTrigger } = fakeGsap();
+    const { gsap, ScrollTrigger, flush } = fakeGsap();
     playScenes(root, gsap as never, ScrollTrigger as never, false);
+    flush();
 
     const mover = document.getElementById('deal-mover')!;
     expect(mover.parentElement!.dataset.stage).toBe('proposal');
@@ -143,7 +160,7 @@ describe('playScenes', () => {
 
   it('keeps scene beats that start later inside the context, so cleanup can revert them', () => {
     const root = page();
-    const { gsap, ScrollTrigger } = fakeGsap();
+    const { gsap, ScrollTrigger, flush } = fakeGsap();
     const added: Array<() => void> = [];
     const revert = vi.fn();
     gsap.context = (fn: () => void) => {
@@ -151,12 +168,16 @@ describe('playScenes', () => {
       return { revert, add: (f: () => void) => (added.push(f), f()) } as never;
     };
     const entries: Array<() => void> = [];
-    ScrollTrigger.create = vi.fn((opts: { onEnter?: () => void }) => {
-      if (opts.onEnter) entries.push(opts.onEnter);
-    }) as never;
+    ScrollTrigger.create = vi.fn(
+      (opts: { onEnter?: () => void; onToggle?: (self: { isActive: boolean }) => void }) => {
+        if (opts.onEnter) entries.push(opts.onEnter);
+        if (opts.onToggle) entries.push(() => opts.onToggle!({ isActive: true }));
+      }
+    ) as never;
     const cleanup = playScenes(root, gsap as never, ScrollTrigger as never, false);
 
     entries.forEach((enter) => enter());
+    flush();
     expect(added.length).toBeGreaterThanOrEqual(2);
     expect(document.getElementById('review-q1-state')!.textContent).toBe('Approved');
     cleanup();
@@ -165,8 +186,9 @@ describe('playScenes', () => {
 
   it('settles tilted windows as they scroll in', () => {
     const root = page();
-    const { gsap, ScrollTrigger, tweens } = fakeGsap();
+    const { gsap, ScrollTrigger, tweens, flush } = fakeGsap();
     playScenes(root, gsap as never, ScrollTrigger as never, false);
+    flush();
 
     const tilt = tweens.find((t) => t.target === root.querySelector('.app.tilt'));
     expect(tilt?.vars).toMatchObject({ rotateX: 0, rotateY: 0, rotateZ: 0 });
@@ -174,8 +196,9 @@ describe('playScenes', () => {
 
   it('shows every scene at its end state, without motion, when motion is reduced', () => {
     const root = page();
-    const { gsap, ScrollTrigger } = fakeGsap();
+    const { gsap, ScrollTrigger, flush } = fakeGsap();
     playScenes(root, gsap as never, ScrollTrigger as never, true);
+    flush();
 
     expect(document.getElementById('review-q1-state')!.textContent).toBe('Approved');
     expect((root.querySelector('.app.tilt') as HTMLElement).style.transform).toBe('none');
@@ -183,24 +206,24 @@ describe('playScenes', () => {
     // The pipeline scene settles to its end state too -- the stalled deal already
     // moved -- rather than freezing mid-story the way a one-shot toggle would.
     expect(document.getElementById('deal-mover')!.parentElement!.dataset.stage).toBe('proposal');
-    expect(document.getElementById('review-draft-text')!.textContent).toBe(
-      'Hi Maya, ahead of your renewal'
-    );
+    expect(document.getElementById('review-draft-text')!.textContent).toContain('renewal');
   });
 
   it('does nothing for a scene whose markup is missing', () => {
     document.body.innerHTML = '<div id="root"></div>';
-    const { gsap, ScrollTrigger } = fakeGsap();
+    const { gsap, ScrollTrigger, flush } = fakeGsap();
     expect(() =>
       playScenes(document.getElementById('root')!, gsap as never, ScrollTrigger as never, false)
     ).not.toThrow();
+    flush();
     expect(ScrollTrigger.create).not.toHaveBeenCalled();
   });
 
   it('reverts everything it made on cleanup', () => {
     const root = page();
-    const { gsap, ScrollTrigger, reverts } = fakeGsap();
+    const { gsap, ScrollTrigger, reverts, flush } = fakeGsap();
     const cleanup = playScenes(root, gsap as never, ScrollTrigger as never, false);
+    flush();
     cleanup();
     expect(reverts[0]).toHaveBeenCalled();
   });
@@ -217,9 +240,7 @@ describe('individual moments (driveable from any ScrollTrigger)', () => {
     const scene = document.getElementById('approval-scene')!;
     const tl = revealReasoning(scene, gsap as never);
     expect(tl).toBeDefined();
-    expect(document.getElementById('review-draft-text')!.textContent).toBe(
-      'Hi Maya, ahead of your renewal'
-    );
+    expect(document.getElementById('review-draft-text')!.textContent).toContain('renewal');
   });
 
   it('typeDraft never clears textContent and returns undefined when the draft is missing', () => {
@@ -227,9 +248,7 @@ describe('individual moments (driveable from any ScrollTrigger)', () => {
     const { gsap } = fakeGsap();
     const scene = document.getElementById('approval-scene')!;
     typeDraft(scene, gsap as never);
-    expect(document.getElementById('review-draft-text')!.textContent).toBe(
-      'Hi Maya, ahead of your renewal'
-    );
+    expect(document.getElementById('review-draft-text')!.textContent).toContain('renewal');
 
     document.getElementById('review-draft-text')!.remove();
     expect(typeDraft(scene, gsap as never)).toBeUndefined();
@@ -270,13 +289,15 @@ describe('individual moments (driveable from any ScrollTrigger)', () => {
   it('playApprovalScene and playPipelineScene no-op when their scene root is missing', () => {
     document.body.innerHTML = '<div id="root"></div>';
     const root = document.getElementById('root')!;
-    const { gsap, ScrollTrigger } = fakeGsap();
+    const { gsap, ScrollTrigger, flush } = fakeGsap();
     expect(() =>
       playApprovalScene(root, gsap as never, ScrollTrigger as never, false)
     ).not.toThrow();
+    flush();
     expect(() =>
       playPipelineScene(root, gsap as never, ScrollTrigger as never, false)
     ).not.toThrow();
+    flush();
     expect(ScrollTrigger.create).not.toHaveBeenCalled();
   });
 });

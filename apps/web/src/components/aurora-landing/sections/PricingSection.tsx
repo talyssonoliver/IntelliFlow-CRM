@@ -2,17 +2,7 @@ import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import './pricing-section.css';
 
-/** What a visitor can tell Aurora they want to run, for the tailored-plan form. */
-const RUN_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
-  { value: 'approvals', label: 'AI agents and the approval queue' },
-  { value: 'pipeline', label: 'Sales pipeline' },
-  { value: 'service', label: 'Cases and tickets' },
-  { value: 'insights', label: 'Insights' },
-  { value: 'inbox', label: 'Email and calendar' },
-  { value: 'integrations', label: 'Integrations' },
-];
-
-/** Pricing card, straddling the Navy/Mist boundary, with a real tailored-plan form. */
+/** Pricing: an invitation to start free, never a barrier. Plans come later, on real data. */
 export function PricingSection() {
   return (
     <>
@@ -26,64 +16,31 @@ export function PricingSection() {
           <div className="price-card reveal" data-reveal>
             <div className="price-copy">
               <p className="eyebrow">Pricing</p>
-              <h2>A plan built around how your team sells.</h2>
+              <h2>Start free. Bring your pipeline in today.</h2>
               <p className="section-lede">
-                Tell us your team size and the parts of Aurora you need. We will put together a plan
-                and walk you through it.
+                Try Aurora free for 14 days. No credit card. Import your leads and deals, let the
+                agents get to work, and choose a plan once you&apos;ve seen it run on your own data.
               </p>
-
-              <form className="team-form" action="/contact" method="get">
-                <div className="field">
-                  <label htmlFor="pricing-email">Work email</label>
-                  <input
-                    id="pricing-email"
-                    name="email"
-                    type="email"
-                    required
-                    placeholder="you@company.com"
-                    autoComplete="email"
-                    aria-describedby="pricing-email-hint"
-                  />
-                  <p className="field-hint" id="pricing-email-hint">
-                    We will only use this to put your plan together.
-                  </p>
-                </div>
-
-                <div className="field">
-                  <label htmlFor="pricing-size">Team size</label>
-                  <select id="pricing-size" name="team_size" required defaultValue="">
-                    <option value="" disabled>
-                      Select team size
-                    </option>
-                    <option value="1-5">1–5</option>
-                    <option value="6-20">6–20</option>
-                    <option value="21-50">21–50</option>
-                    <option value="51-200">51–200</option>
-                    <option value="200+">200+</option>
-                  </select>
-                </div>
-
-                <fieldset className="field chips-field">
-                  <legend>What do you want to run in Aurora?</legend>
-                  <div className="chip-options">
-                    {RUN_OPTIONS.map(({ value, label }) => (
-                      <label key={value} className="chip-option">
-                        <input type="checkbox" name="run" value={value} />
-                        <span>{label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <div className="cta-row">
-                  <button type="submit" className="btn btn-primary">
-                    Get a tailored plan
-                  </button>
-                  <Link href="/contact" className="btn btn-secondary">
-                    Book a demo
-                  </Link>
-                </div>
-              </form>
+              <ul className="trial-facts" aria-label="Your trial">
+                <li>
+                  <span className="material-symbols-outlined">event_available</span>14 days free
+                </li>
+                <li>
+                  <span className="material-symbols-outlined">credit_card_off</span>No credit card
+                </li>
+                <li>
+                  <span className="material-symbols-outlined">upload</span>Your own data from day
+                  one
+                </li>
+              </ul>
+              <div className="cta-row">
+                <Link href="/signup" className="btn btn-primary">
+                  Start free
+                </Link>
+                <Link href="/contact" className="btn btn-secondary">
+                  Talk to us
+                </Link>
+              </div>
             </div>
 
             <ul className="includes">

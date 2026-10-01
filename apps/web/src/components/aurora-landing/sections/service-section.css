@@ -233,3 +233,47 @@
     font-size: 12px;
   }
 }
+
+/* Stacking cards (owner 2026-10-01: "fix the first card and the second goes
+   above the top one"). Each card pins once it reaches the top, and the next
+   card slides up over it. Cards are solid white, so nothing shows through.
+   --stick-top is set per card by AuroraMotion so a card taller than the
+   screen pins only once its bottom is in view; without JS it pins at 96px. */
+.aurora-page .bento .bcard {
+  position: sticky;
+  top: var(--stick-top, 96px);
+  align-self: start;
+}
+.aurora-page .bento .bcard:nth-child(1),
+.aurora-page .bento .bcard:nth-child(2) {
+  z-index: 1;
+}
+.aurora-page .bento .bcard:nth-child(3),
+.aurora-page .bento .bcard:nth-child(4) {
+  z-index: 2;
+  margin-top: 22vh;
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 -18px 40px -24px rgba(17, 23, 91, 0.3),
+    0 18px 40px -26px rgba(17, 23, 91, 0.25);
+}
+@media (max-width: 960px) {
+  /* On a phone every card is at least a screen tall, so the card sliding over
+     covers the one beneath it completely: no half-hidden lines peek out. */
+  .aurora-page .bento .bcard {
+    min-height: calc(100vh - 120px);
+    min-height: calc(100svh - 120px);
+  }
+  .aurora-page .bento .bcard:nth-child(2) {
+    z-index: 2;
+    margin-top: 16vh;
+  }
+  .aurora-page .bento .bcard:nth-child(3) {
+    z-index: 3;
+    margin-top: 16vh;
+  }
+  .aurora-page .bento .bcard:nth-child(4) {
+    z-index: 4;
+    margin-top: 16vh;
+  }
+}

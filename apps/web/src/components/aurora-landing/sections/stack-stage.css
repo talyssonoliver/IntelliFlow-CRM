@@ -137,62 +137,45 @@
     height: 44vh;
   }
 
-  /* Phone stepper (owner 2026-09-30: text must never run over the stack or
-     over other text while scrolling). The stack is pinned in the top 40% of
-     the screen; every card is pinned directly beneath it at the same place,
-     with the same height and a solid background, so each new card slides up
-     over the previous one and fully covers it. Nothing fades, so nothing can
-     ghost; the stack follows the card on top (AuroraMotion). Pure CSS: it
-     works the same without JavaScript. */
+  /* Phone story (owner 2026-10-01, drawn with arrows): the 3D stack is the
+     star. It stays big and centred, pinned for the whole walk. Each story
+     card scrolls up from the bottom, passes in front of the stack and leaves
+     through the top, one card on screen at a time. Cards are solid, so text
+     never shows through, and nothing fades. The stack lights up the layer of
+     the card in view (AuroraMotion). Pure CSS layout: it reads the same
+     without JavaScript. */
   .aurora-page .stage-object.stack-visual,
   .aurora-page .object-sticky.stack-inner {
-    height: 40vh;
-    height: 40svh;
+    height: calc(100vh - 72px);
+    height: calc(100svh - 72px);
   }
   .aurora-page .walk.walk-card,
   .aurora-page .layer-step.layer-card {
-    position: sticky;
-    top: calc(72px + 40vh + 8px);
-    top: calc(72px + 40svh + 8px);
+    position: relative;
     display: block;
     min-height: 0;
-    margin: 0 0 52vh;
+    margin: 0 0 78vh;
+    margin: 0 0 78svh;
     opacity: 1;
   }
   .aurora-page .walk.walk-card {
-    z-index: 3;
+    margin-top: 62vh;
+    margin-top: 62svh;
   }
-  .aurora-page .layer-step.layer-card:nth-of-type(1) {
-    z-index: 4;
-  }
-  .aurora-page .layer-step.layer-card:nth-of-type(2) {
-    z-index: 5;
-  }
-  .aurora-page .layer-step.layer-card:nth-of-type(3) {
-    z-index: 6;
-  }
-  .aurora-page .layer-step.layer-card:nth-of-type(4) {
-    z-index: 7;
-  }
-  .aurora-page .layer-step.layer-card:nth-of-type(5) {
-    z-index: 8;
-    margin-bottom: 36vh;
+  .aurora-page .layer-step.layer-card:last-of-type {
+    margin-bottom: 46vh;
+    margin-bottom: 46svh;
   }
   .aurora-page .layer-step-inner {
     box-sizing: border-box;
-    min-height: calc(60vh - 92px);
-    min-height: calc(60svh - 92px);
     margin: 0;
-    padding: 20px 20px 24px;
+    padding: 20px 20px 22px;
     background: #fff;
     border: 1px solid var(--line);
     border-radius: 20px;
     box-shadow:
-      0 -12px 32px -18px rgba(17, 23, 91, 0.28),
-      var(--shadow-1, 0 8px 24px -12px rgba(17, 23, 91, 0.18));
-  }
-  .aurora-page .layer-step-inner .layer-tag {
-    margin-bottom: 4px;
+      0 24px 48px -20px rgba(17, 23, 91, 0.35),
+      0 2px 6px rgba(17, 23, 91, 0.06);
   }
   .aurora-page .layer-step-inner h3 {
     font-size: 22px;

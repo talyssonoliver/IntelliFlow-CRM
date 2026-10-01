@@ -55,6 +55,8 @@ const hasFinePointer = vi.fn(() => false);
 const setupSmoothScroll = vi.fn((..._args: unknown[]) => vi.fn());
 const revealCleanup = vi.fn();
 const createReveal = vi.fn((..._args: unknown[]) => revealCleanup);
+const exitCleanup = vi.fn();
+const createExitDrift = vi.fn((..._args: unknown[]) => exitCleanup);
 const bridgeCleanup = vi.fn();
 const createSectionBridge = vi.fn((..._args: unknown[]) => bridgeCleanup);
 const recedeCleanup = vi.fn();
@@ -73,6 +75,7 @@ vi.mock('../aurora-motion-system', () => ({
   hasFinePointer: () => hasFinePointer(),
   setupSmoothScroll: (...a: unknown[]) => setupSmoothScroll(...a),
   createReveal: (...a: unknown[]) => createReveal(...a),
+  createExitDrift: (...a: unknown[]) => createExitDrift(...a),
   createSectionBridge: (...a: unknown[]) => createSectionBridge(...a),
   createBackgroundRecede: (...a: unknown[]) => createBackgroundRecede(...a),
   createScrubSteps: (...a: unknown[]) => (createScrubSteps as (...a: unknown[]) => unknown)(...a),

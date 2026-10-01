@@ -25,6 +25,9 @@
    completes, so the seam reads as "the next thing is already here," not a
    hard background-colour cut. Zero cost when --bridge is 0. */
 .aurora-page [data-bridge-section]::before {
+  /* Retired (owner 2026-10-01: no gradient between sections). Colour changes
+     are drawn by SectionCurve instead. */
+  display: none;
   content: '';
   position: absolute;
   inset: auto 0 0 0;

@@ -4,7 +4,10 @@
  * in on it; every layer above it has already been read, so it rises and fades out.
  *
  * Nothing moves on its own: motion follows the scroll position and the pointer,
- * so there is nothing to pause (WCAG 2.2.2).
+ * so there is nothing to pause (WCAG 2.2.2). While the visitor scrolls, the layer
+ * being read turns a few degrees towards them and follows the pointer, then eases
+ * back to flat once the scroll settles. A layer that peels away leaves a ripple
+ * where it lay, like the hero ribbons under the pointer.
  */
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -31,6 +34,23 @@ const REST_Y = 2.35;
 /** Camera height above the rest point; 9 across and 9 deep. */
 const CAMERA_HEIGHT = 15;
 const MIST = new THREE.Color('#F5F7FF');
+/** How far the layer being read turns towards the viewer, in radians (about 11 degrees). */
+const TILT = 0.19;
+/** How long after the last scroll the layer being read stays turned, in ms. */
+const SETTLE_MS = 650;
+/** The axis that turns a slab's face towards the camera, which sits 9 across and 9 deep. */
+const TILT_AXIS = new THREE.Vector3(1, 0, -1).normalize();
+
+/**
+ * How strongly each of the two ripple rings shows while a layer peels (0 to 1).
+ * The second ring trails the first, so the edge reads as a wave spreading out.
+ */
+export function rippleRings(peel: number): Array<{ scale: number; opacity: number }> {
+  return [0, 0.35].map((lag) => {
+    const q = Math.min(1, Math.max(0, (peel - lag) / (1 - lag)));
+    return { scale: 1 + q * 0.45, opacity: q > 0 && q < 1 ? Math.sin(q * Math.PI) * 0.75 : 0 };
+  });
+}
 
 export const baseY = (index: number) => index * (H + GAP);
 
@@ -82,6 +102,24 @@ function faceTexture(id: LayerId, colour: string, fonts: FaceFonts): THREE.Canva
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 16;
   return texture;
+}
+
+/** The glowing outline of a slab, drawn once and tinted per layer for the ripple. */
+function rippleTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = Math.round((512 * D) / W);
+  const g = canvas.getContext('2d');
+  if (g) {
+    g.strokeStyle = '#ffffff';
+    g.shadowColor = '#ffffff';
+    g.shadowBlur = 18;
+    g.lineWidth = 6;
+    g.beginPath();
+    g.roundRect(24, 24, canvas.width - 48, canvas.height - 48, 40);
+    g.stroke();
+  }
+  return new THREE.CanvasTexture(canvas);
 }
 
 /** A soft contact shadow under the stack. */
@@ -171,6 +209,9 @@ export function createStack(
     (W * 0.94 * FACE_SIZE.height) / FACE_SIZE.width
   );
 
+  const rippleGeometry = new THREE.PlaneGeometry(W * 1.08, D * 1.08);
+  const rippleMap = rippleTexture();
+
   const items = LAYERS.map((layer, index) => {
     const group = new THREE.Group();
     const colour = new THREE.Color(layer.colour);
@@ -198,10 +239,43 @@ export function createStack(
     group.add(faceMesh);
     group.position.y = baseY(index);
     root.add(group);
-    return { group, slab, face, state: { lift: 0, glow: 0, peel: 0 } as LayerTarget };
+    // The ripple stays where the layer lay while the layer itself rises away.
+    const rings = [0, 1].map(() => {
+      const material = new THREE.MeshBasicMaterial({
+        map: rippleMap,
+        color: colour,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        toneMapped: false,
+      });
+      const ring = new THREE.Mesh(rippleGeometry, material);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = baseY(index) + H / 2;
+      ring.visible = false;
+      root.add(ring);
+      return ring;
+    });
+    return {
+      group,
+      slab,
+      face,
+      rings,
+      tilt: 0,
+      state: { lift: 0, glow: 0, peel: 0 } as LayerTarget,
+    };
   });
+  const turn = new THREE.Quaternion();
+  const follow = new THREE.Quaternion();
+  const followEuler = new THREE.Euler();
 
   let activeIndex = -1;
+  /** The last time the page scrolled or the active layer changed. */
+  let movedAt = -Infinity;
+  const onScroll = () => {
+    movedAt = performance.now();
+  };
   const size = { w: 1, h: 1 };
   const cam = { y: REST_Y, zoom: 1 };
   const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
@@ -246,6 +320,21 @@ export function createStack(
       item.slab.opacity = 1 - s.peel;
       item.slab.emissiveIntensity = 0.12 * s.glow;
       item.face.opacity = 1 - s.peel;
+
+      // Turned towards the viewer while the page moves, flat once it settles.
+      const turning = index === activeIndex && now - movedAt < SETTLE_MS ? 1 : 0;
+      item.tilt += (turning - item.tilt) * (reducedMotion ? 1 : 1 - Math.pow(0.02, dt));
+      const wobble = s.peel > 0 && s.peel < 1 ? Math.sin(s.peel * Math.PI * 2) * 0.07 : 0;
+      turn.setFromAxisAngle(TILT_AXIS, reducedMotion ? 0 : item.tilt * TILT + wobble);
+      followEuler.set(pointer.y * 0.09 * s.glow, pointer.x * 0.12 * s.glow, 0);
+      item.group.quaternion.copy(turn).multiply(follow.setFromEuler(followEuler));
+
+      rippleRings(reducedMotion ? 0 : s.peel).forEach(({ scale, opacity }, r) => {
+        const ring = item.rings[r]!;
+        ring.visible = opacity > 0.01;
+        ring.scale.set(scale, scale, 1);
+        ring.material.opacity = opacity;
+      });
     });
     const aim = cameraFrame(activeIndex, size);
     const k = reducedMotion ? 1 : 1 - Math.pow(0.02, dt);
@@ -280,11 +369,14 @@ export function createStack(
   resize();
   window.addEventListener('resize', resize);
   window.addEventListener('pointermove', onPointer, { passive: true });
+  window.addEventListener('scroll', onScroll, { passive: true });
   start();
 
   return {
     setActive(id) {
-      activeIndex = id ? LAYERS.findIndex((l) => l.id === id) : -1;
+      const next = id ? LAYERS.findIndex((l) => l.id === id) : -1;
+      if (next !== activeIndex) movedAt = performance.now();
+      activeIndex = next;
     },
     pause: stop,
     resume: start,
@@ -303,13 +395,17 @@ export function createStack(
       stop();
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointer);
+      window.removeEventListener('scroll', onScroll);
       items.forEach((item) => {
+        item.rings.forEach((ring) => ring.material.dispose());
         item.slab.dispose();
         item.face.map?.dispose();
         item.face.dispose();
       });
       slabGeometry.dispose();
       faceGeometry.dispose();
+      rippleGeometry.dispose();
+      rippleMap.dispose();
       shadow.geometry.dispose();
       shadow.material.map?.dispose();
       shadow.material.dispose();

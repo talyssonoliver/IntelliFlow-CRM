@@ -87,6 +87,15 @@ export function StackStage() {
                   <li>
                     <span className="material-symbols-outlined">mood</span>Sentiment
                   </li>
+                  <li>
+                    <span className="material-symbols-outlined">insights</span>Insights
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">tune</span>Customise your agents
+                  </li>
+                  <li>
+                    <span className="material-symbols-outlined">build</span>Tools
+                  </li>
                 </ul>
               </div>
             </article>
@@ -165,12 +174,13 @@ export function StackStage() {
             <article className="layer-step layer-card" data-layer="foundation">
               <div className="layer-step-inner">
                 <p className="layer-tag" style={{ '--c': '#11175B' } as CSSProperties}>
-                  <span></span>05 · Foundation
+                  <span></span>05 · Enterprise-grade
                 </p>
-                <h3>Enterprise-grade underneath.</h3>
+                <h3>Enterprise-grade tools, priced and built for growing businesses.</h3>
                 <p>
-                  Each workspace is isolated in the database, multi-factor authentication is
-                  available on every account, and every change is written to an audit log.
+                  The protections large companies pay extra for, in every workspace from day one.
+                  Each workspace&apos;s data is kept apart, multi-factor sign-in is available on
+                  every account, and every change is written to an audit log.
                 </p>
                 <ul className="chips">
                   <li>
@@ -192,7 +202,7 @@ export function StackStage() {
               <canvas id="stack" aria-hidden="true"></canvas>
               <p className="sr-only">
                 The Aurora platform as five stacked layers: AI agents, human approval, pipeline,
-                service and insight, and the foundation underneath.
+                service and insight, and enterprise-grade protection underneath.
               </p>
             </div>
           </div>

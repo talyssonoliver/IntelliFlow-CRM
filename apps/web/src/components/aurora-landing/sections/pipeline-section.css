@@ -226,7 +226,9 @@
   font-variant-numeric: tabular-nums;
 }
 .aurora-page .deal-card--lost {
-  opacity: 0.78;
+  /* Muted by its surface, not by opacity, so its words stay fully legible. */
+  background: #f4f5fa;
+  box-shadow: none;
 }
 .aurora-page .deal-card--lost .prob i {
   background: #c43b3b;

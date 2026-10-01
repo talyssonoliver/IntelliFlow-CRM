@@ -29,3 +29,14 @@
 .aurora-page .footer.aurora-footer .foot-cols b {
   padding-bottom: 10px;
 }
+
+/* The Final CTA's ribbons run on down behind the footer: its content sits
+   above them, and the footer itself stays transparent over the same Navy. */
+.aurora-page .footer.aurora-footer {
+  position: relative;
+  overflow-x: clip;
+}
+.aurora-page .footer.aurora-footer > .wrap {
+  position: relative;
+  z-index: 3;
+}
