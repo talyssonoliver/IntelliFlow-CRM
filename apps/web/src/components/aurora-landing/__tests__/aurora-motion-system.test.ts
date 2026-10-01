@@ -275,6 +275,24 @@ describe('createScrubSteps', () => {
     created[0]!.onEnterBack!();
     expect(onStep).toHaveBeenCalledWith(0, 0.5, true);
   });
+
+  it('undoes everything it applied on cleanup, so a rewire leaves each step visible', () => {
+    const steps = [document.createElement('div'), document.createElement('div')];
+    const { gsap } = makeGsap();
+    const { ScrollTrigger, created } = makeScrollTrigger();
+    const cleanup = createScrubSteps(steps, gsap as never, ScrollTrigger as never);
+    const timelines = gsap.timeline.mock.results.map(
+      (r) => r.value as { kill: ReturnType<typeof vi.fn> }
+    );
+    expect(timelines).toHaveLength(2);
+
+    cleanup();
+    expect(created.every((t) => t.kill.mock.calls.length === 1)).toBe(true);
+    expect(timelines.every((t) => t.kill.mock.calls.length === 1)).toBe(true);
+    expect(gsap.set).toHaveBeenLastCalledWith(steps, {
+      clearProps: 'opacity,visibility,transform,willChange',
+    });
+  });
 });
 
 describe('createSectionBridge', () => {
