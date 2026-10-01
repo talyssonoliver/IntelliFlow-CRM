@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-09-30T20:39:21.762Z",
+  "timestamp": "2026-10-01T08:13:19.824Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 65,
-    "total_endpoints": 530,
+    "total_endpoints": 529,
     "total_queries": 233,
-    "total_mutations": 297,
+    "total_mutations": 296,
     "routers": [
       {
         "name": "contact",
@@ -1123,12 +1123,6 @@
         "mutations": 7
       },
       {
-        "name": "billing",
-        "endpoints": 10,
-        "queries": 5,
-        "mutations": 5
-      },
-      {
         "name": "intelligence",
         "endpoints": 10,
         "queries": 7,
@@ -1139,6 +1133,12 @@
         "endpoints": 9,
         "queries": 8,
         "mutations": 1
+      },
+      {
+        "name": "billing",
+        "endpoints": 9,
+        "queries": 5,
+        "mutations": 4
       },
       {
         "name": "webhooks",
@@ -4108,11 +4108,6 @@
         "name": "billing.updateBillingInformation",
         "method": "POST",
         "description": "Update billing information"
-      },
-      {
-        "name": "billing.handleSubscriptionWebhook",
-        "method": "POST",
-        "description": "Handle subscription webhook"
       },
       {
         "name": "billing.getPlanState",

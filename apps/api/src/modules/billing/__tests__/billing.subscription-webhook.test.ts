@@ -22,9 +22,14 @@ const EVENT = {
   },
 };
 
-function makeCtx(adapters: Record<string, unknown>) {
+function makeCtx(adapters: Record<string, unknown>, operator = true) {
   const container = { get: vi.fn().mockReturnValue(adapters) };
-  return createTestContext({ container } as never);
+  const ctx = createTestContext({ container } as never);
+  // The procedure is platform-operator only: a verified email on PLATFORM_ADMIN_EMAILS.
+  const user = ctx.user as { email?: string; emailVerified?: boolean };
+  user.email = operator ? 'ops@leangency.test' : 'someone@acme.test';
+  user.emailVerified = true;
+  return ctx;
 }
 
 describe('billing.handleSubscriptionWebhook outbox routing', () => {
@@ -32,11 +37,25 @@ describe('billing.handleSubscriptionWebhook outbox routing', () => {
   const pushDelivery = vi.fn();
 
   beforeEach(() => {
+    process.env.PLATFORM_ADMIN_EMAILS = 'ops@leangency.test';
     upsertFromWebhook.mockReset().mockResolvedValue(undefined);
     pushDelivery.mockReset();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
+
+  it('is FORBIDDEN for anyone who is not a platform operator (it trusts its JSON input)', async () => {
+    const ctx = makeCtx(
+      { stripeSubscriptionRepository: { upsertFromWebhook }, portalDeliverySync: { pushDelivery } },
+      false
+    );
+
+    await expect(
+      billingRouter.createCaller(ctx as never).handleSubscriptionWebhook(EVENT)
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    expect(upsertFromWebhook).not.toHaveBeenCalled();
+    expect(prismaMock.domainEvent.create).not.toHaveBeenCalled();
   });
 
   it('enqueues the push as a domain event with the same payload, without calling the portal', async () => {

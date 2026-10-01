@@ -21,6 +21,7 @@ import {
   tenantProcedure,
   verifiedTenantProcedure,
   publicProcedure,
+  platformAdminProcedure,
 } from '../../trpc';
 import {
   listInvoicesInputSchema,
@@ -1606,11 +1607,14 @@ export const billingRouter = createTRPCRouter({
    * Handle Stripe webhook for subscription changes
    * IFC-211: Syncs tenant modules when plan changes via Stripe
    *
-   * In production, this would verify the Stripe signature.
-   * Called by Stripe webhook endpoint.
+   * Stripe itself never calls this: the verified, signature-checked entry point
+   * is the raw-body route in `webhooks/stripe-webhook.ts`. This tRPC procedure
+   * trusts its JSON input (tenantId and planTier come from the caller) and
+   * `syncModulesToPlan` now writes `Tenant.plan`, which sets every quota limit,
+   * so it is restricted to platform operators (manual replay / repair only).
    * Also invalidates the billing cache so users see fresh data.
    */
-  handleSubscriptionWebhook: publicProcedure
+  handleSubscriptionWebhook: platformAdminProcedure
     .input(
       z.object({
         type: z.string(),
