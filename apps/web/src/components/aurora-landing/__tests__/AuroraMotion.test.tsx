@@ -239,6 +239,14 @@ describe('AuroraMotion', () => {
     Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
     document.dispatchEvent(new Event('visibilitychange'));
     expect(stack.resume).toHaveBeenCalledTimes(2);
+
+    // Back in the tab while scrolled past the stack: the loop stays stopped.
+    ioCallback([{ isIntersecting: false }]);
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(stack.resume).toHaveBeenCalledTimes(2);
   });
 
   it('fills the nav once the page moves', async () => {

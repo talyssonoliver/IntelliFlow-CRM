@@ -118,19 +118,21 @@ export function fitStickyCards(root: HTMLElement, cleanups: Array<() => void>): 
 
 function pauseWhenHidden(canvas: HTMLCanvasElement, s: Stack, cleanups: Array<() => void>) {
   // The render loop never spends a frame off-screen or in a hidden tab.
+  let onScreen = true;
   if (typeof IntersectionObserver === 'function') {
     const io = new IntersectionObserver((entries) => {
       // Entries arrive oldest first; only the newest reflects where the canvas is now.
-      const visible = entries[entries.length - 1]?.isIntersecting ?? true;
-      if (visible && document.visibilityState !== 'hidden') s.resume();
+      onScreen = entries[entries.length - 1]?.isIntersecting ?? true;
+      if (onScreen && document.visibilityState !== 'hidden') s.resume();
       else s.pause();
     });
     io.observe(canvas);
     cleanups.push(() => io.disconnect());
   }
   const onVisibility = () => {
+    // Back in the tab, the loop restarts only if the canvas is still on screen.
     if (document.visibilityState === 'hidden') s.pause();
-    else s.resume();
+    else if (onScreen) s.resume();
   };
   document.addEventListener('visibilitychange', onVisibility);
   cleanups.push(() => document.removeEventListener('visibilitychange', onVisibility));
