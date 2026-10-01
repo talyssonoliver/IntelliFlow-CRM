@@ -395,6 +395,12 @@ async function assertionLink(
         }
 
         const pinned = claims.kind === 'staff';
+        // A home user keeps the role they hold in the CRM (the Portal syncs role changes through
+        // setMemberRole); everyone else is granted the role the Portal asserted.
+        const role: MemberRole =
+          claims.kind === 'member' && existing && existing.tenantId === tenant.id
+            ? toMemberRole(existing.role)
+            : claims.role;
         const grantExpiresAt = new Date(now.getTime() + LOGIN_GRANT_CLAIM_WINDOW_MS);
         let grantId: string;
         try {
@@ -404,7 +410,7 @@ async function assertionLink(
               userId,
               tenantId: tenant.id,
               kind: claims.kind,
-              role: toStoredRole(claims.role),
+              role: toStoredRole(role),
               pinned,
               jti: claims.jti,
               expiresAt: grantExpiresAt,
@@ -432,7 +438,7 @@ async function assertionLink(
             partnerId: partner.id,
             action: 'MEMBER_ATTACHED',
             actor,
-            detail: { kind: claims.kind, role: claims.role, created, jti: claims.jti },
+            detail: { kind: claims.kind, role, created, jti: claims.jti },
           });
         }
         await writeAudit(tx, {
@@ -441,7 +447,7 @@ async function assertionLink(
           partnerId: partner.id,
           action: 'LINK_ISSUED',
           actor,
-          detail: { kind: claims.kind, role: claims.role, jti: claims.jti, grantId },
+          detail: { kind: claims.kind, role, jti: claims.jti, grantId },
         });
 
         const expiresAt = new Date(Math.min(otpExpiry(now).getTime(), grantExpiresAt.getTime()));
@@ -454,7 +460,7 @@ async function assertionLink(
           }),
           expiresAt: expiresAt.toISOString(),
           pinned,
-          role: claims.role,
+          role,
         };
       },
       { maxWait: 10_000, timeout: 30_000 }

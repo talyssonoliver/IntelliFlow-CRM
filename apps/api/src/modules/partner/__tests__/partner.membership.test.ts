@@ -700,6 +700,24 @@ describe('issueLoginLink: kind=member', () => {
     expect(auditRows().map((r) => r.action)).toEqual(['LINK_ISSUED']);
   });
 
+  it('a home user keeps the CRM role they hold, whatever role the assertion carries', async () => {
+    users['alice@client.test'] = { id: 'u-alice', tenantId: 't1', role: 'ADMIN' };
+    const caller = callerWith();
+
+    const out = await caller.issueLoginLink({
+      tenantId: 't1',
+      email: 'alice@client.test',
+      assertion: assertionFor({ role: 'MEMBER' }),
+    });
+
+    expect(out.role).toBe('ADMIN');
+    expect(prismaMock.partnerLoginGrant.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ role: 'ADMIN' }),
+      select: { id: true },
+    });
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
   it('revives a home user whose membership was revoked, after a seat check', async () => {
     users['alice@client.test'] = { id: 'u-alice', tenantId: 't1', role: 'USER' };
     prismaMock.tenantMembership.findUnique.mockResolvedValue({
