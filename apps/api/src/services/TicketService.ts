@@ -22,8 +22,20 @@ import type {
  */
 export type TicketWriteClient = Pick<
   PrismaClient,
-  'ticket' | 'sLAPolicy' | 'ticketActivity' | 'ticketNextStep'
+  'ticket' | 'sLAPolicy' | 'ticketActivity' | 'ticketNextStep' | '$queryRaw'
 >;
+
+export interface CreateTicketInput {
+  subject: string;
+  description?: string;
+  priority: TicketPriority;
+  contactName: string;
+  contactEmail: string;
+  contactId?: string;
+  assigneeId?: string;
+  slaPolicyId?: string;
+  tenantId: string;
+}
 
 export class TicketService {
   constructor(private readonly prisma: PrismaClient) {}
@@ -335,51 +347,61 @@ export class TicketService {
   }
 
   /**
-   * Create a new ticket
+   * Insert the ticket under a global advisory lock so `ticketNumber` (globally
+   * unique) is max+1 at insert time: collision-free across every creator (UI,
+   * portal intake, any tenant) and gap-safe after deletions. The lock is
+   * transaction-scoped, so `db` MUST be a transaction client; `create()`
+   * guarantees that. No retry: a failed INSERT aborts a Postgres transaction,
+   * so a retry on the same client could never succeed.
    */
-  /**
-   * `ticketNumber` is globally unique but was derived from `count() + 1`, so two
-   * concurrent creates (any tenant, any entry point) read the same count and one
-   * of them fails with P2002. Recount and retry on that collision, advancing by the
-   * attempt index so a gap left by a deleted ticket cannot pin the sequence.
-   */
-  private async createWithFreshNumber(
+  private async insertNumbered(
     db: TicketWriteClient,
     data: Omit<Parameters<TicketWriteClient['ticket']['create']>[0]['data'], 'ticketNumber'>
   ) {
-    const MAX_ATTEMPTS = 5;
-    for (let attempt = 0; ; attempt++) {
-      const ticketCount = await db.ticket.count();
-      const ticketNumber = `T-${String(ticketCount + 1 + attempt).padStart(5, '0')}`;
-      try {
-        return await db.ticket.create({
-          data: { ...data, ticketNumber } as Parameters<
-            TicketWriteClient['ticket']['create']
-          >[0]['data'],
-          include: { slaPolicy: true },
-        });
-      } catch (error) {
-        const isNumberCollision =
-          (error as { code?: string } | null)?.code === 'P2002' && attempt < MAX_ATTEMPTS - 1;
-        if (!isNumberCollision) throw error;
-      }
-    }
+    await db.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended('ticket-number', 0))`;
+    const last = await db.ticket.findFirst({
+      orderBy: { ticketNumber: 'desc' },
+      select: { ticketNumber: true },
+    });
+    const lastNumber = last ? Number.parseInt(last.ticketNumber.replace(/\D/g, ''), 10) : 0;
+    const next = (Number.isFinite(lastNumber) ? lastNumber : 0) + 1;
+    const ticketNumber = `T-${String(next).padStart(5, '0')}`;
+    return db.ticket.create({
+      data: { ...data, ticketNumber } as Parameters<
+        TicketWriteClient['ticket']['create']
+      >[0]['data'],
+      include: { slaPolicy: true },
+    });
   }
 
-  async create(
-    data: {
-      subject: string;
-      description?: string;
-      priority: TicketPriority;
-      contactName: string;
-      contactEmail: string;
-      contactId?: string;
-      assigneeId?: string;
-      slaPolicyId?: string;
-      tenantId: string;
-    },
-    db: TicketWriteClient = this.prisma
-  ) {
+  /**
+   * Create a new ticket.
+   *
+   * Pass `db` to create inside the caller's interactive transaction (the ticket
+   * then commits or rolls back with the caller's rows). Without it the service
+   * opens its own transaction. Related-ticket linking is best-effort and runs
+   * after this call returns; with a caller-supplied `db` that is before the
+   * caller commits, so it may find nothing to link.
+   */
+  async create(data: CreateTicketInput, db?: TicketWriteClient) {
+    const ticket = db
+      ? await this.createIn(data, db)
+      : await this.prisma.$transaction((tx) => this.createIn(data, tx));
+
+    // Find and link related tickets (non-blocking, best-effort)
+    this.findAndLinkRelatedTickets({
+      id: ticket.id,
+      subject: data.subject,
+      tenantId: data.tenantId,
+    }).catch(() => {});
+
+    return {
+      ...ticket,
+      slaStatus: this.calculateSLAStatus(ticket),
+    };
+  }
+
+  private async createIn(data: CreateTicketInput, db: TicketWriteClient) {
     // Get SLA policy to calculate due times — auto-select the tenant's oldest policy if not
     // provided. Both lookups are scoped to the tenant: an explicit id from another tenant,
     // or a fallback across tenants, would attach a foreign policy to this ticket.
@@ -428,7 +450,7 @@ export class TicketService {
       now.getTime() + getResolutionMinutes(data.priority) * 60 * 1000
     );
 
-    const ticket = await this.createWithFreshNumber(db, {
+    const ticket = await this.insertNumbered(db, {
       subject: data.subject,
       description: data.description,
       priority: data.priority,
@@ -471,17 +493,7 @@ export class TicketService {
       });
     }
 
-    // Find and link related tickets (non-blocking, best-effort)
-    this.findAndLinkRelatedTickets({
-      id: ticket.id,
-      subject: data.subject,
-      tenantId: data.tenantId,
-    }).catch(() => {});
-
-    return {
-      ...ticket,
-      slaStatus: this.calculateSLAStatus(ticket),
-    };
+    return ticket;
   }
 
   /**
