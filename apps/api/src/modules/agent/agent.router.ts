@@ -17,7 +17,11 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import {
+  createTRPCRouter,
+  protectedProcedure as baseProtectedProcedure,
+  requireModule,
+} from '../../trpc';
 import {
   getAvailableToolNames,
   getAgentTool,
@@ -32,7 +36,11 @@ import { agentAuthorizationService, buildAuthContext } from '../../agent/authori
 import { agentLogger } from '../../agent/logger';
 import { hasPermission } from '../../lib/rbac';
 import type { Context } from '../../context';
+import { assertQuota } from '../../shared/quota-guard';
 import type { AgentAuthContext, PendingAction } from '../../agent/types';
+
+// ADR-070: server-side AI_INTELLIGENCE entitlement (plan gate, not role gate).
+const protectedProcedure = baseProtectedProcedure.use(requireModule('AI_INTELLIGENCE'));
 
 /**
  * Fetch a pending action and assert it belongs to the caller's tenant.
@@ -175,6 +183,9 @@ export const agentRouter = createTRPCRouter({
       if (!ctx.user?.tenantId) {
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context missing' });
       }
+
+      // Per-tenant metering: agent runs are AI spend. Assert only; cost is recorded elsewhere.
+      await assertQuota(ctx, ctx.user.tenantId, 'aiSpendCentsPerMonth');
 
       // Gate: check tool is enabled for this tenant BEFORE building approval prompt
       let tool;

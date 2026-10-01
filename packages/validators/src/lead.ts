@@ -43,6 +43,16 @@ const baseLeadFieldsSchema = z.object({
   need: z.string().max(2000).optional(),
   timeline: z.enum(['immediate', 'short', 'medium', 'long', 'unknown']).optional(),
   annualRevenue: z.enum(['<1M', '1M-10M', '10M-50M', '50M-100M', '100M+']).optional(),
+  // ADR-070: marketing attribution (partner/inbound hand-off). Column limits mirror the
+  // inbound `attribution` contract in @intelliflow/partner-sdk.
+  utmSource: z.string().max(200).optional(),
+  utmMedium: z.string().max(200).optional(),
+  utmCampaign: z.string().max(200).optional(),
+  utmContent: z.string().max(200).optional(),
+  utmTerm: z.string().max(200).optional(),
+  clickId: z.string().max(500).optional(),
+  referrer: z.string().max(2000).optional(),
+  landingPath: z.string().max(2000).optional(),
 });
 
 // Create Lead Schema - uses base fields with source default

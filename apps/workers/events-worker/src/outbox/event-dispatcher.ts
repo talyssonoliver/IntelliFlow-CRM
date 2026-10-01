@@ -249,6 +249,8 @@ export const DOMAIN_EVENT_TYPES = {
   OPPORTUNITY_LOST: 'opportunity.lost',
   // IFC-314: enriched deal-won event → portal delivery/billing sync
   DEAL_WON_ENRICHED: 'opportunity.deal_won_enriched',
+  // Stripe engine-subscription status → portal push, enqueued by the API webhook
+  SUBSCRIPTION_PORTAL_SYNC_REQUESTED: 'subscription.portal_sync_requested',
 
   // Task events
   TASK_CREATED: 'task.created',

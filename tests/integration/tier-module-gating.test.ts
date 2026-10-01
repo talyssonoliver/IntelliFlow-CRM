@@ -4,8 +4,7 @@
  * Validates the SERVER-SIDE entitlement boundary that `requireModule()`
  * (apps/api/src/trpc.ts) depends on: `PrismaTenantModuleRepository` must report
  * the correct enabled-module set for a tenant given its plan tier + any à-la-carte
- * overrides, reading the real `workspaces → workspace_members → users` join and
- * the `tenant_modules` override table.
+ * overrides, reading `Tenant.plan` (ADR-070) and the `tenant_modules` override table.
  *
  * Why this is a MIDDLE-layer (integration) test, not E2E and not a unit test:
  *  - The gating decision is a DB query (`getTenantPlan` raw join) merged with the
@@ -56,21 +55,15 @@ describeDb('Tier → module gating (DB-backed entitlement boundary)', () => {
   // Monotonic suffix so every provisioned tenant gets unique slug/email.
   let seq = 0;
 
-  /** Provision a tenant whose plan resolves to `plan` via the workspace join. */
+  /** Provision a tenant on `plan` (Tenant.plan, ADR-070). */
   async function provisionTenant(plan: string): Promise<string> {
     const n = seq++;
     const key = `${plan.toLowerCase()}-${n}`;
     const t = await prisma.tenant.create({
-      data: { name: `${TAG}-${plan}-${n}`, slug: `${TAG}-${key}` },
+      data: { name: `${TAG}-${plan}-${n}`, slug: `${TAG}-${key}`, plan: plan as any },
     });
-    const u = await prisma.user.create({
+    await prisma.user.create({
       data: { email: `${TAG}-${key}@example.com`, tenantId: t.id },
-    });
-    const w = await prisma.workspace.create({
-      data: { name: `${TAG}-${plan}-${n}-ws`, slug: `${TAG}-${key}-ws`, plan: plan as any },
-    });
-    await prisma.workspaceMember.create({
-      data: { userId: u.id, workspaceId: w.id, role: 'owner', isDefault: true },
     });
     return t.id;
   }
@@ -95,10 +88,6 @@ describeDb('Tier → module gating (DB-backed entitlement boundary)', () => {
   afterAll(async () => {
     if (!prisma) return;
     // Children first (FK), then tenants. tenant_modules cascade on tenant delete.
-    await prisma.workspaceMember.deleteMany({
-      where: { workspace: { slug: { startsWith: TAG } } },
-    });
-    await prisma.workspace.deleteMany({ where: { slug: { startsWith: TAG } } });
     await prisma.user.deleteMany({ where: { email: { startsWith: TAG } } });
     // tenant_modules cascade-delete with their tenant (onDelete: Cascade).
     await prisma.tenant.deleteMany({ where: { slug: { startsWith: TAG } } });

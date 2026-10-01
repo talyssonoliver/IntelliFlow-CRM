@@ -66,19 +66,16 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
   }
 
   async getTenantPlan(tenantId: string): Promise<PlanTier> {
-    // Look up workspace associated with this tenant in ONE query.
-    // WorkspaceMember has no Prisma relation to User, so we use $queryRaw
-    // to join workspaces -> workspace_members -> users in a single round-trip.
-    const rows = await this.prisma.$queryRaw<Array<{ plan: string }>>`
-      SELECT w.plan
-      FROM workspaces w
-      INNER JOIN workspace_members wm ON wm."workspaceId" = w.id
-      INNER JOIN users u ON u.id = wm."userId"
-      WHERE u."tenantId" = ${tenantId}
-      LIMIT 1
-    `;
+    // ADR-070: the plan lives on Tenant (Workspace is deprecated and nothing populates it).
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { plan: true },
+    });
 
-    return (rows[0]?.plan as PlanTier) ?? 'STARTER';
+    // Fail-safe: an unknown or missing plan resolves to the smallest known tier,
+    // never to an undefined MODULE_PLAN_MAP lookup.
+    const plan = tenant?.plan;
+    return plan && plan in MODULE_PLAN_MAP ? (plan as PlanTier) : 'STARTER';
   }
 
   async enableModule(tenantId: string, moduleId: ModuleId): Promise<TenantModuleRecord> {
@@ -155,7 +152,10 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
     // higher-plan (paid) module access. Running both in one transaction means
     // the enabled set can never be observed in a half-synced state. CORE_CRM is
     // part of every plan, so `notIn planModules` never disables it.
+    // The same transaction records the plan on Tenant (the source of truth for getTenantPlan
+    // and quota limits), so a Stripe plan change can never leave modules and plan disagreeing.
     await this.prisma.$transaction([
+      this.prisma.tenant.update({ where: { id: tenantId }, data: { plan } }),
       ...planModules.map((moduleId) =>
         this.prisma.tenantModule.upsert({
           where: { tenantId_moduleId: { tenantId, moduleId } },

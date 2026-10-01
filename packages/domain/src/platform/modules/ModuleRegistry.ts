@@ -32,8 +32,15 @@ export type ModuleId = (typeof CRM_MODULES)[number];
 
 /**
  * Subscription plan tiers in ascending order of capability.
+ * PARTNER_FREE is a non-purchasable, quota-capped tier granted to agency clients.
  */
-export const PLAN_TIERS = ['STARTER', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'] as const;
+export const PLAN_TIERS = [
+  'PARTNER_FREE',
+  'STARTER',
+  'PROFESSIONAL',
+  'ENTERPRISE',
+  'CUSTOM',
+] as const;
 
 export type PlanTier = (typeof PLAN_TIERS)[number];
 
@@ -52,6 +59,7 @@ export type PlanTier = (typeof PLAN_TIERS)[number];
  * Matches pricing page: even Starter gets basic AI scoring, tickets, reports.
  */
 export const MODULE_PLAN_MAP: Record<PlanTier, readonly ModuleId[]> = {
+  PARTNER_FREE: ['CORE_CRM'],
   STARTER: ['CORE_CRM', 'SUPPORT', 'AI_INTELLIGENCE', 'ANALYTICS'],
   PROFESSIONAL: ['CORE_CRM', 'SUPPORT', 'AI_INTELLIGENCE', 'ANALYTICS', 'LEGAL'],
   ENTERPRISE: ['CORE_CRM', 'SUPPORT', 'AI_INTELLIGENCE', 'ANALYTICS', 'LEGAL', 'COMMERCE'],

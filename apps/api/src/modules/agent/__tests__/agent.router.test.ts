@@ -175,7 +175,11 @@ function createAgentTestContext(authenticated = true, admin = false): BaseContex
   const role = admin ? 'ADMIN' : 'USER';
   return {
     prisma: {} as any,
-    container: {} as any,
+    // AI_INTELLIGENCE entitlement gate (ADR-070) resolves `moduleAccess` from the container.
+    container: {
+      get: (name: string) =>
+        name === 'moduleAccess' ? { isModuleEnabled: async () => true } : undefined,
+    } as any,
     services: {} as any,
     security: {} as any,
     adapters: {} as any,

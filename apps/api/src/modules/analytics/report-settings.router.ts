@@ -9,13 +9,17 @@
  */
 
 import type { Prisma, ReportSettings } from '@intelliflow/db';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import {
   updateReportSettingsSchema,
   scheduledDeliverySchema,
   DEFAULT_REPORT_SETTINGS,
   type ScheduledDelivery,
 } from '@intelliflow/validators';
+
+// ADR-070: server-side ANALYTICS entitlement — report settings
+// (a tenant on a plan without it must not reach these endpoints directly).
+const tenantProcedure = moduleTenantProcedure('ANALYTICS');
 
 /**
  * Parse the Prisma Json scheduledDelivery column through Zod. Corrupt DB rows

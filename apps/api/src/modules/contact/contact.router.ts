@@ -75,6 +75,7 @@ import { deriveContactInsights } from '../../shared/contact-insight-deriver';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 // IFC-255: fire-and-forget audit logging for contact mutations + single-record reads
 import { getAuditLogger } from '../../security/audit-logger';
+import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
 
 /**
  * IFC-255: shared fire-and-forget audit-failure handler. Audit logging must
@@ -596,6 +597,9 @@ export const contactRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const contactService = getContactService(ctx);
 
+    // Per-tenant metering: reject before any hygiene/duplicate work when the plan is full.
+    await assertQuota(ctx, typedCtx.tenant.tenantId, 'contacts');
+
     // PG-182: apply tenant hygiene policy + required-field enforcement
     // before handing off to the domain service.
     const [flags, requiredFields] = await Promise.all([
@@ -661,11 +665,15 @@ export const contactRouter = createTRPCRouter({
       }
     }
 
-    const result = await contactService.createContact({
-      ...hygieneInput,
-      ownerId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-    });
+    // The assertion above is a cheap early reject; this one re-checks the live count and
+    // creates under a per-tenant lock so concurrent creates cannot both take the last slot.
+    const result = await withQuotaLock(ctx, typedCtx.tenant.tenantId, 'contacts', 1, () =>
+      contactService.createContact({
+        ...hygieneInput,
+        ownerId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+      })
+    );
 
     if (result.isFailure) {
       throwContactCreateError(result.error.message);

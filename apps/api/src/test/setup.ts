@@ -9,6 +9,11 @@
  */
 
 import { beforeEach, afterAll, vi } from 'vitest';
+
+// Quota guards fail closed when the QuotaService is not wired. Most router unit tests build
+// partial contexts without it, so the test process opts in to skipping explicitly. The
+// quota-guard tests flip this off to prove the production behaviour.
+process.env.QUOTA_GUARD_ALLOW_MISSING_SERVICE = '1';
 import type { PrismaClient, Prisma as PrismaNamespace } from '@intelliflow/db';
 import { Prisma } from '@intelliflow/db';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
@@ -178,6 +183,9 @@ export const mockServices = {
   // fall back to direct Prisma mocks. Tests that need orchestrator behavior
   // should override via createTestContext({ services: { notificationOrchestrator: ... } }).
   notificationOrchestrator: undefined as any,
+  // Per-tenant metering — undefined so router tests skip quota guards;
+  // guard tests override via createTestContext({ services: { quota: ... } }).
+  quota: undefined as any,
   aiMonitoringService: mockDeep<any>(),
   // IFC-214: aiMonitoringStore wraps aiMonitoringService with a Redis cache layer.
   // The router unwraps `.value` on the response, so the mock returns
@@ -268,11 +276,13 @@ export const mockAdapters = {
   feedbackSurveyRepository: mockDeep<any>(),
   publicFeedbackRepository: mockDeep<any>(),
   tenantModuleRepository: mockDeep<any>(),
+  tenantUsageAdapter: mockDeep<any>(),
   notificationRepository: mockDeep<any>(),
   notificationPreferenceRepository: mockDeep<any>(),
   notificationAuditLogger: mockDeep<any>(),
   experimentRepository: mockDeep<any>(),
   appointmentRepository: mockDeep<any>(),
+  quotaRepository: mockDeep<any>(),
 };
 
 /**
@@ -530,6 +540,14 @@ export const mockLead = {
   need: null,
   timeline: null,
   annualRevenue: null,
+  utmSource: null,
+  utmMedium: null,
+  utmCampaign: null,
+  utmContent: null,
+  utmTerm: null,
+  clickId: null,
+  referrer: null,
+  landingPath: null,
   // Lead 360 fields
   location: null,
   website: null,

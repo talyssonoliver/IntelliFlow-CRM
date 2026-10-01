@@ -132,12 +132,16 @@ const mockToolCall = {
 };
 
 describe('Conversation Router', () => {
-  const ctx = createTestContext();
-  const caller = conversationRouter.createCaller(ctx);
+  // Rebuilt per test: vitest's mockReset wipes the container's moduleAccess stub
+  // (the AI_INTELLIGENCE entitlement gate resolves it on every call).
+  let ctx: ReturnType<typeof createTestContext>;
+  let caller: ReturnType<typeof conversationRouter.createCaller>;
 
   beforeEach(() => {
     // Reset mocks and set default responses
     vi.clearAllMocks();
+    ctx = createTestContext();
+    caller = conversationRouter.createCaller(ctx);
 
     // Default mock for conversationRecord
     prismaMock.conversationRecord.findMany.mockResolvedValue([]);

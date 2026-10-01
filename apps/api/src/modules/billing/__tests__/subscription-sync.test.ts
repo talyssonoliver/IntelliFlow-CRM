@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   createSubscriptionSyncHandler,
+  PortalPushEnqueueError,
   type SubscriptionWebhookEvent,
   type SubscriptionSyncDeps,
 } from '../subscription-sync';
@@ -104,6 +105,53 @@ describe('createSubscriptionSyncHandler', () => {
     const res = await createSubscriptionSyncHandler(deps)(makeEvent());
     expect(res).toEqual({ persisted: true, pushed: false });
     expect(h.upsertFromWebhook).toHaveBeenCalled();
+  });
+
+  it('enqueues on the outbox instead of pushing inline when enqueuePortalPush is set', async () => {
+    const enqueuePortalPush = vi.fn().mockResolvedValue(undefined);
+    const res = await createSubscriptionSyncHandler({ ...h.deps, enqueuePortalPush })(makeEvent());
+
+    expect(res).toEqual({ persisted: true, pushed: false });
+    expect(h.pushDelivery).not.toHaveBeenCalled();
+    expect(enqueuePortalPush).toHaveBeenCalledWith(
+      {
+        slug: 'acme',
+        subscriptionStatus: 'active',
+        subscriptionRenewsAt: new Date(1_780_000_000 * 1000).toISOString(),
+      },
+      { tenantId: 'tenant_1', subscriptionId: 'sub_1' }
+    );
+  });
+
+  it('enqueues a null renewal date for a null currentPeriodEnd', async () => {
+    const enqueuePortalPush = vi.fn().mockResolvedValue(undefined);
+    await createSubscriptionSyncHandler({ ...h.deps, enqueuePortalPush })(
+      makeEvent({ currentPeriodEnd: null })
+    );
+    expect(enqueuePortalPush).toHaveBeenCalledWith(
+      expect.objectContaining({ subscriptionRenewsAt: null }),
+      expect.anything()
+    );
+  });
+
+  it('does not enqueue for a subscription without a tenantSlug', async () => {
+    const enqueuePortalPush = vi.fn();
+    await createSubscriptionSyncHandler({ ...h.deps, enqueuePortalPush })(
+      makeEvent({ tenantSlug: undefined })
+    );
+    expect(enqueuePortalPush).not.toHaveBeenCalled();
+  });
+
+  it('throws PortalPushEnqueueError when the enqueue fails (non-Error too)', async () => {
+    const enqueuePortalPush = vi.fn().mockRejectedValue(new Error('db down'));
+    await expect(
+      createSubscriptionSyncHandler({ ...h.deps, enqueuePortalPush })(makeEvent())
+    ).rejects.toThrow(PortalPushEnqueueError);
+
+    const stringFailure = vi.fn().mockRejectedValue('boom');
+    await expect(
+      createSubscriptionSyncHandler({ ...h.deps, enqueuePortalPush: stringFailure })(makeEvent())
+    ).rejects.toThrow('portal push enqueue failed for acme: boom');
   });
 
   it('returns pushed:false (best-effort) when the portal push fails', async () => {

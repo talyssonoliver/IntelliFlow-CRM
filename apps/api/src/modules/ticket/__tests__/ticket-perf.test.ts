@@ -11,6 +11,19 @@ import { ticketRouter } from '../ticket.router';
 import type { UserSession } from '../../../context';
 import type { TenantContext } from '../../../security/tenant-context';
 
+// ADR-070: the module-entitlement gate resolves `moduleAccess` from ctx.container, which
+// these hand-built contexts do not carry. Grant it unless the test supplies its own container.
+const ticketRouterEntitled = {
+  createCaller: (ctx: any) =>
+    ticketRouter.createCaller({
+      ...ctx,
+      container: ctx.container ?? {
+        get: (name: string) =>
+          name === 'moduleAccess' ? { isModuleEnabled: async () => true } : undefined,
+      },
+    }),
+};
+
 // Valid UUIDs for testing
 const TICKET_UUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 const TENANT_UUID = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
@@ -109,7 +122,7 @@ describe('Ticket Router - Performance Tracking (IFC-207)', () => {
 
   const createCaller = () => {
     const ctx = createMockContext();
-    return ticketRouter.createCaller(ctx as never);
+    return ticketRouterEntitled.createCaller(ctx as never);
   };
 
   beforeEach(() => {

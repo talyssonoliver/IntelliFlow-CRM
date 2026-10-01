@@ -13,6 +13,7 @@
  */
 
 import type { StripeSubscriptionRepository } from '@intelliflow/application';
+import type { PrismaClient } from '@intelliflow/db';
 import {
   toDbSubscriptionStatus,
   mapStripeToPortalSubscriptionStatus,
@@ -49,10 +50,36 @@ interface LoggerLike {
   error(obj: unknown, msg?: string): void;
 }
 
+/** Outbox event type consumed by the events-worker subscription-portal-sync handler. */
+export const SUBSCRIPTION_PORTAL_SYNC_EVENT = 'subscription.portal_sync_requested';
+
+/** Thrown when the portal push cannot be enqueued, so the webhook can 5xx and Stripe retries. */
+export class PortalPushEnqueueError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PortalPushEnqueueError';
+  }
+}
+
+/** The exact payload the inline push used to send to the portal. */
+export interface PortalSubscriptionPush {
+  slug: string;
+  subscriptionStatus: PortalSubscriptionStatus;
+  subscriptionRenewsAt: string | null;
+}
+
 export interface SubscriptionSyncDeps {
   repo: StripeSubscriptionRepository;
   /** Optional — only push when the portal sync is configured. */
   portalSync?: PortalSyncClient;
+  /**
+   * Preferred over `portalSync`: enqueue the push on the transactional outbox
+   * (retried by the events-worker) instead of calling the portal inline.
+   */
+  enqueuePortalPush?: (
+    push: PortalSubscriptionPush,
+    ctx: { tenantId: string; subscriptionId: string }
+  ) => Promise<void>;
   logger: LoggerLike;
 }
 
@@ -66,6 +93,49 @@ const SUBSCRIPTION_EVENT_TYPES = new Set([
   'customer.subscription.updated',
   'customer.subscription.deleted',
 ]);
+
+/** Build an `enqueuePortalPush` that writes the push to the `domain_events` outbox. */
+export function createOutboxPortalPushEnqueuer(
+  prisma: Pick<PrismaClient, 'domainEvent'>
+): NonNullable<SubscriptionSyncDeps['enqueuePortalPush']> {
+  return async (push, { tenantId, subscriptionId }) => {
+    await prisma.domainEvent.create({
+      data: {
+        eventType: SUBSCRIPTION_PORTAL_SYNC_EVENT,
+        aggregateType: 'StripeSubscription',
+        aggregateId: subscriptionId,
+        payload: { ...push },
+        metadata: {
+          tenantId,
+          correlationId: subscriptionId,
+          timestamp: new Date().toISOString(),
+          version: '1.0',
+        },
+        tenantId,
+      },
+    });
+  };
+}
+
+async function enqueuePush(
+  enqueue: NonNullable<SubscriptionSyncDeps['enqueuePortalPush']>,
+  {
+    tenantId,
+    subscriptionId,
+    ...push
+  }: PortalSubscriptionPush & {
+    tenantId: string;
+    subscriptionId: string;
+  }
+): Promise<void> {
+  try {
+    await enqueue(push, { tenantId, subscriptionId });
+  } catch (err) {
+    throw new PortalPushEnqueueError(
+      `portal push enqueue failed for ${push.slug}: ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
+}
 
 export function createSubscriptionSyncHandler(deps: SubscriptionSyncDeps) {
   return async (event: SubscriptionWebhookEvent): Promise<SubscriptionSyncResult> => {
@@ -95,8 +165,21 @@ export function createSubscriptionSyncHandler(deps: SubscriptionSyncDeps) {
       tenantSlug: event.tenantSlug ?? null,
     });
 
-    // Engine subscription → reflect status on the portal (best-effort; a portal
-    // outage must not fail the Stripe webhook, which would retry the whole event).
+    // Engine subscription → reflect status on the portal. Via the outbox the push
+    // is durable and retried by the events-worker; an enqueue failure throws so the
+    // webhook 5xxs and Stripe redelivers (the persist above is an idempotent upsert).
+    if (event.tenantSlug && deps.enqueuePortalPush) {
+      await enqueuePush(deps.enqueuePortalPush, {
+        slug: event.tenantSlug,
+        subscriptionStatus: mapStripeToPortalSubscriptionStatus(rawStatus),
+        subscriptionRenewsAt: renewsAt ? renewsAt.toISOString() : null,
+        tenantId: event.tenantId,
+        subscriptionId: event.subscriptionId,
+      });
+      return { persisted: true, pushed: false };
+    }
+
+    // Legacy inline path (best-effort; a portal outage must not fail the webhook).
     if (event.tenantSlug && deps.portalSync) {
       const push = await deps.portalSync.pushDelivery({
         slug: event.tenantSlug,

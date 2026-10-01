@@ -106,6 +106,12 @@ function createMockPrisma(
 
   return {
     $queryRaw: vi.fn().mockImplementation(async () => [{ plan: planForTenant }]),
+    tenant: {
+      findUnique: vi.fn().mockImplementation(async () => ({ plan: planForTenant })),
+      update: vi.fn().mockImplementation(async ({ data }: { data: { plan: PlanTier } }) => ({
+        plan: data.plan,
+      })),
+    },
     tenantModule: {
       findMany: vi.fn().mockImplementation(async ({ where }: { where: { tenantId: string } }) => {
         return [...store.values()].filter((r) => r.tenantId === where.tenantId);
@@ -315,6 +321,12 @@ describe('getTenantPlan — stale-plan read (RACE-ENTIT-05)', () => {
       // $queryRaw returns empty array (no workspace found)
       const mockPrisma: Record<string, any> = {
         $queryRaw: vi.fn().mockResolvedValue([]),
+        tenant: {
+          findUnique: vi.fn().mockImplementation(async () => ({ plan: 'STARTER' })),
+          update: vi.fn().mockImplementation(async ({ data }: { data: { plan: PlanTier } }) => ({
+            plan: data.plan,
+          })),
+        },
         tenantModule: {
           findMany: vi.fn().mockResolvedValue([]),
           findUnique: vi.fn().mockResolvedValue(null),
@@ -485,6 +497,12 @@ describe('isModuleEnabled — falls back to plan-membership correctly', () => {
     async (moduleId, plan) => {
       const mockPrisma: Record<string, any> = {
         $queryRaw: vi.fn().mockResolvedValue([{ plan }]),
+        tenant: {
+          findUnique: vi.fn().mockImplementation(async () => ({ plan: plan })),
+          update: vi.fn().mockImplementation(async ({ data }: { data: { plan: PlanTier } }) => ({
+            plan: data.plan,
+          })),
+        },
         tenantModule: {
           findUnique: vi.fn().mockResolvedValue(null), // no override
           findMany: vi.fn().mockResolvedValue([]),
