@@ -1,4 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// Every rounded rectangle the face draws, as the shared helper is asked for it.
+const { rects } = vi.hoisted(() => ({
+  rects: [] as Array<{ x: number; y: number; w: number; h: number }>,
+}));
+vi.mock('../round-rect', () => ({
+  roundedRect: (_g: unknown, x: number, y: number, w: number, h: number) => {
+    rects.push({ x, y, w, h });
+  },
+}));
+
 import { drawFace, FACES, FACE_SIZE, type LayerId } from '../aurora-face';
 
 /** A 2D context that records what was written and with which font. */
@@ -26,7 +37,9 @@ function recorder() {
     clearRect: () => {},
     fillRect: () => {},
     beginPath: () => {},
-    roundRect: () => {},
+    moveTo: () => {},
+    arcTo: () => {},
+    closePath: () => {},
     fill: () => {},
     measureText: (s: string) => ({ width: s.length * 20 }),
     fillText: (text: string, x: number) =>
@@ -55,10 +68,7 @@ describe('drawFace', () => {
 
   it('draws a probability bar under every pipeline card, sized to its win chance', () => {
     const { g, texts } = recorder();
-    const rects: Array<{ x: number; y: number; w: number; h: number }> = [];
-    g.roundRect = ((x: number, y: number, w: number, h: number) => {
-      rects.push({ x, y, w, h });
-    }) as CanvasRenderingContext2D['roundRect'];
+    rects.length = 0;
     drawFace(g, 'pipeline', '#2A78F6', fonts);
     void texts;
 

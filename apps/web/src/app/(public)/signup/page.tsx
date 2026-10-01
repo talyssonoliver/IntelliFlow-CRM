@@ -140,6 +140,16 @@ function SignUpPageContent() {
   const router = useRouter();
   const auth = useAuth();
   const getUTMData = useUTMCapture();
+  // The landing page's "Start free" form sends the visitor's email here: fill
+  // it in, then take it out of the address bar.
+  const searchParams = useSearchParams();
+  const [prefillEmail] = useState(() => searchParams.get('email') ?? '');
+  useEffect(() => {
+    if (!prefillEmail || typeof globalThis.window === 'undefined') return;
+    const url = new URL(globalThis.location.href);
+    url.searchParams.delete('email');
+    globalThis.history.replaceState(globalThis.history.state, '', url.toString());
+  }, [prefillEmail]);
 
   // Redirect if already authenticated
   useRedirectIfAuthenticated('/');
@@ -276,7 +286,11 @@ function SignUpPageContent() {
             <OAuthDivider />
 
             {/* Registration Form */}
-            <RegistrationForm onSubmit={handleSubmit} isLoading={isSubmitting} />
+            <RegistrationForm
+              onSubmit={handleSubmit}
+              isLoading={isSubmitting}
+              initialEmail={prefillEmail}
+            />
 
             {/* Sign in link */}
             <div className="text-center pt-4 border-t border-white/10">
