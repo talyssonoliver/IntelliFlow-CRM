@@ -267,26 +267,64 @@ function hideAtStageEnd(
   // phone, its inner frame on desktop (the outer column is as tall as the stage,
   // which would fire the hide at load). getComputedStyle, not a live rect: the
   // band's position is fixed by CSS, whether or not it has stuck yet.
-  const stackVisual =
-    [
-      root.querySelector<HTMLElement>('.stage-object.stack-visual'),
-      root.querySelector<HTMLElement>('.object-sticky'),
-    ].find((el) => el && getComputedStyle(el).position === 'sticky') ?? null;
-  const stackStyle = stackVisual ? getComputedStyle(stackVisual) : null;
-  const canvasBottomPx = stackStyle
-    ? Math.ceil(parseFloat(stackStyle.top) + parseFloat(stackStyle.height))
-    : 0;
-  if (end && stackVisual && canvasBottomPx > 0) {
+  // Measured again on every ScrollTrigger refresh (a resize or a rotation),
+  // since the sticky band's top and height change with the viewport.
+  const canvasBottomPx = () => {
+    const band =
+      [
+        root.querySelector<HTMLElement>('.stage-object.stack-visual'),
+        root.querySelector<HTMLElement>('.object-sticky'),
+      ].find((el) => el && getComputedStyle(el).position === 'sticky') ?? null;
+    if (!band) return 0;
+    const style = getComputedStyle(band);
+    return Math.ceil(parseFloat(style.top) + parseFloat(style.height)) || 0;
+  };
+  if (end && canvasBottomPx() > 0) {
     triggers.push(
       ScrollTrigger.create({
         trigger: end,
-        start: `bottom top+=${canvasBottomPx}`,
+        start: () => `bottom top+=${canvasBottomPx()}`,
         onEnter: () => s.hide(),
         onLeaveBack: () => s.show(),
       })
     );
     cleanups.push(() => s.show());
   }
+}
+
+/**
+ * The stack's scroll wiring differs on a phone (the story presents layers) and
+ * on desktop (the scrubbed walkthrough), so it is rebuilt from scratch whenever
+ * the screen crosses the phone breakpoint, after a resize or a rotation.
+ */
+function wireStack(wiring: Wiring, s: Stack): void {
+  const { ScrollTrigger, motion, cleanups } = wiring;
+  let triggers: Array<{ kill(): void }> = [];
+  let local: Array<() => void> = [];
+  const teardown = () => {
+    triggers.forEach((t) => t.kill());
+    local.forEach((fn) => fn());
+    triggers = [];
+    local = [];
+  };
+  const wire = () => {
+    teardown();
+    s.setPresentation(null);
+    s.setActive(null);
+    const scoped: Wiring = { ...wiring, triggers, cleanups: local };
+    hideAtStageEnd(scoped, s, followLayers(scoped, s));
+  };
+  wire();
+  const media = window.matchMedia(motion.MOBILE_QUERY);
+  const rewire = () => {
+    wire();
+    ScrollTrigger.refresh();
+  };
+  media.addEventListener?.('change', rewire);
+  cleanups.push(() => {
+    media.removeEventListener?.('change', rewire);
+    teardown();
+  });
 }
 
 /**
@@ -379,8 +417,7 @@ export function AuroraMotion() {
         cleanups.push(() => s.dispose());
 
         pauseWhenHidden(canvas, s, cleanups);
-        const end = followLayers(wiring, s);
-        hideAtStageEnd(wiring, s, end);
+        wireStack(wiring, s);
       }
       requestAnimationFrame(() => requestAnimationFrame(reveal));
     })().catch((error: unknown) => {
