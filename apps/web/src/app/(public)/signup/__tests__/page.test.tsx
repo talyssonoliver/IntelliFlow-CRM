@@ -103,6 +103,19 @@ describe('SignUpPage', () => {
   // ============================================
 
   describe('Rendering', () => {
+    it("fills in the email the landing page's Start free form sent, then takes it out of the address bar", () => {
+      mockSearchParams.set('email', 'maya@northwind.example');
+      window.history.replaceState(null, '', '/signup?email=maya%40northwind.example&utm_source=x');
+      try {
+        render(<SignUpPage />);
+        expect(screen.getByLabelText(/email address/i)).toHaveValue('maya@northwind.example');
+        expect(window.location.search).toBe('?utm_source=x');
+      } finally {
+        mockSearchParams.delete('email');
+        window.history.replaceState(null, '', '/');
+      }
+    });
+
     it('renders the registration form', () => {
       render(<SignUpPage />);
 
