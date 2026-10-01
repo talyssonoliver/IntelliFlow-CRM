@@ -4,22 +4,22 @@ import { Card } from '@intelliflow/ui';
 import { formatPolicyDate, getPrivacyPolicy } from '@/lib/legal/consent-tracker';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | IntelliFlow CRM',
+  title: 'Privacy Policy',
   description:
-    'Review how IntelliFlow CRM collects, uses, protects, and retains personal data across our public site and product experiences.',
+    'Review how Aurora collects, uses, protects, and retains personal data across our public site and product experiences.',
   openGraph: {
-    title: 'Privacy Policy | IntelliFlow CRM',
+    title: 'Privacy Policy',
     description:
-      'Read the IntelliFlow CRM Privacy Policy, including data handling principles, retention, subprocessors, and data-subject rights.',
+      'Read the Aurora Privacy Policy, including data handling principles, retention, subprocessors, and data-subject rights.',
     url: 'https://intelliflow-crm.com/privacy',
-    siteName: 'IntelliFlow CRM',
+    siteName: 'Aurora',
     type: 'website',
   },
   twitter: {
     card: 'summary',
-    title: 'Privacy Policy | IntelliFlow CRM',
+    title: 'Privacy Policy',
     description:
-      'Learn how IntelliFlow CRM handles personal data, consent, retention, and privacy requests.',
+      'Learn how Aurora handles personal data, consent, retention, and privacy requests.',
   },
   alternates: {
     canonical: '/privacy',
@@ -31,11 +31,11 @@ export default function PrivacyPage() {
   const formattedDate = formatPolicyDate(policy.metadata.effectiveDate);
 
   return (
-    <main id="main-content" className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
+    <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
       <section className="bg-gradient-to-b from-white to-[#edf4ff] dark:from-[#162231] dark:to-[#101922] py-16 lg:py-24">
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#137fec]/10 px-4 py-2 text-sm font-medium text-[#137fec]">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#2a78f6]/10 px-4 py-2 text-sm font-medium text-[#2a78f6]">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 verified_user
               </span>{' '}
@@ -47,9 +47,9 @@ export default function PrivacyPage() {
             </h1>
 
             <p className="mt-6 text-lg text-slate-600 dark:text-slate-400">
-              IntelliFlow CRM is built to help teams move quickly without losing control. This
-              policy explains what personal data we process, why we process it, and how customers
-              can reach us about privacy concerns or data-subject rights.
+              Aurora is built to help teams move quickly without losing control. This policy
+              explains what personal data we process, why we process it, and how customers can reach
+              us about privacy concerns or data-subject rights.
             </p>
           </div>
         </div>
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
                     className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300"
                   >
                     <span
-                      className="material-symbols-outlined mt-0.5 text-base text-[#137fec]"
+                      className="material-symbols-outlined mt-0.5 text-base text-[#2a78f6]"
                       aria-hidden="true"
                     >
                       check_circle
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
               </ul>
             </Card>
 
-            <Card className="border-slate-200 bg-slate-900 p-6 text-white shadow-sm dark:border-slate-700 dark:bg-[#0f172a]">
+            <Card className="border-transparent bg-[#11175b] p-6 text-white shadow-sm">
               <h2 className="text-xl font-semibold">Current version</h2>
               <dl className="mt-4 space-y-4 text-sm">
                 <div>
@@ -96,7 +96,7 @@ export default function PrivacyPage() {
                   <dd className="mt-1">
                     <a
                       href={`mailto:${policy.metadata.contactEmail}`}
-                      className="text-[#7cc4ff] hover:underline"
+                      className="text-[#bca8ff] hover:underline"
                     >
                       {policy.metadata.contactEmail}
                     </a>
@@ -122,7 +122,7 @@ export default function PrivacyPage() {
                       <li key={section.id}>
                         <a
                           href={`#${section.id}`}
-                          className="text-slate-600 transition-colors hover:text-[#137fec] dark:text-slate-300 dark:hover:text-[#7cc4ff]"
+                          className="text-slate-600 transition-colors hover:text-[#2a78f6] dark:text-slate-300 dark:hover:text-[#bca8ff]"
                         >
                           {section.heading}
                         </a>
@@ -156,7 +156,7 @@ export default function PrivacyPage() {
                 </Card>
               ))}
 
-              <Card className="border-slate-200 bg-[#137fec]/5 p-6 shadow-sm dark:border-slate-800 dark:bg-[#137fec]/10">
+              <Card className="border-slate-200 bg-[#2a78f6]/5 p-6 shadow-sm dark:border-slate-800 dark:bg-[#2a78f6]/10">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Need more information?
                 </h2>
@@ -164,12 +164,12 @@ export default function PrivacyPage() {
                   If you need help with a privacy request, contact{' '}
                   <a
                     href={`mailto:${policy.metadata.contactEmail}`}
-                    className="font-medium text-[#137fec] hover:underline"
+                    className="font-medium text-[#2a78f6] hover:underline"
                   >
                     {policy.metadata.contactEmail}
                   </a>
                   . You can also return to the public site or review our{' '}
-                  <Link href="/security" className="font-medium text-[#137fec] hover:underline">
+                  <Link href="/security" className="font-medium text-[#2a78f6] hover:underline">
                     security overview
                   </Link>{' '}
                   for additional governance details.
@@ -179,6 +179,6 @@ export default function PrivacyPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

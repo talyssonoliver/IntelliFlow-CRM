@@ -4,22 +4,21 @@ import { Card } from '@intelliflow/ui';
 import { formatCookieDate, getCookiePolicy } from '@/lib/legal/cookie-policy-tracker';
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy | IntelliFlow CRM',
+  title: 'Cookie Policy',
   description:
-    'Review how IntelliFlow CRM uses cookies, how consent works, and how to manage cookie preferences across the public site and product.',
+    'Review how Aurora uses cookies, how consent works, and how to manage cookie preferences across the public site and product.',
   openGraph: {
-    title: 'Cookie Policy | IntelliFlow CRM',
+    title: 'Cookie Policy',
     description:
-      'Read the IntelliFlow CRM Cookie Policy, including cookie categories, third-party providers, retention, and how to manage preferences.',
+      'Read the Aurora Cookie Policy, including cookie categories, third-party providers, retention, and how to manage preferences.',
     url: 'https://intelliflow-crm.com/cookies',
-    siteName: 'IntelliFlow CRM',
+    siteName: 'Aurora',
     type: 'website',
   },
   twitter: {
     card: 'summary',
-    title: 'Cookie Policy | IntelliFlow CRM',
-    description:
-      'Learn how IntelliFlow CRM uses cookies, obtains consent, and lets you manage preferences.',
+    title: 'Cookie Policy',
+    description: 'Learn how Aurora uses cookies, obtains consent, and lets you manage preferences.',
   },
   alternates: {
     canonical: '/cookies',
@@ -31,15 +30,15 @@ export default function CookiePage() {
   const formattedDate = formatCookieDate(policy.metadata.effectiveDate);
 
   return (
-    <main id="main-content" className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
+    <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
       <section className="bg-gradient-to-b from-white to-[#edf4ff] dark:from-[#162231] dark:to-[#101922] py-16 lg:py-24">
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#137fec]/10 px-4 py-2 text-sm font-medium text-[#137fec]">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#2a78f6]/10 px-4 py-2 text-sm font-medium text-[#2a78f6]">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 cookie
               </span>{' '}
-              How IntelliFlow CRM uses cookies
+              How Aurora uses cookies
             </div>
 
             <h1 className="mt-6 text-4xl font-bold text-slate-900 dark:text-white lg:text-5xl">
@@ -47,8 +46,8 @@ export default function CookiePage() {
             </h1>
 
             <p className="mt-6 text-lg text-slate-600 dark:text-slate-400">
-              This policy explains which cookies IntelliFlow CRM uses, why they are needed, and how
-              you can review or change your consent choices at any time from the cookie banner.
+              This policy explains which cookies Aurora uses, why they are needed, and how you can
+              review or change your consent choices at any time from the cookie banner.
             </p>
           </div>
         </div>
@@ -68,7 +67,7 @@ export default function CookiePage() {
                     className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300"
                   >
                     <span
-                      className="material-symbols-outlined mt-0.5 text-base text-[#137fec]"
+                      className="material-symbols-outlined mt-0.5 text-base text-[#2a78f6]"
                       aria-hidden="true"
                     >
                       check_circle
@@ -79,7 +78,7 @@ export default function CookiePage() {
               </ul>
             </Card>
 
-            <Card className="border-slate-200 bg-slate-900 p-6 text-white shadow-sm dark:border-slate-700 dark:bg-[#0f172a]">
+            <Card className="border-transparent bg-[#11175b] p-6 text-white shadow-sm">
               <h2 className="text-xl font-semibold">Current version</h2>
               <dl className="mt-4 space-y-4 text-sm">
                 <div>
@@ -95,7 +94,7 @@ export default function CookiePage() {
                   <dd className="mt-1">
                     <a
                       href={`mailto:${policy.metadata.contactEmail}`}
-                      className="text-[#7cc4ff] hover:underline"
+                      className="text-[#bca8ff] hover:underline"
                     >
                       {policy.metadata.contactEmail}
                     </a>
@@ -121,7 +120,7 @@ export default function CookiePage() {
                       <li key={section.id}>
                         <a
                           href={`#${section.id}`}
-                          className="text-slate-600 transition-colors hover:text-[#137fec] dark:text-slate-300 dark:hover:text-[#7cc4ff]"
+                          className="text-slate-600 transition-colors hover:text-[#2a78f6] dark:text-slate-300 dark:hover:text-[#bca8ff]"
                         >
                           {section.heading}
                         </a>
@@ -155,7 +154,7 @@ export default function CookiePage() {
                 </Card>
               ))}
 
-              <Card className="border-slate-200 bg-[#137fec]/5 p-6 shadow-sm dark:border-slate-800 dark:bg-[#137fec]/10">
+              <Card className="border-slate-200 bg-[#2a78f6]/5 p-6 shadow-sm dark:border-slate-800 dark:bg-[#2a78f6]/10">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Need more information?
                 </h2>
@@ -163,12 +162,12 @@ export default function CookiePage() {
                   If you need help with a cookie request or a consent change, contact{' '}
                   <a
                     href={`mailto:${policy.metadata.contactEmail}`}
-                    className="font-medium text-[#137fec] hover:underline"
+                    className="font-medium text-[#2a78f6] hover:underline"
                   >
                     {policy.metadata.contactEmail}
                   </a>
                   . For broader data-handling details, review our{' '}
-                  <Link href="/privacy" className="font-medium text-[#137fec] hover:underline">
+                  <Link href="/privacy" className="font-medium text-[#2a78f6] hover:underline">
                     Privacy Policy
                   </Link>
                   .
@@ -178,6 +177,6 @@ export default function CookiePage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
