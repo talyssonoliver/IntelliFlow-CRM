@@ -29,7 +29,7 @@ describe('FinalCta', () => {
   it('promises only the trial the product offers', () => {
     render(<FinalCta />);
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-      'Your first week with Aurora is free. Your team will feel it by Friday.'
+      'Your first 14 days with Aurora are free. Your team will feel it by Friday.'
     );
     expect(screen.getByText('14 days free')).toBeInTheDocument();
     expect(screen.getByText('No credit card')).toBeInTheDocument();
