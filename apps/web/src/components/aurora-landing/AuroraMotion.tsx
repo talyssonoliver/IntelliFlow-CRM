@@ -66,6 +66,17 @@ function wirePage(
     );
   });
 
+  // On the way out the same blocks drift up and fade. The stacking cards are
+  // left out: they stay pinned while the next card covers them.
+  cleanups.push(
+    motion.createExitDrift(
+      root,
+      gsap,
+      ScrollTrigger,
+      '.reveal:not(.bento), [data-reveal]:not(.bento)'
+    )
+  );
+
   // Section hand-offs: each consecutive pair of [data-bridge-section]
   // elements gets a scrubbed colour-wash seam instead of a stacked cut.
   const sections = gsap.utils.toArray<HTMLElement>('[data-bridge-section]', root);
@@ -88,6 +99,23 @@ function wirePage(
 }
 
 /** The render loop never spends a frame off-screen or in a hidden tab. */
+/**
+ * Stacking cards pin at 96px; a card taller than the screen pins later, once its
+ * bottom is in view, so every line of it is read before the next card covers it.
+ */
+export function fitStickyCards(root: HTMLElement, cleanups: Array<() => void>): void {
+  const cards = [...root.querySelectorAll<HTMLElement>('.bento .bcard')];
+  if (cards.length === 0) return;
+  const fit = () =>
+    cards.forEach((card) => {
+      const top = Math.min(96, window.innerHeight - card.offsetHeight - 24);
+      card.style.setProperty('--stick-top', `${Math.round(top)}px`);
+    });
+  fit();
+  window.addEventListener('resize', fit);
+  cleanups.push(() => window.removeEventListener('resize', fit));
+}
+
 function pauseWhenHidden(canvas: HTMLCanvasElement, s: Stack, cleanups: Array<() => void>) {
   // The render loop never spends a frame off-screen or in a hidden tab.
   if (typeof IntersectionObserver === 'function') {
@@ -122,10 +150,10 @@ function followLayers({ root, gsap, ScrollTrigger, motion, triggers, cleanups }:
   const steps = gsap.utils.toArray<HTMLElement>('.walk.walk-card, .layer-step', root);
 
   if (window.matchMedia(motion.MOBILE_QUERY).matches) {
-    // Phone stepper (stack-stage.css): every card pins beneath the stack
-    // at the same place and the newest one covers the last. The layer on
-    // top of the stack is the layer of the last card that has pinned.
-    const stickAt = steps.map((step) => parseFloat(getComputedStyle(step).top) || 0);
+    // Phone story (stack-stage.css): the stack stays pinned and centred while
+    // the story cards scroll up over it. The layer on top is the layer of the
+    // last card to reach the lower third of the screen; before the first
+    // card arrives the stack rests whole.
     const copy = root.querySelector('.stage-copy');
     if (copy) {
       triggers.push(
@@ -134,9 +162,10 @@ function followLayers({ root, gsap, ScrollTrigger, motion, triggers, cleanups }:
           start: 'top bottom',
           end: 'bottom top',
           onUpdate: () => {
+            const line = window.innerHeight * 0.7;
             let active: LayerId | null = null;
-            steps.forEach((step, i) => {
-              if (step.getBoundingClientRect().top <= stickAt[i]! + 1) {
+            steps.forEach((step) => {
+              if (step.getBoundingClientRect().top <= line) {
                 active = (step.dataset.layer as LayerId | undefined) ?? null;
               }
             });
@@ -298,6 +327,7 @@ export function AuroraMotion() {
 
       const wiring: Wiring = { root, gsap, ScrollTrigger, motion, triggers, cleanups };
       wirePage(wiring, playScenes, reduced);
+      fitStickyCards(root, cleanups);
 
       // The stack: its faces print text and icons, so the fonts come first.
       const canvas = root.querySelector<HTMLCanvasElement>('#stack');

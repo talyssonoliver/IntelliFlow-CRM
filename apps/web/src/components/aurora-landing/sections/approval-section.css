@@ -365,3 +365,14 @@
     display: none;
   }
 }
+
+/* The draft is a real email: paragraphs and line breaks kept. */
+.aurora-page #review-draft-text {
+  display: block;
+  white-space: pre-line;
+  line-height: 1.55;
+}
+.aurora-page .state.pending {
+  background: rgba(245, 160, 0, 0.16);
+  color: #c27c00;
+}

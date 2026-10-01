@@ -15,10 +15,31 @@ vi.mock('next/link', () => ({
 import { FinalCta } from '../FinalCta';
 
 describe('FinalCta', () => {
-  it('closes with both primary actions', () => {
+  it('starts the free trial from one email field', () => {
     render(<FinalCta />);
-    expect(screen.getByRole('link', { name: 'Get started' })).toHaveAttribute('href', '/signup');
-    expect(screen.getByRole('link', { name: 'Book a demo' })).toHaveAttribute('href', '/contact');
+    const email = screen.getByLabelText('Work email');
+    expect(email).toHaveAttribute('type', 'email');
+    expect(email).toHaveAttribute('name', 'email');
+    const form = email.closest('form')!;
+    expect(form).toHaveAttribute('action', '/signup');
+    expect(form).toHaveAttribute('method', 'get');
+    expect(screen.getByRole('button', { name: 'Start free' })).toHaveAttribute('type', 'submit');
+  });
+
+  it('promises only the trial the product offers', () => {
+    render(<FinalCta />);
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      'Your first week with Aurora is free. Your team will feel it by Friday.'
+    );
+    expect(screen.getByText('14 days free')).toBeInTheDocument();
+    expect(screen.getByText('No credit card')).toBeInTheDocument();
+    expect(screen.getByText('Every AI action waits for your yes')).toBeInTheDocument();
+  });
+
+  it('shows three moments from a sample workspace, never presented as customers', () => {
+    render(<FinalCta />);
+    const moments = screen.getByRole('list', { name: 'Aurora at work in a sample workspace' });
+    expect(moments.querySelectorAll('li')).toHaveLength(3);
   });
 
   it('rises the ribbon artwork from the bottom on both sides', () => {
@@ -27,8 +48,9 @@ describe('FinalCta', () => {
     const right = container.querySelector('.final-ribbon.right')!;
     expect(left).toHaveAttribute('src', '/brand/aurora/bg/ribbon-left.webp');
     expect(right).toHaveAttribute('src', '/brand/aurora/bg/ribbon-right.webp');
-    expect(left).toHaveAttribute('aria-hidden', 'true');
-    expect(right).toHaveAttribute('aria-hidden', 'true');
+    expect(left.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(right.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(container.querySelector('svg.section-curve')).toBeInTheDocument();
   });
 
   it('carries the section-bridge markup into the footer', () => {

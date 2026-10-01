@@ -2648,3 +2648,9 @@
   object-fit: cover;
   border-radius: 50%;
 }
+
+/* The closing ribbons run behind the footer but never past the end of the
+   page. `clip` (not `hidden`) keeps every sticky element working. */
+#aurora-page.aurora-page {
+  overflow: clip;
+}

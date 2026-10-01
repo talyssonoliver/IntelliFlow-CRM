@@ -21,44 +21,22 @@ describe('PricingSection', () => {
     expect(screen.getByText('15 AI agent types')).toBeInTheDocument();
   });
 
-  it('renders an accessible team form that posts nowhere: GET to /contact', () => {
+  it('invites the visitor to start free instead of asking for details first', () => {
     const { container } = render(<PricingSection />);
-    const form = container.querySelector('form.team-form')!;
-    expect(form).toHaveAttribute('action', '/contact');
-    expect(form).toHaveAttribute('method', 'get');
-  });
-
-  it('labels every field and gives the email inline validation guidance', () => {
-    render(<PricingSection />);
-    const email = screen.getByLabelText('Work email');
-    expect(email).toHaveAttribute('type', 'email');
-    expect(email).toBeRequired();
-    expect(email).toHaveAccessibleDescription(/only use this to put your plan together/i);
-
-    const size = screen.getByLabelText('Team size');
-    expect(size.tagName).toBe('SELECT');
-    expect(size).toBeRequired();
-
-    expect(
-      screen.getByRole('group', { name: 'What do you want to run in Aurora?' })
-    ).toBeInTheDocument();
-  });
-
-  it('lets a visitor pick multiple accessible checkbox chips, each with a real label', () => {
-    render(<PricingSection />);
-    const pipeline = screen.getByRole('checkbox', { name: 'Sales pipeline' });
-    const service = screen.getByRole('checkbox', { name: 'Cases and tickets' });
-    expect(pipeline).toHaveAttribute('name', 'run');
-    expect(service).toHaveAttribute('name', 'run');
-  });
-
-  it('submits via a real submit button, and still offers a direct demo link', () => {
-    render(<PricingSection />);
-    expect(screen.getByRole('button', { name: 'Get a tailored plan' })).toHaveAttribute(
-      'type',
-      'submit'
+    expect(container.querySelector('form')).toBeNull();
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+      'Start free. Bring your pipeline in today.'
     );
-    expect(screen.getByRole('link', { name: 'Book a demo' })).toHaveAttribute('href', '/contact');
+    expect(screen.getByRole('link', { name: 'Start free' })).toHaveAttribute('href', '/signup');
+    expect(screen.getByRole('link', { name: 'Talk to us' })).toHaveAttribute('href', '/contact');
+  });
+
+  it('promises only the trial the product offers: 14 days, no credit card', () => {
+    const { container } = render(<PricingSection />);
+    const facts = screen.getByRole('list', { name: 'Your trial' });
+    expect(facts).toHaveTextContent('14 days free');
+    expect(facts).toHaveTextContent('No credit card');
+    expect(container.textContent).not.toMatch(/free forever|free plan|cancel any ?time/i);
   });
 
   it('straddles the Navy/Mist boundary and carries the bridge markup', () => {

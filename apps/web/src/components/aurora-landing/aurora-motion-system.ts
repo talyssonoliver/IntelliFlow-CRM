@@ -295,6 +295,49 @@ export function createReveal(
   return () => triggers.forEach((t) => t.kill());
 }
 
+/**
+ * Components drift up and fade as they leave the top of the screen, scrubbed to
+ * the scroll position, and come back the same way on the way up. The fade only
+ * starts once the element's bottom edge is in the top quarter or so of the
+ * screen, so copy is never half-faded while it is still being read. While it
+ * fades the element carries `data-exiting`.
+ */
+export function createExitDrift(
+  root: ParentNode,
+  gsap: Gsap,
+  ScrollTrigger: ScrollTriggerStatic,
+  selector: string
+): Cleanup {
+  if (prefersReducedMotion()) return () => undefined;
+  const els = gsap.utils.toArray<HTMLElement>(selector, root as Element);
+  const start = isTouchOrPhone() ? 'bottom 22%' : 'bottom 30%';
+  const tweens = els.map((el) =>
+    gsap.fromTo(
+      el,
+      { autoAlpha: 1, y: 0, scale: 1 },
+      {
+        autoAlpha: 0,
+        y: -MOTION.distance.md,
+        scale: 0.97,
+        ease: 'none',
+        immediateRender: false,
+        scrollTrigger: {
+          trigger: el,
+          start,
+          end: 'bottom 2%',
+          scrub: true,
+          onToggle: (self) => el.toggleAttribute('data-exiting', self.isActive),
+        },
+      }
+    )
+  );
+  return () =>
+    tweens.forEach((tween) => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+    });
+}
+
 // ---------------------------------------------------------------------------
 // Primitive 2 — Scrub steps: a pinned "read down a list" sequence where each
 // step crossfades continuously into the next, driven 1:1 by scroll position.

@@ -11,6 +11,7 @@ import {
   configureScrollTrigger,
   setupSmoothScroll,
   createReveal,
+  createExitDrift,
   createScrubSteps,
   createSectionBridge,
   createBackgroundRecede,
@@ -361,5 +362,70 @@ describe('createTypeReveal', () => {
     handle.kill();
     expect(el.style.clipPath).toBe('inset(0 0 0 0)');
     expect(el.textContent).toContain('Hi Maya');
+  });
+});
+
+describe('createExitDrift', () => {
+  type Vars = {
+    autoAlpha: number;
+    y: number;
+    immediateRender: boolean;
+    scrollTrigger: {
+      start: string;
+      end: string;
+      scrub: boolean;
+      onToggle: (self: { isActive: boolean }) => void;
+    };
+  };
+  const fake = () => {
+    const tweens: Array<{ el: HTMLElement; vars: Vars; kill: ReturnType<typeof vi.fn> }> = [];
+    const gsap = {
+      utils: makeGsap().gsap.utils,
+      fromTo: vi.fn((el: HTMLElement, _from: unknown, vars: Vars) => {
+        const kill = vi.fn();
+        const tween = { el, vars, kill, scrollTrigger: { kill: vi.fn() } };
+        tweens.push(tween);
+        return tween;
+      }),
+    };
+    return { gsap, tweens };
+  };
+
+  it('fades and lifts each block as it leaves the top, scrubbed and reversible', () => {
+    document.body.innerHTML = '<div class="reveal">a</div><div class="reveal">b</div>';
+    const { gsap, tweens } = fake();
+    const cleanup = createExitDrift(document, gsap as never, {} as never, '.reveal');
+    expect(tweens).toHaveLength(2);
+    const { vars, el } = tweens[0]!;
+    expect(vars.autoAlpha).toBe(0);
+    expect(vars.y).toBeLessThan(0);
+    expect(vars.immediateRender).toBe(false);
+    expect(vars.scrollTrigger.scrub).toBe(true);
+    expect(vars.scrollTrigger.start).toBe('bottom 30%');
+
+    vars.scrollTrigger.onToggle({ isActive: true });
+    expect(el.hasAttribute('data-exiting')).toBe(true);
+    vars.scrollTrigger.onToggle({ isActive: false });
+    expect(el.hasAttribute('data-exiting')).toBe(false);
+
+    cleanup();
+    expect(tweens.every((t) => t.kill.mock.calls.length === 1)).toBe(true);
+  });
+
+  it('waits longer on a phone, so copy is never half-faded while it is read', () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: !q.includes('reduce'), media: q }));
+    document.body.innerHTML = '<div class="reveal">a</div>';
+    const { gsap, tweens } = fake();
+    createExitDrift(document, gsap as never, {} as never, '.reveal');
+    expect(tweens[0]!.vars.scrollTrigger.start).toBe('bottom 22%');
+  });
+
+  it('does nothing under reduced motion', () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: true, media: q }));
+    document.body.innerHTML = '<div class="reveal">a</div>';
+    const { gsap } = fake();
+    const cleanup = createExitDrift(document, gsap as never, {} as never, '.reveal');
+    expect(gsap.fromTo).not.toHaveBeenCalled();
+    expect(() => cleanup()).not.toThrow();
   });
 });

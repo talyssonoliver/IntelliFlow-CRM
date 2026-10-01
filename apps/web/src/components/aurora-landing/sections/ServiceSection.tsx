@@ -326,7 +326,6 @@ export function ServiceSection() {
               </div>
             </article>
           </div>
-          <p className="bento-note">Sample workspace data</p>
         </div>
       </section>
     </>

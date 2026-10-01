@@ -1,0 +1,22 @@
+/*
+ * SectionCurve: the curved, ribbon-traced edge between two section colours.
+ * It lies inside the top of its section, drawing the colour above down to a
+ * wave, so the change reads as one flowing line instead of a gradient wash.
+ */
+.aurora-page .section-curve {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 160px;
+  pointer-events: none;
+  z-index: 2;
+  display: block;
+}
+
+@media (max-width: 960px) {
+  .aurora-page .section-curve {
+    height: 72px;
+  }
+}

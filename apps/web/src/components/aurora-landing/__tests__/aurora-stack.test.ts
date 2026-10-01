@@ -13,9 +13,37 @@ vi.mock('three', () => {
       Object.assign(this, { x, y, z });
     }
   }
+  class Quat {
+    angle = 0;
+    setFromAxisAngle(_axis: unknown, angle: number) {
+      this.angle = angle;
+      return this;
+    }
+    setFromEuler() {
+      return this;
+    }
+    copy(q: Quat) {
+      this.angle = q.angle;
+      return this;
+    }
+    multiply() {
+      return this;
+    }
+  }
+  class Vector3 extends Vec {
+    constructor(x = 0, y = 0, z = 0) {
+      super();
+      this.set(x, y, z);
+    }
+    normalize() {
+      return this;
+    }
+  }
   class Obj {
     position = new Vec();
     rotation = new Vec();
+    scale = new Vec();
+    quaternion = new Quat();
     visible = true;
     children: unknown[] = [];
     add(...c: unknown[]) {
@@ -89,6 +117,14 @@ vi.mock('three', () => {
     MeshBasicMaterial: Disposable,
     MeshPhysicalMaterial: Disposable,
     CanvasTexture: Disposable,
+    Quaternion: Quat,
+    Vector3,
+    Euler: class {
+      set() {
+        return this;
+      }
+    },
+    AdditiveBlending: 2,
     NeutralToneMapping: 1,
     SRGBColorSpace: 'srgb',
   };
@@ -101,7 +137,7 @@ vi.mock('three/addons/geometries/RoundedBoxGeometry.js', () => ({
 vi.mock('three/addons/environments/RoomEnvironment.js', () => ({ RoomEnvironment: class {} }));
 
 import * as THREE from 'three';
-import { baseY, cameraFrame, createStack, layerTarget, LAYERS } from '../aurora-stack';
+import { baseY, cameraFrame, createStack, layerTarget, LAYERS, rippleRings } from '../aurora-stack';
 
 const fonts = { text: 'Manrope', icons: 'Material Symbols' };
 
@@ -170,15 +206,18 @@ describe('createStack', () => {
   const run = (n: number) => {
     for (let i = 0; i < n; i++) frames.shift()?.(performance.now() + i * 16);
   };
-  type Group = { visible: boolean; position: { y: number } };
+  type Group = { visible: boolean; position: { y: number }; children: unknown[] };
   const renderer = () =>
     (
       THREE as unknown as {
         renderers: Array<{ renders: number; scene: { children: Array<{ children: Group[] }> } }>;
       }
     ).renderers.at(-1)!;
-  /** The five layer groups, bottom to top (the stack's root holds the shadow first). */
-  const layers = () => renderer().scene.children.at(-1)!.children.slice(1);
+  /** The five layer groups, bottom to top (the root also holds the shadow and the ripple rings). */
+  const layers = () =>
+    renderer()
+      .scene.children.at(-1)!
+      .children.filter((c) => c.children.length > 0);
 
   it('renders every frame and hides the layers above the one being read', () => {
     const canvas = document.createElement('canvas');
@@ -216,5 +255,19 @@ describe('createStack', () => {
     stack.dispose();
     expect(remove).toHaveBeenCalledWith('resize', expect.any(Function));
     expect(remove).toHaveBeenCalledWith('pointermove', expect.any(Function));
+  });
+});
+
+describe('rippleRings', () => {
+  it('shows nothing while a layer rests or has fully peeled away', () => {
+    expect(rippleRings(0).every((r) => r.opacity === 0)).toBe(true);
+    expect(rippleRings(1).every((r) => r.opacity === 0)).toBe(true);
+  });
+
+  it('spreads outwards as the layer peels, the second ring trailing the first', () => {
+    const [first, second] = rippleRings(0.5);
+    expect(first!.opacity).toBeGreaterThan(0.5);
+    expect(first!.scale).toBeGreaterThan(second!.scale);
+    expect(rippleRings(0.9)[0]!.scale).toBeGreaterThan(first!.scale);
   });
 });

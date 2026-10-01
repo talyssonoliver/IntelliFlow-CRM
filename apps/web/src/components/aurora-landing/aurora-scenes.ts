@@ -88,22 +88,25 @@ export function revealReasoning(scene: HTMLElement, gsap: GsapType): GsapTimelin
 }
 
 /**
- * Beat 2: the draft "types" -- a clip-path wipe over text that is already
- * fully present in the DOM (see the module docblock). Never clears or
- * rewrites `textContent`.
+ * Beat 2: the draft "types" -- a clip-path wipe, top to bottom, over text that
+ * is already fully present in the DOM (see the module docblock), so the lines
+ * appear one after another. `textContent` is only ever set by `loadReviewItem`.
  */
 export function typeDraft(scene: HTMLElement, gsap: GsapType): GsapTimeline | undefined {
   const draft = byId(scene, 'review-draft-text');
   if (!draft) return undefined;
-  gsap.set(draft, { clipPath: 'inset(0 100% 0 0)' });
-  return gsap.timeline().to(draft, { clipPath: 'inset(0 0% 0 0)', duration: 1.3, ease: 'none' });
+  gsap.set(draft, { clipPath: 'inset(0 0 100% 0)' });
+  return gsap.timeline().to(draft, { clipPath: 'inset(0 0 0% 0)', duration: 2.6, ease: 'none' });
 }
 
 /** Beat 3: the cursor reads a source, moves to Approve, presses it; the queue and a toast confirm. */
-export function confirmApproval(scene: HTMLElement, gsap: GsapType): GsapTimeline | undefined {
+export function confirmApproval(
+  scene: HTMLElement,
+  gsap: GsapType,
+  state: HTMLElement | null = byId(scene, 'review-q1-state')
+): GsapTimeline | undefined {
   const cursor = byId(scene, 'review-cursor');
   const btn = byId(scene, 'review-approve-btn');
-  const state = byId(scene, 'review-q1-state');
   const toast = byId(scene, 'review-toast');
   const why = byId(scene, 'why-renewal');
   const title = scene.querySelector('.review-title');
@@ -145,7 +148,121 @@ function settleApprovalScene(scene: HTMLElement, gsap: GsapType) {
   }
 }
 
-/** Wires the three approval beats to play in order, once, on the way into view. */
+/** One item in the review queue the scene works through, in a sample workspace. */
+export interface ReviewItem {
+  /** Index of its row in the queue list. */
+  row: number;
+  badge: { icon: string; label: string };
+  sla: string;
+  title: string;
+  confidence: string;
+  whys: ReadonlyArray<readonly [icon: string, text: string, source: string]>;
+  source: readonly [title: string, detail: string];
+  draft: string;
+  sent: string;
+}
+
+/** The scene cycles through these; the first is the one the page's HTML shows. */
+export const REVIEW_ITEMS: readonly ReviewItem[] = [
+  {
+    row: 0,
+    badge: { icon: 'draft', label: 'Email draft' },
+    sla: 'SLA in 4h 12m',
+    title: 'Follow up with Maya Chen at Northwind before the renewal.',
+    confidence: '92%',
+    whys: [
+      ['event', 'Renewal date is in 14 days', 'Contract'],
+      ['mark_email_unread', 'No reply to the last two emails', 'Inbox'],
+      ['trending_down', 'Account score dropped this week', 'Scoring'],
+    ],
+    source: ['Northwind contract', 'Renews 14 Oct · auto-renew off'],
+    draft:
+      "Hi Maya,\n\nAhead of your renewal on the 14th, I wanted to check the new reporting is working for your team. Your managers' weekly exports have been lighter for two weeks, so I've put together a short guide to the scheduled reports they asked about in March.\n\nWould 20 minutes on Thursday suit you to walk through it together?\n\nBest,\nTom",
+    sent: 'Email sent to Maya Chen',
+  },
+  {
+    row: 2,
+    badge: { icon: 'trending_down', label: 'Churn risk' },
+    sla: 'SLA breached',
+    title: 'Check in with Contoso before usage drops further.',
+    confidence: '88%',
+    whys: [
+      ['trending_down', 'Usage down three weeks running', 'Product'],
+      ['support_agent', 'Two support tickets still open', 'Tickets'],
+      ['person', 'Their main contact changed role last month', 'Contacts'],
+    ],
+    source: ['Contoso usage', 'Weekly logins down 38% since 2 Sep'],
+    draft:
+      "Hi Daniel,\n\nI noticed your team has been logging in less over the last few weeks, and two of your support tickets are still open. I've asked our support lead to close both by Friday.\n\nIt would help to understand what changed on your side. Could we find half an hour next week to make sure Aurora is still working for the new team?\n\nThanks,\nTom",
+    sent: 'Email sent to Contoso',
+  },
+  {
+    row: 5,
+    badge: { icon: 'route', label: 'Next best action' },
+    sla: 'SLA in 1h 05m',
+    title: 'Send Fabrikam a pricing recap while the proposal is fresh.',
+    confidence: '90%',
+    whys: [
+      ['visibility', 'Opened the proposal twice this week', 'Email'],
+      ['schedule', 'No reply since Tuesday', 'Inbox'],
+      ['view_kanban', 'Deal in Proposal for 9 days', 'Pipeline'],
+    ],
+    source: ['Fabrikam proposal', '£41,000 · opened twice this week'],
+    draft:
+      'Hi Priya,\n\nThanks for taking another look at the proposal. Here is the short version of the pricing: one plan for all 40 seats, every agent included, and the onboarding you asked for in the first month.\n\nIf it helps, I can send a version with annual billing for your finance team to compare.\n\nKind regards,\nTom',
+    sent: 'Recap sent to Fabrikam',
+  },
+];
+
+/** Puts one review item's content into the detail panel and the floating cards. */
+export function loadReviewItem(scene: HTMLElement, item: ReviewItem): void {
+  const set = (el: Element | null | undefined, text: string) => {
+    if (el) el.textContent = text;
+  };
+  const setText = (el: Element | null | undefined, text: string) => {
+    const node = el
+      ? [...el.childNodes].find((n) => n.nodeType === 3 && n.nodeValue?.trim())
+      : null;
+    if (node) node.nodeValue = text;
+  };
+  const badge = scene.querySelector('.review-detail__head .type-badge');
+  set(badge?.querySelector('.material-symbols-outlined'), item.badge.icon);
+  setText(badge, item.badge.label);
+  const sla = byId(scene, 'review-sla');
+  setText(sla, item.sla);
+  sla?.classList.toggle('breached', item.sla === 'SLA breached');
+  setText(scene.querySelector('.review-title'), item.title);
+  set(scene.querySelector('.review-confidence b'), item.confidence);
+  scene.querySelectorAll<HTMLElement>('.why').forEach((li, i) => {
+    const why = item.whys[i];
+    if (!why) return;
+    set(li.querySelector('.material-symbols-outlined'), why[0]);
+    setText(li, why[1]);
+    set(li.querySelector('em'), why[2]);
+  });
+  const source = byId(scene, 'review-source');
+  set(source?.querySelector('b'), item.source[0]);
+  set(source?.querySelector('span'), item.source[1]);
+  set(byId(scene, 'review-draft-text'), item.draft);
+  set(byId(scene, 'review-toast')?.querySelector('small'), item.sent);
+  scene
+    .querySelectorAll<HTMLElement>('#review-queue > .q')
+    .forEach((row, i) => row.classList.toggle('active', i === item.row));
+}
+
+/** The status chip of an item's queue row, which turns to "Approved" when the cursor approves. */
+function rowState(scene: HTMLElement, item: ReviewItem): HTMLElement | null {
+  const row = scene.querySelectorAll<HTMLElement>('#review-queue > .q')[item.row];
+  const chip = row?.querySelector<HTMLElement>('.state, .sla-chip, .claim-btn');
+  return chip ?? (item.row === 0 ? byId(scene, 'review-q1-state') : null);
+}
+
+/**
+ * Plays the approval queue as a loop while it is on screen: the reasoning
+ * arrives, the draft types, the cursor approves, then the next item in the
+ * queue opens. After the last item the queue resets and it starts again.
+ * It pauses whenever the scene leaves the screen.
+ */
 export function playApprovalScene(
   root: HTMLElement,
   gsap: GsapType,
@@ -169,20 +286,52 @@ export function playApprovalScene(
     settleApprovalScene(scene, gsap);
     return;
   }
+  const queue = byId(scene, 'review-queue');
+  const initialQueue = queue?.innerHTML ?? '';
+  let index = 0;
+  let current: GsapTimeline | undefined;
+  let running = false;
+
+  const next = () => {
+    index = (index + 1) % REVIEW_ITEMS.length;
+    current = gsap.timeline().to({}, { duration: 1.6 });
+    current.eventCallback('onComplete', () => playItem());
+  };
+  const playItem = (): void =>
+    within(() => {
+      if (!running) return;
+      const item = REVIEW_ITEMS[index]!;
+      if (index === 0 && queue) queue.innerHTML = initialQueue;
+      loadReviewItem(scene, item);
+      const toast = byId(scene, 'review-toast');
+      if (toast) gsap.set(toast, { autoAlpha: 0 });
+      const reveal = revealReasoning(scene, gsap);
+      current = reveal;
+      reveal?.eventCallback('onComplete', () =>
+        within(() => {
+          const type = typeDraft(scene, gsap);
+          current = type;
+          type?.eventCallback('onComplete', () =>
+            within(() => {
+              const confirm = confirmApproval(scene, gsap, rowState(scene, item));
+              current = confirm;
+              confirm?.eventCallback('onComplete', () => within(next));
+            })
+          );
+        })
+      );
+    });
+
   ScrollTrigger.create({
     trigger: scene,
-    start: 'top 55%',
-    once: true,
-    onEnter: () =>
-      within(() => {
-        const reveal = revealReasoning(scene, gsap);
-        reveal?.eventCallback('onComplete', () =>
-          within(() => {
-            const type = typeDraft(scene, gsap);
-            type?.eventCallback('onComplete', () => within(() => confirmApproval(scene, gsap)));
-          })
-        );
-      }),
+    start: 'top 70%',
+    end: 'bottom 20%',
+    onToggle: (self) => {
+      running = self.isActive;
+      if (!running) current?.pause();
+      else if (current) current.resume();
+      else playItem();
+    },
   });
 }
 

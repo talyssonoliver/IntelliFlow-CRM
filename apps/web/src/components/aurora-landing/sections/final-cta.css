@@ -1,32 +1,235 @@
 /*
- * FinalCta — the ribbon artwork rises from the bottom on both sides, and the
- * section hands off to the footer as one continuous Navy block. Every rule
- * scoped under .aurora-page. `.aurora-final` is a second class added only on
- * this section's root so these overrides win regardless of stylesheet import
- * order, without editing aurora-landing.css directly.
+ * FinalCta: the closing pitch on Navy. The aurora ribbons flow through it and
+ * on into the footer below as one piece (the footer is transparent over the
+ * same Navy, so the artwork runs under its links). Every rule scoped under
+ * .aurora-page; `.aurora-final` wins over the shared .final rules.
  */
 
 .aurora-page .final.aurora-final {
   --shadow: 0 1px 2px rgba(17, 23, 91, 0.05), 0 8px 24px -12px rgba(17, 23, 91, 0.18);
   --shadow-lg: 0 2px 4px rgba(17, 23, 91, 0.05), 0 30px 60px -24px rgba(17, 23, 91, 0.28);
-  padding: 128px 0;
+  padding: 240px 0 200px;
+  /* Clip sideways only: the ribbons must run down into the footer. */
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
-/* Was top:-60px (aurora-landing.css:735-738) — the right ribbon fell from the
-   top, fighting the brief's "rises from the bottom" on both sides. Now both
-   ribbons anchor to the section's own bottom edge and read as one artwork. */
-.aurora-page .final.aurora-final .final-ribbon.right {
+/* The ribbon artwork: one composition rising from the bottom-left and
+   sweeping across to the right, continuing behind the footer. */
+.aurora-page .final-ribbons {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.aurora-page .final.aurora-final .final-ribbon {
+  position: absolute;
+  opacity: 0.85;
+  filter: saturate(1.15);
+}
+.aurora-page .final.aurora-final .final-ribbon.left {
+  left: -140px;
   top: auto;
-  bottom: -160px;
+  bottom: -340px;
+  width: 760px;
+}
+.aurora-page .final.aurora-final .final-ribbon.right {
+  right: -220px;
+  top: auto;
+  bottom: -420px;
+  width: 980px;
+  transform: rotate(-6deg);
+}
+
+.aurora-page .final.aurora-final .final-inner {
+  position: relative;
+  z-index: 3;
+  max-width: 880px;
+}
+.aurora-page .final.aurora-final h2 {
+  font-size: clamp(34px, 4.4vw, 60px);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+}
+.aurora-page .final.aurora-final .final-inner > p:first-of-type {
+  max-width: 560px;
+  margin: 20px auto 0;
+}
+
+/* One field, one button: the shortest path to the trial. */
+.aurora-page .final-form {
+  display: flex;
+  gap: 8px;
+  max-width: 520px;
+  margin: 36px auto 0;
+  padding: 8px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+    0 24px 60px -24px rgba(40, 217, 212, 0.35);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.aurora-page .final-form input {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--navy);
+  font:
+    600 16px/1 var(--font-manrope),
+    system-ui,
+    sans-serif;
+}
+.aurora-page .final-form input:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.aurora-page .final-form .btn {
+  height: 52px;
+  padding: 0 24px;
+  white-space: nowrap;
+}
+.aurora-page .final-trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 10px;
+  margin-top: 18px;
+  font-size: 14px !important;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
+/* Three live moments drifting on the ribbons around the pitch. */
+.aurora-page .final-moments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.aurora-page .final-moment {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 12px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.45);
+  text-align: left;
+  animation: aurora-drift 7s ease-in-out infinite;
+}
+.aurora-page .final-moment .material-symbols-outlined {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  color: #fff;
+  background: var(--tone);
+}
+.aurora-page .final-moment b {
+  display: block;
+  font-size: 14px;
+  color: var(--navy);
+}
+.aurora-page .final-moment small {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.aurora-page .final-moment:nth-child(1) {
+  left: 7%;
+  top: 34%;
+  transform: rotate(-4deg);
+}
+.aurora-page .final-moment:nth-child(2) {
+  right: 6%;
+  top: 26%;
+  transform: rotate(3deg);
+  animation-delay: -2.4s;
+}
+.aurora-page .final-moment:nth-child(3) {
+  right: 12%;
+  bottom: 14%;
+  transform: rotate(-2deg);
+  animation-delay: -4.6s;
+}
+@keyframes aurora-drift {
+  50% {
+    translate: 0 -10px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .aurora-page .final-moment:nth-child(1) {
+    left: 2%;
+    top: 12%;
+  }
+  .aurora-page .final-moment:nth-child(2) {
+    right: 2%;
+    top: 6%;
+  }
 }
 
 @media (max-width: 960px) {
-  /* Fixes the mobile dead-gap audit found before the final CTA (M1).
-     aurora-landing.css:700-705 has no mobile override for .final. */
   .aurora-page .final.aurora-final {
-    padding: 80px 0;
+    padding: 120px 0 112px;
+  }
+  .aurora-page .final.aurora-final .final-ribbon.left {
+    width: 420px;
+    left: -120px;
+    bottom: -200px;
   }
   .aurora-page .final.aurora-final .final-ribbon.right {
-    bottom: -90px;
+    width: 520px;
+    right: -200px;
+    bottom: -260px;
+  }
+  /* On a phone the moments sit in a row above the pitch, never over the text. */
+  .aurora-page .final-moments {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 0 auto 32px;
+    width: min(340px, calc(100% - 48px));
+  }
+  .aurora-page .final-moment {
+    position: relative;
+    inset: auto !important;
+    width: 100%;
+    transform: none !important;
+  }
+  .aurora-page .final-moment:nth-child(3) {
+    display: none;
+  }
+  .aurora-page .final-form {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-page .final-moment {
+    animation: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .aurora-page .final-form input {
+    flex: none;
+    width: 100%;
   }
 }

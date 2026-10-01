@@ -38,12 +38,12 @@ describe('SecuritySection', () => {
     expect(screen.getByText('Audit log')).toBeInTheDocument();
   });
 
-  it('is entered through the Mist-to-Navy bridge and carries the bridge markup', () => {
+  it('is entered through the curved aurora edge and carries the bridge markup', () => {
     const { container } = render(<SecuritySection />);
     const section = container.querySelector('section.security')!;
     expect(section).toHaveClass('dark');
     expect(section).toHaveAttribute('id', 'security');
     expect(section).toHaveAttribute('data-bridge-section');
-    expect(container.querySelector('.bridge-top')).toBeInTheDocument();
+    expect(container.querySelector('svg.section-curve')).toHaveAttribute('aria-hidden', 'true');
   });
 });

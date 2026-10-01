@@ -107,7 +107,7 @@ export const FACES: Record<LayerId, Face> = {
   },
   foundation: {
     icon: 'shield_lock',
-    title: 'Foundation',
+    title: 'Enterprise-grade',
     pill: ['Protected', '#0A8F8A'],
     rows: [
       { icon: 'lock', label: 'Data isolated', value: 'On', accent: '#0A8F8A' },
@@ -178,9 +178,12 @@ export function drawFace(
   // drawn large: the slab is seen at an angle and the face is only ~500px wide.
   rr(x0, 84, 128, 128, 32, colour);
   icon(f.icon, x0 + 24, 148, 80, '#FFFFFF');
-  text(f.title, x0 + 160, 150, 84, 800, NAVY);
   const [pill, pillColour] = f.pill;
   const pw = widthOf(pill, 48) + 64;
+  // The title takes the room left of the pill, shrinking from 84px if it must.
+  const room = x1 - pw - 32 - (x0 + 160);
+  const titleSize = Math.max(56, Math.min(84, Math.floor((84 * room) / widthOf(f.title, 84))));
+  text(f.title, x0 + 160, 150, titleSize, 800, NAVY);
   rr(x1 - pw, 112, pw, 76, 38, `${pillColour}22`);
   text(pill, x1 - pw / 2, 151, 48, 800, pillColour, 'center');
   g.fillStyle = LINE;
