@@ -91,9 +91,12 @@ describe('PricingPage (Aurora)', () => {
     }
   });
 
-  it('closes with Start free and Talk to us', () => {
+  it('closes with Start free and Talk to us, quoting the real trial length', () => {
     render(<PricingPage />);
     const close = screen.getByTestId('cta-section');
+    expect(within(close).getByRole('heading', { level: 2 })).toHaveTextContent(
+      `Your first ${pricingData.metadata.freeTrialDays} days with Aurora are free.`
+    );
     expect(within(close).getByRole('link', { name: 'Start free' })).toHaveAttribute(
       'href',
       '/signup'

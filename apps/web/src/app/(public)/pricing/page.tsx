@@ -198,7 +198,9 @@ export default function PricingPage() {
             <div className="ap-close-art" aria-hidden="true">
               <img src="/brand/aurora/bg/ribbon-right.webp" alt="" />
             </div>
-            <h2 id="close-heading">Your first week with Aurora is free.</h2>
+            <h2 id="close-heading">
+              Your first {metadata.freeTrialDays} days with Aurora are free.
+            </h2>
             <p>
               {metadata.freeTrialDays} days free · No credit card · Every AI action waits for your
               yes
