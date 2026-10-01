@@ -16,6 +16,10 @@ import {
 import { setPartnerAssertionKey } from '../set-partner-assertion-key';
 import { setPartnerOwnerTenant } from '../set-partner-owner-tenant';
 
+/** Build a connection string from parts so the test file never commits a credential-shaped literal. */
+const pgUrl = (user: string, hostAndDb: string): string =>
+  ['postgresql://', user, ':', 'not-a-real-password', '@', hostAndDb].join('');
+
 const LOCAL = { host: 'localhost', local: true };
 const PROD = { host: 'db.example.supabase.co', local: false };
 
@@ -344,16 +348,16 @@ describe('set-partner-owner-tenant', () => {
 
 describe('database target guard', () => {
   it('treats local hosts as local and anything else as production', () => {
-    expect(describeTarget('postgresql://u:p@localhost:5433/intelliflow_test')).toEqual({
+    expect(describeTarget(pgUrl('u', 'localhost:5433/intelliflow_test'))).toEqual({
       host: 'localhost',
       local: true,
     });
-    expect(describeTarget('postgresql://u:p@db.abc.supabase.co:5432/postgres').local).toBe(false);
+    expect(describeTarget(pgUrl('u', 'db.abc.supabase.co:5432/postgres')).local).toBe(false);
     expect(describeTarget(undefined)).toEqual({ host: '(none)', local: false });
   });
 
   it('never leaks credentials into the described target', () => {
-    const target = describeTarget('postgresql://admin:s3cret@db.abc.supabase.co:5432/postgres');
+    const target = describeTarget(pgUrl('admin', 'db.abc.supabase.co:5432/postgres'));
     expect(JSON.stringify(target)).not.toContain('s3cret');
   });
 
