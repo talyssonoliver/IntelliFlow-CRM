@@ -18,6 +18,7 @@
 
 import { createTRPCClient } from '@intelliflow/api-client';
 import { requiredProdEnv } from '../required-url';
+import { activeTenantHeaders } from '../tenant/active-tenant';
 
 // ============================================
 // Types
@@ -76,7 +77,7 @@ function getBillingClient(): ReturnType<typeof createTRPCClient> {
       headers: (): Record<string, string> => {
         if (typeof globalThis.window === 'undefined') return {};
         const token = localStorage.getItem('accessToken');
-        if (token) return { Authorization: `Bearer ${token}` };
+        if (token) return { Authorization: `Bearer ${token}`, ...activeTenantHeaders() };
         return {};
       },
     });
