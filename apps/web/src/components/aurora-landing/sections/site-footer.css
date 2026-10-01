@@ -40,3 +40,12 @@
   position: relative;
   z-index: 3;
 }
+
+/* Four columns of links: two by two on a phone, so nothing runs off the side. */
+@media (max-width: 960px) {
+  .aurora-page .footer.aurora-footer .foot-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 32px;
+  }
+}
