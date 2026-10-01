@@ -35,6 +35,13 @@ import {
   recordAuthBreadcrumb,
 } from '@/lib/shared/session-cleanup';
 import { safeNextPath } from '@/lib/shared/safe-next-path';
+import {
+  clearActiveTenant,
+  isInheritedMembershipEnabled,
+  isValidTenantId,
+  setActiveTenantId,
+} from '@/lib/tenant/active-tenant';
+import { claimLoginGrant, ClaimLoginGrantError } from '@/lib/tenant/claim-grant';
 
 // ============================================
 // Types
@@ -88,10 +95,20 @@ export function OAuthCallback({
     (
       session: { access_token: string; refresh_token?: string },
       user: { id: string; email?: string } | undefined,
-      flow: 'oauth' | 'magiclink'
+      flow: 'oauth' | 'magiclink',
+      activeTenantId: string | null = null
     ) => {
       setStatus('success');
       recordAuthBreadcrumb(`${flow}:session-established`);
+
+      // ADR-071: a fresh sign-in starts from a known tenant. A magic link names the tenant it
+      // was minted for (the client CRM the Portal opened); every other sign-in starts in the
+      // user's home tenant. A selection left over from a previous session is never reused.
+      if (activeTenantId && isInheritedMembershipEnabled()) {
+        setActiveTenantId(activeTenantId);
+      } else {
+        clearActiveTenant();
+      }
 
       // Store tokens for API calls (our custom token management)
       storeSessionTokens(session.access_token, session.refresh_token);
@@ -170,9 +187,42 @@ export function OAuthCallback({
         );
       }
 
-      finishSignIn(data.session, data.user ?? undefined, 'magiclink');
+      // ADR-071: the link carries `tenant` and `grant` as HINTS. The grant is claimed FIRST, with
+      // the new session's token: for a pinned (agency staff) link this is what binds the session
+      // to the client tenant, and until it is claimed the API refuses everything else. The
+      // tenant the server returns wins over the `tenant` hint. A failed claim fails CLOSED:
+      // the session is dropped rather than left half signed in.
+      const tenantHint = searchParams.get('tenant');
+      let activeTenantId = isValidTenantId(tenantHint) ? tenantHint : null;
+      const grant = searchParams.get('grant');
+      if (grant) {
+        try {
+          const claim = await Promise.race([
+            claimLoginGrant(data.session.access_token, grant),
+            timeoutPromise,
+          ]);
+          activeTenantId = claim.tenantId;
+        } catch (claimError) {
+          try {
+            await supabase.auth.signOut({ scope: 'local' });
+          } catch {
+            // The local cleanup below still applies.
+          }
+          clearSessionTokens();
+          clearTokenCookie();
+          clearSupabaseLocalStorage();
+          throw claimError instanceof ClaimLoginGrantError ||
+            (claimError instanceof Error && claimError.message === 'TIMEOUT')
+            ? claimError
+            : new Error(
+                'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
+              );
+        }
+      }
+
+      finishSignIn(data.session, data.user ?? undefined, 'magiclink', activeTenantId);
     },
-    [finishSignIn]
+    [finishSignIn, searchParams]
   );
 
   // Handle the OAuth callback flow.
