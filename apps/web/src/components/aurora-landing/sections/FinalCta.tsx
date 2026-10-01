@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import pricingData from '@/data/pricing-data.json';
 import { SectionCurve } from './SectionCurve';
 import './final-cta.css';
 
@@ -18,6 +19,9 @@ const MOMENTS: ReadonlyArray<{ icon: string; label: string; detail: string; tone
   },
   { icon: 'insights', label: 'Lead scored 92', detail: 'Acme Ltd · hot', tone: '#BCA8FF' },
 ];
+
+/** The trial length, from the same data the pricing page and FAQ read. */
+const trialDays = pricingData.metadata.freeTrialDays;
 
 /**
  * Closing call to action on Navy. The aurora ribbons flow through it and on
@@ -48,7 +52,9 @@ export function FinalCta() {
           ))}
         </ul>
         <div className="wrap final-inner reveal" data-reveal>
-          <h2>Your first week with Aurora is free. Your team will feel it by Friday.</h2>
+          <h2>
+            Your first {trialDays} days with Aurora are free. Your team will feel it by Friday.
+          </h2>
           <p>
             The agents start work as soon as your leads and deals are in, and nothing goes out
             without your yes.
@@ -70,7 +76,7 @@ export function FinalCta() {
             </button>
           </form>
           <p className="final-trust">
-            <span>14 days free</span>
+            <span>{trialDays} days free</span>
             <span aria-hidden="true">·</span>
             <span>No credit card</span>
             <span aria-hidden="true">·</span>
