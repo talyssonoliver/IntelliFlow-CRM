@@ -1,5 +1,6 @@
 /**
- * The footer's links, shared by the landing page and every other public page.
+ * The header's and footer's links, shared by the landing page and every other
+ * public page.
  * Each goes to a page that exists and is open to visitors, or, for `section`
  * links, to a section of the landing page.
  */
@@ -9,6 +10,17 @@ export interface FooterLink {
   /** A section of the landing page: `#id` on the landing page, `/#id` elsewhere. */
   section?: boolean;
 }
+
+/** The header: the landing's two sections, then every page the old header linked to. */
+export const NAV_LINKS: readonly FooterLink[] = [
+  { label: 'Platform', href: '#platform', section: true },
+  { label: 'AI agents', href: '#agents', section: true },
+  { label: 'Features', href: '/features' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Security', href: '/security' },
+  { label: 'About', href: '/about' },
+  { label: 'Contact', href: '/contact' },
+];
 
 export const FOOTER_COLUMNS: ReadonlyArray<{ title: string; links: readonly FooterLink[] }> = [
   {
