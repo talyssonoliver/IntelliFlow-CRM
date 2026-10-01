@@ -104,9 +104,17 @@ export const listTenants = protectedProcedure
     });
     const byId = new Map(tenants.map((t) => [t.id, t]));
 
+    // A revoked or expired HOME membership row (partner.removeMember) means no access there: the
+    // resolver refuses it with NOT_A_MEMBER, so offering it would strand the app on that error.
+    const homeRow = await ctx.prisma.tenantMembership.findUnique({
+      where: { userId_tenantId: { userId: user.userId, tenantId: homeTenantId } },
+      select: { role: true, source: true, revokedAt: true, expiresAt: true },
+    });
+    const homeLive = !homeRow || isLiveMembership(homeRow);
+
     const entries: TenantEntry[] = [];
     const home = byId.get(homeTenantId);
-    if (home) {
+    if (home && homeLive) {
       entries.push({
         tenantId: home.id,
         name: home.name,

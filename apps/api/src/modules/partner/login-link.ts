@@ -489,6 +489,15 @@ async function attachStaff(
       'This person is not provisioned as staff of the partner.'
     );
   }
+  // Staff reach CLIENT workspaces only. The pinned row would overwrite the user's HOME membership
+  // (clearing a revocation, then expiring in 24 h and locking them out of their own workspace).
+  if (tenant.id === user.tenantId) {
+    throw membershipError(
+      'FORBIDDEN',
+      'STAFF_NOT_PROVISIONED',
+      'Staff access applies to client workspaces, not the partner own workspace.'
+    );
+  }
   // Pinned, expiring, never counted as a seat. Refreshed on every link.
   const expiresAt = new Date(now.getTime() + STAFF_MEMBERSHIP_TTL_MS);
   const data = {

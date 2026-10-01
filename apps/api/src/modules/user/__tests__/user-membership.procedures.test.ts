@@ -144,6 +144,42 @@ describe('user.listTenants', () => {
     });
   });
 
+  it('omits the home tenant when its HOME membership row is revoked or expired', async () => {
+    vi.stubEnv('INHERITED_MEMBERSHIP_ENABLED', '1');
+    for (const row of [
+      { role: 'USER', source: 'HOME', revokedAt: new Date(NOW - HOUR), expiresAt: null },
+      { role: 'USER', source: 'HOME', revokedAt: null, expiresAt: new Date(NOW - HOUR) },
+    ]) {
+      const prisma = makePrisma();
+      prisma.tenantMembership.findMany.mockResolvedValue([
+        { tenantId: CLIENT, role: 'ADMIN', source: 'PORTAL_MEMBER' },
+      ]);
+      prisma.tenantMembership.findUnique.mockResolvedValue(row);
+      prisma.tenant.findMany.mockResolvedValue(tenants);
+
+      const result = await caller(prisma, { user: sessionUser }).listTenants();
+
+      expect(result.tenants.map((t) => t.tenantId)).toEqual([CLIENT]);
+    }
+  });
+
+  it('still lists the home tenant when its HOME membership row is live', async () => {
+    vi.stubEnv('INHERITED_MEMBERSHIP_ENABLED', '1');
+    const prisma = makePrisma();
+    prisma.tenantMembership.findMany.mockResolvedValue([]);
+    prisma.tenantMembership.findUnique.mockResolvedValue({
+      role: 'USER',
+      source: 'HOME',
+      revokedAt: null,
+      expiresAt: null,
+    });
+    prisma.tenant.findMany.mockResolvedValue(tenants);
+
+    const result = await caller(prisma, { user: sessionUser }).listTenants();
+
+    expect(result.tenants.map((t) => t.tenantId)).toEqual([HOME]);
+  });
+
   it('gives a pinned session exactly one entry: the workspace it was opened into', async () => {
     const prisma = makePrisma();
     prisma.tenant.findUnique.mockResolvedValue(tenants[1]);

@@ -1066,6 +1066,20 @@ describe('issueLoginLink: kind=staff', () => {
     expect(supabaseAdminMock.auth.admin.generateLink).not.toHaveBeenCalled();
   });
 
+  it('refuses a staff link into the staff member HOME tenant and never touches the home row', async () => {
+    // The partner's owner tenant is the very tenant the link targets (t1).
+    installWorld({ partner: { ownerTenantId: 't1' } });
+    users['boss@agency.test'] = { id: 'u-boss', tenantId: 't1', role: 'ADMIN' };
+
+    await expectReason(call(callerWith()), 'FORBIDDEN', 'STAFF_NOT_PROVISIONED');
+
+    expect(prismaMock.tenantMembership.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.tenantMembership.update).not.toHaveBeenCalled();
+    expect(prismaMock.tenantMembership.create).not.toHaveBeenCalled();
+    expect(prismaMock.partnerLoginGrant.create).not.toHaveBeenCalled();
+    expect(supabaseAdminMock.auth.admin.generateLink).not.toHaveBeenCalled();
+  });
+
   it('an unrelated client user cannot be passed off as staff', async () => {
     users['boss@agency.test'] = { id: 'u-boss', tenantId: 't2', role: 'ADMIN' };
     await expectReason(call(callerWith()), 'FORBIDDEN', 'STAFF_NOT_PROVISIONED');
