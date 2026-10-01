@@ -414,6 +414,7 @@ export function createScrubSteps(
   }
 
   const triggers: ScrollTriggerType[] = [];
+  const timelines: Array<{ kill(): unknown }> = [];
   steps.forEach((step, index) => {
     const target = targets[index]!;
 
@@ -470,9 +471,16 @@ export function createScrubSteps(
       onEnterBack: () => onStep?.(index, 0.5, true),
     });
     triggers.push(st);
+    timelines.push(tl);
   });
 
-  return () => triggers.forEach((t) => t.kill());
+  // Undo everything this applied, not just the triggers: a rewire (crossing the
+  // phone breakpoint) must leave each step fully visible and in place.
+  return () => {
+    triggers.forEach((t) => t.kill());
+    timelines.forEach((t) => t.kill());
+    gsap.set(targets, { clearProps: 'opacity,visibility,transform,willChange' });
+  };
 }
 
 // ---------------------------------------------------------------------------
