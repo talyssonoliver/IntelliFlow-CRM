@@ -17,7 +17,7 @@ import { context as otelContext, propagation } from '@opentelemetry/api';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import { loadBullMQ } from '../../lib/load-bullmq';
 import {
   churnRiskLevelSchema,
@@ -26,8 +26,13 @@ import {
   aiInsightsSummarySchema,
 } from '@intelliflow/validators';
 import { getTenantContext } from '../../security/tenant-context';
+import { assertQuota } from '../../shared/quota-guard';
 import { SIGNIFICANCE_LEVELS, requiresHumanReview } from '@intelliflow/domain';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
+
+// ADR-070: server-side AI_INTELLIGENCE entitlement — intelligence router
+// (a tenant on a plan without it must not reach these endpoints directly).
+const tenantProcedure = moduleTenantProcedure('AI_INTELLIGENCE');
 
 // ── Structured sentiment data stored inside the Json `recommendations` field ──
 
@@ -926,6 +931,9 @@ export const intelligenceRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const { entityType, entityId, predictionType, priority } = input;
+
+      // Per-tenant metering: the queued prediction is AI spend. Assert only; cost is recorded elsewhere.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiSpendCentsPerMonth');
 
       // Verify entity exists
       if (entityType === 'lead') {

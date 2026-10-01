@@ -60,8 +60,26 @@ export class HttpPortalDeliverySyncAdapter implements PortalDeliverySyncPort {
     if (res.isFailure) return Result.fail(res.error);
 
     const { status, body } = res.value;
-    // 201 created OR 409 slug_conflict → the tenant exists; both are success.
-    if (status === 201 || status === 409) return Result.ok(undefined);
+    if (status === 201) return Result.ok(undefined);
+
+    // 409 slug_conflict means the slug is taken, NOT that it is ours: another
+    // client may own it. Only succeed when the portal names the same source deal
+    // (a retried deal-won push); otherwise fail loudly rather than push
+    // delivery/billing facts into an unrelated tenant.
+    if (status === 409) {
+      const existingDealId = extractExistingDealId(body);
+      const ourDealId = input.crmDealId ?? input.sourceLeadId;
+      if (ourDealId && existingDealId === ourDealId) return Result.ok(undefined);
+      return Result.fail(
+        new PortalSyncError(
+          `Tenant provisioning conflict for slug '${input.slug}': ` +
+            (existingDealId
+              ? `portal links it to deal '${existingDealId}', not '${ourDealId ?? 'none'}'`
+              : 'portal returned no source-deal identity, so ownership cannot be confirmed') +
+            `: HTTP 409 ${snippet(body)}`
+        )
+      );
+    }
 
     return Result.fail(
       new PortalSyncError(`Tenant provisioning failed: HTTP ${status} ${snippet(body)}`)
@@ -116,6 +134,30 @@ export class HttpPortalDeliverySyncAdapter implements PortalDeliverySyncPort {
     if (error instanceof Error) return error.message;
     return 'Unknown error';
   }
+}
+
+/**
+ * Pull the source-deal id out of a 409 body. Accepts `existing.crm_deal_id`
+ * (snake or camel case) or the same key at the top level; returns null when the
+ * body is not JSON or carries no identity.
+ */
+function extractExistingDealId(body: string): string | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== 'object' || parsed === null) return null;
+  const top = parsed as Record<string, unknown>;
+  const nested = typeof top.existing === 'object' && top.existing !== null ? top.existing : {};
+  for (const source of [nested as Record<string, unknown>, top]) {
+    for (const key of ['crm_deal_id', 'crmDealId']) {
+      const value = source[key];
+      if (typeof value === 'string' && value !== '') return value;
+    }
+  }
+  return null;
 }
 
 /** Trim a response body to a short, log-safe snippet. */

@@ -11,7 +11,7 @@
 
 import { TRPCError } from '@trpc/server';
 import type { Prisma, ReportTemplate } from '@intelliflow/db';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import {
   createReportTemplateSchema,
   updateReportTemplateSchema,
@@ -19,6 +19,9 @@ import {
   getReportTemplateSchema,
   type ReportTemplateView,
 } from '@intelliflow/validators';
+
+// ADR-070: server-side ANALYTICS entitlement (report templates).
+const tenantProcedure = moduleTenantProcedure('ANALYTICS');
 
 function normalizeRow(row: ReportTemplate): ReportTemplateView {
   return {

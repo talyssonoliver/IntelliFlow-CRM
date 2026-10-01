@@ -25,6 +25,12 @@ model Tenant {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
+  // ADR-070: provenance + plan. plan lives here, not on Workspace.
+  source      TenantSource @default(DIRECT)
+  partnerId   String?
+  externalRef String?
+  plan        PlanTier     @default(STARTER)
+
   // Relations — all reverse relation fields @ignore'd to shrink generated Tenant.ts
   // (FK constraints preserved in DB; child-side relations untouched)
   users                User[]                     @ignore
@@ -135,6 +141,8 @@ model Tenant {
   articleSections      ArticleSection[]           @ignore
   articleFeedback      ArticleFeedback[]          @ignore
   helpArticleViewDaily            HelpArticleViewDaily[]            @ignore
+  tenantQuotaOverrides            TenantQuotaOverride[]             @ignore
+  tenantUsageCounters             TenantUsageCounter[]              @ignore
   helpArticleSearchNoResultDaily  HelpArticleSearchNoResultDaily[]  @ignore
   helpArticleAnalyticsDedup       HelpArticleAnalyticsDedup[]       @ignore
   leadStageConfigs       LeadStageConfig[]        @ignore
@@ -180,6 +188,8 @@ model Tenant {
   goalDefault               TenantGoalDefault?         // IFC-211: org-wide default daily goal
   termsAcceptances          TermsAcceptance[]          @relation("TenantTermsAcceptances") @ignore // IFC-309
 
+  @@unique([partnerId, externalRef])
+  @@index([partnerId])
   @@index([slug])
   @@index([status])
   @@map("tenants")
@@ -277,8 +287,48 @@ enum TenantStatus {
   TRIAL
 }
 
+// ADR-070: how a tenant came to exist
+enum TenantSource {
+  DIRECT
+  PARTNER
+}
+
+// ADR-070: an external integrator (e.g. the Leangency Portal) that provisions tenants
+model Partner {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  apiKeys PartnerApiKey[]
+
+  @@map("partners")
+}
+
+// ADR-070: per-partner API key (sha256 hash only; plaintext is shown once at creation)
+model PartnerApiKey {
+  id         String    @id @default(cuid())
+  partnerId  String
+  partner    Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  name       String
+  keyHash    String    @unique
+  keyPrefix  String
+  scopes     Json
+  isActive   Boolean   @default(true)
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([keyPrefix])
+  @@index([partnerId])
+  @@map("partner_api_keys")
+}
+
 // IFC-208: Plan Tiers & Module Registry
 enum PlanTier {
+  PARTNER_FREE
   STARTER
   PROFESSIONAL
   ENTERPRISE
@@ -459,6 +509,15 @@ model Lead {
   need            String?
   timeline        String?
   annualRevenue   String?
+  // ADR-070: marketing attribution (populated by partner/inbound lead hand-off)
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmContent      String?
+  utmTerm         String?
+  clickId         String?
+  referrer        String?
+  landingPath     String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -497,6 +556,7 @@ model Lead {
   @@index([tenantId, ownerId, status]) // IFC-030: Assigned lead lookups
   @@index([tenantId, ownerId, createdAt(sort: Desc)]) // HOME-PERF: Welcome summary lead counts
   @@index([tenantId, ownerId, isStarred]) // PG-059: fast "?view=starred" for current user
+  @@index([tenantId, utmCampaign]) // ADR-070: campaign attribution reports
   @@index([accountId])
   @@map("leads")
 }
@@ -3363,6 +3423,7 @@ model SalesPerformance {
 // ============================================
 
 /// Workspace/Tenant for multi-company support
+/// @deprecated — plan lives on Tenant (ADR-070)
 model Workspace {
   id          String   @id @default(cuid())
   name        String
@@ -5938,4 +5999,38 @@ model PortalPmDelivery {
   @@index([eventId])
   @@index([processingStatus])
   @@map("portal_pm_deliveries")
+}
+
+/// Per-tenant override of a plan quota (QuotaRegistry key). `limit` null = unlimited.
+model TenantQuotaOverride {
+  id        String   @id @default(cuid())
+  key       String   // QuotaKey: contacts | seats | emailsPerMonth | aiSpendCentsPerMonth | workflowsActive
+  limit     Int?     // null = unlimited
+  reason    String?
+  createdAt DateTime @default(now())
+
+  // Multi-tenancy
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+  @@map("tenant_quota_overrides")
+}
+
+/// Metered usage counter for a quota key. `period` is 'YYYY-MM' for monthly keys or 'all'.
+model TenantUsageCounter {
+  id        String   @id @default(cuid())
+  key       String   // QuotaKey
+  period    String   // 'YYYY-MM' or 'all'
+  value     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, key, period])
+  @@index([tenantId])
+  @@map("tenant_usage_counters")
 }

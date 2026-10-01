@@ -33,10 +33,14 @@ import {
 
 import type { BillingPaymentMethod } from '../stripe-portal';
 
-// Helper: get current month/year for date-relative tests
+// Helper: pin the clock to a mid-month UTC instant. card-manager reads the
+// current month in UTC (getUTCMonth) while this file used local time, so the
+// two disagreed for a few hours around every month boundary (e.g. 00:30 BST on
+// the 1st is still the previous month in UTC) and the suite failed on the gate.
+vi.useFakeTimers({ now: new Date('2026-06-15T12:00:00Z'), toFake: ['Date'] });
 const now = new Date();
-const currentMonth = now.getMonth() + 1; // 1-indexed
-const currentYear = now.getFullYear();
+const currentMonth = now.getUTCMonth() + 1; // 1-indexed
+const currentYear = now.getUTCFullYear();
 
 // ============================================
 // isCardExpired
@@ -83,9 +87,9 @@ describe('isCardExpiringSoon', () => {
 
   it('returns true for a card expiring within the next 3 months', () => {
     // Find a month 2 months from now
-    const futureDate = new Date(currentYear, now.getMonth() + 2, 1);
-    const expMonth = futureDate.getMonth() + 1;
-    const expYear = futureDate.getFullYear();
+    const futureDate = new Date(Date.UTC(currentYear, now.getUTCMonth() + 2, 1));
+    const expMonth = futureDate.getUTCMonth() + 1;
+    const expYear = futureDate.getUTCFullYear();
     expect(isCardExpiringSoon(expMonth, expYear)).toBe(true);
   });
 
@@ -95,9 +99,9 @@ describe('isCardExpiringSoon', () => {
 
   it('respects custom monthsAhead parameter', () => {
     // Card expiring in 5 months
-    const futureDate = new Date(currentYear, now.getMonth() + 5, 1);
-    const expMonth = futureDate.getMonth() + 1;
-    const expYear = futureDate.getFullYear();
+    const futureDate = new Date(Date.UTC(currentYear, now.getUTCMonth() + 5, 1));
+    const expMonth = futureDate.getUTCMonth() + 1;
+    const expYear = futureDate.getUTCFullYear();
 
     // Default 3 months: should not be expiring soon
     expect(isCardExpiringSoon(expMonth, expYear, 3)).toBe(false);
@@ -170,9 +174,9 @@ describe('getCardStatus', () => {
 
   it('returns expiring soon status for card within 3 months', () => {
     // Card expiring next month
-    const futureDate = new Date(currentYear, now.getMonth() + 1, 1);
-    const expMonth = futureDate.getMonth() + 1;
-    const expYear = futureDate.getFullYear();
+    const futureDate = new Date(Date.UTC(currentYear, now.getUTCMonth() + 1, 1));
+    const expMonth = futureDate.getUTCMonth() + 1;
+    const expYear = futureDate.getUTCFullYear();
 
     const status = getCardStatus(expMonth, expYear);
     expect(status.isExpired).toBe(false);
@@ -193,9 +197,9 @@ describe('getCardStatus', () => {
   it('shows "Expires this month" when 1 month remaining', () => {
     // We need to construct a card expiring exactly 1 month from now.
     // getMonthsUntilExpiry returns 1 when exp is next month.
-    const futureDate = new Date(currentYear, now.getMonth() + 1, 1);
-    const expMonth = futureDate.getMonth() + 1;
-    const expYear = futureDate.getFullYear();
+    const futureDate = new Date(Date.UTC(currentYear, now.getUTCMonth() + 1, 1));
+    const expMonth = futureDate.getUTCMonth() + 1;
+    const expYear = futureDate.getUTCFullYear();
 
     const months = getMonthsUntilExpiry(expMonth, expYear);
     const status = getCardStatus(expMonth, expYear);

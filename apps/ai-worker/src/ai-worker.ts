@@ -70,6 +70,7 @@ import {
   type MemoryRetentionJobResult,
 } from './jobs';
 import { costTracker } from './utils/cost-tracker';
+import { createTenantAiSpendRecorder } from './utils/tenant-ai-spend';
 import { aiConfig, loadAIConfig } from './config/ai.config';
 import {
   extractJobContext,
@@ -134,6 +135,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   // IFC-214: Redis-backed live snapshot publisher (paired with API-side store).
   private redisMonitoringPublisher?: RedisMonitoringPublisher;
   private prisma?: import('@intelliflow/db').PrismaClient;
+  /** Unsubscribes the per-tenant AI-spend recorder from the cost tracker. */
+  private stopTenantAiSpend?: () => void;
   // IFC-310: contact embedding worker for duplicate-detection runtime.
   private contactEmbedWorker?: import('./workers/contact-embed-worker.js').ContactEmbedWorker;
   // D5 / issue #259: ingestion queue consumers (text-extraction + ocr-processing).
@@ -282,9 +285,42 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       return;
     }
     await this.wireAuditLogAdapter();
+    await this.wireTenantAiSpend();
     await this.wireRetrievalService();
     await this.bootContactEmbedWorker();
     await this.bootIngestionWorkers();
+  }
+
+  /**
+   * Attribute each model call's estimated cost to the job's tenant so the API can enforce
+   * the aiSpendCentsPerMonth quota (nothing else increments that counter).
+   */
+  private async wireTenantAiSpend(): Promise<void> {
+    try {
+      const { PrismaQuotaRepository, PrismaTenantModuleRepository } =
+        await import('@intelliflow/adapters');
+      const { QuotaService } = await import('@intelliflow/application');
+      const quota = new QuotaService(
+        new PrismaQuotaRepository(this.prisma as never),
+        new PrismaTenantModuleRepository(this.prisma as never)
+      );
+      const record = createTenantAiSpendRecorder({
+        quota,
+        getTenantId: () => tenantContextStore.getStore()?.tenantId,
+        logger: this.logger,
+      });
+      this.stopTenantAiSpend = costTracker.addListener((usage) => {
+        void record(usage);
+      });
+      this.logger.info(
+        'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth'
+      );
+    } catch (error) {
+      this.logger.error(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to wire the tenant AI spend recorder — AI spend quotas will not advance'
+      );
+    }
   }
 
   /** H4: Wire AuditLogPort so logAIAgentAction() writes to DB in addition to pino. */
@@ -797,6 +833,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    */
   protected async onStop(): Promise<void> {
     this.logger.info('Shutting down AI Worker...');
+
+    this.stopTenantAiSpend?.();
 
     // IFC-297: Drain monitoring data before shutdown
     if (this.monitoringFlushService) {

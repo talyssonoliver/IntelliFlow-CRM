@@ -53,11 +53,64 @@ describe('HttpPortalDeliverySyncAdapter', () => {
       expect(result.isSuccess).toBe(true);
     });
 
-    it('treats 409 slug_conflict as success (idempotent)', async () => {
-      fetchSpy.mockResolvedValue(mockFetchResponse(409, '{"error":"slug_conflict"}'));
+    it('treats 409 as success when existing.crm_deal_id matches the source deal', async () => {
+      fetchSpy.mockResolvedValue(
+        mockFetchResponse(409, '{"error":"slug_conflict","existing":{"crm_deal_id":"lead_1"}}')
+      );
       const adapter = new HttpPortalDeliverySyncAdapter(config);
       const result = await adapter.provisionTenant(provisionInput);
       expect(result.isSuccess).toBe(true);
+    });
+
+    it('accepts a top-level camelCase crmDealId on 409', async () => {
+      fetchSpy.mockResolvedValue(
+        mockFetchResponse(409, '{"error":"slug_conflict","crmDealId":"lead_1"}')
+      );
+      const adapter = new HttpPortalDeliverySyncAdapter(config);
+      const result = await adapter.provisionTenant(provisionInput);
+      expect(result.isSuccess).toBe(true);
+    });
+
+    it('fails a 409 that names a different deal', async () => {
+      fetchSpy.mockResolvedValue(
+        mockFetchResponse(409, '{"error":"slug_conflict","existing":{"crm_deal_id":"other"}}')
+      );
+      const adapter = new HttpPortalDeliverySyncAdapter(config);
+      const result = await adapter.provisionTenant(provisionInput);
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(PortalSyncError);
+      expect(result.error.message).toContain("links it to deal 'other', not 'lead_1'");
+    });
+
+    it('fails a 409 with no identity in the body (portal today)', async () => {
+      fetchSpy.mockResolvedValue(mockFetchResponse(409, '{"error":"slug_conflict"}'));
+      const adapter = new HttpPortalDeliverySyncAdapter(config);
+      const result = await adapter.provisionTenant(provisionInput);
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('no source-deal identity');
+      expect(result.error.message).toContain('HTTP 409');
+    });
+
+    it('fails a 409 with a non-JSON body', async () => {
+      fetchSpy.mockResolvedValue(mockFetchResponse(409, 'conflict'));
+      const adapter = new HttpPortalDeliverySyncAdapter(config);
+      const result = await adapter.provisionTenant(provisionInput);
+      expect(result.isFailure).toBe(true);
+    });
+
+    it('fails a 409 when the JSON body is not an object', async () => {
+      fetchSpy.mockResolvedValue(mockFetchResponse(409, 'null'));
+      const adapter = new HttpPortalDeliverySyncAdapter(config);
+      const result = await adapter.provisionTenant(provisionInput);
+      expect(result.isFailure).toBe(true);
+    });
+
+    it('fails a matching 409 when the input carries no sourceLeadId', async () => {
+      fetchSpy.mockResolvedValue(mockFetchResponse(409, '{"existing":{"crm_deal_id":"lead_1"}}'));
+      const adapter = new HttpPortalDeliverySyncAdapter(config);
+      const result = await adapter.provisionTenant({ ...provisionInput, sourceLeadId: null });
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain("not 'none'");
     });
 
     it('fails on a 500 with a PortalSyncError carrying the status + body snippet', async () => {

@@ -7,8 +7,14 @@
  * Coverage target: >95% for domain layer
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { DateRange, InvalidDateRangeError } from '../DateRange';
+
+// Pin the clock to a mid-month UTC instant: the code under test derives "this
+// month" in UTC while these tests used the local clock, so for the hours around
+// every month boundary (e.g. 00:30 BST on the 1st is still the previous month
+// in UTC) the two disagreed and the pre-ship gate failed.
+vi.useFakeTimers({ now: new Date('2026-06-15T12:00:00Z'), toFake: ['Date'] });
 
 describe('DateRange', () => {
   describe('create()', () => {
