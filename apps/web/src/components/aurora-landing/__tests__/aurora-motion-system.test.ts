@@ -226,6 +226,12 @@ describe('createReveal', () => {
     const reverseTween = gsap.to.mock.results[0]!.value as { reverse: ReturnType<typeof vi.fn> };
     expect(reverseTween.reverse).toHaveBeenCalled();
 
+    // Resized or rotated to a phone: leaving back no longer hides the content.
+    reverseTween.reverse.mockClear();
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: !q.includes('reduce'), media: q }));
+    created[0]!.onLeaveBack!();
+    expect(reverseTween.reverse).not.toHaveBeenCalled();
+
     cleanup();
     expect(created[0]!.kill).toHaveBeenCalled();
   });
@@ -389,7 +395,7 @@ describe('createExitDrift', () => {
     y: number;
     immediateRender: boolean;
     scrollTrigger: {
-      start: string;
+      start: () => string;
       end: string;
       scrub: boolean;
       onToggle: (self: { isActive: boolean }) => void;
@@ -419,7 +425,7 @@ describe('createExitDrift', () => {
     expect(vars.y).toBeLessThan(0);
     expect(vars.immediateRender).toBe(false);
     expect(vars.scrollTrigger.scrub).toBe(true);
-    expect(vars.scrollTrigger.start).toBe('bottom 30%');
+    expect(vars.scrollTrigger.start()).toBe('bottom 30%');
 
     vars.scrollTrigger.onToggle({ isActive: true });
     expect(el.hasAttribute('data-exiting')).toBe(true);
@@ -430,12 +436,22 @@ describe('createExitDrift', () => {
     expect(tweens.every((t) => t.kill.mock.calls.length === 1)).toBe(true);
   });
 
+  it('re-reads the breakpoint on every refresh, so a resize across it takes effect', () => {
+    document.body.innerHTML = '<div class="reveal">a</div>';
+    const { gsap, tweens } = fake();
+    createExitDrift(document, gsap as never, {} as never, '.reveal');
+    const start = tweens[0]!.vars.scrollTrigger.start;
+    expect(start()).toBe('bottom 30%');
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: !q.includes('reduce'), media: q }));
+    expect(start()).toBe('bottom 22%');
+  });
+
   it('waits longer on a phone, so copy is never half-faded while it is read', () => {
     vi.stubGlobal('matchMedia', (q: string) => ({ matches: !q.includes('reduce'), media: q }));
     document.body.innerHTML = '<div class="reveal">a</div>';
     const { gsap, tweens } = fake();
     createExitDrift(document, gsap as never, {} as never, '.reveal');
-    expect(tweens[0]!.vars.scrollTrigger.start).toBe('bottom 22%');
+    expect(tweens[0]!.vars.scrollTrigger.start()).toBe('bottom 22%');
   });
 
   it('does nothing under reduced motion', () => {
