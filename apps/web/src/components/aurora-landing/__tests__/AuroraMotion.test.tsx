@@ -40,6 +40,7 @@ vi.mock('../aurora-scenes', () => ({ playScenes: (...a: unknown[]) => playScenes
 const stack = {
   setActive: vi.fn(),
   setPresentation: vi.fn(),
+  setIntro: vi.fn(),
   pause: vi.fn(),
   resume: vi.fn(),
   hide: vi.fn(),
@@ -375,7 +376,7 @@ describe('AuroraMotion', () => {
     expect(() => render(<AuroraMotion />)).not.toThrow();
   });
 
-  it("on a phone, lifts each card's layer out to face the reader, then dissolves it as the next card arrives", async () => {
+  it("on a phone, lifts each card's layer out to face the reader, and peels it away once its card has left the screen", async () => {
     vi.stubGlobal('matchMedia', (q: string) => ({ matches: q === '(max-width: 960px)', media: q }));
     vi.stubGlobal('innerHeight', 1000);
     const root = mountPage();
@@ -385,8 +386,9 @@ describe('AuroraMotion', () => {
     walk.before(copy);
     copy.append(walk, ...root.querySelectorAll('.layer-step'));
     const [agents, control] = [...root.querySelectorAll<HTMLElement>('.layer-step')];
+    // A card 400px tall whose top sits at `top`.
     const place = (el: HTMLElement, top: number) =>
-      (el.getBoundingClientRect = () => ({ top }) as DOMRect);
+      (el.getBoundingClientRect = () => ({ top, bottom: top + 400 }) as DOMRect);
     render(<AuroraMotion />);
     await waitFor(() => expect(triggers.some((t) => t.trigger === copy)).toBe(true));
     const story = triggers.find((t) => t.trigger === copy)!;
@@ -395,7 +397,7 @@ describe('AuroraMotion', () => {
 
     // The first card is still below the screen: every layer rests in the stack.
     place(agents!, 1200);
-    place(control!, 2000);
+    place(control!, 2900);
     story.onUpdate!({ scroll: () => 0 });
     expect(last().agents).toEqual({ present: 0, dissolve: 0 });
 
@@ -405,12 +407,28 @@ describe('AuroraMotion', () => {
     expect(last().agents.present).toBeCloseTo(1);
     expect(last().agents.dissolve).toBe(0);
 
-    // The next card fills the bottom fifth: the layer has dissolved, the next one is rising.
-    place(agents!, -400);
-    place(control!, 800);
+    // The card scrolls over it and is still on screen: the layer stays.
+    place(agents!, -300);
     story.onUpdate!({ scroll: () => 0 });
-    expect(last().agents.dissolve).toBeCloseTo(1);
-    expect(last().control.present).toBeCloseTo(2 / 3);
+    expect(last().agents.dissolve).toBe(0);
+
+    // The card has left the top: the layer peels away over a quarter of a screen.
+    place(agents!, -525);
+    story.onUpdate!({ scroll: () => 0 });
+    expect(last().agents.dissolve).toBeCloseTo(0.5);
+    place(agents!, -700);
+    place(control!, 1000);
+    story.onUpdate!({ scroll: () => 0 });
+    expect(last().agents.dissolve).toBe(1);
+    // ...and only then does the next card reach the screen.
+    expect(last().control.present).toBe(0);
+
+    // Act 0: the stack opens out as the hero scrolls away, starting closed.
+    const hero = root.querySelector('.hero')!;
+    const intro = triggers.find((t) => t.trigger === hero && t.onUpdate)!;
+    expect(stack.setIntro).toHaveBeenCalledWith(0);
+    intro.onUpdate!({ progress: 0.5 } as never);
+    expect(stack.setIntro).toHaveBeenLastCalledWith(0.5);
 
     story.onLeave!();
     expect(stack.setPresentation).toHaveBeenLastCalledWith(null);

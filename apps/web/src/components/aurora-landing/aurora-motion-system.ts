@@ -258,10 +258,11 @@ export function createReveal(
     return () => undefined;
   }
 
-  // Touch/phone: reveal once, forward only. No `onLeaveBack` reverse — a
+  // Touch/phone: reveal once, forward only. No reverse on leaving back — a
   // quick correction or momentum overshoot near the trigger threshold must
   // never drop already-shown content back to invisible (owner 2026-09-30).
-  const disableExit = isTouchOrPhone();
+  // Asked at the moment it happens, so a resize or rotation across the phone
+  // breakpoint takes effect without rewiring.
 
   const triggers: ScrollTriggerType[] = [];
   els.forEach((el, i) => {
@@ -287,7 +288,9 @@ export function createReveal(
       trigger: el,
       start: RANGE.enterAt,
       onEnter: () => tween.play(),
-      onLeaveBack: disableExit ? undefined : () => tween.reverse(),
+      onLeaveBack: () => {
+        if (!isTouchOrPhone()) tween.reverse();
+      },
     });
     triggers.push(st);
   });
@@ -310,7 +313,8 @@ export function createExitDrift(
 ): Cleanup {
   if (prefersReducedMotion()) return () => undefined;
   const els = gsap.utils.toArray<HTMLElement>(selector, root as Element);
-  const start = isTouchOrPhone() ? 'bottom 22%' : 'bottom 30%';
+  // A function, so every ScrollTrigger refresh (a resize or rotation) re-reads the breakpoint.
+  const start = () => (isTouchOrPhone() ? 'bottom 22%' : 'bottom 30%');
   const tweens = els.map((el) =>
     gsap.fromTo(
       el,
