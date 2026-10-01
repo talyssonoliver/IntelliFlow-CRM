@@ -1,5 +1,12 @@
 import type { CSSProperties } from 'react';
+import pricingData from '@/data/pricing-data.json';
 import './faq-section.css';
+
+const { tiers, metadata } = pricingData;
+/** The lowest published price: the cheapest plan, billed annually. */
+const fromPrice = Math.min(
+  ...tiers.flatMap((t) => (typeof t.price.annual === 'number' ? [t.price.annual] : []))
+);
 
 const FAQ = [
   {
@@ -24,8 +31,7 @@ const FAQ = [
   },
   {
     question: 'What does it cost?',
-    answer:
-      'Plans are built around your team and the parts of Aurora you use. Ask for a tailored plan and we will walk you through it.',
+    answer: `Every plan starts with a ${metadata.freeTrialDays}-day free trial, no credit card needed. Plans start at £${fromPrice} per user per month, billed annually, and every plan is on the pricing page.`,
   },
 ];
 
