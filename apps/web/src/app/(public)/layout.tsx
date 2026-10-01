@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { PublicFooter } from '@/components/public/PublicFooter';
+import { AuroraSiteFooter } from '@/components/aurora-site/AuroraSiteFooter';
 import { PublicLayoutShell } from './_components/PublicLayoutShell';
 import { getAccessToken } from '@/lib/trpc-server';
 
@@ -16,7 +16,7 @@ import { getAccessToken } from '@/lib/trpc-server';
  *   they have their own full-screen backgrounds. The `PublicLayoutShell` client
  *   component detects the path via `usePathname()` and handles this.
  * - For other public routes, the server decides based on the token cookie
- *   whether to show `PublicHeader` + `PublicFooter`. Authenticated users on `/`
+ *   whether to show the Aurora header and footer. Authenticated users on `/`
  *   skip the public chrome entirely so only the authenticated shell renders.
  * - The root `app/layout.tsx` already renders the authenticated `<Navigation />`
  *   globally, so authed users get their normal app chrome wrapping whatever the
@@ -27,11 +27,13 @@ export default async function PublicLayout({ children }: { children: React.React
   const isAuthenticated = token !== null;
 
   return (
-    <PublicLayoutShell isAuthenticated={isAuthenticated}>
+    // The footer is rendered here, on the server, so it follows the server's
+    // auth decision and never flashes in or out on hydration.
+    <PublicLayoutShell
+      isAuthenticated={isAuthenticated}
+      footer={isAuthenticated ? undefined : <AuroraSiteFooter />}
+    >
       {children}
-      {/* Footer rendered here (not inside the client shell) so it inherits the
-          server decision and never flashes in/out on client hydration. */}
-      {!isAuthenticated && <PublicFooter />}
     </PublicLayoutShell>
   );
 }

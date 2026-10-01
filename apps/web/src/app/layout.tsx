@@ -32,7 +32,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: '#0f172a',
+  themeColor: '#11175B',
 };
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -46,11 +46,11 @@ const materialSymbols = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: 'IntelliFlow CRM - AI-Powered Customer Relationship Management',
-    template: '%s | IntelliFlow CRM',
+    default: 'Aurora, the AI CRM that asks before it acts',
+    template: '%s | Aurora',
   },
   description:
-    'Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.',
+    'Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.',
   keywords: [
     'CRM',
     'customer relationship management',
@@ -58,11 +58,12 @@ export const metadata: Metadata = {
     'lead scoring',
     'sales automation',
     'pipeline management',
-    'sales analytics',
+    'human approval',
   ],
-  authors: [{ name: 'IntelliFlow Team' }],
-  creator: 'IntelliFlow',
-  publisher: 'IntelliFlow',
+  applicationName: 'Aurora',
+  authors: [{ name: 'Aurora' }],
+  creator: 'Aurora',
+  publisher: 'Aurora',
   formatDetection: {
     email: false,
     address: false,
@@ -73,20 +74,19 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'IntelliFlow CRM - AI-Powered Sales Intelligence',
+    title: 'Aurora, the AI CRM that asks before it acts',
     description:
-      'Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.',
+      'Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.',
     url: 'https://intelliflow-crm.com',
-    siteName: 'IntelliFlow CRM',
+    siteName: 'Aurora',
     locale: 'en_GB',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'IntelliFlow CRM - AI-Powered Sales Intelligence',
+    title: 'Aurora, the AI CRM that asks before it acts',
     description:
-      'Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.',
-    creator: '@intelliflowcrm',
+      'Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.',
   },
   robots: {
     index: true,
