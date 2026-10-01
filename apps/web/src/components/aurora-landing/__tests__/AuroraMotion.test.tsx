@@ -168,7 +168,7 @@ describe('AuroraMotion', () => {
       expect.anything(),
       scrollTrigger,
       '.reveal, [data-reveal]',
-      expect.objectContaining({ duration: 0.22 })
+      expect.objectContaining({ duration: 0.22, stagger: 0 })
     );
     const [stageSection, proofSection] = [
       root.querySelector('.stage')!,

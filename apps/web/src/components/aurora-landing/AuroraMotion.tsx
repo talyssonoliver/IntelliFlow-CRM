@@ -50,6 +50,8 @@ function wirePage(
   cleanups.push(
     motion.createReveal(root, gsap, ScrollTrigger, '.reveal, [data-reveal]', {
       duration: motion.MOTION.duration.xs,
+      // Each block enters on its own; no delay from its place in the page.
+      stagger: 0,
     })
   );
   // Staggered groups: every direct child of a [data-reveal-stagger]
