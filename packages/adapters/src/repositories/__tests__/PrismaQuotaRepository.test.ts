@@ -107,9 +107,10 @@ describe('PrismaQuotaRepository', () => {
   it('runs fn inside a transaction that first takes the (tenant, key) advisory lock', async () => {
     const order: string[] = [];
     const tx = {
-      $queryRaw: vi.fn(async (strings: string[], ...values: unknown[]) => {
+      // $executeRaw: Prisma 7 cannot deserialize pg_advisory_xact_lock's void result via $queryRaw.
+      $executeRaw: vi.fn(async (strings: string[], ...values: unknown[]) => {
         order.push(`lock:${strings.join('?')}:${values.join(',')}`);
-        return [];
+        return 1;
       }),
     };
     prisma.$transaction.mockImplementation(async (fn: (t: unknown) => unknown, opts: unknown) => {

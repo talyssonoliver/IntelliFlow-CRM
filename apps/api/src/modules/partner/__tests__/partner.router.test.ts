@@ -425,7 +425,7 @@ describe('partner.provisionTenant', () => {
 
     await caller.provisionTenant(input);
 
-    const locks = (prismaMock.$queryRaw as any).mock.calls.filter(([strings]: [string[]]) =>
+    const locks = (prismaMock.$executeRaw as any).mock.calls.filter(([strings]: [string[]]) =>
       strings.join('?').includes('pg_advisory_xact_lock')
     );
     expect(locks).toHaveLength(2);
@@ -433,7 +433,7 @@ describe('partner.provisionTenant', () => {
     expect(locks[1].slice(1)).toEqual(['partner-provision-email:owner@acme.test']);
     // The lock is taken before the Auth user is created.
     expect(locks[0]).toBeDefined();
-    expect(prismaMock.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(prismaMock.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
       supabaseAdminMock.auth.admin.createUser.mock.invocationCallOrder[0]
     );
   });

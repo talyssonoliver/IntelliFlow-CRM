@@ -277,11 +277,11 @@ export const partnerRouter = createTRPCRouter({
       try {
         return await prisma.$transaction(
           async (tx) => {
-            await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${refLockKey}, 0))`;
+            await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${refLockKey}, 0))`;
 
             // A second lock on the owner email serializes different tenants racing for the same
             // Auth identity. Lock order is always (ref, email), so the two cannot deadlock.
-            await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${emailLockKey}, 0))`;
+            await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${emailLockKey}, 0))`;
 
             // A call that waited on the lock finds the winner's committed tenant here.
             const winner = await tx.tenant.findUnique({

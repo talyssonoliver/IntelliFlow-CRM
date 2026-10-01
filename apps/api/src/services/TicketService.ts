@@ -22,7 +22,7 @@ import type {
  */
 export type TicketWriteClient = Pick<
   PrismaClient,
-  'ticket' | 'sLAPolicy' | 'ticketActivity' | 'ticketNextStep' | '$queryRaw'
+  'ticket' | 'sLAPolicy' | 'ticketActivity' | 'ticketNextStep' | '$queryRaw' | '$executeRaw'
 >;
 
 export interface CreateTicketInput {
@@ -349,21 +349,23 @@ export class TicketService {
   /**
    * Insert the ticket under a global advisory lock so `ticketNumber` (globally
    * unique) is max+1 at insert time: collision-free across every creator (UI,
-   * portal intake, any tenant) and gap-safe after deletions. The lock is
-   * transaction-scoped, so `db` MUST be a transaction client; `create()`
-   * guarantees that. No retry: a failed INSERT aborts a Postgres transaction,
-   * so a retry on the same client could never succeed.
+   * portal intake, any tenant) and gap-safe after deletions. The maximum is
+   * taken NUMERICALLY (the column is text, so ORDER BY would rank T-99999 above
+   * T-100000 and pin the sequence for good). The lock is transaction-scoped, so
+   * `db` MUST be a transaction client; `create()` guarantees that. No retry: a
+   * failed INSERT aborts a Postgres transaction, so a retry on the same client
+   * could never succeed.
    */
   private async insertNumbered(
     db: TicketWriteClient,
     data: Omit<Parameters<TicketWriteClient['ticket']['create']>[0]['data'], 'ticketNumber'>
   ) {
-    await db.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended('ticket-number', 0))`;
-    const last = await db.ticket.findFirst({
-      orderBy: { ticketNumber: 'desc' },
-      select: { ticketNumber: true },
-    });
-    const lastNumber = last ? Number.parseInt(last.ticketNumber.replace(/\D/g, ''), 10) : 0;
+    // $executeRaw, not $queryRaw: Prisma 7 cannot deserialize the function's `void` result.
+    await db.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('ticket-number', 0))`;
+    const rows = await db.$queryRaw<Array<{ max: bigint | number | string | null }>>`
+      SELECT COALESCE(MAX(NULLIF(regexp_replace("ticketNumber", '[^0-9]', '', 'g'), '')::bigint), 0) AS max
+      FROM "tickets"`;
+    const lastNumber = Number(rows[0]?.max ?? 0);
     const next = (Number.isFinite(lastNumber) ? lastNumber : 0) + 1;
     const ticketNumber = `T-${String(next).padStart(5, '0')}`;
     return db.ticket.create({

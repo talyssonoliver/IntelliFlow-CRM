@@ -120,19 +120,19 @@ describe('inbound.logSupportTicket', () => {
     (mockServices.ticket.create as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       id: 'ticket_9',
     });
-    prismaMock.$queryRaw.mockClear();
+    prismaMock.$executeRaw.mockClear();
 
     const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
     await caller.logSupportTicket(PORTAL_PAYLOAD);
 
     expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
-    const [strings, ...values] = prismaMock.$queryRaw.mock.calls[0] as unknown as [
+    const [strings, ...values] = prismaMock.$executeRaw.mock.calls[0] as unknown as [
       string[],
       ...unknown[],
     ];
     expect(strings.join('?')).toContain('pg_advisory_xact_lock');
     expect(values).toEqual(['support:thread_42']);
-    const lockOrder = prismaMock.$queryRaw.mock.invocationCallOrder[0]!;
+    const lockOrder = prismaMock.$executeRaw.mock.invocationCallOrder[0]!;
     expect(lockOrder).toBeLessThan(
       prismaMock.ticketActivity.findFirst.mock.invocationCallOrder[0]!
     );

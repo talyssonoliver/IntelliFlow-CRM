@@ -112,7 +112,7 @@ export class PrismaQuotaRepository implements QuotaRepositoryPort {
     const lockKey = `quota:${tenantId}:${key}`;
     return this.prisma.$transaction(
       async (tx) => {
-        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
         return fn();
       },
       { maxWait: 10_000, timeout: 30_000 }
