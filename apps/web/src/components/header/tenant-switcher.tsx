@@ -87,7 +87,7 @@ export function TenantSwitcher({ className }: Readonly<TenantSwitcherProps>) {
   );
 
   // Nothing to choose from, and no pinned session to explain.
-  if (!enabled || !active || (!pinned && tenants.length < 2)) return null;
+  if (!active || (!pinned && (!enabled || tenants.length < 2))) return null;
 
   if (pinned) {
     return (

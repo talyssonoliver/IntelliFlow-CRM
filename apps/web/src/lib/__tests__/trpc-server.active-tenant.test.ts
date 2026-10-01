@@ -72,10 +72,10 @@ describe('SSR active tenant', () => {
       expect(a).not.toBe(b);
     });
 
-    it('ignores the selection while the flag is off', async () => {
+    it('does not gate the selection on the web flag (the API validates it by data)', async () => {
       vi.stubEnv(FLAG, '0');
       h.cookies.set('intelliflow_active_tenant', 'tenant_client_1');
-      expect(await getAccessToken()).toBe(JWT);
+      expect(await getAccessToken()).toBe(`${JWT}#tenant=tenant_client_1`);
     });
 
     it('ignores a tampered cookie value', async () => {

@@ -9,6 +9,7 @@ import { TRPCError } from '@trpc/server';
 import { authRouter, clearStatusCache } from '../auth.router';
 import type { UserSession } from '../../../context';
 import { createTestContext, prismaMock } from '../../../test/setup';
+import { membershipError, reasonFromCause } from '../../../security/membership';
 
 const {
   mockLoginLimiter,
@@ -809,6 +810,34 @@ describe('authRouter', () => {
       expect(result.user?.email).toBe('test@example.com');
       expect(result.user?.role).toBe('USER');
       expect(result.user?.avatar).toBe('https://cdn.example.com/avatar.png');
+    });
+
+    it('rethrows NOT_A_MEMBER instead of reporting a stale active-tenant selection as signed out', async () => {
+      const mockContext = createTestContext({
+        prisma: prismaMock,
+        user: null,
+        authError: membershipError(
+          'FORBIDDEN',
+          'NOT_A_MEMBER',
+          'You are not a member of this workspace.'
+        ),
+      } as never);
+      const caller = authRouter.createCaller(mockContext);
+
+      const error = await caller.getStatus().catch((e: unknown) => e as TRPCError);
+      expect(error).toBeInstanceOf(TRPCError);
+      expect((error as TRPCError).code).toBe('FORBIDDEN');
+      expect(reasonFromCause((error as TRPCError).cause)).toBe('NOT_A_MEMBER');
+    });
+
+    it('still reports an ended pinned session as unauthenticated', async () => {
+      const mockContext = createTestContext({
+        prisma: prismaMock,
+        user: null,
+        authError: new TRPCError({ code: 'UNAUTHORIZED', message: 'ended' }),
+      } as never);
+      const caller = authRouter.createCaller(mockContext);
+      expect(await caller.getStatus()).toEqual({ authenticated: false });
     });
 
     it('should not issue any Prisma user query (N+1 elimination)', async () => {

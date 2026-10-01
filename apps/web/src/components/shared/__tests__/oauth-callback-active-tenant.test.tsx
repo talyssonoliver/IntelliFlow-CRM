@@ -207,14 +207,14 @@ describe('OAuthCallback active tenant', () => {
       expect(localStorage.getItem(ACTIVE_TENANT_STORAGE_KEY)).toBeNull();
     });
 
-    it('still claims, but stores no selection, while the web flag is off', async () => {
+    it('stores the claimed tenant even while the web flag is off (the API decides by data)', async () => {
       vi.stubEnv(FLAG, '0');
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
       await waitFor(() => expect(onSuccess).toHaveBeenCalled());
 
       expect(h.fetch).toHaveBeenCalledTimes(1);
-      expect(localStorage.getItem(ACTIVE_TENANT_STORAGE_KEY)).toBeNull();
+      expect(localStorage.getItem(ACTIVE_TENANT_STORAGE_KEY)).toBe('tenant_client');
     });
   });
 

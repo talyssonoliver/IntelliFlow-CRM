@@ -35,12 +35,7 @@ import {
   recordAuthBreadcrumb,
 } from '@/lib/shared/session-cleanup';
 import { safeNextPath } from '@/lib/shared/safe-next-path';
-import {
-  clearActiveTenant,
-  isInheritedMembershipEnabled,
-  isValidTenantId,
-  setActiveTenantId,
-} from '@/lib/tenant/active-tenant';
+import { clearActiveTenant, isValidTenantId, setActiveTenantId } from '@/lib/tenant/active-tenant';
 import { claimLoginGrant, ClaimLoginGrantError } from '@/lib/tenant/claim-grant';
 
 // ============================================
@@ -104,7 +99,7 @@ export function OAuthCallback({
       // ADR-071: a fresh sign-in starts from a known tenant. A magic link names the tenant it
       // was minted for (the client CRM the Portal opened); every other sign-in starts in the
       // user's home tenant. A selection left over from a previous session is never reused.
-      if (activeTenantId && isInheritedMembershipEnabled()) {
+      if (activeTenantId) {
         setActiveTenantId(activeTenantId);
       } else {
         clearActiveTenant();

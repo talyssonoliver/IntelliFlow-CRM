@@ -140,7 +140,7 @@ export const listTenants = protectedProcedure
  * Bind the caller's browser session to a login grant. The web calls this FIRST after `verifyOtp`.
  * Until a pinned grant is claimed, the session is PIN_PENDING and cannot do anything else.
  *
- * The grant must belong to the caller, be inside its 15 minute window and unclaimed (claimed
+ * The grant must belong to the caller, be inside its claim window (the OTP lifetime, 60 minutes) and unclaimed (claimed
  * atomically with `UPDATE ... WHERE claimedAt IS NULL`), and its membership must still be live.
  * Every refusal is the same `GRANT_INVALID`, so a caller cannot probe which grants exist.
  */
@@ -175,10 +175,11 @@ export const claimLoginGrant = pendingSessionProcedure
       where: { userId_tenantId: { userId: user.userId, tenantId: grant.tenantId } },
       select: { revokedAt: true, expiresAt: true },
     });
-    // A legacy (key-only) grant may belong to a home user with no membership row at all.
-    const homeLegacy =
-      !membership && grant.kind === 'legacy' && grant.tenantId === user.homeTenantId;
-    if (!homeLegacy && (!membership || !isLiveMembership(membership, now))) throw refuse();
+    // The home tenant is an IMPLICIT membership: a home user (a legacy key-only grant, a JIT-created
+    // member, or an existing owner) has no membership row unless one was revoked. Only a pinned
+    // (staff) grant needs a live row; a revoked or expired row is still refused.
+    const homeNoRow = !membership && !grant.pinned && grant.tenantId === user.homeTenantId;
+    if (!homeNoRow && (!membership || !isLiveMembership(membership, now))) throw refuse();
 
     const sessionExpiresAt = grant.pinned ? new Date(now.getTime() + PINNED_SESSION_TTL_MS) : null;
     const claimed = await ctx.prisma.partnerLoginGrant.updateMany({

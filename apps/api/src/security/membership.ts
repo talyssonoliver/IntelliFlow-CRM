@@ -40,8 +40,18 @@ export { ACTIVE_TENANT_HEADER };
 export const PINNED_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 /** A staff membership expires this long after it was last refreshed by a Portal link. */
 export const STAFF_MEMBERSHIP_TTL_MS = 24 * 60 * 60 * 1000;
-/** A login grant can be claimed for this long after it was issued. */
-export const LOGIN_GRANT_CLAIM_WINDOW_MS = 15 * 60 * 1000;
+/** Supabase `otp_expiry` (supabase/config.toml): how long the magic link's OTP stays redeemable. */
+const SUPABASE_OTP_LIFETIME_SECONDS = 3600;
+/**
+ * A login grant can be claimed for this long after it was issued.
+ *
+ * It MUST cover the whole OTP lifetime. The pin-pending check is evaluated by the OTP timestamp
+ * falling inside the grant window, so a window shorter than the OTP would let a staff link that
+ * is redeemed late resolve to the staff member's HOME tenant instead of staying PIN_PENDING.
+ */
+export const LOGIN_GRANT_CLAIM_WINDOW_MS =
+  Math.max(SUPABASE_OTP_LIFETIME_SECONDS, Number(process.env.PARTNER_LOGIN_LINK_TTL_SECONDS) || 0) *
+  1000;
 /** Clock skew tolerated between the grant's `issuedAt` and the session's OTP timestamp. */
 export const GRANT_CLOCK_LEEWAY_MS = 5_000;
 

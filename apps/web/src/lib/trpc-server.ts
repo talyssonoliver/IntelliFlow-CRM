@@ -4,7 +4,6 @@ import { isTokenUsable } from '@/lib/auth/jwt';
 import {
   ACTIVE_TENANT_COOKIE,
   ACTIVE_TENANT_HEADER,
-  isInheritedMembershipEnabled,
   isValidTenantId,
 } from '@/lib/tenant/active-tenant';
 
@@ -27,8 +26,7 @@ function splitScopedToken(scoped: string): { token: string; tenantId: string | n
  * IMPORTANT: This function calls `cookies()` which is a dynamic API.
  * It must be called **outside** any `'use cache'` boundary.
  *
- * ADR-071: when the inherited-membership flag is on and the user has selected a tenant other
- * than their home one (cookie), the returned string is the token with the selection appended
+ * ADR-071: when the user has selected a tenant other than their home one (cookie), the returned string is the token with the selection appended
  * (see `TENANT_SCOPE_SEPARATOR`). Callers pass it on to the `'use cache'` query helpers and to
  * `createCallerFromToken` unchanged, which gives two properties without touching any signature:
  * the selection becomes part of every cache key (tenant A's cached data is never served to tenant
@@ -40,10 +38,8 @@ export async function getAccessToken(): Promise<string | null> {
   const token = cookieStore.get('accessToken')?.value ?? null;
   if (!isTokenUsable(token)) return null;
 
-  if (isInheritedMembershipEnabled()) {
-    const tenantId = cookieStore.get(ACTIVE_TENANT_COOKIE)?.value;
-    if (isValidTenantId(tenantId)) return `${token}${TENANT_SCOPE_SEPARATOR}${tenantId}`;
-  }
+  const tenantId = cookieStore.get(ACTIVE_TENANT_COOKIE)?.value;
+  if (isValidTenantId(tenantId)) return `${token}${TENANT_SCOPE_SEPARATOR}${tenantId}`;
   return token;
 }
 

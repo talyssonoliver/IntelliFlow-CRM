@@ -67,8 +67,11 @@ describe('PinnedTenantBanner', () => {
     expect(screen.getByRole('button', { name: 'back to my CRM' })).toBeEnabled();
   });
 
-  it('uses the Portuguese copy when the document language is pt', () => {
-    document.documentElement.lang = 'pt-BR';
+  it('uses the Portuguese copy for a Portuguese browser, whatever <html lang> says', () => {
+    // The root layout hardcodes <html lang="en">: the browser language must win.
+    document.documentElement.lang = 'en';
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['pt-BR', 'en']);
+    vi.spyOn(navigator, 'language', 'get').mockReturnValue('pt-BR');
     render(<PinnedTenantBanner />);
 
     expect(screen.getByTestId('pinned-tenant-banner')).toHaveTextContent(
@@ -113,7 +116,7 @@ describe('PinnedTenantBanner', () => {
     expect(screen.queryByTestId('pinned-tenant-banner')).not.toBeInTheDocument();
   });
 
-  it('is absent while loading, on error, and with the web flag off', () => {
+  it('is absent while loading and on error', () => {
     h.listTenants = { data: undefined, isLoading: true, isError: false };
     const first = render(<PinnedTenantBanner />);
     expect(screen.queryByTestId('pinned-tenant-banner')).not.toBeInTheDocument();
@@ -123,10 +126,12 @@ describe('PinnedTenantBanner', () => {
     const second = render(<PinnedTenantBanner />);
     expect(screen.queryByTestId('pinned-tenant-banner')).not.toBeInTheDocument();
     second.unmount();
+  });
 
+  it('is still shown with the web flag off: the API pins by data, not by flag', () => {
     h.listTenants = { data: PINNED, isLoading: false, isError: false };
     vi.stubEnv(FLAG, '0');
     render(<PinnedTenantBanner />);
-    expect(screen.queryByTestId('pinned-tenant-banner')).not.toBeInTheDocument();
+    expect(screen.getByTestId('pinned-tenant-banner')).toBeInTheDocument();
   });
 });

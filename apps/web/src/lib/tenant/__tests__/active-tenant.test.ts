@@ -50,11 +50,16 @@ describe('active tenant selection', () => {
       expect(isInheritedMembershipEnabled()).toBe(false);
     });
 
-    it('sends no header and reads no selection while off, even with a stored value', () => {
+    it('does not gate the selection: the header follows a stored value even with the flag off', () => {
       setActiveTenantId('tenant_client_1');
       vi.stubEnv(FLAG, '0');
 
-      expect(getActiveTenantId()).toBeNull();
+      expect(getActiveTenantId()).toBe('tenant_client_1');
+      expect(activeTenantHeaders()).toEqual({ 'x-active-tenant': 'tenant_client_1' });
+    });
+
+    it('sends no header when nothing is stored', () => {
+      vi.stubEnv(FLAG, '0');
       expect(activeTenantHeaders()).toEqual({});
     });
   });

@@ -11,9 +11,12 @@
  * can at worst produce `NOT_A_MEMBER`, which the app heals by clearing it (see
  * `isNotAMemberError`).
  *
- * Everything here is gated by `NEXT_PUBLIC_INHERITED_MEMBERSHIP_ENABLED` (mirror of the API flag
- * `INHERITED_MEMBERSHIP_ENABLED`): with the flag off no header is sent and no selection is read,
- * so request behaviour is identical to before ADR-071.
+ * The selection is NOT gated by `NEXT_PUBLIC_INHERITED_MEMBERSHIP_ENABLED`. The API decides by
+ * data (a pinned Portal grant, a live membership), and two separate env vars are built at
+ * different times; gating the header on the web flag meant an API-on / web-off skew silently
+ * dropped a member into their home CRM instead of the client's. With nothing stored no header is
+ * sent, so request behaviour is unchanged until a Portal link stores a selection. The web flag
+ * only controls whether the tenant SWITCHER is offered (`isInheritedMembershipEnabled`).
  */
 
 /** Request header the API reads to pick the active tenant. */
@@ -37,7 +40,7 @@ export function isValidTenantId(value: unknown): value is string {
   return typeof value === 'string' && TENANT_ID_PATTERN.test(value);
 }
 
-/** True when the web side of the inherited-membership rollout is on. */
+/** True when the tenant SWITCHER is offered (the web side of the rollout). Not a security gate. */
 export function isInheritedMembershipEnabled(): boolean {
   const raw = process.env.NEXT_PUBLIC_INHERITED_MEMBERSHIP_ENABLED?.trim().toLowerCase();
   return raw === '1' || raw === 'true';
@@ -72,7 +75,6 @@ function writeCookie(tenantId: string | null): void {
  */
 export function getActiveTenantId(): string | null {
   if (typeof globalThis.window === 'undefined') return null;
-  if (!isInheritedMembershipEnabled()) return null;
 
   try {
     const stored = localStorage.getItem(ACTIVE_TENANT_STORAGE_KEY);

@@ -92,9 +92,9 @@ Chosen option: **B**.
    tenant, set by an operator script), else `STAFF_NOT_PROVISIONED`. A pinned
    membership (expiring in 24 h, refreshed per link) and a single-use **login
    grant** are written. The session that claims the grant is bound to the client
-   tenant for its whole life: platform-admin forced off, the `homeOnly` mutation
-   guard applies, no tenant switching, staff exempt from seat counting. Operator
-   emails are admitted **only** through this path.
+   tenant for its whole life: platform-admin forced off, the home-only path
+   registry applies, no tenant switching, staff exempt from seat counting.
+   Operator emails are admitted **only** through this path.
 6. **Tenant switcher (Phase 2).** `user.listTenants` returns the caller's
    non-pinned memberships (home included); the web sends `x-active-tenant`.
    There is no `setActiveTenant` mutation: the header is the only selector and

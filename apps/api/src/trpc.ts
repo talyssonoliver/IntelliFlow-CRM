@@ -26,7 +26,7 @@ import {
 } from './security/partner-auth';
 import { isQuotaExceeded } from './shared/quota-guard';
 import { membershipError, reasonFromCause } from './security/membership';
-import { explicitHomeOnlyViolation, homeOnlyViolation } from './security/home-only';
+import { homeOnlyViolation } from './security/home-only';
 
 /**
  * Initialize tRPC with context type
@@ -247,18 +247,6 @@ export const protectedProcedure = t.procedure
   .use(logContextMiddleware)
   .use(tracingMiddleware)
   .use(rateLimitMiddleware);
-
-/**
- * Explicit home-only guard (ADR-071) for procedures outside the path registry in
- * `security/home-only.ts`. `isAuthed` already applies the registry; this middleware applies the
- * same refusal to the procedure it is attached to, whatever its path, at the strictest level: a
- * pinned session AND a member acting outside their home tenant are both refused.
- */
-export const homeOnly = t.middleware(({ ctx, next }) => {
-  const refusal = explicitHomeOnlyViolation(ctx.user);
-  if (refusal) throw membershipError('FORBIDDEN', 'HOME_ONLY', refusal);
-  return next();
-});
 
 /**
  * Session procedure that also accepts an unclaimed staff-link session (PIN_PENDING). Only

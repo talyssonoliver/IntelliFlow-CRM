@@ -4,12 +4,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import {
-  HOME_ONLY_RULES,
-  explicitHomeOnlyViolation,
-  findHomeOnlyRule,
-  homeOnlyViolation,
-} from '../home-only';
+import { HOME_ONLY_RULES, findHomeOnlyRule, homeOnlyViolation } from '../home-only';
 
 vi.mock('../../container', () => ({
   container: {
@@ -123,13 +118,6 @@ describe('home-only rules vs the real router', () => {
     expect(homeOnlyViolation('user.updateProfile', visitingMember)).not.toBeNull();
     expect(homeOnlyViolation('auth.getSessions', visitingMember)).not.toBeNull();
     expect(homeOnlyViolation('queuesAdmin.list', visitingMember)).toBeNull();
-  });
-
-  it('applies the strictest level for an explicitly marked procedure', () => {
-    expect(explicitHomeOnlyViolation(pinnedStaff)).not.toBeNull();
-    expect(explicitHomeOnlyViolation(visitingMember)).not.toBeNull();
-    expect(explicitHomeOnlyViolation(atHome)).toBeNull();
-    expect(explicitHomeOnlyViolation(null)).toBeNull();
   });
 
   it('allows an unauthenticated caller (nothing to refuse)', () => {

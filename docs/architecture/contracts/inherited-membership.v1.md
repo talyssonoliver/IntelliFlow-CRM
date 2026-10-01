@@ -81,7 +81,7 @@ model PartnerLoginGrant {
   pinned           Boolean   @default(false)
   jti              String?   // null for kind=legacy
   issuedAt         DateTime  @default(now())
-  expiresAt        DateTime  // issuedAt + 15 min: the claim window
+  expiresAt        DateTime  // issuedAt + the OTP lifetime (60 min): the claim window
   claimedAt        DateTime?
   claimedSessionId String?   // Supabase JWT `session_id`
   sessionExpiresAt DateTime? // claimedAt + 12h for pinned grants
@@ -225,7 +225,7 @@ prefix `<REASON>: <human text>` AND `error.data.reason` (the shared
 | `ASSERTION_REQUIRED`      | `FORBIDDEN` | assertion missing while enforced, or for kind=staff                                                                                                |
 | `LAST_ADMIN`              | `CONFLICT`  | removeMember / setMemberRole would leave the tenant with no live ADMIN                                                                             |
 | `RESERVED_EMAIL`          | `CONFLICT`  | operator email (`PLATFORM_ADMIN_EMAILS`) on any path except kind=staff                                                                             |
-| `HOME_ONLY`               | `FORBIDDEN` | a pinned session called a procedure on the homeOnly list                                                                                           |
+| `HOME_ONLY`               | `FORBIDDEN` | a pinned session called a procedure on the home-only list                                                                                          |
 | `PIN_PENDING`             | `FORBIDDEN` | an unclaimed OTP session inside a pinned grant window called anything but `user.claimLoginGrant`                                                   |
 | `GRANT_INVALID`           | `FORBIDDEN` | grant unknown, expired, already claimed, or belongs to another user                                                                                |
 
@@ -261,8 +261,8 @@ Behaviour:
     `expiresAt = now + 24h`). Operator emails allowed here only. No seat
     counted.
   - Then write the grant (`kind`, `pinned = (kind==='staff')`, `jti`,
-    `expiresAt = now + 15min`), mint the link via Supabase `generateLink` (magic
-    link, `hashed_token`), audit `LINK_ISSUED`.
+    `expiresAt = now + the OTP lifetime, 60 min`), mint the link via Supabase
+    `generateLink` (magic link, `hashed_token`), audit `LINK_ISSUED`.
 - `tenantId` must belong to the partner (`tenants.partnerId`), as today.
 - Link URL:
   `${APP_URL}/auth/callback?token_hash=<hash>&type=magiclink&tenant=<tenantId>&grant=<grantId>`
@@ -358,9 +358,10 @@ Per request, after authentication, in this order:
    Context additions: `activeTenantId`, `homeTenantId`, `pinned: boolean`,
    `membershipRole`.
 
-### Pinned-session rules (the `homeOnly` guard)
+### Pinned-session rules (the home-only path registry)
 
-A middleware `homeOnly` rejects with `FORBIDDEN HOME_ONLY`: always when
+The path registry `security/home-only.ts`, applied in `isAuthed` to every
+authenticated procedure, rejects with `FORBIDDEN HOME_ONLY`: always when
 `ctx.pinned` is true; and, for a non-pinned member acting in a non-home tenant,
 only for the entries marked (P) (profile and billing, which belong to the home
 account). Applied to these routers/procedures (the census is verified by a test
@@ -387,13 +388,13 @@ non-home tenant are subject only to the (P) items.
 
 ## d. Env, flags and operator scripts
 
-| name                               | where   | meaning                                                                                                                             |
-| ---------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `PARTNER_REQUIRE_ASSERTION`        | API     | `0` (default) / `1` (all partners) / comma list of partner slugs. Enforced partners: key-only link -> `ASSERTION_REQUIRED`.         |
-| `INHERITED_MEMBERSHIP_ENABLED`     | API+web | `0` (default) / `1`. Gates `x-active-tenant`, `user.listTenants`, `kind=staff`, pinned sessions, JIT attach of existing identities. |
-| `PORTAL_CRM_ASSERTION_PRIVATE_KEY` | Portal  | Ed25519 PKCS8 PEM (literal `\n` allowed). Never in the CRM. Public half stored on the Partner row.                                  |
-| `partners.assertionPublicKey`      | DB      | Ed25519 SPKI PEM, nullable. Set only by `tools/scripts/set-partner-assertion-key.ts`.                                               |
-| `partners.ownerTenantId`           | DB      | agency's own tenant, nullable. Set only by `tools/scripts/set-partner-owner-tenant.ts`.                                             |
+| name                               | where   | meaning                                                                                                                                                                                                               |
+| ---------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PARTNER_REQUIRE_ASSERTION`        | API     | `0` (default) / `1`, `true`, `yes`, `on`, `enabled`, `all` (all partners) / comma list of partner slugs (a list containing an "all" word enforces for all). Enforced partners: key-only link -> `ASSERTION_REQUIRED`. |
+| `INHERITED_MEMBERSHIP_ENABLED`     | API+web | `0` (default) / `1`. Gates `x-active-tenant`, `user.listTenants`, `kind=staff`, pinned sessions, JIT attach of existing identities.                                                                                   |
+| `PORTAL_CRM_ASSERTION_PRIVATE_KEY` | Portal  | Ed25519 PKCS8 PEM (literal `\n` allowed). Never in the CRM. Public half stored on the Partner row.                                                                                                                    |
+| `partners.assertionPublicKey`      | DB      | Ed25519 SPKI PEM, nullable. Set only by `tools/scripts/set-partner-assertion-key.ts`.                                                                                                                                 |
+| `partners.ownerTenantId`           | DB      | agency's own tenant, nullable. Set only by `tools/scripts/set-partner-owner-tenant.ts`.                                                                                                                               |
 
 Operator scripts (operator-run, never exposed over HTTP; need the owner's yes in
 production):

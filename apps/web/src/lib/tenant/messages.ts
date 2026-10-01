@@ -35,11 +35,19 @@ const MESSAGES: Record<TenantLocale, TenantMessages> = {
   },
 };
 
-/** pt-* documents/browsers get Portuguese; everything else gets English. */
+/**
+ * pt-* browsers get Portuguese; everything else gets English.
+ *
+ * The browser language comes FIRST. `<html lang>` is the static `en` the root layout ships for
+ * every visitor, so it says nothing about the person and would hide the pt-BR copy from the very
+ * users this feature is for. It is only a fallback when the browser reports no language.
+ */
 export function resolveTenantLocale(): TenantLocale {
   const candidates: Array<string | undefined> = [];
+  if (typeof navigator !== 'undefined') {
+    candidates.push(...(navigator.languages ?? []), navigator.language);
+  }
   if (typeof document !== 'undefined') candidates.push(document.documentElement?.lang);
-  if (typeof navigator !== 'undefined') candidates.push(navigator.language);
   for (const candidate of candidates) {
     if (candidate) return candidate.toLowerCase().startsWith('pt') ? 'pt-BR' : 'en';
   }

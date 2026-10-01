@@ -12,10 +12,19 @@
  * Revoking a membership, removing a member, or claiming a login grant calls
  * `invalidateUserSessions(userId)`, which drops every entry of that user on THIS instance.
  * Other instances age out within the TTL, so 60 seconds bounds how long a revoked membership
- * can keep working there. That bound is part of the ADR-071 contract.
+ * can keep working there. That bound is part of the ADR-071 contract. PINNED (staff) sessions
+ * are the sensitive ones, so they are cached for only a few seconds: `removeMember` and the end
+ * of a pinned session take effect on every instance within `PINNED_SESSION_CACHE_TTL_MS`.
  */
 
 export const SESSION_CACHE_TTL_MS = 60_000;
+/** TTL of a resolved PINNED (staff) session: the revocation bound on instances that did not evict. */
+export const PINNED_SESSION_CACHE_TTL_MS = 5_000;
+
+/** How long a resolved session may be served from the cache. */
+export function resolvedSessionTtlMs(pinned: boolean): number {
+  return pinned ? PINNED_SESSION_CACHE_TTL_MS : SESSION_CACHE_TTL_MS;
+}
 export const SESSION_CACHE_MAX_ENTRIES = 1_000;
 
 interface CacheEntry<T> {
@@ -43,12 +52,12 @@ export class UserSessionCache<T> {
     return entry.value;
   }
 
-  set(userId: string, key: string, value: T): void {
+  set(userId: string, key: string, value: T, ttlMs: number = this.ttlMs): void {
     if (!this.entries.has(key) && this.entries.size >= this.maxEntries) {
       const oldest = this.entries.keys().next().value;
       if (oldest !== undefined) this.remove(oldest);
     }
-    this.entries.set(key, { value, expiresAt: Date.now() + this.ttlMs, userId });
+    this.entries.set(key, { value, expiresAt: Date.now() + ttlMs, userId });
     let keys = this.keysByUser.get(userId);
     if (!keys) {
       keys = new Set();

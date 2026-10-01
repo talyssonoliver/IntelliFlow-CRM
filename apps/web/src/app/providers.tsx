@@ -211,6 +211,9 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
     // Clear invalid token
     localStorage.removeItem('accessToken');
     clearTokenCookie();
+    // ADR-071: and the active-tenant selection that went with it (an ended pinned session, a
+    // revoked membership). Signing in again must start from the home tenant.
+    clearActiveTenant();
 
     // Redirect to login
     globalThis.location.href = '/login';

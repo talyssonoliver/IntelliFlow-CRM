@@ -97,8 +97,8 @@ export { isLiveMembership, liveMembershipWhere };
 
 /** Staff memberships live 24 hours and are refreshed on every link (contract section a). */
 export const STAFF_MEMBERSHIP_TTL_MS = 24 * 60 * 60 * 1000;
-/** A login grant must be claimed within this window of being issued. */
-export const LOGIN_GRANT_CLAIM_WINDOW_MS = 15 * 60 * 1000;
+/** A login grant must be claimed within this window of being issued (the full OTP lifetime). */
+export { LOGIN_GRANT_CLAIM_WINDOW_MS } from '../../security/membership';
 
 // ============================================================================
 // Access resolution

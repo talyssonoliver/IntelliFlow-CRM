@@ -122,12 +122,12 @@ describe('Providers active tenant', () => {
       expect(lastHttpHeaders()).not.toHaveProperty('x-active-tenant');
     });
 
-    it('sends no header while the web flag is off', () => {
+    it('still sends the header while the web flag is off (API-on / web-off skew)', () => {
       setActiveTenantId('tenant_client_1');
       vi.stubEnv(FLAG, '0');
       render(<Providers>x</Providers>);
 
-      expect(lastHttpHeaders()).not.toHaveProperty('x-active-tenant');
+      expect(lastHttpHeaders()['x-active-tenant']).toBe('tenant_client_1');
     });
 
     it('also sets it on the HTTP link used beside the WebSocket link', () => {
@@ -165,6 +165,29 @@ describe('Providers active tenant', () => {
         expect(reload).toHaveBeenCalledTimes(1);
       }
     );
+
+    it('heals from a NOT_A_MEMBER on the auth status query too (no /login bounce loop)', () => {
+      setActiveTenantId('tenant_revoked');
+      render(<Providers>x</Providers>);
+
+      h.caches.query?.onError?.(notAMember, { queryKey: [['auth', 'getStatus']] });
+
+      expect(localStorage.getItem(ACTIVE_TENANT_STORAGE_KEY)).toBeNull();
+      expect(reload).toHaveBeenCalledTimes(1);
+    });
+
+    it('forgets the selection when the session ends (UNAUTHORIZED), so a new sign-in starts at home', () => {
+      setActiveTenantId('tenant_client_1');
+      render(<Providers>x</Providers>);
+
+      h.caches.query?.onError?.(
+        { data: { code: 'UNAUTHORIZED' }, message: 'This staff session has expired.' },
+        { queryKey: ['deal', 'list'] }
+      );
+
+      expect(localStorage.getItem(ACTIVE_TENANT_STORAGE_KEY)).toBeNull();
+      expect(window.location.href).toBe('/login');
+    });
 
     it('does not reload when no selection is stored (no reload loop)', () => {
       render(<Providers>x</Providers>);

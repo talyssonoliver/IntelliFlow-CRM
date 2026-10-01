@@ -144,14 +144,15 @@ describe('TenantSwitcher', () => {
       expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
 
-    it('does not request the list while the web flag is off', () => {
+    it('still requests the list while the web flag is off (the banner needs it), but never offers a switch', () => {
       vi.stubEnv(FLAG, '0');
       renderSwitcher();
 
       expect(h.useQuery).toHaveBeenCalledWith(
         undefined,
-        expect.objectContaining({ enabled: false })
+        expect.not.objectContaining({ enabled: false })
       );
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
 
     it('closes on Escape', async () => {

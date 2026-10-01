@@ -27,6 +27,7 @@ import {
   baseSessionCache,
   invalidateUserSessions,
   resolvedSessionCache,
+  resolvedSessionTtlMs,
   resolvedSessionKey,
 } from './security/session-cache';
 
@@ -702,7 +703,7 @@ async function resolveUserFromToken(
   // claimed, including on instances that did not handle the claim.
   if (resolution.pinPending) return { kind: 'pending', user: session };
 
-  resolvedSessionCache.set(home.userId, key, session);
+  resolvedSessionCache.set(home.userId, key, session, resolvedSessionTtlMs(!!session.pinned));
   return { kind: 'ok', user: session };
 }
 

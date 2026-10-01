@@ -4,12 +4,15 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  PINNED_SESSION_CACHE_TTL_MS,
+  SESSION_CACHE_TTL_MS,
   UserSessionCache,
   baseSessionCache,
   clearAllSessionCaches,
   invalidateUserSessions,
   resolvedSessionCache,
   resolvedSessionKey,
+  resolvedSessionTtlMs,
 } from '../session-cache';
 
 afterEach(() => {
@@ -40,6 +43,22 @@ describe('UserSessionCache', () => {
     vi.advanceTimersByTime(1001);
     expect(cache.get('k')).toBeNull();
     expect(cache.size).toBe(0);
+  });
+
+  it('honours a per-entry TTL shorter than the default', () => {
+    vi.useFakeTimers();
+    const cache = new UserSessionCache<string>(60_000, 10);
+    cache.set('u1', 'pinned', 'p', PINNED_SESSION_CACHE_TTL_MS);
+    cache.set('u1', 'plain', 'q');
+    vi.advanceTimersByTime(PINNED_SESSION_CACHE_TTL_MS + 1);
+    expect(cache.get('pinned')).toBeNull();
+    expect(cache.get('plain')).toBe('q');
+  });
+
+  it('caches a pinned session for far less than an ordinary one', () => {
+    expect(resolvedSessionTtlMs(true)).toBe(PINNED_SESSION_CACHE_TTL_MS);
+    expect(resolvedSessionTtlMs(false)).toBe(SESSION_CACHE_TTL_MS);
+    expect(PINNED_SESSION_CACHE_TTL_MS).toBeLessThanOrEqual(10_000);
   });
 
   it('evicts every entry of one user and leaves the others', () => {

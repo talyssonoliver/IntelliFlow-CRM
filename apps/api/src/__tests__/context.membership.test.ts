@@ -232,6 +232,29 @@ describe('createContext: pinned staff sessions', () => {
     });
   });
 
+  it('re-reads a pinned session after a few seconds, so removal reaches every instance fast', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(NOW);
+      mocks.prisma.tenantMembership.findMany.mockResolvedValue([staffRow]);
+      mocks.prisma.partnerLoginGrant.findFirst.mockResolvedValue({
+        id: 'grant-1',
+        tenantId: CLIENT,
+        sessionExpiresAt: new Date(NOW + 11 * 3600_000),
+      });
+      await createContext({ req: request(sessionToken()) });
+      await createContext({ req: request(sessionToken()) });
+      expect(mocks.prisma.tenantMembership.findMany).toHaveBeenCalledTimes(1);
+
+      // 10 s later, well inside the ordinary 60 s TTL: a pinned session is resolved again.
+      vi.setSystemTime(NOW + 10_000);
+      await createContext({ req: request(sessionToken()) });
+      expect(mocks.prisma.tenantMembership.findMany).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('answers a staff-link session that has not claimed its grant with pendingUser and no user', async () => {
     mocks.prisma.tenantMembership.findMany.mockResolvedValue([staffRow]);
     const issuedAt = new Date(NOW - 60_000);

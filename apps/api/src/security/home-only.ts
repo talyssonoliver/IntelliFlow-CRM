@@ -80,17 +80,3 @@ export function homeOnlyViolation(
   }
   return null;
 }
-
-/** Refusal for a procedure explicitly marked home-only: pinned sessions and members outside home. */
-export function explicitHomeOnlyViolation(
-  user: { tenantId: string; homeTenantId?: string; pinned?: boolean } | null | undefined
-): string | null {
-  if (!user) return null;
-  if (user.pinned) {
-    return 'This action is not available in a client workspace opened from the Portal.';
-  }
-  if (isActingOutsideHome(user)) {
-    return 'This belongs to your own account. Switch back to your own workspace to use it.';
-  }
-  return null;
-}

@@ -7,6 +7,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import {
   GRANT_CLOCK_LEEWAY_MS,
+  LOGIN_GRANT_CLAIM_WINDOW_MS,
   decodeSessionClaims,
   getHomeTenantId,
   isActingOutsideHome,
@@ -419,6 +420,32 @@ describe('resolveActiveTenant: PIN_PENDING', () => {
       claims: { sessionId: SESSION, amr: [otpAt(NOW)] },
     });
     expect(r.pinPending).toBe(true);
+  });
+
+  it('claim window covers the whole OTP lifetime (Supabase otp_expiry is 3600 s)', () => {
+    expect(LOGIN_GRANT_CLAIM_WINDOW_MS).toBeGreaterThanOrEqual(3600 * 1000);
+  });
+
+  it('stays PIN_PENDING when the staff link is redeemed 20 minutes after it was issued', async () => {
+    // A real grant row: the window comes from the shipped constant, and the mock applies the
+    // where filter the query uses, so a window shorter than the OTP would drop the grant.
+    const issuedAt = new Date(NOW.getTime() - 20 * MIN);
+    const grant = unclaimed({
+      issuedAt,
+      expiresAt: new Date(issuedAt.getTime() + LOGIN_GRANT_CLAIM_WINDOW_MS),
+    });
+    const db = makeDb([staff(CLIENT)], [grant]);
+    db.partnerLoginGrant.findMany = vi.fn(
+      async ({ where }: { where: { expiresAt: { gte: Date }; issuedAt: { lte: Date } } }) =>
+        [grant].filter(
+          (g) =>
+            g.expiresAt.getTime() >= where.expiresAt.gte.getTime() &&
+            g.issuedAt.getTime() <= where.issuedAt.lte.getTime()
+        )
+    ) as never;
+    const r = await resolve(db, { claims: { sessionId: SESSION, amr: [otpAt(NOW)] } });
+    expect(r.pinPending).toBe(true);
+    expect(r.pinned).toBe(false);
   });
 
   it('blocks a session that was claimed by a DIFFERENT browser session', async () => {

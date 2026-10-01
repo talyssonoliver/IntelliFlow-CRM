@@ -325,6 +325,36 @@ describe('user.claimLoginGrant', () => {
     expect(result.tenantId).toBe(HOME);
   });
 
+  it('allows a member grant for a home user who has no membership row (JIT member or home owner)', async () => {
+    const prisma = ready({
+      grant: { kind: 'member', pinned: false, tenantId: HOME },
+      membership: null,
+    });
+    const result = await caller(prisma, { user: sessionUser }).claimLoginGrant({
+      grant: 'grant-1',
+    });
+    expect(result).toEqual({ tenantId: HOME, pinned: false, sessionExpiresAt: null });
+  });
+
+  it('still refuses a member grant for a home user whose HOME row was revoked', async () => {
+    await refused(
+      ready({
+        grant: { kind: 'member', pinned: false, tenantId: HOME },
+        membership: { revokedAt: new Date(NOW - 1), expiresAt: null },
+      })
+    );
+  });
+
+  it('never lets a pinned (staff) grant claim without a live membership row', async () => {
+    await refused(
+      ready({ grant: { kind: 'staff', pinned: true, tenantId: HOME }, membership: null })
+    );
+  });
+
+  it('refuses a member grant for a non-home tenant when there is no membership row', async () => {
+    await refused(ready({ grant: { kind: 'member', pinned: false }, membership: null }));
+  });
+
   it('still succeeds, and logs, when the audit row cannot be written', async () => {
     const prisma = ready();
     prisma.tenantMembershipAudit.create.mockRejectedValue(new Error('db down'));

@@ -1,5 +1,5 @@
 /**
- * trpc.ts under ADR-071: authError / PIN_PENDING handling in isAuthed, the home-only guard,
+ * trpc.ts under ADR-071: authError / PIN_PENDING handling in isAuthed, the home-only registry,
  * the machine-readable `reason` in the error formatter, and platform-admin scoping.
  */
 
@@ -8,12 +8,13 @@ import { TRPCError } from '@trpc/server';
 import {
   adminProcedure,
   createTRPCRouter,
-  homeOnly,
   pendingSessionProcedure,
   platformAdminProcedure,
   protectedProcedure,
   tenantProcedure,
 } from '../trpc';
+import * as trpcModule from '../trpc';
+import * as homeOnlyModule from '../security/home-only';
 import { membershipError, reasonFromCause } from '../security/membership';
 
 const baseUser = {
@@ -40,7 +41,6 @@ const router = createTRPCRouter({
   }),
   lead: createTRPCRouter({
     list: protectedProcedure.query(({ ctx }) => ctx.user.tenantId),
-    marked: protectedProcedure.use(homeOnly).query(() => 'marked'),
   }),
   admin: createTRPCRouter({ only: adminProcedure.query(({ ctx }) => ctx.user?.role) }),
   operator: createTRPCRouter({ only: platformAdminProcedure.query(() => 'operator') }),
@@ -144,12 +144,11 @@ describe('home-only guard in isAuthed', () => {
     await expect(caller({ user: pinned }).lead.list()).resolves.toBe('t-client');
   });
 
-  it('applies the explicit homeOnly middleware to any path, strictest level', async () => {
-    await expect(caller({ user: baseUser }).lead.marked()).resolves.toBe('marked');
-    for (const user of [visiting, pinned]) {
-      const error = await rejection(caller({ user }).lead.marked());
-      expect(reasonFromCause(error.cause)).toBe('HOME_ONLY');
-    }
+  it('has exactly one home-only mechanism: the path registry applied in isAuthed', async () => {
+    // A `homeOnly` middleware used to be exported beside the registry. Nothing attached it, so
+    // it passed every gate while protecting nothing. The registry is the only enforcement.
+    expect(trpcModule).not.toHaveProperty('homeOnly');
+    expect(homeOnlyModule).not.toHaveProperty('explicitHomeOnlyViolation');
   });
 });
 

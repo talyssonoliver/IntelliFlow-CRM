@@ -486,10 +486,10 @@ describe('issueLoginLink: kind=member', () => {
     expect(url.searchParams.get('grant')).toBe('grant-1');
     expect(out.pinned).toBe(false);
     expect(out.role).toBe('ADMIN');
-    // the claim window (15 min) is shorter than the OTP expiry, so it bounds expiresAt
+    // the claim window covers the whole OTP lifetime (60 min), so a late redemption stays pinned
     const ttl = Date.parse(out.expiresAt) - Date.now();
-    expect(ttl).toBeGreaterThan(14 * 60_000);
-    expect(ttl).toBeLessThanOrEqual(15 * 60_000);
+    expect(ttl).toBeGreaterThan(59 * 60_000);
+    expect(ttl).toBeLessThanOrEqual(60 * 60_000);
 
     const rows = auditRows();
     expect(rows.map((r) => r.action)).toEqual(['MEMBER_ATTACHED', 'LINK_ISSUED']);

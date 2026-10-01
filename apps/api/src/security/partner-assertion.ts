@@ -207,11 +207,25 @@ export function verifyAssertion(input: VerifyAssertionInput): AssertionClaims {
   return claims;
 }
 
+/** Every spelling of "yes, for everybody" an operator might reasonably type. */
+const REQUIRE_ALL_TOKENS = new Set([
+  '1',
+  'true',
+  'yes',
+  'y',
+  'on',
+  'enabled',
+  'enable',
+  'all',
+  '*',
+]);
+
 /**
  * Whether a partner must present an assertion to mint a login link.
- * `PARTNER_REQUIRE_ASSERTION`: unset/`0`/`false` = nobody, `1`/`true` = every partner,
- * otherwise a comma-separated list of partner slugs. Anything else non-empty is read as a slug
- * list, so a typo enforces for nobody rather than silently for everybody; use `1` for all.
+ * `PARTNER_REQUIRE_ASSERTION`: unset/`0`/`false` = nobody; `1`/`true`/`yes`/`on`/`enabled`/`all`/`*`
+ * = every partner; otherwise a comma-separated list of partner slugs. A list that contains one of
+ * the "everybody" words enforces for everybody, so a misspelt boolean fails closed (this is a
+ * security control: the unsafe direction is leaving the key-only link path open).
  */
 export function isAssertionRequired(
   partnerSlug: string,
@@ -219,12 +233,12 @@ export function isAssertionRequired(
 ): boolean {
   const raw = (env.PARTNER_REQUIRE_ASSERTION ?? '').trim().toLowerCase();
   if (raw === '' || raw === '0' || raw === 'false') return false;
-  if (raw === '1' || raw === 'true') return true;
-  return raw
+  const tokens = raw
     .split(',')
     .map((s) => s.trim())
-    .filter(Boolean)
-    .includes(partnerSlug.toLowerCase());
+    .filter(Boolean);
+  if (tokens.some((t) => REQUIRE_ALL_TOKENS.has(t))) return true;
+  return tokens.includes(partnerSlug.toLowerCase());
 }
 
 /** `INHERITED_MEMBERSHIP_ENABLED`: `1`/`true` turns the feature on; anything else is off. */
