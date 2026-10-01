@@ -35,15 +35,15 @@ function SSOCallbackFallback() {
       <div className="flex flex-col items-center gap-4">
         <div className="flex justify-center gap-1">
           <div
-            className="w-2 h-2 rounded-full bg-[#7cc4ff] animate-bounce"
+            className="w-2 h-2 rounded-full bg-[#bca8ff] animate-bounce"
             style={{ animationDelay: '0ms' }}
           />
           <div
-            className="w-2 h-2 rounded-full bg-[#7cc4ff] animate-bounce"
+            className="w-2 h-2 rounded-full bg-[#bca8ff] animate-bounce"
             style={{ animationDelay: '150ms' }}
           />
           <div
-            className="w-2 h-2 rounded-full bg-[#7cc4ff] animate-bounce"
+            className="w-2 h-2 rounded-full bg-[#bca8ff] animate-bounce"
             style={{ animationDelay: '300ms' }}
           />
         </div>

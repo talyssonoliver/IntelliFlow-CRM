@@ -2,132 +2,218 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Button, cn } from '@intelliflow/ui';
 import pricingData from '@/data/pricing-data.json';
-import { PlanCard } from '@/components/billing/plan-card';
-import { PlanComparisonTable, PlanFaq } from '@/components/billing/plan-comparison-table';
+import './pricing.css';
 
+type Billing = 'monthly' | 'annual';
+type Cell = string | boolean | null;
+
+const { tiers, comparisonFeatures, faqs, metadata } = pricingData;
+const TIER_IDS = tiers.map((t) => t.id) as ReadonlyArray<string>;
+
+/** A comparison cell: a tick, a dash, or the plan's own value. */
+function CellValue({ value }: { value: Cell }) {
+  if (value === true) {
+    return (
+      <span className="material-symbols-outlined ap-yes" aria-label="Included">
+        check
+      </span>
+    );
+  }
+  if (value === false || value === null) {
+    return (
+      <span className="ap-no" aria-label="Not included">
+        –
+      </span>
+    );
+  }
+  return <>{value}</>;
+}
+
+/** The line under a price: how it is billed. */
+function billedNote(custom: boolean, billing: Billing): string {
+  if (custom) return 'Priced to your team';
+  return billing === 'annual' ? 'Billed annually' : 'Billed monthly';
+}
+
+/**
+ * Pricing, in the Aurora design. Every price, feature and answer comes from
+ * data/pricing-data.json, the same source the billing pages read.
+ */
 export default function PricingPage() {
-  const [billing, setBilling] = React.useState<'monthly' | 'annual'>('annual');
+  const [billing, setBilling] = React.useState<Billing>('annual');
 
   return (
-    <>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-white to-[#f6f7f8] dark:from-[#1e2936] dark:to-[#101922] py-16 lg:py-24">
-        <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-6">
-              Simple, Transparent Pricing
-            </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-400 mb-8">
-              Choose the perfect plan for your team. All plans include a 14-day free trial.
-            </p>
+    <div className="aurora-pricing">
+      <section className="as-hero">
+        <div className="as-wrap">
+          <p className="as-eyebrow">Pricing</p>
+          <h1 className="as-h1">Start free. Pick a plan when you are ready.</h1>
+          <p className="as-lede">
+            Every plan starts with a {metadata.freeTrialDays}-day free trial, no credit card needed.
+            Prices are per user, in pounds, before VAT.
+          </p>
 
-            {/* Billing Toggle */}
-            <div className="inline-flex items-center gap-4 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-              <button
-                className={cn(
-                  'px-4 py-2 rounded-md transition-all font-medium text-sm',
-                  billing === 'monthly'
-                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
-                    : 'text-slate-600 dark:text-slate-400'
-                )}
-                onClick={() => setBilling('monthly')}
+          <fieldset className="ap-toggle">
+            <legend className="sr-only">Billing period</legend>
+            <button
+              type="button"
+              aria-pressed={billing === 'monthly'}
+              onClick={() => setBilling('monthly')}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              aria-pressed={billing === 'annual'}
+              onClick={() => setBilling('annual')}
+            >
+              Annual <span className="ap-save">Save {metadata.annualDiscountPercent}%</span>
+            </button>
+          </fieldset>
+        </div>
+      </section>
+
+      <section className="ap-plans-section" aria-label="Plans">
+        <div className="as-wrap ap-plans">
+          {tiers.map((tier) => {
+            const custom = 'custom' in tier.price && !!tier.price.custom;
+            const price = billing === 'monthly' ? tier.price.monthly : tier.price.annual;
+            return (
+              <article
+                key={tier.id}
+                className={`as-card ap-plan${tier.mostPopular ? ' ap-popular' : ''}`}
+                aria-labelledby={`plan-${tier.id}`}
               >
-                Monthly
-              </button>
-              <button
-                className={cn(
-                  'px-4 py-2 rounded-md transition-all font-medium text-sm flex items-center gap-2',
-                  billing === 'annual'
-                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
-                    : 'text-slate-600 dark:text-slate-400'
-                )}
-                onClick={() => setBilling('annual')}
-              >
-                Annual{' '}
-                <span className="text-xs bg-[#10b981] text-white px-2 py-0.5 rounded">
-                  Save 17%
+                {tier.mostPopular && <p className="ap-badge">Most popular</p>}
+                <span className="material-symbols-outlined ap-plan-icon" aria-hidden="true">
+                  {tier.icon}
                 </span>
-              </button>
+                <h2 id={`plan-${tier.id}`} className="ap-plan-name">
+                  {tier.name}
+                </h2>
+                <p className="ap-plan-desc">{tier.description}</p>
+                <p className="ap-price">
+                  {custom ? (
+                    <b className="ap-price-label">
+                      {'label' in tier.price ? tier.price.label : 'Contact Sales'}
+                    </b>
+                  ) : (
+                    <>
+                      <b>£{price}</b>
+                      <span>/user/month</span>
+                    </>
+                  )}
+                </p>
+                <p className="ap-billed">{billedNote(custom, billing)}</p>
+                <Link
+                  href={tier.ctaLink}
+                  className={`as-btn ${tier.mostPopular ? 'as-btn-primary' : 'as-btn-secondary'} ap-cta`}
+                >
+                  {tier.cta}
+                </Link>
+                <ul className="ap-features">
+                  {tier.features.map((feature) => (
+                    <li key={feature}>
+                      <span className="material-symbols-outlined" aria-hidden="true">
+                        check_circle
+                      </span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="as-section" aria-labelledby="compare-heading">
+        <div className="as-wrap">
+          <h2 id="compare-heading" className="as-h2 ap-center">
+            Compare the plans
+          </h2>
+          <div className="as-card ap-table-card">
+            <div className="ap-table-scroll" tabIndex={0} aria-label="Plan comparison">
+              <table className="ap-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Feature</th>
+                    {tiers.map((t) => (
+                      <th scope="col" key={t.id}>
+                        {t.name}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                {comparisonFeatures.map((group) => (
+                  <tbody key={group.category}>
+                    <tr className="ap-group">
+                      <th scope="colgroup" colSpan={TIER_IDS.length + 1}>
+                        {group.category}
+                      </th>
+                    </tr>
+                    {group.features.map((feature) => (
+                      <tr key={feature.name}>
+                        <th scope="row">{feature.name}</th>
+                        {TIER_IDS.map((id) => (
+                          <td key={id}>
+                            <CellValue value={(feature as Record<string, Cell>)[id] ?? null} />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                ))}
+              </table>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing Grid */}
-      <section className="py-16 lg:py-24">
-        <div className="container px-4 lg:px-6 mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {pricingData.tiers.map((tier) => {
-              const price = billing === 'monthly' ? tier.price.monthly : tier.price.annual;
-              const isCustom = !!tier.price.custom;
-
-              return (
-                <PlanCard
-                  key={tier.id}
-                  variant="public"
-                  name={tier.name}
-                  description={tier.description}
-                  icon={tier.icon}
-                  price={isCustom ? (tier.price.label ?? 'Contact Sales') : `£${price}`}
-                  priceSubtext={!isCustom && billing === 'annual' ? 'Billed annually' : undefined}
-                  features={tier.features}
-                  cta={tier.cta}
-                  ctaLink={tier.ctaLink}
-                  isPopular={tier.mostPopular}
-                  isCustom={isCustom}
-                />
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Comparison Table */}
-      <section className="py-16 lg:py-24 bg-slate-50 dark:bg-slate-900">
-        <div className="container px-4 lg:px-6 mx-auto max-w-7xl">
-          <PlanComparisonTable />
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-16 lg:py-24">
-        <div className="container px-4 lg:px-6 mx-auto">
-          <PlanFaq />
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section
-        data-testid="cta-section"
-        className="py-16 lg:py-24 bg-linear-to-r from-ds-primary to-ds-primary-hover"
-      >
-        <div className="container px-4 lg:px-6 mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-            Ready to Transform Your Sales?
+      <section className="as-section ap-faq-section" aria-labelledby="faq-heading">
+        <div className="as-wrap ap-faq">
+          <h2 id="faq-heading" className="as-h2 ap-center">
+            Questions about pricing
           </h2>
-          <p className="text-lg text-white/90 mb-8">
-            Join modern sales teams using IntelliFlow CRM. Start your free 14-day trial today.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
-              asChild
-              size="lg"
-              className="bg-white text-ds-primary hover:bg-white/80 min-w-50"
-            >
-              <Link href="/signup">Start Free Trial</Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              className="border-white text-white hover:bg-white/40 min-w-50"
-            >
-              <Link href="/contact">Contact Sales</Link>
-            </Button>
+          <div className="as-faq-list">
+            {faqs.map((faq) => (
+              <details key={faq.question} className="as-card as-faq-item">
+                <summary>
+                  {faq.question}
+                  <span className="material-symbols-outlined" aria-hidden="true">
+                    expand_more
+                  </span>
+                </summary>
+                <p>{faq.answer}</p>
+              </details>
+            ))}
           </div>
         </div>
       </section>
-    </>
+
+      <section className="ap-close" data-testid="cta-section" aria-labelledby="close-heading">
+        <div className="as-wrap">
+          <div className="ap-close-panel">
+            <div className="ap-close-art" aria-hidden="true">
+              <img src="/brand/aurora/bg/ribbon-right.webp" alt="" />
+            </div>
+            <h2 id="close-heading">Your first week with Aurora is free.</h2>
+            <p>
+              {metadata.freeTrialDays} days free · No credit card · Every AI action waits for your
+              yes
+            </p>
+            <div className="ap-close-cta">
+              <Link href="/signup" className="as-btn as-btn-primary">
+                Start free
+              </Link>
+              <Link href="/contact" className="as-btn as-btn-onDark">
+                Talk to us
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

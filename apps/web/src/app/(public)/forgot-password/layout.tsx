@@ -3,20 +3,20 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Forgot Password',
   description:
-    'Reset your IntelliFlow CRM password. Enter your email to receive a secure password reset link valid for one hour.',
+    'Reset your Aurora password. Enter your email to receive a secure password reset link valid for one hour.',
   openGraph: {
-    title: 'Reset Your IntelliFlow CRM Password',
+    title: 'Reset Your Aurora Password',
     description:
-      'Forgot your password? Request a secure reset link to regain access to your IntelliFlow CRM account.',
+      'Forgot your password? Request a secure reset link to regain access to your Aurora account.',
     url: 'https://intelliflow-crm.com/forgot-password',
-    siteName: 'IntelliFlow CRM',
+    siteName: 'Aurora',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Reset Your IntelliFlow CRM Password',
+    title: 'Reset Your Aurora Password',
     description:
-      'Request a secure password reset link for your IntelliFlow CRM account. Link valid for one hour.',
+      'Request a secure password reset link for your Aurora account. Link valid for one hour.',
   },
   alternates: {
     canonical: '/forgot-password',

@@ -331,14 +331,14 @@ describe('SignUpPage', () => {
   describe('Signup Metadata', () => {
     it('should have correct SEO metadata', () => {
       expect(metadata.title).toBe('Sign Up');
-      expect(metadata.description).toContain('IntelliFlow CRM');
+      expect(metadata.description).toContain('Aurora');
       expect(metadata.description).toContain('14-day free trial');
     });
 
     it('should have Open Graph metadata', () => {
       expect(metadata.openGraph).toBeDefined();
       expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/signup');
-      expect(metadata.openGraph?.siteName).toBe('IntelliFlow CRM');
+      expect(metadata.openGraph?.siteName).toBe('Aurora');
       expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
     });
 

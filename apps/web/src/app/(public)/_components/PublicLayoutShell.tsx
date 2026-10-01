@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
 import { AuroraSiteHeader } from '@/components/aurora-site/AuroraSiteHeader';
-import { manrope } from '@/components/aurora-site/fonts';
 import '@/components/aurora-site/aurora-site.css';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { TourProvider, PublicTour } from '@/components/public/tour-components';
@@ -82,7 +81,7 @@ export function PublicLayoutShell({
   );
 
   const content = showPublicHeader ? (
-    <div className={`aurora-site ${manrope.variable}`}>
+    <div className="aurora-site">
       <AuroraSiteHeader />
       <main id="aurora-site-main" className="as-main" tabIndex={-1}>
         {children}

@@ -61,7 +61,7 @@ function ConfettiAnimation() {
   const [pieces, setPieces] = useState<ConfettiPiece[]>([]);
 
   useEffect(() => {
-    const colors = ['#137fec', '#7cc4ff', '#10b981', '#f59e0b', '#ec4899'];
+    const colors = ['#2a78f6', '#bca8ff', '#10b981', '#f59e0b', '#ec4899'];
     const newPieces: ConfettiPiece[] = [];
 
     for (let i = 0; i < 50; i++) {
@@ -140,8 +140,8 @@ function SuccessErrorFallback({ error, resetErrorBoundary }: Readonly<FallbackPr
           <button
             onClick={resetErrorBoundary}
             className={cn(
-              'px-4 py-2 bg-[#137fec] hover:bg-[#137fec]/90 text-white rounded-lg font-medium transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900'
+              'px-4 py-2 bg-[#2a78f6] hover:bg-[#2a78f6]/90 text-white rounded-lg font-medium transition-colors',
+              'focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-slate-900'
             )}
           >
             Try again
@@ -229,7 +229,7 @@ function SuccessContent() {
                 </span>
               </div>
 
-              <h1 className="text-2xl font-bold text-white mb-2">Welcome to IntelliFlow!</h1>
+              <h1 className="text-2xl font-bold text-white mb-2">Welcome to Aurora!</h1>
               <p className="text-slate-300">Your account has been created successfully.</p>
             </div>
 
@@ -277,8 +277,8 @@ function SuccessContent() {
                 }}
                 disabled={resendMutation.isPending}
                 className={cn(
-                  'text-[#137fec] hover:text-[#137fec]/80 font-medium transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900 rounded',
+                  'text-[#2a78f6] hover:text-[#2a78f6]/80 font-medium transition-colors',
+                  'focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-slate-900 rounded',
                   resendMutation.isPending && 'opacity-50 cursor-not-allowed'
                 )}
               >
@@ -305,9 +305,9 @@ function SuccessContent() {
               href="/dashboard"
               className={cn(
                 'inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg',
-                'bg-[#137fec] text-white font-medium',
-                'hover:bg-[#137fec]/90 transition-all',
-                'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900'
+                'bg-[#2a78f6] text-white font-medium',
+                'hover:bg-[#2a78f6]/90 transition-all',
+                'focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-slate-900'
               )}
             >
               Go to Dashboard{' '}
@@ -348,7 +348,7 @@ export default function SignUpSuccessPage() {
           <AuthBackground>
             <div className="flex items-center justify-center min-h-screen">
               <output
-                className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#137fec]"
+                className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2a78f6]"
                 aria-label="Loading"
               />
             </div>

@@ -55,7 +55,6 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 vi.mock('@/components/aurora-site/AuroraSiteHeader', () => ({
   AuroraSiteHeader: () => <div data-testid="public-header">AuroraSiteHeader</div>,
 }));
-vi.mock('@/components/aurora-site/fonts', () => ({ manrope: { variable: 'font-manrope' } }));
 vi.mock('@/components/aurora-site/aurora-site.css', () => ({}));
 
 vi.mock('@/components/public/feedback-widget-public', () => ({
@@ -343,7 +342,6 @@ describe('Aurora site chrome', () => {
     const { container } = renderShell({ isAuthenticated: false, pathname: '/pricing' });
 
     const site = container.querySelector('.aurora-site')!;
-    expect(site.classList.contains('font-manrope')).toBe(true);
     expect(screen.getByTestId('public-header')).toBeDefined();
     expect(site.querySelector('main#aurora-site-main')).not.toBeNull();
     expect(screen.getByTestId('site-footer')).toBeDefined();
