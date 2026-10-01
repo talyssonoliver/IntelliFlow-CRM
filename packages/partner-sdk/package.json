@@ -1,0 +1,49 @@
+{
+  "name": "@intelliflow/partner-sdk",
+  "version": "1.0.0",
+  "description": "Versioned contract (zod schemas + typed HTTP client) for the IntelliFlow Partner API (ADR-070)",
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./contract/partner-contract.v1.json": "./contract/partner-contract.v1.json"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "contract"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "contract:generate": "tsx scripts/generate-contract.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\" \"scripts/**/*.ts\"",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@intelliflow/typescript-config": "workspace:*",
+    "@types/node": "^25.9.2",
+    "eslint": "^10.4.1",
+    "tsup": "^8.0.0",
+    "tsx": "^4.22.4",
+    "typescript": "^5.3.0",
+    "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

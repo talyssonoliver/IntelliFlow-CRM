@@ -47,4 +47,29 @@ describe('Prisma migration RLS coverage', () => {
 
     expect(missingRls).toEqual([]);
   });
+
+  it('locks the partner credential tables away from anon and authenticated', () => {
+    const sql = readFileSync(
+      path.join(migrationsDir, '20260930120000_tenant_provenance_partner', 'migration.sql'),
+      'utf8'
+    );
+
+    for (const table of ['partners', 'partner_api_keys']) {
+      expect(sql).toContain(`ALTER TABLE "${table}" ENABLE ROW LEVEL SECURITY;`);
+      expect(sql).toContain(`REVOKE ALL ON TABLE "${table}" FROM anon, authenticated;`);
+      // Deny by default: no permissive policy may be created for these tables.
+      expect(sql).not.toMatch(new RegExp(`CREATE POLICY[^;]*ON "${table}"`, 'i'));
+    }
+  });
+
+  it('adds tenants.plan without a backfill (production had no workspace rows; Class A)', () => {
+    const sql = readFileSync(
+      path.join(migrationsDir, '20260930120000_tenant_provenance_partner', 'migration.sql'),
+      'utf8'
+    );
+
+    expect(sql).toMatch(/ADD COLUMN\s+"plan"\s+"PlanTier"\s+NOT NULL\s+DEFAULT 'STARTER'/);
+    expect(sql).not.toMatch(/UPDATE "tenants"/);
+    expect(sql).toContain('No backfill of tenants.plan');
+  });
 });

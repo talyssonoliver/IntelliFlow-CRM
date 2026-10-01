@@ -9,7 +9,13 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure, adminProcedure } from '../../trpc';
+import { z } from 'zod';
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  platformAdminProcedure,
+  tenantProcedure,
+} from '../../trpc';
 import { toggleModuleInputSchema } from '@intelliflow/validators';
 import {
   CRM_MODULES,
@@ -66,7 +72,8 @@ export const moduleAccessRouter = createTRPCRouter({
    * Used by upgrade/paywall UI.
    */
   getPlans: protectedProcedure.query(() => {
-    return PLAN_TIERS.map((tier) => ({
+    // PARTNER_FREE is granted, never purchased: keep it off the upgrade/paywall listing.
+    return PLAN_TIERS.filter((tier) => tier !== 'PARTNER_FREE').map((tier) => ({
       tier,
       label: tier.charAt(0) + tier.slice(1).toLowerCase(),
       modules: [...MODULE_PLAN_MAP[tier]],
@@ -75,43 +82,73 @@ export const moduleAccessRouter = createTRPCRouter({
   }),
 
   /**
-   * Toggle a module on/off for the current tenant.
-   * Only available to Enterprise plan admins.
+   * Plan, quota limits and current usage for the caller's tenant.
+   * `limit: null` means unlimited. Used by the UI to show metering.
    */
-  toggleModule: adminProcedure.input(toggleModuleInputSchema).mutation(async ({ ctx, input }) => {
-    const tenantId = ctx.user?.tenantId;
-    if (!tenantId) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Tenant context required',
-      });
-    }
+  getUsage: tenantProcedure.query(async ({ ctx }) => {
+    const tenantId = ctx.tenant.tenantId;
 
-    if (input.moduleId === 'CORE_CRM') {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Core CRM module cannot be disabled',
-      });
-    }
-
+    const quota = ctx.services?.quota;
     const moduleAccess =
       ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
-    if (!moduleAccess) {
+    if (!quota || !moduleAccess) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'Module access service not available',
+        message: 'Quota service not available',
       });
     }
 
-    if (input.enabled) {
-      await moduleAccess.enableModule(tenantId, input.moduleId);
-    } else {
-      await moduleAccess.disableModule(tenantId, input.moduleId);
-    }
+    const [plan, limits, usage] = await Promise.all([
+      moduleAccess.getTenantPlan(tenantId),
+      quota.getLimits(tenantId),
+      quota.getUsage(tenantId),
+    ]);
 
-    // Return updated module list
-    const modules = await moduleAccess.getEnabledModules(tenantId);
-    const plan = await moduleAccess.getTenantPlan(tenantId);
-    return { modules, plan };
+    return { plan, limits, usage };
   }),
+
+  /**
+   * Toggle a module on/off for a tenant (the caller's own tenant unless `tenantId` is given).
+   *
+   * Platform operators only (ADR-070, PLATFORM_ADMIN_EMAILS): entitlements are what a
+   * tenant pays for, so a tenant's own `ADMIN` must not be able to grant themselves modules.
+   */
+  toggleModule: platformAdminProcedure
+    .input(toggleModuleInputSchema.extend({ tenantId: z.string().min(1).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const tenantId = input.tenantId ?? ctx.user?.tenantId;
+      if (!tenantId) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Tenant context required',
+        });
+      }
+
+      if (input.moduleId === 'CORE_CRM') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Core CRM module cannot be disabled',
+        });
+      }
+
+      const moduleAccess =
+        ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+      if (!moduleAccess) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Module access service not available',
+        });
+      }
+
+      if (input.enabled) {
+        await moduleAccess.enableModule(tenantId, input.moduleId);
+      } else {
+        await moduleAccess.disableModule(tenantId, input.moduleId);
+      }
+
+      // Return updated module list
+      const modules = await moduleAccess.getEnabledModules(tenantId);
+      const plan = await moduleAccess.getTenantPlan(tenantId);
+      return { modules, plan };
+    }),
 });

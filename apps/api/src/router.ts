@@ -68,6 +68,7 @@ import { helpArticleRouter } from './modules/help-article/help-article.router';
 import { customNodeTypeRouter } from './modules/custom-node-type/custom-node-type.router';
 import { customActionHandlerRouter } from './modules/custom-action-handler/custom-action-handler.router';
 import { inboundRouter } from './modules/inbound/inbound.router';
+import { partnerRouter } from './modules/partner/partner.router';
 import { onboardingRouter } from './modules/onboarding/onboarding.router';
 import { termsAcceptanceRouter } from './modules/legal/terms-acceptance.router';
 
@@ -244,6 +245,9 @@ export const appRouter = createTRPCRouter({
   // Cross-repo intake from leangency-portal /discover form.
   // Bearer-authenticated, env-bound tenant. See module README.
   inbound: inboundRouter,
+
+  // ADR-070: Partner API (per-partner API key + scopes; provisions tenants for partners).
+  partner: partnerRouter,
 });
 
 /**

@@ -8,3 +8,4 @@
 
 export * from './PlatformConstants';
 export * from './modules';
+export * from './quotas';

@@ -44,6 +44,23 @@ vi.mock('../container', () => ({
 }));
 
 describe('appRouter smoke — PG-190 module-settings registration', () => {
+  it('registers the ADR-070 partner router with all six procedures', async () => {
+    const { appRouter } = await import('../router.js');
+    const partner = (appRouter._def.record as Record<string, any>).partner;
+
+    expect(partner).toBeDefined();
+    for (const name of [
+      'provisionTenant',
+      'getTenant',
+      'setPlan',
+      'inviteMember',
+      'issueLoginLink',
+      'getUsage',
+    ]) {
+      expect(partner[name], `partner.${name} must be registered`).toBeDefined();
+    }
+  });
+
   it('registers caseSettings router under the exact key `caseSettings`', async () => {
     const { appRouter } = await import('../router.js');
     const record = appRouter._def.record as Record<string, unknown>;

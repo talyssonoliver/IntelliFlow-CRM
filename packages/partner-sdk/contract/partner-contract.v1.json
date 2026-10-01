@@ -1,0 +1,764 @@
+{
+  "contract": "intelliflow-partner-api",
+  "version": "1.0.0",
+  "transport": {
+    "basePath": "/api/trpc",
+    "auth": "Authorization: Bearer pk_<key>",
+    "mutation": "POST <basePath>/<procedure> with the raw input as the JSON body",
+    "query": "GET <basePath>/<procedure>?input=<url-encoded JSON of the raw input>",
+    "transformer": "none"
+  },
+  "scopes": [
+    "tenants:read",
+    "tenants:write",
+    "members:write",
+    "auth:login-link",
+    "usage:read"
+  ],
+  "procedures": {
+    "partner.provisionTenant": {
+      "kind": "mutation",
+      "scope": "tenants:write",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "externalRef": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "plan": {
+            "type": "string",
+            "enum": ["PARTNER_FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"]
+          },
+          "ownerEmail": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "ownerName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": ["externalRef", "name", "plan", "ownerEmail"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string",
+            "enum": [
+              "PARTNER_FREE",
+              "STARTER",
+              "PROFESSIONAL",
+              "ENTERPRISE",
+              "CUSTOM"
+            ]
+          },
+          "created": {
+            "type": "boolean"
+          }
+        },
+        "required": ["tenantId", "slug", "plan", "created"],
+        "additionalProperties": false
+      }
+    },
+    "partner.getTenant": {
+      "kind": "query",
+      "scope": "tenants:read",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "externalRef": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": ["externalRef"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "plan": {
+                "type": "string",
+                "enum": [
+                  "PARTNER_FREE",
+                  "STARTER",
+                  "PROFESSIONAL",
+                  "ENTERPRISE",
+                  "CUSTOM"
+                ]
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": ["tenantId", "slug", "plan", "status"],
+            "additionalProperties": false
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "partner.setPlan": {
+      "kind": "mutation",
+      "scope": "tenants:write",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "plan": {
+            "type": "string",
+            "enum": ["PARTNER_FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"]
+          }
+        },
+        "required": ["tenantId", "plan"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string",
+            "enum": [
+              "PARTNER_FREE",
+              "STARTER",
+              "PROFESSIONAL",
+              "ENTERPRISE",
+              "CUSTOM"
+            ]
+          }
+        },
+        "required": ["tenantId", "plan"],
+        "additionalProperties": false
+      }
+    },
+    "partner.inviteMember": {
+      "kind": "mutation",
+      "scope": "members:write",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "role": {
+            "type": "string",
+            "enum": ["ADMIN", "MEMBER"]
+          }
+        },
+        "required": ["tenantId", "email", "role"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "created": {
+            "type": "boolean"
+          }
+        },
+        "required": ["userId", "created"],
+        "additionalProperties": false
+      }
+    },
+    "partner.issueLoginLink": {
+      "kind": "mutation",
+      "scope": "auth:login-link",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "redirectTo": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["tenantId", "email"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "expiresAt": {
+            "type": "string"
+          }
+        },
+        "required": ["url", "expiresAt"],
+        "additionalProperties": false
+      }
+    },
+    "partner.getUsage": {
+      "kind": "query",
+      "scope": "usage:read",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["tenantId"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string",
+            "enum": [
+              "PARTNER_FREE",
+              "STARTER",
+              "PROFESSIONAL",
+              "ENTERPRISE",
+              "CUSTOM"
+            ]
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "quotas": {
+            "type": "object",
+            "properties": {
+              "contacts": {
+                "type": "object",
+                "properties": {
+                  "used": {
+                    "type": "number"
+                  },
+                  "limit": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["used", "limit"],
+                "additionalProperties": false
+              },
+              "seats": {
+                "type": "object",
+                "properties": {
+                  "used": {
+                    "type": "number"
+                  },
+                  "limit": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["used", "limit"],
+                "additionalProperties": false
+              },
+              "emailsPerMonth": {
+                "type": "object",
+                "properties": {
+                  "used": {
+                    "type": "number"
+                  },
+                  "limit": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "measured": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["used", "limit", "measured"],
+                "additionalProperties": false
+              },
+              "aiSpendCentsPerMonth": {
+                "type": "object",
+                "properties": {
+                  "used": {
+                    "type": "number"
+                  },
+                  "limit": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "measured": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["used", "limit", "measured"],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "contacts",
+              "seats",
+              "emailsPerMonth",
+              "aiSpendCentsPerMonth"
+            ],
+            "additionalProperties": false
+          },
+          "asOf": {
+            "type": "string"
+          }
+        },
+        "required": ["tenantId", "plan", "modules", "quotas", "asOf"],
+        "additionalProperties": false
+      }
+    },
+    "inbound.createLead": {
+      "kind": "mutation",
+      "scope": null,
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "submissionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "externalRef": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "firstName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "company": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "website": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "extraTags": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          "submissionPayload": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "attribution": {
+            "type": "object",
+            "properties": {
+              "utmSource": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "utmMedium": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "utmCampaign": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "utmContent": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "utmTerm": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "clickId": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "referrer": {
+                "type": "string",
+                "maxLength": 2000
+              },
+              "landingPath": {
+                "type": "string",
+                "maxLength": 2000
+              }
+            }
+          }
+        },
+        "required": ["submissionId", "email"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "leadId": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "submissionId": {
+            "type": "string"
+          },
+          "created": {
+            "type": "boolean"
+          }
+        },
+        "required": ["leadId", "tenantId", "submissionId", "created"],
+        "additionalProperties": false
+      }
+    },
+    "inbound.logCallBooking": {
+      "kind": "mutation",
+      "scope": null,
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "submissionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "externalRef": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "firstName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "company": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "website": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "callDate": {
+            "type": "string"
+          },
+          "callTime": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 5000
+          },
+          "extraTags": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          "attribution": {
+            "type": "object",
+            "properties": {
+              "utmSource": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "utmMedium": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "utmCampaign": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "utmContent": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "utmTerm": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "clickId": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "referrer": {
+                "type": "string",
+                "maxLength": 2000
+              },
+              "landingPath": {
+                "type": "string",
+                "maxLength": 2000
+              }
+            }
+          }
+        },
+        "required": ["submissionId", "email", "callDate", "callTime"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "leadId": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "submissionId": {
+            "type": "string"
+          },
+          "leadCreated": {
+            "type": "boolean"
+          },
+          "appointmentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "taskId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "leadId",
+          "tenantId",
+          "submissionId",
+          "leadCreated",
+          "appointmentId",
+          "taskId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "inbound.logSupportTicket": {
+      "kind": "mutation",
+      "scope": null,
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "externalRef": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "firstName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "company": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "extraTags": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 50
+            }
+          }
+        },
+        "required": ["requestId", "email", "category", "subject", "message"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "ticketId": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "created": {
+            "type": "boolean"
+          }
+        },
+        "required": ["ticketId", "tenantId", "requestId", "created"],
+        "additionalProperties": false
+      }
+    }
+  }
+}

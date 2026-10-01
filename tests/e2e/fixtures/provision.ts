@@ -104,8 +104,9 @@ async function seedTenant(prisma: any, persona: QaPersona, userId: string, email
 
   const tenant = await prisma.tenant.upsert({
     where: { slug: tenantSlug },
-    update: { name: `QA ${persona.label}` },
-    create: { name: `QA ${persona.label}`, slug: tenantSlug },
+    // plan lives on Tenant (ADR-070) — the entitlement repository no longer reads Workspace.
+    update: { name: `QA ${persona.label}`, plan: persona.plan },
+    create: { name: `QA ${persona.label}`, slug: tenantSlug, plan: persona.plan },
   });
 
   // Clear any stale user row holding this email under a *different* id (Supabase

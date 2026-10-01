@@ -38,8 +38,11 @@ export interface CostStatistics {
  * Cost tracking service
  * Tracks AI usage, costs, and enforces limits
  */
+export type UsageListener = (usage: UsageMetrics) => void;
+
 export class CostTracker {
   private usageHistory: UsageMetrics[] = [];
+  private readonly listeners = new Set<UsageListener>();
   private dailyCost: number = 0;
   private lastResetDate: Date = new Date();
 
@@ -48,6 +51,17 @@ export class CostTracker {
     private readonly dailyLimit?: number
   ) {
     this.resetDailyCounters();
+  }
+
+  /**
+   * Subscribe to every recorded operation (e.g. to attribute spend to a tenant).
+   * A throwing listener never affects the caller. Returns an unsubscribe function.
+   */
+  addListener(listener: UsageListener): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
 
   /**
@@ -76,6 +90,15 @@ export class CostTracker {
 
     this.usageHistory.push(usage);
     this.dailyCost += cost;
+
+    // Notify before the threshold check: that check can throw, and the spend already happened.
+    for (const listener of this.listeners) {
+      try {
+        listener(usage);
+      } catch (error) {
+        logger.warn({ error: String(error) }, 'Cost usage listener failed');
+      }
+    }
 
     // Log usage
     logger.info(

@@ -55,6 +55,14 @@ function demonstratePrismaTypes() {
     need: null,
     timeline: null,
     annualRevenue: null,
+    utmSource: null,
+    utmMedium: null,
+    utmCampaign: null,
+    utmContent: null,
+    utmTerm: null,
+    clickId: null,
+    referrer: null,
+    landingPath: null,
     accountId: null, // IFC-227
   };
 

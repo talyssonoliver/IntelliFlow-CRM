@@ -421,3 +421,48 @@ describe('CostTracker', () => {
     });
   });
 });
+
+describe('CostTracker listeners', () => {
+  it('notifies listeners with the priced usage and supports unsubscribe', () => {
+    const tracker = new CostTracker(10, 50);
+    const listener = vi.fn();
+    const unsubscribe = tracker.addListener(listener);
+
+    tracker.recordUsage({ model: 'm', inputTokens: 1000, outputTokens: 0, operationType: 'op' });
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener.mock.calls[0]![0]).toMatchObject({
+      model: 'm',
+      operationType: 'op',
+      cost: 0.01,
+    });
+
+    unsubscribe();
+    tracker.recordUsage({ model: 'm', inputTokens: 1000, outputTokens: 0, operationType: 'op' });
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('never lets a throwing listener break recording or other listeners', () => {
+    const tracker = new CostTracker(10, 50);
+    const good = vi.fn();
+    tracker.addListener(() => {
+      throw new Error('boom');
+    });
+    tracker.addListener(good);
+
+    expect(() =>
+      tracker.recordUsage({ model: 'm', inputTokens: 10, outputTokens: 10, operationType: 'op' })
+    ).not.toThrow();
+    expect(good).toHaveBeenCalledTimes(1);
+  });
+
+  it('notifies before the daily-limit check throws, because the spend already happened', () => {
+    const tracker = new CostTracker(0.001, 0.005);
+    const listener = vi.fn();
+    tracker.addListener(listener);
+
+    expect(() =>
+      tracker.recordUsage({ model: 'm', inputTokens: 10000, outputTokens: 0, operationType: 'op' })
+    ).toThrow(/Daily AI cost limit exceeded/);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+});

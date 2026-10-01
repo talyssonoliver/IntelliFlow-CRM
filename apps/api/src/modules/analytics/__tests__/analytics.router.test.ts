@@ -14,6 +14,19 @@ import { TRPCError } from '@trpc/server';
 import { analyticsRouter } from '../analytics.router';
 import type { UserSession, Context } from '../../../context';
 
+// ADR-070: the module-entitlement gate resolves `moduleAccess` from ctx.container, which
+// these hand-built contexts do not carry. Grant it unless the test supplies its own container.
+const analyticsRouterEntitled = {
+  createCaller: (ctx: any) =>
+    analyticsRouter.createCaller({
+      ...ctx,
+      container: ctx.container ?? {
+        get: (name: string) =>
+          name === 'moduleAccess' ? { isModuleEnabled: async () => true } : undefined,
+      },
+    }),
+};
+
 // Mock prisma client
 const mockPrisma = {} as Context['prisma'];
 
@@ -91,7 +104,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -114,7 +127,7 @@ describe('analyticsRouter', () => {
         services: undefined,
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -137,7 +150,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -156,7 +169,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -194,7 +207,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -223,7 +236,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -251,7 +264,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -301,7 +314,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -331,7 +344,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -360,7 +373,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -389,7 +402,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -418,7 +431,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -460,7 +473,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -488,7 +501,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -530,7 +543,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -559,7 +572,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -587,7 +600,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -622,7 +635,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -660,7 +673,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -695,7 +708,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -731,7 +744,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -766,7 +779,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -795,7 +808,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -838,7 +851,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -878,7 +891,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -905,7 +918,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -941,7 +954,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -969,7 +982,7 @@ describe('analyticsRouter', () => {
         },
       };
 
-      const caller = analyticsRouter.createCaller(
+      const caller = analyticsRouterEntitled.createCaller(
         mockContext as any // test-only mock
       );
 
@@ -1011,7 +1024,7 @@ describe('analyticsRouter', () => {
       };
       mockAnalyticsService.getOverview.mockResolvedValue(mockOverview);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getOverview({});
 
       expect(result).toEqual(mockOverview);
@@ -1040,7 +1053,7 @@ describe('analyticsRouter', () => {
         recentActivity: [],
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getOverview({});
 
       expect(result.totalLeads).toBe(0);
@@ -1050,14 +1063,14 @@ describe('analyticsRouter', () => {
     });
 
     it('should throw INTERNAL_SERVER_ERROR when analytics service undefined', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx({ analytics: undefined as any }));
+      const caller = analyticsRouterEntitled.createCaller(makeCtx({ analytics: undefined as any }));
       await expect(caller.getOverview({})).rejects.toMatchObject({
         code: 'INTERNAL_SERVER_ERROR',
       });
     });
 
     it('should throw UNAUTHORIZED when tenantId is undefined', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx({ tenantId: undefined }));
+      const caller = analyticsRouterEntitled.createCaller(makeCtx({ tenantId: undefined }));
       await expect(caller.getOverview({})).rejects.toMatchObject({
         code: 'UNAUTHORIZED',
       });
@@ -1065,7 +1078,7 @@ describe('analyticsRouter', () => {
 
     it('should propagate service errors', async () => {
       mockAnalyticsService.getOverview.mockRejectedValue(new Error('DB connection failed'));
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await expect(caller.getOverview({})).rejects.toThrow('DB connection failed');
     });
 
@@ -1084,7 +1097,7 @@ describe('analyticsRouter', () => {
         recentActivity: [],
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.getOverview({
         startDate: '2026-01-01T00:00:00Z',
         endDate: '2026-01-31T23:59:59Z',
@@ -1122,7 +1135,7 @@ describe('analyticsRouter', () => {
       };
       mockAnalyticsService.getSalesMetrics.mockResolvedValue(mockSales);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getSalesMetrics(validInput);
 
       expect(result.pipelineValue).toBe(1200000);
@@ -1145,7 +1158,7 @@ describe('analyticsRouter', () => {
         closedLostCount: 0,
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.getSalesMetrics(validInput);
 
       expect(mockAnalyticsService.getSalesMetrics).toHaveBeenCalledWith(
@@ -1166,7 +1179,7 @@ describe('analyticsRouter', () => {
         closedLostCount: 0,
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.getSalesMetrics({ ...validInput, ownerId: 'owner_456' });
 
       expect(mockAnalyticsService.getSalesMetrics).toHaveBeenCalledWith(
@@ -1187,7 +1200,7 @@ describe('analyticsRouter', () => {
         closedLostCount: 0,
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getSalesMetrics(validInput);
 
       expect(result.winRate).toBe(0);
@@ -1205,28 +1218,28 @@ describe('analyticsRouter', () => {
         closedLostCount: 0,
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getSalesMetrics(validInput);
 
       expect(result.avgSalesCycleDays).toBeNull();
     });
 
     it('should reject invalid date strings', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await expect(
         caller.getSalesMetrics({ startDate: 'not-a-date', endDate: '2026-01-31T23:59:59Z' })
       ).rejects.toThrow();
     });
 
     it('should throw INTERNAL_SERVER_ERROR when service unavailable', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx({ analytics: undefined as any }));
+      const caller = analyticsRouterEntitled.createCaller(makeCtx({ analytics: undefined as any }));
       await expect(caller.getSalesMetrics(validInput)).rejects.toMatchObject({
         code: 'INTERNAL_SERVER_ERROR',
       });
     });
 
     it('should throw UNAUTHORIZED when tenantId missing', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx({ tenantId: undefined }));
+      const caller = analyticsRouterEntitled.createCaller(makeCtx({ tenantId: undefined }));
       await expect(caller.getSalesMetrics(validInput)).rejects.toMatchObject({
         code: 'UNAUTHORIZED',
       });
@@ -1258,7 +1271,7 @@ describe('analyticsRouter', () => {
       };
       mockAnalyticsService.getLeadMetrics.mockResolvedValue(mockLeads);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getLeadMetrics(validInput);
 
       expect(result.total).toBe(200);
@@ -1275,7 +1288,7 @@ describe('analyticsRouter', () => {
         conversionRate: 0,
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getLeadMetrics(validInput);
 
       expect(result.total).toBe(0);
@@ -1291,7 +1304,7 @@ describe('analyticsRouter', () => {
         conversionRate: 25,
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getLeadMetrics(validInput);
 
       expect(result.conversionRate).toBe(25);
@@ -1308,7 +1321,7 @@ describe('analyticsRouter', () => {
         conversionRate: 10,
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getLeadMetrics(validInput);
 
       const totalPercentage = result.bySource.reduce(
@@ -1319,19 +1332,19 @@ describe('analyticsRouter', () => {
     });
 
     it('should reject missing required dates', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await expect((caller as any).getLeadMetrics({})).rejects.toThrow();
     });
 
     it('should throw INTERNAL_SERVER_ERROR when service unavailable', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx({ analytics: undefined as any }));
+      const caller = analyticsRouterEntitled.createCaller(makeCtx({ analytics: undefined as any }));
       await expect(caller.getLeadMetrics(validInput)).rejects.toMatchObject({
         code: 'INTERNAL_SERVER_ERROR',
       });
     });
 
     it('should throw UNAUTHORIZED when tenantId missing', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx({ tenantId: undefined }));
+      const caller = analyticsRouterEntitled.createCaller(makeCtx({ tenantId: undefined }));
       await expect(caller.getLeadMetrics(validInput)).rejects.toMatchObject({
         code: 'UNAUTHORIZED',
       });
@@ -1406,7 +1419,7 @@ describe('analyticsRouter', () => {
       };
       mockAnalyticsService.getConversionFunnel.mockResolvedValue(mockFunnel);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getConversionFunnel(validInput);
 
       expect(result.stages).toHaveLength(7);
@@ -1467,7 +1480,7 @@ describe('analyticsRouter', () => {
       };
       mockAnalyticsService.getConversionFunnel.mockResolvedValue(mockFunnel);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getConversionFunnel(validInput);
 
       expect(result.stages).toHaveLength(7);
@@ -1489,7 +1502,7 @@ describe('analyticsRouter', () => {
         overallConversionRate: 50,
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getConversionFunnel(validInput);
 
       expect(result.stages[0].conversionFromPrevious).toBeNull();
@@ -1518,7 +1531,7 @@ describe('analyticsRouter', () => {
       };
       mockAnalyticsService.getConversionFunnel.mockResolvedValue(mockFunnel);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getConversionFunnel(validInput);
 
       expect(result.stages.map((s: { stage: string }) => s.stage)).toEqual(stages);
@@ -1531,7 +1544,7 @@ describe('analyticsRouter', () => {
         overallConversionRate: 0,
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.getConversionFunnel({ ...validInput, includeLeads: true });
 
       expect(mockAnalyticsService.getConversionFunnel).toHaveBeenCalledWith(
@@ -1548,7 +1561,7 @@ describe('analyticsRouter', () => {
         overallConversionRate: 0,
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.getConversionFunnel({ ...validInput, includeLeads: false });
 
       expect(mockAnalyticsService.getConversionFunnel).toHaveBeenCalledWith(
@@ -1559,14 +1572,14 @@ describe('analyticsRouter', () => {
     });
 
     it('should throw INTERNAL_SERVER_ERROR when service unavailable', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx({ analytics: undefined as any }));
+      const caller = analyticsRouterEntitled.createCaller(makeCtx({ analytics: undefined as any }));
       await expect(caller.getConversionFunnel(validInput)).rejects.toMatchObject({
         code: 'INTERNAL_SERVER_ERROR',
       });
     });
 
     it('should throw UNAUTHORIZED when tenantId missing', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx({ tenantId: undefined }));
+      const caller = analyticsRouterEntitled.createCaller(makeCtx({ tenantId: undefined }));
       await expect(caller.getConversionFunnel(validInput)).rejects.toMatchObject({
         code: 'UNAUTHORIZED',
       });
@@ -1589,7 +1602,7 @@ describe('analyticsRouter', () => {
       const mockData = [{ period: '2026-01', periodLabel: 'Jan 2026', value: 50000 }];
       mockAnalyticsService.getTimeSeriesData.mockResolvedValue(mockData);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getTimeSeriesData(validInput);
 
       expect(result).toEqual(mockData);
@@ -1601,7 +1614,7 @@ describe('analyticsRouter', () => {
         { period: '2026-01', periodLabel: 'Jan 2026', value: 42 },
       ]);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getTimeSeriesData({ ...validInput, metric: 'leads' });
 
       expect(result[0].value).toBe(42);
@@ -1612,7 +1625,7 @@ describe('analyticsRouter', () => {
         { period: '2026-01', periodLabel: 'Jan 2026', value: 15 },
       ]);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.getTimeSeriesData({ ...validInput, metric: 'deals' });
 
       expect(result[0].value).toBe(15);
@@ -1621,7 +1634,7 @@ describe('analyticsRouter', () => {
     it('should return time series for contacts metric', async () => {
       mockAnalyticsService.getTimeSeriesData.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.getTimeSeriesData({ ...validInput, metric: 'contacts' });
 
       expect(mockAnalyticsService.getTimeSeriesData).toHaveBeenCalled();
@@ -1630,7 +1643,7 @@ describe('analyticsRouter', () => {
     it('should return time series for pipeline_value metric', async () => {
       mockAnalyticsService.getTimeSeriesData.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.getTimeSeriesData({ ...validInput, metric: 'pipeline_value' });
 
       expect(mockAnalyticsService.getTimeSeriesData).toHaveBeenCalled();
@@ -1639,7 +1652,7 @@ describe('analyticsRouter', () => {
     it('should return time series for win_rate metric', async () => {
       mockAnalyticsService.getTimeSeriesData.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.getTimeSeriesData({ ...validInput, metric: 'win_rate' });
 
       expect(mockAnalyticsService.getTimeSeriesData).toHaveBeenCalled();
@@ -1648,7 +1661,7 @@ describe('analyticsRouter', () => {
     it('should accept day, week, and month granularity', async () => {
       mockAnalyticsService.getTimeSeriesData.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
 
       for (const granularity of ['day', 'week', 'month'] as const) {
         await caller.getTimeSeriesData({ ...validInput, granularity });
@@ -1657,14 +1670,14 @@ describe('analyticsRouter', () => {
     });
 
     it('should reject invalid metric enum values', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await expect(
         caller.getTimeSeriesData({ ...validInput, metric: 'invalid_metric' as any })
       ).rejects.toThrow();
     });
 
     it('should reject daily granularity exceeding 31 days (NF-003)', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await expect(
         caller.getTimeSeriesData({
           metric: 'revenue',
@@ -1676,7 +1689,7 @@ describe('analyticsRouter', () => {
     });
 
     it('should reject weekly granularity exceeding 365 days (NF-003)', async () => {
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await expect(
         caller.getTimeSeriesData({
           metric: 'revenue',
@@ -1688,12 +1701,14 @@ describe('analyticsRouter', () => {
     });
 
     it('should throw service/tenant guards', async () => {
-      const caller1 = analyticsRouter.createCaller(makeCtx({ analytics: undefined as any }));
+      const caller1 = analyticsRouterEntitled.createCaller(
+        makeCtx({ analytics: undefined as any })
+      );
       await expect(caller1.getTimeSeriesData(validInput)).rejects.toMatchObject({
         code: 'INTERNAL_SERVER_ERROR',
       });
 
-      const caller2 = analyticsRouter.createCaller(makeCtx({ tenantId: undefined }));
+      const caller2 = analyticsRouterEntitled.createCaller(makeCtx({ tenantId: undefined }));
       await expect(caller2.getTimeSeriesData(validInput)).rejects.toMatchObject({
         code: 'UNAUTHORIZED',
       });
@@ -1720,7 +1735,7 @@ describe('analyticsRouter', () => {
       };
       mockAnalyticsService.exportReport.mockResolvedValue(mockExport);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.exportReport(validInput);
 
       expect(result.format).toBe('json');
@@ -1736,7 +1751,7 @@ describe('analyticsRouter', () => {
       };
       mockAnalyticsService.exportReport.mockResolvedValue(mockExport);
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.exportReport({ ...validInput, format: 'csv' });
 
       expect(result.format).toBe('csv');
@@ -1751,7 +1766,7 @@ describe('analyticsRouter', () => {
         filename: 'f.json',
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.exportReport({ ...validInput, reportType: 'sales' });
 
       expect(mockAnalyticsService.exportReport).toHaveBeenCalledWith(
@@ -1770,7 +1785,7 @@ describe('analyticsRouter', () => {
         filename: 'f.json',
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.exportReport({ ...validInput, reportType: 'leads' });
 
       expect(mockAnalyticsService.exportReport).toHaveBeenCalledWith(
@@ -1789,7 +1804,7 @@ describe('analyticsRouter', () => {
         filename: 'f.json',
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.exportReport({ ...validInput, reportType: 'funnel' });
 
       expect(mockAnalyticsService.exportReport).toHaveBeenCalledWith(
@@ -1808,7 +1823,7 @@ describe('analyticsRouter', () => {
         filename: 'f.json',
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.exportReport({ ...validInput, reportType: 'timeseries' });
 
       expect(mockAnalyticsService.exportReport).toHaveBeenCalledWith(
@@ -1827,7 +1842,7 @@ describe('analyticsRouter', () => {
         filename: 'f.json',
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       await caller.exportReport({ ...validInput, reportType: 'overview' });
 
       expect(mockAnalyticsService.exportReport).toHaveBeenCalledWith(
@@ -1846,7 +1861,7 @@ describe('analyticsRouter', () => {
         filename: 'report.csv',
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.exportReport({ ...validInput, format: 'csv' });
 
       expect(typeof result.data).toBe('string');
@@ -1860,7 +1875,7 @@ describe('analyticsRouter', () => {
         filename: 'empty.json',
       });
 
-      const caller = analyticsRouter.createCaller(makeCtx());
+      const caller = analyticsRouterEntitled.createCaller(makeCtx());
       const result = await caller.exportReport(validInput);
 
       expect(result.data).toBeDefined();
@@ -1868,12 +1883,14 @@ describe('analyticsRouter', () => {
     });
 
     it('should throw service/tenant guards', async () => {
-      const caller1 = analyticsRouter.createCaller(makeCtx({ analytics: undefined as any }));
+      const caller1 = analyticsRouterEntitled.createCaller(
+        makeCtx({ analytics: undefined as any })
+      );
       await expect(caller1.exportReport(validInput)).rejects.toMatchObject({
         code: 'INTERNAL_SERVER_ERROR',
       });
 
-      const caller2 = analyticsRouter.createCaller(makeCtx({ tenantId: undefined }));
+      const caller2 = analyticsRouterEntitled.createCaller(makeCtx({ tenantId: undefined }));
       await expect(caller2.exportReport(validInput)).rejects.toMatchObject({
         code: 'UNAUTHORIZED',
       });

@@ -1,7 +1,7 @@
 /**
  * Inbound Router — cross-repo intake from leangency-portal.
  *
- * Two procedures:
+ * Three procedures:
  *
  * 1. `createLead` — /discover form submissions from leangency.com.
  *    Each successful submission lands as a Lead in this CRM.
@@ -9,6 +9,9 @@
  * 2. `logCallBooking` — discovery-call bookings from the portal.
  *    Dedupes or creates the Lead, then attaches an Appointment, a
  *    reminder Task, and a LeadActivity for the booking event.
+ *
+ * 3. `logSupportTicket` — client support requests from the portal inbox.
+ *    Creates a Ticket in the bound tenant.
  *
  * Auth: shared bearer `PORTAL_INTERNAL_SECRET` (server-to-server only).
  * The portal sends the SAME secret to two destinations (this CRM and the
@@ -25,11 +28,15 @@
  * Idempotency:
  *   - createLead: Lead tagged with `submission:<id>`.
  *   - logCallBooking: Appointment.externalCalendarId stores `booking:<submissionId>`.
+ *   - logSupportTicket: the creating TicketActivity carries
+ *     systemEventData.requestId (the portal inbox thread id).
  */
 
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
+import type { Prisma } from '@intelliflow/db';
 import type { Context } from '../../context';
 
 // ============================================================================
@@ -59,8 +66,27 @@ export const inboundLeadSchema = z.object({
   location: z.string().trim().max(200).optional(),
   /** Optional additional tags to attach to the Lead. */
   extraTags: z.array(z.string().max(50)).max(20).optional(),
-  /** Full original payload — stored as JSON metadata on the create-activity log. */
+  /** Full original payload — stored as JSON metadata on a NOTE LeadActivity. */
   submissionPayload: z.record(z.string(), z.unknown()).optional(),
+  /**
+   * Portal tenant externalRef (uuid). Accepted but ignored for now.
+   * TODO(ADR-070): resolve the tenant by Tenant.externalRef once that column
+   * lands; until then the tenant comes from LEANGENCY_TENANT_ID.
+   */
+  externalRef: z.string().uuid().optional(),
+  /** Marketing attribution — stored with the submission record until Lead columns exist. */
+  attribution: z
+    .object({
+      utmSource: z.string().max(512).optional(),
+      utmMedium: z.string().max(512).optional(),
+      utmCampaign: z.string().max(512).optional(),
+      utmContent: z.string().max(512).optional(),
+      utmTerm: z.string().max(512).optional(),
+      clickId: z.string().max(512).optional(),
+      referrer: z.string().max(512).optional(),
+      landingPath: z.string().max(512).optional(),
+    })
+    .optional(),
 });
 
 export type InboundLeadInput = z.infer<typeof inboundLeadSchema>;
@@ -123,9 +149,43 @@ export interface InboundCallBookingOutput {
 }
 
 // ============================================================================
+// logSupportTicket — Input Schema & Output Interface
+// ============================================================================
+
+/**
+ * Input for `inbound.logSupportTicket`. Mirrors the payload built by
+ * `forwardSupportTicketToIntelliFlow` in leangency-portal
+ * (src/lib/integrations/crm.ts). `requestId` is the portal inbox thread id.
+ */
+export const inboundSupportTicketSchema = z.object({
+  /** Portal inbox thread id — idempotency key. */
+  requestId: z.string().min(1).max(200),
+  email: z.string().email(),
+  firstName: z.string().trim().max(100).optional(),
+  lastName: z.string().trim().max(100).optional(),
+  /** Tenant slug of the reporting client. */
+  company: z.string().trim().max(200).optional(),
+  /** 'bug' | 'change' | 'question' (free-form tolerated). */
+  category: z.string().trim().max(50).optional(),
+  subject: z.string().trim().min(1).max(500),
+  message: z.string().max(20000),
+  source: z.string().trim().max(50).optional(),
+  extraTags: z.array(z.string().max(50)).max(20).optional(),
+});
+
+export type InboundSupportTicketInput = z.infer<typeof inboundSupportTicketSchema>;
+
+export interface InboundSupportTicketOutput {
+  readonly ticketId: string;
+  /** False when the requestId was already ingested (idempotent retry). */
+  readonly created: boolean;
+}
+
+// ============================================================================
 // Helpers
 // ============================================================================
 
+const SUPPORT_EVENT_TYPE = 'portal_support_request';
 const SUBMISSION_TAG_PREFIX = 'submission:';
 const PORTAL_TAG = 'portal-discover';
 const BOOKING_TAG = 'portal-call-booking';
@@ -147,9 +207,22 @@ function assertAuthorised(ctx: Context): void {
   }
 
   const parts = headerValue.split(' ');
-  if (parts.length !== 2 || parts[0]?.toLowerCase() !== 'bearer' || parts[1] !== secret) {
+  if (
+    parts.length !== 2 ||
+    parts[0]?.toLowerCase() !== 'bearer' ||
+    !secretsMatch(parts[1], secret)
+  ) {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid bearer token' });
   }
+}
+
+/** Constant-time compare; hashing first makes both buffers the same length. */
+function secretsMatch(candidate: string | undefined, secret: string): boolean {
+  const a = createHash('sha256')
+    .update(candidate ?? '')
+    .digest();
+  const b = createHash('sha256').update(secret).digest();
+  return timingSafeEqual(a, b);
 }
 
 function getInboundBinding(): { tenantId: string; ownerId: string } {
@@ -172,6 +245,50 @@ function getLeadService(ctx: Context) {
     });
   }
   return ctx.services.lead;
+}
+
+/**
+ * Persist the raw submission (payload + attribution) as a NOTE LeadActivity so
+ * repeat submissions leave a trace. Best-effort: the lead is already safe, so a
+ * failure is logged, never thrown.
+ */
+async function recordSubmission(
+  ctx: Context,
+  input: InboundLeadInput,
+  leadId: string,
+  tenantId: string,
+  repeat: boolean
+): Promise<void> {
+  try {
+    await ctx.prisma.leadActivity.create({
+      data: {
+        type: 'NOTE',
+        title: repeat
+          ? `Repeat portal submission ${input.submissionId}`
+          : `Portal submission ${input.submissionId}`,
+        description: repeat
+          ? 'Submission from an email that already had a lead'
+          : 'Original portal /discover submission',
+        timestamp: new Date(),
+        userName: 'System (portal)',
+        leadId,
+        tenantId,
+        metadata: {
+          source: 'portal-discover-submission',
+          submissionId: input.submissionId,
+          repeat,
+          ...(input.submissionPayload ? { submissionPayload: input.submissionPayload } : {}),
+          ...(input.attribution ? { attribution: input.attribution } : {}),
+        } as Prisma.InputJsonObject,
+      },
+    });
+  } catch (err) {
+    console.warn('[inbound.createLead] submission record failed:', {
+      leadId,
+      submissionId: input.submissionId,
+      error: err instanceof Error ? err.message : err,
+    });
+  }
 }
 
 // ============================================================================
@@ -335,6 +452,7 @@ export const inboundRouter = createTRPCRouter({
             select: { id: true },
           });
           if (existing) {
+            await recordSubmission(ctx, input, existing.id, tenantId, true);
             return {
               leadId: existing.id,
               tenantId,
@@ -344,6 +462,10 @@ export const inboundRouter = createTRPCRouter({
           }
         }
         throw new TRPCError({ code: 'BAD_REQUEST', message });
+      }
+
+      if (input.submissionPayload || input.attribution) {
+        await recordSubmission(ctx, input, result.value.id.value, tenantId, false);
       }
 
       return {
@@ -530,5 +652,120 @@ export const inboundRouter = createTRPCRouter({
         appointmentId,
         taskId,
       };
+    }),
+
+  /**
+   * Create a support Ticket from a portal client problem/change report.
+   *
+   * Behaviour:
+   *   - 401 UNAUTHORIZED — missing or wrong bearer
+   *   - 500 INTERNAL     — env not configured (secret / tenant / user / service)
+   *   - 200              — ticket created (`created: true`)
+   *   - 200              — repeat `requestId` returns the existing ticket (`created: false`)
+   *
+   * Idempotency: the creating SYSTEM_EVENT TicketActivity stores
+   * `systemEventData.requestId`; Ticket has no external-id column.
+   */
+  logSupportTicket: publicProcedure
+    .input(inboundSupportTicketSchema)
+    .mutation(async ({ ctx, input }): Promise<InboundSupportTicketOutput> => {
+      assertAuthorised(ctx);
+      const { tenantId } = getInboundBinding();
+      const ticketService = ctx.services?.ticket;
+      if (!ticketService) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Ticket service not available',
+        });
+      }
+
+      // Serialize per requestId: without the lock two concurrent retries both miss the lookup
+      // and create duplicate tickets. The ticket and its marker are written on the SAME
+      // transaction client, so they commit or roll back together; the lock is released at
+      // commit. A marker failure therefore rethrows (rolling the ticket back) instead of
+      // leaving a ticket with no marker for the next retry to duplicate.
+      const lockKey = `support:${input.requestId}`;
+      return ctx.prisma.$transaction(
+        async (tx): Promise<InboundSupportTicketOutput> => {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+
+          const prior = await tx.ticketActivity.findFirst({
+            where: {
+              tenantId,
+              systemEventType: SUPPORT_EVENT_TYPE,
+              systemEventData: { path: ['requestId'], equals: input.requestId },
+            },
+            select: { ticketId: true },
+          });
+          if (prior) {
+            return { ticketId: prior.ticketId, created: false } as InboundSupportTicketOutput;
+          }
+
+          const defaultSla = await tx.sLAPolicy.findFirst({
+            where: { tenantId, isDefault: true },
+            select: { id: true },
+          });
+          const contactName =
+            [input.firstName, input.lastName].filter(Boolean).join(' ').trim() || input.email;
+
+          let ticket: { id: string };
+          try {
+            ticket = await ticketService.create(
+              {
+                subject: input.subject.slice(0, 200),
+                description: input.message,
+                priority: input.category === 'bug' ? 'HIGH' : 'MEDIUM',
+                contactName: contactName.slice(0, 100),
+                contactEmail: input.email,
+                slaPolicyId: defaultSla?.id,
+                tenantId,
+              },
+              tx
+            );
+          } catch (err) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: err instanceof Error ? err.message : 'Failed to create ticket',
+            });
+          }
+
+          try {
+            await tx.ticketActivity.create({
+              data: {
+                ticketId: ticket.id,
+                tenantId,
+                type: 'SYSTEM_EVENT',
+                content: `Portal support request ${input.requestId}`,
+                authorName: 'System (portal)',
+                authorRole: 'System',
+                channel: 'PORTAL',
+                systemEventType: SUPPORT_EVENT_TYPE,
+                systemEventData: {
+                  requestId: input.requestId,
+                  ...(input.category ? { category: input.category } : {}),
+                  ...(input.company ? { tenantSlug: input.company } : {}),
+                  ...(input.source ? { source: input.source } : {}),
+                  ...(input.extraTags ? { tags: input.extraTags } : {}),
+                },
+              },
+            });
+          } catch (err) {
+            // Without this marker a retry would create a duplicate ticket, so the ticket
+            // must not survive on its own: rethrow and let the transaction roll back.
+            console.error('[inbound.logSupportTicket] idempotency marker failed:', {
+              ticketId: ticket.id,
+              requestId: input.requestId,
+              error: err instanceof Error ? err.message : err,
+            });
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to record the support request; please retry',
+            });
+          }
+
+          return { ticketId: ticket.id, created: true };
+        },
+        { maxWait: 10_000, timeout: 30_000 }
+      );
     }),
 });
