@@ -1,0 +1,353 @@
+/*
+ * The Aurora site layer: the brand tokens, the header and the ribbon footer
+ * every public page shares with the approved landing page. Every rule is
+ * scoped under .aurora-site and targets its own classes, never bare elements,
+ * so pages that have not been rebuilt yet keep their own layout inside it.
+ * Values match components/aurora-landing/aurora-landing.css one for one.
+ */
+.aurora-site {
+  --navy: #11175b;
+  --blue: #2a78f6;
+  --blue-press: #1f63d4;
+  --violet: #7655f6;
+  --cyan: #28d9d4;
+  --lavender: #bca8ff;
+  --mist: #f5f7ff;
+  --ink: #141833;
+  --ink-2: rgba(20, 24, 51, 0.72);
+  --ink-3: rgba(20, 24, 51, 0.52);
+  --line: rgba(17, 23, 91, 0.09);
+  --line-2: rgba(17, 23, 91, 0.14);
+  --shadow-lg: 0 2px 4px rgba(17, 23, 91, 0.04), 0 30px 60px -24px rgba(17, 23, 91, 0.22);
+  min-height: 100vh;
+  background: var(--mist);
+  color: var(--ink);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.aurora-site .as-wrap {
+  width: min(1152px, calc(100% - 48px));
+  margin: 0 auto;
+}
+.aurora-site .as-main {
+  padding-top: 72px;
+  outline: none;
+}
+
+/* Buttons */
+.aurora-site .as-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font:
+    600 15px/1 var(--font-manrope),
+    system-ui,
+    sans-serif;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+.aurora-site .as-btn-primary {
+  background: var(--blue);
+  color: #fff;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.25) inset,
+    0 8px 18px -8px rgba(42, 120, 246, 0.6);
+}
+.aurora-site .as-btn-primary:hover {
+  background: var(--blue-press);
+}
+.aurora-site :is(a, button, summary):focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Skip link: hidden until focused */
+.aurora-site .as-skip {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--navy);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+.aurora-site .as-skip:focus {
+  top: 12px;
+}
+
+/* Header */
+.aurora-site .as-nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  transition:
+    background 0.25s ease,
+    box-shadow 0.25s ease,
+    backdrop-filter 0.25s;
+}
+.aurora-site .as-nav.scrolled {
+  background: rgba(245, 247, 255, 0.82);
+  backdrop-filter: saturate(160%) blur(14px);
+  box-shadow: 0 1px 0 var(--line);
+}
+.aurora-site .as-nav-row {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+.aurora-site .as-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.aurora-site .as-brand img {
+  display: block;
+  width: auto;
+}
+.aurora-site .as-brand-mark {
+  height: 22px;
+}
+.aurora-site .as-brand-word {
+  height: 18px;
+}
+.aurora-site .as-nav-links {
+  display: flex;
+  gap: 30px;
+  margin-left: 24px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.aurora-site .as-nav-links a {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.aurora-site .as-nav-links a:hover,
+.aurora-site .as-nav-links a[aria-current='page'] {
+  color: var(--navy);
+}
+.aurora-site .as-nav-cta {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.aurora-site .as-nav-cta .as-login {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--navy);
+  text-decoration: none;
+}
+
+/* Phone menu: the landing's NavSheet, styled for the site layer. */
+.aurora-site .nav-menu {
+  display: none;
+  position: relative;
+}
+.aurora-site .nav-menu summary {
+  list-style: none;
+  display: block;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--navy);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 1px var(--line-2) inset;
+}
+.aurora-site .nav-menu summary::-webkit-details-marker {
+  display: none;
+}
+.aurora-site .nav-menu .nav-sheet-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 26px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+.aurora-site .nav-menu[open] .nav-sheet-icon {
+  transform: rotate(90deg);
+}
+.aurora-site .nav-menu .nav-sheet-links {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  top: 84px;
+  padding: 10px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px var(--line),
+    var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.aurora-site .nav-menu .nav-sheet-links a {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--navy);
+  text-decoration: none;
+}
+.aurora-site .nav-menu .nav-sheet-links a:not(:last-child) {
+  border-bottom: 1px solid var(--line);
+}
+.aurora-site .nav-menu .nav-sheet-links a:last-child {
+  color: var(--blue);
+}
+
+/* Footer: Navy, entered through the landing's ribbon-traced curve, with the
+   aurora ribbons rising behind its links. */
+.aurora-site .as-footer {
+  position: relative;
+  overflow: clip;
+  margin-top: 96px;
+  padding: 200px 0 32px;
+  background: var(--navy);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
+}
+.aurora-site .as-footer .section-curve {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 160px;
+  pointer-events: none;
+  z-index: 2;
+  display: block;
+}
+.aurora-site .as-footer-ribbons {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.aurora-site .as-footer-ribbons img {
+  position: absolute;
+  display: block;
+  opacity: 0.8;
+  filter: saturate(1.15);
+}
+.aurora-site .as-footer-ribbons .left {
+  left: -160px;
+  bottom: -140px;
+  width: 620px;
+}
+.aurora-site .as-footer-ribbons .right {
+  right: -220px;
+  bottom: -220px;
+  width: 820px;
+  transform: rotate(-6deg);
+}
+.aurora-site .as-footer > .as-wrap {
+  position: relative;
+  z-index: 3;
+}
+.aurora-site .as-foot-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+}
+.aurora-site .as-foot-word {
+  display: block;
+  height: 20px;
+  width: auto;
+  filter: brightness(0) invert(1);
+  margin-bottom: 14px;
+}
+.aurora-site .as-foot-row p {
+  margin: 0;
+  max-width: 280px;
+}
+.aurora-site .as-foot-cols {
+  display: flex;
+  gap: 64px;
+}
+.aurora-site .as-foot-cols div {
+  display: grid;
+  align-content: start;
+}
+.aurora-site .as-foot-cols b {
+  padding-bottom: 10px;
+  color: #fff;
+  font-size: 14px;
+}
+.aurora-site .as-foot-cols a {
+  display: flex;
+  align-items: center;
+  padding-block: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+}
+.aurora-site .as-foot-cols a:hover {
+  color: #fff;
+}
+.aurora-site .as-foot-legal {
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+}
+
+@media (max-width: 960px) {
+  .aurora-site .as-wrap {
+    width: calc(100% - 32px);
+  }
+  .aurora-site .as-nav-row {
+    gap: 12px;
+  }
+  .aurora-site .as-nav-links,
+  .aurora-site .as-nav-cta .as-login {
+    display: none;
+  }
+  .aurora-site .nav-menu {
+    display: block;
+  }
+  .aurora-site .as-footer {
+    margin-top: 64px;
+    padding-top: 112px;
+  }
+  .aurora-site .as-footer .section-curve {
+    height: 72px;
+  }
+  .aurora-site .as-foot-row {
+    flex-direction: column;
+  }
+  .aurora-site .as-foot-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 32px;
+  }
+  .aurora-site .as-footer-ribbons .left {
+    width: 360px;
+    left: -150px;
+    bottom: -90px;
+  }
+  .aurora-site .as-footer-ribbons .right {
+    width: 440px;
+    right: -210px;
+    bottom: -130px;
+  }
+}
