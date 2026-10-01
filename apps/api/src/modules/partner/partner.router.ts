@@ -154,9 +154,10 @@ interface EnsuredAuthUser {
 }
 
 /**
- * Make sure a Supabase Auth user exists for the email (confirmed, so a magic link can sign
- * them in). An existing Auth user with no CRM row is reused: `generateLink` hands back the
- * user without sending anything, which is the only by-email lookup the admin API offers.
+ * Create a confirmed Supabase Auth user for the email, so a magic link can sign them in.
+ * Never adopts an Auth user this request did not create: an existing identity could belong to
+ * someone unrelated to the partner, and attaching it to a partner tenant (then minting a
+ * login link) would be an account takeover. An existing email is a CONFLICT instead.
  */
 async function ensureAuthUser(email: string, name?: string): Promise<EnsuredAuthUser> {
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
@@ -172,13 +173,13 @@ async function ensureAuthUser(email: string, name?: string): Promise<EnsuredAuth
     (error as { code?: string } | null)?.code === 'email_exists' ||
     /already (been )?registered/i.test(error?.message ?? '');
   if (alreadyExists) {
-    const { data: link, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
-      email,
+    throw new TRPCError({
+      code: 'CONFLICT',
+      message:
+        'EMAIL_IN_USE: this email belongs to an existing account. ' +
+        'Invite the owner by email instead.',
+      cause: { code: 'EMAIL_IN_USE' },
     });
-    if (link?.user && !linkError) {
-      return { id: link.user.id, created: false };
-    }
   }
 
   console.error('[partner] Supabase user provisioning failed:', error?.message);

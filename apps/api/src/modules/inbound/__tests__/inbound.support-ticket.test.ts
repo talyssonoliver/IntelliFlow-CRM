@@ -33,6 +33,8 @@ const PORTAL_PAYLOAD = {
 
 describe('inbound.logSupportTicket', () => {
   beforeEach(() => {
+    prismaMock.$transaction.mockImplementation((async (fn: (tx: unknown) => unknown) =>
+      fn(prismaMock)) as never);
     vi.stubEnv('PORTAL_INTERNAL_SECRET', SECRET);
     vi.stubEnv('LEANGENCY_TENANT_ID', TENANT_ID);
     vi.stubEnv('LEANGENCY_SYSTEM_USER_ID', SYSTEM_USER_ID);
@@ -106,6 +108,33 @@ describe('inbound.logSupportTicket', () => {
         tags: ['support-request', 'bug'],
       },
     });
+  });
+
+  it('runs lookup, ticket and marker in one transaction under a per-requestId advisory lock', async () => {
+    prismaMock.ticketActivity.findFirst.mockResolvedValueOnce(null);
+    prismaMock.sLAPolicy.findFirst.mockResolvedValueOnce(null);
+    (mockServices.ticket.create as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      id: 'ticket_9',
+    });
+    prismaMock.$queryRaw.mockClear();
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await caller.logSupportTicket(PORTAL_PAYLOAD);
+
+    expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+    const [strings, ...values] = prismaMock.$queryRaw.mock.calls[0] as unknown as [
+      string[],
+      ...unknown[],
+    ];
+    expect(strings.join('?')).toContain('pg_advisory_xact_lock');
+    expect(values).toEqual(['support:thread_42']);
+    const lockOrder = prismaMock.$queryRaw.mock.invocationCallOrder[0]!;
+    expect(lockOrder).toBeLessThan(
+      prismaMock.ticketActivity.findFirst.mock.invocationCallOrder[0]!
+    );
+    expect(lockOrder).toBeLessThan(
+      (mockServices.ticket.create as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0]!
+    );
   });
 
   it('falls back to email as contact name, MEDIUM priority and no default SLA', async () => {

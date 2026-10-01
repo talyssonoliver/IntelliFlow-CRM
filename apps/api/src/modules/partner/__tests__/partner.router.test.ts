@@ -343,7 +343,7 @@ describe('partner.provisionTenant', () => {
     expect(supabaseAdminMock.auth.admin.createUser).not.toHaveBeenCalled();
   });
 
-  it('reuses an Auth user that exists without a CRM row (found via generateLink)', async () => {
+  it('never adopts an existing Auth user: EMAIL_IN_USE CONFLICT, nothing created, no link', async () => {
     const { caller } = callerWith();
     prismaMock.tenant.findUnique.mockResolvedValue(null);
     prismaMock.user.findUnique.mockResolvedValue(null);
@@ -351,18 +351,17 @@ describe('partner.provisionTenant', () => {
       data: { user: null },
       error: { code: 'email_exists', message: 'exists' },
     });
-    supabaseAdminMock.auth.admin.generateLink.mockResolvedValue({
-      data: { user: { id: 'sb-existing' }, properties: {} },
-      error: null,
-    });
-    prismaMock.tenant.create.mockResolvedValue({ id: 't', slug: 's', plan: 'STARTER' } as never);
-    prismaMock.user.create.mockResolvedValue({} as never);
 
-    await caller.provisionTenant({ ...input, plan: 'STARTER' });
+    const err = await caller
+      .provisionTenant({ ...input, plan: 'STARTER' })
+      .catch((e: unknown) => e as { message: string });
 
-    expect(prismaMock.user.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ id: 'sb-existing' }),
-    });
+    expect(err).toMatchObject({ code: 'CONFLICT' });
+    expect(err.message).toContain('EMAIL_IN_USE');
+    expect(prismaMock.tenant.create).not.toHaveBeenCalled();
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+    expect(supabaseAdminMock.auth.admin.generateLink).not.toHaveBeenCalled();
+    expect(supabaseAdminMock.auth.admin.deleteUser).not.toHaveBeenCalled();
   });
 
   it('answers INTERNAL_SERVER_ERROR when the Auth user cannot be provisioned', async () => {
@@ -393,22 +392,11 @@ describe('partner.provisionTenant', () => {
     expect(supabaseAdminMock.auth.admin.deleteUser).toHaveBeenCalledWith('sb-1');
   });
 
-  it('does not delete a pre-existing Auth user on failure, and tolerates cleanup errors', async () => {
+  it('tolerates cleanup errors when removing the Auth user it created', async () => {
     const { caller } = callerWith();
     prismaMock.tenant.findUnique.mockResolvedValue(null);
     prismaMock.user.findUnique.mockResolvedValue(null);
-    supabaseAdminMock.auth.admin.createUser.mockResolvedValue({
-      data: { user: null },
-      error: { message: 'User already registered' },
-    });
-    supabaseAdminMock.auth.admin.generateLink.mockResolvedValue({
-      data: { user: { id: 'sb-old' } },
-      error: null,
-    });
     prismaMock.tenant.create.mockRejectedValue(new Error('db down'));
-
-    await expect(caller.provisionTenant(input)).rejects.toThrow('db down');
-    expect(supabaseAdminMock.auth.admin.deleteUser).not.toHaveBeenCalled();
 
     supabaseAdminMock.auth.admin.createUser.mockResolvedValue({
       data: { user: { id: 'sb-2' } },
@@ -688,6 +676,26 @@ describe('partner.inviteMember', () => {
     expect(quota.withinQuota).toHaveBeenCalledWith('t1', 'seats', 1, expect.any(Function));
   });
 
+  it('answers EMAIL_IN_USE CONFLICT, creating no member, when the Auth user already exists', async () => {
+    const { caller } = callerWith();
+    prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    supabaseAdminMock.auth.admin.createUser.mockResolvedValue({
+      data: { user: null },
+      error: { code: 'email_exists', message: 'exists' },
+    });
+
+    const err = await caller
+      .inviteMember({ tenantId: 't1', email: 'taken@b.co', role: 'MEMBER' })
+      .catch((e: unknown) => e as { message: string });
+
+    expect(err).toMatchObject({ code: 'CONFLICT' });
+    expect(err.message).toContain('EMAIL_IN_USE');
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+    expect(supabaseAdminMock.auth.admin.generateLink).not.toHaveBeenCalled();
+    expect(supabaseAdminMock.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
+
   it('refuses operator emails, cleans up on failure and maps a unique violation to CONFLICT', async () => {
     const { caller } = callerWith();
     prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
@@ -761,6 +769,15 @@ describe('partner.issueLoginLink', () => {
       email: 'a@b.co',
       options: undefined,
     });
+  });
+
+  it('refuses a login link for a user outside the partner tenants', async () => {
+    const { caller } = callerWith();
+    prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
+    prismaMock.user.findUnique.mockResolvedValue({ tenantId: 'someone-elses-tenant' } as never);
+
+    await expectCode(caller.issueLoginLink({ tenantId: 't1', email: 'a@b.co' }), 'FORBIDDEN');
+    expect(supabaseAdminMock.auth.admin.generateLink).not.toHaveBeenCalled();
   });
 
   it('is FORBIDDEN unless the user belongs to that tenant', async () => {

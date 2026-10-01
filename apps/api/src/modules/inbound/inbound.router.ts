@@ -671,79 +671,90 @@ export const inboundRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }): Promise<InboundSupportTicketOutput> => {
       assertAuthorised(ctx);
       const { tenantId } = getInboundBinding();
-      if (!ctx.services?.ticket) {
+      const ticketService = ctx.services?.ticket;
+      if (!ticketService) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Ticket service not available',
         });
       }
 
-      const prior = await ctx.prisma.ticketActivity.findFirst({
-        where: {
-          tenantId,
-          systemEventType: SUPPORT_EVENT_TYPE,
-          systemEventData: { path: ['requestId'], equals: input.requestId },
-        },
-        select: { ticketId: true },
-      });
-      if (prior) {
-        return { ticketId: prior.ticketId, created: false };
-      }
+      // Serialize per requestId: without the lock two concurrent retries both miss the lookup
+      // and create duplicate tickets. The lock is released at commit, after the marker insert.
+      const lockKey = `support:${input.requestId}`;
+      return ctx.prisma.$transaction(
+        async (tx): Promise<InboundSupportTicketOutput> => {
+          await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
 
-      const defaultSla = await ctx.prisma.sLAPolicy.findFirst({
-        where: { tenantId, isDefault: true },
-        select: { id: true },
-      });
-      const contactName =
-        [input.firstName, input.lastName].filter(Boolean).join(' ').trim() || input.email;
-
-      let ticket: { id: string };
-      try {
-        ticket = await ctx.services.ticket.create({
-          subject: input.subject.slice(0, 200),
-          description: input.message,
-          priority: input.category === 'bug' ? 'HIGH' : 'MEDIUM',
-          contactName: contactName.slice(0, 100),
-          contactEmail: input.email,
-          slaPolicyId: defaultSla?.id,
-          tenantId,
-        });
-      } catch (err) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: err instanceof Error ? err.message : 'Failed to create ticket',
-        });
-      }
-
-      try {
-        await ctx.prisma.ticketActivity.create({
-          data: {
-            ticketId: ticket.id,
-            tenantId,
-            type: 'SYSTEM_EVENT',
-            content: `Portal support request ${input.requestId}`,
-            authorName: 'System (portal)',
-            authorRole: 'System',
-            channel: 'PORTAL',
-            systemEventType: SUPPORT_EVENT_TYPE,
-            systemEventData: {
-              requestId: input.requestId,
-              ...(input.category ? { category: input.category } : {}),
-              ...(input.company ? { tenantSlug: input.company } : {}),
-              ...(input.source ? { source: input.source } : {}),
-              ...(input.extraTags ? { tags: input.extraTags } : {}),
+          const prior = await tx.ticketActivity.findFirst({
+            where: {
+              tenantId,
+              systemEventType: SUPPORT_EVENT_TYPE,
+              systemEventData: { path: ['requestId'], equals: input.requestId },
             },
-          },
-        });
-      } catch (err) {
-        // Without this marker a retry would create a duplicate ticket.
-        console.error('[inbound.logSupportTicket] idempotency marker failed:', {
-          ticketId: ticket.id,
-          requestId: input.requestId,
-          error: err instanceof Error ? err.message : err,
-        });
-      }
+            select: { ticketId: true },
+          });
+          if (prior) {
+            return { ticketId: prior.ticketId, created: false } as InboundSupportTicketOutput;
+          }
 
-      return { ticketId: ticket.id, created: true };
+          const defaultSla = await tx.sLAPolicy.findFirst({
+            where: { tenantId, isDefault: true },
+            select: { id: true },
+          });
+          const contactName =
+            [input.firstName, input.lastName].filter(Boolean).join(' ').trim() || input.email;
+
+          let ticket: { id: string };
+          try {
+            ticket = await ticketService.create({
+              subject: input.subject.slice(0, 200),
+              description: input.message,
+              priority: input.category === 'bug' ? 'HIGH' : 'MEDIUM',
+              contactName: contactName.slice(0, 100),
+              contactEmail: input.email,
+              slaPolicyId: defaultSla?.id,
+              tenantId,
+            });
+          } catch (err) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: err instanceof Error ? err.message : 'Failed to create ticket',
+            });
+          }
+
+          try {
+            await tx.ticketActivity.create({
+              data: {
+                ticketId: ticket.id,
+                tenantId,
+                type: 'SYSTEM_EVENT',
+                content: `Portal support request ${input.requestId}`,
+                authorName: 'System (portal)',
+                authorRole: 'System',
+                channel: 'PORTAL',
+                systemEventType: SUPPORT_EVENT_TYPE,
+                systemEventData: {
+                  requestId: input.requestId,
+                  ...(input.category ? { category: input.category } : {}),
+                  ...(input.company ? { tenantSlug: input.company } : {}),
+                  ...(input.source ? { source: input.source } : {}),
+                  ...(input.extraTags ? { tags: input.extraTags } : {}),
+                },
+              },
+            });
+          } catch (err) {
+            // Without this marker a retry would create a duplicate ticket.
+            console.error('[inbound.logSupportTicket] idempotency marker failed:', {
+              ticketId: ticket.id,
+              requestId: input.requestId,
+              error: err instanceof Error ? err.message : err,
+            });
+          }
+
+          return { ticketId: ticket.id, created: true };
+        },
+        { maxWait: 10_000, timeout: 30_000 }
+      );
     }),
 });
