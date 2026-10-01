@@ -3,6 +3,7 @@
  * product (a white panel with a header and three rows) drawn on a canvas that
  * three.js then maps onto the slab. Content is a sample workspace, never a claim.
  */
+import { roundedRect } from './round-rect';
 
 export type LayerId = 'foundation' | 'service' | 'pipeline' | 'control' | 'agents';
 
@@ -135,7 +136,7 @@ export function drawFace(
   const rr = (x: number, y: number, rw: number, rh: number, r: number, fill: string) => {
     g.fillStyle = fill;
     g.beginPath();
-    g.roundRect(x, y, rw, rh, r);
+    roundedRect(g, x, y, rw, rh, r);
     g.fill();
   };
   const icon = (name: string, x: number, y: number, size: number, fill: string) => {

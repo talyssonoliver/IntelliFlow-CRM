@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { drawFace, FACE_SIZE, type FaceFonts, type LayerId } from './aurora-face';
+import { roundedRect } from './round-rect';
 
 /** Bottom to top. */
 export const LAYERS: ReadonlyArray<{ id: LayerId; colour: string }> = [
@@ -133,7 +134,7 @@ function rippleTexture(): THREE.CanvasTexture {
     g.shadowBlur = 18;
     g.lineWidth = 6;
     g.beginPath();
-    g.roundRect(24, 24, canvas.width - 48, canvas.height - 48, 40);
+    roundedRect(g, 24, 24, canvas.width - 48, canvas.height - 48, 40);
     g.stroke();
   }
   return new THREE.CanvasTexture(canvas);
