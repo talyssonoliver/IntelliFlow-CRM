@@ -47,6 +47,10 @@ export function playScenes(
   // keeps them in the context, so the cleanup's revert kills them too.
   let ctx: ReturnType<GsapType['context']> | null = null;
   const within: Within = (fn) => (ctx ? void ctx.add(fn) : fn());
+  // The approval scene loops for as long as it is on screen, so its beats are
+  // not recorded in the context (that list would grow every cycle); it keeps
+  // only its live timeline and hands back a stop for the cleanup.
+  let stopApproval: () => void = () => undefined;
   ctx = gsap.context(() => {
     // Windows start tilted in space and settle flat as they come into view.
     root.querySelectorAll<HTMLElement>('.app.tilt, .app.tilt-soft').forEach((app) => {
@@ -63,10 +67,13 @@ export function playScenes(
       });
     });
 
-    playApprovalScene(root, gsap, ScrollTrigger, reduced, within);
+    stopApproval = playApprovalScene(root, gsap, ScrollTrigger, reduced);
     playPipelineScene(root, gsap, ScrollTrigger, reduced, within);
   }, root);
-  return () => ctx.revert();
+  return () => {
+    stopApproval();
+    ctx.revert();
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -267,11 +274,11 @@ export function playApprovalScene(
   root: HTMLElement,
   gsap: GsapType,
   ScrollTrigger: ScrollTriggerStatic,
-  reduced: boolean,
-  within: Within = direct
-): void {
+  reduced: boolean
+): () => void {
+  const none = () => undefined;
   const scene = byId(root, 'approval-scene');
-  if (!scene) return;
+  if (!scene) return none;
   const ready = [
     'review-source',
     'review-draft-text',
@@ -281,10 +288,10 @@ export function playApprovalScene(
     'review-toast',
     'why-renewal',
   ].every((id) => byId(scene, id));
-  if (!ready || !scene.querySelector('.review-title')) return;
+  if (!ready || !scene.querySelector('.review-title')) return none;
   if (reduced) {
     settleApprovalScene(scene, gsap);
-    return;
+    return none;
   }
   const queue = byId(scene, 'review-queue');
   const initialQueue = queue?.innerHTML ?? '';
@@ -292,35 +299,29 @@ export function playApprovalScene(
   let current: GsapTimeline | undefined;
   let running = false;
 
+  /** Only one timeline is ever live: the one before it is killed, never kept. */
+  const play = (timeline: GsapTimeline | undefined) => {
+    if (current && current !== timeline) current.kill();
+    current = timeline;
+    return timeline;
+  };
   const next = () => {
     index = (index + 1) % REVIEW_ITEMS.length;
-    current = gsap.timeline().to({}, { duration: 1.6 });
-    current.eventCallback('onComplete', () => playItem());
+    play(gsap.timeline().to({}, { duration: 1.6 }))?.eventCallback('onComplete', () => playItem());
   };
-  const playItem = (): void =>
-    within(() => {
-      if (!running) return;
-      const item = REVIEW_ITEMS[index]!;
-      if (index === 0 && queue) queue.innerHTML = initialQueue;
-      loadReviewItem(scene, item);
-      const toast = byId(scene, 'review-toast');
-      if (toast) gsap.set(toast, { autoAlpha: 0 });
-      const reveal = revealReasoning(scene, gsap);
-      current = reveal;
-      reveal?.eventCallback('onComplete', () =>
-        within(() => {
-          const type = typeDraft(scene, gsap);
-          current = type;
-          type?.eventCallback('onComplete', () =>
-            within(() => {
-              const confirm = confirmApproval(scene, gsap, rowState(scene, item));
-              current = confirm;
-              confirm?.eventCallback('onComplete', () => within(next));
-            })
-          );
-        })
-      );
-    });
+  const playItem = (): void => {
+    if (!running) return;
+    const item = REVIEW_ITEMS[index]!;
+    if (index === 0 && queue) queue.innerHTML = initialQueue;
+    loadReviewItem(scene, item);
+    const toast = byId(scene, 'review-toast');
+    if (toast) gsap.set(toast, { autoAlpha: 0 });
+    play(revealReasoning(scene, gsap))?.eventCallback('onComplete', () =>
+      play(typeDraft(scene, gsap))?.eventCallback('onComplete', () =>
+        play(confirmApproval(scene, gsap, rowState(scene, item)))?.eventCallback('onComplete', next)
+      )
+    );
+  };
 
   ScrollTrigger.create({
     trigger: scene,
@@ -333,6 +334,11 @@ export function playApprovalScene(
       else playItem();
     },
   });
+  return () => {
+    running = false;
+    current?.kill();
+    current = undefined;
+  };
 }
 
 // ---------------------------------------------------------------------------

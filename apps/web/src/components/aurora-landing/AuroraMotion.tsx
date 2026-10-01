@@ -144,21 +144,23 @@ function pauseWhenHidden(canvas: HTMLCanvasElement, s: Stack, cleanups: Array<()
 /**
  * The phone story's state for each layer, from where its card is on screen.
  * A layer lifts out as its card rises from the bottom edge to 70% of the
- * screen, and dissolves as the next card rises from the bottom edge to 80%.
+ * screen, and peels away only once its card has left the top of the screen,
+ * over the next quarter of a screen of scrolling. The cards are spaced so a
+ * layer has gone before the next card appears.
  */
 export function phoneStory(
   cards: HTMLElement[],
   viewport: number
 ): Partial<Record<LayerId, Presentation>> {
-  const rise = (card: HTMLElement | undefined, span: number) => {
-    if (!card) return 0;
-    const top = card.getBoundingClientRect().top / viewport;
-    return Math.min(1, Math.max(0, (1 - top) / span));
-  };
+  const clamp = (v: number) => Math.min(1, Math.max(0, v));
   const story: Partial<Record<LayerId, Presentation>> = {};
-  cards.forEach((card, i) => {
+  cards.forEach((card) => {
+    const rect = card.getBoundingClientRect();
     const layer = card.dataset.layer as LayerId;
-    story[layer] = { present: rise(card, 0.3), dissolve: rise(cards[i + 1], 0.2) };
+    story[layer] = {
+      present: clamp((1 - rect.top / viewport) / 0.3),
+      dissolve: clamp(-rect.bottom / viewport / 0.25),
+    };
   });
   return story;
 }
@@ -183,6 +185,26 @@ function followLayers({ root, gsap, ScrollTrigger, motion, triggers, cleanups }:
     // lifts out of the stack to the top of the frame and turns to face the
     // reader; it stays there while the card scrolls past, and dissolves as the
     // next card fills the bottom fifth of the screen.
+    // Act 0: the stack waits below the fold, then arrives stacked tight and
+    // turned, opening out as the hero scrolls away.
+    const hero = root.querySelector('.hero');
+    const frame = root.querySelector<HTMLElement>('.stage-object.stack-visual');
+    const show = (progress: number) => {
+      s.setIntro(progress);
+      // Hidden on the first screen; fades in over the first stretch of scrolling.
+      if (frame) frame.style.opacity = String(Math.min(1, progress * 6));
+    };
+    if (hero) {
+      const intro = ScrollTrigger.create({
+        trigger: hero,
+        start: 'top top',
+        end: 'bottom 15%',
+        onUpdate: (self) => show(self.progress),
+      });
+      triggers.push(intro);
+      cleanups.push(() => frame?.style.removeProperty('opacity'));
+      show((intro as { progress?: number }).progress ?? 0);
+    }
     const copy = root.querySelector('.stage-copy');
     if (copy) {
       const cards = steps.filter((step) => step.dataset.layer);
@@ -311,6 +333,7 @@ function wireStack(wiring: Wiring, s: Stack): void {
     teardown();
     s.setPresentation(null);
     s.setActive(null);
+    s.setIntro(1);
     const scoped: Wiring = { ...wiring, triggers, cleanups: local };
     hideAtStageEnd(scoped, s, followLayers(scoped, s));
   };

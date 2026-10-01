@@ -41,6 +41,14 @@ const SETTLE_MS = 650;
 /** The axis that turns a slab's face towards the camera, which sits 9 across and 9 deep. */
 const TILT_AXIS = new THREE.Vector3(1, 0, -1).normalize();
 
+/**
+ * Act 0's starting turn about the vertical axis: a quarter-turn. The slabs
+ * stay on a diagonal to the camera, so their edges show depth the whole way
+ * round and the face text stays upright (an eighth of a turn lines them up
+ * with the camera and reads as a flat card; owner 2026-10-01).
+ */
+const INTRO_TURN = Math.PI / 2;
+
 /** Space between the frame's top and a presented layer, in CSS px. */
 const PRESENT_PAD_PX = 20;
 /** How far the camera rises while a layer is presented, so the stack sits lower. */
@@ -158,6 +166,12 @@ export interface Presentation {
 export interface AuroraStack {
   setActive(id: LayerId | null): void;
   /**
+   * Act 0 on a phone, from 0 to 1: the stack arrives tightly stacked and
+   * turned a quarter, then turns back and spreads to its floating state.
+   * 1 (the default) is that state.
+   */
+  setIntro(progress: number): void;
+  /**
    * Phone story: lifts each named layer out of the stack to the top of the
    * frame, square to the viewer, by `present`, and fades it by `dissolve`.
    * `null` returns every layer to the stack.
@@ -264,7 +278,8 @@ export function createStack(
     const rings = [0, 1].map(() => {
       const material = new THREE.MeshBasicMaterial({
         map: rippleMap,
-        color: colour,
+        // Navy reads as a dark box, not a glow: the bottom layer ripples in Violet.
+        color: index === 0 ? new THREE.Color('#7655F6') : colour,
         transparent: true,
         opacity: 0,
         depthWrite: false,
@@ -288,10 +303,15 @@ export function createStack(
     };
   });
   const turn = new THREE.Quaternion();
+  /** Lays a ripple ring flat on its slab's face (rings are planes facing +Z). */
+  const flat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
+  const peelTurn = new THREE.Quaternion();
+  const peelAxis = new THREE.Vector3(1, 0, 0);
   const follow = new THREE.Quaternion();
   const followEuler = new THREE.Euler();
 
   let activeIndex = -1;
+  let intro = 1;
   /** Per layer, how far it is presented (0 to 1) and how far it has dissolved (0 to 1). */
   let presentation: Presentation[] = [];
   const presented = new THREE.Quaternion();
@@ -327,6 +347,7 @@ export function createStack(
       z: up.z * offset + towards.z * 6,
       quaternion: presented,
       scale,
+      up,
     };
   };
   /** The last time the page scrolled or the active layer changed. */
@@ -383,13 +404,17 @@ export function createStack(
     camera.updateProjectionMatrix();
     const pose = presenting ? presentPose(cam, size) : null;
 
+    // Act 0: layers close together around the stack's centre, turned a quarter.
+    const opened = reducedMotion ? 1 : smooth(intro);
+    const spread = 0.28 + 0.72 * opened;
     items.forEach((item, index) => {
       const target = layerTarget(index, activeIndex);
       const s = item.state;
       s.lift += (target.lift - s.lift) * ease;
       s.glow += (target.glow - s.glow) * ease;
       s.peel += (target.peel - s.peel) * ease;
-      item.group.position.set(0, baseY(index) + s.lift + s.peel * 3.4, 0);
+      const slotY = REST_Y + (baseY(index) - REST_Y) * spread;
+      item.group.position.set(0, slotY + s.lift + s.peel * 3.4, 0);
       item.group.visible = s.peel < 0.985;
       item.slab.opacity = 1 - s.peel;
       item.slab.emissiveIntensity = 0.12 * s.glow;
@@ -404,27 +429,47 @@ export function createStack(
       item.group.quaternion.copy(turn).multiply(follow.setFromEuler(followEuler));
       item.group.scale.set(1, 1, 1);
 
-      // Phone story: the layer lifts out to the top of the frame, faces the
-      // viewer while its card scrolls past, then dissolves.
+      // Phone story: the layer lifts out to the top of the frame and faces the
+      // viewer while its card scrolls past. Once the card has left the screen
+      // it peels away as layers always have: it drifts up, wobbles and fades,
+      // leaving a ripple where it was.
       const shown = presentation[index];
-      if (pose && shown && shown.present > 0) {
+      const presented = !!(pose && shown && shown.present > 0);
+      let ripple = s.peel;
+      let ringAt = { x: 0, y: baseY(index) + H / 2, z: 0 };
+      let ringScale = 1;
+      if (pose && shown && presented) {
         const e = smooth(shown.present);
+        const d = reducedMotion ? 0 : shown.dissolve;
         const p = item.group.position;
         p.set(p.x + (pose.x - p.x) * e, p.y + (pose.y - p.y) * e, p.z + (pose.z - p.z) * e);
+        ringAt = { x: p.x, y: p.y, z: p.z };
+        const rise = d * 2.4 * pose.scale;
+        p.set(p.x + pose.up.x * rise, p.y + pose.up.y * rise, p.z + pose.up.z * rise);
         item.group.quaternion.slerp(pose.quaternion, e);
-        const grow = (1 + (pose.scale - 1) * e) * (1 + shown.dissolve * 0.08);
-        item.group.scale.set(grow, grow, grow);
+        if (d > 0 && d < 1) {
+          item.group.quaternion.multiply(
+            peelTurn.setFromAxisAngle(peelAxis, Math.sin(d * Math.PI * 2) * 0.08)
+          );
+        }
+        ringScale = 1 + (pose.scale - 1) * e;
+        item.group.scale.set(ringScale, ringScale, ringScale);
         const alpha = 1 - smooth(shown.dissolve);
         item.group.visible = alpha > 0.015;
         item.slab.opacity = alpha;
         item.face.opacity = alpha;
         item.slab.emissiveIntensity = 0.12;
+        ripple = shown.dissolve;
       }
 
-      rippleRings(reducedMotion ? 0 : s.peel).forEach(({ scale, opacity }, r) => {
+      rippleRings(reducedMotion ? 0 : ripple).forEach(({ scale, opacity }, r) => {
         const ring = item.rings[r]!;
-        ring.visible = !shown?.present && opacity > 0.01;
-        ring.scale.set(scale, scale, 1);
+        ring.visible = opacity > 0.01;
+        ring.position.set(ringAt.x, ringAt.y, ringAt.z);
+        // On the slab's face: flat in the stack, square to the viewer when presented.
+        if (presented) ring.quaternion.copy(item.group.quaternion).multiply(flat);
+        else ring.quaternion.copy(flat);
+        ring.scale.set(scale * ringScale, scale * ringScale, 1);
         ring.material.opacity = opacity;
       });
     });
@@ -433,7 +478,7 @@ export function createStack(
       pointer.y += (pointer.ty - pointer.y) * 0.05;
       // No pointer sway while a layer is presented, so it faces the viewer squarely.
       const sway = presenting ? 0 : 1;
-      root.rotation.y = pointer.x * 0.06 * sway;
+      root.rotation.y = pointer.x * 0.06 * sway + (1 - opened) * INTRO_TURN;
       root.rotation.x = pointer.y * 0.03 * sway;
     }
     renderer.render(scene, camera);
@@ -458,6 +503,9 @@ export function createStack(
   start();
 
   return {
+    setIntro(progress) {
+      intro = Math.min(1, Math.max(0, progress));
+    },
     setPresentation(next) {
       presentation = LAYERS.map((l) => next?.[l.id] ?? { present: 0, dissolve: 0 });
     },
