@@ -80,6 +80,24 @@ function currentSessionEmail(): string | null {
   }
 }
 
+/**
+ * Breadcrumb labels are fixed literals. Never build one from component state or refs (the same
+ * hooks hold the magic-link token): the trace is written to sessionStorage and must stay
+ * free of anything derived from a credential.
+ */
+const BREADCRUMBS = {
+  oauth: {
+    established: 'oauth:session-established',
+    cookie: 'oauth:cookie-synced',
+    error: 'oauth:error',
+  },
+  magiclink: {
+    established: 'magiclink:session-established',
+    cookie: 'magiclink:cookie-synced',
+    error: 'magiclink:error',
+  },
+} as const;
+
 interface PendingMagicLink {
   tokenHash: string;
   next: string;
@@ -121,7 +139,7 @@ export function OAuthCallback({
       activeTenantId: string | null = null
     ) => {
       setStatus('success');
-      recordAuthBreadcrumb(`${flow}:session-established`);
+      recordAuthBreadcrumb(BREADCRUMBS[flow].established);
 
       // ADR-071: a fresh sign-in starts from a known tenant. A magic link names the tenant it
       // was minted for (the client CRM the Portal opened); every other sign-in starts in the
@@ -140,7 +158,7 @@ export function OAuthCallback({
       // immediately on the post-login redirect — otherwise the first server
       // render of /dashboard misses auth and flashes the unauthenticated view.
       syncTokenToCookie(session.access_token);
-      recordAuthBreadcrumb(`${flow}:cookie-synced`);
+      recordAuthBreadcrumb(BREADCRUMBS[flow].cookie);
 
       // Store device fingerprint for session verification
       storeSessionFingerprint();
@@ -173,7 +191,7 @@ export function OAuthCallback({
   const reportError = useCallback(
     (err: unknown) => {
       setStatus('error');
-      recordAuthBreadcrumb(`${flowRef.current}:error`);
+      recordAuthBreadcrumb(BREADCRUMBS[flowRef.current].error);
       let errorMsg: string;
       if (err instanceof Error) {
         errorMsg =
