@@ -9,6 +9,7 @@ type Trigger = {
   onToggle?: (self: { isActive: boolean }) => void;
   onUpdate?: (self: { scroll: () => number }) => void;
   onEnter?: () => void;
+  onLeave?: () => void;
   onLeaveBack?: () => void;
   kill: () => void;
 };
@@ -37,6 +38,7 @@ vi.mock('../aurora-scenes', () => ({ playScenes: (...a: unknown[]) => playScenes
 
 const stack = {
   setActive: vi.fn(),
+  setPresentation: vi.fn(),
   pause: vi.fn(),
   resume: vi.fn(),
   hide: vi.fn(),
@@ -372,8 +374,9 @@ describe('AuroraMotion', () => {
     expect(() => render(<AuroraMotion />)).not.toThrow();
   });
 
-  it('on a phone, puts the layer of the last pinned card on top of the stack', async () => {
+  it("on a phone, lifts each card's layer out to face the reader, then dissolves it as the next card arrives", async () => {
     vi.stubGlobal('matchMedia', (q: string) => ({ matches: q === '(max-width: 960px)', media: q }));
+    vi.stubGlobal('innerHeight', 1000);
     const root = mountPage();
     const walk = root.querySelector<HTMLElement>('.walk')!;
     const copy = document.createElement('div');
@@ -383,25 +386,33 @@ describe('AuroraMotion', () => {
     const [agents, control] = [...root.querySelectorAll<HTMLElement>('.layer-step')];
     const place = (el: HTMLElement, top: number) =>
       (el.getBoundingClientRect = () => ({ top }) as DOMRect);
-    [walk, agents!, control!].forEach((el) => (el.style.top = '420px'));
     render(<AuroraMotion />);
     await waitFor(() => expect(triggers.some((t) => t.trigger === copy)).toBe(true));
-    const stepper = triggers.find((t) => t.trigger === copy)!;
+    const story = triggers.find((t) => t.trigger === copy)!;
     expect(createScrubSteps).not.toHaveBeenCalled();
+    const last = () => stack.setPresentation.mock.lastCall![0];
 
-    place(walk, 420);
-    place(agents!, 900);
-    place(control!, 1400);
-    stepper.onUpdate!({ scroll: () => 0 });
-    expect(stack.setActive).toHaveBeenLastCalledWith(null);
+    // The first card is still below the screen: every layer rests in the stack.
+    place(agents!, 1200);
+    place(control!, 2000);
+    story.onUpdate!({ scroll: () => 0 });
+    expect(last().agents).toEqual({ present: 0, dissolve: 0 });
 
-    place(agents!, 420);
-    stepper.onUpdate!({ scroll: () => 0 });
-    expect(stack.setActive).toHaveBeenLastCalledWith('agents');
+    // Its card at 70% of the screen: the layer is fully out, facing the reader.
+    place(agents!, 700);
+    story.onUpdate!({ scroll: () => 0 });
+    expect(last().agents.present).toBeCloseTo(1);
+    expect(last().agents.dissolve).toBe(0);
 
-    place(control!, 420);
-    stepper.onUpdate!({ scroll: () => 0 });
-    expect(stack.setActive).toHaveBeenLastCalledWith('control');
+    // The next card fills the bottom fifth: the layer has dissolved, the next one is rising.
+    place(agents!, -400);
+    place(control!, 800);
+    story.onUpdate!({ scroll: () => 0 });
+    expect(last().agents.dissolve).toBeCloseTo(1);
+    expect(last().control.present).toBeCloseTo(2 / 3);
+
+    story.onLeave!();
+    expect(stack.setPresentation).toHaveBeenLastCalledWith(null);
   });
 
   it('clears the stack only when the pinned frame is about to unstick, measuring the sticky frame on desktop', async () => {
