@@ -1,0 +1,103 @@
+/* System status, in the Aurora design. Every rule is scoped under .aurora-site .aurora-status. */
+
+.aurora-site .aurora-status .ast-body {
+  display: grid;
+  gap: 16px;
+  max-width: 820px;
+  padding-top: 16px;
+}
+.aurora-site .aurora-status h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--navy);
+}
+.aurora-site .aurora-status .ast-live {
+  padding: 24px;
+}
+.aurora-site .aurora-status .ast-live-row,
+.aurora-site .aurora-status .ast-pending li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.aurora-site .aurora-status .ast-live-row > div,
+.aurora-site .aurora-status .ast-pending li > div {
+  flex: 1;
+  min-width: 0;
+}
+.aurora-site .aurora-status .ast-live-row .ast-result,
+.aurora-site .aurora-status .ast-pending p {
+  display: block;
+  margin: 4px 0 0;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.aurora-site .aurora-status .ast-checked {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.aurora-site .aurora-status .ast-dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+.aurora-site .aurora-status .ast-up {
+  background: #12a8a4;
+  box-shadow: 0 0 0 6px rgba(40, 217, 212, 0.18);
+}
+.aurora-site .aurora-status .ast-down {
+  background: #c43b3b;
+  box-shadow: 0 0 0 6px rgba(196, 59, 59, 0.15);
+}
+.aurora-site .aurora-status .ast-checking {
+  background: var(--lavender);
+}
+.aurora-site .aurora-status .ast-pending {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.aurora-site .aurora-status .ast-pending li {
+  padding: 20px 24px;
+}
+.aurora-site .aurora-status .ast-pending-dot {
+  background: rgba(20, 24, 51, 0.2);
+}
+.aurora-site .aurora-status .ast-tag {
+  flex: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 700;
+}
+.aurora-site .aurora-status .ast-note {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 24px;
+}
+.aurora-site .aurora-status .ast-note p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+@media (max-width: 640px) {
+  .aurora-site .aurora-status .ast-live-row,
+  .aurora-site .aurora-status .ast-pending li {
+    flex-wrap: wrap;
+  }
+  .aurora-site .aurora-status .ast-tag {
+    margin-left: 30px;
+  }
+}
