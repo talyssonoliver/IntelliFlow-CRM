@@ -17,8 +17,18 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure, adminProcedure } from '../../trpc';
+import {
+  createTRPCRouter,
+  adminProcedure as baseAdminProcedure,
+  moduleTenantProcedure,
+  requireModule,
+} from '../../trpc';
 import { pickTrustedForwardedIp } from '../../security/client-ip';
+
+// ADR-070: server-side AI_INTELLIGENCE entitlement — conversation router
+// (a tenant on a plan without it must not reach these endpoints directly).
+const tenantProcedure = moduleTenantProcedure('AI_INTELLIGENCE');
+const adminProcedure = baseAdminProcedure.use(requireModule('AI_INTELLIGENCE'));
 
 // ============================================
 // Input Schemas

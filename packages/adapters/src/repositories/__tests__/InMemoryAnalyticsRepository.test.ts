@@ -5,7 +5,7 @@
  * Coverage target: >90% for repository layer
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   InMemoryAnalyticsRepository,
   type OpportunityData,
@@ -13,6 +13,12 @@ import {
   type ContactData,
   type AuditLogData,
 } from '../InMemoryAnalyticsRepository';
+
+// Pin the clock to a mid-month UTC instant: the code under test derives "this
+// month" in UTC while these tests used the local clock, so for the hours around
+// every month boundary (e.g. 00:30 BST on the 1st is still the previous month
+// in UTC) the two disagreed and the pre-ship gate failed.
+vi.useFakeTimers({ now: new Date('2026-06-15T12:00:00Z'), toFake: ['Date'] });
 
 describe('InMemoryAnalyticsRepository', () => {
   let repo: InMemoryAnalyticsRepository;

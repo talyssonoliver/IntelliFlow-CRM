@@ -765,6 +765,44 @@ describe('billingRouter', () => {
       });
     });
 
+    it('syncs Tenant.plan and modules to the tier of the new price', async () => {
+      process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY = 'price_enterprise_monthly';
+      try {
+        mockStripeAdapterMethods.listSubscriptions.mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: [mockSubscription],
+        });
+        mockStripeAdapterMethods.updateSubscription.mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: { ...mockSubscription, priceId: 'price_enterprise_monthly' },
+        });
+        const syncModulesToPlan = vi.fn().mockResolvedValue([]);
+        const mockContext = {
+          user: {
+            userId: 'user_123',
+            email: 'test@example.com',
+            role: 'USER',
+            tenantId: 'tenant_123',
+            stripeCustomerId: 'cus_123',
+            emailVerified: true,
+          } as UserSession,
+          prisma: {} as unknown,
+          container: { get: vi.fn().mockReturnValue({ syncModulesToPlan }) },
+        };
+        const caller = billingRouter.createCaller(
+          mockContext as unknown as Parameters<typeof billingRouter.createCaller>[0]
+        );
+
+        await caller.updateSubscription({ priceId: 'price_enterprise_monthly' });
+
+        expect(syncModulesToPlan).toHaveBeenCalledWith('tenant_123', 'ENTERPRISE');
+      } finally {
+        delete process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY;
+      }
+    });
+
     it('updates subscription quantity successfully', async () => {
       const updatedSubscription = {
         ...mockSubscription,

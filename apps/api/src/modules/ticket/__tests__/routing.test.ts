@@ -871,6 +871,8 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
       getEligibleAgents: vi.fn(),
     };
     const ctx = {
+      // ADR-070: SUPPORT entitlement gate resolves moduleAccess from the container.
+      container: { get: () => ({ isModuleEnabled: async () => true }) },
       services: { ticketRouting: mockService },
       prisma: {},
       user: { userId: USER_UUID, email: 'test@test.com', role: 'ADMIN', tenantId: TENANT_UUID },
@@ -916,6 +918,8 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
       getEligibleAgents: vi.fn(),
     };
     const ctx = {
+      // ADR-070: SUPPORT entitlement gate resolves moduleAccess from the container.
+      container: { get: () => ({ isModuleEnabled: async () => true }) },
       services: { ticketRouting: mockService },
       prisma: {
         ticket: {
@@ -978,6 +982,8 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
       getEligibleAgents: vi.fn(),
     };
     const ctx = {
+      // ADR-070: SUPPORT entitlement gate resolves moduleAccess from the container.
+      container: { get: () => ({ isModuleEnabled: async () => true }) },
       services: { ticketRouting: mockService },
       prisma: {
         ticket: {
@@ -1034,6 +1040,8 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
       getEligibleAgents: vi.fn(),
     };
     const ctx = {
+      // ADR-070: SUPPORT entitlement gate resolves moduleAccess from the container.
+      container: { get: () => ({ isModuleEnabled: async () => true }) },
       services: { ticketRouting: mockService },
       prisma: {
         ticket: {
@@ -1064,6 +1072,8 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
       getEligibleAgents: vi.fn(),
     };
     const ctx = {
+      // ADR-070: SUPPORT entitlement gate resolves moduleAccess from the container.
+      container: { get: () => ({ isModuleEnabled: async () => true }) },
       services: { ticketRouting: mockService },
       prisma: {
         ticket: {
@@ -1091,6 +1101,8 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
       getEligibleAgents: vi.fn(),
     };
     const ctx = {
+      // ADR-070: SUPPORT entitlement gate resolves moduleAccess from the container.
+      container: { get: () => ({ isModuleEnabled: async () => true }) },
       services: { ticketRouting: mockService },
       prisma: {
         ticket: { findFirst: vi.fn().mockResolvedValue(null) },
@@ -1125,6 +1137,7 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
   // D10: router throws INTERNAL_SERVER_ERROR when service missing
   it('D10: autoRoute throws when service not wired', async () => {
     const ctx = {
+      container: { get: () => ({ isModuleEnabled: async () => true }) },
       services: {},
       prisma: {},
       user: { userId: USER_UUID, email: 'test@test.com', role: 'ADMIN', tenantId: TENANT_UUID },
@@ -1138,6 +1151,7 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
   // D11: suggestAssignee throws INTERNAL_SERVER_ERROR when service missing
   it('D11: suggestAssignee throws when service not wired', async () => {
     const ctx = {
+      container: { get: () => ({ isModuleEnabled: async () => true }) },
       services: {},
       prisma: {},
       user: { userId: USER_UUID, email: 'test@test.com', role: 'ADMIN', tenantId: TENANT_UUID },

@@ -41,6 +41,7 @@ import {
 } from '../../security/tenant-context';
 // IFC-240: fire-and-forget audit logging for lead mutations + single-record reads
 import { getAuditLogger } from '../../security/audit-logger';
+import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
 import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapters';
 import { createNotification } from '../notifications/notifications.router';
 import { deriveLeadInsights } from '../../shared/lead-insight-deriver';
@@ -1019,10 +1020,14 @@ export const leadRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const leadService = getLeadService(ctx);
 
-    const result = await leadService.convertLead(
-      input.leadId,
-      input.createAccount ? (input.accountName ?? null) : null,
-      typedCtx.tenant.userId
+    // Conversion creates a contact: count it against the tenant's contact quota, under the
+    // per-tenant lock so the count and the create cannot interleave with another request.
+    const result = await withQuotaLock(ctx, typedCtx.tenant.tenantId, 'contacts', 1, () =>
+      leadService.convertLead(
+        input.leadId,
+        input.createAccount ? (input.accountName ?? null) : null,
+        typedCtx.tenant.userId
+      )
     );
 
     if (result.isFailure) {
@@ -1090,6 +1095,8 @@ export const leadRouter = createTRPCRouter({
    */
   convertToDeal: tenantProcedure.input(convertLeadToDealSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
+
+    // The contact is optional here; only a conversion that creates one consumes contact quota.
     const useCase = ctx.services?.convertLeadToDeal;
     if (!useCase) {
       throw new TRPCError({
@@ -1098,10 +1105,14 @@ export const leadRouter = createTRPCRouter({
       });
     }
 
-    const result = await useCase.execute({
-      ...input,
-      convertedBy: typedCtx.tenant.userId,
-    });
+    const execute = () =>
+      useCase.execute({
+        ...input,
+        convertedBy: typedCtx.tenant.userId,
+      });
+    const result = input.createContact
+      ? await withQuotaLock(ctx, typedCtx.tenant.tenantId, 'contacts', 1, execute)
+      : await execute();
 
     if (result.isFailure) {
       const msg = result.error.message;
@@ -1528,52 +1539,59 @@ export const leadRouter = createTRPCRouter({
     const { ids, createAccounts } = input;
 
     // IFC-007: Use batch operation via transaction
-    // Replaces O(n) sequential calls with O(1) batch queries
-    const txResult = await typedCtx.prismaWithTenant.$transaction(async (tx) => {
-      const successful: string[] = [];
-      const failed: Array<{ id: string; error: string }> = [];
+    // Replaces O(n) sequential calls with O(1) batch queries.
+    // The per-tenant contact lock is held for the whole conversion; the quota is asserted for the
+    // leads that will really become contacts (known only after loading them below).
+    const txResult = await withQuotaLock(ctx, typedCtx.tenant.tenantId, 'contacts', 0, () =>
+      typedCtx.prismaWithTenant.$transaction(async (tx) => {
+        const successful: string[] = [];
+        const failed: Array<{ id: string; error: string }> = [];
 
-      // Fetch all leads in single query
-      const leads = await tx.lead.findMany({
-        where: { id: { in: ids }, tenantId: typedCtx.tenant.tenantId },
-      });
-      const existingIds = new Set(leads.map((l) => l.id));
+        // Fetch all leads in single query
+        const leads = await tx.lead.findMany({
+          where: { id: { in: ids }, tenantId: typedCtx.tenant.tenantId },
+        });
+        const existingIds = new Set(leads.map((l) => l.id));
 
-      collectMissingLeads(ids, existingIds, failed);
+        collectMissingLeads(ids, existingIds, failed);
 
-      const validLeads = leads.filter((l) => l.status !== 'CONVERTED');
-      const alreadyConverted = leads.filter((l) => l.status === 'CONVERTED');
-      collectAlreadyConvertedLeads(alreadyConverted, failed);
+        const validLeads = leads.filter((l) => l.status !== 'CONVERTED');
+        const alreadyConverted = leads.filter((l) => l.status === 'CONVERTED');
+        collectAlreadyConvertedLeads(alreadyConverted, failed);
 
-      if (validLeads.length === 0) {
-        return { successful, failed, totalProcessed: ids.length };
-      }
-
-      await tx.lead.updateMany({
-        where: { id: { in: validLeads.map((l) => l.id) } },
-        data: { status: 'CONVERTED', updatedAt: new Date() },
-      });
-
-      const activityData = buildConversionActivityData(
-        validLeads,
-        typedCtx.tenant.userId,
-        ctx.user?.email ?? 'System'
-      );
-      await tx.leadActivity.createMany({ data: activityData as any });
-
-      const contactData = buildContactDataFromLeads(validLeads, typedCtx.tenant.userId);
-      await tx.contact.createMany({ data: contactData as any, skipDuplicates: true });
-
-      if (createAccounts) {
-        const accountData = buildAccountDataFromLeads(validLeads, typedCtx.tenant.userId);
-        if (accountData.length > 0) {
-          await tx.account.createMany({ data: accountData as any, skipDuplicates: true });
+        if (validLeads.length === 0) {
+          return { successful, failed, totalProcessed: ids.length };
         }
-      }
 
-      successful.push(...validLeads.map((l) => l.id));
-      return { successful, failed, totalProcessed: ids.length };
-    });
+        // Charge only eligible leads: missing and already-converted ids create no contacts.
+        await assertQuota(ctx, typedCtx.tenant.tenantId, 'contacts', validLeads.length);
+
+        await tx.lead.updateMany({
+          where: { id: { in: validLeads.map((l) => l.id) } },
+          data: { status: 'CONVERTED', updatedAt: new Date() },
+        });
+
+        const activityData = buildConversionActivityData(
+          validLeads,
+          typedCtx.tenant.userId,
+          ctx.user?.email ?? 'System'
+        );
+        await tx.leadActivity.createMany({ data: activityData as any });
+
+        const contactData = buildContactDataFromLeads(validLeads, typedCtx.tenant.userId);
+        await tx.contact.createMany({ data: contactData as any, skipDuplicates: true });
+
+        if (createAccounts) {
+          const accountData = buildAccountDataFromLeads(validLeads, typedCtx.tenant.userId);
+          if (accountData.length > 0) {
+            await tx.account.createMany({ data: accountData as any, skipDuplicates: true });
+          }
+        }
+
+        successful.push(...validLeads.map((l) => l.id));
+        return { successful, failed, totalProcessed: ids.length };
+      })
+    );
 
     // IFC-240: fire-and-forget audit logging (GDPR — bulk lead conversion)
     getAuditLogger(ctx.prisma)

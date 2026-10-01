@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-07-26T12:57:55.623Z",
+  "timestamp": "2026-10-01T08:13:19.824Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,8 +1016,8 @@
   },
   "api_inventory": {
     "total_routers": 65,
-    "total_endpoints": 541,
-    "total_queries": 245,
+    "total_endpoints": 529,
+    "total_queries": 233,
     "total_mutations": 296,
     "routers": [
       {
@@ -1081,12 +1081,6 @@
         "mutations": 10
       },
       {
-        "name": "analytics",
-        "endpoints": 14,
-        "queries": 14,
-        "mutations": 0
-      },
-      {
         "name": "autoresponse",
         "endpoints": 14,
         "queries": 4,
@@ -1129,12 +1123,6 @@
         "mutations": 7
       },
       {
-        "name": "billing",
-        "endpoints": 10,
-        "queries": 5,
-        "mutations": 5
-      },
-      {
         "name": "intelligence",
         "endpoints": 10,
         "queries": 7,
@@ -1145,6 +1133,12 @@
         "endpoints": 9,
         "queries": 8,
         "mutations": 1
+      },
+      {
+        "name": "billing",
+        "endpoints": 9,
+        "queries": 5,
+        "mutations": 4
       },
       {
         "name": "webhooks",
@@ -1315,6 +1309,12 @@
         "mutations": 1
       },
       {
+        "name": "inbound",
+        "endpoints": 3,
+        "queries": 0,
+        "mutations": 3
+      },
+      {
         "name": "appointmentSettings",
         "endpoints": 3,
         "queries": 1,
@@ -1339,16 +1339,16 @@
         "mutations": 1
       },
       {
+        "name": "analytics",
+        "endpoints": 2,
+        "queries": 2,
+        "mutations": 0
+      },
+      {
         "name": "upload",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
-      },
-      {
-        "name": "inbound",
-        "endpoints": 2,
-        "queries": 0,
-        "mutations": 2
       },
       {
         "name": "termsAcceptance",
@@ -1413,19 +1413,26 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 180,
-    "total_fields": 2616,
-    "total_indexes": 835,
-    "total_relations": 253,
+    "total_tables": 184,
+    "total_fields": 2662,
+    "total_indexes": 850,
+    "total_relations": 256,
     "tables_with_embeddings": 4,
-    "enums": 74,
+    "enums": 75,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 158,
-        "indexes": 4,
+        "fields": 164,
+        "indexes": 6,
         "relations": 2,
         "hasEmbedding": false
+      },
+      {
+        "name": "Lead",
+        "fields": 49,
+        "indexes": 14,
+        "relations": 3,
+        "hasEmbedding": true
       },
       {
         "name": "User",
@@ -1433,13 +1440,6 @@
         "indexes": 7,
         "relations": 7,
         "hasEmbedding": false
-      },
-      {
-        "name": "Lead",
-        "fields": 41,
-        "indexes": 13,
-        "relations": 3,
-        "hasEmbedding": true
       },
       {
         "name": "Contact",
@@ -2058,6 +2058,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "PartnerApiKey",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "LeadNote",
         "fields": 11,
         "indexes": 4,
@@ -2534,6 +2541,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "Partner",
+        "fields": 7,
+        "indexes": 2,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
         "name": "TenantModule",
         "fields": 7,
         "indexes": 3,
@@ -2612,6 +2626,20 @@
       },
       {
         "name": "DocumentRequiredField",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TenantQuotaOverride",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TenantUsageCounter",
         "fields": 7,
         "indexes": 3,
         "relations": 1,
@@ -3817,77 +3845,15 @@
     ],
     "analytics": [
       {
-        "name": "analytics.dealsWonTrend",
-        "method": "GET",
-        "description": "Deals won trend",
-        "critical": true
-      },
-      {
-        "name": "analytics.growthTrends",
-        "method": "GET",
-        "description": "Growth trends",
-        "critical": true
-      },
-      {
-        "name": "analytics.trafficSources",
-        "method": "GET",
-        "description": "Traffic sources"
-      },
-      {
         "name": "analytics.recentActivity",
         "method": "GET",
         "description": "Recent activity",
         "critical": true
       },
       {
-        "name": "analytics.leadStats",
-        "method": "GET",
-        "description": "Lead stats"
-      },
-      {
-        "name": "analytics.exportMetrics",
-        "method": "GET",
-        "description": "Export metrics"
-      },
-      {
-        "name": "analytics.exportConversionFunnel",
-        "method": "GET",
-        "description": "Export conversion funnel"
-      },
-      {
         "name": "analytics.getOverview",
         "method": "GET",
         "description": "Get overview"
-      },
-      {
-        "name": "analytics.getSalesMetrics",
-        "method": "GET",
-        "description": "Get sales metrics"
-      },
-      {
-        "name": "analytics.getLeadMetrics",
-        "method": "GET",
-        "description": "Get lead metrics"
-      },
-      {
-        "name": "analytics.getConversionFunnel",
-        "method": "GET",
-        "description": "Get conversion funnel"
-      },
-      {
-        "name": "analytics.getTimeSeriesData",
-        "method": "GET",
-        "description": "Get time series data"
-      },
-      {
-        "name": "analytics.exportReport",
-        "method": "GET",
-        "description": "Export report"
-      },
-      {
-        "name": "analytics.topPerformers",
-        "method": "GET",
-        "description": "Top performers"
       }
     ],
     "reportSettings": [
@@ -4142,11 +4108,6 @@
         "name": "billing.updateBillingInformation",
         "method": "POST",
         "description": "Update billing information"
-      },
-      {
-        "name": "billing.handleSubscriptionWebhook",
-        "method": "POST",
-        "description": "Handle subscription webhook"
       },
       {
         "name": "billing.getPlanState",
@@ -4501,6 +4462,11 @@
         "name": "inbound.logCallBooking",
         "method": "POST",
         "description": "Log call booking"
+      },
+      {
+        "name": "inbound.logSupportTicket",
+        "method": "POST",
+        "description": "Log support ticket"
       }
     ],
     "experiment": [
@@ -5896,9 +5862,9 @@
         "description": "Get plans"
       },
       {
-        "name": "subscription.toggleModule",
+        "name": "subscription.getUsage",
         "method": "POST",
-        "description": "Toggle module"
+        "description": "Get usage"
       }
     ],
     "taskSettings": [

@@ -2,8 +2,7 @@
  * PrismaTenantModuleRepository Tests
  *
  * Covers all public methods of PrismaTenantModuleRepository.
- * Key regression: getTenantPlan MUST issue exactly ONE $queryRaw call
- * (no per-user user.findMany) regardless of how many users exist in the tenant.
+ * Key regression: getTenantPlan reads Tenant.plan (ADR-070), not the workspaces join.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -17,6 +16,7 @@ import { PrismaTenantModuleRepository } from '../PrismaTenantModuleRepository';
 function createMockPrisma(): Record<string, any> {
   return {
     $queryRaw: vi.fn(),
+    tenant: { findUnique: vi.fn(), update: vi.fn().mockResolvedValue({}) },
     // Array-form transaction used by syncModulesToPlan: the operation promises
     // are already created when the array is built, so just await them.
     $transaction: vi.fn().mockImplementation(async (ops: Promise<unknown>[]) => Promise.all(ops)),
@@ -46,7 +46,7 @@ function makeModuleRecord(moduleId: string, enabled: boolean) {
 }
 
 // ---------------------------------------------------------------------------
-// getTenantPlan — N+1 regression tests
+// getTenantPlan — reads Tenant.plan (ADR-070)
 // ---------------------------------------------------------------------------
 
 describe('PrismaTenantModuleRepository.getTenantPlan', () => {
@@ -58,70 +58,37 @@ describe('PrismaTenantModuleRepository.getTenantPlan', () => {
     repo = new PrismaTenantModuleRepository(mockPrisma as unknown as PrismaClient);
   });
 
-  it('issues exactly ONE $queryRaw call regardless of tenant size', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'PROFESSIONAL' }]);
-
-    await repo.getTenantPlan(TENANT_ID);
-
-    // N+1 regression: must be exactly 1 DB call, not 1-per-user
-    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
-  });
-
-  it('does NOT call user.findMany (the removed N+1 query)', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'STARTER' }]);
-
-    await repo.getTenantPlan(TENANT_ID);
-
-    // Ensure the per-user query was removed
-    expect(mockPrisma.user).toBeUndefined();
-  });
-
-  it('passes tenantId as a bound parameter in the raw query', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([]);
-
-    await repo.getTenantPlan(TENANT_ID);
-
-    // $queryRaw with a tagged-template literal receives the TemplateStringsArray
-    // as args[0] and each interpolated value as subsequent positional arguments.
-    // The tenantId is the first (and only) interpolated parameter.
-    const callArgs = mockPrisma.$queryRaw.mock.calls[0];
-    // callArgs[0] is the TemplateStringsArray; callArgs[1] is the first bound value
-    expect(callArgs[1]).toBe(TENANT_ID);
-  });
-
-  it('returns the plan from the query result', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'ENTERPRISE' }]);
+  it('reads the plan from Tenant.plan with a single select', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'PROFESSIONAL' });
 
     const plan = await repo.getTenantPlan(TENANT_ID);
 
-    expect(plan).toBe('ENTERPRISE');
+    expect(plan).toBe('PROFESSIONAL');
+    expect(mockPrisma.tenant.findUnique).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.tenant.findUnique).toHaveBeenCalledWith({
+      where: { id: TENANT_ID },
+      select: { plan: true },
+    });
   });
 
-  it('returns STARTER when no workspace is found (null row)', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([]);
+  it('never touches the deprecated workspaces join', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'ENTERPRISE' });
 
-    const plan = await repo.getTenantPlan(TENANT_ID);
-
-    expect(plan).toBe('STARTER');
-  });
-
-  it('returns STARTER when query result has undefined plan', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: undefined }]);
-
-    const plan = await repo.getTenantPlan(TENANT_ID);
-
-    expect(plan).toBe('STARTER');
-  });
-
-  it('call count stays at 1 even when called multiple times independently', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'PROFESSIONAL' }]);
-
-    // Simulates two independent calls (e.g. getEnabledModules + isModuleEnabled)
-    await repo.getTenantPlan(TENANT_ID);
     await repo.getTenantPlan(TENANT_ID);
 
-    // 2 independent calls = 2 total, but each is still only 1 DB round-trip (not N)
-    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(2);
+    expect(mockPrisma.$queryRaw).not.toHaveBeenCalled();
+  });
+
+  it('returns STARTER when the tenant does not exist', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue(null);
+
+    expect(await repo.getTenantPlan(TENANT_ID)).toBe('STARTER');
+  });
+
+  it('returns STARTER for a plan the module registry does not know yet', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'SOMETHING_NEW' });
+
+    expect(await repo.getTenantPlan(TENANT_ID)).toBe('STARTER');
   });
 });
 
@@ -139,7 +106,7 @@ describe('PrismaTenantModuleRepository.getEnabledModules', () => {
   });
 
   it('returns plan defaults when there are no overrides', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'STARTER' }]);
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER' });
     mockPrisma.tenantModule.findMany.mockResolvedValue([]);
 
     const modules = await repo.getEnabledModules(TENANT_ID);
@@ -152,7 +119,7 @@ describe('PrismaTenantModuleRepository.getEnabledModules', () => {
   });
 
   it('applies enabled override to add a module not in plan', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'STARTER' }]);
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER' });
     mockPrisma.tenantModule.findMany.mockResolvedValue([makeModuleRecord('LEGAL', true)]);
 
     const modules = await repo.getEnabledModules(TENANT_ID);
@@ -161,7 +128,7 @@ describe('PrismaTenantModuleRepository.getEnabledModules', () => {
   });
 
   it('applies disabled override to remove a module from plan', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'PROFESSIONAL' }]);
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'PROFESSIONAL' });
     mockPrisma.tenantModule.findMany.mockResolvedValue([makeModuleRecord('LEGAL', false)]);
 
     const modules = await repo.getEnabledModules(TENANT_ID);
@@ -170,7 +137,7 @@ describe('PrismaTenantModuleRepository.getEnabledModules', () => {
   });
 
   it('never disables CORE_CRM even with an explicit disabled override', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'STARTER' }]);
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER' });
     mockPrisma.tenantModule.findMany.mockResolvedValue([makeModuleRecord('CORE_CRM', false)]);
 
     const modules = await repo.getEnabledModules(TENANT_ID);
@@ -179,7 +146,7 @@ describe('PrismaTenantModuleRepository.getEnabledModules', () => {
   });
 
   it('returns modules in canonical CRM_MODULES order', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'ENTERPRISE' }]);
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'ENTERPRISE' });
     mockPrisma.tenantModule.findMany.mockResolvedValue([]);
 
     const modules = await repo.getEnabledModules(TENANT_ID);
@@ -199,13 +166,13 @@ describe('PrismaTenantModuleRepository.getEnabledModules', () => {
     }
   });
 
-  it('uses exactly one $queryRaw call for getTenantPlan', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'STARTER' }]);
+  it('reads the plan with exactly one tenant lookup', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER' });
     mockPrisma.tenantModule.findMany.mockResolvedValue([]);
 
     await repo.getEnabledModules(TENANT_ID);
 
-    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.tenant.findUnique).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -227,7 +194,7 @@ describe('PrismaTenantModuleRepository.isModuleEnabled', () => {
 
     expect(result).toBe(true);
     expect(mockPrisma.tenantModule.findUnique).not.toHaveBeenCalled();
-    expect(mockPrisma.$queryRaw).not.toHaveBeenCalled();
+    expect(mockPrisma.tenant.findUnique).not.toHaveBeenCalled();
   });
 
   it('returns override value when explicit override exists', async () => {
@@ -236,23 +203,23 @@ describe('PrismaTenantModuleRepository.isModuleEnabled', () => {
     const result = await repo.isModuleEnabled(TENANT_ID, 'LEGAL');
 
     expect(result).toBe(true);
-    expect(mockPrisma.$queryRaw).not.toHaveBeenCalled();
+    expect(mockPrisma.tenant.findUnique).not.toHaveBeenCalled();
   });
 
   it('falls back to plan tier when no override exists', async () => {
     mockPrisma.tenantModule.findUnique.mockResolvedValue(null);
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'PROFESSIONAL' }]);
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'PROFESSIONAL' });
 
     // LEGAL is included in PROFESSIONAL
     const result = await repo.isModuleEnabled(TENANT_ID, 'LEGAL');
 
     expect(result).toBe(true);
-    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.tenant.findUnique).toHaveBeenCalledTimes(1);
   });
 
   it('returns false when module not in plan and no override', async () => {
     mockPrisma.tenantModule.findUnique.mockResolvedValue(null);
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'STARTER' }]);
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER' });
 
     // LEGAL is not included in STARTER
     const result = await repo.isModuleEnabled(TENANT_ID, 'LEGAL');
@@ -363,7 +330,7 @@ describe('PrismaTenantModuleRepository.syncModulesToPlan', () => {
   it('upserts all modules in the given plan as enabled', async () => {
     mockPrisma.tenantModule.upsert.mockResolvedValue({} as any);
     // For the getEnabledModules call at the end
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'PROFESSIONAL' }]);
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'PROFESSIONAL' });
     mockPrisma.tenantModule.findMany.mockResolvedValue([]);
 
     await repo.syncModulesToPlan(TENANT_ID, 'PROFESSIONAL');
@@ -376,9 +343,26 @@ describe('PrismaTenantModuleRepository.syncModulesToPlan', () => {
     }
   });
 
+  it('persists the plan on Tenant in the same transaction as the module sync', async () => {
+    mockPrisma.tenantModule.upsert.mockResolvedValue({} as any);
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'ENTERPRISE' });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+
+    await repo.syncModulesToPlan(TENANT_ID, 'ENTERPRISE');
+
+    expect(mockPrisma.tenant.update).toHaveBeenCalledWith({
+      where: { id: TENANT_ID },
+      data: { plan: 'ENTERPRISE' },
+    });
+    // One $transaction call carries the tenant update together with the module writes.
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    const ops = mockPrisma.$transaction.mock.calls[0][0] as unknown[];
+    expect(ops.length).toBeGreaterThan(mockPrisma.tenantModule.upsert.mock.calls.length);
+  });
+
   it('returns enabled modules after sync', async () => {
     mockPrisma.tenantModule.upsert.mockResolvedValue({} as any);
-    mockPrisma.$queryRaw.mockResolvedValue([{ plan: 'STARTER' }]);
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER' });
     mockPrisma.tenantModule.findMany.mockResolvedValue([]);
 
     const result = await repo.syncModulesToPlan(TENANT_ID, 'STARTER');

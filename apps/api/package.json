@@ -45,6 +45,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@intelliflow/partner-sdk": "workspace:*",
     "@intelliflow/typescript-config": "workspace:*",
     "@prisma/adapter-pg": "^7.8.0",
     "@types/node": "^25.9.2",
