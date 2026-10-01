@@ -3,20 +3,19 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Log In',
   description:
-    'Sign in to IntelliFlow CRM. Access your sales pipeline, AI-powered lead scores, and team dashboard. Supports Google, Microsoft, and enterprise SSO.',
+    'Sign in to Aurora. Access your sales pipeline, AI-powered lead scores, and team dashboard. Supports Google, Microsoft, and enterprise SSO.',
   openGraph: {
-    title: 'Sign In to IntelliFlow CRM',
+    title: 'Sign In to Aurora',
     description:
-      'Access your IntelliFlow CRM account. AI-powered sales tools, pipeline management, and team collaboration.',
+      'Access your Aurora account. AI-powered sales tools, pipeline management, and team collaboration.',
     url: 'https://intelliflow-crm.com/login',
-    siteName: 'IntelliFlow CRM',
+    siteName: 'Aurora',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Sign In to IntelliFlow CRM',
-    description:
-      'Log in to your IntelliFlow CRM. Google SSO, Microsoft SSO, and enterprise SAML supported.',
+    title: 'Sign In to Aurora',
+    description: 'Log in to your Aurora. Google SSO, Microsoft SSO, and enterprise SAML supported.',
   },
   alternates: {
     canonical: '/login',

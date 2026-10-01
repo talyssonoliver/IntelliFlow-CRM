@@ -114,7 +114,7 @@ function stepCircleClass(isCompleted: boolean, isActive: boolean): string {
   if (isCompleted) {
     stateCls = 'bg-green-500 border-green-500 text-white';
   } else if (isActive) {
-    stateCls = 'bg-[#137fec] border-[#137fec] text-white';
+    stateCls = 'bg-[#2a78f6] border-[#2a78f6] text-white';
   } else {
     stateCls = 'bg-slate-800 border-slate-600 text-slate-400';
   }
@@ -127,9 +127,9 @@ function stepCircleClass(isCompleted: boolean, isActive: boolean): string {
 function stepActionClass(isActive: boolean): string {
   return cn(
     'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-    'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900',
+    'focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-slate-900',
     isActive
-      ? 'bg-[#137fec] text-white hover:bg-[#137fec]/90'
+      ? 'bg-[#2a78f6] text-white hover:bg-[#2a78f6]/90'
       : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
   );
 }
@@ -256,11 +256,11 @@ function ProgressBar({ current, total, className }: Readonly<ProgressBarProps>) 
         <span className="text-slate-300">
           {current} of {total} steps completed
         </span>
-        <span className="text-[#137fec] font-medium">{percentage}%</span>
+        <span className="text-[#2a78f6] font-medium">{percentage}%</span>
       </div>
       <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
         <progress
-          className="h-full w-full bg-gradient-to-r from-[#137fec] to-[#7cc4ff] rounded-full transition-all duration-500 appearance-none [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-gradient-to-r [&::-webkit-progress-value]:from-[#137fec] [&::-webkit-progress-value]:to-[#7cc4ff]"
+          className="h-full w-full bg-gradient-to-r from-[#2a78f6] to-[#bca8ff] rounded-full transition-all duration-500 appearance-none [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-gradient-to-r [&::-webkit-progress-value]:from-[#2a78f6] [&::-webkit-progress-value]:to-[#bca8ff]"
           value={percentage}
           max={100}
           aria-label={`Onboarding progress: ${percentage}%`}
@@ -358,7 +358,7 @@ export function OnboardingFlow({
         <div className="pt-4 border-t border-slate-700">
           <Link
             href="/dashboard"
-            className="text-sm text-slate-300 hover:text-white transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900 rounded"
+            className="text-sm text-slate-300 hover:text-white transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-slate-900 rounded"
           >
             Skip for now and go to dashboard{' '}
             <span className="material-symbols-outlined text-lg" aria-hidden="true">

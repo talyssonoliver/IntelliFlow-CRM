@@ -70,7 +70,7 @@ function SignUpErrorFallback({ error, resetErrorBoundary }: Readonly<FallbackPro
     <AuthBackground>
       <div className="relative z-10 w-full max-w-md mx-auto">
         <AuthCard
-          badge="INTELLIFLOW"
+          badge="Sign up"
           badgeIcon="error"
           title="Something went wrong"
           description="An unexpected error occurred during registration."
@@ -202,11 +202,7 @@ function SignUpPageContent() {
           sessionStorage.setItem('oauth_login_success', Date.now().toString());
           clearSupabaseLocalStorage();
 
-          showToast(
-            'success',
-            'Account created!',
-            'Welcome to IntelliFlow — setting up your workspace…'
-          );
+          showToast('success', 'Account created!', 'Welcome to Aurora. Setting up your workspace…');
           router.push('/');
           return;
         }
@@ -263,7 +259,7 @@ function SignUpPageContent() {
       <AuthBackground>
         <div className="relative z-10 w-full max-w-md mx-auto">
           <AuthCard
-            badge="INTELLIFLOW"
+            badge="14 days free"
             badgeIcon="rocket_launch"
             badgeClassName="hidden md:inline-flex"
             title="Create your account"
@@ -288,7 +284,7 @@ function SignUpPageContent() {
                 Already have an account?{' '}
                 <Link
                   href="/login"
-                  className="text-[#7cc4ff] hover:text-[#5ab3ff] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] rounded px-1"
+                  className="text-[#bca8ff] hover:text-[#bca8ff] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#11175b] rounded px-1"
                 >
                   Sign in
                 </Link>

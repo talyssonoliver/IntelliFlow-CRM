@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { AuroraSiteFooter } from '@/components/aurora-site/AuroraSiteFooter';
+import { manrope } from '@/components/aurora-site/fonts';
 import { PublicLayoutShell } from './_components/PublicLayoutShell';
 import { getAccessToken } from '@/lib/trpc-server';
 
@@ -27,13 +28,17 @@ export default async function PublicLayout({ children }: { children: React.React
   const isAuthenticated = token !== null;
 
   return (
-    // The footer is rendered here, on the server, so it follows the server's
-    // auth decision and never flashes in or out on hydration.
-    <PublicLayoutShell
-      isAuthenticated={isAuthenticated}
-      footer={isAuthenticated ? undefined : <AuroraSiteFooter />}
-    >
-      {children}
-    </PublicLayoutShell>
+    // The Aurora typeface's variable for every public screen, sign-in pages included;
+    // `contents` keeps the wrapper out of the layout.
+    <div className={manrope.variable} style={{ display: 'contents' }}>
+      {/* The footer is rendered here, on the server, so it follows the server's
+          auth decision and never flashes in or out on hydration. */}
+      <PublicLayoutShell
+        isAuthenticated={isAuthenticated}
+        footer={isAuthenticated ? undefined : <AuroraSiteFooter />}
+      >
+        {children}
+      </PublicLayoutShell>
+    </div>
   );
 }

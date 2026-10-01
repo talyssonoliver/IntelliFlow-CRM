@@ -70,7 +70,7 @@ function MfaVerifyContent() {
   return (
     <div className="relative z-10 w-full max-w-md mx-auto px-4">
       <AuthCard
-        badge="INTELLIFLOW"
+        badge="Aurora"
         badgeIcon="security"
         title="Two-Factor Authentication"
         description="Enter your verification code to continue"
