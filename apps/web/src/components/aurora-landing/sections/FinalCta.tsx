@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import pricingData from '@/data/pricing-data.json';
 import { SectionCurve } from './SectionCurve';
+import { StartFreeForm } from './StartFreeForm';
 import './final-cta.css';
 
 /** Three small moments from a sample workspace that drift on the ribbons around the pitch. */
@@ -59,22 +60,7 @@ export function FinalCta() {
             The agents start work as soon as your leads and deals are in, and nothing goes out
             without your yes.
           </p>
-          <form className="final-form" action="/signup" method="get">
-            <label htmlFor="final-email" className="sr-only">
-              Work email
-            </label>
-            <input
-              id="final-email"
-              name="email"
-              type="email"
-              placeholder="Your work email"
-              autoComplete="email"
-              required
-            />
-            <button type="submit" className="btn btn-primary">
-              Start free
-            </button>
-          </form>
+          <StartFreeForm />
           <p className="final-trust">
             <span>{trialDays} days free</span>
             <span aria-hidden="true">·</span>
