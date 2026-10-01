@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import type { LayerId } from './aurora-face';
+import type { Presentation } from './aurora-stack';
 
 /** The first screen never waits longer than this for the stack before it shows. */
 export const BOOT_TIMEOUT_MS = 2500;
@@ -138,6 +139,28 @@ function pauseWhenHidden(canvas: HTMLCanvasElement, s: Stack, cleanups: Array<()
   cleanups.push(() => document.removeEventListener('visibilitychange', onVisibility));
 }
 
+/**
+ * The phone story's state for each layer, from where its card is on screen.
+ * A layer lifts out as its card rises from the bottom edge to 70% of the
+ * screen, and dissolves as the next card rises from the bottom edge to 80%.
+ */
+export function phoneStory(
+  cards: HTMLElement[],
+  viewport: number
+): Partial<Record<LayerId, Presentation>> {
+  const rise = (card: HTMLElement | undefined, span: number) => {
+    if (!card) return 0;
+    const top = card.getBoundingClientRect().top / viewport;
+    return Math.min(1, Math.max(0, (1 - top) / span));
+  };
+  const story: Partial<Record<LayerId, Presentation>> = {};
+  cards.forEach((card, i) => {
+    const layer = card.dataset.layer as LayerId;
+    story[layer] = { present: rise(card, 0.3), dissolve: rise(cards[i + 1], 0.2) };
+  });
+  return story;
+}
+
 /** Points the stack at the layer being read, and back to rest at the hero and the stage end. */
 function followLayers({ root, gsap, ScrollTrigger, motion, triggers, cleanups }: Wiring, s: Stack) {
   // The stack points at whichever layer is being read, scrubbed 1:1 to
@@ -152,27 +175,22 @@ function followLayers({ root, gsap, ScrollTrigger, motion, triggers, cleanups }:
   const steps = gsap.utils.toArray<HTMLElement>('.walk.walk-card, .layer-step', root);
 
   if (window.matchMedia(motion.MOBILE_QUERY).matches) {
-    // Phone story (stack-stage.css): the stack stays pinned and centred while
-    // the story cards scroll up over it. The layer on top is the layer of the
-    // last card to reach the lower third of the screen; before the first
-    // card arrives the stack rests whole.
+    // Phone story (stack-stage.css): the stack stays pinned while the story
+    // cards scroll up over it. As a card comes up from the bottom, its layer
+    // lifts out of the stack to the top of the frame and turns to face the
+    // reader; it stays there while the card scrolls past, and dissolves as the
+    // next card fills the bottom fifth of the screen.
     const copy = root.querySelector('.stage-copy');
     if (copy) {
+      const cards = steps.filter((step) => step.dataset.layer);
       triggers.push(
         ScrollTrigger.create({
           trigger: copy,
           start: 'top bottom',
           end: 'bottom top',
-          onUpdate: () => {
-            const line = window.innerHeight * 0.7;
-            let active: LayerId | null = null;
-            steps.forEach((step) => {
-              if (step.getBoundingClientRect().top <= line) {
-                active = (step.dataset.layer as LayerId | undefined) ?? null;
-              }
-            });
-            s.setActive(active);
-          },
+          onUpdate: () => s.setPresentation(phoneStory(cards, window.innerHeight)),
+          onLeave: () => s.setPresentation(null),
+          onLeaveBack: () => s.setPresentation(null),
         })
       );
     }

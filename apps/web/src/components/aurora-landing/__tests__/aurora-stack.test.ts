@@ -11,6 +11,7 @@ vi.mock('three', () => {
     z = 0;
     set(x: number, y: number, z: number) {
       Object.assign(this, { x, y, z });
+      return this;
     }
   }
   class Quat {
@@ -26,6 +27,14 @@ vi.mock('three', () => {
       this.angle = q.angle;
       return this;
     }
+    slerp(q: Quat, t: number) {
+      this.angle += (q.angle - this.angle) * t;
+      return this;
+    }
+    setFromRotationMatrix() {
+      this.angle = Math.PI / 2;
+      return this;
+    }
     multiply() {
       return this;
     }
@@ -36,6 +45,20 @@ vi.mock('three', () => {
       this.set(x, y, z);
     }
     normalize() {
+      const l = Math.hypot(this.x, this.y, this.z) || 1;
+      this.set(this.x / l, this.y / l, this.z / l);
+      return this;
+    }
+    copy(v: Vec) {
+      this.set(v.x, v.y, v.z);
+      return this;
+    }
+    multiplyScalar(k: number) {
+      this.set(this.x * k, this.y * k, this.z * k);
+      return this;
+    }
+    crossVectors(a: Vec, b: Vec) {
+      this.set(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
       return this;
     }
   }
@@ -119,6 +142,11 @@ vi.mock('three', () => {
     CanvasTexture: Disposable,
     Quaternion: Quat,
     Vector3,
+    Matrix4: class {
+      makeBasis() {
+        return this;
+      }
+    },
     Euler: class {
       set() {
         return this;
@@ -234,6 +262,30 @@ describe('createStack', () => {
     expect(pipeline!.position.y).toBeCloseTo(baseY(2) + 0.28);
     stack.dispose();
     expect(cancelAnimationFrame).toHaveBeenCalled();
+  });
+
+  it('lifts a presented layer out to face the viewer, then dissolves it', () => {
+    const canvas = document.createElement('canvas');
+    // A phone-sized frame.
+    canvas.getBoundingClientRect = () => ({ width: 390, height: 772 }) as DOMRect;
+    const stack = createStack(canvas, { fonts, reducedMotion: true });
+    type Shown = { visible: boolean; position: { y: number }; scale: { x: number } };
+    stack.setPresentation({ agents: { present: 1, dissolve: 0 } });
+    run(1);
+    const agents = layers().at(-1) as unknown as Shown;
+    expect(agents.visible).toBe(true);
+    expect(agents.position.y).toBeGreaterThan(baseY(4));
+    expect(agents.scale.x).toBeGreaterThan(0);
+
+    stack.setPresentation({ agents: { present: 1, dissolve: 1 } });
+    run(1);
+    expect(agents.visible).toBe(false);
+
+    stack.setPresentation(null);
+    run(1);
+    expect(agents.visible).toBe(true);
+    expect(agents.position.y).toBeCloseTo(baseY(4));
+    stack.dispose();
   });
 
   it('eases towards its targets when motion is allowed and follows the pointer', () => {

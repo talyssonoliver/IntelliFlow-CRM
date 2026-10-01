@@ -41,6 +41,15 @@ const SETTLE_MS = 650;
 /** The axis that turns a slab's face towards the camera, which sits 9 across and 9 deep. */
 const TILT_AXIS = new THREE.Vector3(1, 0, -1).normalize();
 
+/** Space between the frame's top and a presented layer, in CSS px. */
+const PRESENT_PAD_PX = 20;
+/** How far the camera rises while a layer is presented, so the stack sits lower. */
+const PRESENT_DROP = 1.4;
+const smooth = (t: number) => {
+  const x = Math.min(1, Math.max(0, t));
+  return x * x * (3 - 2 * x);
+};
+
 /**
  * How strongly each of the two ripple rings shows while a layer peels (0 to 1).
  * The second ring trails the first, so the edge reads as a wave spreading out.
@@ -140,8 +149,20 @@ function shadowTexture(): THREE.CanvasTexture {
   return texture;
 }
 
+/** How far a layer has lifted out to face the viewer, and how far it has dissolved. */
+export interface Presentation {
+  present: number;
+  dissolve: number;
+}
+
 export interface AuroraStack {
   setActive(id: LayerId | null): void;
+  /**
+   * Phone story: lifts each named layer out of the stack to the top of the
+   * frame, square to the viewer, by `present`, and fades it by `dissolve`.
+   * `null` returns every layer to the stack.
+   */
+  setPresentation(layers: Partial<Record<LayerId, Presentation>> | null): void;
   /** Stops the render loop (off-screen, or the tab is hidden). Idempotent. */
   pause(): void;
   /** Restarts the render loop after pause(). Idempotent. */
@@ -271,6 +292,43 @@ export function createStack(
   const followEuler = new THREE.Euler();
 
   let activeIndex = -1;
+  /** Per layer, how far it is presented (0 to 1) and how far it has dissolved (0 to 1). */
+  let presentation: Presentation[] = [];
+  const presented = new THREE.Quaternion();
+  const basis = new THREE.Matrix4();
+  const forward = new THREE.Vector3();
+  const right = new THREE.Vector3();
+  const up = new THREE.Vector3();
+  const towards = new THREE.Vector3();
+  const down = new THREE.Vector3();
+  const worldUp = new THREE.Vector3(0, 1, 0);
+  /**
+   * Where a presented layer sits: centred across the frame, its top edge just
+   * under the frame's top, square to the camera and in front of the stack.
+   */
+  const presentPose = (view: { y: number; zoom: number }, frame: { w: number; h: number }) => {
+    forward.set(-9, -(CAMERA_HEIGHT - REST_Y), -9).normalize();
+    right.crossVectors(forward, worldUp).normalize();
+    up.crossVectors(right, forward).normalize();
+    towards.copy(forward).multiplyScalar(-1);
+    down.copy(up).multiplyScalar(-1);
+    // Local +Y (the printed face) towards the camera, the face's top edge up the screen.
+    basis.makeBasis(right, towards, down);
+    presented.setFromRotationMatrix(basis);
+    const halfH = VIEW / view.zoom;
+    const halfW = (VIEW * (frame.w / frame.h)) / view.zoom;
+    // As wide as the frame allows, but never more than about a third of its height.
+    const scale = Math.min((halfW * 2 * 0.88) / W, (halfH * 2 * 0.36) / D);
+    const unitsPerPx = (halfH * 2) / frame.h;
+    const offset = halfH - PRESENT_PAD_PX * unitsPerPx - (D * scale) / 2;
+    return {
+      x: up.x * offset + towards.x * 6,
+      y: view.y + up.y * offset + towards.y * 6,
+      z: up.z * offset + towards.z * 6,
+      quaternion: presented,
+      scale,
+    };
+  };
   /** The last time the page scrolled or the active layer changed. */
   let movedAt = -Infinity;
   const onScroll = () => {
@@ -309,13 +367,29 @@ export function createStack(
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     const ease = reducedMotion ? 1 : 1 - Math.pow(0.0015, dt);
+    const presenting = presentation.some((p) => p.present > 0);
+
+    // The camera moves first: a presented layer is placed against its frame.
+    const aim = cameraFrame(presenting ? -1 : activeIndex, size);
+    // While a layer is presented the rest of the stack sits lower, out from under it.
+    const lower = presenting ? PRESENT_DROP : 0;
+    const k = reducedMotion ? 1 : 1 - Math.pow(0.02, dt);
+    cam.y += (aim.y + lower - cam.y) * k;
+    cam.zoom += (aim.zoom - cam.zoom) * k;
+    // A steep view (about 50 degrees down), so the printed faces read rather than lie flat.
+    camera.position.set(9, CAMERA_HEIGHT + cam.y - REST_Y, 9);
+    camera.lookAt(0, cam.y, 0);
+    camera.zoom = cam.zoom;
+    camera.updateProjectionMatrix();
+    const pose = presenting ? presentPose(cam, size) : null;
+
     items.forEach((item, index) => {
       const target = layerTarget(index, activeIndex);
       const s = item.state;
       s.lift += (target.lift - s.lift) * ease;
       s.glow += (target.glow - s.glow) * ease;
       s.peel += (target.peel - s.peel) * ease;
-      item.group.position.y = baseY(index) + s.lift + s.peel * 3.4;
+      item.group.position.set(0, baseY(index) + s.lift + s.peel * 3.4, 0);
       item.group.visible = s.peel < 0.985;
       item.slab.opacity = 1 - s.peel;
       item.slab.emissiveIntensity = 0.12 * s.glow;
@@ -328,28 +402,39 @@ export function createStack(
       turn.setFromAxisAngle(TILT_AXIS, reducedMotion ? 0 : item.tilt * TILT + wobble);
       followEuler.set(pointer.y * 0.09 * s.glow, pointer.x * 0.12 * s.glow, 0);
       item.group.quaternion.copy(turn).multiply(follow.setFromEuler(followEuler));
+      item.group.scale.set(1, 1, 1);
+
+      // Phone story: the layer lifts out to the top of the frame, faces the
+      // viewer while its card scrolls past, then dissolves.
+      const shown = presentation[index];
+      if (pose && shown && shown.present > 0) {
+        const e = smooth(shown.present);
+        const p = item.group.position;
+        p.set(p.x + (pose.x - p.x) * e, p.y + (pose.y - p.y) * e, p.z + (pose.z - p.z) * e);
+        item.group.quaternion.slerp(pose.quaternion, e);
+        const grow = (1 + (pose.scale - 1) * e) * (1 + shown.dissolve * 0.08);
+        item.group.scale.set(grow, grow, grow);
+        const alpha = 1 - smooth(shown.dissolve);
+        item.group.visible = alpha > 0.015;
+        item.slab.opacity = alpha;
+        item.face.opacity = alpha;
+        item.slab.emissiveIntensity = 0.12;
+      }
 
       rippleRings(reducedMotion ? 0 : s.peel).forEach(({ scale, opacity }, r) => {
         const ring = item.rings[r]!;
-        ring.visible = opacity > 0.01;
+        ring.visible = !shown?.present && opacity > 0.01;
         ring.scale.set(scale, scale, 1);
         ring.material.opacity = opacity;
       });
     });
-    const aim = cameraFrame(activeIndex, size);
-    const k = reducedMotion ? 1 : 1 - Math.pow(0.02, dt);
-    cam.y += (aim.y - cam.y) * k;
-    cam.zoom += (aim.zoom - cam.zoom) * k;
-    // A steep view (about 50 degrees down), so the printed faces read rather than lie flat.
-    camera.position.set(9, CAMERA_HEIGHT + cam.y - REST_Y, 9);
-    camera.lookAt(0, cam.y, 0);
-    camera.zoom = cam.zoom;
-    camera.updateProjectionMatrix();
     if (!reducedMotion) {
       pointer.x += (pointer.tx - pointer.x) * 0.05;
       pointer.y += (pointer.ty - pointer.y) * 0.05;
-      root.rotation.y = pointer.x * 0.06;
-      root.rotation.x = pointer.y * 0.03;
+      // No pointer sway while a layer is presented, so it faces the viewer squarely.
+      const sway = presenting ? 0 : 1;
+      root.rotation.y = pointer.x * 0.06 * sway;
+      root.rotation.x = pointer.y * 0.03 * sway;
     }
     renderer.render(scene, camera);
     if (running) raf = requestAnimationFrame(frame);
@@ -373,6 +458,9 @@ export function createStack(
   start();
 
   return {
+    setPresentation(next) {
+      presentation = LAYERS.map((l) => next?.[l.id] ?? { present: 0, dissolve: 0 });
+    },
     setActive(id) {
       const next = id ? LAYERS.findIndex((l) => l.id === id) : -1;
       if (next !== activeIndex) movedAt = performance.now();
