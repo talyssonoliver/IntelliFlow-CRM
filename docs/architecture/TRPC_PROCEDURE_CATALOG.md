@@ -9,12 +9,12 @@
 
 ## Key
 
-| Column       | Meaning                                                                                                                                           |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Procedure    | `module.procedureName`                                                                                                                            |
-| Type         | Q = query, M = mutation, S = subscription                                                                                                         |
-| Auth         | `pub` = publicProcedure, `auth` = protectedProcedure, `tenant` = tenantProcedure, `admin` = adminProcedure, `authP` = authProcedure (pre-session) |
-| Input schema | Named Zod schema from `@intelliflow/validators` (or `inline` if defined locally)                                                                  |
+| Column       | Meaning                                                                                                                                                                                                                                   |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Procedure    | `module.procedureName`                                                                                                                                                                                                                    |
+| Type         | Q = query, M = mutation, S = subscription                                                                                                                                                                                                 |
+| Auth         | `pub` = publicProcedure, `auth` = protectedProcedure, `tenant` = tenantProcedure, `admin` = adminProcedure, `authP` = authProcedure (pre-session), `platform` = platformAdminProcedure (operator email on PLATFORM_ADMIN_EMAILS, ADR-070) |
+| Input schema | Named Zod schema from `@intelliflow/validators` (or `inline` if defined locally)                                                                                                                                                          |
 
 ---
 
@@ -164,27 +164,27 @@
 
 ## billing (19)
 
-| Procedure                            | Type | Auth   | Input schema                          | Summary                                  |
-| ------------------------------------ | ---- | ------ | ------------------------------------- | ---------------------------------------- |
-| `billing.getSubscription`            | Q    | tenant | —                                     | Current tenant subscription details      |
-| `billing.listInvoices`               | Q    | tenant | `listInvoicesInputSchema`             | Paginated invoice list                   |
-| `billing.getInvoice`                 | Q    | tenant | `getInvoiceInputSchema`               | Single invoice by ID                     |
-| `billing.payInvoice`                 | M    | tenant | `payInvoiceInputSchema`               | Pay an outstanding invoice               |
-| `billing.getPaymentMethods`          | Q    | tenant | —                                     | List saved payment methods               |
-| `billing.updatePaymentMethod`        | M    | tenant | `updatePaymentMethodInputSchema`      | Update default payment method            |
-| `billing.removePaymentMethod`        | M    | tenant | inline `{ paymentMethodId }`          | Remove a payment method                  |
-| `billing.updateSubscription`         | M    | tenant | `updateSubscriptionInputSchema`       | Change subscription plan/tier            |
-| `billing.cancelSubscription`         | M    | tenant | `cancelSubscriptionInputSchema`       | Cancel current subscription              |
-| `billing.pauseSubscription`          | M    | tenant | `pauseSubscriptionInputSchema`        | Pause subscription billing               |
-| `billing.getUpcomingInvoice`         | Q    | tenant | `getUpcomingInvoiceInputSchema`       | Preview next invoice                     |
-| `billing.ensureCustomer`             | M    | tenant | —                                     | Create Stripe customer if missing        |
-| `billing.getUsageMetrics`            | Q    | tenant | —                                     | Feature usage for current billing period |
-| `billing.getBillingInformation`      | Q    | tenant | —                                     | Billing address and tax info             |
-| `billing.updateBillingInformation`   | M    | tenant | `updateBillingInformationInputSchema` | Update billing address/tax info          |
-| `billing.createCheckoutSubscription` | M    | tenant | inline plan + addons                  | Start a Stripe Checkout session          |
-| `billing.sendReceiptEmail`           | M    | tenant | inline `{ invoiceId }`                | Re-send invoice receipt email            |
-| `billing.handleSubscriptionWebhook`  | M    | pub    | `webhookPayloadSchema`                | Process Stripe webhook events            |
-| `billing.getCheckoutSession`         | Q    | tenant | inline `{ sessionId }`                | Get Stripe Checkout session status       |
+| Procedure                            | Type | Auth     | Input schema                          | Summary                                                                                    |
+| ------------------------------------ | ---- | -------- | ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `billing.getSubscription`            | Q    | tenant   | —                                     | Current tenant subscription details                                                        |
+| `billing.listInvoices`               | Q    | tenant   | `listInvoicesInputSchema`             | Paginated invoice list                                                                     |
+| `billing.getInvoice`                 | Q    | tenant   | `getInvoiceInputSchema`               | Single invoice by ID                                                                       |
+| `billing.payInvoice`                 | M    | tenant   | `payInvoiceInputSchema`               | Pay an outstanding invoice                                                                 |
+| `billing.getPaymentMethods`          | Q    | tenant   | —                                     | List saved payment methods                                                                 |
+| `billing.updatePaymentMethod`        | M    | tenant   | `updatePaymentMethodInputSchema`      | Update default payment method                                                              |
+| `billing.removePaymentMethod`        | M    | tenant   | inline `{ paymentMethodId }`          | Remove a payment method                                                                    |
+| `billing.updateSubscription`         | M    | tenant   | `updateSubscriptionInputSchema`       | Change subscription plan/tier                                                              |
+| `billing.cancelSubscription`         | M    | tenant   | `cancelSubscriptionInputSchema`       | Cancel current subscription                                                                |
+| `billing.pauseSubscription`          | M    | tenant   | `pauseSubscriptionInputSchema`        | Pause subscription billing                                                                 |
+| `billing.getUpcomingInvoice`         | Q    | tenant   | `getUpcomingInvoiceInputSchema`       | Preview next invoice                                                                       |
+| `billing.ensureCustomer`             | M    | tenant   | —                                     | Create Stripe customer if missing                                                          |
+| `billing.getUsageMetrics`            | Q    | tenant   | —                                     | Feature usage for current billing period                                                   |
+| `billing.getBillingInformation`      | Q    | tenant   | —                                     | Billing address and tax info                                                               |
+| `billing.updateBillingInformation`   | M    | tenant   | `updateBillingInformationInputSchema` | Update billing address/tax info                                                            |
+| `billing.createCheckoutSubscription` | M    | tenant   | inline plan + addons                  | Start a Stripe Checkout session                                                            |
+| `billing.sendReceiptEmail`           | M    | tenant   | inline `{ invoiceId }`                | Re-send invoice receipt email                                                              |
+| `billing.handleSubscriptionWebhook`  | M    | platform | `webhookPayloadSchema`                | Operator replay of a Stripe subscription event (verified path: webhooks/stripe-webhook.ts) |
+| `billing.getCheckoutSession`         | Q    | tenant   | inline `{ sessionId }`                | Get Stripe Checkout session status                                                         |
 
 ---
 
