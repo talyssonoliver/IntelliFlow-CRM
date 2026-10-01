@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { NavSheet } from './NavSheet';
 import './site-nav.css';
 
 /** Skip link and the fixed site header, with the phone menu. */
@@ -28,18 +29,13 @@ export function SiteNav() {
               Get started
             </Link>
           </div>
-          <details className="nav-menu nav-sheet">
-            <summary aria-label="Menu" className="nav-sheet-toggle">
-              <span className="material-symbols-outlined nav-sheet-icon">menu</span>
-            </summary>
-            <nav aria-label="Mobile" className="nav-sheet-links">
-              <a href="#platform">Platform</a>
-              <a href="#agents">AI agents</a>
-              <a href="#security">Security</a>
-              <a href="#pricing">Pricing</a>
-              <Link href="/login">Log in</Link>
-            </nav>
-          </details>
+          <NavSheet>
+            <a href="#platform">Platform</a>
+            <a href="#agents">AI agents</a>
+            <a href="#security">Security</a>
+            <a href="#pricing">Pricing</a>
+            <Link href="/login">Log in</Link>
+          </NavSheet>
         </div>
       </header>
     </>

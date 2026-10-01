@@ -62,3 +62,33 @@ describe('SiteNav', () => {
     expect(details).not.toHaveAttribute('open');
   });
 });
+
+describe('SiteNav phone menu', () => {
+  const openSheet = (container: HTMLElement) => {
+    const sheet = container.querySelector<HTMLDetailsElement>('details.nav-sheet')!;
+    sheet.setAttribute('open', '');
+    return sheet;
+  };
+
+  it('closes when the visitor taps outside it', () => {
+    const { container } = render(<SiteNav />);
+    const sheet = openSheet(container);
+    sheet.querySelector('summary')!.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(sheet.open).toBe(true);
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(sheet.open).toBe(false);
+  });
+
+  it('closes on Escape and when one of its links is followed', () => {
+    const { container } = render(<SiteNav />);
+    const sheet = openSheet(container);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(sheet.open).toBe(false);
+
+    openSheet(container);
+    within(screen.getByRole('navigation', { name: 'Mobile' }))
+      .getByRole('link', { name: 'Pricing' })
+      .click();
+    expect(sheet.open).toBe(false);
+  });
+});
