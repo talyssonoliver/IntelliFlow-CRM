@@ -402,7 +402,7 @@
 }
 .aurora-site .as-foot-cols {
   display: flex;
-  gap: 64px;
+  gap: 56px;
 }
 .aurora-site .as-foot-cols div {
   display: grid;
@@ -428,6 +428,17 @@
   padding-top: 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 13px;
+}
+
+/* Seven header links: tighter spacing on a narrow desktop so the row never wraps. */
+@media (min-width: 961px) and (max-width: 1240px) {
+  .aurora-site .as-nav-row {
+    gap: 24px;
+  }
+  .aurora-site .as-nav-links {
+    gap: 18px;
+    margin-left: 8px;
+  }
 }
 
 @media (max-width: 960px) {
