@@ -3,9 +3,7 @@
 /**
  * Membership state for the tenant switcher and the pinned-session banner.
  *
- * Wraps `user.listTenants` (session auth, ADR-071 section c). The procedure is part of the
- * contract but is not in the generated AppRouter type until the API lane lands, so it is reached
- * through a narrow structural cast; the runtime tRPC proxy resolves it by path either way.
+ * Wraps `user.listTenants` (session auth, ADR-071 section c).
  *
  * Disabled (no request) when the web rollout flag is off, so the default path is unchanged.
  */
@@ -13,24 +11,7 @@
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { isInheritedMembershipEnabled } from './active-tenant';
-import { findActiveTenant, type ListTenantsOutput, type TenantListEntry } from './memberships';
-
-interface ListTenantsQueryResult {
-  data: ListTenantsOutput | undefined;
-  isLoading: boolean;
-  isError: boolean;
-}
-
-interface TenantProcedures {
-  user: {
-    listTenants: {
-      useQuery: (
-        input: undefined,
-        options?: { enabled?: boolean; staleTime?: number; retry?: boolean | number }
-      ) => ListTenantsQueryResult;
-    };
-  };
-}
+import { findActiveTenant, type TenantListEntry } from './memberships';
 
 export interface TenantMemberships {
   enabled: boolean;
@@ -50,7 +31,7 @@ const LIST_TENANTS_STALE_MS = 60_000;
 
 export function useTenantMemberships(): TenantMemberships {
   const enabled = isInheritedMembershipEnabled();
-  const query = (trpc as unknown as TenantProcedures).user.listTenants.useQuery(undefined, {
+  const query = trpc.user.listTenants.useQuery(undefined, {
     enabled,
     staleTime: LIST_TENANTS_STALE_MS,
     retry: false,

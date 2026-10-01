@@ -48,7 +48,12 @@ export function createWebSocketServer(port: number = WS_PORT): WebSocketServer {
         (typeof connectionParams?.Authorization === 'string' && connectionParams.Authorization) ||
         opts.req.headers.authorization;
 
-      return createWSContext(authHeader);
+      const activeTenant =
+        typeof connectionParams?.['x-active-tenant'] === 'string'
+          ? connectionParams['x-active-tenant']
+          : null;
+
+      return createWSContext(authHeader, activeTenant);
     },
     // Keep connections alive with ping/pong
     keepAlive: {

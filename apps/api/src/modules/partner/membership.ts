@@ -10,8 +10,15 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import type { PrismaClient } from '@intelliflow/db';
+import {
+  isLiveMembership,
+  liveMembershipWhere,
+  seatUserWhere,
+  type MembershipLiveness,
+  type PrismaClient,
+} from '@intelliflow/db';
 import { QuotaExceededError } from '@intelliflow/domain';
+import { invalidateUserSessions as invalidateSessionCacheForUser } from '../../security/session-cache';
 
 // ============================================================================
 // Errors
@@ -82,28 +89,11 @@ export function toMemberRole(role: string | null | undefined): MemberRole {
   return role === 'ADMIN' ? 'ADMIN' : 'MEMBER';
 }
 
-export interface MembershipRow {
-  revokedAt: Date | null;
-  expiresAt: Date | null;
-}
+export type MembershipRow = MembershipLiveness;
 
-/** The single liveness predicate: not revoked, and not expired. */
-export function isLiveMembership(row: MembershipRow, now: Date = new Date()): boolean {
-  return (
-    row.revokedAt === null && (row.expiresAt === null || row.expiresAt.getTime() > now.getTime())
-  );
-}
-
-/** Prisma `where` fragment equivalent to `isLiveMembership`. */
-export function liveMembershipWhere(now: Date): {
-  revokedAt: null;
-  OR: Array<{ expiresAt: null } | { expiresAt: { gt: Date } }>;
-} {
-  return {
-    revokedAt: null,
-    OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-  };
-}
+// One definition of "live" and of "takes a seat", shared with the session resolver and the quota
+// adapter (packages/db/src/membership.ts).
+export { isLiveMembership, liveMembershipWhere };
 
 /** Staff memberships live 24 hours and are refreshed on every link (contract section a). */
 export const STAFF_MEMBERSHIP_TTL_MS = 24 * 60 * 60 * 1000;
@@ -177,34 +167,14 @@ export async function resolveTenantAccess(
  * non-HOME memberships of users whose home is elsewhere. Each user counts once (a membership is
  * unique per user and tenant). Pinned staff memberships never count.
  *
- * `PrismaQuotaRepository.countUsers` (reported by `partner.getUsage`) counts home users only, so
- * it under-reports by the attached members until it adopts this predicate.
+ * Defined once in `seatUserWhere` (packages/db), which `PrismaQuotaRepository.countUsers` also uses.
  */
 export async function countSeats(
   db: PrismaClient,
   tenantId: string,
   now: Date = new Date()
 ): Promise<number> {
-  const [home, attached] = await Promise.all([
-    db.user.count({
-      where: {
-        tenantId,
-        memberships: {
-          none: { tenantId, OR: [{ revokedAt: { not: null } }, { expiresAt: { lte: now } }] },
-        },
-      },
-    }),
-    db.tenantMembership.count({
-      where: {
-        tenantId,
-        pinned: false,
-        source: { not: 'HOME' },
-        ...liveMembershipWhere(now),
-        user: { tenantId: { not: tenantId } },
-      },
-    }),
-  ]);
-  return home + attached;
+  return db.user.count({ where: seatUserWhere(tenantId, now) });
 }
 
 /**
@@ -361,20 +331,24 @@ export async function auditDenied(
 
 type SessionCacheInvalidator = (userId: string) => void | Promise<void>;
 
-let sessionCacheInvalidator: SessionCacheInvalidator | null = null;
+/** The real per-instance session cache (security/session-cache.ts has no dependency on context). */
+const defaultSessionCacheInvalidator: SessionCacheInvalidator = (userId) => {
+  invalidateSessionCacheForUser(userId);
+};
+
+let sessionCacheInvalidator: SessionCacheInvalidator = defaultSessionCacheInvalidator;
 
 /**
- * The API process registers how to drop a user's cached sessions (the cache lives in
- * `context.ts`, which this module must not import). Until it does, revocation takes effect when
- * the 60 s cache entry expires.
+ * Override how a user's cached sessions are dropped (tests). Passing null restores the default,
+ * which evicts the user from this instance's session cache. Other instances serve a revoked
+ * membership for at most the 60 s cache TTL.
  */
 export function registerSessionCacheInvalidator(fn: SessionCacheInvalidator | null): void {
-  sessionCacheInvalidator = fn;
+  sessionCacheInvalidator = fn ?? defaultSessionCacheInvalidator;
 }
 
 /** Best effort: the 60 s TTL bounds staleness if this fails. */
 export async function invalidateUserSessions(userId: string): Promise<void> {
-  if (!sessionCacheInvalidator) return;
   try {
     await sessionCacheInvalidator(userId);
   } catch (error) {

@@ -642,7 +642,11 @@ function applyActiveTenant(
 
 /** Normalise the `x-active-tenant` header value; empty or oversized values count as absent. */
 function readRequestedTenant(req?: Request): string | null {
-  const raw = req?.headers.get(ACTIVE_TENANT_HEADER)?.trim();
+  return normalizeRequestedTenant(req?.headers.get(ACTIVE_TENANT_HEADER));
+}
+
+function normalizeRequestedTenant(value: string | null | undefined): string | null {
+  const raw = typeof value === 'string' ? value.trim() : '';
   return raw && raw.length <= 64 ? raw : null;
 }
 
@@ -719,10 +723,14 @@ function extractWsBearerToken(authHeader: string | undefined): string | null {
  * Resolve a UserSession for a WebSocket connection from a raw JWT.
  * Returns null when the token is invalid or the DB user is absent.
  */
-async function resolveWsUser(token: string): Promise<UserSession | null> {
-  // WebSocket upgrades carry no `x-active-tenant`, so the session acts in its home tenant
-  // (or its pinned tenant). A denied or pending session gets no WebSocket user.
-  const resolved = await resolveUserFromToken(token, null);
+async function resolveWsUser(
+  token: string,
+  requestedTenantId: string | null
+): Promise<UserSession | null> {
+  // The browser cannot set headers on a WebSocket upgrade, so the active tenant arrives in the
+  // connection params. A denied (bad tenant, ended pinned session) or pending session gets no
+  // WebSocket user, exactly like the HTTP path refuses it.
+  const resolved = await resolveUserFromToken(token, requestedTenantId);
   return resolved.kind === 'ok' ? resolved.user : null;
 }
 
@@ -732,7 +740,10 @@ async function resolveWsUser(token: string): Promise<UserSession | null> {
  * Simplified context creation that takes auth header directly,
  * avoiding the need to convert IncomingMessage to Request.
  */
-export const createWSContext = async (authHeader?: string): Promise<BaseContext> => {
+export const createWSContext = async (
+  authHeader?: string,
+  activeTenantId?: string | null
+): Promise<BaseContext> => {
   // Mirror createContext: the container is lazily/async-initialised, so a cold
   // WebSocket connection must await readiness before touching the container Proxy
   // below (container/services/security/adapters), or it can throw while the
@@ -745,7 +756,7 @@ export const createWSContext = async (authHeader?: string): Promise<BaseContext>
 
   if (token) {
     try {
-      user = await resolveWsUser(token);
+      user = await resolveWsUser(token, normalizeRequestedTenant(activeTenantId));
     } catch (err) {
       console.error('[WS Auth] Error verifying token:', err);
     }

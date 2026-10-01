@@ -17,7 +17,8 @@ import {
   newKeyPair,
   signAssertion,
 } from '../../../test/assertion-fixtures';
-import { registerSessionCacheInvalidator } from '../membership';
+import { invalidateUserSessions, registerSessionCacheInvalidator } from '../membership';
+import { baseSessionCache, resolvedSessionCache } from '../../../security/session-cache';
 
 const supabaseAdminMock = vi.hoisted(() => ({
   auth: {
@@ -797,8 +798,8 @@ describe('issueLoginLink: kind=member', () => {
 
     it('counts a seat: a full tenant refuses the attach', async () => {
       enableInherited();
-      prismaMock.user.count.mockResolvedValue(1);
-      prismaMock.tenantMembership.count.mockResolvedValue(1);
+      prismaMock.user.count.mockResolvedValue(2);
+      prismaMock.tenantMembership.count.mockResolvedValue(0);
       const caller = callerWith({ quota: { getLimits: vi.fn().mockResolvedValue({ seats: 2 }) } });
 
       await expectReason(
@@ -1166,6 +1167,20 @@ describe('partner.removeMember', () => {
     ]);
     expect(invalidate).toHaveBeenCalledWith('u-carol');
     registerSessionCacheInvalidator(null);
+  });
+
+  it('evicts the real session cache by default, with no invalidator registered', async () => {
+    registerSessionCacheInvalidator(null);
+    baseSessionCache.set('u-carol', 'u-carol', { tenantId: 't2' });
+    resolvedSessionCache.set('u-carol', 'u-carol|t1|s1', { tenantId: 't1' });
+    resolvedSessionCache.set('u-dave', 'u-dave||s1', { tenantId: 't3' });
+
+    await invalidateUserSessions('u-carol');
+
+    expect(baseSessionCache.get('u-carol')).toBeNull();
+    expect(resolvedSessionCache.get('u-carol|t1|s1')).toBeNull();
+    expect(resolvedSessionCache.get('u-dave||s1')).not.toBeNull();
+    resolvedSessionCache.clear();
   });
 
   it('a home user is not deleted: a revoked HOME row is written, so access ends', async () => {

@@ -293,6 +293,27 @@ describe('createWSContext', () => {
     expect(ctx.user?.tenantId).toBe(HOME);
   });
 
+  it('acts in the connection-params tenant with a live membership', async () => {
+    mocks.prisma.tenantMembership.findMany.mockResolvedValue([
+      membership(CLIENT, { role: 'ADMIN' }),
+    ]);
+    const ctx = await createWSContext(`Bearer ${sessionToken()}`, CLIENT);
+    expect(ctx.user).toMatchObject({ tenantId: CLIENT, homeTenantId: HOME, role: 'ADMIN' });
+  });
+
+  it('gives no WebSocket user for a tenant the user is not a member of', async () => {
+    mocks.prisma.tenantMembership.findMany.mockResolvedValue([membership(CLIENT)]);
+    const ctx = await createWSContext(`Bearer ${sessionToken()}`, OTHER);
+    expect(ctx.user).toBeNull();
+  });
+
+  it('treats an empty or oversized connection-params tenant as absent', async () => {
+    expect((await createWSContext(`Bearer ${sessionToken()}`, '  ')).user?.tenantId).toBe(HOME);
+    expect((await createWSContext(`Bearer ${sessionToken()}`, 'x'.repeat(65))).user?.tenantId).toBe(
+      HOME
+    );
+  });
+
   it('gives a pending staff-link session no WebSocket user', async () => {
     mocks.prisma.tenantMembership.findMany.mockResolvedValue([
       membership(CLIENT, { source: 'PORTAL_STAFF', pinned: true, role: 'ADMIN' }),
