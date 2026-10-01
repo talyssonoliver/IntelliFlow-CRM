@@ -7,10 +7,14 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import { autoRouteInputSchema, suggestAssigneeInputSchema } from '@intelliflow/validators';
 import { type Context } from '../../context';
 import type { TicketRoutingService } from '../../services/TicketRoutingService';
+
+// ADR-070: server-side SUPPORT entitlement — ticket routers
+// (a tenant on a plan without it must not reach these endpoints directly).
+const tenantProcedure = moduleTenantProcedure('SUPPORT');
 
 /**
  * Helper to get ticket routing service from context.

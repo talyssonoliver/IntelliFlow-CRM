@@ -25,6 +25,7 @@ export * from './crm/lead/LeadEvents';
 export * from './crm/lead/LeadRepository';
 export * from './crm/lead/LeadConversionAudit';
 export * from './crm/lead/LeadActivityConstants';
+export * from './crm/lead/attribution';
 
 // CRM Domain - Contacts
 export * from './crm/contact/Contact';

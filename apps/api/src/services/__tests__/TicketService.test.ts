@@ -13,8 +13,12 @@ import type { PrismaClient, Ticket, TicketStatus, TicketPriority } from '@intell
 
 // Create a type for our mock Prisma client
 type MockPrismaClient = {
+  $transaction: ReturnType<typeof vi.fn>;
+  $queryRaw: ReturnType<typeof vi.fn>;
+  $executeRaw: ReturnType<typeof vi.fn>;
   ticket: {
     findMany: ReturnType<typeof vi.fn>;
+    findFirst: ReturnType<typeof vi.fn>;
     findUnique: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
@@ -33,6 +37,7 @@ type MockPrismaClient = {
   };
   sLAPolicy: {
     findUnique: ReturnType<typeof vi.fn>;
+    findFirst: ReturnType<typeof vi.fn>;
   };
   user: {
     findMany: ReturnType<typeof vi.fn>;
@@ -87,8 +92,12 @@ describe('TicketService', () => {
     vi.setSystemTime(new Date('2025-01-15T10:00:00Z'));
 
     mockPrisma = {
+      $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(mockPrisma)),
+      $queryRaw: vi.fn().mockResolvedValue([]), // numeric max -> [] (treated as 0)
+      $executeRaw: vi.fn().mockResolvedValue(1), // advisory lock
       ticket: {
         findMany: vi.fn(),
+        findFirst: vi.fn().mockResolvedValue(null),
         findUnique: vi.fn(),
         create: vi.fn(),
         update: vi.fn(),
@@ -107,6 +116,7 @@ describe('TicketService', () => {
       },
       sLAPolicy: {
         findUnique: vi.fn(),
+        findFirst: vi.fn(),
       },
       user: {
         findMany: vi.fn().mockResolvedValue([]),
@@ -625,9 +635,136 @@ describe('TicketService', () => {
   // ============================================
 
   describe('create', () => {
+    it('scopes the SLA policy lookups to the tenant (explicit id and fallback)', async () => {
+      mockPrisma.ticket.count.mockResolvedValue(0);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.ticket.create.mockResolvedValue(createMockTicket());
+
+      await service.create({
+        subject: 'A',
+        priority: 'MEDIUM' as TicketPriority,
+        contactName: 'c',
+        contactEmail: 'c@x.io',
+        slaPolicyId: 'sla-1',
+        tenantId: 'tenant-1',
+      });
+      expect(mockPrisma.sLAPolicy.findFirst).toHaveBeenLastCalledWith({
+        where: { id: 'sla-1', tenantId: 'tenant-1' },
+      });
+
+      await service.create({
+        subject: 'B',
+        priority: 'MEDIUM' as TicketPriority,
+        contactName: 'c',
+        contactEmail: 'c@x.io',
+        tenantId: 'tenant-1',
+      });
+      expect(mockPrisma.sLAPolicy.findFirst).toHaveBeenLastCalledWith({
+        where: { tenantId: 'tenant-1' },
+        orderBy: { createdAt: 'asc' },
+      });
+    });
+
+    it('numbers under the global advisory lock inside its own transaction when no client is given', async () => {
+      mockPrisma.$queryRaw.mockResolvedValueOnce([{ max: 7n }]);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.ticket.create.mockResolvedValue(createMockTicket({ ticketNumber: 'T-00008' }));
+
+      await service.create({
+        subject: 'A',
+        priority: 'MEDIUM' as TicketPriority,
+        contactName: 'c',
+        contactEmail: 'c@x.io',
+        slaPolicyId: 'sla-1',
+        tenantId: 'tenant-1',
+      });
+
+      expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+      const lockSql = (mockPrisma.$executeRaw.mock.calls[0]![0] as TemplateStringsArray).join('');
+      expect(lockSql).toContain("pg_advisory_xact_lock(hashtextextended('ticket-number', 0))");
+      expect(mockPrisma.$executeRaw.mock.invocationCallOrder[0]!).toBeLessThan(
+        mockPrisma.$queryRaw.mock.invocationCallOrder[0]!
+      );
+      const maxSql = (mockPrisma.$queryRaw.mock.calls[0]![0] as TemplateStringsArray).join('');
+      expect(maxSql).toContain('MAX(');
+      expect(maxSql).toContain('::bigint');
+      expect(maxSql).toContain("'[^0-9]'");
+      expect(maxSql).not.toContain('\\');
+      expect(mockPrisma.ticket.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.ticket.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ ticketNumber: 'T-00008' }) })
+      );
+    });
+
+    it('uses the caller-supplied transaction client without opening its own transaction', async () => {
+      const tx = { ...mockPrisma };
+      tx.ticket = { ...mockPrisma.ticket, create: vi.fn().mockResolvedValue(createMockTicket()) };
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
+
+      await service.create(
+        {
+          subject: 'A',
+          priority: 'MEDIUM' as TicketPriority,
+          contactName: 'c',
+          contactEmail: 'c@x.io',
+          slaPolicyId: 'sla-1',
+          tenantId: 'tenant-1',
+        },
+        tx as never
+      );
+
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+      expect(tx.ticket.create).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.ticket.create).not.toHaveBeenCalled();
+    });
+
+    it('crosses from T-99999 to T-100000 and on to T-100001 (numeric max, not text)', async () => {
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.ticket.create.mockResolvedValue(createMockTicket());
+      const input = {
+        subject: 'A',
+        priority: 'MEDIUM' as TicketPriority,
+        contactName: 'c',
+        contactEmail: 'c@x.io',
+        slaPolicyId: 'sla-1',
+        tenantId: 'tenant-1',
+      };
+
+      mockPrisma.$queryRaw.mockResolvedValueOnce([{ max: 99999n }]);
+      await service.create(input);
+      expect(mockPrisma.ticket.create).toHaveBeenLastCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ ticketNumber: 'T-100000' }) })
+      );
+
+      mockPrisma.$queryRaw.mockResolvedValueOnce([{ max: '100000' }]);
+      await service.create(input);
+      expect(mockPrisma.ticket.create).toHaveBeenLastCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ ticketNumber: 'T-100001' }) })
+      );
+    });
+
+    it('starts at T-00001 when no ticket exists', async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([]);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.ticket.create.mockResolvedValue(createMockTicket());
+
+      await service.create({
+        subject: 'A',
+        priority: 'MEDIUM' as TicketPriority,
+        contactName: 'c',
+        contactEmail: 'c@x.io',
+        slaPolicyId: 'sla-1',
+        tenantId: 'tenant-1',
+      });
+
+      expect(mockPrisma.ticket.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ ticketNumber: 'T-00001' }) })
+      );
+    });
+
     it('should create ticket with SLA times based on priority', async () => {
-      mockPrisma.ticket.count.mockResolvedValue(5);
-      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.$queryRaw.mockResolvedValueOnce([{ max: 5 }]);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
       mockPrisma.ticket.create.mockResolvedValue(createMockTicket());
       mockPrisma.ticketActivity.create.mockResolvedValue({});
 
@@ -656,7 +793,7 @@ describe('TicketService', () => {
 
     it('should throw error if SLA policy not found', async () => {
       mockPrisma.ticket.count.mockResolvedValue(0);
-      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(null);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(null);
 
       await expect(
         service.create({
@@ -672,7 +809,7 @@ describe('TicketService', () => {
 
     it('should calculate SLA response time for CRITICAL priority', async () => {
       mockPrisma.ticket.count.mockResolvedValue(0);
-      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
       mockPrisma.ticket.create.mockResolvedValue(
         createMockTicket({ priority: 'CRITICAL' as TicketPriority })
       );
@@ -701,7 +838,7 @@ describe('TicketService', () => {
 
     it('should calculate SLA response time for HIGH priority', async () => {
       mockPrisma.ticket.count.mockResolvedValue(0);
-      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
       mockPrisma.ticket.create.mockResolvedValue(
         createMockTicket({ priority: 'HIGH' as TicketPriority })
       );
@@ -730,7 +867,7 @@ describe('TicketService', () => {
 
     it('should calculate SLA response time for LOW priority', async () => {
       mockPrisma.ticket.count.mockResolvedValue(0);
-      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
       mockPrisma.ticket.create.mockResolvedValue(
         createMockTicket({ priority: 'LOW' as TicketPriority })
       );
@@ -759,7 +896,7 @@ describe('TicketService', () => {
 
     it('should create initial activity', async () => {
       mockPrisma.ticket.count.mockResolvedValue(0);
-      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
       mockPrisma.ticket.create.mockResolvedValue(createMockTicket());
       mockPrisma.ticketActivity.create.mockResolvedValue({});
 
@@ -785,7 +922,7 @@ describe('TicketService', () => {
 
     it('should include optional fields when provided', async () => {
       mockPrisma.ticket.count.mockResolvedValue(0);
-      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
       mockPrisma.ticket.create.mockResolvedValue(createMockTicket());
       mockPrisma.ticketActivity.create.mockResolvedValue({});
 
@@ -813,8 +950,8 @@ describe('TicketService', () => {
     });
 
     it('should generate correct ticket number', async () => {
-      mockPrisma.ticket.count.mockResolvedValue(99);
-      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.$queryRaw.mockResolvedValueOnce([{ max: 99 }]);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
       mockPrisma.ticket.create.mockResolvedValue(createMockTicket({ ticketNumber: 'T-00100' }));
       mockPrisma.ticketActivity.create.mockResolvedValue({});
 
@@ -853,7 +990,7 @@ describe('TicketService', () => {
 
     beforeEach(() => {
       mockPrisma.ticket.count.mockResolvedValue(0);
-      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
       mockPrisma.ticket.create.mockResolvedValue(createMockTicket());
       mockPrisma.ticketActivity.create.mockResolvedValue({});
       // Return empty array for related tickets search
@@ -917,7 +1054,7 @@ describe('TicketService', () => {
       // Use real timers for async void tests that need setTimeout to settle
       vi.useRealTimers();
       mockPrisma.ticket.count.mockResolvedValue(0);
-      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.sLAPolicy.findFirst.mockResolvedValue(mockSLAPolicy);
       mockPrisma.ticket.create.mockResolvedValue(createMockTicket());
       mockPrisma.ticketActivity.create.mockResolvedValue({});
     });

@@ -21,6 +21,7 @@ import {
   tenantProcedure,
   verifiedTenantProcedure,
   publicProcedure,
+  platformAdminProcedure,
 } from '../../trpc';
 import {
   listInvoicesInputSchema,
@@ -35,7 +36,11 @@ import {
 } from '@intelliflow/validators';
 import { callStripeAPI } from '../../shared/external-service-wrapper';
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
-import { createSubscriptionSyncHandler } from './subscription-sync';
+import {
+  createSubscriptionSyncHandler,
+  createOutboxPortalPushEnqueuer,
+  PortalPushEnqueueError,
+} from './subscription-sync';
 import { buildReceiptEmail } from './receipt-email';
 import {
   PLAN_TIERS,
@@ -71,6 +76,20 @@ export function resolvePriceId(planId: string, billingCycle: 'monthly' | 'annual
     });
   }
   return priceId;
+}
+
+/**
+ * Reverse of resolvePriceId: the plan tier a configured Stripe price ID belongs to, or
+ * undefined when the price is not one of the STRIPE_PRICE_<TIER>_<CYCLE> env prices.
+ */
+export function planTierForPriceId(priceId: string): PlanTier | undefined {
+  for (const tier of PLAN_TIERS) {
+    for (const cycle of ['MONTHLY', 'ANNUAL']) {
+      const configured = process.env[`STRIPE_PRICE_${tier}_${cycle}`];
+      if (configured && configured === priceId) return tier;
+    }
+  }
+  return undefined;
 }
 
 // ============================================
@@ -327,6 +346,70 @@ export function invalidateBillingCache(customerId: string): void {
  */
 export function clearBillingCache(): void {
   billingCache.clear();
+}
+
+interface SubscriptionWebhookPayload {
+  type: string;
+  data: {
+    object: {
+      id: string;
+      customer: string;
+      status?: string;
+      current_period_end?: number;
+      cancel_at_period_end?: boolean;
+      metadata?: Record<string, string>;
+    };
+  };
+}
+
+/**
+ * IFC-314: persist Stripe subscription status (offline-reliable) and — for ENGINE
+ * subscriptions (metadata.tenantSlug present) — enqueue the portal push on the
+ * transactional outbox (events-worker retries it). Persist errors are logged, not
+ * thrown; a failed enqueue rethrows so Stripe redelivers the webhook.
+ */
+async function syncSubscriptionFromWebhook(
+  ctx: import('../../context').Context,
+  input: SubscriptionWebhookPayload
+): Promise<void> {
+  try {
+    const adapters = ctx.container?.get<{
+      stripeSubscriptionRepository: import('@intelliflow/domain').StripeSubscriptionRepository;
+      portalDeliverySync?: unknown;
+    }>('adapters');
+    const subscriptionRepository = adapters?.stripeSubscriptionRepository;
+    if (!subscriptionRepository) return;
+
+    const obj = input.data.object;
+    await createSubscriptionSyncHandler({
+      repo: subscriptionRepository,
+      // Gated on the portal sync being configured, as the inline push was.
+      enqueuePortalPush: adapters?.portalDeliverySync
+        ? createOutboxPortalPushEnqueuer(ctx.prisma)
+        : undefined,
+      logger: {
+        info: (o, m) => console.log(m ?? '', o),
+        warn: (o, m) => console.warn(m ?? '', o),
+        error: (o, m) => console.error(m ?? '', o),
+      },
+    })({
+      type: input.type,
+      subscriptionId: obj.id,
+      customerId: obj.customer,
+      status: obj.status ?? 'active',
+      currentPeriodEnd: obj.current_period_end ?? null,
+      cancelAtPeriodEnd: obj.cancel_at_period_end ?? false,
+      tenantId: obj.metadata?.tenantId,
+      tenantSlug: obj.metadata?.tenantSlug,
+    });
+  } catch (err) {
+    if (err instanceof PortalPushEnqueueError) {
+      // Nothing durable holds the portal push: fail the webhook so Stripe redelivers.
+      console.error('[Billing Webhook] Portal push enqueue failed:', err);
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.message });
+    }
+    console.error('[Billing Webhook] Subscription sync failed (non-fatal):', err);
+  }
 }
 
 // ============================================
@@ -750,9 +833,17 @@ export const billingRouter = createTRPCRouter({
           const moduleAccess =
             ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
           if (moduleAccess) {
-            // Map Stripe priceId to PlanTier (lookup from workspace or metadata)
-            const plan = await moduleAccess.getTenantPlan(user.tenantId);
-            await moduleAccess.syncModulesToPlan(user.tenantId, plan);
+            // Sync to the tier the NEW price belongs to (syncModulesToPlan also records it on
+            // Tenant.plan). Re-reading the current plan here would be a no-op sync.
+            const plan = planTierForPriceId(input.priceId);
+            if (plan) {
+              await moduleAccess.syncModulesToPlan(user.tenantId, plan);
+            } else {
+              console.warn(
+                `[Billing] Price ${input.priceId} is not a configured plan price; ` +
+                  'Tenant.plan will be synced by the subscription webhook.'
+              );
+            }
           }
         } catch (err) {
           // Module sync failure should not block subscription update
@@ -1516,11 +1607,14 @@ export const billingRouter = createTRPCRouter({
    * Handle Stripe webhook for subscription changes
    * IFC-211: Syncs tenant modules when plan changes via Stripe
    *
-   * In production, this would verify the Stripe signature.
-   * Called by Stripe webhook endpoint.
+   * Stripe itself never calls this: the verified, signature-checked entry point
+   * is the raw-body route in `webhooks/stripe-webhook.ts`. This tRPC procedure
+   * trusts its JSON input (tenantId and planTier come from the caller) and
+   * `syncModulesToPlan` now writes `Tenant.plan`, which sets every quota limit,
+   * so it is restricted to platform operators (manual replay / repair only).
    * Also invalidates the billing cache so users see fresh data.
    */
-  handleSubscriptionWebhook: publicProcedure
+  handleSubscriptionWebhook: platformAdminProcedure
     .input(
       z.object({
         type: z.string(),
@@ -1554,46 +1648,7 @@ export const billingRouter = createTRPCRouter({
       // Invalidate cache for this customer on any billing event
       invalidateBillingCache(customerId);
 
-      // IFC-314: persist Stripe subscription status (offline-reliable) and — for
-      // ENGINE subscriptions (metadata.tenantSlug present) — reflect it on the
-      // portal. Best-effort: never let this fail the Stripe webhook. Covers
-      // created/updated/deleted (the sync handler ignores other types).
-      try {
-        const adapters = ctx.container?.get<{
-          stripeSubscriptionRepository: import('@intelliflow/domain').StripeSubscriptionRepository;
-          portalDeliverySync?: {
-            pushDelivery(input: {
-              slug: string;
-              subscriptionStatus?: import('@intelliflow/domain').PortalSubscriptionStatus;
-              subscriptionRenewsAt?: string | null;
-            }): Promise<{ isFailure: boolean; error?: { message: string } }>;
-          } | null;
-        }>('adapters');
-        const subscriptionRepository = adapters?.stripeSubscriptionRepository;
-        if (subscriptionRepository) {
-          const obj = input.data.object;
-          await createSubscriptionSyncHandler({
-            repo: subscriptionRepository,
-            portalSync: adapters?.portalDeliverySync ?? undefined,
-            logger: {
-              info: (o, m) => console.log(m ?? '', o),
-              warn: (o, m) => console.warn(m ?? '', o),
-              error: (o, m) => console.error(m ?? '', o),
-            },
-          })({
-            type: input.type,
-            subscriptionId: obj.id,
-            customerId,
-            status: obj.status ?? 'active',
-            currentPeriodEnd: obj.current_period_end ?? null,
-            cancelAtPeriodEnd: obj.cancel_at_period_end ?? false,
-            tenantId: obj.metadata?.tenantId,
-            tenantSlug: obj.metadata?.tenantSlug,
-          });
-        }
-      } catch (err) {
-        console.error('[Billing Webhook] Subscription sync failed (non-fatal):', err);
-      }
+      await syncSubscriptionFromWebhook(ctx, input);
 
       if (
         input.type !== 'customer.subscription.updated' &&

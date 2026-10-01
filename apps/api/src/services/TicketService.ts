@@ -15,6 +15,28 @@ import type {
  * - Statistics and aggregations
  * - Status transitions
  */
+/**
+ * The subset of the Prisma client `create()` writes through. Callers that must
+ * commit the ticket atomically with their own rows (e.g. an idempotency marker)
+ * pass the interactive-transaction client here.
+ */
+export type TicketWriteClient = Pick<
+  PrismaClient,
+  'ticket' | 'sLAPolicy' | 'ticketActivity' | 'ticketNextStep' | '$queryRaw' | '$executeRaw'
+>;
+
+export interface CreateTicketInput {
+  subject: string;
+  description?: string;
+  priority: TicketPriority;
+  contactName: string;
+  contactEmail: string;
+  contactId?: string;
+  assigneeId?: string;
+  slaPolicyId?: string;
+  tenantId: string;
+}
+
 export class TicketService {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -325,27 +347,72 @@ export class TicketService {
   }
 
   /**
-   * Create a new ticket
+   * Insert the ticket under a global advisory lock so `ticketNumber` (globally
+   * unique) is max+1 at insert time: collision-free across every creator (UI,
+   * portal intake, any tenant) and gap-safe after deletions. The maximum is
+   * taken NUMERICALLY (the column is text, so ORDER BY would rank T-99999 above
+   * T-100000 and pin the sequence for good). The lock is transaction-scoped, so
+   * `db` MUST be a transaction client; `create()` guarantees that. No retry: a
+   * failed INSERT aborts a Postgres transaction, so a retry on the same client
+   * could never succeed.
    */
-  async create(data: {
-    subject: string;
-    description?: string;
-    priority: TicketPriority;
-    contactName: string;
-    contactEmail: string;
-    contactId?: string;
-    assigneeId?: string;
-    slaPolicyId?: string;
-    tenantId: string;
-  }) {
-    // Generate ticket number
-    const ticketCount = await this.prisma.ticket.count();
-    const ticketNumber = `T-${String(ticketCount + 1).padStart(5, '0')}`;
+  private async insertNumbered(
+    db: TicketWriteClient,
+    data: Omit<Parameters<TicketWriteClient['ticket']['create']>[0]['data'], 'ticketNumber'>
+  ) {
+    // $executeRaw, not $queryRaw: Prisma 7 cannot deserialize the function's `void` result.
+    await db.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('ticket-number', 0))`;
+    const rows = await db.$queryRaw<Array<{ max: bigint | number | string | null }>>`
+      SELECT COALESCE(MAX(NULLIF(regexp_replace("ticketNumber", '[^0-9]', '', 'g'), '')::bigint), 0) AS max
+      FROM "tickets"`;
+    const lastNumber = Number(rows[0]?.max ?? 0);
+    const next = (Number.isFinite(lastNumber) ? lastNumber : 0) + 1;
+    const ticketNumber = `T-${String(next).padStart(5, '0')}`;
+    return db.ticket.create({
+      data: { ...data, ticketNumber } as Parameters<
+        TicketWriteClient['ticket']['create']
+      >[0]['data'],
+      include: { slaPolicy: true },
+    });
+  }
 
-    // Get SLA policy to calculate due times — auto-select default if not provided
+  /**
+   * Create a new ticket.
+   *
+   * Pass `db` to create inside the caller's interactive transaction (the ticket
+   * then commits or rolls back with the caller's rows). Without it the service
+   * opens its own transaction. Related-ticket linking is best-effort and runs
+   * after this call returns; with a caller-supplied `db` that is before the
+   * caller commits, so it may find nothing to link.
+   */
+  async create(data: CreateTicketInput, db?: TicketWriteClient) {
+    const ticket = db
+      ? await this.createIn(data, db)
+      : await this.prisma.$transaction((tx) => this.createIn(data, tx));
+
+    // Find and link related tickets (non-blocking, best-effort)
+    this.findAndLinkRelatedTickets({
+      id: ticket.id,
+      subject: data.subject,
+      tenantId: data.tenantId,
+    }).catch(() => {});
+
+    return {
+      ...ticket,
+      slaStatus: this.calculateSLAStatus(ticket),
+    };
+  }
+
+  private async createIn(data: CreateTicketInput, db: TicketWriteClient) {
+    // Get SLA policy to calculate due times — auto-select the tenant's oldest policy if not
+    // provided. Both lookups are scoped to the tenant: an explicit id from another tenant,
+    // or a fallback across tenants, would attach a foreign policy to this ticket.
     const slaPolicy = data.slaPolicyId
-      ? await this.prisma.sLAPolicy.findUnique({ where: { id: data.slaPolicyId } })
-      : await this.prisma.sLAPolicy.findFirst({ orderBy: { createdAt: 'asc' } });
+      ? await db.sLAPolicy.findFirst({ where: { id: data.slaPolicyId, tenantId: data.tenantId } })
+      : await db.sLAPolicy.findFirst({
+          where: { tenantId: data.tenantId },
+          orderBy: { createdAt: 'asc' },
+        });
 
     if (!slaPolicy) {
       throw new Error('SLA policy not found');
@@ -385,30 +452,24 @@ export class TicketService {
       now.getTime() + getResolutionMinutes(data.priority) * 60 * 1000
     );
 
-    const ticket = await this.prisma.ticket.create({
-      data: {
-        ticketNumber,
-        subject: data.subject,
-        description: data.description,
-        priority: data.priority,
-        contactName: data.contactName,
-        contactEmail: data.contactEmail,
-        contactId: data.contactId,
-        assigneeId: data.assigneeId,
-        slaPolicyId: slaPolicy.id,
-        tenantId: data.tenantId,
-        slaResponseDue,
-        slaResolutionDue,
-        status: 'OPEN',
-        slaStatus: 'ON_TRACK',
-      },
-      include: {
-        slaPolicy: true,
-      },
+    const ticket = await this.insertNumbered(db, {
+      subject: data.subject,
+      description: data.description,
+      priority: data.priority,
+      contactName: data.contactName,
+      contactEmail: data.contactEmail,
+      contactId: data.contactId,
+      assigneeId: data.assigneeId,
+      slaPolicyId: slaPolicy.id,
+      tenantId: data.tenantId,
+      slaResponseDue,
+      slaResolutionDue,
+      status: 'OPEN',
+      slaStatus: 'ON_TRACK',
     });
 
     // Create initial activity
-    await this.prisma.ticketActivity.create({
+    await db.ticketActivity.create({
       data: {
         ticketId: ticket.id,
         tenantId: data.tenantId,
@@ -423,7 +484,7 @@ export class TicketService {
     // Generate default next steps based on priority
     const defaultNextSteps = this.getDefaultNextSteps(data.priority);
     if (defaultNextSteps.length > 0) {
-      await this.prisma.ticketNextStep.createMany({
+      await db.ticketNextStep.createMany({
         data: defaultNextSteps.map((step) => ({
           ticketId: ticket.id,
           title: step.title,
@@ -434,17 +495,7 @@ export class TicketService {
       });
     }
 
-    // Find and link related tickets (non-blocking, best-effort)
-    this.findAndLinkRelatedTickets({
-      id: ticket.id,
-      subject: data.subject,
-      tenantId: data.tenantId,
-    }).catch(() => {});
-
-    return {
-      ...ticket,
-      slaStatus: this.calculateSLAStatus(ticket),
-    };
+    return ticket;
   }
 
   /**

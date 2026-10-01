@@ -35,8 +35,14 @@ export interface PortalTenantProvisionInput {
   authorizedEmails: string[];
   /** Optional initial proposal config (Zod-validated portal-side). */
   proposalConfig?: unknown;
-  /** Originating lead id, for traceability. */
+  /**
+   * Originating deal: the intelliFlow `Opportunity` id. The portal stores it as
+   * `client_delivery.crm_deal_id`, and a `409 slug_conflict` is only treated as
+   * success when the portal reports this same id for the existing tenant.
+   */
   sourceLeadId?: string | null;
+  /** Same Opportunity id under its portal-side name (`crm_deal_id`); preferred over `sourceLeadId`. */
+  crmDealId?: string | null;
 }
 
 /** A single setup-fee instalment as reflected to the portal. Money in minor units. */
@@ -82,8 +88,9 @@ export interface PortalDeliveryPushInput {
 export interface PortalDeliverySyncPort {
   /**
    * `POST /api/internal/tenants` — provision the tenant the delivery FK needs.
-   * Idempotent on slug: a `409 slug_conflict` means the tenant already exists and
-   * is treated as success, so a retried deal-won push self-heals.
+   * Idempotent on slug AND source deal: a `409 slug_conflict` is success only when
+   * the response body identifies the same `sourceLeadId` (`existing.crm_deal_id`),
+   * so a retried deal-won push self-heals but a slug owned by another client fails.
    */
   provisionTenant(input: PortalTenantProvisionInput): Promise<Result<void, DomainError>>;
 

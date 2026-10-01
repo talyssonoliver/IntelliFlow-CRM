@@ -78,6 +78,7 @@ export interface PortalSyncClient {
     name: string;
     authorizedEmails: string[];
     sourceLeadId?: string | null;
+    crmDealId?: string | null;
   }): Promise<SyncResult>;
   pushDelivery(input: {
     slug: string;
@@ -177,7 +178,9 @@ export function createPortalDeliverySyncHandler(deps: PortalDeliverySyncHandlerD
       slug,
       name,
       authorizedEmails: [ownerEmail],
-      sourceLeadId: null,
+      crmDealId: opportunityId,
+      // Backwards compatibility: the portal route still reads this key.
+      sourceLeadId: opportunityId,
     });
     if (provision.isFailure) {
       // Throw → outbox retries (likely transient: 5xx / network).

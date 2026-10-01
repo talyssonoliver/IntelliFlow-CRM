@@ -1060,3 +1060,17 @@ waivers:
     author: talyssonoliver
     date: '2026-06-29'
     expires: '2026-12-31'
+  - fingerprint: '3cb4b809aa0ced131d79c3ef65b4da1569e905ca6d68f06a02aae1b35048a970'
+    reason: >-
+      Accepted with evidence, not a regression. The finding assumes existing paid tenants
+      resolved to PROFESSIONAL/ENTERPRISE before this branch and now fall to STARTER. They
+      did not: before this branch getTenantPlan derived the tier from Workspace.plan, and on
+      2026-09-30 production had 0 rows in "workspaces" and "workspace_members" (3 tenants),
+      so every tenant already resolved to STARTER (see the note in migration
+      20260930120000_tenant_provenance_partner). The new column default 'STARTER' preserves
+      that exact behaviour; a backfill would have no source to read from. Plan writes now
+      arrive through the verified Stripe webhook and the partner API. If a workspace- or
+      subscription-derived plan is ever needed for existing tenants, do it as a separate
+      Class B data migration.
+    author: talyssonoliver
+    date: '2026-10-01'

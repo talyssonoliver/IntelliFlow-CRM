@@ -25,9 +25,13 @@ import {
   DEFAULT_TICKET_REQUIRED_FIELDS,
   DEFAULT_TICKET_AUTOMATION,
 } from '@intelliflow/validators';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import { assertCanCreateTag, loadTicketAutomation } from './ticket-automation';
 import { slaPolicyRouter } from './ticket-config.router';
+
+// ADR-070: server-side SUPPORT entitlement — ticket routers
+// (a tenant on a plan without it must not reach these endpoints directly).
+const tenantProcedure = moduleTenantProcedure('SUPPORT');
 
 // ─── Duplicate Rules Sub-Router ─────────────────────────────────────────────
 
