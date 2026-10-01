@@ -729,6 +729,19 @@ describe('partner.inviteMember', () => {
 describe('partner.issueLoginLink', () => {
   const owned = { id: 't1', partnerId: 'partner-1' };
 
+  it('never mints a link for a platform operator email, even as a tenant member', async () => {
+    process.env.PLATFORM_ADMIN_EMAILS = 'ops@leangency.test';
+    const { caller } = callerWith();
+    prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
+    prismaMock.user.findUnique.mockResolvedValue({ tenantId: 't1' } as never);
+
+    await expectCode(
+      caller.issueLoginLink({ tenantId: 't1', email: 'OPS@leangency.test' }),
+      'CONFLICT'
+    );
+    expect(supabaseAdminMock.auth.admin.generateLink).not.toHaveBeenCalled();
+  });
+
   it('issues a magic link for a member of the tenant', async () => {
     const { caller } = callerWith();
     prismaMock.tenant.findUnique.mockResolvedValue(owned as never);

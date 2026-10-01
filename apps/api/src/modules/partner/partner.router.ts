@@ -471,6 +471,10 @@ export const partnerRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await loadPartnerTenant(ctx.prisma, ctx.partner, input.tenantId);
       const email = normalizeEmail(input.email);
+      // Platform-operator rights derive from the verified email (PLATFORM_ADMIN_EMAILS), so a
+      // magic link for an operator address would hand a partner platform-admin access even
+      // when that operator's user row sits in a partner-sourced tenant.
+      assertNotOperatorEmail(email);
 
       const member = await ctx.prisma.user.findUnique({
         where: { email },

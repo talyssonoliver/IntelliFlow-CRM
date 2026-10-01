@@ -337,6 +337,35 @@ export class TicketService {
   /**
    * Create a new ticket
    */
+  /**
+   * `ticketNumber` is globally unique but was derived from `count() + 1`, so two
+   * concurrent creates (any tenant, any entry point) read the same count and one
+   * of them fails with P2002. Recount and retry on that collision, advancing by the
+   * attempt index so a gap left by a deleted ticket cannot pin the sequence.
+   */
+  private async createWithFreshNumber(
+    db: TicketWriteClient,
+    data: Omit<Parameters<TicketWriteClient['ticket']['create']>[0]['data'], 'ticketNumber'>
+  ) {
+    const MAX_ATTEMPTS = 5;
+    for (let attempt = 0; ; attempt++) {
+      const ticketCount = await db.ticket.count();
+      const ticketNumber = `T-${String(ticketCount + 1 + attempt).padStart(5, '0')}`;
+      try {
+        return await db.ticket.create({
+          data: { ...data, ticketNumber } as Parameters<
+            TicketWriteClient['ticket']['create']
+          >[0]['data'],
+          include: { slaPolicy: true },
+        });
+      } catch (error) {
+        const isNumberCollision =
+          (error as { code?: string } | null)?.code === 'P2002' && attempt < MAX_ATTEMPTS - 1;
+        if (!isNumberCollision) throw error;
+      }
+    }
+  }
+
   async create(
     data: {
       subject: string;
@@ -351,14 +380,15 @@ export class TicketService {
     },
     db: TicketWriteClient = this.prisma
   ) {
-    // Generate ticket number
-    const ticketCount = await db.ticket.count();
-    const ticketNumber = `T-${String(ticketCount + 1).padStart(5, '0')}`;
-
-    // Get SLA policy to calculate due times — auto-select default if not provided
+    // Get SLA policy to calculate due times — auto-select the tenant's oldest policy if not
+    // provided. Both lookups are scoped to the tenant: an explicit id from another tenant,
+    // or a fallback across tenants, would attach a foreign policy to this ticket.
     const slaPolicy = data.slaPolicyId
-      ? await db.sLAPolicy.findUnique({ where: { id: data.slaPolicyId } })
-      : await db.sLAPolicy.findFirst({ orderBy: { createdAt: 'asc' } });
+      ? await db.sLAPolicy.findFirst({ where: { id: data.slaPolicyId, tenantId: data.tenantId } })
+      : await db.sLAPolicy.findFirst({
+          where: { tenantId: data.tenantId },
+          orderBy: { createdAt: 'asc' },
+        });
 
     if (!slaPolicy) {
       throw new Error('SLA policy not found');
@@ -398,26 +428,20 @@ export class TicketService {
       now.getTime() + getResolutionMinutes(data.priority) * 60 * 1000
     );
 
-    const ticket = await db.ticket.create({
-      data: {
-        ticketNumber,
-        subject: data.subject,
-        description: data.description,
-        priority: data.priority,
-        contactName: data.contactName,
-        contactEmail: data.contactEmail,
-        contactId: data.contactId,
-        assigneeId: data.assigneeId,
-        slaPolicyId: slaPolicy.id,
-        tenantId: data.tenantId,
-        slaResponseDue,
-        slaResolutionDue,
-        status: 'OPEN',
-        slaStatus: 'ON_TRACK',
-      },
-      include: {
-        slaPolicy: true,
-      },
+    const ticket = await this.createWithFreshNumber(db, {
+      subject: data.subject,
+      description: data.description,
+      priority: data.priority,
+      contactName: data.contactName,
+      contactEmail: data.contactEmail,
+      contactId: data.contactId,
+      assigneeId: data.assigneeId,
+      slaPolicyId: slaPolicy.id,
+      tenantId: data.tenantId,
+      slaResponseDue,
+      slaResolutionDue,
+      status: 'OPEN',
+      slaStatus: 'ON_TRACK',
     });
 
     // Create initial activity
