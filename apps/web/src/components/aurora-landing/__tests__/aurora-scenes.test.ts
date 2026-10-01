@@ -49,11 +49,14 @@ function fakeGsap() {
       },
       pause: vi.fn(),
       resume: vi.fn(),
+      kill: vi.fn(),
     };
+    timelines.push(tl);
     return tl;
   };
   const reverts: Array<() => void> = [];
   const pending: Array<() => void> = [];
+  const timelines: Array<{ kill: ReturnType<typeof vi.fn> }> = [];
   /** Runs queued onComplete callbacks, at most `steps` of them. */
   const flush = (steps = 3) => {
     for (let i = 0; i < steps && pending.length; i++) pending.shift()!();
@@ -78,7 +81,7 @@ function fakeGsap() {
       }
     ),
   };
-  return { gsap, ScrollTrigger, tweens, reverts, flush, pending };
+  return { gsap, ScrollTrigger, tweens, reverts, flush, pending, timelines };
 }
 
 function page() {
@@ -178,10 +181,33 @@ describe('playScenes', () => {
 
     entries.forEach((enter) => enter());
     flush();
-    expect(added.length).toBeGreaterThanOrEqual(2);
     expect(document.getElementById('review-q1-state')!.textContent).toBe('Approved');
+
+    // The approval loop records nothing in the context, however many cycles run.
+    const recorded = added.length;
+    flush(40);
+    expect(added.length).toBe(recorded);
+
     cleanup();
     expect(revert).toHaveBeenCalled();
+  });
+
+  it('keeps only one live approval timeline, killing each before the next, and stops on cleanup', () => {
+    const root = page();
+    const { gsap, ScrollTrigger, flush, timelines } = fakeGsap();
+    const cleanup = playScenes(root, gsap as never, ScrollTrigger as never, false);
+    const alive = () => timelines.filter((t) => t.kill.mock.calls.length === 0).length;
+    flush(30);
+    const afterOneLap = alive();
+    flush(60);
+    // Many more cycles, yet no more live timelines: each is killed before the next.
+    expect(alive()).toBe(afterOneLap);
+    const built = timelines.length;
+
+    cleanup();
+    expect(timelines.at(-1)!.kill).toHaveBeenCalled();
+    flush(30);
+    expect(timelines.length).toBe(built);
   });
 
   it('settles tilted windows as they scroll in', () => {
