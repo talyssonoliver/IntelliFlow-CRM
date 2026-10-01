@@ -28,8 +28,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, cn } from '@intelliflow/ui';
 import { getSupabaseBrowserClient, clearSupabaseLocalStorage } from '@/lib/supabase-browser';
 import { storeSessionFingerprint } from '@/lib/shared/login-security';
-import { storeSessionTokens } from '@/lib/shared/token-exchange';
-import { syncTokenToCookie, recordAuthBreadcrumb } from '@/lib/shared/session-cleanup';
+import { storeSessionTokens, clearSessionTokens } from '@/lib/shared/token-exchange';
+import {
+  syncTokenToCookie,
+  clearTokenCookie,
+  recordAuthBreadcrumb,
+} from '@/lib/shared/session-cleanup';
+import { safeNextPath } from '@/lib/shared/safe-next-path';
 
 // ============================================
 // Types
@@ -57,6 +62,10 @@ interface StatusConfig {
   animate?: boolean;
 }
 
+function flowOf(params: URLSearchParams): 'oauth' | 'magiclink' {
+  return params.get('token_hash') ? 'magiclink' : 'oauth';
+}
+
 // ============================================
 // Component
 // ============================================
@@ -74,6 +83,98 @@ export function OAuthCallback({
   const hasCalledRef = useRef(false);
   const backToLoginRef = useRef<HTMLButtonElement>(null);
 
+  // Shared post-login steps for the OAuth and magic-link paths.
+  const finishSignIn = useCallback(
+    (
+      session: { access_token: string; refresh_token?: string },
+      user: { id: string; email?: string } | undefined,
+      flow: 'oauth' | 'magiclink'
+    ) => {
+      setStatus('success');
+      recordAuthBreadcrumb(`${flow}:session-established`);
+
+      // Store tokens for API calls (our custom token management)
+      storeSessionTokens(session.access_token, session.refresh_token);
+
+      // Sync the access token to the `accessToken` cookie so Next.js SSR server
+      // components (which read the cookie, not localStorage) see the session
+      // immediately on the post-login redirect — otherwise the first server
+      // render of /dashboard misses auth and flashes the unauthenticated view.
+      syncTokenToCookie(session.access_token);
+      recordAuthBreadcrumb(`${flow}:cookie-synced`);
+
+      // Store device fingerprint for session verification
+      storeSessionFingerprint();
+
+      // Set login success flag for AuthContext grace window (SF-002: use timestamp)
+      sessionStorage.setItem('oauth_login_success', Date.now().toString());
+
+      // Clean up Supabase localStorage keys so the SDK doesn't auto-recover
+      // a stale session on subsequent page loads (we manage tokens ourselves).
+      clearSupabaseLocalStorage();
+
+      // Call success callback or redirect
+      if (onSuccess) {
+        onSuccess(
+          { id: user?.id ?? '', email: user?.email },
+          { accessToken: session.access_token }
+        );
+        return;
+      }
+
+      // Redirect after brief success state (300ms per NF-004)
+      const target = flow === 'magiclink' ? safeNextPath(searchParams.get('next')) : redirectUrl;
+      setTimeout(() => {
+        router.push(target);
+      }, 300);
+    },
+    [onSuccess, router, redirectUrl, searchParams]
+  );
+
+  // Magic-link flow (partner Portal -> CRM): /auth/callback?token_hash=…&type=magiclink&next=…
+  //
+  // The hashed OTP is exchanged with verifyOtp, which needs no prior session or PKCE verifier.
+  // Any existing local session is signed out FIRST so a different user's session can never win.
+  const handleMagicLink = useCallback(
+    async (tokenHash: string, linkType: string | null) => {
+      if (linkType !== 'magiclink') {
+        throw new Error('This sign-in link is not valid. Please request a new one.');
+      }
+      setStatus('exchanging');
+
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize authentication client');
+      }
+
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch {
+        // Nothing to sign out, or the call failed: our own token cleanup below still applies.
+      }
+      clearSessionTokens();
+      clearTokenCookie();
+      clearSupabaseLocalStorage();
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('TIMEOUT')), 10_000);
+      });
+      const { data, error } = await Promise.race([
+        supabase.auth.verifyOtp({ type: 'magiclink', token_hash: tokenHash }),
+        timeoutPromise,
+      ]);
+
+      if (error || !data?.session) {
+        throw new Error(
+          'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
+        );
+      }
+
+      finishSignIn(data.session, data.user ?? undefined, 'magiclink');
+    },
+    [finishSignIn]
+  );
+
   // Handle the OAuth callback flow.
   //
   // With detectSessionInUrl: true, the Supabase SDK's _initialize() method
@@ -83,6 +184,12 @@ export function OAuthCallback({
   // read the session via getSession().
   const handleCallback = useCallback(async () => {
     try {
+      const tokenHash = searchParams.get('token_hash');
+      if (tokenHash) {
+        await handleMagicLink(tokenHash, searchParams.get('type'));
+        return;
+      }
+
       // Bookmarked URL detection: no params at all → redirect to login
       const hasCode = searchParams.get('code');
       const hasError = searchParams.get('error');
@@ -150,47 +257,10 @@ export function OAuthCallback({
 
       const { session } = data;
       const { data: userData } = await supabase.auth.getUser(session.access_token);
-      const user = userData?.user;
-
-      setStatus('success');
-      recordAuthBreadcrumb('oauth:session-established');
-
-      // Store tokens for API calls (our custom token management)
-      storeSessionTokens(session.access_token, session.refresh_token);
-
-      // Sync the access token to the `accessToken` cookie so Next.js SSR server
-      // components (which read the cookie, not localStorage) see the session
-      // immediately on the post-OAuth redirect — otherwise the first server
-      // render of /dashboard misses auth and flashes the unauthenticated view.
-      syncTokenToCookie(session.access_token);
-      recordAuthBreadcrumb('oauth:cookie-synced');
-
-      // Store device fingerprint for session verification
-      storeSessionFingerprint();
-
-      // Set OAuth login success flag for AuthContext grace window (SF-002: use timestamp)
-      sessionStorage.setItem('oauth_login_success', Date.now().toString());
-
-      // Clean up Supabase localStorage keys so the SDK doesn't auto-recover
-      // a stale session on subsequent page loads (we manage tokens ourselves).
-      clearSupabaseLocalStorage();
-
-      // Call success callback or redirect
-      if (onSuccess) {
-        onSuccess(
-          { id: user?.id ?? '', email: user?.email },
-          { accessToken: session.access_token }
-        );
-        return;
-      }
-
-      // Redirect to dashboard after brief success state (300ms per NF-004)
-      setTimeout(() => {
-        router.push(redirectUrl);
-      }, 300);
+      finishSignIn(session, userData?.user ?? undefined, 'oauth');
     } catch (err) {
       setStatus('error');
-      recordAuthBreadcrumb('oauth:error');
+      recordAuthBreadcrumb(`${flowOf(searchParams)}:error`);
       let errorMsg: string;
       if (err instanceof Error) {
         errorMsg =
@@ -203,7 +273,7 @@ export function OAuthCallback({
       setErrorMessage(errorMsg);
       onError?.(errorMsg);
     }
-  }, [searchParams, router, redirectUrl, onSuccess, onError]);
+  }, [searchParams, handleMagicLink, finishSignIn, onError]);
 
   // Run callback on mount — hasCalledRef prevents double-execution in StrictMode
   // (PKCE authorization codes are single-use)

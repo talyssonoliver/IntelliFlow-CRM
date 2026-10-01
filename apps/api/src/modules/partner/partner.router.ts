@@ -16,6 +16,7 @@ import { z } from 'zod';
 import type { PrismaClient } from '@intelliflow/db';
 import type { ModuleAccessPort, TenantUsagePort } from '@intelliflow/application';
 import { createTRPCRouter, partnerProcedure, requirePartnerScope } from '../../trpc';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { supabaseAdmin } from '../../lib/supabase';
 import { getPlatformAdminEmails, type PartnerContext } from '../../security/partner-auth';
 import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
@@ -77,6 +78,29 @@ export const issueLoginLinkInput = z.object({
   redirectTo: z.string().url().optional(),
 });
 export const issueLoginLinkOutput = z.object({ url: z.string().url(), expiresAt: z.string() });
+
+const LOGIN_LINK_DEFAULT_NEXT = '/dashboard';
+
+/**
+ * The in-app path the login link lands on after sign-in. `redirectTo` may only choose the path:
+ * it is honoured when it is same-origin with the app, and ignored (never followed) otherwise.
+ */
+export function resolveLoginLinkNext(redirectTo: string | undefined, appUrl: string): string {
+  if (!redirectTo) return LOGIN_LINK_DEFAULT_NEXT;
+  try {
+    const target = new URL(redirectTo);
+    if (target.origin !== new URL(appUrl).origin) {
+      console.warn('[partner] issueLoginLink: ignoring cross-origin redirectTo:', target.origin);
+      return LOGIN_LINK_DEFAULT_NEXT;
+    }
+    const next = `${target.pathname}${target.search}`;
+    // pathname always starts with a single '/', but guard against '//host' style values.
+    return next.startsWith('/') && !next.startsWith('//') ? next : LOGIN_LINK_DEFAULT_NEXT;
+  } catch {
+    console.warn('[partner] issueLoginLink: ignoring unparseable redirectTo');
+    return LOGIN_LINK_DEFAULT_NEXT;
+  }
+}
 
 export const getUsageInput = z.object({ tenantId: z.string().min(1) });
 
@@ -487,19 +511,28 @@ export const partnerRouter = createTRPCRouter({
         });
       }
 
+      // The link points INTO our app, not at Supabase's /verify endpoint. Supabase would redirect
+      // to its Site URL (or an implicit-flow #access_token fragment nothing consumes), so we hand
+      // out only the hashed OTP and let /auth/callback exchange it with verifyOtp.
       const { data, error } = await supabaseAdmin.auth.admin.generateLink({
         type: 'magiclink',
         email,
-        options: input.redirectTo ? { redirectTo: input.redirectTo } : undefined,
       });
-      const url = data?.properties?.action_link;
-      if (error || !url) {
+      const hashedToken = data?.properties?.hashed_token;
+      if (error || !hashedToken) {
         console.error('[partner] generateLink failed:', error?.message);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Could not issue a login link.',
         });
       }
+
+      const appUrl = requiredProdEnv('APP_URL', process.env.APP_URL, 'http://localhost:3000');
+      const callback = new URL('/auth/callback', appUrl);
+      callback.searchParams.set('token_hash', hashedToken);
+      callback.searchParams.set('type', 'magiclink');
+      callback.searchParams.set('next', resolveLoginLinkNext(input.redirectTo, appUrl));
+      const url = callback.toString();
 
       return {
         url,
