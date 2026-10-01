@@ -49,7 +49,7 @@
       "kind": "infra-gated",
       "maxSkipped": 16,
       "reviewBy": "2026-10-31",
-      "reason": "ADR-071: real-database suite for tenant memberships and the pooled SET app.current_tenant_id race. Needs the local test DB (DATABASE_TEST_URL, localhost:5433) with the 20261001120000_tenant_memberships migration applied; it probes and skips when that DB is absent (16/16 passed locally on 2026-10-01)."
+      "reason": "ADR-054: #658 — ADR-071 real-database suite (tenant memberships, pooled SET app.current_tenant_id race). Needs the local test DB (DATABASE_TEST_URL, localhost:5433) with migration 20261001120000_tenant_memberships applied; it probes and skips when that DB is absent. Ran 16/16 locally on 2026-10-01."
     }
   ]
 }
