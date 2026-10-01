@@ -816,6 +816,9 @@ describe('authRouter', () => {
       const mockContext = createTestContext({
         prisma: prismaMock,
         user: null,
+        req: new Request('http://localhost/api/trpc/auth.getStatus', {
+          headers: { 'x-active-tenant': 'tenant-other' },
+        }),
         authError: membershipError(
           'FORBIDDEN',
           'NOT_A_MEMBER',
@@ -828,6 +831,23 @@ describe('authRouter', () => {
       expect(error).toBeInstanceOf(TRPCError);
       expect((error as TRPCError).code).toBe('FORBIDDEN');
       expect(reasonFromCause((error as TRPCError).cause)).toBe('NOT_A_MEMBER');
+    });
+
+    it('reports a revoked HOME membership (no active-tenant header) as unauthenticated', async () => {
+      // No header means the web has no selection to clear; the user must land on /login.
+      const mockContext = createTestContext({
+        prisma: prismaMock,
+        user: null,
+        req: new Request('http://localhost/api/trpc/auth.getStatus'),
+        authError: membershipError(
+          'FORBIDDEN',
+          'NOT_A_MEMBER',
+          'Your access to this workspace has been removed.'
+        ),
+      } as never);
+      const caller = authRouter.createCaller(mockContext);
+
+      await expect(caller.getStatus()).resolves.toEqual({ authenticated: false });
     });
 
     it('still reports an ended pinned session as unauthenticated', async () => {
