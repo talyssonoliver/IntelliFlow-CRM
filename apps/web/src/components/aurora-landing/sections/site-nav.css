@@ -80,3 +80,14 @@
     color: var(--blue);
   }
 }
+
+/* Seven header links: tighter spacing on a narrow desktop so the row never wraps. */
+@media (min-width: 961px) and (max-width: 1240px) {
+  .aurora-page .nav-row {
+    gap: 24px;
+  }
+  .aurora-page .nav-links {
+    gap: 18px;
+    margin-left: 8px;
+  }
+}
