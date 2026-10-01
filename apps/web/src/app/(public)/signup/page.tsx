@@ -16,6 +16,7 @@
  * - Rate limiting protection
  */
 
+import { takeSignupEmail } from '@/lib/signup-prefill';
 import { Suspense, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -140,16 +141,13 @@ function SignUpPageContent() {
   const router = useRouter();
   const auth = useAuth();
   const getUTMData = useUTMCapture();
-  // The landing page's "Start free" form sends the visitor's email here: fill
-  // it in, then take it out of the address bar.
-  const searchParams = useSearchParams();
-  const [prefillEmail] = useState(() => searchParams.get('email') ?? '');
+  // The landing page's "Start free" form leaves the visitor's email in
+  // sessionStorage (never in the URL); pick it up once the page is on the client.
+  const [prefillEmail, setPrefillEmail] = useState('');
   useEffect(() => {
-    if (!prefillEmail || typeof globalThis.window === 'undefined') return;
-    const url = new URL(globalThis.location.href);
-    url.searchParams.delete('email');
-    globalThis.history.replaceState(globalThis.history.state, '', url.toString());
-  }, [prefillEmail]);
+    const email = takeSignupEmail();
+    if (email) setPrefillEmail(email);
+  }, []);
 
   // Redirect if already authenticated
   useRedirectIfAuthenticated('/');
@@ -291,6 +289,7 @@ function SignUpPageContent() {
 
             {/* Registration Form */}
             <RegistrationForm
+              key={prefillEmail || 'blank'}
               onSubmit={handleSubmit}
               isLoading={isSubmitting}
               initialEmail={prefillEmail}
