@@ -174,7 +174,8 @@ function followLayers({ root, gsap, ScrollTrigger, motion, triggers, cleanups }:
   // which the onStep guard below treats as "no active layer".
   const steps = gsap.utils.toArray<HTMLElement>('.walk.walk-card, .layer-step', root);
 
-  if (window.matchMedia(motion.MOBILE_QUERY).matches) {
+  const phone = window.matchMedia(motion.MOBILE_QUERY).matches;
+  if (phone) {
     // Phone story (stack-stage.css): the stack stays pinned while the story
     // cards scroll up over it. As a card comes up from the bottom, its layer
     // lifts out of the stack to the top of the frame and turns to face the
@@ -225,7 +226,8 @@ function followLayers({ root, gsap, ScrollTrigger, motion, triggers, cleanups }:
         trigger: end,
         start: 'top 55%',
         onEnter: () => s.setActive(null),
-        onLeaveBack: () => s.setActive('foundation'),
+        // On a phone the story's presentation shows the layers; the whole stack stays put.
+        onLeaveBack: () => s.setActive(phone ? null : 'foundation'),
       })
     );
   }

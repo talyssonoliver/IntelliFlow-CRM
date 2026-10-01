@@ -413,6 +413,10 @@ describe('AuroraMotion', () => {
 
     story.onLeave!();
     expect(stack.setPresentation).toHaveBeenLastCalledWith(null);
+
+    // Scrolling back up past the stage end never hides the stack on a phone.
+    triggers.find((t) => t.trigger === root.querySelector('.stage-end'))!.onLeaveBack!();
+    expect(stack.setActive).toHaveBeenLastCalledWith(null);
   });
 
   it('clears the stack only when the pinned frame is about to unstick, measuring the sticky frame on desktop', async () => {
