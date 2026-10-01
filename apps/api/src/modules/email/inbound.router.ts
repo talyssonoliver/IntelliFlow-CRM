@@ -1200,6 +1200,9 @@ export const inboundEmailRouter = createTRPCRouter({
 
       // Storage limits per plan tier (in bytes)
       const STORAGE_LIMITS: Record<string, number> = {
+        // Portal-sourced free tier (ADR-070): no outbound email or AI, but inbound mail
+        // still occupies storage. Explicit so it never inherits a paid allowance.
+        PARTNER_FREE: 1 * 1024 * 1024 * 1024, // 1 GB
         STARTER: 5 * 1024 * 1024 * 1024, // 5 GB
         PROFESSIONAL: 25 * 1024 * 1024 * 1024, // 25 GB
         ENTERPRISE: 100 * 1024 * 1024 * 1024, // 100 GB

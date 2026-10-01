@@ -32,10 +32,14 @@ describe('email.getStorageUsage plan resolution', () => {
     });
   });
 
-  it('falls back to the STARTER limit for a plan without a storage tier and for a missing tenant', async () => {
+  it('gives PARTNER_FREE its own 1 GB allowance, never the paid STARTER one', async () => {
     const partner = await arrange('PARTNER_FREE').getStorageUsage();
-    expect(partner.planTier).toBe('PARTNER_FREE');
-    expect(partner.limitBytes).toBe(5 * GB);
+    expect(partner).toEqual({ usedBytes: 15, limitBytes: 1 * GB, planTier: 'PARTNER_FREE' });
+  });
+
+  it('falls back to the STARTER limit for an unknown plan string and for a missing tenant', async () => {
+    const unknown = await arrange('LEGACY_UNMAPPED').getStorageUsage();
+    expect(unknown.limitBytes).toBe(5 * GB);
 
     const missing = await arrange(null).getStorageUsage();
     expect(missing).toMatchObject({ planTier: 'STARTER', limitBytes: 5 * GB });
