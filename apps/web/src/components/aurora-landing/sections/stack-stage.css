@@ -70,6 +70,23 @@
     grid-column: 1;
     grid-row: 1;
   }
+  /* Act 0 (owner 2026-10-01): on a phone the hero has the first screen to
+     itself, its copy centred top to bottom, and the stack waits below the
+     fold until the visitor scrolls. */
+  .aurora-page .stage-grid.stage-grid-v2 .hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100vh - 72px);
+    min-height: calc(100svh - 72px);
+    padding: 24px 0 40px;
+  }
+  /* The stack rides up behind the bottom of the first screen, so it is there
+     the moment the visitor scrolls (AuroraMotion keeps it hidden until then). */
+  .aurora-page .stage-grid.stage-grid-v2 .stage-object.stack-visual {
+    margin-top: -42vh;
+    margin-top: -42svh;
+  }
   /* stage-copy and stage-object deliberately share one grid cell: the sticky
      canvas pins inside it while the copy scrolls through, on top of it. */
   .aurora-page .stage-grid.stage-grid-v2 .stage-copy,

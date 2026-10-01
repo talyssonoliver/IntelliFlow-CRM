@@ -41,6 +41,14 @@ const SETTLE_MS = 650;
 /** The axis that turns a slab's face towards the camera, which sits 9 across and 9 deep. */
 const TILT_AXIS = new THREE.Vector3(1, 0, -1).normalize();
 
+/**
+ * Act 0's starting turn about the vertical axis: a quarter-turn. The slabs
+ * stay on a diagonal to the camera, so their edges show depth the whole way
+ * round and the face text stays upright (an eighth of a turn lines them up
+ * with the camera and reads as a flat card; owner 2026-10-01).
+ */
+const INTRO_TURN = Math.PI / 2;
+
 /** Space between the frame's top and a presented layer, in CSS px. */
 const PRESENT_PAD_PX = 20;
 /** How far the camera rises while a layer is presented, so the stack sits lower. */
@@ -157,6 +165,12 @@ export interface Presentation {
 
 export interface AuroraStack {
   setActive(id: LayerId | null): void;
+  /**
+   * Act 0 on a phone, from 0 to 1: the stack arrives tightly stacked and
+   * turned a quarter, then turns back and spreads to its floating state.
+   * 1 (the default) is that state.
+   */
+  setIntro(progress: number): void;
   /**
    * Phone story: lifts each named layer out of the stack to the top of the
    * frame, square to the viewer, by `present`, and fades it by `dissolve`.
@@ -297,6 +311,7 @@ export function createStack(
   const followEuler = new THREE.Euler();
 
   let activeIndex = -1;
+  let intro = 1;
   /** Per layer, how far it is presented (0 to 1) and how far it has dissolved (0 to 1). */
   let presentation: Presentation[] = [];
   const presented = new THREE.Quaternion();
@@ -389,13 +404,17 @@ export function createStack(
     camera.updateProjectionMatrix();
     const pose = presenting ? presentPose(cam, size) : null;
 
+    // Act 0: layers close together around the stack's centre, turned a quarter.
+    const opened = reducedMotion ? 1 : smooth(intro);
+    const spread = 0.28 + 0.72 * opened;
     items.forEach((item, index) => {
       const target = layerTarget(index, activeIndex);
       const s = item.state;
       s.lift += (target.lift - s.lift) * ease;
       s.glow += (target.glow - s.glow) * ease;
       s.peel += (target.peel - s.peel) * ease;
-      item.group.position.set(0, baseY(index) + s.lift + s.peel * 3.4, 0);
+      const slotY = REST_Y + (baseY(index) - REST_Y) * spread;
+      item.group.position.set(0, slotY + s.lift + s.peel * 3.4, 0);
       item.group.visible = s.peel < 0.985;
       item.slab.opacity = 1 - s.peel;
       item.slab.emissiveIntensity = 0.12 * s.glow;
@@ -459,7 +478,7 @@ export function createStack(
       pointer.y += (pointer.ty - pointer.y) * 0.05;
       // No pointer sway while a layer is presented, so it faces the viewer squarely.
       const sway = presenting ? 0 : 1;
-      root.rotation.y = pointer.x * 0.06 * sway;
+      root.rotation.y = pointer.x * 0.06 * sway + (1 - opened) * INTRO_TURN;
       root.rotation.x = pointer.y * 0.03 * sway;
     }
     renderer.render(scene, camera);
@@ -484,6 +503,9 @@ export function createStack(
   start();
 
   return {
+    setIntro(progress) {
+      intro = Math.min(1, Math.max(0, progress));
+    },
     setPresentation(next) {
       presentation = LAYERS.map((l) => next?.[l.id] ?? { present: 0, dissolve: 0 });
     },

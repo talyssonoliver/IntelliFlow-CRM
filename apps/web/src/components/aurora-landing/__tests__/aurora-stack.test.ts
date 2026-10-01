@@ -317,6 +317,39 @@ describe('createStack', () => {
     stack.dispose();
   });
 
+  it('arrives in Act 0 stacked tight and turned a quarter, then opens to the floating stack', () => {
+    const canvas = document.createElement('canvas');
+    const stack = createStack(canvas, { fonts, reducedMotion: false });
+    const root = () => renderer().scene.children.at(-1) as unknown as { rotation: { y: number } };
+
+    stack.setIntro(0);
+    run(1);
+    const closed = layers().map((g) => g.position.y);
+    const closedSpan = closed.at(-1)! - closed[0]!;
+    expect(root().rotation.y).toBeCloseTo(Math.PI / 2);
+
+    stack.setIntro(1);
+    run(1);
+    const open = layers().map((g) => g.position.y);
+    expect(open[4]).toBeCloseTo(baseY(4));
+    expect(open.at(-1)! - open[0]!).toBeGreaterThan(closedSpan * 3);
+    expect(root().rotation.y).toBeCloseTo(0);
+
+    stack.setIntro(7);
+    run(1);
+    expect(layers().map((g) => g.position.y)).toEqual(open);
+    stack.dispose();
+  });
+
+  it('skips Act 0 under reduced motion: the stack is shown open from the start', () => {
+    const canvas = document.createElement('canvas');
+    const stack = createStack(canvas, { fonts, reducedMotion: true });
+    stack.setIntro(0);
+    run(1);
+    expect(layers().at(-1)!.position.y).toBeCloseTo(baseY(4));
+    stack.dispose();
+  });
+
   it('eases towards its targets when motion is allowed and follows the pointer', () => {
     const canvas = document.createElement('canvas');
     const stack = createStack(canvas, { fonts, reducedMotion: false });

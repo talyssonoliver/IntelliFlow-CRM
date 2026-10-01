@@ -40,6 +40,7 @@ vi.mock('../aurora-scenes', () => ({ playScenes: (...a: unknown[]) => playScenes
 const stack = {
   setActive: vi.fn(),
   setPresentation: vi.fn(),
+  setIntro: vi.fn(),
   pause: vi.fn(),
   resume: vi.fn(),
   hide: vi.fn(),
@@ -421,6 +422,13 @@ describe('AuroraMotion', () => {
     expect(last().agents.dissolve).toBe(1);
     // ...and only then does the next card reach the screen.
     expect(last().control.present).toBe(0);
+
+    // Act 0: the stack opens out as the hero scrolls away, starting closed.
+    const hero = root.querySelector('.hero')!;
+    const intro = triggers.find((t) => t.trigger === hero && t.onUpdate)!;
+    expect(stack.setIntro).toHaveBeenCalledWith(0);
+    intro.onUpdate!({ progress: 0.5 } as never);
+    expect(stack.setIntro).toHaveBeenLastCalledWith(0.5);
 
     story.onLeave!();
     expect(stack.setPresentation).toHaveBeenLastCalledWith(null);
