@@ -25,6 +25,8 @@ import {
   type PartnerScope,
 } from './security/partner-auth';
 import { isQuotaExceeded } from './shared/quota-guard';
+import { membershipError, reasonFromCause } from './security/membership';
+import { explicitHomeOnlyViolation, homeOnlyViolation } from './security/home-only';
 
 /**
  * Initialize tRPC with context type
@@ -50,6 +52,9 @@ const t = initTRPC.context<Context>().create({
               limit: error.cause.limit,
             }
           : null,
+        // ADR-071: machine-readable reason (`ASSERTION_INVALID`, `NOT_A_MEMBER`, ...), copied from
+        // `error.cause.reason`. The same reason is the message prefix `<REASON>: <text>`.
+        reason: reasonFromCause(error.cause),
       },
     };
   },
@@ -119,13 +124,28 @@ const logContextMiddleware = t.middleware(({ ctx, next }) => {
  * - Session cookies
  * - API keys
  */
-const isAuthed = t.middleware(({ ctx, next }) => {
+const isAuthed = t.middleware(({ ctx, path, next }) => {
   if (!ctx.user) {
+    // ADR-071: a valid token that may not act as requested (unknown tenant header, ended pinned
+    // session) keeps its own error instead of the generic UNAUTHORIZED.
+    if (ctx.authError) throw ctx.authError;
+    // An unclaimed staff-link session is authenticated for user.claimLoginGrant ONLY.
+    if (ctx.pendingUser) {
+      throw membershipError(
+        'FORBIDDEN',
+        'PIN_PENDING',
+        'Finish signing in from the Portal link before using the CRM.'
+      );
+    }
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'Authentication required. Please log in to access this resource.',
     });
   }
+  // ADR-071: billing, plan, profile and operator procedures are refused to a pinned staff
+  // session, and (profile and billing only) to a member acting outside their home tenant.
+  const refusal = homeOnlyViolation(path, ctx.user);
+  if (refusal) throw membershipError('FORBIDDEN', 'HOME_ONLY', refusal);
   return next({
     ctx: {
       ...ctx,
@@ -223,6 +243,38 @@ const rateLimitMiddleware = t.middleware(async (opts) => {
 
 export const protectedProcedure = t.procedure
   .use(csrfMiddleware)
+  .use(isAuthed)
+  .use(logContextMiddleware)
+  .use(tracingMiddleware)
+  .use(rateLimitMiddleware);
+
+/**
+ * Explicit home-only guard (ADR-071) for procedures outside the path registry in
+ * `security/home-only.ts`. `isAuthed` already applies the registry; this middleware applies the
+ * same refusal to the procedure it is attached to, whatever its path, at the strictest level: a
+ * pinned session AND a member acting outside their home tenant are both refused.
+ */
+export const homeOnly = t.middleware(({ ctx, next }) => {
+  const refusal = explicitHomeOnlyViolation(ctx.user);
+  if (refusal) throw membershipError('FORBIDDEN', 'HOME_ONLY', refusal);
+  return next();
+});
+
+/**
+ * Session procedure that also accepts an unclaimed staff-link session (PIN_PENDING). Only
+ * `user.claimLoginGrant` uses it: every other procedure sees such a session as unauthenticated.
+ * The pending user is promoted to `ctx.user` so the claim can bind the session to its grant.
+ */
+const allowPendingSession = t.middleware(({ ctx, next }) => {
+  if (!ctx.user && ctx.pendingUser) {
+    return next({ ctx: { ...ctx, user: ctx.pendingUser, pendingUser: undefined } });
+  }
+  return next();
+});
+
+export const pendingSessionProcedure = t.procedure
+  .use(csrfMiddleware)
+  .use(allowPendingSession)
   .use(isAuthed)
   .use(logContextMiddleware)
   .use(tracingMiddleware)
