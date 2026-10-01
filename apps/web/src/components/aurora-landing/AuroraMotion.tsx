@@ -144,21 +144,23 @@ function pauseWhenHidden(canvas: HTMLCanvasElement, s: Stack, cleanups: Array<()
 /**
  * The phone story's state for each layer, from where its card is on screen.
  * A layer lifts out as its card rises from the bottom edge to 70% of the
- * screen, and dissolves as the next card rises from the bottom edge to 80%.
+ * screen, and peels away only once its card has left the top of the screen,
+ * over the next quarter of a screen of scrolling. The cards are spaced so a
+ * layer has gone before the next card appears.
  */
 export function phoneStory(
   cards: HTMLElement[],
   viewport: number
 ): Partial<Record<LayerId, Presentation>> {
-  const rise = (card: HTMLElement | undefined, span: number) => {
-    if (!card) return 0;
-    const top = card.getBoundingClientRect().top / viewport;
-    return Math.min(1, Math.max(0, (1 - top) / span));
-  };
+  const clamp = (v: number) => Math.min(1, Math.max(0, v));
   const story: Partial<Record<LayerId, Presentation>> = {};
-  cards.forEach((card, i) => {
+  cards.forEach((card) => {
+    const rect = card.getBoundingClientRect();
     const layer = card.dataset.layer as LayerId;
-    story[layer] = { present: rise(card, 0.3), dissolve: rise(cards[i + 1], 0.2) };
+    story[layer] = {
+      present: clamp((1 - rect.top / viewport) / 0.3),
+      dissolve: clamp(-rect.bottom / viewport / 0.25),
+    };
   });
   return story;
 }

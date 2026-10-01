@@ -288,6 +288,35 @@ describe('createStack', () => {
     stack.dispose();
   });
 
+  it('peels a presented layer away upwards, leaving a ripple where it was', () => {
+    const canvas = document.createElement('canvas');
+    canvas.getBoundingClientRect = () => ({ width: 390, height: 772 }) as DOMRect;
+    const stack = createStack(canvas, { fonts, reducedMotion: false });
+    type Shown = { visible: boolean; position: { y: number } };
+    const rings = () =>
+      (
+        renderer().scene.children.at(-1)!.children as unknown as Array<{
+          visible: boolean;
+          material?: { opacity: number; blending?: number };
+          children: unknown[];
+        }>
+      ).filter((c) => c.material?.blending === THREE.AdditiveBlending && c.visible);
+
+    stack.setPresentation({ agents: { present: 1, dissolve: 0 } });
+    run(30);
+    // Each run() restarts its frame clock, so both heights are read after a single frame.
+    run(1);
+    const agents = layers().at(-1) as unknown as Shown;
+    const resting = agents.position.y;
+    expect(rings()).toHaveLength(0);
+
+    stack.setPresentation({ agents: { present: 1, dissolve: 0.5 } });
+    run(1);
+    expect(agents.position.y).toBeGreaterThan(resting);
+    expect(rings().length).toBeGreaterThan(0);
+    stack.dispose();
+  });
+
   it('eases towards its targets when motion is allowed and follows the pointer', () => {
     const canvas = document.createElement('canvas');
     const stack = createStack(canvas, { fonts, reducedMotion: false });
