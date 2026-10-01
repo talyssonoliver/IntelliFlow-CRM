@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-01T08:13:19.824Z",
+  "timestamp": "2026-10-01T15:48:41.726Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1413,18 +1413,18 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 184,
-    "total_fields": 2662,
-    "total_indexes": 850,
-    "total_relations": 256,
+    "total_tables": 187,
+    "total_fields": 2710,
+    "total_indexes": 861,
+    "total_relations": 265,
     "tables_with_embeddings": 4,
-    "enums": 75,
+    "enums": 77,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 164,
+        "fields": 167,
         "indexes": 6,
-        "relations": 2,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
@@ -1436,7 +1436,7 @@
       },
       {
         "name": "User",
-        "fields": 42,
+        "fields": 44,
         "indexes": 7,
         "relations": 7,
         "hasEmbedding": false
@@ -1722,6 +1722,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "PartnerLoginGrant",
+        "fields": 16,
+        "indexes": 4,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
         "name": "SecurityEvent",
         "fields": 16,
         "indexes": 8,
@@ -1848,6 +1855,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TenantMembership",
+        "fields": 14,
+        "indexes": 4,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
         "name": "CaseTask",
         "fields": 14,
         "indexes": 7,
@@ -1964,6 +1978,13 @@
         "fields": 13,
         "indexes": 3,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Partner",
+        "fields": 12,
+        "indexes": 2,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2457,6 +2478,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TenantMembershipAudit",
+        "fields": 8,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
         "name": "AccountIndustryOption",
         "fields": 8,
         "indexes": 3,
@@ -2537,13 +2565,6 @@
         "name": "PublicFeedback",
         "fields": 8,
         "indexes": 3,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Partner",
-        "fields": 7,
-        "indexes": 2,
         "relations": 0,
         "hasEmbedding": false
       },
