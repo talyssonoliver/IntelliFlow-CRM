@@ -23,7 +23,7 @@ describe('SiteNav', () => {
     );
   });
 
-  it('gives the phone menu the same destinations as the desktop nav, plus Log in', () => {
+  it('links to every page the old header did, plus the landing sections, on desktop and phone', () => {
     render(<SiteNav />);
     const primary = within(screen.getByRole('navigation', { name: 'Primary' }))
       .getAllByRole('link')
@@ -32,7 +32,15 @@ describe('SiteNav', () => {
       .getAllByRole('link')
       .map((a) => a.getAttribute('href'));
 
-    expect(primary).toEqual(['#platform', '#agents', '#security', '#pricing']);
+    expect(primary).toEqual([
+      '#platform',
+      '#agents',
+      '/features',
+      '/pricing',
+      '/security',
+      '/about',
+      '/contact',
+    ]);
     expect(mobile).toEqual([...primary, '/login']);
   });
 
