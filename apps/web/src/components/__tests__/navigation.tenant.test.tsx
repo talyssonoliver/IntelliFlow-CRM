@@ -6,7 +6,7 @@
  */
 
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const h = vi.hoisted(() => ({
@@ -35,7 +35,7 @@ vi.mock('../header/search-bar', () => ({ SearchBar: () => null }));
 vi.mock('../header/notifications', () => ({ Notifications: () => null }));
 vi.mock('../header/user-menu', () => ({ UserMenu: () => null }));
 
-import { Navigation } from '../navigation';
+import { Navigation, APP_HEADER_HEIGHT_VAR } from '../navigation';
 
 const home = {
   tenantId: 'tenant_home',
@@ -144,5 +144,44 @@ describe('Navigation tenant wiring', () => {
 
     expect(screen.queryByTestId('pinned-tenant-banner')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /switch workspace/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('Navigation publishes its rendered height for the fixed sidebars', () => {
+  // The settings/billing sidebars are `position: fixed` below the header. With the pinned
+  // banner the header is taller than the 4rem they used to assume, and their top sat under it
+  // (seen in production on 02/10 as "no banner on settings"). The header now publishes its real
+  // height as a CSS variable the sidebars read, so the banner is never covered.
+  let offsetHeight: PropertyDescriptor | undefined;
+  beforeEach(() => {
+    offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+      configurable: true,
+      get() {
+        return (this as HTMLElement).tagName === 'HEADER' ? 104 : 0;
+      },
+    });
+  });
+  afterEach(() => {
+    if (offsetHeight) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', offsetHeight);
+    document.documentElement.style.removeProperty(APP_HEADER_HEIGHT_VAR);
+  });
+
+  it('sets --app-header-h on <html> from the header, and clears it on unmount', () => {
+    h.listTenants = {
+      data: {
+        activeTenantId: 'tenant_client',
+        homeTenantId: 'tenant_home',
+        pinned: true,
+        tenants: [{ ...client, isActive: true, pinned: true, source: 'PORTAL_STAFF' }],
+      },
+      isLoading: false,
+      isError: false,
+    };
+    const { unmount } = renderNav();
+    expect(screen.getByTestId('pinned-tenant-banner')).toBeInTheDocument();
+    expect(document.documentElement.style.getPropertyValue(APP_HEADER_HEIGHT_VAR)).toBe('104px');
+    unmount();
+    expect(document.documentElement.style.getPropertyValue(APP_HEADER_HEIGHT_VAR)).toBe('');
   });
 });

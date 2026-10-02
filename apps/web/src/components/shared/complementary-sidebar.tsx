@@ -87,7 +87,7 @@ export function ComplementarySidebar({
       aria-hidden={!isOpen}
       className={cn(
         // Position & sizing — sits below the app header, fills right edge
-        'fixed top-16 right-0 bottom-0 z-20',
+        'fixed top-[var(--app-header-h,4rem)] right-0 bottom-0 z-20',
         'w-80 lg:w-[340px] xl:w-[380px]',
         // Visual treatment
         'border-l border-border bg-card',
