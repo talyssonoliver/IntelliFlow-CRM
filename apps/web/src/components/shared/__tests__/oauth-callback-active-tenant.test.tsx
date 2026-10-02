@@ -21,6 +21,7 @@ import {
 const h = vi.hoisted(() => ({
   push: vi.fn(),
   signOut: vi.fn(),
+  adminSignOut: vi.fn(),
   verifyOtp: vi.fn(),
   storeSessionTokens: vi.fn(),
   clearSessionTokens: vi.fn(),
@@ -41,7 +42,13 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/lib/supabase-browser', () => ({
   getSupabaseBrowserClient: () => ({
-    auth: { signOut: h.signOut, verifyOtp: h.verifyOtp, getSession: vi.fn(), getUser: vi.fn() },
+    auth: {
+      signOut: h.signOut,
+      verifyOtp: h.verifyOtp,
+      getSession: vi.fn(),
+      getUser: vi.fn(),
+      admin: { signOut: h.adminSignOut },
+    },
   }),
   clearSupabaseLocalStorage: h.clearSupabaseLocalStorage,
 }));
@@ -94,6 +101,7 @@ describe('OAuthCallback active tenant', () => {
     localStorage.clear();
     h.order.length = 0;
     h.getStoredAccessToken.mockReturnValue(null);
+    h.adminSignOut.mockResolvedValue({ data: null, error: null });
     vi.stubEnv(FLAG, '1');
     vi.stubGlobal('fetch', h.fetch);
     h.query.value = FULL_LINK;
@@ -274,10 +282,11 @@ describe('OAuthCallback active tenant', () => {
       render(<OAuthCallback />);
       await screen.findByText('Authentication Failed');
 
-      // signOut only before verifyOtp. The session the failed claim leaves behind is dropped
-      // silently (no SIGNED_OUT, no sign-out that could land after a later sign-in); the local
-      // cleanup runs once before verifyOtp and once after the failed claim.
+      // signOut only before verifyOtp. The session the failed claim leaves behind is revoked on
+      // the server and dropped locally without SIGNED_OUT (no sign-out that could land after a
+      // later sign-in); the local cleanup runs once before verifyOtp and once after the claim.
       expect(h.signOut).toHaveBeenCalledTimes(1);
+      expect(h.adminSignOut).toHaveBeenCalledWith(expect.any(String), 'local');
       expect(h.clearSessionTokens).toHaveBeenCalledTimes(2);
       expect(h.clearTokenCookie).toHaveBeenCalledTimes(2);
       expect(h.clearSupabaseLocalStorage).toHaveBeenCalledTimes(2);

@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const h = vi.hoisted(() => ({
   push: vi.fn(),
   signOut: vi.fn(),
+  adminSignOut: vi.fn(),
   verifyOtp: vi.fn(),
   getSession: vi.fn(),
   getUser: vi.fn(),
@@ -35,6 +36,7 @@ vi.mock('@/lib/supabase-browser', () => ({
       verifyOtp: h.verifyOtp,
       getSession: h.getSession,
       getUser: h.getUser,
+      admin: { signOut: h.adminSignOut },
     },
   }),
   clearSupabaseLocalStorage: h.clearSupabaseLocalStorage,
@@ -75,11 +77,12 @@ function resetCleanupSpies() {
 }
 
 /**
- * The abandoned session was dropped silently: its SDK copy and the app tokens are cleared, and
- * no further signOut ran (it would emit SIGNED_OUT, and a late one could land after a new
- * sign-in).
+ * The abandoned session was dropped silently: it is revoked on the server with its own token,
+ * its SDK copy and the app tokens are cleared, and no further signOut ran (it would emit
+ * SIGNED_OUT, and a late one could land after a new sign-in).
  */
 function expectSilentDrop(signOutsBefore: number) {
+  expect(h.adminSignOut).toHaveBeenCalledWith(SESSION.access_token, 'local');
   expect(h.clearSupabaseLocalStorage).toHaveBeenCalled();
   expect(h.clearSessionTokens).toHaveBeenCalled();
   expect(h.signOut).toHaveBeenCalledTimes(signOutsBefore);
@@ -91,6 +94,7 @@ beforeEach(() => {
   h.query.value = LINK;
   h.getStoredAccessToken.mockReturnValue(null);
   h.signOut.mockResolvedValue({ error: null });
+  h.adminSignOut.mockResolvedValue({ data: null, error: null });
   h.verifyOtp.mockResolvedValue({
     data: { session: SESSION, user: { id: 'u1', email: 'a@b.co' } },
     error: null,
@@ -278,6 +282,9 @@ describe('never hangs silently', () => {
     expect(h.signOut).not.toHaveBeenCalled();
     expect(h.clearSessionTokens).not.toHaveBeenCalled();
     expect(h.clearSupabaseLocalStorage).toHaveBeenCalledTimes(1);
+    // The abandoned session itself is still revoked on the server, by its own token only.
+    expect(h.adminSignOut).toHaveBeenCalledTimes(1);
+    expect(h.adminSignOut).toHaveBeenCalledWith(SESSION.access_token, 'local');
   });
 
   describe('a step that settles after the flow watchdog fired', () => {
@@ -435,6 +442,7 @@ describe('OAuth code flow', () => {
       await vi.advanceTimersByTimeAsync(100);
     });
     expect(h.signOut).not.toHaveBeenCalled();
+    expect(h.adminSignOut).not.toHaveBeenCalled();
     expect(h.clearSessionTokens).not.toHaveBeenCalled();
     expect(h.clearSupabaseLocalStorage).not.toHaveBeenCalled();
   });
