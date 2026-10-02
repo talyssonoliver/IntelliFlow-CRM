@@ -90,6 +90,52 @@ export function sameProcess(pid, recordedAtMs, slackMs = 2000) {
   return started <= recordedAtMs + slackMs ? 'yes' : 'no';
 }
 
+/**
+ * The PIDs above `pid`, nearest first, up to `depth` levels. The gate runs
+ * under `git push` -> the husky hook shell -> pnpm; when something kills the
+ * push from above (Claude Code's memory reaper did, on 2026-10-02), the gate
+ * itself survives as an orphan and keeps building for a push that no longer
+ * exists. The watchdog stops it when any of these disappears.
+ */
+export function ancestorsOf(pid, depth = 6) {
+  if (process.platform === 'win32') {
+    const r = spawnSync(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        `$all = @{}; Get-CimInstance Win32_Process | ForEach-Object { $all[[int]$_.ProcessId] = $_ }; ` +
+          `$p = $all[${Number(pid)}]; $out = @(); ` +
+          `for ($i = 0; $i -lt ${Number(depth)} -and $p; $i++) { ` +
+          `$q = $all[[int]$p.ParentProcessId]; ` +
+          // A parent created after its child is a reused PID, not the parent.
+          `if (-not $q -or $q.CreationDate -gt $p.CreationDate) { break }; ` +
+          `$out += $q.ProcessId; $p = $q }; $out -join ','`,
+      ],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 30000 }
+    );
+    return (r.stdout || '')
+      .trim()
+      .split(',')
+      .map((v) => Number.parseInt(v, 10))
+      .filter((v) => Number.isInteger(v) && v > 4);
+  }
+  const out = [];
+  let current = pid;
+  for (let i = 0; i < depth; i++) {
+    const r = spawnSync('ps', ['-o', 'ppid=', '-p', String(current)], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 5000,
+    });
+    const parent = Number.parseInt((r.stdout || '').trim(), 10);
+    if (!Number.isInteger(parent) || parent <= 1) break;
+    out.push(parent);
+    current = parent;
+  }
+  return out;
+}
+
 /** Stop a process and everything it started. */
 export function killTree(pid) {
   if (!isAlive(pid)) return;

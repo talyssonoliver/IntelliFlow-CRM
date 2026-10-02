@@ -72,6 +72,7 @@ import { fileURLToPath } from 'node:url';
 import {
   LOCK_PATH,
   acquire as acquireLock,
+  ancestorsOf,
   killTree,
   readLock,
   recordChild,
@@ -970,7 +971,8 @@ function shutdown() {
 function startWatchdog() {
   const script = path.join(path.dirname(fileURLToPath(import.meta.url)), 'preship-watchdog.mjs');
   try {
-    const w = spawn(process.execPath, [script, String(process.pid), LOCK_PATH], {
+    const above = ancestorsOf(process.pid).join(',');
+    const w = spawn(process.execPath, [script, String(process.pid), LOCK_PATH, above], {
       detached: true,
       stdio: 'ignore',
       windowsHide: true,

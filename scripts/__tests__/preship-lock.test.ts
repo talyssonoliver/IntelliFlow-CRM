@@ -15,6 +15,7 @@ import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 
 import {
   acquire,
+  ancestorsOf,
   isAlive,
   isLive,
   LOCK_MAX_AGE_MS,
@@ -150,6 +151,16 @@ describe('isLive', () => {
   });
 });
 
+describe('ancestorsOf', () => {
+  it('finds the processes above a child, nearest first', async () => {
+    const child = longRunning();
+    await waitFor(() => isAlive(child.pid!));
+    const above = ancestorsOf(child.pid!, 2);
+    expect(above[0]).toBe(process.pid);
+    expect(above.length).toBeGreaterThan(0);
+  });
+});
+
 describe('sameProcess', () => {
   it('says no for a dead PID and yes for this process', () => {
     expect(sameProcess(deadPid(), Date.now())).toBe('no');
@@ -223,6 +234,35 @@ describe('preship-watchdog', () => {
 
     gate.kill('SIGKILL');
     expect(await waitFor(() => !isAlive(step.pid!), 20000)).toBe(true);
+    expect(await waitFor(() => !fs.existsSync(lockPath))).toBe(true);
+  });
+
+  it('stops the gate and its step when something above the gate is killed', async () => {
+    const lockPath = tmpLock();
+    const pusher = longRunning(); // stands in for `git push` / the hook shell
+    const gate = longRunning();
+    const step = longRunning();
+    await waitFor(() => [pusher, gate, step].every((p) => isAlive(p.pid!)));
+    fs.writeFileSync(
+      lockPath,
+      JSON.stringify({
+        gate_pid: gate.pid,
+        acquired_at_ms: Date.now(),
+        child_pid: step.pid,
+        child_step: 'build',
+        child_started_ms: Date.now(),
+      })
+    );
+    const watchdog = spawn(
+      process.execPath,
+      [WATCHDOG, String(gate.pid), lockPath, String(pusher.pid)],
+      { stdio: 'ignore' }
+    );
+    spawned.push(watchdog);
+
+    pusher.kill('SIGKILL');
+    expect(await waitFor(() => !isAlive(step.pid!), 20000)).toBe(true);
+    expect(await waitFor(() => !isAlive(gate.pid!), 20000)).toBe(true);
     expect(await waitFor(() => !fs.existsSync(lockPath))).toBe(true);
   });
 
