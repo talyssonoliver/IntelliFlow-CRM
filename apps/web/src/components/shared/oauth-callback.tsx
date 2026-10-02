@@ -57,6 +57,11 @@ export interface OAuthCallbackProps {
   redirectUrl?: string;
   /** Additional CSS classes */
   className?: string;
+  /**
+   * @internal Flow watchdog ceiling. Production always uses the 30 s default; tests lower it to
+   * reach a watchdog that fires while a step is still inside its own 10 s ceiling.
+   */
+  flowTimeoutMs?: number;
 }
 
 interface StatusConfig {
@@ -136,8 +141,36 @@ function normalizeClaimError(claimError: unknown): Error {
  * sign that session out again and wipe every local trace, so a failure screen is never followed
  * by a silent sign-in.
  */
-function discardLateSession(supabase: BrowserSupabase, pending: Promise<unknown>): void {
-  pending.then(() => dropSession(supabase)).catch(() => undefined);
+function discardLateSession(
+  supabase: BrowserSupabase,
+  pending: Promise<{ data: { session: unknown } | null }>
+): void {
+  pending
+    .then((late) => (late.data?.session ? dropSession(supabase) : undefined))
+    .catch(() => undefined);
+}
+
+/**
+ * The flow watchdog already showed the failure screen. A step that settled after it must not
+ * carry the flow on (no grant claim, no sign-in): drop whatever session now exists and stop.
+ */
+async function abandonedByWatchdog(
+  aborted: { readonly current: boolean },
+  supabase: BrowserSupabase
+): Promise<boolean> {
+  if (!aborted.current) return false;
+  await dropSession(supabase);
+  return true;
+}
+
+/** Open the account-switch prompt as a modal; jsdom has no showModal, so fall back to `open`. */
+function openModal(el: HTMLDialogElement): void {
+  if (el.open) return;
+  try {
+    el.showModal();
+  } catch {
+    el.setAttribute('open', '');
+  }
 }
 
 /**
@@ -176,6 +209,7 @@ export function OAuthCallback({
   onError,
   redirectUrl = '/dashboard',
   className,
+  flowTimeoutMs = FLOW_TIMEOUT_MS,
 }: Readonly<OAuthCallbackProps>) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -255,6 +289,9 @@ export function OAuthCallback({
 
   const reportError = useCallback(
     (err: unknown) => {
+      // Once the watchdog has shown its failure, a step that fails afterwards must not replace
+      // that screen or report a second error.
+      if (abortedRef.current) return;
       if (err instanceof Error && err.message === 'TIMEOUT') abortedRef.current = true;
       setStatus('error');
       recordAuthBreadcrumb(BREADCRUMBS[flowRef.current].error);
@@ -291,6 +328,7 @@ export function OAuthCallback({
     clearSessionTokens();
     clearTokenCookie();
     clearSupabaseLocalStorage();
+    if (abortedRef.current) return;
 
     const verification = supabase.auth.verifyOtp({
       type: 'magiclink',
@@ -305,6 +343,7 @@ export function OAuthCallback({
       discardLateSession(supabase, verification);
       throw verifyError;
     }
+    if (await abandonedByWatchdog(abortedRef, supabase)) return;
     const { data, error } = result;
 
     if (error || !data?.session) {
@@ -327,6 +366,7 @@ export function OAuthCallback({
         await dropSession(supabase);
         throw normalizeClaimError(claimError);
       }
+      if (await abandonedByWatchdog(abortedRef, supabase)) return;
     }
 
     pendingNextRef.current = pending.next;
@@ -432,8 +472,18 @@ export function OAuthCallback({
       // getSession() awaits initializePromise internally, so by the time it
       // returns the SDK has already performed the PKCE code exchange (if the
       // code_verifier was found in PkceAwareStorage / localStorage).
-      // 10-second timeout to handle network issues.
-      const { data, error: sessionError } = await withTimeout(supabase.auth.getSession());
+      // 10-second timeout to handle network issues. getSession cannot be cancelled: if the
+      // exchange lands after the timeout, the session it persisted is discarded.
+      const sessionRequest = supabase.auth.getSession();
+      let sessionResult: Awaited<typeof sessionRequest>;
+      try {
+        sessionResult = await withTimeout(sessionRequest);
+      } catch (sessionTimeout) {
+        discardLateSession(supabase, sessionRequest);
+        throw sessionTimeout;
+      }
+      if (await abandonedByWatchdog(abortedRef, supabase)) return;
+      const { data, error: sessionError } = sessionResult;
 
       if (sessionError) {
         throw new Error(sessionError.message);
@@ -447,7 +497,15 @@ export function OAuthCallback({
       }
 
       const { session } = data;
-      const { data: userData } = await withTimeout(supabase.auth.getUser(session.access_token));
+      let userData: Awaited<ReturnType<typeof supabase.auth.getUser>>['data'];
+      try {
+        ({ data: userData } = await withTimeout(supabase.auth.getUser(session.access_token)));
+      } catch (userError) {
+        // The exchanged session is already persisted: never leave it behind a failure screen.
+        await dropSession(supabase);
+        throw userError;
+      }
+      if (await abandonedByWatchdog(abortedRef, supabase)) return;
       finishSignIn(session, userData?.user ?? undefined, 'oauth');
     } catch (err) {
       reportError(err);
@@ -467,21 +525,17 @@ export function OAuthCallback({
   const isBusy = status === 'loading' || status === 'exchanging';
   useEffect(() => {
     if (!isBusy) return;
-    const timer = setTimeout(() => reportError(new Error('TIMEOUT')), FLOW_TIMEOUT_MS);
+    const timer = setTimeout(() => reportError(new Error('TIMEOUT')), flowTimeoutMs);
     return () => clearTimeout(timer);
-  }, [isBusy, reportError]);
+  }, [isBusy, reportError, flowTimeoutMs]);
 
   // The account-switch prompt is a native modal <dialog>: opened last, it sits on the top layer
   // above every other overlay (onboarding modal included) and makes the rest of the page inert,
-  // so its buttons cannot be covered or shadowed. jsdom has no showModal: fall back to `open`.
+  // so its buttons cannot be covered or shadowed.
   useEffect(() => {
     const el = confirmDialogRef.current;
-    if (status !== 'confirm' || !el || el.open) return;
-    try {
-      el.showModal();
-    } catch {
-      el.setAttribute('open', '');
-    }
+    if (status !== 'confirm' || !el) return;
+    openModal(el);
   }, [status]);
 
   // Focus management: move focus to primary action on error state (NF-007)
@@ -640,6 +694,10 @@ export function OAuthCallback({
                 aria-labelledby="switch-account-title"
                 aria-describedby="switch-account-description"
                 onCancel={(e) => e.preventDefault()}
+                // A prevented cancel does not hold for ever: Chromium closes the dialog on a
+                // repeated Escape without a cancelable event. The prompt only renders while a
+                // choice is pending, so any close without one reopens it.
+                onClose={(e) => openModal(e.currentTarget)}
                 className="static m-0 w-full max-w-none border-0 bg-transparent p-0 text-center text-inherit backdrop:bg-black/60 [&:not([open])]:hidden"
               >
                 <div className="space-y-2">

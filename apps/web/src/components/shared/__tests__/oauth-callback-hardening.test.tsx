@@ -14,6 +14,8 @@ const h = vi.hoisted(() => ({
   push: vi.fn(),
   signOut: vi.fn(),
   verifyOtp: vi.fn(),
+  getSession: vi.fn(),
+  getUser: vi.fn(),
   claim: vi.fn(),
   getStoredAccessToken: vi.fn(),
   storeSessionTokens: vi.fn(),
@@ -27,7 +29,12 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/lib/supabase-browser', () => ({
   getSupabaseBrowserClient: () => ({
-    auth: { signOut: h.signOut, verifyOtp: h.verifyOtp, getSession: vi.fn(), getUser: vi.fn() },
+    auth: {
+      signOut: h.signOut,
+      verifyOtp: h.verifyOtp,
+      getSession: h.getSession,
+      getUser: h.getUser,
+    },
   }),
   clearSupabaseLocalStorage: vi.fn(),
 }));
@@ -113,6 +120,16 @@ describe('account-switch dialog', () => {
     await userEvent.click(await screen.findByTestId('switch-account-continue'));
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     other.remove();
+  });
+
+  it('a dialog closed without a choice reopens, so its actions stay reachable', async () => {
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    const dialog = await screen.findByTestId('switch-account-dialog');
+    // What Chromium does on a repeated Escape: close without a cancelable cancel event.
+    dialog.removeAttribute('open');
+    dialog.dispatchEvent(new Event('close'));
+    expect(dialog).toHaveAttribute('open');
+    expect(screen.getByTestId('switch-account-continue')).toBeInTheDocument();
   });
 
   it('Escape cannot dismiss the prompt without a choice', async () => {
@@ -212,5 +229,143 @@ describe('never hangs silently', () => {
     expect(h.signOut).toHaveBeenCalledTimes(2);
     expect(h.signOut).toHaveBeenLastCalledWith({ scope: 'local' });
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  describe('a step that settles after the flow watchdog fired', () => {
+    // Each step stays inside its own 10 s ceiling; the watchdog is lowered so it fires first.
+    const after = <T,>(ms: number, value: T) =>
+      new Promise<T>((resolve) => setTimeout(() => resolve(value), ms));
+    beforeEach(() => {
+      vi.useFakeTimers();
+      h.signOut.mockImplementationOnce(() => after(9_900, { error: null }));
+      h.verifyOtp.mockImplementation(() =>
+        after(9_900, { data: { session: SESSION, user: { id: 'u1' } }, error: null })
+      );
+      h.claim.mockImplementation(() =>
+        after(9_900, { tenantId: 'ten_1', pinned: false, sessionExpiresAt: null })
+      );
+    });
+
+    it('during verifyOtp: the grant is never claimed and the late session is dropped', async () => {
+      const onSuccess = vi.fn();
+      const onError = vi.fn();
+      render(<OAuthCallback onSuccess={onSuccess} onError={onError} flowTimeoutMs={15_000} />);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(15_000);
+      });
+      expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+      expect(h.claim).not.toHaveBeenCalled();
+      expect(onSuccess).not.toHaveBeenCalled();
+      expect(h.storeSessionTokens).not.toHaveBeenCalled();
+      // The pre-switch sign-out, then the drop of the session verifyOtp produced.
+      expect(h.signOut).toHaveBeenCalledTimes(2);
+      expect(h.signOut).toHaveBeenLastCalledWith({ scope: 'local' });
+      expect(onError).toHaveBeenCalledTimes(1);
+    });
+
+    it('during the grant claim: no sign-in, the session is dropped, one error only', async () => {
+      const onSuccess = vi.fn();
+      const onError = vi.fn();
+      render(<OAuthCallback onSuccess={onSuccess} onError={onError} flowTimeoutMs={25_000} />);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(25_000);
+      });
+      expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
+      expect(h.claim).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+      expect(onSuccess).not.toHaveBeenCalled();
+      expect(h.storeSessionTokens).not.toHaveBeenCalled();
+      expect(h.signOut).toHaveBeenCalledTimes(2);
+      expect(h.signOut).toHaveBeenLastCalledWith({ scope: 'local' });
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/taking too long/i)).toBeInTheDocument();
+    });
+  });
+});
+
+describe('OAuth code flow', () => {
+  beforeEach(() => {
+    h.query.value = 'code=abc&nonce=n1';
+    sessionStorage.setItem('intelliflow_oauth_nonce', 'n1');
+    h.getUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+  });
+
+  it('a session exchanged after getSession timed out is signed out when it lands', async () => {
+    vi.useFakeTimers();
+    let release: (v: unknown) => void = () => undefined;
+    h.getSession.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        })
+    );
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_500);
+    });
+    expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
+    expect(h.signOut).not.toHaveBeenCalled();
+
+    await act(async () => {
+      release({ data: { session: SESSION }, error: null });
+      await vi.advanceTimersByTimeAsync(100);
+    });
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(h.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  it('a late getSession with no session signs nothing out', async () => {
+    vi.useFakeTimers();
+    let release: (v: unknown) => void = () => undefined;
+    h.getSession.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        })
+    );
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_500);
+    });
+    await act(async () => {
+      release({ data: { session: null }, error: null });
+      await vi.advanceTimersByTimeAsync(100);
+    });
+    expect(h.signOut).not.toHaveBeenCalled();
+  });
+
+  it('a getUser timeout drops the already exchanged session', async () => {
+    vi.useFakeTimers();
+    h.getSession.mockResolvedValue({ data: { session: SESSION }, error: null });
+    h.getUser.mockImplementation(NEVER);
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_500);
+    });
+    expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
+    expect(h.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it('signs in when both steps settle in time', async () => {
+    h.getSession.mockResolvedValue({ data: { session: SESSION }, error: null });
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(h.signOut).not.toHaveBeenCalled();
   });
 });
