@@ -334,7 +334,7 @@ function StripeCardForm({
 // OnboardingWelcome — main modal
 // ============================================
 
-export function OnboardingWelcome() {
+function OnboardingWelcomeInner() {
   const { isAuthenticated, isLoading: authLoading, user, emailVerified } = useAuth();
   const pathname = usePathname() ?? '/';
 
@@ -972,4 +972,15 @@ export function OnboardingWelcome() {
       )}
     </dialog>
   );
+}
+
+/**
+ * Route guard: on auth-flow pages (/auth/*, /login, /signup, /reset-password/*, ...) nothing of
+ * the modal mounts at all: no session-driven query, no <dialog>. A signed-in browser that opens a
+ * magic link must see the callback's own "Switch account?" prompt, never this wizard on top of it.
+ */
+export function OnboardingWelcome() {
+  const pathname = usePathname() ?? '/';
+  if (isPublicAuthRoute(pathname)) return null;
+  return <OnboardingWelcomeInner />;
 }

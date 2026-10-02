@@ -67,6 +67,9 @@ vi.mock('@/lib/supabase-browser', () => ({
 // Mock token-exchange
 vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: mockStoreSessionTokens,
+  clearSessionTokens: vi.fn(),
+  // No session before the callback: the OAuth path records this to scope its cleanup.
+  getStoredAccessToken: () => null,
 }));
 
 // Mock session-cleanup (cookie sync + prod-safe breadcrumb)
