@@ -246,4 +246,30 @@ describe('inboundRouter — syncPipelineLead', () => {
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
   });
+  it('matches a stored lead whatever the casing COA sends (emails are stored lowercased)', async () => {
+    existingLead('NEW');
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead({
+      ...(input('CONTACTED') as object),
+      email: 'Owner@Bakery.EXAMPLE',
+    } as never);
+    expect(result.leadId).toBe(LEAD_ID);
+    expect(createLead()).not.toHaveBeenCalled();
+    const lookup = prismaMock.lead.findFirst.mock.calls[0]?.[0] as { where: { email: string } };
+    expect(lookup.where.email).toBe('owner@bakery.example');
+  });
+
+  it('treats a step refused because a concurrent sync already moved the lead as a no-op', async () => {
+    existingLead('NEW');
+    // The concurrent request got there first: the re-read shows CONTACTED.
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'CONTACTED' } as never);
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { message: 'Invalid status transition from CONTACTED to CONTACTED' },
+    });
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('CONTACTED'));
+    expect(result).toMatchObject({ leadId: LEAD_ID, status: 'CONTACTED', changed: false });
+    expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+  });
 });
