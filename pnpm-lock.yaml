@@ -403,6 +403,9 @@ importers:
       '@intelliflow/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@intelliflow/partner-sdk':
+        specifier: workspace:*
+        version: link:../../packages/partner-sdk
       '@intelliflow/platform':
         specifier: workspace:*
         version: link:../../packages/platform
@@ -458,9 +461,6 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@intelliflow/partner-sdk':
-        specifier: workspace:*
-        version: link:../../packages/partner-sdk
       '@intelliflow/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
