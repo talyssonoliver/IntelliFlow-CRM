@@ -15,7 +15,7 @@ import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { PageHeader, type PageAction } from '@/components/shared/page-header';
 import { useTenantMemberships } from '@/lib/tenant/use-tenant-memberships';
-import { BillingUnavailableNotice, ErrorState, isForbiddenError } from './billing-shared';
+import { BillingUnavailableNotice, ErrorState, isHomeOnlyRefusal } from './billing-shared';
 
 /** Normalize null/undefined to empty string for form field display */
 function normalize(value: string | null | undefined): string {
@@ -37,7 +37,7 @@ export function BillingSettings() {
     enabled: isAuthenticated && !authLoading && !pinned,
     staleTime: 5 * 60 * 1000,
     // A home-only refusal will not change on retry.
-    retry: (failureCount, err) => !isForbiddenError(err) && failureCount < 1,
+    retry: (failureCount, err) => !isHomeOnlyRefusal(err) && failureCount < 1,
   });
 
   const [organization, setOrganization] = React.useState('');
@@ -147,7 +147,7 @@ export function BillingSettings() {
     setInvoiceContact(inv);
   }
 
-  if (pinned || isForbiddenError(error)) {
+  if (pinned || isHomeOnlyRefusal(error)) {
     return <BillingUnavailableNotice />;
   }
 

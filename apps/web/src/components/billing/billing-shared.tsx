@@ -46,13 +46,15 @@ export function BillingUnavailableNotice() {
 }
 
 /**
- * True when a tRPC error is a FORBIDDEN refusal (the home-only rule refuses billing to a session
- * acting inside another tenant).
+ * True when a tRPC error is the ADR-071 home-only refusal (`reason: 'HOME_ONLY'`, also the message
+ * prefix `HOME_ONLY:`), which refuses billing to a session acting inside another tenant. Any other
+ * FORBIDDEN (a pending staff link, an origin check) is a real error and is not matched.
  */
-export function isForbiddenError(error: unknown): boolean {
+export function isHomeOnlyRefusal(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
-  const data = (error as { data?: { code?: unknown } | null }).data;
-  return data?.code === 'FORBIDDEN';
+  const err = error as { message?: unknown; data?: { reason?: unknown } | null };
+  if (err.data?.reason === 'HOME_ONLY') return true;
+  return typeof err.message === 'string' && err.message.startsWith('HOME_ONLY:');
 }
 
 /** Standard error state following design system alert pattern. */
