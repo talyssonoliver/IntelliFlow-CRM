@@ -53,7 +53,10 @@ afterEach(() => {
 
 describe('getAccessToken', () => {
   it('returns the cookie value when isTokenUsable returns true', async () => {
-    mockCookiesGet.mockReturnValue({ value: 'tok' });
+    // Only the access-token cookie exists (the active-tenant cookie is a separate name).
+    mockCookiesGet.mockImplementation((name: string) =>
+      name === 'accessToken' ? { value: 'tok' } : undefined
+    );
     mockIsTokenUsable.mockReturnValue(true);
 
     const result = await getAccessToken();

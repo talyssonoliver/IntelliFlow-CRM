@@ -9,10 +9,18 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
+import { tenantUserWhere } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { updateTimezoneInputSchema, updateProfileInputSchema } from '@intelliflow/validators';
+import { claimLoginGrant, listTenants } from './user-membership.procedures';
 
 export const userRouter = createTRPCRouter({
+  /** ADR-071: the tenants this session may use (switcher). */
+  listTenants,
+
+  /** ADR-071: bind this browser session to a Portal login grant (first call after verifyOtp). */
+  claimLoginGrant,
+
   /**
    * Get the authenticated user's full profile.
    * Returns identity, contact info, OAuth metadata, and preferences.
@@ -156,16 +164,18 @@ export const userRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const search = input.search?.trim();
-      const where: Record<string, unknown> = {
-        tenantId: ctx.tenant.tenantId,
-      };
+      // ADR-071: home users AND visiting members of the active tenant. The tenant filter is an
+      // OR of its own, so the search OR goes in a separate AND branch.
+      const where: Record<string, unknown> = { AND: [tenantUserWhere(ctx.tenant.tenantId)] };
       if (search && search.length > 0) {
-        where.OR = [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { givenName: { contains: search, mode: 'insensitive' } },
-          { familyName: { contains: search, mode: 'insensitive' } },
-        ];
+        (where.AND as unknown[]).push({
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+            { givenName: { contains: search, mode: 'insensitive' } },
+            { familyName: { contains: search, mode: 'insensitive' } },
+          ],
+        });
       }
 
       const users = await ctx.prismaWithTenant.user.findMany({

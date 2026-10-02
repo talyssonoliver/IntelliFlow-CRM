@@ -36,6 +36,7 @@ import {
   inviteMemberOutput,
   issueLoginLinkInput,
   issueLoginLinkOutput,
+  resolveLoginLinkNext,
   getUsageInput,
   getUsageOutput,
 } from '../partner.router';
@@ -742,45 +743,81 @@ describe('partner.issueLoginLink', () => {
     expect(supabaseAdminMock.auth.admin.generateLink).not.toHaveBeenCalled();
   });
 
-  it('issues a magic link for a member of the tenant', async () => {
-    const { caller } = callerWith();
-    prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
-    prismaMock.user.findUnique.mockResolvedValue({ tenantId: 't1' } as never);
-    supabaseAdminMock.auth.admin.generateLink.mockResolvedValue({
-      data: { properties: { action_link: 'https://auth.example.com/verify?token=abc' } },
-      error: null,
+  describe('link shape', () => {
+    const SUPABASE_VERIFY = 'https://abc.supabase.co/auth/v1/verify?token=raw&type=magiclink';
+    let savedAppUrl: string | undefined;
+
+    beforeEach(() => {
+      savedAppUrl = process.env.APP_URL;
+      process.env.APP_URL = 'https://crm.example.com';
+    });
+    afterEach(() => {
+      if (savedAppUrl === undefined) delete process.env.APP_URL;
+      else process.env.APP_URL = savedAppUrl;
     });
 
-    const out = await caller.issueLoginLink({
-      tenantId: 't1',
-      email: 'A@b.co',
-      redirectTo: 'https://app.example.com/crm',
+    async function issue(redirectTo?: string) {
+      const { caller } = callerWith();
+      prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
+      prismaMock.user.findUnique.mockResolvedValue({ tenantId: 't1' } as never);
+      supabaseAdminMock.auth.admin.generateLink.mockResolvedValue({
+        data: { properties: { action_link: SUPABASE_VERIFY, hashed_token: 'hashed-abc' } },
+        error: null,
+      });
+      return caller.issueLoginLink({ tenantId: 't1', email: 'A@b.co', redirectTo });
+    }
+
+    it('points into the app on APP_URL with the hashed token, never at Supabase', async () => {
+      const out = await issue();
+
+      const url = new URL(out.url);
+      expect(url.origin).toBe('https://crm.example.com');
+      expect(url.pathname).toBe('/auth/callback');
+      expect(url.searchParams.get('token_hash')).toBe('hashed-abc');
+      expect(url.searchParams.get('type')).toBe('magiclink');
+      expect(url.searchParams.get('next')).toBe('/dashboard');
+      expect(out.url).not.toContain('supabase.co');
+      expect(out.url).not.toContain('/auth/v1/verify');
+      expect(Date.parse(out.expiresAt)).toBeGreaterThan(Date.now());
+      expect(supabaseAdminMock.auth.admin.generateLink).toHaveBeenCalledWith({
+        type: 'magiclink',
+        email: 'a@b.co',
+      });
     });
 
-    expect(out.url).toBe('https://auth.example.com/verify?token=abc');
-    expect(Date.parse(out.expiresAt)).toBeGreaterThan(Date.now());
-    expect(supabaseAdminMock.auth.admin.generateLink).toHaveBeenCalledWith({
-      type: 'magiclink',
-      email: 'a@b.co',
-      options: { redirectTo: 'https://app.example.com/crm' },
+    it('honours a same-origin redirectTo as the next path only', async () => {
+      const out = await issue('https://crm.example.com/leads?tab=new');
+
+      const url = new URL(out.url);
+      expect(url.origin).toBe('https://crm.example.com');
+      expect(url.searchParams.get('next')).toBe('/leads?tab=new');
+    });
+
+    it('ignores a cross-origin redirectTo and logs it', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const out = await issue('https://evil.example.net/steal');
+
+      expect(new URL(out.url).searchParams.get('next')).toBe('/dashboard');
+      expect(out.url).not.toContain('evil.example.net');
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
     });
   });
 
-  it('omits options when no redirectTo is given', async () => {
-    const { caller } = callerWith();
-    prismaMock.tenant.findUnique.mockResolvedValue(owned as never);
-    prismaMock.user.findUnique.mockResolvedValue({ tenantId: 't1' } as never);
-    supabaseAdminMock.auth.admin.generateLink.mockResolvedValue({
-      data: { properties: { action_link: 'https://auth.example.com/v' } },
-      error: null,
-    });
-
-    await caller.issueLoginLink({ tenantId: 't1', email: 'a@b.co' });
-
-    expect(supabaseAdminMock.auth.admin.generateLink).toHaveBeenCalledWith({
-      type: 'magiclink',
-      email: 'a@b.co',
-      options: undefined,
+  describe('resolveLoginLinkNext', () => {
+    const APP = 'https://crm.example.com';
+    it.each([
+      [undefined, '/dashboard'],
+      ['https://crm.example.com/leads', '/leads'],
+      ['https://crm.example.com/', '/'],
+      ['https://crm.example.com:8443/leads', '/dashboard'],
+      ['http://crm.example.com/leads', '/dashboard'],
+      ['https://crm.example.com.evil.net/leads', '/dashboard'],
+      ['not a url', '/dashboard'],
+    ])('%s -> %s', (input, expected) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      expect(resolveLoginLinkNext(input, APP)).toBe(expected);
+      warn.mockRestore();
     });
   });
 

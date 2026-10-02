@@ -55,6 +55,7 @@ import {
 import { ensureAppUserSession, type Context, type UserSession } from '../../context';
 import { getLoginLimiter } from '../../security/login-limiter';
 import { getAuditLogger } from '../../security/audit-logger';
+import { reasonFromCause, ACTIVE_TENANT_HEADER } from '../../security/membership';
 import { pickTrustedForwardedIp } from '../../security/client-ip';
 import { getMfaService } from '../../services/mfa.service';
 import { getSessionService } from '../../services/session.service';
@@ -1143,6 +1144,21 @@ export const authRouter = createTRPCRouter({
    */
   getStatus: publicProcedure.query(({ ctx }) => {
     if (!ctx.user) {
+      // ADR-071: a valid token whose `x-active-tenant` header names a workspace the user may not
+      // act in is NOT "signed out". Surface the denial so the web can drop the stale selection
+      // (providers.tsx heals on NOT_A_MEMBER) instead of bouncing the user between /login and the
+      // app with a selection that every request rejects.
+      // Only when the request actually carried a selection: a revoked HOME membership also
+      // raises NOT_A_MEMBER with no header, and then there is nothing for the web to clear,
+      // so that user must be treated as signed out and land on /login.
+      const carriedSelection = Boolean(ctx.req?.headers.get(ACTIVE_TENANT_HEADER)?.trim());
+      if (
+        carriedSelection &&
+        ctx.authError &&
+        reasonFromCause(ctx.authError.cause) === 'NOT_A_MEMBER'
+      ) {
+        throw ctx.authError;
+      }
       return { authenticated: false };
     }
 

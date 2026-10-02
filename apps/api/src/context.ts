@@ -15,6 +15,21 @@ import type { PrismaClient } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
 import { container, containerReady, type Container, apiPrisma } from './container';
 import { supabaseAdmin, verifyToken } from './lib/supabase';
+import {
+  ACTIVE_TENANT_HEADER,
+  decodeSessionClaims,
+  getHomeTenantId,
+  isActingOutsideHome,
+  resolveActiveTenant,
+  type ActiveTenantResolution,
+} from './security/membership';
+import {
+  baseSessionCache,
+  invalidateUserSessions,
+  resolvedSessionCache,
+  resolvedSessionTtlMs,
+  resolvedSessionKey,
+} from './security/session-cache';
 
 /**
  * User session interface (will be replaced with actual auth implementation)
@@ -37,7 +52,28 @@ export interface UserSession {
   // Email/password sign-up users start false until they confirm.
   // Used by assertEmailVerified() to gate sensitive mutations.
   emailVerified: boolean;
+  /**
+   * ADR-071 inherited membership. `tenantId` above is ALWAYS the ACTIVE tenant of this request
+   * (the home tenant unless a membership is in use), so every reader of `ctx.user.tenantId`
+   * acts in the right tenant without change. The fields below say where the user really lives
+   * and how they got here. All optional so sessions built without them (tests, the dev
+   * fallback) behave exactly as before; use the helpers below instead of reading them raw.
+   */
+  /** The tenant the user lives in (`users.tenantId`). Absent means `tenantId` is home. */
+  homeTenantId?: string;
+  /** Same value as `tenantId`; named for call sites that want to say "active". */
+  activeTenantId?: string;
+  /** Pinned staff session: cannot switch tenants and cannot reach home-only procedures. */
+  pinned?: boolean;
+  /** Role of the membership in use (ADMIN or USER), when acting through one. */
+  membershipRole?: 'ADMIN' | 'USER';
+  /** Unclaimed staff link session: only `user.claimLoginGrant` is allowed. */
+  pinPending?: boolean;
+  /** Supabase `session_id` of the request's session (used to claim a login grant). */
+  sessionId?: string;
 }
+
+export { getHomeTenantId, isActingOutsideHome };
 
 /**
  * Services type from container
@@ -103,6 +139,8 @@ export interface BaseContext {
   security: SecurityServices;
   adapters: Adapters;
   user: UserSession | null | undefined;
+  authError?: TRPCError;
+  pendingUser?: UserSession;
   req?: Request;
   res?: Response;
   [key: string]: unknown;
@@ -124,6 +162,17 @@ export interface Context {
   security?: Partial<SecurityServices>;
   adapters?: Partial<Adapters>;
   user: UserSession | null | undefined;
+  /**
+   * Why a presented token produced no user (ADR-071): a header naming a tenant the user cannot
+   * act in (`FORBIDDEN NOT_A_MEMBER`) or a pinned session that ended (`UNAUTHORIZED`).
+   * `isAuthed` rethrows it instead of the generic UNAUTHORIZED.
+   */
+  authError?: TRPCError;
+  /**
+   * Set instead of `user` for an unclaimed staff-link session (PIN_PENDING). Only
+   * `user.claimLoginGrant` promotes it to `user`; every other procedure sees no user.
+   */
+  pendingUser?: UserSession;
   req?: Request;
   res?: Response;
   [key: string]: unknown;
@@ -559,63 +608,106 @@ export async function ensureAppUserSession(
 }
 
 // ============================================
-// USER SESSION CACHE (performance fix)
+// USER SESSION RESOLUTION + CACHE
 // ============================================
-// Cache resolved UserSession objects in-process to avoid a DB round-trip
-// (prisma.user.findUnique) on every request from the same user.
-// TTL: 60 seconds. Eviction: on size limit (1000 entries).
+// Two caches (see security/session-cache.ts): the HOME session by userId, and the session
+// after active-tenant resolution keyed by (userId, requested tenant, session id). TTL 60 s.
+// Membership revoke / claim evicts the user's keys; other instances age out within the TTL.
 
-const USER_SESSION_CACHE = new Map<string, { session: UserSession; expiresAt: number }>();
-const USER_CACHE_TTL_MS = 60_000; // 60 seconds
-const USER_CACHE_MAX_SIZE = 1_000;
+/** Outcome of turning a bearer token into a session. */
+type TokenResolution =
+  | { kind: 'ok'; user: UserSession }
+  /** Unclaimed staff link: authenticated for `user.claimLoginGrant` only. */
+  | { kind: 'pending'; user: UserSession }
+  /** A valid token that may not act as requested (see `Context.authError`). */
+  | { kind: 'denied'; error: TRPCError }
+  | { kind: 'none' };
 
-function getCachedSession(userId: string): UserSession | null {
-  const entry = USER_SESSION_CACHE.get(userId);
-  if (!entry) return null;
-  if (Date.now() > entry.expiresAt) {
-    USER_SESSION_CACHE.delete(userId);
-    return null;
-  }
-  return entry.session;
+function applyActiveTenant(
+  home: UserSession,
+  resolution: ActiveTenantResolution,
+  sessionId: string | null
+): UserSession {
+  return {
+    ...home,
+    tenantId: resolution.activeTenantId,
+    activeTenantId: resolution.activeTenantId,
+    homeTenantId: resolution.homeTenantId,
+    role: resolution.role,
+    pinned: resolution.pinned,
+    ...(resolution.membershipRole ? { membershipRole: resolution.membershipRole } : {}),
+    ...(resolution.pinPending ? { pinPending: true } : {}),
+    ...(sessionId ? { sessionId } : {}),
+  };
 }
 
-function cacheSession(userId: string, session: UserSession): void {
-  // Simple size eviction: clear oldest entries when at limit
-  if (USER_SESSION_CACHE.size >= USER_CACHE_MAX_SIZE) {
-    const firstKey = USER_SESSION_CACHE.keys().next().value;
-    if (firstKey) USER_SESSION_CACHE.delete(firstKey);
-  }
-  USER_SESSION_CACHE.set(userId, { session, expiresAt: Date.now() + USER_CACHE_TTL_MS });
+/** Normalise the `x-active-tenant` header value; empty or oversized values count as absent. */
+function readRequestedTenant(req?: Request): string | null {
+  return normalizeRequestedTenant(req?.headers.get(ACTIVE_TENANT_HEADER));
+}
+
+function normalizeRequestedTenant(value: string | null | undefined): string | null {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  return raw && raw.length <= 64 ? raw : null;
 }
 
 /**
  * Resolve a UserSession from a raw JWT token.
- * Uses local JWT verification + in-process session cache to minimize latency.
- * Returns null when the token is invalid or the Supabase user cannot be verified.
+ * Uses local JWT verification + in-process session caches to minimize latency, then decides the
+ * ACTIVE tenant (home, a membership via `x-active-tenant`, or a pinned staff grant).
+ * Returns `none` when the token is invalid or the Supabase user cannot be verified.
  */
-async function resolveUserFromToken(token: string): Promise<UserSession | null> {
+async function resolveUserFromToken(
+  token: string,
+  requestedTenantId: string | null
+): Promise<TokenResolution> {
   const { user: supabaseUser, error } = await verifyToken(token);
 
   if (error) {
     console.warn('[Auth] Token verification failed:', error.message);
-    return null;
+    return { kind: 'none' };
   }
 
-  if (!supabaseUser) return null;
+  if (!supabaseUser) return { kind: 'none' };
 
-  // Check session cache before hitting the database
-  const cached = getCachedSession(supabaseUser.id);
-  if (cached) return cached;
+  // The token is verified, so decoding its payload for `session_id` / `amr` is safe.
+  const claims = decodeSessionClaims(token);
+  const key = resolvedSessionKey(supabaseUser.id, requestedTenantId, claims.sessionId);
 
-  const session = await ensureAppUserSession(apiPrisma, supabaseUser);
+  const cachedResolved = resolvedSessionCache.get(key) as UserSession | null;
+  if (cachedResolved) return { kind: 'ok', user: cachedResolved };
 
-  // Cache the resolved session
-  if (session) {
-    cacheSession(supabaseUser.id, session);
+  let home = baseSessionCache.get(supabaseUser.id) as UserSession | null;
+  if (!home) {
+    home = await ensureAppUserSession(apiPrisma, supabaseUser);
+    if (home) baseSessionCache.set(supabaseUser.id, supabaseUser.id, home);
+  }
+  if (!home) return { kind: 'none' };
+
+  let resolution: ActiveTenantResolution;
+  try {
+    resolution = await resolveActiveTenant(apiPrisma, {
+      userId: home.userId,
+      homeTenantId: home.tenantId,
+      homeRole: home.role,
+      claims,
+      requestedTenantId,
+    });
+  } catch (err) {
+    if (err instanceof TRPCError) return { kind: 'denied', error: err };
+    throw err;
   }
 
-  return session;
+  const session = applyActiveTenant(home, resolution, claims.sessionId);
+  // A pending session is never cached: it must be re-evaluated the moment the grant is
+  // claimed, including on instances that did not handle the claim.
+  if (resolution.pinPending) return { kind: 'pending', user: session };
+
+  resolvedSessionCache.set(home.userId, key, session, resolvedSessionTtlMs(!!session.pinned));
+  return { kind: 'ok', user: session };
 }
+
+export { invalidateUserSessions };
 
 /**
  * Extract a raw bearer token from an Authorization header string.
@@ -632,11 +724,15 @@ function extractWsBearerToken(authHeader: string | undefined): string | null {
  * Resolve a UserSession for a WebSocket connection from a raw JWT.
  * Returns null when the token is invalid or the DB user is absent.
  */
-async function resolveWsUser(token: string): Promise<UserSession | null> {
-  const { user: supabaseUser, error } = await verifyToken(token);
-  if (error || !supabaseUser) return null;
-
-  return ensureAppUserSession(apiPrisma, supabaseUser);
+async function resolveWsUser(
+  token: string,
+  requestedTenantId: string | null
+): Promise<UserSession | null> {
+  // The browser cannot set headers on a WebSocket upgrade, so the active tenant arrives in the
+  // connection params. A denied (bad tenant, ended pinned session) or pending session gets no
+  // WebSocket user, exactly like the HTTP path refuses it.
+  const resolved = await resolveUserFromToken(token, requestedTenantId);
+  return resolved.kind === 'ok' ? resolved.user : null;
 }
 
 /**
@@ -645,7 +741,10 @@ async function resolveWsUser(token: string): Promise<UserSession | null> {
  * Simplified context creation that takes auth header directly,
  * avoiding the need to convert IncomingMessage to Request.
  */
-export const createWSContext = async (authHeader?: string): Promise<BaseContext> => {
+export const createWSContext = async (
+  authHeader?: string,
+  activeTenantId?: string | null
+): Promise<BaseContext> => {
   // Mirror createContext: the container is lazily/async-initialised, so a cold
   // WebSocket connection must await readiness before touching the container Proxy
   // below (container/services/security/adapters), or it can throw while the
@@ -658,7 +757,7 @@ export const createWSContext = async (authHeader?: string): Promise<BaseContext>
 
   if (token) {
     try {
-      user = await resolveWsUser(token);
+      user = await resolveWsUser(token, normalizeRequestedTenant(activeTenantId));
     } catch (err) {
       console.error('[WS Auth] Error verifying token:', err);
     }
@@ -693,6 +792,8 @@ export const createContext = async (opts?: {
   await containerReady;
 
   let user: UserSession | null = null;
+  let pendingUser: UserSession | undefined;
+  let authError: TRPCError | undefined;
   const hadBearerToken = Boolean(opts?.req && extractBearerToken(opts?.req));
 
   // Extract and verify token from Authorization header
@@ -702,7 +803,10 @@ export const createContext = async (opts?: {
   // by Supabase — skip the JWT round-trip for them.
   if (token && !token.startsWith('pk_')) {
     try {
-      user = await resolveUserFromToken(token);
+      const resolved = await resolveUserFromToken(token, readRequestedTenant(opts?.req));
+      if (resolved.kind === 'ok') user = resolved.user;
+      else if (resolved.kind === 'pending') pendingUser = resolved.user;
+      else if (resolved.kind === 'denied') authError = resolved.error;
     } catch (err) {
       console.error('[Auth] Error verifying token:', err);
     }
@@ -727,6 +831,9 @@ export const createContext = async (opts?: {
     adapters: container.adapters,
     // User session (null in production if no valid token)
     user,
+    // ADR-071: why a valid token produced no user, and the unclaimed staff-link session.
+    ...(authError ? { authError } : {}),
+    ...(pendingUser ? { pendingUser } : {}),
     req: opts?.req,
     res: opts?.res,
   };

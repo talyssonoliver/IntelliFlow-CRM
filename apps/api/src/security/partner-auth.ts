@@ -160,9 +160,22 @@ export function getPlatformAdminEmails(env: NodeJS.ProcessEnv = process.env): Se
  * (an unverified sign-up must not be able to claim an operator's address).
  */
 export function isPlatformAdmin(
-  user: { email?: string | null; emailVerified?: boolean } | null | undefined,
+  user:
+    | {
+        email?: string | null;
+        emailVerified?: boolean;
+        tenantId?: string;
+        homeTenantId?: string;
+        pinned?: boolean;
+      }
+    | null
+    | undefined,
   env: NodeJS.ProcessEnv = process.env
 ): boolean {
+  // ADR-071: operator rights belong to the operator's OWN workspace. A request acting in
+  // another tenant (a membership, or a pinned staff session) is never a platform admin.
+  if (user?.pinned) return false;
+  if (user?.homeTenantId && user.homeTenantId !== user.tenantId) return false;
   const email = user?.email?.trim().toLowerCase();
   if (!email || user?.emailVerified !== true) return false;
   return getPlatformAdminEmails(env).has(email);

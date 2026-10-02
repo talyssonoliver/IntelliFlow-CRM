@@ -97,7 +97,29 @@ describe('createWebSocketServer', () => {
       },
     });
 
-    expect(createWSContext).toHaveBeenCalledWith('Bearer ws-token');
+    expect(createWSContext).toHaveBeenCalledWith('Bearer ws-token', null);
+  });
+
+  it('passes the active tenant from connection params to the context', async () => {
+    createWebSocketServer(4000);
+
+    const createContext = vi.mocked(applyWSSHandler).mock.calls[0]?.[0].createContext;
+
+    await createContext?.({
+      req: { headers: {} } as any,
+      res: {} as any,
+      info: {
+        connectionParams: { authorization: 'Bearer ws-token', 'x-active-tenant': 'tenant-b' },
+        calls: [],
+        isBatchCall: false,
+        accept: null,
+        type: 'unknown',
+        signal: new AbortController().signal,
+        url: null,
+      },
+    });
+
+    expect(createWSContext).toHaveBeenLastCalledWith('Bearer ws-token', 'tenant-b');
   });
 });
 

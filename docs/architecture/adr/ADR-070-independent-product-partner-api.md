@@ -106,15 +106,15 @@ Authenticated by a **per-partner API key with scopes** (`APIKey` gets its
 reader; the symmetric `PORTAL_INTERNAL_SECRET` is retired once the Portal has
 migrated):
 
-| Procedure                                                    | Purpose                                                                                                                          |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `partner.provisionTenant({ externalRef, name, plan })`       | creates a `Tenant` with `source: PARTNER`; idempotent on `(partnerId, externalRef)`                                              |
-| `partner.setPlan({ tenantId, plan })`                        | partner-granted tier; only for tenants the partner sourced                                                                       |
-| `partner.inviteMember({ tenantId, email, role })`            | creates/attaches the `User` membership                                                                                           |
-| `partner.issueLoginLink({ tenantId, email })`                | Supabase admin `generateLink` (magic link) → the Portal redirects; the CRM never trusts a Portal session                         |
-| `partner.getUsage({ tenantId })`                             | contacts, seats, emails, AI spend vs. quota, for the Portal's upsell widget                                                      |
-| `inbound.createLead` / `logCallBooking` / `logSupportTicket` | become tenant-aware via `externalRef`; `logSupportTicket` is implemented; `submissionPayload` is persisted as lead metadata      |
-| webhooks → partner                                           | `tenant.plan_changed`, `usage.threshold_reached`, plus the existing delivery/billing push (ADR-065), signed with the partner key |
+| Procedure                                                    | Purpose                                                                                                                                                        |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `partner.provisionTenant({ externalRef, name, plan })`       | creates a `Tenant` with `source: PARTNER`; idempotent on `(partnerId, externalRef)`                                                                            |
+| `partner.setPlan({ tenantId, plan })`                        | partner-granted tier; only for tenants the partner sourced                                                                                                     |
+| `partner.inviteMember({ tenantId, email, role })`            | creates/attaches the `User` membership                                                                                                                         |
+| `partner.issueLoginLink({ tenantId, email })`                | Supabase admin `generateLink` (magic link) → returns an in-app `/auth/callback?token_hash=…` URL (no Supabase redirect); the CRM never trusts a Portal session |
+| `partner.getUsage({ tenantId })`                             | contacts, seats, emails, AI spend vs. quota, for the Portal's upsell widget                                                                                    |
+| `inbound.createLead` / `logCallBooking` / `logSupportTicket` | become tenant-aware via `externalRef`; `logSupportTicket` is implemented; `submissionPayload` is persisted as lead metadata                                    |
+| webhooks → partner                                           | `tenant.plan_changed`, `usage.threshold_reached`, plus the existing delivery/billing push (ADR-065), signed with the partner key                               |
 
 Contracts are published as a versioned `@intelliflow/partner-sdk` (built from
 `packages/sdk` / `packages/api-client`) with zod schemas and **contract tests on
