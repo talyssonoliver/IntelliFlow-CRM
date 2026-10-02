@@ -44,6 +44,9 @@ vi.mock('three', () => {
       super();
       this.set(x, y, z);
     }
+    applyMatrix4() {
+      return this;
+    }
     normalize() {
       const l = Math.hypot(this.x, this.y, this.z) || 1;
       this.set(this.x / l, this.y / l, this.z / l);
@@ -63,6 +66,9 @@ vi.mock('three', () => {
     }
   }
   class Obj {
+    matrix = {};
+    frustumCulled = true;
+    updateMatrix() {}
     position = new Vec();
     rotation = new Vec();
     scale = new Vec();
@@ -141,6 +147,25 @@ vi.mock('three', () => {
     MeshPhysicalMaterial: Disposable,
     CanvasTexture: Disposable,
     Quaternion: Quat,
+    Points: class extends Obj {
+      constructor(
+        public geometry: Disposable,
+        public material: Disposable
+      ) {
+        super();
+      }
+    },
+    PointsMaterial: Disposable,
+    BufferGeometry: class extends Disposable {
+      attributes: Record<string, { needsUpdate: boolean }> = {};
+      setAttribute(name: string, attr: { needsUpdate: boolean }) {
+        this.attributes[name] = attr;
+      }
+    },
+    BufferAttribute: class {
+      needsUpdate = false;
+      constructor(public array: Float32Array) {}
+    },
     Vector3,
     Matrix4: class {
       makeBasis() {
@@ -165,7 +190,16 @@ vi.mock('three/addons/geometries/RoundedBoxGeometry.js', () => ({
 vi.mock('three/addons/environments/RoomEnvironment.js', () => ({ RoomEnvironment: class {} }));
 
 import * as THREE from 'three';
-import { baseY, cameraFrame, createStack, layerTarget, LAYERS, rippleRings } from '../aurora-stack';
+import {
+  baseY,
+  cameraFrame,
+  createStack,
+  layerTarget,
+  LAYERS,
+  rippleRings,
+  sparkAt,
+  SPARK_COUNT,
+} from '../aurora-stack';
 
 const fonts = { text: 'Manrope', icons: 'Material Symbols' };
 
@@ -288,32 +322,68 @@ describe('createStack', () => {
     stack.dispose();
   });
 
-  it('peels a presented layer away upwards, leaving a ripple where it was', () => {
+  it('dissolves a presented layer behind a glowing edge as it drifts up, with no outline ripple', () => {
     const canvas = document.createElement('canvas');
     canvas.getBoundingClientRect = () => ({ width: 390, height: 772 }) as DOMRect;
     const stack = createStack(canvas, { fonts, reducedMotion: false });
-    type Shown = { visible: boolean; position: { y: number } };
+    type Shown = {
+      visible: boolean;
+      position: { y: number };
+      children: Array<{
+        material: { onBeforeCompile?: unknown; customProgramCacheKey?: () => string };
+      }>;
+    };
     const rings = () =>
       (
         renderer().scene.children.at(-1)!.children as unknown as Array<{
           visible: boolean;
-          material?: { opacity: number; blending?: number };
-          children: unknown[];
+          material?: { blending?: number };
         }>
       ).filter((c) => c.material?.blending === THREE.AdditiveBlending && c.visible);
 
     stack.setPresentation({ agents: { present: 1, dissolve: 0 } });
-    run(30);
-    // Each run() restarts its frame clock, so both heights are read after a single frame.
-    run(1);
+    run(60);
     const agents = layers().at(-1) as unknown as Shown;
     const resting = agents.position.y;
-    expect(rings()).toHaveLength(0);
+    // Slab and face both carry the dissolve shader, compiled once for every layer.
+    for (const mesh of agents.children) {
+      expect(typeof mesh.material.onBeforeCompile).toBe('function');
+      expect(mesh.material.customProgramCacheKey?.()).toBe('aurora-dissolve');
+    }
 
     stack.setPresentation({ agents: { present: 1, dissolve: 0.5 } });
-    run(1);
+    run(60);
     expect(agents.position.y).toBeGreaterThan(resting);
-    expect(rings().length).toBeGreaterThan(0);
+    expect(agents.visible).toBe(true);
+    expect(rings()).toHaveLength(0);
+
+    stack.setPresentation({ agents: { present: 1, dissolve: 1 } });
+    run(60);
+    expect(agents.visible).toBe(false);
+    stack.dispose();
+  });
+
+  it('springs back home after a press and drag, and eases scroll steps instead of jumping', () => {
+    const canvas = document.createElement('canvas');
+    canvas.getBoundingClientRect = () => ({ width: 390, height: 772 }) as DOMRect;
+    const stack = createStack(canvas, { fonts, reducedMotion: false });
+    const root = () =>
+      renderer().scene.children.at(-1) as unknown as { position: { x: number; z: number } };
+    run(5);
+    const press = (type: string, x: number, y: number, target: EventTarget) => {
+      const e = new Event(type, { bubbles: true }) as PointerEvent;
+      Object.assign(e, { clientX: x, clientY: y, pointerId: 1, button: 0 });
+      target.dispatchEvent(e);
+    };
+    press('pointerdown', 100, 100, canvas);
+    press('pointermove', 300, 100, window);
+    run(40);
+    const dragged = root().position.x;
+    expect(Math.abs(dragged)).toBeGreaterThan(0.1);
+
+    press('pointerup', 300, 100, window);
+    run(120);
+    expect(Math.abs(root().position.x)).toBeLessThan(0.01);
     stack.dispose();
   });
 
@@ -329,15 +399,15 @@ describe('createStack', () => {
     expect(root().rotation.y).toBeCloseTo(Math.PI / 2);
 
     stack.setIntro(1);
-    run(1);
+    run(90);
     const open = layers().map((g) => g.position.y);
     expect(open[4]).toBeCloseTo(baseY(4));
     expect(open.at(-1)! - open[0]!).toBeGreaterThan(closedSpan * 3);
     expect(root().rotation.y).toBeCloseTo(0);
 
     stack.setIntro(7);
-    run(1);
-    expect(layers().map((g) => g.position.y)).toEqual(open);
+    run(30);
+    layers().forEach((g, i) => expect(g.position.y).toBeCloseTo(open[i]!, 6));
     stack.dispose();
   });
 
@@ -383,5 +453,23 @@ describe('rippleRings', () => {
     expect(first!.opacity).toBeGreaterThan(0.5);
     expect(first!.scale).toBeGreaterThan(second!.scale);
     expect(rippleRings(0.9)[0]!.scale).toBeGreaterThan(first!.scale);
+  });
+});
+
+describe('sparkAt', () => {
+  it('keeps every spark dark before the edge reaches it and after it has burnt out', () => {
+    for (let i = 0; i < SPARK_COUNT; i++) {
+      expect(sparkAt(i, 0).glow).toBe(0);
+      expect(sparkAt(i, 1).glow).toBe(0);
+    }
+  });
+
+  it('lifts sparks off the face mid-dissolve, the same way every time', () => {
+    const lit = Array.from({ length: SPARK_COUNT }, (_, i) => sparkAt(i, 0.5)).filter(
+      (sp) => sp.glow > 0
+    );
+    expect(lit.length).toBeGreaterThan(10);
+    expect(lit.every((sp) => sp.y > 0.17)).toBe(true);
+    expect(sparkAt(7, 0.5)).toEqual(sparkAt(7, 0.5));
   });
 });

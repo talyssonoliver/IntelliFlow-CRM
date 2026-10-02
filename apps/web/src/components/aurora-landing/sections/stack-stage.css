@@ -210,3 +210,18 @@
     height: 0;
   }
 }
+
+/* Press and drag the stack: it follows the pointer on a spring and springs home
+   on release (aurora-stack.ts). Vertical touch still scrolls the page. */
+.aurora-page .stage-object.stack-visual #stack,
+.aurora-page .object-sticky #stack {
+  pointer-events: auto;
+  touch-action: pan-y;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.aurora-page .stage-object.stack-visual #stack:active,
+.aurora-page .object-sticky #stack:active {
+  cursor: grabbing;
+}
