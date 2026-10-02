@@ -393,6 +393,45 @@ describe('OAuth code flow', () => {
     expect(onSuccess).not.toHaveBeenCalled();
   });
 
+  it('a late getSession that returns the session held before the callback leaves it alone', async () => {
+    vi.useFakeTimers();
+    // The PKCE exchange failed: getSession hands back the session the browser already had.
+    h.getStoredAccessToken.mockReturnValue(SESSION.access_token);
+    let release: (v: unknown) => void = () => undefined;
+    h.getSession.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        })
+    );
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_500);
+    });
+    expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
+    await act(async () => {
+      release({ data: { session: SESSION }, error: null });
+      await vi.advanceTimersByTimeAsync(100);
+    });
+    expect(h.signOut).not.toHaveBeenCalled();
+    expect(h.clearSessionTokens).not.toHaveBeenCalled();
+    expect(h.clearSupabaseLocalStorage).not.toHaveBeenCalled();
+  });
+
+  it('a getUser timeout never drops the session held before the callback', async () => {
+    vi.useFakeTimers();
+    h.getStoredAccessToken.mockReturnValue(SESSION.access_token);
+    h.getSession.mockResolvedValue({ data: { session: SESSION }, error: null });
+    h.getUser.mockImplementation(NEVER);
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_500);
+    });
+    expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
+    expect(h.signOut).not.toHaveBeenCalled();
+    expect(h.clearSessionTokens).not.toHaveBeenCalled();
+  });
+
   it('signs in when both steps settle in time', async () => {
     h.getSession.mockResolvedValue({ data: { session: SESSION }, error: null });
     const onSuccess = vi.fn();

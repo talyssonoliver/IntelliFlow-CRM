@@ -109,11 +109,17 @@ type BrowserSupabase = NonNullable<ReturnType<typeof getSupabaseBrowserClient>>;
  * emit SIGNED_OUT, which AuthContext treats as a sign-out of THAT session; so only the
  * abandoned session's copy in the SDK's storage is removed, silently. Otherwise the session is
  * signed out locally and every local trace of it is wiped.
+ *
+ * `preexistingAccessToken` is the session the browser held before this callback ran. The OAuth
+ * path does not sign out first, so a step may hand back that session rather than a new one; it
+ * was never this callback's to remove.
  */
 async function dropAbandonedSession(
   supabase: BrowserSupabase,
-  abandonedAccessToken: string
+  abandonedAccessToken: string,
+  preexistingAccessToken: string | null = null
 ): Promise<void> {
+  if (abandonedAccessToken === preexistingAccessToken) return;
   const current = getStoredAccessToken();
   if (current && current !== abandonedAccessToken) {
     clearSupabaseLocalStorage();
@@ -159,12 +165,13 @@ function normalizeClaimError(claimError: unknown): Error {
  */
 function discardLateSession(
   supabase: BrowserSupabase,
-  pending: Promise<{ data: { session: { access_token: string } | null } | null }>
+  pending: Promise<{ data: { session: { access_token: string } | null } | null }>,
+  preexistingAccessToken: string | null = null
 ): void {
   pending
     .then((late) => {
       const token = late.data?.session?.access_token;
-      return token ? dropAbandonedSession(supabase, token) : undefined;
+      return token ? dropAbandonedSession(supabase, token, preexistingAccessToken) : undefined;
     })
     .catch(() => undefined);
 }
@@ -176,10 +183,11 @@ function discardLateSession(
 async function abandonedByWatchdog(
   aborted: { readonly current: boolean },
   supabase: BrowserSupabase,
-  session: { access_token: string } | null | undefined
+  session: { access_token: string } | null | undefined,
+  preexistingAccessToken: string | null = null
 ): Promise<boolean> {
   if (!aborted.current) return false;
-  if (session) await dropAbandonedSession(supabase, session.access_token);
+  if (session) await dropAbandonedSession(supabase, session.access_token, preexistingAccessToken);
   return true;
 }
 
@@ -494,15 +502,25 @@ export function OAuthCallback({
       // code_verifier was found in PkceAwareStorage / localStorage).
       // 10-second timeout to handle network issues. getSession cannot be cancelled: if the
       // exchange lands after the timeout, the session it persisted is discarded.
+      const preexistingToken = getStoredAccessToken();
       const sessionRequest = supabase.auth.getSession();
       let sessionResult: Awaited<typeof sessionRequest>;
       try {
         sessionResult = await withTimeout(sessionRequest);
       } catch (sessionTimeout) {
-        discardLateSession(supabase, sessionRequest);
+        discardLateSession(supabase, sessionRequest, preexistingToken);
         throw sessionTimeout;
       }
-      if (await abandonedByWatchdog(abortedRef, supabase, sessionResult.data?.session)) return;
+      if (
+        await abandonedByWatchdog(
+          abortedRef,
+          supabase,
+          sessionResult.data?.session,
+          preexistingToken
+        )
+      ) {
+        return;
+      }
       const { data, error: sessionError } = sessionResult;
 
       if (sessionError) {
@@ -522,10 +540,10 @@ export function OAuthCallback({
         ({ data: userData } = await withTimeout(supabase.auth.getUser(session.access_token)));
       } catch (userError) {
         // The exchanged session is already persisted: never leave it behind a failure screen.
-        await dropAbandonedSession(supabase, session.access_token);
+        await dropAbandonedSession(supabase, session.access_token, preexistingToken);
         throw userError;
       }
-      if (await abandonedByWatchdog(abortedRef, supabase, session)) return;
+      if (await abandonedByWatchdog(abortedRef, supabase, session, preexistingToken)) return;
       finishSignIn(session, userData?.user ?? undefined, 'oauth');
     } catch (err) {
       reportError(err);
