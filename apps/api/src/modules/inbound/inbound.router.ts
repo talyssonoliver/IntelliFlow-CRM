@@ -1,7 +1,8 @@
 /**
  * Inbound Router — cross-repo intake from leangency-portal.
  *
- * Three procedures:
+ * Four procedures (callers: leangency-portal for 1-3, and the outbound
+ * prospecting system `client-acquisition-leangency` (COA) for 4):
  *
  * 1. `createLead` — /discover form submissions from leangency.com.
  *    Each successful submission lands as a Lead in this CRM.
@@ -12,6 +13,12 @@
  *
  * 3. `logSupportTicket` — client support requests from the portal inbox.
  *    Creates a Ticket in the bound tenant.
+ *
+ * 4. `syncPipelineLead` — COA hands its contacted leads into this CRM, the
+ *    single source of truth for the sales funnel (S-0204). Dedupes by
+ *    (tenant, email) so a site lead and a COA lead for the same person are
+ *    ONE record, then moves its status forward only (never back, never out of
+ *    CONVERTED/LOST), stepping through LeadService so domain events fire.
  *
  * Auth: shared bearer `PORTAL_INTERNAL_SECRET` (server-to-server only).
  * The portal sends the SAME secret to two destinations (this CRM and the
@@ -30,6 +37,8 @@
  *   - logCallBooking: Appointment.externalCalendarId stores `booking:<submissionId>`.
  *   - logSupportTicket: the creating TicketActivity carries
  *     systemEventData.requestId (the portal inbox thread id).
+ *   - syncPipelineLead: a NOTE LeadActivity carries metadata.syncKey
+ *     `coa-sync:<coaLeadId>:<status>`; a repeat of the same stage is a no-op.
  */
 
 import { createHash, timingSafeEqual } from 'node:crypto';
@@ -182,6 +191,64 @@ export interface InboundSupportTicketOutput {
 }
 
 // ============================================================================
+// syncPipelineLead — Input Schema & Output Interface
+// ============================================================================
+
+const PIPELINE_TARGET_STATUSES = [
+  'CONTACTED',
+  'QUALIFIED',
+  'NEGOTIATING',
+  'CONVERTED',
+  'LOST',
+] as const;
+
+/**
+ * Input for `inbound.syncPipelineLead`. Sent by COA (client-acquisition-leangency)
+ * when a prospecting lead moves through its pipeline. `status` is already mapped
+ * to the CRM funnel by the caller; `coaStage` is the raw COA stage (audit only).
+ */
+export const inboundPipelineLeadSchema = z.object({
+  /** COA Lead id — identity on the COA side. */
+  coaLeadId: z.string().min(1).max(200),
+  /** Dedup key in this CRM (tenant + email). */
+  email: z.string().email(),
+  firstName: z.string().trim().max(100).optional(),
+  lastName: z.string().trim().max(100).optional(),
+  company: z.string().trim().max(200).optional(),
+  phone: z.string().trim().max(50).optional(),
+  website: z.string().trim().max(500).optional(),
+  location: z.string().trim().max(200).optional(),
+  /** Target funnel status. */
+  status: z.enum(PIPELINE_TARGET_STATUSES),
+  /** Raw COA crmStage — audit note only. */
+  coaStage: z.string().max(50),
+  /** When COA moved the lead (ISO datetime). */
+  stageChangedAt: z.string().datetime(),
+});
+
+export type InboundPipelineLeadInput = z.infer<typeof inboundPipelineLeadSchema>;
+
+type PipelineLeadStatus =
+  | 'NEW'
+  | 'CONTACTED'
+  | 'QUALIFIED'
+  | 'NEGOTIATING'
+  | 'UNQUALIFIED'
+  | 'CONVERTED'
+  | 'LOST';
+
+export interface InboundPipelineLeadOutput {
+  readonly leadId: string;
+  readonly tenantId: string;
+  /** True when this call created the Lead; false when it already existed. */
+  readonly created: boolean;
+  readonly previousStatus: PipelineLeadStatus;
+  readonly status: PipelineLeadStatus;
+  /** True when at least one status transition was applied. */
+  readonly changed: boolean;
+}
+
+// ============================================================================
 // Helpers
 // ============================================================================
 
@@ -190,6 +257,45 @@ const SUBMISSION_TAG_PREFIX = 'submission:';
 const PORTAL_TAG = 'portal-discover';
 const BOOKING_TAG = 'portal-call-booking';
 const BOOKING_EXTERNAL_ID_PREFIX = 'booking:';
+
+const COA_PIPELINE_TAG = 'coa-pipeline';
+const COA_LEAD_TAG_PREFIX = 'coa-lead:';
+const COA_SYNC_USER = 'System (COA sync)';
+
+/** Forward-only rank. LOST / CONVERTED are terminal for the pipeline route. */
+const PIPELINE_RANK: Record<string, number> = {
+  NEW: 0,
+  UNQUALIFIED: 0,
+  CONTACTED: 1,
+  QUALIFIED: 2,
+  NEGOTIATING: 3,
+  CONVERTED: 4,
+};
+
+/** The funnel ladder walked one valid LeadService transition at a time. */
+const PIPELINE_LADDER: readonly PipelineLeadStatus[] = [
+  'CONTACTED',
+  'QUALIFIED',
+  'NEGOTIATING',
+  'CONVERTED',
+];
+
+/**
+ * Decide the ordered list of statuses to move through. Empty = no change.
+ * Never resurrects CONVERTED/LOST and never downgrades.
+ */
+function planPipelineSteps(current: string, target: PipelineLeadStatus): PipelineLeadStatus[] {
+  if (current === 'CONVERTED' || current === 'LOST') return [];
+  if (target === 'LOST') return ['LOST'];
+  const currentRank = PIPELINE_RANK[current];
+  const targetRank = PIPELINE_RANK[target];
+  if (currentRank === undefined || targetRank === undefined) return [];
+  if (targetRank <= currentRank) return [];
+  return PIPELINE_LADDER.filter((s) => {
+    const r = PIPELINE_RANK[s] as number;
+    return r > currentRank && r <= targetRank;
+  });
+}
 
 function assertAuthorised(ctx: Context): void {
   const secret = process.env.PORTAL_INTERNAL_SECRET?.trim();
@@ -332,6 +438,8 @@ async function upsertLeadByEmail(
     tags: string[];
     ownerId: string;
     tenantId: string;
+    /** Source stamped on a NEWLY created lead. Defaults to 'WEBSITE'. */
+    source?: 'WEBSITE' | 'EMAIL';
   }
 ): Promise<{ leadId: string; leadCreated: boolean }> {
   const leadService = getLeadService(ctx);
@@ -351,7 +459,7 @@ async function upsertLeadByEmail(
     lastName: input.lastName,
     company: input.company,
     phone: input.phone,
-    source: 'WEBSITE',
+    source: input.source ?? 'WEBSITE',
     location: input.location,
     website: input.website,
     tags: input.tags,
@@ -375,6 +483,79 @@ async function upsertLeadByEmail(
   }
 
   return { leadId: result.value.id.value, leadCreated: true };
+}
+
+/**
+ * Read the existing lead's status and add any missing COA tags (best-effort,
+ * logged on failure). Returns the lead's current status.
+ */
+async function mergeCoaTags(
+  ctx: Context,
+  leadId: string,
+  tenantId: string,
+  coaTags: string[],
+  coaLeadId: string
+): Promise<PipelineLeadStatus> {
+  const existing = await ctx.prisma.lead.findFirst({
+    where: { id: leadId, tenantId },
+    select: { id: true, status: true, tags: true },
+  });
+  const have: string[] = Array.isArray(existing?.tags) ? (existing.tags as string[]) : [];
+  const missing = coaTags.filter((t) => !have.includes(t));
+  if (missing.length > 0) {
+    try {
+      await ctx.prisma.lead.update({
+        where: { id: leadId },
+        data: { tags: [...have, ...missing] },
+      });
+    } catch (err) {
+      console.warn('[inbound.syncPipelineLead] tag merge failed:', {
+        leadId,
+        coaLeadId,
+        error: err instanceof Error ? err.message : err,
+      });
+    }
+  }
+  return (existing?.status as PipelineLeadStatus | undefined) ?? 'NEW';
+}
+
+/** Audit NOTE + idempotency marker for a COA pipeline sync. Best-effort. */
+async function recordPipelineSync(
+  ctx: Context,
+  input: InboundPipelineLeadInput,
+  leadId: string,
+  tenantId: string,
+  from: PipelineLeadStatus,
+  to: PipelineLeadStatus,
+  syncKey: string
+): Promise<void> {
+  try {
+    await ctx.prisma.leadActivity.create({
+      data: {
+        type: 'NOTE',
+        title: `COA pipeline: ${input.coaStage} → ${input.status}`,
+        description: `COA lead ${input.coaLeadId} moved to ${input.coaStage} at ${input.stageChangedAt}; CRM status ${from} → ${to}`,
+        timestamp: new Date(),
+        userName: COA_SYNC_USER,
+        leadId,
+        tenantId,
+        metadata: {
+          source: 'coa-pipeline-sync',
+          coaLeadId: input.coaLeadId,
+          coaStage: input.coaStage,
+          status: input.status,
+          stageChangedAt: input.stageChangedAt,
+          syncKey,
+        } as Prisma.InputJsonObject,
+      },
+    });
+  } catch (err) {
+    console.warn('[inbound.syncPipelineLead] audit note failed:', {
+      leadId,
+      syncKey,
+      error: err instanceof Error ? err.message : err,
+    });
+  }
 }
 
 export const inboundRouter = createTRPCRouter({
@@ -767,5 +948,89 @@ export const inboundRouter = createTRPCRouter({
         },
         { maxWait: 10_000, timeout: 30_000 }
       );
+    }),
+
+  /**
+   * Sync a COA (outbound prospecting) lead into the CRM funnel.
+   *
+   * Behaviour:
+   *   - 401 UNAUTHORIZED — missing or wrong bearer
+   *   - 500 INTERNAL     — env not configured (secret / tenant / user / service)
+   *   - 400 BAD_REQUEST  — LeadService refused a status step
+   *   - 200              — lead upserted by (tenant, email); status moved forward
+   *                         only; `changed` says whether anything moved.
+   *
+   * Idempotency: the audit NOTE LeadActivity carries metadata.syncKey
+   * `coa-sync:<coaLeadId>:<status>`. A repeat of that key returns early with
+   * changed:false before any status call. Tags and the audit note are
+   * best-effort (logged, not thrown).
+   */
+  syncPipelineLead: publicProcedure
+    .input(inboundPipelineLeadSchema)
+    .mutation(async ({ ctx, input }): Promise<InboundPipelineLeadOutput> => {
+      assertAuthorised(ctx);
+      const { tenantId, ownerId } = getInboundBinding();
+      const leadService = getLeadService(ctx);
+
+      const coaTags = [COA_PIPELINE_TAG, `${COA_LEAD_TAG_PREFIX}${input.coaLeadId}`];
+
+      // --- Step 1: upsert by (tenant, email) ---------------------------------
+      const { leadId, leadCreated } = await upsertLeadByEmail(ctx, {
+        email: input.email,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        company: input.company,
+        phone: input.phone,
+        location: input.location,
+        website: input.website,
+        tags: coaTags,
+        ownerId,
+        tenantId,
+        source: 'EMAIL',
+      });
+
+      let currentStatus: PipelineLeadStatus = 'NEW';
+      if (!leadCreated) {
+        currentStatus = await mergeCoaTags(ctx, leadId, tenantId, coaTags, input.coaLeadId);
+      }
+
+      // --- Step 3: idempotency ------------------------------------------------
+      const syncKey = `coa-sync:${input.coaLeadId}:${input.status}`;
+      const prior = await ctx.prisma.leadActivity.findFirst({
+        where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
+        select: { id: true },
+      });
+      if (prior) {
+        return {
+          leadId,
+          tenantId,
+          created: leadCreated,
+          previousStatus: currentStatus,
+          status: currentStatus,
+          changed: false,
+        };
+      }
+
+      // --- Step 2: forward-only walk through LeadService ----------------------
+      const steps = planPipelineSteps(currentStatus, input.status);
+      let status = currentStatus;
+      for (const step of steps) {
+        const result = await leadService.changeLeadStatus(leadId, step, COA_SYNC_USER);
+        if (result.isFailure) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: result.error.message });
+        }
+        status = step;
+      }
+
+      await recordPipelineSync(ctx, input, leadId, tenantId, currentStatus, status, syncKey);
+
+      return {
+        leadId,
+        tenantId,
+        created: leadCreated,
+        previousStatus: currentStatus,
+        status,
+        changed: steps.length > 0,
+      };
     }),
 });
