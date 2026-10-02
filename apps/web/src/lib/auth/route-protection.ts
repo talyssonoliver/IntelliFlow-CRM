@@ -55,7 +55,8 @@ export const PUBLIC_AUTH_ROUTE_PREFIXES = [
   // mid-session re-verification; the onboarding modal must not interrupt it.
   // Keep this list in sync with AUTH_PAGES_NO_CHROME in PublicLayoutShell.tsx.
   '/mfa',
-  '/auth/callback',
+  // Every /auth/* page (callback, magic link, ...): authenticated chrome never mounts on them.
+  '/auth',
   '/sso',
 ] as const;
 
