@@ -66,7 +66,16 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import {
+  LOCK_PATH,
+  acquire as acquireLock,
+  killTree,
+  readLock,
+  recordChild,
+  release as releaseLock,
+} from './preship-lock.mjs';
 
 // Resolve REPO_ROOT from git rather than cwd so the script behaves
 // identically whether invoked from the repo root, from a subdirectory,
@@ -113,6 +122,16 @@ function dbStackUnavailable() {
   const names = (r.stdout || '').toLowerCase();
   return !(names.includes('postgres') && names.includes('redis'));
 }
+// Unit projects that scripts/run-coverage.js does NOT run. Everything else in
+// `test:unit` is exercised (and fails the gate) inside the `coverage` step.
+export const UNIT_ONLY_PROJECTS = ['webhooks', 'root', 'property'];
+
+// Whether the `coverage` step will actually run tests in this invocation.
+function coverageWillRun() {
+  if (flags.only && !flags.only.includes('coverage')) return false;
+  return !dbStackUnavailable();
+}
+
 // The coverage gates need the merged lcov the `coverage` step produces; if that
 // step was skipped (no DB), they have nothing to read.
 function lcovMissing() {
@@ -375,8 +394,18 @@ const STEPS = [
   },
   {
     id: 'unit-tests',
-    description: 'vitest run --project unit',
-    cmd: ['pnpm', 'run', 'test:unit'],
+    description: 'vitest run (all projects, or only those `coverage` does not run)',
+    // `coverage` (scripts/run-coverage.js) runs every unit project again under
+    // instrumentation and fails the gate on any test failure, so running them
+    // here too spent ~14 minutes per push testing the same code twice. When
+    // `coverage` will run in this invocation, this step runs only the projects
+    // its list leaves out; otherwise (DB stack down, or --only=unit-tests) it
+    // runs the whole suite as before. preship-unit-split.test.ts fails if the
+    // two lists drift apart.
+    cmd: () =>
+      coverageWillRun()
+        ? ['pnpm', 'exec', 'vitest', 'run', ...UNIT_ONLY_PROJECTS.map((p) => `--project=${p}`)]
+        : ['pnpm', 'run', 'test:unit'],
     required: true,
   },
   {
@@ -786,7 +815,10 @@ function fmtDuration(ms) {
   return `${Math.floor(ms / 60000)}m${Math.round((ms % 60000) / 1000)}s`;
 }
 
-function runStep(step, prev) {
+// The step process currently running, so a signal can stop its whole tree.
+let currentChild = null;
+
+async function runStep(step, prev) {
   const logPath = path.join(LOG_DIR, `${step.id}.log`);
 
   if (flags.only && !flags.only.includes(step.id)) {
@@ -824,34 +856,67 @@ function runStep(step, prev) {
   }
 
   const start = Date.now();
-  const env = { ...process.env, ...(step.env || {}) };
+  // PRESHIP_PARENT_GATE tells a gate started by this step (a test that runs
+  // pre-ship.mjs) that this process already holds the lock.
+  const env = { ...process.env, ...(step.env || {}), PRESHIP_PARENT_GATE: String(process.pid) };
+  const cmd = typeof step.cmd === 'function' ? step.cmd() : step.cmd;
   // shell:true on Windows so the PATH resolves .cmd/.exe extensions for
   // pnpm / gitleaks / etc. All argv values are hard-coded literals (no
   // user input), so shell injection isn't a concern. POSIX systems use
-  // shell:false to avoid the extra fork.
-  const r = spawnSync(step.cmd[0], step.cmd.slice(1), {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env,
-    cwd: step.cwd || REPO_ROOT,
-    shell: process.platform === 'win32',
-    // Default 1MB maxBuffer is blown by noisy steps (unit-tests emits
-    // ~14k lines / >5MB of AUDIT + RBAC log lines). When exceeded,
-    // spawnSync kills the child with SIGTERM and returns status=null,
-    // giving the false impression that the test failed when it was
-    // really truncated. 256MB is comfortably above any current step.
-    maxBuffer: 256 * 1024 * 1024,
+  // shell:false to avoid the extra fork, and detached:true so the step is its
+  // own process group that killTree can stop as a whole.
+  //
+  // Async spawn (not spawnSync) so the gate can still react to a signal while
+  // a step runs, and so the lock can record the step's PID for the watchdog.
+  // stdout streams straight to the log rather than into a buffer (unit-tests
+  // emits >5MB), so there is no maxBuffer to blow.
+  const r = await new Promise((resolve) => {
+    const log = fs.createWriteStream(logPath);
+    let stderr = '';
+    let child;
+    try {
+      // With shell:true Node wants one command string (DEP0190 otherwise); the
+      // argv is all literals, so quoting is only for arguments with spaces.
+      const [file, args] =
+        process.platform === 'win32'
+          ? [cmd.map((a) => (/\s/.test(a) ? `"${a}"` : a)).join(' '), []]
+          : [cmd[0], cmd.slice(1)];
+      child = spawn(file, args, {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env,
+        cwd: step.cwd || REPO_ROOT,
+        shell: process.platform === 'win32',
+        detached: process.platform !== 'win32',
+        windowsHide: true,
+      });
+    } catch (err) {
+      log.end(String(err));
+      resolve({ status: null });
+      return;
+    }
+    currentChild = child;
+    recordChild(child.pid ?? null, step.id);
+    child.stdout.pipe(log, { end: false });
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (d) => {
+      stderr += d;
+    });
+    child.on('error', (err) => {
+      stderr += `\n${String(err)}`;
+    });
+    child.on('close', (code) => {
+      currentChild = null;
+      recordChild(null, null);
+      log.end(stderr ? '\n--- stderr ---\n' + stderr : '', () => resolve({ status: code }));
+    });
   });
   const duration_ms = Date.now() - start;
-
-  const output = (r.stdout || '') + (r.stderr ? '\n--- stderr ---\n' + r.stderr : '');
-  fs.writeFileSync(logPath, output);
 
   const failed = r.status !== 0;
   return {
     id: step.id,
     description: step.description,
-    cmd: step.cmd.join(' '),
+    cmd: cmd.join(' '),
     duration_ms,
     exit_code: r.status ?? -1,
     verdict: failed ? 'FAIL' : 'PASS',
@@ -893,9 +958,58 @@ function isMissingRequired(r) {
   return r.verdict === 'SKIPPED_PRECONDITION' && r.required === true;
 }
 
-function main() {
+// Stop the running step's whole tree and release the lock. Runs on every exit
+// path the gate controls; the watchdog covers the ones it does not.
+function shutdown() {
+  if (currentChild?.pid) killTree(currentChild.pid);
+  currentChild = null;
+  releaseLock();
+}
+
+function startWatchdog() {
+  const script = path.join(path.dirname(fileURLToPath(import.meta.url)), 'preship-watchdog.mjs');
+  try {
+    const w = spawn(process.execPath, [script, String(process.pid), LOCK_PATH], {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+    w.unref();
+  } catch {
+    // The next gate still clears a stale lock and its orphaned step.
+  }
+}
+
+function currentBranch() {
+  const r = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return r.status === 0 ? r.stdout.trim() : 'unknown';
+}
+
+async function main() {
   ensureDirs();
   const head = gitHead();
+  process.on('exit', shutdown);
+  for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
+    process.on(sig, () => {
+      process.stdout.write(`\npre-ship: ${sig} received; stopping the running step.\n`);
+      shutdown();
+      process.exit(130);
+    });
+  }
+  // A gate started from inside a running gate's step (the attest tests do this)
+  // must not wait for the lock its own parent holds, or neither ever finishes.
+  const parent = Number.parseInt(process.env.PRESHIP_PARENT_GATE ?? '', 10);
+  const nested = Number.isInteger(parent) && readLock()?.gate_pid === parent;
+  if (!nested) {
+    await acquireLock(
+      { repo_root: REPO_ROOT, branch: currentBranch(), head },
+      { log: (m) => process.stdout.write(`${m}\n`) }
+    );
+    startWatchdog();
+  }
   const prev = loadPreviousState(head);
   if (prev) {
     process.stdout.write(
@@ -945,7 +1059,7 @@ function main() {
       continue;
     }
     process.stdout.write(`  ${step.id.padEnd(28)} `);
-    const r = runStep(step, prev);
+    const r = await runStep(step, prev);
     results.push(r);
 
     // Re-label a required+SKIPPED_PRECONDITION as MISSING so the line is
@@ -1035,4 +1149,8 @@ function main() {
   process.exit(verdict === 'PASS' ? 0 : 1);
 }
 
-main();
+main().catch((err) => {
+  process.stderr.write(`pre-ship: ${err?.stack || err}\n`);
+  shutdown();
+  process.exit(1);
+});
