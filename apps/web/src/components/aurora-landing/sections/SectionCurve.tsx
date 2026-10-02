@@ -6,7 +6,7 @@ import './section-curve.css';
  * (cyan to blue to violet), so the hand-off echoes the live ribbons in the
  * hero instead of a flat gradient. It sits inside the top of its section.
  */
-export function SectionCurve({ above, id }: { above: string; id: string }) {
+export function SectionCurve({ above, id }: Readonly<{ above: string; id: string }>) {
   const ribbon = `${id}-ribbon`;
   const glow = `${id}-glow`;
   const wave = 'M0,118 C220,52 430,26 690,62 C930,96 1170,124 1440,46';

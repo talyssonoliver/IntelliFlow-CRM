@@ -35,60 +35,58 @@ const DEV_CHIPS: ReadonlyArray<{
 /** Ready integrations and developer surfaces, wired to one Aurora core rather than a flat logo grid. */
 export function IntegrationsSection() {
   return (
-    <>
-      <section
-        className="integrations aurora-integrations"
-        id="integrations"
-        data-bridge-section
-        style={{ '--bridge-accent': 'var(--cyan)' } as CSSProperties}
-      >
-        <div className="wrap">
-          <div className="center reveal" data-reveal>
-            <p className="eyebrow">Integrations</p>
-            <h2>Plugs into the tools your team already lives in.</h2>
-            <p className="section-lede">
-              Email, chat, payments and sign-in on day one. Build your own with webhooks, React
-              hooks and a CLI.
-            </p>
+    <section
+      className="integrations aurora-integrations"
+      id="integrations"
+      data-bridge-section
+      style={{ '--bridge-accent': 'var(--cyan)' } as CSSProperties}
+    >
+      <div className="wrap">
+        <div className="center reveal" data-reveal>
+          <p className="eyebrow">Integrations</p>
+          <h2>Plugs into the tools your team already lives in.</h2>
+          <p className="section-lede">
+            Email, chat, payments and sign-in on day one. Build your own with webhooks, React hooks
+            and a CLI.
+          </p>
+        </div>
+
+        <div className="integration-system reveal" data-reveal>
+          <div className="core-node">
+            <span className="core-ring" aria-hidden="true" />
+            <img src="/brand/aurora/aurora-wave.webp" className="core-mark" alt="" />
+            <span>Aurora core</span>
           </div>
+          <span className="core-stem" aria-hidden="true" />
 
-          <div className="integration-system reveal" data-reveal>
-            <div className="core-node">
-              <span className="core-ring" aria-hidden="true" />
-              <img src="/brand/aurora/aurora-wave.webp" className="core-mark" alt="" />
-              <span>Aurora core</span>
-            </div>
-            <span className="core-stem" aria-hidden="true" />
-
-            <div className="logos" data-reveal-stagger>
-              {CONNECTORS.map(({ label, logo, status }) => (
-                <div className="logo" key={label}>
-                  <img src={logo} alt="" />
-                  <span>{label}</span>
-                  <span className="wire-status">{status}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="dev-panel reveal" data-reveal>
-            <p className="dev-label">Build your own on the same connectors</p>
-            <div className="dev-row" data-reveal-stagger>
-              {DEV_CHIPS.map(({ label, icon, logo, status }) => (
-                <span key={label} className={status ? `dev ${status}` : 'dev'}>
-                  {logo ? (
-                    <img src={logo} alt="" />
-                  ) : (
-                    <span className="material-symbols-outlined">{icon}</span>
-                  )}
-                  {label}
-                  {status && <em>{status === 'beta' ? 'Beta' : 'Coming soon'}</em>}
-                </span>
-              ))}
-            </div>
+          <div className="logos" data-reveal-stagger>
+            {CONNECTORS.map(({ label, logo, status }) => (
+              <div className="logo" key={label}>
+                <img src={logo} alt="" />
+                <span>{label}</span>
+                <span className="wire-status">{status}</span>
+              </div>
+            ))}
           </div>
         </div>
-      </section>
-    </>
+
+        <div className="dev-panel reveal" data-reveal>
+          <p className="dev-label">Build your own on the same connectors</p>
+          <div className="dev-row" data-reveal-stagger>
+            {DEV_CHIPS.map(({ label, icon, logo, status }) => (
+              <span key={label} className={status ? `dev ${status}` : 'dev'}>
+                {logo ? (
+                  <img src={logo} alt="" />
+                ) : (
+                  <span className="material-symbols-outlined">{icon}</span>
+                )}
+                {label}
+                {status && <em>{status === 'beta' ? 'Beta' : 'Coming soon'}</em>}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

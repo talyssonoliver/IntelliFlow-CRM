@@ -6,14 +6,6 @@
  * editing aurora-landing.css directly.
  */
 
-.aurora-page .footer.aurora-footer {
-  /* Was #0c1047 (aurora-landing.css:740-745) — a different navy than
-     --navy (#11175b), the exact shade FinalCta sits on. Two different navies
-     back to back is the seam the brief calls out; this makes them the same
-     colour, so the two sections read as one continuous block. */
-  background: var(--navy);
-}
-
 /* Audit M2: footer <a> measured ~24px tall, under the 44px guideline.
    padding-block grows the tap target without touching the 15px type or its
    line-height; the grid gap drops to 0 since the padding now carries the
@@ -33,6 +25,7 @@
 /* The Final CTA's ribbons run on down behind the footer: its content sits
    above them, and the footer itself stays transparent over the same Navy. */
 .aurora-page .footer.aurora-footer {
+  background: var(--navy);
   position: relative;
   overflow-x: clip;
 }

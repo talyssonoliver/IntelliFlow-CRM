@@ -32,30 +32,28 @@ const FAQ = [
 /** Questions buyers ask. */
 export function FaqSection() {
   return (
-    <>
-      <section
-        className="faq aurora-faq"
-        id="faq"
-        data-bridge-section
-        style={{ '--bridge-accent': 'var(--violet)' } as CSSProperties}
-      >
-        <div className="wrap narrow reveal" data-reveal>
-          <h2>Questions buyers ask.</h2>
-          <div data-reveal-stagger>
-            {FAQ.map(({ question, answer }) => (
-              <details key={question}>
-                <summary>
-                  {question}
-                  <span className="material-symbols-outlined">expand_more</span>
-                </summary>
-                <div className="faq-content">
-                  <p>{answer}</p>
-                </div>
-              </details>
-            ))}
-          </div>
+    <section
+      className="faq aurora-faq"
+      id="faq"
+      data-bridge-section
+      style={{ '--bridge-accent': 'var(--violet)' } as CSSProperties}
+    >
+      <div className="wrap narrow reveal" data-reveal>
+        <h2>Questions buyers ask.</h2>
+        <div data-reveal-stagger>
+          {FAQ.map(({ question, answer }) => (
+            <details key={question}>
+              <summary>
+                {question}
+                <span className="material-symbols-outlined">expand_more</span>
+              </summary>
+              <div className="faq-content">
+                <p>{answer}</p>
+              </div>
+            </details>
+          ))}
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

@@ -46,7 +46,10 @@ export function playScenes(
   // after gsap.context has stopped recording. Running them through ctx.add
   // keeps them in the context, so the cleanup's revert kills them too.
   let ctx: ReturnType<GsapType['context']> | null = null;
-  const within: Within = (fn) => (ctx ? void ctx.add(fn) : fn());
+  const within: Within = (fn) => {
+    if (ctx) ctx.add(fn);
+    else fn();
+  };
   // The approval scene loops for as long as it is on screen, so its beats are
   // not recorded in the context (that list would grow every cycle); it keeps
   // only its live timeline and hands back a stop for the cleanup.
