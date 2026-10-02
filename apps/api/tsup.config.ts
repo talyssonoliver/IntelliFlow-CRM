@@ -12,6 +12,7 @@ export default defineConfig({
     '@intelliflow/application',
     '@intelliflow/db',
     '@intelliflow/domain',
+    '@intelliflow/partner-sdk',
     '@intelliflow/validators',
     '@prisma/client',
     '@trpc/server',

@@ -16,6 +16,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
+import { seatUserWhere } from '@intelliflow/db';
 import {
   createTRPCRouter,
   tenantProcedure,
@@ -1175,7 +1176,8 @@ export const billingRouter = createTRPCRouter({
       notificationCount,
     ] = await Promise.all([
       // CRM
-      db.user.count({ where: { tenantId } }),
+      // Seats (ADR-071): home users + live non-pinned members; pinned staff take no seat.
+      db.user.count({ where: seatUserWhere(tenantId) }),
       db.contact.count({ where: { tenantId } }),
       db.lead.count({ where: { tenantId } }),
       db.account.count({ where: { tenantId } }),

@@ -16,9 +16,28 @@ import { z } from 'zod';
 import type { PrismaClient } from '@intelliflow/db';
 import type { ModuleAccessPort, TenantUsagePort } from '@intelliflow/application';
 import { createTRPCRouter, partnerProcedure, requirePartnerScope } from '../../trpc';
-import { supabaseAdmin } from '../../lib/supabase';
-import { getPlatformAdminEmails, type PartnerContext } from '../../security/partner-auth';
 import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
+import { issueLoginLink } from './login-link';
+import { listMembers, removeMember, setMemberRole } from './members';
+import {
+  assertNotOperatorEmail,
+  discardAuthUser,
+  ensureAuthUser,
+  isUniqueViolation,
+  loadPartnerTenant,
+  normalizeEmail,
+  resolveLoginLinkNext,
+  type EnsuredAuthUser,
+} from './partner-helpers';
+import {
+  assertSeatAvailable,
+  invalidateUserSessions,
+  resolveTenantAccess,
+  writeAudit,
+} from './membership';
+
+// `resolveLoginLinkNext` lives in partner-helpers; re-exported because callers and tests import it here.
+export { resolveLoginLinkNext };
 
 // ============================================================================
 // Contract
@@ -75,8 +94,57 @@ export const issueLoginLinkInput = z.object({
   tenantId: z.string().min(1),
   email: z.string().email(),
   redirectTo: z.string().url().optional(),
+  assertion: z.string().min(1).max(4096).optional(),
 });
-export const issueLoginLinkOutput = z.object({ url: z.string().url(), expiresAt: z.string() });
+export const issueLoginLinkOutput = z.object({
+  url: z.string().url(),
+  expiresAt: z.string(),
+  pinned: z.boolean().optional(),
+  role: z.enum(['ADMIN', 'MEMBER']).optional(),
+});
+
+const memberRole = z.enum(['ADMIN', 'MEMBER']);
+const membershipSource = z.enum([
+  'HOME',
+  'PORTAL_MEMBER',
+  'PORTAL_STAFF',
+  'OWNER_INVITE',
+  'PARTNER_CREATED',
+]);
+
+export const removeMemberInput = z.object({
+  tenantId: z.string().min(1),
+  email: z.string().email(),
+});
+export const removeMemberOutput = z.object({ removed: z.boolean() });
+
+export const setMemberRoleInput = z.object({
+  tenantId: z.string().min(1),
+  email: z.string().email(),
+  role: memberRole,
+});
+export const setMemberRoleOutput = z.object({
+  userId: z.string(),
+  role: memberRole,
+  changed: z.boolean(),
+});
+
+export const listMembersInput = z.object({ tenantId: z.string().min(1) });
+export const listMembersOutput = z.object({
+  tenantId: z.string(),
+  members: z.array(
+    z.object({
+      userId: z.string(),
+      email: z.string(),
+      name: z.string().nullable(),
+      role: memberRole,
+      source: membershipSource,
+      pinned: z.boolean(),
+      expiresAt: z.string().nullable(),
+      createdAt: z.string(),
+    })
+  ),
+});
 
 export const getUsageInput = z.object({ tenantId: z.string().min(1) });
 
@@ -102,111 +170,11 @@ export const getUsageOutput = z.object({
 
 type Plan = z.infer<typeof planOutput>;
 
-/** Supabase magic links live as long as the project's OTP expiry (default 1h). */
-const LOGIN_LINK_TTL_SECONDS = Number(process.env.PARTNER_LOGIN_LINK_TTL_SECONDS) || 3600;
-
-function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
 function slugify(name: string): string {
   let slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   if (slug.startsWith('-')) slug = slug.slice(1);
   if (slug.endsWith('-')) slug = slug.slice(0, -1);
   return slug.slice(0, 48) || 'org';
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return (error as { code?: string } | null)?.code === 'P2002';
-}
-
-function assertNotOperatorEmail(email: string): void {
-  // A partner must never be able to mint an account for a platform operator's address.
-  if (getPlatformAdminEmails().has(email)) {
-    throw new TRPCError({
-      code: 'CONFLICT',
-      message: 'This email address is reserved and cannot be provisioned by a partner.',
-    });
-  }
-}
-
-/** Load a tenant and enforce that the calling partner sourced it. */
-async function loadPartnerTenant(prisma: PrismaClient, partner: PartnerContext, tenantId: string) {
-  const tenant = await prisma.tenant.findUnique({
-    where: { id: tenantId },
-    select: { id: true, slug: true, plan: true, status: true, partnerId: true },
-  });
-  if (!tenant) {
-    throw new TRPCError({ code: 'NOT_FOUND', message: 'Tenant not found.' });
-  }
-  if (tenant.partnerId !== partner.id) {
-    throw new TRPCError({
-      code: 'FORBIDDEN',
-      message: 'This tenant was not sourced by your partner.',
-    });
-  }
-  return tenant;
-}
-
-interface EnsuredAuthUser {
-  id: string;
-  created: boolean;
-}
-
-/**
- * Create a confirmed Supabase Auth user for the email, so a magic link can sign them in.
- * Never adopts an Auth user this request did not create: an existing identity could belong to
- * someone unrelated to the partner, and attaching it to a partner tenant (then minting a
- * login link) would be an account takeover. An existing email is a CONFLICT instead.
- */
-async function ensureAuthUser(email: string, name?: string): Promise<EnsuredAuthUser> {
-  const { data, error } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    email_confirm: true,
-    user_metadata: name ? { name } : {},
-  });
-  if (data?.user && !error) {
-    return { id: data.user.id, created: true };
-  }
-
-  const alreadyExists =
-    (error as { code?: string } | null)?.code === 'email_exists' ||
-    /already (been )?registered/i.test(error?.message ?? '');
-  if (alreadyExists) {
-    throw new TRPCError({
-      code: 'CONFLICT',
-      message:
-        'EMAIL_IN_USE: this email belongs to an existing account. ' +
-        'Invite the owner by email instead.',
-      cause: { code: 'EMAIL_IN_USE' },
-    });
-  }
-
-  console.error('[partner] Supabase user provisioning failed:', error?.message);
-  throw new TRPCError({
-    code: 'INTERNAL_SERVER_ERROR',
-    message: 'Could not provision the user account.',
-  });
-}
-
-/**
- * Best-effort removal of an Auth user this request created, after the CRM write failed.
- * Never deletes an Auth user that a committed CRM user row already references: another
- * request may have adopted the same Supabase identity, and deleting it would lock that
- * tenant's owner out.
- */
-async function discardAuthUser(prisma: PrismaClient, user: EnsuredAuthUser): Promise<void> {
-  if (!user.created) return;
-  try {
-    const referenced = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-    if (referenced) return;
-    await supabaseAdmin.auth.admin.deleteUser(user.id);
-  } catch (err) {
-    console.warn('[partner] Failed to clean up Auth user after a failed write:', err);
-  }
 }
 
 /** Reserve a unique slug: the requested one must be free; a derived one gets a suffix. */
@@ -421,7 +389,7 @@ export const partnerRouter = createTRPCRouter({
 
       const existing = await prisma.user.findUnique({
         where: { email },
-        select: { id: true, tenantId: true },
+        select: { id: true, tenantId: true, role: true },
       });
       if (existing) {
         if (existing.tenantId !== input.tenantId) {
@@ -429,6 +397,31 @@ export const partnerRouter = createTRPCRouter({
             code: 'CONFLICT',
             message: 'This email already belongs to an account in another tenant.',
           });
+        }
+        // The Portal inviting a person it removed earlier revives them (ADR-071): the removal
+        // left a revoked HOME row, which would otherwise keep them out for good.
+        const access = await resolveTenantAccess(prisma, existing, input.tenantId);
+        if (!access.live && access.row) {
+          await prisma.$transaction(
+            async (rawTx) => {
+              const tx = rawTx as PrismaClient;
+              await assertSeatAvailable(tx, ctx.services?.quota, input.tenantId);
+              await tx.tenantMembership.update({
+                where: { userId_tenantId: { userId: existing.id, tenantId: input.tenantId } },
+                data: { revokedAt: null, expiresAt: null },
+              });
+              await writeAudit(tx, {
+                tenantId: input.tenantId,
+                userId: existing.id,
+                partnerId: partner.id,
+                action: 'MEMBER_ATTACHED',
+                actor: `partner:${partner.slug}`,
+                detail: { revived: true, via: 'inviteMember' },
+              });
+            },
+            { maxWait: 10_000, timeout: 30_000 }
+          );
+          await invalidateUserSessions(existing.id);
         }
         return { userId: existing.id, created: false };
       }
@@ -468,44 +461,25 @@ export const partnerRouter = createTRPCRouter({
     .use(requirePartnerScope('auth:login-link'))
     .input(issueLoginLinkInput)
     .output(issueLoginLinkOutput)
-    .mutation(async ({ ctx, input }) => {
-      await loadPartnerTenant(ctx.prisma, ctx.partner, input.tenantId);
-      const email = normalizeEmail(input.email);
-      // Platform-operator rights derive from the verified email (PLATFORM_ADMIN_EMAILS), so a
-      // magic link for an operator address would hand a partner platform-admin access even
-      // when that operator's user row sits in a partner-sourced tenant.
-      assertNotOperatorEmail(email);
+    .mutation(({ ctx, input }) => issueLoginLink(ctx as never, input)),
 
-      const member = await ctx.prisma.user.findUnique({
-        where: { email },
-        select: { tenantId: true },
-      });
-      if (!member || member.tenantId !== input.tenantId) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'This user is not a member of the tenant.',
-        });
-      }
+  removeMember: partnerProcedure
+    .use(requirePartnerScope('members:write'))
+    .input(removeMemberInput)
+    .output(removeMemberOutput)
+    .mutation(({ ctx, input }) => removeMember(ctx as never, input)),
 
-      const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'magiclink',
-        email,
-        options: input.redirectTo ? { redirectTo: input.redirectTo } : undefined,
-      });
-      const url = data?.properties?.action_link;
-      if (error || !url) {
-        console.error('[partner] generateLink failed:', error?.message);
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Could not issue a login link.',
-        });
-      }
+  setMemberRole: partnerProcedure
+    .use(requirePartnerScope('members:write'))
+    .input(setMemberRoleInput)
+    .output(setMemberRoleOutput)
+    .mutation(({ ctx, input }) => setMemberRole(ctx as never, input)),
 
-      return {
-        url,
-        expiresAt: new Date(Date.now() + LOGIN_LINK_TTL_SECONDS * 1000).toISOString(),
-      };
-    }),
+  listMembers: partnerProcedure
+    .use(requirePartnerScope('tenants:read'))
+    .input(listMembersInput)
+    .output(listMembersOutput)
+    .query(({ ctx, input }) => listMembers(ctx as never, input)),
 
   getUsage: partnerProcedure
     .use(requirePartnerScope('usage:read'))

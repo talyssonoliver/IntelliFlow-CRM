@@ -72,4 +72,38 @@ describe('Prisma migration RLS coverage', () => {
     expect(sql).not.toMatch(/UPDATE "tenants"/);
     expect(sql).toContain('No backfill of tenants.plan');
   });
+
+  it('locks the ADR-071 membership tables away from anon and authenticated (no policy)', () => {
+    const sql = readFileSync(
+      path.join(migrationsDir, '20261001120000_tenant_memberships', 'migration.sql'),
+      'utf8'
+    );
+
+    for (const table of [
+      'tenant_memberships',
+      'partner_login_grants',
+      'tenant_membership_audits',
+    ]) {
+      expect(sql).toContain(`ALTER TABLE "${table}" ENABLE ROW LEVEL SECURITY;`);
+      expect(sql).toContain(`REVOKE ALL ON TABLE "${table}" FROM anon, authenticated;`);
+      // Read before any tenant context exists: a tenant policy cannot apply, so deny by default.
+      expect(sql).not.toMatch(new RegExp(`CREATE POLICY[^;]*ON "${table}"`, 'i'));
+    }
+  });
+
+  it('keeps the ADR-071 migration additive (Class A) and guards role and pinned in SQL', () => {
+    const sql = readFileSync(
+      path.join(migrationsDir, '20261001120000_tenant_memberships', 'migration.sql'),
+      'utf8'
+    );
+
+    expect(sql).not.toMatch(/\bDROP\b/i);
+    expect(sql).not.toMatch(/\bDELETE\s+FROM\b/i);
+    expect(sql).not.toMatch(/\bUPDATE\s+"/i);
+    expect(sql).toContain(`CHECK ("role" IN ('ADMIN', 'USER'))`);
+    expect(sql).toContain(`CHECK (("pinned" = false) OR ("source" = 'PORTAL_STAFF'))`);
+    expect(sql).toContain(`CHECK ("kind" IN ('member', 'staff', 'legacy'))`);
+    expect(sql).toMatch(/ADD COLUMN "assertionPublicKey" TEXT/);
+    expect(sql).toMatch(/ADD COLUMN "ownerTenantId" TEXT/);
+  });
 });

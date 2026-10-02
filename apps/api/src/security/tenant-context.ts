@@ -115,6 +115,29 @@ export function extractTenantContext(user: Context['user']): TenantContext {
  * This is the same risk the original code already had (non-atomic SET + query).
  * The application-layer `tenantId` WHERE filters in `createTenantWhereClause`
  * provide defense-in-depth and remain unaffected by this change.
+ *
+ * ADR-071 (inherited membership) and the pooled-SET race
+ * -------------------------------------------------------
+ * `tenantContext.tenantId` is the ACTIVE tenant of the request (`ctx.user.tenantId`), which is
+ * the home tenant unless the user acts through a membership (`x-active-tenant`) or a pinned
+ * staff session. One person can now have requests in DIFFERENT tenants in flight at once (two
+ * tabs, or a member and the same person at home), which makes the race above reachable by a
+ * single user:
+ *
+ *   request A (tenant X) first query -> SET app.current_tenant_id = X   (connection c1)
+ *   request B (tenant Y) first query -> SET app.current_tenant_id = Y   (c1, interleaved)
+ *   request A second query            -> runs on c1 with NO new SET, i.e. under Y
+ *
+ * The SET is session level and issued once per request, so A's later queries can run under B's
+ * tenant. Row Level Security therefore is NOT the tenant boundary here. What holds the boundary
+ * is the explicit `tenantId` filter every router adds (and the validated active-tenant
+ * resolution in context.ts): with RLS reading Y and the filter asking for X, no row of Y can
+ * come back to A. Never write a tenant-scoped query that relies on the SET alone.
+ *
+ * `tests/integration/inherited-membership.test.ts` reproduces this deterministically on a
+ * one-connection pool, asserts the filtered query stays inside the active tenant, and pins the
+ * unfiltered behaviour so a future transaction-local binding (`set_config(..., true)` inside a
+ * transaction, which does not outlive the request) updates that test on purpose.
  */
 export function createTenantScopedPrisma(
   prisma: PrismaClient,

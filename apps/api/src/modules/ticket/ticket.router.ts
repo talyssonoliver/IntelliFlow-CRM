@@ -10,6 +10,7 @@
  */
 
 import { z } from 'zod';
+import { tenantUserWhere } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import {
@@ -867,7 +868,7 @@ export const ticketRouter = createTRPCRouter({
     const tenantId = ctx.tenant.tenantId;
 
     const users = await ctx.prismaWithTenant.user.findMany({
-      where: { tenantId },
+      where: tenantUserWhere(tenantId),
       select: {
         id: true,
         name: true,
