@@ -45,6 +45,7 @@ vi.mock('@/lib/shared/token-exchange', () => ({
   validateOAuthParams: (params: unknown) => mockValidateOAuthParams(params),
   storeSessionTokens: vi.fn(),
   clearSessionTokens: vi.fn(),
+  getStoredAccessToken: () => null,
 }));
 
 // Mock login-security
