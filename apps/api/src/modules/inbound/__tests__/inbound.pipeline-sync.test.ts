@@ -120,7 +120,7 @@ describe('inboundRouter — syncPipelineLead', () => {
       coaStage: 'CONTACTED',
       status: 'CONTACTED',
       stageChangedAt: '2026-10-02T09:00:00.000Z',
-      syncKey: `coa-sync:${COA_LEAD_ID}:CONTACTED`,
+      syncKey: `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED`,
     });
   });
 
@@ -216,7 +216,7 @@ describe('inboundRouter — syncPipelineLead', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           leadId: LEAD_ID,
-          metadata: { path: ['syncKey'], equals: `coa-sync:${COA_LEAD_ID}:CONTACTED` },
+          metadata: { path: ['syncKey'], equals: `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED` },
         }),
       })
     );
