@@ -22,7 +22,12 @@ for (const width of [390, 1024, 1440]) {
       .toHaveAttribute('data-state', 'animated', { timeout: 15_000 })
       .then(() => true)
       .catch(() => false);
-    test.skip(!live, 'WebGL unavailable on this runner; the still images are shown instead');
+    if (!live) {
+      // No WebGL on this runner: the stills stand in, and there is nothing to pause.
+      await expect(background).toHaveAttribute('data-state', /^(static|still)$/);
+      await expect(page.getByRole('button', { name: /background animation/ })).toHaveCount(0);
+      return;
+    }
 
     const pause = page.getByRole('button', { name: 'Pause background animation' });
     await pause.scrollIntoViewIfNeeded();

@@ -11,27 +11,25 @@ const bridgeStyle = { '--bridge-accent': 'var(--navy)' } as CSSProperties;
  */
 export function ProofStrip() {
   return (
-    <>
-      <section className="proof proof-band" data-bridge-section style={bridgeStyle}>
-        <div className="wrap proof-row">
-          <div className="stat">
-            <b>15</b>
-            <span>agent types working the CRM, from lead scoring to email drafting</span>
-          </div>
-          <div className="stat">
-            <b>1</b>
-            <span>approval queue covering all six kinds of AI work, before anything ships</span>
-          </div>
-          <div className="stat">
-            <b>6</b>
-            <span>app connectors ready today, including Gmail, Slack and Stripe</span>
-          </div>
-          <div className="stat">
-            <b>212</b>
-            <span>product screens, from first lead to closed case</span>
-          </div>
+    <section className="proof proof-band" data-bridge-section style={bridgeStyle}>
+      <div className="wrap proof-row">
+        <div className="stat">
+          <b>15</b>
+          <span>agent types working the CRM, from lead scoring to email drafting</span>
         </div>
-      </section>
-    </>
+        <div className="stat">
+          <b>1</b>
+          <span>approval queue covering all six kinds of AI work, before anything ships</span>
+        </div>
+        <div className="stat">
+          <b>6</b>
+          <span>app connectors ready today, including Gmail, Slack and Stripe</span>
+        </div>
+        <div className="stat">
+          <b>212</b>
+          <span>product screens, from first lead to closed case</span>
+        </div>
+      </div>
+    </section>
   );
 }
