@@ -4,11 +4,11 @@ import { Card } from '@intelliflow/ui';
 import { ApplicationForm } from '@/components/shared/application-form';
 
 export const metadata: Metadata = {
-  title: 'Careers | IntelliFlow CRM',
+  title: 'Careers',
   description:
-    'Join the team building the future of AI-powered CRM. Explore open positions at IntelliFlow.',
+    'Join the team building the future of AI-powered CRM. Explore open positions at Aurora.',
   openGraph: {
-    title: 'Careers at IntelliFlow CRM',
+    title: 'Careers at Aurora',
     description:
       'Build the future of AI-first customer relationship management. View open positions.',
     type: 'website',
@@ -146,12 +146,12 @@ const values = [
 
 export default function CareersPage() {
   return (
-    <main id="main-content" className="bg-slate-50 dark:bg-slate-900 min-h-screen">
+    <div className="bg-slate-50 dark:bg-slate-900 min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37] text-white py-16 lg:py-24">
+      <section className="bg-gradient-to-br from-[#11175b] via-[#11175b] to-[#11175b] text-white py-16 lg:py-24">
         <div className="container px-4 lg:px-6 mx-auto max-w-auto">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#bca8ff] font-medium backdrop-blur mb-6">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 groups
               </span>
@@ -208,7 +208,7 @@ export default function CareersPage() {
             {jobListings.map((job) => (
               <Card
                 key={job.id}
-                className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-[#137fec] transition-colors"
+                className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-[#2a78f6] transition-colors"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                   <div className="space-y-2">
@@ -216,7 +216,7 @@ export default function CareersPage() {
                       <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                         {job.title}
                       </h3>
-                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#137fec]/10 text-[#137fec]">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#2a78f6]/10 text-[#2a78f6]">
                         {job.department}
                       </span>
                     </div>
@@ -239,7 +239,7 @@ export default function CareersPage() {
                   <div className="flex-shrink-0">
                     <Link
                       href={`#apply-${job.id}`}
-                      className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-[#137fec] text-white font-medium hover:bg-[#0e6ac7] transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2"
+                      className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-[#2a78f6] text-white font-medium hover:bg-[#1f63d4] transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2"
                     >
                       <span>Apply Now</span>
                       <span className="material-symbols-outlined text-lg" aria-hidden="true">
@@ -250,14 +250,14 @@ export default function CareersPage() {
                 </div>
 
                 <details className="mt-4">
-                  <summary className="cursor-pointer text-sm text-[#137fec] hover:underline">
+                  <summary className="cursor-pointer text-sm text-[#2a78f6] hover:underline">
                     View requirements
                   </summary>
                   <ul className="mt-3 space-y-1 text-sm text-slate-600 dark:text-slate-300">
                     {job.requirements.map((req) => (
                       <li key={req} className="flex items-start gap-2">
                         <span
-                          className="material-symbols-outlined text-base text-[#137fec] mt-0.5"
+                          className="material-symbols-outlined text-base text-[#2a78f6] mt-0.5"
                           aria-hidden="true"
                         >
                           check_circle
@@ -288,9 +288,9 @@ export default function CareersPage() {
                 key={benefit.title}
                 className="flex items-start gap-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-900"
               >
-                <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-[#2a78f6]/10 flex items-center justify-center flex-shrink-0">
                   <span
-                    className="material-symbols-outlined text-xl text-[#137fec]"
+                    className="material-symbols-outlined text-xl text-[#2a78f6]"
                     aria-hidden="true"
                   >
                     {benefit.icon}
@@ -312,7 +312,7 @@ export default function CareersPage() {
       <section id="apply" aria-labelledby="apply-heading" className="py-16">
         <div className="container px-4 lg:px-6 mx-auto max-w-3xl">
           <h2 id="apply-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-            Apply to IntelliFlow
+            Apply to Aurora
           </h2>
           <p className="text-slate-600 dark:text-slate-300 mb-8">
             Don&apos;t see the perfect role? We&apos;re always looking for exceptional talent. Send
@@ -321,6 +321,6 @@ export default function CareersPage() {
           <ApplicationForm positions={jobListings.map((j) => ({ id: j.id, title: j.title }))} />
         </div>
       </section>
-    </main>
+    </div>
   );
 }
