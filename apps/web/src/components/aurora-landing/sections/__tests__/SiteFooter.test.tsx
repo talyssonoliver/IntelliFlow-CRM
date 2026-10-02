@@ -57,6 +57,8 @@ describe('SiteFooter', () => {
       }
     }
     expect(nav.getByRole('link', { name: 'Platform' })).toHaveAttribute('href', '#platform');
+    // The help centre is an in-app module behind a plan gate: never sent to from here.
+    expect(nav.queryByRole('link', { name: /help/i })).toBeNull();
   });
 
   it('never links to a page that does not exist', () => {
