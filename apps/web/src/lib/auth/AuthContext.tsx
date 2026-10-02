@@ -34,6 +34,7 @@ import { getSupabaseProviderName } from './sso-handler';
 import { isTokenUsable } from './jwt';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
 import { AUTH_TOKEN_CHANGED_EVENT } from '@/lib/shared/session-cleanup';
+import { clearActiveTenant } from '@/lib/tenant/active-tenant';
 
 export type AuthMfaMethod = 'totp' | 'sms' | 'email' | 'backup';
 
@@ -542,6 +543,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
           // For enhanced security, consider HttpOnly cookies via Supabase Auth.
           // Trade-off: localStorage enables SPA auth without server-side sessions.
           if (typeof globalThis.window !== 'undefined') {
+            // ADR-071: a password sign-in starts in the user's home tenant. A selection left by
+            // an earlier session (a client CRM, a removed membership) must not ride along: every
+            // request would carry it and be rejected with NOT_A_MEMBER.
+            clearActiveTenant();
             storeSessionTokens(result.session.accessToken, result.session.refreshToken);
             // Sync to cookie for middleware/proxy and server components
             const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
@@ -731,6 +736,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
           // useRedirectIfAuthenticated navigates before the cookie lands in the
           // browser jar — producing a public-page flash on the post-redirect load.
           if (typeof globalThis.window !== 'undefined') {
+            clearActiveTenant();
             storeSessionTokens(result.session.accessToken, result.session.refreshToken);
             const { syncTokenToCookie } = await import('@/lib/shared/session-cleanup');
             syncTokenToCookie(result.session.accessToken);

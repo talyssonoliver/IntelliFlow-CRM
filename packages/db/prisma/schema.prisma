@@ -163,6 +163,10 @@ model Tenant {
   ticketRequiredFields   TicketRequiredField[]    @ignore
   ticketTags             TicketTag[]              @ignore
   ticketAutomationSettings TicketAutomationSetting[] @ignore
+  // ADR-071: inherited tenant membership
+  memberships            TenantMembership[]       @ignore
+  loginGrants            PartnerLoginGrant[]      @ignore
+  ownerOfPartners        Partner[]                @relation("PartnerOwnerTenant") @ignore
   aiMonitoringEvents     AIMonitoringEvent[]      @ignore
   customNodeTypes        CustomNodeType[]         @ignore
   customActionHandlers   CustomActionHandler[]    @ignore
@@ -302,9 +306,103 @@ model Partner {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  apiKeys PartnerApiKey[]
+  // ADR-071: trust anchors, set ONLY by operator scripts (never over HTTP).
+  assertionPublicKey String? // Ed25519 SPKI PEM
+  ownerTenantId      String? // the agency's own CRM tenant (home of its staff)
+  ownerTenant        Tenant? @relation("PartnerOwnerTenant", fields: [ownerTenantId], references: [id], onDelete: SetNull)
+
+  apiKeys     PartnerApiKey[]
+  memberships TenantMembership[]   @relation("MembershipGrantedBy")
+  loginGrants PartnerLoginGrant[]
 
   @@map("partners")
+}
+
+// ADR-071: how a membership came to exist.
+enum MembershipSource {
+  HOME            // lazily written row mirroring users.tenantId
+  PORTAL_MEMBER   // kind=member assertion
+  PORTAL_STAFF    // kind=staff assertion (pinned = true, expiring)
+  OWNER_INVITE    // tenant admin invited an existing identity
+  PARTNER_CREATED // identity created by partner.provisionTenant / inviteMember
+}
+
+enum MembershipAuditAction {
+  LINK_ISSUED
+  GRANT_CLAIMED
+  MEMBER_ATTACHED
+  MEMBER_REMOVED
+  ROLE_CHANGED
+  DENIED
+}
+
+// ADR-071: a user's right to act in a tenant OTHER than their home tenant
+// (users.tenantId). The home tenant is an implicit membership; a source=HOME row is
+// written lazily the first time a user is attached elsewhere. Read before any tenant
+// context exists, so RLS is enabled with no policy (see the migration).
+model TenantMembership {
+  id                 String           @id @default(cuid())
+  userId             String
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId           String
+  tenant             Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role               UserRole         @default(USER) // only ADMIN | USER are ever written
+  source             MembershipSource
+  grantedByPartnerId String?
+  grantedByPartner   Partner?         @relation("MembershipGrantedBy", fields: [grantedByPartnerId], references: [id], onDelete: SetNull)
+  pinned             Boolean          @default(false)
+  expiresAt          DateTime? // staff: now + 24h, refreshed on every link
+  revokedAt          DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@unique([userId, tenantId])
+  @@index([tenantId, revokedAt])
+  @@index([userId])
+  @@map("tenant_memberships")
+}
+
+// ADR-071: one row per issued login link. Doubles as the assertion replay store
+// (unique partnerId+jti) and as the pinned-session registry (claimedSessionId).
+model PartnerLoginGrant {
+  id               String    @id @default(cuid()) // the `grant` URL parameter
+  partnerId        String
+  partner          Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId         String
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  kind             String // 'member' | 'staff' | 'legacy' (key-only path, flag off)
+  role             UserRole
+  pinned           Boolean   @default(false)
+  jti              String? // null for kind=legacy
+  issuedAt         DateTime  @default(now())
+  expiresAt        DateTime // issuedAt + 15 min: the claim window
+  claimedAt        DateTime?
+  claimedSessionId String? // Supabase JWT `session_id`
+  sessionExpiresAt DateTime? // claimedAt + 12h for pinned grants
+
+  @@unique([partnerId, jti])
+  @@index([userId, claimedSessionId])
+  @@index([expiresAt])
+  @@map("partner_login_grants")
+}
+
+// ADR-071: append-only audit of grants, attachments and denials. `detail` never holds an
+// assertion or a token.
+model TenantMembershipAudit {
+  id        String                @id @default(cuid())
+  tenantId  String
+  userId    String?
+  partnerId String?
+  action    MembershipAuditAction
+  actor     String // 'partner:<slug>' | 'user:<id>' | 'system'
+  detail    Json?
+  createdAt DateTime              @default(now())
+
+  @@index([tenantId, createdAt])
+  @@index([userId, createdAt])
+  @@map("tenant_membership_audits")
 }
 
 // ADR-070: per-partner API key (sha256 hash only; plaintext is shown once at creation)
@@ -419,6 +517,10 @@ model User {
   mfaSettings         UserMfaSettings?
   sessions            Session[]
   termsAcceptances    TermsAcceptance[] @relation("UserTermsAcceptances") // IFC-309
+
+  // ADR-071: inherited tenant membership (home tenant stays users.tenantId)
+  memberships         TenantMembership[]
+  loginGrants         PartnerLoginGrant[]
 
   @@index([email])
   @@index([role])

@@ -1,9 +1,10 @@
-import type {
-  PrismaClient,
-  Ticket,
-  TicketStatus,
-  TicketPriority,
-  SLAStatus,
+import {
+  tenantUserWhere,
+  type PrismaClient,
+  type Ticket,
+  type TicketStatus,
+  type TicketPriority,
+  type SLAStatus,
 } from '@intelliflow/db';
 
 /**
@@ -194,7 +195,7 @@ export class TicketService {
       // Find assignees whose name matches the search term
       const matchingAssignees = await this.prisma.user.findMany({
         where: {
-          tenantId,
+          ...tenantUserWhere(tenantId),
           name: { contains: search, mode: 'insensitive' },
         },
         select: { id: true },
