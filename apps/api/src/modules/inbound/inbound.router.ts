@@ -443,10 +443,15 @@ async function upsertLeadByEmail(
   }
 ): Promise<{ leadId: string; leadCreated: boolean }> {
   const leadService = getLeadService(ctx);
+  // The Email value object stores addresses trimmed and lowercased, so a
+  // lookup with the caller's casing ('Sam@x.com') would miss the stored
+  // 'sam@x.com', createLead would then refuse it as a duplicate, and the
+  // race lookup below would miss it again: a failed merge, not a merge.
+  const email = input.email.trim().toLowerCase();
 
   // Fast path: lead already exists?
   const existing = await ctx.prisma.lead.findFirst({
-    where: { tenantId: input.tenantId, email: input.email },
+    where: { tenantId: input.tenantId, email },
     select: { id: true },
   });
   if (existing) {
@@ -454,7 +459,7 @@ async function upsertLeadByEmail(
   }
 
   const result = await leadService.createLead({
-    email: input.email,
+    email,
     firstName: input.firstName,
     lastName: input.lastName,
     company: input.company,
@@ -472,7 +477,7 @@ async function upsertLeadByEmail(
     if (/already exists/i.test(message)) {
       // Race: another request created the lead between our check and create
       const raceExisting = await ctx.prisma.lead.findFirst({
-        where: { tenantId: input.tenantId, email: input.email },
+        where: { tenantId: input.tenantId, email },
         select: { id: true },
       });
       if (raceExisting) {
@@ -1017,6 +1022,24 @@ export const inboundRouter = createTRPCRouter({
       for (const step of steps) {
         const result = await leadService.changeLeadStatus(leadId, step, COA_SYNC_USER);
         if (result.isFailure) {
+          // A concurrent sync of the same lead may have moved it first, which
+          // turns this step into an invalid transition. Re-read: if the lead
+          // is already at or past the target (or terminal), that request did
+          // the work and this one is a no-op, not an error.
+          const now = await ctx.prisma.lead.findFirst({
+            where: { id: leadId, tenantId },
+            select: { status: true },
+          });
+          if (now && planPipelineSteps(now.status, input.status).length === 0) {
+            return {
+              leadId,
+              tenantId,
+              created: leadCreated,
+              previousStatus: currentStatus,
+              status: now.status as PipelineLeadStatus,
+              changed: false,
+            };
+          }
           throw new TRPCError({ code: 'BAD_REQUEST', message: result.error.message });
         }
         status = step;
