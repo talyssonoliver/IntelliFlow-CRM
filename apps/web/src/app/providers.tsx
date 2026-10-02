@@ -9,6 +9,13 @@ import { TimezoneProvider } from '@/providers/TimezoneProvider';
 import { RemindersProvider } from '@/lib/cases/reminders-context';
 import { AUTH_TOKEN_CHANGED_EVENT, clearTokenCookie } from '@/lib/shared/session-cleanup';
 import { requiredProdEnv } from '@/lib/required-url';
+import {
+  ACTIVE_TENANT_HEADER,
+  activeTenantHeaders,
+  clearActiveTenant,
+  getActiveTenantId,
+  isNotAMemberError,
+} from '@/lib/tenant/active-tenant';
 // NOTE: We use a custom tRPC setup instead of TRPCProvider from @intelliflow/api-client
 // because we need:
 // - WebSocket support for real-time subscriptions
@@ -162,8 +169,12 @@ function getWsClient() {
         connectionParams: () => {
           // Only include Authorization if token is valid (not expired)
           const accessToken = getValidAccessToken();
+          // ADR-071: the active tenant travels with the connection (the WS server reads it from
+          // the connection params, as it does `authorization`). A selection change reloads the
+          // page, which opens a fresh connection.
           return {
             authorization: accessToken ? `Bearer ${accessToken}` : undefined,
+            [ACTIVE_TENANT_HEADER]: getActiveTenantId() ?? undefined,
           };
         },
         onOpen: () => {
@@ -200,9 +211,27 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
     // Clear invalid token
     localStorage.removeItem('accessToken');
     clearTokenCookie();
+    // ADR-071: and the active-tenant selection that went with it (an ended pinned session, a
+    // revoked membership). Signing in again must start from the home tenant.
+    clearActiveTenant();
 
     // Redirect to login
     globalThis.location.href = '/login';
+  }, []);
+
+  /**
+   * ADR-071: a stored active-tenant selection the API no longer accepts (membership revoked or
+   * expired) must not wedge the whole app. Drop it and reload into the home tenant. Clearing
+   * first makes this a one-shot: with no selection stored the next request cannot fail the same
+   * way, so there is no reload loop.
+   */
+  const handleStaleTenantSelection = useCallback((error: unknown) => {
+    if (typeof globalThis.window === 'undefined') return;
+    if (!isNotAMemberError(error) || !getActiveTenantId()) return;
+
+    console.warn('[Tenant] Active tenant no longer accepted, returning to the home tenant');
+    clearActiveTenant();
+    globalThis.location.reload();
   }, []);
 
   useEffect(() => {
@@ -256,6 +285,7 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
             if (isAuthError(error) && !isAuthStatusQuery) {
               handleAuthError();
             }
+            handleStaleTenantSelection(error);
           },
         }),
         // Global mutation cache error handler
@@ -264,6 +294,7 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
             if (isAuthError(error)) {
               handleAuthError();
             }
+            handleStaleTenantSelection(error);
           },
         }),
       })
@@ -290,6 +321,8 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
                 // ADR-053: forward a request-correlation id so the API tracing
                 // middleware + query-budget events correlate on a boundary id.
                 'x-request-id': generateRequestId(),
+                // ADR-071: the tenant the user is acting in (absent = home tenant)
+                ...activeTenantHeaders(),
               };
 
               // Only include Authorization header if token is valid (not expired)
@@ -313,6 +346,8 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
               'x-trpc-source': 'react',
               // ADR-053: forward a request-correlation id (see above).
               'x-request-id': generateRequestId(),
+              // ADR-071: the tenant the user is acting in (absent = home tenant)
+              ...activeTenantHeaders(),
             };
 
             // Only include Authorization header if token is valid (not expired)

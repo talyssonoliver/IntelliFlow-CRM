@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 // IFC-312 audit fix F7: type the listReplyDrafts .map() result instead of `any`.
 import type { ContactReplyDraft } from '@intelliflow/db';
+import { tenantUserWhere } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   assertCanDeleteContact,
@@ -2227,7 +2228,7 @@ export const contactRouter = createTRPCRouter({
       // Pre-validate target user once (one query, not N). Finding 3 — lookup
       // miss is NOT_FOUND, not authz denial. Dropped misleading audit call.
       const targetUser = await typedCtx.prismaWithTenant.user.findFirst({
-        where: { id: input.ownerId, tenantId },
+        where: { id: input.ownerId, ...tenantUserWhere(tenantId) },
         select: { id: true },
       });
       if (!targetUser) {

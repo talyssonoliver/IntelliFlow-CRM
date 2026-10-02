@@ -15,6 +15,7 @@
  */
 
 import { getTokenMaxAgeSeconds } from '@/lib/auth/jwt';
+import { ACTIVE_TENANT_STORAGE_KEY, clearActiveTenant } from '@/lib/tenant/active-tenant';
 
 // ============================================
 // Types
@@ -54,6 +55,8 @@ const AUTH_STORAGE_KEYS = [
   'userRole',
   'mfaVerified',
   'lastActivity',
+  // ADR-071: the active-tenant selection belongs to the signed-in user, not the browser.
+  ACTIVE_TENANT_STORAGE_KEY,
 ] as const;
 
 export const AUTH_TOKEN_CHANGED_EVENT = 'intelliflow-auth-token-changed';
@@ -521,6 +524,12 @@ export async function cleanupSession(options: CleanupOptions = {}): Promise<Clea
   };
 
   try {
+    // ADR-071: forget the active-tenant selection (localStorage + SSR cookie). A selection
+    // outliving the session would be sent for the next user and fail with NOT_A_MEMBER.
+    if (opts.clearLocalStorage || opts.clearCookies) {
+      clearActiveTenant();
+    }
+
     // Clear localStorage
     if (opts.clearLocalStorage) {
       result.clearedItems.localStorage = clearLocalStorage(opts.preservePreferences);

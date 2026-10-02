@@ -9,6 +9,8 @@ import {
   SearchBar,
   UserMenu,
   Notifications,
+  TenantSwitcher,
+  PinnedTenantBanner,
   type NavRoute,
 } from './header';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -62,6 +64,8 @@ export function Navigation() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
+      {/* ADR-071: shown only for a pinned Portal-grant session */}
+      <PinnedTenantBanner />
       <div className="flex h-16 items-center px-4 lg:px-6">
         {/* Logo */}
         <div className="mr-8">
@@ -92,6 +96,9 @@ export function Navigation() {
 
         {/* Notifications - count is managed via RemindersContext */}
         <Notifications />
+
+        {/* ADR-071: tenant switcher (hidden with a single tenant, disabled while pinned) */}
+        <TenantSwitcher className="ml-2" />
 
         {/* User Menu */}
         <UserMenu className="ml-2" />

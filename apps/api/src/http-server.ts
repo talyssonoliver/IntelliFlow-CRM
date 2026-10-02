@@ -139,7 +139,7 @@ function applyCorrelationHeaders(res: ServerResponse): void {
 
 const CORS_ALLOWED_METHODS = 'GET, POST, OPTIONS, HEAD';
 const CORS_ALLOWED_HEADERS =
-  'authorization, content-type, x-trpc-source, x-request-id, x-correlation-id';
+  'authorization, content-type, x-trpc-source, x-request-id, x-correlation-id, x-active-tenant';
 
 /**
  * Build the allowed-origin set from env (comma-separated `CORS_ALLOWED_ORIGINS`

@@ -38,7 +38,29 @@ describe('PrismaQuotaRepository', () => {
     await expect(repo.countContacts('t1')).resolves.toBe(7);
     await expect(repo.countUsers('t1')).resolves.toBe(2);
     expect(prisma.contact.count).toHaveBeenCalledWith({ where: { tenantId: 't1' } });
-    expect(prisma.user.count).toHaveBeenCalledWith({ where: { tenantId: 't1' } });
+    expect(prisma.user.count).toHaveBeenCalledWith({ where: expect.any(Object) });
+  });
+
+  it('counts seats as home users plus live non-pinned members, never pinned staff (ADR-071)', async () => {
+    prisma.user.count.mockResolvedValue(3);
+    await repo.countUsers('t1');
+
+    const { where } = prisma.user.count.mock.calls[0]![0] as { where: { OR: any[] } };
+    const [homeBranch, memberBranch] = where.OR;
+
+    // Home users, minus anyone whose home membership was revoked by removeMember.
+    expect(homeBranch.tenantId).toBe('t1');
+    expect(homeBranch.NOT).toEqual({
+      memberships: { some: { tenantId: 't1', revokedAt: { not: null } } },
+    });
+
+    // Attached members: live, not the lazy HOME row, and NEVER pinned (staff take no seat).
+    const live = memberBranch.memberships.some;
+    expect(live.tenantId).toBe('t1');
+    expect(live.pinned).toBe(false);
+    expect(live.source).toEqual({ not: 'HOME' });
+    expect(live.revokedAt).toBeNull();
+    expect(live.OR).toEqual([{ expiresAt: null }, { expiresAt: { gt: expect.any(Date) } }]);
   });
 
   it('counts only active, non-deleted workflows', async () => {

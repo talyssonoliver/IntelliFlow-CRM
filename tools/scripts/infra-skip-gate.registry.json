@@ -43,6 +43,13 @@
       "maxSkipped": 19,
       "reviewBy": "2026-10-31",
       "reason": "ADR-054: ENG-OPS-002.R17 — the SAP ERP adapter suite is scheduled for deletion under R17 and is already declared in tools/scripts/flaky-test-gate.allowlist.json for the same reason. Remove this entry together with that one when R17 lands."
+    },
+    {
+      "file": "tests/integration/inherited-membership.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 16,
+      "reviewBy": "2026-10-31",
+      "reason": "ADR-054: #658 — ADR-071 real-database suite (tenant memberships, pooled SET app.current_tenant_id race). Needs the local test DB (DATABASE_TEST_URL, localhost:5433) with migration 20261001120000_tenant_memberships applied; it probes and skips when that DB is absent. Ran 16/16 locally on 2026-10-01."
     }
   ]
 }

@@ -196,9 +196,15 @@ describe('ticketRouter', () => {
 
       const result = await caller.assignees();
 
+      // ADR-071: home users of the tenant OR users with a live membership in it.
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { tenantId: TENANT_UUID },
+          where: {
+            OR: [
+              expect.objectContaining({ tenantId: TENANT_UUID }),
+              { memberships: { some: expect.objectContaining({ tenantId: TENANT_UUID }) } },
+            ],
+          },
         })
       );
       expect(result).toEqual([
