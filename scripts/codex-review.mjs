@@ -652,6 +652,9 @@ ${diffText || '(no diff output — check base ref)'}
 
   if (codexUsable) {
     process.stdout.write('[codex-review] Running Codex review (headless, OAuth) ...\n');
+    // A previous run's last message must never be read as this run's verdict: when codex
+    // exits without writing one (quota cap, crash), the stale file would replay old findings.
+    fs.rmSync(lastMsgPath, { force: true });
     const r = spawnSync('codex', ['exec', '-', '--ephemeral', '-o', lastMsgPath], {
       encoding: 'utf8',
       input: fullPrompt,
