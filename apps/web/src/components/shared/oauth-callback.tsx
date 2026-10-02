@@ -101,8 +101,24 @@ function withTimeout<T>(promise: Promise<T>, ms: number = STEP_TIMEOUT_MS): Prom
 
 type BrowserSupabase = NonNullable<ReturnType<typeof getSupabaseBrowserClient>>;
 
-/** Sign out the local session and wipe every local trace of it. Never throws. */
-async function dropSession(supabase: BrowserSupabase): Promise<void> {
+/**
+ * Remove a session this callback produced but will not sign in with. Never throws.
+ *
+ * Scoped to that session: the cleanup can run after the user has left the error screen and
+ * signed in some other way. When the app already holds a different session, signing out would
+ * emit SIGNED_OUT, which AuthContext treats as a sign-out of THAT session; so only the
+ * abandoned session's copy in the SDK's storage is removed, silently. Otherwise the session is
+ * signed out locally and every local trace of it is wiped.
+ */
+async function dropAbandonedSession(
+  supabase: BrowserSupabase,
+  abandonedAccessToken: string
+): Promise<void> {
+  const current = getStoredAccessToken();
+  if (current && current !== abandonedAccessToken) {
+    clearSupabaseLocalStorage();
+    return;
+  }
   try {
     await withTimeout(supabase.auth.signOut({ scope: 'local' }));
   } catch {
@@ -143,10 +159,13 @@ function normalizeClaimError(claimError: unknown): Error {
  */
 function discardLateSession(
   supabase: BrowserSupabase,
-  pending: Promise<{ data: { session: unknown } | null }>
+  pending: Promise<{ data: { session: { access_token: string } | null } | null }>
 ): void {
   pending
-    .then((late) => (late.data?.session ? dropSession(supabase) : undefined))
+    .then((late) => {
+      const token = late.data?.session?.access_token;
+      return token ? dropAbandonedSession(supabase, token) : undefined;
+    })
     .catch(() => undefined);
 }
 
@@ -156,10 +175,11 @@ function discardLateSession(
  */
 async function abandonedByWatchdog(
   aborted: { readonly current: boolean },
-  supabase: BrowserSupabase
+  supabase: BrowserSupabase,
+  session: { access_token: string } | null | undefined
 ): Promise<boolean> {
   if (!aborted.current) return false;
-  await dropSession(supabase);
+  if (session) await dropAbandonedSession(supabase, session.access_token);
   return true;
 }
 
@@ -343,7 +363,7 @@ export function OAuthCallback({
       discardLateSession(supabase, verification);
       throw verifyError;
     }
-    if (await abandonedByWatchdog(abortedRef, supabase)) return;
+    if (await abandonedByWatchdog(abortedRef, supabase, result.data?.session)) return;
     const { data, error } = result;
 
     if (error || !data?.session) {
@@ -363,10 +383,10 @@ export function OAuthCallback({
         const claim = await withTimeout(claimLoginGrant(data.session.access_token, pending.grant));
         activeTenantId = claim.tenantId;
       } catch (claimError) {
-        await dropSession(supabase);
+        await dropAbandonedSession(supabase, data.session.access_token);
         throw normalizeClaimError(claimError);
       }
-      if (await abandonedByWatchdog(abortedRef, supabase)) return;
+      if (await abandonedByWatchdog(abortedRef, supabase, data.session)) return;
     }
 
     pendingNextRef.current = pending.next;
@@ -482,7 +502,7 @@ export function OAuthCallback({
         discardLateSession(supabase, sessionRequest);
         throw sessionTimeout;
       }
-      if (await abandonedByWatchdog(abortedRef, supabase)) return;
+      if (await abandonedByWatchdog(abortedRef, supabase, sessionResult.data?.session)) return;
       const { data, error: sessionError } = sessionResult;
 
       if (sessionError) {
@@ -502,10 +522,10 @@ export function OAuthCallback({
         ({ data: userData } = await withTimeout(supabase.auth.getUser(session.access_token)));
       } catch (userError) {
         // The exchanged session is already persisted: never leave it behind a failure screen.
-        await dropSession(supabase);
+        await dropAbandonedSession(supabase, session.access_token);
         throw userError;
       }
-      if (await abandonedByWatchdog(abortedRef, supabase)) return;
+      if (await abandonedByWatchdog(abortedRef, supabase, session)) return;
       finishSignIn(session, userData?.user ?? undefined, 'oauth');
     } catch (err) {
       reportError(err);

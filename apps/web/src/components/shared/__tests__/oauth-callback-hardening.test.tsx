@@ -20,6 +20,7 @@ const h = vi.hoisted(() => ({
   getStoredAccessToken: vi.fn(),
   storeSessionTokens: vi.fn(),
   clearSessionTokens: vi.fn(),
+  clearSupabaseLocalStorage: vi.fn(),
   query: { value: '' },
 }));
 
@@ -36,7 +37,7 @@ vi.mock('@/lib/supabase-browser', () => ({
       getUser: h.getUser,
     },
   }),
-  clearSupabaseLocalStorage: vi.fn(),
+  clearSupabaseLocalStorage: h.clearSupabaseLocalStorage,
 }));
 vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: h.storeSessionTokens,
@@ -229,6 +230,37 @@ describe('never hangs silently', () => {
     expect(h.signOut).toHaveBeenCalledTimes(2);
     expect(h.signOut).toHaveBeenLastCalledWith({ scope: 'local' });
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  it('a late result never signs out a session the user created after the failure', async () => {
+    vi.useFakeTimers();
+    let release: (v: unknown) => void = () => undefined;
+    h.verifyOtp.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        })
+    );
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_500);
+    });
+    expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
+
+    // The user went back to /login and signed in with a password: the app now holds that token.
+    h.getStoredAccessToken.mockReturnValue('password-session-token');
+    h.signOut.mockClear();
+    h.clearSessionTokens.mockClear();
+    h.clearSupabaseLocalStorage.mockClear();
+    await act(async () => {
+      release({ data: { session: SESSION, user: { id: 'u1' } }, error: null });
+      await vi.advanceTimersByTimeAsync(100);
+    });
+    // No SIGNED_OUT (AuthContext would wipe the new session), no app-token wipe: only the
+    // abandoned session's copy in the SDK's storage is removed.
+    expect(h.signOut).not.toHaveBeenCalled();
+    expect(h.clearSessionTokens).not.toHaveBeenCalled();
+    expect(h.clearSupabaseLocalStorage).toHaveBeenCalledTimes(1);
   });
 
   describe('a step that settles after the flow watchdog fired', () => {
