@@ -164,9 +164,13 @@ function gitDiffFiles(base) {
     stdio: ['ignore', 'pipe', 'pipe'],
     shell: process.platform === 'win32',
   });
-  const committed = r.status === 0
-    ? r.stdout.split('\n').map((f) => f.trim()).filter(Boolean)
-    : [];
+  const committed =
+    r.status === 0
+      ? r.stdout
+          .split('\n')
+          .map((f) => f.trim())
+          .filter(Boolean)
+      : [];
 
   // When base resolves to HEAD (e.g. --base=HEAD for self-test/local staging),
   // also include staged (cached) files so the gate catches staged-but-not-yet-
@@ -179,7 +183,12 @@ function gitDiffFiles(base) {
     shell: process.platform === 'win32',
   });
   if (staged.status === 0) {
-    stagedFiles.push(...staged.stdout.split('\n').map((f) => f.trim()).filter(Boolean));
+    stagedFiles.push(
+      ...staged.stdout
+        .split('\n')
+        .map((f) => f.trim())
+        .filter(Boolean)
+    );
   }
 
   // Merge: staged files are included when there are no committed diff files
