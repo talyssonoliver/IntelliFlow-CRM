@@ -95,6 +95,23 @@ describe('TrialBadge', () => {
     expect(screen.queryByTestId('trial-badge')).toBeNull();
   });
 
+  it('does NOT render for a partner-granted PARTNER_FREE plan (not a trial)', () => {
+    mockGetPlanState.mockReturnValue({
+      data: {
+        source: 'partner',
+        tier: 'PARTNER_FREE',
+        status: 'ACTIVE',
+        daysLeft: null,
+        trialEndsAt: null,
+        currentPeriodEnd: null,
+      },
+      isLoading: false,
+    });
+    render(<TrialBadge />);
+    expect(screen.queryByTestId('trial-badge')).toBeNull();
+    expect(screen.queryByText(/trial/i)).toBeNull();
+  });
+
   it('does NOT render when data is undefined (loading)', () => {
     mockGetPlanState.mockReturnValue({ data: undefined, isLoading: true });
     render(<TrialBadge />);

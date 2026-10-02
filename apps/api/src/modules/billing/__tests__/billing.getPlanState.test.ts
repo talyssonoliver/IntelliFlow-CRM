@@ -138,6 +138,50 @@ describe('billing.getPlanState — trial branch', () => {
 });
 
 // ============================================================
+// B2. getPlanState — partner-granted plan (not a trial)
+// ============================================================
+
+describe('billing.getPlanState — PARTNER_FREE branch', () => {
+  it('reports a partner plan with no trial dates for a PARTNER_FREE tenant', async () => {
+    prismaMock.stripeSubscription.findFirst.mockResolvedValue(null);
+    // Created today: the trial derivation would have said "14 days left".
+    prismaMock.tenant.findUnique.mockResolvedValue({
+      createdAt: new Date(),
+      plan: 'PARTNER_FREE',
+    } as any);
+
+    const caller = billingRouter.createCaller(createTestContext() as any);
+    const result = await caller.getPlanState();
+
+    expect(result).toEqual({
+      source: 'partner',
+      tier: 'PARTNER_FREE',
+      status: 'ACTIVE',
+      currentPeriodEnd: null,
+      trialEndsAt: null,
+      daysLeft: null,
+    });
+  });
+
+  it('selects the tenant plan so the partner branch can see it', async () => {
+    prismaMock.stripeSubscription.findFirst.mockResolvedValue(null);
+    prismaMock.tenant.findUnique.mockResolvedValue({
+      createdAt: new Date(),
+      plan: 'STARTER',
+    } as any);
+
+    const caller = billingRouter.createCaller(createTestContext() as any);
+    const result = await caller.getPlanState();
+
+    expect(prismaMock.tenant.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ select: expect.objectContaining({ plan: true }) })
+    );
+    // A non-partner plan with no paid subscription keeps the existing trial behaviour.
+    expect(result.source).toBe('trial');
+  });
+});
+
+// ============================================================
 // C. getPlanState — active subscription passthrough
 // ============================================================
 

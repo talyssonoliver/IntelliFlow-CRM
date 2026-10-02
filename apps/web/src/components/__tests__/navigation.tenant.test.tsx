@@ -11,9 +11,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const h = vi.hoisted(() => ({
   listTenants: { data: undefined as unknown, isLoading: false, isError: false },
+  pathname: '/dashboard',
 }));
 
-vi.mock('next/navigation', () => ({ usePathname: () => '/dashboard' }));
+vi.mock('next/navigation', () => ({ usePathname: () => h.pathname }));
 vi.mock('@/lib/auth/AuthContext', () => ({
   useAuth: () => ({ isAuthenticated: true, isLoading: false }),
 }));
@@ -68,7 +69,31 @@ function renderNav() {
 describe('Navigation tenant wiring', () => {
   beforeEach(() => {
     vi.stubEnv('NEXT_PUBLIC_INHERITED_MEMBERSHIP_ENABLED', '1');
+    h.pathname = '/dashboard';
   });
+
+  // The header (and so the banner) is mounted by the ROOT layout for every route; the settings and
+  // billing layouts only add a sidebar. A pinned staff member must see whose CRM they are in on
+  // those routes too, not only on the dashboard.
+  it.each(['/settings', '/settings/account', '/billing/settings'])(
+    'mounts the pinned banner on %s',
+    (pathname) => {
+      h.pathname = pathname;
+      h.listTenants = {
+        data: {
+          activeTenantId: 'tenant_client',
+          homeTenantId: 'tenant_home',
+          pinned: true,
+          tenants: [{ ...client, isActive: true, pinned: true, source: 'PORTAL_STAFF' }],
+        },
+        isLoading: false,
+        isError: false,
+      };
+      renderNav();
+
+      expect(screen.getByTestId('pinned-tenant-banner')).toHaveTextContent('Acme Plumbing');
+    }
+  );
 
   it('mounts the switcher for a user with several tenants, and no banner', () => {
     h.listTenants = {

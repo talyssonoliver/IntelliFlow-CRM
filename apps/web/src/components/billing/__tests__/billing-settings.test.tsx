@@ -55,6 +55,12 @@ vi.mock('@/lib/trpc', () => ({
   },
 }));
 
+const mockUseTenantMemberships = vi.fn(() => ({ pinned: false }));
+
+vi.mock('@/lib/tenant/use-tenant-memberships', () => ({
+  useTenantMemberships: () => mockUseTenantMemberships(),
+}));
+
 vi.mock('@/lib/auth/AuthContext', () => ({
   useAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
 }));
@@ -66,6 +72,30 @@ describe('BillingSettings', () => {
     vi.clearAllMocks();
     mockOnError = null;
     mockGetBillingInfo.mockReturnValue({ data: mockBillingInfo, isLoading: false, error: null });
+    mockUseTenantMemberships.mockReturnValue({ pinned: false });
+  });
+
+  describe('pinned session (ADR-071: billing is home-only)', () => {
+    it('shows a "not available" notice instead of an empty page in a pinned session', () => {
+      mockUseTenantMemberships.mockReturnValue({ pinned: true });
+      // The query is disabled while pinned: no data, not loading, no error.
+      mockGetBillingInfo.mockReturnValue({ data: undefined, isLoading: false, error: null });
+      render(<BillingSettings />);
+      expect(screen.getByTestId('billing-unavailable-notice')).toBeInTheDocument();
+      expect(screen.getByText(/billing is not available in this workspace/i)).toBeInTheDocument();
+      expect(screen.queryByLabelText(/organization/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /save changes/i })).not.toBeInTheDocument();
+    });
+
+    it('shows the notice when the API refuses billing as FORBIDDEN', () => {
+      const forbidden = Object.assign(new Error('not available'), {
+        data: { code: 'FORBIDDEN' },
+      });
+      mockGetBillingInfo.mockReturnValue({ data: undefined, isLoading: false, error: forbidden });
+      render(<BillingSettings />);
+      expect(screen.getByTestId('billing-unavailable-notice')).toBeInTheDocument();
+      expect(screen.queryByText(/failed to load/i)).not.toBeInTheDocument();
+    });
   });
 
   it('shows loading skeleton when data is loading', () => {

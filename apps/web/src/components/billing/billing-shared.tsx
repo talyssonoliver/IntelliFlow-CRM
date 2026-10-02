@@ -16,6 +16,7 @@ import {
   EmptyState as SharedEmptyState,
   type EmptyStateEntity,
 } from '@intelliflow/ui';
+import { getTenantMessages } from '@/lib/tenant/messages';
 
 /** Standard empty state following design system — delegates to shared EmptyState. */
 export function EmptyState({
@@ -24,6 +25,34 @@ export function EmptyState({
   entity = 'invoices',
 }: Readonly<{ icon: string; message?: string; entity?: EmptyStateEntity }>) {
   return <SharedEmptyState entity={entity} phase="passive" description={message} />;
+}
+
+/**
+ * Shown instead of a billing page when the API refuses billing to this session (ADR-071): a
+ * pinned agency-staff session inside a client's CRM, or a member acting outside their home
+ * tenant. Billing is home-only, so there is nothing to load; say so instead of a blank page.
+ */
+export function BillingUnavailableNotice() {
+  const messages = getTenantMessages();
+  return (
+    <div data-testid="billing-unavailable-notice">
+      <SharedEmptyState
+        icon="lock"
+        title={messages.billingUnavailableTitle}
+        description={messages.billingUnavailableBody}
+      />
+    </div>
+  );
+}
+
+/**
+ * True when a tRPC error is a FORBIDDEN refusal (the home-only rule refuses billing to a session
+ * acting inside another tenant).
+ */
+export function isForbiddenError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const data = (error as { data?: { code?: unknown } | null }).data;
+  return data?.code === 'FORBIDDEN';
 }
 
 /** Standard error state following design system alert pattern. */
