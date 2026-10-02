@@ -65,6 +65,7 @@
  */
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -973,6 +974,9 @@ function startWatchdog() {
       detached: true,
       stdio: 'ignore',
       windowsHide: true,
+      // Not the repo: on Windows a process's working directory cannot be
+      // deleted, and the watchdog can outlive the gate by a poll interval.
+      cwd: os.tmpdir(),
     });
     w.unref();
   } catch {
