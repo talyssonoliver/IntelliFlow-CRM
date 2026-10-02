@@ -274,6 +274,22 @@ describe('OnboardingWelcome', () => {
     }
   );
 
+  it('an OPEN modal is unmounted by client-side navigation to /auth/callback, and returns after', () => {
+    mockUsePathname.mockReturnValue('/dashboard');
+    const { rerender } = render(<OnboardingWelcome />);
+    const dialog = screen.getByTestId('onboarding-dialog') as HTMLDialogElement;
+    expect(dialog.open).toBe(true);
+
+    mockUsePathname.mockReturnValue('/auth/callback');
+    rerender(<OnboardingWelcome />);
+    expect(screen.queryByTestId('onboarding-dialog')).toBeNull();
+    expect(screen.queryByText(/welcome, alice/i)).toBeNull();
+
+    mockUsePathname.mockReturnValue('/dashboard');
+    rerender(<OnboardingWelcome />);
+    expect((screen.getByTestId('onboarding-dialog') as HTMLDialogElement).open).toBe(true);
+  });
+
   it('does NOT open on a public marketing/legal route (e.g. /pricing)', () => {
     // The modal is scoped to "/" + protected app routes; it must not interrupt an
     // authenticated user merely browsing marketing/legal pages.
