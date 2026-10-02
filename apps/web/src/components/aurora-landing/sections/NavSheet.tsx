@@ -6,7 +6,7 @@ import * as React from 'react';
  * The phone menu: a native <details> sheet that also closes when the visitor
  * taps anywhere outside it, presses Escape, or follows one of its links.
  */
-export function NavSheet({ children }: { children: React.ReactNode }) {
+export function NavSheet({ children }: Readonly<{ children: React.ReactNode }>) {
   const ref = React.useRef<HTMLDetailsElement>(null);
 
   React.useEffect(() => {

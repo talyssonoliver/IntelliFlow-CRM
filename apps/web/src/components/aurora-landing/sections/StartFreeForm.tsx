@@ -14,7 +14,7 @@ export function StartFreeForm() {
   const router = useRouter();
   const [email, setEmail] = React.useState('');
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     rememberSignupEmail(email);
     router.push('/signup');

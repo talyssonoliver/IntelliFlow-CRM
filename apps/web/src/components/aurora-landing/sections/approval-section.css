@@ -191,15 +191,15 @@
   color: var(--blue);
 }
 .aurora-page .type-badge--sentiment {
-  background: rgba(40, 217, 212, 0.18);
+  background: #d8f8f7;
   color: #0a726d;
 }
 .aurora-page .type-badge--churn {
-  background: rgba(214, 69, 65, 0.12);
-  color: #c43b3b;
+  background: #fae9e8;
+  color: #b83838;
 }
 .aurora-page .type-badge--auto {
-  background: rgba(188, 168, 255, 0.28);
+  background: #ece7ff;
   color: #5b3fd6;
 }
 .aurora-page .type-badge--nba {
@@ -222,8 +222,8 @@
   font-size: 13px;
 }
 .aurora-page .sla-chip--red {
-  background: rgba(214, 69, 65, 0.12);
-  color: #c43b3b;
+  background: #fae9e8;
+  color: #b83838;
 }
 .aurora-page .review-sla {
   display: inline-flex;
@@ -231,8 +231,8 @@
   gap: 5px;
   font-size: 12px;
   font-weight: 800;
-  color: #c27c00;
-  background: rgba(245, 160, 0, 0.16);
+  color: #935e00;
+  background: #fdf0d6;
   padding: 5px 10px;
   border-radius: 999px;
 }
@@ -248,11 +248,11 @@
   font-size: 11px;
 }
 .aurora-page .state.review {
-  background: rgba(42, 120, 246, 0.14);
+  background: #e1ecfe;
   color: #1f5fce;
 }
 .aurora-page .state.breach {
-  background: rgba(214, 69, 65, 0.14);
+  background: #f9e5e4;
   color: #b3302c;
 }
 
@@ -373,6 +373,6 @@
   line-height: 1.55;
 }
 .aurora-page .state.pending {
-  background: rgba(245, 160, 0, 0.16);
-  color: #c27c00;
+  background: #fdf0d6;
+  color: #935e00;
 }

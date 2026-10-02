@@ -258,19 +258,21 @@ export function PipelineSection() {
 /** Sample-workspace people: initials to portrait (Pexels stock, free licence). */
 const PEOPLE: Record<string, string> = { MC: 'maya-chen', JP: 'james-porter', SK: 'simone-king' };
 
-function DealCard(props: {
-  id?: string;
-  account: string;
-  name: string;
-  value: string;
-  date: string;
-  prob: number;
-  who: { initials: string; color: string };
-  urgent?: boolean;
-  won?: boolean;
-  lost?: boolean;
-  tag?: { icon: string; text: string; tone: 'cold' | 'sent' | 'lost' };
-}) {
+function DealCard(
+  props: Readonly<{
+    id?: string;
+    account: string;
+    name: string;
+    value: string;
+    date: string;
+    prob: number;
+    who: { initials: string; color: string };
+    urgent?: boolean;
+    won?: boolean;
+    lost?: boolean;
+    tag?: { icon: string; text: string; tone: 'cold' | 'sent' | 'lost' };
+  }>
+) {
   const classes = ['deal', 'deal-card'];
   if (props.urgent) classes.push('urgent');
   if (props.won) classes.push('won');
