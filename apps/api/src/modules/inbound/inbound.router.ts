@@ -38,7 +38,7 @@
  *   - logSupportTicket: the creating TicketActivity carries
  *     systemEventData.requestId (the portal inbox thread id).
  *   - syncPipelineLead: a NOTE LeadActivity carries metadata.syncKey
- *     `coa-sync:<coaLeadId>:<status>`; a repeat of the same stage is a no-op.
+ *     `coa-sync:<coaLeadId>:<coaStage>:<status>`; a repeat of the same stage is a no-op.
  */
 
 import { createHash, timingSafeEqual } from 'node:crypto';
@@ -968,7 +968,7 @@ export const inboundRouter = createTRPCRouter({
    *                         only; `changed` says whether anything moved.
    *
    * Idempotency: the audit NOTE LeadActivity carries metadata.syncKey
-   * `coa-sync:<coaLeadId>:<status>`. A repeat of that key returns early with
+   * `coa-sync:<coaLeadId>:<coaStage>:<status>`. A repeat of that key returns early with
    * changed:false before any status call. Tags and the audit note are
    * best-effort (logged, not thrown).
    */
@@ -1002,7 +1002,9 @@ export const inboundRouter = createTRPCRouter({
       }
 
       // --- Step 3: idempotency ------------------------------------------------
-      const syncKey = `coa-sync:${input.coaLeadId}:${input.status}`;
+      // coaStage is in the key: MEETING_BOOKED and a later PROPOSAL_READY both map to
+      // NEGOTIATING, and the second must still get its own audit note.
+      const syncKey = `coa-sync:${input.coaLeadId}:${input.coaStage}:${input.status}`;
       const prior = await ctx.prisma.leadActivity.findFirst({
         where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
         select: { id: true },
