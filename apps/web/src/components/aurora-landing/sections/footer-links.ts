@@ -2,7 +2,8 @@
  * The header's and footer's links, shared by the landing page and every other
  * public page.
  * Each goes to a page that exists and is open to visitors, or, for `section`
- * links, to a section of the landing page.
+ * links, to a section of the landing page. (The help centre is an in-app
+ * module behind a plan gate, so it is not linked from here.)
  */
 export interface FooterLink {
   label: string;
@@ -31,6 +32,7 @@ export const FOOTER_COLUMNS: ReadonlyArray<{ title: string; links: readonly Foot
       { label: 'Features', href: '/features' },
       { label: 'Pricing', href: '/pricing' },
       { label: 'Security', href: '/security' },
+      { label: 'Status', href: '/status' },
     ],
   },
   {
@@ -42,13 +44,6 @@ export const FOOTER_COLUMNS: ReadonlyArray<{ title: string; links: readonly Foot
       { label: 'Careers', href: '/careers' },
       { label: 'Press', href: '/press' },
       { label: 'Partners', href: '/partners' },
-    ],
-  },
-  {
-    title: 'Resources',
-    links: [
-      { label: 'Help centre', href: '/help-center' },
-      { label: 'Status', href: '/status' },
     ],
   },
   {
