@@ -94,6 +94,52 @@ function withTimeout<T>(promise: Promise<T>, ms: number = STEP_TIMEOUT_MS): Prom
   return Promise.race([promise, deadline]).finally(() => clearTimeout(timer));
 }
 
+type BrowserSupabase = NonNullable<ReturnType<typeof getSupabaseBrowserClient>>;
+
+/** Sign out the local session and wipe every local trace of it. Never throws. */
+async function dropSession(supabase: BrowserSupabase): Promise<void> {
+  try {
+    await withTimeout(supabase.auth.signOut({ scope: 'local' }));
+  } catch {
+    // The local cleanup below still applies.
+  }
+  clearSessionTokens();
+  clearTokenCookie();
+  clearSupabaseLocalStorage();
+}
+
+/**
+ * Clear any existing session before the switch. A sign-out that never settled may still finish
+ * later and erase the replacement session (it removes the stored session and emits SIGNED_OUT),
+ * so a timeout is terminal: verifyOtp must not start. Any other failure has settled and the
+ * caller's own token cleanup still applies.
+ */
+async function signOutBeforeSwitch(supabase: BrowserSupabase): Promise<void> {
+  try {
+    await withTimeout(supabase.auth.signOut({ scope: 'local' }));
+  } catch (signOutError) {
+    if (signOutError instanceof Error && signOutError.message === 'TIMEOUT') throw signOutError;
+  }
+}
+
+/** A failed grant claim keeps its own message; anything unexpected becomes the generic one. */
+function normalizeClaimError(claimError: unknown): Error {
+  if (claimError instanceof ClaimLoginGrantError) return claimError;
+  if (claimError instanceof Error && claimError.message === 'TIMEOUT') return claimError;
+  return new Error(
+    'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
+  );
+}
+
+/**
+ * An abandoned (timed-out) sign-in request cannot be aborted. If it later yields a session,
+ * sign that session out again and wipe every local trace, so a failure screen is never followed
+ * by a silent sign-in.
+ */
+function discardLateSession(supabase: BrowserSupabase, pending: Promise<unknown>): void {
+  pending.then(() => dropSession(supabase)).catch(() => undefined);
+}
+
 /**
  * Breadcrumb labels are fixed literals. Never build one from component state or refs (the same
  * hooks hold the magic-link token): the trace is written to sessionStorage and must stay
@@ -241,19 +287,25 @@ export function OAuthCallback({
       throw new Error('Failed to initialize authentication client');
     }
 
-    try {
-      await withTimeout(supabase.auth.signOut({ scope: 'local' }));
-    } catch {
-      // Nothing to sign out, the call failed, or it hung on the auth lock: our own token
-      // cleanup below still applies.
-    }
+    await signOutBeforeSwitch(supabase);
     clearSessionTokens();
     clearTokenCookie();
     clearSupabaseLocalStorage();
 
-    const { data, error } = await withTimeout(
-      supabase.auth.verifyOtp({ type: 'magiclink', token_hash: pending.tokenHash })
-    );
+    const verification = supabase.auth.verifyOtp({
+      type: 'magiclink',
+      token_hash: pending.tokenHash,
+    });
+    let result: Awaited<typeof verification>;
+    try {
+      result = await withTimeout(verification);
+    } catch (verifyError) {
+      // verifyOtp cannot be cancelled: if it finishes after we showed the error, the SDK would
+      // persist and broadcast a session behind the failure screen. Discard it when it lands.
+      discardLateSession(supabase, verification);
+      throw verifyError;
+    }
+    const { data, error } = result;
 
     if (error || !data?.session) {
       throw new Error(
@@ -272,20 +324,8 @@ export function OAuthCallback({
         const claim = await withTimeout(claimLoginGrant(data.session.access_token, pending.grant));
         activeTenantId = claim.tenantId;
       } catch (claimError) {
-        try {
-          await withTimeout(supabase.auth.signOut({ scope: 'local' }));
-        } catch {
-          // The local cleanup below still applies.
-        }
-        clearSessionTokens();
-        clearTokenCookie();
-        clearSupabaseLocalStorage();
-        throw claimError instanceof ClaimLoginGrantError ||
-          (claimError instanceof Error && claimError.message === 'TIMEOUT')
-          ? claimError
-          : new Error(
-              'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
-            );
+        await dropSession(supabase);
+        throw normalizeClaimError(claimError);
       }
     }
 

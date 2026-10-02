@@ -162,7 +162,7 @@ describe('never hangs silently', () => {
     expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
   });
 
-  it('a hung signOut does not block the exchange', async () => {
+  it('a hung signOut is terminal: verifyOtp never starts, so a late signOut cannot erase it', async () => {
     vi.useFakeTimers();
     h.signOut.mockImplementation(NEVER);
     const onSuccess = vi.fn();
@@ -171,8 +171,18 @@ describe('never hangs silently', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(10_500);
     });
+    expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
+    expect(h.verifyOtp).not.toHaveBeenCalled();
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it('a signOut that fails (settles with an error) does not block the exchange', async () => {
+    h.signOut.mockRejectedValue(new Error('no session'));
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     expect(h.verifyOtp).toHaveBeenCalled();
-    expect(onSuccess).toHaveBeenCalled();
   });
 
   it('a late result cannot sign in after the error state was shown', async () => {
@@ -198,5 +208,8 @@ describe('never hangs silently', () => {
     });
     expect(onSuccess).not.toHaveBeenCalled();
     expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
+    // The session the SDK persisted when the abandoned request landed is signed out again.
+    expect(h.signOut).toHaveBeenCalledTimes(2);
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
   });
 });
