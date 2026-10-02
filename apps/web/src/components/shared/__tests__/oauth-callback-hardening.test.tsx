@@ -210,6 +210,7 @@ describe('never hangs silently', () => {
     expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
     // The session the SDK persisted when the abandoned request landed is signed out again.
     expect(h.signOut).toHaveBeenCalledTimes(2);
+    expect(h.signOut).toHaveBeenLastCalledWith({ scope: 'local' });
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
   });
 });
