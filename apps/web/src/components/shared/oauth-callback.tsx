@@ -80,6 +80,20 @@ function currentSessionEmail(): string | null {
   }
 }
 
+/** Ceiling for any single awaited network step (signOut, verifyOtp, grant claim, getSession). */
+const STEP_TIMEOUT_MS = 10_000;
+/** Ceiling for the whole callback while it shows a spinner: the page may never hang silently. */
+const FLOW_TIMEOUT_MS = 30_000;
+
+/** Reject with `TIMEOUT` if `promise` has not settled within `ms`; the timer never leaks. */
+function withTimeout<T>(promise: Promise<T>, ms: number = STEP_TIMEOUT_MS): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('TIMEOUT')), ms);
+  });
+  return Promise.race([promise, deadline]).finally(() => clearTimeout(timer));
+}
+
 /**
  * Breadcrumb labels are fixed literals. Never build one from component state or refs (the same
  * hooks hold the magic-link token): the trace is written to sessionStorage and must stay
@@ -129,6 +143,8 @@ export function OAuthCallback({
   const pendingNextRef = useRef<string | null>(null);
   const flowRef = useRef<'oauth' | 'magiclink'>('oauth');
   const backToLoginRef = useRef<HTMLButtonElement>(null);
+  const confirmDialogRef = useRef<HTMLDialogElement>(null);
+  const abortedRef = useRef(false);
 
   // Shared post-login steps for the OAuth and magic-link paths.
   const finishSignIn = useCallback(
@@ -138,6 +154,9 @@ export function OAuthCallback({
       flow: 'oauth' | 'magiclink',
       activeTenantId: string | null = null
     ) => {
+      // The watchdog already showed the error state: a step that finally resolved must not
+      // sign the user in behind a screen that said it failed.
+      if (abortedRef.current) return;
       setStatus('success');
       recordAuthBreadcrumb(BREADCRUMBS[flow].established);
 
@@ -190,6 +209,7 @@ export function OAuthCallback({
 
   const reportError = useCallback(
     (err: unknown) => {
+      if (err instanceof Error && err.message === 'TIMEOUT') abortedRef.current = true;
       setStatus('error');
       recordAuthBreadcrumb(BREADCRUMBS[flowRef.current].error);
       let errorMsg: string;
@@ -222,21 +242,18 @@ export function OAuthCallback({
     }
 
     try {
-      await supabase.auth.signOut({ scope: 'local' });
+      await withTimeout(supabase.auth.signOut({ scope: 'local' }));
     } catch {
-      // Nothing to sign out, or the call failed: our own token cleanup below still applies.
+      // Nothing to sign out, the call failed, or it hung on the auth lock: our own token
+      // cleanup below still applies.
     }
     clearSessionTokens();
     clearTokenCookie();
     clearSupabaseLocalStorage();
 
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('TIMEOUT')), 10_000);
-    });
-    const { data, error } = await Promise.race([
-      supabase.auth.verifyOtp({ type: 'magiclink', token_hash: pending.tokenHash }),
-      timeoutPromise,
-    ]);
+    const { data, error } = await withTimeout(
+      supabase.auth.verifyOtp({ type: 'magiclink', token_hash: pending.tokenHash })
+    );
 
     if (error || !data?.session) {
       throw new Error(
@@ -252,14 +269,11 @@ export function OAuthCallback({
     let activeTenantId = pending.tenantHint;
     if (pending.grant) {
       try {
-        const claim = await Promise.race([
-          claimLoginGrant(data.session.access_token, pending.grant),
-          timeoutPromise,
-        ]);
+        const claim = await withTimeout(claimLoginGrant(data.session.access_token, pending.grant));
         activeTenantId = claim.tenantId;
       } catch (claimError) {
         try {
-          await supabase.auth.signOut({ scope: 'local' });
+          await withTimeout(supabase.auth.signOut({ scope: 'local' }));
         } catch {
           // The local cleanup below still applies.
         }
@@ -379,12 +393,7 @@ export function OAuthCallback({
       // returns the SDK has already performed the PKCE code exchange (if the
       // code_verifier was found in PkceAwareStorage / localStorage).
       // 10-second timeout to handle network issues.
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('TIMEOUT')), 10_000);
-      });
-
-      const sessionPromise = supabase.auth.getSession();
-      const { data, error: sessionError } = await Promise.race([sessionPromise, timeoutPromise]);
+      const { data, error: sessionError } = await withTimeout(supabase.auth.getSession());
 
       if (sessionError) {
         throw new Error(sessionError.message);
@@ -398,7 +407,7 @@ export function OAuthCallback({
       }
 
       const { session } = data;
-      const { data: userData } = await supabase.auth.getUser(session.access_token);
+      const { data: userData } = await withTimeout(supabase.auth.getUser(session.access_token));
       finishSignIn(session, userData?.user ?? undefined, 'oauth');
     } catch (err) {
       reportError(err);
@@ -413,6 +422,28 @@ export function OAuthCallback({
     handleCallback();
   }, [handleCallback]);
 
+  // Watchdog: whatever step is awaited, a spinner never outlives FLOW_TIMEOUT_MS. The visible
+  // error offers "Back to Sign In" instead of leaving the user on "Signing you in...".
+  const isBusy = status === 'loading' || status === 'exchanging';
+  useEffect(() => {
+    if (!isBusy) return;
+    const timer = setTimeout(() => reportError(new Error('TIMEOUT')), FLOW_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [isBusy, reportError]);
+
+  // The account-switch prompt is a native modal <dialog>: opened last, it sits on the top layer
+  // above every other overlay (onboarding modal included) and makes the rest of the page inert,
+  // so its buttons cannot be covered or shadowed. jsdom has no showModal: fall back to `open`.
+  useEffect(() => {
+    const el = confirmDialogRef.current;
+    if (status !== 'confirm' || !el || el.open) return;
+    try {
+      el.showModal();
+    } catch {
+      el.setAttribute('open', '');
+    }
+  }, [status]);
+
   // Focus management: move focus to primary action on error state (NF-007)
   useEffect(() => {
     if (status === 'error' && backToLoginRef.current) {
@@ -425,6 +456,8 @@ export function OAuthCallback({
   // ==========================================
 
   const signedInAs = currentEmail ? 'You are signed in as ' + currentEmail : 'You are signed in';
+  // A magic link carries only an opaque token, never the identity it signs in. So the copy
+  // must not claim the account differs: it states what the link does and asks.
   const statusConfig: Record<OAuthCallbackStatus, StatusConfig> = {
     loading: {
       icon: 'progress_activity',
@@ -445,7 +478,7 @@ export function OAuthCallback({
     confirm: {
       icon: 'swap_horiz',
       title: 'Switch account?',
-      description: `${signedInAs}. This link signs in to a different account through the Leangency Portal. Continue and switch accounts?`,
+      description: `${signedInAs}. This link signs you in through the Leangency Portal. Continue and switch?`,
       iconColor: 'text-amber-300',
       bgColor: 'bg-amber-500/20',
     },
@@ -525,17 +558,20 @@ export function OAuthCallback({
               </span>
             </div>
 
-            {/* Status text */}
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-white">{config.title}</h1>
-              <p className="text-sm text-slate-300">{config.description}</p>
-            </div>
+            {/* Status text (the confirm state renders its own copy inside the dialog below) */}
+            {status !== 'confirm' && (
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold text-white">{config.title}</h1>
+                <p className="text-sm text-slate-300">{config.description}</p>
+              </div>
+            )}
 
             {/* Error actions */}
             {status === 'error' && (
               <div className="pt-4 space-y-3">
                 <button
                   ref={backToLoginRef}
+                  data-testid="callback-back-to-login"
                   onClick={handleBackToLogin}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] shadow-lg shadow-[#137fec]/20"
                 >
@@ -558,20 +594,41 @@ export function OAuthCallback({
 
             {/* Account-switch confirmation (magic link while already signed in) */}
             {status === 'confirm' && (
-              <div className="pt-4 space-y-3">
-                <button
-                  onClick={handleConfirmSwitch}
-                  className="w-full px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]"
-                >
-                  Continue
-                </button>
-                <button
-                  onClick={handleStaySignedIn}
-                  className="w-full px-6 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-200 font-medium hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]"
-                >
-                  Stay signed in
-                </button>
-              </div>
+              <dialog
+                ref={confirmDialogRef}
+                data-testid="switch-account-dialog"
+                aria-labelledby="switch-account-title"
+                aria-describedby="switch-account-description"
+                onCancel={(e) => e.preventDefault()}
+                className="static m-0 w-full max-w-none border-0 bg-transparent p-0 text-center text-inherit backdrop:bg-black/60 [&:not([open])]:hidden"
+              >
+                <div className="space-y-2">
+                  <h1 id="switch-account-title" className="text-2xl font-bold text-white">
+                    {config.title}
+                  </h1>
+                  <p id="switch-account-description" className="text-sm text-slate-300">
+                    {config.description}
+                  </p>
+                </div>
+                <div className="pt-4 space-y-3">
+                  <button
+                    type="button"
+                    data-testid="switch-account-continue"
+                    onClick={handleConfirmSwitch}
+                    className="w-full px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]"
+                  >
+                    Continue
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="switch-account-stay"
+                    onClick={handleStaySignedIn}
+                    className="w-full px-6 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-200 font-medium hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]"
+                  >
+                    Stay signed in
+                  </button>
+                </div>
+              </dialog>
             )}
 
             {/* Loading indicator */}

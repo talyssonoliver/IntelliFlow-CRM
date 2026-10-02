@@ -15,6 +15,8 @@ describe('isPublicAuthRoute (OnboardingWelcome gate)', () => {
     '/mfa',
     '/mfa/verify',
     '/auth/callback',
+    '/auth/anything-else',
+    '/auth',
     '/sso',
   ])('treats %s as a public auth route (modal suppressed)', (path) => {
     expect(isPublicAuthRoute(path)).toBe(true);

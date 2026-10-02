@@ -263,12 +263,16 @@ describe('OnboardingWelcome', () => {
     expect((dialog as HTMLDialogElement).open).toBe(false);
   });
 
-  it('does NOT open on a public route (e.g. /login)', () => {
-    mockUsePathname.mockReturnValue('/login');
-    render(<OnboardingWelcome />);
-    const dialog = screen.getByTestId('onboarding-dialog');
-    expect((dialog as HTMLDialogElement).open).toBe(false);
-  });
+  it.each(['/login', '/signup', '/reset-password/abc', '/auth/callback', '/auth/anything'])(
+    'does not mount at all on the auth route %s, even with a session',
+    (path) => {
+      mockUsePathname.mockReturnValue(path);
+      const { container } = render(<OnboardingWelcome />);
+      expect(screen.queryByTestId('onboarding-dialog')).toBeNull();
+      expect(container).toBeEmptyDOMElement();
+      expect(mockShowModal).not.toHaveBeenCalled();
+    }
+  );
 
   it('does NOT open on a public marketing/legal route (e.g. /pricing)', () => {
     // The modal is scoped to "/" + protected app routes; it must not interrupt an
