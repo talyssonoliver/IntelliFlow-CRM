@@ -30,12 +30,12 @@ export async function generateMetadata({
 
   if (!post) {
     return {
-      title: 'Post Not Found | IntelliFlow Blog',
+      title: 'Post Not Found | Aurora Blog',
     };
   }
 
   return {
-    title: `${post.title} | IntelliFlow Blog`,
+    title: `${post.title} | Aurora Blog`,
     description: post.excerpt,
     authors: [{ name: post.author.name }],
     openGraph: {
@@ -88,9 +88,9 @@ export default async function BlogPostPage({
     <>
       <ReadingProgress />
 
-      <main id="main-content" className="bg-white dark:bg-slate-900 min-h-screen">
+      <div className="bg-white dark:bg-slate-900 min-h-screen">
         {/* Article Header */}
-        <header className="bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37] text-white py-16 lg:py-20">
+        <header className="bg-gradient-to-br from-[#11175b] via-[#11175b] to-[#11175b] text-white py-16 lg:py-20">
           <div className="container px-4 lg:px-6 mx-auto max-w-4xl">
             {/* Breadcrumb */}
             <nav aria-label="Breadcrumb" className="mb-6">
@@ -115,7 +115,7 @@ export default async function BlogPostPage({
 
             {/* Category & Read Time */}
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              <span className="px-3 py-1 rounded-full text-sm font-medium bg-[#137fec]/20 text-[#7cc4ff]">
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-[#2a78f6]/20 text-[#bca8ff]">
                 {post.category}
               </span>
               <span className="text-slate-300 text-sm">{post.readTime}</span>
@@ -172,7 +172,7 @@ export default async function BlogPostPage({
                     <Link
                       key={tag}
                       href={`/blog?tag=${encodeURIComponent(tag.toLowerCase())}`}
-                      className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-[#137fec]/10 hover:text-[#137fec] transition-colors"
+                      className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-[#2a78f6]/10 hover:text-[#2a78f6] transition-colors"
                     >
                       {tag}
                     </Link>
@@ -233,13 +233,13 @@ export default async function BlogPostPage({
                 {relatedPosts.map((relatedPost) => (
                   <Card
                     key={relatedPost.id}
-                    className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#137fec] transition-colors group"
+                    className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#2a78f6] transition-colors group"
                   >
                     <Link href={`/blog/${relatedPost.slug}`} className="block space-y-3">
                       <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                         {relatedPost.category}
                       </span>
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-[#137fec] transition-colors">
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-[#2a78f6] transition-colors">
                         {relatedPost.title}
                       </h3>
                       <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-2">
@@ -257,19 +257,19 @@ export default async function BlogPostPage({
         )}
 
         {/* CTA Section */}
-        <section className="py-16 bg-gradient-to-r from-[#137fec] to-[#0e6ac7]">
+        <section className="py-16 bg-gradient-to-r from-[#2a78f6] to-[#1f63d4]">
           <div className="container px-4 lg:px-6 mx-auto max-w-4xl text-center">
             <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">
               Ready to transform your sales process?
             </h2>
             <p className="text-white/90 mb-6 max-w-2xl mx-auto">
-              See how IntelliFlow's AI-powered CRM can help your team close more deals with
+              See how Aurora's AI-powered CRM can help your team close more deals with
               governance-ready automation.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/contact"
-                className="px-6 py-3 bg-white text-[#137fec] font-semibold rounded-lg hover:bg-slate-100 transition-colors"
+                className="px-6 py-3 bg-white text-[#2a78f6] font-semibold rounded-lg hover:bg-slate-100 transition-colors"
               >
                 Schedule a Demo
               </Link>
@@ -282,7 +282,7 @@ export default async function BlogPostPage({
             </div>
           </div>
         </section>
-      </main>
+      </div>
     </>
   );
 }

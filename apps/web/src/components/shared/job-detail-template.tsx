@@ -73,7 +73,7 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
       )}
 
       {/* Job Header */}
-      <header className="bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37] text-white py-16 lg:py-20">
+      <header className="bg-gradient-to-br from-[#11175b] via-[#11175b] to-[#11175b] text-white py-16 lg:py-20">
         <div className="container px-4 lg:px-6 mx-auto max-w-4xl">
           {/* Breadcrumb */}
           <nav aria-label="Breadcrumb" className="mb-6">
@@ -98,7 +98,7 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
 
           {/* Job Meta */}
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <span className="px-3 py-1 rounded-full text-sm font-medium bg-[#137fec]/20 text-[#7cc4ff]">
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-[#2a78f6]/20 text-[#bca8ff]">
               {job.department}
             </span>
             <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/10 text-slate-200">
@@ -174,7 +174,7 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
                 {job.responsibilities.map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <span
-                      className="material-symbols-outlined text-[#137fec] mt-0.5"
+                      className="material-symbols-outlined text-[#2a78f6] mt-0.5"
                       aria-hidden="true"
                     >
                       check_circle
@@ -248,7 +248,7 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
                       key={item}
                       className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800"
                     >
-                      <span className="material-symbols-outlined text-[#137fec]" aria-hidden="true">
+                      <span className="material-symbols-outlined text-[#2a78f6]" aria-hidden="true">
                         verified
                       </span>
                       <span className="text-sm text-slate-600 dark:text-slate-300">{item}</span>
@@ -314,7 +314,7 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
               </p>
               <Link
                 href="/contact?subject=careers"
-                className="inline-flex items-center gap-2 text-sm text-[#137fec] font-medium hover:underline"
+                className="inline-flex items-center gap-2 text-sm text-[#2a78f6] font-medium hover:underline"
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   mail
@@ -340,10 +340,10 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
               {relatedJobs.map((relatedJob) => (
                 <Card
                   key={relatedJob.id}
-                  className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#137fec] transition-colors"
+                  className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#2a78f6] transition-colors"
                 >
                   <Link href={`/careers/${relatedJob.id}`} className="block space-y-3">
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#137fec]/10 text-[#137fec]">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#2a78f6]/10 text-[#2a78f6]">
                       {relatedJob.department}
                     </span>
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white">

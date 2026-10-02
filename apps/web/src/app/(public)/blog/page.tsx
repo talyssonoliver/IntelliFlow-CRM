@@ -4,11 +4,11 @@ import { Card } from '@intelliflow/ui';
 import { BlogPagination } from '@/components/blog/blog-pagination';
 
 export const metadata: Metadata = {
-  title: 'Blog | IntelliFlow CRM',
+  title: 'Blog',
   description:
     'Insights on AI-first CRM, sales automation, governance, and customer success strategies.',
   openGraph: {
-    title: 'IntelliFlow CRM Blog',
+    title: 'Aurora Blog',
     description:
       'Expert insights on AI-powered sales, governance-ready automation, and CRM best practices.',
     type: 'website',
@@ -65,11 +65,11 @@ const blogPosts = [
   {
     id: '4',
     slug: 'intelliflow-winter-release',
-    title: "IntelliFlow Winter 2025 Release: What's New",
+    title: "Aurora Winter 2025 Release: What's New",
     excerpt:
       'Introducing enhanced AI scoring, improved audit trails, and 50% faster pipeline views.',
     category: 'product-updates',
-    author: { name: 'Product Team', role: 'IntelliFlow' },
+    author: { name: 'Product Team', role: 'Aurora' },
     publishedAt: '2025-12-20',
     readTime: '4 min read',
     featured: false,
@@ -77,11 +77,11 @@ const blogPosts = [
   {
     id: '5',
     slug: 'voltstack-case-study',
-    title: 'How Voltstack Increased Conversions by 40% with IntelliFlow',
+    title: 'How Voltstack Increased Conversions by 40% with Aurora',
     excerpt:
       "A deep dive into Voltstack's journey from manual processes to AI-assisted sales excellence.",
     category: 'case-studies',
-    author: { name: 'Customer Success', role: 'IntelliFlow' },
+    author: { name: 'Customer Success', role: 'Aurora' },
     publishedAt: '2025-12-18',
     readTime: '10 min read',
     featured: false,
@@ -118,12 +118,12 @@ export default function BlogIndexPage() {
   const regularPosts = blogPosts.filter((p) => !p.featured);
 
   return (
-    <main id="main-content" className="bg-slate-50 dark:bg-slate-900 min-h-screen">
+    <div className="bg-slate-50 dark:bg-slate-900 min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37] text-white py-16 lg:py-24">
+      <section className="bg-gradient-to-br from-[#11175b] via-[#11175b] to-[#11175b] text-white py-16 lg:py-24">
         <div className="container px-4 lg:px-6 mx-auto max-w-auto">
           <div className="max-w-3xl">
-            <h1 className="text-4xl lg:text-5xl font-bold mb-4">IntelliFlow Blog</h1>
+            <h1 className="text-4xl lg:text-5xl font-bold mb-4">Aurora Blog</h1>
             <p className="text-lg text-slate-200">
               Insights on AI-first CRM, sales automation, governance, and strategies to help your
               team close more deals with confidence.
@@ -143,7 +143,7 @@ export default function BlogIndexPage() {
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors
                   ${
                     category.id === 'all'
-                      ? 'bg-[#137fec] text-white'
+                      ? 'bg-[#2a78f6] text-white'
                       : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                   }`}
               >
@@ -167,18 +167,18 @@ export default function BlogIndexPage() {
             {featuredPosts.map((post) => (
               <Card
                 key={post.id}
-                className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-[#137fec] transition-colors group"
+                className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-[#2a78f6] transition-colors group"
               >
                 <Link href={`/blog/${post.slug}`} className="block space-y-4">
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#137fec]/10 text-[#137fec]">
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#2a78f6]/10 text-[#2a78f6]">
                       {getCategoryLabel(post.category)}
                     </span>
                     <span className="text-xs text-slate-500 dark:text-slate-400">
                       {post.readTime}
                     </span>
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white group-hover:text-[#137fec] transition-colors">
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white group-hover:text-[#2a78f6] transition-colors">
                     {post.title}
                   </h3>
                   <p className="text-slate-600 dark:text-slate-300 text-sm">{post.excerpt}</p>
@@ -220,7 +220,7 @@ export default function BlogIndexPage() {
             {regularPosts.map((post) => (
               <Card
                 key={post.id}
-                className="p-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#137fec] transition-colors group"
+                className="p-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#2a78f6] transition-colors group"
               >
                 <Link href={`/blog/${post.slug}`} className="block space-y-3">
                   <div className="flex items-center gap-2">
@@ -231,7 +231,7 @@ export default function BlogIndexPage() {
                       {post.readTime}
                     </span>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-[#137fec] transition-colors">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-[#2a78f6] transition-colors">
                     {post.title}
                   </h3>
                   <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-2">
@@ -253,10 +253,10 @@ export default function BlogIndexPage() {
       </section>
 
       {/* Newsletter CTA */}
-      <section className="py-16 bg-gradient-to-r from-[#137fec] to-[#0e6ac7]">
+      <section className="py-16 bg-gradient-to-r from-[#2a78f6] to-[#1f63d4]">
         <div className="container px-4 lg:px-6 mx-auto max-w-4xl text-center">
           <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">
-            Stay ahead with IntelliFlow insights
+            Stay ahead with Aurora insights
           </h2>
           <p className="text-white/90 mb-6">
             Get the latest on AI-powered sales, automation best practices, and product updates
@@ -274,13 +274,13 @@ export default function BlogIndexPage() {
             />
             <button
               type="submit"
-              className="px-6 py-3 bg-white text-[#137fec] font-semibold rounded-lg hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#137fec]"
+              className="px-6 py-3 bg-white text-[#2a78f6] font-semibold rounded-lg hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#2a78f6]"
             >
               Subscribe
             </button>
           </form>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
