@@ -25,6 +25,7 @@
     "@intelliflow/db": "workspace:*",
     "@intelliflow/domain": "workspace:*",
     "@intelliflow/observability": "workspace:*",
+    "@intelliflow/partner-sdk": "workspace:*",
     "@intelliflow/platform": "workspace:*",
     "@intelliflow/validators": "workspace:*",
     "@opentelemetry/api": "1.9.1",
@@ -45,7 +46,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@intelliflow/partner-sdk": "workspace:*",
     "@intelliflow/typescript-config": "workspace:*",
     "@prisma/adapter-pg": "^7.8.0",
     "@types/node": "^25.9.2",
