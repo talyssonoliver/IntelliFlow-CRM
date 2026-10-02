@@ -50,6 +50,67 @@ const TILT_AXIS = new THREE.Vector3(1, 0, -1).normalize();
  */
 const INTRO_TURN = Math.PI / 2;
 
+/**
+ * The dissolve a presented layer leaves through: fragments below a moving
+ * threshold of soft 3D noise are discarded, and a band just above it glows
+ * cyan into violet, so the slab breaks up behind a bright aurora edge rather
+ * than fading. `uDissolve` runs from about 0 (whole) to 1 (gone).
+ */
+const DISSOLVE_NOISE = `
+uniform float uDissolve;
+varying vec3 vDissolvePos;
+float dissolveHash(vec3 p) {
+  p = fract(p * 0.3183099 + 0.1);
+  p *= 17.0;
+  return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+float dissolveNoise(vec3 x) {
+  vec3 i = floor(x);
+  vec3 f = fract(x);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(mix(dissolveHash(i), dissolveHash(i + vec3(1.0, 0.0, 0.0)), f.x),
+        mix(dissolveHash(i + vec3(0.0, 1.0, 0.0)), dissolveHash(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),
+    mix(mix(dissolveHash(i + vec3(0.0, 0.0, 1.0)), dissolveHash(i + vec3(1.0, 0.0, 1.0)), f.x),
+        mix(dissolveHash(i + vec3(0.0, 1.0, 1.0)), dissolveHash(i + vec3(1.0, 1.0, 1.0)), f.x), f.y),
+    f.z);
+}
+`;
+
+/** Gives a material the dissolve, driven by the shared `uniform`. */
+function addDissolve(material: THREE.Material, uniform: { value: number }): void {
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uDissolve = uniform;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vDissolvePos;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvDissolvePos = position;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>\n${DISSOLVE_NOISE}`)
+      .replace(
+        '#include <dithering_fragment>',
+        `#include <dithering_fragment>
+        if (uDissolve > 0.0) {
+          // Fine grain over a sweep from left to right across the layer.
+          float grain = dissolveNoise(vDissolvePos * 3.2) * 0.6 + dissolveNoise(vDissolvePos * 9.0) * 0.4;
+          float sweep = clamp(vDissolvePos.x / 5.2 + 0.5, 0.0, 1.0);
+          float n = mix(grain, sweep, 0.55);
+          float t = uDissolve * 1.08 - 0.04;
+          if (n < t) discard;
+          float edge = 1.0 - smoothstep(t, t + 0.028, n);
+          vec3 glow = mix(vec3(0.62, 1.0, 0.98), vec3(0.74, 0.66, 1.0), grain);
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, glow * 1.35, edge * 0.9);
+        }`
+      );
+  };
+  // One compiled program for every layer that dissolves.
+  material.customProgramCacheKey = () => 'aurora-dissolve';
+}
+
+/** A spring like the site's magnetic buttons (GSAP elastic.out(1, 0.3)): quick, with one soft overshoot. */
+const SPRING = { stiffness: 260, damping: 11 };
+/** How far the stack follows a drag, as a share of the pointer's travel. */
+const DRAG_FOLLOW = 0.3;
+
 /** Space between the frame's top and a presented layer, in CSS px. */
 const PRESENT_PAD_PX = 20;
 /** How far the camera rises while a layer is presented, so the stack sits lower. */
@@ -140,6 +201,58 @@ function rippleTexture(): THREE.CanvasTexture {
   return new THREE.CanvasTexture(canvas);
 }
 
+/** A soft round glow, the sprite every dissolve spark is drawn with. */
+function sparkTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 64;
+  const g = canvas.getContext('2d');
+  if (g) {
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.35, 'rgba(255,255,255,0.55)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+  }
+  return new THREE.CanvasTexture(canvas);
+}
+
+/** Sparks lifting off a dissolving layer; each one is born where the edge passes it. */
+export const SPARK_COUNT = 220;
+/** How much of the dissolve a spark lives for. */
+const SPARK_LIFE = 0.2;
+
+/**
+ * Where spark `i` is at dissolve `d`, in the layer's own space, and how bright
+ * it is (0 to 1). Deterministic, so scrolling back runs the sparks backwards.
+ */
+export function sparkAt(i: number, d: number): { x: number; y: number; z: number; glow: number } {
+  // A fixed pseudo-random point on the face for each spark.
+  const r1 = fract(Math.sin(i * 12.9898) * 43758.5453);
+  const r2 = fract(Math.sin(i * 78.233) * 12543.123);
+  const r3 = fract(Math.sin(i * 39.425) * 24634.633);
+  const x = (r1 - 0.5) * W * 0.94;
+  const z = (r2 - 0.5) * D * 0.9;
+  // Born when the sweeping edge reaches it (the shader's threshold, roughly).
+  const birth = (x / 5.2 + 0.5) * 0.55 + r3 * 0.45 * 0.6;
+  const age = (d * 1.08 - 0.04 - birth) / SPARK_LIFE;
+  if (age <= 0 || age >= 1) return { x, y: H / 2, z, glow: 0 };
+  // Up off the face, drifting the way the sweep travels, fading as it goes.
+  return {
+    x: x + age * 0.6 * (0.4 + r3),
+    y: H / 2 + age * (0.5 + r1 * 0.9),
+    z: z - age * 0.35 * (r2 - 0.3),
+    glow: Math.sin(age * Math.PI) * (0.6 + 0.4 * r3),
+  };
+}
+const fract = (v: number) => v - Math.floor(v);
+
+/** Eases `from` toward `to` by `k`, landing exactly once within a hair of it. */
+function approach(from: number, to: number, k: number): number {
+  const next = from + (to - from) * k;
+  return Math.abs(to - next) < 0.001 ? to : next;
+}
+
 /** A soft contact shadow under the stack. */
 function shadowTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
@@ -210,7 +323,10 @@ export function createStack(
     alpha: true,
     powerPreference: 'high-performance',
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Phones and touch screens draw at 1.5x: the page already runs a second WebGL
+  // canvas (the aurora background), and 2x on both is where scrolling lagged.
+  const compact = window.matchMedia?.('(pointer: coarse), (max-width: 960px)').matches ?? false;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, compact ? 1.5 : 2));
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = 0.92;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -245,6 +361,33 @@ export function createStack(
     (W * 0.94 * FACE_SIZE.height) / FACE_SIZE.width
   );
 
+  // One spark cloud, lent to whichever presented layer is dissolving.
+  const sparkPositions = new Float32Array(SPARK_COUNT * 3);
+  const sparkColours = new Float32Array(SPARK_COUNT * 4);
+  const sparkGeometry = new THREE.BufferGeometry();
+  sparkGeometry.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
+  // Four components: each spark carries its own alpha.
+  sparkGeometry.setAttribute('color', new THREE.BufferAttribute(sparkColours, 4));
+  const sparkMap = sparkTexture();
+  const sparkMaterial = new THREE.PointsMaterial({
+    map: sparkMap,
+    // CSS pixels: under an orthographic camera three.js draws points at a fixed size.
+    size: 9,
+    sizeAttenuation: false,
+    vertexColors: true,
+    transparent: true,
+    depthWrite: false,
+    // Normal blending: added light vanishes on the pale page behind the stack.
+    toneMapped: false,
+  });
+  const sparks = new THREE.Points(sparkGeometry, sparkMaterial);
+  sparks.visible = false;
+  sparks.frustumCulled = false;
+  root.add(sparks);
+  const sparkPoint = new THREE.Vector3();
+  const CYAN = new THREE.Color('#28D9D4');
+  const LILAC = new THREE.Color('#7655F6');
+
   const rippleGeometry = new THREE.PlaneGeometry(W * 1.08, D * 1.08);
   const rippleMap = rippleTexture();
 
@@ -263,12 +406,15 @@ export function createStack(
       emissiveIntensity: 0,
     });
     group.add(new THREE.Mesh(slabGeometry, slab));
+    const dissolve = { value: 0 };
+    addDissolve(slab, dissolve);
     const face = new THREE.MeshBasicMaterial({
       map: faceTexture(layer.id, layer.colour, fonts),
       transparent: true,
       depthWrite: false,
       toneMapped: false,
     });
+    addDissolve(face, dissolve);
     const faceMesh = new THREE.Mesh(faceGeometry, face);
     faceMesh.rotation.x = -Math.PI / 2;
     faceMesh.position.y = H / 2 + 0.004;
@@ -299,6 +445,9 @@ export function createStack(
       slab,
       face,
       rings,
+      dissolve,
+      /** The presentation, eased toward what the scroll asks for, so it never steps. */
+      shown: { present: 0, dissolve: 0 },
       tilt: 0,
       state: { lift: 0, glow: 0, peel: 0 } as LayerTarget,
     };
@@ -313,6 +462,8 @@ export function createStack(
 
   let activeIndex = -1;
   let intro = 1;
+  let shownIntro = 1;
+  let introSet = false;
   /** Per layer, how far it is presented (0 to 1) and how far it has dissolved (0 to 1). */
   let presentation: Presentation[] = [];
   const presented = new THREE.Quaternion();
@@ -358,6 +509,25 @@ export function createStack(
   };
   const size = { w: 1, h: 1 };
   const cam = { y: REST_Y, zoom: 1 };
+  /** Press and drag: the stack follows on a spring and springs home on release. */
+  const drag = {
+    active: false,
+    id: -1,
+    sx: 0,
+    sy: 0,
+    tx: 0,
+    ty: 0,
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    press: 0,
+    vp: 0,
+  };
+  const screenRight = new THREE.Vector3(1, 0, -1).normalize();
+  const screenUp = new THREE.Vector3()
+    .crossVectors(screenRight, new THREE.Vector3(-9, -(CAMERA_HEIGHT - REST_Y), -9).normalize())
+    .normalize();
   const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
 
   const resize = () => {
@@ -374,6 +544,107 @@ export function createStack(
     const rect = canvas.getBoundingClientRect();
     pointer.tx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
     pointer.ty = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    if (drag.active && e.pointerId === drag.id) {
+      drag.tx = (e.clientX - drag.sx) * DRAG_FOLLOW;
+      drag.ty = (e.clientY - drag.sy) * DRAG_FOLLOW;
+    }
+  };
+  const onPress = (e: PointerEvent) => {
+    if (e.button > 0) return;
+    drag.active = true;
+    drag.id = e.pointerId;
+    drag.sx = e.clientX;
+    drag.sy = e.clientY;
+    drag.tx = 0;
+    drag.ty = 0;
+  };
+  const onRelease = (e: PointerEvent) => {
+    if (!drag.active || e.pointerId !== drag.id) return;
+    drag.active = false;
+    drag.tx = 0;
+    drag.ty = 0;
+  };
+  /** One spring step toward `target`; returns [position, velocity]. */
+  const spring = (x: number, v: number, target: number, dt: number): [number, number] => {
+    if (reducedMotion) return [target, 0];
+    const a = (target - x) * SPRING.stiffness - v * SPRING.damping;
+    const nv = v + a * dt;
+    return [x + nv * dt, nv];
+  };
+
+  /**
+   * Places a presented layer against its frame and runs its dissolve. Returns
+   * where its ripple ring sits and how large it is drawn.
+   */
+  const present = (
+    item: (typeof items)[number],
+    pose: NonNullable<ReturnType<typeof presentPose>>,
+    sparkFrom: { group: THREE.Group | null; d: number }
+  ) => {
+    const shown = item.shown;
+    const e = smooth(shown.present);
+    const d = reducedMotion ? 0 : shown.dissolve;
+    const p = item.group.position;
+    p.set(p.x + (pose.x - p.x) * e, p.y + (pose.y - p.y) * e, p.z + (pose.z - p.z) * e);
+    const ringAt = { x: p.x, y: p.y, z: p.z };
+    // A short drift up while it dissolves; the shader does the leaving.
+    const rise = smooth(d) * 0.7 * pose.scale;
+    p.set(p.x + pose.up.x * rise, p.y + pose.up.y * rise, p.z + pose.up.z * rise);
+    item.group.quaternion.slerp(pose.quaternion, e);
+    const dissolving = d > 0 && d < 1;
+    if (dissolving) {
+      item.group.quaternion.multiply(peelTurn.setFromAxisAngle(peelAxis, -smooth(d) * 0.22));
+      sparkFrom.group = item.group;
+      sparkFrom.d = d;
+    }
+    const ringScale = (1 + (pose.scale - 1) * e) * (1 + smooth(d) * 0.04);
+    item.group.scale.set(ringScale, ringScale, ringScale);
+    item.dissolve.value = d;
+    // Under reduced motion the layer simply goes, with no dissolve to watch.
+    item.group.visible = reducedMotion ? shown.dissolve < 0.5 : d < 0.995;
+    item.slab.opacity = 1;
+    item.face.opacity = 1;
+    item.slab.emissiveIntensity = 0.12;
+    return { ringAt, ringScale };
+  };
+
+  /** Lends the spark cloud to the dissolving layer, in its current pose. */
+  const placeSparks = (group: THREE.Group | null, d: number) => {
+    sparks.visible = !reducedMotion && group !== null;
+    if (!group) return;
+    group.updateMatrix();
+    for (let i = 0; i < SPARK_COUNT; i++) {
+      const sp = sparkAt(i, d);
+      sparkPoint.set(sp.x, sp.y, sp.z).applyMatrix4(group.matrix);
+      sparkPositions[i * 3] = sparkPoint.x;
+      sparkPositions[i * 3 + 1] = sparkPoint.y;
+      sparkPositions[i * 3 + 2] = sparkPoint.z;
+      const tint = i % 3 === 0 ? LILAC : CYAN;
+      sparkColours[i * 4] = tint.r;
+      sparkColours[i * 4 + 1] = tint.g;
+      sparkColours[i * 4 + 2] = tint.b;
+      sparkColours[i * 4 + 3] = sp.glow;
+    }
+    sparkGeometry.attributes.position!.needsUpdate = true;
+    sparkGeometry.attributes.color!.needsUpdate = true;
+  };
+
+  /** Springs the dragged stack back to rest and offsets it on the screen plane. */
+  const placeDrag = (dt: number) => {
+    [drag.x, drag.vx] = spring(drag.x, drag.vx, drag.tx, dt);
+    [drag.y, drag.vy] = spring(drag.y, drag.vy, drag.ty, dt);
+    [drag.press, drag.vp] = spring(drag.press, drag.vp, drag.active ? 1 : 0, dt);
+    // Pointer pixels to world units on the screen plane.
+    const unit = (VIEW * 2) / cam.zoom / size.h;
+    const ox = drag.x * unit;
+    const oy = -drag.y * unit;
+    root.position.set(
+      screenRight.x * ox + screenUp.x * oy,
+      screenRight.y * ox + screenUp.y * oy,
+      screenRight.z * ox + screenUp.z * oy
+    );
+    const pressed = 1 - drag.press * 0.035;
+    root.scale.set(pressed, pressed, pressed);
   };
 
   let raf = 0;
@@ -386,10 +657,19 @@ export function createStack(
       if (running) raf = requestAnimationFrame(frame);
       return;
     }
-    const dt = Math.min(0.05, (now - last) / 1000);
+    // Clamped: a frame stamped before the last one must never step backwards.
+    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
     last = now;
     const ease = reducedMotion ? 1 : 1 - Math.pow(0.0015, dt);
-    const presenting = presentation.some((p) => p.present > 0);
+    // Scroll arrives in steps (touch momentum especially); ease toward it each frame.
+    const follow2 = reducedMotion ? 1 : 1 - Math.pow(0.0005, dt);
+    items.forEach((item, index) => {
+      const want = presentation[index] ?? { present: 0, dissolve: 0 };
+      item.shown.present = approach(item.shown.present, want.present, follow2);
+      item.shown.dissolve = approach(item.shown.dissolve, want.dissolve, follow2);
+    });
+    shownIntro += (intro - shownIntro) * follow2;
+    const presenting = items.some((item) => item.shown.present > 0);
 
     // The camera moves first: a presented layer is placed against its frame.
     const aim = cameraFrame(presenting ? -1 : activeIndex, size);
@@ -406,8 +686,9 @@ export function createStack(
     const pose = presenting ? presentPose(cam, size) : null;
 
     // Act 0: layers close together around the stack's centre, turned a quarter.
-    const opened = reducedMotion ? 1 : smooth(intro);
+    const opened = reducedMotion ? 1 : smooth(shownIntro);
     const spread = 0.28 + 0.72 * opened;
+    const sparkFrom: { group: THREE.Group | null; d: number } = { group: null, d: 0 };
     items.forEach((item, index) => {
       const target = layerTarget(index, activeIndex);
       const s = item.state;
@@ -434,34 +715,12 @@ export function createStack(
       // viewer while its card scrolls past. Once the card has left the screen
       // it peels away as layers always have: it drifts up, wobbles and fades,
       // leaving a ripple where it was.
-      const shown = presentation[index];
-      const presented = !!(pose && shown && shown.present > 0);
-      let ripple = s.peel;
-      let ringAt = { x: 0, y: baseY(index) + H / 2, z: 0 };
-      let ringScale = 1;
-      if (pose && shown && presented) {
-        const e = smooth(shown.present);
-        const d = reducedMotion ? 0 : shown.dissolve;
-        const p = item.group.position;
-        p.set(p.x + (pose.x - p.x) * e, p.y + (pose.y - p.y) * e, p.z + (pose.z - p.z) * e);
-        ringAt = { x: p.x, y: p.y, z: p.z };
-        const rise = d * 2.4 * pose.scale;
-        p.set(p.x + pose.up.x * rise, p.y + pose.up.y * rise, p.z + pose.up.z * rise);
-        item.group.quaternion.slerp(pose.quaternion, e);
-        if (d > 0 && d < 1) {
-          item.group.quaternion.multiply(
-            peelTurn.setFromAxisAngle(peelAxis, Math.sin(d * Math.PI * 2) * 0.08)
-          );
-        }
-        ringScale = 1 + (pose.scale - 1) * e;
-        item.group.scale.set(ringScale, ringScale, ringScale);
-        const alpha = 1 - smooth(shown.dissolve);
-        item.group.visible = alpha > 0.015;
-        item.slab.opacity = alpha;
-        item.face.opacity = alpha;
-        item.slab.emissiveIntensity = 0.12;
-        ripple = shown.dissolve;
-      }
+      item.dissolve.value = 0;
+      const placed = pose && item.shown.present > 0 ? present(item, pose, sparkFrom) : null;
+      const presented = placed !== null;
+      const ripple = placed ? 0 : s.peel;
+      const ringAt = placed?.ringAt ?? { x: 0, y: baseY(index) + H / 2, z: 0 };
+      const ringScale = placed?.ringScale ?? 1;
 
       rippleRings(reducedMotion ? 0 : ripple).forEach(({ scale, opacity }, r) => {
         const ring = item.rings[r]!;
@@ -474,13 +733,15 @@ export function createStack(
         ring.material.opacity = opacity;
       });
     });
+    placeSparks(sparkFrom.group, sparkFrom.d);
+    placeDrag(dt);
     if (!reducedMotion) {
       pointer.x += (pointer.tx - pointer.x) * 0.05;
       pointer.y += (pointer.ty - pointer.y) * 0.05;
       // No pointer sway while a layer is presented, so it faces the viewer squarely.
       const sway = presenting ? 0 : 1;
-      root.rotation.y = pointer.x * 0.06 * sway + (1 - opened) * INTRO_TURN;
-      root.rotation.x = pointer.y * 0.03 * sway;
+      root.rotation.y = pointer.x * 0.06 * sway + (1 - opened) * INTRO_TURN + drag.x * 0.004;
+      root.rotation.x = pointer.y * 0.03 * sway + drag.y * 0.003;
     }
     renderer.render(scene, camera);
     if (running) raf = requestAnimationFrame(frame);
@@ -501,11 +762,17 @@ export function createStack(
   window.addEventListener('resize', resize);
   window.addEventListener('pointermove', onPointer, { passive: true });
   window.addEventListener('scroll', onScroll, { passive: true });
+  canvas.addEventListener('pointerdown', onPress);
+  window.addEventListener('pointerup', onRelease);
+  window.addEventListener('pointercancel', onRelease);
   start();
 
   return {
     setIntro(progress) {
       intro = Math.min(1, Math.max(0, progress));
+      // The first value lands at once: the stack must not visibly close on load.
+      if (reducedMotion || !introSet) shownIntro = intro;
+      introSet = true;
     },
     setPresentation(next) {
       presentation = LAYERS.map((l) => next?.[l.id] ?? { present: 0, dissolve: 0 });
@@ -532,6 +799,9 @@ export function createStack(
       stop();
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointer);
+      canvas.removeEventListener('pointerdown', onPress);
+      window.removeEventListener('pointerup', onRelease);
+      window.removeEventListener('pointercancel', onRelease);
       window.removeEventListener('scroll', onScroll);
       items.forEach((item) => {
         item.rings.forEach((ring) => ring.material.dispose());
@@ -542,6 +812,9 @@ export function createStack(
       slabGeometry.dispose();
       faceGeometry.dispose();
       rippleGeometry.dispose();
+      sparkGeometry.dispose();
+      sparkMaterial.dispose();
+      sparkMap.dispose();
       rippleMap.dispose();
       shadow.geometry.dispose();
       shadow.material.map?.dispose();
