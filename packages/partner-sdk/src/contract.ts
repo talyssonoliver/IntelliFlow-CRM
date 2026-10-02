@@ -1,5 +1,14 @@
 import { z } from 'zod';
-import { CONTRACT_VERSION, PARTNER_SCOPES, PROCEDURES } from './schemas';
+import {
+  ASSERTION_AUDIENCE,
+  ASSERTION_MAX_TTL_SECONDS,
+  CONTRACT_VERSION,
+  MEMBERSHIP_ERROR_REASONS,
+  PARTNER_SCOPES,
+  PROCEDURES,
+  SESSION_PROCEDURES,
+  assertionClaimsSchema,
+} from './schemas';
 
 /** Build the published JSON contract (JSON Schema per procedure input/output). */
 export function buildContract() {
@@ -8,6 +17,14 @@ export function buildContract() {
     procedures[name] = {
       kind: def.kind,
       scope: def.scope,
+      input: z.toJSONSchema(def.input, { io: 'input' }),
+      output: z.toJSONSchema(def.output, { io: 'output' }),
+    };
+  }
+  const sessionProcedures: Record<string, unknown> = {};
+  for (const [name, def] of Object.entries(SESSION_PROCEDURES)) {
+    sessionProcedures[name] = {
+      kind: def.kind,
       input: z.toJSONSchema(def.input, { io: 'input' }),
       output: z.toJSONSchema(def.output, { io: 'output' }),
     };
@@ -24,5 +41,13 @@ export function buildContract() {
     },
     scopes: [...PARTNER_SCOPES],
     procedures,
+    sessionProcedures,
+    assertion: {
+      alg: 'EdDSA',
+      audience: ASSERTION_AUDIENCE,
+      maxTtlSeconds: ASSERTION_MAX_TTL_SECONDS,
+      claims: z.toJSONSchema(assertionClaimsSchema, { io: 'input', unrepresentable: 'any' }),
+    },
+    errorReasons: [...MEMBERSHIP_ERROR_REASONS],
   };
 }

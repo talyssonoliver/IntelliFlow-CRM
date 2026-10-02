@@ -112,6 +112,22 @@ describe('account.reassign (IFC-311)', () => {
     commonBeforeEach();
   });
 
+  // ADR-071: a visiting member (live membership, not a home user) can own accounts.
+  it('accepts a target owner who is a member of the tenant, not only a home user', async () => {
+    await adminCaller.reassign({ id: TEST_UUIDS.account1, ownerId: newOwnerUuid });
+
+    const where = (prismaMock.user.findFirst as any).mock.calls[0][0].where;
+    expect(where.id).toBe(newOwnerUuid);
+    expect(where.OR).toEqual([
+      expect.objectContaining({ tenantId: TEST_UUIDS.tenant }),
+      {
+        memberships: {
+          some: expect.objectContaining({ tenantId: TEST_UUIDS.tenant, revokedAt: null }),
+        },
+      },
+    ]);
+  });
+
   // ─── AC-A1: notifyOnOwnerChange = true → both parties notified ───────────
   it('AC-A1: writes new ownerId and notifies both old + new owner when flag is true', async () => {
     const result = await adminCaller.reassign({

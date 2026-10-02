@@ -14,12 +14,16 @@
  * - AuthBackground provides consistent auth page visual shell
  * - useRedirectIfAuthenticated bounces already-authenticated users
  * - onSuccess uses window.location.href for hard navigation (prevents Back button replay)
+ * - A `token_hash` param means a partner magic link: the already-authenticated bounce is
+ *   skipped (an existing session must not win over the link) and the user lands on `next`
  */
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AuthBackground } from '@/components/shared/auth-background';
 import { OAuthCallback } from '@/components/shared/oauth-callback';
 import { useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
+import { safeNextPath } from '@/lib/shared/safe-next-path';
 
 // ============================================
 // Loading Fallback
@@ -69,6 +73,31 @@ function SSOCallbackContent() {
   return <OAuthCallback onSuccess={handleSuccess} redirectUrl="/" />;
 }
 
+/**
+ * Magic-link variant. Deliberately does NOT call useRedirectIfAuthenticated: that hook would
+ * redirect a browser that already holds a (different) session before the link is processed.
+ */
+function MagicLinkCallbackContent({ next }: Readonly<{ next: string }>) {
+  const handleSuccess = () => {
+    globalThis.location.href = next;
+  };
+
+  return <OAuthCallback onSuccess={handleSuccess} redirectUrl={next} />;
+}
+
+function CallbackRouter() {
+  const searchParams = useSearchParams();
+  // Latch the mode on first render: the callback strips token_hash from the address bar, and a
+  // later re-render must not flip a magic-link visit into the OAuth branch (redirect hook).
+  const [magicNext] = useState<string | null>(() =>
+    searchParams?.get('token_hash') ? safeNextPath(searchParams.get('next')) : null
+  );
+  if (magicNext !== null) {
+    return <MagicLinkCallbackContent next={magicNext} />;
+  }
+  return <SSOCallbackContent />;
+}
+
 // ============================================
 // Page Export
 // ============================================
@@ -77,7 +106,7 @@ export default function SSOCallbackPage() {
   return (
     <AuthBackground>
       <Suspense fallback={<SSOCallbackFallback />}>
-        <SSOCallbackContent />
+        <CallbackRouter />
       </Suspense>
     </AuthBackground>
   );

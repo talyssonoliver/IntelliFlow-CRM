@@ -1,6 +1,6 @@
 {
   "contract": "intelliflow-partner-api",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "transport": {
     "basePath": "/api/trpc",
     "auth": "Authorization: Bearer pk_<key>",
@@ -236,6 +236,11 @@
           "redirectTo": {
             "type": "string",
             "format": "uri"
+          },
+          "assertion": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
           }
         },
         "required": ["tenantId", "email"]
@@ -250,9 +255,180 @@
           },
           "expiresAt": {
             "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["ADMIN", "MEMBER"]
           }
         },
         "required": ["url", "expiresAt"],
+        "additionalProperties": false
+      }
+    },
+    "partner.removeMember": {
+      "kind": "mutation",
+      "scope": "members:write",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          }
+        },
+        "required": ["tenantId", "email"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "removed": {
+            "type": "boolean"
+          }
+        },
+        "required": ["removed"],
+        "additionalProperties": false
+      }
+    },
+    "partner.setMemberRole": {
+      "kind": "mutation",
+      "scope": "members:write",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["ADMIN", "MEMBER"]
+          }
+        },
+        "required": ["tenantId", "email", "role"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["ADMIN", "MEMBER"]
+          },
+          "changed": {
+            "type": "boolean"
+          }
+        },
+        "required": ["userId", "role", "changed"],
+        "additionalProperties": false
+      }
+    },
+    "partner.listMembers": {
+      "kind": "query",
+      "scope": "tenants:read",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["tenantId"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "name": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "role": {
+                  "type": "string",
+                  "enum": ["ADMIN", "MEMBER"]
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "HOME",
+                    "PORTAL_MEMBER",
+                    "PORTAL_STAFF",
+                    "OWNER_INVITE",
+                    "PARTNER_CREATED"
+                  ]
+                },
+                "pinned": {
+                  "type": "boolean"
+                },
+                "expiresAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "createdAt": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "userId",
+                "email",
+                "name",
+                "role",
+                "source",
+                "pinned",
+                "expiresAt",
+                "createdAt"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["tenantId", "members"],
         "additionalProperties": false
       }
     },
@@ -760,5 +936,209 @@
         "additionalProperties": false
       }
     }
-  }
+  },
+  "sessionProcedures": {
+    "user.listTenants": {
+      "kind": "query",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {}
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "activeTenantId": {
+            "type": "string"
+          },
+          "homeTenantId": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "tenants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tenantId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": ["ADMIN", "MEMBER"]
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "HOME",
+                    "PORTAL_MEMBER",
+                    "PORTAL_STAFF",
+                    "OWNER_INVITE",
+                    "PARTNER_CREATED"
+                  ]
+                },
+                "pinned": {
+                  "type": "boolean"
+                },
+                "isHome": {
+                  "type": "boolean"
+                },
+                "isActive": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "tenantId",
+                "name",
+                "slug",
+                "role",
+                "source",
+                "pinned",
+                "isHome",
+                "isActive"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["activeTenantId", "homeTenantId", "pinned", "tenants"],
+        "additionalProperties": false
+      }
+    },
+    "user.claimLoginGrant": {
+      "kind": "mutation",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "grant": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "required": ["grant"]
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "sessionExpiresAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": ["tenantId", "pinned", "sessionExpiresAt"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "assertion": {
+    "alg": "EdDSA",
+    "audience": "intelliflow-crm",
+    "maxTtlSeconds": 60,
+    "claims": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "iss": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "aud": {
+          "type": "string",
+          "const": "intelliflow-crm"
+        },
+        "sub": {
+          "type": "string",
+          "format": "email",
+          "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+        },
+        "tenant": {
+          "type": "object",
+          "properties": {
+            "externalRef": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "tenantId": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["member", "staff"]
+        },
+        "role": {
+          "type": "string",
+          "enum": ["ADMIN", "MEMBER"]
+        },
+        "iat": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "exp": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "jti": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{16,64}$"
+        }
+      },
+      "required": [
+        "iss",
+        "aud",
+        "sub",
+        "tenant",
+        "kind",
+        "role",
+        "iat",
+        "exp",
+        "jti"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "errorReasons": [
+    "ACCOUNT_IN_OTHER_TENANT",
+    "STAFF_NOT_PROVISIONED",
+    "NOT_A_MEMBER",
+    "QUOTA_EXCEEDED",
+    "ASSERTION_INVALID",
+    "ASSERTION_REQUIRED",
+    "LAST_ADMIN",
+    "RESERVED_EMAIL",
+    "HOME_ONLY",
+    "PIN_PENDING",
+    "GRANT_INVALID"
+  ]
 }

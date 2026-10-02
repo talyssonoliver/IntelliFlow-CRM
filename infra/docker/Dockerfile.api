@@ -50,6 +50,8 @@ RUN pnpm --filter db db:generate
 # Build workspace packages in dependency order (all use dist/ exports; CI has no pre-built dist/)
 RUN pnpm --filter domain build
 RUN pnpm --filter validators build
+# The API imports runtime values from the partner SDK (ADR-071 membership); build it too.
+RUN pnpm --filter partner-sdk build
 RUN pnpm --filter webhooks build
 RUN pnpm --filter platform build
 RUN pnpm --filter db build
@@ -60,6 +62,8 @@ RUN pnpm --filter adapters build
 RUN pnpm --filter ai-worker build
 
 # Build the API
+# The DTS step of the api build needs more heap than Node's default worker limit.
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm --filter api build
 
 # NOTE: `pnpm prune --prod` was removed intentionally.

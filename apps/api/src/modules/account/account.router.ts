@@ -11,6 +11,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
+import { tenantUserWhere } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   createAccountSchema,
@@ -1128,7 +1129,7 @@ export const accountRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
 
     const users = await typedCtx.prismaWithTenant.user.findMany({
-      where: { tenantId: typedCtx.tenant.tenantId },
+      where: tenantUserWhere(typedCtx.tenant.tenantId),
       select: { id: true, name: true, email: true, role: true, avatarUrl: true },
       orderBy: [{ name: 'asc' }, { email: 'asc' }],
     });
@@ -1175,7 +1176,7 @@ export const accountRouter = createTRPCRouter({
 
     // OK or SKIPPED — fetch target user once for the legacy response
     const targetUser = await typedCtx.prismaWithTenant.user.findFirst({
-      where: { id: input.ownerId, tenantId },
+      where: { id: input.ownerId, ...tenantUserWhere(tenantId) },
       select: { id: true, name: true, email: true },
     });
 
@@ -1299,7 +1300,7 @@ export const accountRouter = createTRPCRouter({
       // Pre-validate target user once (one query, not N). A lookup miss is a
       // NOT_FOUND, not an authz denial.
       const targetUser = await typedCtx.prismaWithTenant.user.findFirst({
-        where: { id: input.ownerId, tenantId },
+        where: { id: input.ownerId, ...tenantUserWhere(tenantId) },
         select: { id: true },
       });
       if (!targetUser) {
