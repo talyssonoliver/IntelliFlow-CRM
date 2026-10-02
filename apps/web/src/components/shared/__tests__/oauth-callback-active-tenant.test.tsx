@@ -274,8 +274,10 @@ describe('OAuthCallback active tenant', () => {
       render(<OAuthCallback />);
       await screen.findByText('Authentication Failed');
 
-      // once before verifyOtp, once after the failed claim
-      expect(h.signOut).toHaveBeenCalledTimes(2);
+      // signOut only before verifyOtp. The session the failed claim leaves behind is dropped
+      // silently (no SIGNED_OUT, no sign-out that could land after a later sign-in); the local
+      // cleanup runs once before verifyOtp and once after the failed claim.
+      expect(h.signOut).toHaveBeenCalledTimes(1);
       expect(h.clearSessionTokens).toHaveBeenCalledTimes(2);
       expect(h.clearTokenCookie).toHaveBeenCalledTimes(2);
       expect(h.clearSupabaseLocalStorage).toHaveBeenCalledTimes(2);

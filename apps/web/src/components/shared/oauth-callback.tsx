@@ -102,37 +102,30 @@ function withTimeout<T>(promise: Promise<T>, ms: number = STEP_TIMEOUT_MS): Prom
 type BrowserSupabase = NonNullable<ReturnType<typeof getSupabaseBrowserClient>>;
 
 /**
- * Remove a session this callback produced but will not sign in with. Never throws.
+ * Remove a session this callback produced but will not sign in with. Synchronous; never throws.
  *
- * Scoped to that session: the cleanup can run after the user has left the error screen and
- * signed in some other way. When the app already holds a different session, signing out would
- * emit SIGNED_OUT, which AuthContext treats as a sign-out of THAT session; so only the
- * abandoned session's copy in the SDK's storage is removed, silently. Otherwise the session is
- * signed out locally and every local trace of it is wiped.
+ * The SDK holds a session only in localStorage (persistSession, no auto-refresh), so removing
+ * its keys removes the session. It deliberately does NOT call `signOut`: that would emit
+ * SIGNED_OUT, which AuthContext treats as a sign-out of whatever session the APP holds, and a
+ * sign-out that outlived its timeout could still land later. This cleanup can run long after
+ * the error screen, when the user may have signed in some other way, so it decides and acts in
+ * one synchronous step: the app's tokens are cleared only while no other session holds them.
  *
  * `preexistingAccessToken` is the session the browser held before this callback ran. The OAuth
  * path does not sign out first, so a step may hand back that session rather than a new one; it
  * was never this callback's to remove.
  */
-async function dropAbandonedSession(
-  supabase: BrowserSupabase,
+function dropAbandonedSession(
   abandonedAccessToken: string,
   preexistingAccessToken: string | null = null
-): Promise<void> {
+): void {
   if (abandonedAccessToken === preexistingAccessToken) return;
-  const current = getStoredAccessToken();
-  if (current && current !== abandonedAccessToken) {
-    clearSupabaseLocalStorage();
-    return;
-  }
-  try {
-    await withTimeout(supabase.auth.signOut({ scope: 'local' }));
-  } catch {
-    // The local cleanup below still applies.
-  }
-  clearSessionTokens();
-  clearTokenCookie();
   clearSupabaseLocalStorage();
+  const current = getStoredAccessToken();
+  if (!current || current === abandonedAccessToken) {
+    clearSessionTokens();
+    clearTokenCookie();
+  }
 }
 
 /**
@@ -160,18 +153,16 @@ function normalizeClaimError(claimError: unknown): Error {
 
 /**
  * An abandoned (timed-out) sign-in request cannot be aborted. If it later yields a session,
- * sign that session out again and wipe every local trace, so a failure screen is never followed
- * by a silent sign-in.
+ * that session is dropped, so a failure screen is never followed by a silent sign-in.
  */
 function discardLateSession(
-  supabase: BrowserSupabase,
   pending: Promise<{ data: { session: { access_token: string } | null } | null }>,
   preexistingAccessToken: string | null = null
 ): void {
   pending
     .then((late) => {
       const token = late.data?.session?.access_token;
-      return token ? dropAbandonedSession(supabase, token, preexistingAccessToken) : undefined;
+      if (token) dropAbandonedSession(token, preexistingAccessToken);
     })
     .catch(() => undefined);
 }
@@ -180,14 +171,13 @@ function discardLateSession(
  * The flow watchdog already showed the failure screen. A step that settled after it must not
  * carry the flow on (no grant claim, no sign-in): drop whatever session now exists and stop.
  */
-async function abandonedByWatchdog(
+function abandonedByWatchdog(
   aborted: { readonly current: boolean },
-  supabase: BrowserSupabase,
   session: { access_token: string } | null | undefined,
   preexistingAccessToken: string | null = null
-): Promise<boolean> {
+): boolean {
   if (!aborted.current) return false;
-  if (session) await dropAbandonedSession(supabase, session.access_token, preexistingAccessToken);
+  if (session) dropAbandonedSession(session.access_token, preexistingAccessToken);
   return true;
 }
 
@@ -368,10 +358,10 @@ export function OAuthCallback({
     } catch (verifyError) {
       // verifyOtp cannot be cancelled: if it finishes after we showed the error, the SDK would
       // persist and broadcast a session behind the failure screen. Discard it when it lands.
-      discardLateSession(supabase, verification);
+      discardLateSession(verification);
       throw verifyError;
     }
-    if (await abandonedByWatchdog(abortedRef, supabase, result.data?.session)) return;
+    if (abandonedByWatchdog(abortedRef, result.data?.session)) return;
     const { data, error } = result;
 
     if (error || !data?.session) {
@@ -391,10 +381,10 @@ export function OAuthCallback({
         const claim = await withTimeout(claimLoginGrant(data.session.access_token, pending.grant));
         activeTenantId = claim.tenantId;
       } catch (claimError) {
-        await dropAbandonedSession(supabase, data.session.access_token);
+        dropAbandonedSession(data.session.access_token);
         throw normalizeClaimError(claimError);
       }
-      if (await abandonedByWatchdog(abortedRef, supabase, data.session)) return;
+      if (abandonedByWatchdog(abortedRef, data.session)) return;
     }
 
     pendingNextRef.current = pending.next;
@@ -508,19 +498,10 @@ export function OAuthCallback({
       try {
         sessionResult = await withTimeout(sessionRequest);
       } catch (sessionTimeout) {
-        discardLateSession(supabase, sessionRequest, preexistingToken);
+        discardLateSession(sessionRequest, preexistingToken);
         throw sessionTimeout;
       }
-      if (
-        await abandonedByWatchdog(
-          abortedRef,
-          supabase,
-          sessionResult.data?.session,
-          preexistingToken
-        )
-      ) {
-        return;
-      }
+      if (abandonedByWatchdog(abortedRef, sessionResult.data?.session, preexistingToken)) return;
       const { data, error: sessionError } = sessionResult;
 
       if (sessionError) {
@@ -540,10 +521,10 @@ export function OAuthCallback({
         ({ data: userData } = await withTimeout(supabase.auth.getUser(session.access_token)));
       } catch (userError) {
         // The exchanged session is already persisted: never leave it behind a failure screen.
-        await dropAbandonedSession(supabase, session.access_token, preexistingToken);
+        dropAbandonedSession(session.access_token, preexistingToken);
         throw userError;
       }
-      if (await abandonedByWatchdog(abortedRef, supabase, session, preexistingToken)) return;
+      if (abandonedByWatchdog(abortedRef, session, preexistingToken)) return;
       finishSignIn(session, userData?.user ?? undefined, 'oauth');
     } catch (err) {
       reportError(err);

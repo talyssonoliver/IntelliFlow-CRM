@@ -68,6 +68,23 @@ const SESSION = { access_token: 'acc', refresh_token: 'ref' };
 const LINK = 'token_hash=hash123&type=magiclink&next=/dashboard&tenant=ten_1&grant=grant_1';
 const NEVER = () => new Promise<never>(() => undefined);
 
+/** Forget the cleanup the flow itself ran, so a later assertion sees only the late drop. */
+function resetCleanupSpies() {
+  h.clearSupabaseLocalStorage.mockClear();
+  h.clearSessionTokens.mockClear();
+}
+
+/**
+ * The abandoned session was dropped silently: its SDK copy and the app tokens are cleared, and
+ * no further signOut ran (it would emit SIGNED_OUT, and a late one could land after a new
+ * sign-in).
+ */
+function expectSilentDrop(signOutsBefore: number) {
+  expect(h.clearSupabaseLocalStorage).toHaveBeenCalled();
+  expect(h.clearSessionTokens).toHaveBeenCalled();
+  expect(h.signOut).toHaveBeenCalledTimes(signOutsBefore);
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   sessionStorage.clear();
@@ -220,15 +237,15 @@ describe('never hangs silently', () => {
     });
     expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
 
+    resetCleanupSpies();
     await act(async () => {
       release({ data: { session: SESSION, user: { id: 'u1' } }, error: null });
       await vi.advanceTimersByTimeAsync(100);
     });
     expect(onSuccess).not.toHaveBeenCalled();
     expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
-    // The session the SDK persisted when the abandoned request landed is signed out again.
-    expect(h.signOut).toHaveBeenCalledTimes(2);
-    expect(h.signOut).toHaveBeenLastCalledWith({ scope: 'local' });
+    // The session the SDK persisted when the abandoned request landed is dropped again.
+    expectSilentDrop(1);
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
   });
 
@@ -288,15 +305,15 @@ describe('never hangs silently', () => {
       });
       expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
 
+      resetCleanupSpies();
       await act(async () => {
         await vi.advanceTimersByTimeAsync(5_000);
       });
       expect(h.claim).not.toHaveBeenCalled();
       expect(onSuccess).not.toHaveBeenCalled();
       expect(h.storeSessionTokens).not.toHaveBeenCalled();
-      // The pre-switch sign-out, then the drop of the session verifyOtp produced.
-      expect(h.signOut).toHaveBeenCalledTimes(2);
-      expect(h.signOut).toHaveBeenLastCalledWith({ scope: 'local' });
+      // Only the pre-switch sign-out; the session verifyOtp produced is dropped silently.
+      expectSilentDrop(1);
       expect(onError).toHaveBeenCalledTimes(1);
     });
 
@@ -311,13 +328,13 @@ describe('never hangs silently', () => {
       expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
       expect(h.claim).toHaveBeenCalledTimes(1);
 
+      resetCleanupSpies();
       await act(async () => {
         await vi.advanceTimersByTimeAsync(5_000);
       });
       expect(onSuccess).not.toHaveBeenCalled();
       expect(h.storeSessionTokens).not.toHaveBeenCalled();
-      expect(h.signOut).toHaveBeenCalledTimes(2);
-      expect(h.signOut).toHaveBeenLastCalledWith({ scope: 'local' });
+      expectSilentDrop(1);
       expect(onError).toHaveBeenCalledTimes(1);
       expect(screen.getByText(/taking too long/i)).toBeInTheDocument();
     });
@@ -331,7 +348,7 @@ describe('OAuth code flow', () => {
     h.getUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
   });
 
-  it('a session exchanged after getSession timed out is signed out when it lands', async () => {
+  it('a session exchanged after getSession timed out is dropped when it lands', async () => {
     vi.useFakeTimers();
     let release: (v: unknown) => void = () => undefined;
     h.getSession.mockImplementation(
@@ -349,16 +366,17 @@ describe('OAuth code flow', () => {
     expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
     expect(h.signOut).not.toHaveBeenCalled();
 
+    resetCleanupSpies();
     await act(async () => {
       release({ data: { session: SESSION }, error: null });
       await vi.advanceTimersByTimeAsync(100);
     });
     expect(onSuccess).not.toHaveBeenCalled();
-    expect(h.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expectSilentDrop(0);
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
   });
 
-  it('a late getSession with no session signs nothing out', async () => {
+  it('a late getSession with no session clears nothing', async () => {
     vi.useFakeTimers();
     let release: (v: unknown) => void = () => undefined;
     h.getSession.mockImplementation(
@@ -371,11 +389,14 @@ describe('OAuth code flow', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(10_500);
     });
+    resetCleanupSpies();
     await act(async () => {
       release({ data: { session: null }, error: null });
       await vi.advanceTimersByTimeAsync(100);
     });
     expect(h.signOut).not.toHaveBeenCalled();
+    expect(h.clearSupabaseLocalStorage).not.toHaveBeenCalled();
+    expect(h.clearSessionTokens).not.toHaveBeenCalled();
   });
 
   it('a getUser timeout drops the already exchanged session', async () => {
@@ -389,7 +410,7 @@ describe('OAuth code flow', () => {
       await vi.advanceTimersByTimeAsync(10_500);
     });
     expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
-    expect(h.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expectSilentDrop(0);
     expect(onSuccess).not.toHaveBeenCalled();
   });
 
