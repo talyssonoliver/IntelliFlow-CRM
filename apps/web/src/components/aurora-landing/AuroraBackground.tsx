@@ -112,7 +112,8 @@ function readPixels(image: HTMLImageElement): ArtworkPixels | null {
 }
 
 interface LoopControls {
-  setPaused(paused: boolean): void;
+  pause(): void;
+  resume(): void;
   /** Redraw the current frame when the loop is not running (paused or off-screen). */
   repaint(): void;
 }
@@ -124,7 +125,7 @@ interface LoopControls {
  * It stops drawing whenever it is off-screen or the tab is hidden, never animates
  * for visitors who ask for reduced motion, and offers a pause button (WCAG 2.2.2).
  */
-export function AuroraBackground({ className }: { className?: string }) {
+export function AuroraBackground({ className }: Readonly<{ className?: string }>) {
   const rootRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const ribbonRef = React.useRef<HTMLImageElement>(null);
@@ -151,7 +152,7 @@ export function AuroraBackground({ className }: { className?: string }) {
       const width = root.clientWidth;
       const height = root.clientHeight;
       setSize((prev) =>
-        prev && prev.width === width && prev.height === height ? prev : { width, height }
+        prev?.width === width && prev.height === height ? prev : { width, height }
       );
     };
     measure();
@@ -243,10 +244,8 @@ export function AuroraBackground({ className }: { className?: string }) {
           return;
         }
         loopRef.current = {
-          setPaused(next) {
-            if (next) stop();
-            else start();
-          },
+          pause: stop,
+          resume: start,
           repaint,
         };
         setState(pausedRef.current ? 'paused' : 'animated');
@@ -268,7 +267,7 @@ export function AuroraBackground({ className }: { className?: string }) {
         if (typeof IntersectionObserver === 'function') {
           const observer = new IntersectionObserver((entries) => {
             // Entries arrive oldest first; only the newest reflects where the canvas is now.
-            visible = entries[entries.length - 1]?.isIntersecting ?? true;
+            visible = entries.at(-1)?.isIntersecting ?? true;
             if (visible) start();
             else stop();
           });
@@ -345,7 +344,8 @@ export function AuroraBackground({ className }: { className?: string }) {
     const next = !paused;
     pausedRef.current = next;
     setPaused(next);
-    loopRef.current?.setPaused(next);
+    if (next) loopRef.current?.pause();
+    else loopRef.current?.resume();
     const liveState: AuroraBackgroundState = next ? 'paused' : 'animated';
     setState((current) => (current === 'animated' || current === 'paused' ? liveState : current));
   };
@@ -412,9 +412,9 @@ export function AuroraBackground({ className }: { className?: string }) {
         />
         {scene && (
           <>
-            {scene.sparkles.map((sparkle, index) => (
+            {scene.sparkles.map((sparkle) => (
               <svg
-                key={index}
+                key={`${sparkle.x}:${sparkle.y}`}
                 className="absolute"
                 width={sparkle.size}
                 height={sparkle.size}

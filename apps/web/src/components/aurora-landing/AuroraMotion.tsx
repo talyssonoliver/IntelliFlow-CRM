@@ -125,7 +125,7 @@ function pauseWhenHidden(canvas: HTMLCanvasElement, s: Stack, cleanups: Array<()
   if (typeof IntersectionObserver === 'function') {
     const io = new IntersectionObserver((entries) => {
       // Entries arrive oldest first; only the newest reflects where the canvas is now.
-      onScreen = entries[entries.length - 1]?.isIntersecting ?? true;
+      onScreen = entries.at(-1)?.isIntersecting ?? true;
       if (onScreen && document.visibilityState !== 'hidden') s.resume();
       else s.pause();
     });
@@ -299,7 +299,7 @@ function hideAtStageEnd(
       ].find((el) => el && getComputedStyle(el).position === 'sticky') ?? null;
     if (!band) return 0;
     const style = getComputedStyle(band);
-    return Math.ceil(parseFloat(style.top) + parseFloat(style.height)) || 0;
+    return Math.ceil(Number.parseFloat(style.top) + Number.parseFloat(style.height)) || 0;
   };
   if (end && canvasBottomPx() > 0) {
     triggers.push(

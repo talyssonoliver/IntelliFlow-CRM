@@ -146,10 +146,6 @@
   padding-left: 22px;
 }
 /* The owner's initials sit in the top-right corner; the account name stops short of them. */
-.aurora-page .pipeline-scene .deal-card > b {
-  padding-right: 30px;
-  text-overflow: ellipsis;
-}
 /* Design contract floor: UI-in-panel text never below 11px on desktop. The
    shared .who avatar-initial (aurora-landing.css) is 9px — an afterthought
    next to the 15-18px body copy beside it; raise it here rather than in the
@@ -234,8 +230,8 @@
   background: #c43b3b;
 }
 .aurora-page .tag.lost {
-  background: rgba(214, 69, 65, 0.12);
-  color: #c43b3b;
+  background: #fae9e8;
+  color: #b83838;
 }
 
 /* Replaces the shared #mover / #mover.moving rules (dead now that the
@@ -332,12 +328,12 @@
   border-radius: 999px;
 }
 .aurora-page .lead-tier--hot {
-  background: rgba(214, 69, 65, 0.14);
-  color: #c43b3b;
+  background: #f9e5e4;
+  color: #b33636;
 }
 .aurora-page .lead-tier--warm {
-  background: rgba(245, 160, 0, 0.16);
-  color: #c27c00;
+  background: #fdf0d6;
+  color: #935e00;
 }
 .aurora-page .lead-tier--cold {
   background: rgba(20, 24, 51, 0.08);

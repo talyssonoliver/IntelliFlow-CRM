@@ -150,7 +150,7 @@ function arcLengths(samples: ReadonlyArray<Point>): number[] {
     const [x1, y1] = samples[i]!;
     lengths.push(lengths[i - 1]! + Math.hypot(x1 - x0, y1 - y0));
   }
-  const total = lengths[lengths.length - 1] || 1;
+  const total = lengths.at(-1) || 1;
   return lengths.map((l) => l / total);
 }
 
