@@ -511,7 +511,9 @@ async function mergeCoaTags(
     try {
       await ctx.prisma.lead.update({
         where: { id: leadId },
-        data: { tags: [...have, ...missing] },
+        // push, not a whole-array write: two syncs for one email (different
+        // COA leads) would otherwise each overwrite the other's tag.
+        data: { tags: { push: missing } },
       });
     } catch (err) {
       console.warn('[inbound.syncPipelineLead] tag merge failed:', {
@@ -1017,32 +1019,46 @@ export const inboundRouter = createTRPCRouter({
       }
 
       // --- Step 2: forward-only walk through LeadService ----------------------
-      const steps = planPipelineSteps(currentStatus, input.status);
-      let status = currentStatus;
-      for (const step of steps) {
+      const initialSteps = planPipelineSteps(currentStatus, input.status);
+      let pending = initialSteps;
+      let status: PipelineLeadStatus = currentStatus;
+      let moved = false;
+      let replans = 0;
+      while (pending.length > 0) {
+        const step = pending[0] as PipelineLeadStatus;
         const result = await leadService.changeLeadStatus(leadId, step, COA_SYNC_USER);
         if (result.isFailure) {
           // A concurrent sync of the same lead may have moved it first, which
           // turns this step into an invalid transition. Re-read: if the lead
-          // is already at or past the target (or terminal), that request did
-          // the work and this one is a no-op, not an error.
+          // moved, replan from where it is now (possibly nothing left to do).
+          // A refusal the lead's own movement cannot explain is a real error.
           const now = await ctx.prisma.lead.findFirst({
             where: { id: leadId, tenantId },
             select: { status: true },
           });
-          if (now && planPipelineSteps(now.status, input.status).length === 0) {
-            return {
-              leadId,
-              tenantId,
-              created: leadCreated,
-              previousStatus: currentStatus,
-              status: now.status as PipelineLeadStatus,
-              changed: false,
-            };
+          if (now && now.status !== status && replans < 3) {
+            replans += 1;
+            status = now.status as PipelineLeadStatus;
+            pending = planPipelineSteps(now.status, input.status);
+            continue;
           }
           throw new TRPCError({ code: 'BAD_REQUEST', message: result.error.message });
         }
         status = step;
+        moved = true;
+        pending = pending.slice(1);
+      }
+
+      // Everything planned was done by a concurrent sync: it writes the note.
+      if (initialSteps.length > 0 && !moved) {
+        return {
+          leadId,
+          tenantId,
+          created: leadCreated,
+          previousStatus: currentStatus,
+          status,
+          changed: false,
+        };
       }
 
       await recordPipelineSync(ctx, input, leadId, tenantId, currentStatus, status, syncKey);
@@ -1053,7 +1069,7 @@ export const inboundRouter = createTRPCRouter({
         created: leadCreated,
         previousStatus: currentStatus,
         status,
-        changed: steps.length > 0,
+        changed: moved,
       };
     }),
 });

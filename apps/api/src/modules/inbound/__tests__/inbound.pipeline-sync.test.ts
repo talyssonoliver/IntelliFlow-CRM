@@ -134,7 +134,7 @@ describe('inboundRouter — syncPipelineLead', () => {
     expect(result).toMatchObject({ leadId: LEAD_ID, created: false, status: 'CONTACTED' });
     expect(prismaMock.lead.update).toHaveBeenCalledWith({
       where: { id: LEAD_ID },
-      data: { tags: ['portal-discover', ...COA_TAGS] },
+      data: { tags: { push: COA_TAGS } },
     });
   });
 
@@ -271,5 +271,18 @@ describe('inboundRouter — syncPipelineLead', () => {
     const result = await caller.syncPipelineLead(input('CONTACTED'));
     expect(result).toMatchObject({ leadId: LEAD_ID, status: 'CONTACTED', changed: false });
     expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+  });
+  it('replans when a concurrent sync moved the lead part of the way, then finishes the walk', async () => {
+    existingLead('NEW');
+    // Planned NEW -> CONTACTED -> QUALIFIED; a concurrent sync took it to CONTACTED.
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'CONTACTED' } as never);
+    changeStatus()
+      .mockResolvedValueOnce({ isFailure: true, error: { message: 'Invalid status transition' } })
+      .mockResolvedValueOnce({ isFailure: false, value: {} });
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('QUALIFIED', 'RESPONDED'));
+    expect(result).toMatchObject({ status: 'QUALIFIED', changed: true });
+    expect(statusCalls()).toEqual(['CONTACTED', 'QUALIFIED']);
+    expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
   });
 });
