@@ -97,6 +97,9 @@
   .aurora-site .aurora-status .ast-pending li {
     flex-wrap: wrap;
   }
+  .aurora-site .aurora-status .ast-pending li > div {
+    flex-basis: calc(100% - 40px);
+  }
   .aurora-site .aurora-status .ast-tag {
     margin-left: 30px;
   }

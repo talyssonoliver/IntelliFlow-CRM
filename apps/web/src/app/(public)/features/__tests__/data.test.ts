@@ -47,9 +47,11 @@ describe('Features Content Data', () => {
 
     it('should have the expected category names', () => {
       const categoryNames = featuresData.categories.map((c) => c.name);
-      expect(categoryNames).toContain('Core CRM');
-      expect(categoryNames).toContain('AI & Intelligence');
-      expect(categoryNames).toContain('Security & Governance');
+      expect(categoryNames).toEqual([
+        'Agents that do the work',
+        'Your pipeline and service',
+        'Connected and secure',
+      ]);
     });
   });
 
@@ -125,12 +127,41 @@ describe('Features Content Data', () => {
       });
     });
 
-    it('should have valid learn more URLs', () => {
+    it('should only link to a landing section or a page that exists', () => {
       featuresData.categories.forEach((category) => {
         category.features.forEach((feature) => {
-          expect(feature.learnMoreUrl).toMatch(/^\/features\//);
+          expect(['/#agents', '/#platform', '/security', '/pricing']).toContain(
+            feature.learnMoreUrl
+          );
         });
       });
+    });
+
+    it('keeps the anchors the product tour points at', () => {
+      const ids = featuresData.categories.flatMap((c) => c.features.map((f) => f.id));
+      for (const anchor of ['ai-lead-scoring', 'workflow-automation', 'pipeline-analytics']) {
+        expect(ids).toContain(anchor);
+      }
+    });
+
+    it('claims nothing the product does not back', () => {
+      const text = JSON.stringify(featuresData.categories).toLowerCase();
+      for (const claim of [
+        '%',
+        'uptime sla',
+        'sla guarantee',
+        'iso 27001',
+        'iso 42001',
+        'gdpr',
+        'soc 2',
+        'zero trust',
+        'zero-trust',
+        'certif',
+        'templates included',
+        'hours per week',
+      ]) {
+        expect(text, claim).not.toContain(claim);
+      }
     });
   });
 
@@ -149,38 +180,17 @@ describe('Features Content Data', () => {
   });
 
   describe('Content Quality', () => {
-    it('should have AI-related features in AI category', () => {
-      const aiCategory = featuresData.categories.find((c) => c.id === 'ai-intelligence');
-
-      expect(aiCategory).toBeDefined();
-      expect(aiCategory!.features.length).toBeGreaterThan(0);
-
-      // Check that features mention AI or intelligence
-      const hasAIContent = aiCategory!.features.some(
-        (feature) =>
-          feature.title.toLowerCase().includes('ai') ||
-          feature.description.toLowerCase().includes('ai') ||
-          feature.description.toLowerCase().includes('intelligence')
-      );
-
-      expect(hasAIContent).toBe(true);
+    it('should lead with the agents and a person approving their work', () => {
+      const agents = featuresData.categories.find((c) => c.id === 'agents');
+      expect(agents).toBeDefined();
+      expect(agents!.features.map((f) => f.title)).toContain('One approval queue');
     });
 
-    it('should have security-related features in security category', () => {
-      const securityCategory = featuresData.categories.find((c) => c.id === 'security-governance');
-
-      expect(securityCategory).toBeDefined();
-      expect(securityCategory!.features.length).toBeGreaterThan(0);
-
-      // Check that features mention security or compliance
-      const hasSecurityContent = securityCategory!.features.some(
-        (feature) =>
-          feature.title.toLowerCase().includes('security') ||
-          feature.title.toLowerCase().includes('compliance') ||
-          feature.description.toLowerCase().includes('security')
-      );
-
-      expect(hasSecurityContent).toBe(true);
+    it('should say multi-factor sign-in is available, never enforced', () => {
+      const secure = featuresData.categories.find((c) => c.id === 'connected-secure')!;
+      const text = JSON.stringify(secure);
+      expect(text).toMatch(/multi-factor sign-in is available on every account/i);
+      expect(text).not.toMatch(/enforced/i);
     });
   });
 });
