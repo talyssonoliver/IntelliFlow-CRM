@@ -167,6 +167,47 @@ describe('Navigation publishes its rendered height for the fixed sidebars', () =
     document.documentElement.style.removeProperty(APP_HEADER_HEIGHT_VAR);
   });
 
+  it('without ResizeObserver, a banner mounting later still republishes the height', async () => {
+    const RO = globalThis.ResizeObserver;
+    // Simulate a browser without ResizeObserver.
+    Reflect.deleteProperty(globalThis, 'ResizeObserver');
+    try {
+      h.listTenants = { data: undefined, isLoading: false, isError: false };
+      const { rerender } = renderNav();
+      expect(document.documentElement.style.getPropertyValue(APP_HEADER_HEIGHT_VAR)).toBe('104px');
+      let height = 104;
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+        configurable: true,
+        get() {
+          return (this as HTMLElement).tagName === 'HEADER' ? height : 0;
+        },
+      });
+      height = 142;
+      h.listTenants = {
+        data: {
+          activeTenantId: 'tenant_client',
+          homeTenantId: 'tenant_home',
+          pinned: true,
+          tenants: [{ ...client, isActive: true, pinned: true, source: 'PORTAL_STAFF' }],
+        },
+        isLoading: false,
+        isError: false,
+      };
+      rerender(
+        <QueryClientProvider client={new QueryClient()}>
+          <Navigation />
+        </QueryClientProvider>
+      );
+      expect(screen.getByTestId('pinned-tenant-banner')).toBeInTheDocument();
+      // MutationObserver callbacks are delivered as microtasks.
+      await Promise.resolve();
+      await new Promise((r) => setTimeout(r, 0));
+      expect(document.documentElement.style.getPropertyValue(APP_HEADER_HEIGHT_VAR)).toBe('142px');
+    } finally {
+      globalThis.ResizeObserver = RO;
+    }
+  });
+
   it('sets --app-header-h on <html> from the header, and clears it on unmount', () => {
     h.listTenants = {
       data: {
@@ -178,9 +219,22 @@ describe('Navigation publishes its rendered height for the fixed sidebars', () =
       isLoading: false,
       isError: false,
     };
-    const { unmount } = renderNav();
+    const { unmount, rerender } = renderNav();
     expect(screen.getByTestId('pinned-tenant-banner')).toBeInTheDocument();
     expect(document.documentElement.style.getPropertyValue(APP_HEADER_HEIGHT_VAR)).toBe('104px');
+    // A re-render must leave the variable in place: the first version cleared
+    // and re-set it on every render, which kept the fixed sidebars animating.
+    const setProperty = vi.spyOn(document.documentElement.style, 'setProperty');
+    const removeProperty = vi.spyOn(document.documentElement.style, 'removeProperty');
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <Navigation />
+      </QueryClientProvider>
+    );
+    expect(removeProperty).not.toHaveBeenCalledWith(APP_HEADER_HEIGHT_VAR);
+    expect(setProperty).not.toHaveBeenCalledWith(APP_HEADER_HEIGHT_VAR, expect.anything());
+    setProperty.mockRestore();
+    removeProperty.mockRestore();
     unmount();
     expect(document.documentElement.style.getPropertyValue(APP_HEADER_HEIGHT_VAR)).toBe('');
   });
