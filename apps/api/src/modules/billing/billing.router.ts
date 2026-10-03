@@ -1710,7 +1710,9 @@ export const billingRouter = createTRPCRouter({
    *      The tier is derived by reverse-matching the subscription's Stripe price ID
    *      against the STRIPE_PRICE_<TIER>_<CYCLE> env vars. Falls back to 'UNKNOWN'
    *      if the price ID is not in the env (e.g. manually-created sub).
-   *   3. If not found: derive a 14-day trial from Tenant.createdAt and return
+   *   3. If the tenant's plan is PARTNER_FREE (granted by a partner, ADR-070): return
+   *      {tier:'PARTNER_FREE', status:'ACTIVE', source:'partner'} with no trial dates.
+   *   4. Otherwise: derive a 14-day trial from Tenant.createdAt and return
    *      {tier:'PROFESSIONAL', status:'TRIALING', trialEndsAt, daysLeft, source:'trial'}.
    *
    * No DB writes, no Stripe calls, no migration.
@@ -1749,11 +1751,25 @@ export const billingRouter = createTRPCRouter({
       };
     }
 
-    // 2. Derive trial from Tenant.createdAt (no DB write, no migration)
     const tenant = await db.tenant.findUnique({
       where: { id: tenantId },
-      select: { createdAt: true },
+      select: { createdAt: true, plan: true },
     });
+
+    // 2. A PARTNER_FREE tenant is granted by a partner (ADR-070), never purchased and never on
+    //    a trial clock: report it as a partner plan so the web shows no "Trial: N days left".
+    if (tenant?.plan === 'PARTNER_FREE') {
+      return {
+        source: 'partner' as const,
+        tier: 'PARTNER_FREE' as const,
+        status: 'ACTIVE' as const,
+        currentPeriodEnd: null,
+        trialEndsAt: null,
+        daysLeft: null,
+      };
+    }
+
+    // 3. Derive trial from Tenant.createdAt (no DB write, no migration)
 
     const TRIAL_DAYS = 14;
     const trialStart = tenant?.createdAt ?? new Date();

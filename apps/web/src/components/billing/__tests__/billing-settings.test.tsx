@@ -55,6 +55,12 @@ vi.mock('@/lib/trpc', () => ({
   },
 }));
 
+const mockUseTenantMemberships = vi.fn(() => ({ pinned: false }));
+
+vi.mock('@/lib/tenant/use-tenant-memberships', () => ({
+  useTenantMemberships: () => mockUseTenantMemberships(),
+}));
+
 vi.mock('@/lib/auth/AuthContext', () => ({
   useAuth: vi.fn(() => ({ isAuthenticated: true, isLoading: false })),
 }));
@@ -66,6 +72,40 @@ describe('BillingSettings', () => {
     vi.clearAllMocks();
     mockOnError = null;
     mockGetBillingInfo.mockReturnValue({ data: mockBillingInfo, isLoading: false, error: null });
+    mockUseTenantMemberships.mockReturnValue({ pinned: false });
+  });
+
+  describe('pinned session (ADR-071: billing is home-only)', () => {
+    it('shows a "not available" notice instead of an empty page in a pinned session', () => {
+      mockUseTenantMemberships.mockReturnValue({ pinned: true });
+      // The query is disabled while pinned: no data, not loading, no error.
+      mockGetBillingInfo.mockReturnValue({ data: undefined, isLoading: false, error: null });
+      render(<BillingSettings />);
+      expect(screen.getByTestId('billing-unavailable-notice')).toBeInTheDocument();
+      expect(screen.getByText(/billing is not available in this workspace/i)).toBeInTheDocument();
+      expect(screen.queryByLabelText(/organization/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /save changes/i })).not.toBeInTheDocument();
+    });
+
+    it('shows the notice when the API refuses billing as HOME_ONLY', () => {
+      const forbidden = Object.assign(new Error('HOME_ONLY: not available'), {
+        data: { code: 'FORBIDDEN', reason: 'HOME_ONLY' },
+      });
+      mockGetBillingInfo.mockReturnValue({ data: undefined, isLoading: false, error: forbidden });
+      render(<BillingSettings />);
+      expect(screen.getByTestId('billing-unavailable-notice')).toBeInTheDocument();
+      expect(screen.queryByText(/failed to load/i)).not.toBeInTheDocument();
+    });
+
+    it('keeps the error state for any other FORBIDDEN (not a home-only refusal)', () => {
+      const forbidden = Object.assign(new Error('PIN_PENDING: claim the link first'), {
+        data: { code: 'FORBIDDEN', reason: 'PIN_PENDING' },
+      });
+      mockGetBillingInfo.mockReturnValue({ data: undefined, isLoading: false, error: forbidden });
+      render(<BillingSettings />);
+      expect(screen.queryByTestId('billing-unavailable-notice')).not.toBeInTheDocument();
+      expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
+    });
   });
 
   it('shows loading skeleton when data is loading', () => {

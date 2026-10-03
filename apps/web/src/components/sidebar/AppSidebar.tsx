@@ -161,7 +161,7 @@ export function AppSidebar({
     <nav
       ref={navRef}
       className={cn(
-        'fixed left-0 top-16 bottom-0 z-30 flex flex-col bg-card border-r border-border',
+        'fixed left-0 top-[var(--app-header-h,4rem)] bottom-0 z-30 flex flex-col bg-card border-r border-border',
         'transition-all duration-300 ease-in-out',
         isExpanded ? 'w-60' : 'w-14',
         'hidden lg:flex',

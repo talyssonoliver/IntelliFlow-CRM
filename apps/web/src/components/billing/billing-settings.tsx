@@ -14,7 +14,8 @@ import { Card, CardHeader, CardTitle, CardContent, Input, Label, toast } from '@
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { PageHeader, type PageAction } from '@/components/shared/page-header';
-import { ErrorState } from './billing-shared';
+import { useTenantMemberships } from '@/lib/tenant/use-tenant-memberships';
+import { BillingUnavailableNotice, ErrorState, isHomeOnlyRefusal } from './billing-shared';
 
 /** Normalize null/undefined to empty string for form field display */
 function normalize(value: string | null | undefined): string {
@@ -24,15 +25,19 @@ function normalize(value: string | null | undefined): string {
 export function BillingSettings() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const utils = trpc.useUtils();
+  // ADR-071: billing is home-only. A pinned staff session is refused it by the API, so do not
+  // even ask; say it is unavailable here instead of rendering an empty page.
+  const { pinned } = useTenantMemberships();
 
   const {
     data: billingInfo,
     isLoading,
     error,
   } = trpc.billing.getBillingInformation.useQuery(undefined, {
-    enabled: isAuthenticated && !authLoading,
+    enabled: isAuthenticated && !authLoading && !pinned,
     staleTime: 5 * 60 * 1000,
-    retry: 1,
+    // A home-only refusal will not change on retry.
+    retry: (failureCount, err) => !isHomeOnlyRefusal(err) && failureCount < 1,
   });
 
   const [organization, setOrganization] = React.useState('');
@@ -140,6 +145,10 @@ export function BillingSettings() {
     setEmail(eml);
     setTaxId(tax);
     setInvoiceContact(inv);
+  }
+
+  if (pinned || isHomeOnlyRefusal(error)) {
+    return <BillingUnavailableNotice />;
   }
 
   if (isLoading || authLoading) {

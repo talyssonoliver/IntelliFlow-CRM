@@ -10,6 +10,7 @@
  *  - The user is authenticated.
  *  - The current route is a protected app route.
  *  - The plan state source === 'trial' and daysLeft is a number.
+ *    A partner-granted PARTNER_FREE plan reports source 'partner' and never shows a badge.
  *
  * Accessibility:
  *  - Rendered as a simple <span> with aria-label for screen readers.

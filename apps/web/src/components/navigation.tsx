@@ -29,7 +29,37 @@ const PUBLIC_ROUTES = [
   '/auth',
 ];
 
+/**
+ * The header's rendered height, published as `--app-header-h` on <html>.
+ *
+ * The fixed sidebars (AppSidebar, module-settings-nav, complementary-sidebar) sit directly
+ * below the header. They used to hard-code `top-16` (4rem), which was only ever true without
+ * the ADR-071 pinned-tenant banner: with the banner the header is taller and the top of every
+ * sidebar was hidden under it, which read as "the banner is missing on settings". The header
+ * is the one element that knows its own height, so it publishes it and the sidebars read it,
+ * with 4rem as the fallback for any route that renders no header.
+ */
+export const APP_HEADER_HEIGHT_VAR = '--app-header-h';
+
+function usePublishHeaderHeight(ref: React.RefObject<HTMLElement | null>) {
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof document === 'undefined') return;
+    const root = document.documentElement;
+    const publish = () => root.style.setProperty(APP_HEADER_HEIGHT_VAR, `${el.offsetHeight}px`);
+    publish();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(publish);
+    observer?.observe(el);
+    return () => {
+      observer?.disconnect();
+      root.style.removeProperty(APP_HEADER_HEIGHT_VAR);
+    };
+  });
+}
+
 export function Navigation() {
+  const headerRef = React.useRef<HTMLElement | null>(null);
+  usePublishHeaderHeight(headerRef);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const pathname = usePathname();
@@ -63,7 +93,7 @@ export function Navigation() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
+    <header ref={headerRef} className="sticky top-0 z-50 w-full border-b border-border bg-card">
       {/* ADR-071: shown only for a pinned Portal-grant session */}
       <PinnedTenantBanner />
       <div className="flex h-16 items-center px-4 lg:px-6">
