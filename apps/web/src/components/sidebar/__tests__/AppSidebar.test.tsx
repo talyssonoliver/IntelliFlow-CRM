@@ -414,7 +414,10 @@ describe('AppSidebar', () => {
       );
 
       const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
-      expect(sidebar).toHaveClass('transition-all', 'duration-300');
+      // Only the width animates. `top` follows the header's published height and
+      // must apply at once, so the fixed element never carries transition-all.
+      expect(sidebar).toHaveClass('transition-[width]', 'duration-300');
+      expect(sidebar).not.toHaveClass('transition-all');
     });
   });
 });
