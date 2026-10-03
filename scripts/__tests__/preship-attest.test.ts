@@ -640,12 +640,17 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
     git(['config', 'user.name', 'test']);
     fs.mkdirSync(path.join(dir, 'scripts'), { recursive: true });
     fs.copyFileSync(PRESHIP, path.join(dir, 'scripts/pre-ship.mjs'));
+    // The gate's machine-wide lock and its watchdog live beside it.
+    for (const f of ['preship-lock.mjs', 'preship-watchdog.mjs']) {
+      fs.copyFileSync(path.join(REPO_ROOT, 'scripts', f), path.join(dir, 'scripts', f));
+    }
     git(['add', '-A']);
     git(['commit', '-q', '-m', 'seed']);
 
     const r = spawnSync('node', ['scripts/pre-ship.mjs', '--only=__no_such_step__'], {
       cwd: dir,
-      env: cleanEnv(),
+      // Its own lock file: never wait on (or take) the real machine-wide one.
+      env: { ...cleanEnv(), PRESHIP_LOCK_PATH: path.join(dir, 'preship.lock') },
       encoding: 'utf8',
     });
     expect(r.status).toBe(0);

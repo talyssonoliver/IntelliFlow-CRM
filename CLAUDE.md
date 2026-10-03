@@ -175,6 +175,16 @@ DB** (never prod — `.env.local`'s `DATABASE_URL` is production Supabase; use
 `new_coverage` ≥80% on changed lines) so under-tested diffs fail locally, not
 after a CI round.
 
+**One gate per machine.** The gate takes a machine-wide lock
+(`$TMP/intelliflow-preship.lock`); a second push waits for the first instead of
+running beside it. If a gate is killed, a detached watchdog stops the step it
+was running, and the next gate clears anything still left (a killed push once
+left a 4.7 GB `next build` running). See `scripts/preship-lock.mjs`. **Tests run
+once:** `coverage` runs (and fails on) every unit project, so `unit-tests` runs
+only the projects outside its list (`UNIT_ONLY_PROJECTS`), or the whole suite
+when `coverage` cannot run. `scripts/__tests__/preship-unit-split.test.ts` fails
+if the lists drift.
+
 ### Sprint_plan.csv is Single Source of Truth
 
 Always edit CSV for task updates. Run sync after changes. Never edit derived
