@@ -1,0 +1,44 @@
+/*
+ * SiteFooter — continues the Final CTA's Navy with no seam, and gives its
+ * links real 44px touch targets. Every rule scoped under .aurora-page.
+ * `.aurora-footer` is a second class added only on this section's root so
+ * these overrides win regardless of stylesheet import order, without
+ * editing aurora-landing.css directly.
+ */
+
+/* Audit M2: footer <a> measured ~24px tall, under the 44px guideline.
+   padding-block grows the tap target without touching the 15px type or its
+   line-height; the grid gap drops to 0 since the padding now carries the
+   spacing between links. */
+.aurora-page .footer.aurora-footer .foot-cols div {
+  gap: 0;
+}
+.aurora-page .footer.aurora-footer .foot-cols a {
+  display: flex;
+  align-items: center;
+  padding-block: 10px;
+}
+.aurora-page .footer.aurora-footer .foot-cols b {
+  padding-bottom: 10px;
+}
+
+/* The Final CTA's ribbons run on down behind the footer: its content sits
+   above them, and the footer itself stays transparent over the same Navy. */
+.aurora-page .footer.aurora-footer {
+  background: var(--navy);
+  position: relative;
+  overflow-x: clip;
+}
+.aurora-page .footer.aurora-footer > .wrap {
+  position: relative;
+  z-index: 3;
+}
+
+/* Four columns of links: two by two on a phone, so nothing runs off the side. */
+@media (max-width: 960px) {
+  .aurora-page .footer.aurora-footer .foot-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 32px;
+  }
+}

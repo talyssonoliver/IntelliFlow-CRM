@@ -103,6 +103,13 @@ describe('SignUpPage', () => {
   // ============================================
 
   describe('Rendering', () => {
+    it("fills in the email the landing page's Start free form left in session storage, once", async () => {
+      sessionStorage.setItem('aurora:signup-email', 'maya@northwind.example');
+      render(<SignUpPage />);
+      expect(await screen.findByDisplayValue('maya@northwind.example')).toBeInTheDocument();
+      expect(sessionStorage.getItem('aurora:signup-email')).toBeNull();
+    });
+
     it('renders the registration form', () => {
       render(<SignUpPage />);
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-15T13:21:25.603Z",
+  "generated_at": "2026-10-01T07:36:35.219Z",
   "upstream_font_sha256": "b9a28e5c5328940ee287c3d7f6b626e32a9afa92f86b055295cdf6fd5d1c004b",
   "subsetter_version": "subset-font@^2.5.0",
   "variation_axes": {
@@ -215,6 +215,7 @@
     "monetization_on",
     "monitor_heart",
     "monitoring",
+    "mood",
     "more_horiz",
     "more_vert",
     "neurology",
@@ -319,6 +320,7 @@
     "support_agent",
     "swap_horiz",
     "swap_vert",
+    "swipe",
     "sync",
     "system_update",
     "table_chart",
@@ -376,8 +378,8 @@
     "zoom_in",
     "zoom_out"
   ],
-  "icons_count": 366,
-  "scanned_files_count": 1155,
+  "icons_count": 368,
+  "scanned_files_count": 1211,
   "source_scan_patterns": [
     "apps/web/src",
     "packages/ui/src"

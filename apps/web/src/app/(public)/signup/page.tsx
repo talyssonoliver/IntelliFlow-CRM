@@ -16,6 +16,7 @@
  * - Rate limiting protection
  */
 
+import { takeSignupEmail } from '@/lib/signup-prefill';
 import { Suspense, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -140,6 +141,13 @@ function SignUpPageContent() {
   const router = useRouter();
   const auth = useAuth();
   const getUTMData = useUTMCapture();
+  // The landing page's "Start free" form leaves the visitor's email in
+  // sessionStorage (never in the URL); pick it up once the page is on the client.
+  const [prefillEmail, setPrefillEmail] = useState('');
+  useEffect(() => {
+    const email = takeSignupEmail();
+    if (email) setPrefillEmail(email);
+  }, []);
 
   // Redirect if already authenticated
   useRedirectIfAuthenticated('/');
@@ -280,7 +288,12 @@ function SignUpPageContent() {
             <OAuthDivider />
 
             {/* Registration Form */}
-            <RegistrationForm onSubmit={handleSubmit} isLoading={isSubmitting} />
+            <RegistrationForm
+              key={prefillEmail || 'blank'}
+              onSubmit={handleSubmit}
+              isLoading={isSubmitting}
+              initialEmail={prefillEmail}
+            />
 
             {/* Sign in link */}
             <div className="text-center pt-4 border-t border-white/10">
