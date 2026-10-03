@@ -44,6 +44,7 @@ const UNAUTH_SPECS = [
   '**/icons.spec.ts',
   '**/features-tour.spec.ts',
   '**/email/inbound-webhook.spec.ts',
+  '**/preview/aurora-preview.spec.ts',
 ];
 
 /**

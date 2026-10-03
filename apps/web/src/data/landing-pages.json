@@ -1,74 +1,217 @@
 {
   "metadata": {
-    "lastUpdated": "2025-01-15",
+    "lastUpdated": "2026-10-02",
     "totalPages": 3
   },
   "pages": {
     "ai-crm": {
       "slug": "ai-crm",
-      "title": "AI-Powered CRM for Modern Sales Teams | IntelliFlow",
-      "description": "Transform your sales process with AI-powered lead scoring, automated workflows, and intelligent insights. Start your free trial today.",
+      "title": "Aurora, the AI CRM that asks before it acts",
+      "description": "AI agents score your leads, draft every follow-up and flag every deal going quiet, then wait for your yes. 14 days free, no credit card.",
+      "conversionGoal": "trial_signup",
       "sections": [
         {
           "type": "hero",
-          "badge": "AI-Powered CRM",
+          "badge": "The AI-native CRM",
           "badgeIcon": "smart_toy",
-          "headline": "Close More Deals with AI-Powered Intelligence",
-          "subheadline": "IntelliFlow CRM uses machine learning to score leads, automate follow-ups, and provide actionable insights that help your team sell smarter.",
+          "headline": "The CRM that works your pipeline for you.",
+          "subheadline": "Aurora's AI agents score every lead, draft every follow-up and flag every deal going quiet. Then they wait for your yes.",
           "primaryCta": {
-            "text": "Start Free Trial",
+            "text": "Start free",
             "href": "/signup?source=lp-ai-crm"
           },
           "secondaryCta": {
-            "text": "Watch Demo",
-            "href": "/demo"
+            "text": "Talk to us",
+            "href": "/contact"
           }
         },
         {
-          "type": "logo-cloud",
-          "title": "Trusted by innovative sales teams worldwide",
-          "logos": [
-            { "name": "TechCorp" },
-            { "name": "SalesForce Pro" },
-            { "name": "GrowthCo" },
-            { "name": "DataDriven" },
-            { "name": "ScaleUp Inc" }
+          "type": "features",
+          "title": "Agents that do the work",
+          "subtitle": "They prepare the work across your leads, deals and cases. A person approves every step.",
+          "features": [
+            {
+              "icon": "insights",
+              "title": "Lead scoring",
+              "description": "Every lead and account scored, with the reasons behind each score."
+            },
+            {
+              "icon": "edit_note",
+              "title": "Drafted follow-ups",
+              "description": "For every deal going quiet, the next email drafted for you to approve."
+            },
+            {
+              "icon": "fact_check",
+              "title": "One approval queue",
+              "description": "Six kinds of AI work in one queue, each with what the agent noticed and where it looked."
+            },
+            {
+              "icon": "monitoring",
+              "title": "Pipeline and forecast",
+              "description": "The deal board, the list and the forecast are the same pipeline, with stalled deals flagged."
+            }
+          ],
+          "columns": 4
+        },
+        {
+          "type": "stats",
+          "background": "brand",
+          "stats": [
+            {
+              "value": "15",
+              "label": "AI agent types"
+            },
+            {
+              "value": "6",
+              "label": "Kinds of AI work, one approval queue"
+            },
+            {
+              "value": "6",
+              "label": "App connectors"
+            },
+            {
+              "value": "212",
+              "label": "Product screens"
+            }
           ]
         },
         {
+          "type": "cta",
+          "title": "Your first 14 days with Aurora are free.",
+          "subtitle": "No credit card. Every AI action waits for your yes.",
+          "primaryCta": {
+            "text": "Start free",
+            "href": "/signup?source=lp-ai-crm"
+          },
+          "secondaryCta": {
+            "text": "Talk to us",
+            "href": "/contact"
+          }
+        }
+      ]
+    },
+    "enterprise": {
+      "slug": "enterprise",
+      "title": "Aurora for larger teams",
+      "description": "Human approval on every AI action, workspace isolation, an audit log and enterprise single sign-on, on every plan.",
+      "conversionGoal": "enterprise_demo",
+      "sections": [
+        {
+          "type": "hero",
+          "badge": "For larger teams",
+          "badgeIcon": "business",
+          "headline": "Enterprise-grade tools, priced and built for growing businesses.",
+          "subheadline": "The protections large companies pay extra for, in every workspace from day one.",
+          "primaryCta": {
+            "text": "Talk to us",
+            "href": "/contact?type=enterprise"
+          },
+          "secondaryCta": {
+            "text": "View security",
+            "href": "/security"
+          }
+        },
+        {
           "type": "features",
-          "title": "AI That Actually Helps You Sell",
-          "subtitle": "Not just another CRM. Intelligent automation that understands your sales process.",
+          "title": "In charge of every step",
+          "subtitle": "Built so your team stays in control of what the AI does.",
           "features": [
             {
-              "icon": "psychology",
-              "title": "Predictive Lead Scoring",
-              "description": "ML models analyze 50+ signals to prioritize your hottest leads automatically."
+              "icon": "verified_user",
+              "title": "Human approval",
+              "description": "No AI action goes out without a person's approval."
             },
             {
-              "icon": "auto_fix_high",
-              "title": "Smart Follow-ups",
-              "description": "AI suggests the best time and channel to reach out, increasing response rates by 40%."
+              "icon": "shield_lock",
+              "title": "Workspace isolation",
+              "description": "Each workspace's data is kept apart by row-level security."
             },
             {
-              "icon": "insights",
-              "title": "Deal Intelligence",
-              "description": "Get real-time insights on deal health and recommended actions to close faster."
+              "icon": "history",
+              "title": "Audit log",
+              "description": "Every change is written to an audit log, with who made it and when."
             },
             {
-              "icon": "assistant",
-              "title": "AI Email Writer",
-              "description": "Generate personalized emails in seconds. Human-quality writing, AI speed."
+              "icon": "key",
+              "title": "Single sign-on",
+              "description": "Google, Microsoft or your own identity provider, and multi-factor sign-in available on every account."
+            }
+          ],
+          "columns": 4
+        },
+        {
+          "type": "stats",
+          "background": "brand",
+          "stats": [
+            {
+              "value": "15",
+              "label": "AI agent types"
             },
             {
-              "icon": "analytics",
-              "title": "Revenue Forecasting",
-              "description": "Accurate pipeline forecasts powered by historical data and market signals."
+              "value": "6",
+              "label": "Kinds of AI work, one approval queue"
             },
             {
-              "icon": "integration_instructions",
-              "title": "100+ Integrations",
-              "description": "Connect your entire stack. Seamless sync with email, calendar, and tools you use."
+              "value": "6",
+              "label": "App connectors"
+            },
+            {
+              "value": "212",
+              "label": "Product screens"
+            }
+          ]
+        },
+        {
+          "type": "cta",
+          "title": "Let's talk about your team.",
+          "subtitle": "Tell us how your team sells and we will walk you through Aurora.",
+          "primaryCta": {
+            "text": "Talk to us",
+            "href": "/contact?type=enterprise"
+          }
+        }
+      ]
+    },
+    "startup": {
+      "slug": "startup",
+      "title": "Aurora for startups",
+      "description": "A CRM whose agents do the busywork, so a small team can sell like a bigger one. 14 days free, no credit card.",
+      "conversionGoal": "startup_signup",
+      "sections": [
+        {
+          "type": "hero",
+          "badge": "For startups",
+          "badgeIcon": "rocket_launch",
+          "headline": "Sell like a bigger team.",
+          "subheadline": "Aurora's agents score leads, draft follow-ups and keep your pipeline current, so a small team spends the day selling.",
+          "primaryCta": {
+            "text": "Start free",
+            "href": "/signup?source=lp-startup"
+          },
+          "secondaryCta": {
+            "text": "See pricing",
+            "href": "/pricing"
+          }
+        },
+        {
+          "type": "features",
+          "title": "Up and running fast",
+          "subtitle": "Bring your pipeline in today and let the agents start work.",
+          "features": [
+            {
+              "icon": "bolt",
+              "title": "Bring your data in",
+              "description": "Import your contacts and deals, connect Gmail or Outlook, and the agents start work."
+            },
+            {
+              "icon": "hub",
+              "title": "Connected",
+              "description": "Gmail, Outlook, Slack, Microsoft Teams, Stripe and PayPal."
+            },
+            {
+              "icon": "code",
+              "title": "Developer friendly",
+              "description": "Webhooks, React hooks and a CLI. The TypeScript SDK is in beta."
             }
           ],
           "columns": 3
@@ -77,233 +220,38 @@
           "type": "stats",
           "background": "brand",
           "stats": [
-            { "value": "40%", "label": "Faster Deal Cycles" },
-            { "value": "3x", "label": "More Qualified Leads" },
-            { "value": "95%", "label": "Scoring Accuracy" },
-            { "value": "2hrs", "label": "Saved Per Day" }
-          ]
-        },
-        {
-          "type": "testimonials",
-          "title": "Loved by Sales Teams",
-          "subtitle": "See what our customers have to say about IntelliFlow CRM",
-          "testimonials": [
             {
-              "quote": "The AI lead scoring is incredible. We went from guessing which leads to call to knowing exactly who's ready to buy.",
-              "author": "Sarah Chen",
-              "role": "VP of Sales",
-              "company": "TechCorp"
+              "value": "15",
+              "label": "AI agent types"
             },
             {
-              "quote": "IntelliFlow cut our sales cycle in half. The automated follow-ups and smart insights are game-changers.",
-              "author": "Marcus Johnson",
-              "role": "Sales Director",
-              "company": "GrowthCo"
+              "value": "6",
+              "label": "Kinds of AI work, one approval queue"
             },
             {
-              "quote": "Finally, a CRM that works for us instead of against us. The AI suggestions are spot-on.",
-              "author": "Emily Rodriguez",
-              "role": "Account Executive",
-              "company": "ScaleUp Inc"
+              "value": "6",
+              "label": "App connectors"
+            },
+            {
+              "value": "212",
+              "label": "Product screens"
             }
           ]
         },
         {
           "type": "cta",
-          "title": "Ready to Supercharge Your Sales?",
-          "subtitle": "Join thousands of sales teams using AI to close more deals. No credit card required.",
+          "title": "Start free. Bring your pipeline in today.",
+          "subtitle": "14 days free. No credit card.",
           "primaryCta": {
-            "text": "Start Free Trial",
-            "href": "/signup?source=lp-ai-crm"
+            "text": "Start free",
+            "href": "/signup?source=lp-startup"
           },
           "secondaryCta": {
-            "text": "Talk to Sales",
-            "href": "/contact"
-          }
-        }
-      ],
-      "conversionGoal": "trial_signup"
-    },
-    "enterprise": {
-      "slug": "enterprise",
-      "title": "Enterprise CRM Solution | IntelliFlow",
-      "description": "Enterprise-grade CRM with SSO, advanced security, dedicated support, and custom integrations. Built for scale.",
-      "sections": [
-        {
-          "type": "hero",
-          "badge": "Enterprise",
-          "badgeIcon": "business",
-          "headline": "Enterprise CRM Built for Scale",
-          "subheadline": "Advanced security, dedicated support, and custom integrations. Everything your enterprise needs to succeed.",
-          "primaryCta": {
-            "text": "Request Demo",
-            "href": "/demo?plan=enterprise"
-          },
-          "secondaryCta": {
-            "text": "View Security",
-            "href": "/security"
-          }
-        },
-        {
-          "type": "features",
-          "title": "Enterprise-Grade Capabilities",
-          "subtitle": "Built to meet the demanding requirements of large organizations",
-          "features": [
-            {
-              "icon": "security",
-              "title": "Advanced Security",
-              "description": "SOC 2 Type II, ISO 27001 certified. End-to-end encryption and SSO/SAML support."
-            },
-            {
-              "icon": "groups",
-              "title": "Unlimited Users",
-              "description": "Scale your team without limits. Role-based access control and team hierarchies."
-            },
-            {
-              "icon": "support_agent",
-              "title": "Dedicated Support",
-              "description": "24/7 priority support with dedicated customer success manager."
-            },
-            {
-              "icon": "api",
-              "title": "Custom Integrations",
-              "description": "Full API access with custom integration development support."
-            }
-          ],
-          "columns": 2
-        },
-        {
-          "type": "stats",
-          "background": "dark",
-          "stats": [
-            { "value": "500+", "label": "Enterprise Customers" },
-            { "value": "99.99%", "label": "Uptime SLA" },
-            { "value": "< 1hr", "label": "Support Response" },
-            { "value": "SOC 2", "label": "Certified" }
-          ]
-        },
-        {
-          "type": "cta",
-          "title": "Ready for Enterprise CRM?",
-          "subtitle": "Let's discuss how IntelliFlow can transform your organization's sales process.",
-          "primaryCta": {
-            "text": "Schedule a Call",
-            "href": "/contact?type=enterprise"
-          }
-        }
-      ],
-      "conversionGoal": "enterprise_demo"
-    },
-    "startup": {
-      "slug": "startup",
-      "title": "CRM for Startups | IntelliFlow",
-      "description": "The modern CRM built for fast-moving startups. Free tier available, scales as you grow.",
-      "sections": [
-        {
-          "type": "hero",
-          "badge": "For Startups",
-          "badgeIcon": "rocket_launch",
-          "headline": "The CRM That Grows With You",
-          "subheadline": "Start free, scale infinitely. Modern CRM designed for fast-moving startups who can't afford to waste time on clunky tools.",
-          "primaryCta": {
-            "text": "Start Free",
-            "href": "/signup?plan=startup"
-          },
-          "secondaryCta": {
-            "text": "See Pricing",
+            "text": "See pricing",
             "href": "/pricing"
           }
-        },
-        {
-          "type": "features",
-          "title": "Built for Speed",
-          "subtitle": "Everything you need, nothing you don't. Ship faster with a CRM that works the way you do.",
-          "features": [
-            {
-              "icon": "bolt",
-              "title": "5-Minute Setup",
-              "description": "Import contacts, connect email, and start selling in minutes. No IT required."
-            },
-            {
-              "icon": "trending_up",
-              "title": "Scales With You",
-              "description": "From 2 users to 200. Pricing that grows with your team, not against it."
-            },
-            {
-              "icon": "code",
-              "title": "Developer Friendly",
-              "description": "Full API, webhooks, and Zapier integration. Build what you need."
-            }
-          ],
-          "columns": 3
-        },
-        {
-          "type": "pricing",
-          "title": "Simple, Startup-Friendly Pricing",
-          "subtitle": "No hidden fees. No per-seat surprises. Just straightforward pricing.",
-          "tiers": [
-            {
-              "name": "Free",
-              "price": "$0",
-              "period": "forever",
-              "description": "For solo founders and tiny teams",
-              "features": [
-                "Up to 3 users",
-                "1,000 contacts",
-                "Basic integrations",
-                "Email support"
-              ],
-              "cta": {
-                "text": "Get Started",
-                "href": "/signup?plan=free"
-              }
-            },
-            {
-              "name": "Startup",
-              "price": "$49",
-              "period": "month",
-              "description": "For growing teams ready to scale",
-              "features": [
-                "Up to 10 users",
-                "Unlimited contacts",
-                "AI lead scoring",
-                "Priority support"
-              ],
-              "cta": {
-                "text": "Start Trial",
-                "href": "/signup?plan=startup"
-              },
-              "highlighted": true
-            },
-            {
-              "name": "Scale",
-              "price": "$149",
-              "period": "month",
-              "description": "For teams hitting hypergrowth",
-              "features": [
-                "Unlimited users",
-                "Advanced AI features",
-                "Custom integrations",
-                "Dedicated CSM"
-              ],
-              "cta": {
-                "text": "Contact Sales",
-                "href": "/contact?plan=scale"
-              }
-            }
-          ]
-        },
-        {
-          "type": "cta",
-          "title": "Join 1,000+ Startups Using IntelliFlow",
-          "subtitle": "Start free today. No credit card required.",
-          "primaryCta": {
-            "text": "Start Free",
-            "href": "/signup?plan=startup"
-          }
         }
-      ],
-      "conversionGoal": "startup_signup"
+      ]
     }
   }
 }

@@ -263,7 +263,7 @@ export function MfaVerification({
         {onCancel && (
           <button
             onClick={onCancel}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900"
             aria-label="Return to login"
           >
             Return to Login
@@ -292,7 +292,7 @@ export function MfaVerification({
         {onCancel && (
           <button
             onClick={onCancel}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900"
             aria-label="Return to login"
           >
             Return to Login

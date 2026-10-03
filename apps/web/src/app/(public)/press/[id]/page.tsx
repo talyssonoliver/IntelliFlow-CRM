@@ -24,24 +24,24 @@ export async function generateMetadata({
 
   if (!release) {
     return {
-      title: 'Press Release Not Found | IntelliFlow CRM',
+      title: 'Press Release Not Found',
     };
   }
 
   return {
-    title: `${release.title} | IntelliFlow Press`,
+    title: `${release.title} | Aurora Press`,
     description: release.summary,
     openGraph: {
-      title: `${release.title} | IntelliFlow Press`,
+      title: `${release.title} | Aurora Press`,
       description: release.summary,
       url: `https://intelliflow-crm.com/press/${release.id}`,
-      siteName: 'IntelliFlow CRM',
+      siteName: 'Aurora',
       type: 'article',
       publishedTime: release.date,
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${release.title} | IntelliFlow Press`,
+      title: `${release.title} | Aurora Press`,
       description: release.summary,
     },
   };

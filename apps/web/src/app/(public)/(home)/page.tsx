@@ -5,25 +5,26 @@ import { fetchWelcomeSummary } from '@/lib/cached-queries/home-queries';
 import { fetchAIInsights } from '@/lib/cached-queries/ai-insights-queries';
 import { serializeForClient } from '@/lib/shared/serialize-for-client';
 import { HomePagePublicWithAuthFallback } from '@/components/home/HomePagePublicWithAuthFallback';
+import { AuroraLandingPage } from '@/components/aurora-landing/AuroraLandingPage';
 import { AuthenticatedHomePage } from '@/components/home/AuthenticatedHomePage';
 
 export const metadata: Metadata = {
-  title: 'AI-first CRM with Governance Built In | IntelliFlow CRM',
+  title: { absolute: 'Aurora, the AI CRM that asks before it acts' },
   description:
-    'IntelliFlow CRM pairs automation with governance-grade validation. Launch AI-first sales, pipeline, and service flows with evidence-backed quality gates.',
+    'Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Nothing goes out until a person says yes.',
   openGraph: {
-    title: 'IntelliFlow CRM — AI-first CRM with governed automation',
+    title: 'Aurora, the AI CRM that asks before it acts',
     description:
-      'Automate sales and service with AI while keeping governance, accessibility, and performance guardrails in place.',
+      'Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Nothing goes out until a person says yes.',
     url: 'https://intelliflow-crm.com',
-    siteName: 'IntelliFlow CRM',
+    siteName: 'Aurora',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'IntelliFlow CRM — Governed AI for Sales Teams',
+    title: 'Aurora, the AI CRM that asks before it acts',
     description:
-      'Automation with safeguards, audit-ready validation, WCAG-aligned experiences, and performance-first UX.',
+      'Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.',
   },
 };
 
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
  * - Authenticated users → `<AuthenticatedHomePage />` with welcome data prefetched
  *   server-side and passed as `initialWelcomeData`. The greeting and user name
  *   are in the initial HTML, so no client-side hydration flash.
- * - Unauthenticated visitors → `<PublicHomePage />` SSR'd directly with full
+ * - Unauthenticated visitors → the Aurora landing page, SSR'd directly with full
  *   marketing content visible to crawlers and Lighthouse on first paint.
  *
  * This is the `/` route's counterpart to `/dashboard/page.tsx`, following the
@@ -47,7 +48,11 @@ export default async function HomePage() {
     // Server didn't see a token — render the public page. But wrap it in a
     // client component that re-checks auth and swaps to AuthenticatedHomePage
     // if the client turns out to be authenticated (post-login cookie race).
-    return <HomePagePublicWithAuthFallback />;
+    return (
+      <HomePagePublicWithAuthFallback>
+        <AuroraLandingPage />
+      </HomePagePublicWithAuthFallback>
+    );
   }
 
   // Decode userId from the JWT payload (outside 'use cache' boundary — safe here).

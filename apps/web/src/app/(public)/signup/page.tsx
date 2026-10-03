@@ -16,6 +16,7 @@
  * - Rate limiting protection
  */
 
+import { takeSignupEmail } from '@/lib/signup-prefill';
 import { Suspense, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -70,7 +71,7 @@ function SignUpErrorFallback({ error, resetErrorBoundary }: Readonly<FallbackPro
     <AuthBackground>
       <div className="relative z-10 w-full max-w-md mx-auto">
         <AuthCard
-          badge="INTELLIFLOW"
+          badge="Sign up"
           badgeIcon="error"
           title="Something went wrong"
           description="An unexpected error occurred during registration."
@@ -140,6 +141,13 @@ function SignUpPageContent() {
   const router = useRouter();
   const auth = useAuth();
   const getUTMData = useUTMCapture();
+  // The landing page's "Start free" form leaves the visitor's email in
+  // sessionStorage (never in the URL); pick it up once the page is on the client.
+  const [prefillEmail, setPrefillEmail] = useState('');
+  useEffect(() => {
+    const email = takeSignupEmail();
+    if (email) setPrefillEmail(email);
+  }, []);
 
   // Redirect if already authenticated
   useRedirectIfAuthenticated('/');
@@ -202,11 +210,7 @@ function SignUpPageContent() {
           sessionStorage.setItem('oauth_login_success', Date.now().toString());
           clearSupabaseLocalStorage();
 
-          showToast(
-            'success',
-            'Account created!',
-            'Welcome to IntelliFlow — setting up your workspace…'
-          );
+          showToast('success', 'Account created!', 'Welcome to Aurora. Setting up your workspace…');
           router.push('/');
           return;
         }
@@ -263,7 +267,7 @@ function SignUpPageContent() {
       <AuthBackground>
         <div className="relative z-10 w-full max-w-md mx-auto">
           <AuthCard
-            badge="INTELLIFLOW"
+            badge="14 days free"
             badgeIcon="rocket_launch"
             badgeClassName="hidden md:inline-flex"
             title="Create your account"
@@ -280,7 +284,12 @@ function SignUpPageContent() {
             <OAuthDivider />
 
             {/* Registration Form */}
-            <RegistrationForm onSubmit={handleSubmit} isLoading={isSubmitting} />
+            <RegistrationForm
+              key={prefillEmail || 'blank'}
+              onSubmit={handleSubmit}
+              isLoading={isSubmitting}
+              initialEmail={prefillEmail}
+            />
 
             {/* Sign in link */}
             <div className="text-center pt-4 border-t border-white/10">
@@ -288,7 +297,7 @@ function SignUpPageContent() {
                 Already have an account?{' '}
                 <Link
                   href="/login"
-                  className="text-[#7cc4ff] hover:text-[#5ab3ff] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] rounded px-1"
+                  className="text-[#bca8ff] hover:text-[#bca8ff] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#11175b] rounded px-1"
                 >
                   Sign in
                 </Link>

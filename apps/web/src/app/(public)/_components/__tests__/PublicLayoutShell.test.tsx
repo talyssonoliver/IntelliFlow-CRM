@@ -52,9 +52,10 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 // ---------------------------------------------------------------------------
 // Mock public components to isolate PublicLayoutShell rendering logic
 // ---------------------------------------------------------------------------
-vi.mock('@/components/public/PublicHeader', () => ({
-  PublicHeader: () => <div data-testid="public-header">PublicHeader</div>,
+vi.mock('@/components/aurora-site/AuroraSiteHeader', () => ({
+  AuroraSiteHeader: () => <div data-testid="public-header">AuroraSiteHeader</div>,
 }));
+vi.mock('@/components/aurora-site/aurora-site.css', () => ({}));
 
 vi.mock('@/components/public/feedback-widget-public', () => ({
   PublicFeedbackFab: () => <div data-testid="public-feedback-fab">FeedbackFab</div>,
@@ -82,7 +83,10 @@ import { PublicLayoutShell } from '../PublicLayoutShell';
 function renderShell(opts: { isAuthenticated?: boolean; pathname?: string } = {}) {
   currentPathname = opts.pathname ?? '/';
   return render(
-    <PublicLayoutShell isAuthenticated={opts.isAuthenticated ?? false}>
+    <PublicLayoutShell
+      isAuthenticated={opts.isAuthenticated ?? false}
+      footer={<footer data-testid="site-footer">Footer</footer>}
+    >
       <div data-testid="child-content">Content</div>
     </PublicLayoutShell>
   );
@@ -106,7 +110,7 @@ describe('authLoading=true → overlays suppressed', () => {
   it('does NOT render PublicFeedbackFab while auth is loading', () => {
     mockAuthLoading = true;
     mockClientAuthenticated = false;
-    renderShell({ isAuthenticated: false, pathname: '/' });
+    renderShell({ isAuthenticated: false, pathname: '/pricing' });
 
     expect(screen.queryByTestId('public-feedback-fab')).toBeNull();
   });
@@ -143,7 +147,7 @@ describe('authLoading=false & unauthenticated → overlays mounted', () => {
   it('renders PublicFeedbackFab when not loading and not authenticated', () => {
     mockAuthLoading = false;
     mockClientAuthenticated = false;
-    renderShell({ isAuthenticated: false, pathname: '/' });
+    renderShell({ isAuthenticated: false, pathname: '/pricing' });
 
     expect(screen.getByTestId('public-feedback-fab')).toBeDefined();
   });
@@ -167,7 +171,7 @@ describe('authLoading=false & unauthenticated → overlays mounted', () => {
   it('renders PublicHeader on non-auth pages for unauthenticated visitor', () => {
     mockAuthLoading = false;
     mockClientAuthenticated = false;
-    renderShell({ isAuthenticated: false, pathname: '/' });
+    renderShell({ isAuthenticated: false, pathname: '/pricing' });
 
     expect(screen.getByTestId('public-header')).toBeDefined();
   });
@@ -229,7 +233,7 @@ describe('client isAuthenticated=true → overlays suppressed', () => {
   it('does NOT render PublicFeedbackFab when client auth is resolved as authenticated', () => {
     mockAuthLoading = false;
     mockClientAuthenticated = true;
-    renderShell({ isAuthenticated: false, pathname: '/' });
+    renderShell({ isAuthenticated: false, pathname: '/pricing' });
 
     expect(screen.queryByTestId('public-feedback-fab')).toBeNull();
   });
@@ -245,7 +249,7 @@ describe('client isAuthenticated=true → overlays suppressed', () => {
   it('does NOT render PublicHeader when client auth is authenticated', () => {
     mockAuthLoading = false;
     mockClientAuthenticated = true;
-    renderShell({ isAuthenticated: false, pathname: '/' });
+    renderShell({ isAuthenticated: false, pathname: '/pricing' });
 
     expect(screen.queryByTestId('public-header')).toBeNull();
   });
@@ -303,7 +307,7 @@ describe('effectiveAuthenticated logic', () => {
   it('server=false + clientAuth=true + loading=false → authenticated (client wins)', () => {
     mockAuthLoading = false;
     mockClientAuthenticated = true;
-    renderShell({ isAuthenticated: false, pathname: '/' });
+    renderShell({ isAuthenticated: false, pathname: '/pricing' });
 
     expect(screen.queryByTestId('public-feedback-fab')).toBeNull();
   });
@@ -314,8 +318,40 @@ describe('effectiveAuthenticated logic', () => {
     // So overlays are NOT mounted (loading blocks overlays regardless)
     mockAuthLoading = true;
     mockClientAuthenticated = true;
-    renderShell({ isAuthenticated: false, pathname: '/' });
+    renderShell({ isAuthenticated: false, pathname: '/pricing' });
 
     expect(screen.queryByTestId('public-feedback-fab')).toBeNull();
+  });
+});
+
+// ===========================================================================
+// 7. Aurora: the landing page at / brings its own chrome; other pages share it
+// ===========================================================================
+describe('Aurora site chrome', () => {
+  it('adds nothing around the landing page at / for logged-out visitors', () => {
+    const { container } = renderShell({ isAuthenticated: false, pathname: '/' });
+
+    expect(screen.getByTestId('child-content')).toBeDefined();
+    expect(screen.queryByTestId('public-header')).toBeNull();
+    expect(screen.queryByTestId('site-footer')).toBeNull();
+    expect(screen.queryByTestId('public-feedback-fab')).toBeNull();
+    expect(container.querySelector('.aurora-site')).toBeNull();
+  });
+
+  it('wraps every other public page in the Aurora header, main and footer', () => {
+    const { container } = renderShell({ isAuthenticated: false, pathname: '/pricing' });
+
+    const site = container.querySelector('.aurora-site')!;
+    expect(screen.getByTestId('public-header')).toBeDefined();
+    expect(site.querySelector('main#aurora-site-main')).not.toBeNull();
+    expect(screen.getByTestId('site-footer')).toBeDefined();
+  });
+
+  it('keeps the app home for a logged-in user at /, without the Aurora chrome', () => {
+    const { container } = renderShell({ isAuthenticated: true, pathname: '/' });
+
+    expect(screen.getByTestId('child-content')).toBeDefined();
+    expect(container.querySelector('.aurora-site')).toBeNull();
+    expect(screen.queryByTestId('site-footer')).toBeNull();
   });
 });
