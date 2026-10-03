@@ -54,19 +54,25 @@ function usePublishHeaderHeight(el: HTMLElement | null) {
     const root = document.documentElement;
     const publish = () => root.style.setProperty(APP_HEADER_HEIGHT_VAR, `${el.offsetHeight}px`);
     publish();
-    // ResizeObserver reports every height change, the banner mounting later
-    // included. Where it does not exist, watch the header's subtree instead:
-    // the banner mounting or unmounting is a DOM change, and a viewport
-    // resize can rewrap the header, so both republish.
+    // Three sources, all kept on: ResizeObserver for every height change;
+    // a MutationObserver on the header's subtree because the banner mounting
+    // or unmounting is a DOM change, and ResizeObserver notifications are
+    // delivered in the rendering steps, which a hidden tab skips (measured
+    // on 03/10: the banner mounted in a background window and the variable
+    // stayed at the pre-banner 65px until the tab was shown); and the window
+    // resize and visibilitychange events for the rewrap and the return to
+    // the foreground.
     const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(publish);
-    const mutate = resize ? null : new MutationObserver(publish);
+    const mutate = new MutationObserver(publish);
     resize?.observe(el);
-    mutate?.observe(el, { childList: true, subtree: true, attributes: true });
-    if (!resize) window.addEventListener('resize', publish);
+    mutate.observe(el, { childList: true, subtree: true, attributes: true });
+    window.addEventListener('resize', publish);
+    document.addEventListener('visibilitychange', publish);
     return () => {
       resize?.disconnect();
-      mutate?.disconnect();
-      if (!resize) window.removeEventListener('resize', publish);
+      mutate.disconnect();
+      window.removeEventListener('resize', publish);
+      document.removeEventListener('visibilitychange', publish);
       root.style.removeProperty(APP_HEADER_HEIGHT_VAR);
     };
   }, [el]);

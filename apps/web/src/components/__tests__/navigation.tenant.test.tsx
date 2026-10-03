@@ -167,10 +167,10 @@ describe('Navigation publishes its rendered height for the fixed sidebars', () =
     document.documentElement.style.removeProperty(APP_HEADER_HEIGHT_VAR);
   });
 
-  it('without ResizeObserver, a banner mounting later still republishes the height', async () => {
+  it('a banner mounting later republishes the height even when ResizeObserver never fires', async () => {
+    // The test ResizeObserver mock never delivers, which is also what a hidden
+    // tab does in Chrome; the MutationObserver path must carry the update.
     const RO = globalThis.ResizeObserver;
-    // Simulate a browser without ResizeObserver.
-    Reflect.deleteProperty(globalThis, 'ResizeObserver');
     try {
       h.listTenants = { data: undefined, isLoading: false, isError: false };
       const { rerender } = renderNav();
