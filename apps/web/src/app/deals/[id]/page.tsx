@@ -491,7 +491,7 @@ export default function DealDetailPage() {
   const moveStage = api.opportunity.moveStage.useMutation({
     onSuccess: (_data, variables) => {
       revalidateDealCaches(user?.id ?? null).catch(() => {});
-      utils.opportunity.getById.invalidate({ id: dealId });
+      void utils.opportunity.getById.invalidate({ id: dealId });
       setPendingAction(null);
       toast({
         title:
@@ -522,7 +522,7 @@ export default function DealDetailPage() {
   const updateMutation = api.opportunity.update.useMutation({
     onSuccess: () => {
       revalidateDealCaches(user?.id ?? null).catch(() => {});
-      utils.opportunity.getById.invalidate({ id: dealId });
+      void utils.opportunity.getById.invalidate({ id: dealId });
       setEditDialogOpen(false);
       toast({ title: 'Deal updated' });
     },

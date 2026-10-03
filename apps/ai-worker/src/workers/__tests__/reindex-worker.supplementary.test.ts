@@ -261,6 +261,49 @@ describe('ReindexWorker - audit log failure', () => {
   });
 });
 
+describe('ReindexWorker - progress update failure', () => {
+  let worker: ReindexWorker;
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    capturedProcessor = null;
+    worker = new ReindexWorker(createMockPrisma(), redisConnection);
+    await worker.start();
+  });
+  afterEach(async () => {
+    try {
+      await worker.stop();
+    } catch (_e) {
+      /* cleanup may fail if worker never started */
+    }
+  });
+
+  it('logs a rejected in-flight updateProgress instead of leaving it unhandled, and still completes', async () => {
+    if (capturedProcessor == null) return;
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const progressError = new Error('redis unavailable');
+    // Stage-start updateProgress calls (awaited) succeed; the in-flight callback
+    // calls fired from reindexAll/reindexAllNotes reject.
+    const updateProgress = vi
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(progressError)
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(progressError);
+    const j = {
+      id: 'j-pf',
+      data: { indexType: 'all', batchSize: 10, forceRegenerate: false },
+      updateProgress,
+    };
+    await expect(capturedProcessor(j)).resolves.toBeDefined();
+    await new Promise((resolve) => setImmediate(resolve));
+    const logged = errorSpy.mock.calls.filter(
+      (c) => c[0] === '[ReindexWorker] Failed to update job progress:' && c[1] === progressError
+    );
+    expect(logged).toHaveLength(2);
+    errorSpy.mockRestore();
+  });
+});
+
 describe('ReindexWorker defaults', () => {
   it('should export REINDEX_QUEUE_NAME', () => {
     expect(REINDEX_QUEUE_NAME).toBeDefined();

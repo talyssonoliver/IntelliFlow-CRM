@@ -466,14 +466,19 @@ export function CsvImporter() {
     // and the first page is server-cache-tagged). Mirrors lead-list.tsx's pattern.
     // Best-effort: a cache-refresh failure must NOT strand the UI in the importing
     // state — the leads are already created and a stale list self-heals on refetch.
+    // The two server-cache refreshes are independent: one rejecting must not skip
+    // the other, and a failure is logged rather than dropped.
     if (imported > 0) {
-      try {
-        utils.lead.list.invalidate();
-        utils.lead.stats.invalidate();
-        invalidateLeadsCache();
-        if (user?.id) await revalidateLeadCaches(user.id);
-      } catch {
-        // ignore — imported rows exist; the list refetches on its own
+      void utils.lead.list.invalidate();
+      void utils.lead.stats.invalidate();
+      const refreshes = await Promise.allSettled([
+        invalidateLeadsCache(),
+        user?.id ? revalidateLeadCaches(user.id) : Promise.resolve(),
+      ]);
+      for (const r of refreshes) {
+        if (r.status === 'rejected') {
+          console.warn('[CsvImporter] Lead cache refresh failed after import:', r.reason);
+        }
       }
     }
     setResult({ imported, failures, skipped });
