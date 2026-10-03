@@ -41,9 +41,15 @@ const PUBLIC_ROUTES = [
  */
 export const APP_HEADER_HEIGHT_VAR = '--app-header-h';
 
-function usePublishHeaderHeight(ref: React.RefObject<HTMLElement | null>) {
+function usePublishHeaderHeight(el: HTMLElement | null) {
+  // Keyed on the ELEMENT, not run on every render. The first version had no
+  // dependency list, so every re-render of the header (a query settling, a
+  // route change) ran the cleanup and then the effect again: the variable was
+  // removed and re-set within one tick, the sidebars fell back to 4rem and
+  // came back, and with `transition-all` on them their top never stopped
+  // animating (measured at 65px against a 102px header in production on
+  // 03/10). The ResizeObserver already covers every real height change.
   React.useEffect(() => {
-    const el = ref.current;
     if (!el || typeof document === 'undefined') return;
     const root = document.documentElement;
     const publish = () => root.style.setProperty(APP_HEADER_HEIGHT_VAR, `${el.offsetHeight}px`);
@@ -54,12 +60,14 @@ function usePublishHeaderHeight(ref: React.RefObject<HTMLElement | null>) {
       observer?.disconnect();
       root.style.removeProperty(APP_HEADER_HEIGHT_VAR);
     };
-  });
+  }, [el]);
 }
 
 export function Navigation() {
-  const headerRef = React.useRef<HTMLElement | null>(null);
-  usePublishHeaderHeight(headerRef);
+  // A callback ref into state, so the effect above re-runs exactly when the
+  // <header> mounts or unmounts (it is not rendered while auth is loading).
+  const [headerEl, setHeaderEl] = React.useState<HTMLElement | null>(null);
+  usePublishHeaderHeight(headerEl);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const pathname = usePathname();
@@ -93,7 +101,7 @@ export function Navigation() {
   }
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-50 w-full border-b border-border bg-card">
+    <header ref={setHeaderEl} className="sticky top-0 z-50 w-full border-b border-border bg-card">
       {/* ADR-071: shown only for a pinned Portal-grant session */}
       <PinnedTenantBanner />
       <div className="flex h-16 items-center px-4 lg:px-6">

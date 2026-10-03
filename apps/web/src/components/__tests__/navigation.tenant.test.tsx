@@ -178,9 +178,22 @@ describe('Navigation publishes its rendered height for the fixed sidebars', () =
       isLoading: false,
       isError: false,
     };
-    const { unmount } = renderNav();
+    const { unmount, rerender } = renderNav();
     expect(screen.getByTestId('pinned-tenant-banner')).toBeInTheDocument();
     expect(document.documentElement.style.getPropertyValue(APP_HEADER_HEIGHT_VAR)).toBe('104px');
+    // A re-render must leave the variable in place: the first version cleared
+    // and re-set it on every render, which kept the fixed sidebars animating.
+    const setProperty = vi.spyOn(document.documentElement.style, 'setProperty');
+    const removeProperty = vi.spyOn(document.documentElement.style, 'removeProperty');
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <Navigation />
+      </QueryClientProvider>
+    );
+    expect(removeProperty).not.toHaveBeenCalledWith(APP_HEADER_HEIGHT_VAR);
+    expect(setProperty).not.toHaveBeenCalledWith(APP_HEADER_HEIGHT_VAR, expect.anything());
+    setProperty.mockRestore();
+    removeProperty.mockRestore();
     unmount();
     expect(document.documentElement.style.getPropertyValue(APP_HEADER_HEIGHT_VAR)).toBe('');
   });
