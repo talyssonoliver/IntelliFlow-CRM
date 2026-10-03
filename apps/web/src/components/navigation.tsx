@@ -54,10 +54,19 @@ function usePublishHeaderHeight(el: HTMLElement | null) {
     const root = document.documentElement;
     const publish = () => root.style.setProperty(APP_HEADER_HEIGHT_VAR, `${el.offsetHeight}px`);
     publish();
-    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(publish);
-    observer?.observe(el);
+    // ResizeObserver reports every height change, the banner mounting later
+    // included. Where it does not exist, watch the header's subtree instead:
+    // the banner mounting or unmounting is a DOM change, and a viewport
+    // resize can rewrap the header, so both republish.
+    const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(publish);
+    const mutate = resize ? null : new MutationObserver(publish);
+    resize?.observe(el);
+    mutate?.observe(el, { childList: true, subtree: true, attributes: true });
+    if (!resize) window.addEventListener('resize', publish);
     return () => {
-      observer?.disconnect();
+      resize?.disconnect();
+      mutate?.disconnect();
+      if (!resize) window.removeEventListener('resize', publish);
       root.style.removeProperty(APP_HEADER_HEIGHT_VAR);
     };
   }, [el]);
