@@ -11,7 +11,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { tenantUserWhere } from '@intelliflow/db';
+import { tenantUserWhere, type Account } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   createAccountSchema,
@@ -520,6 +520,26 @@ function buildBulkReassignResponse(
   return { successful, failed };
 }
 
+/**
+ * One row of `account.list`: the Account columns plus the owner, parent and
+ * relation counts the query includes. Spelled out instead of inferred from
+ * Prisma's include payload, whose generic depth overflowed TypeScript on the
+ * web client (TS2589).
+ */
+export type AccountListItem = Account & {
+  owner: { id: string; email: string; name: string | null };
+  parentAccount: { id: string; name: string } | null;
+  _count: { contacts: number; opportunities: number };
+};
+
+export interface AccountListPage {
+  accounts: AccountListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
 export const accountRouter = createTRPCRouter({
   /**
    * Create a new account
@@ -589,101 +609,105 @@ export const accountRouter = createTRPCRouter({
    * List accounts with filtering and pagination
    * Uses Prisma for complex queries with joins for performance
    */
-  list: tenantProcedure.input(accountQuerySchema).query(async ({ ctx, input }) => {
-    const typedCtx = getTenantContext(ctx);
-    const {
-      page = 1,
-      limit = 20,
-      search,
-      industry,
-      ownerId,
-      minRevenue,
-      maxRevenue,
-      minEmployees,
-      maxEmployees,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
-    } = input;
+  list: tenantProcedure
+    .input(accountQuerySchema)
+    .query(async ({ ctx, input }): Promise<AccountListPage> => {
+      const typedCtx = getTenantContext(ctx);
+      const {
+        page = 1,
+        limit = 20,
+        search,
+        industry,
+        ownerId,
+        minRevenue,
+        maxRevenue,
+        minEmployees,
+        maxEmployees,
+        sortBy = 'createdAt',
+        sortOrder = 'desc',
+      } = input;
 
-    const skip = (page - 1) * limit;
+      const skip = (page - 1) * limit;
 
-    // Build where clause with tenant isolation
-    const baseWhere: Record<string, unknown> = {};
+      // Build where clause with tenant isolation
+      const baseWhere: Record<string, unknown> = {};
 
-    if (search) {
-      baseWhere.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { website: { contains: search, mode: 'insensitive' } },
-        { industry: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ];
-    }
+      if (search) {
+        baseWhere.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { website: { contains: search, mode: 'insensitive' } },
+          { industry: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ];
+      }
 
-    if (industry) {
-      baseWhere.industry = { contains: industry, mode: 'insensitive' };
-    }
+      if (industry) {
+        baseWhere.industry = { contains: industry, mode: 'insensitive' };
+      }
 
-    if (ownerId) {
-      baseWhere.ownerId = ownerId;
-    }
+      if (ownerId) {
+        baseWhere.ownerId = ownerId;
+      }
 
-    if (minRevenue !== undefined || maxRevenue !== undefined) {
-      baseWhere.revenue = {};
-      if (minRevenue !== undefined) (baseWhere.revenue as Record<string, number>).gte = minRevenue;
-      if (maxRevenue !== undefined) (baseWhere.revenue as Record<string, number>).lte = maxRevenue;
-    }
+      if (minRevenue !== undefined || maxRevenue !== undefined) {
+        baseWhere.revenue = {};
+        if (minRevenue !== undefined)
+          (baseWhere.revenue as Record<string, number>).gte = minRevenue;
+        if (maxRevenue !== undefined)
+          (baseWhere.revenue as Record<string, number>).lte = maxRevenue;
+      }
 
-    if (minEmployees !== undefined || maxEmployees !== undefined) {
-      baseWhere.employees = {};
-      if (minEmployees !== undefined)
-        (baseWhere.employees as Record<string, number>).gte = minEmployees;
-      if (maxEmployees !== undefined)
-        (baseWhere.employees as Record<string, number>).lte = maxEmployees;
-    }
+      if (minEmployees !== undefined || maxEmployees !== undefined) {
+        baseWhere.employees = {};
+        if (minEmployees !== undefined)
+          (baseWhere.employees as Record<string, number>).gte = minEmployees;
+        if (maxEmployees !== undefined)
+          (baseWhere.employees as Record<string, number>).lte = maxEmployees;
+      }
 
-    // Apply tenant filtering
-    const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
+      // Apply tenant filtering
+      const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
 
-    // Execute queries in parallel
-    const [accounts, total] = await Promise.all([
-      typedCtx.prismaWithTenant.account.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { [sortBy]: sortOrder },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
+      // Execute queries in parallel
+      const [accounts, total] = await Promise.all([
+        typedCtx.prismaWithTenant.account.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { [sortBy]: sortOrder },
+          include: {
+            owner: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+              },
+            },
+            parentAccount: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            _count: {
+              select: {
+                contacts: true,
+                opportunities: true,
+              },
             },
           },
-          parentAccount: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          _count: {
-            select: {
-              contacts: true,
-              opportunities: true,
-            },
-          },
-        },
-      }),
-      typedCtx.prismaWithTenant.account.count({ where }),
-    ]);
+        }),
+        typedCtx.prismaWithTenant.account.count({ where }),
+      ]);
 
-    return {
-      accounts,
-      total,
-      page,
-      limit,
-      hasMore: skip + accounts.length < total,
-    };
-  }),
+      return {
+        accounts,
+        total,
+        page,
+        limit,
+        hasMore: skip + accounts.length < total,
+      };
+    }),
 
   /**
    * Update an account
