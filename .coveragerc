@@ -1,0 +1,20 @@
+# coverage.py settings for the repo's Python tooling (#755). Used by
+# scripts/run-python-coverage.mjs (pre-ship + CI's SonarCloud job), which writes
+# artifacts/coverage/python-coverage.xml for sonar.python.coverage.reportPaths
+# and for scripts/check-diff-coverage.mjs. Keep `source` in step with the
+# Python under sonar.sources (tools/) and `omit` in step with sonar.exclusions.
+[run]
+relative_files = True
+branch = True
+# Each folder named explicitly: coverage.py reports a never-imported module at
+# 0% only at the top of a source folder or inside a package, and tools/audit
+# and tools/scripts are not packages. Listing them keeps every Python tooling
+# file in the report — the same set Sonar counts.
+source =
+    tools/audit
+    tools/plan/src
+    tools/scripts
+omit =
+    */tests/*
+    */conftest.py
+    */test_*.py

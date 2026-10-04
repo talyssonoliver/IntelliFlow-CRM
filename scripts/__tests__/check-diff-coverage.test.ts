@@ -15,6 +15,7 @@ import {
   computeDiffCoverage,
   createClassifier,
   parseAddedLines,
+  parseCobertura,
   parseLcov,
   runDiffCoverage,
 } from '../lib/diff-coverage.mjs';
@@ -28,7 +29,7 @@ const real = createClassifier(realScope);
 
 const scope = {
   sourceRoots: ['apps/web/src', 'scripts'],
-  exclusions: [/^scripts\/__tests__\//, /\.py$/],
+  exclusions: [/^scripts\/__tests__\//, /\.sh$/],
   coverageExclusions: [/^apps\/web\/src\/app\/.*\/page\.tsx$/, /^scripts\/thin-cli\.mjs$/],
 };
 
@@ -47,7 +48,11 @@ describe('classification against sonar-project.properties', () => {
     ['scripts/__tests__/check-diff-coverage.test.ts', false],
     ['tools/scripts/__tests__/helper.ts', false],
     ['tools/scripts/security/fixtures/sample.mjs', false],
-    ['tools/audit/run_audit.py', false],
+    ['tools/audit/run_audit.py', true],
+    ['tools/plan/src/domain/task.py', true],
+    ['tools/audit/tests/test_affected.py', false],
+    ['tools/audit/tests/conftest.py', false],
+    ['.agents/skills/x/helper.py', false],
     ['packages/domain/src/types.d.ts', false],
     ['vitest.config.ts', false],
     ['apps/workers/notifications-worker/src/index.ts', false],
@@ -208,6 +213,7 @@ function gate({
   diffStatus = 0,
   mergeBase = { status: 0, stdout: 'abc123\n' },
   lcov = '' as string | null,
+  py = null as string | null,
   env = {} as Record<string, string>,
 } = {}) {
   const calls: string[][] = [];
@@ -224,7 +230,7 @@ function gate({
     },
     readFile: (p: string) => {
       readPaths.push(p.split('\\').join('/'));
-      return lcov;
+      return p.endsWith('.xml') ? py : lcov;
     },
     log: (m: string) => out.push(m),
     error: (m: string) => err.push(m),
@@ -309,7 +315,7 @@ describe('runDiffCoverage', () => {
     ].join('\n');
     const r = gate({ diff, lcov });
     expect(r.code).toBe(0);
-    expect(r.out).toMatch(/TOTAL new_coverage: 80\.0% {2}\(4\/5 lines\)/);
+    expect(r.out).toMatch(/TOTAL new_coverage: 80\.0% {2}\(4\/5 lines \+ branch conditions\)/);
     expect(r.out.indexOf('apps/web/src/b.ts')).toBeLessThan(r.out.indexOf('scripts/a.mjs'));
     expect(r.out).toMatch(/✅ Diff coverage meets the 80% floor/);
   });
@@ -320,6 +326,173 @@ describe('runDiffCoverage', () => {
     expect(
       gate({ diff: diffOf('scripts/a.mjs', 2), lcov, env: { DIFF_COVER_MIN: '50' } }).code
     ).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Python (#755): changed .py lines are judged from the Cobertura report
+// ---------------------------------------------------------------------------
+
+const COBERTURA = [
+  '<coverage><sources><source>.</source></sources><packages><package name="x"><classes>',
+  '<class name="a.py" filename="scripts/a.py"><lines>',
+  '<line number="1" hits="2"/><line number="2" hits="0" branch="true" condition-coverage="50% (1/2)"/>',
+  '</lines></class>',
+  '<class name="b.py" filename="./scripts/sub\\b.py"><lines><line number="5" hits="1"/></lines></class>',
+  '</classes></package></packages></coverage>',
+].join('\n');
+
+describe('parseCobertura', () => {
+  it('reads per-line hits keyed by repo-relative filename', () => {
+    const hits = parseCobertura(COBERTURA);
+    expect(hits.get('scripts/a.py')).toEqual(
+      new Map([
+        [1, 2],
+        [2, 0],
+      ])
+    );
+    expect(hits.get('scripts/sub/b.py')).toEqual(new Map([[5, 1]]));
+  });
+
+  it('merges into an existing map without dropping lcov entries', () => {
+    const into = new Map([['scripts/a.mjs', new Map([[1, 1]])]]);
+    parseCobertura(COBERTURA, into);
+    expect([...into.keys()].sort()).toEqual(['scripts/a.mjs', 'scripts/a.py', 'scripts/sub/b.py']);
+  });
+
+  it('records condition-coverage per line, whatever the attribute order', () => {
+    const conditions = new Map();
+    parseCobertura(
+      '<class filename="x.py"><line branch="true" condition-coverage="25% (1/4)" hits="3" number="7"/></class>',
+      new Map(),
+      conditions
+    );
+    expect(conditions.get('x.py')).toEqual(new Map([[7, { total: 4, covered: 1 }]]));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Branch conditions — Sonar's new_coverage counts them as well as lines
+// ---------------------------------------------------------------------------
+
+describe('branch conditions', () => {
+  it('parseLcov tallies BRDA outcomes per line; "-" and 0 are not covered', () => {
+    const conditions = new Map();
+    parseLcov(
+      [
+        'SF:/repo/scripts/a.mjs',
+        'DA:3,1',
+        'BRDA:3,0,0,2',
+        'BRDA:3,0,1,0',
+        'BRDA:4,1,0,-',
+        'end_of_record',
+        'BRDA:9,0,0,1',
+      ].join('\n'),
+      ROOT,
+      conditions
+    );
+    expect(conditions.get('scripts/a.mjs')).toEqual(
+      new Map([
+        [3, { total: 2, covered: 1 }],
+        [4, { total: 1, covered: 0 }],
+      ])
+    );
+  });
+
+  it('a half-tested branch line scores like Sonar: (1 + 1) / (1 + 2)', () => {
+    const r = computeDiffCoverage(
+      new Map([['scripts/a.mjs', new Set([3])]]),
+      new Map([['scripts/a.mjs', new Map([[3, 1]])]]),
+      () => false,
+      new Map([['scripts/a.mjs', new Map([[3, { total: 2, covered: 1 }]])]])
+    );
+    expect(r).toMatchObject({ coverable: 3, covered: 2 });
+  });
+
+  it('fails the gate on a half-tested JS branch that a line count alone would pass', () => {
+    const lcov = 'SF:/repo/scripts/a.mjs\nDA:1,1\nBRDA:1,0,0,1\nBRDA:1,0,1,0\nend_of_record';
+    const r = gate({ diff: diffOf('scripts/a.mjs', 1), lcov });
+    expect(r.out).toMatch(/2\/3 {2}scripts\/a\.mjs/);
+    expect(r.code).toBe(1); // 66.7% < 80%
+  });
+
+  it('ignores conditions on lines that were not changed', () => {
+    const r = computeDiffCoverage(
+      new Map([['scripts/a.mjs', new Set([1])]]),
+      new Map([
+        [
+          'scripts/a.mjs',
+          new Map([
+            [1, 1],
+            [2, 0],
+          ]),
+        ],
+      ]),
+      () => false,
+      new Map([['scripts/a.mjs', new Map([[2, { total: 2, covered: 0 }]])]])
+    );
+    expect(r).toMatchObject({ coverable: 1, covered: 1 });
+  });
+});
+
+describe('runDiffCoverage with Python changes', () => {
+  it('judges changed .py lines from the Python report and does not need the lcov', () => {
+    const r = gate({ diff: diffOf('scripts/a.py', 2), lcov: null, py: COBERTURA });
+    expect(r.readPaths).toEqual(['/repo/artifacts/coverage/python-coverage.xml']);
+    // line 1 hit (1/1); line 2 missed with 1 of 2 branches taken (1/3) → 2/4
+    expect(r.out).toMatch(/2\/4 {2}scripts\/a\.py/);
+    expect(r.code).toBe(1); // 50% < 80%
+  });
+
+  it('judges only Python lines under DIFF_COVER_ONLY=py, without reading the lcov', () => {
+    const diff = [diffOf('scripts/a.mjs', 3), diffOf('scripts/sub/b.py', 5)].join('\n');
+    const r = gate({ diff, lcov: null, py: COBERTURA, env: { DIFF_COVER_ONLY: 'py' } });
+    expect(r.readPaths).toEqual(['/repo/artifacts/coverage/python-coverage.xml']);
+    expect(r.out).toMatch(/judging 1 Python file\(s\); 1 JS\/TS file\(s\) not judged/);
+    expect(r.code).toBe(0);
+  });
+
+  it('passes under DIFF_COVER_ONLY=py when only JS/TS changed', () => {
+    const r = gate({
+      diff: diffOf('scripts/a.mjs', 2),
+      lcov: null,
+      env: { DIFF_COVER_ONLY: 'py' },
+    });
+    expect(r.out).toMatch(/no coverable source lines changed/);
+    expect(r.code).toBe(0);
+  });
+
+  it('reads both reports when JS and Python lines changed', () => {
+    const diff = [diffOf('scripts/a.mjs', 1), diffOf('scripts/sub/b.py', 5)].join('\n');
+    const lcov = 'SF:/repo/scripts/a.mjs\nDA:1,1\nend_of_record';
+    const r = gate({ diff, lcov, py: COBERTURA });
+    expect(r.readPaths).toHaveLength(2);
+    expect(r.out).toMatch(/TOTAL new_coverage: 100\.0% {2}\(2\/2 lines \+ branch conditions\)/);
+    expect(r.code).toBe(0);
+  });
+
+  it('fails with the command to run when the Python report is missing', () => {
+    const r = gate({ diff: diffOf('scripts/a.py', 1), py: null });
+    expect(r.code).toBe(1);
+    expect(r.err).toMatch(
+      /python-coverage\.xml missing — run node scripts\/run-python-coverage\.mjs/
+    );
+  });
+
+  it('honours DIFF_COVER_PY', () => {
+    const r = gate({
+      diff: diffOf('scripts/a.py', 1),
+      py: COBERTURA,
+      env: { DIFF_COVER_PY: 'out/py.xml' },
+    });
+    expect(r.readPaths).toEqual(['/repo/out/py.xml']);
+    expect(r.code).toBe(0);
+  });
+
+  it('counts a changed .py file absent from the report as 0% (the #382 rule)', () => {
+    const r = gate({ diff: diffOf('scripts/untested.py', 2), py: COBERTURA });
+    expect(r.out).toMatch(/0\/2 {2}scripts\/untested\.py {2}\[no Python coverage — /);
+    expect(r.code).toBe(1);
   });
 });
 
