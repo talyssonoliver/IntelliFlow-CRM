@@ -296,6 +296,8 @@ export function OAuthCallback({
   // A verified session for a DIFFERENT account, held in memory (never stored as the app session)
   // until the user confirms the switch.
   const heldSessionRef = useRef<HeldSession | null>(null);
+  // Set when the page is gone: a verification that lands afterwards must not hold a session.
+  const unmountedRef = useRef(false);
   const flowRef = useRef<'oauth' | 'magiclink'>('oauth');
   const backToLoginRef = useRef<HTMLButtonElement>(null);
   const confirmDialogRef = useRef<HTMLDialogElement>(null);
@@ -475,6 +477,10 @@ export function OAuthCallback({
     }
 
     if (preexistingToken && !isSameAccount(currentIdentity, data.user)) {
+      if (unmountedRef.current) {
+        revokeSession(supabase, data.session.access_token);
+        return;
+      }
       heldSessionRef.current = {
         session: data.session,
         user: data.user ?? undefined,
@@ -679,8 +685,10 @@ export function OAuthCallback({
         reportErrorRef.current(new Error('This sign-in link has already been used.'));
       }
     };
+    unmountedRef.current = false;
     globalThis.addEventListener('pagehide', onPageHide);
     return () => {
+      unmountedRef.current = true;
       globalThis.removeEventListener('pagehide', onPageHide);
       revokeHeld();
     };

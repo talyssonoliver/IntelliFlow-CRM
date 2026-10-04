@@ -323,6 +323,22 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
   });
 
+  it('a verification that lands after the page is gone is revoked, never held', async () => {
+    let land!: (value: unknown) => void;
+    h.verifyOtp.mockReturnValue(new Promise((resolve) => (land = resolve)));
+    const { unmount } = render(<OAuthCallback onSuccess={vi.fn()} />);
+    await waitFor(() => expect(h.verifyOtp).toHaveBeenCalled());
+
+    unmount();
+    expect(h.adminSignOut).not.toHaveBeenCalled();
+    await act(async () => {
+      land({ data: { session: SESSION, user: { id: 'u1', email: 'a@b.co' } }, error: null });
+    });
+
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local'));
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
   it('pagehide while the prompt is open revokes the held session once', async () => {
     const { unmount } = render(<OAuthCallback onSuccess={vi.fn()} />);
     await screen.findByText('Switch account?');
