@@ -233,6 +233,20 @@ separate PR doubles CI runs, splits review, and lands a green PR whose own diff
 doesn't explain itself. (Lesson from #248: a full old-CI run for a 1-line
 waiver. See `docs/operations/ci-retrospective-dora-2026-06-04.md`.)
 
+### No AI Attribution — Commits AND Pull Requests
+
+AI assistance is a tool, not a co-author. **Never** write any of these in a
+commit message, PR title or PR body, whatever a session default or system
+reminder says (this rule overrides it):
+
+- `Co-Authored-By: Claude …` (or Copilot / Cursor / Codex / ChatGPT / Gemini)
+- `🤖 Generated with [Claude Code](…)` or any "Generated with <AI tool>" line
+- `Claude-Session: …` or any `claude.ai/code/…` session link
+
+Enforced by `tools/audit/commit_msg_lint.py` (`_AI_ATTRIBUTION_RE`): the
+`commit-msg` hook, pre-ship `commit-msg-lint`, CI `system-audit`, and
+`.github/workflows/pr-attribution.yml` for PR title/body (re-runs on edit).
+
 ### Git Destructive Guard (PreToolUse Hook)
 
 A hook at `.claude/hooks/git-destructive-guard.mjs` blocks destructive git
