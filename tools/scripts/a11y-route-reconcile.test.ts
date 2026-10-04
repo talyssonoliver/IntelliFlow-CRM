@@ -14,14 +14,16 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { resolve, join } from 'node:path';
 import {
   parseConformanceRoutes,
   normalizeAppRoute,
   reconcileRoutes,
   runReconciliation,
   type ReconcileResult,
+  shouldWriteReport,
 } from './a11y-route-reconcile.js';
 
 // ============================================================================
@@ -475,5 +477,24 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
       });
     }).not.toThrow();
     expect(exitFn).toHaveBeenCalledWith(0);
+  });
+});
+
+describe('shouldWriteReport', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'a11y-report-'));
+  const file = join(dir, 'r.json');
+  const base = { docRoutes: ['/a'], exitCode: 0 };
+
+  it('writes when the file is missing', () => {
+    expect(shouldWriteReport(file, { timestamp: 't1', ...base })).toBe(true);
+  });
+
+  it('skips when only the timestamp differs', () => {
+    writeFileSync(file, JSON.stringify({ timestamp: 't1', ...base }));
+    expect(shouldWriteReport(file, { timestamp: 't2', ...base })).toBe(false);
+  });
+
+  it('writes when content changes', () => {
+    expect(shouldWriteReport(file, { timestamp: 't2', docRoutes: ['/b'], exitCode: 0 })).toBe(true);
   });
 });

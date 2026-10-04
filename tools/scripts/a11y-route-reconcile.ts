@@ -238,6 +238,35 @@ function scanAppRoutes(appDir: string): string[] {
 // ============================================================================
 
 /**
+ * The report carries a volatile `timestamp`. Rewriting the file on every gate
+ * run (timestamp only) made it conflict on every merge of main. Skip the write
+ * when the content, ignoring `timestamp`, is unchanged. The field stays in the
+ * file; no reader in the repo depends on it changing.
+ */
+export function shouldWriteReport(
+  reportPath: string,
+  next: { timestamp: string } & Record<string, unknown>
+): boolean {
+  try {
+    const prev = JSON.parse(readFileSync(reportPath, 'utf-8')) as Record<string, unknown>;
+    const { timestamp: _prevTs, ...prevRest } = prev;
+    const { timestamp: _nextTs, ...nextRest } = next;
+    return JSON.stringify(prevRest) !== JSON.stringify(nextRest);
+  } catch {
+    return true; // missing or unreadable: write it
+  }
+}
+
+function writeReportIfChanged(
+  reportPath: string,
+  report: { timestamp: string } & Record<string, unknown>
+): void {
+  if (shouldWriteReport(reportPath, report)) {
+    writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
+  }
+}
+
+/**
  * Top-level orchestrator with injectable dependencies for testability.
  */
 export function runReconciliation(options?: ReconcileOptions): void {
@@ -322,10 +351,7 @@ export function runReconciliation(options?: ReconcileOptions): void {
       gates: result.gates,
       exitCode: getExitCode(summary),
     };
-    writeFileSync(
-      resolve(reportDir, 'a11y-route-reconcile.json'),
-      JSON.stringify(report, null, 2) + '\n'
-    );
+    writeReportIfChanged(resolve(reportDir, 'a11y-route-reconcile.json'), report);
   } catch {
     // Non-blocking: report write failure shouldn't fail the script
   }
