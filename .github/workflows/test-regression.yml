@@ -27,7 +27,12 @@ name: Test Regression
 
 on:
   workflow_call: {}
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      playwright_args:
+        description: 'Extra args for the cross-browser E2E job (e.g. --project=authenticated tests/e2e/agent-approvals.spec.ts). Empty = the full suite.'
+        required: false
+        default: ''
   schedule:
     # 05:00 UTC nightly — after property tests (04:00) and system audits (03:00)
     - cron: '0 5 * * *'
@@ -539,10 +544,15 @@ jobs:
           echo "INBOUND_EMAIL_WEBHOOK_SECRET=$secret" >> "$GITHUB_ENV"
 
       - name: Run cross-browser E2E
-        run: pnpm exec playwright test
+        # Passed through env, not interpolated into the script; word-split on
+        # purpose so several args work. Empty on schedule = the full suite.
+        env:
+          PLAYWRIGHT_ARGS: ${{ inputs.playwright_args }}
+        run: pnpm exec playwright test $PLAYWRIGHT_ARGS
 
       - name: Upload E2E report
-        if: failure()
+        # cancelled() too: a hung run that is cancelled must still leave evidence.
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report-nightly

@@ -96,6 +96,10 @@ export default defineConfig({
 
   // Maximum time one test can run
   timeout: 30 * 1000,
+  // CI ceiling for the whole run: the nightly takes ~2.3h on one worker, and a
+  // wedged run used to sit silent until the 6h job timeout with no report.
+  // Hitting this ends the run with a report naming the interrupted test.
+  globalTimeout: process.env.CI ? 3 * 60 * 60 * 1000 : undefined,
 
   // Test execution settings
   fullyParallel: true,
