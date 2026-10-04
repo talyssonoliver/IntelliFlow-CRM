@@ -73,16 +73,36 @@ interface StatusConfig {
   animate?: boolean;
 }
 
-/** Best-effort email of the current local session, read from the stored access token. */
-function currentSessionEmail(): string | null {
+/** Best-effort identity (stable id and email) of the current local session, from the stored access token. */
+function currentSessionIdentity(): { id: string | null; email: string | null } | null {
   try {
     const token = getStoredAccessToken();
     if (!token) return null;
     const payload = JSON.parse(atob(token.split('.')[1].replaceAll('-', '+').replaceAll('_', '/')));
-    return typeof payload.email === 'string' ? payload.email : null;
+    return {
+      id: typeof payload.sub === 'string' && payload.sub ? payload.sub : null,
+      email: typeof payload.email === 'string' && payload.email ? payload.email : null,
+    };
   } catch {
     return null;
   }
+}
+
+/**
+ * True only when the link's user is provably the user already signed in: by stable user id when
+ * both sides carry one, otherwise by case-insensitive email. Anything unproven is a DIFFERENT
+ * account, so the switch prompt stays.
+ */
+function isSameAccount(
+  current: { id: string | null; email: string | null } | null,
+  linkUser: { id?: string | null; email?: string | null } | null | undefined
+): boolean {
+  if (!current || !linkUser) return false;
+  if (current.id && linkUser.id) return current.id === linkUser.id;
+  if (current.email && linkUser.email) {
+    return current.email.trim().toLowerCase() === linkUser.email.trim().toLowerCase();
+  }
+  return false;
 }
 
 /** Ceiling for any single awaited network step (signOut, verifyOtp, grant claim, getSession). */
@@ -221,6 +241,12 @@ const BREADCRUMBS = {
   },
 } as const;
 
+interface HeldSession {
+  session: { access_token: string; refresh_token?: string };
+  user: { id: string; email?: string } | undefined;
+  pending: PendingMagicLink;
+}
+
 interface PendingMagicLink {
   tokenHash: string;
   next: string;
@@ -251,6 +277,9 @@ export function OAuthCallback({
   // and never re-read from the URL, so it cannot be replayed from history or a stale render.
   const pendingLinkRef = useRef<PendingMagicLink | null>(null);
   const pendingNextRef = useRef<string | null>(null);
+  // A verified session for a DIFFERENT account, held in memory (never stored as the app session)
+  // until the user confirms the switch.
+  const heldSessionRef = useRef<HeldSession | null>(null);
   const flowRef = useRef<'oauth' | 'magiclink'>('oauth');
   const backToLoginRef = useRef<HTMLButtonElement>(null);
   const confirmDialogRef = useRef<HTMLDialogElement>(null);
@@ -340,9 +369,44 @@ export function OAuthCallback({
     [onError]
   );
 
-  // Exchange the in-memory hashed OTP. Any existing local session is signed out FIRST so a
-  // different user's session can never win. Only ever reached automatically when there is no
-  // session, or after the user explicitly confirmed the account switch.
+  // ADR-071: the link carries `tenant` and `grant` as HINTS. The grant is claimed FIRST, with
+  // the new session's token: for a pinned (agency staff) link this is what binds the session
+  // to the client tenant, and until it is claimed the API refuses everything else. The
+  // tenant the server returns wins over the `tenant` hint. A failed claim fails CLOSED:
+  // the session is dropped rather than left half signed in.
+  const completeMagicLink = useCallback(
+    async (
+      supabase: BrowserSupabase,
+      session: { access_token: string; refresh_token?: string },
+      user: { id: string; email?: string } | undefined,
+      pending: PendingMagicLink
+    ) => {
+      let activeTenantId = pending.tenantHint;
+      if (pending.grant) {
+        try {
+          const claim = await withTimeout(claimLoginGrant(session.access_token, pending.grant));
+          activeTenantId = claim.tenantId;
+        } catch (claimError) {
+          dropAbandonedSession(supabase, session.access_token);
+          throw normalizeClaimError(claimError);
+        }
+        if (abandonedByWatchdog(abortedRef, supabase, session)) return;
+      }
+
+      pendingNextRef.current = pending.next;
+      finishSignIn(session, user, 'magiclink', activeTenantId);
+    },
+    [finishSignIn]
+  );
+
+  // Exchange the in-memory hashed OTP.
+  //
+  // No local session: any stale SDK session is signed out FIRST so a different user's session
+  // can never win, then the link signs in.
+  // A local session exists: the link's identity is only known once the token is verified, so it
+  // is verified WITHOUT touching the app session (no signOut, no token or cookie write). The
+  // same account continues straight into sign-in; a different account is held in memory and the
+  // user must confirm the switch.
   const exchangeMagicLink = useCallback(async () => {
     const pending = pendingLinkRef.current;
     pendingLinkRef.current = null; // single use
@@ -354,10 +418,14 @@ export function OAuthCallback({
       throw new Error('Failed to initialize authentication client');
     }
 
-    await signOutBeforeSwitch(supabase);
-    clearSessionTokens();
-    clearTokenCookie();
-    clearSupabaseLocalStorage();
+    const preexistingToken = getStoredAccessToken();
+    const currentIdentity = preexistingToken ? currentSessionIdentity() : null;
+    if (!preexistingToken) {
+      await signOutBeforeSwitch(supabase);
+      clearSessionTokens();
+      clearTokenCookie();
+      clearSupabaseLocalStorage();
+    }
     if (abortedRef.current) return;
 
     const verification = supabase.auth.verifyOtp({
@@ -370,10 +438,10 @@ export function OAuthCallback({
     } catch (verifyError) {
       // verifyOtp cannot be cancelled: if it finishes after we showed the error, the SDK would
       // persist and broadcast a session behind the failure screen. Discard it when it lands.
-      discardLateSession(supabase, verification);
+      discardLateSession(supabase, verification, preexistingToken);
       throw verifyError;
     }
-    if (abandonedByWatchdog(abortedRef, supabase, result.data?.session)) return;
+    if (abandonedByWatchdog(abortedRef, supabase, result.data?.session, preexistingToken)) return;
     const { data, error } = result;
 
     if (error || !data?.session) {
@@ -382,32 +450,26 @@ export function OAuthCallback({
       );
     }
 
-    // ADR-071: the link carries `tenant` and `grant` as HINTS. The grant is claimed FIRST, with
-    // the new session's token: for a pinned (agency staff) link this is what binds the session
-    // to the client tenant, and until it is claimed the API refuses everything else. The
-    // tenant the server returns wins over the `tenant` hint. A failed claim fails CLOSED:
-    // the session is dropped rather than left half signed in.
-    let activeTenantId = pending.tenantHint;
-    if (pending.grant) {
-      try {
-        const claim = await withTimeout(claimLoginGrant(data.session.access_token, pending.grant));
-        activeTenantId = claim.tenantId;
-      } catch (claimError) {
-        dropAbandonedSession(supabase, data.session.access_token);
-        throw normalizeClaimError(claimError);
-      }
-      if (abandonedByWatchdog(abortedRef, supabase, data.session)) return;
+    if (preexistingToken && !isSameAccount(currentIdentity, data.user)) {
+      heldSessionRef.current = {
+        session: data.session,
+        user: data.user ?? undefined,
+        pending,
+      };
+      setCurrentEmail(currentIdentity?.email ?? null);
+      setStatus('confirm');
+      return;
     }
 
-    pendingNextRef.current = pending.next;
-    finishSignIn(data.session, data.user ?? undefined, 'magiclink', activeTenantId);
-  }, [finishSignIn]);
+    await completeMagicLink(supabase, data.session, data.user ?? undefined, pending);
+  }, [completeMagicLink]);
 
   // Magic-link flow (partner Portal -> CRM): /auth/callback?token_hash=...&type=magiclink&next=...
   //
   // Anyone can mint a link for their own account and send it to a signed-in victim (login CSRF),
-  // so when a local session already exists we do NOT swap accounts silently: the user must
-  // confirm on an interstitial. With no session the exchange runs automatically.
+  // so when a local session already exists for a DIFFERENT account we do NOT swap accounts
+  // silently: the user must confirm on an interstitial. With no session, or when the link is for
+  // the account already signed in, there is nothing to confirm and sign-in completes directly.
   const handleMagicLink = useCallback(
     async (tokenHash: string, linkType: string | null) => {
       // Capture every link parameter BEFORE the URL is stripped below.
@@ -431,11 +493,6 @@ export function OAuthCallback({
         grant,
       };
 
-      if (getStoredAccessToken()) {
-        setCurrentEmail(currentSessionEmail());
-        setStatus('confirm');
-        return;
-      }
       await exchangeMagicLink();
     },
     [exchangeMagicLink, searchParams]
@@ -634,11 +691,26 @@ export function OAuthCallback({
   // ==========================================
 
   const handleConfirmSwitch = () => {
-    exchangeMagicLink().catch(reportError);
+    const held = heldSessionRef.current;
+    heldSessionRef.current = null; // single use
+    const supabase = getSupabaseBrowserClient();
+    if (!held || !supabase) {
+      reportError(new Error('This sign-in link has already been used.'));
+      return;
+    }
+    setStatus('exchanging');
+    completeMagicLink(supabase, held.session, held.user, held.pending).catch(reportError);
   };
 
   const handleStaySignedIn = () => {
     pendingLinkRef.current = null;
+    const held = heldSessionRef.current;
+    heldSessionRef.current = null;
+    const supabase = getSupabaseBrowserClient();
+    // The verified session for the other account is discarded; the current app session is untouched.
+    if (held && supabase) {
+      dropAbandonedSession(supabase, held.session.access_token, getStoredAccessToken());
+    }
     router.push('/dashboard');
   };
 

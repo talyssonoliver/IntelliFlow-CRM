@@ -123,7 +123,7 @@ describe('OAuthCallback active tenant', () => {
   });
 
   describe('with an existing session', () => {
-    it('keeps the grant and tenant in memory and claims them only after Continue', async () => {
+    it('keeps the grant and tenant in memory and claims them only after Continue (verify holds the session, never the app tokens)', async () => {
       h.getStoredAccessToken.mockReturnValue('x.e30.y');
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
@@ -131,7 +131,7 @@ describe('OAuthCallback active tenant', () => {
       await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
       await waitFor(() => expect(onSuccess).toHaveBeenCalled());
 
-      expect(h.order).toEqual(['signOut', 'verifyOtp', 'claim', 'storeSessionTokens']);
+      expect(h.order).toEqual(['verifyOtp', 'claim', 'storeSessionTokens']);
       expect(JSON.parse((h.fetch.mock.calls[0][1] as RequestInit).body as string)).toEqual({
         grant: 'grant_1',
       });
@@ -145,7 +145,7 @@ describe('OAuthCallback active tenant', () => {
       await userEvent.click(await screen.findByRole('button', { name: /stay signed in/i }));
 
       expect(h.fetch).not.toHaveBeenCalled();
-      expect(h.verifyOtp).not.toHaveBeenCalled();
+      expect(h.storeSessionTokens).not.toHaveBeenCalled();
       expect(getActiveTenantId()).toBeNull();
     });
   });

@@ -161,8 +161,9 @@ describe('OAuthCallback magic link', () => {
 });
 
 describe('OAuthCallback magic link with an existing session (login CSRF guard)', () => {
-  // header.payload.signature with payload {"email":"victim@example.com"}
-  const VICTIM_JWT = `x.${btoa(JSON.stringify({ email: 'victim@example.com' }))}.y`;
+  // header.payload.signature with payload {"sub":"victim-id","email":"victim@example.com"}
+  const jwtFor = (claims: Record<string, string>) => `x.${btoa(JSON.stringify(claims))}.y`;
+  const VICTIM_JWT = jwtFor({ sub: 'victim-id', email: 'victim@example.com' });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -176,7 +177,7 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     });
   });
 
-  it('asks first: no signOut and no verifyOtp until the user confirms', async () => {
+  it('a different account asks first: the link is verified but the app session is untouched', async () => {
     render(<OAuthCallback onSuccess={vi.fn()} />);
 
     expect(await screen.findByText('Switch account?')).toBeInTheDocument();
@@ -184,9 +185,68 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /stay signed in/i })).toBeInTheDocument();
     expect(h.signOut).not.toHaveBeenCalled();
-    expect(h.verifyOtp).not.toHaveBeenCalled();
     expect(h.clearSessionTokens).not.toHaveBeenCalled();
+    expect(h.clearTokenCookie).not.toHaveBeenCalled();
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
+    expect(h.syncTokenToCookie).not.toHaveBeenCalled();
+  });
+
+  it('the same account (same user id) shows no dialog and signs straight in', async () => {
+    h.verifyOtp.mockResolvedValue({
+      data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
+      error: null,
+    });
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(screen.queryByText('Switch account?')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('switch-account-dialog')).not.toBeInTheDocument();
+    expect(h.signOut).not.toHaveBeenCalled();
+    expect(h.storeSessionTokens).toHaveBeenCalledWith('acc', 'ref');
+    expect(h.syncTokenToCookie).toHaveBeenCalledWith('acc');
+  });
+
+  it('the same account navigates to the next path with no prompt', async () => {
+    h.verifyOtp.mockResolvedValue({
+      data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
+      error: null,
+    });
+    render(<OAuthCallback />);
+
+    await waitFor(() => expect(h.push).toHaveBeenCalledWith('/leads'), { timeout: 2000 });
+    expect(screen.queryByText('Switch account?')).not.toBeInTheDocument();
+  });
+
+  it('without a stable id on the session, the same email compares case-insensitively', async () => {
+    h.getStoredAccessToken.mockReturnValue(jwtFor({ email: 'Victim@Example.com' }));
+    h.verifyOtp.mockResolvedValue({
+      data: { session: SESSION, user: { id: 'u9', email: 'victim@example.COM' } },
+      error: null,
+    });
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(screen.queryByText('Switch account?')).not.toBeInTheDocument();
+  });
+
+  it('a different user id wins over a matching email: the dialog still appears', async () => {
+    h.verifyOtp.mockResolvedValue({
+      data: { session: SESSION, user: { id: 'other-id', email: 'victim@example.com' } },
+      error: null,
+    });
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+
+    expect(await screen.findByText('Switch account?')).toBeInTheDocument();
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  it('an identity that cannot be compared is treated as a different account', async () => {
+    h.getStoredAccessToken.mockReturnValue('not-a-jwt');
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+
+    expect(await screen.findByText('Switch account?')).toBeInTheDocument();
   });
 
   it('removes the token from the address bar before showing the prompt', async () => {
@@ -198,18 +258,16 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(window.location.href).not.toContain('hash123');
   });
 
-  it('Continue runs signOut then verifyOtp with the in-memory token, then signs in', async () => {
+  it('Continue signs in with the held session, verifying the token only once', async () => {
     const onSuccess = vi.fn();
     render(<OAuthCallback onSuccess={onSuccess} />);
     await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
-    expect(h.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(h.verifyOtp).toHaveBeenCalledTimes(1);
     expect(h.verifyOtp).toHaveBeenCalledWith({ type: 'magiclink', token_hash: 'hash123' });
-    expect(h.signOut.mock.invocationCallOrder[0]).toBeLessThan(
-      h.verifyOtp.mock.invocationCallOrder[0]
-    );
     expect(h.storeSessionTokens).toHaveBeenCalledWith('acc', 'ref');
+    expect(onSuccess).toHaveBeenCalledWith({ id: 'u1', email: 'a@b.co' }, { accessToken: 'acc' });
   });
 
   it('Continue navigates to the sanitised next path', async () => {
@@ -219,27 +277,28 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     await waitFor(() => expect(h.push).toHaveBeenCalledWith('/leads'), { timeout: 2000 });
   });
 
-  it('Stay signed in keeps the session, never touches the token, and goes to /dashboard', async () => {
+  it('Stay signed in keeps the app session, discards the held one, and goes to /dashboard', async () => {
     render(<OAuthCallback onSuccess={vi.fn()} />);
     await userEvent.click(await screen.findByRole('button', { name: /stay signed in/i }));
 
     expect(h.push).toHaveBeenCalledWith('/dashboard');
     expect(h.signOut).not.toHaveBeenCalled();
-    expect(h.verifyOtp).not.toHaveBeenCalled();
     expect(h.clearSessionTokens).not.toHaveBeenCalled();
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
+    expect(h.clearSupabaseLocalStorage).toHaveBeenCalled();
   });
 
-  it('an invalid token after Continue shows the error and Back to Sign In', async () => {
+  it('an invalid token shows the error and Back to Sign In without a prompt', async () => {
     h.verifyOtp.mockResolvedValue({
       data: { session: null, user: null },
       error: { message: 'expired' },
     });
     render(<OAuthCallback onSuccess={vi.fn()} />);
-    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
 
     expect(await screen.findByText('Authentication Failed')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /back to sign in/i })).toBeInTheDocument();
+    expect(screen.queryByText('Switch account?')).not.toBeInTheDocument();
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
+    expect(h.clearSessionTokens).not.toHaveBeenCalled();
   });
 });
