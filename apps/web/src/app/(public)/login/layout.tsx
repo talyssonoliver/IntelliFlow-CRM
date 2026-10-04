@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Log In',
   description:
     'Sign in to IntelliFlow CRM. Access your sales pipeline, AI-powered lead scores, and team dashboard. Supports Google, Microsoft, and enterprise SSO.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Sign In to IntelliFlow CRM',
     description:
       'Access your IntelliFlow CRM account. AI-powered sales tools, pipeline management, and team collaboration.',

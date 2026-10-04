@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import partnerData from '@/data/partner-benefits.json';
+import { OG_IMAGES } from '@/lib/og-images';
 
 /**
  * Partners Page
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
   description:
     'Join our partner ecosystem. Integrate your solution, resell IntelliFlow CRM, or become a certified consultant. API access, co-marketing, and revenue share programs available.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Partner with IntelliFlow CRM',
     description:
       'Technology integrations, reseller programs, and consultant certifications. Build with our API, earn revenue share, and grow your business.',

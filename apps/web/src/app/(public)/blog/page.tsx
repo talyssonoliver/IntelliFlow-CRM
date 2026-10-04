@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { BlogPagination } from '@/components/blog/blog-pagination';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Blog | IntelliFlow CRM',
   description:
     'Insights on AI-first CRM, sales automation, governance, and customer success strategies.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'IntelliFlow CRM Blog',
     description:
       'Expert insights on AI-powered sales, governance-ready automation, and CRM best practices.',

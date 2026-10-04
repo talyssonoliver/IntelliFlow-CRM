@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Pricing',
   description:
     'Simple, transparent pricing for IntelliFlow CRM. Starter, Professional, Enterprise, and Custom plans with a 14-day free trial. Save 17% with annual billing.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'IntelliFlow CRM Pricing — Plans That Scale With Your Team',
     description:
       'Transparent per-user pricing. Starter, Professional, Enterprise, and Custom plans. All include a 14-day free trial with 17% annual savings.',

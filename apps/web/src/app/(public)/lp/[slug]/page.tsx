@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { LandingBuilder, type LandingPageConfig } from '@/components/shared/landing-builder';
 import landingPagesData from '@/data/landing-pages.json';
+import { OG_IMAGES } from '@/lib/og-images';
 
 /**
  * Dynamic Landing Page Template
@@ -50,6 +51,7 @@ export async function generateMetadata({ params }: Readonly<LandingPageProps>): 
     title: pageConfig.title,
     description: pageConfig.description,
     openGraph: {
+      images: OG_IMAGES,
       title: pageConfig.title,
       description: pageConfig.description,
       url: `https://intelliflow-crm.com/lp/${slug}`,

@@ -6,12 +6,14 @@ import {
   formatAupDate,
   getAup,
 } from '@/lib/legal/violation-tracker';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Acceptable Use Policy | IntelliFlow CRM',
   description:
     'Review the IntelliFlow CRM Acceptable Use Policy covering prohibited activities, content rules, security expectations, and the violation-reporting process.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Acceptable Use Policy | IntelliFlow CRM',
     description:
       'Read the IntelliFlow CRM AUP — boundaries that protect every customer, end user, integration, and partner on the platform.',
