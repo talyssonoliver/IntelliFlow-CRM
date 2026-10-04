@@ -298,6 +298,30 @@ describe('Routing Router', () => {
       // Raw RoutingAudit columns are no longer leaked to the client.
       expect(result.items[0]).not.toHaveProperty('ticketId');
     });
+
+    it('reads the lead id from ticketId only for rows marked as lead routing', async () => {
+      const createdAt = new Date('2026-10-04T10:00:00Z');
+      const base = {
+        reason: 'rule_match',
+        ruleId: null,
+        ruleName: null,
+        toUserId: TEST_UUIDS.user1,
+        toUserName: 'Test User',
+        createdAt,
+      };
+      (prismaMock.routingAudit.findMany as any).mockResolvedValue([
+        // LeadRoutingService: lead id in ticketId, entityType 'lead'
+        { ...base, id: 'auto', ticketId: 'lead-auto', details: { entityType: 'lead', score: 82 } },
+        // TicketRoutingService: a real ticket id, never a lead
+        { ...base, id: 'ticket', ticketId: 'ticket-9', details: { routingMethod: 'skill' } },
+        // No details at all
+        { ...base, id: 'bare', ticketId: 'x', details: null },
+      ]);
+
+      const result = await caller.getAssignments({ limit: 20 });
+
+      expect(result.items.map((i) => i.leadId)).toEqual(['lead-auto', null, null]);
+    });
   });
 
   describe('getAgentWorkload', () => {
