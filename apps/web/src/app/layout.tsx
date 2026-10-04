@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import dynamic from 'next/dynamic';
 import { Inter } from 'next/font/google';
-import localFont from 'next/font/local';
 import { GoogleTagManager } from '@next/third-parties/google';
 import './globals.css';
 import { Providers } from './providers';
@@ -14,6 +13,7 @@ import { VerifyEmailBanner } from '@/components/auth/VerifyEmailBanner';
 import { OnboardingWelcome } from '@/components/onboarding/OnboardingWelcomeClient';
 import { Toaster } from '@intelliflow/ui';
 import { getPrivacyPolicy } from '@/lib/legal/consent-tracker';
+import { FONTS_READY_SCRIPT, MATERIAL_SYMBOLS_FONT_URL } from '@/lib/fonts-ready';
 
 // Lazy-load CookieConsentBanner — it ships with every page via the root
 // layout but is only interacted with once per visitor. Defer to keep it out
@@ -37,12 +37,10 @@ export const viewport: Viewport = {
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
-const materialSymbols = localFont({
-  src: '../../public/fonts/MaterialSymbolsOutlined.woff2',
-  variable: '--font-material-symbols',
-  display: 'swap',
-  weight: '400',
-});
+// Material Symbols is self-hosted through a hand-written @font-face in
+// globals.css (family 'Material Symbols Outlined', font-display: block), preloaded
+// below and gated by the fonts-ready script. See src/lib/fonts-ready.ts and
+// apps/project-tracker/docs/metrics/_global/fix-material-icons.md.
 
 export const metadata: Metadata = {
   title: {
@@ -106,7 +104,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${materialSymbols.variable}`}>
+      <head>
+        <link
+          rel="preload"
+          href={MATERIAL_SYMBOLS_FONT_URL}
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        {/* Allowed by the CSP via its sha256 hash (proxy.ts), not a nonce. */}
+        <script dangerouslySetInnerHTML={{ __html: FONTS_READY_SCRIPT }} />
+      </head>
+      <body className={inter.variable}>
         {process.env.NEXT_PUBLIC_GTM_ID && (
           <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
         )}
