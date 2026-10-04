@@ -7575,19 +7575,23 @@ async function seedAgentAvailability(tenantId: string) {
 async function seedRoutingRules(tenantId: string) {
   console.log('🔀 Seeding routing rules...');
 
+  // Canonical shape — the one createRoutingRuleSchema (packages/validators/src/
+  // routing.ts) accepts, the routing API returns and LeadRoutingService
+  // evaluates: arrays of { field, operator, value } and { type, target?,
+  // channels? }. These rules used to be keyed objects with `gte`/`lt` operators,
+  // which the engine cannot iterate and the UI showed as empty. Inclusive
+  // thresholds are written as `greater_than N-1` (all compared fields are ints).
   const rules = [
     {
       id: SEED_IDS.routingRules.enterpriseDeals,
       name: 'Enterprise Deals',
       description: 'Route high-value enterprise leads ($100k+) to senior sales team',
       priority: 0,
-      conditions: {
-        estimatedValue: { operator: 'gte', value: 100000 },
-      },
-      actions: {
-        assign_to_team: SEED_IDS.teams.sales,
-        notify: ['slack', 'email'],
-      },
+      conditions: [{ field: 'estimatedValue', operator: 'greater_than', value: 99999 }],
+      actions: [
+        { type: 'assign_to_team', target: SEED_IDS.teams.sales },
+        { type: 'notify', channels: ['slack', 'email'] },
+      ],
       isActive: true,
       createdBy: SEED_IDS.users.admin,
     },
@@ -7596,13 +7600,11 @@ async function seedRoutingRules(tenantId: string) {
       name: 'Technical Support',
       description: 'Route technical leads from website/API to Mike Davis',
       priority: 1,
-      conditions: {
-        source: { operator: 'in', value: ['WEBSITE', 'API'] },
-        tags: { operator: 'contains', value: 'technical' },
-      },
-      actions: {
-        assign_to_user: SEED_IDS.users.mikeDavis,
-      },
+      conditions: [
+        { field: 'leadSource', operator: 'in', value: ['WEBSITE', 'API'] },
+        { field: 'tags', operator: 'contains', value: 'technical' },
+      ],
+      actions: [{ type: 'assign_to_user', target: SEED_IDS.users.mikeDavis }],
       isActive: true,
       createdBy: SEED_IDS.users.admin,
     },
@@ -7611,13 +7613,11 @@ async function seedRoutingRules(tenantId: string) {
       name: 'Urgent Escalation',
       description: 'Escalate hot leads (score 90+) to Sarah Johnson with notifications',
       priority: 2,
-      conditions: {
-        score: { operator: 'gte', value: 90 },
-      },
-      actions: {
-        assign_to_user: SEED_IDS.users.sarahJohnson,
-        notify: ['slack', 'email'],
-      },
+      conditions: [{ field: 'leadScore', operator: 'greater_than', value: 89 }],
+      actions: [
+        { type: 'assign_to_user', target: SEED_IDS.users.sarahJohnson },
+        { type: 'notify', channels: ['slack', 'email'] },
+      ],
       isActive: true,
       createdBy: SEED_IDS.users.admin,
     },
@@ -7626,13 +7626,11 @@ async function seedRoutingRules(tenantId: string) {
       name: 'High-Value Leads',
       description: 'Route leads with score >= 70 and value >= $50k to sales team',
       priority: 3,
-      conditions: {
-        score: { operator: 'gte', value: 70 },
-        estimatedValue: { operator: 'gte', value: 50000 },
-      },
-      actions: {
-        assign_to_team: SEED_IDS.teams.sales,
-      },
+      conditions: [
+        { field: 'leadScore', operator: 'greater_than', value: 69 },
+        { field: 'estimatedValue', operator: 'greater_than', value: 49999 },
+      ],
+      actions: [{ type: 'assign_to_team', target: SEED_IDS.teams.sales }],
       isActive: true,
       createdBy: SEED_IDS.users.admin,
     },
@@ -7641,13 +7639,11 @@ async function seedRoutingRules(tenantId: string) {
       name: 'Technical Evaluation',
       description: 'Route website leads with technical tags to Mike Davis for evaluation',
       priority: 4,
-      conditions: {
-        source: 'WEBSITE',
-        tags: { operator: 'contains', value: 'technical' },
-      },
-      actions: {
-        assign_to_user: SEED_IDS.users.mikeDavis,
-      },
+      conditions: [
+        { field: 'leadSource', operator: 'equals', value: 'WEBSITE' },
+        { field: 'tags', operator: 'contains', value: 'technical' },
+      ],
+      actions: [{ type: 'assign_to_user', target: SEED_IDS.users.mikeDavis }],
       isActive: true,
       createdBy: SEED_IDS.users.admin,
     },
@@ -7656,13 +7652,11 @@ async function seedRoutingRules(tenantId: string) {
       name: 'Website Inquiries',
       description: 'Route qualified website leads (score 40+) to sales team',
       priority: 5,
-      conditions: {
-        source: 'WEBSITE',
-        score: { operator: 'gte', value: 40 },
-      },
-      actions: {
-        assign_to_team: SEED_IDS.teams.sales,
-      },
+      conditions: [
+        { field: 'leadSource', operator: 'equals', value: 'WEBSITE' },
+        { field: 'leadScore', operator: 'greater_than', value: 39 },
+      ],
+      actions: [{ type: 'assign_to_team', target: SEED_IDS.teams.sales }],
       isActive: true,
       createdBy: SEED_IDS.users.admin,
     },
@@ -7671,12 +7665,8 @@ async function seedRoutingRules(tenantId: string) {
       name: 'Referral Leads',
       description: 'Route all referral leads to Emily Davis',
       priority: 6,
-      conditions: {
-        source: 'REFERRAL',
-      },
-      actions: {
-        assign_to_user: SEED_IDS.users.emilyDavis,
-      },
+      conditions: [{ field: 'leadSource', operator: 'equals', value: 'REFERRAL' }],
+      actions: [{ type: 'assign_to_user', target: SEED_IDS.users.emilyDavis }],
       isActive: true,
       createdBy: SEED_IDS.users.admin,
     },
@@ -7685,12 +7675,8 @@ async function seedRoutingRules(tenantId: string) {
       name: 'Low-Score Nurture',
       description: 'Route low-score leads (< 30) to support team for nurturing',
       priority: 7,
-      conditions: {
-        score: { operator: 'lt', value: 30 },
-      },
-      actions: {
-        assign_to_team: SEED_IDS.teams.support,
-      },
+      conditions: [{ field: 'leadScore', operator: 'less_than', value: 30 }],
+      actions: [{ type: 'assign_to_team', target: SEED_IDS.teams.support }],
       isActive: false,
       createdBy: SEED_IDS.users.admin,
     },
