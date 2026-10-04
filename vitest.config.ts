@@ -10,9 +10,12 @@ import path from 'node:path';
  * the test root.
  */
 const packageRoot = process.cwd();
-// The repo root as a glob prefix (forward slashes, glob metacharacters escaped),
-// for coverage globs that must not match same-named directories deeper down.
-const repoRootGlob = packageRoot.replaceAll('\\', '/').replaceAll(/[()[\]{}*?!+@]/g, '\\$&');
+// The repo root as a glob prefix, for coverage globs that must not match
+// same-named directories deeper down. One pass over the path: a Windows
+// separator becomes '/', and every glob metacharacter is backslash-escaped.
+const repoRootGlob = packageRoot.replaceAll(/[\\()[\]{}*?!+@]/g, (c) =>
+  c === '\\' ? '/' : `\\${c}`
+);
 const monorepoRoot = __dirname;
 
 // Load environment variables from .env.local
