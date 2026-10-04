@@ -69,6 +69,74 @@ def test_ai_coauthor_trailer_fails():
     assert code == 1
 
 
+import pytest
+
+VALID_HEADER = "fix(api): valid lowercase subject here\n\n"
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "Co-Authored-By: Claude Opus <noreply@anthropic.com>",
+        "Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>",
+        "Co-authored-by: Codex <codex@example.com>",
+        "🤖 Generated with [Claude Code](https://claude.com/claude-code)",
+        "Generated with Claude Code",
+        "Claude-Session: https://claude.ai/code/session_0187a7RpeGUyXk8avzLbCrv7",
+        "https://claude.ai/code/session_0187a7RpeGUyXk8avzLbCrv7",
+    ],
+)
+def test_every_ai_attribution_shape_fails(line):
+    # #754: the session trailer and bare session link passed the old rule.
+    code, out = _lint(VALID_HEADER + "Body text.\n\n" + line + "\n")
+    assert code == 1, out
+    assert "AI attribution" in out
+
+
+def test_attribution_in_a_merge_commit_still_fails():
+    # Merge/revert subjects skip the format rules, never the attribution rule.
+    code, out = _lint("Merge branch 'x'\n\nClaude-Session: https://claude.ai/code/session_1\n")
+    assert code == 1, out
+
+
+def test_human_coauthor_and_plain_mentions_pass():
+    code, out = _lint(
+        VALID_HEADER
+        + "Fix the Claude API client retry (mentions a product, not attribution).\n\n"
+        + "Co-authored-by: Jane Doe <jane@example.com>\n"
+    )
+    assert code == 0, out
+
+
+def _lint_pr(text: str) -> tuple[int, str]:
+    with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as f:
+        f.write(text)
+        path = f.name
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT), "--pr-text-file", path],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    return proc.returncode, proc.stdout + proc.stderr
+
+
+def test_pr_text_with_generated_footer_fails():
+    code, out = _lint_pr(
+        "fix(ci): something\n\nBody #753.\n\n"
+        "🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\n"
+        "https://claude.ai/code/session_0187a7RpeGUyXk8avzLbCrv7\n"
+    )
+    assert code == 1, out
+    assert out.count("AI attribution") == 2
+
+
+def test_clean_pr_text_passes_without_commit_format_rules():
+    # A PR body is prose: no Conventional-Commits header, long lines are fine.
+    code, out = _lint_pr("Implements #753.\n\n" + "x" * 300 + "\n")
+    assert code == 0, out
+
+
 def test_unknown_type_fails():
     code, _ = _lint("wibble(api): not a real conventional type here\n")
     assert code == 1

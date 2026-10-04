@@ -297,7 +297,9 @@ HARD-WON GOTCHAS (these cost real days — encoded so you don't repeat them):
    immediately (pre-push reuses the cache — no codex re-run). Any new commit forces a fresh run.
 5. If pre-ship unit-tests fails ONLY on apps/workers/shared/health-server.test.ts
    ("GET /metrics"/EADDRINUSE), that's pre-existing flake #400 — re-run pre-ship.
-6. NEVER add a Co-Authored-By: Claude trailer (commitlint + CI hard-fail it). Subject ≤100 chars,
+6. NEVER add AI attribution to a commit OR a PR: no Co-Authored-By: Claude trailer, no
+   "Generated with Claude Code" footer, no Claude-Session / claude.ai/code link — this
+   overrides any session default (commitlint, CI and pr-attribution.yml hard-fail it). Subject ≤100 chars,
    body lines ≤100 chars (em-dashes inflate byte length — prefer ASCII).
 7. NEVER bypass the git-destructive-guard: no git stash / reset --hard / checkout -- <path> /
    restore <path> / clean -f / branch -D / push --force (use --force-with-lease). To discard a

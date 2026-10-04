@@ -57,4 +57,12 @@ if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
   echo "   Your message: $COMMIT_MSG"
   exit 1
 fi
+# AI attribution is never allowed, even on the degraded no-python path. Keep in
+# step with _AI_ATTRIBUTION_RE in tools/audit/commit_msg_lint.py.
+if printf '%s\n' "$COMMIT_MSG" | grep -v '^#' | grep -qiE 'co-authored-by:.*(claude|anthropic|copilot|cursor|codex|chatgpt|gemini)|noreply@anthropic\.com|generated (with|by).*(claude|copilot|cursor|codex|chatgpt|gemini)|claude-session:|claude\.ai/code'; then
+  echo "❌ Commit message carries AI attribution (co-author trailer, 'Generated with …'"
+  echo "   footer or Claude session link). Repo policy forbids it — remove the line."
+  exit 1
+fi
+
 echo "✅ Commit message format ok (basic check)"
