@@ -12,15 +12,11 @@ import { useCallback, useMemo } from 'react';
 import { Skeleton } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { AppointmentList } from '@/components/appointments';
-import type {
-  AppointmentStats,
-  AppointmentListItem,
-  AppointmentType,
-  AppointmentStatus,
-} from '@/components/appointments/types';
+import type { AppointmentStats, AppointmentListItem } from '@/components/appointments/types';
 import { useAppointmentFilters } from '@/hooks/useAppointmentFilters';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
+import { toAppointmentListItem } from '@/lib/appointments/list-item';
 
 const defaultStats: AppointmentStats = {
   total: 0,
@@ -47,10 +43,7 @@ export default function AppointmentsListPage() {
 
   const { data, isLoading } = api.appointments.list.useQuery(queryParams, {
     staleTime: 30_000,
-  }) as unknown as {
-    data: { appointments?: Record<string, unknown>[]; total?: number } | undefined;
-    isLoading: boolean;
-  };
+  });
 
   const { data: rawStats } = api.appointments.stats.useQuery(undefined, {
     staleTime: 5 * 60_000,
@@ -59,29 +52,7 @@ export default function AppointmentsListPage() {
   });
 
   const appointments: AppointmentListItem[] = useMemo(() => {
-    const rawAppointments: Record<string, unknown>[] | undefined = data?.appointments;
-    if (!rawAppointments) return [];
-    return rawAppointments.map((a) => {
-      const organizer = a.organizer as { id?: string; name?: string | null } | null;
-      const attendees = a.attendees as Array<{ user?: { name?: string | null } }> | undefined;
-      const linkedCases = a.linkedCases as unknown[] | undefined;
-      return {
-        id: a.id as string,
-        title: a.title as string,
-        startTime: new Date(a.startTime as string),
-        endTime: new Date(a.endTime as string),
-        appointmentType: a.appointmentType as AppointmentType,
-        status: a.status as AppointmentStatus,
-        location: (a.location as string) ?? undefined,
-        attendeeCount: attendees?.length ?? 0,
-        hasConflict: false,
-        linkedCaseCount: linkedCases?.length ?? 0,
-        isRecurring: Boolean(a.recurrencePattern),
-        calendarId: a.calendarId as string | null | undefined,
-        organizer: { id: organizer?.id ?? '', name: organizer?.name ?? 'Unknown' },
-        attendeeNames: attendees?.map((att) => att.user?.name ?? 'Unknown') ?? [],
-      };
-    });
+    return data?.appointments.map(toAppointmentListItem) ?? [];
   }, [data]);
 
   const total = data?.total ?? 0;
