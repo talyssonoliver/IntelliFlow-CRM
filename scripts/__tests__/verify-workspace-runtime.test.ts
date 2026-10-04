@@ -300,12 +300,10 @@ describe('round-2 review regressions', () => {
     ]);
   });
 
-  it('reports a block-commented import rather than risk stripping real code', () => {
-    // Fail loud: stripping block comments would also eat code after a '/*' that
-    // sits inside a string (round-5 review).
-    expect(importedWorkspaceSpecifiers(`/* require("@intelliflow/old") */ const x = 1;`)).toEqual([
-      { name: '@intelliflow/old', subpath: '' },
-    ]);
+  it('ignores an import inside a single-line block comment', () => {
+    expect(importedWorkspaceSpecifiers(`/* require("@intelliflow/old") */ const x = 1;`)).toEqual(
+      []
+    );
   });
 
   it("does not lose an import that follows a '/*' inside a string", () => {
@@ -384,5 +382,19 @@ describe('round-4 review regressions', () => {
     const r = verify(app, dist);
     expect(r.problems).toEqual([]);
     expect(r.checked).toEqual(['@intelliflow/a', '@intelliflow/b']);
+  });
+});
+
+describe('round-6 review regressions', () => {
+  it.each([
+    `import(/** webpackChunkName: "x" */ '@intelliflow/foo')`,
+    `import(/* a */ /* b */ '@intelliflow/foo')`,
+  ])('sees an import with comments inside the parentheses: %s', (src) => {
+    expect(importedWorkspaceSpecifiers(src)).toEqual([{ name: '@intelliflow/foo', subpath: '' }]);
+  });
+
+  it('ignores JSDoc example imports in TypeScript sources', () => {
+    const src = `/**\n * @example\n * import { x } from '@intelliflow/observability';\n */\nexport const y = 1;`;
+    expect(importedWorkspaceSpecifiers(src)).toEqual([]);
   });
 });

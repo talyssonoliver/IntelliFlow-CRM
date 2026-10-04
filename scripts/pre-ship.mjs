@@ -259,12 +259,10 @@ const SCOPE_CONSUMERS = [
   'infra-skip-gate',
 ];
 const ONLY_ARG = process.argv.find((a) => a.startsWith('--only='));
+const ONLY_IDS = ONLY_ARG ? ONLY_ARG.slice('--only='.length).split(',') : null;
+const NO_STEPS = ['--help', '--list'].some((f) => process.argv.includes(f));
 const SCOPE_NEEDED =
-  !['--help', '--list'].some((f) => process.argv.includes(f)) &&
-  (!ONLY_ARG ||
-    ONLY_ARG.slice('--only='.length)
-      .split(',')
-      .some((id) => SCOPE_CONSUMERS.includes(id)));
+  !NO_STEPS && (!ONLY_IDS || ONLY_IDS.some((id) => SCOPE_CONSUMERS.includes(id)));
 // The gate code and scope logic are hashed NOW, at start-up, so last-run.json
 // pins what actually ran; restoring the files mid-run cannot launder a narrowed
 // gate or scope into a clean attestation.
@@ -272,9 +270,18 @@ const GATE_PINS = {
   preship_sha256: sha256OfFile(fileURLToPath(import.meta.url)),
   scope_logic_sha256: scopeLogicSha256(REPO_ROOT),
 };
+// When nothing consumes the scope it is not resolved, and says so (`unresolved:
+// true`) rather than posing as a real `full` scope; no test step runs then.
 const TEST_SCOPE = SCOPE_NEEDED
   ? resolveTestScope({ cwd: REPO_ROOT })
-  : { scope: 'full', reason: 'not resolved (no test step selected)', files: [], base: null };
+  : {
+      scope: 'full',
+      unresolved: true,
+      reason: 'not resolved — no test step selected',
+      files: [],
+      base: null,
+    };
+const SCOPE_LABEL = TEST_SCOPE.unresolved ? 'unresolved' : TEST_SCOPE.scope;
 const SCOPED_TESTS = TEST_SCOPE.scope !== 'full';
 const SCOPE_ENV_VALUE = JSON.stringify(TEST_SCOPE);
 const CI_ONLY_REMEDIATION =
@@ -283,8 +290,11 @@ const CI_ONLY_REMEDIATION =
 // The Python audit tooling (tools/audit — commit_msg_lint.py and friends) has
 // pytest suites that Vitest never runs; CI runs them in system-audit-integrity.
 // Run them here whenever that tooling changed (always, in a full-scope run).
+// Probed only when audit-pytest itself can run (not for --help/--list, nor an
+// --only subset without it).
 const PYTEST_AVAILABLE =
-  SCOPE_NEEDED &&
+  !NO_STEPS &&
+  (!ONLY_IDS || ONLY_IDS.includes('audit-pytest')) &&
   PYTHON_BIN !== null &&
   // No shell: under cmd.exe `-c import pytest` would split into two args and the
   // probe would always fail. spawnSync finds python(.exe) on PATH by itself.
@@ -865,7 +875,7 @@ if (flags.help) {
 
 if (flags.list) {
   process.stdout.write(
-    `pre-ship step plan (mode: ${flags.full ? 'full' : 'standard'}, test scope: ${TEST_SCOPE.scope})\n`
+    `pre-ship step plan (mode: ${flags.full ? 'full' : 'standard'}, test scope: ${SCOPE_LABEL})\n`
   );
   for (const s of STEPS) {
     // full_only steps only run under --full; tag them so `--list` (standard) makes
@@ -909,6 +919,7 @@ function scopeKey(scope) {
     scope: scope?.scope ?? 'full',
     files: scope?.files ?? [],
     worktree: scope?.worktree ?? null,
+    unresolved: scope?.unresolved === true,
   };
 }
 
@@ -1046,7 +1057,7 @@ function main() {
     `pre-ship: mode ${flags.full ? 'FULL (standard gate + cross-browser E2E)' : 'standard'}.\n`
   );
   process.stdout.write(
-    `pre-ship: test scope ${TEST_SCOPE.scope} — ${TEST_SCOPE.reason}` +
+    `pre-ship: test scope ${SCOPE_LABEL} — ${TEST_SCOPE.reason}` +
       (SCOPED_TESTS ? ' (the full suite runs on CI; PRESHIP_FULL_TESTS=1 runs it here)' : '') +
       '.\n\n'
   );

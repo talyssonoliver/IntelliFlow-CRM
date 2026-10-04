@@ -241,12 +241,11 @@ export function assessState(state, headSha, preshipSha256, scopeLogicSha = null)
 
 /**
  * Validate a payload read back from a published attestation.
- * @returns {string[]} reasons it is unacceptable (empty === acceptable)
- */
-/**
+ *
  * A clean attestation means every step of the gate ran and passed — at the test
  * scope it records (`test_scope`: `full`, or `related`/`none` locally, where the
  * full suite is left to CI). It is not a claim that the full test suite ran.
+ * @returns {string[]} reasons it is unacceptable (empty === acceptable)
  */
 export function validatePayload(
   payload,
@@ -365,6 +364,26 @@ function git(args, opts = {}) {
 function fail(lines) {
   for (const l of lines) process.stderr.write(`${l}\n`);
   process.exit(1);
+}
+
+/**
+ * Which pins `--verify` checks. Both are skipped together when the gate script
+ * is unreadable (the documented "verifying outside a checkout" mode); in a real
+ * checkout a missing scope file still counts as a mismatch (scopeLogicSha null).
+ * @returns {{preshipSha256: string|null, scopeLogicSha: string|null, checkScope: boolean}}
+ */
+export function verifyPins(preshipFile) {
+  let preshipSha256;
+  try {
+    preshipSha256 = sha256File(preshipFile);
+  } catch {
+    return { preshipSha256: null, scopeLogicSha: null, checkScope: false };
+  }
+  return {
+    preshipSha256,
+    scopeLogicSha: scopeLogicSha256(gateRoot(preshipFile)),
+    checkScope: true,
+  };
 }
 
 // The checkout the gate script belongs to (<root>/scripts/pre-ship.mjs), so the
@@ -575,22 +594,15 @@ function doVerify(flags, preshipFile) {
     fail([`Attestation payload for ${sha} is not valid JSON.`]);
   }
 
-  let preshipSha256 = null;
-  try {
-    preshipSha256 = sha256File(preshipFile);
-  } catch {
-    // Verifying outside a checkout that has the gate script: skip the pin
+  const pins = verifyPins(preshipFile);
+  if (!pins.checkScope) {
+    // Verifying outside a checkout that has the gate script: skip the pins
     // rather than fail on an unrelated cause. Loud, so it is never silent.
-    process.stdout.write(`note: ${preshipFile} not readable — gate-version pin not checked.\n`);
+    process.stdout.write(`note: ${preshipFile} not readable — gate-version pins not checked.\n`);
   }
-
-  // Both pins are skipped together when the gate script is unreadable (the
-  // documented "verifying outside a checkout" mode); in a real checkout a
-  // missing scope file still counts as a mismatch.
-  const reasons =
-    preshipSha256 === null
-      ? validatePayload(payload, sha, null, null, { checkScope: false })
-      : validatePayload(payload, sha, preshipSha256, scopeLogicSha256(gateRoot(preshipFile)));
+  const reasons = validatePayload(payload, sha, pins.preshipSha256, pins.scopeLogicSha, {
+    checkScope: pins.checkScope,
+  });
   if (reasons.length > 0) {
     fail([
       `Attestation for ${sha} does not record a complete clean gate run:`,

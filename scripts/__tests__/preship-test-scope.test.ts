@@ -435,3 +435,14 @@ describe('round-5 review regressions', () => {
     expect(r.scope).toBe('related');
   });
 });
+
+describe('round-6 review regressions', () => {
+  it('a deleted shared test still selects the tests that import it', () => {
+    const tests = new Map([
+      ['packages/a/src/uses-contract.test.ts', "import { contract } from './contract.test';"],
+    ]);
+    expect(
+      testsReferencingChanges([], tests, { deleted: ['packages/a/src/contract.test.ts'] })
+    ).toEqual(['packages/a/src/uses-contract.test.ts']);
+  });
+});

@@ -28,6 +28,7 @@ import {
   validatePayload,
   scopeLogicSha256,
   SCOPE_LOGIC_FILES,
+  verifyPins,
 } from '../preship-attest.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -776,5 +777,38 @@ describe('round-5 review regressions', () => {
       'c'.repeat(64)
     );
     expect(validatePayload(payload, HEAD, null, null, { checkScope: false })).toEqual([]);
+  });
+});
+
+describe('verifyPins (round-6 review)', () => {
+  it('checks both pins in a real checkout', () => {
+    expect(verifyPins(PRESHIP)).toEqual({
+      preshipSha256: PRESHIP_HASH,
+      scopeLogicSha: SCOPE_HASH,
+      checkScope: true,
+    });
+  });
+
+  it('skips both pins when the gate script is unreadable', () => {
+    expect(verifyPins(path.join(os.tmpdir(), 'no-such-dir', 'pre-ship.mjs'))).toEqual({
+      preshipSha256: null,
+      scopeLogicSha: null,
+      checkScope: false,
+    });
+  });
+
+  it('in a checkout missing a scope file, still checks — and a recorded pin mismatches', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pins-'));
+    fs.mkdirSync(path.join(dir, 'scripts'), { recursive: true });
+    fs.copyFileSync(PRESHIP, path.join(dir, 'scripts/pre-ship.mjs'));
+    const pins = verifyPins(path.join(dir, 'scripts/pre-ship.mjs'));
+    expect(pins.checkScope).toBe(true);
+    expect(pins.scopeLogicSha).toBeNull();
+    const { payload } = assess(goodState());
+    const reasons = validatePayload(payload, HEAD, pins.preshipSha256, pins.scopeLogicSha, {
+      checkScope: pins.checkScope,
+    });
+    expect(reasons.some((r) => r.includes('scope_logic_sha256'))).toBe(true);
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 });

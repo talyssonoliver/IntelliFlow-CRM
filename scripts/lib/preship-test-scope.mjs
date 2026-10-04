@@ -111,14 +111,28 @@ function referenceNeedles(file) {
  * @param {Map<string, string>} testContents test path -> source text
  * @returns {string[]}
  */
-export function testsReferencingChanges(changedFiles, testContents) {
+export function testsReferencingChanges(changedFiles, testContents, { deleted = [] } = {}) {
+  // A changed test file runs itself, so it needs no needle; a DELETED one does
+  // (a shared contract suite other tests import), so its importers are found.
   const needles = [
-    ...new Set(
-      changedFiles
+    ...new Set([
+      ...changedFiles
         .map(normalise)
         .filter((f) => !TEST_FILE.test(f))
-        .flatMap(referenceNeedles)
-    ),
+        .flatMap(referenceNeedles),
+      ...deleted.map(normalise).flatMap((f) => [
+        ...referenceNeedles(f),
+        // importers omit the extension: './contract.test'
+        ...(TEST_FILE.test(f)
+          ? [
+              f
+                .split('/')
+                .at(-1)
+                .replace(/\.[^.]+$/, ''),
+            ]
+          : []),
+      ]),
+    ]),
   ];
   if (needles.length === 0) return [];
   const out = [];
@@ -289,7 +303,7 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
       // Fail closed: without the test list, by-name selection is blind.
       return fullScope('git ls-files failed — running the full suite', base);
     }
-    referencingTests = testsReferencingChanges([...changed, ...deleted], testContents);
+    referencingTests = testsReferencingChanges(changed, testContents, { deleted: [...deleted] });
   }
   return {
     ...classifyChangedFiles(changed, { deleted: [...deleted], referencingTests }),
