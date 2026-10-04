@@ -15,10 +15,7 @@ import {
 import { PageHeader } from '@/components/shared';
 import { api } from '@/lib/api';
 import { DEFAULT_HELP_CATEGORIES } from '@/lib/support/help-categories';
-import type {
-  CreateHelpArticleInput,
-  UpdateHelpArticleInput,
-} from '@intelliflow/validators/help-article';
+import type { UpdateHelpArticleInput } from '@intelliflow/validators/help-article';
 import { ForbiddenSurface } from './article-admin-list';
 import {
   docToSections,
@@ -413,17 +410,8 @@ export function ArticleEditor({ mode, articleId }: Readonly<ArticleEditorProps>)
   const publishMutation = api.helpArticle.publish.useMutation();
   const unpublishMutation = api.helpArticle.unpublish.useMutation();
 
-  // The create/update procedures return the full article (with its Prisma
-  // `sections` relation) — a type deep enough to trip `tsc`'s instantiation
-  // limit when awaited inside a callback. The casts are runtime no-ops (the
-  // underlying `mutateAsync` reference is stable), narrowing to the id slice we
-  // actually consume.
-  const createArticle = createMutation.mutateAsync as unknown as (
-    input: CreateHelpArticleInput
-  ) => Promise<{ id: string }>;
-  const updateArticle = updateMutation.mutateAsync as unknown as (
-    input: UpdateHelpArticleInput
-  ) => Promise<{ id: string }>;
+  const createArticle = createMutation.mutateAsync;
+  const updateArticle = updateMutation.mutateAsync;
 
   const isSaving =
     createMutation.isPending ||
