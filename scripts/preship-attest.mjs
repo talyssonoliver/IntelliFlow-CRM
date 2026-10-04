@@ -243,7 +243,18 @@ export function assessState(state, headSha, preshipSha256, scopeLogicSha = null)
  * Validate a payload read back from a published attestation.
  * @returns {string[]} reasons it is unacceptable (empty === acceptable)
  */
-export function validatePayload(payload, sha, preshipSha256, scopeLogicSha = null) {
+/**
+ * A clean attestation means every step of the gate ran and passed — at the test
+ * scope it records (`test_scope`: `full`, or `related`/`none` locally, where the
+ * full suite is left to CI). It is not a claim that the full test suite ran.
+ */
+export function validatePayload(
+  payload,
+  sha,
+  preshipSha256,
+  scopeLogicSha = null,
+  { checkScope = true } = {}
+) {
   const reasons = [];
   if (!payload || typeof payload !== 'object') return ['attestation payload is not JSON'];
   if (payload.v !== PAYLOAD_VERSION) reasons.push(`unsupported payload version ${payload.v}`);
@@ -268,6 +279,7 @@ export function validatePayload(payload, sha, preshipSha256, scopeLogicSha = nul
   // Compared whenever EITHER side has a hash: a checkout missing a pinned file
   // (null here) must not switch the check off for a payload that recorded one.
   if (
+    checkScope &&
     (scopeLogicSha || payload.scope_logic_sha256) &&
     payload.scope_logic_sha256 !== scopeLogicSha
   ) {
@@ -572,15 +584,16 @@ function doVerify(flags, preshipFile) {
     process.stdout.write(`note: ${preshipFile} not readable — gate-version pin not checked.\n`);
   }
 
-  const reasons = validatePayload(
-    payload,
-    sha,
-    preshipSha256,
-    scopeLogicSha256(gateRoot(preshipFile))
-  );
+  // Both pins are skipped together when the gate script is unreadable (the
+  // documented "verifying outside a checkout" mode); in a real checkout a
+  // missing scope file still counts as a mismatch.
+  const reasons =
+    preshipSha256 === null
+      ? validatePayload(payload, sha, null, null, { checkScope: false })
+      : validatePayload(payload, sha, preshipSha256, scopeLogicSha256(gateRoot(preshipFile)));
   if (reasons.length > 0) {
     fail([
-      `Attestation for ${sha} does not record a full clean gate:`,
+      `Attestation for ${sha} does not record a complete clean gate run:`,
       ...reasons.map((r) => `  - ${r}`),
       '',
       '  Re-run the gate at this SHA and re-publish: pnpm run pre-ship && pnpm preship:attest',

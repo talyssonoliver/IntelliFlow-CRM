@@ -70,6 +70,25 @@ git fetch origin "refs/preship/<sha>:refs/preship/<sha>"
 git cat-file -p "refs/preship/<sha>"
 ```
 
+### Test scope and the two pins
+
+A PASS means every step of the gate ran and passed **at the test scope the run
+recorded** — not that the full test suite ran. Locally, `unit-tests` and
+`coverage` run only the tests related to the change (`vitest related`); the full
+suite is CI's sharded runners' job. The payload says which:
+
+- `test_scope` — `full`, `related` or `none`. `PRESHIP_FULL_TESTS=1` gives
+  `full` locally.
+- `preship_sha256` — `scripts/pre-ship.mjs` as it ran.
+- `scope_logic_sha256` — the files that decide which tests run
+  (`SCOPE_LOGIC_FILES` in `scripts/preship-attest.mjs`), as they ran.
+
+Both pins are captured by `pre-ship.mjs` at start-up and written to
+`last-run.json`; `--publish` refuses a run whose pins no longer match the
+checkout, and `--verify` refuses an attestation whose pins do not match the SHA
+being verified. Narrowing the gate or the scope, running it, then restoring the
+files does not produce a clean attestation.
+
 ## Normal flow
 
 Nothing to do. The `pre-push` hook publishes the attestation automatically after

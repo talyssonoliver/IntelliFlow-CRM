@@ -300,10 +300,27 @@ describe('round-2 review regressions', () => {
     ]);
   });
 
-  it('ignores an import that only appears inside a block comment', () => {
-    expect(importedWorkspaceSpecifiers(`/* require("@intelliflow/old") */ const x = 1;`)).toEqual(
-      []
-    );
+  it('reports a block-commented import rather than risk stripping real code', () => {
+    // Fail loud: stripping block comments would also eat code after a '/*' that
+    // sits inside a string (round-5 review).
+    expect(importedWorkspaceSpecifiers(`/* require("@intelliflow/old") */ const x = 1;`)).toEqual([
+      { name: '@intelliflow/old', subpath: '' },
+    ]);
+  });
+
+  it("does not lose an import that follows a '/*' inside a string", () => {
+    const src = `const glob = "apps/*/dist";
+import { s } from "@intelliflow/partner-sdk";
+const y = "*/";`;
+    expect(importedWorkspaceSpecifiers(src)).toEqual([
+      { name: '@intelliflow/partner-sdk', subpath: '' },
+    ]);
+  });
+
+  it("sees esbuild's __require(...)", () => {
+    expect(importedWorkspaceSpecifiers(`var x = __require("@intelliflow/db");`)).toEqual([
+      { name: '@intelliflow/db', subpath: '' },
+    ]);
   });
 
   it('only requires targets behind runtime conditions', () => {

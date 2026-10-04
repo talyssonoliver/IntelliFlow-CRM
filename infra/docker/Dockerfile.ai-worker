@@ -91,6 +91,12 @@ COPY --from=builder --chown=aiworker:nodejs /app/apps/ai-worker/node_modules ./a
 COPY --from=builder --chown=aiworker:nodejs /app/apps/ai-worker/package.json ./apps/ai-worker/
 COPY --from=builder --chown=aiworker:nodejs /app/package.json ./
 
+# Fail the build, not the container boot, if any @intelliflow package the worker
+# imports at runtime is absent or unbuilt in THIS stage — same check as
+# Dockerfile.api (the #742 failure mode). Reads files only, executes nothing.
+COPY --from=builder /app/scripts/docker/verify-workspace-runtime.mjs /tmp/verify-workspace-runtime.mjs
+RUN node /tmp/verify-workspace-runtime.mjs apps/ai-worker apps/ai-worker/dist   && rm /tmp/verify-workspace-runtime.mjs
+
 # Python dependencies: no requirements.txt is committed today (the
 # worker is pure Node/@langchain/* per apps/ai-worker/package.json).
 # Reintroduce the COPY + pip install lines if Python code lands later.

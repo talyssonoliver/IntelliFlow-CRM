@@ -28,24 +28,27 @@ import { fileURLToPath } from 'node:url';
 
 // import x from '@intelliflow/a' · import '@intelliflow/a/register' (side effect,
 // also minified `import"…"`) · import('@intelliflow/a/sub') · require(...) ·
-// export … from. Captures the subpath too: a subpath import resolves through its
-// own export entry, which can be missing while the root entry exists.
+// esbuild's __require(...) · export … from. One block comment is allowed inside
+// the parentheses (`import(/* webpackIgnore: true */ '@intelliflow/x')`).
+// Captures the subpath too: a subpath import resolves through its own export
+// entry, which can be missing while the root entry exists.
+//
+// Block comments are deliberately NOT stripped from the source first: a `/*`
+// inside a string (a glob such as 'packages/*/src') would swallow the real code
+// up to the next `*/` and hide its imports — a false PASS. A commented-out
+// import is reported instead, which fails loudly and is easy to see.
 const SPECIFIER =
-  /\b(?:from|import|require)\s*(?:\(\s*)?["'](@intelliflow\/[a-z0-9._-]+)(?:\/([^"']+))?["']/g;
+  /\b(?:from|import|require|__require)\s*(?:\(\s*(?:\/\*[^*]*\*\/\s*)?)?["'](@intelliflow\/[a-z0-9._-]+)(?:\/([^"']+))?["']/g;
 
 /** Every @intelliflow specifier imported by a source, as {name, subpath} ('' = root). */
-// Block comments are removed first: they can sit inside a real import
-// (`import(/* webpackIgnore: true */ '@intelliflow/x')`) or hold a commented-out
-// one that must not fail the build.
-const BLOCK_COMMENT = /\/\*[\s\S]*?\*\//g;
-// Whole-line `//` comments too (a commented-out import must not fail the build).
+// Whole-line `//` comments are dropped (no real import starts a line with //).
 // Trailing `//` after code is left alone: it cannot be told apart from `//` in a
-// string (a URL) without a parser, and dist output rarely carries it.
+// string (a URL) without a parser.
 const LINE_COMMENT = /^[ \t]*\/\/.*$/gm;
 
 export function importedWorkspaceSpecifiers(source) {
   const out = new Map();
-  const code = source.replace(BLOCK_COMMENT, ' ').replace(LINE_COMMENT, '');
+  const code = source.replace(LINE_COMMENT, '');
   for (const m of code.matchAll(SPECIFIER)) {
     const spec = { name: m[1], subpath: m[2] ?? '' };
     out.set(`${spec.name}|${spec.subpath}`, spec);

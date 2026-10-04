@@ -766,3 +766,15 @@ describe('scope-logic pin', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });
+
+describe('round-5 review regressions', () => {
+  it('skips both pins when verify cannot read the gate (documented mode)', () => {
+    const { payload } = assess(
+      goodState({ scope_logic_sha256: 'c'.repeat(64) }),
+      HEAD,
+      PRESHIP_HASH,
+      'c'.repeat(64)
+    );
+    expect(validatePayload(payload, HEAD, null, null, { checkScope: false })).toEqual([]);
+  });
+});

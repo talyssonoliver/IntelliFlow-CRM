@@ -426,3 +426,12 @@ describe('round-4 review regressions', () => {
     expect(after.worktree).not.toBe(before.worktree);
   });
 });
+
+describe('round-5 review regressions', () => {
+  it('deleting an obsolete test file does not force the full suite', () => {
+    const r = classifyChangedFiles(['packages/a/src/x.ts'], {
+      deleted: ['packages/a/src/__tests__/old.test.ts'],
+    });
+    expect(r.scope).toBe('related');
+  });
+});

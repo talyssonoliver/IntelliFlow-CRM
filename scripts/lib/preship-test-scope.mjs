@@ -79,6 +79,9 @@ const isImportableSource = (f) =>
  */
 function isTestRelevant(f) {
   if (GLOBAL_IMPACT_PATTERNS.some((re) => re.test(f))) return true;
+  // A deleted test file breaks nothing else (no module imports a test), so it
+  // must not force the full suite.
+  if (TEST_FILE.test(f)) return false;
   return isImportableSource(f);
 }
 

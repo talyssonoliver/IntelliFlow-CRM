@@ -284,6 +284,7 @@ const CI_ONLY_REMEDIATION =
 // pytest suites that Vitest never runs; CI runs them in system-audit-integrity.
 // Run them here whenever that tooling changed (always, in a full-scope run).
 const PYTEST_AVAILABLE =
+  SCOPE_NEEDED &&
   PYTHON_BIN !== null &&
   // No shell: under cmd.exe `-c import pytest` would split into two args and the
   // probe would always fail. spawnSync finds python(.exe) on PATH by itself.

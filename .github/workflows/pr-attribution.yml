@@ -33,17 +33,22 @@ jobs:
   pr-attribution:
     name: PR has no AI attribution
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    # No job-level `if:` (repo convention, see pr-checks.yml): a skipped job
+    # reports no conclusion, which would block a PR if this is ever made a
+    # required check. Dependabot is exempted per step instead, so the job
+    # still concludes success for it.
     steps:
       # BASE branch only (the default ref for pull_request_target). Only the
       # linter is needed; commit_msg_lint.py uses the stdlib alone (widen the
       # sparse path if that changes).
       - uses: actions/checkout@v7
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           sparse-checkout: tools/audit
           persist-credentials: false
       - name: Check PR title and body
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         # Title and body arrive via env, never interpolated into the script, so
         # PR content cannot inject shell.
         env:
