@@ -59,6 +59,11 @@ const PROJECTS = [
   'a11y',
   'integration',
   'api',
+  // `root` runs the repo-tooling tests (scripts/**, tools/**). Tooling is in
+  // sonar.sources and CI shards `--project=root`, so without it here pre-ship's
+  // merged lcov had no tooling coverage and diff-coverage would score every
+  // changed tooling line as "no lcov" while Sonar saw it covered.
+  'root',
 ];
 
 // Projects that are allowed extra time (in ms). Default timeout is 20 minutes.
