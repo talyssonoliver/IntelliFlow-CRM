@@ -28,6 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          # Only the linter is needed. commit_msg_lint.py uses the stdlib alone;
+          # if it ever imports from outside tools/audit, widen this path.
           sparse-checkout: tools/audit
       - name: Check PR title and body
         # Title and body arrive via env, never interpolated into the script, so

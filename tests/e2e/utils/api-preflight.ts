@@ -43,22 +43,22 @@ export function describeNonJsonResponse(facts: ResponseFacts): string | null {
   ].join('\n');
 }
 
-/** The base URL the specs run against, as playwright.config.ts resolves it. */
-export function configuredBaseURL(): string {
-  return process.env.E2E_BASE_URL || 'http://localhost:3000';
-}
-
 /**
  * Parse an API response as JSON, or throw a diagnostic naming the URL and
  * status when the server answered with something else (typically HTML).
+ * Pass the Playwright `baseURL` fixture so the diagnostic shows the base URL
+ * the request actually used, not a re-derivation of the config.
  */
-export async function expectJsonResponse(response: APIResponse): Promise<unknown> {
+export async function expectJsonResponse(
+  response: APIResponse,
+  baseURL: string | undefined
+): Promise<unknown> {
   const problem = describeNonJsonResponse({
     url: response.url(),
     status: response.status(),
     contentType: response.headers()['content-type'] ?? '',
     body: await response.text(),
-    baseURL: configuredBaseURL(),
+    baseURL: baseURL ?? '(no baseURL configured)',
   });
   if (problem) throw new Error(problem);
   return response.json();

@@ -243,6 +243,16 @@ const SCOPE_ENV_VALUE = JSON.stringify(TEST_SCOPE);
 const CI_ONLY_REMEDIATION =
   'Needs the full suite, which runs on CI. Run it locally with PRESHIP_FULL_TESTS=1.';
 
+// The Python audit tooling (tools/audit — commit_msg_lint.py and friends) has
+// pytest suites that Vitest never runs; CI runs them in system-audit-integrity.
+// Run them here whenever that tooling changed (always, in a full-scope run).
+const PYTEST_AVAILABLE =
+  PYTHON_BIN !== null &&
+  // No shell: under cmd.exe `-c import pytest` would split into two args and the
+  // probe would always fail. spawnSync finds python(.exe) on PATH by itself.
+  spawnSync(PYTHON_BIN, ['-c', 'import pytest'], { stdio: 'ignore' }).status === 0;
+const AUDIT_PYTEST_NEEDED = !SCOPED_TESTS || TEST_SCOPE.auditChanged === true;
+
 // Step plan — fail-first token gate + steps from audit doc §8, plus the
 // OSV/Trivy dependency-scan parity gate (#485). Each step has:
 //   id          : kebab-case identifier (also used as log filename)
@@ -396,6 +406,20 @@ const STEPS = [
     description: 'ADR-054 flaky-test skip gate (unannotated test.skip/it.skip/describe.skip)',
     cmd: ['pnpm', 'tsx', 'tools/scripts/flaky-test-skip-gate.ts'],
     required: true,
+  },
+  {
+    // Python audit-tooling tests (pytest), mirroring CI's system-audit-integrity.
+    // Required when they are needed AND runnable; with no pytest installed it is
+    // an honest advisory skip (CI still runs them).
+    id: 'audit-pytest',
+    description:
+      'pytest tools/audit/tests (Python audit tooling — mirrors CI system-audit-integrity)',
+    cmd: [PYTHON_BIN || 'python', '-m', 'pytest', 'tools/audit/tests', '-q'],
+    skip_if: () => !PYTEST_AVAILABLE || !AUDIT_PYTEST_NEEDED,
+    skip_remediation: PYTEST_AVAILABLE
+      ? 'tools/audit unchanged — its pytest suite is not affected by this diff.'
+      : 'Install pytest (`python -m pip install pytest pyyaml`) to run the audit tooling tests locally; CI runs them.',
+    required: PYTEST_AVAILABLE && AUDIT_PYTEST_NEEDED,
   },
   {
     // Local: only the tests related to the changed files (vitest related).

@@ -49,17 +49,23 @@ const MIN = 60_000;
  * left to reset. The reason is still logged, so the outage stays visible.
  */
 async function connectionHealthy(client: any, label: string): Promise<boolean> {
-  try {
-    await client.$queryRawUnsafe('SELECT 1');
-    return true;
-  } catch (error) {
-    console.warn(
-      `[inherited-membership] ${label}: database unreachable, skipping cleanup — ${
-        (error as Error)?.message ?? String(error)
-      }`
-    );
-    return false;
+  // A few attempts, so a momentary pool hiccup does not leave this run's TAG rows
+  // behind; only a database that stays unreachable skips the cleanup.
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await client.$queryRawUnsafe('SELECT 1');
+      return true;
+    } catch (error) {
+      lastError = error;
+      if (attempt < 3) await new Promise((r) => setTimeout(r, 250 * attempt));
+    }
   }
+  console.warn(
+    `[inherited-membership] ${label}: database unreachable after 3 attempts, skipping cleanup ` +
+      `(rows tagged ${TAG} may remain) — ${(lastError as Error)?.message ?? String(lastError)}`
+  );
+  return false;
 }
 
 /**

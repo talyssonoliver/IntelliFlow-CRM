@@ -70,22 +70,53 @@ _BAD_SUBJECT_CASE_RE = re.compile(r"^[A-Z]")
 # AI attribution: repo policy is that AI assistance is a tool, not a co-author,
 # and that nothing in a commit or PR credits or links an AI session. Catches the
 # canonical lines AI tools append:
-#   - co-author trailers naming Claude, Anthropic, Copilot, Cursor, Codex, ChatGPT, Gemini
-#   - the bot no-reply addresses those trailers carry
-#   - "Generated with <tool>" footers, with or without the robot emoji
+#   - co-author trailers whose NAME is an AI tool (Claude [Opus 4.x], GitHub
+#     Copilot, Cursor Agent, Codex, ChatGPT, Gemini, Anthropic) — judged on the
+#     whole name, so a human co-author called e.g. "Claude Dupont" still passes
+#   - the bot addresses those trailers carry (noreply@anthropic.com, …)
+#   - "Generated with/by <tool>" footers, with or without the robot emoji
 #   - Claude Code session trailers / links (`Claude-Session:`, claude.ai/code/…),
 #     which passed this rule unnoticed until #754 because only the co-author and
 #     "Generated with" shapes were listed.
 _AI_ATTRIBUTION_RE = re.compile(
-    r"Co-authored-by:\s*[^\n]*\b(?:Claude|Anthropic|Copilot|Cursor|Codex|ChatGPT|Gemini)\b"
-    r"|noreply@anthropic\.com"
-    r"|Generated (?:with|by)\b[^\n]*\b(?:Claude|Copilot|Cursor|Codex|ChatGPT|Gemini)\b"
+    r"Generated (?:with|by)\b[^\n]*\b(?:Claude|Anthropic|Copilot|Cursor|Codex|ChatGPT|Gemini)\b"
     r"|\bClaude-Session:"
-    r"|claude\.ai/code\b",
+    r"|claude\.ai/code\b"
+    r"|noreply@anthropic\.com"
+    r"|\bCopilot@users\.noreply\.github\.com"
+    r"|cursoragent@cursor\.com",
     re.IGNORECASE,
 )
 # Kept for any external importer of the old name.
 _AI_COAUTHOR_RE = _AI_ATTRIBUTION_RE
+
+_COAUTHOR_RE = re.compile(r"^\s*Co-authored-by:\s*(?P<name>[^<]*)", re.IGNORECASE)
+# A co-author name made ONLY of these words (plus version numbers), with at
+# least one tool word, is an AI trailer: "Claude Opus 4.7", "GitHub Copilot".
+_AI_TOOL_WORDS = frozenset(
+    {"claude", "anthropic", "copilot", "cursor", "codex", "chatgpt", "gemini"}
+)
+_AI_NAME_WORDS = _AI_TOOL_WORDS | frozenset(
+    {"github", "openai", "google", "agent", "code", "assist", "opus", "sonnet",
+     "haiku", "fable", "pro", "flash", "ultra", "mini", "max", "ai"}
+)
+
+
+def _is_ai_coauthor(line: str) -> bool:
+    m = _COAUTHOR_RE.match(line)
+    if not m:
+        return False
+    words = re.findall(r"[A-Za-z]+|\d[\d.]*", m.group("name"))
+    if not words:
+        return False
+    lowered = [w.lower() for w in words]
+    return any(w in _AI_TOOL_WORDS for w in lowered) and all(
+        w in _AI_NAME_WORDS or w[0].isdigit() for w in lowered
+    )
+
+
+def _is_ai_attribution(line: str) -> bool:
+    return bool(_AI_ATTRIBUTION_RE.search(line)) or _is_ai_coauthor(line)
 
 
 def ai_attribution_violations(label: str, text: str) -> list[str]:
@@ -96,7 +127,7 @@ def ai_attribution_violations(label: str, text: str) -> list[str]:
     """
     violations: list[str] = []
     for i, line in enumerate(text.splitlines(), start=1):
-        if _AI_ATTRIBUTION_RE.search(line):
+        if _is_ai_attribution(line):
             violations.append(
                 f"{label}: line {i} carries AI attribution (repo policy forbids "
                 f"it in commits and PRs): {line.strip()[:120]!r}"

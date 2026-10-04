@@ -26,11 +26,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// import x from '@intelliflow/a' · import('@intelliflow/a/sub') · require(...) · export … from
-// Captures the subpath too: a subpath import resolves through its own export
-// entry, which can be missing while the root entry exists.
+// import x from '@intelliflow/a' · import '@intelliflow/a/register' (side effect,
+// also minified `import"…"`) · import('@intelliflow/a/sub') · require(...) ·
+// export … from. Captures the subpath too: a subpath import resolves through its
+// own export entry, which can be missing while the root entry exists.
 const SPECIFIER =
-  /(?:from\s*|import\s*\(\s*|require\s*\(\s*)["'](@intelliflow\/[a-z0-9._-]+)(?:\/([^"']+))?["']/g;
+  /\b(?:from|import|require)\s*(?:\(\s*)?["'](@intelliflow\/[a-z0-9._-]+)(?:\/([^"']+))?["']/g;
 
 /** Every @intelliflow specifier imported by a source, as {name, subpath} ('' = root). */
 export function importedWorkspaceSpecifiers(source) {

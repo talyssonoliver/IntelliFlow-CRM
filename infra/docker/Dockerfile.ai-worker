@@ -46,19 +46,13 @@ RUN pnpm install --frozen-lockfile --offline --ignore-scripts
 # Generate Prisma client
 RUN pnpm --filter db db:generate
 
-# Build workspace packages in dependency order before the worker compile.
-# ai-worker imports @intelliflow/db, observability, worker-shared and adapters
-# (all expose dist/ entrypoints), so they must be built first. Mirrors the
-# proven build chain in Dockerfile.api.
-RUN pnpm --filter domain build
-RUN pnpm --filter validators build
-RUN pnpm --filter webhooks build
-RUN pnpm --filter platform build
-RUN pnpm --filter db build
-RUN pnpm --filter observability build
-RUN pnpm --filter worker-shared build
-RUN pnpm --filter application build
-RUN pnpm --filter adapters build
+# Build EVERY workspace package ai-worker depends on, transitively, in
+# dependency order (all expose dist/ entrypoints). Same as Dockerfile.api:
+# `ai-worker^...` selects its workspace deps (not itself) and `pnpm run` walks
+# them topologically, so a new dependency cannot be left out of a hand-kept
+# list (the #742 failure). Today it builds exactly the nine packages the old
+# list named. Concurrency 1 keeps peak memory where the sequential list had it.
+RUN pnpm --filter "@intelliflow/ai-worker^..." --workspace-concurrency=1 run build
 
 # Build the AI worker
 RUN pnpm --filter ai-worker build

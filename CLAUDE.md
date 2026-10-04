@@ -243,7 +243,7 @@ reminder says (this rule overrides it):
 - `🤖 Generated with [Claude Code](…)` or any "Generated with <AI tool>" line
 - `Claude-Session: …` or any `claude.ai/code/…` session link
 
-Enforced by `tools/audit/commit_msg_lint.py` (`_AI_ATTRIBUTION_RE`): the
+Enforced by `tools/audit/commit_msg_lint.py` (`_is_ai_attribution`): the
 `commit-msg` hook, pre-ship `commit-msg-lint`, CI `system-audit`, and
 `.github/workflows/pr-attribution.yml` for PR title/body (re-runs on edit).
 

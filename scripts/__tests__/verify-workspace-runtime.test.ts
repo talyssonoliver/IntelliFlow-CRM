@@ -273,3 +273,21 @@ describe('importedWorkspaceSpecifiers', () => {
     ]);
   });
 });
+
+describe('importedWorkspaceSpecifiers — side-effect imports (code review on #754)', () => {
+  it('catches bare and minified side-effect imports', () => {
+    const src = `import "@intelliflow/obs/instrument";\nimport"@intelliflow/reg";`;
+    expect(importedWorkspaceSpecifiers(src)).toEqual([
+      { name: '@intelliflow/obs', subpath: 'instrument' },
+      { name: '@intelliflow/reg', subpath: '' },
+    ]);
+  });
+
+  it('verify() fails an image whose only reference is a side-effect import of an unbuilt package', () => {
+    const { app, dist } = fixture({ built: false });
+    // Replace the static import with a bare side-effect import of b via a.
+    fs.writeFileSync(path.join(app, 'dist/main.js'), `import "@intelliflow/a";\n`);
+    const r = verify(app, dist);
+    expect(r.problems.some((p) => p.includes('@intelliflow/b'))).toBe(true);
+  });
+});

@@ -13,10 +13,10 @@ import {
   classifyChangedFiles,
   resolveTestScope,
   scopeFromEnvOrResolve,
-  MAX_RELATED_FILES,
+  MAX_RELATED_CHARS,
   SCOPE_ENV,
   parseNameStatus,
-  testsReferencingTooling,
+  testsReferencingChanges,
 } from '../lib/preship-test-scope.mjs';
 
 describe('classifyChangedFiles', () => {
@@ -40,7 +40,8 @@ describe('classifyChangedFiles', () => {
       'artifacts/x.js',
       '.github/a.yml',
     ]);
-    expect(r).toEqual({ scope: 'none', reason: 'no source files changed', files: [] });
+    expect(r.scope).toBe('none');
+    expect(r.files).toEqual([]);
   });
 
   it.each([
@@ -59,9 +60,19 @@ describe('classifyChangedFiles', () => {
     expect(r.reason).toContain(file);
   });
 
-  it('falls back to the full suite when the diff is too large to pass as argv', () => {
-    const many = Array.from({ length: MAX_RELATED_FILES + 1 }, (_, i) => `packages/x/src/f${i}.ts`);
-    expect(classifyChangedFiles(many).scope).toBe('full');
+  it('falls back to the full suite when the path list exceeds the argv/env budget', () => {
+    // A budget on CHARACTERS, not file count: 350 long paths overflow it.
+    const long = 'apps/web/src/components/some-deeply/nested/feature-area/component-name';
+    const many = Array.from({ length: 350 }, (_, i) => `${long}-${i}.tsx`);
+    expect(many.join('').length).toBeGreaterThan(MAX_RELATED_CHARS);
+    const r = classifyChangedFiles(many);
+    expect(r.scope).toBe('full');
+    expect(r.reason).toContain('budget');
+  });
+
+  it('keeps a related run when many short paths fit the budget', () => {
+    const many = Array.from({ length: 450 }, (_, i) => `packages/x/src/f${i}.ts`);
+    expect(classifyChangedFiles(many).scope).toBe('related');
   });
 
   it('normalises Windows separators and de-duplicates', () => {
@@ -213,7 +224,7 @@ describe('classifyChangedFiles — review regressions', () => {
   });
 });
 
-describe('testsReferencingTooling', () => {
+describe('testsReferencingChanges', () => {
   const tests = new Map([
     [
       'scripts/__tests__/preship-attest.test.ts',
@@ -227,22 +238,56 @@ describe('testsReferencingTooling', () => {
   ]);
 
   it('finds the tests that name a changed scripts/ or tools/ file', () => {
-    expect(testsReferencingTooling(['scripts/pre-ship.mjs'], tests)).toEqual([
+    expect(testsReferencingChanges(['scripts/pre-ship.mjs'], tests)).toEqual([
       'scripts/__tests__/preship-attest.test.ts',
     ]);
-    expect(testsReferencingTooling(['scripts/check-diff-coverage.mjs'], tests)).toEqual([
+    expect(testsReferencingChanges(['scripts/check-diff-coverage.mjs'], tests)).toEqual([
       'scripts/__tests__/check-diff-coverage.test.ts',
     ]);
   });
 
-  it('does not expand changes outside the tooling trees', () => {
-    expect(testsReferencingTooling(['packages/domain/src/lead.ts'], tests)).toEqual([]);
+  it('does not select tests that name nothing changed', () => {
+    expect(testsReferencingChanges(['packages/domain/src/other.ts'], tests)).toEqual([]);
+  });
+
+  // Code review on #754: tests read docs, hooks and data by path anywhere in the repo.
+  it.each([
+    [
+      'docs/planning/compliance-calendar.json',
+      'apps/web/src/app/api/compliance/__tests__/compliance-calendar.integrity.test.ts',
+      "readFileSync(join(root, 'docs/planning/compliance-calendar.json'))",
+    ],
+    [
+      'docs/design/PAGE_MAP_AND_FLOWS.md',
+      'apps/web/src/app/__tests__/sitemap-reconciliation.test.ts',
+      "path.resolve(__dirname, '../../../../../docs/design/PAGE_MAP_AND_FLOWS.md')",
+    ],
+    [
+      'docs/design/information-architecture.md',
+      'apps/web/src/app/__tests__/ia-reconciliation.test.ts',
+      "const DIR = path.resolve(__dirname, '../../../../../docs/design')",
+    ],
+    [
+      '.claude/hooks/git-destructive-guard.mjs',
+      'tools/scripts/__tests__/git-destructive-guard.test.ts',
+      "const HOOK = path.join(ROOT, '.claude/hooks', 'git-destructive-guard.mjs')",
+    ],
+  ])('selects the test that reads %s by path', (changed, testPath, testBody) => {
+    expect(testsReferencingChanges([changed], new Map([[testPath, testBody]]))).toEqual([testPath]);
+  });
+
+  it('a docs-only change that a test reads is related, not none', () => {
+    const r = classifyChangedFiles(['docs/design/PAGE_MAP_AND_FLOWS.md'], {
+      referencingTests: ['apps/web/src/app/__tests__/sitemap-reconciliation.test.ts'],
+    });
+    expect(r.scope).toBe('related');
+    expect(r.files).toEqual(['apps/web/src/app/__tests__/sitemap-reconciliation.test.ts']);
   });
 });
 
 describe('parseNameStatus', () => {
-  it('reads modifications, deletions and renames', () => {
-    expect(parseNameStatus('M\ta.ts\nD\tb.ts\nR087\told.ts\tnew.ts\n')).toEqual([
+  it('reads NUL-separated modifications, deletions and renames', () => {
+    expect(parseNameStatus('M\0a.ts\0D\0b.ts\0R087\0old.ts\0new.ts\0')).toEqual([
       { status: 'M', path: 'a.ts' },
       { status: 'D', path: 'b.ts' },
       { status: 'R', path: 'new.ts', from: 'old.ts' },
@@ -281,5 +326,16 @@ describe('resolveTestScope — layered changes against a real repo', () => {
     git(root, 'rm', '-q', 'packages/a/src/base.ts');
     const r = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
     expect(r.scope).toBe('full');
+  });
+});
+
+describe('resolveTestScope — paths git would quote', () => {
+  it('returns a non-ASCII path literally, so it is selected and exists', () => {
+    const root = makeRepo();
+    write(root, 'packages/a/src/café.ts');
+    const r = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
+    expect(r.scope).toBe('related');
+    expect(r.files).toEqual(['packages/a/src/café.ts']);
+    expect(fs.existsSync(path.join(root, r.files[0]))).toBe(true);
   });
 });

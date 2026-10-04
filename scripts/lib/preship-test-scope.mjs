@@ -31,10 +31,14 @@ import path from 'node:path';
 export const DEFAULT_BASE_REF = 'origin/main';
 
 /**
- * Above this many related files the argv approaches the Windows 32K
- * command-line ceiling, and a diff that large is better served by the full run.
+ * Budget for the related-file list, in characters. The list travels as argv
+ * (run-unit-tests-scoped.mjs, run-coverage.js) and as a JSON env value
+ * (PRESHIP_TEST_SCOPE_JSON / COVERAGE_RELATED_FILES); on Windows both a command
+ * line and a single env value cap at 32,767 chars. JSON quoting adds ~3 chars a
+ * path and the runner adds its own args, so stop well short: past this, the
+ * diff is large enough that the full suite is the honest answer anyway.
  */
-export const MAX_RELATED_FILES = 400;
+export const MAX_RELATED_CHARS = 24_000;
 
 /** Files whose effect on tests is not visible through the import graph. */
 const GLOBAL_IMPACT_PATTERNS = [
@@ -54,47 +58,63 @@ const GLOBAL_IMPACT_PATTERNS = [
   /\.sql$/,
 ];
 
-// JSON is included: tests import data modules (pricing-data.json, team-data.json)
-// and `vitest related` follows those imports like any other module.
+// Modules `vitest related` can follow through imports. JSON is included: tests
+// import data modules (pricing-data.json, team-data.json).
 const SOURCE_EXTENSION = /\.(ts|tsx|js|jsx|mjs|cjs|mts|cts|json)$/;
 
-/** Trees that never hold code a test can import. */
+/** Trees whose files are never imported by a test (they may be READ by one). */
 const NON_SOURCE_PREFIXES = ['artifacts/', 'docs/', '.github/', 'infra/'];
-
-/**
- * Tooling trees whose files tests reach by spawning or copying them by path
- * (`spawnSync('node', ['scripts/x.mjs'])`), which the import graph cannot see.
- * A change here also selects every test that names the file.
- */
-const SPAWNED_TOOLING_PREFIXES = ['scripts/', 'tools/'];
 
 const TEST_FILE = /\.(test|spec)\.(ts|tsx|js|mjs|cjs|mts|cts)$/;
 
 const normalise = (f) => f.replace(/\\/g, '/');
 
-/** A path whose change can matter to a test: a module, data file or global input. */
+const isImportableSource = (f) =>
+  SOURCE_EXTENSION.test(f) && !NON_SOURCE_PREFIXES.some((p) => f.startsWith(p));
+
+/**
+ * A path whose deletion can matter to a test: a module, a data file, a global
+ * input, or anything a test names (checked by the caller via references).
+ */
 function isTestRelevant(f) {
   if (GLOBAL_IMPACT_PATTERNS.some((re) => re.test(f))) return true;
-  return SOURCE_EXTENSION.test(f) && !NON_SOURCE_PREFIXES.some((p) => f.startsWith(p));
+  return isImportableSource(f);
 }
 
 /**
- * Test files that reference a changed tooling file by name. Pure: takes the
- * test files' contents. Exported for tests.
+ * The strings a test would use to reach a file WITHOUT importing it: its name
+ * (`'git-destructive-guard.mjs'`, `'PAGE_MAP_AND_FLOWS.md'`), its repo path,
+ * and its folder path (`'docs/design'` for tests that walk a directory).
+ */
+function referenceNeedles(file) {
+  const parts = file.split('/');
+  const needles = [parts.at(-1), file];
+  if (parts.length > 2) needles.push(parts.slice(0, -1).join('/'));
+  return needles.filter((n) => n && n.length >= 4);
+}
+
+/**
+ * Test files that name a changed file. Tests read docs, fixtures, CSVs, hook
+ * scripts and CLI tools by path, spawn them, or copy them; none of that is in
+ * the import graph `vitest related` follows, so those tests are added by name.
+ * Over-selection is the safe direction. Pure: takes the test contents.
  * @param {string[]} changedFiles
  * @param {Map<string, string>} testContents test path -> source text
  * @returns {string[]}
  */
-export function testsReferencingTooling(changedFiles, testContents) {
-  const names = changedFiles
-    .map(normalise)
-    .filter((f) => SPAWNED_TOOLING_PREFIXES.some((p) => f.startsWith(p)) && !TEST_FILE.test(f))
-    .map((f) => f.split('/').pop())
-    .filter(Boolean);
-  if (names.length === 0) return [];
+export function testsReferencingChanges(changedFiles, testContents) {
+  const needles = [
+    ...new Set(
+      changedFiles
+        .map(normalise)
+        .filter((f) => !TEST_FILE.test(f))
+        .flatMap(referenceNeedles)
+    ),
+  ];
+  if (needles.length === 0) return [];
   const out = [];
   for (const [testPath, text] of testContents) {
-    if (names.some((n) => text.includes(n))) out.push(normalise(testPath));
+    if (needles.some((n) => text.includes(n))) out.push(normalise(testPath));
   }
   return out.sort();
 }
@@ -104,7 +124,7 @@ export function testsReferencingTooling(changedFiles, testContents) {
  * @param {string[]} changedFiles repo-relative, forward-slash paths (still present)
  * @param {{deleted?: string[], referencingTests?: string[]}} [extra]
  *   deleted: paths removed (or renamed away) in any layer of the change;
- *   referencingTests: tests that reach changed tooling by path, not import
+ *   referencingTests: tests that name a changed file (reach it by path)
  * @returns {{scope: 'full'|'related'|'none', reason: string, files: string[]}}
  */
 export function classifyChangedFiles(changedFiles, { deleted = [], referencingTests = [] } = {}) {
@@ -131,29 +151,25 @@ export function classifyChangedFiles(changedFiles, { deleted = [], referencingTe
     };
   }
 
-  const sources = [
-    ...new Set([
-      ...unique
-        .filter((f) => SOURCE_EXTENSION.test(f))
-        .filter((f) => !NON_SOURCE_PREFIXES.some((p) => f.startsWith(p))),
-      ...referencingTests.map(normalise),
-    ]),
+  const files = [
+    ...new Set([...unique.filter(isImportableSource), ...referencingTests.map(normalise)]),
   ].sort();
 
-  if (sources.length === 0) {
-    return { scope: 'none', reason: 'no source files changed', files: [] };
+  if (files.length === 0) {
+    return { scope: 'none', reason: 'no source files changed and no test names one', files: [] };
   }
-  if (sources.length > MAX_RELATED_FILES) {
+  const chars = files.reduce((n, f) => n + f.length + 3, 0);
+  if (chars > MAX_RELATED_CHARS) {
     return {
       scope: 'full',
-      reason: `${sources.length} source files changed (> ${MAX_RELATED_FILES}) — too many to select`,
+      reason: `${files.length} related files (${chars} chars) exceed the argv/env budget — running the full suite`,
       files: [],
     };
   }
   return {
     scope: 'related',
-    reason: `${sources.length} changed source file(s)`,
-    files: sources,
+    reason: `${files.length} related file(s)`,
+    files,
   };
 }
 
@@ -170,8 +186,13 @@ function gitEnv() {
   return env;
 }
 
+/**
+ * Run git. Paths are requested NUL-separated (-z) by every caller, and
+ * core.quotepath=false keeps non-ASCII names literal, so a path never arrives
+ * quoted or octal-escaped (which would fail every extension/prefix check).
+ */
 function git(args, cwd) {
-  const r = spawnSync('git', args, {
+  const r = spawnSync('git', ['-c', 'core.quotepath=false', ...args], {
     cwd,
     env: gitEnv(),
     encoding: 'utf8',
@@ -181,12 +202,7 @@ function git(args, cwd) {
   return r.status === 0 ? r.stdout : null;
 }
 
-function lines(out) {
-  return (out || '')
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
-}
+const nulFields = (out) => (out || '').split('\0').filter((f) => f !== '');
 
 /**
  * Resolve the test scope for this checkout.
@@ -215,11 +231,11 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
   // diff would let an uncommitted edit that restores a file's base content hide
   // a committed change to it, and the push sends the commits, not the tree.
   const layers = [
-    git(['diff', '--name-status', '-M', base, 'HEAD'], cwd), // committed
-    git(['diff', '--name-status', '-M', '--cached'], cwd), // staged
-    git(['diff', '--name-status', '-M'], cwd), // unstaged
+    git(['diff', '-z', '--name-status', '-M', base, 'HEAD'], cwd), // committed
+    git(['diff', '-z', '--name-status', '-M', '--cached'], cwd), // staged
+    git(['diff', '-z', '--name-status', '-M'], cwd), // unstaged
   ];
-  const untracked = git(['ls-files', '--others', '--exclude-standard'], cwd);
+  const untracked = git(['ls-files', '-z', '--others', '--exclude-standard'], cwd);
   if (layers.includes(null) || untracked === null) {
     return {
       scope: 'full',
@@ -229,7 +245,7 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
     };
   }
 
-  const present = new Set(lines(untracked));
+  const present = new Set(nulFields(untracked));
   const deleted = new Set();
   for (const layer of layers) {
     for (const entry of parseNameStatus(layer)) {
@@ -242,27 +258,38 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
   for (const f of present) deleted.delete(f);
 
   const changed = [...present];
-  const referencingTests = testsReferencingTooling(changed, readTestFiles(cwd));
+  // Referencing tests also cover deleted files: a test that names a removed
+  // fixture must run (and will fail) rather than be skipped.
+  const referencingTests =
+    changed.length + deleted.size > 0
+      ? testsReferencingChanges([...changed, ...deleted], readTestFiles(cwd))
+      : [];
   return {
     ...classifyChangedFiles(changed, { deleted: [...deleted], referencingTests }),
     base,
+    // The Python audit tooling has pytest suites Vitest never runs; pre-ship's
+    // audit-pytest step keys on this. (A `full` scope runs them regardless.)
+    auditChanged: [...changed, ...deleted].some((f) => f.startsWith('tools/audit/')),
   };
 }
 
 /**
- * Parse `git diff --name-status -M` output.
+ * Parse `git diff -z --name-status -M` output: NUL-separated fields, a status
+ * then one path (two for a rename/copy: source, destination).
  * @returns {{status: string, path: string, from?: string}[]}
  */
 export function parseNameStatus(out) {
+  const fields = nulFields(out);
   const entries = [];
-  for (const line of (out || '').split('\n')) {
-    if (!line.trim()) continue;
-    const [code, a, b] = line.split('\t');
-    const status = code.charAt(0);
-    if ((status === 'R' || status === 'C') && b) {
-      entries.push(status === 'R' ? { status, path: b, from: a } : { status, path: b });
-    } else if (a) {
-      entries.push({ status, path: a });
+  for (let i = 0; i < fields.length; ) {
+    const status = fields[i].charAt(0);
+    if (status === 'R' || status === 'C') {
+      const [from, to] = [fields[i + 1], fields[i + 2]];
+      if (to) entries.push(status === 'R' ? { status, path: to, from } : { status, path: to });
+      i += 3;
+    } else {
+      if (fields[i + 1]) entries.push({ status, path: fields[i + 1] });
+      i += 2;
     }
   }
   return entries;
@@ -270,9 +297,8 @@ export function parseNameStatus(out) {
 
 /** Tracked vitest test files and their contents (Playwright e2e excluded). */
 function readTestFiles(cwd) {
-  const listed = git(['ls-files'], cwd);
   const contents = new Map();
-  for (const f of lines(listed)) {
+  for (const f of nulFields(git(['ls-files', '-z'], cwd))) {
     if (!TEST_FILE.test(f) || f.startsWith('tests/e2e/')) continue;
     try {
       contents.set(f, readFileSync(path.join(cwd, f), 'utf8'));

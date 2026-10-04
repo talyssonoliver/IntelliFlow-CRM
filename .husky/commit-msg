@@ -38,6 +38,18 @@ fi
 # pre-ship (which resolves python) and by CI's system-audit.
 echo "⚠️  python not found — running basic format check only (CI enforces the full rules)"
 COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+# AI attribution is never allowed, even on the degraded no-python path, and is
+# checked BEFORE the merge/revert early exit below. Mirrors _is_ai_attribution in
+# tools/audit/commit_msg_lint.py: footers, session trailers/links, bot addresses,
+# and co-author trailers whose whole name is an AI tool (a human co-author whose
+# name merely contains a tool word, e.g. "Claude Dupont", passes).
+AI_RE='generated (with|by).*(claude|anthropic|copilot|cursor|codex|chatgpt|gemini)|claude-session:|claude\.ai/code|noreply@anthropic\.com|copilot@users\.noreply\.github\.com|cursoragent@cursor\.com'
+AI_COAUTHOR_RE='^[[:space:]]*co-authored-by:[[:space:]]*((github|openai|google)[[:space:]]+)?(claude|anthropic|copilot|cursor|codex|chatgpt|gemini)([[:space:]]+(agent|code|assist|opus|sonnet|haiku|fable|pro|flash|ultra|mini|max|ai|[0-9][0-9.]*))*[[:space:]]*(<|$)'
+if printf '%s\n' "$COMMIT_MSG" | grep -v '^#' | grep -qiE "$AI_RE|$AI_COAUTHOR_RE"; then
+  echo "❌ Commit message carries AI attribution (co-author trailer, 'Generated with …'"
+  echo "   footer or Claude session link). Repo policy forbids it — remove the line."
+  exit 1
+fi
 # Allow auto-generated merge/revert commits — git writes "Merge ..."/"Revert ..."
 # subjects that aren't Conventional Commits. commit_msg_lint.py special-cases
 # these too; mirror it here so a merge can't be blocked when python is absent
@@ -57,12 +69,4 @@ if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
   echo "   Your message: $COMMIT_MSG"
   exit 1
 fi
-# AI attribution is never allowed, even on the degraded no-python path. Keep in
-# step with _AI_ATTRIBUTION_RE in tools/audit/commit_msg_lint.py.
-if printf '%s\n' "$COMMIT_MSG" | grep -v '^#' | grep -qiE 'co-authored-by:.*(claude|anthropic|copilot|cursor|codex|chatgpt|gemini)|noreply@anthropic\.com|generated (with|by).*(claude|copilot|cursor|codex|chatgpt|gemini)|claude-session:|claude\.ai/code'; then
-  echo "❌ Commit message carries AI attribution (co-author trailer, 'Generated with …'"
-  echo "   footer or Claude session link). Repo policy forbids it — remove the line."
-  exit 1
-fi
-
 echo "✅ Commit message format ok (basic check)"
