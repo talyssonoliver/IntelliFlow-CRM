@@ -11,24 +11,42 @@
  * - Fail fast if core functionality is broken
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type ConsoleMessage } from '@playwright/test';
 import { expectJsonResponse } from './utils/api-preflight';
+
+// The per-PR/main smoke job runs the web app WITHOUT the tRPC API (playwright
+// .config.ts starts it only when E2E_START_API=1). The homepage's auth-status
+// query then gets an HTML 404 from /api/trpc, which the browser and AuthContext
+// log as console errors. Those are expected only when no API is running.
+const API_RUNNING = process.env.E2E_START_API === '1';
+
+/** A console error caused by the deliberately absent API, not by the page. */
+function isMissingApiError(msg: ConsoleMessage): boolean {
+  if (API_RUNNING) return false;
+  return (
+    msg.location().url.includes('/api/trpc') || msg.text().startsWith('[AuthContext] Query error')
+  );
+}
 
 test.describe('Smoke Tests', () => {
   test.describe('Application Availability', () => {
     test('should load the homepage', async ({ page }) => {
+      // Listen BEFORE navigating. The listener used to be attached after the
+      // title check, so whether it saw the auth query's error depended on how
+      // fast that query failed: main run 37203421458 failed it 3/3, its rerun
+      // passed on retry ("flaky"). Listening from the start makes the result
+      // deterministic, and every unexpected console error now fails the test.
+      const errors: string[] = [];
+      page.on('console', (msg) => {
+        if (msg.type() === 'error' && !isMissingApiError(msg)) {
+          errors.push(msg.text());
+        }
+      });
+
       await page.goto('/');
 
       // Verify the page loads successfully
       await expect(page).toHaveTitle(/IntelliFlow CRM/i);
-
-      // Verify no console errors (except known warnings)
-      const errors: string[] = [];
-      page.on('console', (msg) => {
-        if (msg.type() === 'error') {
-          errors.push(msg.text());
-        }
-      });
 
       // Give page time to load
       await page.waitForLoadState('networkidle');
