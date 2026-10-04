@@ -83,29 +83,6 @@ const emptyCondition: RoutingCondition = {
 };
 const emptyAction: RoutingAction = { type: 'assign_to_user', target: '' };
 
-/** Parse Prisma Json fields into typed RoutingRule with conditions/actions arrays.
- *  Prisma returns Json columns as `JsonValue` (typed as `[x: string]: any` in the tRPC response).
- *  We validate the shape here at the boundary rather than casting. */
-function parseRoutingRule(
-  row: Record<string, unknown> & {
-    id: string;
-    name: string;
-    description?: string | null;
-    priority: number;
-    isActive: boolean;
-  }
-): RoutingRule {
-  return {
-    id: row.id,
-    name: row.name,
-    description: row.description,
-    priority: row.priority,
-    isActive: row.isActive,
-    conditions: Array.isArray(row.conditions) ? (row.conditions as RoutingCondition[]) : [],
-    actions: Array.isArray(row.actions) ? (row.actions as RoutingAction[]) : [],
-  };
-}
-
 function SortableRule({
   rule,
   onEdit,
@@ -128,8 +105,7 @@ function SortableRule({
     transition,
   };
 
-  const conditions: RoutingCondition[] = Array.isArray(rule.conditions) ? rule.conditions : [];
-  const actions: RoutingAction[] = Array.isArray(rule.actions) ? rule.actions : [];
+  const { conditions, actions } = rule;
 
   const conditionsSummary = conditions
     .map((c) => `${c.field} ${c.operator} ${Array.isArray(c.value) ? c.value.join(', ') : c.value}`)
@@ -508,7 +484,7 @@ export function RoutingRulesEditor() {
           >
             <SortableContext items={rules.map((r) => r.id)} strategy={verticalListSortingStrategy}>
               <ul className="space-y-2 list-none p-0" aria-label="Routing rules list">
-                {rules.map(parseRoutingRule).map((rule) => (
+                {rules.map((rule) => (
                   <SortableRule
                     key={rule.id}
                     rule={rule}
