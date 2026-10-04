@@ -326,7 +326,9 @@ export default defineConfig({
         // tests — from the merged lcov, so Sonar scored it 0%. Tooling is now
         // measured; only its non-source parts are excluded, anchored to the root.
         `${repoRootGlob}/tools/**/fixtures/**`,
-        '**/*.test.{js,mjs,cjs}',
+        // Vitest already leaves test files uninstrumented; stated explicitly so
+        // the scope is readable (and testable) from this list alone.
+        '**/*.{test,spec}.{ts,tsx,js,mjs,cjs}',
         // Prisma generated client - auto-generated, not business logic (14MB / 121 files)
         // These were causing OOM crashes in V8 coverage workers
         'packages/db/generated/**',
