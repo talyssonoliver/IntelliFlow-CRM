@@ -6,7 +6,9 @@
  * Uses direct Prisma access (ticketConfigRouter pattern).
  */
 
+import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
+import type { LeadCustomField } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { LEAD_STATUSES } from '@intelliflow/domain';
 import {
@@ -234,12 +236,31 @@ const scoringRulesRouter = createTRPCRouter({
 
 // ─── Custom Fields Sub-Router ───────────────────────────────────────────────
 
+/**
+ * A lead custom field as the client sees it. `options` is a Prisma Json
+ * column; it is read through the same shape createLeadCustomFieldSchema
+ * accepts, so the client gets `{ values: string[] } | null` instead of
+ * Prisma's recursive JsonValue (which overflowed TypeScript, TS2589, and made
+ * the lead settings page cast the list to a hand-written type).
+ */
+export type LeadCustomFieldDto = Omit<LeadCustomField, 'options'> & {
+  options: { values: string[] } | null;
+};
+
+const customFieldOptionsSchema = z.object({ values: z.array(z.string()) });
+
+function toLeadCustomFieldDto(row: LeadCustomField): LeadCustomFieldDto {
+  const options = customFieldOptionsSchema.safeParse(row.options);
+  return { ...row, options: options.success ? options.data : null };
+}
+
 const customFieldsRouter = createTRPCRouter({
-  list: tenantProcedure.query(async ({ ctx }) => {
-    return ctx.prismaWithTenant.leadCustomField.findMany({
+  list: tenantProcedure.query(async ({ ctx }): Promise<LeadCustomFieldDto[]> => {
+    const fields = await ctx.prismaWithTenant.leadCustomField.findMany({
       where: { tenantId: ctx.tenant.tenantId, isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
+    return fields.map(toLeadCustomFieldDto);
   }),
 
   create: tenantProcedure.input(createLeadCustomFieldSchema).mutation(async ({ ctx, input }) => {
@@ -263,7 +284,7 @@ const customFieldsRouter = createTRPCRouter({
       _max: { sortOrder: true },
     });
 
-    return ctx.prismaWithTenant.leadCustomField.create({
+    const created = await ctx.prismaWithTenant.leadCustomField.create({
       data: {
         fieldName: input.fieldName,
         fieldKey,
@@ -274,6 +295,7 @@ const customFieldsRouter = createTRPCRouter({
         tenantId,
       },
     });
+    return toLeadCustomFieldDto(created);
   }),
 
   update: tenantProcedure.input(updateLeadCustomFieldSchema).mutation(async ({ ctx, input }) => {
@@ -285,7 +307,7 @@ const customFieldsRouter = createTRPCRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Custom field not found' });
     }
 
-    return ctx.prismaWithTenant.leadCustomField.update({
+    const updated = await ctx.prismaWithTenant.leadCustomField.update({
       where: { id },
       data: {
         fieldName: data.fieldName,
@@ -294,6 +316,7 @@ const customFieldsRouter = createTRPCRouter({
         isRequired: data.isRequired ?? existing.isRequired,
       },
     });
+    return toLeadCustomFieldDto(updated);
   }),
 
   delete: tenantProcedure.input(deleteLeadCustomFieldSchema).mutation(async ({ ctx, input }) => {
