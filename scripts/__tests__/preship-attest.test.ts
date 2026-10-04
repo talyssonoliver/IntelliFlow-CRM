@@ -660,7 +660,9 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
     git(['add', '-A']);
     git(['commit', '-q', '-m', 'seed']);
 
-    const r = spawnSync('node', ['scripts/pre-ship.mjs', '--only=__no_such_step__'], {
+    // The leading `--` is what `pnpm run pre-ship -- <flags>` forwards; the gate
+    // must treat it as the end-of-options separator, not reject it (exit 2).
+    const r = spawnSync('node', ['scripts/pre-ship.mjs', '--', '--only=__no_such_step__'], {
       cwd: dir,
       env: cleanEnv(),
       encoding: 'utf8',

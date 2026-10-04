@@ -748,6 +748,9 @@ const flags = {
   only: null,
 };
 for (const a of args) {
+  // `pnpm run pre-ship -- --clean` (the documented form) forwards the `--`
+  // verbatim; it is the conventional end-of-options separator, not a flag.
+  if (a === '--') continue;
   if (a.startsWith('--only=')) {
     flags.only = a.slice('--only='.length).split(',');
     continue;
