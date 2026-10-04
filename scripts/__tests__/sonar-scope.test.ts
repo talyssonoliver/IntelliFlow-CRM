@@ -1,0 +1,123 @@
+/**
+ * scripts/lib/sonar-scope.mjs — reads SonarCloud's scope from
+ * sonar-project.properties so the local diff-coverage gate cannot drift from it.
+ */
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, it, expect } from 'vitest';
+import {
+  listProperty,
+  loadSonarScope,
+  parseProperties,
+  sonarGlobToRegExp,
+  sonarScopeFromProperties,
+} from '../lib/sonar-scope.mjs';
+import { TOOLING_ROOTS } from '../lib/coverage-floor.mjs';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+describe('parseProperties', () => {
+  it('joins backslash continuations and skips comments and blank lines', () => {
+    const props = parseProperties(
+      [
+        '# comment',
+        '! also a comment',
+        '',
+        'sonar.sources=\\',
+        '  apps/api/src,\\',
+        '  scripts',
+        'sonar.projectKey = key ',
+        'not-a-property-line',
+      ].join('\r\n')
+    );
+    expect(props.get('sonar.sources')).toBe('apps/api/src,scripts');
+    expect(props.get('sonar.projectKey')).toBe('key');
+    expect(props.has('not-a-property-line')).toBe(false);
+  });
+
+  it('keeps a trailing backslash on the last line rather than reading past the end', () => {
+    expect(parseProperties('a=b\\').get('a')).toBe('b\\');
+  });
+});
+
+describe('listProperty', () => {
+  it('splits on commas, trims, and drops empty entries', () => {
+    const props = new Map([['k', ' a , b,, c ,']]);
+    expect(listProperty(props, 'k')).toEqual(['a', 'b', 'c']);
+  });
+
+  it('returns an empty list for a missing key', () => {
+    expect(listProperty(new Map(), 'missing')).toEqual([]);
+  });
+});
+
+describe('sonarGlobToRegExp', () => {
+  it.each([
+    ['**/*.test.ts', 'a.test.ts', true],
+    ['**/*.test.ts', 'apps/web/src/x.test.ts', true],
+    ['**/*.test.ts', 'apps/web/src/x.test.tsx', false],
+    ['apps/web/src/app/**/page.tsx', 'apps/web/src/app/page.tsx', true],
+    ['apps/web/src/app/**/page.tsx', 'apps/web/src/app/a/b/page.tsx', true],
+    ['apps/api/src/modules/legal/*.router.ts', 'apps/api/src/modules/legal/cases.router.ts', true],
+    [
+      'apps/api/src/modules/legal/*.router.ts',
+      'apps/api/src/modules/legal/x/cases.router.ts',
+      false,
+    ],
+    ['apps/project-tracker/app/api/**', 'apps/project-tracker/app/api/x/route.ts', true],
+    ['scripts/check-?.mjs', 'scripts/check-a.mjs', true],
+    ['scripts/check-?.mjs', 'scripts/check-ab.mjs', false],
+    ['a.b(c)+[d]{e}^$|.ts', 'a.b(c)+[d]{e}^$|.ts', true],
+    ['a.b(c)+[d]{e}^$|.ts', 'aXb(c)+[d]{e}^$|.ts', false],
+  ])('%s matches %s → %s', (glob, file, expected) => {
+    expect(sonarGlobToRegExp(glob).test(file)).toBe(expected);
+  });
+});
+
+describe('sonarScopeFromProperties', () => {
+  it('strips trailing slashes from source roots and compiles the exclusion lists', () => {
+    const scope = sonarScopeFromProperties(
+      'sonar.sources=apps/api/src/,tools\nsonar.exclusions=**/*.py\nsonar.coverage.exclusions=tools/x.mjs'
+    );
+    expect(scope.sourceRoots).toEqual(['apps/api/src', 'tools']);
+    expect(scope.exclusions[0].test('tools/a/b.py')).toBe(true);
+    expect(scope.coverageExclusions[0].test('tools/x.mjs')).toBe(true);
+  });
+
+  it('refuses a properties file with no sonar.sources', () => {
+    expect(() => sonarScopeFromProperties('sonar.projectKey=x')).toThrow(/no sonar.sources/);
+  });
+});
+
+describe('the committed sonar-project.properties', () => {
+  const scope = loadSonarScope(REPO_ROOT);
+  const excluded = (f: string) => scope.exclusions.some((re) => re.test(f));
+
+  it('puts repo tooling in scope', () => {
+    expect(scope.sourceRoots).toEqual(expect.arrayContaining(['scripts', 'tools']));
+  });
+
+  it('agrees with the coverage floor about which roots are tooling', () => {
+    for (const root of TOOLING_ROOTS) expect(scope.sourceRoots).toContain(root);
+  });
+
+  it('keeps tooling tests, fixtures and non-JS files out of analysis', () => {
+    expect(excluded('scripts/__tests__/check-diff-coverage.test.ts')).toBe(true);
+    expect(excluded('tools/scripts/__tests__/helper.ts')).toBe(true);
+    expect(excluded('tools/scripts/security/fixtures/gitleaks-postgres-literal.fixture.yml')).toBe(
+      true
+    );
+    expect(excluded('tools/audit/run_audit.py')).toBe(true);
+    expect(excluded('tools/scripts/pgvector-test.sql')).toBe(true);
+    expect(excluded('scripts/ci/run.sh')).toBe(true);
+  });
+
+  it('analyses tooling JavaScript/TypeScript', () => {
+    expect(excluded('scripts/lib/diff-coverage.mjs')).toBe(false);
+    expect(excluded('tools/scripts/lib/contract-parser.ts')).toBe(false);
+  });
+
+  it('does not exclude product test helpers that were analysed before', () => {
+    expect(excluded('apps/web/src/components/deals/__tests__/deal-test-utils.tsx')).toBe(false);
+  });
+});
