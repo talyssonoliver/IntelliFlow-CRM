@@ -121,6 +121,7 @@ interface RuleFormData {
   name: string;
   description: string;
   priority: number;
+  isActive: boolean;
   conditions: ConditionFormData[];
   actions: ActionFormData[];
 }
@@ -137,21 +138,36 @@ const defaultFormData: RuleFormData = {
   name: '',
   description: '',
   priority: 0,
+  isActive: true,
   conditions: [emptyCondition],
   actions: [emptyAction],
 };
 
 /**
+ * Resolve typed text to the canonical value for the field (case-insensitive), so
+ * "billing" becomes BILLING and "TRUE" becomes true. Unknown text is kept as typed
+ * and left for the schema to reject.
+ */
+function toCanonicalValue(field: TicketRoutingConditionField, text: string): string {
+  const typed = text.trim();
+  const match = TICKET_ROUTING_FIELD_VALUES[field].find(
+    (allowed) => allowed.toUpperCase() === typed.toUpperCase()
+  );
+  return match ?? typed.toUpperCase();
+}
+
+/**
  * Turn what the user typed into the stored value: list operators take a
- * comma-separated list, and values are stored upper-case like the enums.
+ * comma-separated list.
  */
 function toConditionValue(condition: ConditionFormData): string | string[] {
-  const normalized = condition.value.trim().toUpperCase();
-  if (!isListOperator(condition.operator)) return normalized;
-  return normalized
+  if (!isListOperator(condition.operator)) {
+    return toCanonicalValue(condition.field, condition.value);
+  }
+  return condition.value
     .split(',')
-    .map((part) => part.trim())
-    .filter(Boolean);
+    .filter((part) => part.trim())
+    .map((part) => toCanonicalValue(condition.field, part));
 }
 
 export function AutomationRuleBuilder() {
@@ -203,6 +219,7 @@ export function AutomationRuleBuilder() {
       name: rule.name,
       description: rule.description ?? '',
       priority: rule.priority,
+      isActive: rule.isActive,
       conditions: rule.conditions.length
         ? rule.conditions.map((c) => ({
             field: c.field,
@@ -223,7 +240,7 @@ export function AutomationRuleBuilder() {
       name: formData.name,
       description: formData.description || undefined,
       priority: formData.priority,
-      isActive: true,
+      isActive: formData.isActive,
       conditions: formData.conditions
         .filter((c) => c.value.trim())
         .map((c) => ({ field: c.field, operator: c.operator, value: toConditionValue(c) })),

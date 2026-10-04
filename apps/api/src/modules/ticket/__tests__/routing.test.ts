@@ -1239,6 +1239,7 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
         actions: [{ type: 'assign_to_user', target: AGENT_1_UUID }],
       },
     ]);
+    (mockPr as any).user = { findFirst: vi.fn().mockResolvedValue({ id: AGENT_1_UUID }) };
     const svc = new TicketRoutingService(mockPr);
     const result = await svc.findMatchingRule(TENANT_UUID, 'BILLING', 'HIGH');
     expect(result).not.toBeNull();
