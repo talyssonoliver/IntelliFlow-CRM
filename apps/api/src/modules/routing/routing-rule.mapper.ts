@@ -9,12 +9,17 @@
  * row through this DTO gives the client a small, explicit type and removes the
  * need for any suppression.
  *
- * `conditions` and `actions` are Prisma `Json` columns. They are read through
- * the same Zod schemas that validate writes, so the client gets typed arrays
- * instead of `JsonValue`. A stored value that does not match (e.g. rows written
- * by an older seed in a keyed-object shape) is logged with the rule id and
- * surfaced as an empty list — what the UI already showed for it — rather than
- * failing the whole response.
+ * `conditions` and `actions` are Prisma `Json` columns, and the RoutingRule
+ * table holds more than one kind of rule: lead routing rules (the vocabulary
+ * createRoutingRuleSchema validates) and ticket automation rules, which use a
+ * different one. So the DTO carries both:
+ *  - `conditions` / `actions`: the lead-routing view, read through the same Zod
+ *    schemas that validate writes, so lead UIs get typed arrays. A rule that is
+ *    not in that shape (a ticket rule, or a row written by the old seed's
+ *    keyed-object shape) yields [] here.
+ *  - `conditionsJson` / `actionsJson`: the stored value, untouched, typed
+ *    `unknown` (shallow, so it cannot reintroduce the depth problem). Nothing a
+ *    rule stores is hidden from a consumer that understands another shape.
  */
 import { routingActionSchema, routingConditionSchema } from '@intelliflow/validators';
 import type { RoutingAction, RoutingCondition } from '@intelliflow/validators';
@@ -42,8 +47,14 @@ export interface RoutingRuleDto {
   description: string | null;
   priority: number;
   isActive: boolean;
+  /** Lead-routing conditions; [] when the stored value is not in that shape. */
   conditions: RoutingCondition[];
+  /** Lead-routing actions; [] when the stored value is not in that shape. */
   actions: RoutingAction[];
+  /** The stored conditions exactly as persisted. */
+  conditionsJson: unknown;
+  /** The stored actions exactly as persisted. */
+  actionsJson: unknown;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -52,19 +63,9 @@ export interface RoutingRuleDto {
 const conditionsSchema = z.array(routingConditionSchema);
 const actionsSchema = z.array(routingActionSchema);
 
-function readList<T>(
-  schema: z.ZodType<T[]>,
-  value: unknown,
-  column: 'conditions' | 'actions',
-  ruleId: string
-): T[] {
+function leadView<T>(schema: z.ZodType<T[]>, value: unknown): T[] {
   const parsed = schema.safeParse(value);
-  if (parsed.success) return parsed.data;
-  console.warn(
-    `[routing] rule ${ruleId}: stored ${column} do not match the routing rule schema; returning []`,
-    parsed.error.issues
-  );
-  return [];
+  return parsed.success ? parsed.data : [];
 }
 
 export function toRoutingRuleDto(row: RoutingRuleRow): RoutingRuleDto {
@@ -75,8 +76,10 @@ export function toRoutingRuleDto(row: RoutingRuleRow): RoutingRuleDto {
     description: row.description,
     priority: row.priority,
     isActive: row.isActive,
-    conditions: readList(conditionsSchema, row.conditions, 'conditions', row.id),
-    actions: readList(actionsSchema, row.actions, 'actions', row.id),
+    conditions: leadView(conditionsSchema, row.conditions),
+    actions: leadView(actionsSchema, row.actions),
+    conditionsJson: row.conditions,
+    actionsJson: row.actions,
     createdBy: row.createdBy,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

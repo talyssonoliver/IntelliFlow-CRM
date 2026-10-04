@@ -14,11 +14,15 @@ const mockRule1 = {
   description: 'Route billing to billing team',
   priority: 0,
   isActive: true,
-  conditions: [
+  // Mirrors the routing DTO: a ticket rule is not lead-shaped, so the typed
+  // lead view is empty and the stored rule arrives in the *Json fields.
+  conditions: [],
+  actions: [],
+  conditionsJson: [
     { field: 'category', operator: 'equals', value: 'BILLING' },
     { field: 'priority', operator: 'gte', value: 'HIGH' },
   ],
-  actions: [{ type: 'assign_to_skill', target: 'billing-team' }],
+  actionsJson: [{ type: 'assign_to_skill', target: 'billing-team' }],
   createdBy: 'user-1',
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -29,8 +33,8 @@ const mockRule2 = {
   id: 'rule-2',
   name: 'Escalation Rule',
   priority: 1,
-  conditions: [],
-  actions: [],
+  conditionsJson: [],
+  actionsJson: [],
 };
 
 type MockQueryReturn<T> = { data: T | undefined; isLoading: boolean };
