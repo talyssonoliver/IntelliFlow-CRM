@@ -89,16 +89,18 @@ _AI_TOOLS = (
 # model word, a version or closing punctuation, so prose such as "created with
 # cursor-based paging" or "authored by Devin Smith" is not attribution.
 _AI_FOOTER_LEAD = (
-    r"\b(?:Generated|Created|Written|Authored|Produced)\s+(?:with|by|using|via)\s+"
+    # (?<![A-Za-z]) rather than \b: "_Generated with …_" (underscore emphasis)
+    # must still match, and `_` is a word character.
+    r"(?<![A-Za-z])(?:Generated|Created|Written|Authored|Produced)\s+(?:with|by|using|via)\s+"
     r"(?:\[|the\s+|an?\s+)?[*_`]{0,2}(?:(?:OpenAI|GitHub|Google|Anthropic(?:'s)?)\s+)?"
-    # "OpenAI o1"-style model names count as the tool.
-    r"(?:" + _AI_TOOLS + r"|(?<=OpenAI )o\d\w*)"
+    # o-series model names ("o1", "o3-mini", "o4-mini-high") count as the tool.
+    r"(?:" + _AI_TOOLS + r"|o\d[\w-]*)"
 )
 # What may follow the tool: a model word or a version. `(?![A-Za-z0-9])`, not
 # `\b`, so "_Claude Code_" (underscore emphasis) still ends the word.
 _AI_FOOTER_MODEL_TAIL = (
     r"\s+(?:Code|Agent|AI|Assist|CLI|Opus|Sonnet|Haiku|Fable|Mythos|Pro|Flash|Ultra"
-    r"|Mini|Max|Bot|agent|model)(?![A-Za-z0-9])|\s+\d|-(?:Code|Agent|CLI|\d)"
+    r"|Mini|Max|Bot|agent|model)(?![A-Za-z0-9])|\s+\d|\d|-(?:Code|Agent|CLI|\d)"
 )
 _AI_FOOTER = (
     _AI_FOOTER_LEAD
