@@ -471,16 +471,15 @@ export function OAuthCallback({
       }
       // A claim (or anything else) that settled after the watchdog fired or the user left must not
       // revoke the previous session or sign the new one in.
-      if (
+      const stopped = () =>
         abandonedByWatchdog(
           { current: abortedRef.current || departedRef.current },
           supabase,
           session,
           null,
           isolated
-        )
-      )
-        return;
+        );
+      if (stopped()) return;
 
       // The session this link replaces is revoked only once the new one is certain, so a failed
       // claim never leaves the user signed out of both.
@@ -491,6 +490,8 @@ export function OAuthCallback({
         await withTimeout(
           revokeEvenIfExpired(supabase, previousAccessToken, getStoredRefreshToken())
         ).catch(() => undefined);
+        // The user may have left while the revoke was in flight: sign nothing in after that.
+        if (stopped()) return;
       }
       pendingNextRef.current = pending.next;
       finishSignIn(session, user, 'magiclink', activeTenantId);
