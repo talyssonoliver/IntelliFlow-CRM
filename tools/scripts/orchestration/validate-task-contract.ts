@@ -1,5 +1,5 @@
 /**
- * Task-contract validator (ADR-070).
+ * Task-contract validator (ADR-072).
  *
  * Validates a dispatch contract JSON against the 20-field schema.
  * Checks for duplicate agentLeaseId against the per-machine active-leases log.

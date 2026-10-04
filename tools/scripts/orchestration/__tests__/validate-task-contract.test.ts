@@ -32,7 +32,7 @@ function makeValidContract(overrides: Partial<Record<string, unknown>> = {}): Ta
     ],
     baselineMainSha: '1810a937137adf4b8410eac1719500ea3558ac3b',
     specHash: 'abc123def456',
-    policyVersion: 'ADR-070-v1',
+    policyVersion: 'ADR-072-v1',
     dependencySnapshot: 'pnpm-lock.yaml@1810a937',
     riskClass: 'Low',
     priority: 'high',
@@ -51,7 +51,7 @@ function makeValidContract(overrides: Partial<Record<string, unknown>> = {}): Ta
     allowedMutationScope: [
       '.specify/sprints/sprint-19/spec/AUTOMATION-004/**',
       'tools/scripts/orchestration/**',
-      'docs/architecture/adr/ADR-070*.md',
+      'docs/architecture/adr/ADR-072*.md',
     ],
     humanEscalationConditions: [
       'any Category C decision surfaces',
