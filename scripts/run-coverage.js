@@ -128,7 +128,9 @@ function runVitest(project) {
     // Ensure outDir exists for the JSON report.
     fs.mkdirSync(outDir, { recursive: true });
 
-    const child = spawn('node', args, {
+    // process.execPath: the Node running this script, by absolute path — the
+    // same Node the parent was launched with, never whatever `node` PATH finds.
+    const child = spawn(process.execPath, args, {
       cwd: ROOT,
       env: { ...process.env, COVERAGE_RUN: '1' },
       stdio: 'inherit',

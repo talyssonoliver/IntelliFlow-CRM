@@ -3,6 +3,7 @@
  * sonar-project.properties so the local diff-coverage gate cannot drift from it.
  */
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
@@ -154,5 +155,23 @@ describe('the committed sonar-project.properties', () => {
     expect(
       scope.coverageExclusions.some((re) => re.test('apps/web/src/__mocks__/next/navigation.ts'))
     ).toBe(true);
+  });
+
+  // Owner decision 2026-10-04: S4036 (command run by name via PATH) is ignored
+  // for repo tooling only. Any widening of that ignore to app code fails here.
+  it('ignores rule S4036 only under scripts/ and tools/', () => {
+    const props = parseProperties(
+      fs.readFileSync(path.join(REPO_ROOT, 'sonar-project.properties'), 'utf8')
+    );
+    const keys = listProperty(props, 'sonar.issue.ignore.multicriteria');
+    const s4036 = keys.filter((k) =>
+      /:S4036$/.test(props.get(`sonar.issue.ignore.multicriteria.${k}.ruleKey`) ?? '')
+    );
+    expect(s4036.length).toBeGreaterThan(0);
+    for (const k of s4036) {
+      expect(props.get(`sonar.issue.ignore.multicriteria.${k}.resourceKey`)).toMatch(
+        /^(scripts|tools)\//
+      );
+    }
   });
 });
