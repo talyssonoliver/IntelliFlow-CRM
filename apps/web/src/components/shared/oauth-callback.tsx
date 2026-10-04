@@ -154,7 +154,7 @@ function dropAbandonedSession(
 ): void {
   if (abandonedAccessToken === preexistingAccessToken) return;
   if (isolated) {
-    revokeSession(supabase, abandonedAccessToken);
+    void revokeSession(supabase, abandonedAccessToken);
     return;
   }
   try {
@@ -176,11 +176,15 @@ function dropAbandonedSession(
  * Revoke a session server-side without touching the SDK's storage or emitting SIGNED_OUT, so it
  * cannot disturb the session the app holds now. Fire and forget, like dropAbandonedSession.
  */
-function revokeSession(supabase: BrowserSupabase, accessToken: string): void {
+function revokeSession(supabase: BrowserSupabase, accessToken: string): Promise<void> {
   try {
-    supabase.auth.admin.signOut(accessToken, 'local').catch(() => undefined);
+    return supabase.auth.admin.signOut(accessToken, 'local').then(
+      () => undefined,
+      () => undefined
+    );
   } catch {
     // Nothing else to clean: this session was never stored by this callback.
+    return Promise.resolve();
   }
 }
 
@@ -204,20 +208,20 @@ function revokeEvenIfExpired(
   supabase: BrowserSupabase,
   accessToken: string,
   refreshToken: string | null
-): void {
+): Promise<void> {
   if (!refreshToken || !isExpiredJwt(accessToken)) {
-    revokeSession(supabase, accessToken);
-    return;
+    return revokeSession(supabase, accessToken);
   }
   try {
-    createIsolatedAuthClient()
+    return createIsolatedAuthClient()
       .auth.refreshSession({ refresh_token: refreshToken })
-      .then(({ data }) => {
-        if (data?.session) revokeSession(supabase, data.session.access_token);
-      })
+      .then(({ data }) =>
+        data?.session ? revokeSession(supabase, data.session.access_token) : undefined
+      )
       .catch(() => undefined);
   } catch {
     // Revocation is best effort.
+    return Promise.resolve();
   }
 }
 
@@ -482,7 +486,11 @@ export function OAuthCallback({
       // claim never leaves the user signed out of both.
       if (previousAccessToken && previousAccessToken !== session.access_token) {
         // Read before finishSignIn overwrites the stored tokens with the new session's.
-        revokeEvenIfExpired(supabase, previousAccessToken, getStoredRefreshToken());
+        // Awaited (bounded by the step timeout) so the navigation that follows sign-in cannot
+        // cancel the request and leave the old refresh token valid.
+        await withTimeout(
+          revokeEvenIfExpired(supabase, previousAccessToken, getStoredRefreshToken())
+        ).catch(() => undefined);
       }
       pendingNextRef.current = pending.next;
       finishSignIn(session, user, 'magiclink', activeTenantId);
@@ -552,7 +560,7 @@ export function OAuthCallback({
     // anyone in behind the user's back, whichever account it is for. Discard it.
     if (departedRef.current) {
       if (isolated) {
-        revokeEvenIfExpired(
+        void revokeEvenIfExpired(
           supabase,
           data.session.access_token,
           data.session.refresh_token ?? null
@@ -761,7 +769,7 @@ export function OAuthCallback({
       heldSessionRef.current = null;
       const supabase = getSupabaseBrowserClient();
       if (held && supabase)
-        revokeEvenIfExpired(
+        void revokeEvenIfExpired(
           supabase,
           held.session.access_token,
           held.session.refresh_token ?? null
@@ -854,7 +862,11 @@ export function OAuthCallback({
     // The held session was verified before the user chose; one that has since expired cannot
     // claim a grant or sign in, and the link is already spent.
     if (held.session.expires_at !== undefined && held.session.expires_at * 1000 <= Date.now()) {
-      revokeEvenIfExpired(supabase, held.session.access_token, held.session.refresh_token ?? null);
+      void revokeEvenIfExpired(
+        supabase,
+        held.session.access_token,
+        held.session.refresh_token ?? null
+      );
       reportError(
         new Error(
           'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
@@ -880,7 +892,11 @@ export function OAuthCallback({
     // The verified session for the other account was never stored: it is only revoked, and the
     // current app session, including the SDK's copy that keeps it refreshed, is untouched.
     if (held && supabase)
-      revokeEvenIfExpired(supabase, held.session.access_token, held.session.refresh_token ?? null);
+      void revokeEvenIfExpired(
+        supabase,
+        held.session.access_token,
+        held.session.refresh_token ?? null
+      );
     router.push('/dashboard');
   };
 
