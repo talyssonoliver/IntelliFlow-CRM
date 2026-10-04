@@ -662,17 +662,26 @@ export function OAuthCallback({
 
   // A held session for another account lives only in memory. If the user leaves the prompt
   // without choosing (tab closed, back button, navigation), revoke it so a valid session for an
-  // account they never agreed to cannot outlive the page.
+  // account they never agreed to cannot outlive the page. A page kept in the back/forward cache
+  // comes back showing the used-link error rather than a prompt whose session is gone.
+  const reportErrorRef = useRef(reportError);
+  reportErrorRef.current = reportError;
   useEffect(() => {
-    const revokeHeld = () => {
+    const revokeHeld = (): boolean => {
       const held = heldSessionRef.current;
       heldSessionRef.current = null;
       const supabase = getSupabaseBrowserClient();
       if (held && supabase) revokeSession(supabase, held.session.access_token);
+      return held !== null;
     };
-    globalThis.addEventListener('pagehide', revokeHeld);
+    const onPageHide = (event: PageTransitionEvent) => {
+      if (revokeHeld() && event.persisted) {
+        reportErrorRef.current(new Error('This sign-in link has already been used.'));
+      }
+    };
+    globalThis.addEventListener('pagehide', onPageHide);
     return () => {
-      globalThis.removeEventListener('pagehide', revokeHeld);
+      globalThis.removeEventListener('pagehide', onPageHide);
       revokeHeld();
     };
   }, []);

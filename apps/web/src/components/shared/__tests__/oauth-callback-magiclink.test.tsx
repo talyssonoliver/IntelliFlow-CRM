@@ -9,7 +9,7 @@
  * post-login steps as the OAuth path.
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -304,6 +304,21 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     await screen.findByText('Switch account?');
 
     unmount();
+    expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local');
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  it('a page restored from the back/forward cache shows the used-link error, not the prompt', async () => {
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await screen.findByText('Switch account?');
+
+    const hide = new Event('pagehide');
+    Object.defineProperty(hide, 'persisted', { value: true });
+    act(() => {
+      globalThis.dispatchEvent(hide);
+    });
+
+    expect(await screen.findByText('Authentication Failed')).toBeInTheDocument();
     expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local');
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
   });
