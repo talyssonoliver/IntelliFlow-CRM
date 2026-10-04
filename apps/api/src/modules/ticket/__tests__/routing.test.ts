@@ -210,7 +210,7 @@ function createMockPrisma() {
       update: vi.fn().mockResolvedValue({ id: TICKET_UUID }),
     },
     routingRule: {
-      findFirst: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
     },
     routingAudit: {
       create: vi.fn().mockResolvedValue({ id: AUDIT_UUID }),
@@ -1231,11 +1231,14 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
   it('D14: findMatchingRule returns rule when match found', async () => {
     const RULE_UUID = '00000000-0000-4000-8000-000000000091';
     const mockPr = createMockPrisma();
-    (mockPr as any).routingRule.findFirst.mockResolvedValue({
-      id: RULE_UUID,
-      name: 'Auto-assign billing',
-      assignToUserId: AGENT_1_UUID,
-    });
+    (mockPr as any).routingRule.findMany.mockResolvedValue([
+      {
+        id: RULE_UUID,
+        name: 'Auto-assign billing',
+        conditions: [{ field: 'ticketCategory', operator: 'equals', value: 'BILLING' }],
+        actions: [{ type: 'assign_to_user', target: AGENT_1_UUID }],
+      },
+    ]);
     const svc = new TicketRoutingService(mockPr);
     const result = await svc.findMatchingRule(TENANT_UUID, 'BILLING', 'HIGH');
     expect(result).not.toBeNull();

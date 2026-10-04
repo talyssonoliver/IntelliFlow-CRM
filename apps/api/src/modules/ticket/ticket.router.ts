@@ -158,14 +158,15 @@ function autoRouteNewTicket(
     // Check for a matching routing rule first
     const ticket = await ctx.prismaWithTenant.ticket.findUnique({
       where: { id: params.ticketId },
-      select: { priority: true, status: true },
+      select: { priority: true, status: true, slaStatus: true },
     });
     if (!ticket || ticket.status === 'ARCHIVED') return;
 
     const matchingRule = await routingService.findMatchingRule(
       params.tenantId,
       category,
-      ticket.priority
+      ticket.priority,
+      { status: ticket.status, slaStatus: ticket.slaStatus }
     );
 
     let assigneeId: string;
