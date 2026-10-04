@@ -292,3 +292,14 @@ def test_base_ref_env_unresolvable_is_advisory():
     # never a false failure.
     code, _ = _lint_base_ref_env("definitely/not/a/real/ref")
     assert code == 0
+
+
+def test_hyphenated_tool_name_fails():
+    # Round-7 adversarial review on #754: "Claude-Code" slipped through.
+    code, out = _lint(VALID_HEADER + "Body.\n\nGenerated with Claude-Code\n")
+    assert code == 1, out
+
+
+def test_hyphenated_prose_still_passes():
+    code, out = _lint(VALID_HEADER + "Pagination created with cursor-based paging.\n")
+    assert code == 0, out

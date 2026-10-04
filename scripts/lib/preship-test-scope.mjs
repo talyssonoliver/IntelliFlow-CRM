@@ -70,8 +70,15 @@ const TEST_FILE = /\.(test|spec)\.(ts|tsx|js|mjs|cjs|mts|cts)$/;
 
 const normalise = (f) => f.replace(/\\/g, '/');
 
+// Non-code files that modules import (a stylesheet in a layout, an SVG, a
+// GraphQL document): `vitest related` follows those imports too, so they are
+// handed to it like source (round-7 review: a globals.css-only diff was `none`).
+const IMPORTED_ASSET =
+  /\.(css|scss|sass|less|svg|png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|graphql|gql|wasm|html)$/;
+
 const isImportableSource = (f) =>
-  SOURCE_EXTENSION.test(f) && !NON_SOURCE_PREFIXES.some((p) => f.startsWith(p));
+  (SOURCE_EXTENSION.test(f) || IMPORTED_ASSET.test(f)) &&
+  !NON_SOURCE_PREFIXES.some((p) => f.startsWith(p));
 
 /**
  * A path whose deletion can matter to a test: a module, a data file, a global

@@ -88,7 +88,7 @@ _AI_ATTRIBUTION_RE = re.compile(
     # version or closing punctuation — so prose such as "created with
     # cursor-based paging" or "authored by Devin Smith" is not attribution.
     + r"(?=\s*$|\s*[\])\.,;:!]|\s+(?:Code|Agent|AI|Assist|Opus|Sonnet|Haiku|Fable|Mythos"
-    r"|Pro|Flash|Ultra|Mini|Max|Bot|agent|model)\b|\s+\d)"
+    r"|Pro|Flash|Ultra|Mini|Max|Bot|agent|model)\b|\s+\d|-(?:Code|Agent|CLI)\b)"
     r"|\bClaude-Session:"
     r"|claude\.ai/code\b"
     r"|noreply@anthropic\.com"

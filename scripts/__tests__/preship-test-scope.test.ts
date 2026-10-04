@@ -446,3 +446,11 @@ describe('round-6 review regressions', () => {
     ).toEqual(['packages/a/src/uses-contract.test.ts']);
   });
 });
+
+describe('round-7 review regressions', () => {
+  it('an imported stylesheet change is handed to vitest related, not dropped as none', () => {
+    const r = classifyChangedFiles(['apps/web/src/app/globals.css']);
+    expect(r.scope).toBe('related');
+    expect(r.files).toEqual(['apps/web/src/app/globals.css']);
+  });
+});
