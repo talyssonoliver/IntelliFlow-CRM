@@ -224,5 +224,5 @@ export {
   getHydratedContextJsonPath,
   getAgentSelectionPath,
   getAttestationsDir,
-  getEvidenceDir,
+  getEvidenceDir as getEvidenceDirPath,
 } from './paths.js';
