@@ -11,6 +11,7 @@ import { ActivityFeed } from '@/components/shared/activity-feed';
 import { formatFileSize } from '@/components/documents';
 import { getDocumentTypeDisplayLabel } from '@/components/documents/document-type-utils';
 import type { AccessLevel, DocumentStatus } from '@/components/documents';
+import { mapAuditEntry, type AuditEntry, type AuditTrailRow } from '@/lib/documents/audit-trail';
 
 // Tab types
 type TabId = 'overview' | 'versions' | 'access-control' | 'signatures' | 'activity' | 'comments';
@@ -30,58 +31,6 @@ interface ACLEntry {
   grantedAt: string;
   grantedBy: string;
   expiresAt?: string | null;
-}
-
-// Audit trail types (simplified to avoid deep Prisma Json type instantiation)
-interface RawAuditEntry {
-  id: string;
-  document_id: string;
-  tenant_id: string;
-  event_type: string;
-  user_id: string;
-  ip_address: string | null;
-  user_agent: string | null;
-  changes: unknown;
-  metadata: unknown;
-  created_at: string | Date;
-}
-
-interface AuditEntry {
-  id: string;
-  versionMajor: number;
-  versionMinor: number;
-  versionPatch: number;
-  action: string;
-  timestamp: string;
-  performedBy: string;
-  changes: string | null;
-  metadata: { sizeBytes?: number } | null;
-}
-
-// Map a raw audit entry to the UI-friendly AuditEntry shape
-function mapAuditEntry(entry: RawAuditEntry, index: number, total: number): AuditEntry {
-  const metadata = entry.metadata as {
-    version?: { major?: number; minor?: number; patch?: number };
-    sizeBytes?: number;
-  } | null;
-  const version = metadata?.version;
-  const createdAt =
-    typeof entry.created_at === 'string' ? entry.created_at : String(entry.created_at);
-  const changesStr = entry.changes == null ? null : JSON.stringify(entry.changes);
-  return {
-    id: entry.id,
-    versionMajor: version?.major ?? 1,
-    versionMinor: version?.minor ?? 0,
-    versionPatch: version?.patch ?? total - index - 1,
-    action: entry.event_type
-      .replaceAll('_', ' ')
-      .toLowerCase()
-      .replace(/^\w/, (c) => c.toUpperCase()),
-    timestamp: createdAt,
-    performedBy: entry.user_id,
-    changes: changesStr,
-    metadata: metadata ? { sizeBytes: metadata.sizeBytes } : null,
-  };
 }
 
 function formatDateTime(dateString: string, timezone: string = 'Europe/London'): string {
@@ -755,10 +704,7 @@ export default function DocumentDetailPage() {
   });
 
   // Map audit trail to UI-friendly format using module-level mapAuditEntry helper
-  // tRPC serializes dates as strings; the type mismatch is expected at the wire boundary
-  const auditEntries: RawAuditEntry[] = rawAuditTrail
-    ? (rawAuditTrail as unknown as RawAuditEntry[])
-    : [];
+  const auditEntries: AuditTrailRow[] = rawAuditTrail ?? [];
   const auditTrail: AuditEntry[] = auditEntries.map((entry, index) =>
     mapAuditEntry(entry, index, auditEntries.length)
   );
