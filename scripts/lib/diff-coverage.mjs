@@ -37,7 +37,8 @@ const ALWAYS_EXCLUDED = [
   /\.config\.[cm]?[jt]s$/,
   /(^|\/)(__tests__|__mocks__|migrations|generated|dist|build|\.next|node_modules)\//,
 ];
-const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
+// JavaScript/TypeScript (lcov) and Python (Cobertura, #755).
+const INCLUDE_EXT = /\.([cm]?[jt]sx?|py)$/;
 
 /**
  * @param {{ sourceRoots: string[], exclusions: RegExp[], coverageExclusions: RegExp[] }} scope
@@ -45,7 +46,7 @@ const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
 export function createClassifier(scope) {
   const inSources = (f) => scope.sourceRoots.some((root) => f.startsWith(`${root}/`));
   return {
-    /** A JS/TS file Sonar analyses (in sonar.sources, not excluded). */
+    /** A JS/TS/Python file Sonar analyses (in sonar.sources, not excluded). */
     isCoverableFile: (f) =>
       INCLUDE_EXT.test(f) &&
       inSources(f) &&
@@ -130,6 +131,27 @@ export function parseLcov(lcovText, root) {
 }
 
 /**
+ * Per-file per-line hit counts from a Cobertura report (Python, written by
+ * scripts/run-python-coverage.mjs with repo-relative filenames), merged into
+ * `into` so lcov and Cobertura feed one intersection.
+ *
+ * @param {string} xmlText
+ * @param {Map<string, Map<number, number>>} into
+ * @returns {Map<string, Map<number, number>>}
+ */
+export function parseCobertura(xmlText, into = new Map()) {
+  const CLASS = /<class\b[^>]*\bfilename="([^"]+)"[^>]*>([\s\S]*?)<\/class>/g;
+  const LINE = /<line\b[^>]*\bnumber="(\d+)"[^>]*\bhits="(\d+)"/g;
+  for (const [, filename, body] of xmlText.matchAll(CLASS)) {
+    const file = filename.replaceAll('\\', '/').replace(/^\.\//, '');
+    const hits = into.get(file) ?? new Map();
+    for (const [, ln, n] of body.matchAll(LINE)) hits.set(Number(ln), Number(n));
+    into.set(file, hits);
+  }
+  return into;
+}
+
+/**
  * Intersect added lines with lcov hits.
  *
  * @param {Map<string, Set<number>>} added
@@ -166,6 +188,46 @@ export function computeDiffCoverage(added, lineHits, isSonarCoverageExcluded) {
   return { coverable, covered, perFile };
 }
 
+const isPython = (f) => f.endsWith('.py');
+
+/**
+ * Load the coverage reports the changed files need: the lcov when JS/TS lines
+ * changed, the Python Cobertura report when .py lines changed. A needed report
+ * that is missing is an error, never "0% for everything" — that would blame the
+ * change for a step that did not run.
+ *
+ * @returns {Map<string, Map<number, number>> | null} null after reporting an error
+ */
+function loadReports({ root, env, added, readFile, error }) {
+  const files = [...added.keys()];
+  const reports = [
+    {
+      needed: files.some((f) => !isPython(f)),
+      rel: env.DIFF_COVER_LCOV || 'artifacts/coverage/lcov.info',
+      step: 'the coverage step',
+      parse: (text, into) => {
+        for (const [f, hits] of parseLcov(text, root)) into.set(f, hits);
+      },
+    },
+    {
+      needed: files.some(isPython),
+      rel: env.DIFF_COVER_PY || 'artifacts/coverage/python-coverage.xml',
+      step: 'node scripts/run-python-coverage.mjs',
+      parse: (text, into) => parseCobertura(text, into),
+    },
+  ];
+  const lineHits = new Map();
+  for (const r of reports.filter((x) => x.needed)) {
+    const text = readFile(path.isAbsolute(r.rel) ? r.rel : path.join(root, r.rel));
+    if (text == null) {
+      error(`::error::check-diff-coverage: ${r.rel} missing — run ${r.step} first.`);
+      return null;
+    }
+    r.parse(text, lineHits);
+  }
+  return lineHits;
+}
+
 /**
  * The whole gate. Returns the process exit code.
  *
@@ -182,7 +244,6 @@ export function computeDiffCoverage(added, lineHits, isSonarCoverageExcluded) {
 export function runDiffCoverage({ root, scope, env, sh, readFile, log, error }) {
   const min = Number(env.DIFF_COVER_MIN ?? 80);
   const baseRef = env.DIFF_COVER_BASE || 'origin/main';
-  const lcov = env.DIFF_COVER_LCOV || 'artifacts/coverage/lcov.info';
   const { isCoverableFile, isSonarCoverageExcluded } = createClassifier(scope);
 
   const mb = sh('git', ['merge-base', 'HEAD', baseRef]);
@@ -199,15 +260,12 @@ export function runDiffCoverage({ root, scope, env, sh, readFile, log, error }) 
     return 0;
   }
 
-  const lcovText = readFile(path.isAbsolute(lcov) ? lcov : path.join(root, lcov));
-  if (lcovText == null) {
-    error(`::error::check-diff-coverage: ${lcov} missing — run the coverage step first.`);
-    return 1;
-  }
+  const lineHits = loadReports({ root, env, added, readFile, error });
+  if (lineHits == null) return 1;
 
   const { coverable, covered, perFile } = computeDiffCoverage(
     added,
-    parseLcov(lcovText, root),
+    lineHits,
     isSonarCoverageExcluded
   );
   if (coverable === 0) {
@@ -220,7 +278,8 @@ export function runDiffCoverage({ root, scope, env, sh, readFile, log, error }) 
   log(`check-diff-coverage: new-line coverage vs ${baseRef} (floor ${min}%):\n`);
   for (const f of perFile) {
     const fp = (f.fCov / f.fTot) * 100;
-    const tag = f.absent ? '  [no lcov — file has no tests]' : '';
+    const report = isPython(f.file) ? 'no Python coverage' : 'no lcov';
+    const tag = f.absent ? `  [${report} — file has no tests]` : '';
     log(
       `  ${fp >= min ? '✓' : '✗'} ${fp.toFixed(1).padStart(5)}%  ${f.fCov}/${f.fTot}  ${f.file}${tag}`
     );

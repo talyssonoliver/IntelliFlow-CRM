@@ -470,11 +470,22 @@ const STEPS = [
     required: !SCOPED_TESTS,
   },
   {
+    // #755: Python tooling (tools/audit, tools/plan, tools/scripts) is in
+    // sonar.sources and measured by SonarCloud from the same Cobertura report
+    // this writes. Running it here lets `diff-coverage` judge changed .py lines
+    // exactly as Sonar will. Both pytest suites take ~15s.
+    id: 'python-coverage',
+    description: 'pytest tools/audit + tools/plan under coverage → python-coverage.xml',
+    cmd: ['node', 'scripts/run-python-coverage.mjs'],
+    required: true,
+  },
+  {
     // Mirror SonarCloud's `new_coverage` (>=80% on the CHANGED lines) LOCALLY,
-    // using the SAME merged lcov. The overall ratchet floor above barely moves
-    // for a small diff, so it cannot catch an under-tested change — this step
-    // can. This is the exact gap that let PR #265 pass pre-ship's coverage gate
-    // while CI's `SonarCloud Scan` / new_coverage went red.
+    // using the SAME merged lcov (and, for .py lines, the Python Cobertura
+    // report above). The overall ratchet floor above barely moves for a small
+    // diff, so it cannot catch an under-tested change — this step can. This is
+    // the exact gap that let PR #265 pass pre-ship's coverage gate while CI's
+    // `SonarCloud Scan` / new_coverage went red.
     id: 'diff-coverage',
     description: 'enforce Sonar new_coverage (>=80% on changed lines vs origin/main)',
     cmd: ['node', 'scripts/check-diff-coverage.mjs'],
