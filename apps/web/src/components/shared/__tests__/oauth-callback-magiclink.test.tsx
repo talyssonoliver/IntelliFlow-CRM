@@ -369,21 +369,22 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(screen.queryByText('Switch account?')).not.toBeInTheDocument();
   });
 
-  it('leaving while the replaced session is being revoked signs nothing in', async () => {
+  it('commits the new session first, then waits for the old one to be revoked before moving on', async () => {
     let revoked!: (value: unknown) => void;
     h.adminSignOut.mockReturnValue(new Promise((resolve) => (revoked = resolve)));
     const onSuccess = vi.fn();
-    const { unmount } = render(<OAuthCallback onSuccess={onSuccess} />);
+    render(<OAuthCallback onSuccess={onSuccess} />);
     await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
     await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local'));
 
-    unmount();
+    // The new session is already stored; navigation waits for the revoke.
+    expect(h.storeSessionTokens).toHaveBeenCalledWith('acc', 'ref');
+    expect(onSuccess).not.toHaveBeenCalled();
+
     await act(async () => {
       revoked({ error: null });
     });
-
-    expect(onSuccess).not.toHaveBeenCalled();
-    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
   });
 
   it('the same account revokes the replaced session after signing in', async () => {

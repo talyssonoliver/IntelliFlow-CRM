@@ -366,7 +366,8 @@ export function OAuthCallback({
       session: { access_token: string; refresh_token?: string },
       user: { id: string; email?: string } | undefined,
       flow: 'oauth' | 'magiclink',
-      activeTenantId: string | null = null
+      activeTenantId: string | null = null,
+      beforeNavigate?: () => Promise<void>
     ) => {
       // The watchdog already showed the error state: a step that finally resolved must not
       // sign the user in behind a screen that said it failed.
@@ -403,20 +404,31 @@ export function OAuthCallback({
       // a stale session on subsequent page loads (we manage tokens ourselves).
       clearSupabaseLocalStorage();
 
-      // Call success callback or redirect
-      if (onSuccess) {
-        onSuccess(
-          { id: user?.id ?? '', email: user?.email },
-          { accessToken: session.access_token }
-        );
-        return;
-      }
+      const navigate = () => {
+        // Call success callback or redirect
+        if (onSuccess) {
+          onSuccess(
+            { id: user?.id ?? '', email: user?.email },
+            { accessToken: session.access_token }
+          );
+          return;
+        }
 
-      // Redirect after brief success state (300ms per NF-004)
-      const target = flow === 'magiclink' ? (pendingNextRef.current ?? '/dashboard') : redirectUrl;
-      setTimeout(() => {
-        router.push(target);
-      }, 300);
+        // Redirect after brief success state (300ms per NF-004)
+        const target =
+          flow === 'magiclink' ? (pendingNextRef.current ?? '/dashboard') : redirectUrl;
+        setTimeout(() => {
+          router.push(target);
+        }, 300);
+      };
+
+      // The session is committed above; a step that must finish before the page moves on (the
+      // replaced session's revoke) runs now, so leaving mid-way never strands either session.
+      if (beforeNavigate) {
+        void beforeNavigate().finally(navigate);
+      } else {
+        navigate();
+      }
     },
     [onSuccess, router, redirectUrl]
   );
@@ -481,20 +493,21 @@ export function OAuthCallback({
         );
       if (stopped()) return;
 
-      // The session this link replaces is revoked only once the new one is certain, so a failed
-      // claim never leaves the user signed out of both.
+      // The session this link replaces is revoked only once the new one is committed, so a failed
+      // claim never leaves the user signed out of both, and leaving mid-revoke leaves the new
+      // session in place. The revoke is awaited (bounded by the step timeout) before navigating,
+      // so the navigation cannot cancel it and leave the old refresh token valid.
+      let revokeReplaced: (() => Promise<void>) | undefined;
       if (previousAccessToken && previousAccessToken !== session.access_token) {
-        // Read before finishSignIn overwrites the stored tokens with the new session's.
-        // Awaited (bounded by the step timeout) so the navigation that follows sign-in cannot
-        // cancel the request and leave the old refresh token valid.
-        await withTimeout(
-          revokeEvenIfExpired(supabase, previousAccessToken, getStoredRefreshToken())
-        ).catch(() => undefined);
-        // The user may have left while the revoke was in flight: sign nothing in after that.
-        if (stopped()) return;
+        // Read now, before finishSignIn overwrites the stored tokens with the new session's.
+        const previousRefreshToken = getStoredRefreshToken();
+        revokeReplaced = () =>
+          withTimeout(
+            revokeEvenIfExpired(supabase, previousAccessToken, previousRefreshToken)
+          ).catch(() => undefined);
       }
       pendingNextRef.current = pending.next;
-      finishSignIn(session, user, 'magiclink', activeTenantId);
+      finishSignIn(session, user, 'magiclink', activeTenantId, revokeReplaced);
     },
     [finishSignIn]
   );
