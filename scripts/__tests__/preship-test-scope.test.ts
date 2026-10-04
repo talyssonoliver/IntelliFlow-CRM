@@ -15,6 +15,8 @@ import {
   scopeFromEnvOrResolve,
   MAX_RELATED_FILES,
   SCOPE_ENV,
+  parseNameStatus,
+  testsReferencingTooling,
 } from '../lib/preship-test-scope.mjs';
 
 describe('classifyChangedFiles', () => {
@@ -169,6 +171,115 @@ describe('scopeFromEnvOrResolve', () => {
       cwd: os.tmpdir(),
       env: { [SCOPE_ENV]: '{"scope":"none"', CI: 'true' },
     });
+    expect(r.scope).toBe('full');
+  });
+});
+
+// ─── Copilot review on #754: inputs the import graph cannot see ──────────
+
+describe('classifyChangedFiles — review regressions', () => {
+  it('selects JSON data modules (tests import pricing-data.json, team-data.json)', () => {
+    const r = classifyChangedFiles(['apps/web/src/data/pricing-data.json']);
+    expect(r.scope).toBe('related');
+    expect(r.files).toEqual(['apps/web/src/data/pricing-data.json']);
+  });
+
+  it('runs the full suite for a migration-only change (rls-migrations reads SQL from disk)', () => {
+    const r = classifyChangedFiles([
+      'packages/db/prisma/migrations/20261001120000_tenant_memberships/migration.sql',
+    ]);
+    expect(r.scope).toBe('full');
+  });
+
+  it.each([
+    'apps/web/vitest.setup.ts', // referenced only by a setupFiles string
+    'packages/domain/src/lead.ts',
+    'apps/web/src/data/team-data.json',
+  ])('runs the full suite when %s is deleted', (file) => {
+    const r = classifyChangedFiles([], { deleted: [file] });
+    expect(r.scope).toBe('full');
+    expect(r.reason).toContain(file);
+  });
+
+  it('ignores deleted docs', () => {
+    expect(classifyChangedFiles([], { deleted: ['docs/old.md'] }).scope).toBe('none');
+  });
+
+  it('adds tests that reach changed tooling by path', () => {
+    const r = classifyChangedFiles(['scripts/pre-ship.mjs'], {
+      referencingTests: ['scripts/__tests__/preship-attest.test.ts'],
+    });
+    expect(r.files).toEqual(['scripts/__tests__/preship-attest.test.ts', 'scripts/pre-ship.mjs']);
+  });
+});
+
+describe('testsReferencingTooling', () => {
+  const tests = new Map([
+    [
+      'scripts/__tests__/preship-attest.test.ts',
+      "fs.copyFileSync(PRESHIP, 'scripts/pre-ship.mjs')",
+    ],
+    [
+      'scripts/__tests__/check-diff-coverage.test.ts',
+      "spawnSync('node', [SCRIPT]) // check-diff-coverage.mjs",
+    ],
+    ['packages/domain/src/lead.test.ts', "import { Lead } from './lead'"],
+  ]);
+
+  it('finds the tests that name a changed scripts/ or tools/ file', () => {
+    expect(testsReferencingTooling(['scripts/pre-ship.mjs'], tests)).toEqual([
+      'scripts/__tests__/preship-attest.test.ts',
+    ]);
+    expect(testsReferencingTooling(['scripts/check-diff-coverage.mjs'], tests)).toEqual([
+      'scripts/__tests__/check-diff-coverage.test.ts',
+    ]);
+  });
+
+  it('does not expand changes outside the tooling trees', () => {
+    expect(testsReferencingTooling(['packages/domain/src/lead.ts'], tests)).toEqual([]);
+  });
+});
+
+describe('parseNameStatus', () => {
+  it('reads modifications, deletions and renames', () => {
+    expect(parseNameStatus('M\ta.ts\nD\tb.ts\nR087\told.ts\tnew.ts\n')).toEqual([
+      { status: 'M', path: 'a.ts' },
+      { status: 'D', path: 'b.ts' },
+      { status: 'R', path: 'new.ts', from: 'old.ts' },
+    ]);
+  });
+});
+
+describe('resolveTestScope — layered changes against a real repo', () => {
+  it('keeps a committed change even when an unstaged edit restores the base content', () => {
+    const root = makeRepo();
+    write(root, 'packages/a/src/base.ts', 'export const x = 2;\n');
+    git(root, 'commit', '-q', '-am', 'change base');
+    write(root, 'packages/a/src/base.ts'); // working tree back to the base content
+    const r = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
+    expect(r.scope).toBe('related');
+    expect(r.files).toEqual(['packages/a/src/base.ts']);
+  });
+
+  it('runs the full suite when a committed change deletes a global-impact file', () => {
+    const root = makeRepo();
+    write(root, 'apps/web/vitest.setup.ts');
+    git(root, 'add', '.');
+    git(root, 'commit', '-q', '-m', 'setup on feature');
+    git(root, 'checkout', '-q', 'main');
+    git(root, 'merge', '-q', '--ff-only', 'feature');
+    git(root, 'checkout', '-q', 'feature');
+    git(root, 'rm', '-q', 'apps/web/vitest.setup.ts');
+    git(root, 'commit', '-q', '-m', 'drop setup');
+    const r = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
+    expect(r.scope).toBe('full');
+    expect(r.reason).toContain('apps/web/vitest.setup.ts');
+  });
+
+  it('runs the full suite for a staged-only deletion of a source file', () => {
+    const root = makeRepo();
+    git(root, 'rm', '-q', 'packages/a/src/base.ts');
+    const r = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
     expect(r.scope).toBe('full');
   });
 });

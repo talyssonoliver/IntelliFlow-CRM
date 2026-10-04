@@ -15,6 +15,8 @@ import {
   verify,
   declaredEntries,
   importedWorkspacePackages,
+  importedWorkspaceSpecifiers,
+  subpathTargets,
 } from '../docker/verify-workspace-runtime.mjs';
 
 const SCRIPT = path.resolve(
@@ -149,7 +151,7 @@ describe('CLI', () => {
     const { app, dist } = fixture();
     const r = run(app, dist);
     expect(r.status).toBe(0);
-    expect(r.stdout).toContain('all 2 workspace package(s) resolve and are built');
+    expect(r.stdout).toContain('all 2 workspace import(s) resolve and are built');
   });
 
   it('exits 1 and names the missing package', () => {
@@ -168,5 +170,106 @@ describe('CLI', () => {
 
   it('exits 2 on a usage error', () => {
     expect(run().status).toBe(2);
+  });
+});
+
+// ─── subpath imports (Copilot review on #754) ─────────────────────────────
+// The API imports subpaths such as @intelliflow/validators/required-url. Their
+// export entries resolve separately from the root, so a root that exists says
+// nothing about them.
+
+/** app imports @intelliflow/c (root) and @intelliflow/c/<subpath>. */
+function subpathFixture({
+  exportsMap = {
+    '.': { import: './dist/index.mjs' },
+    './required-url': { import: './dist/required-url.mjs' },
+    './queues/*': { import: './dist/queues/*.mjs' },
+  } as Record<string, unknown> | null,
+  subpath = 'required-url',
+  files = ['dist/index.mjs', 'dist/required-url.mjs'],
+} = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-ws-sub-'));
+  roots.push(root);
+  const app = path.join(root, 'apps/api');
+  const c = path.join(root, 'packages/c');
+  put(
+    path.join(app, 'dist/main.js'),
+    `import { c } from "@intelliflow/c";\nimport { u } from "@intelliflow/c/${subpath}";\n`
+  );
+  put(
+    path.join(c, 'package.json'),
+    JSON.stringify(
+      exportsMap
+        ? { name: '@intelliflow/c', exports: exportsMap }
+        : { name: '@intelliflow/c', main: './dist/index.mjs' }
+    )
+  );
+  for (const f of files) put(path.join(c, f), 'export const x = 1;\n');
+  link(app, '@intelliflow/c', c);
+  return { app, dist: path.join(app, 'dist') };
+}
+
+describe('verify — subpath imports', () => {
+  it('checks the subpath entry, not just the root', () => {
+    const { app, dist } = subpathFixture();
+    const r = verify(app, dist);
+    expect(r.problems).toEqual([]);
+    expect(r.checked).toEqual(['@intelliflow/c', '@intelliflow/c/required-url']);
+  });
+
+  it('reports a missing subpath entry even when the root entry is intact', () => {
+    const { app, dist } = subpathFixture({ files: ['dist/index.mjs'] });
+    const r = verify(app, dist);
+    expect(r.checked).toEqual(['@intelliflow/c']);
+    expect(r.problems).toHaveLength(1);
+    expect(r.problems[0]).toMatch(/@intelliflow\/c\/required-url: entry file\(s\) missing/);
+  });
+
+  it('reports a subpath the exports map does not export', () => {
+    const { app, dist } = subpathFixture({ subpath: 'not-exported' });
+    const r = verify(app, dist);
+    expect(r.problems[0]).toMatch(/c\/not-exported: subpath is not in the package's exports map/);
+  });
+
+  it('resolves ./* export patterns and checks the substituted file', () => {
+    const ok = subpathFixture({
+      subpath: 'queues/types',
+      files: ['dist/index.mjs', 'dist/queues/types.mjs'],
+    });
+    expect(verify(ok.app, ok.dist).problems).toEqual([]);
+    const bad = subpathFixture({ subpath: 'queues/types', files: ['dist/index.mjs'] });
+    expect(verify(bad.app, bad.dist).problems[0]).toMatch(/dist\/queues\/types\.mjs/);
+  });
+
+  it('without an exports map, resolves the subpath as a file like Node does', () => {
+    const ok = subpathFixture({
+      exportsMap: null,
+      subpath: 'seed-ids',
+      files: ['dist/index.mjs', 'seed-ids.js'],
+    });
+    expect(verify(ok.app, ok.dist).problems).toEqual([]);
+    const bad = subpathFixture({
+      exportsMap: null,
+      subpath: 'seed-ids',
+      files: ['dist/index.mjs'],
+    });
+    expect(verify(bad.app, bad.dist).problems[0]).toMatch(/c\/seed-ids: no file for this subpath/);
+  });
+});
+
+describe('subpathTargets', () => {
+  it('returns null without an exports map and [] for a conditions-only map', () => {
+    expect(subpathTargets({ main: './x.js' }, 'a')).toBeNull();
+    expect(subpathTargets({ exports: { import: './x.mjs' } }, 'a')).toEqual([]);
+  });
+});
+
+describe('importedWorkspaceSpecifiers', () => {
+  it('keeps the subpath of each import', () => {
+    const src = `import a from "@intelliflow/v/required-url";\nimport b from '@intelliflow/v';`;
+    expect(importedWorkspaceSpecifiers(src)).toEqual([
+      { name: '@intelliflow/v', subpath: 'required-url' },
+      { name: '@intelliflow/v', subpath: '' },
+    ]);
   });
 });
