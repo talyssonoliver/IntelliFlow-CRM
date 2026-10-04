@@ -60,8 +60,11 @@ describe('isToolingFile', () => {
     expect(isToolingFile(at(rel), ROOT)).toBe(expected);
   });
 
-  it('accepts paths relative to the root', () => {
-    expect(isToolingFile('scripts/a.mjs', '.')).toBe(true);
+  // The CLI passes root = process.cwd(); path.relative resolves a relative
+  // summary key against the cwd, so a relative key works only in that case.
+  it('accepts summary keys relative to the working directory', () => {
+    expect(isToolingFile('scripts/a.mjs', process.cwd())).toBe(true);
+    expect(isToolingFile('apps/web/src/a.ts', process.cwd())).toBe(false);
   });
 });
 
