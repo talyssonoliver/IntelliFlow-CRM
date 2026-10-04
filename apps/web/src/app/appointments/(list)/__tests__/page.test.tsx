@@ -38,11 +38,14 @@ const mockAppointment = {
   appointmentType: 'CONSULTATION',
   status: 'SCHEDULED',
   location: 'Conference Room A',
-  attendeeCount: 2,
-  hasConflict: false,
-  linkedCaseCount: 1,
-  isRecurring: false,
   calendarId: null,
+  // The appointments.list row shape (not the view model): the page derives
+  // attendeeCount / linkedCaseCount / isRecurring from these.
+  recurrence: null,
+  parentAppointmentId: null,
+  organizer: { id: 'user-1', name: 'Alice', avatarUrl: null },
+  attendees: [{ user: { name: 'Bob' } }, { user: { name: 'Carol' } }],
+  linkedCases: [{ caseId: 'case-1' }],
 };
 
 const mockListData: { appointments: unknown[]; total: number } = {
