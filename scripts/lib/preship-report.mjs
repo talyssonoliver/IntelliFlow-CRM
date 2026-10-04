@@ -97,3 +97,28 @@ export function mergeOnlyState(prev, next, stepIds, ranIds) {
   });
   return { ...next, steps };
 }
+
+/**
+ * The state pre-ship writes to last-run.json. A full run writes its own state; an --only run is
+ * merged into the previous state for the same HEAD, and its verdict is re-derived from every
+ * step it now carries (a required FAIL or a missing required guard fails it).
+ */
+export function persistedState(prev, state, only, stepIds, missingCount) {
+  if (!only || !prev) return state;
+  const merged = mergeOnlyState(prev, state, stepIds, new Set(only));
+  const fails = merged.steps.filter((r) => r.verdict === 'FAIL' && r.required !== false);
+  merged.verdict = fails.length === 0 && missingCount === 0 ? 'PASS' : 'FAIL';
+  return merged;
+}
+
+/** The note printed under an advisory failure, or '' for every other step. */
+export function advisoryNote(r) {
+  return isAdvisoryFail(r)
+    ? `    Advisory step failed but does not block the gate. Log: ${r.log_path}\n`
+    : '';
+}
+
+/** The final verdict line, carrying counts that agree with the per-step lines. */
+export function finalLine(verdict, duration, results, expected) {
+  return `pre-ship: ${verdict} in ${duration} (${summaryText(summarize(results, expected))}).\n`;
+}

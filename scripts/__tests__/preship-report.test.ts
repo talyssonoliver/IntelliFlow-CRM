@@ -6,6 +6,9 @@ import {
   summarize,
   summaryText,
   mergeOnlyState,
+  persistedState,
+  advisoryNote,
+  finalLine,
 } from '../lib/preship-report.mjs';
 
 const fmt = (ms: number) => `${ms}ms`;
@@ -78,5 +81,61 @@ describe('--only merge', () => {
 
   it('returns the new state when there is no previous state', () => {
     expect(mergeOnlyState(null, next, ids, new Set(['c']))).toBe(next);
+  });
+});
+
+describe('persisted state and printed lines', () => {
+  const ids = ['a', 'b'];
+  const prev = {
+    git_head: 'h',
+    verdict: 'PASS',
+    steps: [
+      { id: 'a', verdict: 'PASS', duration_ms: 1 },
+      { id: 'b', verdict: 'PASS', duration_ms: 1 },
+    ],
+  };
+  const ran = (verdict: string, required = true) => ({
+    git_head: 'h',
+    verdict: 'PASS',
+    only: ['b'],
+    steps: [{ id: 'b', verdict, required, duration_ms: 2 }],
+  });
+
+  it('a full run is written as is', () => {
+    const state = { ...ran('PASS'), only: null };
+    expect(persistedState(prev, state, null, ids, 0)).toBe(state);
+  });
+
+  it('an --only run with no previous state is written as is', () => {
+    const state = ran('PASS');
+    expect(persistedState(null, state, ['b'], ids, 0)).toBe(state);
+  });
+
+  it('an --only run keeps the cached steps and passes when nothing required failed', () => {
+    const m = persistedState(prev, ran('PASS'), ['b'], ids, 0);
+    expect(m.steps.map((s: { id: string }) => s.id)).toEqual(['a', 'b']);
+    expect(m.verdict).toBe('PASS');
+  });
+
+  it('a required failure in the merged steps fails the verdict', () => {
+    expect(persistedState(prev, ran('FAIL'), ['b'], ids, 0).verdict).toBe('FAIL');
+  });
+
+  it('an advisory failure does not fail it, but a missing required guard does', () => {
+    expect(persistedState(prev, ran('FAIL', false), ['b'], ids, 0).verdict).toBe('PASS');
+    expect(persistedState(prev, ran('PASS'), ['b'], ids, 1).verdict).toBe('FAIL');
+  });
+
+  it('only an advisory failure gets a note, naming its log', () => {
+    const r = { id: 'audit', verdict: 'FAIL', required: false, log_path: 'x.log' };
+    expect(advisoryNote(r)).toContain('does not block the gate. Log: x.log');
+    expect(advisoryNote({ ...r, required: true })).toBe('');
+    expect(advisoryNote({ ...r, verdict: 'PASS' })).toBe('');
+  });
+
+  it('the final line carries the verdict, duration and counts', () => {
+    const line = finalLine('PASS', '3s', [{ id: 'a', verdict: 'PASS' }], ['a']);
+    expect(line.startsWith('pre-ship: PASS in 3s (')).toBe(true);
+    expect(line.endsWith(').\n')).toBe(true);
   });
 });
