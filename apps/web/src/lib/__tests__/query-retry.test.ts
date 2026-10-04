@@ -34,6 +34,25 @@ describe('shouldRetryMutation', () => {
     expect(shouldRetryMutation(0, serverError(code, status))).toBe(false);
   });
 
+  it('never retries a non-JSON response (e.g. a proxy HTML 502 after the server acted)', () => {
+    const htmlBody = TRPCClientError.from(
+      new SyntaxError('Unexpected token \'<\', "<!DOCTYPE "... is not valid JSON')
+    );
+    expect(shouldRetryMutation(0, htmlBody)).toBe(false);
+  });
+
+  it('never retries an aborted request', () => {
+    const abort = TRPCClientError.from(
+      new DOMException('The operation was aborted.', 'AbortError')
+    );
+    expect(shouldRetryMutation(0, abort)).toBe(false);
+  });
+
+  it('never retries an unknown error shape', () => {
+    expect(shouldRetryMutation(0, new Error('boom'))).toBe(false);
+    expect(shouldRetryMutation(0, null)).toBe(false);
+  });
+
   it('never retries an auth error', () => {
     expect(shouldRetryMutation(0, serverError('UNAUTHORIZED', 401))).toBe(false);
   });

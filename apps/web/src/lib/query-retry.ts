@@ -24,14 +24,20 @@ export function isAuthError(error: unknown): boolean {
 }
 
 /**
- * True when the server produced a response. A TRPCClientError built from an
- * HTTP response carries `data` (with `httpStatus`/`code`); a failed fetch does
- * not.
+ * True only when the request never got a response: fetch rejects with a
+ * TypeError ("Failed to fetch" / "NetworkError…" / "Load failed"), which
+ * @trpc/client wraps as the error's `cause`. Every other shape means the server
+ * (or a proxy in front of it) answered, or the caller aborted:
+ * - a tRPC error envelope sets `data` (429, 500, BAD_REQUEST…);
+ * - a non-JSON body, e.g. a proxy's HTML 502 after the server already acted,
+ *   fails in `res.json()` with a SyntaxError cause;
+ * - an abort has an AbortError cause.
  */
-function serverResponded(error: unknown): boolean {
+function isNetworkFailure(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
-  const data = (error as { data?: unknown }).data;
-  return data !== null && data !== undefined;
+  const { data, cause } = error as { data?: unknown; cause?: unknown };
+  if (data !== null && data !== undefined) return false;
+  return cause instanceof TypeError;
 }
 
 export function shouldRetryQuery(failureCount: number, error: unknown): boolean {
@@ -40,6 +46,6 @@ export function shouldRetryQuery(failureCount: number, error: unknown): boolean 
 }
 
 export function shouldRetryMutation(failureCount: number, error: unknown): boolean {
-  if (isAuthError(error) || serverResponded(error)) return false;
+  if (isAuthError(error) || !isNetworkFailure(error)) return false;
   return failureCount < MAX_RETRIES;
 }
