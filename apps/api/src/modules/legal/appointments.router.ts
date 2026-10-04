@@ -18,6 +18,11 @@
  */
 
 import { z } from 'zod';
+import type {
+  Appointment as AppointmentRow,
+  AppointmentAttendee,
+  AppointmentCase,
+} from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure as baseTenantProcedure } from '../../trpc';
 import { AppointmentDomainService } from '../../services';
@@ -465,6 +470,35 @@ async function onAppointmentCancelled(
   }
 }
 
+/** A user as appointment lists show them. */
+interface AppointmentUserSummary {
+  id: string;
+  name: string | null;
+  avatarUrl: string | null;
+}
+
+/**
+ * One row of `appointments.list`: the Appointment columns (the `recurrence`
+ * Json column typed `unknown`), its attendees enriched with their user, its
+ * linked cases and its organizer. Spelled out instead of inferred from the
+ * Prisma include payload, whose depth overflowed TypeScript on the web client
+ * (TS2589) and made three consumers cast the list away.
+ */
+export type AppointmentListItem = Omit<AppointmentRow, 'recurrence'> & {
+  recurrence: unknown;
+  organizer: AppointmentUserSummary | null;
+  attendees: Array<AppointmentAttendee & { user: AppointmentUserSummary | null }>;
+  linkedCases: AppointmentCase[];
+};
+
+export interface AppointmentListPage {
+  appointments: AppointmentListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
 export const appointmentsRouter = createTRPCRouter({
   /**
    * Create a new appointment
@@ -613,94 +647,96 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * List appointments with filtering
    */
-  list: tenantProcedure.input(listAppointmentsSchema).query(async ({ ctx, input }) => {
-    const {
-      page,
-      limit,
-      status,
-      appointmentType,
-      startTimeFrom,
-      startTimeTo,
-      caseId,
-      calendarId,
-      sortBy,
-      sortOrder,
-    } = input;
-    const skip = (page - 1) * limit;
+  list: tenantProcedure
+    .input(listAppointmentsSchema)
+    .query(async ({ ctx, input }): Promise<AppointmentListPage> => {
+      const {
+        page,
+        limit,
+        status,
+        appointmentType,
+        startTimeFrom,
+        startTimeTo,
+        caseId,
+        calendarId,
+        sortBy,
+        sortOrder,
+      } = input;
+      const skip = (page - 1) * limit;
 
-    // Filtering appointments by a legal case is a LEGAL feature — require it.
-    if (caseId) {
-      await assertLegalEntitlement(ctx);
-    }
+      // Filtering appointments by a legal case is a LEGAL feature — require it.
+      if (caseId) {
+        await assertLegalEntitlement(ctx);
+      }
 
-    // Admins see all appointments; regular users only see their own
-    const where: any = { ...userScopeFilter(ctx.user) };
+      // Admins see all appointments; regular users only see their own
+      const where: any = { ...userScopeFilter(ctx.user) };
 
-    if (status && status.length > 0) {
-      where.status = { in: status };
-    }
+      if (status && status.length > 0) {
+        where.status = { in: status };
+      }
 
-    if (appointmentType && appointmentType.length > 0) {
-      where.appointmentType = { in: appointmentType };
-    }
+      if (appointmentType && appointmentType.length > 0) {
+        where.appointmentType = { in: appointmentType };
+      }
 
-    if (startTimeFrom || startTimeTo) {
-      where.startTime = {};
-      if (startTimeFrom) where.startTime.gte = startTimeFrom;
-      if (startTimeTo) where.startTime.lte = startTimeTo;
-    }
+      if (startTimeFrom || startTimeTo) {
+        where.startTime = {};
+        if (startTimeFrom) where.startTime.gte = startTimeFrom;
+        if (startTimeTo) where.startTime.lte = startTimeTo;
+      }
 
-    if (caseId) {
-      where.linkedCases = { some: { caseId } };
-    }
+      if (caseId) {
+        where.linkedCases = { some: { caseId } };
+      }
 
-    if (calendarId !== undefined) {
-      where.calendarId = calendarId;
-    }
+      if (calendarId !== undefined) {
+        where.calendarId = calendarId;
+      }
 
-    const [appointments, total] = await Promise.all([
-      ctx.prismaWithTenant.appointment.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { [sortBy]: sortOrder },
-        include: {
-          attendees: true,
-          linkedCases: true,
-        },
-      }),
-      ctx.prismaWithTenant.appointment.count({ where }),
-    ]);
+      const [appointments, total] = await Promise.all([
+        ctx.prismaWithTenant.appointment.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { [sortBy]: sortOrder },
+          include: {
+            attendees: true,
+            linkedCases: true,
+          },
+        }),
+        ctx.prismaWithTenant.appointment.count({ where }),
+      ]);
 
-    // Enrich attendees with user data for display
-    const allUserIds = [
-      ...new Set(
-        appointments.flatMap((a) => [a.organizerId, ...a.attendees.map((att) => att.userId)])
-      ),
-    ];
-    const users = await ctx.prismaWithTenant.user.findMany({
-      where: { id: { in: allUserIds } },
-      select: { id: true, name: true, avatarUrl: true },
-    });
-    const userMap = new Map(users.map((u) => [u.id, u]));
+      // Enrich attendees with user data for display
+      const allUserIds = [
+        ...new Set(
+          appointments.flatMap((a) => [a.organizerId, ...a.attendees.map((att) => att.userId)])
+        ),
+      ];
+      const users = await ctx.prismaWithTenant.user.findMany({
+        where: { id: { in: allUserIds } },
+        select: { id: true, name: true, avatarUrl: true },
+      });
+      const userMap = new Map(users.map((u) => [u.id, u]));
 
-    const enrichedAppointments = appointments.map((a) => ({
-      ...a,
-      organizer: userMap.get(a.organizerId) ?? null,
-      attendees: a.attendees.map((att) => ({
-        ...att,
-        user: userMap.get(att.userId) ?? null,
-      })),
-    }));
+      const enrichedAppointments = appointments.map((a) => ({
+        ...a,
+        organizer: userMap.get(a.organizerId) ?? null,
+        attendees: a.attendees.map((att) => ({
+          ...att,
+          user: userMap.get(att.userId) ?? null,
+        })),
+      }));
 
-    return {
-      appointments: enrichedAppointments,
-      total,
-      page,
-      limit,
-      hasMore: skip + appointments.length < total,
-    };
-  }),
+      return {
+        appointments: enrichedAppointments,
+        total,
+        page,
+        limit,
+        hasMore: skip + appointments.length < total,
+      };
+    }),
 
   /**
    * Update appointment details
