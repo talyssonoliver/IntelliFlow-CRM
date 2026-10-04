@@ -303,7 +303,7 @@ const winLossReasonsRouter = createTRPCRouter({
 // ─── Scoring Rules Sub-Router ───────────────────────────────────────────────
 
 const scoringRulesRouter = createTRPCRouter({
-  list: tenantProcedure.query(async ({ ctx }) => {
+  list: tenantProcedure.query(async ({ ctx }): Promise<DealScoringRuleDto[]> => {
     const tenantId = ctx.tenant.tenantId;
     return ctx.prismaWithTenant.dealScoringRule.findMany({
       where: { tenantId },
@@ -311,40 +311,44 @@ const scoringRulesRouter = createTRPCRouter({
     });
   }),
 
-  create: tenantProcedure.input(createDealScoringRuleSchema).mutation(async ({ ctx, input }) => {
-    const tenantId = ctx.tenant.tenantId;
-    return ctx.prismaWithTenant.dealScoringRule.create({
-      data: {
-        tenantId,
-        name: input.name,
-        field: input.field,
-        operator: input.operator,
-        valueJson: input.valueJson,
-        points: input.points,
-        isActive: input.isActive,
-        sortOrder: input.sortOrder ?? 0,
-      },
-    });
-  }),
-
-  update: tenantProcedure.input(updateDealScoringRuleSchema).mutation(async ({ ctx, input }) => {
-    const tenantId = ctx.tenant.tenantId;
-    const { id, ...rest } = input;
-    try {
-      return await ctx.prismaWithTenant.dealScoringRule.update({
-        where: { id, tenantId },
-        data: rest,
+  create: tenantProcedure
+    .input(createDealScoringRuleSchema)
+    .mutation(async ({ ctx, input }): Promise<DealScoringRuleDto> => {
+      const tenantId = ctx.tenant.tenantId;
+      return ctx.prismaWithTenant.dealScoringRule.create({
+        data: {
+          tenantId,
+          name: input.name,
+          field: input.field,
+          operator: input.operator,
+          valueJson: input.valueJson,
+          points: input.points,
+          isActive: input.isActive,
+          sortOrder: input.sortOrder ?? 0,
+        },
       });
-    } catch (err: unknown) {
-      if (isRecordNotFoundError(err)) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Scoring rule not found in this tenant.',
+    }),
+
+  update: tenantProcedure
+    .input(updateDealScoringRuleSchema)
+    .mutation(async ({ ctx, input }): Promise<DealScoringRuleDto> => {
+      const tenantId = ctx.tenant.tenantId;
+      const { id, ...rest } = input;
+      try {
+        return await ctx.prismaWithTenant.dealScoringRule.update({
+          where: { id, tenantId },
+          data: rest,
         });
+      } catch (err: unknown) {
+        if (isRecordNotFoundError(err)) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Scoring rule not found in this tenant.',
+          });
+        }
+        throw err;
       }
-      throw err;
-    }
-  }),
+    }),
 
   delete: tenantProcedure.input(deleteDealScoringRuleSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
