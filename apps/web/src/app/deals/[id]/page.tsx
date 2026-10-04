@@ -97,6 +97,15 @@ const ACTIVE_STAGES: OpportunityStage[] = [
 // Utility Functions
 // =============================================================================
 
+/**
+ * The server-cache refresh after a mutation is best-effort (the mutation already
+ * succeeded), but a failure is logged rather than swallowed — otherwise a stale
+ * deals list has no trace of why.
+ */
+function logDealCacheFailure(error: unknown): void {
+  console.warn('[DealPage] Deal cache revalidation failed:', error);
+}
+
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
@@ -490,7 +499,7 @@ export default function DealDetailPage() {
 
   const moveStage = api.opportunity.moveStage.useMutation({
     onSuccess: (_data, variables) => {
-      revalidateDealCaches(user?.id ?? null).catch(() => {});
+      revalidateDealCaches(user?.id ?? null).catch(logDealCacheFailure);
       void utils.opportunity.getById.invalidate({ id: dealId });
       setPendingAction(null);
       toast({
@@ -509,7 +518,10 @@ export default function DealDetailPage() {
 
   const deleteMutation = api.opportunity.delete.useMutation({
     onSuccess: () => {
-      revalidateDealCaches(user?.id ?? null).catch(() => {});
+      revalidateDealCaches(user?.id ?? null).catch(logDealCacheFailure);
+      // The list this navigates to must not show the deal that was just
+      // trashed, even when the server-cache refresh above fails.
+      void utils.opportunity.list.invalidate();
       setDeleteConfirmOpen(false);
       toast({ title: 'Deal moved to trash' });
       router.push('/deals');
@@ -521,7 +533,7 @@ export default function DealDetailPage() {
 
   const updateMutation = api.opportunity.update.useMutation({
     onSuccess: () => {
-      revalidateDealCaches(user?.id ?? null).catch(() => {});
+      revalidateDealCaches(user?.id ?? null).catch(logDealCacheFailure);
       void utils.opportunity.getById.invalidate({ id: dealId });
       setEditDialogOpen(false);
       toast({ title: 'Deal updated' });
