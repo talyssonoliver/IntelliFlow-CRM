@@ -253,7 +253,9 @@
  * Reserved box + fonts-ready gate. In @layer base (unlike the rule below) so a
  * per-icon Tailwind utility (w-5, size-4, invisible…) still wins over it.
  * fonts-ready is added to <html> by the inline script in layout.tsx
- * (src/lib/fonts-ready.ts), which fails open after 3s.
+ * (src/lib/fonts-ready.ts), which fails open after 3s; a <noscript> style opens
+ * it without JS. An icon given a smaller explicit box (h-4 w-4) than its 24px
+ * glyph opts out of the clip with overflow-visible.
  */
 @layer base {
   .material-symbols-outlined {

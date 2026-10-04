@@ -114,6 +114,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
         {/* Allowed by the CSP via its sha256 hash (proxy.ts), not a nonce. */}
         <script dangerouslySetInnerHTML={{ __html: FONTS_READY_SCRIPT }} />
+        {/* Without JS the gate never opens; show icons (font-display: block still applies). */}
+        <noscript>
+          <style>{'.material-symbols-outlined{visibility:inherit}'}</style>
+        </noscript>
       </head>
       <body className={inter.variable}>
         {process.env.NEXT_PUBLIC_GTM_ID && (
