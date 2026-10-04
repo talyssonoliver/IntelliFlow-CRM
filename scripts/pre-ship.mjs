@@ -130,6 +130,10 @@ function lcovMissing() {
   return !fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/lcov.info'));
 }
 
+function pythonReportMissing() {
+  return !fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/python-coverage.xml'));
+}
+
 // The silent-skip gate (#658) reads the per-project vitest JSON the `coverage`
 // step writes. Same shape as lcovMissing: a pure downstream-artifact check, NOT a
 // second docker probe — if `coverage` was skipped the manifest is absent and this
@@ -471,17 +475,32 @@ const STEPS = [
     required: !SCOPED_TESTS,
   },
   {
+    // #755: Python tooling (tools/audit, tools/plan, tools/scripts) is in
+    // sonar.sources and measured by SonarCloud from the same Cobertura report
+    // this writes. Running it here lets `diff-coverage` judge changed .py lines
+    // exactly as Sonar will. Both pytest suites take ~15s.
+    id: 'python-coverage',
+    description: 'pytest tools/audit + tools/plan under coverage → python-coverage.xml',
+    cmd: ['node', 'scripts/run-python-coverage.mjs'],
+    required: true,
+  },
+  {
     // Mirror SonarCloud's `new_coverage` (>=80% on the CHANGED lines) LOCALLY,
-    // using the SAME merged lcov. The overall ratchet floor above barely moves
-    // for a small diff, so it cannot catch an under-tested change — this step
-    // can. This is the exact gap that let PR #265 pass pre-ship's coverage gate
-    // while CI's `SonarCloud Scan` / new_coverage went red.
+    // using the SAME merged lcov (and, for .py lines, the Python Cobertura
+    // report above). The overall ratchet floor above barely moves for a small
+    // diff, so it cannot catch an under-tested change — this step can. This is
+    // the exact gap that let PR #265 pass pre-ship's coverage gate while CI's
+    // `SonarCloud Scan` / new_coverage went red.
     id: 'diff-coverage',
     description: 'enforce Sonar new_coverage (>=80% on changed lines vs origin/main)',
     cmd: ['node', 'scripts/check-diff-coverage.mjs'],
-    // Depends on the lcov from `coverage`; if that was skipped, skip too.
-    skip_if: lcovMissing,
-    skip_remediation: 'Run the `coverage` step first (needs the local test DB).',
+    // Needs a report to judge against. Skip only when BOTH are missing: with just
+    // the Python report (the JS `coverage` step could not run), changed .py lines
+    // are still judged (DIFF_COVER_ONLY=py) instead of the whole gate skipping.
+    skip_if: () => lcovMissing() && pythonReportMissing(),
+    env: () => (lcovMissing() ? { DIFF_COVER_ONLY: 'py' } : {}),
+    skip_remediation:
+      'Run the `coverage` step (needs the local test DB) and `python-coverage` first.',
     required: true,
   },
   {
@@ -887,7 +906,10 @@ function runStep(step, prev) {
   }
 
   const start = Date.now();
-  const env = { ...process.env, ...(step.env || {}) };
+  // A step's env may be a function, evaluated now — after earlier steps ran —
+  // when it depends on what they produced (diff-coverage reads which reports exist).
+  const stepEnv = typeof step.env === 'function' ? step.env() : step.env;
+  const env = { ...process.env, ...(stepEnv || {}) };
   // shell:true on Windows so the PATH resolves .cmd/.exe extensions for
   // pnpm / gitleaks / etc. All argv values are hard-coded literals (no
   // user input), so shell injection isn't a concern. POSIX systems use
