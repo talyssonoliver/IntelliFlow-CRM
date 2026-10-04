@@ -339,3 +339,23 @@ describe('resolveTestScope — paths git would quote', () => {
     expect(fs.existsSync(path.join(root, r.files[0]))).toBe(true);
   });
 });
+
+describe('round-2 review regressions', () => {
+  it('does not select tests by a generic file name such as index.ts', () => {
+    const tests = new Map([['a/x.test.ts', "import { y } from './index.ts'"]]);
+    expect(testsReferencingChanges(['packages/q/src/index.ts'], tests)).toEqual([]);
+    // ...but still by its path.
+    const byPath = new Map([['a/y.test.ts', "read('packages/q/src/index.ts')"]]);
+    expect(testsReferencingChanges(['packages/q/src/index.ts'], byPath)).toEqual(['a/y.test.ts']);
+  });
+
+  it('changes the worktree fingerprint when an already-changed file is edited again', () => {
+    const root = makeRepo();
+    write(root, 'packages/a/src/base.ts', 'export const x = 2;\n');
+    const first = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
+    write(root, 'packages/a/src/base.ts', 'export const x = 3;\n');
+    const second = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
+    expect(second.files).toEqual(first.files);
+    expect(second.worktree).not.toBe(first.worktree);
+  });
+});

@@ -378,13 +378,13 @@ async function main() {
     if (projectsToRun.length === 0) {
       console.log('   No changed source files — no project has related tests to run.');
     } else {
-      console.log(`🧪 Running coverage for ${PROJECTS.length} projects sequentially…`);
+      console.log(`🧪 Running coverage for ${projectsToRun.length} projects sequentially…`);
     }
 
     // Run projects one at a time to avoid .tmp race condition
     for (let i = 0; i < projectsToRun.length; i++) {
-      const project = PROJECTS[i];
-      console.log(`\n━━━ [${i + 1}/${PROJECTS.length}] ${project} ━━━`);
+      const project = projectsToRun[i];
+      console.log(`\n━━━ [${i + 1}/${projectsToRun.length}] ${project} ━━━`);
       const result = await runVitest(project);
       projectResults.push(result);
       // Force GC between projects to free memory

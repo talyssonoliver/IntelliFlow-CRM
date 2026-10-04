@@ -291,3 +291,34 @@ describe('importedWorkspaceSpecifiers — side-effect imports (code review on #7
     expect(r.problems.some((p) => p.includes('@intelliflow/b'))).toBe(true);
   });
 });
+
+describe('round-2 review regressions', () => {
+  it('sees an import with a comment inside the parentheses', () => {
+    const src = `await import(/* webpackIgnore: true */ '@intelliflow/partner-sdk');`;
+    expect(importedWorkspaceSpecifiers(src)).toEqual([
+      { name: '@intelliflow/partner-sdk', subpath: '' },
+    ]);
+  });
+
+  it('ignores an import that only appears inside a block comment', () => {
+    expect(importedWorkspaceSpecifiers(`/* require("@intelliflow/old") */ const x = 1;`)).toEqual(
+      []
+    );
+  });
+
+  it('only requires targets behind runtime conditions', () => {
+    expect(
+      declaredEntries({
+        exports: {
+          '.': {
+            types: './dist/index.d.ts',
+            browser: './dist/browser.js',
+            development: './src/index.ts',
+            import: './dist/index.mjs',
+            require: './dist/index.cjs',
+          },
+        },
+      }).sort()
+    ).toEqual(['./dist/index.cjs', './dist/index.mjs']);
+  });
+});

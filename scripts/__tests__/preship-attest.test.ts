@@ -21,7 +21,14 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
-import { assessState, dirtyPaths, PAYLOAD_VERSION } from '../preship-attest.mjs';
+import {
+  assessState,
+  dirtyPaths,
+  PAYLOAD_VERSION,
+  validatePayload,
+  scopeLogicSha256,
+  SCOPE_LOGIC_FILES,
+} from '../preship-attest.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '../..');
@@ -686,5 +693,41 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
     // ...and that state must NOT be attestable: it is an --only subset run.
     const verdict = assessState(state, state.git_head, PRESHIP_HASH);
     expect(verdict.ok).toBe(false);
+  });
+});
+
+// ─── Round-2 code review on #754: the scope logic is pinned too ──────────
+describe('scope-logic pin', () => {
+  it('records scope_logic_sha256 in the payload', () => {
+    const { payload } = assessState(goodState(), HEAD, PRESHIP_HASH, 'c'.repeat(64));
+    expect(payload?.scope_logic_sha256).toBe('c'.repeat(64));
+  });
+
+  it('rejects a payload whose scope logic differs from the checkout', () => {
+    const { payload } = assessState(goodState(), HEAD, PRESHIP_HASH, 'c'.repeat(64));
+    const reasons = validatePayload(payload, HEAD, PRESHIP_HASH, 'd'.repeat(64));
+    expect(reasons.some((r) => r.includes('scope_logic_sha256'))).toBe(true);
+  });
+
+  it('rejects a payload that predates the pin when the checkout has the logic', () => {
+    const { payload } = assessState(goodState(), HEAD, PRESHIP_HASH);
+    const reasons = validatePayload(payload, HEAD, PRESHIP_HASH, 'd'.repeat(64));
+    expect(reasons.some((r) => r.includes('(absent)'))).toBe(true);
+  });
+
+  it('hashes the real scope files, and the hash moves when one changes', () => {
+    const real = scopeLogicSha256(REPO_ROOT);
+    expect(real).toMatch(/^[0-9a-f]{64}$/);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'scope-pin-'));
+    for (const rel of SCOPE_LOGIC_FILES) {
+      fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+      fs.copyFileSync(path.join(REPO_ROOT, rel), path.join(dir, rel));
+    }
+    expect(scopeLogicSha256(dir)).toBe(real);
+    fs.appendFileSync(path.join(dir, SCOPE_LOGIC_FILES[0]), '\n// narrowed\n');
+    expect(scopeLogicSha256(dir)).not.toBe(real);
+    fs.rmSync(path.join(dir, SCOPE_LOGIC_FILES[1]));
+    expect(scopeLogicSha256(dir)).toBeNull();
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 });

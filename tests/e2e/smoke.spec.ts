@@ -135,24 +135,14 @@ test.describe('Smoke Tests', () => {
   });
 
   test.describe('API Health', () => {
-    // Preflight: the API base must answer with JSON. An HTML answer means the
-    // request hit a fallback page or the base URL points at the wrong server;
-    // without this check that surfaced only as `Unexpected token '<'` from
-    // response.json(), naming neither the URL nor the status.
-    test('preflight: API base answers with JSON, not an HTML fallback', async ({
-      request,
-      baseURL,
-    }) => {
-      const response = await request.get('/api/health');
-      await expectJsonResponse(response, baseURL);
-    });
-
     test('should have healthy API endpoint', async ({ request, baseURL }) => {
       // Test API health endpoint
       const response = await request.get('/api/health');
 
-      // Should return valid JSON — checked before parsing, so an HTML answer
-      // fails with the URL and status instead of a JSON syntax error.
+      // Preflight, BEFORE any parse: the API base must answer with JSON. An HTML
+      // answer means the request hit a fallback page or the base URL points at
+      // the wrong server; without this it surfaced only as `Unexpected token '<'`
+      // from response.json(), naming neither the URL nor the status.
       const body = await expectJsonResponse(response, baseURL);
 
       // Should return 200 OK

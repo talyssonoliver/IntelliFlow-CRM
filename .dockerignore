@@ -11,6 +11,11 @@ dist
 # a stale host dist/ in the context would let a local build pass while CI, which
 # has none, fails (or ship stale code).
 **/dist
+# ...and every TypeScript incremental build-info file. These are gitignored, so
+# CI never has them, but on a laptop one records outputs the image does not
+# have (dist/ is excluded above): `tsc --emitDeclarationOnly` then trusts it,
+# emits no .d.ts, and the next package fails TS7016 (seen with worker-shared).
+**/*.tsbuildinfo
 build
 **/build
 coverage

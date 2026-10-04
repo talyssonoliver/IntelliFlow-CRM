@@ -26,11 +26,22 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.user.login != 'dependabot[bot]'
     steps:
-      - uses: actions/checkout@v7
+      # The linter comes from the BASE branch, not the PR: a PR must not be able
+      # to weaken the rule that judges its own text. Only the linter is needed;
+      # commit_msg_lint.py uses the stdlib alone (widen the path if that changes).
+      - name: Check out the base branch's linter
+        uses: actions/checkout@v7
         with:
-          # Only the linter is needed. commit_msg_lint.py uses the stdlib alone;
-          # if it ever imports from outside tools/audit, widen this path.
+          ref: ${{ github.event.pull_request.base.sha }}
           sparse-checkout: tools/audit
+          path: base
+      # Bootstrap only: until a base branch carries --pr-text-file (i.e. before
+      # the PR that introduced it merges), fall back to the PR's copy, loudly.
+      - name: Check out the PR's linter (bootstrap fallback)
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: tools/audit
+          path: head
       - name: Check PR title and body
         # Title and body arrive via env, never interpolated into the script, so
         # PR content cannot inject shell.
@@ -40,4 +51,9 @@ jobs:
         run: |
           set -euo pipefail
           printf '%s\n\n%s\n' "${PR_TITLE:-}" "${PR_BODY:-}" > "$RUNNER_TEMP/pr-text.md"
-          python3 tools/audit/commit_msg_lint.py --pr-text-file "$RUNNER_TEMP/pr-text.md"
+          linter=base/tools/audit/commit_msg_lint.py
+          if ! grep -q -- '--pr-text-file' "$linter"; then
+            echo "::warning::Base branch linter predates --pr-text-file; using the PR's copy (bootstrap)."
+            linter=head/tools/audit/commit_msg_lint.py
+          fi
+          python3 "$linter" --pr-text-file "$RUNNER_TEMP/pr-text.md"

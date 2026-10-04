@@ -53,6 +53,32 @@ import { spawnSync } from 'node:child_process';
 export const PAYLOAD_VERSION = 1;
 export const ATTEST_REF_PREFIX = 'refs/preship/';
 
+/**
+ * Files that decide WHICH tests the gate runs (the local test scope). They live
+ * outside scripts/pre-ship.mjs, so pinning pre-ship.mjs alone would let them be
+ * narrowed under an existing attestation; they are pinned as one more hash.
+ */
+export const SCOPE_LOGIC_FILES = [
+  'scripts/lib/preship-test-scope.mjs',
+  'scripts/run-unit-tests-scoped.mjs',
+  'scripts/run-coverage.js',
+];
+
+/** sha256 over the scope-logic files (name + content), or null if any is absent. */
+export function scopeLogicSha256(repoRoot) {
+  const h = crypto.createHash('sha256');
+  for (const rel of SCOPE_LOGIC_FILES) {
+    let body;
+    try {
+      body = fs.readFileSync(path.join(repoRoot, rel));
+    } catch {
+      return null;
+    }
+    h.update(rel).update(body);
+  }
+  return h.digest('hex');
+}
+
 /** Step verdicts that mean "this step honestly passed". */
 const PASSING = new Set(['PASS', 'CACHED_PASS']);
 
@@ -88,7 +114,7 @@ const PASSING = new Set(['PASS', 'CACHED_PASS']);
  * @param {string} preshipSha256 sha256 of the scripts/pre-ship.mjs that ran
  * @returns {{ok: boolean, reasons: string[], payload: object|null}}
  */
-export function assessState(state, headSha, preshipSha256) {
+export function assessState(state, headSha, preshipSha256, scopeLogicSha = null) {
   const reasons = [];
 
   if (!state || typeof state !== 'object' || Array.isArray(state)) {
@@ -188,6 +214,9 @@ export function assessState(state, headSha, preshipSha256) {
       // scoping ran the full suite.
       test_scope: state.test_scope?.scope ?? 'full',
       preship_sha256: preshipSha256,
+      // Pins the test-scope logic too (see SCOPE_LOGIC_FILES); null outside a
+      // checkout that has it.
+      scope_logic_sha256: scopeLogicSha,
       node: process.version,
       attested_at: new Date().toISOString(),
     },
@@ -198,7 +227,7 @@ export function assessState(state, headSha, preshipSha256) {
  * Validate a payload read back from a published attestation.
  * @returns {string[]} reasons it is unacceptable (empty === acceptable)
  */
-export function validatePayload(payload, sha, preshipSha256) {
+export function validatePayload(payload, sha, preshipSha256, scopeLogicSha = null) {
   const reasons = [];
   if (!payload || typeof payload !== 'object') return ['attestation payload is not JSON'];
   if (payload.v !== PAYLOAD_VERSION) reasons.push(`unsupported payload version ${payload.v}`);
@@ -218,6 +247,13 @@ export function validatePayload(payload, sha, preshipSha256) {
       `payload preship_sha256 ${payload.preship_sha256} does not match the ` +
         `scripts/pre-ship.mjs in this checkout (${preshipSha256}) — the gate that ` +
         'produced the attestation is not the gate at this SHA'
+    );
+  }
+  if (scopeLogicSha && payload.scope_logic_sha256 !== scopeLogicSha) {
+    reasons.push(
+      `payload scope_logic_sha256 ${payload.scope_logic_sha256 ?? '(absent)'} does not match ` +
+        `the test-scope logic in this checkout (${scopeLogicSha}) — the scope that ` +
+        'selected the tests is not the scope at this SHA'
     );
   }
   return reasons;
@@ -296,6 +332,12 @@ function git(args, opts = {}) {
 function fail(lines) {
   for (const l of lines) process.stderr.write(`${l}\n`);
   process.exit(1);
+}
+
+// The checkout the gate script belongs to (<root>/scripts/pre-ship.mjs), so the
+// scope-logic pin is taken from the same tree as the pre-ship.mjs pin.
+function gateRoot(preshipFile) {
+  return path.dirname(path.dirname(path.resolve(preshipFile)));
 }
 
 function sha256File(p) {
@@ -381,7 +423,12 @@ function doPublish(flags, repoRoot, statePath, preshipFile) {
     return 1;
   }
 
-  const { ok, reasons, payload } = assessState(state, head, preshipSha256);
+  const { ok, reasons, payload } = assessState(
+    state,
+    head,
+    preshipSha256,
+    scopeLogicSha256(gateRoot(preshipFile))
+  );
   if (!ok) {
     fail([
       `REFUSED: ${head.slice(0, 9)} has no attestable pre-ship result:`,
@@ -504,7 +551,12 @@ function doVerify(flags, preshipFile) {
     process.stdout.write(`note: ${preshipFile} not readable — gate-version pin not checked.\n`);
   }
 
-  const reasons = validatePayload(payload, sha, preshipSha256);
+  const reasons = validatePayload(
+    payload,
+    sha,
+    preshipSha256,
+    scopeLogicSha256(gateRoot(preshipFile))
+  );
   if (reasons.length > 0) {
     fail([
       `Attestation for ${sha} does not record a full clean gate:`,
@@ -516,7 +568,7 @@ function doVerify(flags, preshipFile) {
 
   process.stdout.write(
     `pre-ship attestation OK for ${sha.slice(0, 9)}: ${payload.mode} gate, ` +
-      `${payload.steps_ok}/${payload.steps_expected} steps, attested ${payload.attested_at}.\n`
+      `${payload.steps_ok}/${payload.steps_expected} steps, test scope ${payload.test_scope ?? 'full'}, attested ${payload.attested_at}.\n`
   );
   return 0;
 }

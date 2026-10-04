@@ -237,7 +237,11 @@ const IS_CI = process.env.CI === 'true' || process.env.CI === '1';
 // locally with PRESHIP_FULL_TESTS=1; also `full` whenever the diff touches
 // something the import graph cannot see (lockfile, package.json, vitest/tsconfig,
 // Prisma schema, test setup). See scripts/lib/preship-test-scope.mjs.
-const TEST_SCOPE = resolveTestScope({ cwd: REPO_ROOT });
+// --help / --list run no step, so they skip resolution (it reads git and every
+// test file).
+const TEST_SCOPE = ['--help', '--list'].some((f) => process.argv.includes(f))
+  ? { scope: 'full', reason: 'not resolved for --help/--list', files: [], base: null }
+  : resolveTestScope({ cwd: REPO_ROOT });
 const SCOPED_TESTS = TEST_SCOPE.scope !== 'full';
 const SCOPE_ENV_VALUE = JSON.stringify(TEST_SCOPE);
 const CI_ONLY_REMEDIATION =
@@ -469,11 +473,15 @@ const STEPS = [
     env: SCOPED_TESTS ? { COVERAGE_RELATED_FILES: JSON.stringify(TEST_SCOPE.files) } : {},
     // Needs a local test DB (the merged run includes the integration project).
     // Without one, degrade to MISSING-required rather than hard-fail against a
-    // possibly-wrong/prod DB.
-    skip_if: dbStackUnavailable,
+    // possibly-wrong/prod DB. With scope `none` there is nothing to measure, so
+    // it is an honest skip that needs no Docker (diff-coverage then has no
+    // coverable changed lines and passes on its own).
+    skip_if: () => TEST_SCOPE.scope === 'none' || dbStackUnavailable(),
     skip_remediation:
-      'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis` and point DATABASE_URL at the LOCAL test DB (never prod). Then re-run, or set PRESHIP_ALLOW_MISSING=1 to acknowledge the gap for this push.',
-    required: true,
+      TEST_SCOPE.scope === 'none'
+        ? 'No source file changed and no test names a changed file — nothing to cover.'
+        : 'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis` and point DATABASE_URL at the LOCAL test DB (never prod). Then re-run, or set PRESHIP_ALLOW_MISSING=1 to acknowledge the gap for this push.',
+    required: TEST_SCOPE.scope !== 'none',
   },
   {
     // Enforce the SAME ratchet floor CI enforces, via the SAME script
@@ -502,8 +510,10 @@ const STEPS = [
     id: 'diff-coverage',
     description: 'enforce Sonar new_coverage (>=80% on changed lines vs origin/main)',
     cmd: ['node', 'scripts/check-diff-coverage.mjs'],
-    // Depends on the lcov from `coverage`; if that was skipped, skip too.
-    skip_if: lcovMissing,
+    // Depends on the lcov from `coverage`; if that was skipped, skip too. With
+    // scope `none` it runs anyway: it exits PASS before reading any lcov when no
+    // coverable line changed, so it needs no coverage run (and no Docker).
+    skip_if: () => TEST_SCOPE.scope !== 'none' && lcovMissing(),
     skip_remediation: 'Run the `coverage` step first (needs the local test DB).',
     required: true,
   },
@@ -859,7 +869,13 @@ function loadPreviousState(head) {
 // What a cached result depends on. A state file from before test scoping has no
 // test_scope; it ran the full suite.
 function scopeKey(scope) {
-  return { scope: scope?.scope ?? 'full', files: scope?.files ?? [] };
+  // `worktree` fingerprints uncommitted content, so re-editing an already-listed
+  // file invalidates the cached PASS even though HEAD and the file list match.
+  return {
+    scope: scope?.scope ?? 'full',
+    files: scope?.files ?? [],
+    worktree: scope?.worktree ?? null,
+  };
 }
 
 function ensureDirs() {

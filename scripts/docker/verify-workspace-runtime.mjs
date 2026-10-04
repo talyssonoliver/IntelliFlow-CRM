@@ -34,9 +34,14 @@ const SPECIFIER =
   /\b(?:from|import|require)\s*(?:\(\s*)?["'](@intelliflow\/[a-z0-9._-]+)(?:\/([^"']+))?["']/g;
 
 /** Every @intelliflow specifier imported by a source, as {name, subpath} ('' = root). */
+// Block comments are removed first: they can sit inside a real import
+// (`import(/* webpackIgnore: true */ '@intelliflow/x')`) or hold a commented-out
+// one that must not fail the build.
+const BLOCK_COMMENT = /\/\*[\s\S]*?\*\//g;
+
 export function importedWorkspaceSpecifiers(source) {
   const out = new Map();
-  for (const m of source.matchAll(SPECIFIER)) {
+  for (const m of source.replace(BLOCK_COMMENT, ' ').matchAll(SPECIFIER)) {
     const spec = { name: m[1], subpath: m[2] ?? '' };
     out.set(`${spec.name}|${spec.subpath}`, spec);
   }
@@ -50,11 +55,18 @@ export function importedWorkspacePackages(source) {
 
 const isTypesOnly = (f) => /\.d\.[cm]?ts$/.test(f);
 
+// Export conditions Node can select at runtime in this image. Others (types,
+// browser, development, react-native, source, …) are never loaded by `node`, so
+// a target behind them need not ship and must not fail the build.
+const RUNTIME_CONDITIONS = new Set(['import', 'require', 'node', 'module', 'default']);
+
 function collectTargets(node, star, out) {
   if (typeof node === 'string') out.add(star === undefined ? node : node.replaceAll('*', star));
   else if (Array.isArray(node)) for (const n of node) collectTargets(n, star, out);
   else if (node && typeof node === 'object') {
-    for (const [k, v] of Object.entries(node)) if (k !== 'types') collectTargets(v, star, out);
+    for (const [k, v] of Object.entries(node)) {
+      if (RUNTIME_CONDITIONS.has(k)) collectTargets(v, star, out);
+    }
   }
 }
 

@@ -40,12 +40,19 @@ echo "⚠️  python not found — running basic format check only (CI enforces 
 COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
 # AI attribution is never allowed, even on the degraded no-python path, and is
 # checked BEFORE the merge/revert early exit below. Mirrors _is_ai_attribution in
-# tools/audit/commit_msg_lint.py: footers, session trailers/links, bot addresses,
-# and co-author trailers whose whole name is an AI tool (a human co-author whose
-# name merely contains a tool word, e.g. "Claude Dupont", passes).
-AI_RE='generated (with|by).*(claude|anthropic|copilot|cursor|codex|chatgpt|gemini)|claude-session:|claude\.ai/code|noreply@anthropic\.com|copilot@users\.noreply\.github\.com|cursoragent@cursor\.com'
-AI_COAUTHOR_RE='^[[:space:]]*co-authored-by:[[:space:]]*((github|openai|google)[[:space:]]+)?(claude|anthropic|copilot|cursor|codex|chatgpt|gemini)([[:space:]]+(agent|code|assist|opus|sonnet|haiku|fable|pro|flash|ultra|mini|max|ai|[0-9][0-9.]*))*[[:space:]]*(<|$)'
-if printf '%s\n' "$COMMIT_MSG" | grep -v '^#' | grep -qiE "$AI_RE|$AI_COAUTHOR_RE"; then
+# tools/audit/commit_msg_lint.py: "Generated/Created/... with|by|using|via <tool>"
+# footers (tool right after the preposition, so prose passes), session
+# trailers/links, bot addresses, and co-author trailers whose whole name — with
+# "(1M context)"/"[1M]" labels removed — is an AI tool ("Claude Dupont" passes).
+# Like the python path, only the author's message is scanned: `#` lines are
+# dropped and everything below the `git commit -v` scissors line is ignored.
+AI_TOOLS='(claude|anthropic|copilot|cursor|codex|chatgpt|gemini|devin|windsurf|aider|codeium|tabnine)'
+AI_RE="(^|[^a-z])(generated|created|written|authored|produced)[[:space:]]+(with|by|using|via)[[:space:]]+(\[|the[[:space:]]+|an?[[:space:]]+)?${AI_TOOLS}([^a-z]|\$)|(^|[^a-z0-9-])claude-session:|claude\.ai/code|noreply@anthropic\.com|copilot@users\.noreply\.github\.com|cursoragent@cursor\.com"
+AI_COAUTHOR_RE="^[[:space:]]*co-authored-by:[[:space:]]*((github|openai|google)[[:space:]]+)?${AI_TOOLS}([[:space:]]+(agent|code|assist|opus|sonnet|haiku|fable|pro|flash|ultra|mini|max|ai|bot|[0-9][0-9.]*))*[[:space:]]*(<|\$)"
+AUTHOR_TEXT=$(printf '%s\n' "$COMMIT_MSG" | awk '/^#.*>8/ { exit } !/^#/ { print }')
+NO_LABELS=$(printf '%s\n' "$AUTHOR_TEXT" | sed -E 's/\([^)]*\)|\[[^]]*\]/ /g')
+if printf '%s\n' "$AUTHOR_TEXT" | grep -qiE "$AI_RE" ||
+  printf '%s\n' "$NO_LABELS" | grep -qiE "$AI_COAUTHOR_RE"; then
   echo "❌ Commit message carries AI attribution (co-author trailer, 'Generated with …'"
   echo "   footer or Claude session link). Repo policy forbids it — remove the line."
   exit 1

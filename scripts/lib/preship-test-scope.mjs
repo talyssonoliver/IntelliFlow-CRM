@@ -25,7 +25,8 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 export const DEFAULT_BASE_REF = 'origin/main';
@@ -86,9 +87,14 @@ function isTestRelevant(f) {
  * (`'git-destructive-guard.mjs'`, `'PAGE_MAP_AND_FLOWS.md'`), its repo path,
  * and its folder path (`'docs/design'` for tests that walk a directory).
  */
+// Names so common that matching them by name would select a large share of the
+// suite (and push the run to `full`): for these, only the path needles apply.
+const GENERIC_BASENAME = /^(index|types|utils|constants|helpers)\.(ts|tsx|js|jsx|mjs|cjs)$/;
+
 function referenceNeedles(file) {
   const parts = file.split('/');
-  const needles = [parts.at(-1), file];
+  const base = parts.at(-1);
+  const needles = [GENERIC_BASENAME.test(base) ? '' : base, file];
   if (parts.length > 2) needles.push(parts.slice(0, -1).join('/'));
   return needles.filter((n) => n && n.length >= 4);
 }
@@ -270,7 +276,26 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
     // The Python audit tooling has pytest suites Vitest never runs; pre-ship's
     // audit-pytest step keys on this. (A `full` scope runs them regardless.)
     auditChanged: [...changed, ...deleted].some((f) => f.startsWith('tools/audit/')),
+    // Fingerprint of the uncommitted content the tests will run against. Part
+    // of pre-ship's cache key, so editing an already-changed file again (same
+    // file list, same HEAD) re-runs the test steps instead of reusing a PASS.
+    worktree: worktreeFingerprint(cwd, nulFields(untracked)),
   };
+}
+
+/** Hash of tracked uncommitted changes plus untracked files' size and mtime. */
+function worktreeFingerprint(cwd, untracked) {
+  const h = createHash('sha256');
+  h.update(git(['diff', 'HEAD', '--binary'], cwd) ?? 'diff-failed');
+  for (const f of [...untracked].sort()) {
+    try {
+      const st = statSync(path.join(cwd, f));
+      h.update(JSON.stringify([f, st.size, st.mtimeMs]));
+    } catch {
+      h.update(JSON.stringify([f, 'gone']));
+    }
+  }
+  return h.digest('hex').slice(0, 16);
 }
 
 /**
