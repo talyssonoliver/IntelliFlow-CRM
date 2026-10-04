@@ -94,6 +94,19 @@ function reportProgressFailure(job: object): (error: unknown) => void {
   };
 }
 
+/**
+ * Every progress write goes through here: awaited inside try/catch, so a
+ * rejection AND a synchronous throw are both logged (once per job) instead of
+ * failing a reindex whose indexing work already succeeded.
+ */
+async function safeUpdateProgress(job: Job, progress: ReindexJobProgress): Promise<void> {
+  try {
+    await job.updateProgress(progress);
+  } catch (error) {
+    reportProgressFailure(job)(error);
+  }
+}
+
 export class ReindexWorker {
   private worker: Worker<ReindexJobData, ReindexJobResult> | null = null;
   private queue: Queue<ReindexJobData, ReindexJobResult> | null = null;
@@ -253,7 +266,7 @@ export class ReindexWorker {
     }
 
     // Final progress update
-    await job.updateProgress({
+    await safeUpdateProgress(job, {
       stage: 'complete',
       overallProgress: 100,
     } as ReindexJobProgress);
@@ -291,7 +304,7 @@ export class ReindexWorker {
     job: Job<ReindexJobData, ReindexJobResult>,
     data: ReindexJobData
   ): Promise<BatchIndexResult> {
-    await job.updateProgress({
+    await safeUpdateProgress(job, {
       stage: 'documents',
       overallProgress: 0,
     } as ReindexJobProgress);
@@ -306,13 +319,11 @@ export class ReindexWorker {
           ? (progress.processed / progress.total) * 50
           : (progress.processed / progress.total) * 100;
 
-      job
-        .updateProgress({
-          stage: 'documents',
-          documents: progress,
-          overallProgress,
-        } as ReindexJobProgress)
-        .catch(reportProgressFailure(job));
+      void safeUpdateProgress(job, {
+        stage: 'documents',
+        documents: progress,
+        overallProgress,
+      } as ReindexJobProgress);
     });
   }
 
@@ -324,7 +335,7 @@ export class ReindexWorker {
     job: Job<ReindexJobData, ReindexJobResult>,
     data: ReindexJobData
   ): Promise<BatchIndexResult> {
-    await job.updateProgress({
+    await safeUpdateProgress(job, {
       stage: 'notes',
       overallProgress: data.indexType === 'all' ? 50 : 0,
     } as ReindexJobProgress);
@@ -337,13 +348,11 @@ export class ReindexWorker {
       const baseProgress = data.indexType === 'all' ? 50 : 0;
       const overallProgress = baseProgress + (progress.processed / progress.total) * 50;
 
-      job
-        .updateProgress({
-          stage: 'notes',
-          notes: progress,
-          overallProgress,
-        } as ReindexJobProgress)
-        .catch(reportProgressFailure(job));
+      void safeUpdateProgress(job, {
+        stage: 'notes',
+        notes: progress,
+        overallProgress,
+      } as ReindexJobProgress);
     });
   }
 
