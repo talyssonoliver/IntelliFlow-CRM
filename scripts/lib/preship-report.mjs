@@ -72,3 +72,28 @@ export function summaryText({ passed, warned, failed, total }) {
   if (failed > 0) parts.push(`${failed} failed`);
   return parts.join(', ');
 }
+
+/**
+ * `--only=<ids>` must not erase the rest of the cached run. Merge the freshly
+ * run steps into the existing state for the same HEAD (and same test scope —
+ * the caller checks that); every other step keeps its cached result. When there
+ * is no usable previous state, the new state is returned unchanged.
+ *
+ * Provenance fields (only/mode/verdict) stay those of the NEW run: a merged
+ * file must never read as a complete gate unless a full run produced it. The
+ * attestation re-derives completeness from `only` + `steps`, so we keep
+ * `only` set whenever this run was a subset run.
+ */
+export function mergeOnlyState(prev, next, stepIds, ranIds) {
+  if (!prev || !Array.isArray(prev.steps) || prev.git_head !== next.git_head) return next;
+  const ran = new Map(next.steps.filter((s) => ranIds.has(s.id)).map((s) => [s.id, s]));
+  const prevById = new Map(prev.steps.map((s) => [s.id, s]));
+  const steps = stepIds.map((id) => {
+    if (ran.has(id)) return ran.get(id);
+    const old = prevById.get(id);
+    // Only genuine results survive; honest skips are re-derived by the next run.
+    if (old && (old.verdict === 'PASS' || old.verdict === 'FAIL')) return old;
+    return next.steps.find((s) => s.id === id) ?? { id, verdict: 'NOT_RUN', duration_ms: 0 };
+  });
+  return { ...next, steps };
+}

@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
-import { displayVerdict, stepLine, summarize, summaryText } from '../lib/preship-report.mjs';
+import {
+  displayVerdict,
+  stepLine,
+  summarize,
+  summaryText,
+  mergeOnlyState,
+} from '../lib/preship-report.mjs';
 
 const fmt = (ms: number) => `${ms}ms`;
 
@@ -33,5 +39,44 @@ describe('printer truthfulness', () => {
     const c = summarize(results, ['a', 'b', 'audit', 'docs-audit']);
     expect(c).toEqual({ passed: 2, warned: 2, failed: 0, total: 4 });
     expect(summaryText(c)).toBe('2/4 steps passed, 2 advisory warnings');
+  });
+});
+
+describe('--only merge', () => {
+  const ids = ['a', 'b', 'c'];
+  const prev = {
+    git_head: 'h',
+    steps: [
+      { id: 'a', verdict: 'PASS', duration_ms: 10 },
+      { id: 'b', verdict: 'PASS', duration_ms: 20 },
+      { id: 'c', verdict: 'FAIL', required: true, duration_ms: 30 },
+    ],
+  };
+  const next = {
+    git_head: 'h',
+    only: ['c'],
+    steps: [
+      { id: 'a', verdict: 'SKIPPED_NOT_SELECTED', duration_ms: 0 },
+      { id: 'b', verdict: 'SKIPPED_NOT_SELECTED', duration_ms: 0 },
+      { id: 'c', verdict: 'PASS', duration_ms: 99 },
+    ],
+  };
+
+  it('keeps other steps cached and replaces the selected one', () => {
+    const m = mergeOnlyState(prev, next, ids, new Set(['c']));
+    expect(m.steps.map((s: any) => [s.id, s.verdict])).toEqual([
+      ['a', 'PASS'],
+      ['b', 'PASS'],
+      ['c', 'PASS'],
+    ]);
+    expect(m.only).toEqual(['c']);
+  });
+
+  it('ignores previous state from a different HEAD', () => {
+    expect(mergeOnlyState({ ...prev, git_head: 'other' }, next, ids, new Set(['c']))).toBe(next);
+  });
+
+  it('returns the new state when there is no previous state', () => {
+    expect(mergeOnlyState(null, next, ids, new Set(['c']))).toBe(next);
   });
 });

@@ -77,7 +77,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
-import { stepLine, summarize, summaryText, isAdvisoryFail } from './lib/preship-report.mjs';
+import {
+  stepLine,
+  summarize,
+  summaryText,
+  mergeOnlyState,
+  isAdvisoryFail,
+} from './lib/preship-report.mjs';
 
 // Resolve REPO_ROOT from git rather than cwd so the script behaves
 // identically whether invoked from the repo root, from a subdirectory,
@@ -1057,7 +1063,20 @@ function main() {
     verdict,
     steps: results,
   };
-  fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2));
+  // --only must not wipe the other steps' cached results: merge into the
+  // existing state for this HEAD so the next full run can still resume.
+  let persisted = state;
+  if (flags.only && prev) {
+    persisted = mergeOnlyState(
+      prev,
+      state,
+      STEPS.map((s) => s.id),
+      new Set(flags.only)
+    );
+    const mFails = persisted.steps.filter((r) => r.verdict === 'FAIL' && r.required !== false);
+    persisted.verdict = mFails.length === 0 && missing.length === 0 ? 'PASS' : 'FAIL';
+  }
+  fs.writeFileSync(STATE_PATH, JSON.stringify(persisted, null, 2));
 
   process.stdout.write('\n');
   // Under --full, report the two phases as SEPARATE verdict lines so a green
