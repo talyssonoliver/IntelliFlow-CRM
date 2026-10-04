@@ -477,3 +477,18 @@ describe('final adversarial review: packages imported through dist/', () => {
     ).toEqual(['apps/api/partner.router.test.ts']);
   });
 });
+
+describe('package needles match whole specifiers only', () => {
+  it('@intelliflow/ui does not select a test that only imports @intelliflow/ui-kit', () => {
+    const tests = new Map([
+      ['a.test.ts', "import { x } from '@intelliflow/ui-kit';"],
+      ['b.test.ts', "import { Button } from '@intelliflow/ui';"],
+      ['c.test.ts', "import { y } from '@intelliflow/ui/button';"],
+    ]);
+    expect(
+      testsReferencingChanges(['packages/ui/src/x.tsx'], tests, {
+        packageNames: ['@intelliflow/ui'],
+      })
+    ).toEqual(['b.test.ts', 'c.test.ts']);
+  });
+});

@@ -131,11 +131,6 @@ export function testsReferencingChanges(
         .map(normalise)
         .filter((f) => !TEST_FILE.test(f))
         .flatMap(referenceNeedles),
-      // Workspace packages whose imports resolve to their built dist/ (not
-      // aliased to src/ in vitest.config.ts): `vitest related` cannot link a
-      // test importing `@intelliflow/partner-sdk` to packages/partner-sdk/src,
-      // so tests that import the package by name are selected here.
-      ...packageNames,
       ...deleted.map(normalise).flatMap((f) => [
         ...referenceNeedles(f),
         // importers omit the extension: './contract.test'
@@ -150,10 +145,19 @@ export function testsReferencingChanges(
       ]),
     ]),
   ];
-  if (needles.length === 0) return [];
+  // Workspace packages whose imports resolve to their built dist/ (not aliased
+  // to src/ in vitest.config.ts): `vitest related` cannot link a test importing
+  // `@intelliflow/partner-sdk` to packages/partner-sdk/src, so tests that import
+  // the package by name are selected. Matched only as a whole specifier (quote
+  // or `/` after it), so `@intelliflow/ui` does not also match `@intelliflow/ui-kit`.
+  const escapeRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const packagePatterns = packageNames.map((n) => new RegExp(escapeRe(n) + '(?=[\'"`/])'));
+  if (needles.length === 0 && packagePatterns.length === 0) return [];
   const out = [];
   for (const [testPath, text] of testContents) {
-    if (needles.some((n) => text.includes(n))) out.push(normalise(testPath));
+    if (needles.some((n) => text.includes(n)) || packagePatterns.some((re) => re.test(text))) {
+      out.push(normalise(testPath));
+    }
   }
   return out.sort();
 }
