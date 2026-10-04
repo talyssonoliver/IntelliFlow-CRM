@@ -154,6 +154,26 @@ def test_prose_mentioning_a_tool_word_passes(line):
     assert code == 0, out
 
 
+@pytest.mark.parametrize(
+    "line",
+    [
+        "Generated with OpenAI Codex",
+        "Generated with GitHub Copilot",
+        "Created with Anthropic's Claude",
+        "Co-authored-by: Claude Mythos <x@example.com>",
+    ],
+)
+def test_review_round_three_ai_shapes_fail(line):
+    # Round-3 reviews on #754: vendor-prefixed tool names, unlisted model names.
+    code, out = _lint(VALID_HEADER + "Body text.\n\n" + line + "\n")
+    assert code == 1, out
+
+
+def test_vendor_prefix_alone_is_not_attribution():
+    code, out = _lint(VALID_HEADER + "Generated with GitHub Actions, then reviewed.\n")
+    assert code == 0, out
+
+
 def test_attribution_in_a_merge_commit_still_fails():
     # Merge/revert subjects skip the format rules, never the attribution rule.
     code, out = _lint("Merge branch 'x'\n\nClaude-Session: https://claude.ai/code/session_1\n")

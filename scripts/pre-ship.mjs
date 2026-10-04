@@ -76,7 +76,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
+import { scopeLogicSha256 } from './preship-attest.mjs';
+
+function sha256OfFile(p) {
+  try {
+    return crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+  } catch {
+    return null;
+  }
+}
 
 // Resolve REPO_ROOT from git rather than cwd so the script behaves
 // identically whether invoked from the repo root, from a subdirectory,
@@ -237,11 +248,26 @@ const IS_CI = process.env.CI === 'true' || process.env.CI === '1';
 // locally with PRESHIP_FULL_TESTS=1; also `full` whenever the diff touches
 // something the import graph cannot see (lockfile, package.json, vitest/tsconfig,
 // Prisma schema, test setup). See scripts/lib/preship-test-scope.mjs.
-// --help / --list run no step, so they skip resolution (it reads git and every
-// test file).
-const TEST_SCOPE = ['--help', '--list'].some((f) => process.argv.includes(f))
-  ? { scope: 'full', reason: 'not resolved for --help/--list', files: [], base: null }
-  : resolveTestScope({ cwd: REPO_ROOT });
+// Resolution reads git and every test file, so it is skipped when no step that
+// consumes the scope will run: --help, --list, or an --only subset without one.
+const SCOPE_CONSUMERS = [
+  'audit-pytest',
+  'unit-tests',
+  'coverage',
+  'coverage-floor',
+  'diff-coverage',
+  'infra-skip-gate',
+];
+const ONLY_ARG = process.argv.find((a) => a.startsWith('--only='));
+const SCOPE_NEEDED =
+  !['--help', '--list'].some((f) => process.argv.includes(f)) &&
+  (!ONLY_ARG ||
+    ONLY_ARG.slice('--only='.length)
+      .split(',')
+      .some((id) => SCOPE_CONSUMERS.includes(id)));
+const TEST_SCOPE = SCOPE_NEEDED
+  ? resolveTestScope({ cwd: REPO_ROOT })
+  : { scope: 'full', reason: 'not resolved (no test step selected)', files: [], base: null };
 const SCOPED_TESTS = TEST_SCOPE.scope !== 'full';
 const SCOPE_ENV_VALUE = JSON.stringify(TEST_SCOPE);
 const CI_ONLY_REMEDIATION =
@@ -1102,6 +1128,11 @@ function main() {
     // Which tests the test steps covered: `full`, or `related`/`none` with the
     // changed files they were selected from. Carried into the attestation.
     test_scope: TEST_SCOPE,
+    // The gate code AS IT RAN, pinned at run time. preship-attest.mjs refuses to
+    // publish when the checkout no longer matches — otherwise a run with a
+    // narrowed scope (or gate) could be attested after restoring the files.
+    preship_sha256: sha256OfFile(fileURLToPath(import.meta.url)),
+    scope_logic_sha256: scopeLogicSha256(REPO_ROOT),
     started_at: new Date(totalStart).toISOString(),
     completed_at: new Date().toISOString(),
     duration_ms: totalDuration,

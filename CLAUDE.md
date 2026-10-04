@@ -158,7 +158,9 @@ show "pending" status. Never populate fields with fake values.
 ### Never Skip Build Validation
 
 ALL 4 validations are NON-NEGOTIABLE: TypeScript, Tests, Lint, **Build**.
-"Next.js compiles on demand" is NOT a valid reason to skip build.
+"Next.js compiles on demand" is NOT a valid reason to skip build. "Tests" on a
+laptop means the tests related to your change (pre-ship's test scope, below);
+the full suite is not skipped, it runs on CI for every PR and stays required.
 
 ### Pre-ship Gate Is Not Skippable
 

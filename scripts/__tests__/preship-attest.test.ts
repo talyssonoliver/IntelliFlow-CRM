@@ -38,11 +38,16 @@ const PRESHIP = path.join(REPO_ROOT, 'scripts/pre-ship.mjs');
 const HEAD = 'a'.repeat(40);
 const OTHER = 'b'.repeat(40);
 const PRESHIP_HASH = crypto.createHash('sha256').update(fs.readFileSync(PRESHIP)).digest('hex');
+// The real checkout's scope-logic pin; the CLI tests attest against this repo.
+const SCOPE_HASH = scopeLogicSha256(REPO_ROOT);
 
 /** A state object that SHOULD attest: full standard run, everything passed. */
 function goodState(over: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     git_head: HEAD,
+    // Run-time pins pre-ship.mjs records; they must match the checkout.
+    preship_sha256: PRESHIP_HASH,
+    scope_logic_sha256: SCOPE_HASH,
     verdict: 'PASS',
     mode: 'standard',
     allow_missing: false,
@@ -57,7 +62,8 @@ function goodState(over: Record<string, unknown> = {}): Record<string, unknown> 
   };
 }
 
-const assess = (state: unknown, head = HEAD, hash = PRESHIP_HASH) => assessState(state, head, hash);
+const assess = (state: unknown, head = HEAD, hash = PRESHIP_HASH, scope = SCOPE_HASH) =>
+  assessState(state, head, hash, scope);
 
 // ─── assessState: the honest re-derivation ────────────────────────────────
 
@@ -664,6 +670,7 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
       path.join(REPO_ROOT, 'scripts/lib/preship-test-scope.mjs'),
       path.join(dir, 'scripts/lib/preship-test-scope.mjs')
     );
+    fs.copyFileSync(ATTEST, path.join(dir, 'scripts/preship-attest.mjs'));
     git(['add', '-A']);
     git(['commit', '-q', '-m', 'seed']);
 
@@ -689,6 +696,8 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
     expect(state.expected_step_ids).toContain('build');
     // No origin/main in the throwaway repo, so the scope cannot narrow: full.
     expect(state.test_scope.scope).toBe('full');
+    // The gate pins itself as it ran.
+    expect(state.preship_sha256).toBe(PRESHIP_HASH);
 
     // ...and that state must NOT be attestable: it is an --only subset run.
     const verdict = assessState(state, state.git_head, PRESHIP_HASH);
@@ -698,21 +707,47 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
 
 // ─── Round-2 code review on #754: the scope logic is pinned too ──────────
 describe('scope-logic pin', () => {
+  const C = 'c'.repeat(64);
+  const D = 'd'.repeat(64);
+
   it('records scope_logic_sha256 in the payload', () => {
-    const { payload } = assessState(goodState(), HEAD, PRESHIP_HASH, 'c'.repeat(64));
-    expect(payload?.scope_logic_sha256).toBe('c'.repeat(64));
+    const { payload } = assess(goodState({ scope_logic_sha256: C }), HEAD, PRESHIP_HASH, C);
+    expect(payload?.scope_logic_sha256).toBe(C);
   });
 
   it('rejects a payload whose scope logic differs from the checkout', () => {
-    const { payload } = assessState(goodState(), HEAD, PRESHIP_HASH, 'c'.repeat(64));
-    const reasons = validatePayload(payload, HEAD, PRESHIP_HASH, 'd'.repeat(64));
+    const { payload } = assess(goodState({ scope_logic_sha256: C }), HEAD, PRESHIP_HASH, C);
+    const reasons = validatePayload(payload, HEAD, PRESHIP_HASH, D);
     expect(reasons.some((r) => r.includes('scope_logic_sha256'))).toBe(true);
   });
 
   it('rejects a payload that predates the pin when the checkout has the logic', () => {
-    const { payload } = assessState(goodState(), HEAD, PRESHIP_HASH);
-    const reasons = validatePayload(payload, HEAD, PRESHIP_HASH, 'd'.repeat(64));
+    const { payload } = assess(goodState({ scope_logic_sha256: null }), HEAD, PRESHIP_HASH, null);
+    const reasons = validatePayload(payload, HEAD, PRESHIP_HASH, D);
     expect(reasons.some((r) => r.includes('(absent)'))).toBe(true);
+  });
+
+  it('does not let a checkout missing a pinned file switch the check off', () => {
+    const { payload } = assess(goodState({ scope_logic_sha256: C }), HEAD, PRESHIP_HASH, C);
+    expect(validatePayload(payload, HEAD, PRESHIP_HASH, null).length).toBeGreaterThan(0);
+  });
+
+  // Round-3 adversarial review: pin AS IT RAN, not as it is at publish time.
+  it('refuses to attest a run whose scope logic differs from the checkout', () => {
+    const r = assess(goodState({ scope_logic_sha256: C }), HEAD, PRESHIP_HASH, D);
+    expect(r.ok).toBe(false);
+    expect(r.reasons.join(' ')).toContain('test-scope logic that ran');
+  });
+
+  it('refuses to attest a run whose gate script differs from the checkout', () => {
+    const r = assess(goodState({ preship_sha256: 'e'.repeat(64) }));
+    expect(r.ok).toBe(false);
+    expect(r.reasons.join(' ')).toContain('gate that ran');
+  });
+
+  it('refuses a state file that predates the run-time pins', () => {
+    const r = assess(goodState({ preship_sha256: undefined, scope_logic_sha256: undefined }));
+    expect(r.ok).toBe(false);
   });
 
   it('hashes the real scope files, and the hash moves when one changes', () => {

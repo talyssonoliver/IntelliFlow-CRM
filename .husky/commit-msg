@@ -47,8 +47,8 @@ COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
 # Like the python path, only the author's message is scanned: `#` lines are
 # dropped and everything below the `git commit -v` scissors line is ignored.
 AI_TOOLS='(claude|anthropic|copilot|cursor|codex|chatgpt|gemini|devin|windsurf|aider|codeium|tabnine)'
-AI_RE="(^|[^a-z])(generated|created|written|authored|produced)[[:space:]]+(with|by|using|via)[[:space:]]+(\[|the[[:space:]]+|an?[[:space:]]+)?${AI_TOOLS}([^a-z]|\$)|(^|[^a-z0-9-])claude-session:|claude\.ai/code|noreply@anthropic\.com|copilot@users\.noreply\.github\.com|cursoragent@cursor\.com"
-AI_COAUTHOR_RE="^[[:space:]]*co-authored-by:[[:space:]]*((github|openai|google)[[:space:]]+)?${AI_TOOLS}([[:space:]]+(agent|code|assist|opus|sonnet|haiku|fable|pro|flash|ultra|mini|max|ai|bot|[0-9][0-9.]*))*[[:space:]]*(<|\$)"
+AI_RE="(^|[^a-z])(generated|created|written|authored|produced)[[:space:]]+(with|by|using|via)[[:space:]]+(\[|the[[:space:]]+|an?[[:space:]]+)?((openai|github|google|anthropic('s)?)[[:space:]]+)?${AI_TOOLS}([^a-z]|\$)|(^|[^a-z0-9-])claude-session:|claude\.ai/code|noreply@anthropic\.com|copilot@users\.noreply\.github\.com|cursoragent@cursor\.com"
+AI_COAUTHOR_RE="^[[:space:]]*co-authored-by:[[:space:]]*((github|openai|google)[[:space:]]+)?${AI_TOOLS}([[:space:]]+(agent|code|assist|opus|sonnet|haiku|fable|mythos|pro|flash|ultra|mini|max|ai|bot|[0-9][0-9.]*))*[[:space:]]*(<|\$)"
 AUTHOR_TEXT=$(printf '%s\n' "$COMMIT_MSG" | awk '/^#.*>8/ { exit } !/^#/ { print }')
 NO_LABELS=$(printf '%s\n' "$AUTHOR_TEXT" | sed -E 's/\([^)]*\)|\[[^]]*\]/ /g')
 if printf '%s\n' "$AUTHOR_TEXT" | grep -qiE "$AI_RE" ||

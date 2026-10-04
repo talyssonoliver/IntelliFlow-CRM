@@ -2,14 +2,23 @@ name: PR Attribution
 
 # Repo policy: AI assistance is a tool, not a co-author. Commit messages have
 # been checked for this since the audit linter landed, but PR text never was:
-# #754 carried a "Generated with Claude Code" footer and a Claude session link
-# in its body with every check green. This runs the SAME rule
-# (tools/audit/commit_msg_lint.py --pr-text-file) over the PR title and body.
+# #754 carried an AI-tool footer and a session link in its body with every
+# check green. This runs the SAME rule (tools/audit/commit_msg_lint.py
+# --pr-text-file) over the PR title and body.
+#
+# pull_request_target, deliberately: the workflow definition AND the linter come
+# from the BASE branch, so a PR cannot rewrite this file or weaken the linter to
+# pass its own check (with plain pull_request the PR's copy of this workflow
+# would run). This is safe here because no PR code is ever checked out or run:
+# the only PR input is the title/body, passed through env and written to a file.
+# Read-only token, no secrets.
 #
 # Its own workflow, not a step in pr-checks.yml, so it can re-run on `edited`
 # (a body changed after opening) without re-running pr-checks' heavier jobs.
+# The first PR that adds this file is not checked by it (the base has no copy
+# yet); every later PR is.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, edited, synchronize, reopened, ready_for_review]
     branches: [main, develop]
 
@@ -26,22 +35,14 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.user.login != 'dependabot[bot]'
     steps:
-      # The linter comes from the BASE branch, not the PR: a PR must not be able
-      # to weaken the rule that judges its own text. Only the linter is needed;
-      # commit_msg_lint.py uses the stdlib alone (widen the path if that changes).
-      - name: Check out the base branch's linter
-        uses: actions/checkout@v7
+      # BASE branch only (the default ref for pull_request_target). Only the
+      # linter is needed; commit_msg_lint.py uses the stdlib alone (widen the
+      # sparse path if that changes).
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           sparse-checkout: tools/audit
-          path: base
-      # Bootstrap only: until a base branch carries --pr-text-file (i.e. before
-      # the PR that introduced it merges), fall back to the PR's copy, loudly.
-      - name: Check out the PR's linter (bootstrap fallback)
-        uses: actions/checkout@v7
-        with:
-          sparse-checkout: tools/audit
-          path: head
+          persist-credentials: false
       - name: Check PR title and body
         # Title and body arrive via env, never interpolated into the script, so
         # PR content cannot inject shell.
@@ -51,9 +52,4 @@ jobs:
         run: |
           set -euo pipefail
           printf '%s\n\n%s\n' "${PR_TITLE:-}" "${PR_BODY:-}" > "$RUNNER_TEMP/pr-text.md"
-          linter=base/tools/audit/commit_msg_lint.py
-          if ! grep -q -- '--pr-text-file' "$linter"; then
-            echo "::warning::Base branch linter predates --pr-text-file; using the PR's copy (bootstrap)."
-            linter=head/tools/audit/commit_msg_lint.py
-          fi
-          python3 "$linter" --pr-text-file "$RUNNER_TEMP/pr-text.md"
+          python3 tools/audit/commit_msg_lint.py --pr-text-file "$RUNNER_TEMP/pr-text.md"

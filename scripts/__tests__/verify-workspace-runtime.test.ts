@@ -322,3 +322,26 @@ describe('round-2 review regressions', () => {
     ).toEqual(['./dist/index.cjs', './dist/index.mjs']);
   });
 });
+
+describe('round-3 review regressions', () => {
+  it('requires a node-addons target, which Node can select at runtime', () => {
+    expect(
+      declaredEntries({
+        exports: { '.': { 'node-addons': './dist/native.js', default: './dist/fallback.js' } },
+      }).sort()
+    ).toEqual(['./dist/fallback.js', './dist/native.js']);
+  });
+
+  it('follows imports inside a TypeScript runtime entry (tsx images)', () => {
+    const { app, dist } = fixture({ built: false });
+    // a's entry becomes TypeScript; its import of unbuilt b must still be found.
+    const aDir = fs.realpathSync(path.join(app, 'node_modules/@intelliflow/a'));
+    fs.writeFileSync(
+      path.join(aDir, 'package.json'),
+      JSON.stringify({ name: '@intelliflow/a', main: './src/index.ts' })
+    );
+    put(path.join(aDir, 'src/index.ts'), `export * from '@intelliflow/b';\n`);
+    const r = verify(app, dist);
+    expect(r.problems.some((p) => p.includes('@intelliflow/b'))).toBe(true);
+  });
+});

@@ -58,7 +58,14 @@ const isTypesOnly = (f) => /\.d\.[cm]?ts$/.test(f);
 // Export conditions Node can select at runtime in this image. Others (types,
 // browser, development, react-native, source, …) are never loaded by `node`, so
 // a target behind them need not ship and must not fail the build.
-const RUNTIME_CONDITIONS = new Set(['import', 'require', 'node', 'module', 'default']);
+const RUNTIME_CONDITIONS = new Set([
+  'import',
+  'require',
+  'node',
+  'node-addons',
+  'module',
+  'default',
+]);
 
 function collectTargets(node, star, out) {
   if (typeof node === 'string') out.add(star === undefined ? node : node.replaceAll('*', star));
@@ -143,7 +150,10 @@ function listJsFiles(dir) {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) {
       if (e.name !== 'node_modules') out.push(...listJsFiles(p));
-    } else if (/\.(c|m)?js$/.test(e.name)) {
+    } else if (/\.(c|m)?[jt]s$/.test(e.name) && !/\.d\.(c|m)?ts$/.test(e.name)) {
+      // .ts too: the API runs under tsx, and some runtime entries (the
+      // Prisma-generated client) are TypeScript, so their imports must be
+      // followed. Type declarations never load at runtime.
       out.push(p);
     }
   }

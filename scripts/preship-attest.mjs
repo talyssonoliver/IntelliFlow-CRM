@@ -147,6 +147,22 @@ export function assessState(state, headSha, preshipSha256, scopeLogicSha = null)
     const only = Array.isArray(state.only) ? state.only.join(',') : String(state.only);
     reasons.push(`run used --only=${only} — a subset gate cannot be attested`);
   }
+  // The gate and scope logic are pinned AS THEY RAN (recorded by pre-ship.mjs),
+  // and must still match this checkout: running a narrowed gate or scope and then
+  // restoring the files before publishing must not produce a clean attestation.
+  // A state file without the run-time pins predates them and is refused.
+  if (preshipSha256 && state.preship_sha256 !== preshipSha256) {
+    reasons.push(
+      `the gate that ran (pre-ship.mjs ${state.preship_sha256 ?? 'unrecorded'}) is not the ` +
+        `gate in this checkout (${preshipSha256}) — re-run pre-ship`
+    );
+  }
+  if (scopeLogicSha !== state.scope_logic_sha256 && (scopeLogicSha || state.scope_logic_sha256)) {
+    reasons.push(
+      `the test-scope logic that ran (${state.scope_logic_sha256 ?? 'unrecorded'}) is not the ` +
+        `logic in this checkout (${scopeLogicSha ?? 'missing'}) — re-run pre-ship`
+    );
+  }
   if (state.mode !== 'standard' && state.mode !== 'full') {
     reasons.push(`unrecognised pre-ship mode: ${state.mode}`);
   }
@@ -249,7 +265,12 @@ export function validatePayload(payload, sha, preshipSha256, scopeLogicSha = nul
         'produced the attestation is not the gate at this SHA'
     );
   }
-  if (scopeLogicSha && payload.scope_logic_sha256 !== scopeLogicSha) {
+  // Compared whenever EITHER side has a hash: a checkout missing a pinned file
+  // (null here) must not switch the check off for a payload that recorded one.
+  if (
+    (scopeLogicSha || payload.scope_logic_sha256) &&
+    payload.scope_logic_sha256 !== scopeLogicSha
+  ) {
     reasons.push(
       `payload scope_logic_sha256 ${payload.scope_logic_sha256 ?? '(absent)'} does not match ` +
         `the test-scope logic in this checkout (${scopeLogicSha}) — the scope that ` +

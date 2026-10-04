@@ -359,3 +359,19 @@ describe('round-2 review regressions', () => {
     expect(second.worktree).not.toBe(first.worktree);
   });
 });
+
+describe('round-3 review regressions', () => {
+  it("ignores the gate's own tracked outputs: no selection, stable fingerprint", () => {
+    const root = makeRepo();
+    write(root, 'artifacts/coverage/lcov.info', 'TN:\n');
+    git(root, 'add', '.');
+    git(root, 'commit', '-q', '-m', 'tracked gate output');
+    const before = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
+    expect(before.scope).toBe('none');
+    // A gate run rewrites the tracked output; nothing about the change moved.
+    write(root, 'artifacts/coverage/lcov.info', 'TN:\nSF:x\n');
+    const after = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
+    expect(after.scope).toBe('none');
+    expect(after.worktree).toBe(before.worktree);
+  });
+});

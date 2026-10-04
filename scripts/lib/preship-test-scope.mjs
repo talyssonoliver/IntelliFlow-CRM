@@ -262,14 +262,30 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
   }
   // Deleted in one layer but re-added in another means it still exists.
   for (const f of present) deleted.delete(f);
+  // The gate's own tracked outputs (coverage, reports) are rewritten by every
+  // run: they are not part of the change, and as needles they would select every
+  // test that names `artifacts/…`.
+  for (const set of [present, deleted]) {
+    for (const f of [...set]) if (isGateOutput(f)) set.delete(f);
+  }
 
   const changed = [...present];
   // Referencing tests also cover deleted files: a test that names a removed
   // fixture must run (and will fail) rather than be skipped.
-  const referencingTests =
-    changed.length + deleted.size > 0
-      ? testsReferencingChanges([...changed, ...deleted], readTestFiles(cwd))
-      : [];
+  let referencingTests = [];
+  if (changed.length + deleted.size > 0) {
+    const testContents = readTestFiles(cwd);
+    if (testContents === null) {
+      // Fail closed: without the test list, by-name selection is blind.
+      return {
+        scope: 'full',
+        reason: 'git ls-files failed — running the full suite',
+        files: [],
+        base,
+      };
+    }
+    referencingTests = testsReferencingChanges([...changed, ...deleted], testContents);
+  }
   return {
     ...classifyChangedFiles(changed, { deleted: [...deleted], referencingTests }),
     base,
@@ -279,14 +295,25 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
     // Fingerprint of the uncommitted content the tests will run against. Part
     // of pre-ship's cache key, so editing an already-changed file again (same
     // file list, same HEAD) re-runs the test steps instead of reusing a PASS.
-    worktree: worktreeFingerprint(cwd, nulFields(untracked)),
+    worktree: worktreeFingerprint(
+      cwd,
+      nulFields(untracked).filter((f) => !isGateOutput(f))
+    ),
   };
 }
 
-/** Hash of tracked uncommitted changes plus untracked files' size and mtime. */
+const GATE_OUTPUT_PREFIX = 'artifacts/';
+const isGateOutput = (f) => f.startsWith(GATE_OUTPUT_PREFIX);
+
+/**
+ * Hash of tracked uncommitted changes plus untracked files' size and mtime,
+ * excluding the gate's own outputs (else every run would invalidate the cache).
+ * If the diff cannot be read, the fingerprint is unique, so nothing is reused.
+ */
 function worktreeFingerprint(cwd, untracked) {
   const h = createHash('sha256');
-  h.update(git(['diff', 'HEAD', '--binary'], cwd) ?? 'diff-failed');
+  const diff = git(['diff', 'HEAD', '--binary', '--', '.', `:(exclude)${GATE_OUTPUT_PREFIX}`], cwd);
+  h.update(diff ?? `diff-failed:${process.pid}:${Date.now()}:${Math.random()}`);
   for (const f of [...untracked].sort()) {
     try {
       const st = statSync(path.join(cwd, f));
@@ -320,10 +347,15 @@ export function parseNameStatus(out) {
   return entries;
 }
 
-/** Tracked vitest test files and their contents (Playwright e2e excluded). */
+/**
+ * Tracked vitest test files and their contents (Playwright e2e excluded), or
+ * null when git cannot list them (the caller then runs the full suite).
+ */
 function readTestFiles(cwd) {
+  const listed = git(['ls-files', '-z'], cwd);
+  if (listed === null) return null;
   const contents = new Map();
-  for (const f of nulFields(git(['ls-files', '-z'], cwd))) {
+  for (const f of nulFields(listed)) {
     if (!TEST_FILE.test(f) || f.startsWith('tests/e2e/')) continue;
     try {
       contents.set(f, readFileSync(path.join(cwd, f), 'utf8'));

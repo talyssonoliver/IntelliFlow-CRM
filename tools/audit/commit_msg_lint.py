@@ -83,7 +83,7 @@ _BAD_SUBJECT_CASE_RE = re.compile(r"^[A-Z]")
 _AI_TOOLS = r"(?:Claude|Anthropic|Copilot|Cursor|Codex|ChatGPT|Gemini|Devin|Windsurf|Aider|Codeium|Tabnine)"
 _AI_ATTRIBUTION_RE = re.compile(
     r"\b(?:Generated|Created|Written|Authored|Produced)\s+(?:with|by|using|via)\s+"
-    r"(?:\[|the\s+|an?\s+)?" + _AI_TOOLS + r"\b"
+    r"(?:\[|the\s+|an?\s+)?(?:(?:OpenAI|GitHub|Google|Anthropic(?:'s)?)\s+)?" + _AI_TOOLS + r"\b"
     r"|\bClaude-Session:"
     r"|claude\.ai/code\b"
     r"|noreply@anthropic\.com"
@@ -91,8 +91,6 @@ _AI_ATTRIBUTION_RE = re.compile(
     r"|cursoragent@cursor\.com",
     re.IGNORECASE,
 )
-# Kept for any external importer of the old name.
-_AI_COAUTHOR_RE = _AI_ATTRIBUTION_RE
 
 _COAUTHOR_RE = re.compile(r"^\s*Co-authored-by:\s*(?P<name>[^<]*)", re.IGNORECASE)
 _LABEL_RE = re.compile(r"\([^)]*\)|\[[^\]]*\]")
@@ -104,7 +102,7 @@ _AI_TOOL_WORDS = frozenset(
 )
 _AI_NAME_WORDS = _AI_TOOL_WORDS | frozenset(
     {"github", "openai", "google", "agent", "code", "assist", "opus", "sonnet",
-     "haiku", "fable", "pro", "flash", "ultra", "mini", "max", "ai", "bot"}
+     "haiku", "fable", "mythos", "pro", "flash", "ultra", "mini", "max", "ai", "bot"}
 )
 
 
