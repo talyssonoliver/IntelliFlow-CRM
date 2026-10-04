@@ -17,6 +17,7 @@ import {
   SCOPE_ENV,
   parseNameStatus,
   testsReferencingChanges,
+  unaliasedPackageNames,
 } from '../lib/preship-test-scope.mjs';
 
 describe('classifyChangedFiles', () => {
@@ -452,5 +453,27 @@ describe('round-7 review regressions', () => {
     const r = classifyChangedFiles(['apps/web/src/app/globals.css']);
     expect(r.scope).toBe('related');
     expect(r.files).toEqual(['apps/web/src/app/globals.css']);
+  });
+});
+
+describe('final adversarial review: packages imported through dist/', () => {
+  it('a change in a package NOT aliased to src/ selects tests importing it by name', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'unaliased-'));
+    tmpRoots.push(root);
+    write(root, 'vitest.config.ts', "alias: { '@intelliflow/domain': 'packages/domain/src' }\n");
+    write(root, 'packages/partner-sdk/package.json', '{"name":"@intelliflow/partner-sdk"}');
+    write(root, 'packages/domain/package.json', '{"name":"@intelliflow/domain"}');
+    expect(unaliasedPackageNames(root, ['packages/partner-sdk/src/schemas.ts'])).toEqual([
+      '@intelliflow/partner-sdk',
+    ]);
+    expect(unaliasedPackageNames(root, ['packages/domain/src/lead.ts'])).toEqual([]);
+    const tests = new Map([
+      ['apps/api/partner.router.test.ts', "import { schemas } from '@intelliflow/partner-sdk';"],
+    ]);
+    expect(
+      testsReferencingChanges(['packages/partner-sdk/src/schemas.ts'], tests, {
+        packageNames: ['@intelliflow/partner-sdk'],
+      })
+    ).toEqual(['apps/api/partner.router.test.ts']);
   });
 });

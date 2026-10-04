@@ -46,12 +46,16 @@ COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
 # "(1M context)"/"[1M]" labels removed — is an AI tool ("Claude Dupont" passes).
 # Like the python path, only the author's message is scanned: `#` lines are
 # dropped and everything below the `git commit -v` scissors line is ignored.
-AI_TOOLS='(claude|anthropic|copilot|cursor|codex|chatgpt|gemini|devin|windsurf|aider|codeium|tabnine)'
-AI_RE="(^|[^a-z])(generated|created|written|authored|produced)[[:space:]]+(with|by|using|via)[[:space:]]+(\[|the[[:space:]]+|an?[[:space:]]+)?((openai|github|google|anthropic('s)?)[[:space:]]+)?${AI_TOOLS}([[:space:]]*\$|[[:space:]]*[]).,;:!]|[[:space:]]+(code|agent|ai|assist|opus|sonnet|haiku|fable|mythos|pro|flash|ultra|mini|max|bot|model)([^a-z]|\$)|[[:space:]]+[0-9]|-(code|agent|cli)([^a-z]|\$))|(^|[^a-z0-9-])claude-session:|claude\.ai/code|noreply@anthropic\.com|copilot@users\.noreply\.github\.com|cursoragent@cursor\.com"
-AI_COAUTHOR_RE="^[[:space:]]*co-authored-by:[[:space:]]*((github|openai|google|anthropic)[[:space:]]+)?${AI_TOOLS}([[:space:]]+(agent|code|assist|opus|sonnet|haiku|fable|mythos|pro|flash|ultra|mini|max|ai|bot|[0-9][0-9.]*))*[[:space:]]*(<|\$)"
+AI_TOOLS='(claude|anthropic|copilot|cursor|codex|chatgpt|gpt|gemini|devin|windsurf|aider|codeium|tabnine)'
+AI_RE="(^|[^a-z])(generated|created|written|authored|produced)[[:space:]]+(with|by|using|via)[[:space:]]+(\[|the[[:space:]]+|an?[[:space:]]+)?[*_\`]{0,2}((openai|github|google|anthropic('s)?)[[:space:]]+)?${AI_TOOLS}([[:space:]]*\$|[[:space:]]*[]).,;:!*_\`]|[[:space:]]+(code|agent|ai|assist|cli|opus|sonnet|haiku|fable|mythos|pro|flash|ultra|mini|max|bot|model)([^a-z]|\$)|[[:space:]]+[0-9]|-(code|agent|cli|[0-9])([^a-z]|\$))|(^|[^a-z0-9-])claude-session:|claude\.ai/code|claude\.com/claude-code|noreply@anthropic\.com|copilot@users\.noreply\.github\.com|cursoragent@cursor\.com"
+AI_COAUTHOR_RE="^[[:space:]]*[a-z][a-z-]*-by:[[:space:]]*((github|openai|google|anthropic)[[:space:]]+)?${AI_TOOLS}([[:space:]-]+(agent|code|coding|assist|cli|thinking|opus|sonnet|haiku|fable|mythos|pro|flash|ultra|mini|max|ai|bot|[0-9][0-9.]*))*[[:space:]]*(<|\$)"
 AUTHOR_TEXT=$(printf '%s\n' "$COMMIT_MSG" | awk '/^#.*>8/ { exit } !/^#/ { print }')
 NO_LABELS=$(printf '%s\n' "$AUTHOR_TEXT" | sed -E 's/\([^)]*\)|\[[^]]*\]/ /g')
+# A footer wrapped across lines ("Generated\nwith Claude Code"): check once more
+# with the line breaks folded into spaces.
+FOLDED=$(printf '%s\n' "$AUTHOR_TEXT" | tr -s '[:space:]' ' ')
 if printf '%s\n' "$AUTHOR_TEXT" | grep -qiE "$AI_RE" ||
+  printf '%s\n' "$FOLDED" | grep -qiE "$AI_RE" ||
   printf '%s\n' "$NO_LABELS" | grep -qiE "$AI_COAUTHOR_RE"; then
   echo "❌ Commit message carries AI attribution (co-author trailer, 'Generated with …'"
   echo "   footer or Claude session link). Repo policy forbids it — remove the line."

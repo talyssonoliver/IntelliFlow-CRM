@@ -303,3 +303,42 @@ def test_hyphenated_tool_name_fails():
 def test_hyphenated_prose_still_passes():
     code, out = _lint(VALID_HEADER + "Pagination created with cursor-based paging.\n")
     assert code == 0, out
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "Generated with **Claude Code**",
+        "Generated with `Claude Code`",
+        "Co-authored-by: Gemini CLI <a@b.c>",
+        "Co-authored-by: Claude Opus 4 Thinking <a@b.c>",
+        "Co-authored-by: GitHub Copilot Coding Agent <a@b.c>",
+        "Assisted-by: Claude",
+        "See claude.com/claude-code",
+        "Co-authored-by: GPT-5 <a@b.c>",
+        "Generated with GPT-5",
+    ],
+)
+def test_final_review_ai_shapes_fail(line):
+    # Final adversarial review on #754: markdown emphasis, more trailer names,
+    # any *-by: trailer, the claude.com URL, GPT.
+    code, out = _lint(VALID_HEADER + "Body text.\n\n" + line + "\n")
+    assert code == 1, out
+
+
+def test_wrapped_footer_fails():
+    code, out = _lint(VALID_HEADER + "Body text.\n\nGenerated\nwith Claude Code\n")
+    assert code == 1, out
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "Created by Claude Monet.",
+        "Reviewed-by: Claude Dupont <c@d.com>",
+        "Generated with gpt-style prompts in mind.",
+    ],
+)
+def test_final_review_prose_passes(line):
+    code, out = _lint(VALID_HEADER + "Body text.\n\n" + line + "\n")
+    assert code == 0, out

@@ -118,7 +118,11 @@ function referenceNeedles(file) {
  * @param {Map<string, string>} testContents test path -> source text
  * @returns {string[]}
  */
-export function testsReferencingChanges(changedFiles, testContents, { deleted = [] } = {}) {
+export function testsReferencingChanges(
+  changedFiles,
+  testContents,
+  { deleted = [], packageNames = [] } = {}
+) {
   // A changed test file runs itself, so it needs no needle; a DELETED one does
   // (a shared contract suite other tests import), so its importers are found.
   const needles = [
@@ -127,6 +131,11 @@ export function testsReferencingChanges(changedFiles, testContents, { deleted = 
         .map(normalise)
         .filter((f) => !TEST_FILE.test(f))
         .flatMap(referenceNeedles),
+      // Workspace packages whose imports resolve to their built dist/ (not
+      // aliased to src/ in vitest.config.ts): `vitest related` cannot link a
+      // test importing `@intelliflow/partner-sdk` to packages/partner-sdk/src,
+      // so tests that import the package by name are selected here.
+      ...packageNames,
       ...deleted.map(normalise).flatMap((f) => [
         ...referenceNeedles(f),
         // importers omit the extension: './contract.test'
@@ -310,7 +319,10 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
       // Fail closed: without the test list, by-name selection is blind.
       return fullScope('git ls-files failed — running the full suite', base);
     }
-    referencingTests = testsReferencingChanges(changed, testContents, { deleted: [...deleted] });
+    referencingTests = testsReferencingChanges(changed, testContents, {
+      deleted: [...deleted],
+      packageNames: unaliasedPackageNames(cwd, [...changed, ...deleted]),
+    });
   }
   return {
     ...classifyChangedFiles(changed, { deleted: [...deleted], referencingTests }),
@@ -371,6 +383,41 @@ export function parseNameStatus(out) {
     }
   }
   return entries;
+}
+
+/** Workspace packages vitest aliases to their src/ (root vitest.config.ts). */
+function aliasedPackages(cwd) {
+  try {
+    const cfg = readFileSync(path.join(cwd, 'vitest.config.ts'), 'utf8');
+    return new Set([...cfg.matchAll(/['"](@intelliflow\/[a-z0-9._-]+)['"]\s*:/g)].map((m) => m[1]));
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * Names of the workspace packages (nearest package.json below the repo root)
+ * that own the given files and are NOT aliased to src/ — their importers load
+ * dist/, which `vitest related` cannot trace back to the changed source.
+ */
+export function unaliasedPackageNames(cwd, files) {
+  const aliased = aliasedPackages(cwd);
+  const names = new Set();
+  for (const f of files) {
+    const parts = f.split('/');
+    for (let i = parts.length - 1; i > 0; i--) {
+      const pkgJson = path.join(cwd, ...parts.slice(0, i), 'package.json');
+      if (!existsSync(pkgJson)) continue;
+      try {
+        const { name } = JSON.parse(readFileSync(pkgJson, 'utf8'));
+        if (name && !aliased.has(name)) names.add(name);
+      } catch {
+        // unreadable package.json — nothing to add
+      }
+      break;
+    }
+  }
+  return [...names];
 }
 
 /**
