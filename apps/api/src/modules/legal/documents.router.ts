@@ -101,6 +101,26 @@ const placeLegalHoldInputSchema = z.object({
 // tRPC Router
 // ============================================================================
 
+/**
+ * One `documents.getAuditTrail` row. Explicit rather than the raw
+ * CaseDocumentAudit row: its Json columns are Prisma's recursive JsonValue,
+ * whose inference through tRPC overflowed TypeScript (TS2589). The web page
+ * had worked around that with a cast to a snake_case shape the API never
+ * returned, so the audit trail crashed at runtime; this contract is what it
+ * now reads.
+ */
+export interface DocumentAuditEntryDto {
+  id: string;
+  documentId: string;
+  eventType: string;
+  userId: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  changes: unknown;
+  metadata: unknown;
+  createdAt: Date;
+}
+
 export const documentsRouter = createTRPCRouter({
   /**
    * Create a new document
@@ -681,7 +701,7 @@ export const documentsRouter = createTRPCRouter({
    */
   getAuditTrail: tenantProcedure
     .input(z.object({ documentId: z.uuid() }))
-    .query(async ({ ctx, input }) => {
+    .query(async ({ ctx, input }): Promise<DocumentAuditEntryDto[]> => {
       const userId = ctx.user?.userId;
       if (!userId) {
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
@@ -702,7 +722,19 @@ export const documentsRouter = createTRPCRouter({
         orderBy: { createdAt: 'desc' },
       });
 
-      return auditLogs;
+      return auditLogs.map(
+        (log): DocumentAuditEntryDto => ({
+          id: log.id,
+          documentId: log.documentId,
+          eventType: log.eventType,
+          userId: log.userId,
+          ipAddress: log.ipAddress,
+          userAgent: log.userAgent,
+          changes: log.changes,
+          metadata: log.metadata,
+          createdAt: log.createdAt,
+        })
+      );
     }),
 
   /**
