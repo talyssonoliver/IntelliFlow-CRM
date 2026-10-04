@@ -10,6 +10,9 @@ import path from 'node:path';
  * the test root.
  */
 const packageRoot = process.cwd();
+// The repo root as a glob prefix (forward slashes, glob metacharacters escaped),
+// for coverage globs that must not match same-named directories deeper down.
+const repoRootGlob = packageRoot.replaceAll('\\', '/').replaceAll(/[()[\]{}*?!+@]/g, '\\$&');
 const monorepoRoot = __dirname;
 
 // Load environment variables from .env.local
@@ -289,11 +292,18 @@ export default defineConfig({
       // Write coverage even when some tests fail (e.g., one flaky test shouldn't suppress all coverage data)
       reportOnFailure: true,
       include: [
-        // Core product code only - excludes temporary tooling
         'apps/api/**/*.{ts,tsx}',
         'apps/ai-worker/**/*.{ts,tsx}',
         'apps/web/**/*.{ts,tsx}',
         'packages/**/*.{ts,tsx}',
+        // Repo tooling (pre-ship gate, coverage merge, attestation, audit linters,
+        // CI helpers) is in sonar.sources, so its coverage must reach the merged
+        // lcov Sonar reads. scripts/check-coverage-floor.mjs keeps the ratchet floor
+        // on product files only. Vitest matches coverage globs with picomatch
+        // `contains: true` against ABSOLUTE paths, so a bare 'tools/**' also matches
+        // apps/api/src/agent/tools/** — anchor tooling globs to the repo root.
+        `${repoRootGlob}/scripts/**/*.{ts,js,mjs,cjs}`,
+        `${repoRootGlob}/tools/**/*.{ts,js,mjs,cjs}`,
       ],
       exclude: [
         '**/node_modules/**',
@@ -311,7 +321,12 @@ export default defineConfig({
         '**/__mocks__/**',
         // Temporary tooling - not part of product
         'apps/project-tracker/**',
-        'tools/**',
+        // A bare 'tools/**' used to sit here. Matched unanchored (see include), it
+        // also dropped apps/api/src/agent/tools/** — product code with its own
+        // tests — from the merged lcov, so Sonar scored it 0%. Tooling is now
+        // measured; only its non-source parts are excluded, anchored to the root.
+        `${repoRootGlob}/tools/**/fixtures/**`,
+        '**/*.test.{js,mjs,cjs}',
         // Prisma generated client - auto-generated, not business logic (14MB / 121 files)
         // These were causing OOM crashes in V8 coverage workers
         'packages/db/generated/**',
