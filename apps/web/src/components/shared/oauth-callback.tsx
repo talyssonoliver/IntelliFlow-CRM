@@ -348,8 +348,9 @@ export function OAuthCallback({
   // A verified session for a DIFFERENT account, held in memory (never stored as the app session)
   // until the user confirms the switch.
   const heldSessionRef = useRef<HeldSession | null>(null);
-  // Set when the page is gone: a verification that lands afterwards must not hold a session.
-  const unmountedRef = useRef(false);
+  // Set when the user leaves the page (unmount, or pagehide into the bfcache or away): a step
+  // that settles afterwards must not hold a session or sign anyone in.
+  const departedRef = useRef(false);
   const flowRef = useRef<'oauth' | 'magiclink'>('oauth');
   const backToLoginRef = useRef<HTMLButtonElement>(null);
   const confirmDialogRef = useRef<HTMLDialogElement>(null);
@@ -463,8 +464,19 @@ export function OAuthCallback({
           dropAbandonedSession(supabase, session.access_token, null, isolated);
           throw normalizeClaimError(claimError);
         }
-        if (abandonedByWatchdog(abortedRef, supabase, session, null, isolated)) return;
       }
+      // A claim (or anything else) that settled after the watchdog fired or the user left must not
+      // revoke the previous session or sign the new one in.
+      if (
+        abandonedByWatchdog(
+          { current: abortedRef.current || departedRef.current },
+          supabase,
+          session,
+          null,
+          isolated
+        )
+      )
+        return;
 
       // The session this link replaces is revoked only once the new one is certain, so a failed
       // claim never leaves the user signed out of both.
@@ -538,7 +550,7 @@ export function OAuthCallback({
 
     // The page is gone (navigated away or closed): a verification that lands now must not sign
     // anyone in behind the user's back, whichever account it is for. Discard it.
-    if (unmountedRef.current) {
+    if (departedRef.current) {
       if (isolated) {
         revokeEvenIfExpired(
           supabase,
@@ -757,14 +769,15 @@ export function OAuthCallback({
       return held !== null;
     };
     const onPageHide = (event: PageTransitionEvent) => {
+      departedRef.current = true;
       if (revokeHeld() && event.persisted) {
         reportErrorRef.current(new Error('This sign-in link has already been used.'));
       }
     };
-    unmountedRef.current = false;
+    departedRef.current = false;
     globalThis.addEventListener('pagehide', onPageHide);
     return () => {
-      unmountedRef.current = true;
+      departedRef.current = true;
       globalThis.removeEventListener('pagehide', onPageHide);
       revokeHeld();
     };

@@ -346,6 +346,29 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(h.syncTokenToCookie).not.toHaveBeenCalled();
   });
 
+  it('a verification that lands after pagehide signs nobody in, even if the page is kept', async () => {
+    let land!: (value: unknown) => void;
+    h.verifyOtp.mockReturnValue(new Promise((resolve) => (land = resolve)));
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await waitFor(() => expect(h.verifyOtp).toHaveBeenCalled());
+
+    const hide = new Event('pagehide');
+    Object.defineProperty(hide, 'persisted', { value: true });
+    act(() => {
+      globalThis.dispatchEvent(hide);
+    });
+    await act(async () => {
+      land({
+        data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
+        error: null,
+      });
+    });
+
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local'));
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+    expect(screen.queryByText('Switch account?')).not.toBeInTheDocument();
+  });
+
   it('the same account revokes the replaced session after signing in', async () => {
     h.verifyOtp.mockResolvedValue({
       data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
