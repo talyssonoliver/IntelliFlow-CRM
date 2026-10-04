@@ -271,7 +271,8 @@ const BREADCRUMBS = {
 } as const;
 
 interface HeldSession {
-  session: { access_token: string; refresh_token?: string };
+  /** `expires_at` is in epoch seconds, as Supabase returns it. */
+  session: { access_token: string; refresh_token?: string; expires_at?: number };
   user: { id: string; email?: string } | undefined;
   pending: PendingMagicLink;
 }
@@ -780,6 +781,17 @@ export function OAuthCallback({
     const supabase = getSupabaseBrowserClient();
     if (!held || !supabase) {
       reportError(new Error('This sign-in link has already been used.'));
+      return;
+    }
+    // The held session was verified before the user chose; one that has since expired cannot
+    // claim a grant or sign in, and the link is already spent.
+    if (held.session.expires_at !== undefined && held.session.expires_at * 1000 <= Date.now()) {
+      revokeSession(supabase, held.session.access_token);
+      reportError(
+        new Error(
+          'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
+        )
+      );
       return;
     }
     setStatus('exchanging');

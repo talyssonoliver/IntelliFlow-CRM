@@ -370,6 +370,22 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(onSuccess).toHaveBeenCalledWith({ id: 'u1', email: 'a@b.co' }, { accessToken: 'acc' });
   });
 
+  it('Continue on a held session that has expired shows the error and signs nothing in', async () => {
+    h.verifyOtp.mockResolvedValue({
+      data: {
+        session: { ...SESSION, expires_at: Math.floor(Date.now() / 1000) - 1 },
+        user: { id: 'u1', email: 'a@b.co' },
+      },
+      error: null,
+    });
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    expect(await screen.findByText('Authentication Failed')).toBeInTheDocument();
+    expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local');
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
   it('Continue navigates to the sanitised next path', async () => {
     render(<OAuthCallback />);
     await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
