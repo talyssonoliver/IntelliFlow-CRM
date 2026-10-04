@@ -89,9 +89,23 @@ export function classifyChangedFiles(changedFiles) {
   };
 }
 
+/**
+ * process.env without the GIT_* variables a git hook exports. Under the
+ * pre-push hook GIT_DIR (and friends) point at the pushing repo and override
+ * `cwd`, so any git call meant for another checkout would silently read this
+ * one. Dropping them lets git discover the repo from `cwd`, which for pre-ship
+ * (cwd = repo root) is the same repo.
+ */
+function gitEnv() {
+  const env = { ...process.env };
+  for (const k of Object.keys(env)) if (k.startsWith('GIT_')) delete env[k];
+  return env;
+}
+
 function git(args, cwd) {
   const r = spawnSync('git', args, {
     cwd,
+    env: gitEnv(),
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
     maxBuffer: 64 * 1024 * 1024,
