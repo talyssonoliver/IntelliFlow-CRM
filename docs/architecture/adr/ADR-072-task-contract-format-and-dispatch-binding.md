@@ -1,4 +1,4 @@
-# ADR-070 — Task-Contract Format, Dispatch-Binding Enforcement, and Lease Ledger Architecture
+# ADR-072 — Task-Contract Format, Dispatch-Binding Enforcement, and Lease Ledger Architecture
 
 **Status**: Accepted **Date**: 2026-07-26 **Author**: Tech Lead (AUTOMATION-004
 lease) **Related**: ADR-067 (metrics harness), ADR-068 (attestation provenance),
@@ -273,7 +273,7 @@ enforcement requires AUTOMATION-005 durable distributed lock (Upstash Redis
   longer causes phantom completions.
 - 4-way binding guard catches binding violations at dispatch time, eliminating
   L48-class mid-task containment.
-- ADR-070 provides the architectural decision record so AUTOMATION-005 can
+- ADR-072 provides the architectural decision record so AUTOMATION-005 can
   implement the durable cross-env lease store without re-litigating the
   evaluation. Upstash Redis SET NX EX is the leading candidate for
   AUTOMATION-005 scope.
@@ -301,5 +301,5 @@ enforcement requires AUTOMATION-005 durable distributed lock (Upstash Redis
   hardening. The L48 incident and ghost-completion rate are the evidence.
 - **Monolithic task-contract enforcement in a single PR**: splitting contract
   schema (AUTOMATION-004) from live lease store (AUTOMATION-005) keeps each PR
-  independently reviewable and revertable. See ADR-070 rationale pattern from
+  independently reviewable and revertable. See ADR-072 rationale pattern from
   ADR-066 and ADR-068.

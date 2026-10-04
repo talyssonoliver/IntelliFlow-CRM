@@ -4,7 +4,7 @@
 **Sprint**: 19
 **Baseline SHA**: `1810a937137adf4b8410eac1719500ea3558ac3b`
 **Author**: local_28109fae (AUTOMATION-004 lease, 2026-07-26)
-**ADR**: ADR-070 (decision on contract format, dispatch binding, ledger architecture)
+**ADR**: ADR-072 (decision on contract format, dispatch binding, ledger architecture)
 
 > **Note on branch**: the working branch is `fix/orch-002-task-contract-and-dispatch-guard`
 > (created before the ORCH-* prefix was identified as undocumented). The canonical
@@ -44,7 +44,7 @@ A single independently reviewable + mergeable PR that lands:
 
 1. Exactly ONE canonical CSV roadmap row (AUTOMATION-004, deduplicated).
 2. This spec + execution plan as committed evidence artifacts.
-3. ADR-070: complete decision on task-contract format, dispatch-binding
+3. ADR-072: complete decision on task-contract format, dispatch-binding
    enforcement strategy, and ledger architecture (evaluating ≥4 options against
    9 Section 4 requirements; recommendation with rationale).
 4. `tools/scripts/orchestration/schemas/task-contract.schema.json` — complete
@@ -77,7 +77,7 @@ recon makes them the next justified slice.
    no ENG-OPS rows modified; dedup verified against existing rows.
 2. Spec + plan present at
    `.specify/sprints/sprint-19/spec/AUTOMATION-004/{spec,plan}.md`.
-3. ADR-070 published (not a skeleton) — evaluates all 4 candidate ledger
+3. ADR-072 published (not a skeleton) — evaluates all 4 candidate ledger
    options, gives correct verdicts (no option passes all 9 cross-env requirements),
    identifies Upstash Redis SET NX EX as the AUTOMATION-005 leading candidate.
 4. JSON Schema includes all 20 required fields (taskId, approvedOutcome,
@@ -102,7 +102,7 @@ recon makes them the next justified slice.
 ## Allowed Mutation Scope
 
 - `.specify/sprints/sprint-19/spec/AUTOMATION-004/` — spec + plan (this task's evidence)
-- `docs/architecture/adr/ADR-070-*.md` — new ADR
+- `docs/architecture/adr/ADR-072-*.md` — new ADR
 - `docs/operations/agent-autonomy-policy.md` — dispatch-binding section appended
 - `tools/scripts/orchestration/` — schema, validator, guard, tests
 - `Sprint_plan.csv` — exactly one AUTOMATION-004 row appended

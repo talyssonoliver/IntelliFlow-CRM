@@ -1,5 +1,5 @@
 /**
- * Dispatch-binding guard (ADR-070, L48 recurrence prevention).
+ * Dispatch-binding guard (ADR-072, L48 recurrence prevention).
  *
  * Validates the 4-way binding before any task execution begins:
  *   taskId (contract) === intended task ID

@@ -189,7 +189,7 @@ in the ADR.
 ## Dispatch-Binding Enforcement
 
 Defined by
-[ADR-070](../architecture/adr/ADR-070-task-contract-format-and-dispatch-binding.md).
+[ADR-072](../architecture/adr/ADR-072-task-contract-format-and-dispatch-binding.md).
 Every autonomous task dispatch MUST have a machine-readable task contract (JSON
 Schema at `tools/scripts/orchestration/schemas/task-contract.schema.json`) and a
 verified 4-way binding before execution begins.
@@ -205,7 +205,7 @@ verified 4-way binding before execution begins.
 
 A mismatch on ANY dimension is a hard stop. The supervisor MUST see exit 0 from
 the guard before the agent writes any file. This prevents L48-class mid-task
-containment incidents (see ADR-070 context).
+containment incidents (see ADR-072 context).
 
 ### Stored-lease authority check (anti-circular-validation)
 
@@ -256,7 +256,7 @@ the leases file is safe — treated as no prior leases.
 
 ## See also
 
-- [ADR-070](../architecture/adr/ADR-070-task-contract-format-and-dispatch-binding.md)
+- [ADR-072](../architecture/adr/ADR-072-task-contract-format-and-dispatch-binding.md)
   — task-contract format, dispatch-binding, and ledger architecture decision
 - [ADR-069](../architecture/adr/ADR-069-rolling-wave-rebaselining-and-migration-risk-classes.md)
   — rolling-wave rebaselining and migration risk classes
