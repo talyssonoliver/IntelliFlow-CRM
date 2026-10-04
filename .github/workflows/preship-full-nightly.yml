@@ -98,6 +98,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install Python tooling test dependencies
+        # pre-ship's `python-coverage` step (#755) runs the tools/audit and
+        # tools/plan pytest suites under coverage.
+        run: pip install pyyaml click pytest pytest-cov
+
       - name: Start Postgres + Redis (docker compose)
         # Use `docker compose` (not GH `services:`) so the containers are named
         # intelliflow-postgres / intelliflow-redis — the exact substrings the

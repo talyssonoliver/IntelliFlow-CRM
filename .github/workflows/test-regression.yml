@@ -343,6 +343,20 @@ jobs:
           path: artifacts
           digest-mismatch: warn # the queue-jammer: transient artifact-svc digest flake → non-fatal (see merge job)
 
+      # Python tooling coverage (#755) for sonar.python.coverage.reportPaths.
+      # The suites take ~15s, so they run here rather than as another sharded
+      # job feeding an artifact. A failing suite fails this job: Sonar would
+      # otherwise score every Python line as uncovered.
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Python tooling coverage
+        run: |
+          pip install pyyaml click pytest pytest-cov
+          node scripts/run-python-coverage.mjs
+
       - name: SonarQube Cloud Scan
         # Official SonarQube Cloud action, SHA-pinned to v8.1.0 (supply-chain
         # safe). Replaces the deprecated `sonarcloud-github-action` whose v5 pin
