@@ -278,7 +278,9 @@ describe('ReindexWorker - progress update failure', () => {
   });
 
   it('logs a rejected in-flight updateProgress instead of leaving it unhandled, and still completes', async () => {
-    if (capturedProcessor == null) return;
+    // Fail, not skip, if the Worker mock stopped capturing the processor:
+    // returning early here would pass with no assertions.
+    expect(capturedProcessor).toBeTypeOf('function');
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const progressError = new Error('redis unavailable');
     // Stage-start updateProgress calls (awaited) succeed; the in-flight callback
@@ -294,12 +296,16 @@ describe('ReindexWorker - progress update failure', () => {
       data: { indexType: 'all', batchSize: 10, forceRegenerate: false },
       updateProgress,
     };
-    await expect(capturedProcessor(j)).resolves.toBeDefined();
+    await expect(capturedProcessor!(j)).resolves.toBeDefined();
     await new Promise((resolve) => setImmediate(resolve));
     const logged = errorSpy.mock.calls.filter(
-      (c) => c[0] === '[ReindexWorker] Failed to update job progress:' && c[1] === progressError
+      (c) =>
+        typeof c[0] === 'string' &&
+        c[0].startsWith('[ReindexWorker] Failed to update job progress') &&
+        c[1] === progressError
     );
-    expect(logged).toHaveLength(2);
+    // Two rejections on the same job, logged once (no flood during an outage).
+    expect(logged).toHaveLength(1);
     errorSpy.mockRestore();
   });
 });
