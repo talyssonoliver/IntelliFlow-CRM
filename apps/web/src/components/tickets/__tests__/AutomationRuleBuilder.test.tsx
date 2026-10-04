@@ -14,15 +14,11 @@ const mockRule1 = {
   description: 'Route billing to billing team',
   priority: 0,
   isActive: true,
-  // Mirrors the routing DTO: a ticket rule is not lead-shaped, so the typed
-  // lead view is empty and the stored rule arrives in the *Json fields.
-  conditions: [],
-  actions: [],
-  conditionsJson: [
-    { field: 'category', operator: 'equals', value: 'BILLING' },
-    { field: 'priority', operator: 'gte', value: 'HIGH' },
+  conditions: [
+    { field: 'ticketCategory', operator: 'equals', value: 'BILLING' },
+    { field: 'ticketPriority', operator: 'gte', value: 'HIGH' },
   ],
-  actionsJson: [{ type: 'assign_to_skill', target: 'billing-team' }],
+  actions: [{ type: 'assign_to_skill', target: 'billing-team' }],
   createdBy: 'user-1',
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -33,17 +29,17 @@ const mockRule2 = {
   id: 'rule-2',
   name: 'Escalation Rule',
   priority: 1,
-  conditionsJson: [],
-  actionsJson: [],
+  conditions: [],
+  actions: [],
 };
+
+const mockToast = vi.fn();
 
 type MockQueryReturn<T> = { data: T | undefined; isLoading: boolean };
 type MockMutationReturn = { mutate: ReturnType<typeof vi.fn>; isPending: boolean };
 
-const mockListQuery = vi.fn<
-  () => MockQueryReturn<{ items: (typeof mockRule1)[]; nextCursor?: string }>
->(() => ({
-  data: { items: [mockRule1, mockRule2], nextCursor: undefined },
+const mockListQuery = vi.fn<() => MockQueryReturn<(typeof mockRule1)[]>>(() => ({
+  data: [mockRule1, mockRule2],
   isLoading: false,
 }));
 const mockCreateMutation = vi.fn<() => MockMutationReturn>(() => ({
@@ -65,20 +61,21 @@ const mockToggleMutation = vi.fn<() => MockMutationReturn>(() => ({
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
-    useUtils: () => ({ routing: { list: { invalidate: vi.fn() } } }),
-    routing: {
-      list: { useQuery: () => mockListQuery() },
-      create: { useMutation: () => mockCreateMutation() },
-      update: { useMutation: () => mockUpdateMutation() },
-      delete: { useMutation: () => mockDeleteMutation() },
-      toggle: { useMutation: () => mockToggleMutation() },
+    useUtils: () => ({ ticketRouting: { listRules: { invalidate: vi.fn() } } }),
+    // Only the ticket rule procedures exist here: any use of the lead `routing` router would throw.
+    ticketRouting: {
+      listRules: { useQuery: () => mockListQuery() },
+      createRule: { useMutation: () => mockCreateMutation() },
+      updateRule: { useMutation: () => mockUpdateMutation() },
+      deleteRule: { useMutation: () => mockDeleteMutation() },
+      toggleRule: { useMutation: () => mockToggleMutation() },
     },
   },
 }));
 
 vi.mock('@intelliflow/ui', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
-  return { ...actual, toast: vi.fn() };
+  return { ...actual, toast: (...args: unknown[]) => mockToast(...args) };
 });
 
 import { AutomationRuleBuilder } from '../AutomationRuleBuilder';
@@ -87,7 +84,7 @@ describe('AutomationRuleBuilder', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockListQuery.mockReturnValue({
-      data: { items: [mockRule1, mockRule2], nextCursor: undefined },
+      data: [mockRule1, mockRule2],
       isLoading: false,
     });
   });
@@ -112,13 +109,13 @@ describe('AutomationRuleBuilder', () => {
   // Chip rendering tests
   it('renders conditions as human-readable chips', () => {
     render(<AutomationRuleBuilder />);
-    // { field: "category", operator: "equals", value: "BILLING" } → "Category : BILLING"
+    // { field: "ticketCategory", operator: "equals", value: "BILLING" } → "Category : BILLING"
     expect(screen.getByText('Category : BILLING')).toBeInTheDocument();
   });
 
   it('renders priority condition with operator chip', () => {
     render(<AutomationRuleBuilder />);
-    // { field: "priority", operator: "gte", value: "HIGH" } → "Priority >= HIGH"
+    // { field: "ticketPriority", operator: "gte", value: "HIGH" } → "Priority >= HIGH"
     expect(screen.getByText('Priority >= HIGH')).toBeInTheDocument();
   });
 
@@ -166,10 +163,7 @@ describe('AutomationRuleBuilder', () => {
   });
 
   it('shows empty state when no rules', () => {
-    mockListQuery.mockReturnValue({
-      data: { items: [], nextCursor: undefined },
-      isLoading: false,
-    });
+    mockListQuery.mockReturnValue({ data: [], isLoading: false });
     render(<AutomationRuleBuilder />);
     expect(screen.getByText('No Automation Rules')).toBeInTheDocument();
   });
@@ -218,6 +212,8 @@ describe('AutomationRuleBuilder', () => {
     fireEvent.click(screen.getByRole('button', { name: /create new automation rule/i }));
     const nameInput = screen.getByLabelText('Name');
     fireEvent.change(nameInput, { target: { value: 'New Rule' } });
+    fireEvent.change(screen.getByLabelText('Condition 1 value'), { target: { value: 'BILLING' } });
+    fireEvent.change(screen.getByLabelText('Action 1 target'), { target: { value: 'billing' } });
     // "Create Rule" text appears in header button and dialog — click dialog one
     const buttons = screen.getAllByText('Create Rule');
     fireEvent.click(buttons[buttons.length - 1]);
@@ -244,5 +240,89 @@ describe('AutomationRuleBuilder', () => {
     const buttons = screen.getAllByText('Create Rule');
     const submitBtn = buttons[buttons.length - 1];
     expect(submitBtn).toBeDisabled();
+  });
+
+  it('submits canonical ticket vocabulary on create', () => {
+    const mutateFn = vi.fn();
+    mockCreateMutation.mockReturnValue({ mutate: mutateFn, isPending: false });
+    render(<AutomationRuleBuilder />);
+    fireEvent.click(screen.getByRole('button', { name: /create new automation rule/i }));
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Billing rule' } });
+    fireEvent.change(screen.getByLabelText('Condition 1 value'), { target: { value: 'billing' } });
+    fireEvent.change(screen.getByLabelText('Action 1 target'), { target: { value: 'billing' } });
+    const buttons = screen.getAllByText('Create Rule');
+    fireEvent.click(buttons[buttons.length - 1]);
+    expect(mutateFn).toHaveBeenCalledWith({
+      name: 'Billing rule',
+      priority: 0,
+      isActive: true,
+      conditions: [{ field: 'ticketCategory', operator: 'equals', value: 'BILLING' }],
+      actions: [{ type: 'assign_to_skill', target: 'billing' }],
+    });
+  });
+
+  it('reports a validation problem instead of calling the API', () => {
+    const mutateFn = vi.fn();
+    mockCreateMutation.mockReturnValue({ mutate: mutateFn, isPending: false });
+    render(<AutomationRuleBuilder />);
+    fireEvent.click(screen.getByRole('button', { name: /create new automation rule/i }));
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Bad rule' } });
+    fireEvent.change(screen.getByLabelText('Condition 1 value'), { target: { value: 'nonsense' } });
+    fireEvent.change(screen.getByLabelText('Action 1 target'), { target: { value: 'billing' } });
+    const buttons = screen.getAllByText('Create Rule');
+    fireEvent.click(buttons[buttons.length - 1]);
+    expect(mutateFn).not.toHaveBeenCalled();
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: expect.stringContaining('NONSENSE'),
+        variant: 'destructive',
+      })
+    );
+  });
+
+  it('submits an edit with only canonical fields and the rule id', () => {
+    const mutateFn = vi.fn();
+    mockUpdateMutation.mockReturnValue({ mutate: mutateFn, isPending: false });
+    render(<AutomationRuleBuilder />);
+    fireEvent.click(screen.getByLabelText('Edit High Priority Billing'));
+    fireEvent.click(screen.getByText('Save Changes'));
+    expect(mutateFn).toHaveBeenCalledWith({
+      id: 'rule-1',
+      name: 'High Priority Billing',
+      description: 'Route billing to billing team',
+      priority: 0,
+      isActive: true,
+      conditions: [
+        { field: 'ticketCategory', operator: 'equals', value: 'BILLING' },
+        { field: 'ticketPriority', operator: 'gte', value: 'HIGH' },
+      ],
+      actions: [{ type: 'assign_to_skill', target: 'billing-team' }],
+    });
+  });
+
+  it('renders list conditions and an assign-to-user action', () => {
+    mockListQuery.mockReturnValue({
+      data: [
+        {
+          ...mockRule1,
+          id: 'rule-3',
+          name: 'List rule',
+          conditions: [{ field: 'ticketPriority', operator: 'in', value: ['HIGH', 'CRITICAL'] }],
+          actions: [{ type: 'assign_to_user', target: 'user-alice' }],
+        },
+      ],
+      isLoading: false,
+    } as never);
+    render(<AutomationRuleBuilder />);
+    expect(screen.getByText('Priority in HIGH, CRITICAL')).toBeInTheDocument();
+    expect(screen.getByText('Assign to: user-alice')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Edit List rule'));
+    expect(screen.getByDisplayValue('HIGH, CRITICAL')).toBeInTheDocument();
+  });
+
+  it('shows the loading skeleton while rules load', () => {
+    mockListQuery.mockReturnValue({ data: undefined, isLoading: true });
+    render(<AutomationRuleBuilder />);
+    expect(screen.queryByLabelText('Automation Rules')).not.toBeInTheDocument();
   });
 });
