@@ -9,6 +9,7 @@ import { TimezoneProvider } from '@/providers/TimezoneProvider';
 import { RemindersProvider } from '@/lib/cases/reminders-context';
 import { AUTH_TOKEN_CHANGED_EVENT, clearTokenCookie } from '@/lib/shared/session-cleanup';
 import { requiredProdEnv } from '@/lib/required-url';
+import { isAuthError, shouldRetryMutation, shouldRetryQuery } from '@/lib/query-retry';
 import {
   ACTIVE_TENANT_HEADER,
   activeTenantHeaders,
@@ -21,21 +22,6 @@ import {
 // - WebSocket support for real-time subscriptions
 // - Custom auth error handling with automatic redirect
 // - Token validation before including in headers
-
-/**
- * Check if an error is an authentication error (401 UNAUTHORIZED)
- */
-function isAuthError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
-
-  // Check tRPC error shape
-  const err = error as { data?: { code?: string }; message?: string };
-  if (err.data?.code === 'UNAUTHORIZED') return true;
-
-  // Check error message
-  const message = err.message?.toLowerCase() ?? '';
-  return message.includes('unauthorized') || message.includes('authentication required');
-}
 
 /**
  * Decode JWT token and check if it's expired
@@ -258,17 +244,11 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
             staleTime: 5 * 60 * 1000,
             gcTime: 10 * 60 * 1000, // React Query v5 uses gcTime (v4 used cacheTime)
             // Don't retry on auth errors - they won't succeed without re-authentication
-            retry: (failureCount, error) => {
-              if (isAuthError(error)) return false;
-              return failureCount < 3;
-            },
+            retry: shouldRetryQuery,
           },
           mutations: {
-            // Don't retry mutations on auth errors
-            retry: (failureCount, error) => {
-              if (isAuthError(error)) return false;
-              return failureCount < 3;
-            },
+            // Only retry when the server never answered — see lib/query-retry.ts
+            retry: shouldRetryMutation,
           },
         },
         // Global query cache error handler
