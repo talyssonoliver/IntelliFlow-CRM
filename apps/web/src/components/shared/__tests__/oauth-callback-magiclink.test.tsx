@@ -411,18 +411,26 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
   });
 
   it('Continue on a held session that has expired shows the error and signs nothing in', async () => {
+    const past = Math.floor(Date.now() / 1000) - 1;
+    const expiredAccess = `x.${btoa(JSON.stringify({ sub: 'u1', exp: past }))}.y`;
     h.verifyOtp.mockResolvedValue({
       data: {
-        session: { ...SESSION, expires_at: Math.floor(Date.now() / 1000) - 1 },
+        session: { access_token: expiredAccess, refresh_token: 'ref', expires_at: past },
         user: { id: 'u1', email: 'a@b.co' },
       },
+      error: null,
+    });
+    h.refreshSession.mockResolvedValue({
+      data: { session: { access_token: 'fresh' } },
       error: null,
     });
     render(<OAuthCallback onSuccess={vi.fn()} />);
     await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
 
     expect(await screen.findByText('Authentication Failed')).toBeInTheDocument();
-    expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local');
+    // Its own expired token cannot revoke it: it is refreshed and the fresh token revoked.
+    expect(h.refreshSession).toHaveBeenCalledWith({ refresh_token: 'ref' });
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith('fresh', 'local'));
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
   });
 
