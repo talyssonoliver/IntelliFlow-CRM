@@ -387,6 +387,23 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
   });
 
+  it('leaving during the revoke keeps the new session and does not navigate', async () => {
+    let revoked!: (value: unknown) => void;
+    h.adminSignOut.mockReturnValue(new Promise((resolve) => (revoked = resolve)));
+    const { unmount } = render(<OAuthCallback />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local'));
+
+    unmount();
+    await act(async () => {
+      revoked({ error: null });
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+
+    expect(h.storeSessionTokens).toHaveBeenCalledWith('acc', 'ref');
+    expect(h.push).not.toHaveBeenCalled();
+  });
+
   it('the same account revokes the replaced session after signing in', async () => {
     h.verifyOtp.mockResolvedValue({
       data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },

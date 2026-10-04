@@ -405,6 +405,9 @@ export function OAuthCallback({
       clearSupabaseLocalStorage();
 
       const navigate = () => {
+        // The user left while the revoke ran: the session is committed, but the page they went
+        // to wins; never navigate them away from it.
+        if (departedRef.current) return;
         // Call success callback or redirect
         if (onSuccess) {
           onSuccess(
@@ -418,7 +421,7 @@ export function OAuthCallback({
         const target =
           flow === 'magiclink' ? (pendingNextRef.current ?? '/dashboard') : redirectUrl;
         setTimeout(() => {
-          router.push(target);
+          if (!departedRef.current) router.push(target);
         }, 300);
       };
 
