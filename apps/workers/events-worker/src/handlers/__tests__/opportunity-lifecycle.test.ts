@@ -117,7 +117,7 @@ describe('createOpportunityLifecycleHandlers', () => {
   });
 
   describe('handleDescriptionUpdated', () => {
-    it('logs the previous and new description', async () => {
+    it('logs that the description changed, without copying the text into logs', async () => {
       const logger = makeLogger();
       const handlers = createOpportunityLifecycleHandlers(logger);
       const event = makeEvent({
@@ -136,12 +136,17 @@ describe('createOpportunityLifecycleHandlers', () => {
       expect(logger.info).toHaveBeenCalledWith(
         {
           opportunityId: 'opp_4',
-          previousDescription: 'Old text',
-          newDescription: 'New text',
           updatedBy: 'user_3',
+          hadPreviousDescription: true,
+          previousLength: 8,
+          newLength: 8,
         },
         'Opportunity description changed'
       );
+      // A deal description can carry personal data; it must never reach the logs.
+      const logged = JSON.stringify((logger.info as ReturnType<typeof vi.fn>).mock.calls);
+      expect(logged).not.toContain('Old text');
+      expect(logged).not.toContain('New text');
     });
 
     it('handles a null previous description (first description set)', async () => {
@@ -160,7 +165,11 @@ describe('createOpportunityLifecycleHandlers', () => {
 
       await expect(handlers.handleDescriptionUpdated(event)).resolves.toBeUndefined();
       expect(logger.info).toHaveBeenCalledWith(
-        expect.objectContaining({ previousDescription: null, newDescription: 'First description' }),
+        expect.objectContaining({
+          hadPreviousDescription: false,
+          previousLength: 0,
+          newLength: 17,
+        }),
         'Opportunity description changed'
       );
     });
