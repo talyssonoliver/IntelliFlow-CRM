@@ -175,6 +175,12 @@ DB** (never prod — `.env.local`'s `DATABASE_URL` is production Supabase; use
 `new_coverage` ≥80% on changed lines) so under-tested diffs fail locally, not
 after a CI round.
 
+**Test scope:** locally the test steps run only the tests related to the files
+changed since `origin/main` (`vitest related`); the full 10k+ suite is CI's
+sharded runners' job. Typecheck, lint and all other gates stay full.
+`PRESHIP_FULL_TESTS=1` runs the full suite locally; lockfile, `package.json`,
+vitest/tsconfig, Prisma schema or test-setup changes widen to full on their own.
+
 ### Sprint_plan.csv is Single Source of Truth
 
 Always edit CSV for task updates. Run sync after changes. Never edit derived

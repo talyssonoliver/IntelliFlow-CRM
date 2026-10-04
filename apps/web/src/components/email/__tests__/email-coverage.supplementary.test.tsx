@@ -3,9 +3,9 @@
  * Supplementary tests to improve email component coverage to >=90%.
  * Targets uncovered lines in: EmailCompose, EmailListItem, EmailPage, EmailThread, EmailList.
  */
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, beforeEach, describe, it, expect, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, it, expect, vi } from 'vitest';
 import {
   createMockEmailTrpc,
   createMockEmail,
@@ -31,6 +31,32 @@ vi.mock('@/hooks/use-entity-pin', () => ({
 vi.mock('@/hooks/useDebounce', () => ({
   useDebounce: (value: string) => value,
 }));
+
+// Teardown, file-local so it holds even if the shared setup changes.
+// EmailListItem wraps each row in an EntityHoverCard (Radix HoverCard,
+// openDelay 600ms). Radix clears that delay timer only when the card unmounts,
+// so a card still mounted when the DOM environment is torn down can fire its
+// callback against a missing `window` (CI: "window is not defined"). Unmount
+// first, then drop any fake-timer state a test left behind so it cannot leak
+// into the next test or outlive the file.
+afterEach(() => {
+  cleanup();
+  if (vi.isFakeTimers()) {
+    vi.clearAllTimers();
+    vi.useRealTimers();
+  }
+});
+
+// Pins the environment pragma on line 1 (jsdom): without it these components
+// would render under the web project default (happy-dom), and nothing else here
+// would notice the switch. Do not spell the pragma out in a comment: Vitest
+// honours it anywhere in the file, which would make this check vacuous.
+describe('test environment', () => {
+  it('runs under jsdom', () => {
+    expect(typeof window).toBe('object');
+    expect(navigator.userAgent).toContain('jsdom');
+  });
+});
 
 // Lazy imports so mocks are applied before component modules load
 const { EmailListItem } = await import('../EmailListItem');
