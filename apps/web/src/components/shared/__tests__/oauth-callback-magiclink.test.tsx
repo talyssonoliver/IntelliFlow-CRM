@@ -385,7 +385,9 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(h.signOut).not.toHaveBeenCalled();
     expect(h.clearSessionTokens).not.toHaveBeenCalled();
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
-    expect(h.clearSupabaseLocalStorage).toHaveBeenCalled();
+    // The held session is only revoked: the kept session's SDK copy (its refresh) survives.
+    expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local');
+    expect(h.clearSupabaseLocalStorage).not.toHaveBeenCalled();
   });
 
   it('an invalid token shows the error and Back to Sign In without a prompt', async () => {

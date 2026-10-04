@@ -140,13 +140,22 @@ type BrowserSupabase = NonNullable<ReturnType<typeof getSupabaseBrowserClient>>;
  * `preexistingAccessToken` is the session the browser held before this callback ran. The OAuth
  * path does not sign out first, so a step may hand back that session rather than a new one; it
  * was never this callback's to remove.
+ *
+ * `isolated` marks a session verified on the isolated client while another account is signed
+ * in: it was never stored, so it is only revoked. Clearing storage here would delete the copy of
+ * the session the user kept, and with it that session's refresh.
  */
 function dropAbandonedSession(
   supabase: BrowserSupabase,
   abandonedAccessToken: string,
-  preexistingAccessToken: string | null = null
+  preexistingAccessToken: string | null = null,
+  isolated = false
 ): void {
   if (abandonedAccessToken === preexistingAccessToken) return;
+  if (isolated) {
+    revokeSession(supabase, abandonedAccessToken);
+    return;
+  }
   try {
     // Fire and forget: revocation touches neither the SDK's storage nor its events, so its
     // timing cannot affect any session signed in afterwards.
@@ -204,12 +213,13 @@ function normalizeClaimError(claimError: unknown): Error {
 function discardLateSession(
   supabase: BrowserSupabase,
   pending: Promise<{ data: { session: { access_token: string } | null } | null }>,
-  preexistingAccessToken: string | null = null
+  preexistingAccessToken: string | null = null,
+  isolated = false
 ): void {
   pending
     .then((late) => {
       const token = late.data?.session?.access_token;
-      if (token) dropAbandonedSession(supabase, token, preexistingAccessToken);
+      if (token) dropAbandonedSession(supabase, token, preexistingAccessToken, isolated);
     })
     .catch(() => undefined);
 }
@@ -222,10 +232,13 @@ function abandonedByWatchdog(
   aborted: { readonly current: boolean },
   supabase: BrowserSupabase,
   session: { access_token: string } | null | undefined,
-  preexistingAccessToken: string | null = null
+  preexistingAccessToken: string | null = null,
+  isolated = false
 ): boolean {
   if (!aborted.current) return false;
-  if (session) dropAbandonedSession(supabase, session.access_token, preexistingAccessToken);
+  if (session) {
+    dropAbandonedSession(supabase, session.access_token, preexistingAccessToken, isolated);
+  }
   return true;
 }
 
@@ -400,16 +413,18 @@ export function OAuthCallback({
       pending: PendingMagicLink,
       previousAccessToken: string | null = null
     ) => {
+      // A previous session means the link was verified on the isolated client.
+      const isolated = previousAccessToken !== null;
       let activeTenantId = pending.tenantHint;
       if (pending.grant) {
         try {
           const claim = await withTimeout(claimLoginGrant(session.access_token, pending.grant));
           activeTenantId = claim.tenantId;
         } catch (claimError) {
-          dropAbandonedSession(supabase, session.access_token);
+          dropAbandonedSession(supabase, session.access_token, null, isolated);
           throw normalizeClaimError(claimError);
         }
-        if (abandonedByWatchdog(abortedRef, supabase, session)) return;
+        if (abandonedByWatchdog(abortedRef, supabase, session, null, isolated)) return;
       }
 
       // The session this link replaces is revoked only once the new one is certain, so a failed
@@ -453,7 +468,8 @@ export function OAuthCallback({
     }
     if (abortedRef.current) return;
 
-    const verifier = preexistingToken ? createIsolatedAuthClient() : supabase;
+    const isolated = preexistingToken !== null;
+    const verifier = isolated ? createIsolatedAuthClient() : supabase;
     const verification = verifier.auth.verifyOtp({
       type: 'magiclink',
       token_hash: pending.tokenHash,
@@ -464,10 +480,14 @@ export function OAuthCallback({
     } catch (verifyError) {
       // verifyOtp cannot be cancelled: if it finishes after we showed the error, the SDK would
       // persist and broadcast a session behind the failure screen. Discard it when it lands.
-      discardLateSession(supabase, verification, preexistingToken);
+      discardLateSession(supabase, verification, preexistingToken, isolated);
       throw verifyError;
     }
-    if (abandonedByWatchdog(abortedRef, supabase, result.data?.session, preexistingToken)) return;
+    if (
+      abandonedByWatchdog(abortedRef, supabase, result.data?.session, preexistingToken, isolated)
+    ) {
+      return;
+    }
     const { data, error } = result;
 
     if (error || !data?.session) {
@@ -777,10 +797,9 @@ export function OAuthCallback({
     const held = heldSessionRef.current;
     heldSessionRef.current = null;
     const supabase = getSupabaseBrowserClient();
-    // The verified session for the other account is discarded; the current app session is untouched.
-    if (held && supabase) {
-      dropAbandonedSession(supabase, held.session.access_token, getStoredAccessToken());
-    }
+    // The verified session for the other account was never stored: it is only revoked, and the
+    // current app session, including the SDK's copy that keeps it refreshed, is untouched.
+    if (held && supabase) revokeSession(supabase, held.session.access_token);
     router.push('/dashboard');
   };
 
