@@ -37,7 +37,7 @@ import { toRoutingRuleDto, type RoutingRuleDto } from './routing-rule.mapper';
  */
 export interface RoutingAssignmentDto {
   id: string;
-  /** Lead routing stores the lead id in `details.leadId` (RoutingAudit is ticket-shaped). */
+  /** The lead this assignment is about, or null for a ticket routing row (see readLeadId). */
   leadId: string | null;
   reason: string;
   createdAt: Date;
@@ -45,10 +45,17 @@ export interface RoutingAssignmentDto {
   assignedTo: { id: string; name: string; email: string };
 }
 
-function readLeadId(details: unknown): string | null {
-  if (details && typeof details === 'object' && 'leadId' in details) {
-    return typeof details.leadId === 'string' ? details.leadId : null;
-  }
+/**
+ * The lead an audit row is about. RoutingAudit is ticket-shaped, and lead
+ * assignments are written three ways: manual assignment records
+ * `details.leadId`; LeadRoutingService records `details.entityType: 'lead'`
+ * with the lead id in `ticketId`. Rows for tickets have neither, so a ticket id
+ * is never reported as a lead.
+ */
+function readLeadId(details: unknown, ticketId: string): string | null {
+  if (!details || typeof details !== 'object') return null;
+  if ('leadId' in details && typeof details.leadId === 'string') return details.leadId;
+  if ('entityType' in details && details.entityType === 'lead') return ticketId;
   return null;
 }
 
@@ -279,7 +286,7 @@ export const routingRouter = createTRPCRouter({
         const items = audits.map(
           (audit): RoutingAssignmentDto => ({
             id: audit.id,
-            leadId: readLeadId(audit.details),
+            leadId: readLeadId(audit.details, audit.ticketId),
             reason: audit.reason,
             createdAt: audit.createdAt,
             rule: audit.ruleId ? { name: audit.ruleName ?? 'Unknown' } : null,
@@ -401,7 +408,7 @@ export const routingRouter = createTRPCRouter({
             reason: input.reason,
             toUserId: input.userId,
             toUserName: '',
-            details: { leadId: input.leadId },
+            details: { entityType: 'lead', leadId: input.leadId },
           },
         });
 
