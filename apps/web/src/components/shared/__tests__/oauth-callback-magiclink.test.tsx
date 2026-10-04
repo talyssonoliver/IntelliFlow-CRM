@@ -24,6 +24,8 @@ const h = vi.hoisted(() => ({
   storeSessionTokens: vi.fn(),
   clearSessionTokens: vi.fn(),
   getStoredAccessToken: vi.fn(),
+  getStoredRefreshToken: vi.fn(),
+  refreshSession: vi.fn(),
   storeSessionFingerprint: vi.fn(),
   clearSupabaseLocalStorage: vi.fn(),
   syncTokenToCookie: vi.fn(),
@@ -55,6 +57,7 @@ vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: h.storeSessionTokens,
   clearSessionTokens: h.clearSessionTokens,
   getStoredAccessToken: h.getStoredAccessToken,
+  getStoredRefreshToken: h.getStoredRefreshToken,
 }));
 vi.mock('@/lib/shared/session-cleanup', () => ({
   syncTokenToCookie: h.syncTokenToCookie,
@@ -73,8 +76,11 @@ describe('OAuthCallback magic link', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
-    h.createIsolatedAuthClient.mockReturnValue({ auth: { verifyOtp: h.verifyOtp } });
+    h.createIsolatedAuthClient.mockReturnValue({
+      auth: { verifyOtp: h.verifyOtp, refreshSession: h.refreshSession },
+    });
     h.adminSignOut.mockResolvedValue({ error: null });
+    h.getStoredRefreshToken.mockReturnValue(null);
     h.order.length = 0;
     h.getStoredAccessToken.mockReturnValue(null);
     h.query.value = 'token_hash=hash123&type=magiclink&next=/dashboard';
@@ -184,8 +190,11 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
-    h.createIsolatedAuthClient.mockReturnValue({ auth: { verifyOtp: h.verifyOtp } });
+    h.createIsolatedAuthClient.mockReturnValue({
+      auth: { verifyOtp: h.verifyOtp, refreshSession: h.refreshSession },
+    });
     h.adminSignOut.mockResolvedValue({ error: null });
+    h.getStoredRefreshToken.mockReturnValue(null);
     h.query.value = 'token_hash=hash123&type=magiclink&next=/leads';
     h.getStoredAccessToken.mockReturnValue(VICTIM_JWT);
     h.signOut.mockResolvedValue({ error: null });
@@ -285,6 +294,37 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(h.adminSignOut).toHaveBeenCalledTimes(1);
     expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local');
     expect(h.signOut).not.toHaveBeenCalled();
+  });
+
+  it('an expired replaced session is refreshed on the isolated client and the fresh token revoked', async () => {
+    const expired = jwtFor({ sub: 'victim-id', email: 'victim@example.com' }).replace(
+      /^x\.[^.]+/,
+      `x.${btoa(JSON.stringify({ sub: 'victim-id', exp: Math.floor(Date.now() / 1000) - 60 }))}`
+    );
+    h.getStoredAccessToken.mockReturnValue(expired);
+    h.getStoredRefreshToken.mockReturnValue('old-refresh');
+    h.refreshSession.mockResolvedValue({
+      data: { session: { access_token: 'fresh' } },
+      error: null,
+    });
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith('fresh', 'local'));
+    expect(h.refreshSession).toHaveBeenCalledWith({ refresh_token: 'old-refresh' });
+    expect(h.adminSignOut).not.toHaveBeenCalledWith(expired, 'local');
+  });
+
+  it('a replaced session that has not expired is revoked directly, with no refresh', async () => {
+    h.getStoredRefreshToken.mockReturnValue('old-refresh');
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local');
+    expect(h.refreshSession).not.toHaveBeenCalled();
   });
 
   it('the same account revokes the replaced session after signing in', async () => {

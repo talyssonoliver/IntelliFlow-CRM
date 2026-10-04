@@ -58,6 +58,7 @@ vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: h.storeSessionTokens,
   clearSessionTokens: h.clearSessionTokens,
   getStoredAccessToken: h.getStoredAccessToken,
+  getStoredRefreshToken: () => null,
 }));
 vi.mock('@/lib/shared/session-cleanup', () => ({
   syncTokenToCookie: h.syncTokenToCookie,

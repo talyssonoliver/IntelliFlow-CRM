@@ -46,6 +46,7 @@ vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: vi.fn(),
   clearSessionTokens: vi.fn(),
   getStoredAccessToken: () => null,
+  getStoredRefreshToken: () => null,
 }));
 
 // Mock login-security

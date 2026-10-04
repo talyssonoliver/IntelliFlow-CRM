@@ -240,3 +240,16 @@ export function getStoredAccessToken(): string | null {
 
   return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
+
+/**
+ * Get stored refresh token
+ *
+ * @returns Refresh token or null if not stored
+ */
+export function getStoredRefreshToken(): string | null {
+  if (typeof globalThis.window === 'undefined') {
+    return null;
+  }
+
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+}

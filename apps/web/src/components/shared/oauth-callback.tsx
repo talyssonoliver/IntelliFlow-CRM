@@ -36,6 +36,7 @@ import {
   storeSessionTokens,
   clearSessionTokens,
   getStoredAccessToken,
+  getStoredRefreshToken,
 } from '@/lib/shared/token-exchange';
 import {
   syncTokenToCookie,
@@ -180,6 +181,42 @@ function revokeSession(supabase: BrowserSupabase, accessToken: string): void {
     supabase.auth.admin.signOut(accessToken, 'local').catch(() => undefined);
   } catch {
     // Nothing else to clean: this session was never stored by this callback.
+  }
+}
+
+/** True when the JWT carries an `exp` that has passed; an unreadable token is not "expired". */
+function isExpiredJwt(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replaceAll('-', '+').replaceAll('_', '/')));
+    return typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Revoke the session a link replaces. An expired access token cannot authorise its own logout,
+ * so it is first refreshed on the isolated client (no storage, no auth events) and the fresh
+ * token is revoked instead; otherwise the old refresh token would stay valid on the server.
+ */
+function revokeReplacedSession(
+  supabase: BrowserSupabase,
+  accessToken: string,
+  refreshToken: string | null
+): void {
+  if (!refreshToken || !isExpiredJwt(accessToken)) {
+    revokeSession(supabase, accessToken);
+    return;
+  }
+  try {
+    createIsolatedAuthClient()
+      .auth.refreshSession({ refresh_token: refreshToken })
+      .then(({ data }) => {
+        if (data?.session) revokeSession(supabase, data.session.access_token);
+      })
+      .catch(() => undefined);
+  } catch {
+    // Revocation is best effort; the new session is already signed in.
   }
 }
 
@@ -431,7 +468,8 @@ export function OAuthCallback({
       // The session this link replaces is revoked only once the new one is certain, so a failed
       // claim never leaves the user signed out of both.
       if (previousAccessToken && previousAccessToken !== session.access_token) {
-        revokeSession(supabase, previousAccessToken);
+        // Read before finishSignIn overwrites the stored tokens with the new session's.
+        revokeReplacedSession(supabase, previousAccessToken, getStoredRefreshToken());
       }
       pendingNextRef.current = pending.next;
       finishSignIn(session, user, 'magiclink', activeTenantId);
