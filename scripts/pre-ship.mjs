@@ -77,6 +77,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
+import { stepLine, summarize, summaryText, isAdvisoryFail } from './lib/preship-report.mjs';
 
 // Resolve REPO_ROOT from git rather than cwd so the script behaves
 // identically whether invoked from the repo root, from a subdirectory,
@@ -922,21 +923,6 @@ function runStep(step, prev) {
   };
 }
 
-function emoji(v) {
-  return (
-    {
-      PASS: '✓',
-      CACHED_PASS: '✓·',
-      FAIL: '✗',
-      SKIPPED_PRECONDITION: '·',
-      SKIPPED_NOT_SELECTED: '-',
-      SKIPPED_NOT_FULL: '-',
-      NOT_RUN: ' ',
-      MISSING: '!',
-    }[v] || '?'
-  );
-}
-
 // Verdict for a slice of results (standard-only or full-only), honouring the
 // PRESHIP_ALLOW_MISSING acknowledgement. A required FAIL or an unacknowledged
 // MISSING-required makes the slice FAIL. Used to print the standard-gate and
@@ -1015,12 +1001,15 @@ function main() {
     const r = runStep(step, prev);
     results.push(r);
 
-    // Re-label a required+SKIPPED_PRECONDITION as MISSING so the line is
-    // visually distinct from harmless skips (gitleaks not installed, etc).
-    const displayVerdict = isMissingRequired(r) && !allowMissing ? 'MISSING' : r.verdict;
-    process.stdout.write(
-      `${emoji(displayVerdict)} ${displayVerdict}  (${fmtDuration(r.duration_ms)})\n`
-    );
+    // Truthful per-step label: MISSING for an unrunnable required guard, WARN
+    // (not "FAIL") for a non-blocking advisory failure, PASS (after retry) when
+    // a step needed more than one attempt.
+    process.stdout.write(`${stepLine(r, { allowMissing }, fmtDuration)}\n`);
+    if (isAdvisoryFail(r)) {
+      process.stdout.write(
+        `    Advisory step failed but does not block the gate. Log: ${r.log_path}\n`
+      );
+    }
 
     if (isMissingRequired(r)) {
       if (allowMissing) {
@@ -1085,7 +1074,10 @@ function main() {
     process.stdout.write(`pre-ship: standard gate ${stdV}.\n`);
     process.stdout.write(`pre-ship: full-matrix E2E ${fullV}.\n`);
   }
-  process.stdout.write(`pre-ship: ${verdict} in ${fmtDuration(totalDuration)}.\n`);
+  const counts = summarize(results, state.expected_step_ids);
+  process.stdout.write(
+    `pre-ship: ${verdict} in ${fmtDuration(totalDuration)} (${summaryText(counts)}).\n`
+  );
   if (fails.length > 0) {
     process.stdout.write(`  Failed required steps:\n`);
     for (const f of fails) process.stdout.write(`    - ${f.id} (see ${f.log_path})\n`);
