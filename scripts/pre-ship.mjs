@@ -129,6 +129,10 @@ function lcovMissing() {
   return !fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/lcov.info'));
 }
 
+function pythonReportMissing() {
+  return !fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/python-coverage.xml'));
+}
+
 // The silent-skip gate (#658) reads the per-project vitest JSON the `coverage`
 // step writes. Same shape as lcovMissing: a pure downstream-artifact check, NOT a
 // second docker probe — if `coverage` was skipped the manifest is absent and this
@@ -489,9 +493,13 @@ const STEPS = [
     id: 'diff-coverage',
     description: 'enforce Sonar new_coverage (>=80% on changed lines vs origin/main)',
     cmd: ['node', 'scripts/check-diff-coverage.mjs'],
-    // Depends on the lcov from `coverage`; if that was skipped, skip too.
-    skip_if: lcovMissing,
-    skip_remediation: 'Run the `coverage` step first (needs the local test DB).',
+    // Needs a report to judge against. Skip only when BOTH are missing: with just
+    // the Python report (the JS `coverage` step could not run), changed .py lines
+    // are still judged (DIFF_COVER_ONLY=py) instead of the whole gate skipping.
+    skip_if: () => lcovMissing() && pythonReportMissing(),
+    env: () => (lcovMissing() ? { DIFF_COVER_ONLY: 'py' } : {}),
+    skip_remediation:
+      'Run the `coverage` step (needs the local test DB) and `python-coverage` first.',
     required: true,
   },
   {
@@ -897,7 +905,10 @@ function runStep(step, prev) {
   }
 
   const start = Date.now();
-  const env = { ...process.env, ...(step.env || {}) };
+  // A step's env may be a function, evaluated now — after earlier steps ran —
+  // when it depends on what they produced (diff-coverage reads which reports exist).
+  const stepEnv = typeof step.env === 'function' ? step.env() : step.env;
+  const env = { ...process.env, ...(stepEnv || {}) };
   // shell:true on Windows so the PATH resolves .cmd/.exe extensions for
   // pnpm / gitleaks / etc. All argv values are hard-coded literals (no
   // user input), so shell injection isn't a concern. POSIX systems use
