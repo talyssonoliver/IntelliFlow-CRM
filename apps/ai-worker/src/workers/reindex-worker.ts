@@ -77,8 +77,21 @@ export interface ReindexJobProgress {
  * Progress reporting is best-effort: a failed updateProgress (e.g. Redis blip)
  * must not fail the reindex or become an unhandled rejection, but it must be logged.
  */
-function reportProgressFailure(error: unknown): void {
-  console.error('[ReindexWorker] Failed to update job progress:', error);
+const progressFailureReported = new WeakSet<object>();
+
+/**
+ * One log per job: progress fires once per processed item, so during a Redis
+ * outage an unthrottled handler would log every item of the reindex.
+ */
+function reportProgressFailure(job: object): (error: unknown) => void {
+  return (error) => {
+    if (progressFailureReported.has(job)) return;
+    progressFailureReported.add(job);
+    console.error(
+      '[ReindexWorker] Failed to update job progress (further failures for this job are not logged):',
+      error
+    );
+  };
 }
 
 export class ReindexWorker {
@@ -299,7 +312,7 @@ export class ReindexWorker {
           documents: progress,
           overallProgress,
         } as ReindexJobProgress)
-        .catch(reportProgressFailure);
+        .catch(reportProgressFailure(job));
     });
   }
 
@@ -330,7 +343,7 @@ export class ReindexWorker {
           notes: progress,
           overallProgress,
         } as ReindexJobProgress)
-        .catch(reportProgressFailure);
+        .catch(reportProgressFailure(job));
     });
   }
 
