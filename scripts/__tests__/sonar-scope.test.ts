@@ -112,6 +112,21 @@ describe('the committed sonar-project.properties', () => {
     expect(excluded('scripts/ci/run.sh')).toBe(true);
   });
 
+  // The local gate never counts a test file as coverable (and Vitest never
+  // instruments one), so Sonar must not analyse one as source either — for
+  // every extension, or a new scripts/foo.test.mjs passes pre-ship and is
+  // scored as uncovered source by Sonar.
+  it.each(['ts', 'tsx', 'js', 'mjs', 'cjs'])(
+    'excludes .test.%s and .spec.%s files anywhere in sources',
+    (ext) => {
+      for (const kind of ['test', 'spec']) {
+        for (const dir of ['scripts', 'tools/scripts/lib', 'apps/web/src']) {
+          expect(excluded(`${dir}/foo.${kind}.${ext}`)).toBe(true);
+        }
+      }
+    }
+  );
+
   it('analyses tooling JavaScript/TypeScript', () => {
     expect(excluded('scripts/lib/diff-coverage.mjs')).toBe(false);
     expect(excluded('tools/scripts/lib/contract-parser.ts')).toBe(false);
