@@ -299,7 +299,12 @@ const PYTEST_AVAILABLE =
   // No shell: under cmd.exe `-c import pytest` would split into two args and the
   // probe would always fail. spawnSync finds python(.exe) on PATH by itself.
   spawnSync(PYTHON_BIN, ['-c', 'import pytest, yaml'], { stdio: 'ignore' }).status === 0;
-const AUDIT_PYTEST_NEEDED = !SCOPED_TESTS || TEST_SCOPE.auditChanged === true;
+// When this diff changed tools/audit, its pytest suite is the ONLY coverage for
+// that code, so it is REQUIRED: without pytest/pyyaml it is MISSING (blocks the
+// push unless acknowledged with PRESHIP_ALLOW_MISSING=1), never a silent pass.
+// In a full-scope run with no known audit change it runs when it can, advisory.
+const AUDIT_CHANGED = TEST_SCOPE.auditChanged === true;
+const AUDIT_PYTEST_RUN = AUDIT_CHANGED || (!SCOPED_TESTS && PYTEST_AVAILABLE);
 
 // Step plan — fail-first token gate + steps from audit doc §8, plus the
 // OSV/Trivy dependency-scan parity gate (#485). Each step has:
@@ -463,11 +468,11 @@ const STEPS = [
     description:
       'pytest tools/audit/tests (Python audit tooling — mirrors CI system-audit-integrity)',
     cmd: [PYTHON_BIN || 'python', '-m', 'pytest', 'tools/audit/tests', '-q'],
-    skip_if: () => !PYTEST_AVAILABLE || !AUDIT_PYTEST_NEEDED,
-    skip_remediation: PYTEST_AVAILABLE
-      ? 'tools/audit unchanged — its pytest suite is not affected by this diff.'
-      : 'Install pytest (`python -m pip install pytest pyyaml`) to run the audit tooling tests locally; CI runs them.',
-    required: PYTEST_AVAILABLE && AUDIT_PYTEST_NEEDED,
+    skip_if: () => !AUDIT_PYTEST_RUN || !PYTEST_AVAILABLE,
+    skip_remediation: AUDIT_PYTEST_RUN
+      ? 'This diff changes tools/audit and its pytest suite is the only coverage for it. Install pytest and pyyaml (`python -m pip install pytest pyyaml`) and re-run.'
+      : 'tools/audit unchanged — its pytest suite is not affected by this diff.',
+    required: AUDIT_CHANGED,
   },
   {
     // Local: only the tests related to the changed files (vitest related).

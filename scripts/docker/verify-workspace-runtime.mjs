@@ -45,14 +45,65 @@ const SPECIFIER =
 const INLINE_BLOCK_COMMENT = /\/\*[^\n]*?\*\//g;
 const COMMENT_LINE = /^[ \t]*(?:\/\/|\*).*$/gm;
 
+const WORKSPACE_SPEC = /^(@intelliflow\/[a-z0-9._-]+)(?:\/(.+))?$/;
+const CALL_OPEN = /\b(?:import|require|__require)\s*\(/g;
+
+/**
+ * Call-form imports (`import(…)`, `require(…)`, `__require(…)`) are read with a
+ * small scanner over the RAW source rather than a regex: any number of comments
+ * of any shape — including a block comment spanning lines — may sit between the
+ * parenthesis and the string, and Node still loads the module. Scanning the raw
+ * text can only see more (a call inside a comment), never less.
+ */
+/**
+ * Does the call at `idx` start inside a comment? Covers a `//` or JSDoc ` *`
+ * line and a block comment opened earlier on the same line and not yet closed.
+ * Missing an exotic case only reports an extra import (fails loudly).
+ */
+function startsInComment(source, idx) {
+  const lineStart = source.lastIndexOf('\n', idx - 1) + 1;
+  const before = source.slice(lineStart, idx);
+  if (/^\s*(?:\/\/|\*)/.test(before)) return true;
+  const open = before.lastIndexOf('/*');
+  return open !== -1 && before.indexOf('*/', open + 2) === -1;
+}
+
+function callSpecifiers(source) {
+  const found = [];
+  for (const m of source.matchAll(CALL_OPEN)) {
+    if (startsInComment(source, m.index)) continue;
+    let i = m.index + m[0].length;
+    for (;;) {
+      while (i < source.length && /\s/.test(source[i])) i++;
+      if (source.startsWith('/*', i)) {
+        const end = source.indexOf('*/', i + 2);
+        if (end === -1) break;
+        i = end + 2;
+      } else if (source.startsWith('//', i)) {
+        const end = source.indexOf('\n', i);
+        if (end === -1) break;
+        i = end + 1;
+      } else {
+        break;
+      }
+    }
+    const quote = source[i];
+    if (quote !== '"' && quote !== "'" && quote !== '`') continue;
+    const close = source.indexOf(quote, i + 1);
+    if (close === -1) continue;
+    const spec = WORKSPACE_SPEC.exec(source.slice(i + 1, close));
+    if (spec) found.push({ name: spec[1], subpath: spec[2] ?? '' });
+  }
+  return found;
+}
+
 /** Every @intelliflow specifier imported by a source, as {name, subpath} ('' = root). */
 export function importedWorkspaceSpecifiers(source) {
   const out = new Map();
+  const add = (spec) => out.set(`${spec.name}|${spec.subpath}`, spec);
   const code = source.replace(INLINE_BLOCK_COMMENT, ' ').replace(COMMENT_LINE, '');
-  for (const m of code.matchAll(SPECIFIER)) {
-    const spec = { name: m[1], subpath: m[2] ?? '' };
-    out.set(`${spec.name}|${spec.subpath}`, spec);
-  }
+  for (const m of code.matchAll(SPECIFIER)) add({ name: m[1], subpath: m[2] ?? '' });
+  for (const spec of callSpecifiers(source)) add(spec);
   return [...out.values()];
 }
 

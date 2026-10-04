@@ -398,3 +398,19 @@ describe('round-6 review regressions', () => {
     expect(importedWorkspaceSpecifiers(src)).toEqual([]);
   });
 });
+
+describe('round-6 adversarial regressions', () => {
+  it('sees an import whose comment spans several lines inside import(...)', () => {
+    const src = `await import(/* webpackIgnore: true\n * keep external\n */ '@intelliflow/partner-sdk');`;
+    expect(importedWorkspaceSpecifiers(src)).toEqual([
+      { name: '@intelliflow/partner-sdk', subpath: '' },
+    ]);
+  });
+
+  it('sees require() with a line comment before the string', () => {
+    const src = `const x = require(\n  // why\n  '@intelliflow/db/seed-ids'\n);`;
+    expect(importedWorkspaceSpecifiers(src)).toEqual([
+      { name: '@intelliflow/db', subpath: 'seed-ids' },
+    ]);
+  });
+});
