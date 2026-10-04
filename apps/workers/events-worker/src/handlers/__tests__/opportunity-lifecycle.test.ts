@@ -125,8 +125,8 @@ describe('createOpportunityLifecycleHandlers', () => {
         aggregateId: 'opp_4',
         payload: {
           opportunityId: 'opp_4',
-          previousDescription: 'Old text',
-          newDescription: 'New text',
+          previousDescription: 'SENTINEL-PREV-a91f',
+          newDescription: 'SENTINEL-NEW-77c2',
           updatedBy: 'user_3',
         },
       });
@@ -138,15 +138,20 @@ describe('createOpportunityLifecycleHandlers', () => {
           opportunityId: 'opp_4',
           updatedBy: 'user_3',
           hadPreviousDescription: true,
-          previousLength: 8,
-          newLength: 8,
+          previousLength: 18,
+          newLength: 17,
         },
         'Opportunity description changed'
       );
       // A deal description can carry personal data; it must never reach the logs.
-      const logged = JSON.stringify((logger.info as ReturnType<typeof vi.fn>).mock.calls);
-      expect(logged).not.toContain('Old text');
-      expect(logged).not.toContain('New text');
+      // Every logger method, not only info: no path may carry the text.
+      const logged = JSON.stringify(
+        (['info', 'warn', 'error'] as const).map(
+          (m) => (logger[m] as unknown as ReturnType<typeof vi.fn>).mock.calls
+        )
+      );
+      expect(logged).not.toContain('SENTINEL-PREV-a91f');
+      expect(logged).not.toContain('SENTINEL-NEW-77c2');
     });
 
     it('handles a null previous description (first description set)', async () => {
