@@ -36,12 +36,33 @@ export function resolveFloor(env) {
   );
 }
 
+export const DEFAULT_SUMMARY = 'artifacts/coverage/coverage-summary.json';
+
+/**
+ * Resolve the summary path given on the command line, refusing one outside the
+ * repo. The gate only ever reads a coverage report the repo itself produced, so
+ * a path that escapes the root (`../..`, an absolute path elsewhere) is a
+ * mistake or an attack, never a valid input.
+ *
+ * @param {string | undefined} arg
+ * @param {string} root repo root
+ * @returns {string} absolute path inside root
+ */
+export function resolveSummaryPath(arg, root) {
+  const base = path.resolve(root);
+  const resolved = path.resolve(base, arg || DEFAULT_SUMMARY);
+  if (resolved !== base && !resolved.startsWith(base + path.sep)) {
+    throw new Error(`coverage summary path ${arg} is outside the repository (${base})`);
+  }
+  return resolved;
+}
+
 /**
  * @param {string} file absolute or relative path from a coverage summary
  * @param {string} root repo root
  */
 export function isToolingFile(file, root) {
-  const rel = path.relative(root, file).replace(/\\/g, '/');
+  const rel = path.relative(root, file).replaceAll('\\', '/');
   return TOOLING_ROOTS.some((r) => rel.startsWith(`${r}/`));
 }
 

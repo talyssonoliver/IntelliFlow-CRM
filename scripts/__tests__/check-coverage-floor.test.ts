@@ -13,6 +13,7 @@ import {
   istanbulPercent,
   isToolingFile,
   resolveFloor,
+  resolveSummaryPath,
   runCoverageFloor,
   splitTotals,
 } from '../lib/coverage-floor.mjs';
@@ -148,24 +149,64 @@ describe('runCoverageFloor', () => {
   });
 });
 
+describe('resolveSummaryPath', () => {
+  it('defaults to the merged coverage summary under the root', () => {
+    expect(resolveSummaryPath(undefined, ROOT)).toBe(
+      path.join(ROOT, 'artifacts', 'coverage', 'coverage-summary.json')
+    );
+  });
+
+  it('resolves a relative path against the root', () => {
+    expect(resolveSummaryPath('artifacts/x/summary.json', ROOT)).toBe(
+      path.join(ROOT, 'artifacts', 'x', 'summary.json')
+    );
+  });
+
+  it('accepts an absolute path inside the root', () => {
+    const inside = path.join(ROOT, 'a', 'summary.json');
+    expect(resolveSummaryPath(inside, ROOT)).toBe(inside);
+  });
+
+  it.each([
+    ['../outside.json'],
+    ['artifacts/../../outside.json'],
+    [path.resolve('/elsewhere/summary.json')],
+    [path.resolve('/repo-sibling/summary.json')],
+  ])('refuses %s, which escapes the root', (arg) => {
+    expect(() => resolveSummaryPath(arg, ROOT)).toThrow(/outside the repository/);
+  });
+});
+
 describe('scripts/check-coverage-floor.mjs', () => {
+  const cli = (args: string[]) =>
+    spawnSync(
+      process.execPath,
+      [path.join(REPO_ROOT, 'scripts', 'check-coverage-floor.mjs'), ...args],
+      {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+      }
+    );
+
   it('runs end to end against a summary path given on the command line', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cov-floor-'));
+    const tmp = fs.mkdtempSync(path.join(REPO_ROOT, 'artifacts', 'cov-floor-test-'));
     try {
       const summary = path.join(tmp, 'coverage-summary.json');
       fs.writeFileSync(
         summary,
         JSON.stringify({ [path.join(REPO_ROOT, 'apps/web/src/a.ts')]: entry(1, 1) })
       );
-      const r = spawnSync(
-        process.execPath,
-        [path.join(REPO_ROOT, 'scripts', 'check-coverage-floor.mjs'), summary],
-        { cwd: REPO_ROOT, encoding: 'utf8' }
-      );
+      const r = cli([summary]);
       expect(r.stdout).toMatch(/Product coverage meets the ratchet floor/);
       expect(r.status).toBe(0);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
+  });
+
+  it('refuses a summary path outside the repository', () => {
+    const r = cli([path.join(os.tmpdir(), 'coverage-summary.json')]);
+    expect(r.stderr).toMatch(/outside the repository/);
+    expect(r.status).toBe(1);
   });
 });

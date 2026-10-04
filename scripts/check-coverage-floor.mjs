@@ -20,12 +20,21 @@
  * Exit: 0 meets floor · 1 below floor or summary missing.
  */
 import fs from 'node:fs';
-import { runCoverageFloor } from './lib/coverage-floor.mjs';
+import { resolveSummaryPath, runCoverageFloor } from './lib/coverage-floor.mjs';
+
+const root = process.cwd();
+let summaryPath;
+try {
+  summaryPath = resolveSummaryPath(process.argv[2], root);
+} catch (e) {
+  console.error(`::error::${e.message}`);
+  process.exit(1);
+}
 
 process.exit(
   runCoverageFloor({
-    summaryPath: process.argv[2] || 'artifacts/coverage/coverage-summary.json',
-    root: process.cwd(),
+    summaryPath,
+    root,
     env: process.env,
     readFile: (p) => (fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null),
     log: console.log,
