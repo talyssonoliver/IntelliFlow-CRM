@@ -58,7 +58,9 @@ test.describe('Material Symbols Icons Loading', () => {
       });
 
       // Check icon visibility
-      const iconElements = page.locator('.material-symbols-outlined');
+      // The first icons in the DOM sit in the closed onboarding <dialog> (display:none),
+      // so check the first icon actually on screen.
+      const iconElements = page.locator('.material-symbols-outlined').filter({ visible: true });
       const count = await iconElements.count();
 
       if (count > 0) {
@@ -166,7 +168,9 @@ test.describe('Material Symbols Icons Loading', () => {
       });
 
       // Check visibility during load - icons should be hidden (visibility: hidden)
-      const iconElements = page.locator('.material-symbols-outlined');
+      // The first icons in the DOM sit in the closed onboarding <dialog> (display:none),
+      // so check the first icon actually on screen.
+      const iconElements = page.locator('.material-symbols-outlined').filter({ visible: true });
       const count = await iconElements.count();
 
       if (count > 0) {
@@ -224,13 +228,15 @@ test.describe('Material Symbols Icons Loading', () => {
             fontFamily: computed.fontFamily,
             fontStyle: computed.fontStyle,
             lineHeight: computed.lineHeight,
+            fontSize: computed.fontSize,
             textRendering: computed.textRendering,
           };
         });
 
         expect(iconProps.fontFamily).toContain('Material Symbols Outlined');
         expect(iconProps.fontStyle).toBe('normal');
-        expect(iconProps.lineHeight).toBe('1');
+        // line-height: 1 resolves to the font size in px in getComputedStyle (never '1').
+        expect(iconProps.lineHeight).toBe(iconProps.fontSize);
         expect(iconProps.textRendering).toBe('optimizelegibility');
       }
     });
