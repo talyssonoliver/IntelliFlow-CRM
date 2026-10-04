@@ -7711,7 +7711,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.sarahJohnson,
       toUserName: 'Sarah Johnson',
       reason: 'rule_match',
-      details: { score: 82, estimatedValue: 95000 },
+      details: { entityType: 'lead', score: 82, estimatedValue: 95000 },
       createdAt: new Date(now - 2 * HOUR),
     },
     {
@@ -7722,7 +7722,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.sarahJohnson,
       toUserName: 'Sarah Johnson',
       reason: 'rule_match',
-      details: { score: 88, estimatedValue: 120000 },
+      details: { entityType: 'lead', score: 88, estimatedValue: 120000 },
       createdAt: new Date(now - 4 * HOUR),
     },
     {
@@ -7733,7 +7733,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.emilyDavis,
       toUserName: 'Emily Davis',
       reason: 'rule_match',
-      details: { source: 'REFERRAL' },
+      details: { entityType: 'lead', source: 'REFERRAL' },
       createdAt: new Date(now - 6 * HOUR),
     },
     {
@@ -7744,7 +7744,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.mikeDavis,
       toUserName: 'Mike Davis',
       reason: 'rule_match',
-      details: { source: 'WEBSITE', score: 85 },
+      details: { entityType: 'lead', source: 'WEBSITE', score: 85 },
       createdAt: new Date(now - 8 * HOUR),
     },
     {
@@ -7755,7 +7755,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.emilyDavis,
       toUserName: 'Emily Davis',
       reason: 'manual',
-      details: { note: 'Referral from existing client' },
+      details: { entityType: 'lead', note: 'Referral from existing client' },
       createdAt: new Date(now - 12 * HOUR),
     },
     {
@@ -7764,7 +7764,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.jamesWilson,
       toUserName: 'James Wilson',
       reason: 'skill_match',
-      details: { skill: 'API Integration', proficiency: 90 },
+      details: { entityType: 'lead', skill: 'API Integration', proficiency: 90 },
       createdAt: new Date(now - 18 * HOUR),
     },
     {
@@ -7775,7 +7775,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.davidKim,
       toUserName: 'David Kim',
       reason: 'load_balance',
-      details: { currentLoad: 1, maxCapacity: 12 },
+      details: { entityType: 'lead', currentLoad: 1, maxCapacity: 12 },
       createdAt: new Date(now - 1 * DAY),
     },
     {
@@ -7786,7 +7786,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.sarahJohnson,
       toUserName: 'Sarah Johnson',
       reason: 'rule_match',
-      details: { score: 79, estimatedValue: 55000 },
+      details: { entityType: 'lead', score: 79, estimatedValue: 55000 },
       createdAt: new Date(now - 1.5 * DAY),
     },
     {
@@ -7797,7 +7797,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.mikeDavis,
       toUserName: 'Mike Davis',
       reason: 'manual',
-      details: { note: 'Reassigned for technical evaluation' },
+      details: { entityType: 'lead', note: 'Reassigned for technical evaluation' },
       createdAt: new Date(now - 2 * DAY),
     },
     {
@@ -7806,7 +7806,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.emilyDavis,
       toUserName: 'Emily Davis',
       reason: 'skill_match',
-      details: { skill: 'SMB Sales', proficiency: 82 },
+      details: { entityType: 'lead', skill: 'SMB Sales', proficiency: 82 },
       createdAt: new Date(now - 2 * DAY),
     },
     {
@@ -7819,7 +7819,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.sarahJohnson,
       toUserName: 'Sarah Johnson',
       reason: 'escalation',
-      details: { score: 92, previousAgent: 'Mike Davis' },
+      details: { entityType: 'lead', score: 92, previousAgent: 'Mike Davis' },
       createdAt: new Date(now - 2.5 * DAY),
     },
     {
@@ -7830,7 +7830,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.jamesWilson,
       toUserName: 'James Wilson',
       reason: 'rule_match',
-      details: { source: 'EMAIL', score: 55 },
+      details: { entityType: 'lead', source: 'EMAIL', score: 55 },
       createdAt: new Date(now - 3 * DAY),
     },
     {
@@ -7841,7 +7841,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.davidKim,
       toUserName: 'David Kim',
       reason: 'manual',
-      details: { note: 'Alex on leave, reassigning' },
+      details: { entityType: 'lead', note: 'Alex on leave, reassigning' },
       createdAt: new Date(now - 4 * DAY),
     },
     {
@@ -7852,7 +7852,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.mikeDavis,
       toUserName: 'Mike Davis',
       reason: 'rule_match',
-      details: { tags: ['technical'], source: 'WEBSITE' },
+      details: { entityType: 'lead', tags: ['technical'], source: 'WEBSITE' },
       createdAt: new Date(now - 4.5 * DAY),
     },
     {
@@ -7863,7 +7863,7 @@ async function seedRoutingAudits(tenantId: string) {
       toUserId: SEED_IDS.users.sarahJohnson,
       toUserName: 'Sarah Johnson',
       reason: 'rule_match',
-      details: { score: 88, estimatedValue: 120000 },
+      details: { entityType: 'lead', score: 88, estimatedValue: 120000 },
       createdAt: new Date(now - 5 * DAY),
     },
   ];
