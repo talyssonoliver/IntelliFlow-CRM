@@ -183,6 +183,10 @@ export function assessState(state, headSha, preshipSha256) {
       // Advisory (`required: false`) steps that did not pass, as `id:verdict`.
       // The attestation states what the gate tolerated rather than reading clean.
       advisory_not_passed: advisoryNotPassed,
+      // `full`, or `related`/`none` when the laptop ran only the tests related
+      // to the diff (the full suite is CI's). A state file from before test
+      // scoping ran the full suite.
+      test_scope: state.test_scope?.scope ?? 'full',
       preship_sha256: preshipSha256,
       node: process.version,
       attested_at: new Date().toISOString(),

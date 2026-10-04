@@ -12,6 +12,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { expectJsonResponse } from './utils/api-preflight';
 
 test.describe('Smoke Tests', () => {
   test.describe('Application Availability', () => {
@@ -134,15 +135,29 @@ test.describe('Smoke Tests', () => {
   });
 
   test.describe('API Health', () => {
+    // Preflight: the API base must answer with JSON. An HTML answer means the
+    // request hit a fallback page or the base URL points at the wrong server;
+    // without this check that surfaced only as `Unexpected token '<'` from
+    // response.json(), naming neither the URL nor the status.
+    test('preflight: API base answers with JSON, not an HTML fallback', async ({ request }) => {
+      const response = await request.get('/api/health');
+      await expectJsonResponse(response);
+      expect(response.headers()['content-type']).toContain('application/json');
+    });
+
     test('should have healthy API endpoint', async ({ request }) => {
       // Test API health endpoint
       const response = await request.get('/api/health');
 
-      // Should return 200 OK
-      expect(response.ok()).toBeTruthy();
+      // Should return valid JSON — checked before parsing, so an HTML answer
+      // fails with the URL and status instead of a JSON syntax error.
+      const body = await expectJsonResponse(response);
 
-      // Should return valid JSON
-      const body = await response.json();
+      // Should return 200 OK
+      expect(
+        response.ok(),
+        `GET ${response.url()} returned HTTP ${response.status()}`
+      ).toBeTruthy();
       expect(body).toHaveProperty('status');
     });
 
