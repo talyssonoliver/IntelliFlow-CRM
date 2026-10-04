@@ -23,8 +23,15 @@ const API_RUNNING = process.env.E2E_START_API === '1';
 /** A console error caused by the deliberately absent API, not by the page. */
 function isMissingApiError(msg: ConsoleMessage): boolean {
   if (API_RUNNING) return false;
+  if (msg.location().url.includes('/api/trpc')) return true;
+  // AuthContext logs EVERY auth-status failure with this prefix. Only the one
+  // the absent API causes is expected: the tRPC client parsing the web app's
+  // HTML 404 page as JSON. Any other auth error (a broken client, a bad
+  // payload) must still fail the test.
+  const text = msg.text();
   return (
-    msg.location().url.includes('/api/trpc') || msg.text().startsWith('[AuthContext] Query error')
+    text.startsWith('[AuthContext] Query error') &&
+    (text.includes("Unexpected token '<'") || text.includes('<!DOCTYPE'))
   );
 }
 
