@@ -254,6 +254,50 @@ describe('Routing Router', () => {
       expect(result.items[0].reason).toBe('rule_match');
       expect(result.items[0].rule?.name).toBe('High Score Leads');
     });
+
+    it('returns the explicit assignment contract with leadId read from details', async () => {
+      const createdAt = new Date('2026-10-04T10:00:00Z');
+      (prismaMock.routingAudit.findMany as any).mockResolvedValue([
+        {
+          id: 'audit-1',
+          ticketId: TEST_UUIDS.lead1,
+          reason: 'manual',
+          ruleId: null,
+          ruleName: null,
+          toUserId: TEST_UUIDS.user1,
+          toUserName: 'Test User',
+          details: { leadId: TEST_UUIDS.lead1 },
+          createdAt,
+        },
+        {
+          id: 'audit-2',
+          ticketId: 't-2',
+          reason: 'rule_match',
+          ruleId: 'r-1',
+          ruleName: null,
+          toUserId: TEST_UUIDS.user1,
+          toUserName: 'Test User',
+          details: { leadId: 42 },
+          createdAt,
+        },
+      ]);
+
+      const result = await caller.getAssignments({ limit: 20 });
+
+      expect(result.items[0]).toEqual({
+        id: 'audit-1',
+        leadId: TEST_UUIDS.lead1,
+        reason: 'manual',
+        createdAt,
+        rule: null,
+        assignedTo: { id: TEST_UUIDS.user1, name: 'Test User', email: '' },
+      });
+      // A non-string leadId is not trusted; an unnamed rule still shows.
+      expect(result.items[1].leadId).toBeNull();
+      expect(result.items[1].rule).toEqual({ name: 'Unknown' });
+      // Raw RoutingAudit columns are no longer leaked to the client.
+      expect(result.items[0]).not.toHaveProperty('ticketId');
+    });
   });
 
   describe('getAgentWorkload', () => {
@@ -365,7 +409,13 @@ describe('Routing Router', () => {
         reason: 'manual',
       });
 
-      expect(result.reason).toBe('manual');
+      expect(result).toEqual({
+        auditId: 'audit-1',
+        leadId: TEST_UUIDS.lead1,
+        userId: TEST_UUIDS.user1,
+        reason: 'manual',
+        createdAt: mockAudit.createdAt,
+      });
     });
 
     it('should reject assignment for lead not in tenant', async () => {
