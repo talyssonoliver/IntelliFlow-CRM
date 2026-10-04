@@ -17,6 +17,8 @@ const h = vi.hoisted(() => ({
   push: vi.fn(),
   signOut: vi.fn(),
   verifyOtp: vi.fn(),
+  adminSignOut: vi.fn(),
+  createIsolatedAuthClient: vi.fn(),
   getSession: vi.fn(),
   getUser: vi.fn(),
   storeSessionTokens: vi.fn(),
@@ -42,9 +44,12 @@ vi.mock('@/lib/supabase-browser', () => ({
       verifyOtp: h.verifyOtp,
       getSession: h.getSession,
       getUser: h.getUser,
+      admin: { signOut: h.adminSignOut },
     },
   }),
   clearSupabaseLocalStorage: h.clearSupabaseLocalStorage,
+  // Verifying a link while signed in uses an isolated client; it shares the verifyOtp spy.
+  createIsolatedAuthClient: h.createIsolatedAuthClient,
 }));
 vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: h.storeSessionTokens,
@@ -68,6 +73,8 @@ describe('OAuthCallback magic link', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
+    h.createIsolatedAuthClient.mockReturnValue({ auth: { verifyOtp: h.verifyOtp } });
+    h.adminSignOut.mockResolvedValue({ error: null });
     h.order.length = 0;
     h.getStoredAccessToken.mockReturnValue(null);
     h.query.value = 'token_hash=hash123&type=magiclink&next=/dashboard';
@@ -79,6 +86,15 @@ describe('OAuthCallback magic link', () => {
       h.order.push('verifyOtp');
       return { data: { session: SESSION, user: { id: 'u1', email: 'a@b.co' } }, error: null };
     });
+  });
+
+  it('with no session, verifies on the app client and revokes nothing extra', async () => {
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(h.createIsolatedAuthClient).not.toHaveBeenCalled();
+    expect(h.adminSignOut).not.toHaveBeenCalled();
   });
 
   it('signs out the existing session FIRST, then verifies the token hash', async () => {
@@ -168,6 +184,8 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
+    h.createIsolatedAuthClient.mockReturnValue({ auth: { verifyOtp: h.verifyOtp } });
+    h.adminSignOut.mockResolvedValue({ error: null });
     h.query.value = 'token_hash=hash123&type=magiclink&next=/leads';
     h.getStoredAccessToken.mockReturnValue(VICTIM_JWT);
     h.signOut.mockResolvedValue({ error: null });
@@ -247,6 +265,57 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     render(<OAuthCallback onSuccess={vi.fn()} />);
 
     expect(await screen.findByText('Switch account?')).toBeInTheDocument();
+  });
+
+  it('verifies the link on the isolated client, so nothing is persisted before consent', async () => {
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+
+    await screen.findByText('Switch account?');
+    expect(h.createIsolatedAuthClient).toHaveBeenCalledTimes(1);
+    expect(h.clearSupabaseLocalStorage).not.toHaveBeenCalled();
+    expect(h.adminSignOut).not.toHaveBeenCalled();
+  });
+
+  it('Continue revokes the replaced session once the new one is signed in', async () => {
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(h.adminSignOut).toHaveBeenCalledTimes(1);
+    expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local');
+    expect(h.signOut).not.toHaveBeenCalled();
+  });
+
+  it('the same account revokes the replaced session after signing in', async () => {
+    h.verifyOtp.mockResolvedValue({
+      data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
+      error: null,
+    });
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local');
+  });
+
+  it('leaving the prompt without a choice revokes the held session', async () => {
+    const { unmount } = render(<OAuthCallback onSuccess={vi.fn()} />);
+    await screen.findByText('Switch account?');
+
+    unmount();
+    expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local');
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  it('pagehide while the prompt is open revokes the held session once', async () => {
+    const { unmount } = render(<OAuthCallback onSuccess={vi.fn()} />);
+    await screen.findByText('Switch account?');
+
+    globalThis.dispatchEvent(new Event('pagehide'));
+    unmount();
+    expect(h.adminSignOut).toHaveBeenCalledTimes(1);
+    expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local');
   });
 
   it('removes the token from the address bar before showing the prompt', async () => {

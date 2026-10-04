@@ -26,7 +26,11 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, cn } from '@intelliflow/ui';
-import { getSupabaseBrowserClient, clearSupabaseLocalStorage } from '@/lib/supabase-browser';
+import {
+  getSupabaseBrowserClient,
+  clearSupabaseLocalStorage,
+  createIsolatedAuthClient,
+} from '@/lib/supabase-browser';
 import { storeSessionFingerprint } from '@/lib/shared/login-security';
 import {
   storeSessionTokens,
@@ -155,6 +159,18 @@ function dropAbandonedSession(
   if (!current || current === abandonedAccessToken) {
     clearSessionTokens();
     clearTokenCookie();
+  }
+}
+
+/**
+ * Revoke a session server-side without touching the SDK's storage or emitting SIGNED_OUT, so it
+ * cannot disturb the session the app holds now. Fire and forget, like dropAbandonedSession.
+ */
+function revokeSession(supabase: BrowserSupabase, accessToken: string): void {
+  try {
+    supabase.auth.admin.signOut(accessToken, 'local').catch(() => undefined);
+  } catch {
+    // Nothing else to clean: this session was never stored by this callback.
   }
 }
 
@@ -379,7 +395,8 @@ export function OAuthCallback({
       supabase: BrowserSupabase,
       session: { access_token: string; refresh_token?: string },
       user: { id: string; email?: string } | undefined,
-      pending: PendingMagicLink
+      pending: PendingMagicLink,
+      previousAccessToken: string | null = null
     ) => {
       let activeTenantId = pending.tenantHint;
       if (pending.grant) {
@@ -393,6 +410,11 @@ export function OAuthCallback({
         if (abandonedByWatchdog(abortedRef, supabase, session)) return;
       }
 
+      // The session this link replaces is revoked only once the new one is certain, so a failed
+      // claim never leaves the user signed out of both.
+      if (previousAccessToken && previousAccessToken !== session.access_token) {
+        revokeSession(supabase, previousAccessToken);
+      }
       pendingNextRef.current = pending.next;
       finishSignIn(session, user, 'magiclink', activeTenantId);
     },
@@ -404,9 +426,10 @@ export function OAuthCallback({
   // No local session: any stale SDK session is signed out FIRST so a different user's session
   // can never win, then the link signs in.
   // A local session exists: the link's identity is only known once the token is verified, so it
-  // is verified WITHOUT touching the app session (no signOut, no token or cookie write). The
-  // same account continues straight into sign-in; a different account is held in memory and the
-  // user must confirm the switch.
+  // is verified on an isolated client that persists nothing and emits nothing to AuthContext. The
+  // same account continues straight into sign-in; a different account is held in memory only and
+  // the user must confirm the switch. Either way the replaced session is revoked once the new
+  // one is signed in.
   const exchangeMagicLink = useCallback(async () => {
     const pending = pendingLinkRef.current;
     pendingLinkRef.current = null; // single use
@@ -428,7 +451,8 @@ export function OAuthCallback({
     }
     if (abortedRef.current) return;
 
-    const verification = supabase.auth.verifyOtp({
+    const verifier = preexistingToken ? createIsolatedAuthClient() : supabase;
+    const verification = verifier.auth.verifyOtp({
       type: 'magiclink',
       token_hash: pending.tokenHash,
     });
@@ -461,7 +485,13 @@ export function OAuthCallback({
       return;
     }
 
-    await completeMagicLink(supabase, data.session, data.user ?? undefined, pending);
+    await completeMagicLink(
+      supabase,
+      data.session,
+      data.user ?? undefined,
+      pending,
+      preexistingToken
+    );
   }, [completeMagicLink]);
 
   // Magic-link flow (partner Portal -> CRM): /auth/callback?token_hash=...&type=magiclink&next=...
@@ -630,6 +660,23 @@ export function OAuthCallback({
     openModal(el);
   }, [status]);
 
+  // A held session for another account lives only in memory. If the user leaves the prompt
+  // without choosing (tab closed, back button, navigation), revoke it so a valid session for an
+  // account they never agreed to cannot outlive the page.
+  useEffect(() => {
+    const revokeHeld = () => {
+      const held = heldSessionRef.current;
+      heldSessionRef.current = null;
+      const supabase = getSupabaseBrowserClient();
+      if (held && supabase) revokeSession(supabase, held.session.access_token);
+    };
+    globalThis.addEventListener('pagehide', revokeHeld);
+    return () => {
+      globalThis.removeEventListener('pagehide', revokeHeld);
+      revokeHeld();
+    };
+  }, []);
+
   // Focus management: move focus to primary action on error state (NF-007)
   useEffect(() => {
     if (status === 'error' && backToLoginRef.current) {
@@ -699,7 +746,13 @@ export function OAuthCallback({
       return;
     }
     setStatus('exchanging');
-    completeMagicLink(supabase, held.session, held.user, held.pending).catch(reportError);
+    completeMagicLink(
+      supabase,
+      held.session,
+      held.user,
+      held.pending,
+      getStoredAccessToken()
+    ).catch(reportError);
   };
 
   const handleStaySignedIn = () => {

@@ -51,6 +51,8 @@ vi.mock('@/lib/supabase-browser', () => ({
     },
   }),
   clearSupabaseLocalStorage: h.clearSupabaseLocalStorage,
+  // Verifying a link while signed in uses an isolated client; it shares the verifyOtp spy.
+  createIsolatedAuthClient: () => ({ auth: { verifyOtp: h.verifyOtp } }),
 }));
 vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: h.storeSessionTokens,
