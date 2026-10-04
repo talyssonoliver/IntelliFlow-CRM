@@ -327,6 +327,25 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(h.refreshSession).not.toHaveBeenCalled();
   });
 
+  it('a same-account verification that lands after the page is gone signs nobody in', async () => {
+    let land!: (value: unknown) => void;
+    h.verifyOtp.mockReturnValue(new Promise((resolve) => (land = resolve)));
+    const { unmount } = render(<OAuthCallback onSuccess={vi.fn()} />);
+    await waitFor(() => expect(h.verifyOtp).toHaveBeenCalled());
+
+    unmount();
+    await act(async () => {
+      land({
+        data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
+        error: null,
+      });
+    });
+
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local'));
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+    expect(h.syncTokenToCookie).not.toHaveBeenCalled();
+  });
+
   it('the same account revokes the replaced session after signing in', async () => {
     h.verifyOtp.mockResolvedValue({
       data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },

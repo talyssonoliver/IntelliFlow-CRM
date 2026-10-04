@@ -536,15 +536,22 @@ export function OAuthCallback({
       );
     }
 
-    if (preexistingToken && !isSameAccount(currentIdentity, data.user)) {
-      if (unmountedRef.current) {
+    // The page is gone (navigated away or closed): a verification that lands now must not sign
+    // anyone in behind the user's back, whichever account it is for. Discard it.
+    if (unmountedRef.current) {
+      if (isolated) {
         revokeEvenIfExpired(
           supabase,
           data.session.access_token,
           data.session.refresh_token ?? null
         );
-        return;
+      } else {
+        dropAbandonedSession(supabase, data.session.access_token, preexistingToken);
       }
+      return;
+    }
+
+    if (preexistingToken && !isSameAccount(currentIdentity, data.user)) {
       heldSessionRef.current = {
         session: data.session,
         user: data.user ?? undefined,
