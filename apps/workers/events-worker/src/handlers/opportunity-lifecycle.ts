@@ -120,8 +120,18 @@ export function createOpportunityLifecycleHandlers(
         event.payload as OpportunityDescriptionUpdatedPayload;
 
       // Signal search re-index / audit trail that description text changed.
+      // The text itself is NOT logged: a deal description is free text that
+      // can carry personal data, and worker logs are not where it should be
+      // copied. Lengths are enough to tell a first description, an edit and a
+      // clear apart.
       logger.info(
-        { opportunityId, previousDescription, newDescription, updatedBy },
+        {
+          opportunityId,
+          updatedBy,
+          hadPreviousDescription: previousDescription != null && previousDescription !== '',
+          previousLength: previousDescription?.length ?? 0,
+          newLength: newDescription?.length ?? 0,
+        },
         'Opportunity description changed'
       );
 
