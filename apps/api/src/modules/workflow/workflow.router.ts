@@ -571,6 +571,49 @@ function validateWorkflowGraph(graph: GraphInput): string[] {
 // Router
 // ---------------------------------------------------------------------------
 
+/**
+ * What `workflow.getById` returns. Explicit rather than the raw
+ * WorkflowDefinition row: the row's Json columns are Prisma's recursive
+ * JsonValue, and inferring that through tRPC overflowed TypeScript's
+ * instantiation depth on the web client (TS2589). `triggerConfig` and `steps`
+ * are typed `unknown` — the canvas validates their envelope where it reads them.
+ */
+export interface WorkflowDefinitionDto {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string | null;
+  category: string;
+  triggerType: string;
+  triggerConfig: unknown;
+  steps: unknown;
+  isActive: boolean;
+  version: number;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+function toWorkflowDefinitionDto(w: WorkflowDefinitionDto): WorkflowDefinitionDto {
+  return {
+    id: w.id,
+    tenantId: w.tenantId,
+    name: w.name,
+    description: w.description,
+    category: w.category,
+    triggerType: w.triggerType,
+    triggerConfig: w.triggerConfig,
+    steps: w.steps,
+    isActive: w.isActive,
+    version: w.version,
+    createdBy: w.createdBy,
+    createdAt: w.createdAt,
+    updatedAt: w.updatedAt,
+    deletedAt: w.deletedAt,
+  };
+}
+
 export const workflowRouter = createTRPCRouter({
   // -------------------------------------------------------------------------
   // CRUD procedures — IFC-031
@@ -783,13 +826,15 @@ export const workflowRouter = createTRPCRouter({
     }),
 
   /** Get a single workflow definition by ID (excludes soft-deleted). */
-  getById: tenantProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    const tenantId = ctx.tenant.tenantId;
-    const workflow = await ctx.prismaWithTenant.workflowDefinition.findFirst({
-      where: { id: input.id, tenantId, deletedAt: null },
-    });
-    return workflow ?? null;
-  }),
+  getById: tenantProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }): Promise<WorkflowDefinitionDto | null> => {
+      const tenantId = ctx.tenant.tenantId;
+      const workflow = await ctx.prismaWithTenant.workflowDefinition.findFirst({
+        where: { id: input.id, tenantId, deletedAt: null },
+      });
+      return workflow ? toWorkflowDefinitionDto(workflow) : null;
+    }),
 
   /**
    * PG-193 — Fetch a single WorkflowExecution by ID, joined with its

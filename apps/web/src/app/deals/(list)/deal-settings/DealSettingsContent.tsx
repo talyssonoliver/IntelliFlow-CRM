@@ -445,17 +445,13 @@ export default function DealSettingsContent() {
   ]);
 
   const handleReset = useCallback(async () => {
-    // Each mutateAsync is typed through a deep tRPC generic; Promise.all
-    // on the raw promises triggers TS2589. Wrapping in `void` collapses the
-    // inferred type to `Promise<void>` and keeps the parallel execution.
-    const run = (p: Promise<unknown>): Promise<void> => p.then(() => undefined);
     try {
       await Promise.all([
-        run(duplicateRulesReset.mutateAsync()),
-        run(requiredFieldsReset.mutateAsync()),
-        run(winLossReset.mutateAsync()),
-        run(scoringReset.mutateAsync()),
-        run(automationReset.mutateAsync()),
+        duplicateRulesReset.mutateAsync(),
+        requiredFieldsReset.mutateAsync(),
+        winLossReset.mutateAsync(),
+        scoringReset.mutateAsync(),
+        automationReset.mutateAsync(),
       ]);
       setIsDirty(false);
       setResetOpen(false);

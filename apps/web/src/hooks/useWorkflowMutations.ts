@@ -11,29 +11,11 @@ import { useRouter } from 'next/navigation';
 import { toast } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 
-// Simplified mutation shape to break deep tRPC type inference (avoids TS2589)
-interface SimpleMutation<TInput> {
-  mutate: (input: TInput) => void;
-  isPending: boolean;
-}
-
 export function useWorkflowMutations() {
   const router = useRouter();
   const utils = api.useUtils();
 
-  const createMutation: SimpleMutation<{
-    name: string;
-    category: string;
-    triggerType: string;
-    triggerConfig: Record<string, unknown>;
-    steps: Array<{
-      id: number;
-      type: string;
-      config?: Record<string, unknown>;
-      position?: { x: number; y: number };
-    }>;
-    edges?: Array<{ id: string; source: string; target: string; label?: string }>;
-  }> = api.workflow.create.useMutation({
+  const createMutation = api.workflow.create.useMutation({
     onSuccess: () => {
       void utils.workflow.list.invalidate();
       router.push('/cases/case-workflows');
@@ -47,17 +29,7 @@ export function useWorkflowMutations() {
     },
   });
 
-  const updateMutation: SimpleMutation<{
-    id: string;
-    name?: string;
-    steps?: Array<{
-      id: number;
-      type: string;
-      config?: Record<string, unknown>;
-      position?: { x: number; y: number };
-    }>;
-    edges?: Array<{ id: string; source: string; target: string; label?: string }>;
-  }> = api.workflow.update.useMutation({
+  const updateMutation = api.workflow.update.useMutation({
     // Invalidate BOTH the list (so the row re-renders with the new step
     // count / updatedAt) AND the single-workflow cache (so revisiting the
     // edit screen reflects the just-saved graph, not the stale one).
@@ -75,7 +47,7 @@ export function useWorkflowMutations() {
     },
   });
 
-  const deleteMutation: SimpleMutation<{ id: string }> = api.workflow.delete.useMutation({
+  const deleteMutation = api.workflow.delete.useMutation({
     onSuccess: () => {
       void utils.workflow.list.invalidate();
       toast({ title: 'Workflow deleted' });
@@ -89,19 +61,18 @@ export function useWorkflowMutations() {
     },
   });
 
-  const setActiveMutation: SimpleMutation<{ id: string; isActive: boolean }> =
-    api.workflow.setActive.useMutation({
-      onSuccess: () => {
-        void utils.workflow.list.invalidate();
-      },
-      onError: (error: { message?: string }) => {
-        toast({
-          title: 'Error',
-          description: error.message ?? 'Failed to update workflow status',
-          variant: 'destructive',
-        });
-      },
-    });
+  const setActiveMutation = api.workflow.setActive.useMutation({
+    onSuccess: () => {
+      void utils.workflow.list.invalidate();
+    },
+    onError: (error: { message?: string }) => {
+      toast({
+        title: 'Error',
+        description: error.message ?? 'Failed to update workflow status',
+        variant: 'destructive',
+      });
+    },
+  });
 
   return {
     createMutation,
