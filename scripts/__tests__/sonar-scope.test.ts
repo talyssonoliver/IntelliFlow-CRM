@@ -147,7 +147,12 @@ describe('the committed sonar-project.properties', () => {
     expect(excluded('tools/scripts/lib/contract-parser.ts')).toBe(false);
   });
 
-  it('does not exclude product test helpers that were analysed before', () => {
-    expect(excluded('apps/web/src/components/deals/__tests__/deal-test-utils.tsx')).toBe(false);
+  it('keeps analysing product test helpers, but expects no coverage of them', () => {
+    const helper = 'apps/web/src/components/deals/__tests__/deal-test-utils.tsx';
+    expect(excluded(helper)).toBe(false);
+    expect(scope.coverageExclusions.some((re) => re.test(helper))).toBe(true);
+    expect(
+      scope.coverageExclusions.some((re) => re.test('apps/web/src/__mocks__/next/navigation.ts'))
+    ).toBe(true);
   });
 });
