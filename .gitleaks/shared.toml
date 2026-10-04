@@ -1,0 +1,82 @@
+# Shared secret-scan rules. Canonical copy: C:/Users/talys/ops/secret-scan/shared.toml
+# Every repo carries an identical copy at .gitleaks/shared.toml; edit the
+# canonical copy and re-sync, never one repo alone.
+#
+# Owner ruling 2026-10-04: a credential-SHAPED string is a finding even when
+# the value is fake. GitGuardian flags shape, and so would anyone else
+# scanning the repo. Tests build such strings at runtime from parts
+# ('post' + 'gres://') and use *.example.invalid hosts.
+#
+# The rules below add what gitleaks' defaults miss and GitGuardian catches:
+# its defaults have entropy floors and stopwords that let low-entropy fakes
+# (a database URI with a short password, a short Bearer token) through.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "uri-credentials"
+description = "Credentials embedded in a connection URI (postgres, redis, mongodb, amqp, https...)"
+regex = '''(?i)\b[a-z][a-z0-9+.-]{1,20}://[^\s:/@'"`<>{}$]{1,64}:([^\s/@'"`<>{}$]{1,128})@[a-z0-9_.\[\]-]+'''
+secretGroup = 1
+keywords = ["://"]
+
+[[rules]]
+id = "bearer-token"
+description = "Literal Bearer token"
+regex = '''(?i)\bbearer\s+([a-z0-9\-._~+/]{12,}=*)'''
+secretGroup = 1
+keywords = ["bearer"]
+
+[[rules]]
+id = "password-literal"
+description = "Quoted literal assigned to a password field"
+regex = '''(?i)\b[a-z0-9_]*(?:password|passwd|pwd)["']?\s*(?::|=|=>)\s*["'`]([^"'`\s$<>{}]{6,})["'`]'''
+secretGroup = 1
+keywords = ["password", "passwd", "pwd"]
+
+[[rules]]
+id = "notion-token"
+description = "Notion integration token"
+regex = '''\b((?:ntn|secret)_[A-Za-z0-9]{30,})'''
+secretGroup = 1
+keywords = ["ntn_", "secret_"]
+
+[[rules]]
+id = "neon-host"
+description = "Real-looking Neon database host"
+regex = '''\b(ep-[a-z0-9-]+\.[a-z0-9.-]*neon\.tech)\b'''
+secretGroup = 1
+keywords = ["neon.tech"]
+
+[[rules]]
+id = "openai-style-key"
+description = "sk- prefixed API key (OpenAI, Anthropic and similar)"
+regex = '''\b(sk-(?:proj-|ant-|live-)?[A-Za-z0-9_-]{20,})'''
+secretGroup = 1
+keywords = ["sk-"]
+
+[[rules]]
+id = "stripe-webhook-secret"
+description = "Stripe webhook signing secret"
+regex = '''\b(whsec_[A-Za-z0-9]{16,})'''
+secretGroup = 1
+keywords = ["whsec_"]
+
+[[rules]]
+id = "jwt-any"
+description = "JWT-shaped string (header.payload.signature), signed or not"
+regex = '''\b(eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{0,})'''
+secretGroup = 1
+keywords = ["eyj"]
+
+# Placeholders that are not credential-shaped. Narrow on purpose: the value
+# must be ONLY a placeholder, not merely contain one.
+[[allowlists]]
+description = "Pure placeholders: repeated filler characters, env/template references, angle-bracket names"
+regexTarget = "secret"
+regexes = [
+  '''^(?i)(x+|\*+|\.+|_+|#+|0+|-+)$''',
+  '''^(?i)ep-x+\.[a-z0-9.-]*neon\.tech$''',
+  '''^(?i)(redacted|\[redacted\])$''',
+]
