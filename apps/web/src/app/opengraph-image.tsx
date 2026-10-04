@@ -10,7 +10,10 @@ import { ImageResponse } from 'next/og';
 // matches the actual brand tokens defined in `layout.tsx` metadata
 // instead of a hand-made asset going stale.
 
-export const runtime = 'edge';
+// No `export const runtime = 'edge'`: next.config enables
+// `experimental.useCache`, and Next refuses a route-segment `runtime` config
+// alongside it ("not compatible with nextConfig.experimental.useCache").
+// `next/og` renders on the default Node.js runtime as well.
 export const alt = 'IntelliFlow CRM — AI-Powered Customer Relationship Management';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
