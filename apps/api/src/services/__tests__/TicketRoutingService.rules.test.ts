@@ -19,9 +19,20 @@ function row(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function build(rules: unknown[], agents: Array<{ userId: string }> = []) {
+function build(
+  rules: unknown[],
+  agents: Array<{ userId: string }> = [],
+  tenantUsers: string[] = ['user-alice', 'user-bob']
+) {
   const prisma = {
     routingRule: { findMany: vi.fn().mockResolvedValue(rules) },
+    user: {
+      findFirst: vi
+        .fn()
+        .mockImplementation(async ({ where }: { where: { id: string; tenantId: string } }) =>
+          where.tenantId === TENANT && tenantUsers.includes(where.id) ? { id: where.id } : null
+        ),
+    },
     agentAvailability: {
       findMany: vi.fn().mockResolvedValue(
         agents.map((a) => ({
@@ -72,8 +83,16 @@ describe('TicketRoutingService.findMatchingRule', () => {
 
   it('returns the first matching rule in query order', async () => {
     const { service } = build([
-      row({ id: 'first', name: 'First', actions: [{ type: 'assign_to_user', target: 'u1' }] }),
-      row({ id: 'second', name: 'Second', actions: [{ type: 'assign_to_user', target: 'u2' }] }),
+      row({
+        id: 'first',
+        name: 'First',
+        actions: [{ type: 'assign_to_user', target: 'user-alice' }],
+      }),
+      row({
+        id: 'second',
+        name: 'Second',
+        actions: [{ type: 'assign_to_user', target: 'user-bob' }],
+      }),
     ]);
 
     expect((await service.findMatchingRule(TENANT, 'BILLING', 'LOW'))?.id).toBe('first');
@@ -114,6 +133,21 @@ describe('TicketRoutingService.findMatchingRule', () => {
     expect(
       await service.findMatchingRule(TENANT, 'GENERAL', 'LOW', { slaStatus: 'AT_RISK' })
     ).not.toBeNull();
+  });
+
+  it('only assigns to users of the tenant, skipping a rule that targets anyone else', async () => {
+    const { prisma, service } = build([
+      row({ id: 'foreign', actions: [{ type: 'assign_to_user', target: 'user-of-other-tenant' }] }),
+      row({ id: 'own', actions: [{ type: 'assign_to_user', target: 'user-bob' }] }),
+    ]);
+
+    const match = await service.findMatchingRule(TENANT, 'BILLING', 'LOW');
+
+    expect(match).toEqual({ id: 'own', assignToUserId: 'user-bob', ruleName: 'Billing to Alice' });
+    expect(prisma.user.findFirst).toHaveBeenCalledWith({
+      where: { id: 'user-of-other-tenant', tenantId: TENANT },
+      select: { id: true },
+    });
   });
 
   it('resolves assign_to_skill to the best eligible agent with that skill', async () => {

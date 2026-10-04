@@ -259,7 +259,15 @@ export class TicketRoutingService {
     actions: Array<{ type: string; target: string }>
   ): Promise<string | null> {
     const userAction = actions.find((a) => a.type === 'assign_to_user');
-    if (userAction) return userAction.target;
+    if (userAction) {
+      // The target is free text in the stored rule: only assign to a user of this tenant,
+      // so a rule can never route a ticket to another tenant's user (or a deleted one).
+      const user = await this.prisma.user.findFirst({
+        where: { id: userAction.target, tenantId },
+        select: { id: true },
+      });
+      return user?.id ?? null;
+    }
 
     const skillAction = actions.find((a) => a.type === 'assign_to_skill');
     if (skillAction) {

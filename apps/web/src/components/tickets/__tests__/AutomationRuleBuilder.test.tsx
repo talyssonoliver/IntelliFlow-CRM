@@ -320,6 +320,42 @@ describe('AutomationRuleBuilder', () => {
     expect(screen.getByDisplayValue('HIGH, CRITICAL')).toBeInTheDocument();
   });
 
+  it('keeps a disabled rule disabled when it is edited', () => {
+    const mutateFn = vi.fn();
+    mockUpdateMutation.mockReturnValue({ mutate: mutateFn, isPending: false });
+    mockListQuery.mockReturnValue({
+      data: [{ ...mockRule1, isActive: false }],
+      isLoading: false,
+    });
+    render(<AutomationRuleBuilder />);
+    fireEvent.click(screen.getByLabelText('Edit High Priority Billing'));
+    fireEvent.click(screen.getByText('Save Changes'));
+    expect(mutateFn).toHaveBeenCalledWith(expect.objectContaining({ isActive: false }));
+  });
+
+  it('keeps lower-case boolean values for SLA breached conditions', () => {
+    const mutateFn = vi.fn();
+    mockUpdateMutation.mockReturnValue({ mutate: mutateFn, isPending: false });
+    mockListQuery.mockReturnValue({
+      data: [
+        {
+          ...mockRule1,
+          conditions: [{ field: 'isSlaBreached', operator: 'equals', value: 'true' }],
+        },
+      ],
+      isLoading: false,
+    } as never);
+    render(<AutomationRuleBuilder />);
+    fireEvent.click(screen.getByLabelText('Edit High Priority Billing'));
+    fireEvent.change(screen.getByLabelText('Condition 1 value'), { target: { value: 'TRUE' } });
+    fireEvent.click(screen.getByText('Save Changes'));
+    expect(mutateFn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conditions: [{ field: 'isSlaBreached', operator: 'equals', value: 'true' }],
+      })
+    );
+  });
+
   it('shows the loading skeleton while rules load', () => {
     mockListQuery.mockReturnValue({ data: undefined, isLoading: true });
     render(<AutomationRuleBuilder />);

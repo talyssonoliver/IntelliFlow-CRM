@@ -77,6 +77,28 @@ function toTicketRuleDto(row: TicketRuleRow): TicketAutomationRuleDto {
   };
 }
 
+/**
+ * assign_to_user targets are stored as free text; reject any that is not a user of the
+ * caller's tenant, so a rule cannot point at another tenant's user.
+ */
+async function assertAssigneesInTenant(
+  db: {
+    user: { count(args: { where: { id: { in: string[] }; tenantId: string } }): Promise<number> };
+  },
+  tenantId: string,
+  actions: ReadonlyArray<{ type: string; target: string }> | undefined
+): Promise<void> {
+  const userIds = (actions ?? []).filter((a) => a.type === 'assign_to_user').map((a) => a.target);
+  if (userIds.length === 0) return;
+  const found = await db.user.count({ where: { id: { in: userIds }, tenantId } });
+  if (found !== new Set(userIds).size) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'assign_to_user target must be a user in this tenant',
+    });
+  }
+}
+
 function isUniqueViolation(error: unknown): boolean {
   return (
     typeof error === 'object' && error !== null && (error as { code?: unknown }).code === 'P2002'
@@ -226,6 +248,7 @@ export const ticketRoutingRouter = createTRPCRouter({
    * Create a ticket automation rule.
    */
   createRule: tenantProcedure.input(createTicketRuleSchema).mutation(async ({ ctx, input }) => {
+    await assertAssigneesInTenant(ctx.prismaWithTenant, ctx.tenant.tenantId, input.actions);
     try {
       const rule = await ctx.prismaWithTenant.routingRule.create({
         data: {
@@ -257,6 +280,7 @@ export const ticketRoutingRouter = createTRPCRouter({
     if (!existing) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Ticket rule not found' });
     }
+    await assertAssigneesInTenant(ctx.prismaWithTenant, ctx.tenant.tenantId, data.actions);
 
     try {
       const rule = await ctx.prismaWithTenant.routingRule.update({ where, data });

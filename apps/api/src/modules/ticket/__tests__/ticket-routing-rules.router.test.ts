@@ -157,6 +157,7 @@ describe('ticketRouting rule CRUD', () => {
   describe('createRule', () => {
     it('stores a TICKET rule for the caller tenant with defaults applied', async () => {
       const rows = useStore([]);
+      (prismaMock.user.count as unknown as Mock).mockResolvedValue(1);
 
       const created = await caller.createRule({
         name: 'Critical to Alice',
@@ -176,6 +177,23 @@ describe('ticketRouting rule CRUD', () => {
       expect(created.conditions).toEqual([
         { field: 'ticketPriority', operator: 'gte', value: 'HIGH' },
       ]);
+    });
+
+    it('rejects an assign_to_user target that is not a user of the tenant', async () => {
+      const rows = useStore([]);
+      (prismaMock.user.count as unknown as Mock).mockResolvedValue(0);
+
+      await expect(
+        caller.createRule({
+          name: 'Foreign user',
+          conditions: billingConditions as never,
+          actions: [{ type: 'assign_to_user', target: 'user-of-other-tenant' }],
+        })
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+      expect(rows).toHaveLength(0);
+      expect(prismaMock.user.count).toHaveBeenCalledWith({
+        where: { id: { in: ['user-of-other-tenant'] }, tenantId: TENANT },
+      });
     });
 
     it('rejects lead vocabulary before touching the database', async () => {
@@ -227,6 +245,19 @@ describe('ticketRouting rule CRUD', () => {
 
       expect(updated.name).toBe('Renamed');
       expect(rows[0]).toMatchObject({ priority: 5, isActive: true, conditions: billingConditions });
+    });
+
+    it('rejects switching a rule to an assign_to_user target outside the tenant', async () => {
+      const rows = useStore([rule({ id: 'r1' })]);
+      (prismaMock.user.count as unknown as Mock).mockResolvedValue(0);
+
+      await expect(
+        caller.updateRule({
+          id: 'r1',
+          actions: [{ type: 'assign_to_user', target: 'user-of-other-tenant' }],
+        })
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+      expect(rows[0].actions).toEqual(skillActions);
     });
 
     it('scopes the write by tenant and rule type', async () => {
