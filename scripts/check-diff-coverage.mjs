@@ -25,7 +25,7 @@ const sh = (cmd, args) =>
   });
 
 const top = sh('git', ['rev-parse', '--show-toplevel']);
-const root = (top.status === 0 ? top.stdout.trim() : process.cwd()).replace(/\\/g, '/');
+const root = (top.status === 0 ? top.stdout.trim() : process.cwd()).replaceAll('\\', '/');
 
 process.exit(
   runDiffCoverage({

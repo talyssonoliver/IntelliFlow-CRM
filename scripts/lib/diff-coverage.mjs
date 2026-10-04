@@ -65,31 +65,42 @@ export function createClassifier(scope) {
  */
 export function parseAddedLines(diffText, isCoverableFile) {
   const added = new Map();
-  let file = null;
-  let newLine = 0;
+  const cursor = { file: null, newLine: 0 };
   for (const line of diffText.split(/\r?\n/)) {
-    if (line.startsWith('+++ ')) {
-      const p = line.slice(4).replace(/^b\//, '').trim();
-      file = p === '/dev/null' ? null : p;
-      continue;
-    }
-    const hunk = line.match(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
-    if (hunk) {
-      newLine = Number(hunk[1]);
-      continue;
-    }
-    if (file == null) continue;
+    if (readHeader(line, cursor) || cursor.file == null) continue;
     if (line.startsWith('+')) {
-      if (isCoverableFile(file)) {
-        if (!added.has(file)) added.set(file, new Set());
-        added.get(file).add(newLine);
-      }
-      newLine++;
+      if (isCoverableFile(cursor.file)) addLine(added, cursor.file, cursor.newLine);
+      cursor.newLine++;
     } else if (!line.startsWith('-') && !line.startsWith('\\')) {
-      newLine++; // context (rare with -U0); deletions only move the old side
+      cursor.newLine++; // context (rare with -U0); deletions only move the old side
     }
   }
   return added;
+}
+
+const HUNK_HEADER = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
+
+/**
+ * Apply a `+++ b/<file>` or `@@ … +<start> … @@` header to the cursor.
+ * Returns true when the line was a header (and so carries no content).
+ */
+function readHeader(line, cursor) {
+  if (line.startsWith('+++ ')) {
+    const p = line.slice(4).replace(/^b\//, '').trim();
+    cursor.file = p === '/dev/null' ? null : p;
+    return true;
+  }
+  const hunk = HUNK_HEADER.exec(line);
+  if (hunk) {
+    cursor.newLine = Number(hunk[1]);
+    return true;
+  }
+  return false;
+}
+
+function addLine(added, file, lineNo) {
+  if (!added.has(file)) added.set(file, new Set());
+  added.get(file).add(lineNo);
 }
 
 /**
@@ -104,7 +115,7 @@ export function parseLcov(lcovText, root) {
   let cur = null;
   for (const line of lcovText.split(/\r?\n/)) {
     if (line.startsWith('SF:')) {
-      let f = line.slice(3).trim().replace(/\\/g, '/');
+      let f = line.slice(3).trim().replaceAll('\\', '/');
       if (f.startsWith(`${root}/`)) f = f.slice(root.length + 1);
       cur = f.replace(/^\.\//, '');
       if (!lineHits.has(cur)) lineHits.set(cur, new Map());
