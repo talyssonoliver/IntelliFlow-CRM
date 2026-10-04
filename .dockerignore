@@ -7,6 +7,10 @@ node_modules
 .turbo
 **/.turbo
 dist
+# Every package's dist/ too, not just the root one. The image builds its own;
+# a stale host dist/ in the context would let a local build pass while CI, which
+# has none, fails (or ship stale code).
+**/dist
 build
 **/build
 coverage
