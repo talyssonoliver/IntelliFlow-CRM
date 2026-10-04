@@ -11,6 +11,7 @@
  *   DIFF_COVER_MIN     coverage floor, default 80 (matches Sonar new_coverage)
  *   DIFF_COVER_BASE    base ref, default origin/main
  *   DIFF_COVER_LCOV    lcov path, default artifacts/coverage/lcov.info
+ *   DIFF_COVER_PY      Python Cobertura path, default artifacts/coverage/python-coverage.xml
  */
 import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';

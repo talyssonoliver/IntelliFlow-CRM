@@ -103,15 +103,23 @@ describe('the committed sonar-project.properties', () => {
     for (const root of TOOLING_ROOTS) expect(scope.sourceRoots).toContain(root);
   });
 
-  it('keeps tooling tests, fixtures and non-JS files out of analysis', () => {
+  it('keeps tooling tests, fixtures and non-code files out of analysis', () => {
     expect(excluded('scripts/__tests__/check-diff-coverage.test.ts')).toBe(true);
     expect(excluded('tools/scripts/__tests__/helper.ts')).toBe(true);
     expect(excluded('tools/scripts/security/fixtures/gitleaks-postgres-literal.fixture.yml')).toBe(
       true
     );
-    expect(excluded('tools/audit/run_audit.py')).toBe(true);
+    expect(excluded('tools/audit/tests/test_affected.py')).toBe(true);
+    expect(excluded('tools/audit/tests/conftest.py')).toBe(true);
+    expect(excluded('tools/plan/tests/unit/test_task.py')).toBe(true);
     expect(excluded('tools/scripts/pgvector-test.sql')).toBe(true);
     expect(excluded('scripts/ci/run.sh')).toBe(true);
+  });
+
+  it('analyses Python tooling (#755)', () => {
+    expect(excluded('tools/audit/run_audit.py')).toBe(false);
+    expect(excluded('tools/plan/src/domain/task.py')).toBe(false);
+    expect(excluded('tools/scripts/repair-and-wire-csv.py')).toBe(false);
   });
 
   // The local gate never counts a test file as coverable (and Vitest never
@@ -130,8 +138,8 @@ describe('the committed sonar-project.properties', () => {
   );
 
   // Replays the committed scope over every tracked tooling file: only
-  // JavaScript/TypeScript may remain (owner decision: JS/TS only, Python later).
-  it('leaves only JavaScript/TypeScript tooling in analysis', () => {
+  // JavaScript/TypeScript and Python may remain (owner decisions 2026-10-04).
+  it('leaves only JavaScript/TypeScript and Python tooling in analysis', () => {
     const tracked = execFileSync('git', ['ls-files', 'scripts', 'tools'], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
@@ -139,8 +147,10 @@ describe('the committed sonar-project.properties', () => {
       .split(/\r?\n/)
       .filter(Boolean);
     expect(tracked.length).toBeGreaterThan(0);
-    const analysedNonJs = tracked.filter((f) => !excluded(f) && !/\.(ts|tsx|js|mjs|cjs)$/.test(f));
-    expect(analysedNonJs).toEqual([]);
+    const analysedOther = tracked.filter(
+      (f) => !excluded(f) && !/\.(ts|tsx|js|mjs|cjs|py)$/.test(f)
+    );
+    expect(analysedOther).toEqual([]);
   });
 
   it('analyses tooling JavaScript/TypeScript', () => {
