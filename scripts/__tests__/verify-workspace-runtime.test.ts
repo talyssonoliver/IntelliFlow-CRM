@@ -345,3 +345,27 @@ describe('round-3 review regressions', () => {
     expect(r.problems.some((p) => p.includes('@intelliflow/b'))).toBe(true);
   });
 });
+
+describe('round-4 review regressions', () => {
+  it('ignores whole-line // comments', () => {
+    expect(
+      importedWorkspaceSpecifiers(`  // require("@intelliflow/missing")\nconst x = 1;`)
+    ).toEqual([]);
+  });
+
+  it('a package whose entry is at its root is scanned shallowly, without tests', () => {
+    const { app, dist } = fixture();
+    const aDir = fs.realpathSync(path.join(app, 'node_modules/@intelliflow/a'));
+    fs.writeFileSync(
+      path.join(aDir, 'package.json'),
+      JSON.stringify({ name: '@intelliflow/a', main: './index.js' })
+    );
+    put(path.join(aDir, 'index.js'), `export * from '@intelliflow/b';\n`);
+    // Never loaded at runtime: a nested tool script and a root-level test.
+    put(path.join(aDir, 'scripts/seed.js'), `import "@intelliflow/never-built";\n`);
+    put(path.join(aDir, 'a.test.js'), `import "@intelliflow/test-only";\n`);
+    const r = verify(app, dist);
+    expect(r.problems).toEqual([]);
+    expect(r.checked).toEqual(['@intelliflow/a', '@intelliflow/b']);
+  });
+});

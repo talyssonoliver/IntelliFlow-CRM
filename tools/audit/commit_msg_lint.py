@@ -83,7 +83,12 @@ _BAD_SUBJECT_CASE_RE = re.compile(r"^[A-Z]")
 _AI_TOOLS = r"(?:Claude|Anthropic|Copilot|Cursor|Codex|ChatGPT|Gemini|Devin|Windsurf|Aider|Codeium|Tabnine)"
 _AI_ATTRIBUTION_RE = re.compile(
     r"\b(?:Generated|Created|Written|Authored|Produced)\s+(?:with|by|using|via)\s+"
-    r"(?:\[|the\s+|an?\s+)?(?:(?:OpenAI|GitHub|Google|Anthropic(?:'s)?)\s+)?" + _AI_TOOLS + r"\b"
+    r"(?:\[|the\s+|an?\s+)?(?:(?:OpenAI|GitHub|Google|Anthropic(?:'s)?)\s+)?" + _AI_TOOLS
+    # ...and the tool name must END the footer or be followed by a model word, a
+    # version or closing punctuation — so prose such as "created with
+    # cursor-based paging" or "authored by Devin Smith" is not attribution.
+    + r"(?=\s*$|\s*[\])\.,;:!]|\s+(?:Code|Agent|AI|Assist|Opus|Sonnet|Haiku|Fable|Mythos"
+    r"|Pro|Flash|Ultra|Mini|Max|Bot|agent|model)\b|\s+\d)"
     r"|\bClaude-Session:"
     r"|claude\.ai/code\b"
     r"|noreply@anthropic\.com"

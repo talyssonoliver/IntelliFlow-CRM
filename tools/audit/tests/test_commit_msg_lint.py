@@ -169,6 +169,20 @@ def test_review_round_three_ai_shapes_fail(line):
     assert code == 1, out
 
 
+@pytest.mark.parametrize(
+    "line",
+    [
+        "Pagination created with cursor-based paging.",
+        "Refactor written using Aider-style diffs.",
+        "Authored by Devin Smith.",
+    ],
+)
+def test_round_four_prose_with_tool_words_passes(line):
+    # Round-4 code review on #754: a tool word followed by ordinary prose.
+    code, out = _lint(VALID_HEADER + line + "\n")
+    assert code == 0, out
+
+
 def test_vendor_prefix_alone_is_not_attribution():
     code, out = _lint(VALID_HEADER + "Generated with GitHub Actions, then reviewed.\n")
     assert code == 0, out

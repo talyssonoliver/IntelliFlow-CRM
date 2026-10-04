@@ -61,10 +61,12 @@ async function connectionHealthy(client: any, label: string): Promise<boolean> {
       if (attempt < 3) await new Promise((r) => setTimeout(r, 250 * attempt));
     }
   }
-  console.warn(
+  const message =
     `[inherited-membership] ${label}: database unreachable after 3 attempts, skipping cleanup ` +
-      `(rows tagged ${TAG} may remain) — ${(lastError as Error)?.message ?? String(lastError)}`
-  );
+    `(rows tagged ${TAG} may remain) — ${(lastError as Error)?.message ?? String(lastError)}`;
+  // In GitHub Actions this becomes a run-summary annotation, so a teardown
+  // outage stays visible on a green run instead of hiding in the log.
+  console.warn(process.env.GITHUB_ACTIONS === 'true' ? `::warning::${message}` : message);
   return false;
 }
 

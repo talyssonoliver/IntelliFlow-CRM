@@ -21,7 +21,7 @@
 #       (bypasses ALL hooks; visible in shell history).
 #
 #       Test scope: typecheck, lint and every non-test gate run in full. The
-#       test steps run only the tests related to the files this branch changed
+#       unit-tests and coverage steps run only the tests related to the files this branch changed
 #       since origin/main (`vitest related`); the full 10k+ suite runs on CI's
 #       sharded runners. PRESHIP_FULL_TESTS=1 runs the full suite here too. A
 #       change the import graph cannot see (lockfile, package.json, vitest or
@@ -72,7 +72,8 @@ if ! pnpm run pre-ship; then
   echo "  Re-run targeted: pnpm exec node scripts/pre-ship.mjs --only=<step-id>" >&2
   echo "  Infra step can't run (Docker / test-DB down)? PRESHIP_ALLOW_MISSING=1" >&2
   echo "  runs the rest + records the gap — it is NOT a full bypass." >&2
-  echo "  Tests ran at the related scope; PRESHIP_FULL_TESTS=1 runs the full suite." >&2
+  echo "  unit-tests and coverage ran at the related scope (integration runs in full);" >&2
+  echo "  PRESHIP_FULL_TESTS=1 runs the full unit suite here too." >&2
   exit 1
 fi
 

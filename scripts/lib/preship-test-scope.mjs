@@ -26,7 +26,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 export const DEFAULT_BASE_REF = 'origin/main';
@@ -219,18 +219,25 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
   if (env.CI === 'true' || env.CI === '1') {
     return { scope: 'full', reason: 'CI runs the full suite', files: [], base: null };
   }
-  if (env.PRESHIP_FULL_TESTS === '1') {
-    return { scope: 'full', reason: 'PRESHIP_FULL_TESTS=1', files: [], base: null };
-  }
+  // Full-scope results still carry the worktree fingerprint: pre-ship's cache is
+  // keyed on it, and without one an uncommitted edit would reuse a cached PASS.
+  const fullScope = (reason, base = null) => ({
+    scope: 'full',
+    reason,
+    files: [],
+    base,
+    worktree: worktreeFingerprint(
+      cwd,
+      nulFields(git(['ls-files', '-z', '--others', '--exclude-standard'], cwd)).filter(
+        (f) => !isGateOutput(f)
+      )
+    ),
+  });
+  if (env.PRESHIP_FULL_TESTS === '1') return fullScope('PRESHIP_FULL_TESTS=1');
 
   const base = (git(['merge-base', 'HEAD', baseRef], cwd) || '').trim();
   if (!base) {
-    return {
-      scope: 'full',
-      reason: `cannot resolve merge-base with ${baseRef} — running the full suite`,
-      files: [],
-      base: null,
-    };
+    return fullScope(`cannot resolve merge-base with ${baseRef} — running the full suite`);
   }
 
   // Each layer is read SEPARATELY and unioned. A single base-to-working-tree
@@ -243,31 +250,31 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
   ];
   const untracked = git(['ls-files', '-z', '--others', '--exclude-standard'], cwd);
   if (layers.includes(null) || untracked === null) {
-    return {
-      scope: 'full',
-      reason: 'git diff failed — running the full suite',
-      files: [],
-      base,
-    };
+    return fullScope('git diff failed — running the full suite', base);
   }
 
-  const present = new Set(nulFields(untracked));
-  const deleted = new Set();
-  for (const layer of layers) {
+  // Every path any layer touched (both sides of a rename). Under artifacts/ only
+  // COMMITTED or STAGED changes count: the gate rewrites tracked outputs there
+  // (coverage, reports) on every run, and those uncommitted rewrites are not
+  // part of the change — but a committed artifacts/ file that a test reads
+  // (e.g. artifacts/misc/onboarding-config.json) is.
+  const touched = new Set();
+  const touch = (p, layerIndex) => {
+    if (p && !(isGateOutput(p) && layerIndex >= 2)) touched.add(p);
+  };
+  layers.forEach((layer, i) => {
     for (const entry of parseNameStatus(layer)) {
-      if (entry.status === 'D') deleted.add(entry.path);
-      else present.add(entry.path);
-      if (entry.from) deleted.add(entry.from); // a rename removes the old path
+      touch(entry.path, i);
+      touch(entry.from, i); // a rename removes the old path
     }
-  }
-  // Deleted in one layer but re-added in another means it still exists.
-  for (const f of present) deleted.delete(f);
-  // The gate's own tracked outputs (coverage, reports) are rewritten by every
-  // run: they are not part of the change, and as needles they would select every
-  // test that names `artifacts/…`.
-  for (const set of [present, deleted]) {
-    for (const f of [...set]) if (isGateOutput(f)) set.delete(f);
-  }
+  });
+  for (const p of nulFields(untracked)) touch(p, 3);
+
+  // Present or deleted by what is on disk NOW, not by which layer said what: a
+  // file changed in a commit and then deleted in the working tree is deleted.
+  const present = new Set();
+  const deleted = new Set();
+  for (const p of touched) (existsSync(path.join(cwd, p)) ? present : deleted).add(p);
 
   const changed = [...present];
   // Referencing tests also cover deleted files: a test that names a removed
@@ -277,12 +284,7 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
     const testContents = readTestFiles(cwd);
     if (testContents === null) {
       // Fail closed: without the test list, by-name selection is blind.
-      return {
-        scope: 'full',
-        reason: 'git ls-files failed — running the full suite',
-        files: [],
-        base,
-      };
+      return fullScope('git ls-files failed — running the full suite', base);
     }
     referencingTests = testsReferencingChanges([...changed, ...deleted], testContents);
   }

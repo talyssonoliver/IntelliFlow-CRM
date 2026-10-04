@@ -375,3 +375,54 @@ describe('round-3 review regressions', () => {
     expect(after.worktree).toBe(before.worktree);
   });
 });
+
+describe('round-4 review regressions', () => {
+  it('a COMMITTED change to a tracked artifacts/ file that a test reads selects that test', () => {
+    const root = makeRepo();
+    write(root, 'artifacts/misc/onboarding-config.json', '{"a":1}\n');
+    write(root, 'packages/a/src/tour.test.ts', "read('artifacts/misc/onboarding-config.json')\n");
+    git(root, 'add', '.');
+    git(root, 'commit', '-q', '-m', 'config + test');
+    git(root, 'checkout', '-q', 'main');
+    git(root, 'merge', '-q', '--ff-only', 'feature');
+    git(root, 'checkout', '-q', 'feature');
+    write(root, 'artifacts/misc/onboarding-config.json', '{"a":2}\n');
+    git(root, 'commit', '-q', '-am', 'change config');
+    const r = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
+    expect(r.scope).toBe('related');
+    expect(r.files).toContain('packages/a/src/tour.test.ts');
+  });
+
+  it('an UNCOMMITTED rewrite of a tracked artifacts/ file (gate output) is ignored', () => {
+    const root = makeRepo();
+    write(root, 'artifacts/reports/x.json', '{}\n');
+    write(root, 'packages/a/src/r.test.ts', "read('artifacts/reports/x.json')\n");
+    git(root, 'add', '.');
+    git(root, 'commit', '-q', '-m', 'report');
+    git(root, 'checkout', '-q', 'main');
+    git(root, 'merge', '-q', '--ff-only', 'feature');
+    git(root, 'checkout', '-q', 'feature');
+    write(root, 'artifacts/reports/x.json', '{"regenerated":true}\n');
+    expect(resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' }).scope).toBe('none');
+  });
+
+  it('a file changed in a commit and then deleted in the working tree counts as deleted', () => {
+    const root = makeRepo();
+    write(root, 'packages/a/src/base.ts', 'export const x = 2;\n');
+    git(root, 'commit', '-q', '-am', 'change');
+    fs.rmSync(path.join(root, 'packages/a/src/base.ts'));
+    const r = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
+    expect(r.scope).toBe('full');
+    expect(r.reason).toContain('packages/a/src/base.ts');
+  });
+
+  it('a full scope still fingerprints the worktree, so a cached PASS cannot outlive an edit', () => {
+    const root = makeRepo();
+    const env = { ...LOCAL_ENV, PRESHIP_FULL_TESTS: '1' };
+    const before = resolveTestScope({ cwd: root, env, baseRef: 'main' });
+    write(root, 'packages/a/src/base.ts', 'export const x = 9;\n');
+    const after = resolveTestScope({ cwd: root, env, baseRef: 'main' });
+    expect(before.scope).toBe('full');
+    expect(after.worktree).not.toBe(before.worktree);
+  });
+});

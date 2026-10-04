@@ -38,10 +38,15 @@ const SPECIFIER =
 // (`import(/* webpackIgnore: true */ '@intelliflow/x')`) or hold a commented-out
 // one that must not fail the build.
 const BLOCK_COMMENT = /\/\*[\s\S]*?\*\//g;
+// Whole-line `//` comments too (a commented-out import must not fail the build).
+// Trailing `//` after code is left alone: it cannot be told apart from `//` in a
+// string (a URL) without a parser, and dist output rarely carries it.
+const LINE_COMMENT = /^[ \t]*\/\/.*$/gm;
 
 export function importedWorkspaceSpecifiers(source) {
   const out = new Map();
-  for (const m of source.replace(BLOCK_COMMENT, ' ').matchAll(SPECIFIER)) {
+  const code = source.replace(BLOCK_COMMENT, ' ').replace(LINE_COMMENT, '');
+  for (const m of code.matchAll(SPECIFIER)) {
     const spec = { name: m[1], subpath: m[2] ?? '' };
     out.set(`${spec.name}|${spec.subpath}`, spec);
   }
@@ -143,14 +148,22 @@ function legacySubpathTarget(pkgDir, subpath) {
   );
 }
 
-function listJsFiles(dir) {
+// Never loaded at runtime: tests, stories, fixtures.
+const NON_RUNTIME_DIR = new Set(['node_modules', '__tests__', '__mocks__', '__fixtures__']);
+const NON_RUNTIME_FILE = /\.(test|spec|stories)\.[cm]?[jt]sx?$/;
+
+function listJsFiles(dir, recursive = true) {
   const out = [];
   if (!fs.existsSync(dir)) return out;
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) {
-      if (e.name !== 'node_modules') out.push(...listJsFiles(p));
-    } else if (/\.(c|m)?[jt]s$/.test(e.name) && !/\.d\.(c|m)?ts$/.test(e.name)) {
+      if (recursive && !NON_RUNTIME_DIR.has(e.name)) out.push(...listJsFiles(p));
+    } else if (
+      /\.(c|m)?[jt]s$/.test(e.name) &&
+      !/\.d\.(c|m)?ts$/.test(e.name) &&
+      !NON_RUNTIME_FILE.test(e.name)
+    ) {
       // .ts too: the API runs under tsx, and some runtime entries (the
       // Prisma-generated client) are TypeScript, so their imports must be
       // followed. Type declarations never load at runtime.
@@ -240,7 +253,10 @@ export function verify(appDir, distDir) {
       (d) => !scannedDirs.has(d)
     );
     for (const d of dirs) scannedDirs.add(d);
-    for (const s of specifiersOfFiles(dirs.flatMap(listJsFiles))) {
+    // An entry that sits at the package root would otherwise pull in the whole
+    // package (src/, scripts, tooling); there only the root's own files count.
+    const files = dirs.flatMap((d) => listJsFiles(d, d !== pkgDir));
+    for (const s of specifiersOfFiles(files)) {
       queue.push([s, pkgDir, label]);
     }
   }

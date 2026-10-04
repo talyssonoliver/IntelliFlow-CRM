@@ -265,6 +265,13 @@ const SCOPE_NEEDED =
     ONLY_ARG.slice('--only='.length)
       .split(',')
       .some((id) => SCOPE_CONSUMERS.includes(id)));
+// The gate code and scope logic are hashed NOW, at start-up, so last-run.json
+// pins what actually ran; restoring the files mid-run cannot launder a narrowed
+// gate or scope into a clean attestation.
+const GATE_PINS = {
+  preship_sha256: sha256OfFile(fileURLToPath(import.meta.url)),
+  scope_logic_sha256: scopeLogicSha256(REPO_ROOT),
+};
 const TEST_SCOPE = SCOPE_NEEDED
   ? resolveTestScope({ cwd: REPO_ROOT })
   : { scope: 'full', reason: 'not resolved (no test step selected)', files: [], base: null };
@@ -280,7 +287,7 @@ const PYTEST_AVAILABLE =
   PYTHON_BIN !== null &&
   // No shell: under cmd.exe `-c import pytest` would split into two args and the
   // probe would always fail. spawnSync finds python(.exe) on PATH by itself.
-  spawnSync(PYTHON_BIN, ['-c', 'import pytest'], { stdio: 'ignore' }).status === 0;
+  spawnSync(PYTHON_BIN, ['-c', 'import pytest, yaml'], { stdio: 'ignore' }).status === 0;
 const AUDIT_PYTEST_NEEDED = !SCOPED_TESTS || TEST_SCOPE.auditChanged === true;
 
 // Step plan — fail-first token gate + steps from audit doc §8, plus the
@@ -1131,8 +1138,7 @@ function main() {
     // The gate code AS IT RAN, pinned at run time. preship-attest.mjs refuses to
     // publish when the checkout no longer matches — otherwise a run with a
     // narrowed scope (or gate) could be attested after restoring the files.
-    preship_sha256: sha256OfFile(fileURLToPath(import.meta.url)),
-    scope_logic_sha256: scopeLogicSha256(REPO_ROOT),
+    ...GATE_PINS,
     started_at: new Date(totalStart).toISOString(),
     completed_at: new Date().toISOString(),
     duration_ms: totalDuration,
