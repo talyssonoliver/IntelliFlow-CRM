@@ -2,6 +2,7 @@
  * scripts/lib/sonar-scope.mjs — reads SonarCloud's scope from
  * sonar-project.properties so the local diff-coverage gate cannot drift from it.
  */
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
@@ -126,6 +127,20 @@ describe('the committed sonar-project.properties', () => {
       }
     }
   );
+
+  // Replays the committed scope over every tracked tooling file: only
+  // JavaScript/TypeScript may remain (owner decision: JS/TS only, Python later).
+  it('leaves only JavaScript/TypeScript tooling in analysis', () => {
+    const tracked = execFileSync('git', ['ls-files', 'scripts', 'tools'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+    })
+      .split(/\r?\n/)
+      .filter(Boolean);
+    expect(tracked.length).toBeGreaterThan(0);
+    const analysedNonJs = tracked.filter((f) => !excluded(f) && !/\.(ts|tsx|js|mjs|cjs)$/.test(f));
+    expect(analysedNonJs).toEqual([]);
+  });
 
   it('analyses tooling JavaScript/TypeScript', () => {
     expect(excluded('scripts/lib/diff-coverage.mjs')).toBe(false);
