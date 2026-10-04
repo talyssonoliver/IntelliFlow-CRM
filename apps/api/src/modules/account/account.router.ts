@@ -524,9 +524,11 @@ function buildBulkReassignResponse(
  * One row of `account.list`: the Account columns plus the owner, parent and
  * relation counts the query includes. Spelled out instead of inferred from
  * Prisma's include payload, whose generic depth overflowed TypeScript on the
- * web client (TS2589).
+ * web client (TS2589). The `scoreProvenance` Json column is typed `unknown`
+ * rather than Prisma's recursive JsonValue for the same reason.
  */
-export type AccountListItem = Account & {
+export type AccountListItem = Omit<Account, 'scoreProvenance'> & {
+  scoreProvenance: unknown;
   owner: { id: string; email: string; name: string | null };
   parentAccount: { id: string; name: string } | null;
   _count: { contacts: number; opportunities: number };
