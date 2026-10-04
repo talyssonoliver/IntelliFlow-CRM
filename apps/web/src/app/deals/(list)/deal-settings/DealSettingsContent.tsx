@@ -230,18 +230,11 @@ export default function DealSettingsContent() {
   );
 
   const scoringRows: DealScoringRuleRow[] = useMemo(() => {
-    const raw = (scoringQuery.data ?? []) as unknown as Array<{
-      id: string;
-      name: string;
-      field: string;
-      operator: string;
-      valueJson: { type?: string; value?: unknown } | null;
-      points: number;
-      isActive: boolean;
-      sortOrder: number;
-    }>;
+    const raw = scoringQuery.data ?? [];
     return raw.map((r): DealScoringRuleRow => {
-      const rawVal = (r.valueJson ?? {}) as { type?: string; value?: unknown };
+      // valueJson is free-form Json ({ type, value } by convention): read it checked.
+      const rawVal: { type?: unknown; value?: unknown } =
+        typeof r.valueJson === 'object' && r.valueJson !== null ? r.valueJson : {};
       // Narrow the persisted JSON back into the discriminated-union row type.
       // Unknown types fall back to a zero-number rule so the card still renders.
       let valueJson: DealScoringRuleRow['valueJson'];
@@ -250,7 +243,7 @@ export default function DealSettingsContent() {
       } else if (rawVal.type === 'array' && Array.isArray(rawVal.value)) {
         valueJson = {
           type: 'array',
-          value: (rawVal.value as unknown[]).filter(
+          value: rawVal.value.filter(
             (v): v is string | number => typeof v === 'string' || typeof v === 'number'
           ),
         };
