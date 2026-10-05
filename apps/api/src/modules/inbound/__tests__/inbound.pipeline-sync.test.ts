@@ -8,6 +8,7 @@
  *  - NEW -> NEGOTIATING walks CONTACTED, QUALIFIED, NEGOTIATING in order
  *  - forward-only: downgrade is a no-op
  *  - CONVERTED / LOST current status is never moved
+ *  - a COA win (status CONVERTED) is capped at NEGOTIATING, tagged coa-won and noted
  *  - target LOST from CONTACTED
  *  - repeat syncKey is a no-op and makes no status calls
  *  - a refused step surfaces as BAD_REQUEST
@@ -149,6 +150,7 @@ describe('inboundRouter — syncPipelineLead', () => {
       created: true,
       previousStatus: 'NEW',
       status: 'CONTACTED',
+      conversionPending: false,
       changed: true,
     });
     expect(createLead().mock.calls[0]?.[0]).toMatchObject({
@@ -224,11 +226,126 @@ describe('inboundRouter — syncPipelineLead', () => {
     });
   });
 
-  it('walks UNQUALIFIED -> CONVERTED through the whole ladder', async () => {
-    existingLead('UNQUALIFIED');
-    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
-    await caller.syncPipelineLead(input('CONVERTED', 'WON'));
-    expect(statusCalls()).toEqual(['CONTACTED', 'QUALIFIED', 'NEGOTIATING', 'CONVERTED']);
+  describe('COA win (status CONVERTED) is never applied', () => {
+    const WON = 'WON';
+    const KEY = `coa-sync:${COA_LEAD_ID}:${WON}:CONVERTED:2026-10-02T09:00:00.000Z`;
+    const wonTagCalls = () => tagMergeCalls().filter((c) => (c[1] as string[]).includes('coa-won'));
+    const noteData = () =>
+      (prismaMock.leadActivity.create.mock.calls[0]?.[0] as { data: Record<string, any> }).data;
+
+    it('walks UNQUALIFIED only as far as NEGOTIATING, tags coa-won and records the win', async () => {
+      existingLead('UNQUALIFIED');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(statusCalls()).toEqual(['CONTACTED', 'QUALIFIED', 'NEGOTIATING']);
+      expect(statusCalls()).not.toContain('CONVERTED');
+      expect(result).toMatchObject({
+        previousStatus: 'UNQUALIFIED',
+        status: 'NEGOTIATING',
+        changed: true,
+        conversionPending: true,
+      });
+
+      const won = wonTagCalls();
+      expect(won).toHaveLength(1);
+      const call = won[0] as unknown as [TemplateStringsArray, ...unknown[]];
+      expect(call[0].join('?')).toMatch(/GROUP BY u\.tag/);
+      expect(call.slice(1)).toEqual([['coa-won'], LEAD_ID, TENANT_ID]);
+
+      const note = noteData();
+      expect(note.description).toMatch(/WON/);
+      expect(note.metadata).toMatchObject({
+        coaStage: WON,
+        stageChangedAt: '2026-10-02T09:00:00.000Z',
+        coaWon: true,
+        conversionPending: true,
+        syncKey: KEY,
+      });
+    });
+
+    it('ends a brand-new lead at NEGOTIATING, never CONVERTED', async () => {
+      prismaMock.lead.findFirst.mockResolvedValueOnce(null as never);
+      createLead().mockResolvedValueOnce({ isFailure: false, value: { id: { value: LEAD_ID } } });
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(statusCalls()).toEqual(['CONTACTED', 'QUALIFIED', 'NEGOTIATING']);
+      expect(result).toMatchObject({ status: 'NEGOTIATING', conversionPending: true });
+      expect(wonTagCalls()).toHaveLength(1);
+    });
+
+    it('a lead already NEGOTIATING makes no status call but is still tagged and noted, once', async () => {
+      existingLead('NEGOTIATING', ['portal-discover', ...COA_TAGS]);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(changeStatus()).not.toHaveBeenCalled();
+      expect(result).toMatchObject({
+        status: 'NEGOTIATING',
+        changed: false,
+        conversionPending: true,
+      });
+      expect(wonTagCalls()).toHaveLength(1);
+      expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
+      expect(noteData().description).toMatch(/WON/);
+    });
+
+    it('does not re-tag a lead that already carries coa-won', async () => {
+      existingLead('NEGOTIATING', ['portal-discover', ...COA_TAGS, 'coa-won']);
+      prismaMock.lead.findFirst.mockResolvedValueOnce({ tags: [...COA_TAGS, 'coa-won'] } as never);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await caller.syncPipelineLead(input('CONVERTED', WON));
+      expect(wonTagCalls()).toHaveLength(0);
+    });
+
+    it('a repeat of the same won sync is a no-op (same requested-status key, no loop)', async () => {
+      existingLead('NEGOTIATING', ['portal-discover', ...COA_TAGS]);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await caller.syncPipelineLead(input('CONVERTED', WON));
+      expect(wonTagCalls()).toHaveLength(1);
+
+      // The first run left its marker note; the retry finds it by the same key.
+      vi.clearAllMocks();
+      prismaMock.leadActivity.findFirst.mockResolvedValue({ id: 'act_1' } as never);
+      existingLead('NEGOTIATING', ['portal-discover', ...COA_TAGS, 'coa-won']);
+      const repeat = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(repeat).toMatchObject({
+        status: 'NEGOTIATING',
+        changed: false,
+        conversionPending: true,
+      });
+      expect(changeStatus()).not.toHaveBeenCalled();
+      expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+      expect(wonTagCalls()).toHaveLength(0);
+      expect(prismaMock.leadActivity.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ metadata: { path: ['syncKey'], equals: KEY } }),
+        })
+      );
+    });
+
+    it('a CONVERTED lead receiving a COA win is untouched: no status call, no tag, not pending', async () => {
+      existingLead('CONVERTED');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+      expect(changeStatus()).not.toHaveBeenCalled();
+      expect(wonTagCalls()).toHaveLength(0);
+      expect(result).toMatchObject({
+        status: 'CONVERTED',
+        changed: false,
+        conversionPending: false,
+      });
+    });
+
+    it('a LOST lead receiving a COA win is never moved', async () => {
+      existingLead('LOST');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+      expect(changeStatus()).not.toHaveBeenCalled();
+      expect(result).toMatchObject({ status: 'LOST', changed: false });
+    });
   });
 
   it('never downgrades: current QUALIFIED, target CONTACTED is a no-op', async () => {
