@@ -345,6 +345,13 @@ const STEPS = [
     required: true,
   },
   {
+    id: 'lint-promises',
+    description:
+      'type-aware no-floating-promises over product source (SonarCloud S9383 parity; `void` is not accepted)',
+    cmd: ['pnpm', 'run', 'lint:promises'],
+    required: true,
+  },
+  {
     id: 'typecheck',
     description: 'turbo run typecheck + sonar-guard',
     cmd: ['pnpm', 'run', 'typecheck'],

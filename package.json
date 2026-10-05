@@ -43,6 +43,7 @@
     "test:load": "node tools/scripts/k6/run-ifc-033-load-test.mjs",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
+    "lint:promises": "eslint -c eslint.promises.config.mjs --no-warn-ignored apps/api/src apps/ai-worker/src apps/web/src apps/project-tracker/app apps/project-tracker/components apps/project-tracker/lib packages/adapters/src packages/api-client/src packages/application/src packages/db/src packages/domain/src packages/observability/src packages/platform/src packages/ui/src packages/validators/src",
     "lint:artifacts": "tsx tools/lint/artifact-paths.ts",
     "lint:artifacts:fix": "tsx tools/lint/artifact-paths.ts --fix",
     "lint:artifacts:audit": "tsx tools/lint/artifact-paths.ts --audit",
