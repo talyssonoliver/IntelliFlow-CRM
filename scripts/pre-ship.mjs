@@ -65,8 +65,27 @@
  *   PRESHIP_FULL_TESTS=1. Typecheck, lint and all other gates are unchanged.
  *   See scripts/lib/preship-test-scope.mjs.
  *
+ * Machine test slots (scripts/preship-lock.mjs):
+ *   At most 3 full test runs at once on one machine (owner ruling 2026-10-03).
+ *   Before the first `heavy` step that actually runs (library-build, typecheck,
+ *   unit-tests, integration-tests, coverage, build, e2e-full-matrix) the gate
+ *   takes one of slot1..3.lock in the shared slot directory (default
+ *   ~/ops/test-slots, the one ops/test-slots/with-slot.mjs uses), waiting and
+ *   printing who holds each slot if all three are taken. Light-only runs
+ *   (--only=lint,format-check, ...) never take one. CI, and a run already under
+ *   a slot (TEST_SLOT_HELD), are exempt. The slot and the step process tree are
+ *   released on success, failure, SIGINT/SIGTERM/SIGHUP/SIGBREAK and an uncaught
+ *   exception; a detached watchdog covers a hard kill.
+ *
  * Env:
  *   PRESHIP_MODE=full        same as passing --full
+ *   PRESHIP_SLOT_DIR=<dir>   where the slots live (default ~/ops/test-slots;
+ *                            created if missing, else a temp-dir fallback)
+ *   PRESHIP_SLOT_COUNT=<n>   number of slots (default 3)
+ *   PRESHIP_SLOT_MAX_AGE_MIN=<n>  a slot is reclaimed only if its owner is gone
+ *                            AND it is older than this (default 45)
+ *   PRESHIP_SESSION_LABEL=<s>  name shown to others waiting (default pre-ship@branch)
+ *   PRESHIP_SLOT_POLL_MS=<n> how often a waiting gate re-checks (default 30000)
  *   PRESHIP_FULL_TESTS=1     run the FULL test suite locally (default: related only)
  *   PRESHIP_KEEP_GOING=1     don't hard-stop on first required FAIL
  *   PRESHIP_ALLOW_MISSING=1  let required+SKIPPED_PRECONDITION steps pass
@@ -75,7 +94,20 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import os from 'node:os';
+import { spawn, spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import {
+  acquireSlot,
+  ancestorsOf,
+  gateStatePath,
+  installExitHandlers,
+  killTree,
+  recordSlotChild,
+  releaseSlot,
+  resolveSlotDir,
+  writeGateState,
+} from './preship-lock.mjs';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
 import { stepLine, advisoryNote, persistedState, finalLine } from './lib/preship-report.mjs';
 
@@ -257,6 +289,9 @@ const CI_ONLY_REMEDIATION =
 //                 services not running, no integration tests possible).
 //                 Skipped steps are NOT cached as PASS; they re-evaluate
 //                 every run.
+//   heavy       : true for a step that holds real memory/CPU (a build, the type
+//                 checker, a test run). A run that executes one takes a machine
+//                 test slot first (scripts/preship-lock.mjs); light steps never do.
 //   required    : if false, step failure is reported but doesn't fail
 //                 the overall gate. Only `architecture` is non-required
 //                 because the sub-project install is `continue-on-error`
@@ -298,6 +333,7 @@ const STEPS = [
   },
   {
     id: 'library-build',
+    heavy: true,
     description: 'turbo run build for library packages (typecheck/test depend on dist/)',
     cmd: [
       'pnpm',
@@ -346,6 +382,7 @@ const STEPS = [
   },
   {
     id: 'typecheck',
+    heavy: true,
     description: 'turbo run typecheck + sonar-guard',
     cmd: ['pnpm', 'run', 'typecheck'],
     required: true,
@@ -406,6 +443,7 @@ const STEPS = [
     // Local: only the tests related to the changed files (vitest related).
     // CI / PRESHIP_FULL_TESTS=1: the full `test:unit` suite.
     id: 'unit-tests',
+    heavy: true,
     description: SCOPED_TESTS
       ? `vitest related --project=!integration — ${TEST_SCOPE.scope} scope (${TEST_SCOPE.reason})`
       : 'vitest run --project=!integration — full suite',
@@ -415,6 +453,7 @@ const STEPS = [
   },
   {
     id: 'integration-tests',
+    heavy: true,
     description:
       'vitest run --project integration (FAILS the gate if Docker postgres/redis not up — override with PRESHIP_ALLOW_MISSING=1)',
     cmd: ['pnpm', 'run', 'test:integration'],
@@ -441,6 +480,7 @@ const STEPS = [
   },
   {
     id: 'coverage',
+    heavy: true,
     description: SCOPED_TESTS
       ? `pnpm run test:coverage over the related tests only — ${TEST_SCOPE.scope} scope (feeds diff-coverage)`
       : 'pnpm run test:coverage (merged Istanbul output)',
@@ -524,6 +564,7 @@ const STEPS = [
   },
   {
     id: 'build',
+    heavy: true,
     description: 'pnpm run build (full prod build — catches Next.js page-data collection issues)',
     cmd: ['pnpm', 'run', 'build'],
     // CI's Build job sets a wall of env stubs for module-load guards
@@ -737,6 +778,7 @@ const STEPS = [
     // preship-full-nightly.yml. Playwright exits non-zero on "No tests found", so a
     // discovery regression fails this step LOUD rather than passing on zero signal.
     id: 'e2e-full-matrix',
+    heavy: true,
     description:
       'FULL cross-browser E2E — Playwright chromium+firefox+webkit (opt-in --full; nightly)',
     cmd: [
@@ -808,7 +850,11 @@ if (flags.help) {
       '  files changed since origin/main (vitest related). The full suite runs on CI.',
       '  PRESHIP_FULL_TESTS=1 runs the full suite locally.',
       '',
+      'Machine slots: a run with a heavy step (build, typecheck, tests) takes one of 3',
+      '  shared test slots first and waits if all are taken (PRESHIP_SLOT_DIR to relocate).',
+      '',
       'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1 · PRESHIP_FULL_TESTS=1',
+      '     PRESHIP_SLOT_DIR · PRESHIP_SLOT_COUNT · PRESHIP_SLOT_MAX_AGE_MIN · PRESHIP_SESSION_LABEL',
       '',
     ].join('\n')
   );
@@ -868,7 +914,123 @@ function fmtDuration(ms) {
   return `${Math.floor(ms / 60000)}m${Math.round((ms % 60000) / 1000)}s`;
 }
 
-function runStep(step, prev) {
+// ---- machine test slot, step tracking and cleanup (scripts/preship-lock.mjs) ----
+//
+// At most three full test runs may run at once on one machine. A gate that is
+// about to run a `heavy` step first takes one of the shared slots (waiting, and
+// saying who holds them, if all three are taken) and keeps it to the end of the
+// run. Light-only runs (--only=lint,...) never take one. The slot, and the step
+// process tree, are released on every exit path: success, failure, a signal, an
+// uncaught exception; a detached watchdog covers a hard kill.
+const GATE_PID = process.pid;
+let currentChild = null; // the step process now running (its tree is stopped on exit)
+let slot = null;
+let watchdogStarted = false;
+const gateState = {
+  gate_pid: GATE_PID,
+  gate_start_ms: Date.now(),
+  repo_root: REPO_ROOT,
+  child_pid: null,
+  child_step: null,
+  child_start_ms: null,
+  slot: null,
+};
+const STATE_FILE = gateStatePath(GATE_PID);
+
+function persistGateState() {
+  try {
+    writeGateState(gateState);
+  } catch {
+    // Only the watchdog's view is lost; the gate's own handlers still clean up.
+  }
+}
+
+/** CI machines are not this machine; a parent already holding a slot passes it down via TEST_SLOT_HELD. */
+function slotExempt() {
+  const ci = (process.env.CI || '').toLowerCase();
+  return (ci && ci !== 'false' && ci !== '0') || Boolean(process.env.TEST_SLOT_HELD);
+}
+
+function currentBranch() {
+  const r = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    cwd: REPO_ROOT,
+  });
+  return r.status === 0 ? r.stdout.trim() : 'unknown';
+}
+
+/** Take a machine test slot before the first heavy step that actually runs. */
+async function ensureSlot(step) {
+  if (!step.heavy || slot || slotExempt()) return false;
+  const log = (m) => process.stdout.write(`\n${m}\n`);
+  const branch = currentBranch();
+  slot = await acquireSlot(
+    {
+      label: process.env.PRESHIP_SESSION_LABEL || `pre-ship@${branch}`,
+      repo: path.basename(REPO_ROOT),
+      branch,
+      cwd: REPO_ROOT,
+      command: `pre-ship ${process.argv.slice(2).join(' ')}`.trim(),
+    },
+    {
+      dir: resolveSlotDir(process.env, log).dir,
+      log,
+      pollMs: Number(process.env.PRESHIP_SLOT_POLL_MS || 30_000),
+      beatMs: Number(process.env.PRESHIP_SLOT_BEAT_MS || 120_000),
+    }
+  );
+  // Nested gates and `with-slot` wrappers inside a step see this and do not take a second slot.
+  process.env.TEST_SLOT_HELD = `slot${slot.n}`;
+  gateState.slot = { path: slot.path, nonce: slot.nonce };
+  persistGateState();
+  log(`pre-ship: test slot ${slot.n} taken (${slot.path}).`);
+  return true;
+}
+
+/** Start the detached watchdog once, the first time there is a step process to watch. */
+function ensureWatchdog() {
+  if (watchdogStarted) return;
+  watchdogStarted = true;
+  persistGateState();
+  try {
+    const script = path.join(path.dirname(fileURLToPath(import.meta.url)), 'preship-watchdog.mjs');
+    const above = ancestorsOf(GATE_PID).join(',');
+    const w = spawn(process.execPath, [script, String(GATE_PID), STATE_FILE, above], {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+      // Not the repo: on Windows a process's working directory cannot be deleted,
+      // and the watchdog can outlive the gate by a poll interval.
+      cwd: os.tmpdir(),
+    });
+    w.unref();
+  } catch {
+    // Without it a hard kill is cleaned up by the next waiter's stale-slot rule only.
+  }
+}
+
+function recordChild(pid, stepId) {
+  gateState.child_pid = pid ?? null;
+  gateState.child_step = pid ? stepId : null;
+  gateState.child_start_ms = pid ? Date.now() : null;
+  persistGateState();
+  recordSlotChild(slot, gateState.child_pid, gateState.child_start_ms);
+}
+
+/** Stop the running step's whole tree, release our slot, drop the state file. Synchronous. */
+function shutdown() {
+  if (currentChild?.pid) killTree(currentChild.pid);
+  currentChild = null;
+  releaseSlot(slot);
+  try {
+    fs.unlinkSync(STATE_FILE);
+  } catch {
+    /* never written, or already gone */
+  }
+}
+
+async function runStep(step, prev) {
   const logPath = path.join(LOG_DIR, `${step.id}.log`);
 
   if (flags.only && !flags.only.includes(step.id)) {
@@ -905,6 +1067,8 @@ function runStep(step, prev) {
     };
   }
 
+  // Heavy steps hold a machine test slot (waits here if all three are taken).
+  if (await ensureSlot(step)) process.stdout.write(`  ${step.id.padEnd(28)} `);
   const start = Date.now();
   // A step's env may be a function, evaluated now — after earlier steps ran —
   // when it depends on what they produced (diff-coverage reads which reports exist).
@@ -913,24 +1077,57 @@ function runStep(step, prev) {
   // shell:true on Windows so the PATH resolves .cmd/.exe extensions for
   // pnpm / gitleaks / etc. All argv values are hard-coded literals (no
   // user input), so shell injection isn't a concern. POSIX systems use
-  // shell:false to avoid the extra fork.
-  const r = spawnSync(step.cmd[0], step.cmd.slice(1), {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env,
-    cwd: step.cwd || REPO_ROOT,
-    shell: process.platform === 'win32',
-    // Default 1MB maxBuffer is blown by noisy steps (unit-tests emits
-    // ~14k lines / >5MB of AUDIT + RBAC log lines). When exceeded,
-    // spawnSync kills the child with SIGTERM and returns status=null,
-    // giving the false impression that the test failed when it was
-    // really truncated. 256MB is comfortably above any current step.
-    maxBuffer: 256 * 1024 * 1024,
+  // shell:false to avoid the extra fork, and detached:true so the step is its
+  // own process group that killTree can stop as a whole.
+  //
+  // Async spawn (not spawnSync) so the gate can still react to a signal while a
+  // step runs, and so the step's PID is known to the watchdog. stdout streams
+  // straight to the log rather than into a buffer (unit-tests emits >5MB), so
+  // there is no maxBuffer to blow.
+  ensureWatchdog();
+  const r = await new Promise((resolve) => {
+    const out = fs.createWriteStream(logPath);
+    let stderr = '';
+    let child;
+    try {
+      // With shell:true Node wants one command string (DEP0190 otherwise); the
+      // argv is all literals, so quoting is only for arguments with spaces.
+      const [file, args] =
+        process.platform === 'win32'
+          ? [step.cmd.map((a) => (/\s/.test(a) ? `"${a}"` : a)).join(' '), []]
+          : [step.cmd[0], step.cmd.slice(1)];
+      child = spawn(file, args, {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env,
+        cwd: step.cwd || REPO_ROOT,
+        shell: process.platform === 'win32',
+        detached: process.platform !== 'win32',
+        windowsHide: true,
+      });
+    } catch (err) {
+      out.end(String(err));
+      resolve({ status: null });
+      return;
+    }
+    currentChild = child;
+    recordChild(child.pid ?? null, step.id);
+    child.stdout.pipe(out, { end: false });
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (d) => {
+      stderr += d;
+    });
+    child.on('error', (err) => {
+      stderr += `\n${String(err)}`;
+    });
+    child.on('close', (code) => {
+      // The step's own process is done; stop anything it left behind.
+      if (child.pid && process.platform !== 'win32') killTree(child.pid);
+      currentChild = null;
+      recordChild(null, null);
+      out.end(stderr ? '\n--- stderr ---\n' + stderr : '', () => resolve({ status: code }));
+    });
   });
   const duration_ms = Date.now() - start;
-
-  const output = (r.stdout || '') + (r.stderr ? '\n--- stderr ---\n' + r.stderr : '');
-  fs.writeFileSync(logPath, output);
 
   const failed = r.status !== 0;
   return {
@@ -963,9 +1160,16 @@ function isMissingRequired(r) {
   return r.verdict === 'SKIPPED_PRECONDITION' && r.required === true;
 }
 
-function main() {
+async function main() {
   ensureDirs();
   const head = gitHead();
+  // Release the slot and stop the step tree on every exit path we get to run.
+  installExitHandlers(shutdown, {
+    log: (m) =>
+      process.stdout.write(`
+${m}
+`),
+  });
   const prev = loadPreviousState(head);
   if (prev) {
     process.stdout.write(
@@ -1020,7 +1224,7 @@ function main() {
       continue;
     }
     process.stdout.write(`  ${step.id.padEnd(28)} `);
-    const r = runStep(step, prev);
+    const r = await runStep(step, prev);
     results.push(r);
 
     // Truthful per-step label: MISSING for an unrunnable required guard, WARN
@@ -1116,4 +1320,9 @@ function main() {
   process.exit(verdict === 'PASS' ? 0 : 1);
 }
 
-main();
+main().catch((err) => {
+  process.stderr.write(`pre-ship: ${err?.stack || err}
+`);
+  shutdown();
+  process.exit(1);
+});

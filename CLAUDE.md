@@ -182,6 +182,18 @@ sharded runners' job. Typecheck, lint and all other gates stay full.
 (other than `scripts`), vitest/tsconfig, Prisma schema or test-setup changes
 widen to full on their own.
 
+**At most 3 full test runs at once, machine-wide.** Before its first heavy step
+(library-build, typecheck, unit/integration tests, coverage, build, full E2E)
+the gate takes one of three slots in the shared directory `~/ops/test-slots`
+(`slot1..3.lock`, the same slots `ops/test-slots/with-slot.mjs` uses), waits and
+prints who holds them if all are taken, and releases only its own slot on
+success, failure, a signal or an uncaught exception. A slot is reclaimed only
+when its owner is gone **and** it is older than 45 min. A killed push leaves no
+orphaned vitest/turbo/tsup: the step's process tree is stopped (`taskkill /T /F`
+on Windows) by the gate, or by a detached watchdog after a hard kill. Light-only
+runs (`--only=lint,...`) take no slot. `PRESHIP_SLOT_DIR` relocates the slots;
+there is no bypass. See `scripts/preship-lock.mjs`.
+
 ### Sprint_plan.csv is Single Source of Truth
 
 Always edit CSV for task updates. Run sync after changes. Never edit derived
