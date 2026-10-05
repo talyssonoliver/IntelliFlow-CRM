@@ -546,24 +546,38 @@ async function recordPipelineSync(
   syncKey: string
 ): Promise<void> {
   try {
-    await ctx.prisma.leadActivity.create({
-      data: {
-        type: 'NOTE',
-        title: `COA pipeline: ${input.coaStage} → ${input.status}`,
-        description: `COA lead ${input.coaLeadId} moved to ${input.coaStage} at ${input.stageChangedAt}; CRM status ${from} → ${to}`,
-        timestamp: new Date(),
-        userName: COA_SYNC_USER,
-        leadId,
-        tenantId,
-        metadata: {
-          source: 'coa-pipeline-sync',
-          coaLeadId: input.coaLeadId,
-          coaStage: input.coaStage,
-          status: input.status,
-          stageChangedAt: input.stageChangedAt,
-          syncKey,
-        } as Prisma.InputJsonObject,
-      },
+    // Existence check + insert must be atomic per syncKey: two concurrent
+    // requests both pass the early `prior` lookup, so serialise them on a
+    // transaction-scoped advisory lock (released at commit) and re-check on
+    // `tx`. Only the marker is locked (short, no external calls); the status
+    // walk stays outside because its compare-and-set writes refuse stale
+    // moves, so a duplicated walk is a harmless no-op.
+    await ctx.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${syncKey}, 0))`;
+      const existing = await tx.leadActivity.findFirst({
+        where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
+        select: { id: true },
+      });
+      if (existing) return;
+      await tx.leadActivity.create({
+        data: {
+          type: 'NOTE',
+          title: `COA pipeline: ${input.coaStage} → ${input.status}`,
+          description: `COA lead ${input.coaLeadId} moved to ${input.coaStage} at ${input.stageChangedAt}; CRM status ${from} → ${to}`,
+          timestamp: new Date(),
+          userName: COA_SYNC_USER,
+          leadId,
+          tenantId,
+          metadata: {
+            source: 'coa-pipeline-sync',
+            coaLeadId: input.coaLeadId,
+            coaStage: input.coaStage,
+            status: input.status,
+            stageChangedAt: input.stageChangedAt,
+            syncKey,
+          } as Prisma.InputJsonObject,
+        },
+      });
     });
   } catch (err) {
     console.warn('[inbound.syncPipelineLead] audit note failed:', {
