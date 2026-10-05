@@ -15,6 +15,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { axe } from 'vitest-axe';
 import React from 'react';
+// Components are imported statically, not with `await import()` inside each test.
+// The first dynamic import transforms the whole @intelliflow/ui source tree
+// (aliased to packages/ui/src, cache disabled), and that cold transform counted
+// against the first test's 30s timeout: about 5s alone, over 30s while other
+// gates ran (NotificationBell timed out twice in pre-ship). A static import runs
+// at collection, outside any test timeout. vi.mock() calls are hoisted above
+// these imports, so the components still see the mocks.
+import { Button } from '@intelliflow/ui';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { MainNav } from '@/components/header/main-nav';
+import { SearchBar } from '@/components/header/search-bar';
 
 // ============================================================================
 // Mocks — required for components with external dependencies
@@ -91,14 +102,12 @@ vi.mock('@/components/notifications/hooks/useNotificationSubscription', () => ({
 
 describe('Tier 1: Shell Components', () => {
   it('NotificationBell has no accessibility violations', async () => {
-    const { NotificationBell } = await import('@/components/notifications/NotificationBell');
     const { container } = render(React.createElement(NotificationBell));
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
 
   it('MainNav has no accessibility violations', async () => {
-    const { MainNav } = await import('@/components/header/main-nav');
     const routes = [
       { label: 'Dashboard', href: '/dashboard' },
       { label: 'Leads', href: '/leads' },
@@ -110,7 +119,6 @@ describe('Tier 1: Shell Components', () => {
   });
 
   it('SearchBar has no accessibility violations', async () => {
-    const { SearchBar } = await import('@/components/header/search-bar');
     const { container } = render(React.createElement(SearchBar));
     const results = await axe(container);
     expect(results).toHaveNoViolations();
@@ -234,7 +242,6 @@ describe('Tier 2: Page Skeletons', () => {
 
 describe('Tier 3: Interactive Components', () => {
   it('Button with icon has no accessibility violations', async () => {
-    const { Button } = await import('@intelliflow/ui');
     const { container } = render(
       React.createElement(
         'div',
