@@ -10,6 +10,7 @@ import { RemindersProvider } from '@/lib/cases/reminders-context';
 import { AUTH_TOKEN_CHANGED_EVENT, clearTokenCookie } from '@/lib/shared/session-cleanup';
 import { requiredProdEnv } from '@/lib/required-url';
 import { isAuthError, shouldRetryMutation, shouldRetryQuery } from '@/lib/query-retry';
+import { noRealtimeLink } from '@/lib/no-realtime-link';
 import {
   ACTIVE_TENANT_HEADER,
   activeTenantHeaders,
@@ -317,27 +318,33 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
         })
       );
     } else {
-      // SSR or no WebSocket - use HTTP only
+      // SSR or no WebSocket - use HTTP only. Subscriptions must not reach
+      // httpBatchLink (it throws, crashing any page with a live-update hook);
+      // they complete quietly instead — see lib/no-realtime-link.ts.
       links.push(
-        httpBatchLink({
-          url: `${getBaseUrl()}/api/trpc`,
-          headers() {
-            const headers: Record<string, string> = {
-              'x-trpc-source': 'react',
-              // ADR-053: forward a request-correlation id (see above).
-              'x-request-id': generateRequestId(),
-              // ADR-071: the tenant the user is acting in (absent = home tenant)
-              ...activeTenantHeaders(),
-            };
+        splitLink({
+          condition: (op) => op.type === 'subscription',
+          true: noRealtimeLink,
+          false: httpBatchLink({
+            url: `${getBaseUrl()}/api/trpc`,
+            headers() {
+              const headers: Record<string, string> = {
+                'x-trpc-source': 'react',
+                // ADR-053: forward a request-correlation id (see above).
+                'x-request-id': generateRequestId(),
+                // ADR-071: the tenant the user is acting in (absent = home tenant)
+                ...activeTenantHeaders(),
+              };
 
-            // Only include Authorization header if token is valid (not expired)
-            const accessToken = getValidAccessToken();
-            if (accessToken) {
-              headers['Authorization'] = `Bearer ${accessToken}`;
-            }
+              // Only include Authorization header if token is valid (not expired)
+              const accessToken = getValidAccessToken();
+              if (accessToken) {
+                headers['Authorization'] = `Bearer ${accessToken}`;
+              }
 
-            return headers;
-          },
+              return headers;
+            },
+          }),
         })
       );
     }
