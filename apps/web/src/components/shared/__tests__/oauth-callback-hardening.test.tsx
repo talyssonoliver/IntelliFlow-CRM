@@ -91,6 +91,17 @@ function expectSilentDrop(signOutsBefore: number) {
   expect(h.signOut).toHaveBeenCalledTimes(signOutsBefore);
 }
 
+/**
+ * The prompt is in the DOM as soon as the flow reaches 'confirm', but a passive effect opens it a
+ * tick later. Wait for the real condition (the dialog is open) instead of the element merely
+ * existing, which a loaded runner can observe in between.
+ */
+async function findOpenDialog() {
+  const dialog = await screen.findByTestId('switch-account-dialog');
+  await waitFor(() => expect(dialog).toHaveAttribute('open'));
+  return dialog;
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   sessionStorage.clear();
@@ -116,7 +127,7 @@ describe('account-switch dialog', () => {
 
   it('renders as a dialog with test ids on both actions', async () => {
     render(<OAuthCallback onSuccess={vi.fn()} />);
-    const dialog = await screen.findByTestId('switch-account-dialog');
+    const dialog = await findOpenDialog();
     expect(dialog.tagName).toBe('DIALOG');
     expect(dialog).toHaveAttribute('open');
     expect(screen.getByTestId('switch-account-continue')).toBeInTheDocument();
@@ -125,7 +136,7 @@ describe('account-switch dialog', () => {
 
   it('does not assert the link is for a different account', async () => {
     render(<OAuthCallback onSuccess={vi.fn()} />);
-    await screen.findByTestId('switch-account-dialog');
+    await findOpenDialog();
     expect(screen.queryByText(/different account/i)).toBeNull();
     expect(
       screen.getByText(
@@ -149,7 +160,7 @@ describe('account-switch dialog', () => {
 
   it('a dialog closed without a choice reopens, so its actions stay reachable', async () => {
     render(<OAuthCallback onSuccess={vi.fn()} />);
-    const dialog = await screen.findByTestId('switch-account-dialog');
+    const dialog = await findOpenDialog();
     // What Chromium does on a repeated Escape: close without a cancelable cancel event.
     dialog.removeAttribute('open');
     dialog.dispatchEvent(new Event('close'));
@@ -159,7 +170,7 @@ describe('account-switch dialog', () => {
 
   it('Escape cannot dismiss the prompt without a choice', async () => {
     render(<OAuthCallback onSuccess={vi.fn()} />);
-    const dialog = await screen.findByTestId('switch-account-dialog');
+    const dialog = await findOpenDialog();
     const evt = new Event('cancel', { cancelable: true });
     dialog.dispatchEvent(evt);
     expect(evt.defaultPrevented).toBe(true);
