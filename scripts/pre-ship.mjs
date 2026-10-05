@@ -84,6 +84,8 @@ import {
   sharedSemaphore,
 } from './lib/test-slot.mjs';
 import { stepLine, advisoryNote, persistedState, finalLine } from './lib/preship-report.mjs';
+import { integrationInfraMissing } from './lib/preship-integration-infra.mjs';
+import { reusableResult } from './lib/preship-cache.mjs';
 
 // Throwaway stub credentials for the build-time env mirror below (never a real DB).
 const STUB_DB_USER = 'stub';
@@ -427,23 +429,9 @@ const STEPS = [
     description:
       'vitest run --project integration (FAILS the gate if Docker postgres/redis not up — override with PRESHIP_ALLOW_MISSING=1)',
     cmd: ['pnpm', 'run', 'test:integration'],
-    skip_if: () => {
-      // Probe Docker for postgres AND redis. `docker ps --filter name=X
-      // --filter name=Y` combines filters with AND, so no single container
-      // can match both — that probe is permanently empty. List ALL running
-      // container names once and require both substrings to appear.
-      const r = spawnSync('docker', ['ps', '--format', '{{.Names}}'], {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-        shell: process.platform === 'win32',
-        timeout: 10000, // wedged daemon: don't hang the gate on the probe (mirrors dbStackUnavailable)
-      });
-      if (r.error || r.status !== 0) return true; // docker missing / daemon down / probe timed out → skip
-      const names = (r.stdout || '').toLowerCase();
-      const hasPostgres = names.includes('postgres');
-      const hasRedis = names.includes('redis');
-      return !(hasPostgres && hasRedis);
-    },
+    // The endpoints the suite will actually use, TCP-probed (see the lib). A
+    // name match on `docker ps` was fooled by other projects' containers.
+    skip_if: () => integrationInfraMissing(REPO_ROOT) !== null,
     skip_remediation:
       'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.',
     required: true,
@@ -909,8 +897,8 @@ function runStep(step, prev) {
     };
   }
 
-  const cached = prev?.steps?.find((s) => s.id === step.id);
-  if (cached && cached.verdict === 'PASS') {
+  const cached = reusableResult(step.id, prev);
+  if (cached) {
     // Display 0ms for cached results so the printed timing isn't
     // mistaken for a fresh run that took the old duration. Keep the
     // original duration in a separate field for audit if needed.
