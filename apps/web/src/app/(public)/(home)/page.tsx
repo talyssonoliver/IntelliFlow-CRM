@@ -6,12 +6,14 @@ import { fetchAIInsights } from '@/lib/cached-queries/ai-insights-queries';
 import { serializeForClient } from '@/lib/shared/serialize-for-client';
 import { HomePagePublicWithAuthFallback } from '@/components/home/HomePagePublicWithAuthFallback';
 import { AuthenticatedHomePage } from '@/components/home/AuthenticatedHomePage';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'AI-first CRM with Governance Built In | IntelliFlow CRM',
   description:
     'IntelliFlow CRM pairs automation with governance-grade validation. Launch AI-first sales, pipeline, and service flows with evidence-backed quality gates.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'IntelliFlow CRM — AI-first CRM with governed automation',
     description:
       'Automate sales and service with AI while keeping governance, accessibility, and performance guardrails in place.',

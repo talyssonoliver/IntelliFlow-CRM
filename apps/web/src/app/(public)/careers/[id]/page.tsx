@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { JobDetailTemplate } from '@/components/shared/job-detail-template';
 import { ApplicationForm } from '@/components/shared/application-form';
 import { jobListings, type JobListing } from '@/data/job-listings';
+import { OG_IMAGES } from '@/lib/og-images';
 
 // Get all job IDs for static generation
 export function generateStaticParams() {
@@ -30,6 +31,7 @@ export async function generateMetadata({
     title: `${job.title} | IntelliFlow Careers`,
     description: job.description.slice(0, 160),
     openGraph: {
+      images: OG_IMAGES,
       title: `${job.title} at IntelliFlow`,
       description: job.description.slice(0, 160),
       type: 'website',

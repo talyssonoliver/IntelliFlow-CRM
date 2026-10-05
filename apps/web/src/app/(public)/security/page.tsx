@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import securityData from '@/data/security-features.json';
+import { OG_IMAGES } from '@/lib/og-images';
 
 /**
  * Security Page
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
   description:
     'Enterprise-grade security with ISO 27001, SOC 2 Type II, and GDPR compliance. Zero-trust architecture, end-to-end encryption, and comprehensive audit logging.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Security | IntelliFlow CRM',
     description:
       'Enterprise-grade security protecting your data with industry-leading practices and certifications.',

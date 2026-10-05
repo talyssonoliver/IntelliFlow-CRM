@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Verify Email',
   description:
     'Verify your email address to activate your IntelliFlow CRM account. Check your inbox for the verification link.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Verify Your Email — IntelliFlow CRM',
     description:
       'Complete your IntelliFlow CRM registration by verifying your email address. Secure account activation.',
