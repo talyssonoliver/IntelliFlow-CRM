@@ -24,7 +24,7 @@
 #       test steps run only the tests related to the files this branch changed
 #       since origin/main (`vitest related`); the full 10k+ suite runs on CI's
 #       sharded runners. PRESHIP_FULL_TESTS=1 runs the full suite here too. A
-#       change the import graph cannot see (lockfile, package.json, vitest or
+#       change the import graph cannot see (lockfile, package.json beyond scripts, vitest or
 #       tsconfig, Prisma schema, test setup) widens the run to the full suite
 #       automatically. See scripts/lib/preship-test-scope.mjs.
 

@@ -1863,6 +1863,28 @@ AUTOMATION-003:
   waiver_expiry: '2026-08-31'
   notes: 'PG-191 unblock waiver (GH #574). Pre-existing landmine: AUTOMATION-003 (#566) was never given a plan-overrides entry, so it auto-classified Tier A and hard-failed the plan-linter, blocking unrelated feature PRs. tier:B mirrors sibling AUTOMATION-001/002; do NOT treat gate_profile/acceptance_owner/evidence_required as canonical — they are intentionally omitted pending the real values in GH #574.'
 
+# AUTOMATION-004 (#670) landed without a plan-overrides entry, so the linter
+# auto-classified it Tier A and hard-failed on gate_profile/acceptance_owner/
+# evidence_required for every PR whose lint step runs plan-linter (first seen on
+# dependabot #774). Unlike AUTOMATION-003's waiver above, these values are the
+# task's own: owner and artifacts from its Sprint_plan.csv row, gates from its
+# VALIDATE column. Tier B, as for its sibling AUTOMATION-001/002.
+AUTOMATION-004:
+  tier: B
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'Tech Lead (Orchestration)'
+  debt_allowed: no
+  evidence_required:
+    - tools/scripts/orchestration/schemas/task-contract.schema.json
+    - tools/scripts/orchestration/validate-task-contract.ts
+    - tools/scripts/orchestration/verify-dispatch-binding.ts
+    - tools/scripts/orchestration/__tests__/validate-task-contract.test.ts
+    - docs/architecture/adr/ADR-072-task-contract-format-and-dispatch-binding.md
+  notes: 'Task-contract schema + dispatch-binding guard (#670). Values from its Sprint_plan.csv row (VALIDATE: pnpm typecheck; vitest tools/scripts/orchestration/__tests__; pnpm lint).'
+
 EXC-SEC-001:
   tier: A
   gate_profile:
