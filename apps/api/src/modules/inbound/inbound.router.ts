@@ -473,16 +473,24 @@ async function upsertLeadByEmail(
   });
 
   if (result.isFailure) {
-    const message = result.error.message;
-    if (/already exists/i.test(message)) {
-      // Race: another request created the lead between our check and create
-      const raceExisting = await ctx.prisma.lead.findFirst({
-        where: { tenantId: input.tenantId, email },
-        select: { id: true },
-      });
-      if (raceExisting) {
-        return { leadId: raceExisting.id, leadCreated: false };
-      }
+    const { message } = result.error;
+    // Any failure may be a race: another request created the lead between the
+    // check above and createLead. That shows up as the service's duplicate
+    // refusal, or as a persistence failure when the unique index rejects the
+    // insert. Re-read before deciding what this failure means.
+    const raceExisting = await ctx.prisma.lead.findFirst({
+      where: { tenantId: input.tenantId, email },
+      select: { id: true },
+    });
+    if (raceExisting) {
+      return { leadId: raceExisting.id, leadCreated: false };
+    }
+    // No lead exists, so the failure is real. An infrastructure failure is the
+    // server's, and retryable: a 4xx would make a server-to-server caller drop
+    // it for good. Only a genuine input or domain refusal is the caller's.
+    const code = (result.error as { code?: string }).code;
+    if (code === 'PERSISTENCE_ERROR' || code === 'EXTERNAL_SERVICE_ERROR') {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message, cause: result.error });
     }
     throw new TRPCError({ code: 'BAD_REQUEST', message });
   }
