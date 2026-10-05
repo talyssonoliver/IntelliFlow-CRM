@@ -89,9 +89,42 @@ pnpm preship:attest
 
 ## After `gh pr update-branch` — the policy
 
-**The new head SHA must be attested locally before merge.** Full CI is _not_
-accepted as a substitute for the server-side merge commit; that is the whole
-point of #644.
+**A clean update carries the attestation; anything else needs a fresh local
+run.** (Changed 2026-10-05; the original rule demanded a local re-run for every
+new head.)
+
+Why it changed: branch protection is `strict`, so every merge to main makes
+every other open PR out of date. Under the old rule each update meant another
+full local gate, often near an hour, and with several agents merging, main moved
+again before it finished. PRs went round that loop for hours, and the loop was
+the main cost of shipping here.
+
+What is carried, exactly: `--publish` records the branch's
+`git patch-id --verbatim`, a hash of the whole diff from its merge-base with
+`origin/main`, whitespace and binary content included. It publishes the same tag
+object a second time at `refs/preship-patch/<patch-id>/<sha>`. When CI finds no
+record for the new head, `--verify` computes the new head's patch-id and accepts
+a record under that key only if all of these hold:
+
+- the record is a full clean gate (same checks as the exact-SHA path);
+- it was made by the same `scripts/pre-ship.mjs` (gate-version pin);
+- its payload names that patch-id;
+- its tag targets the commit its ref names.
+
+The check prints `carried from <old-sha>`.
+
+What still forces a re-run: a rebase that resolved a conflict, main changing
+lines next to the branch's own hunks, any new commit, or a change to the gate
+script itself. All of these change the patch-id or the pin.
+
+What covers the combination: the diff the gate passed is byte-identical, and
+main's side was gated by its own PRs. What is new is only how the two interact,
+and the PR's required CI checks (the full sharded suite, typecheck, build,
+integration) run on exactly that head before it can merge. #637, the incident
+behind #644, merged at a head nobody had gated; that is still impossible,
+because some gate run must match the branch's exact diff.
+
+When nothing can be carried, re-run locally:
 
 ```bash
 git fetch origin

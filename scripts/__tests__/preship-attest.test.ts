@@ -21,7 +21,17 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
-import { assessState, dirtyPaths, PAYLOAD_VERSION } from '../preship-attest.mjs';
+import {
+  assessState,
+  branchPatchId,
+  carriedAttestation,
+  dirtyPaths,
+  patchIdentity,
+  PATCH_REF_PREFIX,
+  PAYLOAD_VERSION,
+  publishRefspecs,
+  readAttestation,
+} from '../preship-attest.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '../..');
@@ -685,5 +695,283 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
     // ...and that state must NOT be attestable: it is an --only subset run.
     const verdict = assessState(state, state.git_head, PRESHIP_HASH);
     expect(verdict.ok).toBe(false);
+  });
+});
+
+// ─── Branch-diff carry-forward (a clean rebase keeps the attestation) ──────
+
+// Branch protection is strict, so every merge to main forces every open PR onto
+// a new head SHA. These cases pin that a CLEAN rebase reuses the attestation of
+// the same diff, and that anything else (a changed diff, whitespace included, a
+// different gate version, a forged record) still demands a fresh gate run.
+describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
+  const tmpDirs: string[] = [];
+  afterAll(() => {
+    for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true });
+  });
+
+  const cleanEnv = (): NodeJS.ProcessEnv => {
+    const e: NodeJS.ProcessEnv = { ...process.env };
+    for (const k of Object.keys(e)) if (k.startsWith('GIT_')) delete e[k];
+    return e;
+  };
+
+  /** The tool's git(), bound to a fixture repo instead of the process cwd. */
+  const gitIn =
+    (cwd: string) =>
+    (args: string[], opts: Record<string, unknown> = {}) =>
+      spawnSync('git', args, {
+        cwd,
+        env: cleanEnv(),
+        encoding: 'utf8',
+        maxBuffer: 64 * 1024 * 1024,
+        ...opts,
+      });
+  type Git = ReturnType<typeof gitIn>;
+  type Refused = { ok: false; reasons: string[] };
+
+  /** main with one commit, feature with one more; plus a bare remote. */
+  function makeBranchRepo() {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'preship-carry-'));
+    tmpDirs.push(root);
+    const work = path.join(root, 'work');
+    const bare = path.join(root, 'origin.git');
+    fs.mkdirSync(work, { recursive: true });
+    const g = gitIn(work);
+    gitIn(root)(['init', '--bare', '-q', bare]);
+    g(['init', '-q', '-b', 'main']);
+    g(['config', 'user.email', 'test@example.com']);
+    g(['config', 'user.name', 'test']);
+    fs.writeFileSync(path.join(work, 'README.md'), '# fixture\n');
+    g(['add', 'README.md']);
+    g(['commit', '-q', '-m', 'seed']);
+    g(['checkout', '-q', '-b', 'feature']);
+    fs.writeFileSync(path.join(work, 'feature.txt'), 'one\n');
+    g(['add', 'feature.txt']);
+    g(['commit', '-q', '-m', 'feature']);
+    const sha = g(['rev-parse', 'HEAD']).stdout.trim();
+    return { work, bare, sha, g };
+  }
+
+  /** Move main on (an unrelated file) and rebase feature onto it: a clean update. */
+  function advanceMainAndRebase(g: Git, work: string): string {
+    g(['checkout', '-q', 'main']);
+    fs.writeFileSync(path.join(work, 'other.txt'), 'main moved\n');
+    g(['add', 'other.txt']);
+    g(['commit', '-q', '-m', 'main moves']);
+    g(['checkout', '-q', 'feature']);
+    g(['rebase', '-q', 'main']);
+    return g(['rev-parse', 'HEAD']).stdout.trim();
+  }
+
+  /** Re-commit feature.txt with new content (a different branch diff). */
+  function rewriteFeature(g: Git, work: string, content: string): string {
+    fs.writeFileSync(path.join(work, 'feature.txt'), content);
+    g(['add', 'feature.txt']);
+    g(['commit', '-q', '--amend', '-m', 'feature']);
+    return g(['rev-parse', 'HEAD']).stdout.trim();
+  }
+
+  const cli = (work: string, args: string[]) =>
+    spawnSync('node', [ATTEST, ...args, '--base=main', `--preship-file=${PRESHIP}`], {
+      cwd: work,
+      env: cleanEnv(),
+      encoding: 'utf8',
+    });
+
+  /** Publish an attestation for HEAD through the real CLI, as the pre-push hook does. */
+  function publish(work: string, bare: string, sha: string) {
+    const state = path.join(path.dirname(work), 'state.json');
+    fs.writeFileSync(state, JSON.stringify(goodState({ git_head: sha })));
+    return cli(work, ['--publish', `--remote=${bare}`, `--state=${state}`]);
+  }
+
+  /** A hand-built tag object pushed to `ref`, for forged-record cases. */
+  function pushTag(
+    g: Git,
+    bare: string,
+    name: string,
+    target: string,
+    payload: object,
+    ref: string
+  ) {
+    g(['tag', '-a', '-m', JSON.stringify(payload), name, target]);
+    const obj = g(['rev-parse', name]).stdout.trim();
+    g(['push', '-q', bare, `${obj}:${ref}`]);
+    return obj;
+  }
+
+  const fullPayload = (sha: string, patchId: string) => ({
+    v: 1,
+    sha,
+    mode: 'standard',
+    allow_missing: false,
+    only: null,
+    steps_ok: 3,
+    steps_expected: 3,
+    preship_sha256: PRESHIP_HASH,
+    patch_id: patchId,
+  });
+
+  const flagsFor = (bare: string) => ({ remote: bare, base: 'main' });
+
+  it('branchPatchId is the same across a clean rebase and changes with the diff', () => {
+    const { work, sha, g } = makeBranchRepo();
+    const before = branchPatchId(sha, 'main', g);
+    expect(before?.patchId).toMatch(/^[0-9a-f]{40}$/);
+
+    const rebased = advanceMainAndRebase(g, work);
+    expect(rebased).not.toBe(sha);
+    const after = branchPatchId(rebased, 'main', g);
+    expect(after?.patchId).toBe(before?.patchId);
+    // The merge-base moved with main; the identity did not.
+    expect(after?.base).not.toBe(before?.base);
+
+    const changed = rewriteFeature(g, work, 'two\n');
+    expect(branchPatchId(changed, 'main', g)?.patchId).not.toBe(before?.patchId);
+  });
+
+  it('branchPatchId treats a whitespace-only change as a different diff', () => {
+    const { work, sha, g } = makeBranchRepo();
+    const plain = branchPatchId(sha, 'main', g)?.patchId;
+    const spaced = rewriteFeature(g, work, 'one \n');
+    expect(branchPatchId(spaced, 'main', g)?.patchId).not.toBe(plain);
+  });
+
+  it('branchPatchId returns null without a merge-base or without a diff', () => {
+    const { sha, g } = makeBranchRepo();
+    expect(branchPatchId(sha, 'no-such-ref', g)).toBeNull();
+    const mainTip = g(['rev-parse', 'main']).stdout.trim();
+    expect(branchPatchId(mainTip, 'main', g)).toBeNull();
+  });
+
+  it('publishRefspecs adds the branch-diff ref only when the patch-id is known', () => {
+    const obj = 'c'.repeat(40);
+    const pid = 'd'.repeat(40);
+    expect(publishRefspecs(obj, HEAD, null)).toEqual([`${obj}:refs/preship/${HEAD}`]);
+    expect(publishRefspecs(obj, HEAD, { patchId: pid, base: OTHER })).toEqual([
+      `${obj}:refs/preship/${HEAD}`,
+      `${obj}:${PATCH_REF_PREFIX}${pid}/${HEAD}`,
+    ]);
+  });
+
+  it('patchIdentity refreshes the base only when it is a branch of the publishing remote', () => {
+    const calls: string[][] = [];
+    const stub = (args: string[]) => {
+      calls.push(args);
+      return { status: 1, stdout: '' };
+    };
+    expect(patchIdentity(HEAD, { remote: 'origin', base: 'origin/main' }, stub)).toBeNull();
+    expect(calls[0]).toEqual(['fetch', '--quiet', 'origin', 'main']);
+
+    calls.length = 0;
+    patchIdentity(HEAD, { remote: 'upstream-path', base: 'main' }, stub);
+    expect(calls.some((c) => c[0] === 'fetch')).toBe(false);
+  });
+
+  it('publish records the patch-id and a second ref keyed by it', () => {
+    const { work, bare, sha, g } = makeBranchRepo();
+    const r = publish(work, bare, sha);
+    expect(r.status).toBe(0);
+    const pid = branchPatchId(sha, 'main', g)!.patchId;
+    expect(r.stdout).toContain(pid.slice(0, 12));
+
+    const ls = g(['ls-remote', bare, `${PATCH_REF_PREFIX}${pid}/*`]).stdout.trim();
+    expect(ls).toContain(`${PATCH_REF_PREFIX}${pid}/${sha}`);
+    const read = readAttestation(bare, `refs/preship/${sha}`, ls.split(/\s+/)[0], g);
+    expect(read.target).toBe(sha);
+    expect(read.payload.patch_id).toBe(pid);
+  });
+
+  it('carries the attestation to a clean rebase onto a newer main', () => {
+    const { work, bare, sha, g } = makeBranchRepo();
+    expect(publish(work, bare, sha).status).toBe(0);
+    const rebased = advanceMainAndRebase(g, work);
+
+    expect(carriedAttestation(flagsFor(bare), rebased, PRESHIP_HASH, g)).toMatchObject({
+      ok: true,
+      from: sha,
+    });
+
+    // The CLI the CI job runs agrees, and says where the record came from.
+    const r = cli(work, ['--verify', `--sha=${rebased}`, `--remote=${bare}`]);
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain(`carried from ${sha.slice(0, 9)}`);
+  });
+
+  it('does not carry it when the rebase changed the diff', () => {
+    const { work, bare, sha, g } = makeBranchRepo();
+    expect(publish(work, bare, sha).status).toBe(0);
+    advanceMainAndRebase(g, work);
+    const changed = rewriteFeature(g, work, 'one, resolved differently\n');
+
+    const carried = carriedAttestation(flagsFor(bare), changed, PRESHIP_HASH, g) as Refused;
+    expect(carried.ok).toBe(false);
+    expect(carried.reasons.join('\n')).toMatch(/no earlier head/);
+
+    const r = cli(work, ['--verify', `--sha=${changed}`, `--remote=${bare}`]);
+    expect(r.status).not.toBe(0);
+    expect(r.stderr).toMatch(/No earlier attestation could be carried/);
+  });
+
+  it('does not carry a record made by a different gate version', () => {
+    const { work, bare, sha, g } = makeBranchRepo();
+    expect(publish(work, bare, sha).status).toBe(0);
+    const rebased = advanceMainAndRebase(g, work);
+    const carried = carriedAttestation(flagsFor(bare), rebased, 'f'.repeat(64), g) as Refused;
+    expect(carried.ok).toBe(false);
+    expect(carried.reasons.join('\n')).toMatch(/preship_sha256/);
+  });
+
+  it('refuses a record under the patch ref whose payload names another patch-id', () => {
+    const { work, bare, sha, g } = makeBranchRepo();
+    const pid = branchPatchId(sha, 'main', g)!.patchId;
+    const ref = `${PATCH_REF_PREFIX}${pid}/${sha}`;
+    pushTag(g, bare, 'forged', sha, fullPayload(sha, 'e'.repeat(40)), ref);
+    const rebased = advanceMainAndRebase(g, work);
+
+    const carried = carriedAttestation(flagsFor(bare), rebased, PRESHIP_HASH, g) as Refused;
+    expect(carried.ok).toBe(false);
+    expect(carried.reasons.join('\n')).toMatch(/patch-id/);
+  });
+
+  it('refuses a patch ref that is not an annotated tag, or that names another commit', () => {
+    const { work, bare, sha, g } = makeBranchRepo();
+    const pid = branchPatchId(sha, 'main', g)!.patchId;
+    // A bare commit where a tag object should be.
+    g(['push', '-q', bare, `${sha}:${PATCH_REF_PREFIX}${pid}/${sha}`]);
+    // A well-formed tag under a ref naming a commit it does not target.
+    pushTag(
+      g,
+      bare,
+      'misnamed',
+      sha,
+      fullPayload(OTHER, pid),
+      `${PATCH_REF_PREFIX}${pid}/${OTHER}`
+    );
+    const rebased = advanceMainAndRebase(g, work);
+
+    const carried = carriedAttestation(flagsFor(bare), rebased, PRESHIP_HASH, g) as Refused;
+    expect(carried.ok).toBe(false);
+    const why = carried.reasons.join('\n');
+    expect(why).toMatch(/not a tag/);
+    expect(why).toMatch(/points at/);
+  });
+
+  it('readAttestation reports a payload that is not JSON and a ref it cannot fetch', () => {
+    const { bare, sha, g } = makeBranchRepo();
+    g(['tag', '-a', '-m', 'not json', 'junk', sha]);
+    const obj = g(['rev-parse', 'junk']).stdout.trim();
+    g(['push', '-q', bare, `${obj}:refs/preship/${sha}`]);
+    expect(readAttestation(bare, `refs/preship/${sha}`, obj, g).error).toMatch(/not valid JSON/);
+    expect(readAttestation(bare, 'refs/preship/missing', obj, g).error).toMatch(/could not fetch/);
+  });
+
+  it('cannot carry anything for a commit with no merge-base', () => {
+    const { bare, sha, g } = makeBranchRepo();
+    const flags = { remote: bare, base: 'no-such-ref' };
+    const carried = carriedAttestation(flags, sha, PRESHIP_HASH, g) as Refused;
+    expect(carried.ok).toBe(false);
+    expect(carried.reasons[0]).toMatch(/cannot compute the branch diff/);
   });
 });
