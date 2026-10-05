@@ -222,7 +222,10 @@ describe('ticketRouting rule CRUD', () => {
           conditions: billingConditions as never,
           actions: skillActions as never,
         })
-      ).rejects.toMatchObject({ code: 'CONFLICT' });
+      ).rejects.toMatchObject({
+        code: 'CONFLICT',
+        message: expect.stringContaining('lead routing rules'),
+      });
     });
 
     it('surfaces unexpected database errors as internal errors', async () => {
