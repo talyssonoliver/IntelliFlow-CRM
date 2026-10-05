@@ -16,6 +16,7 @@ import {
   getReadinessHealth,
 } from './modules/misc/health.service';
 import { container, containerReady } from './container';
+import { getHealthProbes } from './modules/misc/health-probes';
 import { processStripeWebhook } from './webhooks/stripe-webhook';
 import { handlePmEventsRoute } from './modules/pm-events/handle-pm-events-route';
 
@@ -336,14 +337,18 @@ async function handleHealthRoute(
     case '/health/ready':
     case '/api/health/ready': {
       const ctx = await Promise.resolve(createContextFn({ req: webRequest }));
-      const readiness = await getReadinessHealth(ctx);
+      const readiness = await getReadinessHealth(ctx, getHealthProbes());
       sendJson(res, readiness.ready ? 200 : 503, readiness, headOnly);
       return true;
     }
     case '/health/detailed':
     case '/api/health/detailed': {
       const ctx = await Promise.resolve(createContextFn({ req: webRequest }));
-      const health = await getDetailedHealth(ctx, { includeDatabaseStats: true });
+      const health = await getDetailedHealth(
+        ctx,
+        { includeDatabaseStats: true },
+        getHealthProbes()
+      );
       // /health/detailed always returns 200; degradation is carried in the JSON
       // body. This matches the worker health convention (degraded = "still
       // operational, just degraded") and the documented contract. Only
