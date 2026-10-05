@@ -1193,11 +1193,20 @@ describe('LeadList — row actions, status gating & cell rendering (IFC-248)', (
       hasMore: false,
     };
     render(<LeadList />);
-    ['New', 'Contacted', 'Qualified', 'Negotiating', 'Unqualified', 'Converted', 'Lost'].forEach(
-      (label) => {
-        expect(screen.getAllByText(label).length).toBeGreaterThan(0);
-      }
-    );
+    // IFC-243: lead-list now renders the shared LeadStatusBadge
+    // (components/leads/lead-detail.tsx) instead of a local, incomplete
+    // duplicate — 'New' -> 'New Lead' is that component's canonical label.
+    [
+      'New Lead',
+      'Contacted',
+      'Qualified',
+      'Negotiating',
+      'Unqualified',
+      'Converted',
+      'Lost',
+    ].forEach((label) => {
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0);
+    });
   });
 
   it('renders score badges across high/medium/low thresholds (AC-24)', () => {
