@@ -243,25 +243,50 @@ export function validatePayload(payload, sha, preshipSha256) {
  * still runs the full suite on the new combination. So the same diff carries
  * the attestation forward.
  *
- * `git patch-id --verbatim` hashes the diff with whitespace kept (plain
- * --stable ignores it, and whitespace matters in YAML, Python and Markdown).
- * `--binary` puts binary content in the hash instead of "Binary files differ".
+ * The hash must depend on the diff alone, and must be the same on a laptop and
+ * on a CI runner:
+ * - `git patch-id --verbatim` keeps whitespace (plain --stable drops it, and
+ *   whitespace matters in YAML, Python and Markdown).
+ * - `diff-tree` is plumbing, so personal `diff.*` config (noprefix,
+ *   src/dstPrefix, context, interHunkContext, renames) cannot change the patch
+ *   the way it changes porcelain `git diff`. Renames are off and quotePath is
+ *   pinned for the same reason.
+ * - `--binary` hashes binary content, not "Binary files differ".
+ * - The diff stays raw bytes end to end. Decoding it as UTF-8 would collapse
+ *   different non-UTF-8 bytes (Latin-1 text, say) into U+FFFD, so two
+ *   different diffs could share a patch-id.
+ *
  * A rebase that resolved a conflict, or main changing lines next to the
  * branch's hunks, changes the diff and so the patch-id: no carry, re-run.
  *
  * @param {string} sha the commit whose branch diff to identify
  * @param {string} baseRef the branch it targets, e.g. origin/main
- * @param {(args: string[], opts?: object) => {status: number|null, stdout: string}} gitFn
+ * @param {(args: string[], opts?: object) => {status: number|null, stdout: string|Buffer}} gitFn
  * @returns {{patchId: string, base: string} | null} null when it cannot be computed
  */
 export function branchPatchId(sha, baseRef, gitFn) {
   const mb = gitFn(['merge-base', sha, baseRef]);
-  const base = mb.status === 0 ? mb.stdout.trim() : '';
+  const base = mb.status === 0 ? String(mb.stdout).trim() : '';
   if (!/^[0-9a-f]{40}$/.test(base)) return null;
-  const diff = gitFn(['diff', '--binary', '--no-color', '--no-ext-diff', base, sha]);
-  if (diff.status !== 0 || diff.stdout === '') return null;
+  const diff = gitFn(
+    [
+      '-c',
+      'core.quotePath=true',
+      'diff-tree',
+      '-p',
+      '-r',
+      '--binary',
+      '--no-color',
+      '--no-ext-diff',
+      '--no-renames',
+      base,
+      sha,
+    ],
+    { encoding: 'buffer' }
+  );
+  if (diff.status !== 0 || diff.stdout.length === 0) return null;
   const pid = gitFn(['patch-id', '--verbatim'], { input: diff.stdout });
-  const patchId = pid.status === 0 ? pid.stdout.trim().split(/\s+/)[0] : '';
+  const patchId = pid.status === 0 ? String(pid.stdout).trim().split(/\s+/)[0] : '';
   return /^[0-9a-f]{40}$/.test(patchId) ? { patchId, base } : null;
 }
 
@@ -269,15 +294,29 @@ export function branchPatchId(sha, baseRef, gitFn) {
  * The branch identity to record at publish time. When --base is a branch of the
  * remote being published to (origin/main for origin), refresh it first: against
  * a stale local origin/main the diff would include main's own newer commits and
- * never match what CI computes. Best-effort; without a patch-id the record is
- * still valid for its exact SHA.
+ * never match what CI computes. Best-effort, but never silent: without a
+ * patch-id the record is still valid for its exact SHA, only a later rebase
+ * will not carry it, and the warning says so.
  */
-export function patchIdentity(head, flags, gitFn = git) {
+export function patchIdentity(head, flags, gitFn = git, warn = (m) => process.stderr.write(m)) {
   const slash = flags.base.indexOf('/');
   if (slash > 0 && flags.base.slice(0, slash) === flags.remote) {
-    gitFn(['fetch', '--quiet', flags.remote, flags.base.slice(slash + 1)]);
+    const fetched = gitFn(['fetch', '--quiet', flags.remote, flags.base.slice(slash + 1)]);
+    if (fetched.status !== 0) {
+      warn(
+        `warn: could not refresh ${flags.base} (${String(fetched.stderr ?? '').trim()}). ` +
+          'If it is stale, a later clean rebase will not carry this attestation.\n'
+      );
+    }
   }
-  return branchPatchId(head, flags.base, gitFn);
+  const patch = branchPatchId(head, flags.base, gitFn);
+  if (!patch) {
+    warn(
+      `warn: no branch diff against ${flags.base}; this attestation covers ` +
+        `${head.slice(0, 9)} only and will not carry across a rebase.\n`
+    );
+  }
+  return patch;
 }
 
 /** Where one tag object is published: by SHA, and by branch diff when known. */
