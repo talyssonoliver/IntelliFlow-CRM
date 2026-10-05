@@ -324,6 +324,53 @@ describe('LoginPage', () => {
       );
     });
 
+    async function reachMfaStep() {
+      mockLogin.mockImplementation(async () => {
+        mockAuthState = createMockAuth({
+          mfa: { required: true, methods: ['totp'] as any },
+        });
+        return false;
+      });
+      const { rerender } = render(<LoginPage />);
+      await user.type(screen.getByLabelText(/email address/i), 'demo@intelliflow.com');
+      await user.type(screen.getByLabelText(/^password$/i), 'Demo@1234');
+      await user.click(screen.getByRole('button', { name: /^sign in$/i }));
+      rerender(<LoginPage />);
+      return await screen.findByRole('button', { name: /use a different login method/i });
+    }
+
+    it('logs out and returns to credentials when the MFA step is cancelled', async () => {
+      mockLogout.mockResolvedValue(undefined);
+
+      await user.click(await reachMfaStep());
+
+      expect(mockLogout).toHaveBeenCalledTimes(1);
+      expect(await screen.findByLabelText(/email address/i)).toBeInTheDocument();
+    });
+
+    it('shows a destructive toast when logout fails while cancelling MFA', async () => {
+      mockLogout.mockRejectedValue(new Error('logout exploded'));
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.click(await reachMfaStep());
+
+      expect(await screen.findByText('Sign-out failed')).toBeInTheDocument();
+      expect(screen.getByText('logout exploded')).toBeInTheDocument();
+      expect(errorSpy).toHaveBeenCalled();
+      errorSpy.mockRestore();
+    });
+
+    it('falls back to a generic message when logout rejects with a non-Error', async () => {
+      mockLogout.mockRejectedValue('boom');
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await user.click(await reachMfaStep());
+
+      expect(await screen.findByText('Sign-out failed')).toBeInTheDocument();
+      expect(screen.getByText('Please try again')).toBeInTheDocument();
+      errorSpy.mockRestore();
+    });
+
     it('shows error message on failed login', async () => {
       mockLogin.mockRejectedValue(new Error('Invalid email or password'));
 

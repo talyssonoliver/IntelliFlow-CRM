@@ -39,9 +39,9 @@ export default function StoragePoliciesContent() {
   });
   const updateMutation = trpc.documentSettings.retentionPolicies.updateAll.useMutation({
     onSuccess: () => {
-      void utils.documentSettings.retentionPolicies.getAll.invalidate();
       toast({ title: 'Storage policies saved', description: 'Retention rules were updated.' });
       setIsDirty(false);
+      return utils.documentSettings.retentionPolicies.getAll.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -49,10 +49,10 @@ export default function StoragePoliciesContent() {
   });
   const resetMutation = trpc.documentSettings.retentionPolicies.resetToDefaults.useMutation({
     onSuccess: () => {
-      void utils.documentSettings.retentionPolicies.getAll.invalidate();
       toast({ title: 'Storage policies reset', description: 'Restored factory defaults.' });
       setResetOpen(false);
       setIsDirty(false);
+      return utils.documentSettings.retentionPolicies.getAll.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });

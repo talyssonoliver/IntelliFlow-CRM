@@ -60,13 +60,15 @@ export default function AIReviewDetailPage() {
   const claimMutation = api.aiReview.claim.useMutation({
     onSuccess: (data) => {
       setLockToken(data.lockToken);
-      utils.aiReview.get.invalidate({ reviewId });
-      utils.aiReview.list.invalidate();
-      utils.aiReview.stats.invalidate();
       toast({
         title: 'Review claimed',
         description: 'You have exclusive access to review this output.',
       });
+      return Promise.all([
+        utils.aiReview.get.invalidate({ reviewId }),
+        utils.aiReview.list.invalidate(),
+        utils.aiReview.stats.invalidate(),
+      ]);
     },
     onError: (err: { message: string }) => {
       toast({
@@ -80,10 +82,12 @@ export default function AIReviewDetailPage() {
   const approveMutation = api.aiReview.approve.useMutation({
     onSuccess: () => {
       setLockToken(null);
-      utils.aiReview.get.invalidate({ reviewId });
-      utils.aiReview.list.invalidate();
-      utils.aiReview.stats.invalidate();
       toast({ title: 'Review approved' });
+      return Promise.all([
+        utils.aiReview.get.invalidate({ reviewId }),
+        utils.aiReview.list.invalidate(),
+        utils.aiReview.stats.invalidate(),
+      ]);
     },
     onError: (err: { message: string }) => {
       toast({
@@ -97,10 +101,12 @@ export default function AIReviewDetailPage() {
   const rejectMutation = api.aiReview.reject.useMutation({
     onSuccess: () => {
       setLockToken(null);
-      utils.aiReview.get.invalidate({ reviewId });
-      utils.aiReview.list.invalidate();
-      utils.aiReview.stats.invalidate();
       toast({ title: 'Review rejected' });
+      return Promise.all([
+        utils.aiReview.get.invalidate({ reviewId }),
+        utils.aiReview.list.invalidate(),
+        utils.aiReview.stats.invalidate(),
+      ]);
     },
     onError: (err: { message: string }) => {
       toast({
@@ -114,10 +120,12 @@ export default function AIReviewDetailPage() {
   const escalateMutation = api.aiReview.escalate.useMutation({
     onSuccess: () => {
       setLockToken(null);
-      utils.aiReview.get.invalidate({ reviewId });
-      utils.aiReview.list.invalidate();
-      utils.aiReview.stats.invalidate();
       toast({ title: 'Review escalated' });
+      return Promise.all([
+        utils.aiReview.get.invalidate({ reviewId }),
+        utils.aiReview.list.invalidate(),
+        utils.aiReview.stats.invalidate(),
+      ]);
     },
     onError: (err: { message: string }) => {
       toast({
@@ -135,17 +143,17 @@ export default function AIReviewDetailPage() {
     escalateMutation.isPending;
 
   const handleClaim = useCallback(() => {
-    claimMutation.mutateAsync({ reviewId });
+    claimMutation.mutate({ reviewId });
   }, [claimMutation, reviewId]);
 
   const handleApprove = useCallback(() => {
     if (!lockToken) return;
-    approveMutation.mutateAsync({ reviewId, lockToken });
+    approveMutation.mutate({ reviewId, lockToken });
   }, [approveMutation, reviewId, lockToken]);
 
   const handleReject = useCallback(() => {
     if (!lockToken || !rejectNotes.trim()) return;
-    rejectMutation.mutateAsync({
+    rejectMutation.mutate({
       reviewId,
       lockToken,
       notes: rejectNotes.trim(),
@@ -156,7 +164,7 @@ export default function AIReviewDetailPage() {
 
   const handleEscalate = useCallback(() => {
     if (!lockToken || !escalateReason.trim()) return;
-    escalateMutation.mutateAsync({
+    escalateMutation.mutate({
       reviewId,
       lockToken,
       reason: escalateReason.trim(),

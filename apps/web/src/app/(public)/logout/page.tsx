@@ -173,7 +173,12 @@ function LogoutContent() {
       }
     };
 
-    run();
+    run().catch((err: unknown) => {
+      // The fallback cleanup inside run() itself failed; surface it instead of leaving a stuck spinner.
+      console.error('[Logout] Cleanup after logout failure also failed:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred during logout');
+      setStatus('error');
+    });
   }, [status, auth]);
 
   // Handle redirect

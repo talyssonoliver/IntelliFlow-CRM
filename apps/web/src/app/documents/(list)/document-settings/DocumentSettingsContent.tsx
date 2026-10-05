@@ -444,13 +444,23 @@ export default function DocumentSettingsContent() {
       <div className="w-full text-center py-12">
         <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
         <button
-          onClick={() => {
-            generalQuery.refetch();
-            duplicateRulesQuery.refetch();
-            requiredFieldsQuery.refetch();
-            tagsQuery.refetch();
-            automationQuery.refetch();
-            retentionQuery.refetch();
+          onClick={async () => {
+            try {
+              await Promise.all([
+                generalQuery.refetch(),
+                duplicateRulesQuery.refetch(),
+                requiredFieldsQuery.refetch(),
+                tagsQuery.refetch(),
+                automationQuery.refetch(),
+                retentionQuery.refetch(),
+              ]);
+            } catch (err) {
+              toast({
+                title: 'Error reloading settings',
+                description: err instanceof Error ? err.message : 'Unknown error',
+                variant: 'destructive',
+              });
+            }
           }}
           className="text-sm text-primary hover:underline"
         >

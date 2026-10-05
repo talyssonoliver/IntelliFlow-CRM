@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { toast } from '@intelliflow/ui';
 
 const {
   mockUseRequireAuth,
@@ -150,6 +151,60 @@ describe('ContactSettingsContent', () => {
     render(<ContactSettingsContent />);
     const saveBtn = screen.getByRole('button', { name: /Save Changes/i });
     expect(saveBtn).toBeDisabled();
+  });
+
+  describe('Retry after a load error', () => {
+    const originalImpl = mockDuplicateRulesQuery.getMockImplementation();
+    afterEach(() => {
+      mockDuplicateRulesQuery.mockImplementation(originalImpl as never);
+      vi.mocked(toast).mockClear();
+    });
+
+    const errorQuery = (refetch: ReturnType<typeof vi.fn>) =>
+      vi.fn(() => ({
+        data: undefined,
+        isLoading: false,
+        error: new Error('load failed'),
+        refetch,
+      }));
+
+    it('refetches every settings query when Retry is clicked', async () => {
+      const refetch = vi.fn().mockResolvedValue({});
+      mockDuplicateRulesQuery.mockImplementation(errorQuery(refetch) as never);
+      render(<ContactSettingsContent />);
+      fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+      await waitFor(() => expect(refetch).toHaveBeenCalledTimes(1));
+      expect(refetch).toHaveBeenCalledWith({ throwOnError: true });
+      expect(toast).not.toHaveBeenCalled();
+    });
+
+    it('shows a destructive toast when the retry itself fails', async () => {
+      const refetch = vi.fn().mockRejectedValue(new Error('still offline'));
+      mockDuplicateRulesQuery.mockImplementation(errorQuery(refetch) as never);
+      render(<ContactSettingsContent />);
+      fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+      await waitFor(() =>
+        expect(toast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Error reloading settings',
+            description: 'still offline',
+            variant: 'destructive',
+          })
+        )
+      );
+    });
+
+    it('falls back to a generic message for non-Error rejections', async () => {
+      const refetch = vi.fn().mockRejectedValue('nope');
+      mockDuplicateRulesQuery.mockImplementation(errorQuery(refetch) as never);
+      render(<ContactSettingsContent />);
+      fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+      await waitFor(() =>
+        expect(toast).toHaveBeenCalledWith(
+          expect.objectContaining({ description: 'An unexpected error occurred' })
+        )
+      );
+    });
   });
 
   // Keep refs alive so TS does not flag unused mocks.

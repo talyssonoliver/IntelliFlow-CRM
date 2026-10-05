@@ -34,45 +34,42 @@ export default function CaseDetailPage() {
 
   // Mutations
   const updateMutation = api.cases.update.useMutation({
-    onSuccess: () => {
-      utils.cases.getById.invalidate({ id: caseId });
-      utils.cases.list.invalidate();
-      utils.cases.stats.invalidate();
-    },
+    onSuccess: () =>
+      Promise.all([
+        utils.cases.getById.invalidate({ id: caseId }),
+        utils.cases.list.invalidate(),
+        utils.cases.stats.invalidate(),
+      ]),
   });
 
   const changeStatusMutation = api.cases.changeStatus.useMutation({
-    onSuccess: () => {
-      utils.cases.getById.invalidate({ id: caseId });
-      utils.cases.list.invalidate();
-      utils.cases.stats.invalidate();
-    },
+    onSuccess: () =>
+      Promise.all([
+        utils.cases.getById.invalidate({ id: caseId }),
+        utils.cases.list.invalidate(),
+        utils.cases.stats.invalidate(),
+      ]),
   });
 
   const closeMutation = api.cases.close.useMutation({
-    onSuccess: () => {
-      utils.cases.getById.invalidate({ id: caseId });
-      utils.cases.list.invalidate();
-      utils.cases.stats.invalidate();
-    },
+    onSuccess: () =>
+      Promise.all([
+        utils.cases.getById.invalidate({ id: caseId }),
+        utils.cases.list.invalidate(),
+        utils.cases.stats.invalidate(),
+      ]),
   });
 
   const addTaskMutation = api.cases.addTask.useMutation({
-    onSuccess: () => {
-      utils.cases.getById.invalidate({ id: caseId });
-    },
+    onSuccess: () => utils.cases.getById.invalidate({ id: caseId }),
   });
 
   const completeTaskMutation = api.cases.completeTask.useMutation({
-    onSuccess: () => {
-      utils.cases.getById.invalidate({ id: caseId });
-    },
+    onSuccess: () => utils.cases.getById.invalidate({ id: caseId }),
   });
 
   const removeTaskMutation = api.cases.removeTask.useMutation({
-    onSuccess: () => {
-      utils.cases.getById.invalidate({ id: caseId });
-    },
+    onSuccess: () => utils.cases.getById.invalidate({ id: caseId }),
   });
 
   const handleStatusChange = (status: string) => {

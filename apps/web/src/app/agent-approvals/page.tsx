@@ -839,43 +839,28 @@ function AgentApprovalsContent() {
 
   // Mutations
   const approveMutation = trpc.autoResponse.approve.useMutation({
-    onSuccess: () => {
-      pendingQuery.refetch();
-      listQuery.refetch();
-      statsQuery.refetch();
-    },
+    onSuccess: () =>
+      Promise.all([pendingQuery.refetch(), listQuery.refetch(), statsQuery.refetch()]),
   });
 
   const rejectMutation = trpc.autoResponse.reject.useMutation({
-    onSuccess: () => {
-      pendingQuery.refetch();
-      listQuery.refetch();
-      statsQuery.refetch();
-    },
+    onSuccess: () =>
+      Promise.all([pendingQuery.refetch(), listQuery.refetch(), statsQuery.refetch()]),
   });
 
   const escalateMutation = trpc.autoResponse.escalate.useMutation({
-    onSuccess: () => {
-      pendingQuery.refetch();
-      listQuery.refetch();
-      statsQuery.refetch();
-    },
+    onSuccess: () =>
+      Promise.all([pendingQuery.refetch(), listQuery.refetch(), statsQuery.refetch()]),
   });
 
   const rollbackMutation = trpc.autoResponse.rollback.useMutation({
-    onSuccess: () => {
-      pendingQuery.refetch();
-      listQuery.refetch();
-      statsQuery.refetch();
-    },
+    onSuccess: () =>
+      Promise.all([pendingQuery.refetch(), listQuery.refetch(), statsQuery.refetch()]),
   });
 
   const regenerateMutation = trpc.autoResponse.regenerate.useMutation({
-    onSuccess: () => {
-      pendingQuery.refetch();
-      listQuery.refetch();
-      statsQuery.refetch();
-    },
+    onSuccess: () =>
+      Promise.all([pendingQuery.refetch(), listQuery.refetch(), statsQuery.refetch()]),
   });
 
   // ==========================================================================
@@ -1126,9 +1111,17 @@ function AgentApprovalsContent() {
           <h2 className="text-red-800 font-medium">Error loading approvals</h2>
           <p className="text-red-600 text-sm mt-1">{queryError.message}</p>
           <button
-            onClick={() => {
-              pendingQuery.refetch();
-              listQuery.refetch();
+            onClick={async () => {
+              try {
+                await Promise.all([pendingQuery.refetch(), listQuery.refetch()]);
+              } catch (error) {
+                console.error('Failed to retry loading approvals:', error);
+                toast({
+                  title: 'Retry Failed',
+                  description: String(error instanceof Error ? error.message : 'Unknown error'),
+                  variant: 'destructive',
+                });
+              }
             }}
             className="mt-2 text-sm text-red-700 underline"
           >

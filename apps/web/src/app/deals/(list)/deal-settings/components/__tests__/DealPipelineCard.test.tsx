@@ -6,6 +6,11 @@ vi.mock('@intelliflow/ui', async (orig) => {
   return { ...actual, toast: vi.fn() };
 });
 
+const pipelineMocks = vi.hoisted(() => ({
+  invalidate: vi.fn(),
+  resetOnSuccess: undefined as undefined | (() => Promise<unknown>),
+}));
+
 vi.mock('@/lib/trpc', () => {
   const data = {
     stages: [
@@ -42,22 +47,26 @@ vi.mock('@/lib/trpc', () => {
       }),
     },
     resetToDefaults: {
-      useMutation: ({ onSuccess }: any) => ({
-        mutate: vi.fn(() => onSuccess?.()),
-        isPending: false,
-      }),
+      useMutation: ({ onSuccess }: any) => {
+        pipelineMocks.resetOnSuccess = onSuccess;
+        return {
+          mutate: vi.fn(() => onSuccess?.()),
+          isPending: false,
+        };
+      },
     },
   };
   return {
     trpc: {
       useUtils: () => ({
-        dealSettings: { pipeline: { getAll: { invalidate: vi.fn() } } },
+        dealSettings: { pipeline: { getAll: { invalidate: pipelineMocks.invalidate } } },
       }),
       dealSettings: { pipeline: pipelineBranch },
     },
   };
 });
 
+import { toast } from '@intelliflow/ui';
 import { DealPipelineCard } from '../DealPipelineCard';
 
 describe('DealPipelineCard', () => {
@@ -87,5 +96,29 @@ describe('DealPipelineCard', () => {
     render(<DealPipelineCard />);
     const toggles = screen.getAllByRole('switch');
     expect(toggles.length).toBe(2);
+  });
+
+  it('runs the reset success handler (invalidate + toast) when resetting the pipeline', () => {
+    render(<DealPipelineCard />);
+    fireEvent.click(screen.getByRole('button', { name: /reset pipeline/i }));
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Pipeline reset' }));
+  });
+
+  it('returns the pipeline invalidation from the reset success handler so the mutation waits for fresh data', async () => {
+    let finish: () => void = () => undefined;
+    pipelineMocks.invalidate.mockReturnValueOnce(
+      new Promise<void>((resolve) => (finish = resolve))
+    );
+    render(<DealPipelineCard />);
+    let settled = false;
+    const pending = pipelineMocks.resetOnSuccess!().then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(pipelineMocks.invalidate).toHaveBeenCalledTimes(1);
+    expect(settled).toBe(false);
+    finish();
+    await pending;
+    expect(settled).toBe(true);
   });
 });
