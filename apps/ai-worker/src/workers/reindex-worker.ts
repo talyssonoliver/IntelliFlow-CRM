@@ -319,11 +319,13 @@ export class ReindexWorker {
           ? (progress.processed / progress.total) * 50
           : (progress.processed / progress.total) * 100;
 
-      void safeUpdateProgress(job, {
+      // The sync progress callback cannot await. safeUpdateProgress already logs once per
+      // job and never rejects; the call-site catch is the backstop so nothing floats.
+      safeUpdateProgress(job, {
         stage: 'documents',
         documents: progress,
         overallProgress,
-      } as ReindexJobProgress);
+      } as ReindexJobProgress).catch(reportProgressFailure(job));
     });
   }
 
@@ -348,11 +350,13 @@ export class ReindexWorker {
       const baseProgress = data.indexType === 'all' ? 50 : 0;
       const overallProgress = baseProgress + (progress.processed / progress.total) * 50;
 
-      void safeUpdateProgress(job, {
+      // The sync progress callback cannot await. safeUpdateProgress already logs once per
+      // job and never rejects; the call-site catch is the backstop so nothing floats.
+      safeUpdateProgress(job, {
         stage: 'notes',
         notes: progress,
         overallProgress,
-      } as ReindexJobProgress);
+      } as ReindexJobProgress).catch(reportProgressFailure(job));
     });
   }
 

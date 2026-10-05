@@ -214,6 +214,28 @@ describe('ReindexWorker - processJob via captured processor', () => {
     };
     expect(await capturedProcessor(j)).toBeDefined();
   });
+  it('should log (not throw) when a per-batch progress update rejects', async () => {
+    if (capturedProcessor == null) return;
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const j = {
+      id: 'j-progress-fail',
+      data: { indexType: 'all', batchSize: 10, forceRegenerate: false },
+      updateProgress: vi
+        .fn()
+        .mockImplementation((p: { documents?: unknown; notes?: unknown }) =>
+          p.documents || p.notes
+            ? Promise.reject(new Error('redis down'))
+            : Promise.resolve(undefined)
+        ),
+    };
+    expect(await capturedProcessor(j)).toBeDefined();
+    await Promise.resolve();
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('progress update failed'),
+      expect.any(Error)
+    );
+    errorSpy.mockRestore();
+  });
   it('should process notes with IDs', async () => {
     if (capturedProcessor == null) return;
     const j = {

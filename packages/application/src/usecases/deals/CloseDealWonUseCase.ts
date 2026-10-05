@@ -108,26 +108,24 @@ export class CloseDealWonUseCase {
       opportunity.name
     );
 
-    Promise.resolve().then(async () => {
-      try {
-        await this.eventBus.publish(enrichedEvent);
-      } catch (err) {
+    Promise.resolve()
+      .then(() => this.eventBus.publish(enrichedEvent))
+      .catch((err: unknown) => {
         console.error('[CloseDealWon] Failed to publish enriched event:', err);
-      }
-    });
+      });
 
     // 4. Fire-and-forget: Dispatch deal-won notification
-    Promise.resolve().then(async () => {
-      try {
-        await this.notificationService.sendEmail({
+    Promise.resolve()
+      .then(() =>
+        this.notificationService.sendEmail({
           to: [input.closedBy],
           subject: `Deal Won: ${opportunity.name}`,
           textBody: `Congratulations! The deal "${opportunity.name}" has been closed as won with a value of ${opportunity.value.currency} ${opportunity.value.amount}.`,
-        });
-      } catch (err) {
+        })
+      )
+      .catch((err: unknown) => {
         console.error('[CloseDealWon] Failed to send notification:', err);
-      }
-    });
+      });
 
     // 5. Return success with the updated opportunity
     return Result.ok(opportunity);

@@ -235,3 +235,24 @@ describe('M16 PII redaction — clean text unchanged', () => {
     expect(out).toBe(clean);
   });
 });
+
+describe('PII exposure audit write failure', () => {
+  it('reports a rejected audit write at the call site and still returns the redacted text', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const service = new GuardrailsAIService(makeMockAI('Contact jane@acme.io'), makeMockAudit(), {
+      ...config,
+      enableLogging: true,
+    });
+    const auditError = new Error('event could not be built');
+    vi.spyOn(service as any, 'logSecurityEvent').mockRejectedValue(auditError);
+
+    const r = await service.scoreLead(baseInput);
+
+    expect(r.isSuccess).toBe(true);
+    expect(r.value?.reasoning).toContain('[EMAIL_REDACTED]');
+    await vi.waitFor(() =>
+      expect(consoleError).toHaveBeenCalledWith('[GUARDRAILS] Audit log failed:', auditError)
+    );
+    consoleError.mockRestore();
+  });
+});

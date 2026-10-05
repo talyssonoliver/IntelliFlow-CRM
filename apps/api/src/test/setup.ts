@@ -93,10 +93,13 @@ export function delayedPrismaResult<T>(
   value: T,
   delayMs: number
 ): PrismaNamespace.PrismaPromise<T> {
-  const promise = new Promise<T>((resolve) => {
-    setTimeout(() => resolve(value), delayMs);
-  });
-  Object.defineProperty(promise, Symbol.toStringTag, { value: 'PrismaPromise' });
+  const promise = Object.defineProperty(
+    new Promise<T>((resolve) => {
+      setTimeout(() => resolve(value), delayMs);
+    }),
+    Symbol.toStringTag,
+    { value: 'PrismaPromise' }
+  );
   return promise as PrismaNamespace.PrismaPromise<T>; // NOSONAR
 }
 

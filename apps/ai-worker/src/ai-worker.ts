@@ -310,7 +310,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         logger: this.logger,
       });
       this.stopTenantAiSpend = costTracker.addListener((usage) => {
-        void record(usage);
+        record(usage).catch((error: unknown) => {
+          this.logger.warn(
+            { error: error instanceof Error ? error.message : String(error) },
+            'Tenant AI spend recorder failed unexpectedly — this usage was not attributed'
+          );
+        });
       });
       this.logger.info(
         'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth'

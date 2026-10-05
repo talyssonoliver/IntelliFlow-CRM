@@ -19,7 +19,11 @@ initializeSentry()
   .catch((err) => {
     console.error('[API] Sentry initialization failed:', err);
   })
-  .then(() => startApiServer());
+  .then(() => startApiServer())
+  .catch((err) => {
+    console.error('[API] Failed to start API server:', err);
+    process.exit(1);
+  });
 
 process.on('SIGTERM', async () => {
   console.log('[API] SIGTERM received — shutting down gracefully');
