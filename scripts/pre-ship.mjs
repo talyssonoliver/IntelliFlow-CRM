@@ -121,19 +121,13 @@ const STATE_PATH = path.join(OUT_DIR, 'last-run.json');
 // hard-failing — so a DB-less env can still push the rest of the gate without a
 // wholesale skip. NOTE: this only detects "no DB stack"; pointing DATABASE_URL
 // at the correct (non-prod) DB remains the developer's responsibility.
+// The database and Redis the tests will actually use, TCP-probed (see
+// ./lib/preship-integration-infra.mjs). A name match on `docker ps` was fooled
+// by other projects' containers. Probed once per run: several steps ask.
+let testStackMissing;
 function dbStackUnavailable() {
-  const r = spawnSync('docker', ['ps', '--format', '{{.Names}}'], {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    shell: process.platform === 'win32',
-    // Bound the probe: a WEDGED daemon makes `docker ps` hang indefinitely, which
-    // would stall the whole gate before the SKIPPED_PRECONDITION logic runs. On
-    // timeout spawnSync returns a null status → treated as "db stack unavailable".
-    timeout: 10000,
-  });
-  if (r.error || r.status !== 0) return true; // docker missing / daemon down / probe timed out
-  const names = (r.stdout || '').toLowerCase();
-  return !(names.includes('postgres') && names.includes('redis'));
+  if (testStackMissing === undefined) testStackMissing = integrationInfraMissing(REPO_ROOT);
+  return testStackMissing !== null;
 }
 // The coverage gates need the merged lcov the `coverage` step produces; if that
 // step was skipped (no DB), they have nothing to read.
@@ -431,7 +425,7 @@ const STEPS = [
     cmd: ['pnpm', 'run', 'test:integration'],
     // The endpoints the suite will actually use, TCP-probed (see the lib). A
     // name match on `docker ps` was fooled by other projects' containers.
-    skip_if: () => integrationInfraMissing(REPO_ROOT) !== null,
+    skip_if: dbStackUnavailable,
     skip_remediation:
       'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.',
     required: true,
