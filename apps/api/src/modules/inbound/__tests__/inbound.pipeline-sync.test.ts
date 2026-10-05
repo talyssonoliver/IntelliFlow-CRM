@@ -132,10 +132,26 @@ describe('inboundRouter — syncPipelineLead', () => {
 
     expect(createLead()).not.toHaveBeenCalled();
     expect(result).toMatchObject({ leadId: LEAD_ID, created: false, status: 'CONTACTED' });
-    expect(prismaMock.lead.update).toHaveBeenCalledWith({
-      where: { id: LEAD_ID },
-      data: { tags: { push: COA_TAGS } },
-    });
+    expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+  });
+
+  it('appends tags with a tenant-scoped, de-duplicating UPDATE (not a blind push)', async () => {
+    existingLead('NEW');
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await caller.syncPipelineLead(input('CONTACTED'));
+
+    // A blind `push` stores a tag twice when two syncs both read it as missing;
+    // the merge must be idempotent in the write itself.
+    expect(prismaMock.lead.update).not.toHaveBeenCalled();
+    const call = prismaMock.$executeRaw.mock.calls[0] as unknown as [
+      TemplateStringsArray,
+      ...unknown[],
+    ];
+    const sql = call[0].join('?');
+    expect(sql).toMatch(/UPDATE "leads"/);
+    expect(sql).toMatch(/GROUP BY u\.tag/); // collapses duplicates, order-preserving
+    expect(sql).toMatch(/"id" = \? AND "tenantId" = \?/); // scoped by id AND tenant
+    expect(call.slice(1)).toEqual([COA_TAGS, LEAD_ID, TENANT_ID]);
   });
 
   it('does not touch tags that are already present', async () => {
@@ -143,6 +159,7 @@ describe('inboundRouter — syncPipelineLead', () => {
     const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
     await caller.syncPipelineLead(input('CONTACTED'));
     expect(prismaMock.lead.update).not.toHaveBeenCalled();
+    expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
   });
 
   it('walks NEW -> NEGOTIATING through CONTACTED and QUALIFIED in order', async () => {

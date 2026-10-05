@@ -98,9 +98,40 @@ describe('PrismaLeadRepository', () => {
 
       expect(mockPrisma.lead.updateMany).toHaveBeenCalledWith({
         where: { id: testLead.id.value, tenantId: 'tenant-123', status: 'NEW' },
-        data: expect.objectContaining({ id: testLead.id.value }),
+        data: { status: testLead.status, updatedAt: testLead.updatedAt },
       });
       expect(mockPrisma.lead.upsert).not.toHaveBeenCalled();
+    });
+
+    it('a concurrent non-status change survives a compare-and-set status write', async () => {
+      // Stateful stand-in for the leads table: updateMany applies `data` to the
+      // row only when the where clause (id, tenantId, status) still matches.
+      const row: Record<string, unknown> = {
+        id: testLead.id.value,
+        tenantId: 'tenant-123',
+        status: 'NEW',
+        tags: ['portal-discover'],
+        firstName: 'Original',
+      };
+      mockPrisma.lead.updateMany.mockImplementation(
+        async ({ where, data }: { where: Record<string, unknown>; data: object }) => {
+          const matches = Object.entries(where).every(([k, v]) => row[k] === v);
+          if (matches) Object.assign(row, data);
+          return { count: matches ? 1 : 0 };
+        }
+      );
+
+      // The caller's snapshot (stale tags/firstName) is what testLead holds.
+      // Another writer then changes non-status columns before our save lands.
+      row.tags = ['portal-discover', 'coa-pipeline'];
+      row.firstName = 'Changed';
+
+      testLead.changeStatus('CONTACTED', 'user-1');
+      await repository.save(testLead, { expectedStatus: 'NEW' });
+
+      expect(row.status).toBe('CONTACTED');
+      expect(row.tags).toEqual(['portal-discover', 'coa-pipeline']);
+      expect(row.firstName).toBe('Changed');
     });
 
     it('throws LeadStatusConflictError when the persisted status moved (count 0)', async () => {
