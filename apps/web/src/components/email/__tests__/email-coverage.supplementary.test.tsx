@@ -34,13 +34,38 @@ vi.mock('@/hooks/useDebounce', () => ({
 
 // Teardown, file-local so it holds even if the shared setup changes.
 // EmailListItem wraps each row in an EntityHoverCard (Radix HoverCard,
-// openDelay 600ms). Radix clears that delay timer only when the card unmounts,
-// so a card still mounted when the DOM environment is torn down can fire its
-// callback against a missing `window` (CI: "window is not defined"). Unmount
-// first, then drop any fake-timer state a test left behind so it cannot leak
-// into the next test or outlive the file.
+// openDelay 600ms). A click fires pointerenter AND focus on the trigger, and
+// Radix's handleOpen overwrites its single open-timer ref without clearing the
+// previous timer, so the first 600ms timer can never be cleared by unmount.
+// Left alone it fires after the DOM environment is torn down and its
+// controlled-state callback hits a missing `window` (CI: "window is not
+// defined", an uncaught error that fails the shard). Record every HoverCard
+// delay timer a test schedules and clear them all after unmounting, so
+// nothing can outlive the test.
+const HOVER_CARD_OPEN_DELAY_MS = 600;
+let hoverCardTimers: Array<Parameters<typeof clearTimeout>[0]> = [];
+let setTimeoutSpy: { mockRestore: () => void } | undefined;
+
+beforeEach(() => {
+  hoverCardTimers = [];
+  const realSetTimeout = globalThis.setTimeout;
+  setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((
+    handler: TimerHandler,
+    delay?: number,
+    ...args: unknown[]
+  ) => {
+    const id = realSetTimeout(handler as () => void, delay, ...args);
+    if (delay === HOVER_CARD_OPEN_DELAY_MS)
+      hoverCardTimers.push(id as Parameters<typeof clearTimeout>[0]);
+    return id;
+  }) as typeof setTimeout);
+});
+
 afterEach(() => {
   cleanup();
+  setTimeoutSpy?.mockRestore();
+  hoverCardTimers.forEach((id) => clearTimeout(id));
+  hoverCardTimers = [];
   if (vi.isFakeTimers()) {
     vi.clearAllTimers();
     vi.useRealTimers();
