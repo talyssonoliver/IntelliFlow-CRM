@@ -73,15 +73,13 @@ describe('preshipSlotArgv', () => {
 
 describe('shimLaunch', () => {
   it('is null without a command after --', () => {
-    expect(shimLaunch(['vitest'], { env: {}, platform: 'linux', exists: yes })).toBeNull();
-    expect(
-      shimLaunch(['--base', '2', '--'], { env: {}, platform: 'linux', exists: yes })
-    ).toBeNull();
+    expect(shimLaunch(['vitest'], { env: {}, exists: yes })).toBeNull();
+    expect(shimLaunch(['--base', '2', '--'], { env: {}, exists: yes })).toBeNull();
   });
 
   it('hands everything to the semaphore when the machine has one', () => {
     const argv = ['--base', '2', '--', 'vitest', 'run'];
-    const l = shimLaunch(argv, { env: {}, platform: 'win32', node: 'node', exists: yes });
+    const l = shimLaunch(argv, { env: {}, node: 'node', exists: yes });
     expect(l).toEqual({
       cmd: 'node',
       args: [path.join(DEFAULT_SLOTS_DIR, 'with-slot.mjs'), ...argv],
@@ -92,23 +90,9 @@ describe('shimLaunch', () => {
   it('runs the command directly elsewhere, without a shell', () => {
     const l = shimLaunch(['--', 'vitest', 'run', 'a b'], {
       env: {},
-      platform: 'linux',
       exists: no,
     });
     expect(l).toEqual({ cmd: 'vitest', args: ['run', 'a b'], options: {} });
-  });
-
-  it('on Windows without the semaphore, goes through cmd.exe with each word quoted as needed', () => {
-    const l = shimLaunch(['--', 'pnpm', 'test', 'a b', 'say "hi"'], {
-      env: { ComSpec: 'C:\\Windows\\cmd.exe' },
-      platform: 'win32',
-      exists: no,
-    });
-    expect(l).toEqual({
-      cmd: 'C:\\Windows\\cmd.exe',
-      args: ['/d', '/s', '/c', '"pnpm test "a b" "say \\"hi\\"""'],
-      options: { windowsVerbatimArguments: true },
-    });
   });
 });
 

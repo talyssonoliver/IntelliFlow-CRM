@@ -64,32 +64,21 @@ export function preshipSlotArgv(semaphore, script, args, node = process.execPath
   ];
 }
 
-const quote = (a) => (/^[\w@:=.,/\\+-]+$/.test(a) ? a : '"' + a.replace(/"/g, '\\"') + '"');
-
 /**
  * How scripts/with-test-slot.mjs launches its command: through the semaphore
- * when the machine has one, otherwise directly. npm/pnpm are .cmd shims on
- * Windows and only run through cmd.exe, which takes one quoted command line.
+ * when the machine has one, otherwise directly and without a shell, so no
+ * command line is ever assembled and nothing needs quoting. The wrapped
+ * commands are real executables (`node scripts/run-tests.js`), not .cmd shims.
  * @param {string[]} argv `[--label x] [--base n] -- <command...>`
- * @param {{env: NodeJS.ProcessEnv, platform: string, node?: string, exists?: (p: string) => boolean}} ctx
+ * @param {{env: NodeJS.ProcessEnv, node?: string, exists?: (p: string) => boolean}} ctx
  * @returns {{cmd: string, args: string[], options: object} | null} null on bad usage
  */
-export function shimLaunch(
-  argv,
-  { env, platform, node = process.execPath, exists = fs.existsSync }
-) {
+export function shimLaunch(argv, { env, node = process.execPath, exists = fs.existsSync }) {
   const sep = argv.indexOf('--');
   if (sep === -1 || sep === argv.length - 1) return null;
   const semaphore = sharedSemaphore(env, exists);
   if (semaphore) return { cmd: node, args: [semaphore, ...argv], options: {} };
   const words = argv.slice(sep + 1);
-  if (platform === 'win32') {
-    return {
-      cmd: env.ComSpec || 'cmd.exe',
-      args: ['/d', '/s', '/c', '"' + words.map(quote).join(' ') + '"'],
-      options: { windowsVerbatimArguments: true },
-    };
-  }
   return { cmd: words[0], args: words.slice(1), options: {} };
 }
 

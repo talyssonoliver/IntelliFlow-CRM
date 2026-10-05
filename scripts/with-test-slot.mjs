@@ -7,7 +7,7 @@
 // machine has no semaphore.
 import { runForwarding, shimLaunch } from './lib/test-slot.mjs';
 
-const launch = shimLaunch(process.argv.slice(2), { env: process.env, platform: process.platform });
+const launch = shimLaunch(process.argv.slice(2), { env: process.env });
 if (!launch) {
   console.error('usage: with-test-slot.mjs [--label <name>] [--base <n>] -- <command...>');
   process.exit(2);
