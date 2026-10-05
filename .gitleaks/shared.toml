@@ -35,6 +35,16 @@ regex = '''(?i)\b[a-z0-9_]*(?:password|passwd|pwd)["']?\s*(?::|=|=>)\s*["'`]([^"
 secretGroup = 1
 keywords = ["password", "passwd", "pwd"]
 
+# GitGuardian's Generic Password also fires on a password-named variable built
+# from literal pieces (an array join or a string concatenation). Seen
+# 2026-10-05 on taly_planner 254e2ec. Use filler ('x'.repeat(12)) instead.
+[[rules]]
+id = "password-fragments"
+description = "Password-named field assembled from literal fragments"
+regex = '''(?i)\b[a-z0-9_]*(?:password|passwd|pwd)["']?\s*(?::|=|=>)\s*(?:\[\s*)?["'`]([^"'`\s$<>{}]{2,})["'`]\s*[+,]'''
+secretGroup = 1
+keywords = ["password", "passwd", "pwd"]
+
 [[rules]]
 id = "notion-token"
 description = "Notion integration token"

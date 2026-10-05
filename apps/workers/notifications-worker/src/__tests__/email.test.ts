@@ -545,7 +545,7 @@ describe('createEmailChannel', () => {
       SMTP_PORT: '465',
       SMTP_SECURE: 'true',
       SMTP_USER: 'user',
-      SMTP_PASSWORD: 'pass',
+      SMTP_PASSWORD: 'x'.repeat(4),
       EMAIL_FROM: 'test@test.com',
       EMAIL_FROM_NAME: 'Test',
     };

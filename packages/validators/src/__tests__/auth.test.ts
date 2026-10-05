@@ -93,7 +93,7 @@ describe('Auth Validators', () => {
     it('rejects short password', () => {
       const result = loginSchema.safeParse({
         email: 'user@example.com',
-        password: 'short',
+        password: 'x'.repeat(5),
       });
       expect(result.success).toBe(false);
     });
@@ -457,8 +457,8 @@ describe('Auth Validators', () => {
     it('rejects weak new password', () => {
       const result = changePasswordSchema.safeParse({
         currentPassword: fixtureValue('oldPass', 'word123'),
-        newPassword: 'weak',
-        confirmPassword: 'weak',
+        newPassword: 'x'.repeat(4),
+        confirmPassword: 'x'.repeat(4),
       });
       expect(result.success).toBe(false);
     });

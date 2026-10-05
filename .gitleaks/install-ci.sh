@@ -24,7 +24,9 @@ case "$(uname -s)" in
 esac
 
 curl -fsSL --retry 3 -o "$dest/$asset" "$base/$asset"
-got=$(sha256sum "$dest/$asset" | cut -d' ' -f1)
+# Hash from stdin: given a Windows path with backslashes (RUNNER_TEMP on a
+# Windows runner), sha256sum escapes the line and prefixes the hash with "\".
+got=$(sha256sum < "$dest/$asset" | cut -d' ' -f1)
 if [ "$got" != "$want" ]; then
   echo "install-ci: checksum mismatch for $asset" >&2
   exit 1

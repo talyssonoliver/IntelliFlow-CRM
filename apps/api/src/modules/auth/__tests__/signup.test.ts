@@ -222,8 +222,8 @@ describe('Signup Procedure (IFC-120)', () => {
     await expect(
       caller.signup({
         email: 'user@example.com',
-        password: 'weak',
-        confirmPassword: 'weak',
+        password: 'x'.repeat(4),
+        confirmPassword: 'x'.repeat(4),
         name: 'User',
         acceptTerms: true as const,
       })
