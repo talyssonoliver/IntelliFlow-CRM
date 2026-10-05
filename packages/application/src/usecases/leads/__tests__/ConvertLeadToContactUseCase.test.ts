@@ -345,6 +345,28 @@ describe('ConvertLeadToContactUseCase', () => {
       expect(updatedLead!.isConverted).toBe(true);
     });
 
+    it('writes no Contact or audit row when the lead status changed since it was read', async () => {
+      const lead = Lead.create({
+        email: 'raced@example.com',
+        firstName: 'Raced',
+        lastName: 'Lead',
+        ownerId: 'owner-race',
+        tenantId: 'tenant-race',
+      }).value;
+      leadRepository.setLead(lead);
+      // Another writer moved the lead between the read and this save: the
+      // compare-and-set refuses it.
+      vi.spyOn(leadRepository, 'save').mockRejectedValueOnce(
+        new Error('lead status changed concurrently')
+      );
+
+      const result = await useCase.execute({ leadId: lead.id.value, convertedBy: 'sales-rep' });
+
+      expect(result.isFailure).toBe(true);
+      expect(contactRepository.savedContact).toBeNull();
+      expect(conversionAuditRepository.savedAudit).toBeNull();
+    });
+
     it('should fail when lead is already converted', async () => {
       const leadResult = Lead.create({
         email: 'already@converted.com',
