@@ -3,12 +3,14 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { getDpa, formatDpaDate } from '@/lib/legal/signature-handler';
 import { DpaSignaturePanel } from '@/components/legal/dpa-signature-panel';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Data Processing Addendum | IntelliFlow CRM',
   description:
     'Review the IntelliFlow CRM Data Processing Addendum governing our GDPR Article 28 data processor relationship with enterprise customers.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Data Processing Addendum | IntelliFlow CRM',
     description:
       'Read the IntelliFlow CRM DPA covering processing subject matter, sub-processors, security measures, and controller obligations under GDPR Article 28.',

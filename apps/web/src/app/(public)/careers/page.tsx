@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { ApplicationForm } from '@/components/shared/application-form';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Careers | IntelliFlow CRM',
   description:
     'Join the team building the future of AI-powered CRM. Explore open positions at IntelliFlow.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Careers at IntelliFlow CRM',
     description:
       'Build the future of AI-first customer relationship management. View open positions.',

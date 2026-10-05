@@ -11,7 +11,15 @@ const mockAssignments = [
     reason: 'rule_match',
     assignedTo: { id: 'u1', name: 'Alice', email: 'alice@example.com' },
     rule: { name: 'High Score Leads' },
-    details: { leadId: 'lead-1' },
+    leadId: 'lead-1234567890',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'audit-2',
+    reason: 'manual',
+    assignedTo: { id: 'u2', name: 'Bob', email: '' },
+    rule: null,
+    leadId: null,
     createdAt: new Date().toISOString(),
   },
 ];
@@ -44,6 +52,14 @@ import { AssignmentDashboard } from '../AssignmentDashboard';
 describe('AssignmentDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('shows the first 8 characters of the lead id, or a dash when there is none', () => {
+    render(<AssignmentDashboard />);
+
+    expect(screen.getByText('lead-123')).toBeInTheDocument();
+    const bobRow = screen.getByText('Bob').closest('tr');
+    expect(bobRow?.querySelector('td')?.textContent).toBe('—');
   });
 
   it('renders 4 stats cards with correct labels', () => {
@@ -82,6 +98,6 @@ describe('AssignmentDashboard', () => {
   it('shows relative timestamps', () => {
     render(<AssignmentDashboard />);
 
-    expect(screen.getByText('just now')).toBeInTheDocument();
+    expect(screen.getAllByText('just now')).toHaveLength(mockAssignments.length);
   });
 });

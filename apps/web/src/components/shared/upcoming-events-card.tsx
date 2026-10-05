@@ -125,19 +125,17 @@ export function UpcomingEventsCard({
   );
 
   const events: CalendarEvent[] = useMemo(() => {
-    const appointments = (appointmentData?.appointments ?? []) as unknown as Array<
-      Record<string, unknown>
-    >;
+    const appointments = appointmentData?.appointments ?? [];
     return appointments
       .map(
         (a): CalendarEvent => ({
-          id: a.id as string,
-          title: a.title as string,
-          startTime: new Date(a.startTime as string),
-          appointmentType: a.appointmentType as string,
-          status: a.status as string,
-          location: a.location as string | null | undefined,
-          attendees: a.attendees as CalendarEvent['attendees'],
+          id: a.id,
+          title: a.title,
+          startTime: new Date(a.startTime),
+          appointmentType: a.appointmentType,
+          status: a.status,
+          location: a.location,
+          attendees: a.attendees,
         })
       )
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())

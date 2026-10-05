@@ -3,12 +3,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Button, Card } from '@intelliflow/ui';
 import featuresData from '@/data/features-content.json';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Powerful Features for Modern Sales Teams | IntelliFlow CRM',
   description:
     'Discover AI-powered CRM features: lead scoring, workflow automation, predictive analytics, smart contact management, and enterprise-grade security.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'IntelliFlow CRM — AI Lead Scoring & Automation',
     description:
       'Explore features across Core CRM, AI & Intelligence, and Security & Governance. Built for modern sales teams that close more deals, faster.',

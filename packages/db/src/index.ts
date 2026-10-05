@@ -87,6 +87,7 @@ export type {
   CaseAutomationSetting,
   AppointmentSettings,
   PublicFeedback,
+  LeadCustomField,
 } from '../generated/prisma/client';
 
 // Re-export performance tracking utilities

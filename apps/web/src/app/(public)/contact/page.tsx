@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ContactForm } from '@/components/shared/contact-form';
+import { OG_IMAGES } from '@/lib/og-images';
 
 /**
  * Contact Page
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
   description:
     "Get in touch with the IntelliFlow CRM team. We're here to answer your questions about our AI-powered CRM solution.",
   openGraph: {
+    images: OG_IMAGES,
     title: 'Contact IntelliFlow CRM',
     description:
       'Have questions about IntelliFlow CRM? Our team is ready to help you discover how our AI-powered platform can transform your sales process.',
