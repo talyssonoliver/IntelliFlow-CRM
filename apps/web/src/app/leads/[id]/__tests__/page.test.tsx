@@ -7,6 +7,23 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { toast } from '@intelliflow/ui';
 
+const lane = vi.hoisted(() => ({
+  // onSuccess handlers captured per mutation so cache-refresh behaviour can be asserted
+  mutationOpts: {} as Record<string, { onSuccess?: (data?: unknown) => unknown }>,
+  user: { id: 'user-1', email: 'user@example.com' } as { id: string; email: string } | null,
+  revalidateLeadCaches: vi.fn(),
+  revalidateLeadConversionCaches: vi.fn(),
+  pushRecentLeadView: vi.fn(),
+}));
+
+vi.mock('@/app/leads/actions', () => ({
+  revalidateLeadCaches: lane.revalidateLeadCaches,
+  revalidateLeadConversionCaches: lane.revalidateLeadConversionCaches,
+}));
+vi.mock('@/lib/leads/use-lead-recent-views', () => ({
+  pushRecentLeadView: lane.pushRecentLeadView,
+}));
+
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
 const mockLogActivityMutate = vi.fn();
@@ -103,7 +120,7 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => ({
     isLoading: false,
     isAuthenticated: true,
-    user: { id: 'user-1', email: 'user@example.com' },
+    user: lane.user,
   }),
 }));
 
@@ -125,22 +142,35 @@ vi.mock('@/lib/api', () => ({
         }),
       },
       delete: {
-        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+        useMutation: (opts?: { onSuccess?: (data?: unknown) => unknown }) => {
+          lane.mutationOpts.delete = opts ?? {};
+          return { mutate: vi.fn(), isPending: false };
+        },
       },
       update: {
-        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+        useMutation: (opts?: { onSuccess?: (data?: unknown) => unknown }) => {
+          lane.mutationOpts.archive = opts ?? {};
+          return { mutate: vi.fn(), isPending: false };
+        },
       },
       convert: {
-        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+        useMutation: (opts?: { onSuccess?: (data?: unknown) => unknown }) => {
+          lane.mutationOpts.convert = opts ?? {};
+          return { mutate: vi.fn(), isPending: false };
+        },
       },
       scoreWithAI: {
-        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+        useMutation: (opts?: { onSuccess?: (data?: unknown) => unknown }) => {
+          lane.mutationOpts.score = opts ?? {};
+          return { mutate: vi.fn(), isPending: false };
+        },
       },
       addNote: {
         useMutation: (opts?: {
           onSuccess?: () => void;
           onError?: (err: { message: string }) => void;
         }) => {
+          lane.mutationOpts.addNote = opts ?? {};
           // Capture the component's onSuccess/onError callbacks so tests can invoke them
           if (opts?.onSuccess) capturedCallbacks.addNote.onSuccess = opts.onSuccess;
           if (opts?.onError) capturedCallbacks.addNote.onError = opts.onError;
@@ -155,6 +185,7 @@ vi.mock('@/lib/api', () => ({
           onSuccess?: () => void;
           onError?: (err: { message: string }) => void;
         }) => {
+          lane.mutationOpts.logActivity = opts ?? {};
           if (opts?.onSuccess) capturedCallbacks.logActivity.onSuccess = opts.onSuccess;
           if (opts?.onError) capturedCallbacks.logActivity.onError = opts.onError;
           return {
@@ -980,5 +1011,110 @@ describe('LeadDetailPage - Activity Feed Toggle (IFC-247)', () => {
     // After clicking load more (visibleCount goes from 5 → 10), all 7 are visible
     // so the load more button should disappear
     expect(screen.queryByRole('button', { name: /Load more activities/i })).not.toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Floating-promise handling: cache refreshes are returned from onSuccess and
+// failures are reported rather than left unhandled.
+// ---------------------------------------------------------------------------
+describe('Lead360Page — cache refresh promises', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    lane.user = { id: 'user-1', email: 'user@example.com' };
+    lane.revalidateLeadCaches.mockReset().mockResolvedValue(undefined);
+    lane.revalidateLeadConversionCaches.mockReset().mockResolvedValue(undefined);
+    lane.pushRecentLeadView.mockReset();
+    mockLeadGetByIdInvalidate.mockReset();
+    mockActivityFeedUnifiedInvalidate.mockReset();
+    mockActivityFeedEntityInvalidate.mockReset();
+  });
+
+  const deferred = () => {
+    let release!: () => void;
+    const promise = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    return { promise, release };
+  };
+
+  it.each(['addNote', 'logActivity'])(
+    '%s onSuccess returns the invalidations so the mutation waits for the refetch',
+    async (key) => {
+      render(<Lead360Page />);
+      const gate = deferred();
+      mockLeadGetByIdInvalidate.mockReturnValueOnce(gate.promise);
+      const returned = lane.mutationOpts[key].onSuccess!();
+      let settled = false;
+      Promise.resolve(returned).then(() => {
+        settled = true;
+      });
+      await Promise.resolve();
+      expect(settled).toBe(false);
+      gate.release();
+      await returned;
+      expect(settled).toBe(true);
+      expect(mockActivityFeedUnifiedInvalidate).toHaveBeenCalled();
+      expect(mockActivityFeedEntityInvalidate).toHaveBeenCalled();
+    }
+  );
+
+  it.each([
+    ['archive', 'Lead archived'],
+    ['score', 'AI analysis complete'],
+  ])('%s onSuccess toasts first, then returns revalidation + invalidation', async (key, title) => {
+    render(<Lead360Page />);
+    const returned = lane.mutationOpts[key].onSuccess!();
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title }));
+    await returned;
+    expect(lane.revalidateLeadCaches).toHaveBeenCalledWith('user-1');
+    expect(mockLeadGetByIdInvalidate).toHaveBeenCalledWith({ id: 'lead-1' });
+  });
+
+  it.each(['archive', 'score'])('%s onSuccess skips revalidation without a user', async (key) => {
+    lane.user = null;
+    render(<Lead360Page />);
+    await lane.mutationOpts[key].onSuccess!();
+    expect(lane.revalidateLeadCaches).not.toHaveBeenCalled();
+    expect(mockLeadGetByIdInvalidate).toHaveBeenCalled();
+  });
+
+  it('logs a failed cache revalidation without failing the mutation', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const failure = new Error('revalidate down');
+    lane.revalidateLeadCaches.mockRejectedValue(failure);
+    lane.revalidateLeadConversionCaches.mockRejectedValue(failure);
+    render(<Lead360Page />);
+    await lane.mutationOpts.archive.onSuccess!();
+    await lane.mutationOpts.score.onSuccess!();
+    lane.mutationOpts.delete.onSuccess!();
+    lane.mutationOpts.convert.onSuccess!({ contactId: 'c-1' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(consoleError).toHaveBeenCalledTimes(4);
+    expect(consoleError).toHaveBeenCalledWith('Failed to revalidate lead caches:', failure);
+    expect(mockPush).toHaveBeenCalledWith('/leads');
+    expect(mockPush).toHaveBeenCalledWith('/contacts/c-1');
+    consoleError.mockRestore();
+  });
+
+  it('records the recently viewed lead', async () => {
+    render(<Lead360Page />);
+    await vi.waitFor(() => expect(lane.pushRecentLeadView).toHaveBeenCalledWith('lead-1'));
+  });
+
+  it('logs when recording the recently viewed lead fails', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const failure = new Error('storage full');
+    lane.pushRecentLeadView.mockImplementation(() => {
+      throw failure;
+    });
+    render(<Lead360Page />);
+    await vi.waitFor(() =>
+      expect(consoleError).toHaveBeenCalledWith('Failed to record recently viewed lead:', failure)
+    );
+    consoleError.mockRestore();
   });
 });

@@ -378,4 +378,21 @@ describe('ComplianceDetailPanel', () => {
       });
     });
   });
+
+  describe('Fetch failure', () => {
+    it('logs the failure and stops loading when the fetch rejects', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockFetch.mockRejectedValue(new Error('Network error'));
+
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
+
+      await waitFor(() => {
+        expect(errorSpy).toHaveBeenCalledWith(
+          'Failed to fetch compliance detail:',
+          expect.any(Error)
+        );
+      });
+      errorSpy.mockRestore();
+    });
+  });
 });

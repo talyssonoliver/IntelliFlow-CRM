@@ -35,6 +35,15 @@ const DEFAULT_FORM: FormState = {
   phone: '',
 };
 
+// Linear-time equivalent of the former email regex, which backtracked super-linearly.
+function isEmailLike(value: string): boolean {
+  if (/\s/.test(value)) return false;
+  const parts = value.split('@');
+  if (parts.length !== 2 || !parts[0]) return false;
+  const dot = parts[1].indexOf('.', 1);
+  return dot !== -1 && dot < parts[1].length - 1;
+}
+
 export function ContactAddSheet({
   open,
   onOpenChange,
@@ -48,14 +57,16 @@ export function ContactAddSheet({
   const utils = api.useUtils();
   const createMutation = api.contact.create.useMutation({
     onSuccess: () => {
-      utils.account.getContacts.invalidate({ accountId });
-      utils.account.getById.invalidate({ id: accountId });
       toast({
         title: 'Contact created',
         description: `${form.firstName} ${form.lastName} has been added.`,
       });
       onOpenChange(false);
       onSuccess?.();
+      return Promise.all([
+        utils.account.getContacts.invalidate({ accountId }),
+        utils.account.getById.invalidate({ id: accountId }),
+      ]);
     },
     onError: (error) => {
       const desc =
@@ -83,7 +94,7 @@ export function ContactAddSheet({
     }
     if (!form.email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    } else if (!isEmailLike(form.email)) {
       newErrors.email = 'Invalid email format';
     }
     if (!form.phone.trim()) {

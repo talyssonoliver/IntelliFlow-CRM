@@ -1,14 +1,32 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 
 // Hoisted mock values — must be before vi.mock
-const { mockSearchParams, mockMutate, mockInvalidate, mockSetData } = vi.hoisted(() => ({
+const {
+  mockSearchParams,
+  mockMutate,
+  mockInvalidate,
+  mockSetData,
+  mockUnreadInvalidate,
+  mockRevalidateNotifications,
+  captured,
+} = vi.hoisted(() => ({
   mockSearchParams: new URLSearchParams(),
   mockMutate: vi.fn(),
   mockInvalidate: vi.fn(),
   mockSetData: vi.fn(),
+  mockUnreadInvalidate: vi.fn(),
+  mockRevalidateNotifications: vi.fn(),
+  captured: {} as Record<
+    'markAsRead' | 'markAllAsRead' | 'delete',
+    (() => Promise<unknown>) | undefined
+  >,
+}));
+
+vi.mock('../actions', () => ({
+  revalidateNotifications: (...args: unknown[]) => mockRevalidateNotifications(...args),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -23,22 +41,31 @@ vi.mock('@/lib/trpc', () => ({
   trpc: {
     notifications: {
       markAsRead: {
-        useMutation: vi.fn(() => ({
-          mutate: mockMutate,
-          isPending: false,
-        })),
+        useMutation: vi.fn((opts?: { onSuccess?: () => Promise<unknown> }) => {
+          captured.markAsRead = opts?.onSuccess;
+          return {
+            mutate: mockMutate,
+            isPending: false,
+          };
+        }),
       },
       markAllAsRead: {
-        useMutation: vi.fn(() => ({
-          mutate: mockMutate,
-          isPending: false,
-        })),
+        useMutation: vi.fn((opts?: { onSuccess?: () => Promise<unknown> }) => {
+          captured.markAllAsRead = opts?.onSuccess;
+          return {
+            mutate: mockMutate,
+            isPending: false,
+          };
+        }),
       },
       delete: {
-        useMutation: vi.fn(() => ({
-          mutate: mockMutate,
-          isPending: false,
-        })),
+        useMutation: vi.fn((opts?: { onSuccess?: () => Promise<unknown> }) => {
+          captured.delete = opts?.onSuccess;
+          return {
+            mutate: mockMutate,
+            isPending: false,
+          };
+        }),
       },
       getUnreadCount: {
         useQuery: vi.fn(() => ({
@@ -53,7 +80,7 @@ vi.mock('@/lib/trpc', () => ({
     useUtils: vi.fn(() => ({
       notifications: {
         list: { setData: mockSetData, invalidate: mockInvalidate },
-        getUnreadCount: { invalidate: mockInvalidate },
+        getUnreadCount: { invalidate: mockUnreadInvalidate },
       },
     })),
   },
@@ -163,6 +190,7 @@ vi.mock('@/components/notifications', () => ({
 
 // Import the component under test
 import NotificationsPage from '../page';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 
 describe('NotificationsPage', () => {
   beforeEach(() => {
@@ -316,5 +344,81 @@ describe('NotificationsPage', () => {
     const props = mockNotificationFiltersProps.mock.calls.at(-1)![0];
     expect(props.unreadCount).toBe(3);
     expect(props.highPriorityCount).toBe(1);
+  });
+
+  describe('mutation onSuccess cache refresh', () => {
+    beforeEach(() => {
+      mockInvalidate.mockResolvedValue(undefined);
+      mockUnreadInvalidate.mockResolvedValue(undefined);
+      mockRevalidateNotifications.mockResolvedValue(undefined);
+    });
+
+    it.each(['markAsRead', 'markAllAsRead'] as const)(
+      '%s refreshes the list, unread count and server caches',
+      async (name) => {
+        render(<NotificationsPage />);
+        await act(async () => {
+          await captured[name]!();
+        });
+        expect(mockInvalidate).toHaveBeenCalled();
+        expect(mockUnreadInvalidate).toHaveBeenCalled();
+        expect(mockRevalidateNotifications).toHaveBeenCalledWith('user-1');
+      }
+    );
+
+    it('delete refreshes the list and unread count but not the per-user server cache', async () => {
+      render(<NotificationsPage />);
+      await act(async () => {
+        await captured.delete!();
+      });
+      expect(mockInvalidate).toHaveBeenCalled();
+      expect(mockUnreadInvalidate).toHaveBeenCalled();
+      expect(mockRevalidateNotifications).not.toHaveBeenCalled();
+    });
+
+    it('stays pending until the list invalidation has finished', async () => {
+      let finish: () => void = () => undefined;
+      mockInvalidate.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
+      render(<NotificationsPage />);
+      let settled = false;
+      const pending = captured.markAsRead!().then(() => {
+        settled = true;
+      });
+      await Promise.resolve();
+      expect(settled).toBe(false);
+      finish();
+      await act(async () => {
+        await pending;
+      });
+      expect(settled).toBe(true);
+    });
+
+    it('logs, and does not fail the mutation, when server revalidation rejects', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const boom = new Error('revalidate failed');
+      mockRevalidateNotifications.mockRejectedValueOnce(boom);
+      render(<NotificationsPage />);
+      await act(async () => {
+        await expect(captured.markAsRead!()).resolves.toBeDefined();
+      });
+      expect(errorSpy).toHaveBeenCalledWith(
+        '[NotificationsPage] Failed to revalidate notification caches:',
+        boom
+      );
+      errorSpy.mockRestore();
+    });
+
+    it('skips server revalidation when no user is signed in', async () => {
+      vi.mocked(useRequireAuth).mockReturnValueOnce({
+        isAuthenticated: true,
+        isLoading: false,
+        user: null,
+      } as unknown as ReturnType<typeof useRequireAuth>);
+      render(<NotificationsPage />);
+      await act(async () => {
+        await captured.markAsRead!();
+      });
+      expect(mockRevalidateNotifications).not.toHaveBeenCalled();
+    });
   });
 });

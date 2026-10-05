@@ -65,6 +65,12 @@ export function LogoutButton({
   const { hasUnsavedChanges, dirtyForms, clearAll } = useUnsavedChanges();
   const [showModal, setShowModal] = useState(false);
 
+  // The consumer onLogoutStart/onLogoutComplete callbacks run inside handleLogout; if one throws,
+  // log it rather than leaving an unhandled rejection.
+  const logLogoutFailure = (error: unknown) => {
+    console.error('[LogoutButton] Logout flow failed:', error);
+  };
+
   /**
    * Handle button click - show modal if unsaved changes, otherwise logout
    */
@@ -72,7 +78,7 @@ export function LogoutButton({
     if (hasUnsavedChanges) {
       setShowModal(true);
     } else {
-      handleLogout();
+      handleLogout().catch(logLogoutFailure);
     }
   };
 
@@ -92,7 +98,7 @@ export function LogoutButton({
   const dismissAndLogout = () => {
     setShowModal(false);
     clearAll();
-    handleLogout();
+    handleLogout().catch(logLogoutFailure);
   };
 
   const handleLogoutWithoutSaving = dismissAndLogout;

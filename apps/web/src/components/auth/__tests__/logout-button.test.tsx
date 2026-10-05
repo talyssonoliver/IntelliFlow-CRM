@@ -125,6 +125,28 @@ describe('LogoutButton', () => {
       expect(onLogoutStart).toHaveBeenCalled();
     });
 
+    it('logs instead of leaving an unhandled rejection when onLogoutStart throws', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const boom = new Error('start failed');
+      const user = userEvent.setup();
+
+      render(
+        <LogoutButton
+          onLogoutStart={() => {
+            throw boom;
+          }}
+        />,
+        { wrapper: createWrapper() }
+      );
+
+      await user.click(screen.getByRole('button', { name: /sign out/i }));
+
+      await waitFor(() =>
+        expect(errorSpy).toHaveBeenCalledWith('[LogoutButton] Logout flow failed:', boom)
+      );
+      errorSpy.mockRestore();
+    });
+
     it('should show loading state during logout', async () => {
       // Mock isLoggingOut to be true
       vi.doMock('@/hooks/useLogout', () => ({
@@ -197,6 +219,23 @@ describe('LogoutButton', () => {
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
+    });
+
+    it('should clear unsaved state and log out when "Logout Without Saving" is chosen', async () => {
+      mockUnsavedChangesState.hasUnsavedChanges = true;
+      mockUnsavedChangesState.dirtyForms = ['Lead Form'];
+
+      const user = userEvent.setup();
+
+      render(<LogoutButton />, { wrapper: createWrapper() });
+
+      await user.click(screen.getByRole('button', { name: /sign out/i }));
+      await user.click(
+        await screen.findByRole('button', { name: /logout without saving your changes/i })
+      );
+
+      expect(mockUnsavedChangesState.clearAll).toHaveBeenCalled();
+      await waitFor(() => expect(mockLogout).toHaveBeenCalled());
     });
 
     it('should proceed without modal when no unsaved changes', async () => {

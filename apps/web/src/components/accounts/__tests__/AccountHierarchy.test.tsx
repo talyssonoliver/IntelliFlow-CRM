@@ -111,6 +111,37 @@ describe('AccountHierarchy', () => {
     expect(container.querySelector('[role="tree"]')).toBeNull();
   });
 
+  it('invalidates the hierarchy query when setParent succeeds', () => {
+    useQueryMock.mockReturnValue({ data: undefined, isLoading: false, error: null });
+    render(<AccountHierarchy accountId="00000000-0000-4000-8000-000000000001" />);
+    const opts = useMutationMock.mock.calls[0][0] as { onSuccess: () => void };
+    opts.onSuccess();
+    expect(invalidateMock).toHaveBeenCalledWith({
+      accountId: '00000000-0000-4000-8000-000000000001',
+    });
+  });
+
+  it('returns the invalidation promise so setParent stays pending until the refetch', async () => {
+    useQueryMock.mockReturnValue({ data: undefined, isLoading: false, error: null });
+    render(<AccountHierarchy accountId="00000000-0000-4000-8000-000000000001" />);
+    const opts = useMutationMock.mock.calls[0][0] as { onSuccess: () => unknown };
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    invalidateMock.mockReturnValueOnce(gate);
+    const returned = opts.onSuccess();
+    let settled = false;
+    Promise.resolve(returned).then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    release();
+    await returned;
+    expect(settled).toBe(true);
+  });
+
   it('shows empty state when no hierarchy exists', () => {
     useQueryMock.mockReturnValue({
       data: {
