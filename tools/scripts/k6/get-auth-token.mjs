@@ -20,11 +20,13 @@
 
 const url = process.env.SUPABASE_URL;
 const anonKey = process.env.SUPABASE_ANON_KEY;
-const email = process.env.K6_TEST_EMAIL || 'admin@intelliflow.dev';
-const password = process.env.K6_TEST_PASSWORD || 'TestPassword123!';
+const email = process.env.K6_TEST_EMAIL;
+const password = process.env.K6_TEST_PASSWORD;
 
-if (!url || !anonKey) {
-  console.error('ERROR: SUPABASE_URL and SUPABASE_ANON_KEY must be set in the environment.');
+if (!url || !anonKey || !email || !password) {
+  console.error(
+    'ERROR: SUPABASE_URL, SUPABASE_ANON_KEY, K6_TEST_EMAIL and K6_TEST_PASSWORD must be set in the environment.'
+  );
   process.exit(1);
 }
 
