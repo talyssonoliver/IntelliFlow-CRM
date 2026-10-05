@@ -48,9 +48,7 @@ export default function EditContactPage() {
   );
   const isLoading = query.isLoading;
   const error = query.error;
-  // Narrow tRPC's deeply-generic output to a flat record type at the boundary
-  // to avoid TS2589 "excessively deep" when consumed in effects/JSX below.
-  const record = query.data as unknown as Record<string, unknown> | undefined;
+  const record = query.data;
 
   const [formData, setFormData] = useState<Partial<ContactFormData> | null>(null);
   const [seeded, setSeeded] = useState(false);
@@ -64,30 +62,23 @@ export default function EditContactPage() {
   // Seed form from fetched contact data
   useEffect(() => {
     if (record && !seeded) {
-      const r = record as unknown as Record<string, unknown>;
-      const phoneRaw = r.phone;
-      const phone =
-        typeof phoneRaw === 'string'
-          ? phoneRaw
-          : ((phoneRaw as { value?: string } | null)?.value ?? '');
-      const tagsRaw = r.tags;
-
+      const r = record;
       const next: Partial<ContactFormData> = {
-        firstName: (r.firstName as string | null) ?? '',
-        lastName: (r.lastName as string | null) ?? '',
-        email: (r.email as string | null) ?? '',
-        phone,
-        streetAddress: (r.streetAddress as string | null) ?? '',
-        city: (r.city as string | null) ?? '',
-        zipCode: (r.zipCode as string | null) ?? '',
-        company: (r.company as string | null) ?? '',
-        jobTitle: (r.title as string | null) ?? '',
-        department: (r.department as string | null) ?? '',
-        linkedIn: (r.linkedInUrl as string | null) ?? '',
-        contactType: (r.contactType as string | null) ?? '',
-        status: (r.status as ContactFormData['status']) ?? 'ACTIVE',
-        tags: Array.isArray(tagsRaw) ? (tagsRaw as string[]).join(', ') : '',
-        notes: (r.contactNotes as string | null) ?? '',
+        firstName: r.firstName ?? '',
+        lastName: r.lastName ?? '',
+        email: r.email ?? '',
+        phone: r.phone ?? '',
+        streetAddress: r.streetAddress ?? '',
+        city: r.city ?? '',
+        zipCode: r.zipCode ?? '',
+        company: r.company ?? '',
+        jobTitle: r.title ?? '',
+        department: r.department ?? '',
+        linkedIn: r.linkedInUrl ?? '',
+        contactType: r.contactType ?? '',
+        status: r.status ?? 'ACTIVE',
+        tags: r.tags.join(', '),
+        notes: r.contactNotes ?? '',
       };
       setFormData(next);
       setSeeded(true);

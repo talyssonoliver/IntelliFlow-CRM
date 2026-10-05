@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { Card } from '@intelliflow/ui';
 import { StatusMonitor } from '@/components/status/status-monitor';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'System Status | IntelliFlow CRM',
   description: 'Real-time system status and incident history for IntelliFlow CRM services.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'IntelliFlow CRM System Status',
     description: 'Check the current operational status of all IntelliFlow services.',
     type: 'website',

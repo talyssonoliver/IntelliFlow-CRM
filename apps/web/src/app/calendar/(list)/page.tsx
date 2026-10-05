@@ -16,8 +16,6 @@ import { PageHeader } from '@/components/shared';
 import { AppointmentCalendar } from '@/components/appointments';
 import type {
   AppointmentListItem,
-  AppointmentType,
-  AppointmentStatus,
   CalendarAppointment,
   CalendarTask,
 } from '@/components/appointments/types';
@@ -26,6 +24,7 @@ import { useAppointmentFilters } from '@/hooks/useAppointmentFilters';
 import { useCalendarVisibility } from '@/hooks/useCalendarVisibility';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
+import { toAppointmentListItem } from '@/lib/appointments/list-item';
 
 /**
  * Compute the visible date range for a calendar view.
@@ -96,35 +95,10 @@ export default function CalendarPage() {
 
   const { data, isLoading } = api.appointments.list.useQuery(calendarQueryParams, {
     staleTime: 30_000,
-  }) as unknown as {
-    data: { appointments?: Record<string, unknown>[]; total?: number } | undefined;
-    isLoading: boolean;
-  };
+  });
 
   const appointments: AppointmentListItem[] = useMemo(() => {
-    const rawAppointments: Record<string, unknown>[] | undefined = data?.appointments;
-    if (!rawAppointments) return [];
-    return rawAppointments.map((a) => {
-      const organizer = a.organizer as { id?: string; name?: string | null } | null;
-      const attendees = a.attendees as Array<{ user?: { name?: string | null } }> | undefined;
-      const linkedCases = a.linkedCases as unknown[] | undefined;
-      return {
-        id: a.id as string,
-        title: a.title as string,
-        startTime: new Date(a.startTime as string),
-        endTime: new Date(a.endTime as string),
-        appointmentType: a.appointmentType as AppointmentType,
-        status: a.status as AppointmentStatus,
-        location: (a.location as string) ?? undefined,
-        attendeeCount: attendees?.length ?? 0,
-        hasConflict: false,
-        linkedCaseCount: linkedCases?.length ?? 0,
-        isRecurring: Boolean(a.recurrencePattern),
-        calendarId: a.calendarId as string | null | undefined,
-        organizer: { id: organizer?.id ?? '', name: organizer?.name ?? 'Unknown' },
-        attendeeNames: attendees?.map((att) => att.user?.name ?? 'Unknown') ?? [],
-      };
-    });
+    return data?.appointments.map(toAppointmentListItem) ?? [];
   }, [data]);
 
   const calendarAppointments = useMemo((): CalendarAppointment[] => {

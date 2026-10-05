@@ -300,7 +300,7 @@ export default function LeadSettingsContent() {
     );
   }
 
-  const fields = (fieldsQuery.data as unknown as CustomField[]) ?? [];
+  const fields: CustomField[] = fieldsQuery.data ?? [];
 
   return (
     <div className="w-full">
