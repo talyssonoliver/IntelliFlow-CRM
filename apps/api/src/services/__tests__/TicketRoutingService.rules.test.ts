@@ -29,8 +29,11 @@ function build(
     user: {
       findFirst: vi
         .fn()
-        .mockImplementation(async ({ where }: { where: { id: string; tenantId: string } }) =>
-          where.tenantId === TENANT && tenantUsers.includes(where.id) ? { id: where.id } : null
+        .mockImplementation(
+          async ({ where }: { where: { id: string; OR: Array<{ tenantId?: string }> } }) =>
+            where.OR[0].tenantId === TENANT && tenantUsers.includes(where.id)
+              ? { id: where.id, name: `Name of ${where.id}` }
+              : null
         ),
     },
     agentAvailability: {
@@ -71,6 +74,7 @@ describe('TicketRoutingService.findMatchingRule', () => {
     expect(await service.findMatchingRule(TENANT, 'BILLING', 'LOW')).toEqual({
       id: 'rule-1',
       assignToUserId: 'user-alice',
+      assigneeName: 'Name of user-alice',
       ruleName: 'Billing to Alice',
     });
   });
@@ -143,10 +147,19 @@ describe('TicketRoutingService.findMatchingRule', () => {
 
     const match = await service.findMatchingRule(TENANT, 'BILLING', 'LOW');
 
-    expect(match).toEqual({ id: 'own', assignToUserId: 'user-bob', ruleName: 'Billing to Alice' });
+    expect(match).toEqual({
+      id: 'own',
+      assignToUserId: 'user-bob',
+      assigneeName: 'Name of user-bob',
+      ruleName: 'Billing to Alice',
+    });
+    // membership-aware predicate (home users minus revoked, plus live members), not a bare tenantId
     expect(prisma.user.findFirst).toHaveBeenCalledWith({
-      where: { id: 'user-of-other-tenant', tenantId: TENANT },
-      select: { id: true },
+      where: {
+        id: 'user-of-other-tenant',
+        OR: [expect.objectContaining({ tenantId: TENANT }), expect.any(Object)],
+      },
+      select: { id: true, name: true },
     });
   });
 
@@ -159,6 +172,7 @@ describe('TicketRoutingService.findMatchingRule', () => {
     const match = await service.findMatchingRule(TENANT, 'BILLING', 'LOW');
 
     expect(match?.assignToUserId).toBe('agent-1');
+    expect(match?.assigneeName).toBe('agent-1');
     expect(prisma.agentSkill.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ tenantId: TENANT, skillName: 'billing' }),

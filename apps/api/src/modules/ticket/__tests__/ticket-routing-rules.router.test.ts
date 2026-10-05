@@ -192,7 +192,10 @@ describe('ticketRouting rule CRUD', () => {
       ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
       expect(rows).toHaveLength(0);
       expect(prismaMock.user.count).toHaveBeenCalledWith({
-        where: { id: { in: ['user-of-other-tenant'] }, tenantId: TENANT },
+        where: {
+          id: { in: ['user-of-other-tenant'] },
+          OR: [expect.objectContaining({ tenantId: TENANT }), expect.any(Object)],
+        },
       });
     });
 

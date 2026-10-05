@@ -12,7 +12,7 @@
  * 5. No-match (generic queue + TicketRoutingFailedEvent)
  */
 
-import type { PrismaClient } from '@intelliflow/db';
+import { tenantUserWhere, type PrismaClient } from '@intelliflow/db';
 import {
   TICKET_CATEGORY_SKILL_MAP,
   evaluateTicketRoutingConditions,
@@ -225,7 +225,12 @@ export class TicketRoutingService {
     category: TicketCategory,
     priority: string,
     facts: { status?: string; slaStatus?: string | null } = {}
-  ): Promise<{ id: string; assignToUserId: string; ruleName: string } | null> {
+  ): Promise<{
+    id: string;
+    assignToUserId: string;
+    assigneeName: string;
+    ruleName: string;
+  } | null> {
     const rules = await this.prisma.routingRule.findMany({
       where: { tenantId, ruleType: 'TICKET', isActive: true },
       orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
@@ -245,9 +250,14 @@ export class TicketRoutingService {
       if (!conditions.success || !actions.success) continue;
       if (!evaluateTicketRoutingConditions(conditions.data, context)) continue;
 
-      const assignToUserId = await this.resolveRuleAssignee(tenantId, actions.data);
-      if (assignToUserId) {
-        return { id: rule.id, assignToUserId, ruleName: rule.name };
+      const assignee = await this.resolveRuleAssignee(tenantId, actions.data);
+      if (assignee) {
+        return {
+          id: rule.id,
+          assignToUserId: assignee.id,
+          assigneeName: assignee.name,
+          ruleName: rule.name,
+        };
       }
     }
 
@@ -257,22 +267,23 @@ export class TicketRoutingService {
   private async resolveRuleAssignee(
     tenantId: string,
     actions: Array<{ type: string; target: string }>
-  ): Promise<string | null> {
+  ): Promise<{ id: string; name: string } | null> {
     const userAction = actions.find((a) => a.type === 'assign_to_user');
     if (userAction) {
-      // The target is free text in the stored rule: only assign to a user of this tenant,
-      // so a rule can never route a ticket to another tenant's user (or a deleted one).
+      // The target is free text in the stored rule: only assign to someone who works in this
+      // tenant (home user or live member), so a rule can never route a ticket to another
+      // tenant's user, a deleted user or a revoked member.
       const user = await this.prisma.user.findFirst({
-        where: { id: userAction.target, tenantId },
-        select: { id: true },
+        where: { id: userAction.target, ...tenantUserWhere(tenantId) },
+        select: { id: true, name: true },
       });
-      return user?.id ?? null;
+      return user ? { id: user.id, name: user.name ?? 'Unknown' } : null;
     }
 
     const skillAction = actions.find((a) => a.type === 'assign_to_skill');
     if (skillAction) {
       const agents = await this.getEligibleAgents(tenantId, skillAction.target);
-      return agents[0]?.agentId ?? null;
+      return agents[0] ? { id: agents[0].agentId, name: agents[0].name } : null;
     }
 
     return null;

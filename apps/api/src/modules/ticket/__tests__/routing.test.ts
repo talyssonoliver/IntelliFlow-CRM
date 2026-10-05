@@ -1015,6 +1015,7 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
       findMatchingRule: vi.fn().mockResolvedValue({
         id: RULE_UUID,
         assignToUserId: AGENT_1_UUID,
+        assigneeName: 'Agent 1',
         ruleName: 'Billing Priority Rule',
       }),
       suggestAssignees: vi.fn().mockResolvedValue([
@@ -1059,6 +1060,55 @@ describe('Section D: Router Caller + Container Wiring Tests', () => {
     expect(result.assignedUserId).toBe(AGENT_1_UUID);
     expect(mockService.routeTicket).toHaveBeenCalledWith(
       expect.objectContaining({ routingMethod: 'rule_match', ruleId: RULE_UUID })
+    );
+  });
+
+  // D5b: a matching rule resolves its own assignee, so it needs no category candidates
+  it('D5b: autoRoute honours a matching rule even when no category candidates exist', async () => {
+    const RULE_UUID = '00000000-0000-4000-8000-000000000090';
+    const mockService = {
+      checkSlaEscalation: vi.fn().mockResolvedValue(false),
+      findMatchingRule: vi.fn().mockResolvedValue({
+        id: RULE_UUID,
+        assignToUserId: AGENT_1_UUID,
+        assigneeName: 'Agent 1',
+        ruleName: 'Skill rule',
+      }),
+      suggestAssignees: vi.fn().mockResolvedValue([]),
+      routeTicket: vi.fn().mockResolvedValue({
+        ticketId: TICKET_UUID,
+        assigneeId: AGENT_1_UUID,
+        assigneeName: 'Agent 1',
+        auditId: AUDIT_UUID,
+        reason: 'Rule match: Skill rule',
+        routingMethod: 'rule_match',
+        matchedSkill: null,
+        ruleId: RULE_UUID,
+      }),
+    };
+    const ctx = {
+      container: { get: () => ({ isModuleEnabled: async () => true }) },
+      services: { ticketRouting: mockService },
+      prisma: {
+        ticket: {
+          findFirst: vi
+            .fn()
+            .mockResolvedValue({ id: TICKET_UUID, tenantId: TENANT_UUID, priority: 'HIGH' }),
+        },
+      },
+      user: { userId: USER_UUID, email: 'test@test.com', role: 'ADMIN', tenantId: TENANT_UUID },
+    } as any;
+
+    const caller = routerModule.ticketRoutingRouter.createCaller(ctx);
+    const result = await caller.autoRoute({ ticketId: TICKET_UUID, category: 'GENERAL' });
+
+    expect(result.assignedUserId).toBe(AGENT_1_UUID);
+    expect(mockService.routeTicket).toHaveBeenCalledWith(
+      expect.objectContaining({
+        routingMethod: 'rule_match',
+        ruleId: RULE_UUID,
+        assigneeName: 'Agent 1',
+      })
     );
   });
 

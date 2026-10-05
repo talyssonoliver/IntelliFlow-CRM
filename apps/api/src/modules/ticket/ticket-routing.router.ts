@@ -9,6 +9,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
+import { tenantUserWhere } from '@intelliflow/db';
 import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import {
   autoRouteInputSchema,
@@ -82,15 +83,15 @@ function toTicketRuleDto(row: TicketRuleRow): TicketAutomationRuleDto {
  * caller's tenant, so a rule cannot point at another tenant's user.
  */
 async function assertAssigneesInTenant(
-  db: {
-    user: { count(args: { where: { id: { in: string[] }; tenantId: string } }): Promise<number> };
-  },
+  db: Pick<Context['prisma'], 'user'>,
   tenantId: string,
   actions: ReadonlyArray<{ type: string; target: string }> | undefined
 ): Promise<void> {
   const userIds = (actions ?? []).filter((a) => a.type === 'assign_to_user').map((a) => a.target);
   if (userIds.length === 0) return;
-  const found = await db.user.count({ where: { id: { in: userIds }, tenantId } });
+  const found = await db.user.count({
+    where: { id: { in: userIds }, ...tenantUserWhere(tenantId) },
+  });
   if (found !== new Set(userIds).size) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -152,7 +153,8 @@ export const ticketRoutingRouter = createTRPCRouter({
     // Get eligible agents
     const candidates = await service.suggestAssignees(tenantId, category, 10);
 
-    if (candidates.length === 0) {
+    // A matching rule resolves its own assignee, so it needs no category candidates.
+    if (candidates.length === 0 && (isEscalation || !matchingRule)) {
       throw new TRPCError({
         code: 'PRECONDITION_FAILED',
         message: 'No eligible agents available for routing',
@@ -175,8 +177,7 @@ export const ticketRoutingRouter = createTRPCRouter({
     } else if (matchingRule) {
       // Rule match
       assigneeId = matchingRule.assignToUserId;
-      assigneeName =
-        candidates.find((c) => c.agentId === matchingRule.assignToUserId)?.name || 'Unknown';
+      assigneeName = matchingRule.assigneeName;
       reason = `Rule match: ${matchingRule.ruleName}`;
       routingMethod = 'rule_match';
       ruleId = matchingRule.id;
