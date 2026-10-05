@@ -428,7 +428,12 @@ export function OAuthCallback({
         const target =
           flow === 'magiclink' ? (pendingNextRef.current ?? '/dashboard') : redirectUrl;
         setTimeout(() => {
-          if (!departedRef.current) router.push(target);
+          // Left during the delay: hold the redirect for a bfcache restore instead of losing it.
+          if (departedRef.current) {
+            pendingNavigateRef.current = () => router.push(target);
+            return;
+          }
+          router.push(target);
         }, 300);
       };
 

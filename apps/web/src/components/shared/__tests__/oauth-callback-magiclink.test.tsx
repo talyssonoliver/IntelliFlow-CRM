@@ -430,6 +430,30 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     await waitFor(() => expect(h.push).toHaveBeenCalledWith('/leads'), { timeout: 2000 });
   });
 
+  it('leaving during the redirect delay holds the redirect for a bfcache restore', async () => {
+    h.getStoredAccessToken.mockReturnValue(null);
+    render(<OAuthCallback />);
+    await waitFor(() => expect(h.storeSessionTokens).toHaveBeenCalled());
+
+    const transition = (type: string) => {
+      const event = new Event(type);
+      Object.defineProperty(event, 'persisted', { value: true });
+      return event;
+    };
+    act(() => {
+      globalThis.dispatchEvent(transition('pagehide'));
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+    expect(h.push).not.toHaveBeenCalled();
+
+    act(() => {
+      globalThis.dispatchEvent(transition('pageshow'));
+    });
+    expect(h.push).toHaveBeenCalledWith('/leads');
+  });
+
   it('the same account revokes the replaced session after signing in', async () => {
     h.verifyOtp.mockResolvedValue({
       data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
