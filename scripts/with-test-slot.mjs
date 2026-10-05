@@ -26,15 +26,21 @@ if (sep === -1 || sep === argv.length - 1) {
 let child;
 if (existsSync(shared)) {
   child = spawn(process.execPath, [shared, ...argv], { stdio: 'inherit' });
+} else if (process.platform === 'win32') {
+  // npm/pnpm are .cmd shims on Windows and only run through cmd.exe, which
+  // takes one command line: quote any word that would split.
+  const quote = (a) => (/^[\w@:=.,/\\+-]+$/.test(a) ? a : '"' + a.replace(/"/g, '\\"') + '"');
+  const line = argv
+    .slice(sep + 1)
+    .map(quote)
+    .join(' ');
+  child = spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', '"' + line + '"'], {
+    stdio: 'inherit',
+    windowsVerbatimArguments: true,
+  });
 } else {
-  // npm/pnpm are .cmd shims on Windows and only run through a shell.
-  const words = argv.slice(sep + 1);
-  const quote = (a) =>
-    /^[A-Za-z0-9_@:=.,/\\+-]+$/.test(a) ? a : `"${a.replace(/(["\\])/g, '\\$1')}"`;
-  child =
-    process.platform === 'win32'
-      ? spawn(words.map(quote).join(' '), { stdio: 'inherit', shell: true })
-      : spawn(words[0], words.slice(1), { stdio: 'inherit' });
+  const [cmd, ...args] = argv.slice(sep + 1);
+  child = spawn(cmd, args, { stdio: 'inherit' });
 }
 // Forward Ctrl-C and kill so the semaphore releases its slot.
 for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, () => child.kill(sig));
