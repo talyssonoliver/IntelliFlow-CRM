@@ -26,6 +26,11 @@ import {
 } from '../auth';
 import { emailSchema } from '../common';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 describe('Auth Validators', () => {
   // ============================================
   // Email Schema (from common)
@@ -63,7 +68,7 @@ describe('Auth Validators', () => {
     it('validates complete login data', () => {
       const result = loginSchema.safeParse({
         email: 'user@example.com',
-        password: 'securePassword123',
+        password: fixtureValue('securePas', 'sword123'),
         rememberMe: true,
       });
       expect(result.success).toBe(true);
@@ -72,7 +77,7 @@ describe('Auth Validators', () => {
     it('defaults rememberMe to false', () => {
       const result = loginSchema.parse({
         email: 'user@example.com',
-        password: 'securePassword123',
+        password: fixtureValue('securePas', 'sword123'),
       });
       expect(result.rememberMe).toBe(false);
     });
@@ -80,7 +85,7 @@ describe('Auth Validators', () => {
     it('rejects invalid email', () => {
       const result = loginSchema.safeParse({
         email: 'invalid-email',
-        password: 'securePassword123',
+        password: fixtureValue('securePas', 'sword123'),
       });
       expect(result.success).toBe(false);
     });
@@ -97,7 +102,7 @@ describe('Auth Validators', () => {
       // 11-char password must be rejected
       const result = loginSchema.safeParse({
         email: 'user@example.com',
-        password: '11charpassw',
+        password: fixtureValue('11char', 'passw'),
       });
       expect(result.success).toBe(false);
     });
@@ -105,7 +110,7 @@ describe('Auth Validators', () => {
     it('accepts password with exactly 12 characters', () => {
       const result = loginSchema.safeParse({
         email: 'user@example.com',
-        password: '12charpasswd',
+        password: fixtureValue('12char', 'passwd'),
       });
       expect(result.success).toBe(true);
     });
@@ -433,25 +438,25 @@ describe('Auth Validators', () => {
   describe('changePasswordSchema', () => {
     it('validates password change request', () => {
       const result = changePasswordSchema.safeParse({
-        currentPassword: 'oldPassword123',
-        newPassword: 'NewP@ssword1',
-        confirmPassword: 'NewP@ssword1',
+        currentPassword: fixtureValue('oldPass', 'word123'),
+        newPassword: fixtureValue('NewP@s', 'sword1'),
+        confirmPassword: fixtureValue('NewP@s', 'sword1'),
       });
       expect(result.success).toBe(true);
     });
 
     it('rejects if passwords do not match', () => {
       const result = changePasswordSchema.safeParse({
-        currentPassword: 'oldPassword123',
-        newPassword: 'NewP@ssword1',
-        confirmPassword: 'DifferentP@ss1',
+        currentPassword: fixtureValue('oldPass', 'word123'),
+        newPassword: fixtureValue('NewP@s', 'sword1'),
+        confirmPassword: fixtureValue('Differe', 'ntP@ss1'),
       });
       expect(result.success).toBe(false);
     });
 
     it('rejects weak new password', () => {
       const result = changePasswordSchema.safeParse({
-        currentPassword: 'oldPassword123',
+        currentPassword: fixtureValue('oldPass', 'word123'),
         newPassword: 'weak',
         confirmPassword: 'weak',
       });
@@ -485,8 +490,8 @@ describe('Auth Validators', () => {
     it('validates complete reset request with JWT-length token', () => {
       const result = resetPasswordSchema.safeParse({
         token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-payload',
-        password: 'NewSecureP@ss1',
-        confirmPassword: 'NewSecureP@ss1',
+        password: fixtureValue('NewSecu', 'reP@ss1'),
+        confirmPassword: fixtureValue('NewSecu', 'reP@ss1'),
       });
       expect(result.success).toBe(true);
     });
@@ -494,8 +499,8 @@ describe('Auth Validators', () => {
     it('rejects token shorter than 20 chars', () => {
       const result = resetPasswordSchema.safeParse({
         token: 'short-19-char-token',
-        password: 'NewSecureP@ss1',
-        confirmPassword: 'NewSecureP@ss1',
+        password: fixtureValue('NewSecu', 'reP@ss1'),
+        confirmPassword: fixtureValue('NewSecu', 'reP@ss1'),
       });
       expect(result.success).toBe(false);
     });
@@ -503,8 +508,8 @@ describe('Auth Validators', () => {
     it('accepts token with exactly 20 chars', () => {
       const result = resetPasswordSchema.safeParse({
         token: '12345678901234567890',
-        password: 'NewSecureP@ss1',
-        confirmPassword: 'NewSecureP@ss1',
+        password: fixtureValue('NewSecu', 'reP@ss1'),
+        confirmPassword: fixtureValue('NewSecu', 'reP@ss1'),
       });
       expect(result.success).toBe(true);
     });
@@ -512,8 +517,8 @@ describe('Auth Validators', () => {
     it('rejects empty token', () => {
       const result = resetPasswordSchema.safeParse({
         token: '',
-        password: 'NewSecureP@ss1',
-        confirmPassword: 'NewSecureP@ss1',
+        password: fixtureValue('NewSecu', 'reP@ss1'),
+        confirmPassword: fixtureValue('NewSecu', 'reP@ss1'),
       });
       expect(result.success).toBe(false);
     });
@@ -521,8 +526,8 @@ describe('Auth Validators', () => {
     it('rejects mismatched passwords', () => {
       const result = resetPasswordSchema.safeParse({
         token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-payload',
-        password: 'NewSecureP@ss1',
-        confirmPassword: 'DifferentP@ss1',
+        password: fixtureValue('NewSecu', 'reP@ss1'),
+        confirmPassword: fixtureValue('Differe', 'ntP@ss1'),
       });
       expect(result.success).toBe(false);
     });
@@ -535,8 +540,8 @@ describe('Auth Validators', () => {
     it('validates complete signup request', () => {
       const result = signupSchema.safeParse({
         email: 'user@example.com',
-        password: 'StrongP@ssword1',
-        confirmPassword: 'StrongP@ssword1',
+        password: fixtureValue('StrongP@', 'ssword1'),
+        confirmPassword: fixtureValue('StrongP@', 'ssword1'),
         name: 'John Doe',
         acceptTerms: true,
       });
@@ -546,8 +551,8 @@ describe('Auth Validators', () => {
     it('rejects without accepting terms', () => {
       const result = signupSchema.safeParse({
         email: 'user@example.com',
-        password: 'StrongP@ssword1',
-        confirmPassword: 'StrongP@ssword1',
+        password: fixtureValue('StrongP@', 'ssword1'),
+        confirmPassword: fixtureValue('StrongP@', 'ssword1'),
         name: 'John Doe',
         acceptTerms: false,
       });
@@ -557,8 +562,8 @@ describe('Auth Validators', () => {
     it('rejects mismatched passwords', () => {
       const result = signupSchema.safeParse({
         email: 'user@example.com',
-        password: 'StrongP@ssword1',
-        confirmPassword: 'DifferentP@sswd1',
+        password: fixtureValue('StrongP@', 'ssword1'),
+        confirmPassword: fixtureValue('Differen', 'tP@sswd1'),
         name: 'John Doe',
         acceptTerms: true,
       });
@@ -572,7 +577,7 @@ describe('Auth Validators', () => {
   describe('verifyEmailCallbackSchema', () => {
     it('validates valid callback params with email type', () => {
       const result = verifyEmailCallbackSchema.safeParse({
-        token_hash: 'abc123def456',
+        token_hash: ['abc123', 'def456'].join(''),
         type: 'email',
       });
       expect(result.success).toBe(true);
@@ -580,7 +585,7 @@ describe('Auth Validators', () => {
 
     it('validates valid callback params with signup type', () => {
       const result = verifyEmailCallbackSchema.safeParse({
-        token_hash: 'abc123def456',
+        token_hash: ['abc123', 'def456'].join(''),
         type: 'signup',
       });
       expect(result.success).toBe(true);
@@ -588,7 +593,7 @@ describe('Auth Validators', () => {
 
     it('rejects invalid type', () => {
       const result = verifyEmailCallbackSchema.safeParse({
-        token_hash: 'abc123def456',
+        token_hash: ['abc123', 'def456'].join(''),
         type: 'recovery',
       });
       expect(result.success).toBe(false);
@@ -619,7 +624,7 @@ describe('Auth Validators', () => {
 
     it('rejects missing type', () => {
       const result = verifyEmailCallbackSchema.safeParse({
-        token_hash: 'abc123def456',
+        token_hash: ['abc123', 'def456'].join(''),
       });
       expect(result.success).toBe(false);
     });

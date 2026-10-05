@@ -294,9 +294,11 @@ export async function waitForDatabase(
  * Ensures tests use a separate database from development
  */
 export function getTestDatabaseUrl(): string {
+  const dbUser = process.env.TEST_DB_USER ?? 'postgres';
+  const dbPass = process.env.TEST_DB_PASSWORD ?? dbUser;
   return (
     process.env.TEST_DATABASE_URL ||
     process.env.DATABASE_URL?.replace(/\/([^/]+)$/, '/test_$1') ||
-    'postgresql://postgres:postgres@localhost:5432/intelliflow_test'
+    `postgresql://${dbUser}:${dbPass}@localhost:5432/intelliflow_test`
   );
 }

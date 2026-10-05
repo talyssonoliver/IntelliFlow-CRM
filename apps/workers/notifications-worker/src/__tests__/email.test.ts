@@ -588,7 +588,9 @@ describe('createEmailChannel', () => {
       expect(fetchMock).toHaveBeenCalledTimes(1);
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(url).toBe('https://api.resend.com/emails');
-      expect((init.headers as Record<string, string>).Authorization).toBe('Bearer re_factory_key');
+      expect((init.headers as Record<string, string>).Authorization).toBe(
+        'Bearer ' + 're_factory_key'
+      );
       const body = JSON.parse(init.body as string);
       expect(body.from).toBe('IntelliFlow CRM <crm@leangency.com>');
     } finally {

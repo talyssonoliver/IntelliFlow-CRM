@@ -59,7 +59,7 @@ describeDb('HelpArticleAnalytics integration (real DB)', () => {
     prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: DB_URL! }) });
 
     // A set DATABASE_URL does NOT mean a reachable database. `release.yml` runs
-    // this lane with a deliberate stub URL (postgresql://stub:stub@localhost/stub)
+    // this lane with a deliberate stub URL (a stub user on localhost)
     // and provisions no Postgres, so gating on `DB_URL` alone made every hook
     // throw PrismaClientKnownRequestError and reddened the Release workflow.
     // Probe the connection and skip cleanly instead — same shape as

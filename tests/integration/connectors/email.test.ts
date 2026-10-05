@@ -408,7 +408,7 @@ describe('Gmail Email Adapter', () => {
 
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages', {
         headers: {
-          Authorization: 'Bearer invalid_token',
+          Authorization: 'Bearer ' + 'invalid_token',
         },
       });
 

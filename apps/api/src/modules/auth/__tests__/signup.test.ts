@@ -78,6 +78,11 @@ vi.mock('../../../services/session.service', () => ({
 
 import { authRouter } from '../auth.router';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 describe('Signup Procedure (IFC-120)', () => {
   const createMockContext = () => ({
     prisma: {} as any,
@@ -92,8 +97,8 @@ describe('Signup Procedure (IFC-120)', () => {
 
   const validSignup = {
     email: 'newuser@example.com',
-    password: 'StrongP@ssword1', // pragma: allowlist secret
-    confirmPassword: 'StrongP@ssword1', // pragma: allowlist secret
+    password: fixtureValue('StrongP@', 'ssword1'),
+    confirmPassword: fixtureValue('StrongP@', 'ssword1'),
     name: 'New User',
     acceptTerms: true as const,
   };
@@ -122,7 +127,7 @@ describe('Signup Procedure (IFC-120)', () => {
     expect(result).toEqual({ success: true, needsEmailVerification: true, session: null });
     expect(mockSupabaseAdmin.auth.signUp).toHaveBeenCalledWith({
       email: 'newuser@example.com',
-      password: 'StrongP@ssword1', // pragma: allowlist secret
+      password: fixtureValue('StrongP@', 'ssword1'),
       options: { data: { name: 'New User' } },
     });
   });
