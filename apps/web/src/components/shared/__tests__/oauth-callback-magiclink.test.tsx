@@ -296,6 +296,19 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(h.signOut).not.toHaveBeenCalled();
   });
 
+  it('logs a failed revoke of the replaced session and still finishes the sign-in', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const failure = new Error('revoke down');
+    h.adminSignOut.mockRejectedValue(failure);
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(warn).toHaveBeenCalledWith('[OAuthCallback] Session revoke failed:', failure);
+    warn.mockRestore();
+  });
+
   it('an expired replaced session is refreshed on the isolated client and the fresh token revoked', async () => {
     const expired = jwtFor({ sub: 'victim-id', email: 'victim@example.com' }).replace(
       /^x\.[^.]+/,

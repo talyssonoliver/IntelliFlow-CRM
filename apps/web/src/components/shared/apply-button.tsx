@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { cn } from '@intelliflow/ui';
+import { cn, toast } from '@intelliflow/ui';
 
 interface ApplyButtonProps {
   jobId: string;
@@ -198,8 +198,21 @@ ${jobUrl}`;
       label: 'Copy Link',
       icon: 'link',
       action: () => {
-        navigator.clipboard?.writeText(jobUrl);
         setShowDropdown(false);
+        const reportCopyFailure = (err?: unknown) =>
+          toast({
+            title: 'Could not copy link',
+            description:
+              err instanceof Error
+                ? err.message
+                : 'Copying to the clipboard is not available. Please copy the URL manually.',
+            variant: 'destructive',
+          });
+        if (!navigator.clipboard) {
+          reportCopyFailure();
+          return;
+        }
+        navigator.clipboard.writeText(jobUrl).catch(reportCopyFailure);
       },
     },
     {

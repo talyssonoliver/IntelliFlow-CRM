@@ -134,6 +134,30 @@ describe('EmailVerification', () => {
       });
     });
 
+    it('logs instead of leaving an unhandled rejection when callbacks throw', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const boom = new Error('callback failed');
+      render(
+        <EmailVerification
+          {...defaultProps}
+          onVerified={() => {
+            throw boom;
+          }}
+          onError={() => {
+            throw boom;
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(errorSpy).toHaveBeenCalledWith(
+          '[EmailVerification] Verification callback failed:',
+          boom
+        );
+      });
+      errorSpy.mockRestore();
+    });
+
     it('calls onVerified callback on success', async () => {
       const onVerified = vi.fn();
       render(<EmailVerification {...defaultProps} onVerified={onVerified} />);

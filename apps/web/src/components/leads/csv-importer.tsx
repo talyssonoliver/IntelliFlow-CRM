@@ -471,16 +471,16 @@ export function CsvImporter() {
     if (imported > 0) {
       const logRefreshFailure = (reason: unknown) =>
         console.warn('[CsvImporter] Lead cache refresh failed after import:', reason);
-      // React Query's invalidate does not reject on refetch errors (no
-      // throwOnError here), so there is nothing to handle.
-      void utils.lead.list.invalidate();
-      void utils.lead.stats.invalidate();
-      // Fire-and-forget, as before this fix: it must not delay the completion
-      // screen, but a rejection is now logged instead of left unhandled.
-      // Chained through then() so a synchronous throw is caught as well.
-      void Promise.resolve()
-        .then(() => invalidateLeadsCache())
-        .catch(logRefreshFailure);
+      // Fire-and-forget on purpose: it must not delay the completion screen. The
+      // chain ends in a handler, so a rejection is logged instead of left unhandled.
+      // React Query's invalidate does not reject on refetch errors (no throwOnError
+      // here); the server action can, and goes through then() so a synchronous throw
+      // is caught as well.
+      Promise.all([
+        utils.lead.list.invalidate(),
+        utils.lead.stats.invalidate(),
+        Promise.resolve().then(() => invalidateLeadsCache()),
+      ]).catch(logRefreshFailure);
       if (user?.id) {
         try {
           await revalidateLeadCaches(user.id);

@@ -478,9 +478,10 @@ describe('PaymentMethods', () => {
       const setDefaultBtn = screen.getByTitle('Set as default');
       await user.click(setDefaultBtn);
 
-      // onSuccess fires: invalidate + toast
+      // onSuccess fires: toast, then returns the invalidation so the mutation waits for fresh data
+      mockInvalidate.mockResolvedValue('refreshed');
       const successCb = (mockUpdateMutation as any)._onSuccess;
-      if (successCb) successCb();
+      await expect(successCb()).resolves.toBe('refreshed');
 
       await waitFor(() => {
         expect(mockInvalidate).toHaveBeenCalled();
@@ -523,9 +524,10 @@ describe('PaymentMethods', () => {
       const confirmBtn = screen.getByRole('button', { name: /^remove$/i });
       await user.click(confirmBtn);
 
-      // onSuccess: invalidate + toast
+      // onSuccess: toast, then returns the invalidation so the mutation waits for fresh data
+      mockInvalidate.mockResolvedValue('refreshed');
       const successCb = (mockRemoveMutation as any)._onSuccess;
-      if (successCb) successCb();
+      await expect(successCb()).resolves.toBe('refreshed');
 
       await waitFor(() => {
         expect(mockMutateAsyncRemove).toHaveBeenCalled();

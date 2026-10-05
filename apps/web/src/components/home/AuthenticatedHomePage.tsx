@@ -353,9 +353,7 @@ export function AuthenticatedHomePage({ initialWelcomeData }: AuthenticatedHomeP
 
   // Mutations
   const unpinMutation = trpc.home.unpinItem.useMutation({
-    onSuccess: () => {
-      refetchPinned();
-    },
+    onSuccess: () => refetchPinned(),
   });
 
   const reorderMutation = trpc.home.reorderPinnedItems.useMutation({

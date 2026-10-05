@@ -4,6 +4,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApplyButton, SaveJobButton, ShareJobButton } from '../apply-button';
 
+const { mockToast } = vi.hoisted(() => ({ mockToast: vi.fn() }));
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@intelliflow/ui')>()),
+  toast: mockToast,
+}));
+
 // Mock next/link
 vi.mock('next/link', () => ({
   default: ({
@@ -318,8 +324,20 @@ describe('ShareJobButton', () => {
   });
 
   beforeEach(() => {
-    mockWriteText.mockClear();
+    mockWriteText.mockReset();
+    mockWriteText.mockResolvedValue(undefined);
+    mockToast.mockClear();
   });
+
+  /** userEvent.setup() replaces navigator.clipboard with its own stub: put ours back. */
+  function setupUser() {
+    const user = userEvent.setup();
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: mockWriteText, readText: vi.fn().mockResolvedValue('') },
+      configurable: true,
+    });
+    return user;
+  }
 
   describe('Rendering', () => {
     it('should render share button', () => {
@@ -416,6 +434,73 @@ describe('ShareJobButton', () => {
       await waitFor(() => {
         expect(screen.queryByRole('menu')).not.toBeInTheDocument();
       });
+    });
+
+    it('copies the job link without any error toast when the clipboard accepts it', async () => {
+      const user = setupUser();
+      render(<ShareJobButton {...defaultProps} />);
+
+      await user.click(screen.getByRole('button', { name: 'Share this job' }));
+      await user.click(screen.getByText('Copy Link'));
+
+      expect(mockWriteText).toHaveBeenCalledWith(
+        expect.stringContaining('/careers/sr-fullstack-eng')
+      );
+      expect(mockToast).not.toHaveBeenCalled();
+    });
+
+    it('shows a destructive toast when the clipboard write is rejected', async () => {
+      mockWriteText.mockRejectedValue(new Error('Permission denied'));
+      const user = setupUser();
+      render(<ShareJobButton {...defaultProps} />);
+
+      await user.click(screen.getByRole('button', { name: 'Share this job' }));
+      await user.click(screen.getByText('Copy Link'));
+
+      await waitFor(() =>
+        expect(mockToast).toHaveBeenCalledWith({
+          title: 'Could not copy link',
+          description: 'Permission denied',
+          variant: 'destructive',
+        })
+      );
+    });
+
+    it('shows a generic destructive toast when the clipboard rejects with a non-Error', async () => {
+      mockWriteText.mockRejectedValue('denied');
+      const user = setupUser();
+      render(<ShareJobButton {...defaultProps} />);
+
+      await user.click(screen.getByRole('button', { name: 'Share this job' }));
+      await user.click(screen.getByText('Copy Link'));
+
+      await waitFor(() =>
+        expect(mockToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Could not copy link',
+            description: expect.stringContaining('copy the URL manually'),
+            variant: 'destructive',
+          })
+        )
+      );
+    });
+
+    it('tells the user when the Clipboard API is unavailable', async () => {
+      const clipboard = navigator.clipboard;
+      try {
+        const user = setupUser();
+        Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
+        render(<ShareJobButton {...defaultProps} />);
+
+        await user.click(screen.getByRole('button', { name: 'Share this job' }));
+        await user.click(screen.getByText('Copy Link'));
+
+        expect(mockToast).toHaveBeenCalledWith(
+          expect.objectContaining({ title: 'Could not copy link', variant: 'destructive' })
+        );
+      } finally {
+        Object.defineProperty(navigator, 'clipboard', { value: clipboard, configurable: true });
+      }
     });
 
     it('should close dropdown after action', async () => {

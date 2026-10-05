@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import React from 'react';
 
 // Hoisted mock values — must be before vi.mock
@@ -20,7 +20,7 @@ const {
   mockMarkAsReadMutate: vi.fn(),
 }));
 
-let markAsReadMutationOnSuccess: (() => void) | undefined;
+let markAsReadMutationOnSuccess: (() => Promise<unknown>) | undefined;
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
@@ -32,7 +32,7 @@ vi.mock('@/lib/trpc', () => ({
       },
       onNew: { useSubscription: mockUseSubscription },
       markAsRead: {
-        useMutation: vi.fn((opts?: { onSuccess?: () => void }) => {
+        useMutation: vi.fn((opts?: { onSuccess?: () => Promise<unknown> }) => {
           if (opts?.onSuccess) {
             (markAsReadMutationOnSuccess as any) = opts.onSuccess;
           }
@@ -113,6 +113,7 @@ vi.mock('@/app/notifications/actions', () => ({
 }));
 
 import { NotificationBell } from '../NotificationBell';
+import { revalidateNotifications } from '@/app/notifications/actions';
 
 describe('NotificationBell', () => {
   beforeEach(() => {
@@ -386,6 +387,67 @@ describe('NotificationBell', () => {
     }
     onSuccess();
     expect(mockInvalidate).toHaveBeenCalled();
+  });
+
+  it('markAsRead.onSuccess revalidates the per-user server cache and waits for the refetches', async () => {
+    render(<NotificationBell />);
+    let finish: () => void = () => undefined;
+    mockInvalidate.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
+    let settled = false;
+    const pending = markAsReadMutationOnSuccess!().then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(revalidateNotifications).toHaveBeenCalledWith('user-1');
+    expect(settled).toBe(false);
+    finish();
+    await act(async () => {
+      await pending;
+    });
+    expect(settled).toBe(true);
+  });
+
+  it('markAsRead.onSuccess logs, and still resolves, when server revalidation rejects', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const boom = new Error('revalidate failed');
+    vi.mocked(revalidateNotifications).mockRejectedValueOnce(boom);
+    render(<NotificationBell />);
+    await act(async () => {
+      await expect(markAsReadMutationOnSuccess!()).resolves.toBeDefined();
+    });
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[NotificationBell] Failed to refresh notifications:',
+      boom
+    );
+    errorSpy.mockRestore();
+  });
+
+  it('markAsRead.onSuccess skips server revalidation when no user is signed in', async () => {
+    mockUseAuth.mockReturnValueOnce({
+      isAuthenticated: true,
+      isLoading: false,
+      user: null,
+    } as never);
+    render(<NotificationBell />);
+    await act(async () => {
+      await markAsReadMutationOnSuccess!();
+    });
+    expect(revalidateNotifications).not.toHaveBeenCalled();
+  });
+
+  it('logs instead of leaving an unhandled rejection when a new-notification refresh fails', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const boom = new Error('refetch failed');
+    mockInvalidate.mockRejectedValueOnce(boom);
+    render(<NotificationBell />);
+    mockSubscriptionHook.mock.calls[0][0].onData();
+    await waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith(
+        '[NotificationBell] Failed to refresh notifications:',
+        boom
+      )
+    );
+    errorSpy.mockRestore();
   });
 
   // 2.7 — Bell button aria-label is "Notifications, N unread" when count > 0
