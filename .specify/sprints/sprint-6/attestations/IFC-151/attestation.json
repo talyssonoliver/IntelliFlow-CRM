@@ -252,7 +252,7 @@
       "appendix": "Quick commands for common DLQ operations"
     }
   },
-  "verdict": "COMPLETE",
+  "verdict": "PARTIAL",
   "completed_at": "2025-12-29T09:15:00Z",
   "started_at": "2025-12-29T08:30:00Z",
   "actual_duration_minutes": 45,

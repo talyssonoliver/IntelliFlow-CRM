@@ -20,5 +20,26 @@
       "name": "completion-evidence",
       "passed": true
     }
-  ]
+  ],
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T23:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Reopen evidence: DoD \"metrics and alerts\" and the attestation's \"Real-time monitoring via Prometheus metrics\" / \"Alert configuration for DLQ depth, drain success, retry success\": no alerting system connected to production loads these rules, and production exports no telemetry (see IFC-032). The DLQ, retry and runbook parts are not disputed.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: (1) DLQ depth / drain / retry metrics reach the hosted backend from production, and their alerts are loaded there and proven by a received test alert (IFC-032).",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 50,
+  "updated_at": "2026-10-05T23:30:00Z"
 }

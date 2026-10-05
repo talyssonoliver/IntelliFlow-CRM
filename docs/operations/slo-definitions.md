@@ -9,7 +9,9 @@
 
 This document defines the Service Level Objectives (SLOs) and Service Level
 Indicators (SLIs) for IntelliFlow CRM. These metrics establish the reliability
-targets and measurement methods for all production services.
+targets and measurement methods for all production services. IntelliFlow CRM is
+run by one person (the owner), who is the only audience for this document and
+the only person who acts on it.
 
 ### 1.1 Definitions
 
@@ -129,12 +131,12 @@ Latency SLI = Requests within threshold / Total requests * 100
 
 ### 4.1 Budget Consumption Thresholds
 
-| Consumed | Status | Action Required                               |
-| -------- | ------ | --------------------------------------------- |
-| 0-50%    | Green  | Normal operations                             |
-| 50-75%   | Yellow | Increased monitoring, limit risky deployments |
-| 75-90%   | Orange | Feature freeze, focus on reliability          |
-| 90-100%  | Red    | Emergency response, all hands on reliability  |
+| Consumed | Status | Action Required                                  |
+| -------- | ------ | ------------------------------------------------ |
+| 0-50%    | Green  | Normal operations                                |
+| 50-75%   | Yellow | Increased monitoring, limit risky deployments    |
+| 75-90%   | Orange | Feature freeze, focus on reliability             |
+| 90-100%  | Red    | Emergency response, all work goes to reliability |
 
 ### 4.2 Budget Reset
 
@@ -149,7 +151,7 @@ When error budget reaches 0%:
 1. Halt all non-critical deployments
 2. Conduct immediate incident review
 3. Implement reliability improvements
-4. Resume normal operations only after executive approval
+4. Resume normal operations only after the owner decides the budget is recovered
 
 ---
 
@@ -157,16 +159,18 @@ When error budget reaches 0%:
 
 ### 5.1 Data Collection
 
-| Component       | Tool                       | Retention |
-| --------------- | -------------------------- | --------- |
-| Metrics         | Prometheus / OpenTelemetry | 90 days   |
-| Logs            | Grafana Loki               | 30 days   |
-| Traces          | Jaeger / Tempo             | 14 days   |
-| Synthetic Tests | Checkly / Pingdom          | 365 days  |
+| Component | Tool                                       | Retention                           |
+| --------- | ------------------------------------------ | ----------------------------------- |
+| Metrics   | OpenTelemetry export to Grafana Cloud      | Per Grafana Cloud plan (to confirm) |
+| Logs      | Railway logs; Grafana Cloud (being set up) | Per plan (to confirm)               |
+| Traces    | OpenTelemetry export to Grafana Cloud      | Per Grafana Cloud plan (to confirm) |
+| Errors    | Sentry                                     | Per Sentry plan                     |
+
+There are no synthetic tests yet. The Grafana Cloud stack is being set up.
 
 ### 5.2 SLO Dashboard
 
-**Location**: Grafana > SLO Overview Dashboard
+**Location**: Grafana Cloud > SLO Overview Dashboard (to be created)
 
 **Panels**:
 
@@ -178,23 +182,26 @@ When error budget reaches 0%:
 
 ### 5.3 Alerting Thresholds
 
-| Alert Level     | Trigger Condition                        |
-| --------------- | ---------------------------------------- |
-| Page (Critical) | Error budget burn rate > 14.4x for 5 min |
-| Page (High)     | Error budget burn rate > 6x for 30 min   |
-| Ticket (Medium) | Error budget burn rate > 3x for 2 hours  |
-| Ticket (Low)    | Error budget > 75% consumed              |
+| Alert Level      | Trigger Condition                        |
+| ---------------- | ---------------------------------------- |
+| Email (Critical) | Error budget burn rate > 14.4x for 5 min |
+| Email (High)     | Error budget burn rate > 6x for 30 min   |
+| Ticket (Medium)  | Error budget burn rate > 3x for 2 hours  |
+| Ticket (Low)     | Error budget > 75% consumed              |
+
+All alerts go by email to the owner from Grafana Cloud alerting (being set up,
+not yet proven). There is no paging service.
 
 ---
 
 ## 6. Reporting Cadence
 
-| Report             | Frequency      | Audience              |
-| ------------------ | -------------- | --------------------- |
-| SLO Status         | Real-time      | Engineering           |
-| Weekly Summary     | Every Monday   | Engineering + Product |
-| Monthly Review     | 1st of month   | Leadership            |
-| Quarterly Analysis | End of quarter | Executive Team        |
+| Report             | Frequency      | Audience |
+| ------------------ | -------------- | -------- |
+| SLO Status         | Real-time      | Owner    |
+| Weekly Summary     | Every Monday   | Owner    |
+| Monthly Review     | 1st of month   | Owner    |
+| Quarterly Analysis | End of quarter | Owner    |
 
 ### 6.1 Monthly SLO Review Agenda
 
@@ -214,9 +221,8 @@ SLO changes require:
 
 1. Written proposal with justification
 2. Impact analysis on dependent services
-3. Stakeholder review (Engineering + Product)
-4. 2-week notice before implementation
-5. Documentation update
+3. Review by the owner
+4. Documentation update
 
 ### 7.2 Exception Handling
 
@@ -228,7 +234,7 @@ Temporary SLO exceptions may be granted for:
 
 Exceptions require:
 
-- Written approval from Engineering Lead
+- Written approval from the owner
 - Maximum duration of 7 days
 - Post-exception review
 
@@ -266,7 +272,6 @@ sum(rate(http_requests_total[5m])) * 100
 
 - [Alerts Configuration](../infra/monitoring/alerts-config.yaml)
 - [Incident Runbook](./incident-runbook.md)
-- [On-Call Schedule](../infra/monitoring/oncall-schedule.json)
 - [Monitoring Runbook](./runbooks/monitoring-runbook.md)
 
 ---
