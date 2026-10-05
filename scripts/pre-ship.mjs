@@ -75,8 +75,14 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
+import {
+  preshipNeedsSlot,
+  preshipSlotArgv,
+  runForwarding,
+  sharedSemaphore,
+} from './lib/test-slot.mjs';
 import { stepLine, advisoryNote, persistedState, finalLine } from './lib/preship-report.mjs';
 
 // Resolve REPO_ROOT from git rather than cwd so the script behaves
@@ -786,45 +792,16 @@ for (const a of args) {
 }
 
 // --- Machine-wide test slot ---
-// At most three full test runs at once on the owner's machine, across every
-// repository (owner ruling 2026-10-05: ten gates and pre-ships ran together and
-// memory ran out). Re-run this gate under the shared semaphore, which waits for
-// a free slot and releases it on exit. --help/--list, --only subsets, CI, and a
-// run that already holds a slot (TEST_SLOT_HELD) go straight on, as does a
-// machine without the shared file. --exclusive keeps it to one IntelliFlow
-// pre-ship at a time (standing rule 2026-10-05: three at once left 1.6 GB
-// free). See scripts/with-test-slot.mjs.
-const subsetOrInfo = flags.help || flags.list || flags.only !== null;
-if (!subsetOrInfo && !process.env.TEST_SLOT_HELD && !process.env.CI) {
-  const slot = path.join(
-    process.env.TEST_SLOTS_DIR || 'C:/Users/talys/ops/test-slots',
-    'with-slot.mjs'
-  );
-  if (fs.existsSync(slot)) {
-    // Async, not spawnSync: Ctrl-C and kill are forwarded to the wrapper (which
-    // releases its slot and stops the inner gate's tree), and its exit code is
-    // this process's exit code.
-    const wrapper = spawn(
-      process.execPath,
-      [
-        slot,
-        '--label',
-        'intelliflow-pre-ship',
-        '--exclusive',
-        'intelliflow-pre-ship',
-        '--',
-        process.execPath,
-        process.argv[1],
-        ...args,
-      ],
-      { stdio: 'inherit' }
+// At most three full test runs at once on the owner's machine, and one
+// IntelliFlow pre-ship at a time: re-run this gate under the shared semaphore,
+// which waits for a free slot and releases it on exit. Ctrl-C and kill are
+// forwarded and the exit code is passed through. See scripts/lib/test-slot.mjs.
+if (preshipNeedsSlot(flags, process.env)) {
+  const semaphore = sharedSemaphore(process.env);
+  if (semaphore) {
+    process.exit(
+      await runForwarding(process.execPath, preshipSlotArgv(semaphore, process.argv[1], args))
     );
-    for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, () => wrapper.kill(sig));
-    const code = await new Promise((resolve) => {
-      wrapper.on('exit', (c, signal) => resolve(signal ? 1 : (c ?? 1)));
-      wrapper.on('error', () => resolve(1));
-    });
-    process.exit(code);
   }
 }
 
