@@ -10,8 +10,9 @@
  * Scopes:
  *   full    — run everything. Always under CI, on PRESHIP_FULL_TESTS=1, when the
  *             base ref cannot be resolved, when a changed file can affect tests it
- *             is not imported by (lockfile, package.json, vitest/tsconfig, Prisma
- *             schema, test setup), or when the diff is too large to pass as argv.
+ *             is not imported by (lockfile, package.json beyond `scripts`,
+ *             vitest/tsconfig, Prisma schema, test setup), or when the diff is too
+ *             large to pass as argv.
  *   related — run `vitest related <files>` for the changed source files.
  *   none    — no source file changed (docs/config-only diff); nothing to run.
  *
@@ -20,6 +21,8 @@
  * push sends, so a dirty tree can only widen the selection, never narrow it.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 export const DEFAULT_BASE_REF = 'origin/main';
@@ -87,6 +90,44 @@ export function classifyChangedFiles(changedFiles) {
     reason: `${sources.length} changed source file(s)`,
     files: sources,
   };
+}
+
+/** JSON with object keys sorted, so key order alone never reads as a change. */
+function canonical(value) {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((k) => [k, canonical(value[k])])
+    );
+  }
+  return value;
+}
+
+/**
+ * True when two package.json texts differ only in `scripts`. A scripts edit
+ * changes what `pnpm run x` does, not what any test imports or resolves, so it
+ * must not widen the run to the full suite (a one-line scripts change used to
+ * cost a 15-minute full unit run plus a full coverage run). Anything else —
+ * dependencies, overrides, exports, type, workspaces — still widens. Unparseable
+ * text is never "scripts only". Exported for tests.
+ * @param {string} before
+ * @param {string} after
+ */
+export function isScriptsOnlyPackageJsonChange(before, after) {
+  let a;
+  let b;
+  try {
+    a = JSON.parse(before);
+    b = JSON.parse(after);
+  } catch {
+    return false;
+  }
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+  delete a.scripts;
+  delete b.scripts;
+  return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 }
 
 /**
@@ -158,7 +199,22 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
     };
   }
 
-  return { ...classifyChangedFiles([...lines(tracked), ...lines(untracked)]), base };
+  // A package.json whose only change is `scripts` cannot affect a test, so it
+  // drops out before classification instead of forcing the full suite. A new
+  // package.json (no base version) still counts.
+  const changed = lines(tracked).filter((f) => {
+    if (!/(^|\/)package\.json$/.test(f)) return true;
+    const before = git(['show', `${base}:${f}`], cwd);
+    let after;
+    try {
+      after = fs.readFileSync(path.join(cwd, f), 'utf8');
+    } catch {
+      return true;
+    }
+    return before === null || !isScriptsOnlyPackageJsonChange(before, after);
+  });
+
+  return { ...classifyChangedFiles([...changed, ...lines(untracked)]), base };
 }
 
 /** Env var pre-ship uses to hand its resolved scope to the step subprocesses. */
