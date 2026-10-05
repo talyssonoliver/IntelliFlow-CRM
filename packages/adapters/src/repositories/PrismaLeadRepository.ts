@@ -6,6 +6,7 @@ import {
   PhoneNumber,
   type LeadSource,
   type LeadStatus,
+  LeadStatusConflictError,
   type RepositoryTransaction,
 } from '@intelliflow/domain';
 import { LeadRepository } from '@intelliflow/application';
@@ -90,7 +91,7 @@ export class PrismaLeadRepository implements LeadRepository {
 
   async save(
     lead: Lead,
-    opts?: { note?: { content: string; author: string } },
+    opts?: { note?: { content: string; author: string }; expectedStatus?: string },
     tx?: RepositoryTransaction
   ): Promise<void> {
     // Join the caller's transaction when supplied (DDD-001/002), else use our
@@ -129,6 +130,20 @@ export class PrismaLeadRepository implements LeadRepository {
       createdAt: lead.createdAt,
       updatedAt: lead.updatedAt,
     };
+
+    if (opts?.expectedStatus !== undefined) {
+      // Compare-and-set: the status was read earlier and the transition validated
+      // against that snapshot. Only write if it is still what we read, so a
+      // concurrent writer's newer (or terminal) status is never overwritten.
+      const { count } = await db.lead.updateMany({
+        where: { id: data.id, tenantId: data.tenantId, status: opts.expectedStatus as LeadStatus },
+        data,
+      });
+      if (count === 0) {
+        throw new LeadStatusConflictError(data.id, opts.expectedStatus);
+      }
+      return;
+    }
 
     await db.lead.upsert({
       where: { id: data.id },
