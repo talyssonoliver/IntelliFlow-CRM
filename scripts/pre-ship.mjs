@@ -791,7 +791,9 @@ for (const a of args) {
 // memory ran out). Re-run this gate under the shared semaphore, which waits for
 // a free slot and releases it on exit. --help/--list, --only subsets, CI, and a
 // run that already holds a slot (TEST_SLOT_HELD) go straight on, as does a
-// machine without the shared file. See scripts/with-test-slot.mjs.
+// machine without the shared file. --exclusive keeps it to one IntelliFlow
+// pre-ship at a time (standing rule 2026-10-05: three at once left 1.6 GB
+// free). See scripts/with-test-slot.mjs.
 const subsetOrInfo = flags.help || flags.list || flags.only !== null;
 if (!subsetOrInfo && !process.env.TEST_SLOT_HELD && !process.env.CI) {
   const slot = path.join(
@@ -801,7 +803,17 @@ if (!subsetOrInfo && !process.env.TEST_SLOT_HELD && !process.env.CI) {
   if (fs.existsSync(slot)) {
     const r = spawnSync(
       process.execPath,
-      [slot, '--label', 'intelliflow-pre-ship', '--', process.execPath, process.argv[1], ...args],
+      [
+        slot,
+        '--label',
+        'intelliflow-pre-ship',
+        '--exclusive',
+        'intelliflow-pre-ship',
+        '--',
+        process.execPath,
+        process.argv[1],
+        ...args,
+      ],
       { stdio: 'inherit' }
     );
     process.exit(r.status ?? 1);
