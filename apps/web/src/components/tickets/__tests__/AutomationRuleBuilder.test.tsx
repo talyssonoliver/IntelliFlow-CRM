@@ -254,6 +254,7 @@ describe('AutomationRuleBuilder', () => {
     fireEvent.click(buttons[buttons.length - 1]);
     expect(mutateFn).toHaveBeenCalledWith({
       name: 'Billing rule',
+      description: '',
       priority: 0,
       isActive: true,
       conditions: [{ field: 'ticketCategory', operator: 'equals', value: 'BILLING' }],
@@ -354,6 +355,16 @@ describe('AutomationRuleBuilder', () => {
         conditions: [{ field: 'isSlaBreached', operator: 'equals', value: 'true' }],
       })
     );
+  });
+
+  it('sends an empty description so an edit can clear it', () => {
+    const mutateFn = vi.fn();
+    mockUpdateMutation.mockReturnValue({ mutate: mutateFn, isPending: false });
+    render(<AutomationRuleBuilder />);
+    fireEvent.click(screen.getByLabelText('Edit High Priority Billing'));
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: '' } });
+    fireEvent.click(screen.getByText('Save Changes'));
+    expect(mutateFn).toHaveBeenCalledWith(expect.objectContaining({ description: '' }));
   });
 
   it('opens the create dialog from the empty state', () => {

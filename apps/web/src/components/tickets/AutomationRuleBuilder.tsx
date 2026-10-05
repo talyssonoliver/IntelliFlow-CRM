@@ -238,7 +238,7 @@ export function AutomationRuleBuilder() {
     if (!formData.name.trim()) return;
     const parsed = createTicketRuleSchema.safeParse({
       name: formData.name,
-      description: formData.description || undefined,
+      description: formData.description,
       priority: formData.priority,
       isActive: formData.isActive,
       conditions: formData.conditions
