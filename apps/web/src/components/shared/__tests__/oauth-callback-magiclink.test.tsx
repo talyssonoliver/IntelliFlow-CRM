@@ -9,7 +9,7 @@
  * post-login steps as the OAuth path.
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -17,11 +17,15 @@ const h = vi.hoisted(() => ({
   push: vi.fn(),
   signOut: vi.fn(),
   verifyOtp: vi.fn(),
+  adminSignOut: vi.fn(),
+  createIsolatedAuthClient: vi.fn(),
   getSession: vi.fn(),
   getUser: vi.fn(),
   storeSessionTokens: vi.fn(),
   clearSessionTokens: vi.fn(),
   getStoredAccessToken: vi.fn(),
+  getStoredRefreshToken: vi.fn(),
+  refreshSession: vi.fn(),
   storeSessionFingerprint: vi.fn(),
   clearSupabaseLocalStorage: vi.fn(),
   syncTokenToCookie: vi.fn(),
@@ -42,14 +46,18 @@ vi.mock('@/lib/supabase-browser', () => ({
       verifyOtp: h.verifyOtp,
       getSession: h.getSession,
       getUser: h.getUser,
+      admin: { signOut: h.adminSignOut },
     },
   }),
   clearSupabaseLocalStorage: h.clearSupabaseLocalStorage,
+  // Verifying a link while signed in uses an isolated client; it shares the verifyOtp spy.
+  createIsolatedAuthClient: h.createIsolatedAuthClient,
 }));
 vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: h.storeSessionTokens,
   clearSessionTokens: h.clearSessionTokens,
   getStoredAccessToken: h.getStoredAccessToken,
+  getStoredRefreshToken: h.getStoredRefreshToken,
 }));
 vi.mock('@/lib/shared/session-cleanup', () => ({
   syncTokenToCookie: h.syncTokenToCookie,
@@ -68,6 +76,11 @@ describe('OAuthCallback magic link', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
+    h.createIsolatedAuthClient.mockReturnValue({
+      auth: { verifyOtp: h.verifyOtp, refreshSession: h.refreshSession },
+    });
+    h.adminSignOut.mockResolvedValue({ error: null });
+    h.getStoredRefreshToken.mockReturnValue(null);
     h.order.length = 0;
     h.getStoredAccessToken.mockReturnValue(null);
     h.query.value = 'token_hash=hash123&type=magiclink&next=/dashboard';
@@ -79,6 +92,15 @@ describe('OAuthCallback magic link', () => {
       h.order.push('verifyOtp');
       return { data: { session: SESSION, user: { id: 'u1', email: 'a@b.co' } }, error: null };
     });
+  });
+
+  it('with no session, verifies on the app client and revokes nothing extra', async () => {
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(h.createIsolatedAuthClient).not.toHaveBeenCalled();
+    expect(h.adminSignOut).not.toHaveBeenCalled();
   });
 
   it('signs out the existing session FIRST, then verifies the token hash', async () => {
@@ -161,12 +183,18 @@ describe('OAuthCallback magic link', () => {
 });
 
 describe('OAuthCallback magic link with an existing session (login CSRF guard)', () => {
-  // header.payload.signature with payload {"email":"victim@example.com"}
-  const VICTIM_JWT = `x.${btoa(JSON.stringify({ email: 'victim@example.com' }))}.y`;
+  // header.payload.signature with payload {"sub":"victim-id","email":"victim@example.com"}
+  const jwtFor = (claims: Record<string, string>) => `x.${btoa(JSON.stringify(claims))}.y`;
+  const VICTIM_JWT = jwtFor({ sub: 'victim-id', email: 'victim@example.com' });
 
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
+    h.createIsolatedAuthClient.mockReturnValue({
+      auth: { verifyOtp: h.verifyOtp, refreshSession: h.refreshSession },
+    });
+    h.adminSignOut.mockResolvedValue({ error: null });
+    h.getStoredRefreshToken.mockReturnValue(null);
     h.query.value = 'token_hash=hash123&type=magiclink&next=/leads';
     h.getStoredAccessToken.mockReturnValue(VICTIM_JWT);
     h.signOut.mockResolvedValue({ error: null });
@@ -176,7 +204,7 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     });
   });
 
-  it('asks first: no signOut and no verifyOtp until the user confirms', async () => {
+  it('a different account asks first: the link is verified but the app session is untouched', async () => {
     render(<OAuthCallback onSuccess={vi.fn()} />);
 
     expect(await screen.findByText('Switch account?')).toBeInTheDocument();
@@ -184,9 +212,308 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /stay signed in/i })).toBeInTheDocument();
     expect(h.signOut).not.toHaveBeenCalled();
-    expect(h.verifyOtp).not.toHaveBeenCalled();
     expect(h.clearSessionTokens).not.toHaveBeenCalled();
+    expect(h.clearTokenCookie).not.toHaveBeenCalled();
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
+    expect(h.syncTokenToCookie).not.toHaveBeenCalled();
+  });
+
+  it('the same account (same user id) shows no dialog and signs straight in', async () => {
+    h.verifyOtp.mockResolvedValue({
+      data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
+      error: null,
+    });
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(screen.queryByText('Switch account?')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('switch-account-dialog')).not.toBeInTheDocument();
+    expect(h.signOut).not.toHaveBeenCalled();
+    expect(h.storeSessionTokens).toHaveBeenCalledWith('acc', 'ref');
+    expect(h.syncTokenToCookie).toHaveBeenCalledWith('acc');
+  });
+
+  it('the same account navigates to the next path with no prompt', async () => {
+    h.verifyOtp.mockResolvedValue({
+      data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
+      error: null,
+    });
+    render(<OAuthCallback />);
+
+    await waitFor(() => expect(h.push).toHaveBeenCalledWith('/leads'), { timeout: 2000 });
+    expect(screen.queryByText('Switch account?')).not.toBeInTheDocument();
+  });
+
+  it('without a stable id on the session, the same email compares case-insensitively', async () => {
+    h.getStoredAccessToken.mockReturnValue(jwtFor({ email: 'Victim@Example.com' }));
+    h.verifyOtp.mockResolvedValue({
+      data: { session: SESSION, user: { id: 'u9', email: 'victim@example.COM' } },
+      error: null,
+    });
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(screen.queryByText('Switch account?')).not.toBeInTheDocument();
+  });
+
+  it('a different user id wins over a matching email: the dialog still appears', async () => {
+    h.verifyOtp.mockResolvedValue({
+      data: { session: SESSION, user: { id: 'other-id', email: 'victim@example.com' } },
+      error: null,
+    });
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+
+    expect(await screen.findByText('Switch account?')).toBeInTheDocument();
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  it('an identity that cannot be compared is treated as a different account', async () => {
+    h.getStoredAccessToken.mockReturnValue('not-a-jwt');
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+
+    expect(await screen.findByText('Switch account?')).toBeInTheDocument();
+  });
+
+  it('verifies the link on the isolated client, so nothing is persisted before consent', async () => {
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+
+    await screen.findByText('Switch account?');
+    expect(h.createIsolatedAuthClient).toHaveBeenCalledTimes(1);
+    expect(h.clearSupabaseLocalStorage).not.toHaveBeenCalled();
+    expect(h.adminSignOut).not.toHaveBeenCalled();
+  });
+
+  it('Continue revokes the replaced session once the new one is signed in', async () => {
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(h.adminSignOut).toHaveBeenCalledTimes(1);
+    expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local');
+    expect(h.signOut).not.toHaveBeenCalled();
+  });
+
+  it('an expired replaced session is refreshed on the isolated client and the fresh token revoked', async () => {
+    const expired = jwtFor({ sub: 'victim-id', email: 'victim@example.com' }).replace(
+      /^x\.[^.]+/,
+      `x.${btoa(JSON.stringify({ sub: 'victim-id', exp: Math.floor(Date.now() / 1000) - 60 }))}`
+    );
+    h.getStoredAccessToken.mockReturnValue(expired);
+    h.getStoredRefreshToken.mockReturnValue('old-refresh');
+    h.refreshSession.mockResolvedValue({
+      data: { session: { access_token: 'fresh' } },
+      error: null,
+    });
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith('fresh', 'local'));
+    expect(h.refreshSession).toHaveBeenCalledWith({ refresh_token: 'old-refresh' });
+    expect(h.adminSignOut).not.toHaveBeenCalledWith(expired, 'local');
+  });
+
+  it('a replaced session that has not expired is revoked directly, with no refresh', async () => {
+    h.getStoredRefreshToken.mockReturnValue('old-refresh');
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local');
+    expect(h.refreshSession).not.toHaveBeenCalled();
+  });
+
+  it('a same-account verification that lands after the page is gone signs nobody in', async () => {
+    let land!: (value: unknown) => void;
+    h.verifyOtp.mockReturnValue(new Promise((resolve) => (land = resolve)));
+    const { unmount } = render(<OAuthCallback onSuccess={vi.fn()} />);
+    await waitFor(() => expect(h.verifyOtp).toHaveBeenCalled());
+
+    unmount();
+    await act(async () => {
+      land({
+        data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
+        error: null,
+      });
+    });
+
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local'));
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+    expect(h.syncTokenToCookie).not.toHaveBeenCalled();
+  });
+
+  it('a verification that lands after pagehide signs nobody in, even if the page is kept', async () => {
+    let land!: (value: unknown) => void;
+    h.verifyOtp.mockReturnValue(new Promise((resolve) => (land = resolve)));
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await waitFor(() => expect(h.verifyOtp).toHaveBeenCalled());
+
+    const hide = new Event('pagehide');
+    Object.defineProperty(hide, 'persisted', { value: true });
+    act(() => {
+      globalThis.dispatchEvent(hide);
+    });
+    await act(async () => {
+      land({
+        data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
+        error: null,
+      });
+    });
+
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local'));
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+    expect(screen.queryByText('Switch account?')).not.toBeInTheDocument();
+  });
+
+  it('commits the new session first, then waits for the old one to be revoked before moving on', async () => {
+    let revoked!: (value: unknown) => void;
+    h.adminSignOut.mockReturnValue(new Promise((resolve) => (revoked = resolve)));
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local'));
+
+    // The new session is already stored; navigation waits for the revoke.
+    expect(h.storeSessionTokens).toHaveBeenCalledWith('acc', 'ref');
+    expect(onSuccess).not.toHaveBeenCalled();
+
+    await act(async () => {
+      revoked({ error: null });
+    });
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+  });
+
+  it('leaving during the revoke keeps the new session and does not navigate', async () => {
+    let revoked!: (value: unknown) => void;
+    h.adminSignOut.mockReturnValue(new Promise((resolve) => (revoked = resolve)));
+    const { unmount } = render(<OAuthCallback />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local'));
+
+    unmount();
+    await act(async () => {
+      revoked({ error: null });
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+
+    expect(h.storeSessionTokens).toHaveBeenCalledWith('acc', 'ref');
+    expect(h.push).not.toHaveBeenCalled();
+  });
+
+  it('a page restored from the bfcache mid-revoke finishes the held navigation', async () => {
+    let revoked!: (value: unknown) => void;
+    h.adminSignOut.mockReturnValue(new Promise((resolve) => (revoked = resolve)));
+    render(<OAuthCallback />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local'));
+
+    const transition = (type: string) => {
+      const event = new Event(type);
+      Object.defineProperty(event, 'persisted', { value: true });
+      return event;
+    };
+    act(() => {
+      globalThis.dispatchEvent(transition('pagehide'));
+    });
+    await act(async () => {
+      revoked({ error: null });
+    });
+    expect(h.push).not.toHaveBeenCalled();
+
+    act(() => {
+      globalThis.dispatchEvent(transition('pageshow'));
+    });
+    await waitFor(() => expect(h.push).toHaveBeenCalledWith('/leads'), { timeout: 2000 });
+  });
+
+  it('leaving during the redirect delay holds the redirect for a bfcache restore', async () => {
+    h.getStoredAccessToken.mockReturnValue(null);
+    render(<OAuthCallback />);
+    await waitFor(() => expect(h.storeSessionTokens).toHaveBeenCalled());
+
+    const transition = (type: string) => {
+      const event = new Event(type);
+      Object.defineProperty(event, 'persisted', { value: true });
+      return event;
+    };
+    act(() => {
+      globalThis.dispatchEvent(transition('pagehide'));
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+    expect(h.push).not.toHaveBeenCalled();
+
+    act(() => {
+      globalThis.dispatchEvent(transition('pageshow'));
+    });
+    expect(h.push).toHaveBeenCalledWith('/leads');
+  });
+
+  it('the same account revokes the replaced session after signing in', async () => {
+    h.verifyOtp.mockResolvedValue({
+      data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
+      error: null,
+    });
+    const onSuccess = vi.fn();
+    render(<OAuthCallback onSuccess={onSuccess} />);
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+    expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local');
+  });
+
+  it('leaving the prompt without a choice revokes the held session', async () => {
+    const { unmount } = render(<OAuthCallback onSuccess={vi.fn()} />);
+    await screen.findByText('Switch account?');
+
+    unmount();
+    expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local');
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  it('a page restored from the back/forward cache shows the used-link error, not the prompt', async () => {
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await screen.findByText('Switch account?');
+
+    const hide = new Event('pagehide');
+    Object.defineProperty(hide, 'persisted', { value: true });
+    act(() => {
+      globalThis.dispatchEvent(hide);
+    });
+
+    expect(await screen.findByText('Authentication Failed')).toBeInTheDocument();
+    expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local');
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  it('a verification that lands after the page is gone is revoked, never held', async () => {
+    let land!: (value: unknown) => void;
+    h.verifyOtp.mockReturnValue(new Promise((resolve) => (land = resolve)));
+    const { unmount } = render(<OAuthCallback onSuccess={vi.fn()} />);
+    await waitFor(() => expect(h.verifyOtp).toHaveBeenCalled());
+
+    unmount();
+    expect(h.adminSignOut).not.toHaveBeenCalled();
+    await act(async () => {
+      land({ data: { session: SESSION, user: { id: 'u1', email: 'a@b.co' } }, error: null });
+    });
+
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local'));
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
+  });
+
+  it('pagehide while the prompt is open revokes the held session once', async () => {
+    const { unmount } = render(<OAuthCallback onSuccess={vi.fn()} />);
+    await screen.findByText('Switch account?');
+
+    globalThis.dispatchEvent(new Event('pagehide'));
+    unmount();
+    expect(h.adminSignOut).toHaveBeenCalledTimes(1);
+    expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local');
   });
 
   it('removes the token from the address bar before showing the prompt', async () => {
@@ -198,18 +525,40 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(window.location.href).not.toContain('hash123');
   });
 
-  it('Continue runs signOut then verifyOtp with the in-memory token, then signs in', async () => {
+  it('Continue signs in with the held session, verifying the token only once', async () => {
     const onSuccess = vi.fn();
     render(<OAuthCallback onSuccess={onSuccess} />);
     await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
-    expect(h.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(h.verifyOtp).toHaveBeenCalledTimes(1);
     expect(h.verifyOtp).toHaveBeenCalledWith({ type: 'magiclink', token_hash: 'hash123' });
-    expect(h.signOut.mock.invocationCallOrder[0]).toBeLessThan(
-      h.verifyOtp.mock.invocationCallOrder[0]
-    );
     expect(h.storeSessionTokens).toHaveBeenCalledWith('acc', 'ref');
+    expect(onSuccess).toHaveBeenCalledWith({ id: 'u1', email: 'a@b.co' }, { accessToken: 'acc' });
+  });
+
+  it('Continue on a held session that has expired shows the error and signs nothing in', async () => {
+    const past = Math.floor(Date.now() / 1000) - 1;
+    const expiredAccess = `x.${btoa(JSON.stringify({ sub: 'u1', exp: past }))}.y`;
+    h.verifyOtp.mockResolvedValue({
+      data: {
+        session: { access_token: expiredAccess, refresh_token: 'ref', expires_at: past },
+        user: { id: 'u1', email: 'a@b.co' },
+      },
+      error: null,
+    });
+    h.refreshSession.mockResolvedValue({
+      data: { session: { access_token: 'fresh' } },
+      error: null,
+    });
+    render(<OAuthCallback onSuccess={vi.fn()} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    expect(await screen.findByText('Authentication Failed')).toBeInTheDocument();
+    // Its own expired token cannot revoke it: it is refreshed and the fresh token revoked.
+    expect(h.refreshSession).toHaveBeenCalledWith({ refresh_token: 'ref' });
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith('fresh', 'local'));
+    expect(h.storeSessionTokens).not.toHaveBeenCalled();
   });
 
   it('Continue navigates to the sanitised next path', async () => {
@@ -219,27 +568,30 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     await waitFor(() => expect(h.push).toHaveBeenCalledWith('/leads'), { timeout: 2000 });
   });
 
-  it('Stay signed in keeps the session, never touches the token, and goes to /dashboard', async () => {
+  it('Stay signed in keeps the app session, discards the held one, and goes to /dashboard', async () => {
     render(<OAuthCallback onSuccess={vi.fn()} />);
     await userEvent.click(await screen.findByRole('button', { name: /stay signed in/i }));
 
     expect(h.push).toHaveBeenCalledWith('/dashboard');
     expect(h.signOut).not.toHaveBeenCalled();
-    expect(h.verifyOtp).not.toHaveBeenCalled();
     expect(h.clearSessionTokens).not.toHaveBeenCalled();
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
+    // The held session is only revoked: the kept session's SDK copy (its refresh) survives.
+    expect(h.adminSignOut).toHaveBeenCalledWith('acc', 'local');
+    expect(h.clearSupabaseLocalStorage).not.toHaveBeenCalled();
   });
 
-  it('an invalid token after Continue shows the error and Back to Sign In', async () => {
+  it('an invalid token shows the error and Back to Sign In without a prompt', async () => {
     h.verifyOtp.mockResolvedValue({
       data: { session: null, user: null },
       error: { message: 'expired' },
     });
     render(<OAuthCallback onSuccess={vi.fn()} />);
-    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
 
     expect(await screen.findByText('Authentication Failed')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /back to sign in/i })).toBeInTheDocument();
+    expect(screen.queryByText('Switch account?')).not.toBeInTheDocument();
     expect(h.storeSessionTokens).not.toHaveBeenCalled();
+    expect(h.clearSessionTokens).not.toHaveBeenCalled();
   });
 });

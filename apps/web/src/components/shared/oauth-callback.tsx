@@ -26,12 +26,17 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, cn } from '@intelliflow/ui';
-import { getSupabaseBrowserClient, clearSupabaseLocalStorage } from '@/lib/supabase-browser';
+import {
+  getSupabaseBrowserClient,
+  clearSupabaseLocalStorage,
+  createIsolatedAuthClient,
+} from '@/lib/supabase-browser';
 import { storeSessionFingerprint } from '@/lib/shared/login-security';
 import {
   storeSessionTokens,
   clearSessionTokens,
   getStoredAccessToken,
+  getStoredRefreshToken,
 } from '@/lib/shared/token-exchange';
 import {
   syncTokenToCookie,
@@ -73,16 +78,36 @@ interface StatusConfig {
   animate?: boolean;
 }
 
-/** Best-effort email of the current local session, read from the stored access token. */
-function currentSessionEmail(): string | null {
+/** Best-effort identity (stable id and email) of the current local session, from the stored access token. */
+function currentSessionIdentity(): { id: string | null; email: string | null } | null {
   try {
     const token = getStoredAccessToken();
     if (!token) return null;
     const payload = JSON.parse(atob(token.split('.')[1].replaceAll('-', '+').replaceAll('_', '/')));
-    return typeof payload.email === 'string' ? payload.email : null;
+    return {
+      id: typeof payload.sub === 'string' && payload.sub ? payload.sub : null,
+      email: typeof payload.email === 'string' && payload.email ? payload.email : null,
+    };
   } catch {
     return null;
   }
+}
+
+/**
+ * True only when the link's user is provably the user already signed in: by stable user id when
+ * both sides carry one, otherwise by case-insensitive email. Anything unproven is a DIFFERENT
+ * account, so the switch prompt stays.
+ */
+function isSameAccount(
+  current: { id: string | null; email: string | null } | null,
+  linkUser: { id?: string | null; email?: string | null } | null | undefined
+): boolean {
+  if (!current || !linkUser) return false;
+  if (current.id && linkUser.id) return current.id === linkUser.id;
+  if (current.email && linkUser.email) {
+    return current.email.trim().toLowerCase() === linkUser.email.trim().toLowerCase();
+  }
+  return false;
 }
 
 /** Ceiling for any single awaited network step (signOut, verifyOtp, grant claim, getSession). */
@@ -116,13 +141,22 @@ type BrowserSupabase = NonNullable<ReturnType<typeof getSupabaseBrowserClient>>;
  * `preexistingAccessToken` is the session the browser held before this callback ran. The OAuth
  * path does not sign out first, so a step may hand back that session rather than a new one; it
  * was never this callback's to remove.
+ *
+ * `isolated` marks a session verified on the isolated client while another account is signed
+ * in: it was never stored, so it is only revoked. Clearing storage here would delete the copy of
+ * the session the user kept, and with it that session's refresh.
  */
 function dropAbandonedSession(
   supabase: BrowserSupabase,
   abandonedAccessToken: string,
-  preexistingAccessToken: string | null = null
+  preexistingAccessToken: string | null = null,
+  isolated = false
 ): void {
   if (abandonedAccessToken === preexistingAccessToken) return;
+  if (isolated) {
+    void revokeSession(supabase, abandonedAccessToken);
+    return;
+  }
   try {
     // Fire and forget: revocation touches neither the SDK's storage nor its events, so its
     // timing cannot affect any session signed in afterwards.
@@ -135,6 +169,59 @@ function dropAbandonedSession(
   if (!current || current === abandonedAccessToken) {
     clearSessionTokens();
     clearTokenCookie();
+  }
+}
+
+/**
+ * Revoke a session server-side without touching the SDK's storage or emitting SIGNED_OUT, so it
+ * cannot disturb the session the app holds now. Fire and forget, like dropAbandonedSession.
+ */
+function revokeSession(supabase: BrowserSupabase, accessToken: string): Promise<void> {
+  try {
+    return supabase.auth.admin.signOut(accessToken, 'local').then(
+      () => undefined,
+      () => undefined
+    );
+  } catch {
+    // Nothing else to clean: this session was never stored by this callback.
+    return Promise.resolve();
+  }
+}
+
+/** True when the JWT carries an `exp` that has passed; an unreadable token is not "expired". */
+function isExpiredJwt(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replaceAll('-', '+').replaceAll('_', '/')));
+    return typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Revoke a session that may have expired: the one a link replaces, or a held session for another
+ * account the user left waiting. An expired access token cannot authorise its own logout,
+ * so it is first refreshed on the isolated client (no storage, no auth events) and the fresh
+ * token is revoked instead; otherwise the old refresh token would stay valid on the server.
+ */
+function revokeEvenIfExpired(
+  supabase: BrowserSupabase,
+  accessToken: string,
+  refreshToken: string | null
+): Promise<void> {
+  if (!refreshToken || !isExpiredJwt(accessToken)) {
+    return revokeSession(supabase, accessToken);
+  }
+  try {
+    return createIsolatedAuthClient()
+      .auth.refreshSession({ refresh_token: refreshToken })
+      .then(({ data }) =>
+        data?.session ? revokeSession(supabase, data.session.access_token) : undefined
+      )
+      .catch(() => undefined);
+  } catch {
+    // Revocation is best effort.
+    return Promise.resolve();
   }
 }
 
@@ -168,12 +255,13 @@ function normalizeClaimError(claimError: unknown): Error {
 function discardLateSession(
   supabase: BrowserSupabase,
   pending: Promise<{ data: { session: { access_token: string } | null } | null }>,
-  preexistingAccessToken: string | null = null
+  preexistingAccessToken: string | null = null,
+  isolated = false
 ): void {
   pending
     .then((late) => {
       const token = late.data?.session?.access_token;
-      if (token) dropAbandonedSession(supabase, token, preexistingAccessToken);
+      if (token) dropAbandonedSession(supabase, token, preexistingAccessToken, isolated);
     })
     .catch(() => undefined);
 }
@@ -186,10 +274,13 @@ function abandonedByWatchdog(
   aborted: { readonly current: boolean },
   supabase: BrowserSupabase,
   session: { access_token: string } | null | undefined,
-  preexistingAccessToken: string | null = null
+  preexistingAccessToken: string | null = null,
+  isolated = false
 ): boolean {
   if (!aborted.current) return false;
-  if (session) dropAbandonedSession(supabase, session.access_token, preexistingAccessToken);
+  if (session) {
+    dropAbandonedSession(supabase, session.access_token, preexistingAccessToken, isolated);
+  }
   return true;
 }
 
@@ -221,6 +312,13 @@ const BREADCRUMBS = {
   },
 } as const;
 
+interface HeldSession {
+  /** `expires_at` is in epoch seconds, as Supabase returns it. */
+  session: { access_token: string; refresh_token?: string; expires_at?: number };
+  user: { id: string; email?: string } | undefined;
+  pending: PendingMagicLink;
+}
+
 interface PendingMagicLink {
   tokenHash: string;
   next: string;
@@ -251,6 +349,15 @@ export function OAuthCallback({
   // and never re-read from the URL, so it cannot be replayed from history or a stale render.
   const pendingLinkRef = useRef<PendingMagicLink | null>(null);
   const pendingNextRef = useRef<string | null>(null);
+  // A verified session for a DIFFERENT account, held in memory (never stored as the app session)
+  // until the user confirms the switch.
+  const heldSessionRef = useRef<HeldSession | null>(null);
+  // Set when the user leaves the page (unmount, or pagehide into the bfcache or away): a step
+  // that settles afterwards must not hold a session or sign anyone in.
+  const departedRef = useRef(false);
+  // A committed sign-in whose navigation was held because the user left; a page restored from the
+  // back/forward cache runs it, so it never sits on the success screen.
+  const pendingNavigateRef = useRef<(() => void) | null>(null);
   const flowRef = useRef<'oauth' | 'magiclink'>('oauth');
   const backToLoginRef = useRef<HTMLButtonElement>(null);
   const confirmDialogRef = useRef<HTMLDialogElement>(null);
@@ -262,7 +369,8 @@ export function OAuthCallback({
       session: { access_token: string; refresh_token?: string },
       user: { id: string; email?: string } | undefined,
       flow: 'oauth' | 'magiclink',
-      activeTenantId: string | null = null
+      activeTenantId: string | null = null,
+      beforeNavigate?: () => Promise<void>
     ) => {
       // The watchdog already showed the error state: a step that finally resolved must not
       // sign the user in behind a screen that said it failed.
@@ -299,20 +407,43 @@ export function OAuthCallback({
       // a stale session on subsequent page loads (we manage tokens ourselves).
       clearSupabaseLocalStorage();
 
-      // Call success callback or redirect
-      if (onSuccess) {
-        onSuccess(
-          { id: user?.id ?? '', email: user?.email },
-          { accessToken: session.access_token }
-        );
-        return;
-      }
+      const navigate = () => {
+        // The user left while the revoke ran: the session is committed, but the page they went
+        // to wins; never navigate them away from it.
+        if (departedRef.current) {
+          pendingNavigateRef.current = navigate;
+          return;
+        }
+        pendingNavigateRef.current = null;
+        // Call success callback or redirect
+        if (onSuccess) {
+          onSuccess(
+            { id: user?.id ?? '', email: user?.email },
+            { accessToken: session.access_token }
+          );
+          return;
+        }
 
-      // Redirect after brief success state (300ms per NF-004)
-      const target = flow === 'magiclink' ? (pendingNextRef.current ?? '/dashboard') : redirectUrl;
-      setTimeout(() => {
-        router.push(target);
-      }, 300);
+        // Redirect after brief success state (300ms per NF-004)
+        const target =
+          flow === 'magiclink' ? (pendingNextRef.current ?? '/dashboard') : redirectUrl;
+        setTimeout(() => {
+          // Left during the delay: hold the redirect for a bfcache restore instead of losing it.
+          if (departedRef.current) {
+            pendingNavigateRef.current = () => router.push(target);
+            return;
+          }
+          router.push(target);
+        }, 300);
+      };
+
+      // The session is committed above; a step that must finish before the page moves on (the
+      // replaced session's revoke) runs now, so leaving mid-way never strands either session.
+      if (beforeNavigate) {
+        void beforeNavigate().finally(navigate);
+      } else {
+        navigate();
+      }
     },
     [onSuccess, router, redirectUrl]
   );
@@ -340,9 +471,71 @@ export function OAuthCallback({
     [onError]
   );
 
-  // Exchange the in-memory hashed OTP. Any existing local session is signed out FIRST so a
-  // different user's session can never win. Only ever reached automatically when there is no
-  // session, or after the user explicitly confirmed the account switch.
+  // ADR-071: the link carries `tenant` and `grant` as HINTS. The grant is claimed FIRST, with
+  // the new session's token: for a pinned (agency staff) link this is what binds the session
+  // to the client tenant, and until it is claimed the API refuses everything else. The
+  // tenant the server returns wins over the `tenant` hint. A failed claim fails CLOSED:
+  // the session is dropped rather than left half signed in.
+  const completeMagicLink = useCallback(
+    async (
+      supabase: BrowserSupabase,
+      session: { access_token: string; refresh_token?: string },
+      user: { id: string; email?: string } | undefined,
+      pending: PendingMagicLink,
+      previousAccessToken: string | null = null
+    ) => {
+      // A previous session means the link was verified on the isolated client.
+      const isolated = previousAccessToken !== null;
+      let activeTenantId = pending.tenantHint;
+      if (pending.grant) {
+        try {
+          const claim = await withTimeout(claimLoginGrant(session.access_token, pending.grant));
+          activeTenantId = claim.tenantId;
+        } catch (claimError) {
+          dropAbandonedSession(supabase, session.access_token, null, isolated);
+          throw normalizeClaimError(claimError);
+        }
+      }
+      // A claim (or anything else) that settled after the watchdog fired or the user left must not
+      // revoke the previous session or sign the new one in.
+      const stopped = () =>
+        abandonedByWatchdog(
+          { current: abortedRef.current || departedRef.current },
+          supabase,
+          session,
+          null,
+          isolated
+        );
+      if (stopped()) return;
+
+      // The session this link replaces is revoked only once the new one is committed, so a failed
+      // claim never leaves the user signed out of both, and leaving mid-revoke leaves the new
+      // session in place. The revoke is awaited (bounded by the step timeout) before navigating,
+      // so the navigation cannot cancel it and leave the old refresh token valid.
+      let revokeReplaced: (() => Promise<void>) | undefined;
+      if (previousAccessToken && previousAccessToken !== session.access_token) {
+        // Read now, before finishSignIn overwrites the stored tokens with the new session's.
+        const previousRefreshToken = getStoredRefreshToken();
+        revokeReplaced = () =>
+          withTimeout(
+            revokeEvenIfExpired(supabase, previousAccessToken, previousRefreshToken)
+          ).catch(() => undefined);
+      }
+      pendingNextRef.current = pending.next;
+      finishSignIn(session, user, 'magiclink', activeTenantId, revokeReplaced);
+    },
+    [finishSignIn]
+  );
+
+  // Exchange the in-memory hashed OTP.
+  //
+  // No local session: any stale SDK session is signed out FIRST so a different user's session
+  // can never win, then the link signs in.
+  // A local session exists: the link's identity is only known once the token is verified, so it
+  // is verified on an isolated client that persists nothing and emits nothing to AuthContext. The
+  // same account continues straight into sign-in; a different account is held in memory only and
+  // the user must confirm the switch. Either way the replaced session is revoked once the new
+  // one is signed in.
   const exchangeMagicLink = useCallback(async () => {
     const pending = pendingLinkRef.current;
     pendingLinkRef.current = null; // single use
@@ -354,13 +547,19 @@ export function OAuthCallback({
       throw new Error('Failed to initialize authentication client');
     }
 
-    await signOutBeforeSwitch(supabase);
-    clearSessionTokens();
-    clearTokenCookie();
-    clearSupabaseLocalStorage();
+    const preexistingToken = getStoredAccessToken();
+    const currentIdentity = preexistingToken ? currentSessionIdentity() : null;
+    if (!preexistingToken) {
+      await signOutBeforeSwitch(supabase);
+      clearSessionTokens();
+      clearTokenCookie();
+      clearSupabaseLocalStorage();
+    }
     if (abortedRef.current) return;
 
-    const verification = supabase.auth.verifyOtp({
+    const isolated = preexistingToken !== null;
+    const verifier = isolated ? createIsolatedAuthClient() : supabase;
+    const verification = verifier.auth.verifyOtp({
       type: 'magiclink',
       token_hash: pending.tokenHash,
     });
@@ -370,10 +569,14 @@ export function OAuthCallback({
     } catch (verifyError) {
       // verifyOtp cannot be cancelled: if it finishes after we showed the error, the SDK would
       // persist and broadcast a session behind the failure screen. Discard it when it lands.
-      discardLateSession(supabase, verification);
+      discardLateSession(supabase, verification, preexistingToken, isolated);
       throw verifyError;
     }
-    if (abandonedByWatchdog(abortedRef, supabase, result.data?.session)) return;
+    if (
+      abandonedByWatchdog(abortedRef, supabase, result.data?.session, preexistingToken, isolated)
+    ) {
+      return;
+    }
     const { data, error } = result;
 
     if (error || !data?.session) {
@@ -382,32 +585,47 @@ export function OAuthCallback({
       );
     }
 
-    // ADR-071: the link carries `tenant` and `grant` as HINTS. The grant is claimed FIRST, with
-    // the new session's token: for a pinned (agency staff) link this is what binds the session
-    // to the client tenant, and until it is claimed the API refuses everything else. The
-    // tenant the server returns wins over the `tenant` hint. A failed claim fails CLOSED:
-    // the session is dropped rather than left half signed in.
-    let activeTenantId = pending.tenantHint;
-    if (pending.grant) {
-      try {
-        const claim = await withTimeout(claimLoginGrant(data.session.access_token, pending.grant));
-        activeTenantId = claim.tenantId;
-      } catch (claimError) {
-        dropAbandonedSession(supabase, data.session.access_token);
-        throw normalizeClaimError(claimError);
+    // The page is gone (navigated away or closed): a verification that lands now must not sign
+    // anyone in behind the user's back, whichever account it is for. Discard it.
+    if (departedRef.current) {
+      if (isolated) {
+        void revokeEvenIfExpired(
+          supabase,
+          data.session.access_token,
+          data.session.refresh_token ?? null
+        );
+      } else {
+        dropAbandonedSession(supabase, data.session.access_token, preexistingToken);
       }
-      if (abandonedByWatchdog(abortedRef, supabase, data.session)) return;
+      return;
     }
 
-    pendingNextRef.current = pending.next;
-    finishSignIn(data.session, data.user ?? undefined, 'magiclink', activeTenantId);
-  }, [finishSignIn]);
+    if (preexistingToken && !isSameAccount(currentIdentity, data.user)) {
+      heldSessionRef.current = {
+        session: data.session,
+        user: data.user ?? undefined,
+        pending,
+      };
+      setCurrentEmail(currentIdentity?.email ?? null);
+      setStatus('confirm');
+      return;
+    }
+
+    await completeMagicLink(
+      supabase,
+      data.session,
+      data.user ?? undefined,
+      pending,
+      preexistingToken
+    );
+  }, [completeMagicLink]);
 
   // Magic-link flow (partner Portal -> CRM): /auth/callback?token_hash=...&type=magiclink&next=...
   //
   // Anyone can mint a link for their own account and send it to a signed-in victim (login CSRF),
-  // so when a local session already exists we do NOT swap accounts silently: the user must
-  // confirm on an interstitial. With no session the exchange runs automatically.
+  // so when a local session already exists for a DIFFERENT account we do NOT swap accounts
+  // silently: the user must confirm on an interstitial. With no session, or when the link is for
+  // the account already signed in, there is nothing to confirm and sign-in completes directly.
   const handleMagicLink = useCallback(
     async (tokenHash: string, linkType: string | null) => {
       // Capture every link parameter BEFORE the URL is stripped below.
@@ -431,11 +649,6 @@ export function OAuthCallback({
         grant,
       };
 
-      if (getStoredAccessToken()) {
-        setCurrentEmail(currentSessionEmail());
-        setStatus('confirm');
-        return;
-      }
       await exchangeMagicLink();
     },
     [exchangeMagicLink, searchParams]
@@ -573,6 +786,51 @@ export function OAuthCallback({
     openModal(el);
   }, [status]);
 
+  // A held session for another account lives only in memory. If the user leaves the prompt
+  // without choosing (tab closed, back button, navigation), revoke it so a valid session for an
+  // account they never agreed to cannot outlive the page. A page kept in the back/forward cache
+  // comes back showing the used-link error rather than a prompt whose session is gone.
+  const reportErrorRef = useRef(reportError);
+  reportErrorRef.current = reportError;
+  useEffect(() => {
+    const revokeHeld = (): boolean => {
+      const held = heldSessionRef.current;
+      heldSessionRef.current = null;
+      const supabase = getSupabaseBrowserClient();
+      if (held && supabase)
+        void revokeEvenIfExpired(
+          supabase,
+          held.session.access_token,
+          held.session.refresh_token ?? null
+        );
+      return held !== null;
+    };
+    const onPageHide = (event: PageTransitionEvent) => {
+      departedRef.current = true;
+      if (revokeHeld() && event.persisted) {
+        reportErrorRef.current(new Error('This sign-in link has already been used.'));
+      }
+    };
+    // Back from the back/forward cache: the user is on this page again, so a held navigation for a
+    // sign-in that was already committed carries on.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      departedRef.current = false;
+      const held = pendingNavigateRef.current;
+      pendingNavigateRef.current = null;
+      held?.();
+    };
+    departedRef.current = false;
+    globalThis.addEventListener('pagehide', onPageHide);
+    globalThis.addEventListener('pageshow', onPageShow);
+    return () => {
+      departedRef.current = true;
+      globalThis.removeEventListener('pagehide', onPageHide);
+      globalThis.removeEventListener('pageshow', onPageShow);
+      revokeHeld();
+    };
+  }, []);
+
   // Focus management: move focus to primary action on error state (NF-007)
   useEffect(() => {
     if (status === 'error' && backToLoginRef.current) {
@@ -634,11 +892,51 @@ export function OAuthCallback({
   // ==========================================
 
   const handleConfirmSwitch = () => {
-    exchangeMagicLink().catch(reportError);
+    const held = heldSessionRef.current;
+    heldSessionRef.current = null; // single use
+    const supabase = getSupabaseBrowserClient();
+    if (!held || !supabase) {
+      reportError(new Error('This sign-in link has already been used.'));
+      return;
+    }
+    // The held session was verified before the user chose; one that has since expired cannot
+    // claim a grant or sign in, and the link is already spent.
+    if (held.session.expires_at !== undefined && held.session.expires_at * 1000 <= Date.now()) {
+      void revokeEvenIfExpired(
+        supabase,
+        held.session.access_token,
+        held.session.refresh_token ?? null
+      );
+      reportError(
+        new Error(
+          'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
+        )
+      );
+      return;
+    }
+    setStatus('exchanging');
+    completeMagicLink(
+      supabase,
+      held.session,
+      held.user,
+      held.pending,
+      getStoredAccessToken()
+    ).catch(reportError);
   };
 
   const handleStaySignedIn = () => {
     pendingLinkRef.current = null;
+    const held = heldSessionRef.current;
+    heldSessionRef.current = null;
+    const supabase = getSupabaseBrowserClient();
+    // The verified session for the other account was never stored: it is only revoked, and the
+    // current app session, including the SDK's copy that keeps it refreshed, is untouched.
+    if (held && supabase)
+      void revokeEvenIfExpired(
+        supabase,
+        held.session.access_token,
+        held.session.refresh_token ?? null
+      );
     router.push('/dashboard');
   };
 
