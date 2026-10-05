@@ -45,6 +45,13 @@ function input(status: string, coaStage = 'CONTACTED') {
   } as never;
 }
 
+/** $executeRaw calls other than the per-syncKey advisory lock (i.e. the tag merge). */
+function tagMergeCalls() {
+  return prismaMock.$executeRaw.mock.calls.filter(
+    (c) => !(c[0] as unknown as TemplateStringsArray).join('?').includes('pg_advisory_xact_lock')
+  );
+}
+
 const createLead = () => mockServices.lead.createLead as ReturnType<typeof vi.fn>;
 const changeStatus = () => mockServices.lead.changeLeadStatus as ReturnType<typeof vi.fn>;
 
@@ -66,6 +73,8 @@ describe('inboundRouter — syncPipelineLead', () => {
     vi.stubEnv('LEANGENCY_SYSTEM_USER_ID', SYSTEM_USER_ID);
     prismaMock.leadActivity.findFirst.mockResolvedValue(null as never);
     prismaMock.leadActivity.create.mockResolvedValue({} as never);
+    prismaMock.$transaction.mockImplementation((async (fn: (tx: unknown) => unknown) =>
+      fn(prismaMock)) as never);
     changeStatus().mockResolvedValue({ isFailure: false, value: {} });
   });
 
@@ -132,7 +141,7 @@ describe('inboundRouter — syncPipelineLead', () => {
 
     expect(createLead()).not.toHaveBeenCalled();
     expect(result).toMatchObject({ leadId: LEAD_ID, created: false, status: 'CONTACTED' });
-    expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(tagMergeCalls()).toHaveLength(1);
   });
 
   it('appends tags with a tenant-scoped, de-duplicating UPDATE (not a blind push)', async () => {
@@ -143,10 +152,7 @@ describe('inboundRouter — syncPipelineLead', () => {
     // A blind `push` stores a tag twice when two syncs both read it as missing;
     // the merge must be idempotent in the write itself.
     expect(prismaMock.lead.update).not.toHaveBeenCalled();
-    const call = prismaMock.$executeRaw.mock.calls[0] as unknown as [
-      TemplateStringsArray,
-      ...unknown[],
-    ];
+    const call = tagMergeCalls()[0] as unknown as [TemplateStringsArray, ...unknown[]];
     const sql = call[0].join('?');
     expect(sql).toMatch(/UPDATE "leads"/);
     expect(sql).toMatch(/GROUP BY u\.tag/); // collapses duplicates, order-preserving
@@ -159,7 +165,7 @@ describe('inboundRouter — syncPipelineLead', () => {
     const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
     await caller.syncPipelineLead(input('CONTACTED'));
     expect(prismaMock.lead.update).not.toHaveBeenCalled();
-    expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
+    expect(tagMergeCalls()).toHaveLength(0);
   });
 
   it('walks NEW -> NEGOTIATING through CONTACTED and QUALIFIED in order', async () => {
@@ -369,5 +375,60 @@ describe('inboundRouter — syncPipelineLead', () => {
     expect(result).toMatchObject({ status: 'QUALIFIED', changed: true });
     expect(statusCalls()).toEqual(['CONTACTED', 'QUALIFIED']);
     expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('two concurrent same-key syncs write exactly ONE audit note (atomic marker)', async () => {
+    // Fake store: the lookup reflects committed notes; $transaction serialises
+    // on a per-key advisory lock, like pg_advisory_xact_lock.
+    const notes: Array<{ syncKey: string }> = [];
+    const queues = new Map<string, Promise<unknown>>();
+    const keyOf = (args: unknown) =>
+      (args as { where: { metadata: { equals: string } } }).where.metadata.equals;
+    const find = async (args: unknown) => {
+      await Promise.resolve();
+      return notes.some((n) => n.syncKey === keyOf(args)) ? { id: 'act' } : null;
+    };
+    prismaMock.leadActivity.findFirst.mockImplementation(find as never);
+    prismaMock.leadActivity.create.mockImplementation((async (args: {
+      data: { metadata: { syncKey: string } };
+    }) => {
+      await Promise.resolve();
+      notes.push({ syncKey: args.data.metadata.syncKey });
+      return {};
+    }) as never);
+    let held: string | undefined;
+    const tx = {
+      leadActivity: prismaMock.leadActivity,
+      $executeRaw: async (_s: TemplateStringsArray, key: string) => {
+        held = key;
+        return 0;
+      },
+    };
+    prismaMock.$transaction.mockImplementation((async (fn: (t: unknown) => Promise<unknown>) => {
+      // The lock key is only known once the callback runs its first statement,
+      // so serialise every transaction on the single key used in this test.
+      const key = 'coa-sync';
+      const prev = queues.get(key) ?? Promise.resolve();
+      const run = prev.then(() => fn(tx));
+      queues.set(
+        key,
+        run.catch(() => undefined)
+      );
+      return run;
+    }) as never);
+    prismaMock.lead.findFirst.mockImplementation((async () => ({
+      id: LEAD_ID,
+      status: 'NEW',
+      tags: COA_TAGS,
+    })) as never);
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await Promise.all([
+      caller.syncPipelineLead(input('CONTACTED')),
+      caller.syncPipelineLead(input('CONTACTED')),
+    ]);
+
+    expect(notes).toHaveLength(1);
+    expect(held).toBe(`coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED`);
   });
 });
