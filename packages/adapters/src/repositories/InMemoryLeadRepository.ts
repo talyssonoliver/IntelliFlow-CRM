@@ -12,7 +12,7 @@ export class InMemoryLeadRepository implements LeadRepository {
 
   async save(
     lead: Lead,
-    opts?: { note?: { content: string; author: string } },
+    opts?: { note?: { content: string; author: string }; expectedStatus?: string },
     tx?: RepositoryTransaction
   ): Promise<void> {
     // Persist the lead and, per the repository contract, any initial note

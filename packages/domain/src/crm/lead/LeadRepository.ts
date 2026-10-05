@@ -5,6 +5,21 @@ import { DateRange } from '../../shared/QueryTypes';
 import { RepositoryTransaction } from '../../shared/RepositoryTransaction';
 
 /**
+ * Thrown by `save` when `opts.expectedStatus` no longer matches the persisted
+ * status, i.e. another writer moved the lead after it was read. The caller
+ * must re-read and replan; the stale write was NOT applied.
+ */
+export class LeadStatusConflictError extends Error {
+  constructor(
+    readonly leadId: string,
+    readonly expectedStatus: string
+  ) {
+    super(`Lead ${leadId} is no longer in status ${expectedStatus}`);
+    this.name = 'LeadStatusConflictError';
+  }
+}
+
+/**
  * Lead Repository Interface
  * Defines the contract for lead persistence
  * Implementation lives in adapters layer
@@ -20,10 +35,15 @@ export interface LeadRepository {
    * atomically with the lead (single transaction) so a required initial note —
    * e.g. the New Lead form's "Other" source detail — is never left dangling
    * without its lead, or the lead without its required detail.
+   *
+   * When `opts.expectedStatus` is supplied the write is a compare-and-set: it
+   * only lands if the persisted status still equals it, otherwise
+   * `LeadStatusConflictError` is thrown and nothing is written. Status
+   * transitions MUST pass it so a stale read cannot overwrite a newer status.
    */
   save(
     lead: Lead,
-    opts?: { note?: { content: string; author: string } },
+    opts?: { note?: { content: string; author: string }; expectedStatus?: string },
     tx?: RepositoryTransaction
   ): Promise<void>;
 

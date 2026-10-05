@@ -8,6 +8,7 @@ import {
   Email,
   PhoneNumber,
   LeadRepository,
+  LeadStatusConflictError,
   Contact,
   Account,
   CreateLeadProps,
@@ -660,14 +661,22 @@ export class LeadService {
       );
     }
 
+    const expectedStatus = lead.status;
     const statusResult = lead.changeStatus(newStatus, changedBy);
     if (statusResult.isFailure) {
       return Result.fail(statusResult.error);
     }
 
     try {
-      await this.leadRepository.save(lead);
-    } catch {
+      // Compare-and-set on the status the transition was validated against, so a
+      // concurrent writer that moved the lead first is never overwritten.
+      await this.leadRepository.save(lead, { expectedStatus });
+    } catch (error) {
+      if (error instanceof LeadStatusConflictError) {
+        return Result.fail(
+          new PersistenceError(`Lead status changed concurrently (expected ${expectedStatus})`)
+        );
+      }
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
 

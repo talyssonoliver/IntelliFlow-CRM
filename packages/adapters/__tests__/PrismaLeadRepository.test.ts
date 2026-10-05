@@ -9,11 +9,12 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PrismaLeadRepository } from '../src/repositories/PrismaLeadRepository';
-import { Lead, LeadId, Email } from '@intelliflow/domain';
+import { Lead, LeadId, Email, LeadStatusConflictError } from '@intelliflow/domain';
 import type { PrismaClient } from '@intelliflow/db';
 
 type LeadPrismaDelegateDouble = {
   upsert: ReturnType<typeof vi.fn>;
+  updateMany: ReturnType<typeof vi.fn>;
   findUnique: ReturnType<typeof vi.fn>;
   findFirst: ReturnType<typeof vi.fn>;
   findMany: ReturnType<typeof vi.fn>;
@@ -30,6 +31,7 @@ interface LeadPrismaClientDouble {
 const createMockPrismaClient = (): LeadPrismaClientDouble => {
   const lead: LeadPrismaDelegateDouble = {
     upsert: vi.fn(),
+    updateMany: vi.fn(),
     findUnique: vi.fn(),
     findFirst: vi.fn(),
     findMany: vi.fn(),
@@ -89,6 +91,27 @@ describe('PrismaLeadRepository', () => {
   });
 
   describe('save()', () => {
+    it('compare-and-sets the status when expectedStatus is given (no upsert)', async () => {
+      mockPrisma.lead.updateMany.mockResolvedValue({ count: 1 });
+
+      await repository.save(testLead, { expectedStatus: 'NEW' });
+
+      expect(mockPrisma.lead.updateMany).toHaveBeenCalledWith({
+        where: { id: testLead.id.value, tenantId: 'tenant-123', status: 'NEW' },
+        data: expect.objectContaining({ id: testLead.id.value }),
+      });
+      expect(mockPrisma.lead.upsert).not.toHaveBeenCalled();
+    });
+
+    it('throws LeadStatusConflictError when the persisted status moved (count 0)', async () => {
+      mockPrisma.lead.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(repository.save(testLead, { expectedStatus: 'NEW' })).rejects.toBeInstanceOf(
+        LeadStatusConflictError
+      );
+      expect(mockPrisma.lead.upsert).not.toHaveBeenCalled();
+    });
+
     it('should call prisma.lead.upsert with correct data', async () => {
       const upsertMock = mockPrisma.lead.upsert;
       upsertMock.mockResolvedValue({});
