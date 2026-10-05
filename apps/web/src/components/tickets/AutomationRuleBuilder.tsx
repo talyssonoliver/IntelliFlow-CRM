@@ -122,9 +122,9 @@ export function AutomationRuleBuilder() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tRPC deep type instantiation workaround
   const createMutation = (trpc.routing.create as any).useMutation({
     onSuccess: () => {
-      utils.routing.list.invalidate();
       setDialogOpen(false);
       toast({ title: 'Rule created' });
+      return utils.routing.list.invalidate();
     },
     onError: (err: { message: string }) =>
       toast({ title: err.message, variant: 'destructive' as const }),
@@ -132,10 +132,10 @@ export function AutomationRuleBuilder() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateMutation = (trpc.routing.update as any).useMutation({
     onSuccess: () => {
-      utils.routing.list.invalidate();
       setDialogOpen(false);
       setEditingId(null);
       toast({ title: 'Rule updated' });
+      return utils.routing.list.invalidate();
     },
     onError: (err: { message: string }) =>
       toast({ title: err.message, variant: 'destructive' as const }),
@@ -143,8 +143,8 @@ export function AutomationRuleBuilder() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const deleteMutation = (trpc.routing.delete as any).useMutation({
     onSuccess: () => {
-      utils.routing.list.invalidate();
       toast({ title: 'Rule deleted' });
+      return utils.routing.list.invalidate();
     },
     onError: (err: { message: string }) =>
       toast({ title: err.message, variant: 'destructive' as const }),

@@ -217,7 +217,11 @@ function BulkActionsBar<T>({
               size="sm"
               onClick={() => {
                 const handler = action.onClick || action.onExecute;
-                if (handler) handler(selectedRows);
+                if (handler) {
+                  Promise.resolve(handler(selectedRows)).catch((error: unknown) => {
+                    console.error('[DataTable] Bulk action failed:', error);
+                  });
+                }
               }}
             >
               {action.icon && (

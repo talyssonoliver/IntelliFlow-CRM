@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { ConfirmationDialog } from '../src/components/confirmation-dialog';
@@ -56,6 +56,23 @@ describe('ConfirmationDialog', () => {
     );
     await user.click(screen.getByText('Confirm'));
     expect(onConfirm).toHaveBeenCalled();
+  });
+
+  it('logs instead of leaving an unhandled rejection when onConfirm rejects', async () => {
+    const failure = new Error('confirm failed');
+    const onConfirm = vi.fn().mockRejectedValue(failure);
+    const onOpenChange = vi.fn();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const user = userEvent.setup();
+    render(
+      <ConfirmationDialog {...defaultProps} onConfirm={onConfirm} onOpenChange={onOpenChange} />
+    );
+    await user.click(screen.getByText('Confirm'));
+    await waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith('[ConfirmationDialog] onConfirm failed:', failure)
+    );
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    errorSpy.mockRestore();
   });
 
   it('does not render when closed', () => {
