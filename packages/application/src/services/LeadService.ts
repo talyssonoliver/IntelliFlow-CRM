@@ -111,7 +111,10 @@ export class LeadService {
       return Result.fail(emailResult.error);
     }
 
-    const existingLead = await this.leadRepository.existsByEmail(emailResult.value);
+    const existingLead = await this.leadRepository.existsByEmailInTenant(
+      emailResult.value,
+      props.tenantId
+    );
     if (existingLead) {
       return Result.fail(new ValidationError(`Lead with email ${props.email} already exists`));
     }

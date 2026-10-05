@@ -244,9 +244,9 @@ export class PrismaLeadRepository implements LeadRepository {
     });
   }
 
-  async existsByEmail(email: Email): Promise<boolean> {
+  async existsByEmailInTenant(email: Email, tenantId: string): Promise<boolean> {
     const count = await this.prisma.lead.count({
-      where: { email: email.value },
+      where: { email: email.value, tenantId },
     });
     return count > 0;
   }

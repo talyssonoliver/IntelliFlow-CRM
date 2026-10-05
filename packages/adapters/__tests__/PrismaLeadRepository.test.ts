@@ -745,16 +745,16 @@ describe('PrismaLeadRepository', () => {
     });
   });
 
-  describe('existsByEmail()', () => {
+  describe('existsByEmailInTenant()', () => {
     it('should return true when email exists', async () => {
       const countMock = mockPrisma.lead.count;
       countMock.mockResolvedValue(1);
 
       const emailResult = Email.create('test@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, 'tenant-1');
 
       expect(countMock).toHaveBeenCalledWith({
-        where: { email: 'test@example.com' },
+        where: { email: 'test@example.com', tenantId: 'tenant-1' },
       });
 
       expect(exists).toBe(true);
@@ -765,7 +765,7 @@ describe('PrismaLeadRepository', () => {
       countMock.mockResolvedValue(0);
 
       const emailResult = Email.create('nonexistent@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, 'tenant-1');
 
       expect(exists).toBe(false);
     });
@@ -775,7 +775,7 @@ describe('PrismaLeadRepository', () => {
       countMock.mockResolvedValue(2);
 
       const emailResult = Email.create('duplicate@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, 'tenant-1');
 
       expect(exists).toBe(true);
     });
