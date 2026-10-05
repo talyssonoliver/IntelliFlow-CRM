@@ -509,12 +509,21 @@ async function mergeCoaTags(
   const missing = coaTags.filter((t) => !have.includes(t));
   if (missing.length > 0) {
     try {
-      await ctx.prisma.lead.update({
-        where: { id: leadId },
-        // push, not a whole-array write: two syncs for one email (different
-        // COA leads) would otherwise each overwrite the other's tag.
-        data: { tags: { push: missing } },
-      });
+      // Idempotent at write time: the `missing` list was decided from a read
+      // that a concurrent sync may already have outdated, and Prisma's `push`
+      // never dedupes, so two syncs would store the same tag twice. Merge the
+      // distinct values inside one UPDATE (order-preserving) instead. Scoped by
+      // id AND tenant on the same client every other query in this router uses.
+      await ctx.prisma.$executeRaw`
+        UPDATE "leads"
+        SET "tags" = ARRAY(
+          SELECT u.tag
+          FROM unnest("tags" || ${missing}::text[]) WITH ORDINALITY AS u(tag, ord)
+          GROUP BY u.tag
+          ORDER BY MIN(u.ord)
+        )
+        WHERE "id" = ${leadId} AND "tenantId" = ${tenantId}
+      `;
     } catch (err) {
       console.warn('[inbound.syncPipelineLead] tag merge failed:', {
         leadId,

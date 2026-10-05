@@ -135,9 +135,14 @@ export class PrismaLeadRepository implements LeadRepository {
       // Compare-and-set: the status was read earlier and the transition validated
       // against that snapshot. Only write if it is still what we read, so a
       // concurrent writer's newer (or terminal) status is never overwritten.
+      //
+      // Write ONLY what a status transition mutates. Lead.changeStatus /
+      // qualify / convert change exactly `status` and `updatedAt`; writing the
+      // whole snapshot row would silently revert any non-status column (tags,
+      // names, phone, score, BANT...) another writer changed after our read.
       const { count } = await db.lead.updateMany({
         where: { id: data.id, tenantId: data.tenantId, status: opts.expectedStatus as LeadStatus },
-        data,
+        data: { status: data.status, updatedAt: data.updatedAt },
       });
       if (count === 0) {
         throw new LeadStatusConflictError(data.id, opts.expectedStatus);
