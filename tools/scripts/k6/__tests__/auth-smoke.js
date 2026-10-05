@@ -3,7 +3,7 @@
  * Phase 1.2: RED - Write k6 Auth Integration Test
  *
  * Quick validation that Supabase auth is working for load tests.
- * Run with: k6 run --env SUPABASE_URL=<url> --env SUPABASE_ANON_KEY=<key> auth-smoke.js
+ * Run with: k6 run --env SUPABASE_URL=<url> --env SUPABASE_ANON_KEY=<key> --env K6_TEST_PASSWORD=<password> auth-smoke.js
  */
 
 import http from 'k6/http';
@@ -44,6 +44,9 @@ function validateEnvironment() {
   }
   if (!SUPABASE_ANON_KEY) {
     errors.push('SUPABASE_ANON_KEY not configured');
+  }
+  if (!TEST_USER.password) {
+    errors.push('K6_TEST_PASSWORD not configured');
   }
 
   if (errors.length > 0) {
