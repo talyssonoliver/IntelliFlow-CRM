@@ -9,7 +9,7 @@ import { TimezoneProvider } from '@/providers/TimezoneProvider';
 import { RemindersProvider } from '@/lib/cases/reminders-context';
 import { AUTH_TOKEN_CHANGED_EVENT, clearTokenCookie } from '@/lib/shared/session-cleanup';
 import { requiredProdEnv } from '@/lib/required-url';
-import { isAuthError, shouldRetryMutation, shouldRetryQuery } from '@/lib/query-retry';
+import { isAuthError, MUTATION_RETRY, shouldRetryQuery } from '@/lib/query-retry';
 import { noRealtimeLink } from '@/lib/no-realtime-link';
 import {
   ACTIVE_TENANT_HEADER,
@@ -248,8 +248,8 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
             retry: shouldRetryQuery,
           },
           mutations: {
-            // Only retry when the server never answered — see lib/query-retry.ts
-            retry: shouldRetryMutation,
+            // Never auto-retried (not idempotent) — see lib/query-retry.ts
+            retry: MUTATION_RETRY,
           },
         },
         // Global query cache error handler
