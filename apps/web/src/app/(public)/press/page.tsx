@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import pressData from '@/data/press-releases.json';
 import { formatPressDate, getCategoryStyle } from '@/lib/press/utils';
+import { OG_IMAGES } from '@/lib/og-images';
 
 /**
  * Press Page
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
   description:
     'Latest news, press releases, and media resources from Aurora. Download our media kit for brand assets and company information.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Press & Media',
     description:
       'Latest news and press releases from Aurora. AI-powered CRM for modern sales teams.',

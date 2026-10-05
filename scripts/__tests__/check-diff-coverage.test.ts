@@ -1,266 +1,518 @@
 /**
- * Acceptance test for check-diff-coverage.mjs blind-spot fix (issue #382).
+ * check-diff-coverage — the local mirror of Sonar's new_coverage condition.
  *
- * The blind spot: a brand-new source file with no tests is ABSENT from lcov.
- * The prior behaviour was to skip absent files ("not in coverage scope"), so
- * a completely-untested new page scored "100% local / 0% on SonarCloud".
- * The fix: absent files now count as 0% covered, mirroring Sonar new_coverage.
+ * These tests import the real logic from scripts/lib/diff-coverage.mjs. They
+ * used to re-implement it in this file and test the copy ("kept in sync with
+ * the script"), and the copy had already drifted: it still treated apps/workers/
+ * as a Sonar source root, which the script did not. One CLI smoke test remains
+ * to prove the entry point is wired.
  */
-
 import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
+import {
+  computeDiffCoverage,
+  createClassifier,
+  parseAddedLines,
+  parseCobertura,
+  parseLcov,
+  runDiffCoverage,
+} from '../lib/diff-coverage.mjs';
+import { loadSonarScope } from '../lib/sonar-scope.mjs';
 
-// ESM __dirname shim for .ts files run via Vitest
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const ROOT = '/repo';
 
-// ---------------------------------------------------------------------------
-// Script runner
-// ---------------------------------------------------------------------------
+const realScope = loadSonarScope(REPO_ROOT);
+const real = createClassifier(realScope);
 
-const SCRIPT = path.resolve(__dirname, '..', 'check-diff-coverage.mjs');
-
-function runScript(lcovContent: string, env: Record<string, string> = {}) {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'diff-cov-test-'));
-  const lcovPath = path.join(tmp, 'lcov.info');
-  fs.writeFileSync(lcovPath, lcovContent, 'utf8');
-  const r = spawnSync(process.execPath, [SCRIPT], {
-    encoding: 'utf8',
-    shell: false,
-    env: { ...process.env, DIFF_COVER_LCOV: lcovPath, DIFF_COVER_BASE: 'origin/main', ...env },
-    maxBuffer: 8 * 1024 * 1024,
-  });
-  fs.rmSync(tmp, { recursive: true, force: true });
-  return { stdout: r.stdout || '', stderr: r.stderr || '', status: r.status };
-}
+const scope = {
+  sourceRoots: ['apps/web/src', 'scripts'],
+  exclusions: [/^scripts\/__tests__\//, /\.sh$/],
+  coverageExclusions: [/^apps\/web\/src\/app\/.*\/page\.tsx$/, /^scripts\/thin-cli\.mjs$/],
+};
 
 // ---------------------------------------------------------------------------
-// Mirror the file-classification predicates from check-diff-coverage.mjs.
-// Kept in sync with the script — a divergence here means the acceptance test
-// doesn't test the real behaviour.
+// File classification — against the COMMITTED sonar-project.properties
 // ---------------------------------------------------------------------------
 
-const SONAR_SOURCE_ROOTS = [
-  /^apps\/api\/src\//,
-  /^apps\/ai-worker\/src\//,
-  /^apps\/web\/src\//,
-  /^apps\/project-tracker\/(app|components|lib)\//,
-  /^packages\/(adapters|api-client|application|db|domain|observability|platform|ui|validators)\/src\//,
-  /^apps\/workers\//,
-];
-const EXCLUDE = [
-  /\.(test|spec)\.[cm]?[jt]sx?$/,
-  /\.d\.ts$/,
-  /\.config\.[cm]?[jt]s$/,
-  /(^|\/)(__tests__|__mocks__|migrations|generated|dist|build|\.next|node_modules)\//,
-];
-const INCLUDE_EXT = /\.[cm]?[jt]sx?$/;
-const SONAR_COVERAGE_EXCLUDE = [
-  /^apps\/api\/src\/tracing\/example\.ts$/,
-  /^apps\/project-tracker\/app\/api\//,
-  /^apps\/project-tracker\/components\//,
-  /^apps\/project-tracker\/lib\/data-sync\.ts$/,
-  /^apps\/ai-worker\/src\/index\.ts$/,
-];
-const isCoverableFile = (f: string) =>
-  INCLUDE_EXT.test(f) &&
-  SONAR_SOURCE_ROOTS.some((re) => re.test(f)) &&
-  !EXCLUDE.some((re) => re.test(f));
-const isSonarCoverageExcluded = (f: string) => SONAR_COVERAGE_EXCLUDE.some((re) => re.test(f));
-
-// ---------------------------------------------------------------------------
-// Pure intersection logic extracted for unit testing (mirrors the script patch)
-// ---------------------------------------------------------------------------
-
-interface FileEntry {
-  file: string;
-  fCov: number;
-  fTot: number;
-  absent?: boolean;
-}
-
-interface CoverageResult {
-  coverable: number;
-  covered: number;
-  perFile: FileEntry[];
-}
-
-/** Tally hit/coverable lines for a file present in lcov. */
-function tallyPresentFile(lines: Set<number>, hits: Map<number, number>) {
-  let fCov = 0;
-  let fTot = 0;
-  for (const ln of lines) {
-    if (hits.has(ln)) {
-      fTot++;
-      if ((hits.get(ln) ?? 0) > 0) fCov++;
-    }
-  }
-  return { fCov, fTot };
-}
-
-/**
- * Re-implements the fixed intersection logic from check-diff-coverage.mjs.
- * Absent-from-lcov files are counted as 0% covered (the blind-spot fix).
- */
-function computeCoverage(
-  added: Map<string, Set<number>>,
-  lineHits: Map<string, Map<number, number>>
-): CoverageResult {
-  let coverable = 0;
-  let covered = 0;
-  const perFile: FileEntry[] = [];
-  for (const [file, lines] of added) {
-    if (isSonarCoverageExcluded(file)) continue;
-    const hits = lineHits.get(file);
-    if (!hits) {
-      // FIXED: absent = 0% covered (issue #382 blind spot)
-      if (lines.size > 0) {
-        coverable += lines.size;
-        perFile.push({ file, fCov: 0, fTot: lines.size, absent: true });
-      }
-      continue;
-    }
-    const { fCov, fTot } = tallyPresentFile(lines, hits);
-    if (fTot > 0) {
-      coverable += fTot;
-      covered += fCov;
-      perFile.push({ file, fCov, fTot });
-    }
-  }
-  return { coverable, covered, perFile };
-}
-
-// ---------------------------------------------------------------------------
-// Tests: file classification
-// ---------------------------------------------------------------------------
-
-describe('check-diff-coverage: file classification', () => {
-  it('classifies a new Next.js page as coverable', () => {
-    expect(isCoverableFile('apps/web/src/app/contacts/[id]/page.tsx')).toBe(true);
+describe('classification against sonar-project.properties', () => {
+  it.each([
+    ['apps/web/src/components/Foo.tsx', true],
+    ['packages/domain/src/crm/lead/Lead.ts', true],
+    ['scripts/lib/diff-coverage.mjs', true],
+    ['scripts/run-coverage.js', true],
+    ['tools/scripts/lib/contract-parser.ts', true],
+    ['apps/web/src/components/Foo.test.tsx', false],
+    ['scripts/__tests__/check-diff-coverage.test.ts', false],
+    ['tools/scripts/__tests__/helper.ts', false],
+    ['tools/scripts/security/fixtures/sample.mjs', false],
+    ['tools/audit/run_audit.py', true],
+    ['tools/plan/src/domain/task.py', true],
+    ['tools/audit/tests/test_affected.py', false],
+    ['tools/audit/tests/conftest.py', false],
+    ['.agents/skills/x/helper.py', false],
+    ['packages/domain/src/types.d.ts', false],
+    ['vitest.config.ts', false],
+    ['apps/workers/notifications-worker/src/index.ts', false],
+    ['infra/monitoring/x.ts', false],
+  ])('%s coverable → %s', (file, expected) => {
+    expect(real.isCoverableFile(file)).toBe(expected);
   });
 
-  it('does NOT classify .test.ts as coverable', () => {
-    expect(isCoverableFile('apps/api/src/foo.test.ts')).toBe(false);
-  });
-
-  it('does NOT classify .d.ts as coverable', () => {
-    expect(isCoverableFile('packages/domain/src/foo.d.ts')).toBe(false);
-  });
-
-  it('does NOT classify .config.ts as coverable', () => {
-    expect(isCoverableFile('apps/web/vitest.config.ts')).toBe(false);
-  });
-
-  it('excludes Sonar coverage exclusion: apps/api/src/tracing/example.ts', () => {
-    expect(isSonarCoverageExcluded('apps/api/src/tracing/example.ts')).toBe(true);
-  });
-
-  it('excludes Sonar coverage exclusion: project-tracker app/api routes', () => {
-    expect(isSonarCoverageExcluded('apps/project-tracker/app/api/sprint-plan/route.ts')).toBe(true);
-  });
-
-  it('does NOT exclude a normal source file from Sonar coverage exclusions', () => {
-    expect(isSonarCoverageExcluded('apps/web/src/app/contacts/[id]/page.tsx')).toBe(false);
-  });
-
-  it('does NOT classify scripts/ as coverable (not in sonar.sources)', () => {
-    expect(isCoverableFile('scripts/check-diff-coverage.mjs')).toBe(false);
-  });
-
-  it('does NOT classify tools/ as coverable (not in sonar.sources)', () => {
-    expect(isCoverableFile('tools/scripts/some-util.ts')).toBe(false);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Tests: absent-from-lcov blind spot (acceptance gate for issue #382)
-// ---------------------------------------------------------------------------
-
-describe('check-diff-coverage: absent-from-lcov blind spot (issue #382)', () => {
-  it('PASS when no coverable source files are changed (HEAD as base)', () => {
-    const r = runScript('SF:apps/web/src/app/page.tsx\nDA:1,1\nend_of_record\n', {
-      DIFF_COVER_BASE: 'HEAD',
-    });
-    expect(r.stdout).toMatch(
-      /no coverable source lines changed|no changed lines are in coverage scope/
+  it('honours sonar.coverage.exclusions, including the thin CLI entry points', () => {
+    expect(real.isSonarCoverageExcluded('apps/api/src/tracing/example.ts')).toBe(true);
+    expect(real.isSonarCoverageExcluded('apps/api/src/modules/legal/anything.router.ts')).toBe(
+      true
     );
-    expect(r.status).toBe(0);
-  });
-
-  it('FAIL when a changed coverable file is absent from lcov (the blind spot)', () => {
-    const lcovDummyOnly = 'SF:apps/web/src/app/dummy-only.tsx\nDA:1,1\nend_of_record\n';
-    const r = runScript(lcovDummyOnly);
-
-    if (r.stderr.includes('git diff against')) {
-      console.warn('SKIP: origin/main not reachable in this environment');
-      return;
-    }
-    const noCoverableLines =
-      r.stdout.includes('no coverable source lines changed') ||
-      r.stdout.includes('no changed lines are in coverage scope');
-    if (noCoverableLines) {
-      // No TS/TSX source lines changed in this diff — gate passes correctly.
-      console.warn('INFO: no coverable source lines in diff — gate passed');
-      expect(r.status).toBe(0);
-      return;
-    }
-    // Changed files absent from lcov → must fail with [no lcov] annotation
-    expect(r.stdout).toMatch(/\[no lcov/);
-    expect(r.status).toBe(1);
-    expect(r.stderr).toMatch(/Diff coverage .* is below the 80%/);
+    expect(real.isSonarCoverageExcluded('scripts/check-diff-coverage.mjs')).toBe(true);
+    expect(real.isSonarCoverageExcluded('scripts/check-coverage-floor.mjs')).toBe(true);
+    expect(real.isSonarCoverageExcluded('scripts/lib/diff-coverage.mjs')).toBe(false);
   });
 });
 
 // ---------------------------------------------------------------------------
-// Tests: intersection logic (pure, git-state-independent)
+// Diff and lcov parsing
 // ---------------------------------------------------------------------------
 
-describe('check-diff-coverage: intersection logic with absent file', () => {
-  it('counts absent-from-lcov coverable file lines as uncovered (0%)', () => {
-    const added = new Map([
-      ['apps/web/src/app/contacts/page.tsx', new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])],
-    ]);
-    const lineHits = new Map<string, Map<number, number>>();
+describe('parseAddedLines', () => {
+  const diff = [
+    'diff --git a/scripts/a.mjs b/scripts/a.mjs',
+    'index 1..2 100644',
+    '--- a/scripts/a.mjs',
+    '+++ b/scripts/a.mjs',
+    '@@ -1,0 +2,2 @@',
+    '+const a = 1;',
+    '+const b = 2;',
+    '@@ -10 +11 @@',
+    '-old',
+    '+new',
+    ' context',
+    '+after context',
+    '\\ No newline at end of file',
+    'diff --git a/README.md b/README.md',
+    '+++ b/README.md',
+    '@@ -0,0 +1 @@',
+    '+# not coverable',
+    'diff --git a/scripts/gone.mjs b/scripts/gone.mjs',
+    '+++ /dev/null',
+    '@@ -1 +0,0 @@',
+    '-deleted',
+    '+++ b/scripts/b.mjs',
+    '@@ -0,0 +5 @@',
+    '+x',
+  ].join('\n');
 
-    const { coverable, covered, perFile } = computeCoverage(added, lineHits);
-    const pct = coverable > 0 ? (covered / coverable) * 100 : 100;
-
-    expect(coverable).toBe(10);
-    expect(covered).toBe(0);
-    expect(pct).toBe(0);
-    expect(perFile[0].absent).toBe(true);
-    expect(perFile[0].fCov).toBe(0);
-    expect(perFile[0].fTot).toBe(10);
+  it('records added line numbers per coverable file and tracks context lines', () => {
+    const added = parseAddedLines(diff, (f: string) => f.startsWith('scripts/'));
+    expect([...added.get('scripts/a.mjs')!]).toEqual([2, 3, 11, 13]);
+    expect([...added.get('scripts/b.mjs')!]).toEqual([5]);
+    expect(added.has('README.md')).toBe(false);
+    expect(added.has('scripts/gone.mjs')).toBe(false);
   });
 
-  it('still passes for a file that IS in lcov with all lines hit', () => {
-    const added = new Map([['packages/domain/src/models/contact.ts', new Set([10, 11, 12])]]);
-    const lineHits = new Map([
+  it('ignores content before the first file header', () => {
+    expect(parseAddedLines('+orphan\n@@ -1 +1 @@\n+x', () => true).size).toBe(0);
+  });
+});
+
+describe('parseLcov', () => {
+  it('keys hits by repo-relative path, from absolute, Windows and ./-prefixed SF lines', () => {
+    const hits = parseLcov(
       [
-        'packages/domain/src/models/contact.ts',
-        new Map([
-          [10, 5],
-          [11, 3],
-          [12, 1],
-        ]),
-      ],
-    ]);
+        `SF:${ROOT}/scripts/a.mjs`,
+        'DA:1,3',
+        'DA:2,0',
+        'end_of_record',
+        'SF:/repo\\scripts\\b.mjs',
+        'DA:7,1',
+        'end_of_record',
+        'SF:./scripts/c.mjs',
+        'DA:4,0',
+        'end_of_record',
+        'DA:9,9',
+      ].join('\n'),
+      ROOT
+    );
+    expect(hits.get('scripts/a.mjs')).toEqual(
+      new Map([
+        [1, 3],
+        [2, 0],
+      ])
+    );
+    expect(hits.get('scripts/b.mjs')).toEqual(new Map([[7, 1]]));
+    expect(hits.get('scripts/c.mjs')).toEqual(new Map([[4, 0]]));
+  });
+});
 
-    const { coverable, covered } = computeCoverage(added, lineHits);
-    expect((covered / coverable) * 100).toBe(100);
-    expect(covered).toBe(3);
-    expect(coverable).toBe(3);
+// ---------------------------------------------------------------------------
+// Intersection (issue #382: absent from lcov = 0%, not "skip")
+// ---------------------------------------------------------------------------
+
+describe('computeDiffCoverage', () => {
+  const none = () => false;
+
+  it('counts every added line of a file absent from lcov as uncovered', () => {
+    const r = computeDiffCoverage(
+      new Map([['apps/web/src/new.tsx', new Set([1, 2, 3])]]),
+      new Map(),
+      none
+    );
+    expect(r).toEqual({
+      coverable: 3,
+      covered: 0,
+      perFile: [{ file: 'apps/web/src/new.tsx', fCov: 0, fTot: 3, absent: true }],
+    });
   });
 
-  it('skips files in Sonar coverage exclusions even when absent from lcov', () => {
-    const added = new Map([['apps/api/src/tracing/example.ts', new Set([1, 2, 3])]]);
-    const lineHits = new Map<string, Map<number, number>>();
+  it('counts only executable (DA) lines of a file present in lcov', () => {
+    const r = computeDiffCoverage(
+      new Map([['scripts/a.mjs', new Set([1, 2, 3, 4])]]),
+      new Map([
+        [
+          'scripts/a.mjs',
+          new Map([
+            [1, 2],
+            [2, 0],
+            [3, 1],
+          ]),
+        ],
+      ]),
+      none
+    );
+    expect(r.coverable).toBe(3);
+    expect(r.covered).toBe(2);
+  });
 
-    const { coverable } = computeCoverage(added, lineHits);
-    expect(coverable).toBe(0); // fully skipped — no coverage expectation
+  it('drops a present file whose added lines are all non-executable', () => {
+    const r = computeDiffCoverage(
+      new Map([['scripts/a.mjs', new Set([9])]]),
+      new Map([['scripts/a.mjs', new Map([[1, 1]])]]),
+      none
+    );
+    expect(r).toEqual({ coverable: 0, covered: 0, perFile: [] });
+  });
+
+  it('skips files Sonar holds no coverage expectation for, even when absent', () => {
+    const r = computeDiffCoverage(
+      new Map([['scripts/thin-cli.mjs', new Set([1, 2])]]),
+      new Map(),
+      (f: string) => f === 'scripts/thin-cli.mjs'
+    );
+    expect(r.coverable).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The whole gate, with git and the filesystem injected
+// ---------------------------------------------------------------------------
+
+function gate({
+  diff = '',
+  diffStatus = 0,
+  mergeBase = { status: 0, stdout: 'abc123\n' },
+  lcov = '' as string | null,
+  py = null as string | null,
+  env = {} as Record<string, string>,
+} = {}) {
+  const calls: string[][] = [];
+  const out: string[] = [];
+  const err: string[] = [];
+  const readPaths: string[] = [];
+  const code = runDiffCoverage({
+    root: ROOT,
+    scope,
+    env,
+    sh: (cmd: string, args: string[]) => {
+      calls.push([cmd, ...args]);
+      return args[0] === 'merge-base' ? mergeBase : { status: diffStatus, stdout: diff };
+    },
+    readFile: (p: string) => {
+      readPaths.push(p.split('\\').join('/'));
+      return p.endsWith('.xml') ? py : lcov;
+    },
+    log: (m: string) => out.push(m),
+    error: (m: string) => err.push(m),
+  });
+  return { code, calls, out: out.join('\n'), err: err.join('\n'), readPaths };
+}
+
+const diffOf = (file: string, lines: number) =>
+  [`+++ b/${file}`, `@@ -0,0 +1,${lines} @@`, ...Array.from({ length: lines }, () => '+x')].join(
+    '\n'
+  );
+
+describe('runDiffCoverage', () => {
+  it('diffs against the merge-base with the default base ref', () => {
+    const { calls } = gate();
+    expect(calls[0]).toEqual(['git', 'merge-base', 'HEAD', 'origin/main']);
+    expect(calls[1]).toEqual(['git', 'diff', '--unified=0', '--no-color', 'abc123', 'HEAD']);
+  });
+
+  it('falls back to the base ref itself when there is no merge-base', () => {
+    const { calls } = gate({
+      mergeBase: { status: 1, stdout: '' },
+      env: { DIFF_COVER_BASE: 'upstream/x' },
+    });
+    expect(calls[1][4]).toBe('upstream/x');
+  });
+
+  it('fails when git diff fails', () => {
+    const r = gate({ diffStatus: 128 });
+    expect(r.code).toBe(1);
+    expect(r.err).toMatch(/git diff against origin\/main failed/);
+  });
+
+  it('passes when no coverable line changed', () => {
+    const r = gate({ diff: diffOf('README.md', 2) });
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/no coverable source lines changed/);
+  });
+
+  it('fails when the lcov report is missing', () => {
+    const r = gate({ diff: diffOf('scripts/a.mjs', 1), lcov: null });
+    expect(r.code).toBe(1);
+    expect(r.err).toMatch(/artifacts\/coverage\/lcov\.info missing/);
+    expect(r.readPaths).toEqual(['/repo/artifacts/coverage/lcov.info']);
+  });
+
+  it('reads an absolute DIFF_COVER_LCOV as given', () => {
+    const lcovPath = path.resolve('/tmp/x/lcov.info');
+    const r = gate({
+      diff: diffOf('scripts/a.mjs', 1),
+      lcov: null,
+      env: { DIFF_COVER_LCOV: lcovPath },
+    });
+    expect(r.readPaths).toEqual([lcovPath.split('\\').join('/')]);
+  });
+
+  it('passes when the only changed lines are coverage-excluded', () => {
+    const r = gate({ diff: diffOf('scripts/thin-cli.mjs', 3), lcov: '' });
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/no changed lines are in coverage scope/);
+  });
+
+  it('fails a new tooling file no test loads (absent from lcov) — the #382 rule', () => {
+    const r = gate({ diff: diffOf('scripts/a.mjs', 4), lcov: '' });
+    expect(r.code).toBe(1);
+    expect(r.out).toMatch(/0\/4 {2}scripts\/a\.mjs {2}\[no lcov/);
+    expect(r.err).toMatch(/Diff coverage 0\.0% is below the 80% floor/);
+  });
+
+  it('passes at the floor and lists the worst file first', () => {
+    const diff = [diffOf('scripts/a.mjs', 4), diffOf('apps/web/src/b.ts', 1)].join('\n');
+    const lcov = [
+      'SF:/repo/scripts/a.mjs',
+      'DA:1,1',
+      'DA:2,1',
+      'DA:3,1',
+      'DA:4,1',
+      'end_of_record',
+      'SF:/repo/apps/web/src/b.ts',
+      'DA:1,0',
+      'end_of_record',
+    ].join('\n');
+    const r = gate({ diff, lcov });
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/TOTAL new_coverage: 80\.0% {2}\(4\/5 lines \+ branch conditions\)/);
+    expect(r.out.indexOf('apps/web/src/b.ts')).toBeLessThan(r.out.indexOf('scripts/a.mjs'));
+    expect(r.out).toMatch(/✅ Diff coverage meets the 80% floor/);
+  });
+
+  it('honours DIFF_COVER_MIN', () => {
+    const lcov = 'SF:/repo/scripts/a.mjs\nDA:1,1\nDA:2,0\nend_of_record';
+    expect(gate({ diff: diffOf('scripts/a.mjs', 2), lcov }).code).toBe(1);
+    expect(
+      gate({ diff: diffOf('scripts/a.mjs', 2), lcov, env: { DIFF_COVER_MIN: '50' } }).code
+    ).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Python (#755): changed .py lines are judged from the Cobertura report
+// ---------------------------------------------------------------------------
+
+const COBERTURA = [
+  '<coverage><sources><source>.</source></sources><packages><package name="x"><classes>',
+  '<class name="a.py" filename="scripts/a.py"><lines>',
+  '<line number="1" hits="2"/><line number="2" hits="0" branch="true" condition-coverage="50% (1/2)"/>',
+  '</lines></class>',
+  '<class name="b.py" filename="./scripts/sub\\b.py"><lines><line number="5" hits="1"/></lines></class>',
+  '</classes></package></packages></coverage>',
+].join('\n');
+
+describe('parseCobertura', () => {
+  it('reads per-line hits keyed by repo-relative filename', () => {
+    const hits = parseCobertura(COBERTURA);
+    expect(hits.get('scripts/a.py')).toEqual(
+      new Map([
+        [1, 2],
+        [2, 0],
+      ])
+    );
+    expect(hits.get('scripts/sub/b.py')).toEqual(new Map([[5, 1]]));
+  });
+
+  it('merges into an existing map without dropping lcov entries', () => {
+    const into = new Map([['scripts/a.mjs', new Map([[1, 1]])]]);
+    parseCobertura(COBERTURA, into);
+    expect([...into.keys()].sort()).toEqual(['scripts/a.mjs', 'scripts/a.py', 'scripts/sub/b.py']);
+  });
+
+  it('records condition-coverage per line, whatever the attribute order', () => {
+    const conditions = new Map();
+    parseCobertura(
+      '<class filename="x.py"><line branch="true" condition-coverage="25% (1/4)" hits="3" number="7"/></class>',
+      new Map(),
+      conditions
+    );
+    expect(conditions.get('x.py')).toEqual(new Map([[7, { total: 4, covered: 1 }]]));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Branch conditions — Sonar's new_coverage counts them as well as lines
+// ---------------------------------------------------------------------------
+
+describe('branch conditions', () => {
+  it('parseLcov tallies BRDA outcomes per line; "-" and 0 are not covered', () => {
+    const conditions = new Map();
+    parseLcov(
+      [
+        'SF:/repo/scripts/a.mjs',
+        'DA:3,1',
+        'BRDA:3,0,0,2',
+        'BRDA:3,0,1,0',
+        'BRDA:4,1,0,-',
+        'end_of_record',
+        'BRDA:9,0,0,1',
+      ].join('\n'),
+      ROOT,
+      conditions
+    );
+    expect(conditions.get('scripts/a.mjs')).toEqual(
+      new Map([
+        [3, { total: 2, covered: 1 }],
+        [4, { total: 1, covered: 0 }],
+      ])
+    );
+  });
+
+  it('a half-tested branch line scores like Sonar: (1 + 1) / (1 + 2)', () => {
+    const r = computeDiffCoverage(
+      new Map([['scripts/a.mjs', new Set([3])]]),
+      new Map([['scripts/a.mjs', new Map([[3, 1]])]]),
+      () => false,
+      new Map([['scripts/a.mjs', new Map([[3, { total: 2, covered: 1 }]])]])
+    );
+    expect(r).toMatchObject({ coverable: 3, covered: 2 });
+  });
+
+  it('fails the gate on a half-tested JS branch that a line count alone would pass', () => {
+    const lcov = 'SF:/repo/scripts/a.mjs\nDA:1,1\nBRDA:1,0,0,1\nBRDA:1,0,1,0\nend_of_record';
+    const r = gate({ diff: diffOf('scripts/a.mjs', 1), lcov });
+    expect(r.out).toMatch(/2\/3 {2}scripts\/a\.mjs/);
+    expect(r.code).toBe(1); // 66.7% < 80%
+  });
+
+  it('ignores conditions on lines that were not changed', () => {
+    const r = computeDiffCoverage(
+      new Map([['scripts/a.mjs', new Set([1])]]),
+      new Map([
+        [
+          'scripts/a.mjs',
+          new Map([
+            [1, 1],
+            [2, 0],
+          ]),
+        ],
+      ]),
+      () => false,
+      new Map([['scripts/a.mjs', new Map([[2, { total: 2, covered: 0 }]])]])
+    );
+    expect(r).toMatchObject({ coverable: 1, covered: 1 });
+  });
+});
+
+describe('runDiffCoverage with Python changes', () => {
+  it('judges changed .py lines from the Python report and does not need the lcov', () => {
+    const r = gate({ diff: diffOf('scripts/a.py', 2), lcov: null, py: COBERTURA });
+    expect(r.readPaths).toEqual(['/repo/artifacts/coverage/python-coverage.xml']);
+    // line 1 hit (1/1); line 2 missed with 1 of 2 branches taken (1/3) → 2/4
+    expect(r.out).toMatch(/2\/4 {2}scripts\/a\.py/);
+    expect(r.code).toBe(1); // 50% < 80%
+  });
+
+  it('judges only Python lines under DIFF_COVER_ONLY=py, without reading the lcov', () => {
+    const diff = [diffOf('scripts/a.mjs', 3), diffOf('scripts/sub/b.py', 5)].join('\n');
+    const r = gate({ diff, lcov: null, py: COBERTURA, env: { DIFF_COVER_ONLY: 'py' } });
+    expect(r.readPaths).toEqual(['/repo/artifacts/coverage/python-coverage.xml']);
+    expect(r.out).toMatch(/judging 1 Python file\(s\); 1 JS\/TS file\(s\) not judged/);
+    expect(r.code).toBe(0);
+  });
+
+  it('passes under DIFF_COVER_ONLY=py when only JS/TS changed', () => {
+    const r = gate({
+      diff: diffOf('scripts/a.mjs', 2),
+      lcov: null,
+      env: { DIFF_COVER_ONLY: 'py' },
+    });
+    expect(r.out).toMatch(/no coverable source lines changed/);
+    expect(r.code).toBe(0);
+  });
+
+  it('reads both reports when JS and Python lines changed', () => {
+    const diff = [diffOf('scripts/a.mjs', 1), diffOf('scripts/sub/b.py', 5)].join('\n');
+    const lcov = 'SF:/repo/scripts/a.mjs\nDA:1,1\nend_of_record';
+    const r = gate({ diff, lcov, py: COBERTURA });
+    expect(r.readPaths).toHaveLength(2);
+    expect(r.out).toMatch(/TOTAL new_coverage: 100\.0% {2}\(2\/2 lines \+ branch conditions\)/);
+    expect(r.code).toBe(0);
+  });
+
+  it('fails with the command to run when the Python report is missing', () => {
+    const r = gate({ diff: diffOf('scripts/a.py', 1), py: null });
+    expect(r.code).toBe(1);
+    expect(r.err).toMatch(
+      /python-coverage\.xml missing — run node scripts\/run-python-coverage\.mjs/
+    );
+  });
+
+  it('honours DIFF_COVER_PY', () => {
+    const r = gate({
+      diff: diffOf('scripts/a.py', 1),
+      py: COBERTURA,
+      env: { DIFF_COVER_PY: 'out/py.xml' },
+    });
+    expect(r.readPaths).toEqual(['/repo/out/py.xml']);
+    expect(r.code).toBe(0);
+  });
+
+  it('counts a changed .py file absent from the report as 0% (the #382 rule)', () => {
+    const r = gate({ diff: diffOf('scripts/untested.py', 2), py: COBERTURA });
+    expect(r.out).toMatch(/0\/2 {2}scripts\/untested\.py {2}\[no Python coverage — /);
+    expect(r.code).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CLI wiring (spawned — Istanbul cannot see this, which is why the entry point
+// is a thin wrapper listed in sonar.coverage.exclusions)
+// ---------------------------------------------------------------------------
+
+describe('scripts/check-diff-coverage.mjs', () => {
+  it('runs end to end and passes when nothing changed (HEAD as base)', () => {
+    const r = spawnSync(
+      process.execPath,
+      [path.join(REPO_ROOT, 'scripts', 'check-diff-coverage.mjs')],
+      {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        env: { ...process.env, DIFF_COVER_BASE: 'HEAD' },
+      }
+    );
+    expect(r.stdout).toMatch(/no coverable source lines changed/);
+    expect(r.status).toBe(0);
   });
 });

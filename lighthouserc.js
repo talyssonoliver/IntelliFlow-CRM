@@ -99,7 +99,7 @@ module.exports = {
         'categories:performance': ['error', { minScore: 0.9 }],
         'categories:accessibility': ['error', { minScore: 0.9 }],
         'categories:best-practices': ['warn', { minScore: 0.9 }],
-        'categories:seo': ['warn', { minScore: 0.9 }],
+        'categories:seo': ['error', { minScore: 0.9 }], // IFC-208: warn -> error (content-audit F-005)
 
         // Core Web Vitals (Sprint Plan requirements)
         'first-contentful-paint': ['error', { maxNumericValue: 1000 }], // FCP <1s

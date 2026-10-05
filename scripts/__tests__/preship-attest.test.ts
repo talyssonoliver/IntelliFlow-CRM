@@ -130,6 +130,18 @@ describe('assessState — accepts an honest full run', () => {
     expect(payload?.advisory_not_passed).toEqual([]);
   });
 
+  it('records the test scope the run used, so a related-only run never reads as full', () => {
+    const { payload } = assess(
+      goodState({ test_scope: { scope: 'related', reason: '2 files', files: ['a.ts', 'b.ts'] } })
+    );
+    expect(payload?.test_scope).toBe('related');
+  });
+
+  it('reads a state file from before test scoping as a full-suite run', () => {
+    const { payload } = assess(goodState());
+    expect(payload?.test_scope).toBe('full');
+  });
+
   it('still refuses a REQUIRED step recorded as FAIL alongside an advisory one', () => {
     // The exemption must key on required-ness only — never widen to all FAILs.
     const r = assess(
@@ -640,10 +652,16 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
     git(['config', 'user.name', 'test']);
     fs.mkdirSync(path.join(dir, 'scripts'), { recursive: true });
     fs.copyFileSync(PRESHIP, path.join(dir, 'scripts/pre-ship.mjs'));
+    fs.mkdirSync(path.join(dir, 'scripts/lib'), { recursive: true });
+    for (const lib of ['preship-test-scope.mjs', 'preship-report.mjs']) {
+      fs.copyFileSync(path.join(REPO_ROOT, 'scripts/lib', lib), path.join(dir, 'scripts/lib', lib));
+    }
     git(['add', '-A']);
     git(['commit', '-q', '-m', 'seed']);
 
-    const r = spawnSync('node', ['scripts/pre-ship.mjs', '--only=__no_such_step__'], {
+    // The leading `--` is what `pnpm run pre-ship -- <flags>` forwards; the gate
+    // must treat it as the end-of-options separator, not reject it (exit 2).
+    const r = spawnSync('node', ['scripts/pre-ship.mjs', '--', '--only=__no_such_step__'], {
       cwd: dir,
       env: cleanEnv(),
       encoding: 'utf8',
@@ -661,6 +679,8 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
     // The full-only cross-browser matrix is excluded outside --full.
     expect(state.expected_step_ids).not.toContain('e2e-full-matrix');
     expect(state.expected_step_ids).toContain('build');
+    // No origin/main in the throwaway repo, so the scope cannot narrow: full.
+    expect(state.test_scope.scope).toBe('full');
 
     // ...and that state must NOT be attestable: it is an --only subset run.
     const verdict = assessState(state, state.git_head, PRESHIP_HASH);

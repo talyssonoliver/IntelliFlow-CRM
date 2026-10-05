@@ -9,7 +9,7 @@
  * tenant, and fails closed when the claim fails.
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
@@ -51,11 +51,14 @@ vi.mock('@/lib/supabase-browser', () => ({
     },
   }),
   clearSupabaseLocalStorage: h.clearSupabaseLocalStorage,
+  // Verifying a link while signed in uses an isolated client; it shares the verifyOtp spy.
+  createIsolatedAuthClient: () => ({ auth: { verifyOtp: h.verifyOtp } }),
 }));
 vi.mock('@/lib/shared/token-exchange', () => ({
   storeSessionTokens: h.storeSessionTokens,
   clearSessionTokens: h.clearSessionTokens,
   getStoredAccessToken: h.getStoredAccessToken,
+  getStoredRefreshToken: () => null,
 }));
 vi.mock('@/lib/shared/session-cleanup', () => ({
   syncTokenToCookie: h.syncTokenToCookie,
@@ -123,7 +126,7 @@ describe('OAuthCallback active tenant', () => {
   });
 
   describe('with an existing session', () => {
-    it('keeps the grant and tenant in memory and claims them only after Continue', async () => {
+    it('keeps the grant and tenant in memory and claims them only after Continue (verify holds the session, never the app tokens)', async () => {
       h.getStoredAccessToken.mockReturnValue('x.e30.y');
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
@@ -131,11 +134,33 @@ describe('OAuthCallback active tenant', () => {
       await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
       await waitFor(() => expect(onSuccess).toHaveBeenCalled());
 
-      expect(h.order).toEqual(['signOut', 'verifyOtp', 'claim', 'storeSessionTokens']);
+      expect(h.order).toEqual(['verifyOtp', 'claim', 'storeSessionTokens']);
       expect(JSON.parse((h.fetch.mock.calls[0][1] as RequestInit).body as string)).toEqual({
         grant: 'grant_1',
       });
       expect(getActiveTenantId()).toBe('tenant_client');
+    });
+
+    it('a claim that settles after the user left signs nothing in and revokes nothing old', async () => {
+      h.getStoredAccessToken.mockReturnValue('x.e30.y');
+      let settle!: (value: ReturnType<typeof trpcOk>) => void;
+      h.fetch.mockImplementation(
+        () => new Promise<ReturnType<typeof trpcOk>>((resolve) => (settle = resolve))
+      );
+      const onSuccess = vi.fn();
+      const { unmount } = render(<OAuthCallback onSuccess={onSuccess} />);
+      await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+      await waitFor(() => expect(h.fetch).toHaveBeenCalled());
+
+      unmount();
+      await act(async () => {
+        settle(trpcOk({ tenantId: 'tenant_client', pinned: true, sessionExpiresAt: null }));
+      });
+
+      expect(onSuccess).not.toHaveBeenCalled();
+      expect(h.storeSessionTokens).not.toHaveBeenCalled();
+      expect(h.adminSignOut).not.toHaveBeenCalledWith('x.e30.y', 'local');
+      expect(getActiveTenantId()).toBeNull();
     });
 
     it('claims nothing and stores no tenant when the user stays signed in', async () => {
@@ -145,7 +170,7 @@ describe('OAuthCallback active tenant', () => {
       await userEvent.click(await screen.findByRole('button', { name: /stay signed in/i }));
 
       expect(h.fetch).not.toHaveBeenCalled();
-      expect(h.verifyOtp).not.toHaveBeenCalled();
+      expect(h.storeSessionTokens).not.toHaveBeenCalled();
       expect(getActiveTenantId()).toBeNull();
     });
   });

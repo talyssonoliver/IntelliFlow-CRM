@@ -11,23 +11,49 @@
  * - Fail fast if core functionality is broken
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type ConsoleMessage } from '@playwright/test';
+import { expectJsonResponse } from './utils/api-preflight';
+
+// The per-PR/main smoke job runs the web app WITHOUT the tRPC API (playwright
+// .config.ts starts it only when E2E_START_API=1). The homepage's auth-status
+// query then gets an HTML 404 from /api/trpc, which the browser and AuthContext
+// log as console errors. Those are expected only when no API is running.
+const API_RUNNING = process.env.E2E_START_API === '1';
+
+/** A console error caused by the deliberately absent API, not by the page. */
+function isMissingApiError(msg: ConsoleMessage): boolean {
+  if (API_RUNNING) return false;
+  if (msg.location().url.includes('/api/trpc')) return true;
+  // AuthContext logs EVERY auth-status failure with this prefix. Only the one
+  // the absent API causes is expected: the tRPC client parsing the web app's
+  // HTML 404 page as JSON. Any other auth error (a broken client, a bad
+  // payload) must still fail the test.
+  const text = msg.text();
+  return (
+    text.startsWith('[AuthContext] Query error') &&
+    (text.includes("Unexpected token '<'") || text.includes('<!DOCTYPE'))
+  );
+}
 
 test.describe('Smoke Tests', () => {
   test.describe('Application Availability', () => {
     test('should load the homepage', async ({ page }) => {
+      // Listen BEFORE navigating. The listener used to be attached after the
+      // title check, so whether it saw the auth query's error depended on how
+      // fast that query failed: main run 37203421458 failed it 3/3, its rerun
+      // passed on retry ("flaky"). Listening from the start makes the result
+      // deterministic, and every unexpected console error now fails the test.
+      const errors: string[] = [];
+      page.on('console', (msg) => {
+        if (msg.type() === 'error' && !isMissingApiError(msg)) {
+          errors.push(msg.text());
+        }
+      });
+
       await page.goto('/');
 
       // Verify the page loads successfully
       await expect(page).toHaveTitle(/IntelliFlow CRM/i);
-
-      // Verify no console errors (except known warnings)
-      const errors: string[] = [];
-      page.on('console', (msg) => {
-        if (msg.type() === 'error') {
-          errors.push(msg.text());
-        }
-      });
 
       // Give page time to load
       await page.waitForLoadState('networkidle');
@@ -134,15 +160,29 @@ test.describe('Smoke Tests', () => {
   });
 
   test.describe('API Health', () => {
+    // Preflight: the API base must answer with JSON. An HTML answer means the
+    // request hit a fallback page or the base URL points at the wrong server;
+    // without this check that surfaced only as `Unexpected token '<'` from
+    // response.json(), naming neither the URL nor the status.
+    test('preflight: API base answers with JSON, not an HTML fallback', async ({ request }) => {
+      const response = await request.get('/api/health');
+      await expectJsonResponse(response);
+      expect(response.headers()['content-type']).toContain('application/json');
+    });
+
     test('should have healthy API endpoint', async ({ request }) => {
       // Test API health endpoint
       const response = await request.get('/api/health');
 
-      // Should return 200 OK
-      expect(response.ok()).toBeTruthy();
+      // Should return valid JSON — checked before parsing, so an HTML answer
+      // fails with the URL and status instead of a JSON syntax error.
+      const body = await expectJsonResponse(response);
 
-      // Should return valid JSON
-      const body = await response.json();
+      // Should return 200 OK
+      expect(
+        response.ok(),
+        `GET ${response.url()} returned HTTP ${response.status()}`
+      ).toBeTruthy();
       expect(body).toHaveProperty('status');
     });
 

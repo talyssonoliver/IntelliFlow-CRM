@@ -2,6 +2,7 @@ import * as React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import teamData from '../../../data/team-data.json';
+import { OG_IMAGES } from '@/lib/og-images';
 import './about.css';
 
 /**
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
   description:
     "Learn about Aurora's mission to build modern, AI-first CRM with governance-grade validation. Meet our team and discover our values.",
   openGraph: {
+    images: OG_IMAGES,
     title: 'About Aurora: AI-first, governance-grade',
     description:
       'Founded in 2024. Aurora builds AI-first CRM that pairs automation with governance-grade validation. Meet the team building the future of CRM.',

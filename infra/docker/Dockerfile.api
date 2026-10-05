@@ -47,19 +47,15 @@ RUN pnpm install --frozen-lockfile --offline --ignore-scripts
 # Generate Prisma client
 RUN pnpm --filter db db:generate
 
-# Build workspace packages in dependency order (all use dist/ exports; CI has no pre-built dist/)
-RUN pnpm --filter domain build
-RUN pnpm --filter validators build
-# The API imports runtime values from the partner SDK (ADR-071 membership); build it too.
-RUN pnpm --filter partner-sdk build
-RUN pnpm --filter webhooks build
-RUN pnpm --filter platform build
-RUN pnpm --filter db build
-RUN pnpm --filter observability build
-RUN pnpm --filter worker-shared build
-RUN pnpm --filter application build
-RUN pnpm --filter adapters build
-RUN pnpm --filter ai-worker build
+# Build EVERY workspace package the API depends on, transitively, in dependency
+# order (all use dist/ exports; CI has no pre-built dist/). `api^...` selects the
+# API's workspace dependencies but not the API itself, and `pnpm run` walks them
+# topologically, so a new workspace dependency is built without editing this
+# file. This replaced a hand-kept list of `pnpm --filter <pkg> build` lines: one
+# package missing from that list (@intelliflow/partner-sdk, #742) shipped an
+# image that could not boot. Packages without a build script are skipped.
+# Concurrency 1 keeps peak memory where the sequential list had it.
+RUN pnpm --filter "@intelliflow/api^..." --workspace-concurrency=1 run build
 
 # Build the API
 # The DTS step of the api build needs more heap than Node's default worker limit.
@@ -104,6 +100,14 @@ COPY --from=builder --chown=apiuser:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=apiuser:nodejs /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder --chown=apiuser:nodejs /app/apps/api/package.json ./apps/api/
 COPY --from=builder --chown=apiuser:nodejs /app/package.json ./
+
+# Fail the build, not the container boot, if any @intelliflow package the API
+# imports at runtime is absent or unbuilt in THIS stage (the #742 failure mode:
+# the image built, then could not resolve @intelliflow/partner-sdk). Walks the
+# imports transitively; reads files only, executes nothing.
+COPY --from=builder /app/scripts/docker/verify-workspace-runtime.mjs /tmp/verify-workspace-runtime.mjs
+RUN node /tmp/verify-workspace-runtime.mjs apps/api apps/api/dist \
+  && rm /tmp/verify-workspace-runtime.mjs
 
 # Switch to non-root user
 USER apiuser

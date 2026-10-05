@@ -16,6 +16,7 @@ import {
   EmptyState as SharedEmptyState,
   type EmptyStateEntity,
 } from '@intelliflow/ui';
+import { getTenantMessages } from '@/lib/tenant/messages';
 
 /** Standard empty state following design system — delegates to shared EmptyState. */
 export function EmptyState({
@@ -24,6 +25,36 @@ export function EmptyState({
   entity = 'invoices',
 }: Readonly<{ icon: string; message?: string; entity?: EmptyStateEntity }>) {
   return <SharedEmptyState entity={entity} phase="passive" description={message} />;
+}
+
+/**
+ * Shown instead of a billing page when the API refuses billing to this session (ADR-071): a
+ * pinned agency-staff session inside a client's CRM, or a member acting outside their home
+ * tenant. Billing is home-only, so there is nothing to load; say so instead of a blank page.
+ */
+export function BillingUnavailableNotice() {
+  const messages = getTenantMessages();
+  return (
+    <div data-testid="billing-unavailable-notice">
+      <SharedEmptyState
+        icon="lock"
+        title={messages.billingUnavailableTitle}
+        description={messages.billingUnavailableBody}
+      />
+    </div>
+  );
+}
+
+/**
+ * True when a tRPC error is the ADR-071 home-only refusal (`reason: 'HOME_ONLY'`, also the message
+ * prefix `HOME_ONLY:`), which refuses billing to a session acting inside another tenant. Any other
+ * FORBIDDEN (a pending staff link, an origin check) is a real error and is not matched.
+ */
+export function isHomeOnlyRefusal(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as { message?: unknown; data?: { reason?: unknown } | null };
+  if (err.data?.reason === 'HOME_ONLY') return true;
+  return typeof err.message === 'string' && err.message.startsWith('HOME_ONLY:');
 }
 
 /** Standard error state following design system alert pattern. */

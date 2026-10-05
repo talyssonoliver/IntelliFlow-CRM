@@ -7,12 +7,14 @@ import { serializeForClient } from '@/lib/shared/serialize-for-client';
 import { HomePagePublicWithAuthFallback } from '@/components/home/HomePagePublicWithAuthFallback';
 import { AuroraLandingPage } from '@/components/aurora-landing/AuroraLandingPage';
 import { AuthenticatedHomePage } from '@/components/home/AuthenticatedHomePage';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: { absolute: 'Aurora, the AI CRM that asks before it acts' },
   description:
     'Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Nothing goes out until a person says yes.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Aurora, the AI CRM that asks before it acts',
     description:
       'Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Nothing goes out until a person says yes.',

@@ -40,6 +40,47 @@ const TAG = `inhmem_${Date.now()}`;
 const HOUR = 3600_000;
 const MIN = 60_000;
 
+/**
+ * Is this client's connection still usable? Cleanup probes before it runs, because
+ * CI saw `ECONNREFUSED` thrown from the `RESET ROLE` / `RESET app.current_tenant_id`
+ * teardown after the database had already gone away. That error failed the suite
+ * from `afterAll` and buried whatever had actually gone wrong. Session state dies
+ * with the connection anyway, so an unreachable database means there is nothing
+ * left to reset. The reason is still logged, so the outage stays visible.
+ */
+async function connectionHealthy(client: any, label: string): Promise<boolean> {
+  try {
+    await client.$queryRawUnsafe('SELECT 1');
+    return true;
+  } catch (error) {
+    console.warn(
+      `[inherited-membership] ${label}: database unreachable, skipping cleanup — ${
+        (error as Error)?.message ?? String(error)
+      }`
+    );
+    return false;
+  }
+}
+
+/**
+ * Run teardown statements only against a healthy connection, then always
+ * disconnect. A statement failing on a HEALTHY connection is a real defect, so
+ * it still throws (after the disconnect).
+ */
+async function cleanupThenDisconnect(
+  client: any,
+  label: string,
+  cleanup: () => Promise<void>
+): Promise<void> {
+  try {
+    if (await connectionHealthy(client, label)) {
+      await cleanup();
+    }
+  } finally {
+    await client.$disconnect();
+  }
+}
+
 describeDb('inherited membership (real database)', () => {
   let prisma: any;
   let rlsUnavailable = false;
@@ -156,16 +197,14 @@ describeDb('inherited membership (real database)', () => {
 
   afterAll(async () => {
     if (!prisma) return;
-    try {
+    await cleanupThenDisconnect(prisma, 'row cleanup', async () => {
       await prisma.partnerLoginGrant.deleteMany({ where: { partnerId } });
       await prisma.account.deleteMany({ where: { name: { startsWith: TAG } } });
       await prisma.tenantMembership.deleteMany({ where: { tenantId: { in: [t1, t2, t3] } } });
       await prisma.user.deleteMany({ where: { email: { startsWith: TAG } } });
       await prisma.partner.deleteMany({ where: { slug: TAG } });
       await prisma.tenant.deleteMany({ where: { name: { startsWith: TAG } } });
-    } finally {
-      await prisma.$disconnect();
-    }
+    });
   });
 
   describe('two members of the same tenant', () => {
@@ -378,6 +417,10 @@ describeDb('inherited membership (real database)', () => {
     });
 
     beforeAll(async () => {
+      // The outer beforeAll found no usable database / RLS role: every test here is
+      // skipped by the outer beforeEach, so do not open a connection that `SET ROLE`
+      // would fail on.
+      if (!prisma || rlsUnavailable) return;
       const { PrismaClient } = await import('../../packages/db/src');
       pinned = new PrismaClient({ adapter: new PrismaPg({ connectionString: DB_URL!, max: 1 }) });
       // The RLS-subject role production queries run as; session level on the single connection.
@@ -386,12 +429,10 @@ describeDb('inherited membership (real database)', () => {
 
     afterAll(async () => {
       if (!pinned) return;
-      try {
+      await cleanupThenDisconnect(pinned, 'session reset', async () => {
         await pinned.$executeRawUnsafe('RESET ROLE');
         await pinned.$executeRawUnsafe('RESET app.current_tenant_id');
-      } finally {
-        await pinned.$disconnect();
-      }
+      });
     });
 
     /** The real extension, not the VITEST short-circuit. */

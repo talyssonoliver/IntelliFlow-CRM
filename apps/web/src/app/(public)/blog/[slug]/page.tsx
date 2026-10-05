@@ -11,6 +11,7 @@ import { CommentsWidget } from '@/components/blog/comments-widget';
 import { ShareButtons } from '@/components/blog/share-buttons';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { blogPosts, type BlogPost } from '@/data/blog-posts';
+import { OG_IMAGES } from '@/lib/og-images';
 
 // Get all slugs for static generation
 export function generateStaticParams() {
@@ -39,6 +40,7 @@ export async function generateMetadata({
     description: post.excerpt,
     authors: [{ name: post.author.name }],
     openGraph: {
+      images: OG_IMAGES,
       title: post.title,
       description: post.excerpt,
       type: 'article',

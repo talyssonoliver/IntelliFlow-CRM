@@ -161,8 +161,13 @@ export function AppSidebar({
     <nav
       ref={navRef}
       className={cn(
-        'fixed left-0 top-16 bottom-0 z-30 flex flex-col bg-card border-r border-border',
-        'transition-all duration-300 ease-in-out',
+        'fixed left-0 top-[var(--app-header-h,4rem)] bottom-0 z-30 flex flex-col bg-card border-r border-border',
+        // Only the width animates (expand/collapse). `top` follows the header's
+        // published height and must apply at once: a transition on it left the
+        // sidebar under a taller header until the transition ran, and in a
+        // hidden tab, where transitions do not advance, for as long as the tab
+        // stayed hidden.
+        'transition-[width] duration-300 ease-in-out',
         isExpanded ? 'w-60' : 'w-14',
         'hidden lg:flex',
         className

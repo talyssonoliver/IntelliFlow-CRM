@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Sign Up',
   description:
     'Create your Aurora account. Start a 14-day free trial with AI-powered lead scoring, pipeline management, and team collaboration tools.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Start your free 14-day Aurora trial',
     description:
       'Get started with AI-powered CRM. Lead scoring, deal tracking, workflow automation, and enterprise-grade security. No credit card required.',

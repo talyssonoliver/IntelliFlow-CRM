@@ -2,6 +2,7 @@ import * as React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import featuresData from '@/data/features-content.json';
+import { OG_IMAGES } from '@/lib/og-images';
 import './features.css';
 
 /**
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
   description:
     'What Aurora does: AI agents that score leads and draft follow-ups for your approval, one approval queue, your pipeline, cases, email and calendar, six connectors and security on from day one.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Aurora features: agents that do the work, with you in charge',
     description:
       'Lead scoring, drafted follow-ups, one approval queue, pipeline, cases, email and calendar, and six connectors.',

@@ -19,6 +19,14 @@
 #       EVERYTHING ELSE and records the gap; it is not a full bypass. The only
 #       full escape is the deliberate, discouraged `git push --no-verify`
 #       (bypasses ALL hooks; visible in shell history).
+#
+#       Test scope: typecheck, lint and every non-test gate run in full. The
+#       test steps run only the tests related to the files this branch changed
+#       since origin/main (`vitest related`); the full 10k+ suite runs on CI's
+#       sharded runners. PRESHIP_FULL_TESTS=1 runs the full suite here too. A
+#       change the import graph cannot see (lockfile, package.json, vitest or
+#       tsconfig, Prisma schema, test setup) widens the run to the full suite
+#       automatically. See scripts/lib/preship-test-scope.mjs.
 
 # --- (1) refs/heads/main block ---
 # Drain stdin into a buffer so we can re-iterate. `git push` only sends
@@ -64,6 +72,7 @@ if ! pnpm run pre-ship; then
   echo "  Re-run targeted: pnpm exec node scripts/pre-ship.mjs --only=<step-id>" >&2
   echo "  Infra step can't run (Docker / test-DB down)? PRESHIP_ALLOW_MISSING=1" >&2
   echo "  runs the rest + records the gap — it is NOT a full bypass." >&2
+  echo "  Tests ran at the related scope; PRESHIP_FULL_TESTS=1 runs the full suite." >&2
   exit 1
 fi
 

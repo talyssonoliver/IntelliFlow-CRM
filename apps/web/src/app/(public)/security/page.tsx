@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { OG_IMAGES } from '@/lib/og-images';
 import { CONTROLS } from './controls';
 import './security.css';
 
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
   description:
     "Aurora's security, on from day one: no AI action goes out without a person's approval, each workspace's data is kept apart, multi-factor sign-in is available on every account and every change is logged.",
   openGraph: {
+    images: OG_IMAGES,
     title: 'Aurora security: on from day one',
     description:
       "No AI action goes out without a person's approval. Each workspace's data is kept apart and every change is logged.",

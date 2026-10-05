@@ -56,6 +56,7 @@ vi.mock('@/components/shared', () => ({
   PageHeader: ({ title }: { title: string }) => <h1>{title}</h1>,
 }));
 
+import { invalidateLeadsCache } from '@/app/leads/(list)/actions';
 import { revalidateLeadCaches } from '@/app/leads/actions';
 import { CsvImporter } from '../csv-importer';
 
@@ -234,6 +235,23 @@ describe('CsvImporter', () => {
     // it still reaches the result step (the lead was created).
     await waitFor(() => expect(screen.getByText('Import complete')).toBeTruthy());
     expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('still revalidates per-user caches when invalidateLeadsCache rejects, and logs it', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.mocked(invalidateLeadsCache).mockRejectedValueOnce(new Error('action skew'));
+    vi.mocked(revalidateLeadCaches).mockClear();
+    render(<CsvImporter />);
+    await uploadFile(makeFile('email,first\na@x.com,Ann'));
+    await waitFor(() => expect(screen.getByText('Map columns to lead fields')).toBeTruthy());
+    fireEvent.click(screen.getByRole('button', { name: /Import 1 valid lead/i }));
+    await waitFor(() => expect(screen.getByText('Import complete')).toBeTruthy());
+    expect(revalidateLeadCaches).toHaveBeenCalledWith('u1');
+    expect(warn).toHaveBeenCalledWith(
+      '[CsvImporter] Lead cache refresh failed after import:',
+      expect.objectContaining({ message: 'action skew' })
+    );
+    warn.mockRestore();
   });
 
   it('result step links back to leads and resets on "Import another"', async () => {

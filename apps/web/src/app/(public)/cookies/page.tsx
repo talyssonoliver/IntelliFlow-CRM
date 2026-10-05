@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { formatCookieDate, getCookiePolicy } from '@/lib/legal/cookie-policy-tracker';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Cookie Policy',
   description:
     'Review how Aurora uses cookies, how consent works, and how to manage cookie preferences across the public site and product.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Cookie Policy',
     description:
       'Read the Aurora Cookie Policy, including cookie categories, third-party providers, retention, and how to manage preferences.',

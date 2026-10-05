@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Pricing',
   description:
     'Aurora pricing: Starter, Professional, Enterprise and Custom plans, each with a 14-day free trial and no credit card. Save 17% with annual billing.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Aurora pricing: start free, pick a plan when you are ready',
     description:
       'Transparent per-user pricing. Starter, Professional, Enterprise, and Custom plans. All include a 14-day free trial with 17% annual savings.',

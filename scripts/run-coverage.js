@@ -14,6 +14,13 @@
  * Usage:
  *   node scripts/run-coverage.js           # runs all projects
  *   node scripts/run-coverage.js --merge-only  # skip test runs, just merge
+ *
+ * Related mode (local pre-ship): when COVERAGE_RELATED_FILES is set to a JSON
+ * array of changed source files, each project runs `vitest related` over those
+ * files instead of its whole suite, so diff-coverage can still measure the changed
+ * lines without the full 10k+ suite running on a laptop. An empty array means no
+ * source changed: no project runs and an empty lcov is written. The full run is
+ * what CI (and PRESHIP_FULL_TESTS=1) uses; see scripts/lib/preship-test-scope.mjs.
  */
 
 import { spawn, execSync } from 'node:child_process';
@@ -52,6 +59,11 @@ const PROJECTS = [
   'a11y',
   'integration',
   'api',
+  // `root` runs the repo-tooling tests (scripts/**, tools/**). Tooling is in
+  // sonar.sources and CI shards `--project=root`, so without it here pre-ship's
+  // merged lcov had no tooling coverage and diff-coverage would score every
+  // changed tooling line as "no lcov" while Sonar saw it covered.
+  'root',
 ];
 
 // Projects that are allowed extra time (in ms). Default timeout is 20 minutes.
@@ -62,6 +74,26 @@ const PROJECT_TIMEOUT_MS = {
 };
 
 const MERGE_ONLY = process.argv.includes('--merge-only');
+
+/** @type {string[] | null} null = full run; an array = related mode. */
+const RELATED_FILES = parseRelatedFiles(process.env.COVERAGE_RELATED_FILES);
+
+function parseRelatedFiles(raw) {
+  if (raw === undefined || raw === '') return null;
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    // A malformed list must not silently turn into "no tests": fail loudly.
+    console.error(`❌ COVERAGE_RELATED_FILES is not valid JSON: ${err.message}`);
+    process.exit(1);
+  }
+  if (!Array.isArray(parsed) || parsed.some((f) => typeof f !== 'string')) {
+    console.error('❌ COVERAGE_RELATED_FILES must be a JSON array of file paths');
+    process.exit(1);
+  }
+  return parsed;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -81,13 +113,14 @@ function runVitest(project) {
       '--max-old-space-size=8192',
       '--expose-gc',
       path.join(ROOT, 'node_modules', 'vitest', 'vitest.mjs'),
-      'run',
+      ...(RELATED_FILES ? ['related', '--run', '--passWithNoTests'] : ['run']),
       '--coverage',
       `--coverage.reportsDirectory=${outDir}`,
       `--project=${project}`,
       '--reporter=default',
       '--reporter=json',
       `--outputFile.json=${resultJsonPath}`,
+      ...(RELATED_FILES ?? []),
     ];
 
     console.log(`\n▶ Running coverage for project: ${project}`);
@@ -95,7 +128,9 @@ function runVitest(project) {
     // Ensure outDir exists for the JSON report.
     fs.mkdirSync(outDir, { recursive: true });
 
-    const child = spawn('node', args, {
+    // process.execPath: the Node running this script, by absolute path — the
+    // same Node the parent was launched with, never whatever `node` PATH finds.
+    const child = spawn(process.execPath, args, {
       cwd: ROOT,
       env: { ...process.env, COVERAGE_RUN: '1' },
       stdio: 'inherit',
@@ -238,6 +273,15 @@ async function mergeCoverage() {
   }
 
   if (found === 0) {
+    // In related mode a diff whose files no test imports legitimately yields no
+    // coverage at all. Write an empty lcov so diff-coverage reports the changed
+    // lines as uncovered, instead of the gate dying on a missing file.
+    if (RELATED_FILES) {
+      fs.mkdirSync(FINAL_DIR, { recursive: true });
+      fs.writeFileSync(path.join(FINAL_DIR, 'lcov.info'), '');
+      console.log('\n📊 No project ran a related test — wrote an empty lcov.info.');
+      return;
+    }
     console.error('❌ No per-project coverage files found — aborting merge');
     process.exit(1);
   }
@@ -332,10 +376,20 @@ async function main() {
     // read any manifest whose marker does not match the current HEAD.
     writeRunIdMarker();
 
-    console.log(`🧪 Running coverage for ${PROJECTS.length} projects sequentially…`);
+    if (RELATED_FILES) {
+      console.log(
+        `🎯 Related mode: ${RELATED_FILES.length} changed source file(s) — each project runs only the tests that import them.`
+      );
+    }
+    const projectsToRun = RELATED_FILES?.length === 0 ? [] : PROJECTS;
+    if (projectsToRun.length === 0) {
+      console.log('   No changed source files — no project has related tests to run.');
+    } else {
+      console.log(`🧪 Running coverage for ${PROJECTS.length} projects sequentially…`);
+    }
 
     // Run projects one at a time to avoid .tmp race condition
-    for (let i = 0; i < PROJECTS.length; i++) {
+    for (let i = 0; i < projectsToRun.length; i++) {
       const project = PROJECTS[i];
       console.log(`\n━━━ [${i + 1}/${PROJECTS.length}] ${project} ━━━`);
       const result = await runVitest(project);

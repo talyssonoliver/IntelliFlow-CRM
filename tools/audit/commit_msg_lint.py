@@ -67,14 +67,41 @@ _HEADER_RE = re.compile(
 # Upper-case first char, PascalCase, ALL-CAPS (START-CASE covers multi-word Caps)
 _BAD_SUBJECT_CASE_RE = re.compile(r"^[A-Z]")
 
-# AI-coauthor trailers: repo policy is that AI assistance is a tool, not a
-# co-author. Catches the canonical patterns emitted by Claude, Copilot, etc.
-_AI_COAUTHOR_RE = re.compile(
-    r"(?:Co-Authored-By|Co-authored-by):\s*(?:Claude|GitHub Copilot|Cursor)"
+# AI attribution: repo policy is that AI assistance is a tool, not a co-author,
+# and that nothing in a commit or PR credits or links an AI session. Catches the
+# canonical lines AI tools append:
+#   - co-author trailers naming Claude, Anthropic, Copilot, Cursor, Codex, ChatGPT, Gemini
+#   - the bot no-reply addresses those trailers carry
+#   - "Generated with <tool>" footers, with or without the robot emoji
+#   - Claude Code session trailers / links (`Claude-Session:`, claude.ai/code/…),
+#     which passed this rule unnoticed until #754 because only the co-author and
+#     "Generated with" shapes were listed.
+_AI_ATTRIBUTION_RE = re.compile(
+    r"Co-authored-by:\s*[^\n]*\b(?:Claude|Anthropic|Copilot|Cursor|Codex|ChatGPT|Gemini)\b"
     r"|noreply@anthropic\.com"
-    r"|🤖\s*Generated with .*Claude",
+    r"|Generated (?:with|by)\b[^\n]*\b(?:Claude|Copilot|Cursor|Codex|ChatGPT|Gemini)\b"
+    r"|\bClaude-Session:"
+    r"|claude\.ai/code\b",
     re.IGNORECASE,
 )
+# Kept for any external importer of the old name.
+_AI_COAUTHOR_RE = _AI_ATTRIBUTION_RE
+
+
+def ai_attribution_violations(label: str, text: str) -> list[str]:
+    """
+    Return one violation per line of *text* that carries AI attribution.
+    Shared by commit-message linting and the PR title/body check
+    (``--pr-text-file``), so both enforce exactly the same rule.
+    """
+    violations: list[str] = []
+    for i, line in enumerate(text.splitlines(), start=1):
+        if _AI_ATTRIBUTION_RE.search(line):
+            violations.append(
+                f"{label}: line {i} carries AI attribution (repo policy forbids "
+                f"it in commits and PRs): {line.strip()[:120]!r}"
+            )
+    return violations
 
 
 # ---------------------------------------------------------------------------
@@ -234,14 +261,19 @@ def _lint_message(sha: str, raw_msg: str) -> list[str]:
     header = lines[0].rstrip()
     body_lines = lines[1:] if len(lines) > 1 else []
 
-    violations: list[str] = []
+    # ---- AI attribution policy ----
+    # Repo policy: AI assistance is a tool, not a co-author. Checked FIRST and on
+    # every line, header included, so no early return below (merge/revert
+    # subjects, unparseable headers) can let an attribution line through.
+    # See _AI_ATTRIBUTION_RE for the shapes.
+    violations: list[str] = ai_attribution_violations(sha[:12], raw_msg)
 
     # ---- Header parse ----
     match = _HEADER_RE.match(header)
     if not match:
-        # Could be a merge commit — allow "Merge …" subjects silently
+        # Could be a merge commit — allow "Merge …" subjects (format-wise)
         if header.startswith("Merge ") or header.startswith("Revert "):
-            return []
+            return violations
         violations.append(
             f"{sha[:12]}: header does not match '<type>(<scope>): <subject>' — got: {header!r}"
         )
@@ -295,16 +327,6 @@ def _lint_message(sha: str, raw_msg: str) -> list[str]:
                 f"{sha[:12]}: line {i} too long ({len(line)} chars, max 100): {line[:60]!r}…"
             )
 
-    # ---- AI-coauthor trailer policy ----
-    # Repo policy: AI assistance is a tool, not a co-author. Reject any commit
-    # whose message body carries a Claude / Copilot / Cursor coauthor trailer
-    # or the "Generated with Claude" robot-emoji line.
-    for i, line in enumerate(body_lines, start=2):
-        if _AI_COAUTHOR_RE.search(line):
-            violations.append(
-                f"{sha[:12]}: line {i} contains an AI-coauthor trailer (repo policy "
-                f"forbids these): {line.strip()!r}"
-            )
 
     return violations
 
@@ -361,7 +383,33 @@ def main(argv: list[str] | None = None) -> int:
             "to the commit-msg hook). Bypasses waiver/bot handling."
         ),
     )
+    mode.add_argument(
+        "--pr-text-file",
+        help=(
+            "Check a PR title + body (written to this file by CI) for AI "
+            "attribution only — the same rule commits get. The commit-format "
+            "rules do not apply to PR text."
+        ),
+    )
     args = parser.parse_args(argv)
+
+    # --- PR title/body (pr-attribution.yml) ------------------------------
+    # The commit rules never saw PR text, so a "Generated with Claude Code"
+    # footer and a session link sat in #754's body with every check green.
+    if args.pr_text_file:
+        text = Path(args.pr_text_file).read_text(encoding="utf-8")
+        violations = ai_attribution_violations("PR", text)
+        if violations:
+            for v in violations:
+                print(f"[commitlint] FAIL  {v}")
+            print(
+                f"\n[commitlint] {len(violations)} AI-attribution line(s) in the PR "
+                "title/body — remove them (repo policy).",
+                file=sys.stderr,
+            )
+            return 1
+        print("[commitlint] PASS  PR title/body carry no AI attribution")
+        return 0
 
     # --- Single pending message (the commit-msg hook) --------------------
     # Catches violations at commit time, before they're even committed.

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { OG_IMAGES } from '@/lib/og-images';
 import Link from 'next/link';
 import { LiveStatus } from './LiveStatus';
 import './status.css';
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
   title: 'System status',
   description: "A live check of Aurora's web app, run from your browser when you open the page.",
   openGraph: {
+    images: OG_IMAGES,
     title: 'Aurora system status',
     description: "A live check of Aurora's web app, run from your browser.",
     type: 'website',

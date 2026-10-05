@@ -1,0 +1,41 @@
+name: PR Attribution
+
+# Repo policy: AI assistance is a tool, not a co-author. Commit messages have
+# been checked for this since the audit linter landed, but PR text never was:
+# #754 carried a "Generated with Claude Code" footer and a Claude session link
+# in its body with every check green. This runs the SAME rule
+# (tools/audit/commit_msg_lint.py --pr-text-file) over the PR title and body.
+#
+# Its own workflow, not a step in pr-checks.yml, so it can re-run on `edited`
+# (a body changed after opening) without re-running pr-checks' heavier jobs.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-attribution-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-attribution:
+    name: PR has no AI attribution
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: tools/audit
+      - name: Check PR title and body
+        # Title and body arrive via env, never interpolated into the script, so
+        # PR content cannot inject shell.
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          printf '%s\n\n%s\n' "${PR_TITLE:-}" "${PR_BODY:-}" > "$RUNNER_TEMP/pr-text.md"
+          python3 tools/audit/commit_msg_lint.py --pr-text-file "$RUNNER_TEMP/pr-text.md"

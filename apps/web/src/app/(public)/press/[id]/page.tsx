@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import pressData from '@/data/press-releases.json';
 import { PressReleaseDetail } from '@/components/press/PressReleaseDetail';
 import type { PressRelease } from '@/components/press/PressReleaseDetail';
+import { OG_IMAGES } from '@/lib/og-images';
 
 const releases = pressData.releases as PressRelease[];
 const releaseMap: Record<string, PressRelease> = {};
@@ -32,6 +33,7 @@ export async function generateMetadata({
     title: `${release.title} | Aurora Press`,
     description: release.summary,
     openGraph: {
+      images: OG_IMAGES,
       title: `${release.title} | Aurora Press`,
       description: release.summary,
       url: `https://intelliflow-crm.com/press/${release.id}`,

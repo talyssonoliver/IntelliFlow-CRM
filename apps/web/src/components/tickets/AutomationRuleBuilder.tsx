@@ -107,8 +107,8 @@ export function AutomationRuleBuilder() {
     description?: string | null;
     priority: number;
     isActive?: boolean;
-    conditions?: unknown;
-    actions?: unknown;
+    conditionsJson?: unknown;
+    actionsJson?: unknown;
   };
   const { data: rulesData, isLoading } = (
     trpc.routing.list as unknown as {
@@ -166,15 +166,15 @@ export function AutomationRuleBuilder() {
 
   function openEdit(rule: (typeof rules)[number]) {
     setEditingId(rule.id);
-    const conditions = Array.isArray(rule.conditions)
-      ? (rule.conditions as Array<Record<string, unknown>>).map((c) => ({
+    const conditions = Array.isArray(rule.conditionsJson)
+      ? (rule.conditionsJson as Array<Record<string, unknown>>).map((c) => ({
           field: String(c.field ?? 'category'),
           operator: String(c.operator ?? 'equals'),
           value: String(c.value ?? ''),
         }))
       : [{ field: 'category', operator: 'equals', value: '' }];
-    const actions = Array.isArray(rule.actions)
-      ? (rule.actions as Array<Record<string, unknown>>).map((a) => ({
+    const actions = Array.isArray(rule.actionsJson)
+      ? (rule.actionsJson as Array<Record<string, unknown>>).map((a) => ({
           type: String(a.type ?? 'assign_to_skill'),
           target: String(a.target ?? ''),
         }))
@@ -266,11 +266,11 @@ export function AutomationRuleBuilder() {
         </TableHeader>
         <TableBody>
           {rules.map((rule: AutomationRule) => {
-            const conditions = Array.isArray(rule.conditions)
-              ? (rule.conditions as Array<Record<string, unknown>>)
+            const conditions = Array.isArray(rule.conditionsJson)
+              ? (rule.conditionsJson as Array<Record<string, unknown>>)
               : [];
-            const actions = Array.isArray(rule.actions)
-              ? (rule.actions as Array<Record<string, unknown>>)
+            const actions = Array.isArray(rule.actionsJson)
+              ? (rule.actionsJson as Array<Record<string, unknown>>)
               : [];
 
             return (

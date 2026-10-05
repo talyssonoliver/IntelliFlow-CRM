@@ -32,7 +32,6 @@ import {
   toast,
 } from '@intelliflow/ui';
 import { PageHeader, type PageAction } from '@/components/shared/page-header';
-import type { ReportTemplateView } from '@intelliflow/validators';
 
 type ChartType = 'table' | 'bar' | 'line' | 'pie' | 'area';
 type SharingScope = 'private' | 'team' | 'tenant';
@@ -73,7 +72,7 @@ export default function ReportTemplatesContent() {
   });
   const createMutation = trpc.analytics.reportTemplates.create.useMutation({
     onSuccess: () => {
-      utils.analytics.reportTemplates.list.invalidate();
+      void utils.analytics.reportTemplates.list.invalidate();
       toast({ title: 'Template created', description: 'Your report template was saved.' });
       setDialogOpen(false);
       setForm(EMPTY_FORM);
@@ -85,7 +84,7 @@ export default function ReportTemplatesContent() {
   });
   const updateMutation = trpc.analytics.reportTemplates.update.useMutation({
     onSuccess: () => {
-      utils.analytics.reportTemplates.list.invalidate();
+      void utils.analytics.reportTemplates.list.invalidate();
       toast({ title: 'Template updated', description: 'Your changes were saved.' });
       setDialogOpen(false);
       setForm(EMPTY_FORM);
@@ -97,7 +96,7 @@ export default function ReportTemplatesContent() {
   });
   const deleteMutation = trpc.analytics.reportTemplates.delete.useMutation({
     onSuccess: () => {
-      utils.analytics.reportTemplates.list.invalidate();
+      void utils.analytics.reportTemplates.list.invalidate();
       toast({ title: 'Template deleted' });
       setDeleteTarget(null);
     },
@@ -121,11 +120,12 @@ export default function ReportTemplatesContent() {
     setDialogOpen(true);
   }
 
-  function openEdit(t: ReportTemplateView) {
+  // A template as the client receives it (dates arrive as ISO strings over the wire).
+  function openEdit(t: NonNullable<typeof listQuery.data>[number]) {
     setForm({
       name: t.name,
       description: t.description ?? '',
-      selectedColumns: (t.selectedColumns as string[]).join(', '),
+      selectedColumns: t.selectedColumns.join(', '),
       chartType: (t.chartType as ChartType) ?? 'table',
       defaultPeriod: (t.defaultPeriod as DefaultPeriod) ?? '30d',
       sharingScope: (t.sharingScope as SharingScope) ?? 'private',
@@ -189,7 +189,7 @@ export default function ReportTemplatesContent() {
     );
   }
 
-  const templates = (listQuery.data ?? []) as unknown as ReportTemplateView[];
+  const templates = listQuery.data ?? [];
   const isLoading = listQuery.isLoading;
   const listError = listQuery.error;
 

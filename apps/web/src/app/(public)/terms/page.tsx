@@ -3,12 +3,14 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { formatTermsDate, getTermsOfService } from '@/lib/legal/acceptance-tracker';
 import { TermsAcceptanceConfirm } from '@/components/legal/TermsAcceptanceConfirm';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
   description:
     'Review the Aurora Terms of Service, including acceptable use, account obligations, intellectual property, and governing law.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Terms of Service',
     description:
       'Read the Aurora Terms of Service, including subscription terms, prohibited activities, disclaimers, and limitation of liability.',

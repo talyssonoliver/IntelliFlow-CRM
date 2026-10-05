@@ -70,6 +70,7 @@ vi.mock('@/lib/shared/token-exchange', () => ({
   clearSessionTokens: vi.fn(),
   // No session before the callback: the OAuth path records this to scope its cleanup.
   getStoredAccessToken: () => null,
+  getStoredRefreshToken: () => null,
 }));
 
 // Mock session-cleanup (cookie sync + prod-safe breadcrumb)

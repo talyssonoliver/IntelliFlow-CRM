@@ -34,7 +34,60 @@ const PUBLIC_ROUTES = [
   '/sso',
 ];
 
+/**
+ * The header's rendered height, published as `--app-header-h` on <html>.
+ *
+ * The fixed sidebars (AppSidebar, module-settings-nav, complementary-sidebar) sit directly
+ * below the header. They used to hard-code `top-16` (4rem), which was only ever true without
+ * the ADR-071 pinned-tenant banner: with the banner the header is taller and the top of every
+ * sidebar was hidden under it, which read as "the banner is missing on settings". The header
+ * is the one element that knows its own height, so it publishes it and the sidebars read it,
+ * with 4rem as the fallback for any route that renders no header.
+ */
+export const APP_HEADER_HEIGHT_VAR = '--app-header-h';
+
+function usePublishHeaderHeight(el: HTMLElement | null) {
+  // Keyed on the ELEMENT, not run on every render. The first version had no
+  // dependency list, so every re-render of the header (a query settling, a
+  // route change) ran the cleanup and then the effect again: the variable was
+  // removed and re-set within one tick, the sidebars fell back to 4rem and
+  // came back, and with `transition-all` on them their top never stopped
+  // animating (measured at 65px against a 102px header in production on
+  // 03/10). The ResizeObserver already covers every real height change.
+  React.useEffect(() => {
+    if (!el || typeof document === 'undefined') return;
+    const root = document.documentElement;
+    const publish = () => root.style.setProperty(APP_HEADER_HEIGHT_VAR, `${el.offsetHeight}px`);
+    publish();
+    // Three sources, all kept on: ResizeObserver for every height change;
+    // a MutationObserver on the header's subtree because the banner mounting
+    // or unmounting is a DOM change, and ResizeObserver notifications are
+    // delivered in the rendering steps, which a hidden tab skips (measured
+    // on 03/10: the banner mounted in a background window and the variable
+    // stayed at the pre-banner 65px until the tab was shown); and the window
+    // resize and visibilitychange events for the rewrap and the return to
+    // the foreground.
+    const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(publish);
+    const mutate = new MutationObserver(publish);
+    resize?.observe(el);
+    mutate.observe(el, { childList: true, subtree: true, attributes: true });
+    window.addEventListener('resize', publish);
+    document.addEventListener('visibilitychange', publish);
+    return () => {
+      resize?.disconnect();
+      mutate.disconnect();
+      window.removeEventListener('resize', publish);
+      document.removeEventListener('visibilitychange', publish);
+      root.style.removeProperty(APP_HEADER_HEIGHT_VAR);
+    };
+  }, [el]);
+}
+
 export function Navigation() {
+  // A callback ref into state, so the effect above re-runs exactly when the
+  // <header> mounts or unmounts (it is not rendered while auth is loading).
+  const [headerEl, setHeaderEl] = React.useState<HTMLElement | null>(null);
+  usePublishHeaderHeight(headerEl);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const pathname = usePathname();
@@ -68,7 +121,7 @@ export function Navigation() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
+    <header ref={setHeaderEl} className="sticky top-0 z-50 w-full border-b border-border bg-card">
       {/* ADR-071: shown only for a pinned Portal-grant session */}
       <PinnedTenantBanner />
       <div className="flex h-16 items-center px-4 lg:px-6">

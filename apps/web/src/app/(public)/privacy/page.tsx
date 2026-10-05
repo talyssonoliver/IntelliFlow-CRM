@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { formatPolicyDate, getPrivacyPolicy } from '@/lib/legal/consent-tracker';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
     'Review how Aurora collects, uses, protects, and retains personal data across our public site and product experiences.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Privacy Policy',
     description:
       'Read the Aurora Privacy Policy, including data handling principles, retention, subprocessors, and data-subject rights.',

@@ -57,8 +57,17 @@
  *                        full-matrix-E2E verdict as SEPARATE lines. See
  *                        docs/dev/preship-full.md.
  *
+ * Test scope:
+ *   Locally, `unit-tests` and `coverage` run only the tests related to the files
+ *   changed since the merge-base with origin/main (`vitest related`); the
+ *   whole-repo `coverage-floor` and `infra-skip-gate` become CI-only advisory
+ *   skips. The full 10k+ suite runs on CI's sharded runners, and here under CI or
+ *   PRESHIP_FULL_TESTS=1. Typecheck, lint and all other gates are unchanged.
+ *   See scripts/lib/preship-test-scope.mjs.
+ *
  * Env:
  *   PRESHIP_MODE=full        same as passing --full
+ *   PRESHIP_FULL_TESTS=1     run the FULL test suite locally (default: related only)
  *   PRESHIP_KEEP_GOING=1     don't hard-stop on first required FAIL
  *   PRESHIP_ALLOW_MISSING=1  let required+SKIPPED_PRECONDITION steps pass
  *                            (infra-unrunnable steps only; NOT a full bypass)
@@ -67,6 +76,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
+import { stepLine, advisoryNote, persistedState, finalLine } from './lib/preship-report.mjs';
 
 // Resolve REPO_ROOT from git rather than cwd so the script behaves
 // identically whether invoked from the repo root, from a subdirectory,
@@ -117,6 +128,10 @@ function dbStackUnavailable() {
 // step was skipped (no DB), they have nothing to read.
 function lcovMissing() {
   return !fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/lcov.info'));
+}
+
+function pythonReportMissing() {
+  return !fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/python-coverage.xml'));
 }
 
 // The silent-skip gate (#658) reads the per-project vitest JSON the `coverage`
@@ -218,6 +233,20 @@ const DEP_SCANNER = resolveDepScanner();
 // without a bypass env, while every runnable gate (and the E2E matrix) still
 // blocks loudly.
 const IS_CI = process.env.CI === 'true' || process.env.CI === '1';
+
+// TEST SCOPE (CI post-mortem, .github/ci-pre-ship-remediation.md §4A): the full
+// 10k+ test suite is CI's job — its 20 sharded runners are the authority. On a
+// laptop the test steps run only what this branch can affect: `vitest related`
+// over the files changed since the merge-base with origin/main. Typecheck, lint
+// and every non-test gate stay full and mandatory. Always `full` under CI, and
+// locally with PRESHIP_FULL_TESTS=1; also `full` whenever the diff touches
+// something the import graph cannot see (lockfile, package.json, vitest/tsconfig,
+// Prisma schema, test setup). See scripts/lib/preship-test-scope.mjs.
+const TEST_SCOPE = resolveTestScope({ cwd: REPO_ROOT });
+const SCOPED_TESTS = TEST_SCOPE.scope !== 'full';
+const SCOPE_ENV_VALUE = JSON.stringify(TEST_SCOPE);
+const CI_ONLY_REMEDIATION =
+  'Needs the full suite, which runs on CI. Run it locally with PRESHIP_FULL_TESTS=1.';
 
 // Step plan — fail-first token gate + steps from audit doc §8, plus the
 // OSV/Trivy dependency-scan parity gate (#485). Each step has:
@@ -374,9 +403,14 @@ const STEPS = [
     required: true,
   },
   {
+    // Local: only the tests related to the changed files (vitest related).
+    // CI / PRESHIP_FULL_TESTS=1: the full `test:unit` suite.
     id: 'unit-tests',
-    description: 'vitest run --project unit',
-    cmd: ['pnpm', 'run', 'test:unit'],
+    description: SCOPED_TESTS
+      ? `vitest related --project=!integration — ${TEST_SCOPE.scope} scope (${TEST_SCOPE.reason})`
+      : 'vitest run --project=!integration — full suite',
+    cmd: ['node', 'scripts/run-unit-tests-scoped.mjs'],
+    env: { [SCOPE_ENV]: SCOPE_ENV_VALUE },
     required: true,
   },
   {
@@ -407,8 +441,13 @@ const STEPS = [
   },
   {
     id: 'coverage',
-    description: 'pnpm run test:coverage (merged Istanbul output)',
+    description: SCOPED_TESTS
+      ? `pnpm run test:coverage over the related tests only — ${TEST_SCOPE.scope} scope (feeds diff-coverage)`
+      : 'pnpm run test:coverage (merged Istanbul output)',
     cmd: ['pnpm', 'run', 'test:coverage'],
+    // In a scoped run, run-coverage.js reads this and runs `vitest related` per
+    // project, so diff-coverage still measures the changed lines locally.
+    env: SCOPED_TESTS ? { COVERAGE_RELATED_FILES: JSON.stringify(TEST_SCOPE.files) } : {},
     // Needs a local test DB (the merged run includes the integration project).
     // Without one, degrade to MISSING-required rather than hard-fail against a
     // possibly-wrong/prod DB.
@@ -427,22 +466,41 @@ const STEPS = [
     description: 'enforce CI ratchet floor (78/70/75/80) on merged coverage — shared gate',
     cmd: ['node', 'scripts/check-coverage-floor.mjs'],
     // Depends on the lcov from `coverage`; if that was skipped, skip too.
-    skip_if: lcovMissing,
-    skip_remediation: 'Run the `coverage` step first (needs the local test DB).',
+    // A whole-repo ratchet is meaningless over a related-only lcov, so in a
+    // scoped run this is CI-only: an honest advisory skip, recorded as such.
+    skip_if: () => SCOPED_TESTS || lcovMissing(),
+    skip_remediation: SCOPED_TESTS
+      ? CI_ONLY_REMEDIATION
+      : 'Run the `coverage` step first (needs the local test DB).',
+    required: !SCOPED_TESTS,
+  },
+  {
+    // #755: Python tooling (tools/audit, tools/plan, tools/scripts) is in
+    // sonar.sources and measured by SonarCloud from the same Cobertura report
+    // this writes. Running it here lets `diff-coverage` judge changed .py lines
+    // exactly as Sonar will. Both pytest suites take ~15s.
+    id: 'python-coverage',
+    description: 'pytest tools/audit + tools/plan under coverage → python-coverage.xml',
+    cmd: ['node', 'scripts/run-python-coverage.mjs'],
     required: true,
   },
   {
     // Mirror SonarCloud's `new_coverage` (>=80% on the CHANGED lines) LOCALLY,
-    // using the SAME merged lcov. The overall ratchet floor above barely moves
-    // for a small diff, so it cannot catch an under-tested change — this step
-    // can. This is the exact gap that let PR #265 pass pre-ship's coverage gate
-    // while CI's `SonarCloud Scan` / new_coverage went red.
+    // using the SAME merged lcov (and, for .py lines, the Python Cobertura
+    // report above). The overall ratchet floor above barely moves for a small
+    // diff, so it cannot catch an under-tested change — this step can. This is
+    // the exact gap that let PR #265 pass pre-ship's coverage gate while CI's
+    // `SonarCloud Scan` / new_coverage went red.
     id: 'diff-coverage',
     description: 'enforce Sonar new_coverage (>=80% on changed lines vs origin/main)',
     cmd: ['node', 'scripts/check-diff-coverage.mjs'],
-    // Depends on the lcov from `coverage`; if that was skipped, skip too.
-    skip_if: lcovMissing,
-    skip_remediation: 'Run the `coverage` step first (needs the local test DB).',
+    // Needs a report to judge against. Skip only when BOTH are missing: with just
+    // the Python report (the JS `coverage` step could not run), changed .py lines
+    // are still judged (DIFF_COVER_ONLY=py) instead of the whole gate skipping.
+    skip_if: () => lcovMissing() && pythonReportMissing(),
+    env: () => (lcovMissing() ? { DIFF_COVER_ONLY: 'py' } : {}),
+    skip_remediation:
+      'Run the `coverage` step (needs the local test DB) and `python-coverage` first.',
     required: true,
   },
   {
@@ -456,10 +514,13 @@ const STEPS = [
     id: 'infra-skip-gate',
     description: 'runtime silent-skip gate (a suite that executed 0 of N collected tests)',
     cmd: ['pnpm', 'tsx', 'tools/scripts/infra-skip-gate.ts'],
-    skip_if: skipManifestMissing,
-    skip_remediation:
-      'Run the `coverage` step first (needs the local test DB) so the per-project vitest JSON exists.',
-    required: true,
+    // Reconciles every collected suite, so it needs the full run: CI-only when
+    // the local run is scoped.
+    skip_if: () => SCOPED_TESTS || skipManifestMissing(),
+    skip_remediation: SCOPED_TESTS
+      ? CI_ONLY_REMEDIATION
+      : 'Run the `coverage` step first (needs the local test DB) so the per-project vitest JSON exists.',
+    required: !SCOPED_TESTS,
   },
   {
     id: 'build',
@@ -707,6 +768,9 @@ const flags = {
   only: null,
 };
 for (const a of args) {
+  // `pnpm run pre-ship -- --clean` (the documented form) forwards the `--`
+  // verbatim; it is the conventional end-of-options separator, not a flag.
+  if (a === '--') continue;
   if (a.startsWith('--only=')) {
     flags.only = a.slice('--only='.length).split(',');
     continue;
@@ -740,7 +804,11 @@ if (flags.help) {
       '  --help      print this help and exit',
       '  --only=IDS  run only the comma-separated step ids',
       '',
-      'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1',
+      'Test scope: locally, unit tests and coverage run only the tests related to',
+      '  files changed since origin/main (vitest related). The full suite runs on CI.',
+      '  PRESHIP_FULL_TESTS=1 runs the full suite locally.',
+      '',
+      'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1 · PRESHIP_FULL_TESTS=1',
       '',
     ].join('\n')
   );
@@ -748,7 +816,9 @@ if (flags.help) {
 }
 
 if (flags.list) {
-  process.stdout.write(`pre-ship step plan (mode: ${flags.full ? 'full' : 'standard'})\n`);
+  process.stdout.write(
+    `pre-ship step plan (mode: ${flags.full ? 'full' : 'standard'}, test scope: ${TEST_SCOPE.scope})\n`
+  );
   for (const s of STEPS) {
     // full_only steps only run under --full; tag them so `--list` (standard) makes
     // the extra matrix step visibly opt-in rather than looking always-on.
@@ -770,10 +840,22 @@ function loadPreviousState(head) {
   if (flags.clean) return null;
   try {
     const s = JSON.parse(fs.readFileSync(STATE_PATH, 'utf8'));
-    return s.git_head === head ? s : null;
+    if (s.git_head !== head) return null;
+    // A cached PASS only stands for the scope it ran at: a related-only PASS must
+    // not satisfy a PRESHIP_FULL_TESTS=1 run, nor one over a different file set.
+    if (JSON.stringify(scopeKey(s.test_scope)) !== JSON.stringify(scopeKey(TEST_SCOPE))) {
+      return null;
+    }
+    return s;
   } catch {
     return null;
   }
+}
+
+// What a cached result depends on. A state file from before test scoping has no
+// test_scope; it ran the full suite.
+function scopeKey(scope) {
+  return { scope: scope?.scope ?? 'full', files: scope?.files ?? [] };
 }
 
 function ensureDirs() {
@@ -824,7 +906,10 @@ function runStep(step, prev) {
   }
 
   const start = Date.now();
-  const env = { ...process.env, ...(step.env || {}) };
+  // A step's env may be a function, evaluated now — after earlier steps ran —
+  // when it depends on what they produced (diff-coverage reads which reports exist).
+  const stepEnv = typeof step.env === 'function' ? step.env() : step.env;
+  const env = { ...process.env, ...(stepEnv || {}) };
   // shell:true on Windows so the PATH resolves .cmd/.exe extensions for
   // pnpm / gitleaks / etc. All argv values are hard-coded literals (no
   // user input), so shell injection isn't a concern. POSIX systems use
@@ -860,21 +945,6 @@ function runStep(step, prev) {
   };
 }
 
-function emoji(v) {
-  return (
-    {
-      PASS: '✓',
-      CACHED_PASS: '✓·',
-      FAIL: '✗',
-      SKIPPED_PRECONDITION: '·',
-      SKIPPED_NOT_SELECTED: '-',
-      SKIPPED_NOT_FULL: '-',
-      NOT_RUN: ' ',
-      MISSING: '!',
-    }[v] || '?'
-  );
-}
-
 // Verdict for a slice of results (standard-only or full-only), honouring the
 // PRESHIP_ALLOW_MISSING acknowledgement. A required FAIL or an unacknowledged
 // MISSING-required makes the slice FAIL. Used to print the standard-gate and
@@ -907,7 +977,12 @@ function main() {
   process.stdout.write('\n');
 
   process.stdout.write(
-    `pre-ship: mode ${flags.full ? 'FULL (standard gate + cross-browser E2E)' : 'standard'}.\n\n`
+    `pre-ship: mode ${flags.full ? 'FULL (standard gate + cross-browser E2E)' : 'standard'}.\n`
+  );
+  process.stdout.write(
+    `pre-ship: test scope ${TEST_SCOPE.scope} — ${TEST_SCOPE.reason}` +
+      (SCOPED_TESTS ? ' (the full suite runs on CI; PRESHIP_FULL_TESTS=1 runs it here)' : '') +
+      '.\n\n'
   );
 
   const results = [];
@@ -948,12 +1023,10 @@ function main() {
     const r = runStep(step, prev);
     results.push(r);
 
-    // Re-label a required+SKIPPED_PRECONDITION as MISSING so the line is
-    // visually distinct from harmless skips (gitleaks not installed, etc).
-    const displayVerdict = isMissingRequired(r) && !allowMissing ? 'MISSING' : r.verdict;
-    process.stdout.write(
-      `${emoji(displayVerdict)} ${displayVerdict}  (${fmtDuration(r.duration_ms)})\n`
-    );
+    // Truthful per-step label: MISSING for an unrunnable required guard, WARN
+    // (not "FAIL") for a non-blocking advisory failure, PASS (after retry) when
+    // a step needed more than one attempt.
+    process.stdout.write(`${stepLine(r, { allowMissing }, fmtDuration)}\n${advisoryNote(r)}`);
 
     if (isMissingRequired(r)) {
       if (allowMissing) {
@@ -992,13 +1065,20 @@ function main() {
     allow_missing: allowMissing,
     only: flags.only ?? null,
     expected_step_ids: STEPS.filter((s) => !s.full_only || flags.full).map((s) => s.id),
+    // Which tests the test steps covered: `full`, or `related`/`none` with the
+    // changed files they were selected from. Carried into the attestation.
+    test_scope: TEST_SCOPE,
     started_at: new Date(totalStart).toISOString(),
     completed_at: new Date().toISOString(),
     duration_ms: totalDuration,
     verdict,
     steps: results,
   };
-  fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2));
+  // --only must not wipe the other steps' cached results: merge into the
+  // existing state for this HEAD so the next full run can still resume.
+  const ids = STEPS.map((s) => s.id);
+  const persisted = persistedState(prev, state, flags.only, ids, missing.length);
+  fs.writeFileSync(STATE_PATH, JSON.stringify(persisted, null, 2));
 
   process.stdout.write('\n');
   // Under --full, report the two phases as SEPARATE verdict lines so a green
@@ -1015,7 +1095,8 @@ function main() {
     process.stdout.write(`pre-ship: standard gate ${stdV}.\n`);
     process.stdout.write(`pre-ship: full-matrix E2E ${fullV}.\n`);
   }
-  process.stdout.write(`pre-ship: ${verdict} in ${fmtDuration(totalDuration)}.\n`);
+  const duration = fmtDuration(totalDuration);
+  process.stdout.write(finalLine(verdict, duration, results, state.expected_step_ids));
   if (fails.length > 0) {
     process.stdout.write(`  Failed required steps:\n`);
     for (const f of fails) process.stdout.write(`    - ${f.id} (see ${f.log_path})\n`);

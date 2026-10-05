@@ -32,3 +32,16 @@ reason = """
 extract-zip arbitrary file write. Same package, same dev-only path, also
 patched: <0.0.0. Same reasoning and same expiry as the entry above.
 """
+
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2026-12-10
+reason = """
+braces <=3.0.3 stack-exhaustion denial of service through deeply nested
+patterns (CVE-2026-93687), published 03/10/2026. No fixed version exists:
+braces@3.0.3 is the latest release (18/09/2024), so no override can satisfy
+it. Reached only through micromatch@4.0.8 — build and lint tooling, never a
+runtime dependency of a deployed app. Mirrors the pnpm.auditConfig.ignoreGhsas
+entry added the same day. Re-check on expiry — if braces has published a
+release above 3.0.3 by then, take it and delete this entry.
+"""

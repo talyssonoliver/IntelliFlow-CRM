@@ -104,7 +104,7 @@ export function ModuleSettingsNav({
         createPortal(
           <div
             className={cn(
-              'fixed top-16 bottom-0 left-0 z-[31] backdrop-blur-[2px] transition-opacity duration-150 ease-out',
+              'fixed top-[var(--app-header-h,4rem)] bottom-0 left-0 z-[31] backdrop-blur-[2px] transition-opacity duration-150 ease-out',
               sidebarPinned ? 'w-60' : 'w-14'
             )}
             onClick={onClose}
@@ -131,7 +131,7 @@ export function ModuleSettingsNav({
         aria-label={title}
         aria-hidden={!isOpen}
         className={cn(
-          'fixed top-16 bottom-0 z-[28]',
+          'fixed top-[var(--app-header-h,4rem)] bottom-0 z-[28]',
           'w-56',
           'border-r border-border bg-card shadow-lg',
           'flex flex-col',

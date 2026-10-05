@@ -256,8 +256,7 @@ function CanvasInner({
     { id: workflowId! },
     { enabled: !!workflowId }
   );
-  // Break deep tRPC type inference chain to avoid TS2589
-  const existingWorkflow = workflowQuery.data as { steps?: unknown } | undefined;
+  const existingWorkflow = workflowQuery.data;
   const isLoadingWorkflow = workflowQuery.isLoading;
 
   // Convert persisted steps/edges back into canvas format.

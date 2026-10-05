@@ -75,6 +75,22 @@ export function createBrowserClient() {
   });
 }
 
+/**
+ * A client that verifies a credential without touching the app: it persists nothing, never
+ * refreshes, and its auth events never reach AuthContext. The magic-link callback uses it to
+ * learn whose link it is while another account is signed in, before the user agrees to switch.
+ */
+export function createIsolatedAuthClient() {
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      storageKey: 'sb-isolated-link-verify',
+    },
+  });
+}
+
 // Singleton instance for the browser
 let browserClient: ReturnType<typeof createBrowserClient> | null = null;
 

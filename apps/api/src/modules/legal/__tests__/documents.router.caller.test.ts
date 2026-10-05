@@ -791,22 +791,40 @@ describe('Documents Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = documentsRouter.createCaller(ctx);
 
-      const auditLogs = [
-        {
-          id: 'audit-1',
-          document_id: TEST_UUIDS.task1,
-          action: 'CREATED',
-          user_id: TEST_UUIDS.user1,
-          created_at: now,
-        },
-      ];
+      // The Prisma row shape: camelCase fields (columns are @map'd to snake_case
+      // in the database only). The page used to read snake_case and crashed.
+      const auditLog = {
+        id: 'audit-1',
+        documentId: TEST_UUIDS.task1,
+        tenantId: TEST_UUIDS.tenant,
+        eventType: 'CREATED',
+        userId: TEST_UUIDS.user1,
+        ipAddress: null,
+        userAgent: 'vitest',
+        changes: null,
+        metadata: { version: { major: 1, minor: 0, patch: 0 } },
+        createdAt: now,
+      };
 
-      prismaMock.caseDocumentAudit.findMany.mockResolvedValue(auditLogs as any);
+      prismaMock.caseDocumentAudit.findMany.mockResolvedValue([auditLog]);
 
       const result = await caller.getAuditTrail({ documentId: TEST_UUIDS.task1 });
 
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(1);
+      expect(result).toEqual([
+        {
+          id: 'audit-1',
+          documentId: TEST_UUIDS.task1,
+          eventType: 'CREATED',
+          userId: TEST_UUIDS.user1,
+          ipAddress: null,
+          userAgent: 'vitest',
+          changes: null,
+          metadata: { version: { major: 1, minor: 0, patch: 0 } },
+          createdAt: now,
+        },
+      ]);
+      // tenantId is internal and not part of the contract.
+      expect(result[0]).not.toHaveProperty('tenantId');
     });
 
     it('should return empty array when no audit logs', async () => {

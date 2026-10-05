@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ContactForm } from '@/components/shared/contact-form';
+import { OG_IMAGES } from '@/lib/og-images';
 import './contact.css';
 
 /**
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
   description:
     "Get in touch with the Aurora team. We're here to answer your questions about our AI-powered CRM.",
   openGraph: {
+    images: OG_IMAGES,
     title: 'Contact Aurora',
     description:
       'Have questions about Aurora? Our team is ready to help you discover how our AI-powered platform can transform your sales process.',

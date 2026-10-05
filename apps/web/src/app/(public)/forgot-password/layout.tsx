@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Forgot Password',
   description:
     'Reset your Aurora password. Enter your email to receive a secure password reset link valid for one hour.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Reset Your Aurora Password',
     description:
       'Forgot your password? Request a secure reset link to regain access to your Aurora account.',

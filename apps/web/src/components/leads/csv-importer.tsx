@@ -466,14 +466,27 @@ export function CsvImporter() {
     // and the first page is server-cache-tagged). Mirrors lead-list.tsx's pattern.
     // Best-effort: a cache-refresh failure must NOT strand the UI in the importing
     // state — the leads are already created and a stale list self-heals on refetch.
+    // The two server-cache refreshes are independent: one rejecting must not skip
+    // the other, and a failure is logged rather than dropped.
     if (imported > 0) {
-      try {
-        utils.lead.list.invalidate();
-        utils.lead.stats.invalidate();
-        invalidateLeadsCache();
-        if (user?.id) await revalidateLeadCaches(user.id);
-      } catch {
-        // ignore — imported rows exist; the list refetches on its own
+      const logRefreshFailure = (reason: unknown) =>
+        console.warn('[CsvImporter] Lead cache refresh failed after import:', reason);
+      // React Query's invalidate does not reject on refetch errors (no
+      // throwOnError here), so there is nothing to handle.
+      void utils.lead.list.invalidate();
+      void utils.lead.stats.invalidate();
+      // Fire-and-forget, as before this fix: it must not delay the completion
+      // screen, but a rejection is now logged instead of left unhandled.
+      // Chained through then() so a synchronous throw is caught as well.
+      void Promise.resolve()
+        .then(() => invalidateLeadsCache())
+        .catch(logRefreshFailure);
+      if (user?.id) {
+        try {
+          await revalidateLeadCaches(user.id);
+        } catch (error) {
+          logRefreshFailure(error);
+        }
       }
     }
     setResult({ imported, failures, skipped });

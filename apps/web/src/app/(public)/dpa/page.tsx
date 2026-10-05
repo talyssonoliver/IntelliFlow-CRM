@@ -3,12 +3,14 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { getDpa, formatDpaDate } from '@/lib/legal/signature-handler';
 import { DpaSignaturePanel } from '@/components/legal/dpa-signature-panel';
+import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
   title: 'Data Processing Addendum',
   description:
     'Review the Aurora Data Processing Addendum governing our GDPR Article 28 data processor relationship with enterprise customers.',
   openGraph: {
+    images: OG_IMAGES,
     title: 'Data Processing Addendum',
     description:
       'Read the Aurora DPA covering processing subject matter, sub-processors, security measures, and controller obligations under GDPR Article 28.',

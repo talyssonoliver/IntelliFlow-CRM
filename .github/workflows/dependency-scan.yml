@@ -117,7 +117,7 @@ jobs:
         # coverage. To restore as strict gate later, either upgrade Snyk
         # plan or switch to a billing-aware wrapper that distinguishes
         # quota-exhausted from real findings.
-        uses: snyk/actions/node@8e119fbb6c251787721d34ba683ed48eba792766
+        uses: snyk/actions/node@b075801f26076be9bb50521154cafab73f44da0c
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -165,7 +165,7 @@ jobs:
 
       - name: Run OSV Scanner
         # H0 gate — see NPM Audit job for rationale.
-        uses: google/osv-scanner-action/osv-scanner-action@v2.5.0
+        uses: google/osv-scanner-action/osv-scanner-action@v2.6.0
         with:
           scan-args: |-
             --lockfile=pnpm-lock.yaml

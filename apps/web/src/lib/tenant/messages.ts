@@ -14,6 +14,8 @@ export interface TenantMessages {
   switcherDisabled: string;
   switcherHome: string;
   switching: string;
+  billingUnavailableTitle: string;
+  billingUnavailableBody: string;
 }
 
 const MESSAGES: Record<TenantLocale, TenantMessages> = {
@@ -24,6 +26,9 @@ const MESSAGES: Record<TenantLocale, TenantMessages> = {
     switcherDisabled: 'Switching workspace is disabled in this session',
     switcherHome: 'Your CRM',
     switching: 'Switching…',
+    billingUnavailableTitle: 'Billing is not available in this workspace',
+    billingUnavailableBody:
+      "Billing belongs to the workspace owner's own account. Open your own CRM to manage your billing.",
   },
   'pt-BR': {
     pinnedBanner: (tenantName) => `Você está no CRM de ${tenantName}`,
@@ -32,6 +37,9 @@ const MESSAGES: Record<TenantLocale, TenantMessages> = {
     switcherDisabled: 'Trocar de espaço de trabalho está desativado nesta sessão',
     switcherHome: 'Seu CRM',
     switching: 'Trocando…',
+    billingUnavailableTitle: 'O faturamento não está disponível neste espaço de trabalho',
+    billingUnavailableBody:
+      'O faturamento pertence à conta do próprio titular. Abra o seu CRM para gerenciar o seu faturamento.',
   },
 };
 
