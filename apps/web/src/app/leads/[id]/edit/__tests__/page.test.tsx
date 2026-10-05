@@ -10,7 +10,7 @@
  * - Invalidates caches on success
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 
 // ---------------------------------------------------------------------------
@@ -255,6 +255,13 @@ describe('EditLeadPage', () => {
   // `api.lead.update.useMutation({ onSuccess, onError })` call in page.tsx
   // would invoke them after a real mutation settles.
   describe('update mutation callbacks', () => {
+    // The onSuccess test switches to fake timers. Restore real ones after every
+    // test here, so a failing assertion cannot leak fake timers into the next
+    // test (a waitFor there would never advance and fail misleadingly).
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('onSuccess: shows a success toast, invalidates caches, and navigates to the detail page', async () => {
       vi.useFakeTimers();
       render(<EditLeadPage />);
