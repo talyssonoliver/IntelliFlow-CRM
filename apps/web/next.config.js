@@ -237,15 +237,21 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
 
-// Sentry build plugin. Source-map upload needs SENTRY_AUTH_TOKEN (+ org/project);
-// without it the upload is skipped silently so CI and preview builds are unaffected.
+// Sentry build plugin. Source maps upload (and a release is created) only when
+// SENTRY_AUTH_TOKEN, SENTRY_ORG and SENTRY_PROJECT are ALL set. Vercel already
+// has SENTRY_AUTH_TOKEN without org/project, and an upload attempt with a
+// token but no target must not be able to fail a production build.
+const sentryUpload = Boolean(
+  process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT
+);
 const sentryBuildOptions = {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
-  authToken: process.env.SENTRY_AUTH_TOKEN,
+  authToken: sentryUpload ? process.env.SENTRY_AUTH_TOKEN : undefined,
   silent: true,
   telemetry: false,
-  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+  sourcemaps: { disable: !sentryUpload },
+  release: { create: sentryUpload },
 };
 
 module.exports = withSentryConfig(withBundleAnalyzer(nextConfig), sentryBuildOptions);
