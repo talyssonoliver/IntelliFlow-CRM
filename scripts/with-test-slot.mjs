@@ -1,51 +1,15 @@
 #!/usr/bin/env node
-// At most three full test runs at once on the owner's machine (owner ruling
-// 2026-10-05: ten gates at once ran it out of memory). This hands the command
-// to the shared semaphore, which queues it for a free slot:
+// Runs a full test command through the machine-wide test-slot semaphore:
 //
 //   node scripts/with-test-slot.mjs [--label <name>] [--base <n>] -- <command...>
 //
-// The semaphore lives outside every repository, at
-// C:/Users/talys/ops/test-slots/with-slot.mjs (TEST_SLOTS_DIR overrides), so
-// all repos share one count; its README says how slots are taken and reaped.
-// Where it does not exist (another machine, a hosted CI runner) the command
-// runs directly. CI, nested runs and filtered runs (--base) are exempted by
-// the semaphore itself.
-import { existsSync } from 'node:fs';
-import { spawn } from 'node:child_process';
-import { join } from 'node:path';
+// See scripts/lib/test-slot.mjs for the rules and the fallback when this
+// machine has no semaphore.
+import { runForwarding, shimLaunch } from './lib/test-slot.mjs';
 
-const argv = process.argv.slice(2);
-const shared = join(process.env.TEST_SLOTS_DIR || 'C:/Users/talys/ops/test-slots', 'with-slot.mjs');
-const sep = argv.indexOf('--');
-if (sep === -1 || sep === argv.length - 1) {
+const launch = shimLaunch(process.argv.slice(2), { env: process.env, platform: process.platform });
+if (!launch) {
   console.error('usage: with-test-slot.mjs [--label <name>] [--base <n>] -- <command...>');
   process.exit(2);
 }
-
-let child;
-if (existsSync(shared)) {
-  child = spawn(process.execPath, [shared, ...argv], { stdio: 'inherit' });
-} else if (process.platform === 'win32') {
-  // npm/pnpm are .cmd shims on Windows and only run through cmd.exe, which
-  // takes one command line: quote any word that would split.
-  const quote = (a) => (/^[\w@:=.,/\\+-]+$/.test(a) ? a : '"' + a.replace(/"/g, '\\"') + '"');
-  const line = argv
-    .slice(sep + 1)
-    .map(quote)
-    .join(' ');
-  child = spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', '"' + line + '"'], {
-    stdio: 'inherit',
-    windowsVerbatimArguments: true,
-  });
-} else {
-  const [cmd, ...args] = argv.slice(sep + 1);
-  child = spawn(cmd, args, { stdio: 'inherit' });
-}
-// Forward Ctrl-C and kill so the semaphore releases its slot.
-for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, () => child.kill(sig));
-child.on('exit', (code, signal) => process.exit(signal ? 1 : (code ?? 1)));
-child.on('error', (err) => {
-  console.error(`with-test-slot: could not start: ${err.message}`);
-  process.exit(1);
-});
+process.exit(await runForwarding(launch.cmd, launch.args, launch.options));
