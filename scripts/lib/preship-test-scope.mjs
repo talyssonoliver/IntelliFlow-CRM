@@ -46,7 +46,7 @@ export const MAX_RELATED_FILES = 400;
  *     vitest config, matched by the setup patterns) and `__mocks__/` stubs
  *     (reached through config aliases and vi.mock resolution) are invisible.
  */
-const GLOBAL_IMPACT_PATTERNS = [
+export const GLOBAL_IMPACT_PATTERNS = [
   /(^|\/)package\.json$/,
   /^pnpm-lock\.yaml$/,
   /^pnpm-workspace\.yaml$/,

@@ -109,20 +109,36 @@ a record under that key only if all of these hold:
 - the record is a full clean gate (same checks as the exact-SHA path);
 - it was made by the same `scripts/pre-ship.mjs` (gate-version pin);
 - its payload names that patch-id;
-- its tag targets the commit its ref names.
+- its tag targets the commit its ref names;
+- **nothing main brought in since the attested base touches the PR's affected
+  scope** (`scripts/lib/carry-scope.mjs`). A clean rebase is not proof of
+  compatibility, so the main-side changes between the record's `patch_base` and
+  the new base must avoid all of these:
+  - global-impact files (lockfile, any `package.json`, tsconfig, vitest/vite
+    config, test setup, `__mocks__`, Prisma schema);
+  - any file in a workspace package the PR touches;
+  - any file in a package those depend on, or in a package that depends on them,
+    transitively;
+  - repo-root files outside every package, when the PR touches the root too.
+
+  Docs, artifacts and metrics on main's side are ignored.
 
 The check prints `carried from <old-sha>`.
 
-What still forces a re-run: a rebase that resolved a conflict, main changing
-lines next to the branch's own hunks, any new commit, or a change to the gate
-script itself. All of these change the patch-id or the pin.
+What it skips, and why that is safe: the local gate's re-run on the rebased
+head, and only that. The PR's own diff is byte-identical to what the gate
+passed. Nothing main changed in the meantime can reach that code through the
+workspace dependency graph. Main's own changes were gated by their PRs. The PR's
+required CI checks (full sharded suite, typecheck, build, integration) still run
+on exactly the rebased head before it can merge. The scope check is per package,
+coarser than an import graph, so it errs towards refusing.
 
-What covers the combination: the diff the gate passed is byte-identical, and
-main's side was gated by its own PRs. What is new is only how the two interact,
-and the PR's required CI checks (the full sharded suite, typecheck, build,
-integration) run on exactly that head before it can merge. #637, the incident
-behind #644, merged at a head nobody had gated; that is still impossible,
-because some gate run must match the branch's exact diff.
+What still forces a re-run: a rebase that resolved a conflict, main changing
+lines next to the branch's own hunks, any new commit, a change to the gate
+script itself (these change the patch-id or the pin), or any main-side change in
+the PR's affected scope. The refusal lists the blocking files. #637, the
+incident behind #644, merged at a head nobody had gated; that is still
+impossible, because some gate run must match the branch's exact diff.
 
 When nothing can be carried, re-run locally:
 

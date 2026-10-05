@@ -26,6 +26,7 @@ import {
   branchPatchId,
   carriedAttestation,
   carriedLine,
+  mainChangesInScope,
   dirtyPaths,
   noAttestationLines,
   patchFields,
@@ -734,7 +735,18 @@ describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
   type Git = ReturnType<typeof gitIn>;
   type Refused = { ok: false; reasons: string[] };
 
-  /** main with one commit, feature with one more; plus a bare remote. */
+  /** The PR's own change lives in workspace package `a`. */
+  const FEATURE = 'packages/a/feature.txt';
+
+  function put(work: string, rel: string, content: string | Buffer) {
+    fs.mkdirSync(path.dirname(path.join(work, rel)), { recursive: true });
+    fs.writeFileSync(path.join(work, rel), content);
+  }
+
+  /**
+   * A three-package workspace on main (`c` depends on `a`; `b` is unrelated),
+   * a feature branch with one commit in `a`, and a bare remote.
+   */
   function makeBranchRepo() {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'preship-carry-'));
     tmpDirs.push(root);
@@ -746,32 +758,42 @@ describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
     g(['init', '-q', '-b', 'main']);
     g(['config', 'user.email', 'test@example.com']);
     g(['config', 'user.name', 'test']);
-    fs.writeFileSync(path.join(work, 'README.md'), '# fixture\n');
-    g(['add', 'README.md']);
+    put(work, 'README.md', '# fixture\n');
+    put(work, 'packages/a/package.json', JSON.stringify({ name: 'a' }));
+    put(work, 'packages/b/package.json', JSON.stringify({ name: 'b' }));
+    put(
+      work,
+      'packages/c/package.json',
+      JSON.stringify({ name: 'c', dependencies: { a: 'workspace:*' } })
+    );
+    g(['add', '.']);
     g(['commit', '-q', '-m', 'seed']);
     g(['checkout', '-q', '-b', 'feature']);
-    fs.writeFileSync(path.join(work, 'feature.txt'), 'one\n');
-    g(['add', 'feature.txt']);
+    put(work, FEATURE, 'one\n');
+    g(['add', FEATURE]);
     g(['commit', '-q', '-m', 'feature']);
     const sha = g(['rev-parse', 'HEAD']).stdout.trim();
     return { work, bare, sha, g };
   }
 
-  /** Move main on (an unrelated file) and rebase feature onto it: a clean update. */
-  function advanceMainAndRebase(g: Git, work: string): string {
+  /**
+   * Move main on by changing `file` and rebase feature onto it. The default,
+   * a file in the unrelated package `b`, is a clean update outside the PR's scope.
+   */
+  function advanceMainAndRebase(g: Git, work: string, file = 'packages/b/other.txt'): string {
     g(['checkout', '-q', 'main']);
-    fs.writeFileSync(path.join(work, 'other.txt'), 'main moved\n');
-    g(['add', 'other.txt']);
+    put(work, file, `main moved ${Date.now()}\n`);
+    g(['add', file]);
     g(['commit', '-q', '-m', 'main moves']);
     g(['checkout', '-q', 'feature']);
     g(['rebase', '-q', 'main']);
     return g(['rev-parse', 'HEAD']).stdout.trim();
   }
 
-  /** Re-commit feature.txt with new content (a different branch diff). */
-  function rewriteFeature(g: Git, work: string, content: string): string {
-    fs.writeFileSync(path.join(work, 'feature.txt'), content);
-    g(['add', 'feature.txt']);
+  /** Re-commit the feature file with new content (a different branch diff). */
+  function rewriteFeature(g: Git, work: string, content: string | Buffer): string {
+    put(work, FEATURE, content);
+    g(['add', FEATURE]);
     g(['commit', '-q', '--amend', '-m', 'feature']);
     return g(['rev-parse', 'HEAD']).stdout.trim();
   }
@@ -1056,6 +1078,72 @@ describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
     const r = cli(work, ['--verify', `--sha=${changed}`, `--remote=${bare}`]);
     expect(r.status).not.toBe(0);
     expect(r.stderr).toMatch(/No earlier attestation could be carried/);
+  });
+
+  // A clean rebase is not proof of compatibility: the carry also needs main's
+  // intervening changes to stay outside the PR's affected scope.
+  it.each([
+    ['an unrelated package', 'packages/b/other.txt', true],
+    ['docs only', 'docs/notes.md', true],
+    ['the same package as the PR', 'packages/a/other.ts', false],
+    ['a package that depends on the PR’s package', 'packages/c/index.ts', false],
+    ['the lockfile', 'pnpm-lock.yaml', false],
+    ['a repo-root source file', 'scripts/tool.mjs', true],
+  ])('main changing %s: carried = %s', (_label, file, carried) => {
+    const { work, bare, sha, g } = makeBranchRepo();
+    expect(publish(work, bare, sha).status).toBe(0);
+    const rebased = advanceMainAndRebase(g, work, file);
+    const result = carriedAttestation(flagsFor(bare), rebased, PRESHIP_HASH, g);
+    expect(result.ok).toBe(carried);
+    if (!carried) {
+      const why = (result as Refused).reasons.join('\n');
+      expect(why).toMatch(/main changed 1 file\(s\) in this PR's affected scope/);
+      expect(why).toContain(file);
+    }
+  });
+
+  it('main changing a package the PR’s package depends on blocks the carry', () => {
+    const { work, bare, g } = makeBranchRepo();
+    // Make `a` depend on `b` on main first, and re-base the feature on that.
+    g(['checkout', '-q', 'main']);
+    put(
+      work,
+      'packages/a/package.json',
+      JSON.stringify({ name: 'a', dependencies: { b: 'workspace:*' } })
+    );
+    g(['add', 'packages/a/package.json']);
+    g(['commit', '-q', '-m', 'a depends on b']);
+    g(['checkout', '-q', 'feature']);
+    g(['rebase', '-q', 'main']);
+    const sha = g(['rev-parse', 'HEAD']).stdout.trim();
+    expect(publish(work, bare, sha).status).toBe(0);
+
+    const rebased = advanceMainAndRebase(g, work, 'packages/b/lib.ts');
+    const result = carriedAttestation(flagsFor(bare), rebased, PRESHIP_HASH, g) as Refused;
+    expect(result.ok).toBe(false);
+    expect(result.reasons.join('\n')).toContain('packages/b/lib.ts (in b, within the PR');
+  });
+
+  it('a PR that touches the repo root is blocked by main touching the root too', () => {
+    const { work, bare, g } = makeBranchRepo();
+    put(work, 'scripts/mine.mjs', 'export {};\n');
+    g(['add', 'scripts/mine.mjs']);
+    g(['commit', '-q', '-m', 'root change']);
+    const sha = g(['rev-parse', 'HEAD']).stdout.trim();
+    expect(publish(work, bare, sha).status).toBe(0);
+    const rebased = advanceMainAndRebase(g, work, 'scripts/tool.mjs');
+    const result = carriedAttestation(flagsFor(bare), rebased, PRESHIP_HASH, g) as Refused;
+    expect(result.ok).toBe(false);
+    expect(result.reasons.join('\n')).toMatch(/repo-root file, and the PR touches the root too/);
+  });
+
+  it('mainChangesInScope blocks without an attested base and is empty when main did not move', () => {
+    const { sha, g } = makeBranchRepo();
+    const base = g(['merge-base', sha, 'main']).stdout.trim();
+    expect(mainChangesInScope(sha, undefined, base, g)[0].why).toMatch(/no patch_base/);
+    expect(mainChangesInScope(sha, base, base, g)).toEqual([]);
+    const broken = mainChangesInScope(sha, OTHER, base, g);
+    expect(broken[0].why).toMatch(/cannot list the changes/);
   });
 
   it('does not carry a record made by a different gate version', () => {

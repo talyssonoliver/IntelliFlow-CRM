@@ -50,6 +50,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
+import { carryBlockers, workspaceGraph } from './lib/carry-scope.mjs';
 
 export const PAYLOAD_VERSION = 1;
 export const ATTEST_REF_PREFIX = 'refs/preship/';
@@ -653,10 +654,63 @@ export function carriedAttestation(flags, sha, preshipSha256, gitFn = git) {
     if (read.payload?.patch_id !== patch.patchId) {
       why.push(`payload records patch-id ${read.payload?.patch_id}, not ${patch.patchId}`);
     }
-    if (why.length === 0) return { ok: true, from, payload: read.payload };
+    if (why.length === 0) {
+      // Same diff, valid record. Now the compatibility condition: nothing main
+      // brought in since the attested base may touch this PR's affected scope.
+      const blockers = mainChangesInScope(sha, read.payload.patch_base, patch.base, gitFn);
+      if (blockers.length === 0) return { ok: true, from, payload: read.payload };
+      reasons.push(
+        `${from.slice(0, 9)}: same diff, but main changed ${blockers.length} file(s) in this PR's ` +
+          'affected scope since it was attested; re-run pre-ship on this head:',
+        ...blockers.slice(0, 10).map((b) => `    ${b.file} (${b.why})`),
+        ...(blockers.length > 10 ? [`    ...and ${blockers.length - 10} more`] : [])
+      );
+      continue;
+    }
     reasons.push(...why.map((w) => `${from.slice(0, 9)}: ${w}`));
   }
   return { ok: false, reasons };
+}
+
+/** Lines of `git <args>` output, or null when git fails. */
+function gitLines(gitFn, args) {
+  const r = gitFn(args);
+  return r.status === 0
+    ? String(r.stdout)
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean)
+    : null;
+}
+
+/**
+ * Main's changes between the attested base and the new base that fall in the
+ * PR's affected scope (see lib/carry-scope.mjs). An unknown or unreadable old
+ * base blocks: without it nothing can be said about what main changed.
+ * @returns {Array<{file: string, why: string}>}
+ */
+export function mainChangesInScope(sha, oldBase, newBase, gitFn = git) {
+  if (!/^[0-9a-f]{40}$/.test(String(oldBase ?? ''))) {
+    return [{ file: '(attested base)', why: 'the record has no patch_base to compare with' }];
+  }
+  if (oldBase === newBase) return [];
+  const mainFiles = gitLines(gitFn, ['diff', '--name-only', '--no-renames', oldBase, newBase]);
+  const prFiles = gitLines(gitFn, ['diff', '--name-only', '--no-renames', newBase, sha]);
+  const manifests = gitLines(gitFn, ['ls-tree', '-r', '--name-only', sha]);
+  if (!mainFiles || !prFiles || !manifests) {
+    return [
+      {
+        file: '(git)',
+        why: `cannot list the changes between ${oldBase.slice(0, 9)} and ${sha.slice(0, 9)}`,
+      },
+    ];
+  }
+  const graph = workspaceGraph(
+    manifests
+      .filter((p) => /(^|\/)package\.json$/.test(p) && !p.includes('node_modules/'))
+      .map((p) => ({ path: p, json: String(gitFn(['show', `${sha}:${p}`]).stdout ?? '') }))
+  );
+  return carryBlockers({ prFiles, mainFiles, graph });
 }
 
 function doVerify(flags, preshipFile) {
