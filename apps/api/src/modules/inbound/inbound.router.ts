@@ -1081,7 +1081,11 @@ export const inboundRouter = createTRPCRouter({
       // --- Step 3: idempotency ------------------------------------------------
       // coaStage is in the key: MEETING_BOOKED and a later PROPOSAL_READY both map to
       // NEGOTIATING, and the second must still get its own audit note.
-      const syncKey = `coa-sync:${input.coaLeadId}:${input.coaStage}:${input.status}`;
+      // stageChangedAt is in it too: COA sends the time of the latest event INTO
+      // the stage, so a retry of the same entry is still deduplicated, while a
+      // lead that genuinely re-enters the stage later (after being reopened)
+      // gets a new transition instead of being suppressed for ever.
+      const syncKey = `coa-sync:${input.coaLeadId}:${input.coaStage}:${input.status}:${input.stageChangedAt}`;
       const prior = await ctx.prisma.leadActivity.findFirst({
         where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
         select: { id: true },

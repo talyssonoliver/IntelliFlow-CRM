@@ -129,7 +129,7 @@ describe('inboundRouter — syncPipelineLead', () => {
       coaStage: 'CONTACTED',
       status: 'CONTACTED',
       stageChangedAt: '2026-10-02T09:00:00.000Z',
-      syncKey: `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED`,
+      syncKey: `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-10-02T09:00:00.000Z`,
     });
   });
 
@@ -239,7 +239,32 @@ describe('inboundRouter — syncPipelineLead', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           leadId: LEAD_ID,
-          metadata: { path: ['syncKey'], equals: `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED` },
+          metadata: {
+            path: ['syncKey'],
+            equals: `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-10-02T09:00:00.000Z`,
+          },
+        }),
+      })
+    );
+  });
+
+  it('keys idempotency on the stage entry, so a later re-entry into the same stage is not suppressed', async () => {
+    existingLead('NEW');
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const reentry = {
+      ...(input('CONTACTED') as object),
+      stageChangedAt: '2026-11-15T08:30:00.000Z',
+    };
+
+    await caller.syncPipelineLead(reentry as never);
+
+    expect(prismaMock.leadActivity.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          metadata: {
+            path: ['syncKey'],
+            equals: `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-11-15T08:30:00.000Z`,
+          },
         }),
       })
     );
@@ -311,7 +336,9 @@ describe('inboundRouter — syncPipelineLead', () => {
         data: { metadata: { syncKey: string }; description: string };
       }
     ).data;
-    expect(data.metadata.syncKey).toBe(`coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED`);
+    expect(data.metadata.syncKey).toBe(
+      `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-10-02T09:00:00.000Z`
+    );
     expect(data.description).toContain('NEW → CONTACTED');
   });
 
@@ -429,6 +456,6 @@ describe('inboundRouter — syncPipelineLead', () => {
     ]);
 
     expect(notes).toHaveLength(1);
-    expect(held).toBe(`coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED`);
+    expect(held).toBe(`coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-10-02T09:00:00.000Z`);
   });
 });
