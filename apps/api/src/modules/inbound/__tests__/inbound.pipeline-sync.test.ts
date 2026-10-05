@@ -287,7 +287,75 @@ describe('inboundRouter — syncPipelineLead', () => {
     const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
     const result = await caller.syncPipelineLead(input('CONTACTED'));
     expect(result).toMatchObject({ leadId: LEAD_ID, status: 'CONTACTED', changed: false });
+  });
+
+  it('still writes this request audit note and syncKey when another writer moved the lead', async () => {
+    existingLead('NEW');
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'CONTACTED' } as never);
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { message: 'Invalid status transition from CONTACTED to CONTACTED' },
+    });
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('CONTACTED'));
+    expect(result.changed).toBe(false);
+    expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
+    const data = (
+      prismaMock.leadActivity.create.mock.calls[0]?.[0] as unknown as {
+        data: { metadata: { syncKey: string }; description: string };
+      }
+    ).data;
+    expect(data.metadata.syncKey).toBe(`coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED`);
+    expect(data.description).toContain('NEW → CONTACTED');
+  });
+
+  it('maps a PersistenceError the re-read cannot explain to INTERNAL_SERVER_ERROR', async () => {
+    existingLead('NEW');
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'NEW' } as never);
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'PERSISTENCE_ERROR', message: 'Failed to save lead' },
+    });
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    expect(logged).toHaveBeenCalled();
+    logged.mockRestore();
     expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+  });
+
+  it('keeps BAD_REQUEST for a validation refusal the re-read cannot explain', async () => {
+    existingLead('NEW');
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'NEW' } as never);
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid status transition' },
+    });
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+    });
+  });
+
+  it('maps a throwing re-read to INTERNAL_SERVER_ERROR and logs the cause', async () => {
+    existingLead('NEW');
+    prismaMock.lead.findFirst.mockRejectedValueOnce(new Error('connection reset') as never);
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'PERSISTENCE_ERROR', message: 'Failed to save lead' },
+    });
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    expect(logged).toHaveBeenCalledWith(
+      expect.stringContaining('re-read failed'),
+      expect.objectContaining({ error: 'connection reset' })
+    );
+    logged.mockRestore();
   });
   it('replans when a concurrent sync moved the lead part of the way, then finishes the walk', async () => {
     existingLead('NEW');
