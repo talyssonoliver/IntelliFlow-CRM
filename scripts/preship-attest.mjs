@@ -523,10 +523,7 @@ function doPublish(flags, repoRoot, statePath, preshipFile) {
   // never match what CI computes. Best-effort; without it the record is still
   // valid for this exact SHA.
   const patch = patchIdentity(head, flags, git);
-  if (patch) {
-    payload.patch_id = patch.patchId;
-    payload.patch_base = patch.base;
-  }
+  Object.assign(payload, patchFields(patch));
 
   const tmpTag = '_preship-attest-tmp';
   const tag = git(['tag', '-a', '-f', '-F', '-', tmpTag, head], {
@@ -548,12 +545,55 @@ function doPublish(flags, repoRoot, statePath, preshipFile) {
     ]);
   }
 
-  process.stdout.write(
-    `pre-ship attestation published for ${head.slice(0, 9)} ` +
-      `(${payload.mode}, ${payload.steps_ok}/${payload.steps_expected} steps` +
-      (patch ? `, branch patch-id ${patch.patchId.slice(0, 12)}).\n` : ').\n')
-  );
+  process.stdout.write(publishedLine(head, payload, patch));
   return 0;
+}
+
+/** Payload fields that record the branch identity (none when it is unknown). */
+export function patchFields(patch) {
+  return patch ? { patch_id: patch.patchId, patch_base: patch.base } : {};
+}
+
+/** What --publish prints on success. */
+export function publishedLine(head, payload, patch) {
+  return (
+    `pre-ship attestation published for ${head.slice(0, 9)} ` +
+    `(${payload.mode}, ${payload.steps_ok}/${payload.steps_expected} steps` +
+    (patch ? `, branch patch-id ${patch.patchId.slice(0, 12)}).\n` : ').\n')
+  );
+}
+
+/** What --verify prints when it accepts a carried attestation. */
+export function carriedLine(sha, carried, base) {
+  const p = carried.payload;
+  return (
+    `pre-ship attestation OK for ${sha.slice(0, 9)}, carried from ${carried.from.slice(0, 9)}: ` +
+    `same branch diff against ${base} (patch-id ${p.patch_id.slice(0, 12)}), ` +
+    `${p.mode} gate, ${p.steps_ok}/${p.steps_expected} steps, attested ${p.attested_at}.\n`
+  );
+}
+
+/** Why --verify refused, and how to fix it, when nothing could be carried. */
+export function noAttestationLines(sha, carryReasons) {
+  return [
+    `NO PRE-SHIP ATTESTATION for ${sha}.`,
+    '',
+    '  No local pre-ship run has been recorded against this exact commit. This',
+    '  is usually because the head moved server-side (gh pr update-branch /',
+    '  the "Update branch" button) after the last local gate run.',
+    '',
+    '  No earlier attestation could be carried forward either:',
+    ...carryReasons.map((r) => `    - ${r}`),
+    '  (A clean rebase carries one; a changed diff, e.g. a resolved conflict, does not.)',
+    '',
+    '  To fix, from a checkout of this branch:',
+    `    git fetch origin && git checkout ${sha.slice(0, 9)}`,
+    '    pnpm run pre-ship',
+    '    pnpm preship:attest',
+    '  then re-run this check.',
+    '',
+    '  See docs/runbooks/preship-attestation.md.',
+  ];
 }
 
 /** Fetch an attestation ref and parse its tag object. */
@@ -643,33 +683,10 @@ function doVerify(flags, preshipFile) {
   if (ls.stdout.trim() === '') {
     const carried = carriedAttestation(flags, sha, preshipSha256);
     if (carried.ok) {
-      const p = carried.payload;
-      process.stdout.write(
-        `pre-ship attestation OK for ${sha.slice(0, 9)}, carried from ${carried.from.slice(0, 9)}: ` +
-          `same branch diff against ${flags.base} (patch-id ${p.patch_id.slice(0, 12)}), ` +
-          `${p.mode} gate, ${p.steps_ok}/${p.steps_expected} steps, attested ${p.attested_at}.\n`
-      );
+      process.stdout.write(carriedLine(sha, carried, flags.base));
       return 0;
     }
-    fail([
-      `NO PRE-SHIP ATTESTATION for ${sha}.`,
-      '',
-      '  No local pre-ship run has been recorded against this exact commit. This',
-      '  is usually because the head moved server-side (gh pr update-branch /',
-      '  the "Update branch" button) after the last local gate run.',
-      '',
-      '  No earlier attestation could be carried forward either:',
-      ...carried.reasons.map((r) => `    - ${r}`),
-      '  (A clean rebase carries one; a changed diff, e.g. a resolved conflict, does not.)',
-      '',
-      '  To fix, from a checkout of this branch:',
-      `    git fetch origin && git checkout ${sha.slice(0, 9)}`,
-      '    pnpm run pre-ship',
-      '    pnpm preship:attest',
-      '  then re-run this check.',
-      '',
-      '  See docs/runbooks/preship-attestation.md.',
-    ]);
+    fail(noAttestationLines(sha, carried.reasons));
   }
 
   const obj = ls.stdout.trim().split(/\s+/)[0];
