@@ -785,6 +785,29 @@ for (const a of args) {
   process.exit(2);
 }
 
+// --- Machine-wide test slot ---
+// At most three full test runs at once on the owner's machine, across every
+// repository (owner ruling 2026-10-05: ten gates and pre-ships ran together and
+// memory ran out). Re-run this gate under the shared semaphore, which waits for
+// a free slot and releases it on exit. --help/--list, --only subsets, CI, and a
+// run that already holds a slot (TEST_SLOT_HELD) go straight on, as does a
+// machine without the shared file. See scripts/with-test-slot.mjs.
+const subsetOrInfo = flags.help || flags.list || flags.only !== null;
+if (!subsetOrInfo && !process.env.TEST_SLOT_HELD && !process.env.CI) {
+  const slot = path.join(
+    process.env.TEST_SLOTS_DIR || 'C:/Users/talys/ops/test-slots',
+    'with-slot.mjs'
+  );
+  if (fs.existsSync(slot)) {
+    const r = spawnSync(
+      process.execPath,
+      [slot, '--label', 'intelliflow-pre-ship', '--', process.execPath, process.argv[1], ...args],
+      { stdio: 'inherit' }
+    );
+    process.exit(r.status ?? 1);
+  }
+}
+
 if (flags.help) {
   process.stdout.write(
     [
