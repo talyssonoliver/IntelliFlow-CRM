@@ -1,7 +1,7 @@
 name: Deploy Workers (Railway)
 
 # INFRA-TF-005 — railway-deploy CI for the events/ingestion/notifications
-# workers. After their GHCR images are (re)built by "Build & Push Images", this
+# workers. Run by hand after a promotion moved their :latest, this
 # redeploys the corresponding Railway services so the running workers pick up
 # the new image.
 #
@@ -13,10 +13,12 @@ name: Deploy Workers (Railway)
 # verify the `railway redeploy` invocation against your actual project/service
 # names (it could not be validated pre-provisioning).
 
+# Manual only. It used to follow every "Build & Push Images" run, which runs on
+# every merge to main, so arming RAILWAY_WORKERS_DEPLOYED would have made each
+# merge a production deploy. Production changes only through
+# promote-production.yml (gated, records a ledger entry); once the workers
+# exist, add them to its `redeploy` input instead of running this.
 on:
-  workflow_run:
-    workflows: ['Build & Push Images']
-    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -30,12 +32,8 @@ jobs:
   redeploy:
     name: Redeploy ${{ matrix.service }}
     runs-on: ubuntu-latest
-    # Dormant until the workers are provisioned + the flag is flipped; and (for
-    # the build-triggered path) only after a SUCCESSFUL image build.
-    if: >-
-      vars.RAILWAY_WORKERS_DEPLOYED == 'true' &&
-      (github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success')
+    # Dormant until the workers are provisioned and the flag is flipped.
+    if: vars.RAILWAY_WORKERS_DEPLOYED == 'true'
     strategy:
       fail-fast: false
       matrix:
