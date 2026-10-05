@@ -16,37 +16,64 @@
  *   ancestorPids: comma-separated PIDs above the gate, as recorded at its start.
  */
 
-import { isAlive, readGateState, reapGate } from './preship-lock.mjs';
+import { pathToFileURL } from 'node:url';
+import { isAlive, readGateState, reapGate } from './preship-process.mjs';
 
-const gatePid = Number.parseInt(process.argv[2], 10);
-const stateFile = process.argv[3];
-const ancestors = (process.argv[4] || '')
-  .split(',')
-  .map((v) => Number.parseInt(v, 10))
-  .filter((v) => Number.isInteger(v) && v > 0);
-const POLL_MS = Number(process.env.PRESHIP_WATCHDOG_POLL_MS || 2000);
+/** Parse argv (after the script): gate pid, state file, comma-separated ancestor pids. */
+export function parseArgs(argv) {
+  const gatePid = Number.parseInt(argv[0], 10);
+  const stateFile = argv[1];
+  const ancestors = (argv[2] || '')
+    .split(',')
+    .map((v) => Number.parseInt(v, 10))
+    .filter((v) => Number.isInteger(v) && v > 0);
+  return { gatePid, stateFile, ancestors, valid: Number.isInteger(gatePid) && Boolean(stateFile) };
+}
 
-if (!Number.isInteger(gatePid) || !stateFile) process.exit(2);
-
-const timer = setInterval(() => {
-  const state = readGateState(stateFile);
-  // The gate finished and removed its state file: nothing left to watch.
-  if (!state || state.gate_pid !== gatePid) {
-    clearInterval(timer);
-    return;
-  }
-  const gateAlive = isAlive(gatePid);
-  if (gateAlive && ancestors.every(isAlive)) return;
-  clearInterval(timer);
+/**
+ * One look at the gate. Returns 'done' (nothing left to watch: the gate finished
+ * and removed its state file), 'waiting' (gate and everything above it are alive)
+ * or 'reaped' (something is gone: the gate is ended if still alive, then its step
+ * tree and slot are cleaned up).
+ */
+export function watchTick({ gatePid, stateFile, ancestors }, deps = {}) {
+  const read = deps.readGateState ?? readGateState;
+  const alive = deps.isAlive ?? isAlive;
+  const reap = deps.reapGate ?? reapGate;
+  const kill = deps.kill ?? ((pid, sig) => process.kill(pid, sig));
+  const state = read(stateFile);
+  if (!state || state.gate_pid !== gatePid) return 'done';
+  const gateAlive = alive(gatePid);
+  if (gateAlive && ancestors.every((p) => alive(p))) return 'waiting';
   // Orphaned from above: nothing is waiting for this gate's verdict any more.
   // End the gate first so it cannot start another step while the tree is stopped.
   // Only the gate process: it started this watchdog, so a tree kill would take it too.
   if (gateAlive) {
     try {
-      process.kill(gatePid, 'SIGKILL');
+      kill(gatePid, 'SIGKILL');
     } catch {
       /* exited on its own meanwhile */
     }
   }
-  reapGate(state, stateFile);
-}, POLL_MS);
+  reap(state, stateFile);
+  return 'reaped';
+}
+
+/** Poll until the gate is done or reaped. Returns the interval handle's stop function. */
+export function startWatch(
+  target,
+  { pollMs = 2000, deps, setIntervalFn = setInterval, clearIntervalFn = clearInterval } = {}
+) {
+  const timer = setIntervalFn(() => {
+    if (watchTick(target, deps) !== 'waiting') clearIntervalFn(timer);
+  }, pollMs);
+  return () => clearIntervalFn(timer);
+}
+
+function main(argv = process.argv.slice(2)) {
+  const target = parseArgs(argv);
+  if (!target.valid) process.exit(2);
+  startWatch(target, { pollMs: Number(process.env.PRESHIP_WATCHDOG_POLL_MS || 2000) });
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
