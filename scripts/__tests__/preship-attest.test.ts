@@ -857,16 +857,54 @@ describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
 
   it('patchIdentity refreshes the base only when it is a branch of the publishing remote', () => {
     const calls: string[][] = [];
+    const warnings: string[] = [];
     const stub = (args: string[]) => {
       calls.push(args);
-      return { status: 1, stdout: '' };
+      return { status: 1, stdout: '', stderr: 'offline' };
     };
-    expect(patchIdentity(HEAD, { remote: 'origin', base: 'origin/main' }, stub)).toBeNull();
+    const warn = (m: string) => warnings.push(m);
+    expect(patchIdentity(HEAD, { remote: 'origin', base: 'origin/main' }, stub, warn)).toBeNull();
     expect(calls[0]).toEqual(['fetch', '--quiet', 'origin', 'main']);
+    // Neither a failed refresh nor a missing patch-id is silent.
+    expect(warnings.join('')).toMatch(/could not refresh origin\/main \(offline\)/);
+    expect(warnings.join('')).toMatch(/will not carry across a rebase/);
 
     calls.length = 0;
-    patchIdentity(HEAD, { remote: 'upstream-path', base: 'main' }, stub);
+    patchIdentity(HEAD, { remote: 'upstream-path', base: 'main' }, stub, warn);
     expect(calls.some((c) => c[0] === 'fetch')).toBe(false);
+  });
+
+  it('branchPatchId keeps non-UTF-8 bytes distinct (no lossy decoding of the diff)', () => {
+    const { work, sha, g } = makeBranchRepo();
+    // Latin-1 e-acute vs e-grave: both decode to U+FFFD if read as UTF-8.
+    const latin = (byte: number) => Buffer.from([0x63, 0x61, 0x66, byte, 0x0a]);
+    fs.writeFileSync(path.join(work, 'feature.txt'), latin(0xe9));
+    g(['add', 'feature.txt']);
+    g(['commit', '-q', '--amend', '-m', 'feature']);
+    const acute = branchPatchId(g(['rev-parse', 'HEAD']).stdout.trim(), 'main', g)?.patchId;
+    fs.writeFileSync(path.join(work, 'feature.txt'), latin(0xe8));
+    g(['add', 'feature.txt']);
+    g(['commit', '-q', '--amend', '-m', 'feature']);
+    const grave = branchPatchId(g(['rev-parse', 'HEAD']).stdout.trim(), 'main', g)?.patchId;
+    expect(acute).toMatch(/^[0-9a-f]{40}$/);
+    expect(grave).not.toBe(acute);
+    expect(sha).toBeTruthy();
+  });
+
+  it('branchPatchId ignores personal diff config, so a laptop and CI agree', () => {
+    const { sha, g } = makeBranchRepo();
+    const plain = branchPatchId(sha, 'main', g)?.patchId;
+    for (const [key, value] of [
+      ['diff.noprefix', 'true'],
+      ['diff.srcPrefix', 'SRC/'],
+      ['diff.context', '1'],
+      ['diff.interHunkContext', '20'],
+      ['core.quotePath', 'false'],
+    ]) {
+      g(['config', key, value]);
+      expect(branchPatchId(sha, 'main', g)?.patchId, key).toBe(plain);
+      g(['config', '--unset', key]);
+    }
   });
 
   it('publish records the patch-id and a second ref keyed by it', () => {
