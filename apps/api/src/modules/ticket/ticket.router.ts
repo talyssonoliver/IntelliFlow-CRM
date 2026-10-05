@@ -151,10 +151,6 @@ function autoRouteNewTicket(
   const category = params.category || 'GENERAL';
 
   (async () => {
-    // Find eligible agents
-    const candidates = await routingService.suggestAssignees(params.tenantId, category, 10);
-    if (candidates.length === 0) return; // No agents available — leave unassigned
-
     // Check for a matching routing rule first
     const ticket = await ctx.prismaWithTenant.ticket.findUnique({
       where: { id: params.ticketId },
@@ -169,6 +165,10 @@ function autoRouteNewTicket(
       { status: ticket.status, slaStatus: ticket.slaStatus }
     );
 
+    // Find eligible agents; a matching rule resolves its own assignee and needs none
+    const candidates = await routingService.suggestAssignees(params.tenantId, category, 10);
+    if (candidates.length === 0 && !matchingRule) return; // No agents available — leave unassigned
+
     let assigneeId: string;
     let assigneeName: string;
     let reason: string;
@@ -178,9 +178,7 @@ function autoRouteNewTicket(
 
     if (matchingRule) {
       assigneeId = matchingRule.assignToUserId;
-      assigneeName =
-        candidates.find((c: { agentId: string }) => c.agentId === matchingRule.assignToUserId)
-          ?.name || 'Unknown';
+      assigneeName = matchingRule.assigneeName;
       reason = `Auto-routed on creation: rule match "${matchingRule.ruleName}"`;
       routingMethod = 'rule_match';
       ruleId = matchingRule.id;
