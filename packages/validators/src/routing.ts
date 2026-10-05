@@ -24,10 +24,11 @@ export const routingConditionSchema = z.object({
 export type RoutingCondition = z.infer<typeof routingConditionSchema>;
 
 // --- Action Schema ---
+// Every supported action assigns to someone, so each needs a target: a user id,
+// a team id or a skill name. An empty target would match and then assign nobody.
 export const routingActionSchema = z.object({
   type: z.enum(ROUTING_ACTION_TYPES),
-  target: z.string().optional(),
-  channels: z.array(z.string()).optional(),
+  target: z.string().trim().min(1, 'Action target is required'),
 });
 export type RoutingAction = z.infer<typeof routingActionSchema>;
 

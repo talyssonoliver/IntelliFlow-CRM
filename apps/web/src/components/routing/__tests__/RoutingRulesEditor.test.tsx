@@ -6,9 +6,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+// Captures the DndContext drag-end handler so a test can drop a rule.
+const dnd = vi.hoisted(() => ({ onDragEnd: undefined as undefined | ((e: any) => void) }));
+
 // Mock @dnd-kit/core
 vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children }: any) => <div data-testid="dnd-context">{children}</div>,
+  DndContext: ({ children, onDragEnd }: any) => {
+    dnd.onDragEnd = onDragEnd;
+    return <div data-testid="dnd-context">{children}</div>;
+  },
   closestCenter: vi.fn(),
   KeyboardSensor: vi.fn(),
   PointerSensor: vi.fn(),
@@ -50,7 +56,7 @@ const mockRules = [
   {
     id: 'rule-1',
     name: 'High Score Leads',
-    priority: 0,
+    priority: 1,
     isActive: true,
     conditions: [{ field: 'leadScore', operator: 'greater_than', value: 80 }],
     actions: [{ type: 'assign_to_team', target: 'Senior Sales' }],
@@ -58,10 +64,10 @@ const mockRules = [
   {
     id: 'rule-2',
     name: 'Website Leads',
-    priority: 1,
+    priority: 0,
     isActive: false,
     conditions: [{ field: 'leadSource', operator: 'equals', value: 'WEBSITE' }],
-    actions: [{ type: 'notify', channels: ['email'] }],
+    actions: [{ type: 'assign_by_skill', target: 'sales' }],
   },
 ];
 
@@ -148,13 +154,7 @@ vi.mock('@intelliflow/domain', () => ({
     'not_in',
     'contains',
   ],
-  ROUTING_ACTION_TYPES: [
-    'assign_to_user',
-    'assign_to_team',
-    'assign_by_skill',
-    'notify',
-    'escalate',
-  ],
+  ROUTING_ACTION_TYPES: ['assign_to_user', 'assign_to_team', 'assign_by_skill'],
 }));
 
 vi.mock('@intelliflow/validators', () => ({
@@ -221,6 +221,30 @@ describe('RoutingRulesEditor', () => {
     render(<RoutingRulesEditor />);
 
     expect(screen.getByRole('list', { name: /routing rules/i })).toBeInTheDocument();
+  });
+
+  it('drag-reorder gives the rule dropped on top the highest priority (higher runs first)', () => {
+    render(<RoutingRulesEditor />);
+
+    // The list shows rule-1 (priority 1) above rule-2 (priority 0). Drop rule-2 on rule-1.
+    dnd.onDragEnd?.({ active: { id: 'rule-2' }, over: { id: 'rule-1' } });
+
+    expect(mockReorderRules.mutate).toHaveBeenCalledWith({
+      rules: [
+        { id: 'rule-2', priority: 1 },
+        { id: 'rule-1', priority: 0 },
+      ],
+    });
+  });
+
+  it('ignores a drop that does not move a rule', () => {
+    render(<RoutingRulesEditor />);
+
+    dnd.onDragEnd?.({ active: { id: 'rule-1' }, over: { id: 'rule-1' } });
+    dnd.onDragEnd?.({ active: { id: 'rule-1' }, over: null });
+    dnd.onDragEnd?.({ active: { id: 'unknown' }, over: { id: 'rule-1' } });
+
+    expect(mockReorderRules.mutate).not.toHaveBeenCalled();
   });
 
   it('shows empty state when no rules', async () => {

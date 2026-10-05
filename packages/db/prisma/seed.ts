@@ -7586,17 +7586,18 @@ async function seedRoutingRules(tenantId: string) {
   // channels? }. These rules used to be keyed objects with `gte`/`lt` operators,
   // which the engine cannot iterate and the UI showed as empty. Inclusive
   // thresholds are written as `greater_than N-1` (all compared fields are ints).
+  //
+  // Priority: a HIGHER number is evaluated FIRST (schema + LeadRoutingService),
+  // so the list below runs top to bottom with priorities 7..0. Only actions the
+  // engine executes are seeded (assign_to_user / assign_to_team / assign_by_skill).
   const rules = [
     {
       id: SEED_IDS.routingRules.enterpriseDeals,
       name: 'Enterprise Deals',
       description: 'Route high-value enterprise leads ($100k+) to senior sales team',
-      priority: 0,
+      priority: 7,
       conditions: [{ field: 'estimatedValue', operator: 'greater_than', value: 99999 }],
-      actions: [
-        { type: 'assign_to_team', target: SEED_IDS.teams.sales },
-        { type: 'notify', channels: ['slack', 'email'] },
-      ],
+      actions: [{ type: 'assign_to_team', target: SEED_IDS.teams.sales }],
       isActive: true,
       createdBy: SEED_IDS.users.admin,
     },
@@ -7604,7 +7605,7 @@ async function seedRoutingRules(tenantId: string) {
       id: SEED_IDS.routingRules.technicalSupport,
       name: 'Technical Support',
       description: 'Route technical leads from website/API to Mike Davis',
-      priority: 1,
+      priority: 6,
       conditions: [
         { field: 'leadSource', operator: 'in', value: ['WEBSITE', 'API'] },
         { field: 'tags', operator: 'contains', value: 'technical' },
@@ -7617,12 +7618,9 @@ async function seedRoutingRules(tenantId: string) {
       id: SEED_IDS.routingRules.urgentEscalation,
       name: 'Urgent Escalation',
       description: 'Escalate hot leads (score 90+) to Sarah Johnson with notifications',
-      priority: 2,
+      priority: 5,
       conditions: [{ field: 'leadScore', operator: 'greater_than', value: 89 }],
-      actions: [
-        { type: 'assign_to_user', target: SEED_IDS.users.sarahJohnson },
-        { type: 'notify', channels: ['slack', 'email'] },
-      ],
+      actions: [{ type: 'assign_to_user', target: SEED_IDS.users.sarahJohnson }],
       isActive: true,
       createdBy: SEED_IDS.users.admin,
     },
@@ -7630,7 +7628,7 @@ async function seedRoutingRules(tenantId: string) {
       id: SEED_IDS.routingRules.highValueLeads,
       name: 'High-Value Leads',
       description: 'Route leads with score >= 70 and value >= $50k to sales team',
-      priority: 3,
+      priority: 4,
       conditions: [
         { field: 'leadScore', operator: 'greater_than', value: 69 },
         { field: 'estimatedValue', operator: 'greater_than', value: 49999 },
@@ -7643,7 +7641,7 @@ async function seedRoutingRules(tenantId: string) {
       id: SEED_IDS.routingRules.technicalEvaluation,
       name: 'Technical Evaluation',
       description: 'Route website leads with technical tags to Mike Davis for evaluation',
-      priority: 4,
+      priority: 3,
       conditions: [
         { field: 'leadSource', operator: 'equals', value: 'WEBSITE' },
         { field: 'tags', operator: 'contains', value: 'technical' },
@@ -7656,7 +7654,7 @@ async function seedRoutingRules(tenantId: string) {
       id: SEED_IDS.routingRules.websiteInquiries,
       name: 'Website Inquiries',
       description: 'Route qualified website leads (score 40+) to sales team',
-      priority: 5,
+      priority: 2,
       conditions: [
         { field: 'leadSource', operator: 'equals', value: 'WEBSITE' },
         { field: 'leadScore', operator: 'greater_than', value: 39 },
@@ -7669,7 +7667,7 @@ async function seedRoutingRules(tenantId: string) {
       id: SEED_IDS.routingRules.referralLeads,
       name: 'Referral Leads',
       description: 'Route all referral leads to Emily Davis',
-      priority: 6,
+      priority: 1,
       conditions: [{ field: 'leadSource', operator: 'equals', value: 'REFERRAL' }],
       actions: [{ type: 'assign_to_user', target: SEED_IDS.users.emilyDavis }],
       isActive: true,
@@ -7679,7 +7677,7 @@ async function seedRoutingRules(tenantId: string) {
       id: SEED_IDS.routingRules.lowScoreNurture,
       name: 'Low-Score Nurture',
       description: 'Route low-score leads (< 30) to support team for nurturing',
-      priority: 7,
+      priority: 0,
       conditions: [{ field: 'leadScore', operator: 'less_than', value: 30 }],
       actions: [{ type: 'assign_to_team', target: SEED_IDS.teams.support }],
       isActive: false,

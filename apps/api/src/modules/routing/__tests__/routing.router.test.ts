@@ -48,6 +48,18 @@ describe('Routing Router', () => {
       expect(result.nextCursor).toBeUndefined();
     });
 
+    it('lists rules in evaluation order: priority DESC (higher runs first), ties by creation', async () => {
+      (prismaMock.routingRule.findMany as any).mockResolvedValue([mockRule]);
+
+      await caller.list({ limit: 20 });
+
+      expect(prismaMock.routingRule.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }, { id: 'asc' }],
+        })
+      );
+    });
+
     it('should filter by isActive', async () => {
       (prismaMock.routingRule.findMany as any).mockResolvedValue([mockRule]);
 

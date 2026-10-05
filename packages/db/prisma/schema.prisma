@@ -4254,10 +4254,10 @@ model RoutingRule {
   ruleType    RoutingRuleType @default(LEAD)
   name        String
   description String?
-  priority    Int      @default(0) // Higher = evaluated first
+  priority    Int      @default(0) // Higher = evaluated first (engine: priority DESC; the editor lists and reorders the same way)
   isActive    Boolean  @default(true)
   conditions  Json     // Array of condition objects
-  actions     Json     // Array of action objects (assign to user/team/skill)
+  actions     Json     // Array of { type: assign_to_user|assign_to_team|assign_by_skill, target } — target = user id | team id | skill name
   createdBy   String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

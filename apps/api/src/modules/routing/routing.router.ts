@@ -85,7 +85,10 @@ function getLeadRoutingService(ctx: Context): LeadRoutingService {
 
 export const routingRouter = createTRPCRouter({
   /**
-   * List routing rules with optional filtering and cursor pagination
+   * List routing rules with optional filtering and cursor pagination.
+   * Ordered the way the engine evaluates them: priority DESC (higher number =
+   * evaluated first), ties by creation order. The first row is the first rule
+   * to be tried.
    */
   list: tenantProcedure
     .input(
@@ -106,7 +109,7 @@ export const routingRouter = createTRPCRouter({
         where,
         take: input.limit + 1,
         ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
-        orderBy: { priority: 'asc' },
+        orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }, { id: 'asc' }],
       });
 
       let nextCursor: string | undefined;
@@ -202,7 +205,9 @@ export const routingRouter = createTRPCRouter({
     }),
 
   /**
-   * Batch reorder routing rules by updating priorities
+   * Batch reorder routing rules by updating priorities.
+   * Convention: a HIGHER priority is evaluated FIRST (schema + engine), so the
+   * caller assigns the largest number to the rule that should run first.
    */
   reorder: tenantProcedure
     .input(
