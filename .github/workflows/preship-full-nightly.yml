@@ -11,12 +11,15 @@ name: Pre-ship Full (Nightly Cross-Browser)
 # step. It is NOT wired into any push/PR trigger — the default push gate stays
 # single-browser. See docs/dev/preship-full.md.
 #
-# No preship bypass is used. The laptop-only gates that cannot exist on a CI
-# runner (codex-review needs a local OAuth session; gitleaks/terraform/osv-scanner
-# are optional local tools) degrade to an honest SKIP under CI=true — pre-ship.mjs
-# flips codex-review to non-required when process.env.CI is set (its own contract:
-# "There is NO CI enforcement — pre-push only"). Every runnable gate AND the E2E
-# matrix remain required and block. The Docker stack is started via `docker
+# No preship bypass is used. The one laptop-only gate that cannot exist on a CI
+# runner (codex-review needs a local OAuth session) degrades to an honest SKIP
+# under CI=true — pre-ship.mjs flips codex-review to non-required when
+# process.env.CI is set (its own contract: "There is NO CI enforcement —
+# pre-push only"). terraform-fmt is required, so
+# Terraform is INSTALLED below (pinned to terraform.yml's TF_VERSION); without
+# it the step is SKIPPED_PRECONDITION -> MISSING and fails the gate. gitleaks and
+# osv-scanner are advisory (required:false) and skip when absent. Every runnable
+# gate AND the E2E matrix remain required and block. The Docker stack is started via `docker
 # compose` (container names intelliflow-postgres / intelliflow-redis) so the
 # gate's docker-name probes see it and the DB-backed steps (integration/coverage)
 # actually run rather than degrading to MISSING.
@@ -102,6 +105,14 @@ jobs:
         # pre-ship's `python-coverage` step (#755) runs the tools/audit and
         # tools/plan pytest suites under coverage.
         run: pip install pyyaml click pytest pytest-cov
+
+      - name: Setup Terraform
+        # pre-ship's required `terraform-fmt` step runs `terraform -chdir=
+        # infra/terraform fmt -check -recursive`. Version matches TF_VERSION in
+        # terraform.yml.
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: '1.9.8'
 
       - name: Start Postgres + Redis (docker compose)
         # Use `docker compose` (not GH `services:`) so the containers are named
