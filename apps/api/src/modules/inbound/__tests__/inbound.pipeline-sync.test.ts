@@ -93,6 +93,49 @@ describe('inboundRouter — syncPipelineLead', () => {
     });
   });
 
+  it('maps a lead-creation persistence failure with no lead to INTERNAL_SERVER_ERROR', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never); // fast path
+    createLead().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'PERSISTENCE_ERROR', message: 'Failed to save lead' },
+    });
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never); // race re-read
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+  });
+
+  it('recovers a concurrent insert that surfaced as a persistence failure', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never); // fast path
+    createLead().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'PERSISTENCE_ERROR', message: 'Unique constraint failed' },
+    });
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ id: LEAD_ID } as never); // race re-read
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('CONTACTED'));
+
+    expect(result.leadId).toBe(LEAD_ID);
+    expect(result.created).toBe(false);
+  });
+
+  it('keeps BAD_REQUEST for a lead-creation validation refusal', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never);
+    createLead().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid email' },
+    });
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never);
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+    });
+  });
+
   it('creates a new lead with source EMAIL + coa tags and walks NEW -> CONTACTED', async () => {
     prismaMock.lead.findFirst.mockResolvedValueOnce(null as never);
     createLead().mockResolvedValueOnce({ isFailure: false, value: { id: { value: LEAD_ID } } });
