@@ -356,6 +356,13 @@ describe('AutomationRuleBuilder', () => {
     );
   });
 
+  it('opens the create dialog from the empty state', () => {
+    mockListQuery.mockReturnValue({ data: [], isLoading: false });
+    render(<AutomationRuleBuilder />);
+    fireEvent.click(screen.getByText('Create Rule'));
+    expect(screen.getByText('Create Automation Rule')).toBeInTheDocument();
+  });
+
   it('shows the loading skeleton while rules load', () => {
     mockListQuery.mockReturnValue({ data: undefined, isLoading: true });
     render(<AutomationRuleBuilder />);

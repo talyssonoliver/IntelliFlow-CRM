@@ -273,16 +273,176 @@ export function AutomationRuleBuilder() {
     }));
   }
 
+  // Shared by the empty state and the list so the first rule can be created from either.
+  const ruleDialog = (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{editingId ? 'Edit Rule' : 'Create Automation Rule'}</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="rule-name">Name</Label>
+            <Input
+              id="rule-name"
+              value={formData.name}
+              onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
+              placeholder="e.g. High Priority Billing"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="rule-desc">Description</Label>
+            <Textarea
+              id="rule-desc"
+              value={formData.description}
+              onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="rule-priority">Priority</Label>
+            <Input
+              id="rule-priority"
+              type="number"
+              min={0}
+              value={formData.priority}
+              onChange={(e) =>
+                setFormData((f) => ({ ...f, priority: parseInt(e.target.value) || 0 }))
+              }
+            />
+          </div>
+
+          {/* Conditions */}
+          <div>
+            <h4 className="mb-2 text-sm font-medium">Conditions</h4>
+            {formData.conditions.map((condition, idx) => (
+              <div key={idx} className="mb-2 grid grid-cols-3 gap-2">
+                <Select
+                  value={condition.field}
+                  onValueChange={(v) => {
+                    if (isOneOf(TICKET_ROUTING_CONDITION_FIELDS, v)) {
+                      updateCondition(idx, { field: v });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TICKET_ROUTING_CONDITION_FIELDS.map((field) => (
+                      <SelectItem key={field} value={field}>
+                        {FIELD_LABELS[field]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={condition.operator}
+                  onValueChange={(v) => {
+                    if (isOneOf(TICKET_ROUTING_CONDITION_OPERATORS, v)) {
+                      updateCondition(idx, { operator: v });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TICKET_ROUTING_CONDITION_OPERATORS.map((operator) => (
+                      <SelectItem key={operator} value={operator}>
+                        {OPERATOR_LABELS[operator]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  value={condition.value}
+                  onChange={(e) => updateCondition(idx, { value: e.target.value })}
+                  placeholder={
+                    isListOperator(condition.operator)
+                      ? 'Comma-separated values'
+                      : TICKET_ROUTING_FIELD_VALUES[condition.field].join(' / ')
+                  }
+                  aria-label={`Condition ${idx + 1} value`}
+                />
+              </div>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setFormData((f) => ({ ...f, conditions: [...f.conditions, emptyCondition] }))
+              }
+            >
+              Add Condition
+            </Button>
+          </div>
+
+          {/* Actions */}
+          <div>
+            <h4 className="mb-2 text-sm font-medium">Actions</h4>
+            {formData.actions.map((action, idx) => (
+              <div key={idx} className="mb-2 grid grid-cols-2 gap-2">
+                <Select
+                  value={action.type}
+                  onValueChange={(v) => {
+                    if (isOneOf(TICKET_ROUTING_ACTION_TYPES, v)) {
+                      updateAction(idx, { type: v });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TICKET_ROUTING_ACTION_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {ACTION_LABELS[type]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  value={action.target}
+                  onChange={(e) => updateAction(idx, { target: e.target.value })}
+                  placeholder={action.type === 'assign_to_user' ? 'User ID' : 'Skill name'}
+                  aria-label={`Action ${idx + 1} target`}
+                />
+              </div>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFormData((f) => ({ ...f, actions: [...f.actions, emptyAction] }))}
+            >
+              Add Action
+            </Button>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={!formData.name.trim()}>
+            {editingId ? 'Save Changes' : 'Create Rule'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   if (isLoading) return <ConfigCardSkeleton />;
 
   if (!rules.length) {
     return (
-      <ConfigEmptyState
-        title="No Automation Rules"
-        description="Create rules to automatically route, assign, and escalate tickets."
-        actionLabel="Create Rule"
-        onAction={openCreate}
-      />
+      <>
+        <ConfigEmptyState
+          title="No Automation Rules"
+          description="Create rules to automatically route, assign, and escalate tickets."
+          actionLabel="Create Rule"
+          onAction={openCreate}
+        />
+        {ruleDialog}
+      </>
     );
   }
 
@@ -379,160 +539,7 @@ export function AutomationRuleBuilder() {
         </TableBody>
       </Table>
 
-      {/* Rule Builder Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Rule' : 'Create Automation Rule'}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="rule-name">Name</Label>
-              <Input
-                id="rule-name"
-                value={formData.name}
-                onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
-                placeholder="e.g. High Priority Billing"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="rule-desc">Description</Label>
-              <Textarea
-                id="rule-desc"
-                value={formData.description}
-                onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="rule-priority">Priority</Label>
-              <Input
-                id="rule-priority"
-                type="number"
-                min={0}
-                value={formData.priority}
-                onChange={(e) =>
-                  setFormData((f) => ({ ...f, priority: parseInt(e.target.value) || 0 }))
-                }
-              />
-            </div>
-
-            {/* Conditions */}
-            <div>
-              <h4 className="mb-2 text-sm font-medium">Conditions</h4>
-              {formData.conditions.map((condition, idx) => (
-                <div key={idx} className="mb-2 grid grid-cols-3 gap-2">
-                  <Select
-                    value={condition.field}
-                    onValueChange={(v) => {
-                      if (isOneOf(TICKET_ROUTING_CONDITION_FIELDS, v)) {
-                        updateCondition(idx, { field: v });
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TICKET_ROUTING_CONDITION_FIELDS.map((field) => (
-                        <SelectItem key={field} value={field}>
-                          {FIELD_LABELS[field]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={condition.operator}
-                    onValueChange={(v) => {
-                      if (isOneOf(TICKET_ROUTING_CONDITION_OPERATORS, v)) {
-                        updateCondition(idx, { operator: v });
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TICKET_ROUTING_CONDITION_OPERATORS.map((operator) => (
-                        <SelectItem key={operator} value={operator}>
-                          {OPERATOR_LABELS[operator]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    value={condition.value}
-                    onChange={(e) => updateCondition(idx, { value: e.target.value })}
-                    placeholder={
-                      isListOperator(condition.operator)
-                        ? 'Comma-separated values'
-                        : TICKET_ROUTING_FIELD_VALUES[condition.field].join(' / ')
-                    }
-                    aria-label={`Condition ${idx + 1} value`}
-                  />
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setFormData((f) => ({ ...f, conditions: [...f.conditions, emptyCondition] }))
-                }
-              >
-                Add Condition
-              </Button>
-            </div>
-
-            {/* Actions */}
-            <div>
-              <h4 className="mb-2 text-sm font-medium">Actions</h4>
-              {formData.actions.map((action, idx) => (
-                <div key={idx} className="mb-2 grid grid-cols-2 gap-2">
-                  <Select
-                    value={action.type}
-                    onValueChange={(v) => {
-                      if (isOneOf(TICKET_ROUTING_ACTION_TYPES, v)) {
-                        updateAction(idx, { type: v });
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TICKET_ROUTING_ACTION_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {ACTION_LABELS[type]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    value={action.target}
-                    onChange={(e) => updateAction(idx, { target: e.target.value })}
-                    placeholder={action.type === 'assign_to_user' ? 'User ID' : 'Skill name'}
-                    aria-label={`Action ${idx + 1} target`}
-                  />
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setFormData((f) => ({ ...f, actions: [...f.actions, emptyAction] }))}
-              >
-                Add Action
-              </Button>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={!formData.name.trim()}>
-              {editingId ? 'Save Changes' : 'Create Rule'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {ruleDialog}
     </div>
   );
 }
