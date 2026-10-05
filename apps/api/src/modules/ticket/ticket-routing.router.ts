@@ -110,7 +110,8 @@ function conflictOnDuplicateName(error: unknown): never {
   if (isUniqueViolation(error)) {
     throw new TRPCError({
       code: 'CONFLICT',
-      message: 'A routing rule with this name already exists',
+      message:
+        'A routing rule with this name already exists (rule names are shared with lead routing rules)',
     });
   }
   throw error;
