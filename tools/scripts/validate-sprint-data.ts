@@ -191,7 +191,7 @@ type ParsedTaskJson = {
   repoRelativePath: string;
 };
 
-function indexTaskJsonFiles(taskJsonFiles: string[]): {
+export function indexTaskJsonFiles(taskJsonFiles: string[]): {
   byId: Map<string, ParsedTaskJson>;
   parseErrors: string[];
   missingTaskIdFiles: string[];
@@ -303,7 +303,7 @@ function validateCsvStructure(tasks: SprintTask[]): GateResult[] {
 // Gate: Sprint Task Counts
 // ============================================================================
 
-function validateSprintCounts(
+export function validateSprintCounts(
   tasks: SprintTask[],
   metricsDir: string,
   targetSprint: string
@@ -484,7 +484,7 @@ function checkJsonMissingFiles(
   };
 }
 
-function checkJsonStatusConsistency(
+export function checkJsonStatusConsistency(
   sprintTasks: SprintTask[],
   index: ReturnType<typeof indexTaskJsonFiles>
 ): GateResult {
@@ -699,4 +699,10 @@ function main(): void {
   process.exit(exitCode);
 }
 
-main();
+// Run only as a CLI, so the gates above can be imported by tests.
+if (
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith('validate-sprint-data.ts')
+) {
+  main();
+}
