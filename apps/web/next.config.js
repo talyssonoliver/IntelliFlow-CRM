@@ -1,4 +1,5 @@
 const path = require('path');
+const { withSentryConfig } = require('@sentry/nextjs');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -236,4 +237,15 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
 
-module.exports = withBundleAnalyzer(nextConfig);
+// Sentry build plugin. Source-map upload needs SENTRY_AUTH_TOKEN (+ org/project);
+// without it the upload is skipped silently so CI and preview builds are unaffected.
+const sentryBuildOptions = {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true,
+  telemetry: false,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+};
+
+module.exports = withSentryConfig(withBundleAnalyzer(nextConfig), sentryBuildOptions);
