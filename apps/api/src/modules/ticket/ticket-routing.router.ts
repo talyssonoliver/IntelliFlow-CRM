@@ -257,7 +257,7 @@ export const ticketRoutingRouter = createTRPCRouter({
           tenantId: ctx.tenant.tenantId,
           ruleType: 'TICKET',
           name: input.name,
-          description: input.description ?? null,
+          description: input.description || null,
           priority: input.priority,
           isActive: input.isActive,
           conditions: input.conditions,
@@ -275,7 +275,9 @@ export const ticketRoutingRouter = createTRPCRouter({
    * Update a ticket automation rule. Only provided fields change.
    */
   updateRule: tenantProcedure.input(updateTicketRuleSchema).mutation(async ({ ctx, input }) => {
-    const { id, ...data } = input;
+    const { id, description, ...rest } = input;
+    // An empty description clears it (stored as null); undefined leaves it unchanged.
+    const data = description === undefined ? rest : { ...rest, description: description || null };
     const where = { id, tenantId: ctx.tenant.tenantId, ruleType: 'TICKET' } as const;
 
     const existing = await ctx.prismaWithTenant.routingRule.findFirst({ where });

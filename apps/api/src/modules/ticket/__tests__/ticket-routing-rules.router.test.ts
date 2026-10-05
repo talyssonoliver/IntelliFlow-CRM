@@ -266,6 +266,16 @@ describe('ticketRouting rule CRUD', () => {
       expect(rows[0].actions).toEqual(skillActions);
     });
 
+    it('clears the description when it is sent empty and keeps it when omitted', async () => {
+      const rows = useStore([rule({ id: 'r1', description: 'old' })]);
+
+      await caller.updateRule({ id: 'r1', name: 'Renamed' });
+      expect(rows[0].description).toBe('old');
+
+      await caller.updateRule({ id: 'r1', description: '' });
+      expect(rows[0].description).toBeNull();
+    });
+
     it('scopes the write by tenant and rule type', async () => {
       useStore([rule({ id: 'r1' })]);
 
