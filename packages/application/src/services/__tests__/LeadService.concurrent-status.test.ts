@@ -16,6 +16,7 @@ import {
   Lead,
   LeadId,
   LeadStatusConflictError,
+  Result,
   type LeadRepository,
   type LeadStatus,
 } from '@intelliflow/domain';
@@ -37,6 +38,7 @@ function makeLead(): Lead {
 
 class RacyLeadRepository {
   status: LeadStatus = 'NEW';
+  score = 80;
   /** When set, the next findById returns its snapshot, then waits for this gate. */
   pauseNextReadUntil: Promise<void> | null = null;
   constructor(private readonly template: Lead) {}
@@ -47,7 +49,7 @@ class RacyLeadRepository {
       email: t.email,
       source: t.source,
       status: this.status,
-      score: { value: t.score.value, confidence: 1 },
+      score: { value: this.score, confidence: 1 },
       ownerId: t.ownerId,
       tenantId: t.tenantId,
       createdAt: t.createdAt,
@@ -67,11 +69,17 @@ class RacyLeadRepository {
     if (opts?.expectedStatus !== undefined && this.status !== opts.expectedStatus) {
       throw new LeadStatusConflictError(lead.id.value, opts.expectedStatus);
     }
-    this.status = lead.status;
+    // Mirrors the real adapters: a compare-and-set writes the status, while a
+    // plain save writes the score fields but NEVER rewrites `status`.
+    if (opts?.expectedStatus !== undefined) {
+      this.status = lead.status;
+    } else {
+      this.score = lead.score.value;
+    }
   }
 }
 
-function build(repo: RacyLeadRepository): LeadService {
+function build(repo: RacyLeadRepository, scoreTo = 50): LeadService {
   const tx: TransactionPort = { run: (work) => work({} as never) };
   const bus = {
     publish: vi.fn().mockResolvedValue(undefined),
@@ -79,9 +87,13 @@ function build(repo: RacyLeadRepository): LeadService {
   } as unknown as EventBusPort;
   return new LeadService(
     repo as unknown as LeadRepository,
-    {} as ContactRepository,
-    {} as AccountRepository,
-    {} as AIServicePort,
+    { save: vi.fn().mockResolvedValue(undefined) } as unknown as ContactRepository,
+    { save: vi.fn().mockResolvedValue(undefined) } as unknown as AccountRepository,
+    {
+      scoreLead: vi
+        .fn()
+        .mockResolvedValue(Result.ok({ score: scoreTo, confidence: 0.9, modelVersion: 'm1' })),
+    } as unknown as AIServicePort,
     bus,
     tx
   );
@@ -123,5 +135,92 @@ describe('LeadService.changeLeadStatus concurrency', () => {
 
     expect(r.isSuccess).toBe(true);
     expect(repo.status).toBe('CONTACTED');
+  });
+});
+
+describe('LeadService status-changing and scoring saves are compare-and-set safe', () => {
+  async function stalePause(repo: RacyLeadRepository, run: () => Promise<unknown>) {
+    let release!: () => void;
+    repo.pauseNextReadUntil = new Promise<void>((r) => (release = r));
+    const pending = run();
+    await Promise.resolve();
+    return { release, pending };
+  }
+
+  it('a stale qualifyLead must conflict, not overwrite a status moved concurrently', async () => {
+    const template = makeLead();
+    const repo = new RacyLeadRepository(template);
+    const service = build(repo);
+
+    const { release, pending } = await stalePause(repo, () =>
+      service.qualifyLead(template.id.value, 'user-1', 'looks good')
+    );
+    repo.status = 'LOST'; // a COA sync wrote LOST after qualifyLead read NEW
+    release();
+    const result = (await pending) as Result<unknown, Error>;
+
+    expect(result.isFailure).toBe(true);
+    expect(repo.status).toBe('LOST');
+  });
+
+  it('a stale convertLead must conflict, not overwrite a status moved concurrently', async () => {
+    const template = makeLead();
+    const repo = new RacyLeadRepository(template);
+    repo.status = 'QUALIFIED';
+    const service = build(repo);
+
+    const { release, pending } = await stalePause(repo, () =>
+      service.convertLead(template.id.value, null, 'user-1')
+    );
+    repo.status = 'LOST';
+    release();
+    const result = (await pending) as Result<unknown, Error>;
+
+    expect(result.isFailure).toBe(true);
+    expect(repo.status).toBe('LOST');
+  });
+
+  it('a scoreLead save keeps a status moved concurrently and still stores the score', async () => {
+    const template = makeLead();
+    const repo = new RacyLeadRepository(template);
+    repo.score = 10;
+    const service = build(repo, 50); // neither auto-qualify nor auto-disqualify
+
+    const { release, pending } = await stalePause(repo, () => service.scoreLead(template.id.value));
+    repo.status = 'CONTACTED';
+    release();
+    const result = (await pending) as Result<unknown, Error>;
+
+    expect(result.isSuccess).toBe(true);
+    expect(repo.status).toBe('CONTACTED');
+    expect(repo.score).toBe(50);
+  });
+
+  it('a scoreLead auto-qualify against a concurrently moved status conflicts', async () => {
+    const template = makeLead();
+    const repo = new RacyLeadRepository(template);
+    repo.score = 0;
+    const service = build(repo, 90); // >= AUTO_QUALIFY while the read status is NEW
+
+    const { release, pending } = await stalePause(repo, () => service.scoreLead(template.id.value));
+    repo.status = 'LOST';
+    release();
+    const result = (await pending) as Result<unknown, Error>;
+
+    expect(result.isFailure).toBe(true);
+    expect(repo.status).toBe('LOST');
+  });
+
+  it('scoreLead still auto-qualifies when nothing moved the lead', async () => {
+    const template = makeLead();
+    const repo = new RacyLeadRepository(template);
+    repo.score = 0;
+    const service = build(repo, 90);
+
+    const result = await service.scoreLead(template.id.value);
+
+    expect(result.isSuccess).toBe(true);
+    expect(repo.status).toBe('QUALIFIED');
+    expect(repo.score).toBe(90);
   });
 });

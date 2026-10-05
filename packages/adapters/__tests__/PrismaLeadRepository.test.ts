@@ -143,6 +143,17 @@ describe('PrismaLeadRepository', () => {
       expect(mockPrisma.lead.upsert).not.toHaveBeenCalled();
     });
 
+    it('the plain upsert update never rewrites status but create still sets it', async () => {
+      mockPrisma.lead.upsert.mockResolvedValue({});
+
+      await repository.save(testLead);
+
+      const arg = mockPrisma.lead.upsert.mock.calls[0][0];
+      expect(arg.create.status).toBe(testLead.status);
+      expect(arg.update).not.toHaveProperty('status');
+      expect(arg.update.score).toBe(testLead.score.value);
+    });
+
     it('should call prisma.lead.upsert with correct data', async () => {
       const upsertMock = mockPrisma.lead.upsert;
       upsertMock.mockResolvedValue({});

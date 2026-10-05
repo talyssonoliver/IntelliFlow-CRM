@@ -458,6 +458,43 @@ describe('InMemoryLeadRepository', () => {
       expect((await repository.findById(lead.id))?.status).toBe('CONTACTED');
     });
 
+    it('a concurrent non-status change survives a compare-and-set status save', async () => {
+      const lead = createTestLead('cas3@example.com').value;
+      await repository.save(lead);
+
+      const stale = (await repository.findById(lead.id))!;
+
+      // Another writer changes non-status columns after the stale read.
+      const other = (await repository.findById(lead.id))!;
+      other.updateContactInfo({ firstName: 'Changed', tags: ['coa-pipeline'] });
+      await repository.save(other);
+
+      stale.changeStatus('CONTACTED', 'me');
+      await repository.save(stale, { expectedStatus: 'NEW' });
+
+      const stored = (await repository.findById(lead.id))!;
+      expect(stored.status).toBe('CONTACTED');
+      expect(stored.firstName).toBe('Changed');
+      expect(stored.tags).toEqual(['coa-pipeline']);
+    });
+
+    it('a plain save never rewrites a stored status from a stale snapshot', async () => {
+      const lead = createTestLead('cas4@example.com').value;
+      await repository.save(lead);
+
+      const stale = (await repository.findById(lead.id))!;
+      const other = (await repository.findById(lead.id))!;
+      other.changeStatus('CONTACTED', 'other');
+      await repository.save(other, { expectedStatus: 'NEW' });
+
+      stale.updateScore(60, 0.9, 'm1');
+      await repository.save(stale);
+
+      const stored = (await repository.findById(lead.id))!;
+      expect(stored.status).toBe('CONTACTED');
+      expect(stored.score.value).toBe(60);
+    });
+
     it('does not change the stored lead when a returned lead is mutated without save', async () => {
       const lead = createTestLead('snap@example.com').value;
       await repository.save(lead);
