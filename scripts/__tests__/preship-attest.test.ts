@@ -13,7 +13,7 @@
  * this script is invoked FROM .husky/pre-push, which is precisely the context
  * that exports GIT_DIR/GIT_WORK_TREE pointing at the real repo.
  */
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -25,7 +25,11 @@ import {
   assessState,
   branchPatchId,
   carriedAttestation,
+  carriedLine,
   dirtyPaths,
+  noAttestationLines,
+  patchFields,
+  publishedLine,
   patchIdentity,
   PATCH_REF_PREFIX,
   PAYLOAD_VERSION,
@@ -872,6 +876,108 @@ describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
     calls.length = 0;
     patchIdentity(HEAD, { remote: 'upstream-path', base: 'main' }, stub, warn);
     expect(calls.some((c) => c[0] === 'fetch')).toBe(false);
+  });
+
+  it('patchIdentity fetches the base from a real remote and returns the patch-id silently', () => {
+    const { work, bare, sha, g } = makeBranchRepo();
+    g(['remote', 'add', 'origin', bare]);
+    g(['push', '-q', 'origin', 'main']);
+    const warnings: string[] = [];
+    const patch = patchIdentity(sha, { remote: 'origin', base: 'origin/main' }, g, (m: string) =>
+      warnings.push(m)
+    );
+    expect(patch?.patchId).toBe(branchPatchId(sha, 'main', g)?.patchId);
+    expect(warnings).toEqual([]);
+    expect(work).toBeTruthy();
+  });
+
+  it('fails safe on every git error path and uses the real git by default', () => {
+    type R = { status: number | null; stdout: string | Buffer; stderr?: string };
+    const scripted =
+      (answers: Record<string, R>) =>
+      (args: string[]): R => {
+        const key = args.find((a) => answers[a]) ?? '';
+        return answers[key] ?? { status: 1, stdout: '' };
+      };
+    const ok = (stdout: string | Buffer): R => ({ status: 0, stdout });
+
+    // patch-id fails, or prints something that is not a patch-id: no identity.
+    const base = { 'merge-base': ok(`${OTHER}\n`), 'diff-tree': ok(Buffer.from('diff')) };
+    expect(branchPatchId(HEAD, 'main', scripted({ ...base }))).toBeNull();
+    expect(
+      branchPatchId(HEAD, 'main', scripted({ ...base, 'patch-id': ok('nonsense') }))
+    ).toBeNull();
+
+    // A fetch failure with no stderr still warns.
+    const warnings: string[] = [];
+    const noStderr = () => ({ status: 128, stdout: '' });
+    patchIdentity(HEAD, { remote: 'origin', base: 'origin/main' }, noStderr, (m: string) =>
+      warnings.push(m)
+    );
+    expect(warnings[0]).toMatch(/could not refresh origin\/main \(\)/);
+
+    // ls-remote failing means nothing to carry; a nameless object type and a
+    // tag with no target line are reported, not trusted.
+    const lsFails = carriedAttestation(
+      { remote: 'r', base: 'main' },
+      HEAD,
+      null,
+      scripted({ ...base, 'patch-id': ok(`${'d'.repeat(40)} ${HEAD}`) })
+    ) as Refused;
+    expect(lsFails.reasons[0]).toMatch(/no earlier head/);
+    const read = readAttestation('r', 'refs/x', 'obj', scripted({ fetch: ok('') }));
+    expect(read.error).toMatch(/unknown object, not a tag/);
+    const untargeted = readAttestation(
+      'r',
+      'refs/x',
+      'obj',
+      scripted({ fetch: ok(''), '-t': ok('tag\n'), '-p': ok('tag x\n\n{}') })
+    );
+    expect(untargeted).toEqual({ target: null, payload: {} });
+
+    // Defaults: the module's own git, run here against a ref that cannot exist.
+    const quiet = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    try {
+      expect(patchIdentity(HEAD, { remote: 'nowhere', base: 'no-such-ref' })).toBeNull();
+      expect(quiet).toHaveBeenCalled();
+    } finally {
+      quiet.mockRestore();
+    }
+    const flags = { remote: 'nowhere', base: 'no-such-ref' };
+    expect(carriedAttestation(flags, HEAD, null).ok).toBe(false);
+    expect(readAttestation('nowhere', 'refs/none', HEAD).error).toMatch(/could not fetch/);
+  });
+
+  it('patchFields and the CLI messages say what was recorded and carried', () => {
+    const pid = 'd'.repeat(40);
+    expect(patchFields(null)).toEqual({});
+    expect(patchFields({ patchId: pid, base: OTHER })).toEqual({
+      patch_id: pid,
+      patch_base: OTHER,
+    });
+
+    const payload = { mode: 'standard', steps_ok: 3, steps_expected: 3 };
+    expect(publishedLine(HEAD, payload, null)).toBe(
+      `pre-ship attestation published for ${HEAD.slice(0, 9)} (standard, 3/3 steps).\n`
+    );
+    expect(publishedLine(HEAD, payload, { patchId: pid, base: OTHER })).toContain(
+      `branch patch-id ${pid.slice(0, 12)}).`
+    );
+
+    const line = carriedLine(
+      HEAD,
+      { from: OTHER, payload: { ...payload, patch_id: pid, attested_at: '2026-10-05T19:00:00Z' } },
+      'origin/main'
+    );
+    expect(line).toContain(`carried from ${OTHER.slice(0, 9)}`);
+    expect(line).toContain(`same branch diff against origin/main (patch-id ${pid.slice(0, 12)})`);
+
+    const refused = noAttestationLines(HEAD, ['no earlier head has the same branch diff']).join(
+      '\n'
+    );
+    expect(refused).toMatch(new RegExp(`NO PRE-SHIP ATTESTATION for ${HEAD}`));
+    expect(refused).toMatch(/ {4}- no earlier head has the same branch diff/);
+    expect(refused).toMatch(/pnpm preship:attest/);
   });
 
   it('branchPatchId keeps non-UTF-8 bytes distinct (no lossy decoding of the diff)', () => {
