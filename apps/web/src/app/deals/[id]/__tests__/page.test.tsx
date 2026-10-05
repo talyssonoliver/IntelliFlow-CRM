@@ -14,6 +14,7 @@ const mockMoveStage = vi.fn();
 const mockUpdate = vi.fn();
 const mockDeleteAsync = vi.fn().mockResolvedValue({ success: true, id: 'deal-123' });
 const mockInvalidate = vi.fn();
+const mockListInvalidate = vi.fn();
 const mockToast = vi.fn();
 type CapturedMutationConfig = {
   onSuccess?: (...args: unknown[]) => void;
@@ -159,7 +160,10 @@ vi.mock('@/lib/api', () => ({
       },
     },
     useUtils: () => ({
-      opportunity: { getById: { invalidate: mockInvalidate } },
+      opportunity: {
+        getById: { invalidate: mockInvalidate },
+        list: { invalidate: mockListInvalidate },
+      },
     }),
   },
 }));
@@ -262,7 +266,7 @@ vi.mock('@/components/deals/DealForm', () => ({
 // Plain function (not vi.fn) so vi.clearAllMocks() can't strip the resolved
 // value — the page calls `revalidateDealCaches(...).catch(...)` in onSuccess.
 vi.mock('@/app/deals/actions', () => ({
-  revalidateDealCaches: () => Promise.resolve(),
+  revalidateDealCaches: vi.fn(() => Promise.resolve()),
 }));
 
 type StubAction = {
@@ -725,6 +729,23 @@ describe('DealDetailPage', () => {
         expect.objectContaining({ title: expect.stringMatching(/trash|deleted/i) })
       );
       expect(mockPush).toHaveBeenCalledWith('/deals');
+      // The list it lands on must not still show the trashed deal.
+      expect(mockListInvalidate).toHaveBeenCalled();
+    });
+
+    it('delete onSuccess logs a failed server-cache refresh instead of swallowing it', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { revalidateDealCaches } = await import('@/app/deals/actions');
+      vi.mocked(revalidateDealCaches).mockRejectedValueOnce(new Error('cache down'));
+      await renderDealPage();
+      capturedDeleteConfig.onSuccess?.();
+      await vi.waitFor(() =>
+        expect(warn).toHaveBeenCalledWith(
+          '[DealPage] Deal cache revalidation failed:',
+          expect.objectContaining({ message: 'cache down' })
+        )
+      );
+      warn.mockRestore();
     });
 
     it('delete onError shows a destructive toast', async () => {
