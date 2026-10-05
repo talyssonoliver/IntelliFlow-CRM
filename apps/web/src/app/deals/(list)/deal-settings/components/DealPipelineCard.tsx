@@ -49,17 +49,8 @@ export function DealPipelineCard() {
     );
   }
 
-  // pipelineConfig.getAll returns { stages: [...] }
-  const raw = stagesQuery.data as unknown as
-    | { stages?: PipelineStageRow[] }
-    | PipelineStageRow[]
-    | null;
-  const stages: PipelineStageRow[] = Array.isArray(raw)
-    ? raw
-    : (() => {
-        const nested = (raw as { stages?: PipelineStageRow[] })?.stages;
-        return Array.isArray(nested) ? (nested as PipelineStageRow[]) : [];
-      })();
+  // pipelineConfig.getAll returns { stages: [...] } (built-in defaults fill missing stages)
+  const stages: PipelineStageRow[] = stagesQuery.data?.stages ?? [];
 
   if (stages.length === 0) {
     return (

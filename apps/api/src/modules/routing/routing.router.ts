@@ -23,6 +23,49 @@ import {
   suggestLeadAssigneeInputSchema,
 } from '@intelliflow/validators';
 import type { LeadRoutingService } from '../../services/LeadRoutingService';
+import { toRoutingRuleDto, type RoutingRuleDto } from './routing-rule.mapper';
+
+/**
+ * What a manual lead assignment returns. Explicit (not the raw RoutingAudit
+ * row) for the same reason as RoutingRuleDto: inferring Prisma's return type
+ * through tRPC overflowed TypeScript's instantiation depth on the client.
+ */
+/**
+ * One row of `routing.getAssignments`. Explicit for the same TS2589 reason as
+ * RoutingRuleDto; the web dashboard previously cast the inferred rows to a
+ * hand-written copy of this shape.
+ */
+export interface RoutingAssignmentDto {
+  id: string;
+  /** The lead this assignment is about, or null for a ticket routing row (see readLeadId). */
+  leadId: string | null;
+  reason: string;
+  createdAt: Date;
+  rule: { name: string } | null;
+  assignedTo: { id: string; name: string; email: string };
+}
+
+/**
+ * The lead an audit row is about. RoutingAudit is ticket-shaped, and lead
+ * assignments are written three ways: manual assignment records
+ * `details.leadId`; LeadRoutingService records `details.entityType: 'lead'`
+ * with the lead id in `ticketId`. Rows for tickets have neither, so a ticket id
+ * is never reported as a lead.
+ */
+function readLeadId(details: unknown, ticketId: string): string | null {
+  if (!details || typeof details !== 'object') return null;
+  if ('leadId' in details && typeof details.leadId === 'string') return details.leadId;
+  if ('entityType' in details && details.entityType === 'lead') return ticketId;
+  return null;
+}
+
+export interface LeadAssignmentResult {
+  auditId: string;
+  leadId: string;
+  userId: string;
+  reason: string;
+  createdAt: Date;
+}
 import type { Context } from '../../context';
 
 /**
@@ -52,7 +95,7 @@ export const routingRouter = createTRPCRouter({
         isActive: z.boolean().optional(),
       })
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ ctx, input }): Promise<{ items: RoutingRuleDto[]; nextCursor?: string }> => {
       const tenantId = ctx.tenant.tenantId;
       const where: Record<string, unknown> = { tenantId };
       if (input.isActive !== undefined) {
@@ -72,79 +115,90 @@ export const routingRouter = createTRPCRouter({
         nextCursor = next?.id;
       }
 
-      return { items: rules, nextCursor };
+      return { items: rules.map(toRoutingRuleDto), nextCursor };
     }),
 
   /**
    * Get a single routing rule by ID
    */
-  get: tenantProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    const rule = await ctx.prismaWithTenant.routingRule.findFirst({
-      where: { id: input.id, tenantId: ctx.tenant.tenantId },
-    });
-    return rule;
-  }),
+  get: tenantProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }): Promise<RoutingRuleDto | null> => {
+      const rule = await ctx.prismaWithTenant.routingRule.findFirst({
+        where: { id: input.id, tenantId: ctx.tenant.tenantId },
+      });
+      return rule ? toRoutingRuleDto(rule) : null;
+    }),
 
   /**
    * Create a new routing rule
    */
-  create: tenantProcedure.input(createRoutingRuleSchema).mutation(async ({ ctx, input }) => {
-    return ctx.prismaWithTenant.routingRule.create({
-      data: {
-        tenantId: ctx.tenant.tenantId,
-        name: input.name,
-        description: input.description ?? null,
-        priority: input.priority,
-        isActive: input.isActive,
-        conditions: input.conditions as any,
-        actions: input.actions as any,
-        createdBy: ctx.tenant.userId,
-      },
-    });
-  }),
+  create: tenantProcedure
+    .input(createRoutingRuleSchema)
+    .mutation(async ({ ctx, input }): Promise<RoutingRuleDto> => {
+      const rule = await ctx.prismaWithTenant.routingRule.create({
+        data: {
+          tenantId: ctx.tenant.tenantId,
+          name: input.name,
+          description: input.description ?? null,
+          priority: input.priority,
+          isActive: input.isActive,
+          conditions: input.conditions,
+          actions: input.actions,
+          createdBy: ctx.tenant.userId,
+        },
+      });
+      return toRoutingRuleDto(rule);
+    }),
 
   /**
    * Update an existing routing rule
    */
-  update: tenantProcedure.input(updateRoutingRuleSchema).mutation(async ({ ctx, input }) => {
-    const { id, ...data } = input;
-    const tenantId = ctx.tenant.tenantId;
+  update: tenantProcedure
+    .input(updateRoutingRuleSchema)
+    .mutation(async ({ ctx, input }): Promise<RoutingRuleDto> => {
+      const { id, ...data } = input;
+      const tenantId = ctx.tenant.tenantId;
 
-    // Verify rule exists and belongs to this tenant
-    const existing = await ctx.prismaWithTenant.routingRule.findFirst({
-      where: { id, tenantId },
-    });
-    if (!existing) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
-    }
+      // Verify rule exists and belongs to this tenant
+      const existing = await ctx.prismaWithTenant.routingRule.findFirst({
+        where: { id, tenantId },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
+      }
 
-    const updateData: Record<string, unknown> = {};
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.description !== undefined) updateData.description = data.description;
-    if (data.priority !== undefined) updateData.priority = data.priority;
-    if (data.isActive !== undefined) updateData.isActive = data.isActive;
-    if (data.conditions !== undefined) updateData.conditions = data.conditions as any;
-    if (data.actions !== undefined) updateData.actions = data.actions as any;
+      const updateData: Record<string, unknown> = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.description !== undefined) updateData.description = data.description;
+      if (data.priority !== undefined) updateData.priority = data.priority;
+      if (data.isActive !== undefined) updateData.isActive = data.isActive;
+      if (data.conditions !== undefined) updateData.conditions = data.conditions;
+      if (data.actions !== undefined) updateData.actions = data.actions;
 
-    return ctx.prismaWithTenant.routingRule.update({
-      where: { id },
-      data: updateData,
-    });
-  }),
+      const rule = await ctx.prismaWithTenant.routingRule.update({
+        where: { id },
+        data: updateData,
+      });
+      return toRoutingRuleDto(rule);
+    }),
 
   /**
    * Delete a routing rule
    */
-  delete: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    const existing = await ctx.prismaWithTenant.routingRule.findFirst({
-      where: { id: input.id, tenantId: ctx.tenant.tenantId },
-    });
-    if (!existing) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
-    }
+  delete: tenantProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }): Promise<RoutingRuleDto> => {
+      const existing = await ctx.prismaWithTenant.routingRule.findFirst({
+        where: { id: input.id, tenantId: ctx.tenant.tenantId },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
+      }
 
-    return ctx.prismaWithTenant.routingRule.delete({ where: { id: input.id } });
-  }),
+      const rule = await ctx.prismaWithTenant.routingRule.delete({ where: { id: input.id } });
+      return toRoutingRuleDto(rule);
+    }),
 
   /**
    * Batch reorder routing rules by updating priorities
@@ -186,7 +240,7 @@ export const routingRouter = createTRPCRouter({
    */
   toggle: tenantProcedure
     .input(z.object({ id: z.string(), isActive: z.boolean() }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }): Promise<RoutingRuleDto> => {
       const existing = await ctx.prismaWithTenant.routingRule.findFirst({
         where: { id: input.id, tenantId: ctx.tenant.tenantId },
       });
@@ -194,10 +248,11 @@ export const routingRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
       }
 
-      return ctx.prismaWithTenant.routingRule.update({
+      const rule = await ctx.prismaWithTenant.routingRule.update({
         where: { id: input.id },
         data: { isActive: input.isActive },
       });
+      return toRoutingRuleDto(rule);
     }),
 
   /**
@@ -212,29 +267,36 @@ export const routingRouter = createTRPCRouter({
         cursor: z.string().optional(),
       })
     )
-    .query(async ({ ctx, input }) => {
-      const audits = await ctx.prismaWithTenant.routingAudit.findMany({
-        where: { tenantId: ctx.tenant.tenantId },
-        take: input.limit + 1,
-        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
-        orderBy: { createdAt: 'desc' },
-      });
+    .query(
+      async ({ ctx, input }): Promise<{ items: RoutingAssignmentDto[]; nextCursor?: string }> => {
+        const audits = await ctx.prismaWithTenant.routingAudit.findMany({
+          where: { tenantId: ctx.tenant.tenantId },
+          take: input.limit + 1,
+          ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+          orderBy: { createdAt: 'desc' },
+        });
 
-      let nextCursor: string | undefined;
-      if (audits.length > input.limit) {
-        const next = audits.pop();
-        nextCursor = next?.id;
+        let nextCursor: string | undefined;
+        if (audits.length > input.limit) {
+          const next = audits.pop();
+          nextCursor = next?.id;
+        }
+
+        // Map flat fields to the shape the frontend components expect
+        const items = audits.map(
+          (audit): RoutingAssignmentDto => ({
+            id: audit.id,
+            leadId: readLeadId(audit.details, audit.ticketId),
+            reason: audit.reason,
+            createdAt: audit.createdAt,
+            rule: audit.ruleId ? { name: audit.ruleName ?? 'Unknown' } : null,
+            assignedTo: { id: audit.toUserId, name: audit.toUserName, email: '' },
+          })
+        );
+
+        return { items, nextCursor };
       }
-
-      // Map flat fields to the shape the frontend components expect
-      const items = audits.map((audit) => ({
-        ...audit,
-        rule: audit.ruleId ? { name: audit.ruleName ?? 'Unknown' } : null,
-        assignedTo: { id: audit.toUserId, name: audit.toUserName, email: '' },
-      }));
-
-      return { items, nextCursor };
-    }),
+    ),
 
   /**
    * Get agent workload (availability + capacity).
@@ -320,10 +382,10 @@ export const routingRouter = createTRPCRouter({
         reason: z.string().default('manual'),
       })
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }): Promise<LeadAssignmentResult> => {
       const tenantId = ctx.tenant.tenantId;
 
-      return ctx.prismaWithTenant.$transaction(async (tx) => {
+      return ctx.prismaWithTenant.$transaction(async (tx): Promise<LeadAssignmentResult> => {
         // Verify lead belongs to this tenant
         const lead = await tx.lead.findFirst({
           where: { id: input.leadId, tenantId },
@@ -346,11 +408,17 @@ export const routingRouter = createTRPCRouter({
             reason: input.reason,
             toUserId: input.userId,
             toUserName: '',
-            details: { leadId: input.leadId },
+            details: { entityType: 'lead', leadId: input.leadId },
           },
         });
 
-        return audit;
+        return {
+          auditId: audit.id,
+          leadId: input.leadId,
+          userId: input.userId,
+          reason: audit.reason,
+          createdAt: audit.createdAt,
+        };
       });
     }),
 

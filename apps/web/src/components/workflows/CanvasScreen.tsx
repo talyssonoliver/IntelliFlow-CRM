@@ -31,7 +31,7 @@ export function CanvasScreen({ workflowId }: CanvasScreenProps) {
     { id: workflowId! },
     { enabled: !!workflowId }
   );
-  const remoteName = (workflowQuery.data as { name?: string } | undefined)?.name;
+  const remoteName = workflowQuery.data?.name;
 
   // Local controlled state so users can type freely; seeded from the
   // remote name once it lands. Empty string for /new (placeholder shown).

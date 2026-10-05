@@ -17,6 +17,13 @@
  */
 
 import { TRPCError } from '@trpc/server';
+import type {
+  DealAutomationSetting,
+  DealDuplicateRule,
+  DealRequiredField,
+  DealScoringRule,
+  DealWinLossReason,
+} from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   updateDealDuplicateRulesSchema,
@@ -39,6 +46,14 @@ import {
   generateDealReasonKey,
 } from '@intelliflow/validators';
 import { loadDealAutomation, assertCanCreateTag } from './deal-automation';
+
+/**
+ * A DealScoringRule as the client sees it. `valueJson` is a Prisma Json
+ * column; typed as Prisma's recursive JsonValue, tRPC's output serialisation
+ * of it overflowed TypeScript's instantiation depth (TS2589) wherever a client
+ * awaited several of these procedures together (deal-settings reset).
+ */
+export type DealScoringRuleDto = Omit<DealScoringRule, 'valueJson'> & { valueJson: unknown };
 import { pipelineConfigRouter } from './pipeline-config.router';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -113,7 +128,7 @@ const duplicateRulesRouter = createTRPCRouter({
       });
     }),
 
-  resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
+  resetToDefaults: tenantProcedure.mutation(async ({ ctx }): Promise<DealDuplicateRule[]> => {
     const tenantId = ctx.tenant.tenantId;
     await ctx.prismaWithTenant.$transaction([
       ctx.prismaWithTenant.dealDuplicateRule.deleteMany({ where: { tenantId } }),
@@ -171,7 +186,7 @@ const requiredFieldsRouter = createTRPCRouter({
       return ctx.prismaWithTenant.dealRequiredField.findMany({ where: { tenantId } });
     }),
 
-  resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
+  resetToDefaults: tenantProcedure.mutation(async ({ ctx }): Promise<DealRequiredField[]> => {
     const tenantId = ctx.tenant.tenantId;
     await ctx.prismaWithTenant.$transaction([
       ctx.prismaWithTenant.dealRequiredField.deleteMany({ where: { tenantId } }),
@@ -262,7 +277,7 @@ const winLossReasonsRouter = createTRPCRouter({
     return { softDeleted: false };
   }),
 
-  resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
+  resetToDefaults: tenantProcedure.mutation(async ({ ctx }): Promise<DealWinLossReason[]> => {
     const tenantId = ctx.tenant.tenantId;
     const allDefaults = [...DEFAULT_DEAL_WIN_REASONS, ...DEFAULT_DEAL_LOSS_REASONS].map(
       (r, index) => ({
@@ -288,7 +303,7 @@ const winLossReasonsRouter = createTRPCRouter({
 // ─── Scoring Rules Sub-Router ───────────────────────────────────────────────
 
 const scoringRulesRouter = createTRPCRouter({
-  list: tenantProcedure.query(async ({ ctx }) => {
+  list: tenantProcedure.query(async ({ ctx }): Promise<DealScoringRuleDto[]> => {
     const tenantId = ctx.tenant.tenantId;
     return ctx.prismaWithTenant.dealScoringRule.findMany({
       where: { tenantId },
@@ -296,40 +311,44 @@ const scoringRulesRouter = createTRPCRouter({
     });
   }),
 
-  create: tenantProcedure.input(createDealScoringRuleSchema).mutation(async ({ ctx, input }) => {
-    const tenantId = ctx.tenant.tenantId;
-    return ctx.prismaWithTenant.dealScoringRule.create({
-      data: {
-        tenantId,
-        name: input.name,
-        field: input.field,
-        operator: input.operator,
-        valueJson: input.valueJson,
-        points: input.points,
-        isActive: input.isActive,
-        sortOrder: input.sortOrder ?? 0,
-      },
-    });
-  }),
-
-  update: tenantProcedure.input(updateDealScoringRuleSchema).mutation(async ({ ctx, input }) => {
-    const tenantId = ctx.tenant.tenantId;
-    const { id, ...rest } = input;
-    try {
-      return await ctx.prismaWithTenant.dealScoringRule.update({
-        where: { id, tenantId },
-        data: rest,
+  create: tenantProcedure
+    .input(createDealScoringRuleSchema)
+    .mutation(async ({ ctx, input }): Promise<DealScoringRuleDto> => {
+      const tenantId = ctx.tenant.tenantId;
+      return ctx.prismaWithTenant.dealScoringRule.create({
+        data: {
+          tenantId,
+          name: input.name,
+          field: input.field,
+          operator: input.operator,
+          valueJson: input.valueJson,
+          points: input.points,
+          isActive: input.isActive,
+          sortOrder: input.sortOrder ?? 0,
+        },
       });
-    } catch (err: unknown) {
-      if (isRecordNotFoundError(err)) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Scoring rule not found in this tenant.',
+    }),
+
+  update: tenantProcedure
+    .input(updateDealScoringRuleSchema)
+    .mutation(async ({ ctx, input }): Promise<DealScoringRuleDto> => {
+      const tenantId = ctx.tenant.tenantId;
+      const { id, ...rest } = input;
+      try {
+        return await ctx.prismaWithTenant.dealScoringRule.update({
+          where: { id, tenantId },
+          data: rest,
         });
+      } catch (err: unknown) {
+        if (isRecordNotFoundError(err)) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Scoring rule not found in this tenant.',
+          });
+        }
+        throw err;
       }
-      throw err;
-    }
-  }),
+    }),
 
   delete: tenantProcedure.input(deleteDealScoringRuleSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
@@ -349,7 +368,7 @@ const scoringRulesRouter = createTRPCRouter({
     return { success: true };
   }),
 
-  resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
+  resetToDefaults: tenantProcedure.mutation(async ({ ctx }): Promise<DealScoringRuleDto[]> => {
     const tenantId = ctx.tenant.tenantId;
     // Reset wipes the tenant's list — admins author their own rules; no
     // opinionated defaults (spec §Defaults). Wrapped in $transaction to match
@@ -470,7 +489,7 @@ const automationRouter = createTRPCRouter({
     });
   }),
 
-  resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
+  resetToDefaults: tenantProcedure.mutation(async ({ ctx }): Promise<DealAutomationSetting> => {
     const tenantId = ctx.tenant.tenantId;
     return ctx.prismaWithTenant.dealAutomationSetting.upsert({
       where: { tenantId },
