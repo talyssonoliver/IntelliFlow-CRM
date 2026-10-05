@@ -75,7 +75,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
 import { stepLine, advisoryNote, persistedState, finalLine } from './lib/preship-report.mjs';
 
@@ -801,7 +801,10 @@ if (!subsetOrInfo && !process.env.TEST_SLOT_HELD && !process.env.CI) {
     'with-slot.mjs'
   );
   if (fs.existsSync(slot)) {
-    const r = spawnSync(
+    // Async, not spawnSync: Ctrl-C and kill are forwarded to the wrapper (which
+    // releases its slot and stops the inner gate's tree), and its exit code is
+    // this process's exit code.
+    const wrapper = spawn(
       process.execPath,
       [
         slot,
@@ -816,7 +819,12 @@ if (!subsetOrInfo && !process.env.TEST_SLOT_HELD && !process.env.CI) {
       ],
       { stdio: 'inherit' }
     );
-    process.exit(r.status ?? 1);
+    for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, () => wrapper.kill(sig));
+    const code = await new Promise((resolve) => {
+      wrapper.on('exit', (c, signal) => resolve(signal ? 1 : (c ?? 1)));
+      wrapper.on('error', () => resolve(1));
+    });
+    process.exit(code);
   }
 }
 
