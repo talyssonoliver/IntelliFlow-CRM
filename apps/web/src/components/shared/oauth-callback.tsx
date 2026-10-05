@@ -355,6 +355,9 @@ export function OAuthCallback({
   // Set when the user leaves the page (unmount, or pagehide into the bfcache or away): a step
   // that settles afterwards must not hold a session or sign anyone in.
   const departedRef = useRef(false);
+  // A committed sign-in whose navigation was held because the user left; a page restored from the
+  // back/forward cache runs it, so it never sits on the success screen.
+  const pendingNavigateRef = useRef<(() => void) | null>(null);
   const flowRef = useRef<'oauth' | 'magiclink'>('oauth');
   const backToLoginRef = useRef<HTMLButtonElement>(null);
   const confirmDialogRef = useRef<HTMLDialogElement>(null);
@@ -407,7 +410,11 @@ export function OAuthCallback({
       const navigate = () => {
         // The user left while the revoke ran: the session is committed, but the page they went
         // to wins; never navigate them away from it.
-        if (departedRef.current) return;
+        if (departedRef.current) {
+          pendingNavigateRef.current = navigate;
+          return;
+        }
+        pendingNavigateRef.current = null;
         // Call success callback or redirect
         if (onSuccess) {
           onSuccess(
@@ -799,11 +806,22 @@ export function OAuthCallback({
         reportErrorRef.current(new Error('This sign-in link has already been used.'));
       }
     };
+    // Back from the back/forward cache: the user is on this page again, so a held navigation for a
+    // sign-in that was already committed carries on.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      departedRef.current = false;
+      const held = pendingNavigateRef.current;
+      pendingNavigateRef.current = null;
+      held?.();
+    };
     departedRef.current = false;
     globalThis.addEventListener('pagehide', onPageHide);
+    globalThis.addEventListener('pageshow', onPageShow);
     return () => {
       departedRef.current = true;
       globalThis.removeEventListener('pagehide', onPageHide);
+      globalThis.removeEventListener('pageshow', onPageShow);
       revokeHeld();
     };
   }, []);

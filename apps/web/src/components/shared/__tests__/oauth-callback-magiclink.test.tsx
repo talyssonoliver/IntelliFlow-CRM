@@ -404,6 +404,32 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
     expect(h.push).not.toHaveBeenCalled();
   });
 
+  it('a page restored from the bfcache mid-revoke finishes the held navigation', async () => {
+    let revoked!: (value: unknown) => void;
+    h.adminSignOut.mockReturnValue(new Promise((resolve) => (revoked = resolve)));
+    render(<OAuthCallback />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(h.adminSignOut).toHaveBeenCalledWith(VICTIM_JWT, 'local'));
+
+    const transition = (type: string) => {
+      const event = new Event(type);
+      Object.defineProperty(event, 'persisted', { value: true });
+      return event;
+    };
+    act(() => {
+      globalThis.dispatchEvent(transition('pagehide'));
+    });
+    await act(async () => {
+      revoked({ error: null });
+    });
+    expect(h.push).not.toHaveBeenCalled();
+
+    act(() => {
+      globalThis.dispatchEvent(transition('pageshow'));
+    });
+    await waitFor(() => expect(h.push).toHaveBeenCalledWith('/leads'), { timeout: 2000 });
+  });
+
   it('the same account revokes the replaced session after signing in', async () => {
     h.verifyOtp.mockResolvedValue({
       data: { session: SESSION, user: { id: 'victim-id', email: 'victim@example.com' } },
