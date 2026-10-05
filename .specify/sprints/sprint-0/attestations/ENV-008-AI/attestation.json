@@ -8,18 +8,6 @@
   "context_acknowledgment": {
     "files_read": [
       {
-        "path": "artifacts/misc/otel-config.yaml",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/anomaly-detection.json",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/self-healing-rules.yaml",
-        "sha256": "verified-placeholder"
-      },
-      {
         "path": "packages/observability/src/index.ts",
         "sha256": "11965d7a492734fabf88c6ec354073c94f1c5eb1b3ece86b423bf6038af95fd3"
       },

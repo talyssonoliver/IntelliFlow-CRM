@@ -6,7 +6,7 @@
   "created_at": "2026-07-24",
   "branch": "feat/ifc-033-k6-load-test",
   "base_commit": "15c1b4dec431110287e729cdb334643efcbbaaa7",
-  "verdict": "COMPLETE",
+  "verdict": "PARTIAL",
   "provenance_version": "ADR-068",
   "summary": "Real k6 load test of Sprint-19 critical paths (lead ingestion, tRPC reads, and the DDD-001/002 atomic lead->deal conversion) against a local, prod-safe dev-auth target. Canonical 3-min run met the ADR-018 budget with margin: 1,081 leads created (~21,617/hour, 4.3x the 5,000/hour budget), p95 11.6ms (<200ms), 0% errors (<0.1%), 180 atomic conversions (0 failures). Identified bottleneck: per-user AUTHENTICATED rate-limit tier (1,000 req/60s, keyed by userId) — a single-user synthetic-harness artifact, not a system ceiling. Tenant isolation (RLS) verified at the DB layer under a non-superuser role. Evidence: real k6 HTML report (real timestamps), Grafana/Prometheus screenshot, summary JSON.",
   "gate_results": [
