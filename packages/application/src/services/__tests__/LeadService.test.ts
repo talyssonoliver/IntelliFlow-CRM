@@ -480,6 +480,11 @@ describe('LeadService', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error).toBeInstanceOf(ValidationError);
       expect(result.error.message).toContain('below minimum');
+      expect(result.error).toMatchObject({
+        code: 'VALIDATION_ERROR',
+        reason: 'LEAD_SCORE_BELOW_MINIMUM',
+        score: 30,
+      });
     });
 
     it('should fail for non-existent lead', async () => {

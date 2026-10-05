@@ -5,7 +5,8 @@
  *  - 401 without / with wrong bearer
  *  - new email -> lead created with source EMAIL + coa tags, walked NEW -> CONTACTED
  *  - existing website lead (same email) is reused, not duplicated, and gets tags
- *  - NEW -> NEGOTIATING walks CONTACTED, QUALIFIED, NEGOTIATING in order
+ *  - NEW -> NEGOTIATING walks CONTACTED, QUALIFIED (via qualifyLead), NEGOTIATING in order
+ *  - a score-refused qualification stops at CONTACTED, tags coa-qualified, notes it
  *  - forward-only: downgrade is a no-op
  *  - CONVERTED / LOST current status is never moved
  *  - a COA win (status CONVERTED) is capped at NEGOTIATING, tagged coa-won and noted
@@ -55,6 +56,21 @@ function tagMergeCalls() {
 
 const createLead = () => mockServices.lead.createLead as ReturnType<typeof vi.fn>;
 const changeStatus = () => mockServices.lead.changeLeadStatus as ReturnType<typeof vi.fn>;
+const qualify = () => mockServices.lead.qualifyLead as ReturnType<typeof vi.fn>;
+
+/** The refusal LeadService.qualifyLead returns below the minimum score. */
+function scoreRefusal(score = 12, minScore = 40) {
+  return {
+    isFailure: true,
+    error: {
+      code: 'VALIDATION_ERROR',
+      reason: 'LEAD_SCORE_BELOW_MINIMUM',
+      score,
+      minScore,
+      message: `Lead score ${score} is below minimum qualification threshold ${minScore}`,
+    },
+  };
+}
 
 function statusCalls(): string[] {
   return changeStatus().mock.calls.map((c) => c[1] as string);
@@ -77,6 +93,7 @@ describe('inboundRouter — syncPipelineLead', () => {
     prismaMock.$transaction.mockImplementation((async (fn: (tx: unknown) => unknown) =>
       fn(prismaMock)) as never);
     changeStatus().mockResolvedValue({ isFailure: false, value: {} });
+    qualify().mockResolvedValue({ isFailure: false, value: {} });
   });
 
   it('returns 401 without a bearer', async () => {
@@ -151,6 +168,7 @@ describe('inboundRouter — syncPipelineLead', () => {
       previousStatus: 'NEW',
       status: 'CONTACTED',
       conversionPending: false,
+      qualificationPending: false,
       changed: true,
     });
     expect(createLead().mock.calls[0]?.[0]).toMatchObject({
@@ -218,7 +236,8 @@ describe('inboundRouter — syncPipelineLead', () => {
     const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
     const result = await caller.syncPipelineLead(input('NEGOTIATING', 'MEETING'));
 
-    expect(statusCalls()).toEqual(['CONTACTED', 'QUALIFIED', 'NEGOTIATING']);
+    expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
+    expect(qualify()).toHaveBeenCalledTimes(1);
     expect(result).toMatchObject({
       previousStatus: 'NEW',
       status: 'NEGOTIATING',
@@ -238,7 +257,8 @@ describe('inboundRouter — syncPipelineLead', () => {
       const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
       const result = await caller.syncPipelineLead(input('CONVERTED', WON));
 
-      expect(statusCalls()).toEqual(['CONTACTED', 'QUALIFIED', 'NEGOTIATING']);
+      expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
+      expect(qualify()).toHaveBeenCalledTimes(1);
       expect(statusCalls()).not.toContain('CONVERTED');
       expect(result).toMatchObject({
         previousStatus: 'UNQUALIFIED',
@@ -270,7 +290,7 @@ describe('inboundRouter — syncPipelineLead', () => {
       const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
       const result = await caller.syncPipelineLead(input('CONVERTED', WON));
 
-      expect(statusCalls()).toEqual(['CONTACTED', 'QUALIFIED', 'NEGOTIATING']);
+      expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
       expect(result).toMatchObject({ status: 'NEGOTIATING', conversionPending: true });
       expect(wonTagCalls()).toHaveLength(1);
     });
@@ -554,13 +574,15 @@ describe('inboundRouter — syncPipelineLead', () => {
     existingLead('NEW');
     // Planned NEW -> CONTACTED -> QUALIFIED; a concurrent sync took it to CONTACTED.
     prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'CONTACTED' } as never);
-    changeStatus()
-      .mockResolvedValueOnce({ isFailure: true, error: { message: 'Invalid status transition' } })
-      .mockResolvedValueOnce({ isFailure: false, value: {} });
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { message: 'Invalid status transition' },
+    });
     const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
     const result = await caller.syncPipelineLead(input('QUALIFIED', 'RESPONDED'));
     expect(result).toMatchObject({ status: 'QUALIFIED', changed: true });
-    expect(statusCalls()).toEqual(['CONTACTED', 'QUALIFIED']);
+    expect(statusCalls()).toEqual(['CONTACTED']);
+    expect(qualify()).toHaveBeenCalledTimes(1);
     expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
   });
 
@@ -617,5 +639,173 @@ describe('inboundRouter — syncPipelineLead', () => {
 
     expect(notes).toHaveLength(1);
     expect(held).toBe(`coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-10-02T09:00:00.000Z`);
+  });
+
+  describe('QUALIFIED goes through the real qualify operation', () => {
+    const WON = 'WON';
+    const qualifiedTagCalls = () =>
+      tagMergeCalls().filter((c) => (c[1] as string[]).includes('coa-qualified'));
+    const noteData = () =>
+      (prismaMock.leadActivity.create.mock.calls[0]?.[0] as { data: Record<string, any> }).data;
+
+    it('reaches QUALIFIED via qualifyLead, never changeLeadStatus(..., QUALIFIED)', async () => {
+      existingLead('NEW');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('NEGOTIATING', 'MEETING'));
+
+      expect(statusCalls()).not.toContain('QUALIFIED');
+      expect(qualify()).toHaveBeenCalledTimes(1);
+      expect(qualify()).toHaveBeenCalledWith(LEAD_ID, 'System (COA sync)', expect.any(String));
+      expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
+      expect(result).toMatchObject({ status: 'NEGOTIATING', qualificationPending: false });
+    });
+
+    it('a score refusal stops at CONTACTED, tags coa-qualified, notes it, never tries NEGOTIATING', async () => {
+      existingLead('NEW');
+      qualify().mockResolvedValueOnce(scoreRefusal(12, 40));
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('NEGOTIATING', 'MEETING'));
+
+      expect(statusCalls()).toEqual(['CONTACTED']);
+      expect(statusCalls()).not.toContain('NEGOTIATING');
+      expect(result).toMatchObject({
+        previousStatus: 'NEW',
+        status: 'CONTACTED',
+        changed: true,
+        qualificationPending: true,
+        conversionPending: false,
+      });
+
+      const tags = qualifiedTagCalls();
+      expect(tags).toHaveLength(1);
+      const call = tags[0] as unknown as [TemplateStringsArray, ...unknown[]];
+      expect(call.slice(1)).toEqual([['coa-qualified'], LEAD_ID, TENANT_ID]);
+
+      const note = noteData();
+      expect(note.description).toMatch(/score gate refused/);
+      expect(note.description).toMatch(/score 12, minimum 40/);
+      expect(note.metadata).toMatchObject({
+        qualificationPending: true,
+        qualificationScore: 12,
+        qualificationMinScore: 40,
+      });
+    });
+
+    it('a lead already CONTACTED that is refused stays put but is still tagged and noted', async () => {
+      existingLead('CONTACTED', ['portal-discover', ...COA_TAGS]);
+      qualify().mockResolvedValueOnce(scoreRefusal());
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('QUALIFIED', 'RESPONDED'));
+
+      expect(changeStatus()).not.toHaveBeenCalled();
+      expect(result).toMatchObject({
+        status: 'CONTACTED',
+        changed: false,
+        qualificationPending: true,
+      });
+      expect(qualifiedTagCalls()).toHaveLength(1);
+      expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('a COA win with a refused qualify stops at CONTACTED with both pending flags', async () => {
+      existingLead('NEW');
+      qualify().mockResolvedValueOnce(scoreRefusal());
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(statusCalls()).toEqual(['CONTACTED']);
+      expect(result).toMatchObject({
+        status: 'CONTACTED',
+        qualificationPending: true,
+        conversionPending: true,
+      });
+      expect(qualifiedTagCalls()).toHaveLength(1);
+      expect(tagMergeCalls().filter((c) => (c[1] as string[]).includes('coa-won'))).toHaveLength(1);
+      expect(noteData().metadata).toMatchObject({
+        coaWon: true,
+        conversionPending: true,
+        qualificationPending: true,
+      });
+    });
+
+    it('a COA win whose lead passes the score still reaches NEGOTIATING', async () => {
+      existingLead('NEW');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
+      expect(result).toMatchObject({
+        status: 'NEGOTIATING',
+        qualificationPending: false,
+        conversionPending: true,
+      });
+      expect(qualifiedTagCalls()).toHaveLength(0);
+    });
+
+    it('a repeat of a refused sync keeps reporting qualificationPending with no calls', async () => {
+      prismaMock.leadActivity.findFirst.mockResolvedValue({
+        id: 'act_1',
+        metadata: { qualificationPending: true },
+      } as never);
+      existingLead('CONTACTED', ['portal-discover', ...COA_TAGS, 'coa-qualified']);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('NEGOTIATING', 'MEETING'));
+
+      expect(result).toMatchObject({
+        status: 'CONTACTED',
+        changed: false,
+        qualificationPending: true,
+      });
+      expect(qualify()).not.toHaveBeenCalled();
+      expect(changeStatus()).not.toHaveBeenCalled();
+    });
+
+    it('a compare-and-set conflict from qualify re-reads and replans, not a refusal', async () => {
+      existingLead('NEW');
+      // qualify lost the race: the lead is already QUALIFIED when re-read.
+      prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'QUALIFIED' } as never);
+      qualify().mockResolvedValueOnce({
+        isFailure: true,
+        error: {
+          code: 'PERSISTENCE_ERROR',
+          message: 'Lead status changed concurrently (expected CONTACTED)',
+        },
+      });
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('NEGOTIATING', 'MEETING'));
+
+      expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
+      expect(result).toMatchObject({ status: 'NEGOTIATING', qualificationPending: false });
+      expect(qualifiedTagCalls()).toHaveLength(0);
+    });
+
+    it('maps a qualify persistence failure the re-read cannot explain to INTERNAL_SERVER_ERROR', async () => {
+      existingLead('NEW');
+      prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'CONTACTED' } as never);
+      qualify().mockResolvedValueOnce({
+        isFailure: true,
+        error: { code: 'PERSISTENCE_ERROR', message: 'Failed to save lead' },
+      });
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await expect(caller.syncPipelineLead(input('QUALIFIED', 'RESPONDED'))).rejects.toMatchObject({
+        code: 'INTERNAL_SERVER_ERROR',
+      });
+      logged.mockRestore();
+      expect(qualifiedTagCalls()).toHaveLength(0);
+    });
+
+    it('a non-score validation refusal from qualify stays BAD_REQUEST', async () => {
+      existingLead('NEW');
+      prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'CONTACTED' } as never);
+      qualify().mockResolvedValueOnce({
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Lead with status LOST cannot be qualified' },
+      });
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await expect(caller.syncPipelineLead(input('QUALIFIED', 'RESPONDED'))).rejects.toMatchObject({
+        code: 'BAD_REQUEST',
+      });
+    });
   });
 });

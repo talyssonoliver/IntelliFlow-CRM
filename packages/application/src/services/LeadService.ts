@@ -17,7 +17,12 @@ import {
 import { AIServicePort, EventBusPort } from '../ports/external';
 import { ContactRepository, AccountRepository } from '../ports/repositories';
 import { TransactionPort } from '../ports/TransactionPort';
-import { PersistenceError, ValidationError, NotFoundError } from '../errors';
+import {
+  PersistenceError,
+  ValidationError,
+  NotFoundError,
+  LeadScoreBelowMinimumError,
+} from '../errors';
 
 /**
  * Lead qualification thresholds
@@ -304,9 +309,7 @@ export class LeadService {
     // Business rule: Check minimum score for qualification
     if (lead.score.value < this.defaultQualificationCriteria.minScore) {
       return Result.fail(
-        new ValidationError(
-          `Lead score ${lead.score.value} is below minimum qualification threshold ${this.defaultQualificationCriteria.minScore}`
-        )
+        new LeadScoreBelowMinimumError(lead.score.value, this.defaultQualificationCriteria.minScore)
       );
     }
 

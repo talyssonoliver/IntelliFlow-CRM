@@ -255,6 +255,12 @@ export interface InboundPipelineLeadOutput {
    * converts it. Always present so a COA-side consumer can rely on it.
    */
   readonly conversionPending: boolean;
+  /**
+   * True when COA reported the lead qualified (or further) but the CRM's own
+   * qualification rule (minimum score) refused it: the sync stops at CONTACTED,
+   * tags `coa-qualified` and notes the refusal. Always present.
+   */
+  readonly qualificationPending: boolean;
 }
 
 // ============================================================================
@@ -271,6 +277,7 @@ const COA_PIPELINE_TAG = 'coa-pipeline';
 const COA_LEAD_TAG_PREFIX = 'coa-lead:';
 const COA_SYNC_USER = 'System (COA sync)';
 const COA_WON_TAG = 'coa-won';
+const COA_QUALIFIED_TAG = 'coa-qualified';
 
 /** Forward-only rank. LOST / CONVERTED are terminal for the pipeline route. */
 const PIPELINE_RANK: Record<string, number> = {
@@ -589,23 +596,54 @@ async function tagCoaWon(
   status: PipelineLeadStatus
 ): Promise<void> {
   if (input.status !== 'CONVERTED' || status === 'CONVERTED') return;
+  await appendCoaTag(ctx, input, leadId, tenantId, COA_WON_TAG);
+}
+
+/** Tag a lead COA reported qualified that the CRM score gate refused. */
+async function tagCoaQualified(
+  ctx: Context,
+  input: InboundPipelineLeadInput,
+  leadId: string,
+  tenantId: string,
+  refusal: QualificationRefusal | null
+): Promise<void> {
+  if (!refusal) return;
+  await appendCoaTag(ctx, input, leadId, tenantId, COA_QUALIFIED_TAG);
+}
+
+async function appendCoaTag(
+  ctx: Context,
+  input: InboundPipelineLeadInput,
+  leadId: string,
+  tenantId: string,
+  tag: string
+): Promise<void> {
   const lead = await ctx.prisma.lead.findFirst({
     where: { id: leadId, tenantId },
     select: { tags: true },
   });
   const have: string[] = Array.isArray(lead?.tags) ? (lead.tags as string[]) : [];
-  await appendMissingTags(ctx, leadId, tenantId, have, [COA_WON_TAG], input.coaLeadId);
+  await appendMissingTags(ctx, leadId, tenantId, have, [tag], input.coaLeadId);
 }
 
 function describePipelineSync(
   input: InboundPipelineLeadInput,
   from: PipelineLeadStatus,
-  to: PipelineLeadStatus
+  to: PipelineLeadStatus,
+  refusal: QualificationRefusal | null
 ): string {
-  const base = `COA lead ${input.coaLeadId} moved to ${input.coaStage} at ${input.stageChangedAt}; CRM status ${from} → ${to}`;
-  return isConversionPending(input.status, to)
-    ? `${base}. COA reported this lead as WON (${input.coaStage} at ${input.stageChangedAt}); the sync does not convert leads, so it is capped at ${to} and tagged ${COA_WON_TAG}: convert it in the CRM`
-    : base;
+  let text = `COA lead ${input.coaLeadId} moved to ${input.coaStage} at ${input.stageChangedAt}; CRM status ${from} → ${to}`;
+  if (isConversionPending(input.status, to)) {
+    text += `. COA reported this lead as WON (${input.coaStage} at ${input.stageChangedAt}); the sync does not convert leads, so it is capped at ${to} and tagged ${COA_WON_TAG}: convert it in the CRM`;
+  }
+  if (refusal) {
+    const numbers =
+      refusal.score !== undefined && refusal.minScore !== undefined
+        ? ` (score ${refusal.score}, minimum ${refusal.minScore})`
+        : '';
+    text += `. COA reported this lead qualified, but the CRM score gate refused the qualification${numbers}; the sync stopped at ${to} and tagged ${COA_QUALIFIED_TAG}: qualify it in the CRM once it scores high enough`;
+  }
+  return text;
 }
 
 /** Audit NOTE + idempotency marker for a COA pipeline sync. Best-effort. */
@@ -616,7 +654,8 @@ async function recordPipelineSync(
   tenantId: string,
   from: PipelineLeadStatus,
   to: PipelineLeadStatus,
-  syncKey: string
+  syncKey: string,
+  refusal: QualificationRefusal | null
 ): Promise<void> {
   try {
     // Existence check + insert must be atomic per syncKey: two concurrent
@@ -636,7 +675,7 @@ async function recordPipelineSync(
         data: {
           type: 'NOTE',
           title: `COA pipeline: ${input.coaStage} → ${input.status}`,
-          description: describePipelineSync(input, from, to),
+          description: describePipelineSync(input, from, to, refusal),
           timestamp: new Date(),
           userName: COA_SYNC_USER,
           leadId,
@@ -649,6 +688,15 @@ async function recordPipelineSync(
             stageChangedAt: input.stageChangedAt,
             ...(isConversionPending(input.status, to)
               ? { coaWon: true, conversionPending: true, appliedStatus: to }
+              : {}),
+            ...(refusal
+              ? {
+                  qualificationPending: true,
+                  ...(refusal.score !== undefined ? { qualificationScore: refusal.score } : {}),
+                  ...(refusal.minScore !== undefined
+                    ? { qualificationMinScore: refusal.minScore }
+                    : {}),
+                }
               : {}),
             syncKey,
           } as Prisma.InputJsonObject,
@@ -694,6 +742,94 @@ async function rereadStatusAfterFailure(
       cause: err,
     });
   }
+}
+
+/** Why the CRM refused to qualify a lead COA reported as qualified. */
+interface QualificationRefusal {
+  readonly score?: number;
+  readonly minScore?: number;
+}
+
+/**
+ * The real qualify operation refused on the minimum-score rule. Detected by the
+ * error's `reason` discriminator (LeadScoreBelowMinimumError, code
+ * VALIDATION_ERROR), never by its message.
+ */
+function asScoreRefusal(error: unknown): QualificationRefusal | null {
+  const e = error as { reason?: unknown; score?: unknown; minScore?: unknown } | null;
+  if (e?.reason !== 'LEAD_SCORE_BELOW_MINIMUM') return null;
+  return {
+    score: typeof e.score === 'number' ? e.score : undefined,
+    minScore: typeof e.minScore === 'number' ? e.minScore : undefined,
+  };
+}
+
+interface PipelineWalk {
+  readonly status: PipelineLeadStatus;
+  readonly moved: boolean;
+  readonly refusal: QualificationRefusal | null;
+}
+
+/**
+ * Apply one ladder step. QUALIFIED goes through the real qualify operation (it
+ * enforces the minimum score, emits LeadQualifiedEvent and compare-and-sets the
+ * status); every other step is a plain status change.
+ */
+function applyPipelineStep(
+  leadService: ReturnType<typeof getLeadService>,
+  leadId: string,
+  step: PipelineLeadStatus,
+  input: InboundPipelineLeadInput
+) {
+  return step === 'QUALIFIED'
+    ? leadService.qualifyLead(
+        leadId,
+        COA_SYNC_USER,
+        `COA lead ${input.coaLeadId} reached ${input.coaStage} at ${input.stageChangedAt}`
+      )
+    : leadService.changeLeadStatus(leadId, step, COA_SYNC_USER);
+}
+
+/**
+ * Forward-only walk. A score refusal of the QUALIFIED step stops the walk where
+ * it is (no later step, no direct status set); a concurrent move re-reads and
+ * replans; anything else surfaces as before.
+ */
+async function walkPipeline(
+  ctx: Context,
+  leadService: ReturnType<typeof getLeadService>,
+  input: InboundPipelineLeadInput,
+  leadId: string,
+  tenantId: string,
+  currentStatus: PipelineLeadStatus
+): Promise<PipelineWalk> {
+  let pending = planPipelineSteps(currentStatus, input.status);
+  let status: PipelineLeadStatus = currentStatus;
+  let moved = false;
+  let replans = 0;
+  while (pending.length > 0) {
+    const step = pending[0] as PipelineLeadStatus;
+    const result = await applyPipelineStep(leadService, leadId, step, input);
+    if (result.isFailure) {
+      const refusal = step === 'QUALIFIED' ? asScoreRefusal(result.error) : null;
+      if (refusal) return { status, moved, refusal };
+      // A concurrent sync of the same lead may have moved it first, which
+      // turns this step into an invalid transition or a compare-and-set
+      // conflict. Re-read: if the lead moved, replan from where it is now.
+      const now = await rereadStatusAfterFailure(ctx, leadId, tenantId, step, result.error);
+      if (now && now.status !== status && replans < 3) {
+        replans += 1;
+        status = now.status as PipelineLeadStatus;
+        pending = planPipelineSteps(now.status, input.status);
+        continue;
+      }
+      throwStepFailure(leadId, step, result.error);
+    }
+    status = step;
+    moved = true;
+    pending = pending.slice(1);
+  }
+  return { status, moved, refusal: null };
 }
 
 /**
@@ -1117,6 +1253,9 @@ export const inboundRouter = createTRPCRouter({
    *   - 500 INTERNAL     — env not configured (secret / tenant / user / service)
    *   - 400 BAD_REQUEST  — LeadService refused a status step (invalid transition)
    *   - 500 INTERNAL     — persistence/infrastructure failure (retryable)
+   *   - QUALIFIED is reached via LeadService.qualifyLead (minimum-score rule,
+   *     LeadQualifiedEvent, compare-and-set). A score refusal stops the walk at
+   *     CONTACTED, tags `coa-qualified`, notes it, and reports `qualificationPending`.
    *   - 200              — lead upserted by (tenant, email); status moved forward
    *                         only, never to CONVERTED (a COA win stops at NEGOTIATING,
    *                         is tagged `coa-won`, and reports `conversionPending`);
@@ -1170,9 +1309,10 @@ export const inboundRouter = createTRPCRouter({
       const syncKey = `coa-sync:${input.coaLeadId}:${input.coaStage}:${input.status}:${input.stageChangedAt}`;
       const prior = await ctx.prisma.leadActivity.findFirst({
         where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
-        select: { id: true },
+        select: { id: true, metadata: true },
       });
       if (prior) {
+        const priorMeta = prior.metadata as { qualificationPending?: unknown } | null;
         return {
           leadId,
           tenantId,
@@ -1181,56 +1321,37 @@ export const inboundRouter = createTRPCRouter({
           status: currentStatus,
           changed: false,
           conversionPending: isConversionPending(input.status, currentStatus),
+          qualificationPending: priorMeta?.qualificationPending === true,
         };
       }
 
       // --- Step 2: forward-only walk through LeadService ----------------------
-      const initialSteps = planPipelineSteps(currentStatus, input.status);
-      let pending = initialSteps;
-      let status: PipelineLeadStatus = currentStatus;
-      let moved = false;
-      let replans = 0;
-      while (pending.length > 0) {
-        const step = pending[0] as PipelineLeadStatus;
-        const result = await leadService.changeLeadStatus(leadId, step, COA_SYNC_USER);
-        if (result.isFailure) {
-          // A concurrent sync of the same lead may have moved it first, which
-          // turns this step into an invalid transition. Re-read: if the lead
-          // moved, replan from where it is now (possibly nothing left to do).
-          const now = await rereadStatusAfterFailure(ctx, leadId, tenantId, step, result.error);
-          if (now && now.status !== status && replans < 3) {
-            replans += 1;
-            status = now.status as PipelineLeadStatus;
-            pending = planPipelineSteps(now.status, input.status);
-            continue;
-          }
-          throwStepFailure(leadId, step, result.error);
-        }
-        status = step;
-        moved = true;
-        pending = pending.slice(1);
-      }
+      const { status, moved, refusal } = await walkPipeline(
+        ctx,
+        leadService,
+        input,
+        leadId,
+        tenantId,
+        currentStatus
+      );
 
       await tagCoaWon(ctx, input, leadId, tenantId, status);
+      await tagCoaQualified(ctx, input, leadId, tenantId, refusal);
 
-      // Everything planned was done by another writer (a concurrent sync, a UI
-      // user). Still record THIS request's audit note and syncKey marker so a
-      // retry of the same key short-circuits; recordPipelineSync is idempotent
-      // per syncKey because the early `prior` lookup above skips a repeat.
-      if (initialSteps.length > 0 && !moved) {
-        await recordPipelineSync(ctx, input, leadId, tenantId, currentStatus, status, syncKey);
-        return {
-          leadId,
-          tenantId,
-          created: leadCreated,
-          previousStatus: currentStatus,
-          status,
-          changed: false,
-          conversionPending: isConversionPending(input.status, status),
-        };
-      }
-
-      await recordPipelineSync(ctx, input, leadId, tenantId, currentStatus, status, syncKey);
+      // Always record THIS request's audit note and syncKey marker so a retry of
+      // the same key short-circuits, even when another writer did the moving or
+      // the qualification was refused; recordPipelineSync is idempotent per
+      // syncKey because the early `prior` lookup above skips a repeat.
+      await recordPipelineSync(
+        ctx,
+        input,
+        leadId,
+        tenantId,
+        currentStatus,
+        status,
+        syncKey,
+        refusal
+      );
 
       return {
         leadId,
@@ -1240,6 +1361,7 @@ export const inboundRouter = createTRPCRouter({
         status,
         changed: moved,
         conversionPending: isConversionPending(input.status, status),
+        qualificationPending: refusal !== null,
       };
     }),
 });
