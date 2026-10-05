@@ -19,6 +19,9 @@
  *    (tenant, email) so a site lead and a COA lead for the same person are
  *    ONE record, then moves its status forward only (never back, never out of
  *    CONVERTED/LOST), stepping through LeadService so domain events fire.
+ *    The sync NEVER sets CONVERTED: conversion runs a workflow that creates or
+ *    links a Contact, so a COA win stops at NEGOTIATING, is tagged `coa-won`
+ *    and noted, and a human converts it in the CRM.
  *
  * Auth: shared bearer `PORTAL_INTERNAL_SECRET` (server-to-server only).
  * The portal sends the SAME secret to two destinations (this CRM and the
@@ -246,6 +249,12 @@ export interface InboundPipelineLeadOutput {
   readonly status: PipelineLeadStatus;
   /** True when at least one status transition was applied. */
   readonly changed: boolean;
+  /**
+   * True when COA reported the lead as won (status CONVERTED) but the CRM lead
+   * is not CONVERTED: the sync caps at NEGOTIATING and tags `coa-won`; a human
+   * converts it. Always present so a COA-side consumer can rely on it.
+   */
+  readonly conversionPending: boolean;
 }
 
 // ============================================================================
@@ -261,6 +270,7 @@ const BOOKING_EXTERNAL_ID_PREFIX = 'booking:';
 const COA_PIPELINE_TAG = 'coa-pipeline';
 const COA_LEAD_TAG_PREFIX = 'coa-lead:';
 const COA_SYNC_USER = 'System (COA sync)';
+const COA_WON_TAG = 'coa-won';
 
 /** Forward-only rank. LOST / CONVERTED are terminal for the pipeline route. */
 const PIPELINE_RANK: Record<string, number> = {
@@ -272,23 +282,26 @@ const PIPELINE_RANK: Record<string, number> = {
   CONVERTED: 4,
 };
 
-/** The funnel ladder walked one valid LeadService transition at a time. */
-const PIPELINE_LADDER: readonly PipelineLeadStatus[] = [
-  'CONTACTED',
-  'QUALIFIED',
-  'NEGOTIATING',
-  'CONVERTED',
-];
+/**
+ * The funnel ladder walked one valid LeadService transition at a time. It stops
+ * at NEGOTIATING on purpose: CONVERTED is never applied by the sync (see
+ * `planPipelineSteps`).
+ */
+const PIPELINE_LADDER: readonly PipelineLeadStatus[] = ['CONTACTED', 'QUALIFIED', 'NEGOTIATING'];
 
 /**
  * Decide the ordered list of statuses to move through. Empty = no change.
- * Never resurrects CONVERTED/LOST and never downgrades.
+ * Never resurrects CONVERTED/LOST and never downgrades. A COA win (target
+ * CONVERTED) is capped at NEGOTIATING: converting runs a workflow that creates
+ * or links a Contact and emits LeadConvertedEvent, which a status walk through
+ * changeLeadStatus would skip, leaving a converted lead with no Contact.
  */
 function planPipelineSteps(current: string, target: PipelineLeadStatus): PipelineLeadStatus[] {
   if (current === 'CONVERTED' || current === 'LOST') return [];
   if (target === 'LOST') return ['LOST'];
+  const cappedTarget = target === 'CONVERTED' ? 'NEGOTIATING' : target;
   const currentRank = PIPELINE_RANK[current];
-  const targetRank = PIPELINE_RANK[target];
+  const targetRank = PIPELINE_RANK[cappedTarget];
   if (currentRank === undefined || targetRank === undefined) return [];
   if (targetRank <= currentRank) return [];
   return PIPELINE_LADDER.filter((s) => {
@@ -514,7 +527,23 @@ async function mergeCoaTags(
     select: { id: true, status: true, tags: true },
   });
   const have: string[] = Array.isArray(existing?.tags) ? (existing.tags as string[]) : [];
-  const missing = coaTags.filter((t) => !have.includes(t));
+  await appendMissingTags(ctx, leadId, tenantId, have, coaTags, coaLeadId);
+  return (existing?.status as PipelineLeadStatus | undefined) ?? 'NEW';
+}
+
+/**
+ * Append the tags not in `have` (best-effort, logged on failure) with the
+ * tenant-scoped, de-duplicating UPDATE.
+ */
+async function appendMissingTags(
+  ctx: Context,
+  leadId: string,
+  tenantId: string,
+  have: string[],
+  tags: string[],
+  coaLeadId: string
+): Promise<void> {
+  const missing = tags.filter((t) => !have.includes(t));
   if (missing.length > 0) {
     try {
       // Idempotent at write time: the `missing` list was decided from a read
@@ -540,7 +569,43 @@ async function mergeCoaTags(
       });
     }
   }
-  return (existing?.status as PipelineLeadStatus | undefined) ?? 'NEW';
+}
+
+/** True when COA reported a win the CRM has not converted (the sync never does). */
+function isConversionPending(requested: PipelineLeadStatus, status: PipelineLeadStatus): boolean {
+  return requested === 'CONVERTED' && status !== 'CONVERTED';
+}
+
+/**
+ * Tag a COA win `coa-won` so a human converts it in the CRM. Skipped when the
+ * lead is already CONVERTED. Same idempotent, tenant-scoped append as the COA
+ * tags; reads the current tags so a lead already carrying it is not rewritten.
+ */
+async function tagCoaWon(
+  ctx: Context,
+  input: InboundPipelineLeadInput,
+  leadId: string,
+  tenantId: string,
+  status: PipelineLeadStatus
+): Promise<void> {
+  if (input.status !== 'CONVERTED' || status === 'CONVERTED') return;
+  const lead = await ctx.prisma.lead.findFirst({
+    where: { id: leadId, tenantId },
+    select: { tags: true },
+  });
+  const have: string[] = Array.isArray(lead?.tags) ? (lead.tags as string[]) : [];
+  await appendMissingTags(ctx, leadId, tenantId, have, [COA_WON_TAG], input.coaLeadId);
+}
+
+function describePipelineSync(
+  input: InboundPipelineLeadInput,
+  from: PipelineLeadStatus,
+  to: PipelineLeadStatus
+): string {
+  const base = `COA lead ${input.coaLeadId} moved to ${input.coaStage} at ${input.stageChangedAt}; CRM status ${from} → ${to}`;
+  return isConversionPending(input.status, to)
+    ? `${base}. COA reported this lead as WON (${input.coaStage} at ${input.stageChangedAt}); the sync does not convert leads, so it is capped at ${to} and tagged ${COA_WON_TAG}: convert it in the CRM`
+    : base;
 }
 
 /** Audit NOTE + idempotency marker for a COA pipeline sync. Best-effort. */
@@ -571,7 +636,7 @@ async function recordPipelineSync(
         data: {
           type: 'NOTE',
           title: `COA pipeline: ${input.coaStage} → ${input.status}`,
-          description: `COA lead ${input.coaLeadId} moved to ${input.coaStage} at ${input.stageChangedAt}; CRM status ${from} → ${to}`,
+          description: describePipelineSync(input, from, to),
           timestamp: new Date(),
           userName: COA_SYNC_USER,
           leadId,
@@ -582,6 +647,9 @@ async function recordPipelineSync(
             coaStage: input.coaStage,
             status: input.status,
             stageChangedAt: input.stageChangedAt,
+            ...(isConversionPending(input.status, to)
+              ? { coaWon: true, conversionPending: true, appliedStatus: to }
+              : {}),
             syncKey,
           } as Prisma.InputJsonObject,
         },
@@ -1050,7 +1118,9 @@ export const inboundRouter = createTRPCRouter({
    *   - 400 BAD_REQUEST  — LeadService refused a status step (invalid transition)
    *   - 500 INTERNAL     — persistence/infrastructure failure (retryable)
    *   - 200              — lead upserted by (tenant, email); status moved forward
-   *                         only; `changed` says whether anything moved.
+   *                         only, never to CONVERTED (a COA win stops at NEGOTIATING,
+   *                         is tagged `coa-won`, and reports `conversionPending`);
+   *                         `changed` says whether anything moved.
    *
    * Idempotency: the audit NOTE LeadActivity carries metadata.syncKey
    * `coa-sync:<coaLeadId>:<coaStage>:<status>`. A repeat of that key returns early with
@@ -1093,6 +1163,10 @@ export const inboundRouter = createTRPCRouter({
       // the stage, so a retry of the same entry is still deduplicated, while a
       // lead that genuinely re-enters the stage later (after being reopened)
       // gets a new transition instead of being suppressed for ever.
+      // The key uses the REQUESTED status, not the capped one: it names COA's
+      // event (a retry sends the identical payload, so it dedupes identically),
+      // and keying on the capped value would collide a won event with a genuine
+      // NEGOTIATING entry made at the same stage and time.
       const syncKey = `coa-sync:${input.coaLeadId}:${input.coaStage}:${input.status}:${input.stageChangedAt}`;
       const prior = await ctx.prisma.leadActivity.findFirst({
         where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
@@ -1106,6 +1180,7 @@ export const inboundRouter = createTRPCRouter({
           previousStatus: currentStatus,
           status: currentStatus,
           changed: false,
+          conversionPending: isConversionPending(input.status, currentStatus),
         };
       }
 
@@ -1136,6 +1211,8 @@ export const inboundRouter = createTRPCRouter({
         pending = pending.slice(1);
       }
 
+      await tagCoaWon(ctx, input, leadId, tenantId, status);
+
       // Everything planned was done by another writer (a concurrent sync, a UI
       // user). Still record THIS request's audit note and syncKey marker so a
       // retry of the same key short-circuits; recordPipelineSync is idempotent
@@ -1149,6 +1226,7 @@ export const inboundRouter = createTRPCRouter({
           previousStatus: currentStatus,
           status,
           changed: false,
+          conversionPending: isConversionPending(input.status, status),
         };
       }
 
@@ -1161,6 +1239,7 @@ export const inboundRouter = createTRPCRouter({
         previousStatus: currentStatus,
         status,
         changed: moved,
+        conversionPending: isConversionPending(input.status, status),
       };
     }),
 });
