@@ -3,6 +3,7 @@ import {
   LeadId,
   Email,
   LeadStatusConflictError,
+  type LeadStatus,
   type RepositoryTransaction,
 } from '@intelliflow/domain';
 import { LeadRepository } from '@intelliflow/application';
@@ -12,7 +13,7 @@ import { LeadRepository } from '@intelliflow/application';
  * mutating a lead the caller holds never changes what is stored, and a later
  * compare-and-set sees the status that was actually persisted.
  */
-function snapshot(lead: Lead): Lead {
+function snapshot(lead: Lead, override?: { status?: LeadStatus; updatedAt?: Date }): Lead {
   return Lead.reconstitute(lead.id, {
     email: lead.email,
     firstName: lead.firstName,
@@ -21,12 +22,12 @@ function snapshot(lead: Lead): Lead {
     title: lead.title,
     phone: lead.phone,
     source: lead.source,
-    status: lead.status,
+    status: override?.status ?? lead.status,
     score: { value: lead.score.value, confidence: lead.score.confidence },
     ownerId: lead.ownerId,
     tenantId: lead.tenantId,
     createdAt: new Date(lead.createdAt.getTime()),
-    updatedAt: new Date(lead.updatedAt.getTime()),
+    updatedAt: new Date((override?.updatedAt ?? lead.updatedAt).getTime()),
     location: lead.location,
     website: lead.website,
     avatarUrl: lead.avatarUrl,
@@ -58,13 +59,23 @@ export class InMemoryLeadRepository implements LeadRepository {
     // Persist the lead and, per the repository contract, any initial note
     // together — atomic by construction here since both writes are synchronous
     // in-memory map mutations that cannot partially fail.
+    const stored = this.leads.get(lead.id.value);
     if (opts?.expectedStatus !== undefined) {
-      const stored = this.leads.get(lead.id.value);
+      // Compare-and-set, mirroring PrismaLeadRepository: write ONLY status and
+      // updatedAt onto the STORED lead so a concurrent non-status change survives.
       if (!stored || stored.status !== opts.expectedStatus) {
         throw new LeadStatusConflictError(lead.id.value, opts.expectedStatus);
       }
+      this.leads.set(
+        lead.id.value,
+        snapshot(stored, { status: lead.status, updatedAt: lead.updatedAt })
+      );
+    } else if (stored) {
+      // Plain save never rewrites status (a stale snapshot must not revert it).
+      this.leads.set(lead.id.value, snapshot(lead, { status: stored.status }));
+    } else {
+      this.leads.set(lead.id.value, snapshot(lead));
     }
-    this.leads.set(lead.id.value, snapshot(lead));
     if (opts?.note) {
       const existing = this.leadNotes.get(lead.id.value) ?? [];
       existing.push(opts.note);
@@ -95,7 +106,7 @@ export class InMemoryLeadRepository implements LeadRepository {
     return Array.from(this.leads.values())
       .filter((lead) => lead.ownerId === ownerId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .map(snapshot);
+      .map((l) => snapshot(l));
   }
 
   async findByStatus(status: string, ownerId?: string): Promise<Lead[]> {
@@ -106,7 +117,7 @@ export class InMemoryLeadRepository implements LeadRepository {
         return matchesStatus && matchesOwner;
       })
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .map(snapshot);
+      .map((l) => snapshot(l));
   }
 
   async findByMinScore(minScore: number, ownerId?: string): Promise<Lead[]> {
@@ -117,7 +128,7 @@ export class InMemoryLeadRepository implements LeadRepository {
         return matchesScore && matchesOwner;
       })
       .sort((a, b) => b.score.value - a.score.value)
-      .map(snapshot);
+      .map((l) => snapshot(l));
   }
 
   async delete(id: LeadId): Promise<void> {
@@ -155,7 +166,7 @@ export class InMemoryLeadRepository implements LeadRepository {
       })
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
       .slice(0, limit)
-      .map(snapshot);
+      .map((l) => snapshot(l));
   }
 
   // Test helper methods
@@ -164,6 +175,6 @@ export class InMemoryLeadRepository implements LeadRepository {
   }
 
   getAll(): Lead[] {
-    return Array.from(this.leads.values()).map(snapshot);
+    return Array.from(this.leads.values()).map((l) => snapshot(l));
   }
 }

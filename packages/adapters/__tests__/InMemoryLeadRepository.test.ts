@@ -770,8 +770,9 @@ describe('InMemoryLeadRepository', () => {
       expect(highScoreLeads).toHaveLength(1);
 
       // Change status
+      const statusBeforeQualify = testLead.status;
       testLead.qualify('user-123', 'Good fit');
-      await repository.save(testLead);
+      await repository.save(testLead, { expectedStatus: statusBeforeQualify });
 
       // Find by status
       const qualifiedLeads = await repository.findByStatus('QUALIFIED');
@@ -779,7 +780,7 @@ describe('InMemoryLeadRepository', () => {
 
       // Convert lead
       testLead.convert('contact-123', 'account-456', 'user-789');
-      await repository.save(testLead);
+      await repository.save(testLead, { expectedStatus: 'QUALIFIED' });
 
       // Verify conversion
       const converted = await repository.findById(testLeadId);

@@ -180,6 +180,7 @@ export class ConvertLeadToContactUseCase {
     const contact = contactResult.value;
 
     // 11. Convert lead (updates status and creates event)
+    const expectedStatus = lead.status;
     const convertResult = lead.convert(contact.id.value, accountId, input.convertedBy);
     if (convertResult.isFailure) {
       return Result.fail(convertResult.error);
@@ -199,7 +200,7 @@ export class ConvertLeadToContactUseCase {
     // 13. Persist all changes
     try {
       await this.contactRepository.save(contact);
-      await this.leadRepository.save(lead);
+      await this.leadRepository.save(lead, { expectedStatus });
       await this.conversionAuditRepository.save(audit);
     } catch (error) {
       return Result.fail(

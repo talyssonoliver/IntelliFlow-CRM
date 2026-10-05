@@ -150,6 +150,8 @@ export class PrismaLeadRepository implements LeadRepository {
       return;
     }
 
+    const { status: _status, ...updateData } = data;
+
     await db.lead.upsert({
       where: { id: data.id },
       // Nest the initial note into the create so the lead + note commit in a
@@ -169,7 +171,10 @@ export class PrismaLeadRepository implements LeadRepository {
             },
           }
         : data,
-      update: data,
+      // `status` is never rewritten here: a stale snapshot must not revert a
+      // status another writer moved. Status changes go through the
+      // expectedStatus compare-and-set above (insert still sets it via `create`).
+      update: updateData,
     });
   }
 
