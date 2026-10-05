@@ -11,6 +11,7 @@ import { spawnSync } from 'node:child_process';
 
 import {
   classifyChangedFiles,
+  isScriptsOnlyPackageJsonChange,
   resolveTestScope,
   scopeFromEnvOrResolve,
   MAX_RELATED_FILES,
@@ -65,6 +66,44 @@ describe('classifyChangedFiles', () => {
   it('normalises Windows separators and de-duplicates', () => {
     const r = classifyChangedFiles(['packages\\a\\src\\x.ts', 'packages/a/src/x.ts']);
     expect(r.files).toEqual(['packages/a/src/x.ts']);
+  });
+});
+
+describe('isScriptsOnlyPackageJsonChange', () => {
+  const pkg = (o: object) => JSON.stringify(o, null, 2);
+
+  it('is true when only scripts changed, whatever the key order', () => {
+    expect(
+      isScriptsOnlyPackageJsonChange(
+        pkg({ name: 'x', version: '1.0.0', scripts: { test: 'vitest run' } }),
+        pkg({
+          scripts: { test: 'node wrap.mjs vitest run', lint: 'eslint .' },
+          version: '1.0.0',
+          name: 'x',
+        })
+      )
+    ).toBe(true);
+  });
+
+  it('is false when anything outside scripts changed', () => {
+    const before = pkg({ name: 'x', scripts: {}, devDependencies: { vitest: '4.1.0' } });
+    expect(
+      isScriptsOnlyPackageJsonChange(
+        before,
+        pkg({ name: 'x', scripts: {}, devDependencies: { vitest: '4.1.1' } })
+      )
+    ).toBe(false);
+    expect(
+      isScriptsOnlyPackageJsonChange(
+        before,
+        pkg({ name: 'x', scripts: {}, devDependencies: { vitest: '4.1.0' }, type: 'module' })
+      )
+    ).toBe(false);
+  });
+
+  it('is false for unparseable text, so it can only widen', () => {
+    expect(isScriptsOnlyPackageJsonChange('{', pkg({ name: 'x' }))).toBe(false);
+    expect(isScriptsOnlyPackageJsonChange(pkg({ name: 'x' }), 'null')).toBe(false);
   });
 });
 
@@ -143,6 +182,36 @@ describe('resolveTestScope', () => {
       'packages/a/src/committed.ts',
       'packages/a/src/untracked.ts',
     ]);
+  });
+
+  it('does not widen to full when a package.json changed only in scripts', () => {
+    const root = makeRepo();
+    write(root, 'package.json', JSON.stringify({ name: 'r', scripts: { test: 'vitest run' } }));
+    git(root, 'add', '.');
+    git(root, 'commit', '-q', '-m', 'pkg');
+    git(root, 'branch', '-f', 'main', 'HEAD');
+    // Same fields in a different order, plus a scripts edit: still scripts-only.
+    write(
+      root,
+      'package.json',
+      JSON.stringify({ scripts: { test: 'node wrap.mjs vitest run' }, name: 'r' })
+    );
+    write(root, 'packages/a/src/changed.ts');
+    const r = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
+    expect(r.scope).toBe('related');
+    expect(r.files).toEqual(['packages/a/src/changed.ts']);
+  });
+
+  it('still widens to full when a package.json dependency changed', () => {
+    const root = makeRepo();
+    write(root, 'package.json', JSON.stringify({ name: 'r', dependencies: { zod: '^4.0.0' } }));
+    git(root, 'add', '.');
+    git(root, 'commit', '-q', '-m', 'pkg');
+    git(root, 'branch', '-f', 'main', 'HEAD');
+    write(root, 'package.json', JSON.stringify({ name: 'r', dependencies: { zod: '^4.1.0' } }));
+    const r = resolveTestScope({ cwd: root, env: LOCAL_ENV, baseRef: 'main' });
+    expect(r.scope).toBe('full');
+    expect(r.reason).toContain('package.json');
   });
 
   it('is none for a docs-only branch', () => {
