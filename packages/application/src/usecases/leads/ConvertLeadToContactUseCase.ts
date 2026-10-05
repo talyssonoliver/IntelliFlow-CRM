@@ -197,10 +197,14 @@ export class ConvertLeadToContactUseCase {
       idempotencyKey,
     });
 
-    // 13. Persist all changes
+    // 13. Persist all changes. The lead's compare-and-set goes FIRST: if another
+    // writer moved the lead since it was read, LeadStatusConflictError aborts
+    // here, before a Contact or audit row exists for a conversion that did not
+    // happen. (This use case has no transaction manager; the Contact holds the
+    // FK to the lead, so saving the lead first is safe.)
     try {
-      await this.contactRepository.save(contact);
       await this.leadRepository.save(lead, { expectedStatus });
+      await this.contactRepository.save(contact);
       await this.conversionAuditRepository.save(audit);
     } catch (error) {
       return Result.fail(
