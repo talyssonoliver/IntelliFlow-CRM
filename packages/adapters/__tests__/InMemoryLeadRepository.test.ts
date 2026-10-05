@@ -463,19 +463,19 @@ describe('InMemoryLeadRepository', () => {
     });
   });
 
-  describe('existsByEmail()', () => {
+  describe('existsByEmailInTenant()', () => {
     it('should return true when email exists', async () => {
       await repository.save(testLead);
 
       const emailResult = Email.create('test@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, testLead.tenantId);
 
       expect(exists).toBe(true);
     });
 
     it('should return false when email does not exist', async () => {
       const emailResult = Email.create('nonexistent@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, testLead.tenantId);
 
       expect(exists).toBe(false);
     });
@@ -484,7 +484,7 @@ describe('InMemoryLeadRepository', () => {
       await repository.save(testLead);
 
       const emailResult = Email.create('TEST@EXAMPLE.COM');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, testLead.tenantId);
 
       expect(exists).toBe(true);
     });
@@ -494,7 +494,7 @@ describe('InMemoryLeadRepository', () => {
       await repository.delete(testLeadId);
 
       const emailResult = Email.create('test@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, testLead.tenantId);
 
       expect(exists).toBe(false);
     });

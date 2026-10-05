@@ -135,9 +135,9 @@ export class InMemoryLeadRepository implements LeadRepository {
     this.leads.delete(id.value);
   }
 
-  async existsByEmail(email: Email): Promise<boolean> {
+  async existsByEmailInTenant(email: Email, tenantId: string): Promise<boolean> {
     for (const lead of this.leads.values()) {
-      if (lead.email.equals(email)) {
+      if (lead.tenantId === tenantId && lead.email.equals(email)) {
         return true;
       }
     }

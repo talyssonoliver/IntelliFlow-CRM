@@ -296,22 +296,35 @@ describe('InMemoryLeadRepository', () => {
     });
   });
 
-  describe('existsByEmail()', () => {
+  describe('existsByEmailInTenant()', () => {
     it('should return true for existing email', async () => {
       const lead = createTestLead('existing@example.com').value;
       await repository.save(lead);
 
       const email = Email.create('existing@example.com').value;
-      const exists = await repository.existsByEmail(email);
+      const exists = await repository.existsByEmailInTenant(email, lead.tenantId);
 
       expect(exists).toBe(true);
     });
 
     it('should return false for non-existing email', async () => {
       const email = Email.create('nonexistent@example.com').value;
-      const exists = await repository.existsByEmail(email);
+      const exists = await repository.existsByEmailInTenant(email, 'tenant-x');
 
       expect(exists).toBe(false);
+    });
+
+    it('is tenant-scoped: same email in another tenant is not a duplicate', async () => {
+      const other = Lead.create({
+        email: 'shared@example.com',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-a',
+      }).value;
+      await repository.save(other);
+      const email = Email.create('shared@example.com').value;
+
+      expect(await repository.existsByEmailInTenant(email, 'tenant-a')).toBe(true);
+      expect(await repository.existsByEmailInTenant(email, 'tenant-b')).toBe(false);
     });
   });
 

@@ -33,17 +33,38 @@ import {
   LeadConversionAuditRepository,
 } from '../../../ports/repositories';
 import { EventBusPort } from '../../../ports/external';
+import type { TransactionPort } from '../../../ports/TransactionPort';
 import { ConversionSnapshot } from '../ConversionSnapshot';
 
 // =============================================================================
 // Mock Implementations
 // =============================================================================
 
+// Fake unit of work: writes made with the provided tx are buffered and applied
+// only when `work` resolves; if it throws they are discarded (rollback).
+type FakeTx = { defer: (apply: () => void) => void };
+const deferOrApply = (tx: unknown, apply: () => void): void => {
+  const t = tx as FakeTx | undefined;
+  if (t && typeof t.defer === 'function') t.defer(apply);
+  else apply();
+};
+class FakeTransactionManager implements TransactionPort {
+  runs = 0;
+  async run<T>(work: (tx: never) => Promise<T>): Promise<T> {
+    this.runs++;
+    const pending: Array<() => void> = [];
+    const tx: FakeTx = { defer: (apply) => void pending.push(apply) };
+    const result = await work(tx as never);
+    for (const apply of pending) apply();
+    return result;
+  }
+}
+
 class MockLeadRepository implements Partial<LeadRepository> {
   private leads: Map<string, Lead> = new Map();
 
-  async save(lead: Lead): Promise<void> {
-    this.leads.set(lead.id.value, lead);
+  async save(lead: Lead, _opts?: unknown, tx?: unknown): Promise<void> {
+    deferOrApply(tx, () => this.leads.set(lead.id.value, lead));
   }
 
   async findById(id: { value: string }): Promise<Lead | null> {
@@ -59,9 +80,11 @@ class MockContactRepository implements Partial<ContactRepository> {
   private contacts: Map<string, Contact> = new Map();
   savedContact: Contact | null = null;
 
-  async save(contact: Contact): Promise<void> {
-    this.contacts.set(contact.id.value, contact);
-    this.savedContact = contact;
+  async save(contact: Contact, tx?: unknown): Promise<void> {
+    deferOrApply(tx, () => {
+      this.contacts.set(contact.id.value, contact);
+      this.savedContact = contact;
+    });
   }
 
   async findById(id: { value: string }): Promise<Contact | null> {
@@ -77,9 +100,11 @@ class MockAccountRepository implements Partial<AccountRepository> {
   private accounts: Map<string, Account> = new Map();
   savedAccount: Account | null = null;
 
-  async save(account: Account): Promise<void> {
-    this.accounts.set(account.id.value, account);
-    this.savedAccount = account;
+  async save(account: Account, tx?: unknown): Promise<void> {
+    deferOrApply(tx, () => {
+      this.accounts.set(account.id.value, account);
+      this.savedAccount = account;
+    });
   }
 
   async findById(id: { value: string }): Promise<Account | null> {
@@ -121,9 +146,11 @@ class MockLeadConversionAuditRepository implements Partial<LeadConversionAuditRe
   private audits: Map<string, LeadConversionAudit> = new Map();
   savedAudit: LeadConversionAudit | null = null;
 
-  async save(audit: LeadConversionAudit): Promise<void> {
-    this.audits.set(audit.idempotencyKey, audit);
-    this.savedAudit = audit;
+  async save(audit: LeadConversionAudit, tx?: unknown): Promise<void> {
+    deferOrApply(tx, () => {
+      this.audits.set(audit.idempotencyKey, audit);
+      this.savedAudit = audit;
+    });
   }
 
   async findByIdempotencyKey(key: string): Promise<LeadConversionAudit | null> {
@@ -154,6 +181,7 @@ describe('ConvertLeadToContactUseCase', () => {
   let accountRepository: MockAccountRepository;
   let conversionAuditRepository: MockLeadConversionAuditRepository;
   let eventBus: MockEventBus;
+  let transactionManager: FakeTransactionManager;
   let useCase: ConvertLeadToContactUseCase;
 
   beforeEach(() => {
@@ -162,12 +190,14 @@ describe('ConvertLeadToContactUseCase', () => {
     accountRepository = new MockAccountRepository();
     conversionAuditRepository = new MockLeadConversionAuditRepository();
     eventBus = new MockEventBus();
+    transactionManager = new FakeTransactionManager();
     useCase = new ConvertLeadToContactUseCase(
       leadRepository as any as LeadRepository,
       contactRepository as any as ContactRepository,
       accountRepository as any as AccountRepository,
       conversionAuditRepository as any as LeadConversionAuditRepository,
-      eventBus
+      eventBus,
+      transactionManager
     );
   });
 
@@ -365,6 +395,86 @@ describe('ConvertLeadToContactUseCase', () => {
       expect(result.isFailure).toBe(true);
       expect(contactRepository.savedContact).toBeNull();
       expect(conversionAuditRepository.savedAudit).toBeNull();
+    });
+
+    it('rolls the lead conversion back when the contact save fails', async () => {
+      const lead = Lead.create({
+        email: 'half@example.com',
+        firstName: 'Half',
+        lastName: 'Converted',
+        ownerId: 'owner-half',
+        tenantId: 'tenant-half',
+      }).value;
+      leadRepository.setLead(lead);
+      vi.spyOn(contactRepository, 'save').mockRejectedValueOnce(new Error('contact write failed'));
+
+      const result = await useCase.execute({
+        leadId: lead.id.value,
+        accountName: 'Half Co',
+        convertedBy: 'sales-rep',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('Failed to save conversion');
+      expect(transactionManager.runs).toBe(1);
+      expect(contactRepository.savedContact).toBeNull();
+      expect(conversionAuditRepository.savedAudit).toBeNull();
+      expect(accountRepository.savedAccount).toBeNull();
+      expect(eventBus.publishedEvents).toHaveLength(0);
+    });
+
+    it('does not leave the lead CONVERTED in the store when the contact save fails', async () => {
+      const lead = Lead.create({
+        email: 'store@example.com',
+        firstName: 'Store',
+        lastName: 'Lead',
+        ownerId: 'owner-store',
+        tenantId: 'tenant-store',
+      }).value;
+      const committed: string[] = [];
+      vi.spyOn(leadRepository, 'save').mockImplementation(async (l, _o, tx) => {
+        deferOrApply(tx, () => committed.push(l.status));
+      });
+      leadRepository.setLead(lead);
+      vi.spyOn(contactRepository, 'save').mockRejectedValueOnce(new Error('contact write failed'));
+
+      await useCase.execute({ leadId: lead.id.value, convertedBy: 'sales-rep' });
+
+      expect(committed).toEqual([]);
+    });
+
+    it('passes the transaction to every repository write', async () => {
+      const lead = Lead.create({
+        email: 'tx@example.com',
+        firstName: 'Tx',
+        lastName: 'Lead',
+        ownerId: 'owner-tx',
+        tenantId: 'tenant-tx',
+      }).value;
+      leadRepository.setLead(lead);
+      const seen: Record<string, unknown> = {};
+      const leadSave = leadRepository.save.bind(leadRepository);
+      vi.spyOn(leadRepository, 'save').mockImplementation(async (l, o, tx) => {
+        seen.lead = tx;
+        return leadSave(l, o, tx);
+      });
+      const contactSave = contactRepository.save.bind(contactRepository);
+      vi.spyOn(contactRepository, 'save').mockImplementation(async (c, tx) => {
+        seen.contact = tx;
+        return contactSave(c, tx);
+      });
+      const auditSave = conversionAuditRepository.save.bind(conversionAuditRepository);
+      vi.spyOn(conversionAuditRepository, 'save').mockImplementation(async (a, tx) => {
+        seen.audit = tx;
+        return auditSave(a, tx);
+      });
+
+      const result = await useCase.execute({ leadId: lead.id.value, convertedBy: 'sales-rep' });
+
+      expect(result.isSuccess).toBe(true);
+      expect(seen.lead).toBeDefined();
+      expect(seen.contact).toBe(seen.lead);
+      expect(seen.audit).toBe(seen.lead);
     });
 
     it('should fail when lead is already converted', async () => {

@@ -78,9 +78,11 @@ export interface LeadRepository {
   delete(id: LeadId): Promise<void>;
 
   /**
-   * Check if email exists
+   * Check if a lead with this email exists in the given tenant.
+   * Tenant-scoped on purpose: the DB invariant is @@unique([email, tenantId]),
+   * so the same address in another tenant is not a duplicate.
    */
-  existsByEmail(email: Email): Promise<boolean>;
+  existsByEmailInTenant(email: Email, tenantId: string): Promise<boolean>;
 
   /**
    * Count leads by status
