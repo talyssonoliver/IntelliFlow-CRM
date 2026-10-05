@@ -36,16 +36,18 @@ export default function RiskRegister() {
       setSummary(result.summary || null);
       setLastUpdated(result.lastUpdated);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const handleFetchError = useCallback((err: unknown) => {
+    setError(err instanceof Error ? err.message : 'Unknown error');
+  }, []);
+
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData().catch(handleFetchError);
+  }, [fetchData, handleFetchError]);
 
   const handleAddRisk = async (newRisk: Partial<Risk>) => {
     try {
@@ -55,7 +57,7 @@ export default function RiskRegister() {
         body: JSON.stringify({ action: 'add', risk: newRisk }),
       });
       if (!response.ok) throw new Error('Failed to add risk');
-      await fetchData();
+      await fetchData().catch(handleFetchError);
       setShowAddModal(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add risk');
@@ -73,7 +75,7 @@ export default function RiskRegister() {
         const data = await response.json();
         throw new Error(data.message || 'Failed to edit risk');
       }
-      await fetchData();
+      await fetchData().catch(handleFetchError);
       setEditRisk(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to edit risk');
@@ -141,7 +143,10 @@ export default function RiskRegister() {
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
         </div>
-        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
+        <button
+          onClick={() => fetchData().catch(handleFetchError)}
+          className="mt-2 text-sm underline hover:no-underline"
+        >
           Try again
         </button>
       </div>
@@ -194,7 +199,7 @@ export default function RiskRegister() {
               </div>
             )}
           </div>
-          <RefreshButton onRefresh={fetchData} label="Reload" />
+          <RefreshButton onRefresh={() => fetchData().catch(handleFetchError)} label="Reload" />
         </div>
       </div>
 

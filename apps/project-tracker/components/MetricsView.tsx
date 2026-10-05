@@ -167,7 +167,7 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
         const result = await response.json();
         console.log('Metrics synced:', result);
         // Reload metrics after sync
-        await loadMetrics();
+        await loadMetrics().catch(reportMetricsLoadError);
       } else {
         console.error('Sync failed:', await response.text());
       }
@@ -199,6 +199,10 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
     if (risksRes.ok) setRiskData(await risksRes.json());
   };
 
+  const reportMetricsLoadError = (error: unknown) => {
+    console.error('Error loading metrics:', error);
+  };
+
   const loadMetrics = async () => {
     setIsLoading(true);
     const sprintParam = getSprintParam();
@@ -213,22 +217,20 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
       ]);
       await applyMetricsResponses(sprintRes, phasesRes, velocityRes, capacityRes, risksRes);
       setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Error loading metrics:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadMetrics();
+    loadMetrics().catch(reportMetricsLoadError);
 
     // Watch for file changes using Server-Sent Events
     const eventSource = new EventSource('/api/metrics/watch');
 
     eventSource.onmessage = () => {
       console.log('Metrics files changed, reloading...');
-      loadMetrics();
+      loadMetrics().catch(reportMetricsLoadError);
     };
 
     eventSource.onerror = (error) => {
@@ -278,7 +280,7 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
             Sync
           </button>
           <button
-            onClick={loadMetrics}
+            onClick={() => loadMetrics().catch(reportMetricsLoadError)}
             disabled={isLoading}
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
           >

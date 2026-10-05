@@ -101,8 +101,8 @@ export function TaskDataProvider({ children }: Readonly<TaskDataProviderProps>) 
   const filteredTasks =
     currentSprint === 'all' ? allTasks : allTasks.filter((t) => t.sprint === currentSprint);
 
-  // Load data from unified API
-  const refreshData = useCallback(async () => {
+  // Load data from unified API (rejects on failure; callers attach handleLoadError)
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -156,13 +156,21 @@ export function TaskDataProvider({ children }: Readonly<TaskDataProviderProps>) 
 
       // Sync metrics after loading
       await fetch('/api/sync-metrics', { method: 'POST', cache: 'no-store' });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      console.error('Error loading data:', err);
     } finally {
       setIsLoading(false);
     }
   }, [currentSprint]);
+
+  const handleLoadError = useCallback((err: unknown) => {
+    setError(err instanceof Error ? err.message : 'Unknown error');
+    console.error('Error loading data:', err);
+  }, []);
+
+  // Public refresh: resolves once the attempt is done; a failure is reported via `error`.
+  const refreshData = useCallback(
+    () => loadData().catch(handleLoadError),
+    [loadData, handleLoadError]
+  );
 
   // Set sprint and trigger re-computation
   const setCurrentSprint = useCallback((sprint: SprintNumber) => {
@@ -176,7 +184,7 @@ export function TaskDataProvider({ children }: Readonly<TaskDataProviderProps>) 
 
   // Load data on mount
   useEffect(() => {
-    refreshData();
+    loadData().catch(handleLoadError);
   }, []);
 
   // Subscribe to SSE for real-time updates
@@ -191,7 +199,7 @@ export function TaskDataProvider({ children }: Readonly<TaskDataProviderProps>) 
           const data = JSON.parse(event.data);
           if (data.source === 'csv') {
             console.log('[TaskDataContext] CSV changed, reloading...');
-            refreshData();
+            loadData().catch(handleLoadError);
           }
         } catch (err) {
           console.error('[TaskDataContext] SSE parse error:', err);
@@ -209,7 +217,7 @@ export function TaskDataProvider({ children }: Readonly<TaskDataProviderProps>) 
     return () => {
       eventSource?.close();
     };
-  }, [refreshData]);
+  }, [loadData, handleLoadError]);
 
   const value: TaskDataContextType = useMemo(
     () => ({

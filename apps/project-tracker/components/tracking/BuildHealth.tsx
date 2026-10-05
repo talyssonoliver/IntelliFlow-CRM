@@ -173,11 +173,13 @@ export default function BuildHealth() {
       const result = await response.json();
       setData(result.metrics);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleFetchError = useCallback((err: unknown) => {
+    setError(err instanceof Error ? err.message : 'Unknown error');
   }, []);
 
   const handleValidation = async (type: 'all' | 'typecheck' | 'lint') => {
@@ -187,7 +189,7 @@ export default function BuildHealth() {
         method: 'POST',
       });
       if (!response.ok) throw new Error('Validation failed');
-      await fetchData();
+      await fetchData().catch(handleFetchError);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Validation failed');
     } finally {
@@ -196,8 +198,8 @@ export default function BuildHealth() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData().catch(handleFetchError);
+  }, [fetchData, handleFetchError]);
 
   if (loading && !data) {
     return (
@@ -214,7 +216,10 @@ export default function BuildHealth() {
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
         </div>
-        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
+        <button
+          onClick={() => fetchData().catch(handleFetchError)}
+          className="mt-2 text-sm underline hover:no-underline"
+        >
           Try again
         </button>
       </div>

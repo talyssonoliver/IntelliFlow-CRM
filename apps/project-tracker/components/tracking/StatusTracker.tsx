@@ -48,11 +48,13 @@ export default function StatusTracker() {
         lastUpdated: result.lastUpdated,
       });
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleFetchError = useCallback((err: unknown) => {
+    setError(err instanceof Error ? err.message : 'Unknown error');
   }, []);
 
   const handleRefresh = async () => {
@@ -60,7 +62,7 @@ export default function StatusTracker() {
     try {
       const response = await fetch('/api/tracking/status', { method: 'POST' });
       if (!response.ok) throw new Error('Failed to refresh status');
-      await fetchData();
+      await fetchData().catch(handleFetchError);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Refresh failed');
       setLoading(false);
@@ -68,8 +70,8 @@ export default function StatusTracker() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData().catch(handleFetchError);
+  }, [fetchData, handleFetchError]);
 
   if (loading && !data) {
     return (
@@ -86,7 +88,10 @@ export default function StatusTracker() {
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
         </div>
-        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
+        <button
+          onClick={() => fetchData().catch(handleFetchError)}
+          className="mt-2 text-sm underline hover:no-underline"
+        >
           Try again
         </button>
       </div>

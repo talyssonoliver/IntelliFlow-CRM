@@ -254,7 +254,7 @@ export function DailyWorkflowSummary({
   });
 
   // Fetch workflow status for all tasks
-  const fetchWorkflowData = useCallback(async () => {
+  const loadWorkflowData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -367,12 +367,17 @@ export function DailyWorkflowSummary({
         blockedTasks,
         scoredTasks,
       });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load workflow data');
     } finally {
       setLoading(false);
     }
   }, [tasks, sprint]);
+
+  // Fire-and-forget trigger: a failed load surfaces as the view's error, at the call site.
+  const fetchWorkflowData = useCallback((): void => {
+    loadWorkflowData().catch((err: unknown) => {
+      setError(err instanceof Error ? err.message : 'Failed to load workflow data');
+    });
+  }, [loadWorkflowData]);
 
   useEffect(() => {
     fetchWorkflowData();
@@ -502,7 +507,7 @@ export function DailyWorkflowSummary({
       });
 
       // Refresh workflow data
-      await fetchWorkflowData();
+      fetchWorkflowData();
     } catch (err) {
       setActionResult({
         success: false,
