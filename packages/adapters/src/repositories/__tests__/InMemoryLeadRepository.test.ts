@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { InMemoryLeadRepository } from '../InMemoryLeadRepository';
-import { Lead, Email, LeadId } from '@intelliflow/domain';
+import { Lead, Email, LeadId, LeadStatusConflictError } from '@intelliflow/domain';
 
 describe('InMemoryLeadRepository', () => {
   let repository: InMemoryLeadRepository;
@@ -425,6 +425,49 @@ describe('InMemoryLeadRepository', () => {
       expect(all).toHaveLength(2);
       expect(all.map((l) => l.email.value)).toContain('lead1@example.com');
       expect(all.map((l) => l.email.value)).toContain('lead2@example.com');
+    });
+  });
+
+  describe('compare-and-set and snapshot semantics', () => {
+    it('throws LeadStatusConflictError and writes nothing when expectedStatus is stale', async () => {
+      const lead = createTestLead('cas1@example.com').value;
+      await repository.save(lead);
+
+      // Another writer moves the stored lead to CONTACTED.
+      const other = (await repository.findById(lead.id))!;
+      other.changeStatus('CONTACTED', 'other');
+      await repository.save(other, { expectedStatus: 'NEW' });
+
+      // A stale writer still believes NEW and tries to set QUALIFIED.
+      const stale = (await repository.findById(lead.id))!;
+      stale.changeStatus('QUALIFIED', 'stale');
+      await expect(repository.save(stale, { expectedStatus: 'NEW' })).rejects.toBeInstanceOf(
+        LeadStatusConflictError
+      );
+      expect((await repository.findById(lead.id))?.status).toBe('CONTACTED');
+    });
+
+    it('saves when expectedStatus matches the stored status', async () => {
+      const lead = createTestLead('cas2@example.com').value;
+      await repository.save(lead);
+
+      const loaded = (await repository.findById(lead.id))!;
+      loaded.changeStatus('CONTACTED', 'me');
+      await repository.save(loaded, { expectedStatus: 'NEW' });
+
+      expect((await repository.findById(lead.id))?.status).toBe('CONTACTED');
+    });
+
+    it('does not change the stored lead when a returned lead is mutated without save', async () => {
+      const lead = createTestLead('snap@example.com').value;
+      await repository.save(lead);
+
+      const loaded = (await repository.findById(lead.id))!;
+      loaded.changeStatus('CONTACTED', 'me');
+      lead.changeStatus('QUALIFIED', 'me');
+
+      expect((await repository.findById(lead.id))?.status).toBe('NEW');
+      expect(repository.getAll()[0].status).toBe('NEW');
     });
   });
 });

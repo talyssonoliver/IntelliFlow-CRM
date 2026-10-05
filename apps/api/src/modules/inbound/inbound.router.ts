@@ -574,6 +574,59 @@ async function recordPipelineSync(
   }
 }
 
+/**
+ * Re-read the lead's status after a refused step. A throwing re-read is an
+ * infrastructure failure: log the cause and surface a retryable 500 rather
+ * than letting a raw error escape.
+ */
+async function rereadStatusAfterFailure(
+  ctx: Context,
+  leadId: string,
+  tenantId: string,
+  step: PipelineLeadStatus,
+  stepError: { message: string }
+): Promise<{ status: string } | null> {
+  try {
+    return await ctx.prisma.lead.findFirst({
+      where: { id: leadId, tenantId },
+      select: { status: true },
+    });
+  } catch (err) {
+    console.error('[inbound.syncPipelineLead] status re-read failed:', {
+      leadId,
+      step,
+      stepError: stepError.message,
+      error: err instanceof Error ? err.message : err,
+    });
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Lead status could not be confirmed after a failed update',
+      cause: err,
+    });
+  }
+}
+
+/**
+ * A refusal the lead's own movement cannot explain. Infrastructure failures are
+ * retryable server errors (COA must not treat them as permanent); only a
+ * refused transition is a client error.
+ */
+function throwStepFailure(
+  leadId: string,
+  step: PipelineLeadStatus,
+  error: { code?: string; message: string }
+): never {
+  if (error.code === 'PERSISTENCE_ERROR' || error.code === 'EXTERNAL_SERVICE_ERROR') {
+    console.error('[inbound.syncPipelineLead] status update failed:', {
+      leadId,
+      step,
+      error: error.message,
+    });
+    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message });
+  }
+  throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+}
+
 export const inboundRouter = createTRPCRouter({
   /**
    * Create a Lead from a portal /discover submission.
@@ -972,7 +1025,8 @@ export const inboundRouter = createTRPCRouter({
    * Behaviour:
    *   - 401 UNAUTHORIZED — missing or wrong bearer
    *   - 500 INTERNAL     — env not configured (secret / tenant / user / service)
-   *   - 400 BAD_REQUEST  — LeadService refused a status step
+   *   - 400 BAD_REQUEST  — LeadService refused a status step (invalid transition)
+   *   - 500 INTERNAL     — persistence/infrastructure failure (retryable)
    *   - 200              — lead upserted by (tenant, email); status moved forward
    *                         only; `changed` says whether anything moved.
    *
@@ -1042,26 +1096,26 @@ export const inboundRouter = createTRPCRouter({
           // A concurrent sync of the same lead may have moved it first, which
           // turns this step into an invalid transition. Re-read: if the lead
           // moved, replan from where it is now (possibly nothing left to do).
-          // A refusal the lead's own movement cannot explain is a real error.
-          const now = await ctx.prisma.lead.findFirst({
-            where: { id: leadId, tenantId },
-            select: { status: true },
-          });
+          const now = await rereadStatusAfterFailure(ctx, leadId, tenantId, step, result.error);
           if (now && now.status !== status && replans < 3) {
             replans += 1;
             status = now.status as PipelineLeadStatus;
             pending = planPipelineSteps(now.status, input.status);
             continue;
           }
-          throw new TRPCError({ code: 'BAD_REQUEST', message: result.error.message });
+          throwStepFailure(leadId, step, result.error);
         }
         status = step;
         moved = true;
         pending = pending.slice(1);
       }
 
-      // Everything planned was done by a concurrent sync: it writes the note.
+      // Everything planned was done by another writer (a concurrent sync, a UI
+      // user). Still record THIS request's audit note and syncKey marker so a
+      // retry of the same key short-circuits; recordPipelineSync is idempotent
+      // per syncKey because the early `prior` lookup above skips a repeat.
       if (initialSteps.length > 0 && !moved) {
+        await recordPipelineSync(ctx, input, leadId, tenantId, currentStatus, status, syncKey);
         return {
           leadId,
           tenantId,
