@@ -4,7 +4,7 @@
   "task_id": "IFC-074",
   "attestor": "Claude Code - Task Integrity Validator",
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
-  "verdict": "COMPLETE",
+  "verdict": "PARTIAL",
   "context_acknowledgment": {
     "files_read": [
       {
