@@ -20,5 +20,36 @@
       "name": "completion-evidence",
       "passed": true
     }
-  ]
+  ],
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T22:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Reopen evidence: `docs/operations/restore-drill-report.md` recorded a restore drill that never ran, with teams and backup systems this single-operator Supabase + Railway deployment does not have. It was replaced with an honest \"no drill yet\" report.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "Reopen evidence: `infra/monitoring/oncall-schedule.json` defined multi-team weekly rotations. There is no rota. It was replaced with the real escalation path (the owner, via the alert channel).",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "Reopen evidence: \"Alert rules configured\": `infra/monitoring/alerts-config.yaml` is not loaded anywhere connected to production (see IFC-032).",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: (1) Run a real restore drill (a Supabase backup restored into a scratch project), with a timed log as evidence. (2) Keep the on-call file to the real escalation path, and prove the alert channel (IFC-032). (3) SLO alerts loaded in the hosted backend and proven by a received test alert. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 50,
+  "updated_at": "2026-10-05T22:30:00Z"
 }

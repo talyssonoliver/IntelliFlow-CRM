@@ -64,7 +64,7 @@ function resolveAuthToken() {
     console.log('Auth: using persisted K6_AUTH_TOKEN from environment (no re-auth)');
     return envToken;
   }
-  return authenticate('admin@intelliflow.dev', 'TestPassword123!');
+  return authenticate('admin@intelliflow.dev', __ENV.K6_TEST_PASSWORD || '');
 }
 
 export default function (data) {

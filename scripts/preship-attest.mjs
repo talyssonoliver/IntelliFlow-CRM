@@ -38,6 +38,7 @@
  *
  * Options:
  *   --remote=<name|path>   default: $PRESHIP_ATTEST_REMOTE or "origin"
+ *   --base=<ref>           branch the PR targets, default: origin/main
  *   --state=<path>         default: <repo>/artifacts/preship/last-run.json
  *   --preship-file=<path>  default: <repo>/scripts/pre-ship.mjs
  *   --help
@@ -49,9 +50,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
+import { carryBlockers, workspaceGraph } from './lib/carry-scope.mjs';
 
 export const PAYLOAD_VERSION = 1;
 export const ATTEST_REF_PREFIX = 'refs/preship/';
+/**
+ * Second home for the same tag object, keyed by the branch's diff:
+ * `refs/preship-patch/<patch-id>/<sha>`. See branchPatchId and doVerify.
+ */
+export const PATCH_REF_PREFIX = 'refs/preship-patch/';
+export const DEFAULT_BASE_REF = 'origin/main';
 
 /** Step verdicts that mean "this step honestly passed". */
 const PASSING = new Set(['PASS', 'CACHED_PASS']);
@@ -223,6 +231,102 @@ export function validatePayload(payload, sha, preshipSha256) {
   return reasons;
 }
 
+/**
+ * Identify a branch by its own changes rather than by its SHA.
+ *
+ * WHY: branch protection is `strict`, so every merge to main makes every other
+ * open PR out of date. Updating it (rebase, since history is linear) gives the
+ * head a new SHA that no local gate has seen, the exact-SHA attestation goes
+ * missing, and the only remedy used to be another full local pre-ship. With
+ * several agents merging, main moved again before that finished, so PRs went
+ * round the loop for hours. When the update is clean, the branch's diff against
+ * its merge-base is byte-for-byte what the gate already ran on, and the PR's CI
+ * still runs the full suite on the new combination. So the same diff carries
+ * the attestation forward.
+ *
+ * The hash must depend on the diff alone, and must be the same on a laptop and
+ * on a CI runner:
+ * - `git patch-id --verbatim` keeps whitespace (plain --stable drops it, and
+ *   whitespace matters in YAML, Python and Markdown).
+ * - `diff-tree` is plumbing, so personal `diff.*` config (noprefix,
+ *   src/dstPrefix, context, interHunkContext, renames) cannot change the patch
+ *   the way it changes porcelain `git diff`. Renames are off and quotePath is
+ *   pinned for the same reason.
+ * - `--binary` hashes binary content, not "Binary files differ".
+ * - The diff stays raw bytes end to end. Decoding it as UTF-8 would collapse
+ *   different non-UTF-8 bytes (Latin-1 text, say) into U+FFFD, so two
+ *   different diffs could share a patch-id.
+ *
+ * A rebase that resolved a conflict, or main changing lines next to the
+ * branch's hunks, changes the diff and so the patch-id: no carry, re-run.
+ *
+ * @param {string} sha the commit whose branch diff to identify
+ * @param {string} baseRef the branch it targets, e.g. origin/main
+ * @param {(args: string[], opts?: object) => {status: number|null, stdout: string|Buffer}} gitFn
+ * @returns {{patchId: string, base: string} | null} null when it cannot be computed
+ */
+export function branchPatchId(sha, baseRef, gitFn) {
+  const mb = gitFn(['merge-base', sha, baseRef]);
+  const base = mb.status === 0 ? String(mb.stdout).trim() : '';
+  if (!/^[0-9a-f]{40}$/.test(base)) return null;
+  const diff = gitFn(
+    [
+      '-c',
+      'core.quotePath=true',
+      'diff-tree',
+      '-p',
+      '-r',
+      '--binary',
+      '--no-color',
+      '--no-ext-diff',
+      '--no-renames',
+      base,
+      sha,
+    ],
+    { encoding: 'buffer' }
+  );
+  if (diff.status !== 0 || diff.stdout.length === 0) return null;
+  const pid = gitFn(['patch-id', '--verbatim'], { input: diff.stdout });
+  const patchId = pid.status === 0 ? String(pid.stdout).trim().split(/\s+/)[0] : '';
+  return /^[0-9a-f]{40}$/.test(patchId) ? { patchId, base } : null;
+}
+
+/**
+ * The branch identity to record at publish time. When --base is a branch of the
+ * remote being published to (origin/main for origin), refresh it first: against
+ * a stale local origin/main the diff would include main's own newer commits and
+ * never match what CI computes. Best-effort, but never silent: without a
+ * patch-id the record is still valid for its exact SHA, only a later rebase
+ * will not carry it, and the warning says so.
+ */
+export function patchIdentity(head, flags, gitFn = git, warn = (m) => process.stderr.write(m)) {
+  const slash = flags.base.indexOf('/');
+  if (slash > 0 && flags.base.slice(0, slash) === flags.remote) {
+    const fetched = gitFn(['fetch', '--quiet', flags.remote, flags.base.slice(slash + 1)]);
+    if (fetched.status !== 0) {
+      warn(
+        `warn: could not refresh ${flags.base} (${String(fetched.stderr ?? '').trim()}). ` +
+          'If it is stale, a later clean rebase will not carry this attestation.\n'
+      );
+    }
+  }
+  const patch = branchPatchId(head, flags.base, gitFn);
+  if (!patch) {
+    warn(
+      `warn: no branch diff against ${flags.base}; this attestation covers ` +
+        `${head.slice(0, 9)} only and will not carry across a rebase.\n`
+    );
+  }
+  return patch;
+}
+
+/** Where one tag object is published: by SHA, and by branch diff when known. */
+export function publishRefspecs(obj, head, patch) {
+  const refspecs = [`${obj}:${ATTEST_REF_PREFIX}${head}`];
+  if (patch) refspecs.push(`${obj}:${PATCH_REF_PREFIX}${patch.patchId}/${head}`);
+  return refspecs;
+}
+
 /** Extract the message body of a `git cat-file -p <tag>` dump. */
 export function tagMessage(catFileOutput) {
   const idx = catFileOutput.indexOf('\n\n');
@@ -271,9 +375,13 @@ const USAGE = `pre-ship attestation (ENG-OPS-003.Gap14, issue #644)
 
   node scripts/preship-attest.mjs --verify --sha=<40-hex>
       Verify that <sha> has a published attestation. Exits 1 if it does not.
+      With no record for <sha> itself, a record for an earlier head with the
+      SAME branch diff against --base (same git patch-id) is accepted: a clean
+      rebase onto a newer main does not need the gate run again.
 
 Options:
   --remote=<name|path>   default: $PRESHIP_ATTEST_REMOTE or "origin"
+  --base=<ref>           branch the PR targets, default: origin/main
   --state=<path>         default: <repo>/artifacts/preship/last-run.json
   --preship-file=<path>  default: <repo>/scripts/pre-ship.mjs
   --help
@@ -289,6 +397,8 @@ function git(args, opts = {}) {
     // Never block a non-interactive hook on a credential prompt: fail fast so
     // the warn-only caller can move on.
     env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+    // A branch diff (branchPatchId) can be far larger than the 1 MiB default.
+    maxBuffer: 512 * 1024 * 1024,
     ...opts,
   });
 }
@@ -310,6 +420,7 @@ function main(argv) {
     remote: process.env.PRESHIP_ATTEST_REMOTE || 'origin',
     state: null,
     preshipFile: null,
+    base: DEFAULT_BASE_REF,
   };
 
   for (const a of argv) {
@@ -320,6 +431,7 @@ function main(argv) {
       return 0;
     } else if (a.startsWith('--sha=')) flags.sha = a.slice(6).trim();
     else if (a.startsWith('--remote=')) flags.remote = a.slice(9);
+    else if (a.startsWith('--base=')) flags.base = a.slice(7);
     else if (a.startsWith('--state=')) flags.state = a.slice(8);
     else if (a.startsWith('--preship-file=')) flags.preshipFile = a.slice(15);
     else {
@@ -406,6 +518,14 @@ function doPublish(flags, repoRoot, statePath, preshipFile) {
     return 0;
   }
 
+  // Record the branch's diff identity so a clean rebase onto a newer main can
+  // reuse this record (see branchPatchId). Refresh the base first: against a
+  // stale local origin/main the diff would include main's own newer commits and
+  // never match what CI computes. Best-effort; without it the record is still
+  // valid for this exact SHA.
+  const patch = patchIdentity(head, flags, git);
+  Object.assign(payload, patchFields(patch));
+
   const tmpTag = '_preship-attest-tmp';
   const tag = git(['tag', '-a', '-f', '-F', '-', tmpTag, head], {
     input: JSON.stringify(payload, null, 2) + '\n',
@@ -415,7 +535,7 @@ function doPublish(flags, repoRoot, statePath, preshipFile) {
   }
   const obj = git(['rev-parse', tmpTag]).stdout.trim();
 
-  const push = git(['push', flags.remote, `${obj}:${ref}`]);
+  const push = git(['push', flags.remote, ...publishRefspecs(obj, head, patch)]);
   git(['tag', '-d', tmpTag]); // local scratch tag; harmless if it fails
 
   if (push.status !== 0) {
@@ -426,11 +546,171 @@ function doPublish(flags, repoRoot, statePath, preshipFile) {
     ]);
   }
 
-  process.stdout.write(
-    `pre-ship attestation published for ${head.slice(0, 9)} ` +
-      `(${payload.mode}, ${payload.steps_ok}/${payload.steps_expected} steps).\n`
-  );
+  process.stdout.write(publishedLine(head, payload, patch));
   return 0;
+}
+
+/** Payload fields that record the branch identity (none when it is unknown). */
+export function patchFields(patch) {
+  return patch ? { patch_id: patch.patchId, patch_base: patch.base } : {};
+}
+
+/** What --publish prints on success. */
+export function publishedLine(head, payload, patch) {
+  return (
+    `pre-ship attestation published for ${head.slice(0, 9)} ` +
+    `(${payload.mode}, ${payload.steps_ok}/${payload.steps_expected} steps` +
+    (patch ? `, branch patch-id ${patch.patchId.slice(0, 12)}).\n` : ').\n')
+  );
+}
+
+/** What --verify prints when it accepts a carried attestation. */
+export function carriedLine(sha, carried, base) {
+  const p = carried.payload;
+  return (
+    `pre-ship attestation OK for ${sha.slice(0, 9)}, carried from ${carried.from.slice(0, 9)}: ` +
+    `same branch diff against ${base} (patch-id ${p.patch_id.slice(0, 12)}), ` +
+    `${p.mode} gate, ${p.steps_ok}/${p.steps_expected} steps, attested ${p.attested_at}.\n`
+  );
+}
+
+/** Why --verify refused, and how to fix it, when nothing could be carried. */
+export function noAttestationLines(sha, carryReasons) {
+  return [
+    `NO PRE-SHIP ATTESTATION for ${sha}.`,
+    '',
+    '  No local pre-ship run has been recorded against this exact commit. This',
+    '  is usually because the head moved server-side (gh pr update-branch /',
+    '  the "Update branch" button) after the last local gate run.',
+    '',
+    '  No earlier attestation could be carried forward either:',
+    ...carryReasons.map((r) => `    - ${r}`),
+    '  (A clean rebase carries one; a changed diff, e.g. a resolved conflict, does not.)',
+    '',
+    '  To fix, from a checkout of this branch:',
+    `    git fetch origin && git checkout ${sha.slice(0, 9)}`,
+    '    pnpm run pre-ship',
+    '    pnpm preship:attest',
+    '  then re-run this check.',
+    '',
+    '  See docs/runbooks/preship-attestation.md.',
+  ];
+}
+
+/** Fetch an attestation ref and parse its tag object. */
+export function readAttestation(remote, ref, obj, gitFn = git) {
+  const fetched = gitFn(['fetch', '--quiet', remote, ref]);
+  if (fetched.status !== 0) return { error: `could not fetch ${ref}: ${fetched.stderr.trim()}` };
+  const type = gitFn(['cat-file', '-t', obj]).stdout.trim();
+  if (type !== 'tag') return { error: `${ref} is a ${type || 'unknown'} object, not a tag` };
+  const dump = gitFn(['cat-file', '-p', obj]).stdout;
+  const target = /^object ([0-9a-f]{40})$/m.exec(dump)?.[1] ?? null;
+  try {
+    return { target, payload: JSON.parse(tagMessage(dump)) };
+  } catch {
+    return { target, error: `${ref} payload is not valid JSON` };
+  }
+}
+
+/**
+ * No record for `sha` itself: look for one published for an earlier head with
+ * the same branch diff (see branchPatchId). A candidate must be a full clean
+ * gate of the same gate version, record this diff's patch-id, and target the
+ * commit its ref names. CI still runs the full suite on `sha`; this only spares
+ * the local gate a re-run on a diff it has already passed.
+ *
+ * @returns {{ok: true, from: string, payload: object} | {ok: false, reasons: string[]}}
+ */
+export function carriedAttestation(flags, sha, preshipSha256, gitFn = git) {
+  const patch = branchPatchId(sha, flags.base, gitFn);
+  if (!patch) {
+    return {
+      ok: false,
+      reasons: [`cannot compute the branch diff of ${sha.slice(0, 9)} against ${flags.base}`],
+    };
+  }
+  const prefix = `${PATCH_REF_PREFIX}${patch.patchId}/`;
+  const ls = gitFn(['ls-remote', flags.remote, `${prefix}*`]);
+  const rows = ls.status === 0 ? ls.stdout.trim().split('\n').filter(Boolean) : [];
+  if (rows.length === 0) {
+    return {
+      ok: false,
+      reasons: [
+        `no earlier head has the same branch diff (patch-id ${patch.patchId.slice(0, 12)})`,
+      ],
+    };
+  }
+  const reasons = [];
+  for (const row of rows) {
+    const [obj, ref] = row.split(/\s+/);
+    const from = ref.slice(prefix.length);
+    const read = readAttestation(flags.remote, ref, obj, gitFn);
+    if (read.error) {
+      reasons.push(read.error);
+      continue;
+    }
+    const why = validatePayload(read.payload, from, preshipSha256);
+    if (read.target !== from) why.push(`tag points at ${read.target}, not ${from}`);
+    if (read.payload?.patch_id !== patch.patchId) {
+      why.push(`payload records patch-id ${read.payload?.patch_id}, not ${patch.patchId}`);
+    }
+    if (why.length === 0) {
+      // Same diff, valid record. Now the compatibility condition: nothing main
+      // brought in since the attested base may touch this PR's affected scope.
+      const blockers = mainChangesInScope(sha, read.payload.patch_base, patch.base, gitFn);
+      if (blockers.length === 0) return { ok: true, from, payload: read.payload };
+      reasons.push(
+        `${from.slice(0, 9)}: same diff, but main changed ${blockers.length} file(s) in this PR's ` +
+          'affected scope since it was attested; re-run pre-ship on this head:',
+        ...blockers.slice(0, 10).map((b) => `    ${b.file} (${b.why})`),
+        ...(blockers.length > 10 ? [`    ...and ${blockers.length - 10} more`] : [])
+      );
+      continue;
+    }
+    reasons.push(...why.map((w) => `${from.slice(0, 9)}: ${w}`));
+  }
+  return { ok: false, reasons };
+}
+
+/** Lines of `git <args>` output, or null when git fails. */
+function gitLines(gitFn, args) {
+  const r = gitFn(args);
+  return r.status === 0
+    ? String(r.stdout)
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean)
+    : null;
+}
+
+/**
+ * Main's changes between the attested base and the new base that fall in the
+ * PR's affected scope (see lib/carry-scope.mjs). An unknown or unreadable old
+ * base blocks: without it nothing can be said about what main changed.
+ * @returns {Array<{file: string, why: string}>}
+ */
+export function mainChangesInScope(sha, oldBase, newBase, gitFn = git) {
+  if (!/^[0-9a-f]{40}$/.test(String(oldBase ?? ''))) {
+    return [{ file: '(attested base)', why: 'the record has no patch_base to compare with' }];
+  }
+  if (oldBase === newBase) return [];
+  const mainFiles = gitLines(gitFn, ['diff', '--name-only', '--no-renames', oldBase, newBase]);
+  const prFiles = gitLines(gitFn, ['diff', '--name-only', '--no-renames', newBase, sha]);
+  const manifests = gitLines(gitFn, ['ls-tree', '-r', '--name-only', sha]);
+  if (!mainFiles || !prFiles || !manifests) {
+    return [
+      {
+        file: '(git)',
+        why: `cannot list the changes between ${oldBase.slice(0, 9)} and ${sha.slice(0, 9)}`,
+      },
+    ];
+  }
+  const graph = workspaceGraph(
+    manifests
+      .filter((p) => /(^|\/)package\.json$/.test(p) && !p.includes('node_modules/'))
+      .map((p) => ({ path: p, json: String(gitFn(['show', `${sha}:${p}`]).stdout ?? '') }))
+  );
+  return carryBlockers({ prFiles, mainFiles, graph });
 }
 
 function doVerify(flags, preshipFile) {
@@ -441,26 +721,26 @@ function doVerify(flags, preshipFile) {
   }
   const ref = ATTEST_REF_PREFIX + sha;
 
+  let preshipSha256 = null;
+  try {
+    preshipSha256 = sha256File(preshipFile);
+  } catch {
+    // Verifying outside a checkout that has the gate script: skip the pin
+    // rather than fail on an unrelated cause. Loud, so it is never silent.
+    process.stdout.write(`note: ${preshipFile} not readable — gate-version pin not checked.\n`);
+  }
+
   const ls = git(['ls-remote', flags.remote, ref]);
   if (ls.status !== 0) {
     fail([`Could not query ${flags.remote} for ${ref}.`, ls.stderr.trim()]);
   }
   if (ls.stdout.trim() === '') {
-    fail([
-      `NO PRE-SHIP ATTESTATION for ${sha}.`,
-      '',
-      '  No local pre-ship run has been recorded against this exact commit. This',
-      '  is usually because the head moved server-side (gh pr update-branch /',
-      '  the "Update branch" button) after the last local gate run.',
-      '',
-      '  To fix, from a checkout of this branch:',
-      `    git fetch origin && git checkout ${sha.slice(0, 9)}`,
-      '    pnpm run pre-ship',
-      '    pnpm preship:attest',
-      '  then re-run this check.',
-      '',
-      '  See docs/runbooks/preship-attestation.md.',
-    ]);
+    const carried = carriedAttestation(flags, sha, preshipSha256);
+    if (carried.ok) {
+      process.stdout.write(carriedLine(sha, carried, flags.base));
+      return 0;
+    }
+    fail(noAttestationLines(sha, carried.reasons));
   }
 
   const obj = ls.stdout.trim().split(/\s+/)[0];
@@ -493,15 +773,6 @@ function doVerify(flags, preshipFile) {
     payload = JSON.parse(tagMessage(dump));
   } catch {
     fail([`Attestation payload for ${sha} is not valid JSON.`]);
-  }
-
-  let preshipSha256 = null;
-  try {
-    preshipSha256 = sha256File(preshipFile);
-  } catch {
-    // Verifying outside a checkout that has the gate script: skip the pin
-    // rather than fail on an unrelated cause. Loud, so it is never silent.
-    process.stdout.write(`note: ${preshipFile} not readable — gate-version pin not checked.\n`);
   }
 
   const reasons = validatePayload(payload, sha, preshipSha256);

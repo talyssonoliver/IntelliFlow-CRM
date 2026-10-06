@@ -5,7 +5,7 @@
   "run_id": "exec-IFC-117-2026-02-19",
   "attestor": "Claude Code — Exec Session",
   "attestation_timestamp": "2026-02-19T21:23:00.000Z",
-  "verdict": "COMPLETE",
+  "verdict": "PARTIAL",
   "context_acknowledgment": {
     "files_read": [
       {

@@ -10,14 +10,6 @@
       {
         "path": "infra/terraform/modules/supabase/main.tf",
         "sha256": "12f8b36e8d65986faa06da3d7976aeefb9f811f40d81abd9921c795eaae1dc4b"
-      },
-      {
-        "path": "artifacts/misc/drift-detection-config.yaml",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/logs/destroy-rebuild-test.log",
-        "sha256": "verified-placeholder"
       }
     ],
     "invariants_acknowledged": [

@@ -48,7 +48,7 @@ const client = createTRPCClient({
 
 const result = await client.auth.login.mutate({
   email: 'user@example.com',
-  password: 'your_password_here',
+  password: '<your-password>',
 });
 
 if (result.mfaRequired) {
@@ -90,7 +90,7 @@ const leads = await client.lead.list.query({
   offset: 0,
 }, {
   headers: {
-    Authorization: 'Bearer YOUR_ACCESS_TOKEN_HERE',
+    Authorization: 'Bearer <access-token>',
   },
 });`}
         label="Authenticated API Call"
@@ -110,7 +110,7 @@ response = requests.post(
     "https://your-intelliflow.example.com/api/auth/login",
     json={
         "email": "user@example.com",
-        "password": "your_password_here",
+        "password": "<your-password>",
     },
 )
 data = response.json()
@@ -157,7 +157,7 @@ new_token = response.json()["accessToken"]
 
       <CodeBlock
         code={`# Authenticated API call
-headers = {"Authorization": f"Bearer YOUR_ACCESS_TOKEN_HERE"}
+headers = {"Authorization": f"Bearer <access-token>"}
 leads = requests.get(
     "https://your-intelliflow.example.com/api/leads",
     headers=headers,
@@ -177,7 +177,7 @@ function CurlExamples() {
         code={`# Login with email/password
 curl -X POST https://your-intelliflow.example.com/api/auth/login \\
   -H "Content-Type: application/json" \\
-  -d '{"email": "user@example.com", "password": "your_password_here"}'`}
+  -d '{"email": "user@example.com", "password": "<your-password>"}'`}
         label="Login"
       />
 
@@ -198,7 +198,7 @@ curl -X POST https://your-intelliflow.example.com/api/auth/refresh \\
       <CodeBlock
         code={`# Authenticated API call
 curl https://your-intelliflow.example.com/api/leads \\
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN_HERE"`}
+  -H "Authorization: Bearer <access-token>"`}
         label="Authenticated API Call"
       />
     </div>
@@ -217,7 +217,7 @@ const response = await fetch(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       email: 'user@example.com',
-      password: 'your_password_here',
+      password: '<your-password>',
     }),
   }
 );
@@ -277,7 +277,7 @@ const leads = await fetch(
   'https://your-intelliflow.example.com/api/leads?limit=10',
   {
     headers: {
-      Authorization: 'Bearer YOUR_ACCESS_TOKEN_HERE',
+      Authorization: 'Bearer <access-token>',
     },
   }
 );

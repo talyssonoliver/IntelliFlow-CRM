@@ -109,7 +109,7 @@ export function EmailInput({
             'transition-colors',
             error
               ? 'border-red-500 focus:ring-red-500'
-              : 'border-slate-600 focus:border-[#137fec] focus:ring-[#137fec]',
+              : 'border-slate-600 focus:border-[#2a78f6] focus:ring-[#2a78f6]',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
         />
@@ -198,9 +198,9 @@ export function ForgotPasswordForm({
         disabled={isLoading}
         className={cn(
           'w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg',
-          'bg-[#137fec] text-white font-medium',
-          'hover:bg-[#137fec]/90 transition-all',
-          'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900',
+          'bg-[#2a78f6] text-white font-medium',
+          'hover:bg-[#2a78f6]/90 transition-all',
+          'focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-slate-900',
           'disabled:opacity-50 disabled:cursor-not-allowed'
         )}
       >
@@ -277,7 +277,7 @@ export function ResetEmailSent({
       <div className="bg-slate-800/50 rounded-lg p-4 space-y-3">
         <div className="flex items-start gap-3">
           <span
-            className="material-symbols-outlined text-[#137fec] flex-shrink-0"
+            className="material-symbols-outlined text-[#2a78f6] flex-shrink-0"
             aria-hidden="true"
           >
             info
@@ -390,7 +390,7 @@ export function buildResetEmailPayload(options: {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reset Your Password</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0f172a;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #11175b;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
     <tr>
       <td>
@@ -398,8 +398,8 @@ export function buildResetEmailPayload(options: {
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 32px;">
           <tr>
             <td style="text-align: center;">
-              <span style="display: inline-block; padding: 8px 16px; background: linear-gradient(135deg, #137fec 0%, #7cc4ff 100%); border-radius: 8px; color: white; font-size: 14px; font-weight: 600; letter-spacing: 1px;">
-                INTELLIFLOW
+              <span style="display: inline-block; padding: 8px 16px; background: linear-gradient(135deg, #2a78f6 0%, #bca8ff 100%); border-radius: 8px; color: white; font-size: 14px; font-weight: 600; letter-spacing: 1px;">
+                AURORA
               </span>
             </td>
           </tr>
@@ -420,7 +420,7 @@ export function buildResetEmailPayload(options: {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 24px 0;">
                 <tr>
                   <td style="text-align: center;">
-                    <a href="${resetUrl}" style="display: inline-block; padding: 14px 32px; background-color: #137fec; color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px;">
+                    <a href="${resetUrl}" style="display: inline-block; padding: 14px 32px; background-color: #2a78f6; color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px;">
                       Reset Password
                     </a>
                   </td>
@@ -439,7 +439,7 @@ export function buildResetEmailPayload(options: {
 
               <p style="margin: 16px 0 0 0; color: #64748b; font-size: 12px; line-height: 1.6;">
                 Can't click the button? Copy and paste this link into your browser:<br>
-                <a href="${resetUrl}" style="color: #137fec; word-break: break-all;">${resetUrl}</a>
+                <a href="${resetUrl}" style="color: #2a78f6; word-break: break-all;">${resetUrl}</a>
               </p>
             </td>
           </tr>
@@ -450,7 +450,7 @@ export function buildResetEmailPayload(options: {
           <tr>
             <td style="text-align: center; color: #64748b; font-size: 12px;">
               <p style="margin: 0;">
-                &copy; ${new Date().getFullYear()} IntelliFlow. All rights reserved.
+                &copy; ${new Date().getFullYear()} Aurora. All rights reserved.
               </p>
               <p style="margin: 8px 0 0 0;">
                 <a href="#" style="color: #94a3b8; text-decoration: underline;">Privacy Policy</a>
@@ -472,7 +472,7 @@ Reset Your Password
 
 Hi ${name},
 
-We received a request to reset your password for your IntelliFlow account.
+We received a request to reset your password for your Aurora account.
 
 Click the link below to reset your password:
 ${resetUrl}
@@ -482,14 +482,14 @@ This link will expire in 1 hour.
 If you didn't request a password reset, you can safely ignore this email. Your password won't be changed.
 
 ---
-IntelliFlow
+Aurora
   `.trim();
 
   return {
     to: email,
     from: process.env.NEXT_PUBLIC_SENDER_EMAIL || 'crm@leangency.com',
     replyTo: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@leangency.com',
-    subject: 'Reset your IntelliFlow password',
+    subject: 'Reset your Aurora password',
     htmlBody,
     textBody,
     metadata: {

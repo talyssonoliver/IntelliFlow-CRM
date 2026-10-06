@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "IFC-033",
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T23:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Reopen evidence: `artifacts/reports/load-test-report.html` is real k6 output, but its target was `http://localhost:4000`, a local dev server. The DoD \"System handles 5000 leads/hour\" is about the deployed system, and no deployed environment was load-tested.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "Reopen evidence: `artifacts/misc/grafana-load-test.png` came from a local Grafana stack that was never connected to production.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: (1) Run the k6 scenario against a deployed, non-production environment (or production, with the owner's approval), and record the target URL and the run output. (2) Take the load-test dashboard from the hosted backend that production reports to (IFC-032), not from a local stack.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 50,
+  "updated_at": "2026-10-05T23:30:00Z"
+}

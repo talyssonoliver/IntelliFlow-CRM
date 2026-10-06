@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "artifacts/misc/velocity-prediction.json",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/capacity-model.csv",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/reports/risk-matrix.md",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "Backlog AI-prioritized",
       "Velocity AI-predicted",

@@ -27,11 +27,10 @@ describe('PrivacyPage', () => {
     expect(emailLinks[0]).toHaveAttribute('href', 'mailto:privacy@intelliflow-crm.com');
   });
 
-  it('renders a main landmark and section navigation links', () => {
+  it('renders inside the Aurora shell (no main of its own) with section navigation links', () => {
     render(<PrivacyPage />);
 
-    const main = screen.getByRole('main');
-    expect(main).toHaveAttribute('id', 'main-content');
+    expect(screen.queryByRole('main')).toBeNull();
 
     expect(screen.getByRole('link', { name: /information we collect/i })).toHaveAttribute(
       'href',
@@ -41,7 +40,7 @@ describe('PrivacyPage', () => {
   });
 
   it('exports metadata for the canonical privacy route', () => {
-    expect(metadata.title).toBe('Privacy Policy | IntelliFlow CRM');
+    expect(metadata.title).toBe('Privacy Policy');
     expect(metadata.alternates?.canonical).toBe('/privacy');
     expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/privacy');
   });

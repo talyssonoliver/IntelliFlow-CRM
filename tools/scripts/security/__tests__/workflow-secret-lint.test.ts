@@ -32,6 +32,11 @@ afterAll(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
+/** Assemble a credential-shaped database URI at runtime so no such literal sits in this file. */
+function pgUri(user: string, pass: string, host = 'localhost'): string {
+  return ['postgresql://', user, ':', pass, '@', host, ':5432/intelliflow_test'].join('');
+}
+
 let counter = 0;
 /** Write a temp workflow file and lint it; returns exit status + parsed findings. */
 function lint(content: string) {
@@ -58,11 +63,7 @@ describe('workflow-secret-lint', () => {
 
   it('FAILS on a bare DATABASE_URL credential literal', () => {
     const { status, findings } = lint(
-      [
-        'env:',
-        '  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test',
-        '',
-      ].join('\n')
+      ['env:', `  DATABASE_URL: ${pgUri('postgres', 'postgres')}`, ''].join('\n')
     );
     expect(status).toBe(1);
     expect(findings).toHaveLength(1);
@@ -86,7 +87,7 @@ describe('workflow-secret-lint', () => {
     const { status } = lint(
       [
         'env:',
-        "  DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL || 'postgresql://stub:stub@localhost:5432/stub' }}",
+        `  DATABASE_URL: \${{ secrets.STAGING_DATABASE_URL || '${pgUri('stub', 'stub')}' }}`,
         '',
       ].join('\n')
     );
@@ -137,9 +138,7 @@ describe('workflow-secret-lint', () => {
   });
 
   it('PASSES a self-evident placeholder credential (stub:stub)', () => {
-    const { status } = lint(
-      ['env:', '  DATABASE_URL: postgresql://stub:stub@localhost:5432/stub', ''].join('\n')
-    );
+    const { status } = lint(['env:', `  DATABASE_URL: ${pgUri('stub', 'stub')}`, ''].join('\n'));
     expect(status).toBe(0);
   });
 

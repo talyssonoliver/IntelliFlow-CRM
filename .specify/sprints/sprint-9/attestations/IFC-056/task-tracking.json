@@ -20,5 +20,26 @@
       "name": "completion-evidence",
       "passed": true
     }
-  ]
+  ],
+  "status_history": [
+    {
+      "status": "BACKLOG",
+      "at": "2026-10-05T23:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Reopen evidence: The evidence described an 8-person team with named developers, skill scores and training records. The project is run by one person and none of these people exist. The fabricated artifacts (`artifacts/reports/skill-assessment-results.csv`, `docs/training/training-completion.csv`) and the attestation's claims were removed. No skills assessment or training programme has run.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: (1) Re-scope with the owner: either a real individual learning log, or retire the task.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 0,
+  "updated_at": "2026-10-05T23:30:00Z"
 }

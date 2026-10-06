@@ -12,8 +12,14 @@
  * 5. No-match (generic queue + TicketRoutingFailedEvent)
  */
 
-import type { PrismaClient } from '@intelliflow/db';
-import { TICKET_CATEGORY_SKILL_MAP, type TicketCategory } from '@intelliflow/domain';
+import { tenantUserWhere, type PrismaClient } from '@intelliflow/db';
+import {
+  TICKET_CATEGORY_SKILL_MAP,
+  evaluateTicketRoutingConditions,
+  type TicketCategory,
+  type TicketRoutingContext,
+} from '@intelliflow/domain';
+import { ticketRuleActionSchema, ticketRuleConditionSchema } from '@intelliflow/validators';
 
 export interface EligibleAgent {
   agentId: string;
@@ -205,31 +211,79 @@ export class TicketRoutingService {
   }
 
   /**
-   * Check for matching routing rules by priority DESC.
+   * Find the first active ticket rule (priority DESC, then oldest first) whose
+   * conditions all match, and resolve its assignment to a concrete user.
+   *
+   * Rules are stored as arrays of { field, operator, value } / { type, target }
+   * (see ticketRuleConditionSchema). Only ruleType = 'TICKET' rows are read, and
+   * rows that no longer parse are skipped rather than matched by accident.
+   * `assign_to_skill` resolves to the best eligible agent holding that skill; a
+   * rule with no resolvable assignee is skipped so later rules still get a turn.
    */
   async findMatchingRule(
     tenantId: string,
     category: TicketCategory,
-    priority: string
-  ): Promise<{ id: string; assignToUserId: string; ruleName: string } | null> {
-    const rule = await (this.prisma as any).routingRule.findFirst({
-      where: {
-        tenantId,
-        isActive: true,
-        conditions: {
-          path: ['ticketCategory'],
-          equals: category,
-        },
-      },
-      orderBy: { priority: 'desc' },
+    priority: string,
+    facts: { status?: string; slaStatus?: string | null } = {}
+  ): Promise<{
+    id: string;
+    assignToUserId: string;
+    assigneeName: string;
+    ruleName: string;
+  } | null> {
+    const rules = await this.prisma.routingRule.findMany({
+      where: { tenantId, ruleType: 'TICKET', isActive: true },
+      orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
     });
 
-    if (rule?.assignToUserId) {
-      return {
-        id: rule.id,
-        assignToUserId: rule.assignToUserId,
-        ruleName: rule.name,
-      };
+    const context: Partial<TicketRoutingContext> = {
+      ticketCategory: category,
+      ticketPriority: priority,
+      isSlaBreached: String(facts.slaStatus === 'BREACHED'),
+    };
+    if (facts.status) context.ticketStatus = facts.status;
+    if (facts.slaStatus) context.slaStatus = facts.slaStatus;
+
+    for (const rule of rules) {
+      const conditions = ticketRuleConditionSchema.array().safeParse(rule.conditions);
+      const actions = ticketRuleActionSchema.array().safeParse(rule.actions);
+      if (!conditions.success || !actions.success) continue;
+      if (!evaluateTicketRoutingConditions(conditions.data, context)) continue;
+
+      const assignee = await this.resolveRuleAssignee(tenantId, actions.data);
+      if (assignee) {
+        return {
+          id: rule.id,
+          assignToUserId: assignee.id,
+          assigneeName: assignee.name,
+          ruleName: rule.name,
+        };
+      }
+    }
+
+    return null;
+  }
+
+  private async resolveRuleAssignee(
+    tenantId: string,
+    actions: Array<{ type: string; target: string }>
+  ): Promise<{ id: string; name: string } | null> {
+    const userAction = actions.find((a) => a.type === 'assign_to_user');
+    if (userAction) {
+      // The target is free text in the stored rule: only assign to someone who works in this
+      // tenant (home user or live member), so a rule can never route a ticket to another
+      // tenant's user, a deleted user or a revoked member.
+      const user = await this.prisma.user.findFirst({
+        where: { id: userAction.target, ...tenantUserWhere(tenantId) },
+        select: { id: true, name: true },
+      });
+      return user ? { id: user.id, name: user.name ?? 'Unknown' } : null;
+    }
+
+    const skillAction = actions.find((a) => a.type === 'assign_to_skill');
+    if (skillAction) {
+      const agents = await this.getEligibleAgents(tenantId, skillAction.target);
+      return agents[0] ? { id: agents[0].agentId, name: agents[0].name } : null;
     }
 
     return null;

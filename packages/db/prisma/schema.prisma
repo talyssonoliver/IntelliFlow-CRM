@@ -4114,10 +4114,18 @@ enum AgentStatus {
 }
 
 /// Ticket routing rule
+/// Discriminator for routing_rules: lead routing and ticket automation keep
+/// different condition/action vocabularies and each reads only its own rows.
+enum RoutingRuleType {
+  LEAD
+  TICKET
+}
+
 model RoutingRule {
   id          String   @id @default(cuid())
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ruleType    RoutingRuleType @default(LEAD)
   name        String
   description String?
   priority    Int      @default(0) // Higher = evaluated first

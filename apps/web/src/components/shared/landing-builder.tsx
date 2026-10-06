@@ -163,14 +163,26 @@ export function LandingHero({
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37] py-16 lg:py-24">
-      <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-[#137fec]/20 blur-3xl opacity-50" />
-      <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl opacity-40" />
+    <section className="relative overflow-hidden bg-[#11175b] py-20 lg:py-28">
+      {/* The aurora: a violet glow and the ribbons rising from the corners. */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="absolute left-1/2 top-1/3 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#7655f6]/25 blur-[120px]" />
+        <img
+          src="/brand/aurora/bg/ribbon-left.webp"
+          alt=""
+          className="absolute -bottom-24 -left-36 w-[360px] max-w-none opacity-80 sm:w-[560px]"
+        />
+        <img
+          src="/brand/aurora/bg/ribbon-right.webp"
+          alt=""
+          className="absolute -bottom-32 -right-40 w-[440px] max-w-none -rotate-6 opacity-80 sm:w-[720px]"
+        />
+      </div>
 
       <div className="container relative z-10 px-4 lg:px-6 mx-auto max-w-auto">
         <div className="max-w-3xl mx-auto text-center">
           {section.badge && (
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#bca8ff] font-medium backdrop-blur mb-6">
               {section.badgeIcon && (
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   {section.badgeIcon}
@@ -189,9 +201,9 @@ export function LandingHero({
               href={section.primaryCta.href}
               onClick={handleCtaClick}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
-                bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7]
-                transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]
-                focus:ring-offset-2 focus:ring-offset-[#0f172a]"
+                bg-[#2a78f6] text-white font-semibold hover:bg-[#1f63d4]
+                transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff]
+                focus:ring-offset-2 focus:ring-offset-[#11175b]"
             >
               {ctaText}
             </Link>
@@ -238,10 +250,10 @@ export function LandingFeatures({ section }: Readonly<{ section: FeaturesSection
           {section.features.map((feature) => (
             <Card
               key={feature.title}
-              className="p-6 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 hover:border-[#137fec] hover:shadow-md transition-all"
+              className="p-6 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 hover:border-[#2a78f6] hover:shadow-md transition-all"
             >
-              <div className="w-12 h-12 rounded-lg bg-[#137fec]/10 flex items-center justify-center mb-4">
-                <span className="material-symbols-outlined text-[#137fec]" aria-hidden="true">
+              <div className="w-12 h-12 rounded-lg bg-[#2a78f6]/10 flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined text-[#2a78f6]" aria-hidden="true">
                   {feature.icon}
                 </span>
               </div>
@@ -282,8 +294,8 @@ export function LandingTestimonials({ section }: Readonly<{ section: Testimonial
                 "{testimonial.quote}"
               </blockquote>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#137fec]/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[#137fec]" aria-hidden="true">
+                <div className="w-10 h-10 rounded-full bg-[#2a78f6]/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[#2a78f6]" aria-hidden="true">
                     person
                   </span>
                 </div>
@@ -308,7 +320,7 @@ export function LandingStats({ section }: Readonly<{ section: StatsSection }>) {
   const bgClass = {
     light: 'bg-white dark:bg-slate-800',
     dark: 'bg-slate-900 dark:bg-slate-950',
-    brand: 'bg-gradient-to-r from-[#137fec] to-[#0e6ac7]',
+    brand: 'bg-[#11175b]',
   }[section.background || 'light'];
 
   const textClass =
@@ -324,7 +336,7 @@ export function LandingStats({ section }: Readonly<{ section: StatsSection }>) {
           {section.stats.map((stat) => (
             <div key={stat.label} className="text-center">
               <p
-                className={`text-4xl font-bold mb-2 ${section.background === 'brand' ? 'text-white' : 'text-[#137fec]'}`}
+                className={`text-4xl font-bold mb-2 ${section.background === 'brand' ? 'text-white' : 'text-[#2a78f6]'}`}
               >
                 {stat.value}
               </p>
@@ -362,12 +374,12 @@ export function LandingPricing({ section }: Readonly<{ section: PricingSection }
               key={tier.name}
               className={`p-6 ${
                 tier.highlighted
-                  ? 'border-2 border-[#137fec] shadow-lg scale-105'
+                  ? 'border-2 border-[#2a78f6] shadow-lg scale-105'
                   : 'border border-slate-200 dark:border-slate-700'
               } bg-white dark:bg-slate-900`}
             >
               {tier.highlighted && (
-                <span className="inline-block px-3 py-1 bg-[#137fec] text-white text-xs font-semibold rounded-full mb-4">
+                <span className="inline-block px-3 py-1 bg-[#2a78f6] text-white text-xs font-semibold rounded-full mb-4">
                   Most Popular
                 </span>
               )}
@@ -397,7 +409,7 @@ export function LandingPricing({ section }: Readonly<{ section: PricingSection }
               </ul>
               <Button
                 asChild
-                className={`w-full ${tier.highlighted ? 'bg-[#137fec] hover:bg-[#0e6ac7]' : ''}`}
+                className={`w-full ${tier.highlighted ? 'bg-[#2a78f6] hover:bg-[#1f63d4]' : ''}`}
                 variant={tier.highlighted ? 'default' : 'outline'}
               >
                 <Link href={tier.cta.href}>{tier.cta.text}</Link>
@@ -460,7 +472,7 @@ export function LandingCta({
   };
 
   return (
-    <section className="py-16 lg:py-20 bg-gradient-to-r from-[#137fec] to-[#0e6ac7]">
+    <section className="py-16 lg:py-20 bg-[#11175b]">
       <div className="container px-4 lg:px-6 mx-auto max-w-4xl text-center">
         <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">{section.title}</h2>
         {section.subtitle && <p className="text-lg text-white/90 mb-8">{section.subtitle}</p>}
@@ -469,7 +481,7 @@ export function LandingCta({
             href={section.primaryCta.href}
             onClick={handleCtaClick}
             className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white
-              text-[#137fec] font-semibold rounded-lg hover:bg-slate-100
+              text-[#2a78f6] font-semibold rounded-lg hover:bg-slate-100
               transition-colors"
           >
             {section.primaryCta.text}

@@ -4,6 +4,7 @@
   "installCommand": "corepack enable && pnpm install --frozen-lockfile",
   "git": {
     "deploymentEnabled": {
+      "**": false,
       "main": true
     }
   },

@@ -1,0 +1,103 @@
+{
+  "_comment": "Owner ruling 2026-10-06: tasks truthfully reopened in #795 are exempt from the strict sprint completion/start gates until the expiry below, by which they must be redone. An expired entry fails validate:sprint in every mode (tools/scripts/lib/reopen-exemptions.ts). Remove an entry when its task is Completed again.",
+  "exemptions": [
+    {
+      "taskId": "IFC-032",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-08",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "Production OTLP export to Grafana Cloud + real trace ID; blocked on the owner creating the OTLP token"
+    },
+    {
+      "taskId": "INFRA-TF-004",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-08",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "ai-worker emitting OTLP in production (same change as IFC-032)"
+    },
+    {
+      "taskId": "ENV-008-AI",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-08",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "All running services emit telemetry; anomaly/self-healing claims re-scoped"
+    },
+    {
+      "taskId": "EP-001-AI",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-08",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "OTLP push from Railway to the hosted backend (replaces the EasyPanel plan)"
+    },
+    {
+      "taskId": "IFC-074",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-09",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "Trace/log correlation and MTTD measured from production data"
+    },
+    {
+      "taskId": "IFC-097",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-09",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "Measured trace coverage + live dashboard URL"
+    },
+    {
+      "taskId": "IFC-116",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-09",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "Alert rules loaded in the hosted backend, proven by a received alert"
+    },
+    {
+      "taskId": "IFC-117",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-09",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "AI metrics reach the hosted backend; AI dashboard + alerts loaded"
+    },
+    {
+      "taskId": "IFC-142",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-10",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "SLO alerts live; real Supabase restore drill with a timed log"
+    },
+    {
+      "taskId": "IFC-052",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-10",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "Monitoring active + deployment log and rollback evidence from a real deploy"
+    },
+    {
+      "taskId": "PG-014",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-10",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "Status page driven by real health checks (/health/detailed from #793)"
+    },
+    {
+      "taskId": "IFC-033",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-11",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "k6 run against a deployed environment with the owner's approval"
+    },
+    {
+      "taskId": "IFC-043",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-11",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "Runbook artifacts + rollback log from a real rollback"
+    },
+    {
+      "taskId": "IFC-056",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-11",
+      "lane": "projects-64 (owner decision)",
+      "reason": "Re-scope or retire: the original evidence described people who do not exist"
+    }
+  ]
+}

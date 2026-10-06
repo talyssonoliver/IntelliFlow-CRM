@@ -143,6 +143,38 @@ export class OpportunityLostEvent extends DomainEvent {
 }
 
 /**
+ * Event: Opportunity description updated
+ *
+ * IFC-283 W-02: description changes previously emitted no event, so
+ * downstream consumers (audit trail, search re-index) had no signal a deal's
+ * description had changed. Mirrors OpportunityValueUpdatedEvent's shape
+ * (previous/new + actor) rather than OpportunityCloseDateChangedEvent's,
+ * since description is always a defined string (never cleared to null/undefined
+ * the way a date can be).
+ */
+export class OpportunityDescriptionUpdatedEvent extends DomainEvent {
+  readonly eventType = 'opportunity.description_updated';
+
+  constructor(
+    public readonly opportunityId: OpportunityId,
+    public readonly previousDescription: string | undefined,
+    public readonly newDescription: string,
+    public readonly updatedBy: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      opportunityId: this.opportunityId.value,
+      previousDescription: this.previousDescription ?? null,
+      newDescription: this.newDescription,
+      updatedBy: this.updatedBy,
+    };
+  }
+}
+
+/**
  * Event: Opportunity probability updated
  */
 export class OpportunityProbabilityUpdatedEvent extends DomainEvent {
