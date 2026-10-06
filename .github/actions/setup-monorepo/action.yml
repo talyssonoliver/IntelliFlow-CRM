@@ -100,6 +100,20 @@ runs:
       shell: bash
       run: pnpm install --frozen-lockfile
 
+    # Local turbo cache, a fallback for the Vercel remote cache (which answers
+    # 429 under load and then every task rebuilds). Restored in every job;
+    # saved only from push-to-main runs (see the save step below), so PRs read
+    # main's warm cache without each writing their own copy into the 10 GB repo
+    # cache and evicting the pnpm store.
+    - name: Restore turbo cache
+      if: inputs.install-deps == 'true'
+      uses: actions/cache/restore@v6
+      with:
+        path: .turbo/cache
+        key: turbo-libs-${{ runner.os }}-${{ github.sha }}
+        restore-keys: |
+          turbo-libs-${{ runner.os }}-
+
     - name: Pre-build library packages
       # Mirrors the per-workflow `pnpm exec turbo run build --filter=!...` step
       # that lived in ci.yml typecheck/test/integration, pr-checks quality,
@@ -130,3 +144,10 @@ runs:
           --filter=!@intelliflow/api \
           --filter=!@intelliflow/project-tracker \
           --filter=!@intelliflow/workers
+
+    - name: Save turbo cache (push to main only)
+      if: inputs.build-libs == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: actions/cache/save@v6
+      with:
+        path: .turbo/cache
+        key: turbo-libs-${{ runner.os }}-${{ github.sha }}
