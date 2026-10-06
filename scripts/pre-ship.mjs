@@ -65,6 +65,17 @@
  *   PRESHIP_FULL_TESTS=1. Typecheck, lint and all other gates are unchanged.
  *   See scripts/lib/preship-test-scope.mjs.
  *
+ * Machine test slots and orphans:
+ *   At most 3 full test runs at once on one machine (owner ruling 2026-10-03).
+ *   The gate re-runs itself under the shared slot semaphore before any step
+ *   (scripts/lib/test-slot.mjs, see "Machine-wide test slot" below). Separately,
+ *   it never leaves a step orphaned (scripts/lib/preship-gate.mjs): each
+ *   step runs async with its PID recorded, its whole process tree is stopped on
+ *   success, failure, SIGINT/SIGTERM/SIGHUP/SIGBREAK and an uncaught exception,
+ *   and a detached watchdog (scripts/preship-watchdog.mjs) stops it after a hard
+ *   kill of the gate or the death of anything above it (the `git push`, the hook
+ *   shell).
+ *
  * Env:
  *   PRESHIP_MODE=full        same as passing --full
  *   PRESHIP_FULL_TESTS=1     run the FULL test suite locally (default: related only)
@@ -76,6 +87,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { createGate } from './lib/preship-gate.mjs';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
 import {
   preshipNeedsSlot,
@@ -867,7 +879,16 @@ function fmtDuration(ms) {
   return `${Math.floor(ms / 60000)}m${Math.round((ms % 60000) / 1000)}s`;
 }
 
-function runStep(step, prev) {
+// ---- step tracking and cleanup ------------------------------------------------
+//
+// The step process tree is stopped on every exit path (success, failure, a signal,
+// an uncaught exception); a detached watchdog covers a hard kill of the gate or the
+// death of anything above it. Machine test slots come from with-slot.mjs, not from
+// here. The lifecycle lives in scripts/lib/preship-gate.mjs (unit-tested in-process);
+// this is the wiring.
+const gate = createGate({ repoRoot: REPO_ROOT });
+
+async function runStep(step, prev) {
   const logPath = path.join(LOG_DIR, `${step.id}.log`);
 
   if (flags.only && !flags.only.includes(step.id)) {
@@ -912,24 +933,19 @@ function runStep(step, prev) {
   // shell:true on Windows so the PATH resolves .cmd/.exe extensions for
   // pnpm / gitleaks / etc. All argv values are hard-coded literals (no
   // user input), so shell injection isn't a concern. POSIX systems use
-  // shell:false to avoid the extra fork.
-  const r = spawnSync(step.cmd[0], step.cmd.slice(1), {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
+  // shell:false to avoid the extra fork, and detached:true so the step is its
+  // own process group that killTree can stop as a whole.
+  //
+  // Async spawn (not spawnSync) so the gate can still react to a signal while a
+  // step runs, and so the step's PID is known to the watchdog. stdout streams
+  // straight to the log rather than into a buffer (unit-tests emits >5MB), so
+  // there is no maxBuffer to blow.
+  const r = await gate.runStepProcess(step, {
+    logPath,
     env,
     cwd: step.cwd || REPO_ROOT,
-    shell: process.platform === 'win32',
-    // Default 1MB maxBuffer is blown by noisy steps (unit-tests emits
-    // ~14k lines / >5MB of AUDIT + RBAC log lines). When exceeded,
-    // spawnSync kills the child with SIGTERM and returns status=null,
-    // giving the false impression that the test failed when it was
-    // really truncated. 256MB is comfortably above any current step.
-    maxBuffer: 256 * 1024 * 1024,
   });
   const duration_ms = Date.now() - start;
-
-  const output = (r.stdout || '') + (r.stderr ? '\n--- stderr ---\n' + r.stderr : '');
-  fs.writeFileSync(logPath, output);
 
   const failed = r.status !== 0;
   return {
@@ -962,9 +978,11 @@ function isMissingRequired(r) {
   return r.verdict === 'SKIPPED_PRECONDITION' && r.required === true;
 }
 
-function main() {
+async function main() {
   ensureDirs();
   const head = gitHead();
+  // Stop the step tree on every exit path we get to run.
+  gate.installExit();
   const prev = loadPreviousState(head);
   if (prev) {
     process.stdout.write(
@@ -1019,7 +1037,7 @@ function main() {
       continue;
     }
     process.stdout.write(`  ${step.id.padEnd(28)} `);
-    const r = runStep(step, prev);
+    const r = await runStep(step, prev);
     results.push(r);
 
     // Truthful per-step label: MISSING for an unrunnable required guard, WARN
@@ -1115,4 +1133,7 @@ function main() {
   process.exit(verdict === 'PASS' ? 0 : 1);
 }
 
-main();
+main().catch((err) => {
+  gate.fatal(err);
+  process.exit(1);
+});
