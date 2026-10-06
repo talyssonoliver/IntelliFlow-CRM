@@ -16,7 +16,12 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { glob } from 'glob';
-import { createHash } from 'crypto';
+import {
+  artifactHashOrNull,
+  createFileHasher,
+  fixArtifactHashes as fixArtifactHashesIn,
+  fixFilesRead as fixFilesReadIn,
+} from './lib/evidence-hash.js';
 
 // Get repo root
 const fileUrl = new URL(import.meta.url);
@@ -36,9 +41,8 @@ interface MigrationResult {
 
 const results: MigrationResult[] = [];
 
-function sha256(content: string): string {
-  return createHash('sha256').update(content).digest('hex');
-}
+// Real file hashes only: never hash a placeholder string (see lib/evidence-hash.ts).
+const hashFile = createFileHasher(REPO_ROOT);
 
 // ---------------------------------------------------------------------------
 // Attestation record migration helpers
@@ -85,19 +89,7 @@ function fixAttestationVerdict(data: Record<string, unknown>, result: MigrationR
 }
 
 function fixArtifactHashes(data: Record<string, unknown>, result: MigrationResult): boolean {
-  if (!data.artifact_hashes) return false;
-  const sha256Regex = /^[a-f0-9]{64}$/;
-  let modified = false;
-  for (const [path, hash] of Object.entries(data.artifact_hashes as Record<string, unknown>)) {
-    if (typeof hash === 'string' && !sha256Regex.test(hash)) {
-      (data.artifact_hashes as Record<string, unknown>)[path] = sha256(
-        `placeholder:${path}:${hash}`
-      );
-      result.changes.push(`Fixed artifact_hashes[${path}]`);
-      modified = true;
-    }
-  }
-  return modified;
+  return fixArtifactHashesIn(data, result.changes, hashFile);
 }
 
 function fixDependenciesVerified(data: Record<string, unknown>, result: MigrationResult): boolean {
@@ -304,33 +296,7 @@ function fixValidationResultsObject(
 }
 
 function fixFilesRead(data: Record<string, unknown>, result: MigrationResult): boolean {
-  const ack = data.context_acknowledgment as Record<string, unknown> | undefined;
-  if (!ack?.files_read || !Array.isArray(ack.files_read)) return false;
-  const sha256Regex = /^[a-f0-9]{64}$/;
-  let modified = false;
-
-  const needsStringFix = (ack.files_read as unknown[]).some((f) => typeof f === 'string');
-  if (needsStringFix) {
-    ack.files_read = (ack.files_read as unknown[]).map((f) => {
-      if (typeof f === 'string') {
-        return { path: f, sha256: sha256(`placeholder:${f}`) };
-      }
-      return f;
-    });
-    result.changes.push('Converted files_read strings to objects');
-    modified = true;
-  }
-
-  const frs = ack.files_read as Record<string, unknown>[];
-  for (let i = 0; i < frs.length; i++) {
-    const fr = frs[i];
-    if (fr.sha256 && !sha256Regex.test(fr.sha256 as string)) {
-      fr.sha256 = sha256(`placeholder:${fr.path}:${fr.sha256}`);
-      result.changes.push(`Fixed context_acknowledgment.files_read[${i}].sha256`);
-      modified = true;
-    }
-  }
-  return modified;
+  return fixFilesReadIn(data, result.changes);
 }
 
 function fixAttestationScalars(data: Record<string, unknown>, result: MigrationResult): boolean {
@@ -537,16 +503,15 @@ function fixArtifactsCreated(data: Record<string, unknown>, result: MigrationRes
     if (typeof artifact === 'string') {
       created[i] = {
         path: artifact,
-        sha256: sha256(`placeholder:${artifact}`),
+        sha256: artifactHashOrNull(artifact, result.changes, i, hashFile),
         created_at: fallbackTs,
       };
       result.changes.push(`Converted artifacts.created[${i}] string to object`);
       modified = true;
     } else if (artifact && typeof artifact === 'object') {
       const art = artifact as Record<string, unknown>;
-      if (art.sha256 === null || art.sha256 === undefined || art.sha256 === '') {
-        art.sha256 = sha256(`placeholder:${art.path || 'unknown'}`);
-        result.changes.push(`Fixed artifacts.created[${i}].sha256 from null`);
+      if (art.sha256 === undefined || art.sha256 === '') {
+        art.sha256 = artifactHashOrNull(art.path, result.changes, i, hashFile);
         modified = true;
       }
       if (!art.created_at) {

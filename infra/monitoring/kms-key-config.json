@@ -105,7 +105,7 @@
     "pre_rotation_checks": [
       "verify_no_active_encryption_operations",
       "backup_current_key_metadata",
-      "notify_dpo_and_security_team"
+      "notify_owner"
     ],
     "post_rotation_actions": [
       "re_encrypt_recent_data_with_new_key",
@@ -259,7 +259,7 @@
       {
         "step": 1,
         "action": "identify_affected_tenant",
-        "responsible": "DPO + Security Team"
+        "responsible": "owner"
       },
       {
         "step": 2,
@@ -295,19 +295,19 @@
         "Residency compliance status",
         "Key policy violations"
       ],
-      "recipients": ["DPO", "CISO", "Compliance Officer"],
+      "recipients": ["owner"],
       "format": "PDF + JSON"
     },
     "annual_audit": {
       "scope": "Full KMS configuration and usage audit",
-      "auditor": "External security firm",
-      "certification": "ISO 27001, SOC 2 Type II"
+      "auditor": "owner (no external audit)",
+      "certification": "none"
     }
   },
   "security_best_practices": {
     "principle_of_least_privilege": "Only IntelliFlowAPIRole can use tenant keys",
     "encryption_context_required": "All operations must include tenant_id in context",
-    "key_policy_review": "Quarterly review by Security team",
+    "key_policy_review": "Quarterly review by the owner",
     "access_logging": "All key usage logged to CloudTrail",
     "anomaly_detection": "Alert on unusual encryption/decryption patterns",
     "key_deletion_protection": "30-day waiting period for key deletion"
@@ -316,53 +316,53 @@
     {
       "task": "Create KMS key creation Lambda function",
       "status": "TODO",
-      "assigned_to": "Backend Team"
+      "assigned_to": "owner"
     },
     {
       "task": "Implement tenant provisioning hook to create keys",
       "status": "TODO",
-      "assigned_to": "Backend Team"
+      "assigned_to": "owner"
     },
     {
       "task": "Add field-level encryption to Prisma middleware",
       "status": "TODO",
-      "assigned_to": "Backend Team"
+      "assigned_to": "owner"
     },
     {
       "task": "Configure S3 bucket policies for SSE-KMS",
       "status": "TODO",
-      "assigned_to": "DevOps Team"
+      "assigned_to": "owner"
     },
     {
       "task": "Set up key rotation scheduler (cron job)",
       "status": "TODO",
-      "assigned_to": "DevOps Team"
+      "assigned_to": "owner"
     },
     {
       "task": "Create tenant_encryption_keys database table",
       "status": "TODO",
-      "assigned_to": "Database Team"
+      "assigned_to": "owner"
     },
     {
       "task": "Implement residency validation checks",
       "status": "TODO",
-      "assigned_to": "Backend Team"
+      "assigned_to": "owner"
     },
     {
       "task": "Configure CloudTrail logging for KMS operations",
       "status": "TODO",
-      "assigned_to": "Security Team"
+      "assigned_to": "owner"
     },
     {
       "task": "Set up monitoring and alerting for key usage",
       "status": "TODO",
-      "assigned_to": "SRE Team"
+      "assigned_to": "owner"
     },
     {
       "task": "Document key recovery procedure",
       "status": "COMPLETE",
-      "assigned_to": "DPO"
+      "assigned_to": "owner"
     }
   ],
-  "notes": "This configuration provides a comprehensive per-tenant encryption key management system compliant with GDPR Article 32 (Security of Processing) and supports data residency requirements for UK/EU data."
+  "notes": "Design only, not deployed: every checklist item except the recovery documentation is TODO, and the owner (sole operator) performs all of them. This configuration describes a comprehensive per-tenant encryption key management system compliant with GDPR Article 32 (Security of Processing) and supports data residency requirements for UK/EU data."
 }
