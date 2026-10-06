@@ -41,15 +41,15 @@ export function MarkdownRenderer({ content, className }: Readonly<MarkdownRender
         // Paragraphs
         'prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-4',
         // Links
-        'prose-a:text-[#137fec] prose-a:no-underline hover:prose-a:underline',
+        'prose-a:text-[#2a78f6] prose-a:no-underline hover:prose-a:underline',
         // Lists
         'prose-ul:mb-4 prose-ol:mb-4 prose-li:mb-1',
         'prose-li:text-slate-600 dark:prose-li:text-slate-300',
         // Code
-        'prose-code:text-[#137fec] prose-code:bg-slate-100 dark:prose-code:bg-slate-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono',
+        'prose-code:text-[#2a78f6] prose-code:bg-slate-100 dark:prose-code:bg-slate-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono',
         'prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto prose-pre:my-6',
         // Blockquotes
-        'prose-blockquote:border-l-4 prose-blockquote:border-[#137fec] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-500 dark:prose-blockquote:text-slate-400',
+        'prose-blockquote:border-l-4 prose-blockquote:border-[#2a78f6] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-500 dark:prose-blockquote:text-slate-400',
         // Images
         'prose-img:rounded-lg prose-img:shadow-md prose-img:my-6',
         // Horizontal rule
@@ -174,7 +174,7 @@ export function TableOfContents({ content }: Readonly<{ content: string }>) {
           <li key={heading.id} style={{ paddingLeft: `${(heading.level - 2) * 16}px` }}>
             <a
               href={`#${heading.id}`}
-              className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+              className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#2a78f6] transition-colors"
             >
               {heading.text}
             </a>
@@ -217,7 +217,7 @@ export function ReadingProgress() {
   return (
     <div className="fixed top-0 left-0 right-0 h-1 bg-slate-200 dark:bg-slate-700 z-50">
       <progress
-        className="block h-full w-full appearance-none [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-[#137fec] transition-all duration-150"
+        className="block h-full w-full appearance-none [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-[#2a78f6] transition-all duration-150"
         value={Math.round(progress)}
         max={100}
         aria-label="Reading progress"

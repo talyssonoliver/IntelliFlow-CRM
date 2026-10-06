@@ -47,7 +47,7 @@ const sampleComments: Comment[] = [
     id: '2',
     author: { name: 'Maria Garcia' },
     content:
-      "Would love to see a follow-up post on how to measure the ROI of AI-assisted lead scoring. We're currently evaluating IntelliFlow for our mid-market sales team.",
+      "Would love to see a follow-up post on how to measure the ROI of AI-assisted lead scoring. We're currently evaluating Aurora for our mid-market sales team.",
     createdAt: '2025-12-28T16:45:00Z',
     likes: 8,
   },
@@ -173,7 +173,7 @@ export function CommentsWidget({ postSlug: _postSlug, className }: Readonly<Comm
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Share your thoughts..."
             rows={3}
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white bg-white dark:bg-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent resize-none"
+            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white bg-white dark:bg-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent resize-none"
           />
           <div className="flex justify-between items-center mt-3">
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -182,7 +182,7 @@ export function CommentsWidget({ postSlug: _postSlug, className }: Readonly<Comm
             <Button
               type="submit"
               disabled={!newComment.trim() || isSubmitting}
-              className="bg-[#137fec] hover:bg-[#0e6ac7] disabled:opacity-50"
+              className="bg-[#2a78f6] hover:bg-[#1f63d4] disabled:opacity-50"
             >
               {isSubmitting ? 'Posting...' : 'Post Comment'}
             </Button>
@@ -276,8 +276,8 @@ function CommentCard({
               className={cn(
                 'inline-flex items-center gap-1 text-sm transition-colors',
                 comment.isLiked
-                  ? 'text-[#137fec]'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-[#137fec]'
+                  ? 'text-[#2a78f6]'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-[#2a78f6]'
               )}
             >
               <span className="material-symbols-outlined text-base" aria-hidden="true">
@@ -287,7 +287,7 @@ function CommentCard({
             </button>
             <button
               onClick={() => onReply(comment.id)}
-              className="inline-flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] transition-colors"
             >
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 reply
@@ -308,14 +308,14 @@ function CommentCard({
                 onChange={(e) => onReplyContentChange(e.target.value)}
                 placeholder="Write a reply..."
                 rows={2}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white bg-white dark:bg-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent resize-none text-sm"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white bg-white dark:bg-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent resize-none text-sm"
               />
               <div className="flex gap-2 mt-2">
                 <Button
                   size="sm"
                   onClick={onSubmitReply}
                   disabled={!replyContent.trim() || isSubmitting}
-                  className="bg-[#137fec] hover:bg-[#0e6ac7] text-xs"
+                  className="bg-[#2a78f6] hover:bg-[#1f63d4] text-xs"
                 >
                   {isSubmitting ? 'Posting...' : 'Reply'}
                 </Button>
@@ -357,8 +357,8 @@ function CommentCard({
                       className={cn(
                         'inline-flex items-center gap-1 text-xs mt-2 transition-colors',
                         reply.isLiked
-                          ? 'text-[#137fec]'
-                          : 'text-slate-500 dark:text-slate-400 hover:text-[#137fec]'
+                          ? 'text-[#2a78f6]'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-[#2a78f6]'
                       )}
                     >
                       <span className="material-symbols-outlined text-sm" aria-hidden="true">

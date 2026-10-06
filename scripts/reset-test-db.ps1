@@ -11,7 +11,7 @@
 #
 # Environment Variables:
 #   TEST_DATABASE_URL - Connection string for the test database
-#                       Default: postgresql://intelliflow:intelliflow@localhost:5433/intelliflow_test
+#                       Default: local test DB on port 5433 (user/password from TEST_DB_USER / TEST_DB_PASSWORD, default intelliflow)
 #
 
 $ErrorActionPreference = "Stop"
@@ -21,7 +21,9 @@ Write-Host "IntelliFlow CRM - Test Database Reset"
 Write-Host "============================================"
 
 # Use TEST_DATABASE_URL if provided, otherwise use default
-$dbUrl = if ($env:TEST_DATABASE_URL) { $env:TEST_DATABASE_URL } else { "postgresql://intelliflow:intelliflow@localhost:5433/intelliflow_test" }
+$testDbUser = if ($env:TEST_DB_USER) { $env:TEST_DB_USER } else { "intelliflow" }
+$testDbPass = if ($env:TEST_DB_PASSWORD) { $env:TEST_DB_PASSWORD } else { $testDbUser }
+$dbUrl = if ($env:TEST_DATABASE_URL) { $env:TEST_DATABASE_URL } else { "postgresql://${testDbUser}:${testDbPass}@localhost:5433/intelliflow_test" }
 $env:DATABASE_URL = $dbUrl
 
 # Mask password for display

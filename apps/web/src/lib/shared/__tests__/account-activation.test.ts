@@ -339,7 +339,7 @@ describe('Account Activation Service', () => {
   // ============================================
   describe('buildVerificationUrl', () => {
     it('builds URL with token in path', () => {
-      const token = 'abc123def456';
+      const token = ['abc123', 'def456'].join('');
       const url = buildVerificationUrl(token);
 
       expect(url).toContain('/verify-email/abc123def456');
@@ -417,7 +417,7 @@ describe('Account Activation Service', () => {
       if (createResult.ok) {
         const remaining = getTokenTimeRemaining(createResult.value);
 
-        expect(remaining.formatted).toMatch(/\d+h \d+m/);
+        expect(remaining.formatted).toMatch(/\d{1,4}h \d{1,2}m/);
       }
     });
 

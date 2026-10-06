@@ -1,0 +1,811 @@
+/**
+ * Inbound Router — syncPipelineLead tests (S-0204: COA -> IntelliFlow funnel).
+ *
+ * Covers:
+ *  - 401 without / with wrong bearer
+ *  - new email -> lead created with source EMAIL + coa tags, walked NEW -> CONTACTED
+ *  - existing website lead (same email) is reused, not duplicated, and gets tags
+ *  - NEW -> NEGOTIATING walks CONTACTED, QUALIFIED (via qualifyLead), NEGOTIATING in order
+ *  - a score-refused qualification stops at CONTACTED, tags coa-qualified, notes it
+ *  - forward-only: downgrade is a no-op
+ *  - CONVERTED / LOST current status is never moved
+ *  - a COA win (status CONVERTED) is capped at NEGOTIATING, tagged coa-won and noted
+ *  - target LOST from CONTACTED
+ *  - repeat syncKey is a no-op and makes no status calls
+ *  - a refused step surfaces as BAD_REQUEST
+ */
+
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+import { inboundRouter } from '../inbound.router';
+import { createTestContext, prismaMock, mockServices } from '../../../test/setup';
+
+const TENANT_ID = '00000000-0000-4000-8000-000000000900';
+const SYSTEM_USER_ID = '00000000-0000-4000-8000-000000000901';
+// Test-only constant; >= 16 chars to satisfy the router's secret check.
+const SECRET = ['portal', 'test', 'fixture', 'value'].join('-');
+
+const LEAD_ID = 'lead_pipeline_test_1';
+const COA_LEAD_ID = 'coa_lead_42';
+const COA_TAGS = ['coa-pipeline', `coa-lead:${COA_LEAD_ID}`];
+
+function buildCtx(authHeader: string | undefined) {
+  const h = new Headers();
+  if (authHeader !== undefined) h.set('Authorization', authHeader);
+  return createTestContext({ req: { headers: h } as unknown as Request });
+}
+
+function input(status: string, coaStage = 'CONTACTED') {
+  return {
+    coaLeadId: COA_LEAD_ID,
+    email: 'owner@bakery.example',
+    firstName: 'Sam',
+    company: 'Bakery Ltd',
+    status,
+    coaStage,
+    stageChangedAt: '2026-10-02T09:00:00.000Z',
+  } as never;
+}
+
+/** $executeRaw calls other than the per-syncKey advisory lock (i.e. the tag merge). */
+function tagMergeCalls() {
+  return prismaMock.$executeRaw.mock.calls.filter(
+    (c) => !(c[0] as unknown as TemplateStringsArray).join('?').includes('pg_advisory_xact_lock')
+  );
+}
+
+const createLead = () => mockServices.lead.createLead as ReturnType<typeof vi.fn>;
+const changeStatus = () => mockServices.lead.changeLeadStatus as ReturnType<typeof vi.fn>;
+const qualify = () => mockServices.lead.qualifyLead as ReturnType<typeof vi.fn>;
+
+/** The refusal LeadService.qualifyLead returns below the minimum score. */
+function scoreRefusal(score = 12, minScore = 40) {
+  return {
+    isFailure: true,
+    error: {
+      code: 'VALIDATION_ERROR',
+      reason: 'LEAD_SCORE_BELOW_MINIMUM',
+      score,
+      minScore,
+      message: `Lead score ${score} is below minimum qualification threshold ${minScore}`,
+    },
+  };
+}
+
+function statusCalls(): string[] {
+  return changeStatus().mock.calls.map((c) => c[1] as string);
+}
+
+/** Existing lead: upsert lookup finds it, then the status read returns `status`. */
+function existingLead(status: string, tags: string[] = ['portal-discover']) {
+  prismaMock.lead.findFirst
+    .mockResolvedValueOnce({ id: LEAD_ID } as never)
+    .mockResolvedValueOnce({ id: LEAD_ID, status, tags } as never);
+}
+
+describe('inboundRouter — syncPipelineLead', () => {
+  beforeEach(() => {
+    vi.stubEnv('PORTAL_INTERNAL_SECRET', SECRET);
+    vi.stubEnv('LEANGENCY_TENANT_ID', TENANT_ID);
+    vi.stubEnv('LEANGENCY_SYSTEM_USER_ID', SYSTEM_USER_ID);
+    prismaMock.leadActivity.findFirst.mockResolvedValue(null as never);
+    prismaMock.leadActivity.create.mockResolvedValue({} as never);
+    prismaMock.$transaction.mockImplementation((async (fn: (tx: unknown) => unknown) =>
+      fn(prismaMock)) as never);
+    changeStatus().mockResolvedValue({ isFailure: false, value: {} });
+    qualify().mockResolvedValue({ isFailure: false, value: {} });
+  });
+
+  it('returns 401 without a bearer', async () => {
+    const caller = inboundRouter.createCaller(buildCtx(undefined) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+    });
+    expect(changeStatus()).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 with a wrong bearer', async () => {
+    const caller = inboundRouter.createCaller(buildCtx('Bearer nope') as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+    });
+  });
+
+  it('maps a lead-creation persistence failure with no lead to INTERNAL_SERVER_ERROR', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never); // fast path
+    createLead().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'PERSISTENCE_ERROR', message: 'Failed to save lead' },
+    });
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never); // race re-read
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+  });
+
+  it('recovers a concurrent insert that surfaced as a persistence failure', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never); // fast path
+    createLead().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'PERSISTENCE_ERROR', message: 'Unique constraint failed' },
+    });
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ id: LEAD_ID } as never); // race re-read
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('CONTACTED'));
+
+    expect(result.leadId).toBe(LEAD_ID);
+    expect(result.created).toBe(false);
+  });
+
+  it('keeps BAD_REQUEST for a lead-creation validation refusal', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never);
+    createLead().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid email' },
+    });
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never);
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+    });
+  });
+
+  it('creates a new lead with source EMAIL + coa tags and walks NEW -> CONTACTED', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never);
+    createLead().mockResolvedValueOnce({ isFailure: false, value: { id: { value: LEAD_ID } } });
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('CONTACTED'));
+
+    expect(result).toEqual({
+      leadId: LEAD_ID,
+      tenantId: TENANT_ID,
+      created: true,
+      previousStatus: 'NEW',
+      status: 'CONTACTED',
+      conversionPending: false,
+      qualificationPending: false,
+      changed: true,
+    });
+    expect(createLead().mock.calls[0]?.[0]).toMatchObject({
+      email: 'owner@bakery.example',
+      source: 'EMAIL',
+      tags: COA_TAGS,
+      ownerId: SYSTEM_USER_ID,
+      tenantId: TENANT_ID,
+    });
+    expect(changeStatus()).toHaveBeenCalledTimes(1);
+    expect(changeStatus()).toHaveBeenCalledWith(LEAD_ID, 'CONTACTED', 'System (COA sync)');
+
+    const activity = prismaMock.leadActivity.create.mock.calls[0]?.[0] as {
+      data: { type: string; title: string; metadata: Record<string, unknown> };
+    };
+    expect(activity.data.type).toBe('NOTE');
+    expect(activity.data.title).toBe('COA pipeline: CONTACTED → CONTACTED');
+    expect(activity.data.metadata).toMatchObject({
+      source: 'coa-pipeline-sync',
+      coaLeadId: COA_LEAD_ID,
+      coaStage: 'CONTACTED',
+      status: 'CONTACTED',
+      stageChangedAt: '2026-10-02T09:00:00.000Z',
+      syncKey: `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-10-02T09:00:00.000Z`,
+    });
+  });
+
+  it('reuses an existing website lead (no second lead) and adds the coa tags', async () => {
+    existingLead('NEW');
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('CONTACTED'));
+
+    expect(createLead()).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ leadId: LEAD_ID, created: false, status: 'CONTACTED' });
+    expect(tagMergeCalls()).toHaveLength(1);
+  });
+
+  it('appends tags with a tenant-scoped, de-duplicating UPDATE (not a blind push)', async () => {
+    existingLead('NEW');
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await caller.syncPipelineLead(input('CONTACTED'));
+
+    // A blind `push` stores a tag twice when two syncs both read it as missing;
+    // the merge must be idempotent in the write itself.
+    expect(prismaMock.lead.update).not.toHaveBeenCalled();
+    const call = tagMergeCalls()[0] as unknown as [TemplateStringsArray, ...unknown[]];
+    const sql = call[0].join('?');
+    expect(sql).toMatch(/UPDATE "leads"/);
+    expect(sql).toMatch(/GROUP BY u\.tag/); // collapses duplicates, order-preserving
+    expect(sql).toMatch(/"id" = \? AND "tenantId" = \?/); // scoped by id AND tenant
+    expect(call.slice(1)).toEqual([COA_TAGS, LEAD_ID, TENANT_ID]);
+  });
+
+  it('does not touch tags that are already present', async () => {
+    existingLead('NEW', ['portal-discover', ...COA_TAGS]);
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await caller.syncPipelineLead(input('CONTACTED'));
+    expect(prismaMock.lead.update).not.toHaveBeenCalled();
+    expect(tagMergeCalls()).toHaveLength(0);
+  });
+
+  it('walks NEW -> NEGOTIATING through CONTACTED and QUALIFIED in order', async () => {
+    existingLead('NEW');
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('NEGOTIATING', 'MEETING'));
+
+    expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
+    expect(qualify()).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      previousStatus: 'NEW',
+      status: 'NEGOTIATING',
+      changed: true,
+    });
+  });
+
+  describe('COA win (status CONVERTED) is never applied', () => {
+    const WON = 'WON';
+    const KEY = `coa-sync:${COA_LEAD_ID}:${WON}:CONVERTED:2026-10-02T09:00:00.000Z`;
+    const wonTagCalls = () => tagMergeCalls().filter((c) => (c[1] as string[]).includes('coa-won'));
+    const noteData = () =>
+      (prismaMock.leadActivity.create.mock.calls[0]?.[0] as { data: Record<string, any> }).data;
+
+    it('walks UNQUALIFIED only as far as NEGOTIATING, tags coa-won and records the win', async () => {
+      existingLead('UNQUALIFIED');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
+      expect(qualify()).toHaveBeenCalledTimes(1);
+      expect(statusCalls()).not.toContain('CONVERTED');
+      expect(result).toMatchObject({
+        previousStatus: 'UNQUALIFIED',
+        status: 'NEGOTIATING',
+        changed: true,
+        conversionPending: true,
+      });
+
+      const won = wonTagCalls();
+      expect(won).toHaveLength(1);
+      const call = won[0] as unknown as [TemplateStringsArray, ...unknown[]];
+      expect(call[0].join('?')).toMatch(/GROUP BY u\.tag/);
+      expect(call.slice(1)).toEqual([['coa-won'], LEAD_ID, TENANT_ID]);
+
+      const note = noteData();
+      expect(note.description).toMatch(/WON/);
+      expect(note.metadata).toMatchObject({
+        coaStage: WON,
+        stageChangedAt: '2026-10-02T09:00:00.000Z',
+        coaWon: true,
+        conversionPending: true,
+        syncKey: KEY,
+      });
+    });
+
+    it('ends a brand-new lead at NEGOTIATING, never CONVERTED', async () => {
+      prismaMock.lead.findFirst.mockResolvedValueOnce(null as never);
+      createLead().mockResolvedValueOnce({ isFailure: false, value: { id: { value: LEAD_ID } } });
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
+      expect(result).toMatchObject({ status: 'NEGOTIATING', conversionPending: true });
+      expect(wonTagCalls()).toHaveLength(1);
+    });
+
+    it('a lead already NEGOTIATING makes no status call but is still tagged and noted, once', async () => {
+      existingLead('NEGOTIATING', ['portal-discover', ...COA_TAGS]);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(changeStatus()).not.toHaveBeenCalled();
+      expect(result).toMatchObject({
+        status: 'NEGOTIATING',
+        changed: false,
+        conversionPending: true,
+      });
+      expect(wonTagCalls()).toHaveLength(1);
+      expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
+      expect(noteData().description).toMatch(/WON/);
+    });
+
+    it('does not re-tag a lead that already carries coa-won', async () => {
+      existingLead('NEGOTIATING', ['portal-discover', ...COA_TAGS, 'coa-won']);
+      prismaMock.lead.findFirst.mockResolvedValueOnce({ tags: [...COA_TAGS, 'coa-won'] } as never);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await caller.syncPipelineLead(input('CONVERTED', WON));
+      expect(wonTagCalls()).toHaveLength(0);
+    });
+
+    it('a repeat of the same won sync is a no-op (same requested-status key, no loop)', async () => {
+      existingLead('NEGOTIATING', ['portal-discover', ...COA_TAGS]);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await caller.syncPipelineLead(input('CONVERTED', WON));
+      expect(wonTagCalls()).toHaveLength(1);
+
+      // The first run left its marker note; the retry finds it by the same key.
+      vi.clearAllMocks();
+      prismaMock.leadActivity.findFirst.mockResolvedValue({ id: 'act_1' } as never);
+      existingLead('NEGOTIATING', ['portal-discover', ...COA_TAGS, 'coa-won']);
+      const repeat = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(repeat).toMatchObject({
+        status: 'NEGOTIATING',
+        changed: false,
+        conversionPending: true,
+      });
+      expect(changeStatus()).not.toHaveBeenCalled();
+      expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+      expect(wonTagCalls()).toHaveLength(0);
+      expect(prismaMock.leadActivity.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ metadata: { path: ['syncKey'], equals: KEY } }),
+        })
+      );
+    });
+
+    it('a CONVERTED lead receiving a COA win is untouched: no status call, no tag, not pending', async () => {
+      existingLead('CONVERTED');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+      expect(changeStatus()).not.toHaveBeenCalled();
+      expect(wonTagCalls()).toHaveLength(0);
+      expect(result).toMatchObject({
+        status: 'CONVERTED',
+        changed: false,
+        conversionPending: false,
+      });
+    });
+
+    it('a LOST lead receiving a COA win is never moved', async () => {
+      existingLead('LOST');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+      expect(changeStatus()).not.toHaveBeenCalled();
+      expect(result).toMatchObject({ status: 'LOST', changed: false });
+    });
+  });
+
+  it('never downgrades: current QUALIFIED, target CONTACTED is a no-op', async () => {
+    existingLead('QUALIFIED');
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('CONTACTED'));
+
+    expect(changeStatus()).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      previousStatus: 'QUALIFIED',
+      status: 'QUALIFIED',
+      changed: false,
+    });
+  });
+
+  it('does not move a CONVERTED lead', async () => {
+    existingLead('CONVERTED');
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('LOST', 'LOST'));
+    expect(changeStatus()).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ status: 'CONVERTED', changed: false });
+  });
+
+  it('does not resurrect a LOST lead', async () => {
+    existingLead('LOST');
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('QUALIFIED'));
+    expect(changeStatus()).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ status: 'LOST', changed: false });
+  });
+
+  it('moves CONTACTED -> LOST when COA marks the lead lost', async () => {
+    existingLead('CONTACTED');
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('LOST', 'LOST'));
+    expect(statusCalls()).toEqual(['LOST']);
+    expect(result).toMatchObject({ previousStatus: 'CONTACTED', status: 'LOST', changed: true });
+  });
+
+  it('repeat of the same syncKey is a no-op and makes no status calls', async () => {
+    existingLead('NEW');
+    prismaMock.leadActivity.findFirst.mockResolvedValueOnce({ id: 'act_1' } as never);
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('CONTACTED'));
+
+    expect(result.changed).toBe(false);
+    expect(changeStatus()).not.toHaveBeenCalled();
+    expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+    expect(prismaMock.leadActivity.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          leadId: LEAD_ID,
+          metadata: {
+            path: ['syncKey'],
+            equals: `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-10-02T09:00:00.000Z`,
+          },
+        }),
+      })
+    );
+  });
+
+  it('keys idempotency on the stage entry, so a later re-entry into the same stage is not suppressed', async () => {
+    existingLead('NEW');
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const reentry = {
+      ...(input('CONTACTED') as object),
+      stageChangedAt: '2026-11-15T08:30:00.000Z',
+    };
+
+    await caller.syncPipelineLead(reentry as never);
+
+    expect(prismaMock.leadActivity.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          metadata: {
+            path: ['syncKey'],
+            equals: `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-11-15T08:30:00.000Z`,
+          },
+        }),
+      })
+    );
+  });
+
+  it('surfaces a refused status step as BAD_REQUEST and writes no audit note', async () => {
+    existingLead('NEW');
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { message: 'Invalid status transition' },
+    });
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+      message: 'Invalid status transition',
+    });
+    expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+  });
+
+  it('audit note failure is logged, not thrown', async () => {
+    existingLead('NEW');
+    prismaMock.leadActivity.create.mockRejectedValueOnce(new Error('db down') as never);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('CONTACTED'));
+    expect(result.changed).toBe(true);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+  it('matches a stored lead whatever the casing COA sends (emails are stored lowercased)', async () => {
+    existingLead('NEW');
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead({
+      ...(input('CONTACTED') as object),
+      email: 'Owner@Bakery.EXAMPLE',
+    } as never);
+    expect(result.leadId).toBe(LEAD_ID);
+    expect(createLead()).not.toHaveBeenCalled();
+    const lookup = prismaMock.lead.findFirst.mock.calls[0]?.[0] as { where: { email: string } };
+    expect(lookup.where.email).toBe('owner@bakery.example');
+  });
+
+  it('treats a step refused because a concurrent sync already moved the lead as a no-op', async () => {
+    existingLead('NEW');
+    // The concurrent request got there first: the re-read shows CONTACTED.
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'CONTACTED' } as never);
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { message: 'Invalid status transition from CONTACTED to CONTACTED' },
+    });
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('CONTACTED'));
+    expect(result).toMatchObject({ leadId: LEAD_ID, status: 'CONTACTED', changed: false });
+  });
+
+  it('still writes this request audit note and syncKey when another writer moved the lead', async () => {
+    existingLead('NEW');
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'CONTACTED' } as never);
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { message: 'Invalid status transition from CONTACTED to CONTACTED' },
+    });
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('CONTACTED'));
+    expect(result.changed).toBe(false);
+    expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
+    const data = (
+      prismaMock.leadActivity.create.mock.calls[0]?.[0] as unknown as {
+        data: { metadata: { syncKey: string }; description: string };
+      }
+    ).data;
+    expect(data.metadata.syncKey).toBe(
+      `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-10-02T09:00:00.000Z`
+    );
+    expect(data.description).toContain('NEW → CONTACTED');
+  });
+
+  it('maps a PersistenceError the re-read cannot explain to INTERNAL_SERVER_ERROR', async () => {
+    existingLead('NEW');
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'NEW' } as never);
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'PERSISTENCE_ERROR', message: 'Failed to save lead' },
+    });
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    expect(logged).toHaveBeenCalled();
+    logged.mockRestore();
+    expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+  });
+
+  it('keeps BAD_REQUEST for a validation refusal the re-read cannot explain', async () => {
+    existingLead('NEW');
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'NEW' } as never);
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid status transition' },
+    });
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+    });
+  });
+
+  it('maps a throwing re-read to INTERNAL_SERVER_ERROR and logs the cause', async () => {
+    existingLead('NEW');
+    prismaMock.lead.findFirst.mockRejectedValueOnce(new Error('connection reset') as never);
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'PERSISTENCE_ERROR', message: 'Failed to save lead' },
+    });
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await expect(caller.syncPipelineLead(input('CONTACTED'))).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    expect(logged).toHaveBeenCalledWith(
+      expect.stringContaining('re-read failed'),
+      expect.objectContaining({ error: 'connection reset' })
+    );
+    logged.mockRestore();
+  });
+  it('replans when a concurrent sync moved the lead part of the way, then finishes the walk', async () => {
+    existingLead('NEW');
+    // Planned NEW -> CONTACTED -> QUALIFIED; a concurrent sync took it to CONTACTED.
+    prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'CONTACTED' } as never);
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { message: 'Invalid status transition' },
+    });
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    const result = await caller.syncPipelineLead(input('QUALIFIED', 'RESPONDED'));
+    expect(result).toMatchObject({ status: 'QUALIFIED', changed: true });
+    expect(statusCalls()).toEqual(['CONTACTED']);
+    expect(qualify()).toHaveBeenCalledTimes(1);
+    expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('two concurrent same-key syncs write exactly ONE audit note (atomic marker)', async () => {
+    // Fake store: the lookup reflects committed notes; $transaction serialises
+    // on a per-key advisory lock, like pg_advisory_xact_lock.
+    const notes: Array<{ syncKey: string }> = [];
+    const queues = new Map<string, Promise<unknown>>();
+    const keyOf = (args: unknown) =>
+      (args as { where: { metadata: { equals: string } } }).where.metadata.equals;
+    const find = async (args: unknown) => {
+      await Promise.resolve();
+      return notes.some((n) => n.syncKey === keyOf(args)) ? { id: 'act' } : null;
+    };
+    prismaMock.leadActivity.findFirst.mockImplementation(find as never);
+    prismaMock.leadActivity.create.mockImplementation((async (args: {
+      data: { metadata: { syncKey: string } };
+    }) => {
+      await Promise.resolve();
+      notes.push({ syncKey: args.data.metadata.syncKey });
+      return {};
+    }) as never);
+    let held: string | undefined;
+    const tx = {
+      leadActivity: prismaMock.leadActivity,
+      $executeRaw: async (_s: TemplateStringsArray, key: string) => {
+        held = key;
+        return 0;
+      },
+    };
+    prismaMock.$transaction.mockImplementation((async (fn: (t: unknown) => Promise<unknown>) => {
+      // The lock key is only known once the callback runs its first statement,
+      // so serialise every transaction on the single key used in this test.
+      const key = 'coa-sync';
+      const prev = queues.get(key) ?? Promise.resolve();
+      const run = prev.then(() => fn(tx));
+      queues.set(
+        key,
+        run.catch(() => undefined)
+      );
+      return run;
+    }) as never);
+    prismaMock.lead.findFirst.mockImplementation((async () => ({
+      id: LEAD_ID,
+      status: 'NEW',
+      tags: COA_TAGS,
+    })) as never);
+
+    const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+    await Promise.all([
+      caller.syncPipelineLead(input('CONTACTED')),
+      caller.syncPipelineLead(input('CONTACTED')),
+    ]);
+
+    expect(notes).toHaveLength(1);
+    expect(held).toBe(`coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-10-02T09:00:00.000Z`);
+  });
+
+  describe('QUALIFIED goes through the real qualify operation', () => {
+    const WON = 'WON';
+    const qualifiedTagCalls = () =>
+      tagMergeCalls().filter((c) => (c[1] as string[]).includes('coa-qualified'));
+    const noteData = () =>
+      (prismaMock.leadActivity.create.mock.calls[0]?.[0] as { data: Record<string, any> }).data;
+
+    it('reaches QUALIFIED via qualifyLead, never changeLeadStatus(..., QUALIFIED)', async () => {
+      existingLead('NEW');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('NEGOTIATING', 'MEETING'));
+
+      expect(statusCalls()).not.toContain('QUALIFIED');
+      expect(qualify()).toHaveBeenCalledTimes(1);
+      expect(qualify()).toHaveBeenCalledWith(LEAD_ID, 'System (COA sync)', expect.any(String));
+      expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
+      expect(result).toMatchObject({ status: 'NEGOTIATING', qualificationPending: false });
+    });
+
+    it('a score refusal stops at CONTACTED, tags coa-qualified, notes it, never tries NEGOTIATING', async () => {
+      existingLead('NEW');
+      qualify().mockResolvedValueOnce(scoreRefusal(12, 40));
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('NEGOTIATING', 'MEETING'));
+
+      expect(statusCalls()).toEqual(['CONTACTED']);
+      expect(statusCalls()).not.toContain('NEGOTIATING');
+      expect(result).toMatchObject({
+        previousStatus: 'NEW',
+        status: 'CONTACTED',
+        changed: true,
+        qualificationPending: true,
+        conversionPending: false,
+      });
+
+      const tags = qualifiedTagCalls();
+      expect(tags).toHaveLength(1);
+      const call = tags[0] as unknown as [TemplateStringsArray, ...unknown[]];
+      expect(call.slice(1)).toEqual([['coa-qualified'], LEAD_ID, TENANT_ID]);
+
+      const note = noteData();
+      expect(note.description).toMatch(/score gate refused/);
+      expect(note.description).toMatch(/score 12, minimum 40/);
+      expect(note.metadata).toMatchObject({
+        qualificationPending: true,
+        qualificationScore: 12,
+        qualificationMinScore: 40,
+      });
+    });
+
+    it('a lead already CONTACTED that is refused stays put but is still tagged and noted', async () => {
+      existingLead('CONTACTED', ['portal-discover', ...COA_TAGS]);
+      qualify().mockResolvedValueOnce(scoreRefusal());
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('QUALIFIED', 'RESPONDED'));
+
+      expect(changeStatus()).not.toHaveBeenCalled();
+      expect(result).toMatchObject({
+        status: 'CONTACTED',
+        changed: false,
+        qualificationPending: true,
+      });
+      expect(qualifiedTagCalls()).toHaveLength(1);
+      expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('a COA win with a refused qualify stops at CONTACTED with both pending flags', async () => {
+      existingLead('NEW');
+      qualify().mockResolvedValueOnce(scoreRefusal());
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(statusCalls()).toEqual(['CONTACTED']);
+      expect(result).toMatchObject({
+        status: 'CONTACTED',
+        qualificationPending: true,
+        conversionPending: true,
+      });
+      expect(qualifiedTagCalls()).toHaveLength(1);
+      expect(tagMergeCalls().filter((c) => (c[1] as string[]).includes('coa-won'))).toHaveLength(1);
+      expect(noteData().metadata).toMatchObject({
+        coaWon: true,
+        conversionPending: true,
+        qualificationPending: true,
+      });
+    });
+
+    it('a COA win whose lead passes the score still reaches NEGOTIATING', async () => {
+      existingLead('NEW');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONVERTED', WON));
+
+      expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
+      expect(result).toMatchObject({
+        status: 'NEGOTIATING',
+        qualificationPending: false,
+        conversionPending: true,
+      });
+      expect(qualifiedTagCalls()).toHaveLength(0);
+    });
+
+    it('a repeat of a refused sync keeps reporting qualificationPending with no calls', async () => {
+      prismaMock.leadActivity.findFirst.mockResolvedValue({
+        id: 'act_1',
+        metadata: { qualificationPending: true },
+      } as never);
+      existingLead('CONTACTED', ['portal-discover', ...COA_TAGS, 'coa-qualified']);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('NEGOTIATING', 'MEETING'));
+
+      expect(result).toMatchObject({
+        status: 'CONTACTED',
+        changed: false,
+        qualificationPending: true,
+      });
+      expect(qualify()).not.toHaveBeenCalled();
+      expect(changeStatus()).not.toHaveBeenCalled();
+    });
+
+    it('a compare-and-set conflict from qualify re-reads and replans, not a refusal', async () => {
+      existingLead('NEW');
+      // qualify lost the race: the lead is already QUALIFIED when re-read.
+      prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'QUALIFIED' } as never);
+      qualify().mockResolvedValueOnce({
+        isFailure: true,
+        error: {
+          code: 'PERSISTENCE_ERROR',
+          message: 'Lead status changed concurrently (expected CONTACTED)',
+        },
+      });
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('NEGOTIATING', 'MEETING'));
+
+      expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
+      expect(result).toMatchObject({ status: 'NEGOTIATING', qualificationPending: false });
+      expect(qualifiedTagCalls()).toHaveLength(0);
+    });
+
+    it('maps a qualify persistence failure the re-read cannot explain to INTERNAL_SERVER_ERROR', async () => {
+      existingLead('NEW');
+      prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'CONTACTED' } as never);
+      qualify().mockResolvedValueOnce({
+        isFailure: true,
+        error: { code: 'PERSISTENCE_ERROR', message: 'Failed to save lead' },
+      });
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await expect(caller.syncPipelineLead(input('QUALIFIED', 'RESPONDED'))).rejects.toMatchObject({
+        code: 'INTERNAL_SERVER_ERROR',
+      });
+      logged.mockRestore();
+      expect(qualifiedTagCalls()).toHaveLength(0);
+    });
+
+    it('a non-score validation refusal from qualify stays BAD_REQUEST', async () => {
+      existingLead('NEW');
+      prismaMock.lead.findFirst.mockResolvedValueOnce({ status: 'CONTACTED' } as never);
+      qualify().mockResolvedValueOnce({
+        isFailure: true,
+        error: { code: 'VALIDATION_ERROR', message: 'Lead with status LOST cannot be qualified' },
+      });
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await expect(caller.syncPipelineLead(input('QUALIFIED', 'RESPONDED'))).rejects.toMatchObject({
+        code: 'BAD_REQUEST',
+      });
+    });
+  });
+});

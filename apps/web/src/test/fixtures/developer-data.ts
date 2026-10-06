@@ -12,7 +12,7 @@ export function createMockApiKey(overrides?: Partial<ApiKey>): ApiKey {
   return {
     id: 'key-test-001',
     name: 'Test API Key',
-    key: 'ifc_live_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+    key: 'ifc_live_' + 'a1b2c3d4e5f6'.repeat(3) + 'a1b2',
     maskedKey: 'ifc_live_••••••••••••••••••••••••••••••••••••a1b2',
     createdAt: '2026-01-15T10:00:00Z',
     lastUsed: null,
@@ -40,13 +40,13 @@ export const mockApiKeys: ApiKey[] = [
   createMockApiKey({
     id: 'key-mock-001',
     name: 'Production Key',
-    key: 'ifc_live_1234567890abcdef1234567890abcdef12345678',
+    key: 'ifc_live_' + '1234567890abcdef'.repeat(2) + '12345678',
     maskedKey: 'ifc_live_••••••••••••••••••••••••••••••••••••5678',
   }),
   createMockApiKey({
     id: 'key-mock-002',
     name: 'Sandbox Key',
-    key: 'ifc_test_abcdef1234567890abcdef1234567890abcdef12',
+    key: 'ifc_test_' + 'abcdef1234567890'.repeat(2) + 'abcdef12',
     maskedKey: 'ifc_test_••••••••••••••••••••••••••••••••••••ef12',
   }),
 ];

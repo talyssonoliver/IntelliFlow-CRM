@@ -9,7 +9,8 @@ describe('root opengraph-image', () => {
   it('declares the expected Open Graph image metadata', () => {
     expect(size).toEqual({ width: 1200, height: 630 });
     expect(contentType).toBe('image/png');
-    expect(alt).toContain('IntelliFlow CRM');
+    expect(alt).toContain('Aurora');
+    expect(alt).not.toMatch(/IntelliFlow|—/);
   });
 
   it('renders a PNG image response at the declared size', async () => {

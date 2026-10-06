@@ -70,7 +70,7 @@ class TestLeadRepository implements LeadRepository {
     this.leads.delete(id.value);
   }
 
-  async existsByEmail(): Promise<boolean> {
+  async existsByEmailInTenant(): Promise<boolean> {
     return false;
   }
 

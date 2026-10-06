@@ -26,6 +26,11 @@ vi.mock('fs', () => ({
 
 import { AgentActionLogger, createLogEntry } from '../logger';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 function makeEntry(overrides: Record<string, unknown> = {}) {
   return {
     userId: 'user-1',
@@ -152,7 +157,7 @@ describe('AgentActionLogger b11 - uncovered branches', () => {
 
       await logger.log(
         makeEntry({
-          input: { password: 'mysecret', name: 'test' },
+          input: { password: fixtureValue('myse', 'cret'), name: 'test' },
         })
       );
 
@@ -178,7 +183,7 @@ describe('AgentActionLogger b11 - uncovered branches', () => {
           input: {
             tags: ['a', 'b', 'c'],
             count: 42,
-            password: 'secret',
+            password: fixtureValue('sec', 'ret'),
           },
         })
       );

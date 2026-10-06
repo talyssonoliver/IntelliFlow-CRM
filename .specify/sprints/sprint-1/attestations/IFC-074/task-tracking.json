@@ -11,7 +11,28 @@
     ],
     "missing": []
   },
-  "blockers": [],
+  "blockers": [
+    {
+      "description": "Reopen evidence: Railway production, read 2026-10-05 via the Railway API: every service (api, ai-worker, events-worker, ingestion-worker, notifications-worker) has `OTEL_ENABLED=false` and no `OTEL_EXPORTER_OTLP_ENDPOINT`; `ws` has no OTel vars. `infra/terraform/environments/production/terraform.tfvars` keeps OTel off until `otel_exporter_endpoint` is set, and it is not set. Production exports no traces, metrics or logs.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "Reopen evidence: `artifacts/reports/correlation-test.csv` trace IDs are not valid W3C IDs (e.g. `a1b2c3d4e5f6g7h8...`, `abc123def456ghi789...` contain non-hex characters). They were hand-written, not observed.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "Reopen evidence: `artifacts/reports/mttr-baseline.json` metadata says `measurement_method: Manual testing with simulated incidents`. KPI \"MTTD <2min\" cannot be measured with no production telemetry and no alert delivery.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: (1) Done when IFC-032 is done: production traces and logs correlate in the hosted backend, and an MTTD is measured from a real alert. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    }
+  ],
   "completed_at": "2025-12-27T11:33:39.037Z",
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.704Z"
@@ -51,6 +72,11 @@
     {
       "at": "2025-12-21T16:00:00Z",
       "status": "DONE"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T22:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
     }
   ],
   "task_id": "IFC-074",
@@ -63,5 +89,7 @@
       "passed": true,
       "timestamp": "2025-12-27T11:33:39.037Z"
     }
-  ]
+  ],
+  "percent_complete": 50,
+  "updated_at": "2026-10-05T22:30:00Z"
 }

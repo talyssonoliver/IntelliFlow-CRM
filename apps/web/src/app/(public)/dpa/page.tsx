@@ -6,23 +6,22 @@ import { DpaSignaturePanel } from '@/components/legal/dpa-signature-panel';
 import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
-  title: 'Data Processing Addendum | IntelliFlow CRM',
+  title: 'Data Processing Addendum',
   description:
-    'Review the IntelliFlow CRM Data Processing Addendum governing our GDPR Article 28 data processor relationship with enterprise customers.',
+    'Review the Aurora Data Processing Addendum governing our GDPR Article 28 data processor relationship with enterprise customers.',
   openGraph: {
     images: OG_IMAGES,
-    title: 'Data Processing Addendum | IntelliFlow CRM',
+    title: 'Data Processing Addendum',
     description:
-      'Read the IntelliFlow CRM DPA covering processing subject matter, sub-processors, security measures, and controller obligations under GDPR Article 28.',
+      'Read the Aurora DPA covering processing subject matter, sub-processors, security measures, and controller obligations under GDPR Article 28.',
     url: 'https://intelliflow-crm.com/dpa',
-    siteName: 'IntelliFlow CRM',
+    siteName: 'Aurora',
     type: 'website',
   },
   twitter: {
     card: 'summary',
-    title: 'Data Processing Addendum | IntelliFlow CRM',
-    description:
-      'IntelliFlow CRM DPA — GDPR Article 28 data processor agreement for enterprise customers.',
+    title: 'Data Processing Addendum',
+    description: 'Aurora DPA: GDPR Article 28 data processor agreement for enterprise customers.',
   },
   alternates: {
     canonical: '/dpa',
@@ -34,15 +33,15 @@ export default function DpaPage() {
   const formattedDate = formatDpaDate(dpa.metadata.effectiveDate);
 
   return (
-    <main id="main-content" className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
+    <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
       <section className="bg-gradient-to-b from-white to-[#edf4ff] dark:from-[#162231] dark:to-[#101922] py-16 lg:py-24">
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#137fec]/10 px-4 py-2 text-sm font-medium text-[#137fec]">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#2a78f6]/10 px-4 py-2 text-sm font-medium text-[#2a78f6]">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 assignment
               </span>{' '}
-              GDPR Article 28 — Data Processor Agreement
+              GDPR Article 28: Data Processor Agreement
             </div>
 
             <h1 className="mt-6 text-4xl font-bold text-slate-900 dark:text-white lg:text-5xl">
@@ -50,9 +49,9 @@ export default function DpaPage() {
             </h1>
 
             <p className="mt-6 text-lg text-slate-600 dark:text-slate-400">
-              This addendum governs the data processor relationship between IntelliFlow CRM and
-              enterprise customers, ensuring your organisation&apos;s personal data is handled in
-              accordance with GDPR Article 28 requirements.
+              This addendum governs the data processor relationship between Aurora and enterprise
+              customers, ensuring your organisation&apos;s personal data is handled in accordance
+              with GDPR Article 28 requirements.
             </p>
           </div>
         </div>
@@ -72,7 +71,7 @@ export default function DpaPage() {
                     className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300"
                   >
                     <span
-                      className="material-symbols-outlined mt-0.5 text-base text-[#137fec]"
+                      className="material-symbols-outlined mt-0.5 text-base text-[#2a78f6]"
                       aria-hidden="true"
                     >
                       check_circle
@@ -83,7 +82,7 @@ export default function DpaPage() {
               </ul>
             </Card>
 
-            <Card className="border-slate-200 bg-slate-900 p-6 text-white shadow-sm dark:border-slate-700 dark:bg-[#0f172a]">
+            <Card className="border-transparent bg-[#11175b] p-6 text-white shadow-sm">
               <h2 className="text-xl font-semibold">Current version</h2>
               <dl className="mt-4 space-y-4 text-sm">
                 <div>
@@ -99,7 +98,7 @@ export default function DpaPage() {
                   <dd className="mt-1">
                     <a
                       href={`mailto:${dpa.metadata.contactEmail}`}
-                      className="text-[#7cc4ff] hover:underline"
+                      className="text-[#bca8ff] hover:underline"
                     >
                       {dpa.metadata.contactEmail}
                     </a>
@@ -138,7 +137,7 @@ export default function DpaPage() {
                       <li key={section.id}>
                         <a
                           href={`#${section.id}`}
-                          className="text-slate-600 transition-colors hover:text-[#137fec] dark:text-slate-300 dark:hover:text-[#7cc4ff]"
+                          className="text-slate-600 transition-colors hover:text-[#2a78f6] dark:text-slate-300 dark:hover:text-[#bca8ff]"
                         >
                           {section.heading}
                         </a>
@@ -172,7 +171,7 @@ export default function DpaPage() {
                 </Card>
               ))}
 
-              <Card className="border-slate-200 bg-[#137fec]/5 p-6 shadow-sm dark:border-slate-800 dark:bg-[#137fec]/10">
+              <Card className="border-slate-200 bg-[#2a78f6]/5 p-6 shadow-sm dark:border-slate-800 dark:bg-[#2a78f6]/10">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Questions about this agreement?
                 </h2>
@@ -180,17 +179,17 @@ export default function DpaPage() {
                   Contact our legal team at{' '}
                   <a
                     href={`mailto:${dpa.metadata.contactEmail}`}
-                    className="font-medium text-[#137fec] hover:underline"
+                    className="font-medium text-[#2a78f6] hover:underline"
                   >
                     {dpa.metadata.contactEmail}
                   </a>{' '}
                   for enterprise DPA enquiries, countersigned copies, or audit requests. You may
                   also review our{' '}
-                  <Link href="/privacy" className="font-medium text-[#137fec] hover:underline">
+                  <Link href="/privacy" className="font-medium text-[#2a78f6] hover:underline">
                     Privacy Policy
                   </Link>{' '}
                   and{' '}
-                  <Link href="/security" className="font-medium text-[#137fec] hover:underline">
+                  <Link href="/security" className="font-medium text-[#2a78f6] hover:underline">
                     Security Overview
                   </Link>{' '}
                   for additional data governance information.
@@ -205,6 +204,6 @@ export default function DpaPage() {
         currentVersion={dpa.metadata.version}
         downloadPath="/legal/dpa-template.pdf"
       />
-    </main>
+    </div>
   );
 }

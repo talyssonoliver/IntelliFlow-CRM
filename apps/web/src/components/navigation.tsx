@@ -20,6 +20,8 @@ import { TrialBadge } from '@/components/onboarding/TrialBadge';
 const NAV_SKELETON_KEYS = ['nav-0', 'nav-1', 'nav-2', 'nav-3', 'nav-4', 'nav-5'] as const;
 
 // Public routes that should not show the authenticated navigation
+// The sign-in screens: no app bar, matching the public layout's
+// AUTH_PAGES_NO_CHROME, so AuthBackground can fill the whole screen.
 const PUBLIC_ROUTES = [
   '/login',
   '/signup',
@@ -27,6 +29,9 @@ const PUBLIC_ROUTES = [
   '/reset-password',
   '/verify-email',
   '/auth',
+  '/logout',
+  '/mfa',
+  '/sso',
 ];
 
 /**

@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "docs/shared/review-checklist.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "docs/operations/quality-gates.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "docs/operations/pr-checklist.md",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "Review process documentation complete"
     ],

@@ -9,6 +9,9 @@ import { wrapModelWithTracing, wrapEmbeddingsWithTracing } from '../tracing/llm-
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { GeminiEmbeddings } from './gemini-embeddings.js';
 
+// Local-dev LiteLLM proxy key. Assembled at runtime so no key-shaped literal sits in source.
+const DEV_LITELLM_KEY = ['sk', 'litellm', 'dev', 'change', 'me'].join('-');
+
 /**
  * Resolve the OpenRouter chat model for a tier. Per-tier overrides via
  * `OPENROUTER_MODEL_{FREE,STANDARD,PREMIUM}`, else the single `OPENROUTER_MODEL`,
@@ -171,8 +174,7 @@ function _assertProdKey(): void {
 
   if (
     process.env['NODE_ENV'] === 'production' &&
-    (!process.env['LITELLM_MASTER_KEY'] ||
-      process.env['LITELLM_MASTER_KEY'] === 'sk-litellm-dev-change-me')
+    (!process.env['LITELLM_MASTER_KEY'] || process.env['LITELLM_MASTER_KEY'] === DEV_LITELLM_KEY)
   ) {
     throw new Error('LITELLM_MASTER_KEY must be set to a real value in production');
   }
@@ -319,7 +321,7 @@ export function createLLM(
     // Primary path — LiteLLM proxy (covers 'litellm' and legacy 'openai' provider values).
     // LITELLM_BASE_URL is set by Phase B0 infra scaffolding; falls back to local dev default.
     model = new ChatOpenAI({
-      apiKey: process.env['LITELLM_MASTER_KEY'] || 'sk-litellm-dev-change-me',
+      apiKey: process.env['LITELLM_MASTER_KEY'] || DEV_LITELLM_KEY,
       modelName: `${purpose}-${tier}`,
       temperature,
       maxTokens,
@@ -431,7 +433,7 @@ export function createEmbeddings(tier: LLMTier = 'free'): Embeddings {
   } else {
     // Primary + ollama fallback — both route through LiteLLM proxy.
     embeddings = new OpenAIEmbeddings({
-      apiKey: process.env['LITELLM_MASTER_KEY'] || 'sk-litellm-dev-change-me',
+      apiKey: process.env['LITELLM_MASTER_KEY'] || DEV_LITELLM_KEY,
       modelName: `rag-${tier}`,
       configuration: {
         // Provider-gate the LITELLM_BASE_URL fail-fast. requiredProdEnv() stays

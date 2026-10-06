@@ -20,5 +20,26 @@
       "name": "completion-evidence",
       "passed": true
     }
-  ]
+  ],
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T23:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Reopen evidence: GATE:integration-wired / DoD \"AI metrics must be collected by actual code paths and pushed to dashboards\": `apps/ai-worker/src/metrics/prometheus-exporter.ts` exposes metrics, but nothing in production scrapes them, and `infra/monitoring/ai-grafana-dashboard.json` / `ai-prometheus-rules.yaml` are not loaded anywhere. \"Alerts configured\" fails for the same reason.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: (1) AI metrics reach the hosted backend from production (OTLP from ai-worker, IFC-032). The AI dashboard and alert rules are loaded there, and an alert is proven by a received test notification.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 50,
+  "updated_at": "2026-10-05T23:30:00Z"
 }
