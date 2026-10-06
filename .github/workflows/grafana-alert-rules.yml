@@ -6,8 +6,10 @@ name: Grafana Alert Rules
 # The dispatch input "send_test" also creates an always-firing test rule, to
 # prove alerts reach the owner's email. The next normal run deletes it.
 #
-# Needs the repo secret GRAFANA_SA_TOKEN (a Grafana service-account token with
-# the Editor role). Without it the job fails, saying so; it never prints the token.
+# Needs GRAFANA_SA_TOKEN (a Grafana service-account token with the Admin role:
+# alert-rule provisioning is Admin-only) as a secret of the Production
+# environment (the repository secret store is full). Without it the job fails,
+# saying so; it never prints the token.
 on:
   push:
     branches: [main]
@@ -37,6 +39,7 @@ jobs:
   apply:
     name: Apply alert rules to Grafana Cloud
     runs-on: ubuntu-latest
+    environment: Production
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
