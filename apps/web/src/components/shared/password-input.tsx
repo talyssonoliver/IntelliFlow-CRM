@@ -115,7 +115,7 @@ export function PasswordInput({
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           className={cn(
-            'w-full pl-11 pr-12 py-3 rounded-lg border bg-white/5 text-white placeholder:text-slate-400 backdrop-blur-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:border-transparent',
+            'w-full pl-11 pr-12 py-3 rounded-lg border bg-white/5 text-white placeholder:text-slate-400 backdrop-blur-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:border-transparent',
             error ? 'border-red-500/50' : 'border-white/10 hover:border-white/20'
           )}
           placeholder={placeholder}
@@ -126,7 +126,7 @@ export function PasswordInput({
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] rounded p-1"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] rounded p-1"
           aria-label={showPassword ? 'Hide password' : 'Show password'}
           disabled={disabled}
         >

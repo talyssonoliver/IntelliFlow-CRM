@@ -4,7 +4,7 @@
 **Date:** 2026-02-02  
 **Owners:** Growth Lead, Frontend Lead  
 **Related Tasks:** PG-001–PG-018, PG-019, PG-020, PG-021, PG-022, PG-023,
-PG-024, PG-124 **Decision Records:** ADR-020-public-site-auth.md,
+PG-024, PG-124 **Decision Records:** ADR-020 (public site auth),
 ADR-039-saml-sso-integration.md
 
 ## Summary

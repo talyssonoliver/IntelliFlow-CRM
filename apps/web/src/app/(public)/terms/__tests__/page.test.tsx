@@ -45,11 +45,10 @@ describe('TermsPage', () => {
     expect(emailLinks[0]).toHaveAttribute('href', 'mailto:legal@intelliflow-crm.com');
   });
 
-  it('renders a main landmark and section navigation links', () => {
+  it('renders inside the Aurora shell (no main of its own) with section navigation links', () => {
     render(<TermsPage />);
 
-    const main = screen.getByRole('main');
-    expect(main).toHaveAttribute('id', 'main-content');
+    expect(screen.queryByRole('main')).toBeNull();
 
     expect(screen.getByRole('link', { name: /acceptance of terms/i })).toHaveAttribute(
       'href',

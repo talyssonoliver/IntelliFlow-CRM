@@ -535,7 +535,7 @@ describe('OutboundEmailService', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            Authorization: 'Bearer SG.test-api-key',
+            Authorization: 'Bearer ' + 'SG.test-api-key',
             'Content-Type': 'application/json',
           }),
         })

@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "docs/sales/demo-script.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/demo-recordings.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/objection-handling.md",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "Demo toolkit created",
       "Objection handling guide complete"

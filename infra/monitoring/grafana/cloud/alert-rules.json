@@ -1,0 +1,80 @@
+{
+  "_comment": "Production alert rules for the Grafana Cloud stack (IFC-032). Applied by tools/scripts/grafana/apply-alert-rules.mjs through the Grafana provisioning API (workflow: grafana-alert-rules.yml). Metrics are the span metrics Grafana Cloud generates from our OTLP traces: traces_spanmetrics_calls_total{service, span_name, span_kind, status_code} and the traces_spanmetrics_latency histogram (seconds). Routed by the default notification policy to the owner's email contact point.",
+  "folder": { "uid": "intelliflow-prod", "title": "IntelliFlow production" },
+  "datasourceUid": "grafanacloud-prom",
+  "group": { "name": "intelliflow-prod", "intervalSeconds": 60 },
+  "rules": [
+    {
+      "uid": "ifc032-telemetry-silent",
+      "title": "Production telemetry stopped (ai-worker sends no spans)",
+      "replaces": "ifc032-otel-collector-down (there is no collector; the hosted gateway receives directly)",
+      "expr": "sum(rate(traces_spanmetrics_calls_total{service=\"ai-worker\"}[15m]))",
+      "selector": "traces_spanmetrics_calls_total{service=\"ai-worker\"}",
+      "operator": "lt",
+      "threshold": 0.001,
+      "for": "15m",
+      "noData": "Alerting",
+      "severity": "critical",
+      "summary": "ai-worker has sent no spans for 15 minutes. Either ai-worker is down (as it was from June to October 2026) or OTLP export broke."
+    },
+    {
+      "uid": "ifc032-lead-routing-failures",
+      "title": "Lead routing failures",
+      "expr": "sum(increase(traces_spanmetrics_calls_total{span_name=\"workflow.lead.route\", status_code=\"STATUS_CODE_ERROR\"}[5m]))",
+      "selector": "traces_spanmetrics_calls_total{span_name=\"workflow.lead.route\"}",
+      "operator": "gt",
+      "threshold": 5,
+      "for": "5m",
+      "noData": "OK",
+      "severity": "high",
+      "summary": "More than 5 lead-routing workflow spans ended in error in 5 minutes."
+    },
+    {
+      "uid": "ifc032-workflow-error-rate",
+      "title": "Workflow error rate above 1%",
+      "expr": "sum(rate(traces_spanmetrics_calls_total{span_name=~\"workflow\\\\..*\", status_code=\"STATUS_CODE_ERROR\"}[5m])) / clamp_min(sum(rate(traces_spanmetrics_calls_total{span_name=~\"workflow\\\\..*\"}[5m])), 1e-9)",
+      "selector": "traces_spanmetrics_calls_total{span_name=~\"workflow\\\\..*\"}",
+      "operator": "gt",
+      "threshold": 0.01,
+      "for": "5m",
+      "noData": "OK",
+      "severity": "high",
+      "summary": "More than 1% of workflow spans ended in error over 5 minutes."
+    },
+    {
+      "uid": "ifc032-workflow-p95-latency",
+      "title": "Lead routing p95 latency above 500 ms",
+      "expr": "histogram_quantile(0.95, sum by (le) (rate(traces_spanmetrics_latency_bucket{span_name=\"workflow.lead.route\"}[5m])))",
+      "selector": "traces_spanmetrics_latency_bucket{span_name=\"workflow.lead.route\"}",
+      "operator": "gt",
+      "threshold": 0.5,
+      "for": "5m",
+      "noData": "OK",
+      "severity": "medium",
+      "summary": "p95 duration of workflow.lead.route spans is above 500 ms."
+    },
+    {
+      "uid": "ifc032-api-error-rate",
+      "title": "API server error rate above 5%",
+      "expr": "sum(rate(traces_spanmetrics_calls_total{service=\"api\", span_kind=\"SPAN_KIND_SERVER\", status_code=\"STATUS_CODE_ERROR\"}[10m])) / clamp_min(sum(rate(traces_spanmetrics_calls_total{service=\"api\", span_kind=\"SPAN_KIND_SERVER\"}[10m])), 1e-9)",
+      "selector": "traces_spanmetrics_calls_total{service=\"api\", span_kind=\"SPAN_KIND_SERVER\"}",
+      "operator": "gt",
+      "threshold": 0.05,
+      "for": "10m",
+      "noData": "OK",
+      "severity": "high",
+      "summary": "More than 5% of api server spans ended in error over 10 minutes."
+    }
+  ],
+  "deliveryTest": {
+    "uid": "ifc032-delivery-test",
+    "title": "IFC-032 delivery test (expected; deleted on the next normal run)",
+    "expr": "vector(1)",
+    "operator": "gt",
+    "threshold": 0,
+    "for": "0s",
+    "noData": "OK",
+    "severity": "info",
+    "summary": "Test alert proving that production alerts reach the owner's email. Safe to ignore."
+  }
+}

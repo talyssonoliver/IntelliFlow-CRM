@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "artifacts/misc/security-scan-results.json",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/reports/compliance-report.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/logs/patch-log.csv",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "Security AI-audited",
       "Vulnerabilities AI-detected",

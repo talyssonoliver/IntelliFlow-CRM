@@ -1,0 +1,93 @@
+/*
+ * SiteNav overrides. Every rule is scoped under .aurora-page. Selectors combine
+ * the shared ".nav-menu" class with this section's own marker classes
+ * (".nav-sheet", ".nav-sheet-toggle", ".nav-sheet-icon", ".nav-sheet-links") so
+ * they carry more class weight than aurora-landing.css's plain rules and win
+ * regardless of CSS import order — see the design contract's "override shared
+ * rules here" instruction.
+ */
+@media (max-width: 960px) {
+  /* The page's single most-repeated conversion button (also the only .btn-sm
+     that is a real tappable CTA, not decorative in-mockup UI) stays in the
+     fixed nav row on phone (aurora-landing.css only hides `.nav-cta .link`,
+     the "Log in" text link, at this width — the "Get started" button next to
+     the hamburger is deliberate). The shared 38px .btn-sm height is 6px under
+     the design contract's own 44px phone touch-target floor; widen only this
+     one via the descendant compound below rather than touching the shared
+     rule, which every in-mockup "Approve/Reject/Escalate" button also uses
+     at its intentional, smaller in-app scale. */
+  .aurora-page .nav-cta .btn.btn-sm {
+    height: 44px;
+    padding: 0 16px;
+  }
+
+  /* The hamburger toggle itself: 48x48, clearing the 44px guideline with room to
+     spare (the shared rule is 40x48 — a11y audit m1). */
+  .aurora-page .nav-menu.nav-sheet .nav-sheet-toggle {
+    display: block;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 12px;
+  }
+  /* Safari does not lay out <summary> as a grid, so the icon fills the button
+     and centres its own glyph, with no text line-height under it. */
+  .aurora-page .nav-menu.nav-sheet .nav-sheet-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 26px;
+    line-height: 1;
+    transition: transform 0.2s ease;
+  }
+  .aurora-page .nav-menu.nav-sheet[open] .nav-sheet-icon {
+    transform: rotate(90deg);
+  }
+
+  /* A proper sheet: full-width, dropping from under the header, generous 52px row
+     targets (well over the 44px guideline) instead of the shared file's compact
+     200px dropdown with ~36-40px rows. */
+  .aurora-page .nav-menu.nav-sheet .nav-sheet-links {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    top: 84px;
+    min-width: 0;
+    padding: 10px;
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .aurora-page .nav-menu.nav-sheet .nav-sheet-links a {
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 0 16px;
+    font-size: 16px;
+  }
+  .aurora-page .nav-menu.nav-sheet .nav-sheet-links a:not(:last-child) {
+    border-bottom: 1px solid var(--line);
+  }
+  .aurora-page .nav-menu.nav-sheet .nav-sheet-links a:first-child {
+    border-radius: 12px 12px 0 0;
+  }
+  .aurora-page .nav-menu.nav-sheet .nav-sheet-links a:last-child {
+    border-radius: 0 0 12px 12px;
+    color: var(--blue);
+  }
+}
+
+/* Seven header links: tighter spacing on a narrow desktop so the row never wraps. */
+@media (min-width: 961px) and (max-width: 1240px) {
+  .aurora-page .nav-row {
+    gap: 24px;
+  }
+  .aurora-page .nav-links {
+    gap: 18px;
+    margin-left: 8px;
+  }
+}

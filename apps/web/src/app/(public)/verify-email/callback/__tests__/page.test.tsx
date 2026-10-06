@@ -79,9 +79,9 @@ describe('VerifyEmailCallbackPage (IFC-120 AC-004)', () => {
       expect(screen.getByTestId('auth-background')).toBeTruthy();
     });
 
-    it('renders AuthCard with INTELLIFLOW badge', () => {
+    it('renders AuthCard with the Aurora badge', () => {
       render(<VerifyEmailCallbackPage />);
-      expect(screen.getByTestId('auth-card-badge').textContent).toBe('INTELLIFLOW');
+      expect(screen.getByTestId('auth-card-badge').textContent).toBe('Aurora');
     });
 
     it('renders EmailVerification component', () => {

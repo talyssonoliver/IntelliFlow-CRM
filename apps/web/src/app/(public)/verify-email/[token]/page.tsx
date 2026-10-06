@@ -42,7 +42,7 @@ function LegacyVerifyContent() {
 
   return (
     <AuthBackground>
-      <AuthCard badge="INTELLIFLOW" badgeIcon="mark_email_read" title="Invalid Verification Link">
+      <AuthCard badge="Aurora" badgeIcon="mark_email_read" title="Invalid Verification Link">
         <div className="text-center space-y-4 py-4">
           <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
             <span className="material-symbols-outlined text-3xl text-amber-400" aria-hidden="true">
@@ -61,8 +61,8 @@ function LegacyVerifyContent() {
               disabled={resendMutation.isPending}
               className={cn(
                 'inline-flex items-center gap-2 px-6 py-3 rounded-lg',
-                'bg-[#137fec] text-white font-medium',
-                'hover:bg-[#137fec]/90 transition-colors',
+                'bg-[#2a78f6] text-white font-medium',
+                'hover:bg-[#2a78f6]/90 transition-colors',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >
@@ -83,7 +83,7 @@ function LegacyVerifyContent() {
 
           <Link
             href="/login"
-            className="inline-block text-sm text-[#137fec] hover:text-[#7cc4ff] transition-colors"
+            className="inline-block text-sm text-[#2a78f6] hover:text-[#bca8ff] transition-colors"
           >
             Back to sign in
           </Link>

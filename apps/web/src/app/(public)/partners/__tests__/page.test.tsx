@@ -24,7 +24,7 @@ vi.mock('next/link', () => ({
 describe('PartnersPage', () => {
   describe('Metadata', () => {
     it('should have correct SEO metadata', () => {
-      expect(metadata.title).toBe('Partner with IntelliFlow CRM | Technology & Business Partners');
+      expect(metadata.title).toBe('Partner with Aurora | Technology & Business Partners');
       expect(metadata.description).toContain('Join our partner ecosystem');
       expect(metadata.description).toContain('API access');
       expect(metadata.description).toContain('revenue share');
@@ -32,16 +32,16 @@ describe('PartnersPage', () => {
 
     it('should have Open Graph metadata', () => {
       expect(metadata.openGraph).toBeDefined();
-      expect(metadata.openGraph?.title).toBe('Partner with IntelliFlow CRM');
+      expect(metadata.openGraph?.title).toBe('Partner with Aurora');
       expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/partners');
-      expect(metadata.openGraph?.siteName).toBe('IntelliFlow CRM');
+      expect(metadata.openGraph?.siteName).toBe('Aurora');
       expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
     });
 
     it('should have Twitter metadata', () => {
       expect(metadata.twitter).toBeDefined();
       expect((metadata.twitter as Record<string, unknown>)?.card).toBe('summary_large_image');
-      expect(metadata.twitter?.title).toBe('Partner with IntelliFlow CRM');
+      expect(metadata.twitter?.title).toBe('Partner with Aurora');
     });
   });
 
@@ -50,7 +50,7 @@ describe('PartnersPage', () => {
       render(<PartnersPage />);
       const heading = screen.getByRole('heading', {
         level: 1,
-        name: /Build, Sell, Grow with IntelliFlow CRM/i,
+        name: /Build, Sell, Grow with Aurora/i,
       });
       expect(heading).toBeDefined();
     });
@@ -73,10 +73,9 @@ describe('PartnersPage', () => {
       expect(learnMoreLink.getAttribute('href')).toBe('#benefits');
     });
 
-    it('should have proper accessibility attributes in hero', () => {
+    it('renders inside the Aurora shell, with no main landmark of its own', () => {
       render(<PartnersPage />);
-      const main = screen.getByRole('main');
-      expect(main.id).toBe('main-content');
+      expect(screen.queryByRole('main')).toBeNull();
     });
   });
 
@@ -207,7 +206,7 @@ describe('PartnersPage', () => {
       render(<PartnersPage />);
       const heading = screen.getByRole('heading', {
         level: 2,
-        name: /Ready to Partner with IntelliFlow CRM?/i,
+        name: /Ready to Partner with Aurora?/i,
       });
       expect(heading).toBeDefined();
     });
@@ -292,10 +291,10 @@ describe('PartnersPage', () => {
   });
 
   describe('Brand Compliance', () => {
-    it('should use primary brand color for CTAs', () => {
+    it('should use Aurora Signal Blue for CTAs', () => {
       const { container } = render(<PartnersPage />);
-      // Check for #137fec color usage
-      const brandColorElements = container.querySelectorAll('[class*="137fec"]');
+      // Check for #2a78f6 colour usage
+      const brandColorElements = container.querySelectorAll('[class*="2a78f6"]');
       expect(brandColorElements.length).toBeGreaterThan(0);
     });
 

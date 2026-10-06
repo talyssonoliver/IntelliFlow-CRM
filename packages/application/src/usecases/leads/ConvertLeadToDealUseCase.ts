@@ -170,6 +170,7 @@ export class ConvertLeadToDealUseCase {
     const opportunity = opportunityResult.value;
 
     // 8. Convert lead (updates status and creates event)
+    const expectedStatus = lead.status;
     const convertResult = lead.convert(contactId, accountId, input.convertedBy);
     if (convertResult.isFailure) {
       return Result.fail(convertResult.error);
@@ -192,7 +193,7 @@ export class ConvertLeadToDealUseCase {
           await this.contactRepository.save(contact, tx);
         }
         await this.opportunityRepository.save(opportunity, tx);
-        await this.leadRepository.save(lead, undefined, tx);
+        await this.leadRepository.save(lead, { expectedStatus }, tx);
 
         const events = aggregates.flatMap((aggregate) => aggregate.getDomainEvents());
         if (events.length > 0) {

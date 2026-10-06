@@ -56,11 +56,11 @@ export function ApplyButton({
   };
 
   const variantClasses = {
-    primary: 'bg-[#137fec] text-white hover:bg-[#0e6ac7] focus:ring-[#7cc4ff]',
+    primary: 'bg-[#2a78f6] text-white hover:bg-[#1f63d4] focus:ring-[#bca8ff]',
     secondary:
       'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 focus:ring-slate-400',
     outline:
-      'bg-transparent border-2 border-[#137fec] text-[#137fec] hover:bg-[#137fec]/10 focus:ring-[#137fec]',
+      'bg-transparent border-2 border-[#2a78f6] text-[#2a78f6] hover:bg-[#2a78f6]/10 focus:ring-[#2a78f6]',
   };
 
   return (
@@ -153,7 +153,7 @@ export function SaveJobButton({ jobId, jobTitle, className }: Readonly<SaveJobBu
         'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
         'border border-slate-200 dark:border-slate-700',
         isSaved
-          ? 'bg-[#137fec]/10 text-[#137fec] border-[#137fec]'
+          ? 'bg-[#2a78f6]/10 text-[#2a78f6] border-[#2a78f6]'
           : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800',
         className
       )}
@@ -185,9 +185,9 @@ export function ShareJobButton({ jobId, jobTitle, className }: Readonly<ShareJob
       ? `/careers/${jobId}`
       : `${globalThis.location.origin}/careers/${jobId}`;
 
-  const linkedInTitle = `${jobTitle} at IntelliFlow`;
-  const twitterText = `Check out this opportunity: ${jobTitle} at IntelliFlow`;
-  const emailSubject = `Job Opportunity: ${jobTitle} at IntelliFlow`;
+  const linkedInTitle = `${jobTitle} at Aurora`;
+  const twitterText = `Check out this opportunity: ${jobTitle} at Aurora`;
+  const emailSubject = `Job Opportunity: ${jobTitle} at Aurora`;
   const emailBody = `I thought you might be interested in this role:
 
 ${jobTitle}

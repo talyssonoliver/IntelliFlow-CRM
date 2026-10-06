@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Readonly<LandingPageProps>): 
 
   if (!pageConfig) {
     return {
-      title: 'Page Not Found | IntelliFlow CRM',
+      title: 'Page not found',
     };
   }
 
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: Readonly<LandingPageProps>): 
       title: pageConfig.title,
       description: pageConfig.description,
       url: `https://intelliflow-crm.com/lp/${slug}`,
-      siteName: 'IntelliFlow CRM',
+      siteName: 'Aurora',
       type: 'website',
     },
     twitter: {
