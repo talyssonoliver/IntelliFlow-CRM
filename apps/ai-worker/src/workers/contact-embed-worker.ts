@@ -12,6 +12,7 @@
  */
 
 import { Job, Worker, Queue, QueueEvents } from 'bullmq';
+import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
 
@@ -86,6 +87,7 @@ export class ContactEmbedWorker {
       {
         connection: this.redisConnection,
         concurrency: 5,
+        drainDelay: getDrainDelaySeconds(),
       }
     );
 

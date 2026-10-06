@@ -43,6 +43,8 @@ export {
   type RedisConnectionConfig,
   type ConnectionHealthResult,
   type ConnectionOptions,
+  DEFAULT_DRAIN_DELAY_SECONDS,
+  getDrainDelaySeconds,
 } from './connection';
 
 // Retry strategy
