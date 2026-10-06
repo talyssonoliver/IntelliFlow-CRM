@@ -6,7 +6,7 @@
  */
 
 import { Queue, Worker, QueueEvents, Job, ConnectionOptions } from 'bullmq';
-import { getBullMQConnectionOptions } from './connection';
+import { getBullMQConnectionOptions, getDrainDelaySeconds } from './connection';
 import { QueueConfig, QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } from './types';
 import { createBackoffStrategy, globalRetryBudget, BACKOFF_PRESETS } from './retry-strategy';
 import { JobMetricsCollector } from './metrics-collector';
@@ -63,6 +63,7 @@ class QueueRegistry {
     const worker = new Worker<T, R>(queueName, processor, {
       connection: connection || getBullMQConnectionOptions(),
       concurrency: config.concurrency,
+      drainDelay: getDrainDelaySeconds(),
       limiter: config.rateLimiter
         ? {
             max: config.rateLimiter.max,

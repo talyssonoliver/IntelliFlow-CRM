@@ -14,6 +14,7 @@
  */
 
 import { Job, Worker, Queue, QueueEvents } from 'bullmq';
+import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
 
@@ -105,7 +106,7 @@ export class CaseDeadlineMonitorWorker {
     this.worker = new Worker<CaseDeadlineMonitorJobData, CaseDeadlineMonitorJobResult>(
       CASE_DEADLINE_MONITOR_QUEUE_NAME,
       async (job) => this.process(job),
-      { connection: this.redisConnection, concurrency: 1 }
+      { connection: this.redisConnection, concurrency: 1, drainDelay: getDrainDelaySeconds() }
     );
     this.worker.on('failed', (job, error) =>
       console.warn(`[case-deadline-monitor] job ${job?.id} failed:`, error?.message)
