@@ -420,7 +420,7 @@ export function RegistrationForm({
           aria-describedby={errors.fullName ? `${formId}-fullName-error` : undefined}
           className={cn(
             'w-full px-4 py-3 rounded-lg border bg-slate-800/50 text-white placeholder-slate-400',
-            'focus:outline-none focus:ring-2 focus:ring-[#137fec]/50 focus:border-primary',
+            'focus:outline-none focus:ring-2 focus:ring-[#2a78f6]/50 focus:border-primary',
             'transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
             errors.fullName
               ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/50'
@@ -463,7 +463,7 @@ export function RegistrationForm({
           aria-describedby={errors.email ? `${formId}-email-error` : undefined}
           className={cn(
             'w-full px-4 py-3 rounded-lg border bg-slate-800/50 text-white placeholder-slate-400',
-            'focus:outline-none focus:ring-2 focus:ring-[#137fec]/50 focus:border-primary',
+            'focus:outline-none focus:ring-2 focus:ring-[#2a78f6]/50 focus:border-primary',
             'transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
             errors.email
               ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/50'
@@ -563,7 +563,7 @@ export function RegistrationForm({
           aria-describedby={errors.acceptTerms ? `${formId}-acceptTerms-error` : undefined}
           className={cn(
             'mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-800/50',
-            'text-primary focus:ring-[#137fec]/50 focus:ring-offset-0',
+            'text-primary focus:ring-[#2a78f6]/50 focus:ring-offset-0',
             'disabled:opacity-50 disabled:cursor-not-allowed'
           )}
         />
@@ -609,8 +609,8 @@ export function RegistrationForm({
         disabled={isLoading}
         className={cn(
           'w-full py-3 px-4 rounded-lg font-semibold text-white',
-          'bg-[#137fec] hover:bg-[#137fec]/90',
-          'focus:outline-none focus:ring-2 focus:ring-[#137fec]/50 focus:ring-offset-2 focus:ring-offset-slate-900',
+          'bg-[#2a78f6] hover:bg-[#2a78f6]/90',
+          'focus:outline-none focus:ring-2 focus:ring-[#2a78f6]/50 focus:ring-offset-2 focus:ring-offset-slate-900',
           'transition-all disabled:opacity-50 disabled:cursor-not-allowed',
           'flex items-center justify-center gap-2'
         )}

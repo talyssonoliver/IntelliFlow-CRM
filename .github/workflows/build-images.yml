@@ -1,21 +1,23 @@
 name: Build & Push Images
 
-# Builds the API and AI-worker Docker images and publishes them to GitHub
-# Container Registry (GHCR). These images are what infra/terraform deploys
-# to Railway, so they must exist before `terraform apply`.
+# Builds the service images and publishes each under ONE immutable tag in
+# GitHub Container Registry (GHCR):
 #
-# Published images:
-#   ghcr.io/<owner>/intelliflow-crm-api:latest
-#   ghcr.io/<owner>/intelliflow-crm-ai-worker:latest
+#   ghcr.io/<owner>/intelliflow-crm-<service>:sha-<full 40-char commit SHA>
 #
-# Trigger manually from the Actions tab (workflow_dispatch), on a version
-# tag, or on push to main.
+# This is CI, not deployment. It never touches `:latest`, which Railway
+# production tracks (image auto-updates). Only "Promote to Production"
+# (promote-production.yml) moves `:latest`, after checking the commit's gates,
+# and only to an image built here: build once, promote that same digest.
+# Runbook: docs/operations/production-promotion.md.
+#
+# No `v*` tag trigger: release.yml pushes a v* tag on most merges, so a tag
+# trigger would bring back an automatic publish on every merge.
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    tags: ['v*']
 
 permissions:
   contents: read
@@ -58,8 +60,9 @@ jobs:
       # Retried buildx (was docker/build-push-action). The base-image pull from
       # Docker Hub intermittently times out ("context deadline exceeded") on one
       # matrix service, reddening main; a re-attempt clears it. The GHA layer
-      # cache makes retries cheap. Tags: latest + sha-<short> (+ the git tag on
-      # v* tag pushes), matching the previous metadata-action output.
+      # cache makes retries cheap. One tag only: sha-<full SHA>. Never :latest
+      # (see the header). The digest goes to the job summary so promotion and
+      # rollback can name the exact artifact.
       - name: Build and push (retry transient registry timeouts)
         shell: bash
         env:
@@ -67,11 +70,8 @@ jobs:
           DOCKERFILE: ${{ matrix.dockerfile }}
         run: |
           set -euo pipefail
-          short_sha="${GITHUB_SHA::7}"
-          tags=(--tag "$IMAGE:latest" --tag "$IMAGE:sha-$short_sha")
-          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
-            tags+=(--tag "$IMAGE:${GITHUB_REF#refs/tags/}")
-          fi
+          ref="$IMAGE:sha-$GITHUB_SHA"
+          tags=(--tag "$ref")
           for attempt in 1 2 3; do
             echo "::group::build $IMAGE (attempt $attempt)"
             if docker buildx build --push \
@@ -82,6 +82,9 @@ jobs:
                  .; then
               echo "::endgroup::"
               echo "build succeeded on attempt $attempt"
+              digest="$(docker buildx imagetools inspect "$ref" --format '{{json .Manifest}}' | jq -r .digest)"
+              echo "published $ref = $digest"
+              echo "| ${{ matrix.service }} | \`$ref\` | \`$digest\` |" >> "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             echo "::endgroup::"

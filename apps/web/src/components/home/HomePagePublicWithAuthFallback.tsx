@@ -1,8 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import type * as React from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { PublicHomePage } from './PublicHomePage';
 
 // Load the authenticated home (PinnedItemsSheet, ActivityFeed, @tanstack/react-virtual,
 // InsightCard…) ONLY on the client when the login-race fallback actually fires.
@@ -17,7 +17,7 @@ const AuthenticatedHomePage = dynamic(
 /**
  * Client wrapper used when the server-side cookie check returned `null`
  * (no token). This is the normal case for real visitors — they see the
- * public marketing page.
+ * public marketing page, rendered on the server and passed in as `children`.
  *
  * However, a login race can cause the server to return `null` even though
  * the client is actually authenticated (the cookie write hasn't propagated
@@ -25,12 +25,12 @@ const AuthenticatedHomePage = dynamic(
  * once client auth resolves, preventing the "public page shown to logged-in
  * user" flash.
  */
-export function HomePagePublicWithAuthFallback() {
+export function HomePagePublicWithAuthFallback({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (!isLoading && isAuthenticated) {
     return <AuthenticatedHomePage />;
   }
 
-  return <PublicHomePage />;
+  return <>{children}</>;
 }

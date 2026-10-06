@@ -43,8 +43,8 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
           Application Received
         </h3>
         <p className="text-slate-600 dark:text-slate-300">
-          Thank you for your interest in IntelliFlow. We&apos;ll review your application and get
-          back to you within 5 business days.
+          Thank you for your interest in Aurora. We&apos;ll review your application and get back to
+          you within 5 business days.
         </p>
       </Card>
     );
@@ -66,7 +66,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
               name="firstName"
               type="text"
               required
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
               placeholder="Jane"
             />
           </div>
@@ -82,7 +82,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
               name="lastName"
               type="text"
               required
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
               placeholder="Doe"
             />
           </div>
@@ -100,7 +100,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
             name="email"
             type="email"
             required
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
             placeholder="jane.doe@example.com"
           />
         </div>
@@ -116,7 +116,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
             id="phone"
             name="phone"
             type="tel"
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
             placeholder="+1 (555) 000-0000"
           />
         </div>
@@ -132,7 +132,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
             id="position"
             name="position"
             required
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
           >
             <option value="">Select a position</option>
             {positions.map((position) => (
@@ -155,7 +155,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
             id="linkedin"
             name="linkedin"
             type="url"
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
             placeholder="https://linkedin.com/in/janedoe"
           />
         </div>
@@ -171,7 +171,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
             id="portfolio"
             name="portfolio"
             type="url"
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
             placeholder="https://github.com/janedoe"
           />
         </div>
@@ -190,7 +190,7 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
               type="file"
               required
               accept=".pdf,.doc,.docx"
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#137fec]/10 file:text-[#137fec] file:font-medium hover:file:bg-[#137fec]/20 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#2a78f6]/10 file:text-[#2a78f6] file:font-medium hover:file:bg-[#2a78f6]/20 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
             />
           </div>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -203,13 +203,13 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
             htmlFor="coverLetter"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
           >
-            Why IntelliFlow?
+            Why Aurora?
           </label>
           <textarea
             id="coverLetter"
             name="coverLetter"
             rows={4}
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent resize-none"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent resize-none"
             placeholder="Tell us why you're excited about this role and what you'd bring to the team..."
           />
         </div>
@@ -220,21 +220,21 @@ export function ApplicationForm({ positions }: Readonly<ApplicationFormProps>) {
             name="privacy"
             type="checkbox"
             required
-            className="mt-1 w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-[#137fec] focus:ring-[#137fec]"
+            className="mt-1 w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-[#2a78f6] focus:ring-[#2a78f6]"
           />
           <label htmlFor="privacy" className="text-sm text-slate-600 dark:text-slate-300">
             I agree to the{' '}
-            <Link href="/privacy" className="text-[#137fec] hover:underline">
+            <Link href="/privacy" className="text-[#2a78f6] hover:underline">
               Privacy Policy
             </Link>{' '}
-            and consent to IntelliFlow processing my data for recruitment purposes.
+            and consent to Aurora processing my data for recruitment purposes.
           </label>
         </div>
 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#2a78f6] text-white font-semibold hover:bg-[#1f63d4] transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
             <>

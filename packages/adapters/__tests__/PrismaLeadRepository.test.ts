@@ -9,11 +9,12 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PrismaLeadRepository } from '../src/repositories/PrismaLeadRepository';
-import { Lead, LeadId, Email } from '@intelliflow/domain';
+import { Lead, LeadId, Email, LeadStatusConflictError } from '@intelliflow/domain';
 import type { PrismaClient } from '@intelliflow/db';
 
 type LeadPrismaDelegateDouble = {
   upsert: ReturnType<typeof vi.fn>;
+  updateMany: ReturnType<typeof vi.fn>;
   findUnique: ReturnType<typeof vi.fn>;
   findFirst: ReturnType<typeof vi.fn>;
   findMany: ReturnType<typeof vi.fn>;
@@ -30,6 +31,7 @@ interface LeadPrismaClientDouble {
 const createMockPrismaClient = (): LeadPrismaClientDouble => {
   const lead: LeadPrismaDelegateDouble = {
     upsert: vi.fn(),
+    updateMany: vi.fn(),
     findUnique: vi.fn(),
     findFirst: vi.fn(),
     findMany: vi.fn(),
@@ -89,6 +91,69 @@ describe('PrismaLeadRepository', () => {
   });
 
   describe('save()', () => {
+    it('compare-and-sets the status when expectedStatus is given (no upsert)', async () => {
+      mockPrisma.lead.updateMany.mockResolvedValue({ count: 1 });
+
+      await repository.save(testLead, { expectedStatus: 'NEW' });
+
+      expect(mockPrisma.lead.updateMany).toHaveBeenCalledWith({
+        where: { id: testLead.id.value, tenantId: 'tenant-123', status: 'NEW' },
+        data: { status: testLead.status, updatedAt: testLead.updatedAt },
+      });
+      expect(mockPrisma.lead.upsert).not.toHaveBeenCalled();
+    });
+
+    it('a concurrent non-status change survives a compare-and-set status write', async () => {
+      // Stateful stand-in for the leads table: updateMany applies `data` to the
+      // row only when the where clause (id, tenantId, status) still matches.
+      const row: Record<string, unknown> = {
+        id: testLead.id.value,
+        tenantId: 'tenant-123',
+        status: 'NEW',
+        tags: ['portal-discover'],
+        firstName: 'Original',
+      };
+      mockPrisma.lead.updateMany.mockImplementation(
+        async ({ where, data }: { where: Record<string, unknown>; data: object }) => {
+          const matches = Object.entries(where).every(([k, v]) => row[k] === v);
+          if (matches) Object.assign(row, data);
+          return { count: matches ? 1 : 0 };
+        }
+      );
+
+      // The caller's snapshot (stale tags/firstName) is what testLead holds.
+      // Another writer then changes non-status columns before our save lands.
+      row.tags = ['portal-discover', 'coa-pipeline'];
+      row.firstName = 'Changed';
+
+      testLead.changeStatus('CONTACTED', 'user-1');
+      await repository.save(testLead, { expectedStatus: 'NEW' });
+
+      expect(row.status).toBe('CONTACTED');
+      expect(row.tags).toEqual(['portal-discover', 'coa-pipeline']);
+      expect(row.firstName).toBe('Changed');
+    });
+
+    it('throws LeadStatusConflictError when the persisted status moved (count 0)', async () => {
+      mockPrisma.lead.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(repository.save(testLead, { expectedStatus: 'NEW' })).rejects.toBeInstanceOf(
+        LeadStatusConflictError
+      );
+      expect(mockPrisma.lead.upsert).not.toHaveBeenCalled();
+    });
+
+    it('the plain upsert update never rewrites status but create still sets it', async () => {
+      mockPrisma.lead.upsert.mockResolvedValue({});
+
+      await repository.save(testLead);
+
+      const arg = mockPrisma.lead.upsert.mock.calls[0][0];
+      expect(arg.create.status).toBe(testLead.status);
+      expect(arg.update).not.toHaveProperty('status');
+      expect(arg.update.score).toBe(testLead.score.value);
+    });
+
     it('should call prisma.lead.upsert with correct data', async () => {
       const upsertMock = mockPrisma.lead.upsert;
       upsertMock.mockResolvedValue({});
@@ -680,16 +745,16 @@ describe('PrismaLeadRepository', () => {
     });
   });
 
-  describe('existsByEmail()', () => {
+  describe('existsByEmailInTenant()', () => {
     it('should return true when email exists', async () => {
       const countMock = mockPrisma.lead.count;
       countMock.mockResolvedValue(1);
 
       const emailResult = Email.create('test@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, 'tenant-1');
 
       expect(countMock).toHaveBeenCalledWith({
-        where: { email: 'test@example.com' },
+        where: { email: 'test@example.com', tenantId: 'tenant-1' },
       });
 
       expect(exists).toBe(true);
@@ -700,7 +765,7 @@ describe('PrismaLeadRepository', () => {
       countMock.mockResolvedValue(0);
 
       const emailResult = Email.create('nonexistent@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, 'tenant-1');
 
       expect(exists).toBe(false);
     });
@@ -710,7 +775,7 @@ describe('PrismaLeadRepository', () => {
       countMock.mockResolvedValue(2);
 
       const emailResult = Email.create('duplicate@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, 'tenant-1');
 
       expect(exists).toBe(true);
     });

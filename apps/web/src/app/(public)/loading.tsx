@@ -6,10 +6,10 @@ const LOADING_TESTIMONIALS = ['test-0', 'test-1', 'test-2'] as const;
 
 export default function PublicHomeLoading() {
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-50 animate-pulse">
+    <div className="min-h-screen bg-[#11175b] text-slate-50 animate-pulse">
       <section className="relative overflow-hidden py-16 lg:py-24">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37]" />
-        <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-[#137fec]/30 blur-3xl opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#11175b] via-[#11175b] to-[#11175b]" />
+        <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-[#2a78f6]/30 blur-3xl opacity-60" />
         <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-indigo-500/30 blur-3xl opacity-50" />
 
         <div className="relative container px-4 lg:px-6 mx-auto max-w-6xl">
@@ -20,7 +20,7 @@ export default function PublicHomeLoading() {
               <div className="h-12 bg-white/10 rounded-lg w-5/6" />
               <div className="h-6 bg-white/10 rounded w-2/3" />
               <div className="flex flex-col sm:flex-row gap-3">
-                <div className="h-12 w-40 bg-[#137fec]/40 rounded-lg" />
+                <div className="h-12 w-40 bg-[#2a78f6]/40 rounded-lg" />
                 <div className="h-12 w-36 border border-white/20 rounded-lg" />
               </div>
               <div className="flex flex-wrap gap-3">
@@ -120,7 +120,7 @@ export default function PublicHomeLoading() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-24 bg-gradient-to-r from-[#137fec] to-[#0e6ac7] text-white">
+      <section className="py-16 lg:py-24 bg-gradient-to-r from-[#2a78f6] to-[#1f63d4] text-white">
         <div className="container px-4 lg:px-6 mx-auto max-w-5xl space-y-4">
           <div className="h-10 w-3/4 bg-white/40 rounded" />
           <div className="h-4 w-2/3 bg-white/30 rounded" />

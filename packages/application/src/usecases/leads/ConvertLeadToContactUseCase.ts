@@ -25,6 +25,7 @@ import {
 } from '@intelliflow/domain';
 import { LeadRepository, ContactRepository, AccountRepository } from '../../ports/repositories';
 import { EventBusPort } from '../../ports/external';
+import { TransactionPort } from '../../ports/TransactionPort';
 import { ValidationError, NotFoundError, PersistenceError } from '../../errors';
 import { ConversionSnapshot } from './ConversionSnapshot';
 
@@ -98,8 +99,9 @@ export interface ConvertLeadToContactOutput {
  * 4. Creates contact from lead data (preserving all fields)
  * 5. Creates ConversionSnapshot for audit
  * 6. Marks lead as CONVERTED
- * 7. Persists all changes with audit record
- * 8. Publishes domain events for audit trail
+ * 7. Persists lead (compare-and-set), contact, audit record and any new
+ *    account plus their domain events in ONE transaction
+ * 8. Clears domain events once the transaction has committed
  */
 export class ConvertLeadToContactUseCase {
   constructor(
@@ -107,7 +109,8 @@ export class ConvertLeadToContactUseCase {
     private readonly contactRepository: ContactRepository,
     private readonly accountRepository: AccountRepository,
     private readonly conversionAuditRepository: LeadConversionAuditRepository,
-    private readonly eventBus: EventBusPort
+    private readonly eventBus: EventBusPort,
+    private readonly transactionManager: TransactionPort
   ) {}
 
   async execute(
@@ -161,15 +164,18 @@ export class ConvertLeadToContactUseCase {
     }
 
     // 9. Handle account creation/linking
+    // (a new Account is only built here; it is saved inside the transaction below)
     let accountId: string | null = null;
+    let newAccount: Account | null = null;
     if (input.accountId) {
       accountId = input.accountId;
     } else if (input.accountName) {
-      const accountResult = await this.handleAccount(input.accountName, lead);
+      const accountResult = await this.prepareAccount(input.accountName, lead);
       if (accountResult.isFailure) {
         return Result.fail(accountResult.error);
       }
-      accountId = accountResult.value;
+      accountId = accountResult.value.accountId;
+      newAccount = accountResult.value.newAccount;
     }
 
     // 10. Create contact from lead data
@@ -180,6 +186,7 @@ export class ConvertLeadToContactUseCase {
     const contact = contactResult.value;
 
     // 11. Convert lead (updates status and creates event)
+    const expectedStatus = lead.status;
     const convertResult = lead.convert(contact.id.value, accountId, input.convertedBy);
     if (convertResult.isFailure) {
       return Result.fail(convertResult.error);
@@ -196,19 +203,38 @@ export class ConvertLeadToContactUseCase {
       idempotencyKey,
     });
 
-    // 13. Persist all changes
+    // 13. Persist everything atomically. Lead (compare-and-set), Contact, audit
+    // row, any new Account and the event outbox share ONE transaction: a failure
+    // anywhere (including a CAS conflict, which throws LeadStatusConflictError)
+    // rolls the whole conversion back, so the lead is never left CONVERTED
+    // without its Contact and audit row.
+    const aggregates = [newAccount, lead, contact].filter(
+      (a): a is NonNullable<typeof a> => a !== null
+    );
     try {
-      await this.contactRepository.save(contact);
-      await this.leadRepository.save(lead);
-      await this.conversionAuditRepository.save(audit);
+      await this.transactionManager.run(async (tx) => {
+        if (newAccount) {
+          await this.accountRepository.save(newAccount, tx);
+        }
+        await this.leadRepository.save(lead, { expectedStatus }, tx);
+        await this.contactRepository.save(contact, tx);
+        await this.conversionAuditRepository.save(audit, tx);
+
+        const events = aggregates.flatMap((aggregate) => aggregate.getDomainEvents());
+        if (events.length > 0) {
+          await this.eventBus.publishAll(events, tx);
+        }
+      });
     } catch (error) {
       return Result.fail(
         new PersistenceError('Failed to save conversion: ' + (error as Error).message)
       );
     }
 
-    // 14. Publish domain events (audit trail)
-    await this.publishEvents(lead, contact);
+    // 14. Clear domain events now the transaction has committed
+    for (const aggregate of aggregates) {
+      aggregate.clearDomainEvents();
+    }
 
     // 15. Return output
     return Result.ok({
@@ -240,51 +266,27 @@ export class ConvertLeadToContactUseCase {
   }
 
   /**
-   * Handle account creation or linking
+   * Resolve an existing account by name or build a new one (NO write yet; the
+   * caller saves `newAccount` inside the conversion transaction).
    */
-  private async handleAccount(
+  private async prepareAccount(
     accountName: string,
     lead: Lead
-  ): Promise<Result<string, DomainError>> {
-    // Check if account already exists
+  ): Promise<Result<{ accountId: string; newAccount: Account | null }, DomainError>> {
     const existingAccounts = await this.accountRepository.findByName(accountName, lead.tenantId);
     if (existingAccounts.length > 0) {
-      return Result.ok(existingAccounts[0].id.value);
+      return Result.ok({ accountId: existingAccounts[0].id.value, newAccount: null });
     }
 
-    // Create new account
     const accountResult = Account.create({
       name: accountName,
       ownerId: lead.ownerId,
       tenantId: lead.tenantId,
     });
-
     if (accountResult.isFailure) {
       return Result.fail(accountResult.error);
     }
-
-    const account = accountResult.value;
-
-    try {
-      await this.accountRepository.save(account);
-    } catch (error) {
-      return Result.fail(
-        new PersistenceError('Failed to create account: ' + (error as Error).message)
-      );
-    }
-
-    // Publish account events
-    const accountEvents = account.getDomainEvents();
-    if (accountEvents.length > 0) {
-      try {
-        await this.eventBus.publishAll(accountEvents);
-      } catch {
-        // Log but don't fail - event publishing is best-effort
-      }
-      account.clearDomainEvents();
-    }
-
-    return Result.ok(account.id.value);
+    return Result.ok({ accountId: accountResult.value.id.value, newAccount: accountResult.value });
   }
 
   /**
@@ -306,27 +308,5 @@ export class ConvertLeadToContactUseCase {
       ownerId: lead.ownerId,
       tenantId: lead.tenantId,
     });
-  }
-
-  /**
-   * Publish domain events for audit trail
-   */
-  private async publishEvents(lead: Lead, contact: Contact): Promise<void> {
-    const leadEvents = lead.getDomainEvents();
-    const contactEvents = contact.getDomainEvents();
-
-    const allEvents = [...leadEvents, ...contactEvents];
-
-    if (allEvents.length > 0) {
-      try {
-        await this.eventBus.publishAll(allEvents);
-      } catch (error) {
-        // Log but don't fail - event publishing is best-effort
-        console.error('Failed to publish domain events:', error);
-      }
-    }
-
-    lead.clearDomainEvents();
-    contact.clearDomainEvents();
   }
 }

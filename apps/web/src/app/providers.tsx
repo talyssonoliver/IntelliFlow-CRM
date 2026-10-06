@@ -9,6 +9,8 @@ import { TimezoneProvider } from '@/providers/TimezoneProvider';
 import { RemindersProvider } from '@/lib/cases/reminders-context';
 import { AUTH_TOKEN_CHANGED_EVENT, clearTokenCookie } from '@/lib/shared/session-cleanup';
 import { requiredProdEnv } from '@/lib/required-url';
+import { isAuthError, MUTATION_RETRY, shouldRetryQuery } from '@/lib/query-retry';
+import { noRealtimeLink } from '@/lib/no-realtime-link';
 import {
   ACTIVE_TENANT_HEADER,
   activeTenantHeaders,
@@ -21,21 +23,6 @@ import {
 // - WebSocket support for real-time subscriptions
 // - Custom auth error handling with automatic redirect
 // - Token validation before including in headers
-
-/**
- * Check if an error is an authentication error (401 UNAUTHORIZED)
- */
-function isAuthError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
-
-  // Check tRPC error shape
-  const err = error as { data?: { code?: string }; message?: string };
-  if (err.data?.code === 'UNAUTHORIZED') return true;
-
-  // Check error message
-  const message = err.message?.toLowerCase() ?? '';
-  return message.includes('unauthorized') || message.includes('authentication required');
-}
 
 /**
  * Decode JWT token and check if it's expired
@@ -258,17 +245,11 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
             staleTime: 5 * 60 * 1000,
             gcTime: 10 * 60 * 1000, // React Query v5 uses gcTime (v4 used cacheTime)
             // Don't retry on auth errors - they won't succeed without re-authentication
-            retry: (failureCount, error) => {
-              if (isAuthError(error)) return false;
-              return failureCount < 3;
-            },
+            retry: shouldRetryQuery,
           },
           mutations: {
-            // Don't retry mutations on auth errors
-            retry: (failureCount, error) => {
-              if (isAuthError(error)) return false;
-              return failureCount < 3;
-            },
+            // Never auto-retried (not idempotent) — see lib/query-retry.ts
+            retry: MUTATION_RETRY,
           },
         },
         // Global query cache error handler
@@ -337,27 +318,33 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
         })
       );
     } else {
-      // SSR or no WebSocket - use HTTP only
+      // SSR or no WebSocket - use HTTP only. Subscriptions must not reach
+      // httpBatchLink (it throws, crashing any page with a live-update hook);
+      // they complete quietly instead — see lib/no-realtime-link.ts.
       links.push(
-        httpBatchLink({
-          url: `${getBaseUrl()}/api/trpc`,
-          headers() {
-            const headers: Record<string, string> = {
-              'x-trpc-source': 'react',
-              // ADR-053: forward a request-correlation id (see above).
-              'x-request-id': generateRequestId(),
-              // ADR-071: the tenant the user is acting in (absent = home tenant)
-              ...activeTenantHeaders(),
-            };
+        splitLink({
+          condition: (op) => op.type === 'subscription',
+          true: noRealtimeLink,
+          false: httpBatchLink({
+            url: `${getBaseUrl()}/api/trpc`,
+            headers() {
+              const headers: Record<string, string> = {
+                'x-trpc-source': 'react',
+                // ADR-053: forward a request-correlation id (see above).
+                'x-request-id': generateRequestId(),
+                // ADR-071: the tenant the user is acting in (absent = home tenant)
+                ...activeTenantHeaders(),
+              };
 
-            // Only include Authorization header if token is valid (not expired)
-            const accessToken = getValidAccessToken();
-            if (accessToken) {
-              headers['Authorization'] = `Bearer ${accessToken}`;
-            }
+              // Only include Authorization header if token is valid (not expired)
+              const accessToken = getValidAccessToken();
+              if (accessToken) {
+                headers['Authorization'] = `Bearer ${accessToken}`;
+              }
 
-            return headers;
-          },
+              return headers;
+            },
+          }),
         })
       );
     }
