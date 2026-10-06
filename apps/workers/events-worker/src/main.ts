@@ -88,6 +88,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
         useDatabase: false,
         outbox: {
           pollIntervalMs: 100,
+          maxPollIntervalMs: 5000,
           batchSize: 100,
           lockTimeoutMs: 30000,
           maxRetries: 3,
@@ -133,6 +134,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
     this.outboxPoller = new OutboxPoller({
       config: {
         pollIntervalMs: this.workerConfig.outbox.pollIntervalMs,
+        maxPollIntervalMs: this.workerConfig.outbox.maxPollIntervalMs,
         batchSize: this.workerConfig.outbox.batchSize,
         lockTimeoutMs: this.workerConfig.outbox.lockTimeoutMs,
         maxRetries: this.workerConfig.outbox.maxRetries,
