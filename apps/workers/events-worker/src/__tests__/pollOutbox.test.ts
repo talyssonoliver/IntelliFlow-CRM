@@ -407,6 +407,122 @@ describe('InMemoryOutboxRepository', () => {
   });
 });
 
+describe('OutboxPoller - Idle Backoff', () => {
+  const mockLogger = pino({ level: 'silent' });
+  let repository: InMemoryOutboxRepository;
+  let dispatcher: EventDispatcher;
+  let poller: OutboxPoller;
+  let fetchSpy: ReturnType<typeof vi.spyOn>;
+
+  const event = (id: string): OutboxEvent => ({
+    id,
+    eventType: 'lead.created',
+    aggregateType: 'Lead',
+    aggregateId: `lead-${id}`,
+    payload: {},
+    metadata: {
+      correlationId: `corr-${id}`,
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+    },
+    status: 'pending',
+    retryCount: 0,
+    createdAt: new Date(),
+  });
+
+  const build = (config: Partial<OutboxPollerConfig>) =>
+    new OutboxPoller({ config, repository, dispatcher, logger: mockLogger });
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    repository = new InMemoryOutboxRepository();
+    dispatcher = new EventDispatcher(mockLogger);
+    dispatcher.register('lead.created', vi.fn().mockResolvedValue(undefined));
+    fetchSpy = vi.spyOn(repository, 'fetchPendingEvents');
+    poller = build({ pollIntervalMs: 100, maxPollIntervalMs: 1600 });
+  });
+
+  afterEach(async () => {
+    await poller.stop();
+    vi.useRealTimers();
+  });
+
+  it('doubles the delay after each empty poll, up to the cap', async () => {
+    await poller.start();
+    await vi.advanceTimersByTimeAsync(0);
+    const delays: number[] = [poller.getStats().nextPollDelayMs];
+
+    for (let i = 0; i < 6; i++) {
+      await vi.advanceTimersByTimeAsync(delays[delays.length - 1]);
+      delays.push(poller.getStats().nextPollDelayMs);
+    }
+
+    expect(delays).toEqual([200, 400, 800, 1600, 1600, 1600, 1600]);
+  });
+
+  it('issues far fewer queries than a fixed 100ms poll when the outbox is empty', async () => {
+    await poller.start();
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    // A fixed 100ms poll would run ~100 queries in 10s. With the 1600ms cap:
+    // t=0, 200, 600, 1400, 3000, 4600, 6200, 7800, 9400 => 9 queries.
+    expect(fetchSpy).toHaveBeenCalledTimes(9);
+  });
+
+  it('resets to the fast interval as soon as a batch is non-empty', async () => {
+    await poller.start();
+    await vi.advanceTimersByTimeAsync(3_000); // backed off to the cap
+    expect(poller.getStats().nextPollDelayMs).toBe(1600);
+
+    await repository.addEvent(event('1'));
+    await vi.advanceTimersByTimeAsync(1600);
+
+    expect(poller.getStats().processed).toBe(1);
+    expect(poller.getStats().nextPollDelayMs).toBe(100);
+
+    // Events keep flowing: the next one is picked up on the 100ms cadence
+    await repository.addEvent(event('2'));
+    await vi.advanceTimersByTimeAsync(100);
+    expect(poller.getStats().processed).toBe(2);
+  });
+
+  it('picks up an event written while idle within the cap', async () => {
+    await poller.start();
+    await vi.advanceTimersByTimeAsync(20_000);
+
+    await repository.addEvent(event('late'));
+    await vi.advanceTimersByTimeAsync(1600);
+
+    expect(poller.getStats().processed).toBe(1);
+  });
+
+  it('backs off when the repository throws', async () => {
+    fetchSpy.mockRejectedValue(new Error('db down'));
+    await poller.start();
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(200);
+
+    expect(poller.getStats().nextPollDelayMs).toBe(400);
+    expect(poller.getStats().isPolling).toBe(true);
+  });
+
+  it('never goes below the fast interval when the cap is misconfigured lower', async () => {
+    poller = build({ pollIntervalMs: 500, maxPollIntervalMs: 100 });
+    await poller.start();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(poller.getStats().nextPollDelayMs).toBe(500);
+  });
+
+  it('defaults to a 5000ms cap', async () => {
+    poller = build({});
+    await poller.start();
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    expect(poller.getStats().nextPollDelayMs).toBe(5000);
+  });
+});
+
 describe('OutboxPoller - Retry Backoff', () => {
   it('should use configured backoff delays', () => {
     const repository = new InMemoryOutboxRepository();

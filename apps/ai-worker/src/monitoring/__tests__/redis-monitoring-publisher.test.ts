@@ -413,4 +413,68 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
     const result = await pub.tick();
     expect(result.written).toBe(10); // 2 tenants × 5 kinds
   });
+  describe('cadence defaults (idle query load)', () => {
+    const savedInterval = process.env.AI_MONITORING_REDIS_PUBLISH_INTERVAL_MS;
+    const savedTtl = process.env.AI_MONITORING_REDIS_TTL_SECONDS;
+
+    beforeEach(() => {
+      delete process.env.AI_MONITORING_REDIS_PUBLISH_INTERVAL_MS;
+      delete process.env.AI_MONITORING_REDIS_TTL_SECONDS;
+    });
+
+    afterEach(() => {
+      if (savedInterval === undefined) delete process.env.AI_MONITORING_REDIS_PUBLISH_INTERVAL_MS;
+      else process.env.AI_MONITORING_REDIS_PUBLISH_INTERVAL_MS = savedInterval;
+      if (savedTtl === undefined) delete process.env.AI_MONITORING_REDIS_TTL_SECONDS;
+      else process.env.AI_MONITORING_REDIS_TTL_SECONDS = savedTtl;
+    });
+
+    it('publishes every 60s by default, not every 5s', async () => {
+      const redis = makeRedis();
+      const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
+      const pub = new RedisMonitoringPublisher(redis, prisma);
+      pub.start();
+
+      await vi.advanceTimersByTimeAsync(59_000);
+      expect(redis.set).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(redis.set.mock.calls.length).toBe(5); // one tick: 1 tenant x 5 kinds
+      await pub.stop();
+    });
+
+    it('defaults the TTL to 6x the cadence (360s at 60s)', async () => {
+      const redis = makeRedis();
+      const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
+      const pub = new RedisMonitoringPublisher(redis, prisma);
+
+      await pub.tick();
+
+      for (const call of redis.set.mock.calls) expect(call[3]).toBe(360);
+    });
+
+    it('keeps the env override for the interval, and the TTL follows it', async () => {
+      process.env.AI_MONITORING_REDIS_PUBLISH_INTERVAL_MS = '5000';
+      const redis = makeRedis();
+      const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
+      const pub = new RedisMonitoringPublisher(redis, prisma);
+      pub.start();
+
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect(redis.set.mock.calls.length).toBe(5);
+      for (const call of redis.set.mock.calls) expect(call[3]).toBe(30);
+      await pub.stop();
+    });
+
+    it('keeps an explicit TTL env override', async () => {
+      process.env.AI_MONITORING_REDIS_TTL_SECONDS = '900';
+      const redis = makeRedis();
+      const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
+      const pub = new RedisMonitoringPublisher(redis, prisma);
+
+      await pub.tick();
+
+      for (const call of redis.set.mock.calls) expect(call[3]).toBe(900);
+    });
+  });
 });
