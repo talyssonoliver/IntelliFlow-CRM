@@ -1,0 +1,214 @@
+name: Promote to Production
+
+# The ONLY workflow that may move the `:latest` image tags Railway production
+# tracks, and the only one that redeploys production services.
+#
+#   1. Gates: the commit is on main, and scripts/ops/promotion-gates.mjs passes:
+#      every required check succeeded on the main commit, the merged PR head
+#      passed Pre-ship Attestation, and Build & Push Images succeeded for it.
+#   2. Artifact: resolves ghcr.io/<owner>/intelliflow-crm-<svc>:sha-<SHA>
+#      (built by build-images.yml) to a digest. Nothing is rebuilt.
+#   3. Promote (skipped on dry_run): points `:latest` at that exact digest,
+#      byte-for-byte (crane copies the manifest), and fails unless `:latest`
+#      then resolves to the same digest.
+#   4. Redeploy: `railway redeploy` for the listed services, so production does
+#      not wait on Railway's auto-update cache (up to hours), then confirms
+#      the API process restarted.
+#   5. Ledger: a GitHub deployment in environment `railway-production`, with
+#      ref = the promoted SHA and payload = digests, previous digests, reason,
+#      actor and run. `gh api repos/{owner}/{repo}/deployments?environment=railway-production`
+#      lists every promotion.
+#
+# Manual only (workflow_dispatch), deliberately: release.yml pushes a v* tag
+# on most merges, so a tag trigger would make promotion automatic. dry_run
+# defaults to true: a run shows the gates and the exact digests, and changes
+# nothing until dry_run is unticked.
+#
+# Rollback = promote the previous SHA from the ledger. Runbook:
+# docs/operations/production-promotion.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Full 40-character main commit SHA to promote'
+        required: true
+        type: string
+      reason:
+        description: 'Why (recorded in the ledger)'
+        required: true
+        type: string
+      dry_run:
+        description: 'Dry run: check gates and resolve digests, change nothing'
+        required: true
+        default: true
+        type: boolean
+      services:
+        description: 'Images whose :latest moves (space-separated)'
+        required: true
+        default: 'api ai-worker events-worker ingestion-worker notifications-worker'
+        type: string
+      redeploy:
+        description: 'Railway services to redeploy after the tag moves (space-separated; empty = none)'
+        required: false
+        default: 'api'
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+  deployments: write
+  checks: read
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: promote-production
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote ${{ inputs.sha }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SHA: ${{ inputs.sha }}
+      SERVICES: ${{ inputs.services }}
+      REDEPLOY: ${{ inputs.redeploy }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      REASON: ${{ inputs.reason }}
+      REGISTRY_PREFIX: ghcr.io/${{ github.repository_owner }}/intelliflow-crm-
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: The commit is a full SHA on main
+        run: |
+          set -euo pipefail
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::sha must be the full 40-character commit SHA, got '$SHA'"; exit 1; }
+          git merge-base --is-ancestor "$SHA" origin/main \
+            || { echo "::error::$SHA is not on main. Only merged main commits can be promoted."; exit 1; }
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Promotion gates (required checks, attestation, image build)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/ops/promotion-gates.mjs --sha="$SHA"
+
+      - name: Set up crane
+        uses: imjasonh/setup-crane@v0.7
+
+      - name: Resolve the built images to digests (no rebuild)
+        id: resolve
+        run: |
+          set -euo pipefail
+          plan='[]'
+          {
+            echo "### Promotion plan for \`$SHA\`"
+            echo
+            echo "| service | built image | digest | :latest now |"
+            echo "|---|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for svc in $SERVICES; do
+            repo="${REGISTRY_PREFIX}${svc}"
+            digest="$(crane digest "$repo:sha-$SHA")" \
+              || { echo "::error::$repo:sha-$SHA does not exist. Was it built by Build & Push Images?"; exit 1; }
+            previous="$(crane digest "$repo:latest" 2>/dev/null || echo none)"
+            echo "| $svc | \`$repo:sha-$SHA\` | \`$digest\` | \`$previous\` |" >> "$GITHUB_STEP_SUMMARY"
+            plan="$(jq -c --arg s "$svc" --arg r "$repo" --arg d "$digest" --arg p "$previous" \
+              '. + [{service:$s, repo:$r, digest:$d, previous:$p}]' <<<"$plan")"
+          done
+          echo "plan=$plan" >> "$GITHUB_OUTPUT"
+
+      - name: Dry run stops here
+        if: inputs.dry_run
+        run: |
+          echo "Dry run: gates passed and digests resolved; nothing was changed." | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Open the ledger entry
+        if: ${{ !inputs.dry_run }}
+        id: ledger
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLAN: ${{ steps.resolve.outputs.plan }}
+        run: |
+          set -euo pipefail
+          payload="$(jq -c --arg reason "$REASON" --arg actor "$GITHUB_ACTOR" \
+            --arg run "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            '{images: ., reason: $reason, actor: $actor, run: $run}' <<<"$PLAN")"
+          id="$(jq -n --arg ref "$SHA" --argjson payload "$payload" \
+            '{ref: $ref, environment: "railway-production", auto_merge: false,
+              required_contexts: [], production_environment: true,
+              description: "Image promotion", payload: $payload}' \
+            | gh api "repos/$GITHUB_REPOSITORY/deployments" --input - --jq .id)"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          gh api "repos/$GITHUB_REPOSITORY/deployments/$id/statuses" -f state=in_progress \
+            -f log_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" > /dev/null
+
+      - name: Move :latest to the exact built digest
+        if: ${{ !inputs.dry_run }}
+        env:
+          PLAN: ${{ steps.resolve.outputs.plan }}
+        run: |
+          set -euo pipefail
+          jq -c '.[]' <<<"$PLAN" | while read -r row; do
+            repo="$(jq -r .repo <<<"$row")"
+            digest="$(jq -r .digest <<<"$row")"
+            # crane copies the manifest bytes, so the tag gets the identical digest.
+            crane tag "$repo@$digest" latest
+            now="$(crane digest "$repo:latest")"
+            if [ "$now" != "$digest" ]; then
+              echo "::error::$repo:latest resolves to $now, expected $digest"
+              exit 1
+            fi
+            echo "$repo:latest -> $digest" | tee -a "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Redeploy on Railway and confirm the API restarted
+        if: ${{ !inputs.dry_run && inputs.redeploy != '' }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          API_URL: ${{ vars.PRODUCTION_API_URL }}
+        run: |
+          set -euo pipefail
+          uptime() { curl -fsS --max-time 15 "$API_URL/api/health/live" | jq -r '.uptime // empty'; }
+          before="$(uptime || true)"
+          started="$(date +%s)"
+          for svc in $REDEPLOY; do
+            echo "railway redeploy --service $svc"
+            npx -y @railway/cli@4 redeploy --service "$svc" --yes
+          done
+          if [[ " $REDEPLOY " != *" api "* || -z "$API_URL" ]]; then
+            echo "API not in the redeploy list (or no PRODUCTION_API_URL); restart not verified." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # A redeploy replaces the process, so the API's own uptime drops below
+          # the time since the redeploy was requested.
+          for _ in $(seq 1 40); do
+            sleep 15
+            now="$(uptime || true)"
+            elapsed=$(( $(date +%s) - started ))
+            if [ -n "$now" ] && awk -v u="$now" -v e="$elapsed" 'BEGIN { exit !(u < e) }'; then
+              echo "API restarted: uptime ${now}s < ${elapsed}s since the redeploy (was ${before:-unknown}s)." | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          done
+          echo "::error::The API did not restart within 10 minutes of the redeploy. :latest has moved; check the Railway dashboard."
+          exit 1
+
+      - name: Close the ledger entry
+        if: ${{ always() && steps.ledger.outputs.id != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          state=failure
+          if [ "${{ job.status }}" = "success" ]; then state=success; fi
+          gh api "repos/$GITHUB_REPOSITORY/deployments/${{ steps.ledger.outputs.id }}/statuses" \
+            -f state="$state" \
+            -f log_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" > /dev/null

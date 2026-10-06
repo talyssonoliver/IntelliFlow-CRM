@@ -240,7 +240,7 @@ const IS_CI = process.env.CI === 'true' || process.env.CI === '1';
 // over the files changed since the merge-base with origin/main. Typecheck, lint
 // and every non-test gate stay full and mandatory. Always `full` under CI, and
 // locally with PRESHIP_FULL_TESTS=1; also `full` whenever the diff touches
-// something the import graph cannot see (lockfile, package.json, vitest/tsconfig,
+// something the import graph cannot see (lockfile, package.json beyond scripts, vitest/tsconfig,
 // Prisma schema, test setup). See scripts/lib/preship-test-scope.mjs.
 const TEST_SCOPE = resolveTestScope({ cwd: REPO_ROOT });
 const SCOPED_TESTS = TEST_SCOPE.scope !== 'full';

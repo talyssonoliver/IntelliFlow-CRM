@@ -1,0 +1,17 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "lint": {
+      "dependsOn": [],
+      "inputs": [
+        "index.js",
+        "config.yaml",
+        "package.json",
+        "$TURBO_ROOT$/apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+        "$TURBO_ROOT$/apps/project-tracker/docs/metrics/plan-overrides.yaml",
+        "$TURBO_ROOT$/apps/project-tracker/docs/metrics/validation.yaml"
+      ]
+    }
+  }
+}
