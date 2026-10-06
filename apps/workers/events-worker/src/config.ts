@@ -3,6 +3,8 @@
  *
  * @module events-worker/config
  * @task IFC-163
+ *
+ * Defaults below are read once at startup; see main.ts for the env mapping.
  */
 
 import { z } from 'zod';
