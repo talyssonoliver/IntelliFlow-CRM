@@ -73,7 +73,16 @@
       "brace-expansion@<1.1.20": ">=1.1.20 <2",
       "brace-expansion@<2.1.6": ">=2.1.6 <3",
       "brace-expansion@>=3.0.0 <3.0.8": ">=3.0.8 <4",
-      "brace-expansion@<5.0.11": ">=5.0.11"
+      "brace-expansion@<5.0.11": ">=5.0.11",
+      "proxy-addr@<2.0.8": ">=2.0.8 <3",
+      "compression@<1.8.2": ">=1.8.2 <2",
+      "source-map-js@<1.2.2": ">=1.2.2 <2",
+      "tinypool@<2.1.2": ">=2.1.2 <3",
+      "colord@<2.9.4": ">=2.9.4 <3",
+      "postcss-selector-parser@<7.1.6": ">=7.1.6 <8",
+      "js-yaml@>=5.0.0 <5.4.1": ">=5.4.1 <6",
+      "katex@<0.18.2": ">=0.18.2 <1",
+      "http-cache-semantics@<4.3.0": ">=4.3.0 <5"
     }
   }
 }

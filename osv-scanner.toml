@@ -45,3 +45,17 @@ runtime dependency of a deployed app. Mirrors the pnpm.auditConfig.ignoreGhsas
 entry added the same day. Re-check on expiry — if braces has published a
 release above 3.0.3 by then, take it and delete this entry.
 """
+
+[[IgnoredVulns]]
+id = "GHSA-hp3w-g68c-fv3c"
+ignoreUntil = 2026-12-10
+reason = """
+sprintf-js denial of service through unbounded precision (medium), published
+24/09/2026. No fixed version exists: every release up to 1.1.3, the latest, is
+in the vulnerable range. Reached only through tsup > @microsoft/api-extractor >
+@rushstack/ts-command-line > argparse@1.0.10 > sprintf-js@1.0.3, a
+devDependency used to build type declarations, never a runtime dependency of a
+deployed app. pnpm audit already passes it (below the high threshold). Re-check
+on expiry: if sprintf-js publishes a release above 1.1.3, or argparse 1.x drops
+it, take that and delete this entry.
+"""

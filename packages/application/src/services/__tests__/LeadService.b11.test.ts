@@ -47,7 +47,7 @@ function createMockLeadRepo(): LeadRepository {
     save: vi.fn().mockResolvedValue(undefined),
     findById: vi.fn().mockResolvedValue(null),
     findByEmail: vi.fn().mockResolvedValue(null),
-    existsByEmail: vi.fn().mockResolvedValue(false),
+    existsByEmailInTenant: vi.fn().mockResolvedValue(false),
     findByStatus: vi.fn().mockResolvedValue([]),
     findByOwnerId: vi.fn().mockResolvedValue([]),
     findByMinScore: vi.fn().mockResolvedValue([]),
