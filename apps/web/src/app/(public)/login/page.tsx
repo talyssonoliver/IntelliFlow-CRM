@@ -383,7 +383,7 @@ export default function LoginPage() {
           <div className="relative z-10 w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Branding header */}
             <div className="text-center mb-8 space-y-2">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur-sm text-sm mb-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#bca8ff] font-medium backdrop-blur-sm text-sm mb-4">
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   security
                 </span>
@@ -429,7 +429,7 @@ export default function LoginPage() {
           badge="Secure Access"
           badgeIcon="shield_lock"
           title="Welcome back"
-          description="Sign in to your IntelliFlow CRM account"
+          description="Sign in to your Aurora account"
         >
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Rate limit warning */}
@@ -461,7 +461,7 @@ export default function LoginPage() {
                   autoComplete="email"
                   value={formData.email}
                   onChange={(e) => updateField('email', e.target.value)}
-                  className={`w-full pl-11 pr-4 py-3 rounded-lg border bg-white/5 text-white placeholder:text-slate-400 backdrop-blur-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:border-transparent ${
+                  className={`w-full pl-11 pr-4 py-3 rounded-lg border bg-white/5 text-white placeholder:text-slate-400 backdrop-blur-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:border-transparent ${
                     errors.email ? 'border-red-500/50' : 'border-white/10 hover:border-white/20'
                   }`}
                   placeholder="you@company.com"
@@ -495,7 +495,7 @@ export default function LoginPage() {
               labelExtra={
                 <Link
                   href="/forgot-password"
-                  className="text-sm text-[#7cc4ff] hover:text-[#5ab3ff] transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] rounded px-1"
+                  className="text-sm text-[#bca8ff] hover:text-[#bca8ff] transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#11175b] rounded px-1"
                 >
                   Forgot password?
                 </Link>
@@ -510,7 +510,7 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={formData.rememberMe}
                 onChange={(e) => updateField('rememberMe', e.target.checked)}
-                className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#137fec] focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] transition-colors cursor-pointer"
+                className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#2a78f6] focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#11175b] transition-colors cursor-pointer"
                 disabled={isLoading || rateLimitInfo.isLimited}
               />
               <label
@@ -525,7 +525,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading || rateLimitInfo.isLimited}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#137fec]/20 hover:shadow-[#137fec]/30 hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#2a78f6] text-white font-semibold hover:bg-[#1f63d4] transition-all focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#11175b] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#2a78f6]/20 hover:shadow-[#2a78f6]/30 hover:scale-[1.02] active:scale-[0.98]"
               aria-busy={isLoading}
             >
               {isLoading ? (
@@ -578,7 +578,7 @@ export default function LoginPage() {
               Don&apos;t have an account?{' '}
               <Link
                 href="/signup"
-                className="text-[#7cc4ff] hover:text-[#5ab3ff] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] rounded px-1"
+                className="text-[#bca8ff] hover:text-[#bca8ff] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#11175b] rounded px-1"
               >
                 Sign up for free
               </Link>

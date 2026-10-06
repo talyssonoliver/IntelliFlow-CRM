@@ -142,7 +142,7 @@ export function SearchSuggestions({ maxItems = 4 }: Readonly<{ maxItems?: number
           Try one of these instead
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          We matched nearby destinations from real IntelliFlow routes.
+          We matched nearby destinations from real Aurora routes.
         </p>
       </div>
 
@@ -151,10 +151,10 @@ export function SearchSuggestions({ maxItems = 4 }: Readonly<{ maxItems?: number
           <Link
             key={suggestion.href}
             href={suggestion.href}
-            className="group rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition-colors hover:border-[#137fec] hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-[#7cc4ff] dark:hover:bg-slate-800"
+            className="group rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition-colors hover:border-[#2a78f6] hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-[#bca8ff] dark:hover:bg-slate-800"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#137fec]/10 text-[#137fec]">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#2a78f6]/10 text-[#2a78f6]">
                 <span className="material-symbols-outlined" aria-hidden="true">
                   {suggestion.icon}
                 </span>

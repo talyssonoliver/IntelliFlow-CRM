@@ -8,6 +8,7 @@ import {
   Email,
   PhoneNumber,
   LeadRepository,
+  LeadStatusConflictError,
   Contact,
   Account,
   CreateLeadProps,
@@ -16,7 +17,12 @@ import {
 import { AIServicePort, EventBusPort } from '../ports/external';
 import { ContactRepository, AccountRepository } from '../ports/repositories';
 import { TransactionPort } from '../ports/TransactionPort';
-import { PersistenceError, ValidationError, NotFoundError } from '../errors';
+import {
+  PersistenceError,
+  ValidationError,
+  NotFoundError,
+  LeadScoreBelowMinimumError,
+} from '../errors';
 
 /**
  * Lead qualification thresholds
@@ -110,7 +116,10 @@ export class LeadService {
       return Result.fail(emailResult.error);
     }
 
-    const existingLead = await this.leadRepository.existsByEmail(emailResult.value);
+    const existingLead = await this.leadRepository.existsByEmailInTenant(
+      emailResult.value,
+      props.tenantId
+    );
     if (existingLead) {
       return Result.fail(new ValidationError(`Lead with email ${props.email} already exists`));
     }
@@ -199,6 +208,7 @@ export class LeadService {
     }
 
     const previousScore = lead.score.value;
+    const expectedStatus = lead.status;
 
     // Call AI service. IFC-212: thread lead.tenantId + lead.id.value through the
     // optional opts so queue-backed adapters tag the worker payload with the real
@@ -248,14 +258,23 @@ export class LeadService {
       }
     }
 
-    // Persist changes + events atomically (DDD-002 pattern)
+    // Persist changes + events atomically (DDD-002 pattern). Scoring mutates the
+    // score fields; the auto-(dis)qualify above is the only status change. The
+    // plain save never writes `status`, so a status change goes through a
+    // compare-and-set on the status the scoring was based on (first, so a lost
+    // race rolls back before anything else is written).
     try {
       await this.transactionManager.run(async (tx) => {
+        if (lead.status !== expectedStatus) {
+          await this.leadRepository.save(lead, { expectedStatus }, tx);
+        }
         await this.leadRepository.save(lead, undefined, tx);
         await this.publishEvents(lead, tx);
       });
-    } catch {
-      return Result.fail(new PersistenceError('Failed to save lead after scoring'));
+    } catch (error) {
+      return Result.fail(
+        this.saveFailure(error, expectedStatus, 'Failed to save lead after scoring')
+      );
     }
 
     return Result.ok({
@@ -290,12 +309,11 @@ export class LeadService {
     // Business rule: Check minimum score for qualification
     if (lead.score.value < this.defaultQualificationCriteria.minScore) {
       return Result.fail(
-        new ValidationError(
-          `Lead score ${lead.score.value} is below minimum qualification threshold ${this.defaultQualificationCriteria.minScore}`
-        )
+        new LeadScoreBelowMinimumError(lead.score.value, this.defaultQualificationCriteria.minScore)
       );
     }
 
+    const expectedStatus = lead.status;
     const qualifyResult = lead.qualify(qualifiedBy, reason);
     if (qualifyResult.isFailure) {
       return Result.fail(qualifyResult.error);
@@ -303,11 +321,11 @@ export class LeadService {
 
     try {
       await this.transactionManager.run(async (tx) => {
-        await this.leadRepository.save(lead, undefined, tx);
+        await this.leadRepository.save(lead, { expectedStatus }, tx);
         await this.publishEvents(lead, tx);
       });
-    } catch {
-      return Result.fail(new PersistenceError('Failed to save lead'));
+    } catch (error) {
+      return Result.fail(this.saveFailure(error, expectedStatus, 'Failed to save lead'));
     }
 
     return Result.ok(lead);
@@ -381,6 +399,7 @@ export class LeadService {
     const contact = contactResult.value;
 
     // Convert lead
+    const expectedStatus = lead.status;
     const convertResult = lead.convert(contact.id.value, accountId, convertedBy);
     if (convertResult.isFailure) {
       return Result.fail(convertResult.error);
@@ -395,7 +414,7 @@ export class LeadService {
           await this.accountRepository.save(newAccount, tx);
         }
         await this.contactRepository.save(contact, tx);
-        await this.leadRepository.save(lead, undefined, tx);
+        await this.leadRepository.save(lead, { expectedStatus }, tx);
 
         if (newAccount) {
           await this.publishAccountEvents(newAccount, tx);
@@ -403,8 +422,8 @@ export class LeadService {
         await this.publishContactEvents(contact, tx);
         await this.publishEvents(lead, tx);
       });
-    } catch {
-      return Result.fail(new PersistenceError('Failed to save conversion'));
+    } catch (error) {
+      return Result.fail(this.saveFailure(error, expectedStatus, 'Failed to save conversion'));
     }
 
     return Result.ok({
@@ -623,6 +642,21 @@ export class LeadService {
   }
 
   /**
+   * Map a failed lead save: a lost compare-and-set race gets a distinct,
+   * actionable message; anything else is a generic persistence failure.
+   */
+  private saveFailure(
+    error: unknown,
+    expectedStatus: LeadStatus,
+    message: string
+  ): PersistenceError {
+    if (error instanceof LeadStatusConflictError) {
+      return new PersistenceError(`Lead status changed concurrently (expected ${expectedStatus})`);
+    }
+    return new PersistenceError(message);
+  }
+
+  /**
    * Change lead status with business rule validation
    */
   async changeLeadStatus(
@@ -660,15 +694,18 @@ export class LeadService {
       );
     }
 
+    const expectedStatus = lead.status;
     const statusResult = lead.changeStatus(newStatus, changedBy);
     if (statusResult.isFailure) {
       return Result.fail(statusResult.error);
     }
 
     try {
-      await this.leadRepository.save(lead);
-    } catch {
-      return Result.fail(new PersistenceError('Failed to save lead'));
+      // Compare-and-set on the status the transition was validated against, so a
+      // concurrent writer that moved the lead first is never overwritten.
+      await this.leadRepository.save(lead, { expectedStatus });
+    } catch (error) {
+      return Result.fail(this.saveFailure(error, expectedStatus, 'Failed to save lead'));
     }
 
     await this.publishEvents(lead);

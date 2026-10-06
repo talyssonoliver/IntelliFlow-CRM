@@ -13,6 +13,7 @@
 
 import { test, expect, type ConsoleMessage } from '@playwright/test';
 import { expectJsonResponse } from './utils/api-preflight';
+import { acceptCookieConsent } from './utils/cookie-consent';
 
 // The per-PR/main smoke job runs the web app WITHOUT the tRPC API (playwright
 // .config.ts starts it only when E2E_START_API=1). The homepage's auth-status
@@ -79,8 +80,22 @@ test.describe('Smoke Tests', () => {
     test('should have accessible navigation', async ({ page }) => {
       await page.goto('/');
 
+      // Below md the header nav is collapsed behind the 'Toggle menu' button (the
+      // desktop <nav> is display:none there), so open it the way a user would.
+      // Retry the click until aria-expanded flips: a pre-hydration click is a no-op.
+      const menuToggle = page.getByRole('button', { name: 'Toggle menu' });
+      if (await menuToggle.isVisible()) {
+        await expect(async () => {
+          // Click only while closed, so a retry never toggles an open menu shut.
+          if ((await menuToggle.getAttribute('aria-expanded')) !== 'true') {
+            await menuToggle.click();
+          }
+          await expect(menuToggle).toHaveAttribute('aria-expanded', 'true', { timeout: 1000 });
+        }).toPass({ timeout: 15_000 });
+      }
+
       // Verify main navigation is present
-      const nav = page.locator('nav').first();
+      const nav = page.locator('nav').filter({ visible: true }).first();
       await expect(nav).toBeVisible();
 
       // Verify key navigation links
@@ -97,6 +112,8 @@ test.describe('Smoke Tests', () => {
   test.describe('Authentication Flow', () => {
     test('should show validation errors for invalid login', async ({ page }) => {
       await page.goto('/login');
+      // On phone-sized viewports the consent dialog covers the submit button.
+      await acceptCookieConsent(page);
 
       // Submit the empty form; client-side validation should block navigation
       // and surface a field error. The login page renders errors as inline

@@ -6,6 +6,7 @@ import {
   PhoneNumber,
   type LeadSource,
   type LeadStatus,
+  LeadStatusConflictError,
   type RepositoryTransaction,
 } from '@intelliflow/domain';
 import { LeadRepository } from '@intelliflow/application';
@@ -90,7 +91,7 @@ export class PrismaLeadRepository implements LeadRepository {
 
   async save(
     lead: Lead,
-    opts?: { note?: { content: string; author: string } },
+    opts?: { note?: { content: string; author: string }; expectedStatus?: string },
     tx?: RepositoryTransaction
   ): Promise<void> {
     // Join the caller's transaction when supplied (DDD-001/002), else use our
@@ -130,6 +131,27 @@ export class PrismaLeadRepository implements LeadRepository {
       updatedAt: lead.updatedAt,
     };
 
+    if (opts?.expectedStatus !== undefined) {
+      // Compare-and-set: the status was read earlier and the transition validated
+      // against that snapshot. Only write if it is still what we read, so a
+      // concurrent writer's newer (or terminal) status is never overwritten.
+      //
+      // Write ONLY what a status transition mutates. Lead.changeStatus /
+      // qualify / convert change exactly `status` and `updatedAt`; writing the
+      // whole snapshot row would silently revert any non-status column (tags,
+      // names, phone, score, BANT...) another writer changed after our read.
+      const { count } = await db.lead.updateMany({
+        where: { id: data.id, tenantId: data.tenantId, status: opts.expectedStatus as LeadStatus },
+        data: { status: data.status, updatedAt: data.updatedAt },
+      });
+      if (count === 0) {
+        throw new LeadStatusConflictError(data.id, opts.expectedStatus);
+      }
+      return;
+    }
+
+    const { status: _status, ...updateData } = data;
+
     await db.lead.upsert({
       where: { id: data.id },
       // Nest the initial note into the create so the lead + note commit in a
@@ -149,7 +171,10 @@ export class PrismaLeadRepository implements LeadRepository {
             },
           }
         : data,
-      update: data,
+      // `status` is never rewritten here: a stale snapshot must not revert a
+      // status another writer moved. Status changes go through the
+      // expectedStatus compare-and-set above (insert still sets it via `create`).
+      update: updateData,
     });
   }
 
@@ -219,9 +244,9 @@ export class PrismaLeadRepository implements LeadRepository {
     });
   }
 
-  async existsByEmail(email: Email): Promise<boolean> {
+  async existsByEmailInTenant(email: Email, tenantId: string): Promise<boolean> {
     const count = await this.prisma.lead.count({
-      where: { email: email.value },
+      where: { email: email.value, tenantId },
     });
     return count > 0;
   }
