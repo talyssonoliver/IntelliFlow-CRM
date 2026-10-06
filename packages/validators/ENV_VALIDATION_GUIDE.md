@@ -248,7 +248,7 @@ openssl rand -base64 32
 
 ### "Invalid url" for DATABASE_URL
 
-**Fix**: Ensure format is `postgresql://user:pass@host:port/database`
+**Fix**: Ensure format is `postgresql://<user>:<password>@host:port/database`
 
 ### "CORS_ORIGIN must be specific in production (not \*)"
 

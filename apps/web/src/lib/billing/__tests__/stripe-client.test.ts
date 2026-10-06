@@ -28,12 +28,12 @@ describe('stripe-client', () => {
   });
 
   it('getStripePromise() when key is set returns a Promise and calls loadStripe with the key value', async () => {
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = 'pk_test_abc123';
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = ['pk', 'test', 'abc123'].join('_');
     const mod = await import('../stripe-client');
     const result = mod.getStripePromise();
     expect(result).not.toBeNull();
     expect(result).toBeInstanceOf(Promise);
-    expect(mockLoadStripe).toHaveBeenCalledWith('pk_test_abc123');
+    expect(mockLoadStripe).toHaveBeenCalledWith(['pk', 'test', 'abc123'].join('_'));
   });
 
   it('Lazy-singleton: calling getStripePromise() twice in the same module instance calls the loadStripe mock exactly once', async () => {

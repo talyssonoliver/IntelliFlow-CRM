@@ -19,7 +19,7 @@ export default function HomeLoading() {
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
       <div className="px-4 sm:px-6 lg:px-8 xl:px-12 py-6 max-w-[1800px] mx-auto animate-pulse">
         {/* Welcome Banner Skeleton — matches gradient blue banner */}
-        <div className="bg-gradient-to-r from-[#137fec] to-indigo-600 rounded-xl p-8 mb-6 shadow-lg relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[#2a78f6] to-indigo-600 rounded-xl p-8 mb-6 shadow-lg relative overflow-hidden">
           <div className="relative z-10 max-w-2xl space-y-3">
             {/* Greeting label (Good morning / Good afternoon) */}
             <div className="h-4 w-32 bg-white/25 rounded" />

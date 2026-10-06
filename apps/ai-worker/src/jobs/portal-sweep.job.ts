@@ -4,7 +4,7 @@
  * BullMQ cron job (daily 05:00 UTC) on the `portal-sweep` queue. The Leangency
  * portal has no scheduler of its own, so this is the heartbeat that drives its
  * time-based delivery transitions: it POSTs to the portal's
- * `/api/internal/delivery/sweep` endpoint (Bearer PORTAL_INTERNAL_SECRET), which
+ * `/api/internal/delivery/sweep` endpoint (bearer auth with PORTAL_INTERNAL_SECRET), which
  * auto-pauses onboardings stalled past their 3-day cap. The portal owns the
  * logic; this job owns the tick.
  *

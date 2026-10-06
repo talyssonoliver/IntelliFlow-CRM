@@ -8,7 +8,7 @@ import { sendContactEmail } from '@/lib/shared/email-handler';
  * Contact Form Component
  *
  * Public-facing contact form with:
- * - Full brand compliance (IntelliFlow design system)
+ * - Full brand compliance (Aurora design system)
  * - WCAG 2.1 AA accessibility
  * - Client-side + server-side validation
  * - Spam prevention (honeypot)
@@ -156,7 +156,7 @@ export function ContactForm() {
             aria-describedby={formErrors.name ? 'name-error' : undefined}
             className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-900
               text-slate-900 dark:text-white placeholder-slate-400
-              focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent
+              focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent
               disabled:opacity-50 disabled:cursor-not-allowed
               ${formErrors.name ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
             placeholder="John Doe"
@@ -199,7 +199,7 @@ export function ContactForm() {
             aria-describedby={formErrors.email ? 'email-error' : undefined}
             className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-900
               text-slate-900 dark:text-white placeholder-slate-400
-              focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent
+              focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent
               disabled:opacity-50 disabled:cursor-not-allowed
               ${formErrors.email ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
             placeholder="you@example.com"
@@ -236,7 +236,7 @@ export function ContactForm() {
             aria-describedby={formErrors.phone ? 'phone-error' : undefined}
             className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-900
               text-slate-900 dark:text-white placeholder-slate-400
-              focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent
+              focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent
               disabled:opacity-50 disabled:cursor-not-allowed
               ${formErrors.phone ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
             placeholder="+1 (555) 123-4567"
@@ -272,7 +272,7 @@ export function ContactForm() {
             aria-invalid={!!formErrors.company}
             className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-900
               text-slate-900 dark:text-white placeholder-slate-400
-              focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent
+              focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent
               disabled:opacity-50 disabled:cursor-not-allowed
               ${formErrors.company ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
             placeholder="Acme Corporation"
@@ -296,10 +296,10 @@ export function ContactForm() {
           aria-invalid={!!formErrors.subject}
           className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-900
             text-slate-900 dark:text-white placeholder-slate-400
-            focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent
+            focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent
             disabled:opacity-50 disabled:cursor-not-allowed
             ${formErrors.subject ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
-          placeholder="Interested in IntelliFlow CRM"
+          placeholder="Interested in Aurora"
           disabled={formState.isSubmitting}
         />
       </div>
@@ -326,7 +326,7 @@ export function ContactForm() {
           aria-describedby={formErrors.message ? 'message-error' : 'message-hint'}
           className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-900
             text-slate-900 dark:text-white placeholder-slate-400
-            focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent
+            focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent
             disabled:opacity-50 disabled:cursor-not-allowed resize-y
             ${formErrors.message ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
           placeholder="Tell us about your needs..."
@@ -366,8 +366,8 @@ export function ContactForm() {
         type="submit"
         disabled={formState.isSubmitting}
         className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
-          bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7]
-          transition-colors focus:outline-none focus:ring-2 focus:ring-[#137fec]
+          bg-[#2a78f6] text-white font-semibold hover:bg-[#1f63d4]
+          transition-colors focus:outline-none focus:ring-2 focus:ring-[#2a78f6]
           focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {formState.isSubmitting ? (

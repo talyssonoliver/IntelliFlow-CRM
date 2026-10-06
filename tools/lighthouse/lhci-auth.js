@@ -18,9 +18,11 @@ module.exports = async (browser, context) => {
 
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  const TEST_EMAIL = process.env.LHCI_TEST_EMAIL;
+  const TEST_PASSWORD = process.env.LHCI_TEST_PASSWORD;
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !TEST_EMAIL || !TEST_PASSWORD) {
     throw new Error(
-      'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set'
+      'NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, LHCI_TEST_EMAIL and LHCI_TEST_PASSWORD must be set'
     );
   }
 
@@ -34,13 +36,18 @@ module.exports = async (browser, context) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: opts.anonKey },
         body: JSON.stringify({
-          email: 'admin@intelliflow.dev',
-          password: 'TestPassword123!',
+          email: opts.email,
+          password: opts.password,
         }),
       });
       return res.json();
     },
-    { supabaseUrl: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY }
+    {
+      supabaseUrl: SUPABASE_URL,
+      anonKey: SUPABASE_ANON_KEY,
+      email: TEST_EMAIL,
+      password: TEST_PASSWORD,
+    }
   );
 
   const { access_token, refresh_token } = authResponse;

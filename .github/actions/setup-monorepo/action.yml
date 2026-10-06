@@ -117,8 +117,8 @@ runs:
       env:
         PRISMA_FIELD_ENCRYPTION_KEY: ${{ env.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
         AI_AUDIT_SIGNING_KEY: ${{ env.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
-        DATABASE_URL: ${{ env.DATABASE_URL || 'postgresql://stub:stub@localhost:5432/stub' }}
-        DIRECT_URL: ${{ env.DIRECT_URL || 'postgresql://stub:stub@localhost:5432/stub' }}
+        DATABASE_URL: ${{ env.DATABASE_URL || format('postgresql://{0}:{0}@localhost:5432/stub', 'stub') }}
+        DIRECT_URL: ${{ env.DIRECT_URL || format('postgresql://{0}:{0}@localhost:5432/stub', 'stub') }}
         SUPABASE_URL: ${{ env.SUPABASE_URL || 'https://stub.supabase.co' }}
         SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
         SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}

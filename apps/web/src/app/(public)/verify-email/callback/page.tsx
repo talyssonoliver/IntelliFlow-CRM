@@ -23,10 +23,10 @@ import { AuthBackground, AuthCard, EmailVerification } from '@/components/shared
 function VerifyCallbackLoading() {
   return (
     <AuthBackground>
-      <AuthCard badge="INTELLIFLOW" badgeIcon="mark_email_read" title="">
+      <AuthCard badge="Aurora" badgeIcon="mark_email_read" title="">
         <output className="flex flex-col items-center justify-center py-8 space-y-4 block">
           <div
-            className="w-8 h-8 border-2 border-slate-600 border-t-[#137fec] rounded-full animate-spin"
+            className="w-8 h-8 border-2 border-slate-600 border-t-[#2a78f6] rounded-full animate-spin"
             aria-hidden="true"
           />
           <p className="text-sm text-slate-400">Verifying your email...</p>
@@ -50,7 +50,7 @@ function VerifyCallbackContent() {
   return (
     <AuthBackground>
       <AuthCard
-        badge="INTELLIFLOW"
+        badge="Aurora"
         badgeIcon="mark_email_read"
         title=""
         securityBadge="256-bit SSL encrypted verification"

@@ -5,9 +5,8 @@ import { SearchSuggestions } from '@/components/status/search-suggestions';
 import { NotFoundAnalytics } from '@/components/status/not-found-analytics';
 
 export const metadata: Metadata = {
-  title: 'Page Not Found | IntelliFlow CRM',
-  description:
-    'Recover from missing links with guided next steps and real IntelliFlow destinations.',
+  title: 'Page Not Found',
+  description: 'Recover from missing links with guided next steps and real Aurora destinations.',
   alternates: {
     canonical: '/404',
   },
@@ -19,12 +18,12 @@ export const metadata: Metadata = {
 
 export default function NotFoundPage() {
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,_rgba(19,127,236,0.16),_transparent_42%),linear-gradient(180deg,_#f8fbff_0%,_#eef4fb_100%)] px-6 py-12 dark:bg-[radial-gradient(circle_at_top,_rgba(124,196,255,0.14),_transparent_36%),linear-gradient(180deg,_#0f172a_0%,_#111827_100%)]">
+    <main className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,_rgba(19,127,236,0.16),_transparent_42%),linear-gradient(180deg,_#f8fbff_0%,_#eef4fb_100%)] px-6 py-12 dark:bg-[radial-gradient(circle_at_top,_rgba(124,196,255,0.14),_transparent_36%),linear-gradient(180deg,_#11175b_0%,_#111827_100%)]">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-        <Card className="overflow-hidden border border-slate-200 bg-white/95 shadow-xl shadow-[#137fec]/10 backdrop-blur dark:border-slate-700 dark:bg-slate-950/90">
+        <Card className="overflow-hidden border border-slate-200 bg-white/95 shadow-xl shadow-[#2a78f6]/10 backdrop-blur dark:border-slate-700 dark:bg-slate-950/90">
           <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.2fr_0.8fr] lg:px-10 lg:py-10">
             <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#137fec]/20 bg-[#137fec]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#137fec]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#2a78f6]/20 bg-[#2a78f6]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#2a78f6]">
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   route
                 </span>{' '}
@@ -44,7 +43,7 @@ export default function NotFoundPage() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#137fec] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#0e6ac7] focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2a78f6] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#1f63d4] focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     dashboard
@@ -53,7 +52,7 @@ export default function NotFoundPage() {
                 </Link>
                 <Link
                   href="/"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     home
@@ -79,7 +78,7 @@ export default function NotFoundPage() {
                 </p>
                 <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">4</p>
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  Suggested destinations pulled from real IntelliFlow routes.
+                  Suggested destinations pulled from real Aurora routes.
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
