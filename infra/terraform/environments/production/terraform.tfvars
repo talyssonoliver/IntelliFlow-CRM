@@ -144,6 +144,12 @@ cost_alert_threshold   = 1
 # is set empty). OTEL_ENABLED stays "false" until otel_exporter_endpoint is set.
 observability_managed_services = ["api", "ai-worker"]
 
+# IFC-032: production OTLP goes to the Grafana Cloud stack (OTLP gateway, UK
+# region). The endpoint is not a secret; its auth header is, so it comes from
+# TF_VAR_otel_exporter_otlp_headers (GitHub secret OTEL_EXPORTER_OTLP_HEADERS)
+# and is never committed. Setting the endpoint flips OTEL_ENABLED to "true".
+otel_exporter_endpoint = "https://otlp-gateway-prod-gb-south-1.grafana.net/otlp"
+
 # Storage buckets exist live + are managed outside Terraform (the supabase CLI
 # isn't available to the runner); skip the local-exec creator.
 storage_buckets = {}

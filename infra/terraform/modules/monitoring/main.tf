@@ -25,6 +25,7 @@ locals {
   # Only advertise an OTLP endpoint when one is actually configured.
   otel_endpoint_env = var.otel_exporter_endpoint != "" ? {
     OTEL_EXPORTER_OTLP_ENDPOINT = var.otel_exporter_endpoint
+    OTEL_EXPORTER_OTLP_PROTOCOL = "http/protobuf"
   } : {}
 
   observability_env = merge(local.base_observability_env, local.otel_endpoint_env)

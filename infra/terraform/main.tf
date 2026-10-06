@@ -10,6 +10,12 @@ locals {
 
   # Full project name with environment suffix
   full_project_name = "${var.project_name}-${var.environment}"
+
+  # OTLP auth header (sensitive) for the Railway services. Keyed on the
+  # NON-sensitive endpoint so the map's keys stay plannable in for_each.
+  otlp_auth_env = var.otel_exporter_endpoint != "" ? {
+    OTEL_EXPORTER_OTLP_HEADERS = var.otel_exporter_otlp_headers
+  } : {}
 }
 
 # Supabase Module
@@ -168,7 +174,7 @@ module "railway" {
     REDIS_TLS                   = var.redis_tls
     GEMINI_API_KEY              = var.gemini_api_key
     OPENROUTER_API_KEY          = var.openrouter_api_key
-  }, module.monitoring.observability_env)
+  }, module.monitoring.observability_env, local.otlp_auth_env)
 
   # Service-level observability for the otherwise-unmanaged live services
   # (api, ai-worker — #314). They keep env_vars = {} (so the full shared_env_vars
@@ -181,6 +187,7 @@ module "railway" {
   service_observability_vars = {
     for svc in var.observability_managed_services : svc => merge(
       module.monitoring.observability_env,
+      local.otlp_auth_env,
       { SENTRY_DSN = var.sentry_dsn },
     )
   }
