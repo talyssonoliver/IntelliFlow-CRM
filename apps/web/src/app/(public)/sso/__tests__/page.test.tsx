@@ -165,7 +165,7 @@ describe('SsoPage', () => {
 
   it('exports metadata with title and description', () => {
     expect(metadata).toBeDefined();
-    expect(metadata.title).toBe('Enterprise SSO | IntelliFlow CRM');
+    expect(metadata.title).toBe('Enterprise SSO');
     expect(metadata.description).toContain('SSO');
   });
 

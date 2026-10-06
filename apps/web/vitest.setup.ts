@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { vi, afterEach, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import React from 'react';
+import { trackTimeouts } from './src/test/pending-timeouts';
 
 // =============================================================================
 // Next.js Navigation Mock
@@ -256,8 +257,18 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
+// Timeouts a test file leaves pending (Radix HoverCard and Toast delays among
+// them) fire after the DOM environment is torn down and fail the shard with
+// "document is not defined". Track them all and clear the leftovers in
+// afterAll, when every test in the file has finished. See ./src/test/pending-timeouts.ts.
+const leakedTimeouts = trackTimeouts();
+
 // Final cleanup when all tests complete
 afterAll(() => {
+  leakedTimeouts.clearPending();
+  // Unwrap again: with isolate:false this setup runs once per file in one
+  // context, and the wrappers must not stack.
+  leakedTimeouts.restore();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();

@@ -126,12 +126,10 @@ export function PressReleaseDetail({
           </div>
         )}
 
-        {/* Boilerplate / About IntelliFlow */}
+        {/* Boilerplate / About Aurora */}
         <div className="container px-4 lg:px-6 mx-auto max-w-4xl pb-8">
           <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
-              About IntelliFlow
-            </h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-3">About Aurora</h2>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
               {release.boilerplate}
             </p>

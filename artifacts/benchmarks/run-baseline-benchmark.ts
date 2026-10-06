@@ -50,7 +50,7 @@ function getEnvVar(name: string): string {
 
 /**
  * Authenticate with Supabase and return a Bearer token.
- * Uses the admin seed user (admin@intelliflow.dev / TestPassword123!).
+ * Uses the admin seed user (K6_TEST_EMAIL / K6_TEST_PASSWORD from the environment).
  */
 async function getAuthToken(): Promise<string | null> {
   const supabaseUrl = getEnvVar('SUPABASE_URL') || getEnvVar('NEXT_PUBLIC_SUPABASE_URL');
@@ -65,7 +65,10 @@ async function getAuthToken(): Promise<string | null> {
     const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
       method: 'POST',
       headers: { 'apikey': anonKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'admin@intelliflow.dev', password: 'TestPassword123!' }),
+      body: JSON.stringify({
+        email: getEnvVar('K6_TEST_EMAIL'),
+        password: getEnvVar('K6_TEST_PASSWORD'),
+      }),
     });
 
     if (!response.ok) {

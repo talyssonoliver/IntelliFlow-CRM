@@ -212,9 +212,9 @@ export function ResetSuccess({ onContinue, className }: Readonly<ResetSuccessPro
         href="/login"
         className={cn(
           'inline-flex items-center justify-center gap-2 w-full px-6 py-3 rounded-lg',
-          'bg-[#137fec] text-white font-medium',
-          'hover:bg-[#137fec]/90 transition-all',
-          'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900'
+          'bg-[#2a78f6] text-white font-medium',
+          'hover:bg-[#2a78f6]/90 transition-all',
+          'focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-slate-900'
         )}
       >
         Continue to Sign In{' '}
@@ -273,9 +273,9 @@ export function TokenInvalid({ reason, className }: Readonly<TokenInvalidProps>)
         href="/forgot-password"
         className={cn(
           'inline-flex items-center justify-center gap-2 w-full px-6 py-3 rounded-lg',
-          'bg-[#137fec] text-white font-medium',
-          'hover:bg-[#137fec]/90 transition-all',
-          'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900'
+          'bg-[#2a78f6] text-white font-medium',
+          'hover:bg-[#2a78f6]/90 transition-all',
+          'focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-slate-900'
         )}
       >
         Request New Reset Link{' '}
@@ -475,9 +475,9 @@ export function PasswordResetForm({
         disabled={isSubmitting}
         className={cn(
           'w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg',
-          'bg-[#137fec] text-white font-medium',
-          'hover:bg-[#137fec]/90 transition-all',
-          'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900',
+          'bg-[#2a78f6] text-white font-medium',
+          'hover:bg-[#2a78f6]/90 transition-all',
+          'focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-slate-900',
           'disabled:opacity-50 disabled:cursor-not-allowed'
         )}
       >

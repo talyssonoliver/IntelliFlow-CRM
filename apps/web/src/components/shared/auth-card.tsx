@@ -3,7 +3,8 @@
 /**
  * AuthCard - Branded card container for auth pages
  *
- * Centered card with branding header (badge, title, description).
+ * Centered Aurora glass card on Navy with a branding header (badge, title,
+ * description).
  * Used across login, signup, forgot-password, and reset-password pages.
  *
  * Features:
@@ -86,7 +87,7 @@ export function AuthCard({
         {badge && (
           <div
             className={cn(
-              'inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur-sm text-sm mb-4',
+              'inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#bca8ff] font-semibold backdrop-blur-sm text-sm mb-4 ring-1 ring-inset ring-white/15',
               badgeClassName
             )}
           >
@@ -98,20 +99,20 @@ export function AuthCard({
             {badge}
           </div>
         )}
-        <h1 className="text-3xl font-bold text-white">{title}</h1>
-        {description && <p className="text-slate-300 text-sm">{description}</p>}
+        <h1 className="text-3xl font-extrabold tracking-tight text-white">{title}</h1>
+        {description && <p className="text-white/75 text-[15px]">{description}</p>}
       </div>
 
-      <Card className="relative overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl rounded-2xl">
-        {/* Card gradient overlay */}
+      <Card className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+        {/* Card sheen */}
         <div
-          className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-[#137fec]/[0.03]"
+          className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-[#7655f6]/[0.06]"
           aria-hidden="true"
         />
 
-        {/* Security indicator glow */}
+        {/* Aurora glow in the corner */}
         <div
-          className="absolute top-0 right-0 w-32 h-32 bg-[#137fec]/10 rounded-bl-full blur-2xl"
+          className="absolute top-0 right-0 w-40 h-40 bg-[#28d9d4]/10 rounded-bl-full blur-2xl"
           aria-hidden="true"
         />
 
@@ -123,7 +124,7 @@ export function AuthCard({
           <div className="bg-white/[0.03] border-t border-white/10 px-8 py-4">
             <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
               <span
-                className="material-symbols-outlined text-base text-[#7cc4ff]"
+                className="material-symbols-outlined text-base text-[#bca8ff]"
                 aria-hidden="true"
               >
                 verified_user

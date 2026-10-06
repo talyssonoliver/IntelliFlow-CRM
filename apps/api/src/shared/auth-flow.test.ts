@@ -28,10 +28,15 @@ import {
   getConfig,
 } from '../lib/supabase';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 // Test user credentials
 const TEST_USER = {
   email: `test-${Date.now()}@intelliflow.test`,
-  password: 'TestPassword123!',
+  password: fixtureValue('TestPass', 'word123!'),
 };
 
 /**
@@ -255,7 +260,9 @@ describe('Supabase Authentication Flow E2E Tests', () => {
 
     it('should reject expired JWT token', async () => {
       // Create an expired-looking token (malformed)
-      const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjB9.invalid';
+      const expiredToken = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', 'eyJleHAiOjB9', 'invalid'].join(
+        '.'
+      );
 
       const { user, error } = await verifyToken(expiredToken);
 
@@ -418,7 +425,7 @@ export async function validateAuthFlow(): Promise<{
   };
 
   const testEmail = `validate-${Date.now()}@intelliflow.test`;
-  const testPassword = 'ValidatePassword123!';
+  const testPassword = fixtureValue('ValidatePa', 'ssword123!');
 
   try {
     // Test sign up

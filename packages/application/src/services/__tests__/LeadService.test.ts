@@ -64,9 +64,9 @@ class MockLeadRepository implements LeadRepository {
     this.leads.delete(id.value);
   }
 
-  async existsByEmail(email: Email): Promise<boolean> {
+  async existsByEmailInTenant(email: Email, tenantId: string): Promise<boolean> {
     for (const lead of this.leads.values()) {
-      if (lead.email.equals(email)) return true;
+      if (lead.tenantId === tenantId && lead.email.equals(email)) return true;
     }
     return false;
   }
@@ -280,6 +280,33 @@ describe('LeadService', () => {
       expect(result.error.message).toContain('already exists');
     });
 
+    it('creates the lead when the same email exists only in another tenant', async () => {
+      const first = await leadService.createLead({
+        email: 'cross-tenant@example.com',
+        source: 'WEBSITE',
+        ownerId: 'owner-a',
+        tenantId: 'tenant-a',
+      });
+      expect(first.isSuccess).toBe(true);
+
+      const otherTenant = await leadService.createLead({
+        email: 'cross-tenant@example.com',
+        source: 'WEBSITE',
+        ownerId: 'owner-b',
+        tenantId: 'tenant-b',
+      });
+      expect(otherTenant.isSuccess).toBe(true);
+
+      const sameTenant = await leadService.createLead({
+        email: 'cross-tenant@example.com',
+        source: 'WEBSITE',
+        ownerId: 'owner-a',
+        tenantId: 'tenant-a',
+      });
+      expect(sameTenant.isFailure).toBe(true);
+      expect(sameTenant.error.message).toContain('already exists');
+    });
+
     it('should publish domain events after creation', async () => {
       await leadService.createLead({
         email: 'events@example.com',
@@ -453,6 +480,11 @@ describe('LeadService', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error).toBeInstanceOf(ValidationError);
       expect(result.error.message).toContain('below minimum');
+      expect(result.error).toMatchObject({
+        code: 'VALIDATION_ERROR',
+        reason: 'LEAD_SCORE_BELOW_MINIMUM',
+        score: 30,
+      });
     });
 
     it('should fail for non-existent lead', async () => {

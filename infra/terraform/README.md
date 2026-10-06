@@ -97,7 +97,7 @@ export TF_VAR_vercel_api_token="xxxxxxxxxxxxx"
 export TF_VAR_railway_token="xxxxxxxxxxxxx"
 
 # Database
-export TF_VAR_db_password="super-secret-password"
+export TF_VAR_db_password="<your-db-password>"
 ```
 
 Load the variables:
@@ -178,7 +178,7 @@ region = "us-east-1"
 # Supabase
 supabase_project_name = "intelliflow-dev"
 supabase_region = "us-east-1"
-supabase_db_password = "env:DB_PASSWORD_DEV"
+# supabase_db_password: supply via TF_VAR_supabase_db_password
 
 # Vercel
 vercel_project_name = "intelliflow-crm-dev"
