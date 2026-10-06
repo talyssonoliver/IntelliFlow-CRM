@@ -456,7 +456,7 @@ export class OpportunityService {
     // description (updateDescription) cannot fail. Apply both last.
     this.applyStakeholderMutations(opportunity, data);
     if (data.description !== undefined) {
-      opportunity.updateDescription(data.description);
+      opportunity.updateDescription(data.description, updatedBy);
     }
 
     try {
