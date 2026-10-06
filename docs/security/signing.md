@@ -296,6 +296,12 @@ cosign verify-blob \
 
 ### Verification in Deployment Pipeline
 
+> **Note (2026-10-05):** `blue-green-deploy.yml` was removed; it never performed
+> a real traffic switch. The examples below describe the intended design only.
+> The live rollback path is `vercel-rollback.yml` (see
+> `docs/operations/release-rollback.md`), and it does not verify artifact
+> signatures.
+
 The blue-green deployment workflow includes verification:
 
 ```yaml

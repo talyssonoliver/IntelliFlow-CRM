@@ -38,6 +38,11 @@ Development → Staging → Production
 
 **Deployment**:
 
+> **Note (2026-10-05):** blue-green deployment is not implemented; the workflow
+> was removed. Production is Vercel's own deployment flow with manual Instant
+> Rollback (`docs/operations/release-rollback.md`). Treat the blue-green and
+> gradual traffic shift bullets in this document as aspirational.
+
 - Automatic blue-green deployment
 - Health checks must pass within 2 minutes
 - Automatic rollback if health checks fail

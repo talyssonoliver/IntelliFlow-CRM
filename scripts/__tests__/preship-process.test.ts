@@ -589,6 +589,8 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
       'preship-report.mjs',
       'preship-gate.mjs',
       'test-slot.mjs',
+      'preship-integration-infra.mjs',
+      'preship-cache.mjs',
     ]) {
       fs.copyFileSync(path.join(SCRIPTS, 'lib', lib), path.join(dir, 'scripts/lib', lib));
     }

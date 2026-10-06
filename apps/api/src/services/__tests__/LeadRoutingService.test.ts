@@ -210,6 +210,10 @@ describe('Section A: Unit Tests', () => {
       tenantId: TENANT_ID,
     });
 
+    expect(txMock.routingRule.findMany).toHaveBeenCalledWith({
+      where: { tenantId: TENANT_ID, ruleType: 'LEAD', isActive: true },
+      orderBy: { priority: 'desc' },
+    });
     expect(txMock.routingAudit.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         tenantId: TENANT_ID,
@@ -356,6 +360,24 @@ describe('Section A: Unit Tests', () => {
 
     expect(result).not.toBeNull();
     expect(result!.ruleId).toBe(RULE_ID);
+  });
+
+  it('A15b: findMatchingRule reads only LEAD rules of the tenant (never ticket rules)', async () => {
+    (prismaMock as any).routingRule.findMany.mockResolvedValue([]);
+
+    await service.findMatchingRule(TENANT_ID, {
+      score: 85,
+      source: 'WEB',
+      status: 'NEW',
+      estimatedValue: 5000,
+      location: 'New York',
+      tags: [],
+    });
+
+    expect((prismaMock as any).routingRule.findMany).toHaveBeenCalledWith({
+      where: { tenantId: TENANT_ID, ruleType: 'LEAD', isActive: true },
+      orderBy: { priority: 'desc' },
+    });
   });
 
   it('A16: findMatchingRule extracts assignee from actions[].target', async () => {

@@ -97,7 +97,7 @@ export const routingRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }): Promise<{ items: RoutingRuleDto[]; nextCursor?: string }> => {
       const tenantId = ctx.tenant.tenantId;
-      const where: Record<string, unknown> = { tenantId };
+      const where: Record<string, unknown> = { tenantId, ruleType: 'LEAD' };
       if (input.isActive !== undefined) {
         where.isActive = input.isActive;
       }
@@ -125,7 +125,7 @@ export const routingRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }): Promise<RoutingRuleDto | null> => {
       const rule = await ctx.prismaWithTenant.routingRule.findFirst({
-        where: { id: input.id, tenantId: ctx.tenant.tenantId },
+        where: { id: input.id, tenantId: ctx.tenant.tenantId, ruleType: 'LEAD' },
       });
       return rule ? toRoutingRuleDto(rule) : null;
     }),
@@ -139,6 +139,7 @@ export const routingRouter = createTRPCRouter({
       const rule = await ctx.prismaWithTenant.routingRule.create({
         data: {
           tenantId: ctx.tenant.tenantId,
+          ruleType: 'LEAD',
           name: input.name,
           description: input.description ?? null,
           priority: input.priority,
@@ -162,7 +163,7 @@ export const routingRouter = createTRPCRouter({
 
       // Verify rule exists and belongs to this tenant
       const existing = await ctx.prismaWithTenant.routingRule.findFirst({
-        where: { id, tenantId },
+        where: { id, tenantId, ruleType: 'LEAD' },
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
@@ -190,7 +191,7 @@ export const routingRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }): Promise<RoutingRuleDto> => {
       const existing = await ctx.prismaWithTenant.routingRule.findFirst({
-        where: { id: input.id, tenantId: ctx.tenant.tenantId },
+        where: { id: input.id, tenantId: ctx.tenant.tenantId, ruleType: 'LEAD' },
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
@@ -215,7 +216,7 @@ export const routingRouter = createTRPCRouter({
       // Verify all rules belong to this tenant before reordering
       const ruleIds = input.rules.map((r) => r.id);
       const ownedCount = await ctx.prismaWithTenant.routingRule.count({
-        where: { id: { in: ruleIds }, tenantId },
+        where: { id: { in: ruleIds }, tenantId, ruleType: 'LEAD' },
       });
       if (ownedCount !== ruleIds.length) {
         throw new TRPCError({
@@ -242,7 +243,7 @@ export const routingRouter = createTRPCRouter({
     .input(z.object({ id: z.string(), isActive: z.boolean() }))
     .mutation(async ({ ctx, input }): Promise<RoutingRuleDto> => {
       const existing = await ctx.prismaWithTenant.routingRule.findFirst({
-        where: { id: input.id, tenantId: ctx.tenant.tenantId },
+        where: { id: input.id, tenantId: ctx.tenant.tenantId, ruleType: 'LEAD' },
       });
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Routing rule not found' });
