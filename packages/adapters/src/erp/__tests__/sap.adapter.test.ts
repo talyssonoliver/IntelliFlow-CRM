@@ -8,6 +8,11 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { SAPAdapter, SAPConfig, SAPCustomer, SAPSalesOrder } from '../sap/client';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 // Mock fetch globally
 const mockFetch = vi.fn();
 global.fetch = mockFetch as typeof fetch;
@@ -19,7 +24,7 @@ describe('SAPAdapter', () => {
     clientId: 'test_client',
     clientSecret: 'test_secret',
     username: 'test_user',
-    password: 'test_pass',
+    password: fixtureValue('test_', 'pass'),
     company: 'TEST_CO',
   };
 

@@ -131,7 +131,7 @@ export default function ForgotPasswordPage() {
     <AuthBackground>
       <div className="relative z-10 w-full max-w-md mx-auto px-4">
         <AuthCard
-          badge="INTELLIFLOW"
+          badge="Aurora"
           badgeIcon="lock_reset"
           title={state === 'form' ? 'Forgot your password?' : 'Check your email'}
           description={
@@ -142,7 +142,7 @@ export default function ForgotPasswordPage() {
               Remember your password?{' '}
               <Link
                 href="/login"
-                className="text-[#137fec] hover:text-[#137fec]/80 font-medium transition-colors"
+                className="text-[#2a78f6] hover:text-[#2a78f6]/80 font-medium transition-colors"
               >
                 Back to sign in
               </Link>

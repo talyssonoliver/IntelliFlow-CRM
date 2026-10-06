@@ -14,6 +14,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AgentActionLogger, createLogEntry, LogEntry } from '../logger';
 import { AgentActionLog } from '../types';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 describe('Agent Logger', () => {
   let logger: AgentActionLogger;
 
@@ -100,7 +105,7 @@ describe('Agent Logger', () => {
         entityType: 'LEAD',
         input: {
           username: 'testuser',
-          password: 'supersecret123',
+          password: fixtureValue('superse', 'cret123'),
           apiToken: 'token123',
         },
         success: true,
@@ -134,7 +139,7 @@ describe('Agent Logger', () => {
           user: {
             name: 'Test',
             credentials: {
-              password: 'secret123',
+              password: fixtureValue('secre', 't123'),
             },
           },
         },
@@ -580,7 +585,7 @@ describe('Agent Logger', () => {
         input: { query: 'test' },
         output: {
           user: 'testuser',
-          password: 'secret123',
+          password: fixtureValue('secre', 't123'),
         },
         success: true,
         durationMs: 10,

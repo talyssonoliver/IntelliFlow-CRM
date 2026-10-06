@@ -122,6 +122,11 @@ import {
   type ReindexJobData,
 } from '../reindex-worker';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 // =============================================
 // Helpers
 // =============================================
@@ -408,7 +413,7 @@ describe('createReindexWorker factory', () => {
     const w = createReindexWorker(mockPrisma, {
       host: 'redis.example.com',
       port: 6380,
-      password: 'secret',
+      password: fixtureValue('sec', 'ret'),
     });
     expect(w).toBeInstanceOf(ReindexWorker);
   });

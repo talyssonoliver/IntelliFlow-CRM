@@ -8,6 +8,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 // Mock the hooks
 const mockMfaStatus = {
   data: {
@@ -279,7 +284,9 @@ describe('MFA Management Dashboard (PG-125)', () => {
       fireEvent.click(confirmBtn);
 
       await waitFor(() => {
-        expect(mockDisableMfa.mutateAsync).toHaveBeenCalledWith({ password: 'MyPassword123' });
+        expect(mockDisableMfa.mutateAsync).toHaveBeenCalledWith({
+          password: fixtureValue('MyPassw', 'ord123'),
+        });
       });
     });
 

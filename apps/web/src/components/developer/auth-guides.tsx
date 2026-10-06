@@ -259,12 +259,12 @@ Content-Type: application/json
 
 {
   "email": "user@example.com",
-  "password": "your_password_here"
+  "password": "<your-password>"
 }
 
 // Response (no MFA):
 {
-  "accessToken": "YOUR_ACCESS_TOKEN_HERE",
+  "accessToken": "<access-token>",
   "refreshToken": "YOUR_REFRESH_TOKEN_HERE",
   "expiresIn": 86400
 }
@@ -287,10 +287,7 @@ Content-Type: application/json
           Include the access token in the{' '}
           <code className="text-xs bg-muted px-1 py-0.5 rounded">Authorization</code> header:
         </p>
-        <CodeBlock
-          code={`Authorization: Bearer YOUR_ACCESS_TOKEN_HERE`}
-          label="Bearer Token Header"
-        />
+        <CodeBlock code={`Authorization: Bearer <access-token>`} label="Bearer Token Header" />
       </section>
 
       <section aria-labelledby="tokens-password">
@@ -373,7 +370,7 @@ function MfaTab() {
 
         <CodeBlock
           code={`POST /api/auth/mfa/setup
-Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+Authorization: Bearer <access-token>
 
 // Response:
 {

@@ -153,34 +153,47 @@ test.describe('UTM Tracking', () => {
   });
 
   test('retrieves UTM from localStorage on subsequent visits', async ({ page }) => {
-    // First visit with UTM params
-    await page.goto('/signup?utm_source=facebook&utm_medium=social');
-    await page.waitForLoadState('networkidle');
+    // Wait on the condition itself, not on 'networkidle': Stripe.js on this page
+    // keeps beaconing, so the network never reliably goes idle (CI timed out here).
+    const readUtmSource = () =>
+      page.evaluate(() => {
+        const raw = localStorage.getItem('intelliflow_utm');
+        return raw ? (JSON.parse(raw).utm_source as string | null) : null;
+      });
 
-    // Navigate away and back
+    // First visit with UTM params — the page stores them on mount.
+    await page.goto('/signup?utm_source=facebook&utm_medium=social');
+    await expect.poll(readUtmSource).toBe('facebook');
+
+    // Navigate away and back without UTM params; wait for the form to hydrate
+    // (the mount effect has run) before reading storage again.
     await page.goto('/');
     await page.goto('/signup');
-    await page.waitForLoadState('networkidle');
+    await expect(page.locator('input[name="email"]')).toBeVisible();
 
-    // UTM should still be in localStorage
-    const utmData = await page.evaluate(() => {
-      return localStorage.getItem('intelliflow_utm');
-    });
-
-    expect(utmData).toBeTruthy();
-    const parsed = JSON.parse(utmData!);
-    expect(parsed.utm_source).toBe('facebook');
+    // The earlier attribution must survive a param-less revisit.
+    expect(await readUtmSource()).toBe('facebook');
   });
 });
 
 test.describe('Error Recovery', () => {
   test('error recovery - correct and resubmit', async ({ page }) => {
-    // Submit invalid form
+    // This describe has no beforeEach of its own (the /signup goto lives in
+    // 'Sign Up Flow'), so it previously ran against about:blank.
+    await page.goto('/signup');
+
+    // Hydration gate: before React attaches onSubmit a click NATIVE-submits the
+    // form (a GET that reloads /signup). Retry an empty submit until React's
+    // inline error proves the handler is live.
+    await expect(async () => {
+      await page.click('button[type="submit"]');
+      await expect(page.locator('text=Full name is required')).toBeVisible({ timeout: 1000 });
+    }).toPass({ timeout: 15_000 });
+
+    // Submit an invalid email; React validation must flag it.
     await page.fill('input[name="email"]', 'invalid-email');
     await page.click('button[type="submit"]');
-
-    // Verify errors appear
-    await expect(page.locator('[role="alert"]')).toHaveCount.call(expect, { timeout: 5000 });
+    await expect(page.locator('text=Please enter a valid email address')).toBeVisible();
 
     // Correct the errors
     await page.fill('input[name="fullName"]', 'Test User');

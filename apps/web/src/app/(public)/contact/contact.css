@@ -1,0 +1,112 @@
+/* Contact, in the Aurora design. Every rule is scoped under .aurora-site .aurora-contact. */
+
+.aurora-site .aurora-contact .ac-center {
+  text-align: center;
+}
+.aurora-site .aurora-contact .ac-body {
+  padding: 24px 0 0;
+}
+.aurora-site .aurora-contact .ac-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 48px;
+  align-items: start;
+}
+.aurora-site .aurora-contact .ac-h2 {
+  font-size: clamp(26px, 2.6vw, 34px);
+}
+.aurora-site .aurora-contact .ac-intro {
+  margin: 14px 0 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.aurora-site .aurora-contact .ac-methods {
+  display: grid;
+  gap: 18px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.aurora-site .aurora-contact .ac-methods li {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.aurora-site .aurora-contact .ac-tile {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(42, 120, 246, 0.1);
+  color: var(--blue);
+  font-size: 22px;
+}
+.aurora-site .aurora-contact .ac-methods h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.aurora-site .aurora-contact .ac-methods p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.aurora-site .aurora-contact .ac-methods a {
+  font-weight: 600;
+  color: var(--blue);
+  text-decoration: none;
+  word-break: break-all;
+}
+.aurora-site .aurora-contact .ac-methods a:hover {
+  text-decoration: underline;
+}
+.aurora-site .aurora-contact .ac-expect {
+  margin-top: 32px;
+  padding: 24px;
+}
+.aurora-site .aurora-contact .ac-expect h3 {
+  margin: 0 0 14px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.aurora-site .aurora-contact .ac-expect ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.aurora-site .aurora-contact .ac-expect li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.aurora-site .aurora-contact .ac-expect .material-symbols-outlined {
+  flex: none;
+  font-size: 20px;
+  color: #12a8a4;
+}
+.aurora-site .aurora-contact .ac-form {
+  padding: 32px;
+}
+.aurora-site .aurora-contact .ac-faq {
+  max-width: 820px;
+}
+
+@media (max-width: 960px) {
+  .aurora-site .aurora-contact .ac-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .aurora-site .aurora-contact .ac-form {
+    padding: 22px 18px;
+  }
+}

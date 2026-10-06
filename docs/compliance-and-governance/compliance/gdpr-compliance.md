@@ -275,7 +275,8 @@ Contact: privacy@intelliflow-crm.com
 - [x] DPO role in RBAC (`packages/domain/src/shared/Permission.ts`)
 - [x] Automated retention enforcement (`schedule_deletion_by_retention()`)
 - [x] Breach detection via Sentry alerts
-- [x] GDPR training tracked (`docs/training/training-completion.csv`)
+- [ ] GDPR training tracked (not started; the earlier training record was
+      fabricated and was removed)
 
 ### Sprint 28 (Backlog — UI settings pages)
 

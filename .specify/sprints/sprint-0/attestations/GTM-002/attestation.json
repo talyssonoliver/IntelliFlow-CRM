@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "docs/company/messaging/voice-guidelines.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/example-messaging.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/tone-matrix.csv",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "Voice and tone defined",
       "Messaging examples created"

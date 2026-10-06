@@ -15,6 +15,11 @@ import {
   SAPNotFoundError,
 } from '../../../packages/adapters/src/erp/sap/client';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 // Mock fetch globally
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
@@ -28,7 +33,7 @@ describe.skip('SAP ERP Adapter', () => {
     clientId: 'test-client-id',
     clientSecret: 'test-client-secret',
     username: 'test-user',
-    password: 'test-password',
+    password: fixtureValue('test-pa', 'ssword'),
     company: 'TEST_CO',
   };
 

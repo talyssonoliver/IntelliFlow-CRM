@@ -29,7 +29,7 @@ export const jobListings: Record<string, JobListing> = {
     location: 'Remote (UK/EU)',
     type: 'Full-time',
     description:
-      'We are looking for a Senior Full-Stack Engineer to join our core platform team. You will work on building and scaling our Next.js/tRPC platform with a focus on type safety, performance, and AI integration. This is a hands-on role where you will have significant impact on the architecture and technical direction of IntelliFlow.',
+      'We are looking for a Senior Full-Stack Engineer to join our core platform team. You will work on building and scaling our Next.js/tRPC platform with a focus on type safety, performance, and AI integration. This is a hands-on role where you will have significant impact on the architecture and technical direction of Aurora.',
     responsibilities: [
       'Design and implement new features across the full stack using TypeScript, Next.js, and tRPC',
       'Lead technical design discussions and make architectural decisions',
@@ -74,7 +74,7 @@ export const jobListings: Record<string, JobListing> = {
     location: 'Remote (Global)',
     type: 'Full-time',
     description:
-      "Join our AI team to design and implement intelligent features that power IntelliFlow's AI-first CRM. You will work on lead scoring, predictive analytics, RAG-based assistants, and other ML-powered features. We prioritize responsible AI with human oversight built into every system.",
+      "Join our AI team to design and implement intelligent features that power Aurora's AI-first CRM. You will work on lead scoring, predictive analytics, RAG-based assistants, and other ML-powered features. We prioritize responsible AI with human oversight built into every system.",
     responsibilities: [
       'Design and implement AI features including lead scoring and predictive analytics',
       'Build and maintain RAG-based AI assistants using LangChain',
@@ -162,13 +162,13 @@ export const jobListings: Record<string, JobListing> = {
     location: 'Remote (US/EU)',
     type: 'Full-time',
     description:
-      'Help developers succeed with IntelliFlow by creating technical content, improving documentation, and building developer community. You will work at the intersection of engineering and developer advocacy, ensuring our APIs and SDKs are world-class.',
+      'Help developers succeed with Aurora by creating technical content, improving documentation, and building developer community. You will work at the intersection of engineering and developer advocacy, ensuring our APIs and SDKs are world-class.',
     responsibilities: [
       'Create technical tutorials, guides, and video content',
       'Build sample applications and integrations',
       'Engage with developer community on Discord and GitHub',
       'Improve API documentation and developer experience',
-      'Represent IntelliFlow at conferences and meetups',
+      'Represent Aurora at conferences and meetups',
       'Gather feedback from developers to improve products',
     ],
     requirements: [
@@ -206,7 +206,7 @@ export const jobListings: Record<string, JobListing> = {
     location: 'Remote (UK/EU)',
     type: 'Full-time',
     description:
-      'Ensure IntelliFlow meets enterprise security standards with a focus on zero-trust architecture. You will work across the stack to identify vulnerabilities, implement security controls, and ensure compliance with SOC 2, GDPR, and ISO standards.',
+      'Ensure Aurora meets enterprise security standards with a focus on zero-trust architecture. You will work across the stack to identify vulnerabilities, implement security controls, and ensure compliance with SOC 2, GDPR, and ISO standards.',
     responsibilities: [
       'Design and implement security controls across the platform',
       'Conduct security reviews and threat modeling',

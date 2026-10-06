@@ -20,7 +20,7 @@ tags = {
 supabase_access_token  = "env:SUPABASE_ACCESS_TOKEN"  # Or set directly
 supabase_project_name  = "intelliflow-crm-dev"
 supabase_region        = "us-east-1"
-supabase_db_password   = "env:DB_PASSWORD"
+# supabase_db_password: supply via the TF_VAR_supabase_db_password environment variable
 supabase_plan          = "free"
 
 # Vercel Configuration

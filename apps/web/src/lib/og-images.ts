@@ -14,6 +14,7 @@ export const OG_IMAGES = [
     url: '/opengraph-image',
     width: 1200,
     height: 630,
-    alt: 'IntelliFlow CRM — AI-Powered Customer Relationship Management',
+    // Kept in step with `alt` in app/opengraph-image.tsx.
+    alt: 'Aurora: the CRM that works your pipeline for you',
   },
 ];

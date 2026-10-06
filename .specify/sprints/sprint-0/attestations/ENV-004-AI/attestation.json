@@ -10,10 +10,6 @@
       {
         "path": "supabase/config.toml",
         "sha256": "be4b1d70dd0de623a8bd8385c1c51d682410fc9dde1b92bee4a6f2539925944d"
-      },
-      {
-        "path": "supabase/.gitignore",
-        "sha256": "verified-placeholder"
       }
     ],
     "invariants_acknowledged": [

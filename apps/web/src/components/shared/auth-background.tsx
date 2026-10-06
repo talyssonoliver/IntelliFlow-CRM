@@ -1,16 +1,15 @@
 'use client';
 
 /**
- * AuthBackground - Animated gradient background for auth pages
+ * AuthBackground - the Aurora backdrop for the sign-in pages
  *
- * Provides the dark theme animated background with gradient orbs
- * used across login, signup, forgot-password, and reset-password pages.
+ * Aurora Navy with the landing page's aurora ribbons rising from the bottom
+ * corners and a soft violet glow behind the card, as in the landing's
+ * Security section and closing call to action. The wordmark at the top left
+ * goes back home. Used across login, signup, forgot-password, reset-password,
+ * verify-email, MFA, SSO and logout.
  *
- * Features:
- * - Animated gradient orbs with pulse effect
- * - Dark blue theme matching design system
- * - Subtle grid pattern overlay
- * - Full viewport coverage
+ * Nothing here moves on its own, so there is nothing to pause.
  *
  * @example
  * ```tsx
@@ -21,6 +20,7 @@
  */
 
 import * as React from 'react';
+import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
 
 // ============================================================
@@ -42,43 +42,47 @@ export function AuthBackground({ children, className }: Readonly<AuthBackgroundP
   return (
     <main
       className={cn(
-        // IFC-007: Use min-height for responsive auth pages
+        // IFC-007: Use min-height for responsive auth pages (the full screen:
+        // the sign-in pages have no app bar above them)
         // - Uses dvh (dynamic viewport height) for mobile keyboard support
         // - Falls back to vh for older browsers via CSS
         // - Centers content when it fits, scrolls when content is taller
-        // - py-8 provides breathing room at top/bottom when scrolling
+        // - pt-24 clears the wordmark; pb-12 gives breathing room when scrolling
         // - scroll-pb-32 ensures focused inputs aren't hidden behind keyboard
         // - Hide scrollbar for cleaner appearance
-        'relative min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] bg-[#0f172a] flex items-center justify-center overflow-y-auto px-4 py-8 scroll-pb-32 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
+        'aurora-auth relative min-h-screen min-h-[100dvh] bg-[#11175b] flex items-center justify-center overflow-y-auto overflow-x-clip px-4 pt-24 pb-12 scroll-pb-32 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
         className
       )}
+      style={{ fontFamily: 'var(--font-manrope), system-ui, sans-serif' }}
     >
-      {/* Base gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37]" />
+      {/* The aurora: a violet glow behind the card and the ribbons rising from the corners. */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="absolute left-1/2 top-1/3 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#7655f6]/25 blur-[120px]" />
+        <div className="absolute -right-24 top-0 h-80 w-80 rounded-full bg-[#28d9d4]/10 blur-[100px]" />
+        <img
+          src="/brand/aurora/bg/ribbon-left.webp"
+          alt=""
+          className="absolute -bottom-16 -left-36 w-[360px] max-w-none opacity-90 sm:-bottom-24 sm:w-[600px]"
+        />
+        <img
+          src="/brand/aurora/bg/ribbon-right.webp"
+          alt=""
+          className="absolute -bottom-24 -right-44 w-[440px] max-w-none -rotate-6 opacity-90 sm:-bottom-36 sm:w-[780px]"
+        />
+      </div>
 
-      {/* Animated gradient orb - top left */}
-      <div
-        className="absolute -left-40 top-20 h-96 w-96 rounded-full bg-[#137fec]/20 blur-3xl opacity-50 animate-pulse"
-        style={{ animationDuration: '4s' }}
-        aria-hidden="true"
-      />
-
-      {/* Animated gradient orb - bottom right */}
-      <div
-        className="absolute right-0 bottom-0 h-[500px] w-[500px] rounded-full bg-indigo-500/20 blur-3xl opacity-40 animate-pulse"
-        style={{ animationDuration: '6s', animationDelay: '1s' }}
-        aria-hidden="true"
-      />
-
-      {/* Subtle grid pattern overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.015]"
-        style={{
-          backgroundImage: `linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)`,
-          backgroundSize: '64px 64px',
-        }}
-        aria-hidden="true"
-      />
+      <Link
+        href="/"
+        aria-label="Aurora home"
+        className="absolute left-5 top-6 z-20 flex items-center gap-2.5 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#bca8ff] sm:left-8"
+      >
+        <img src="/brand/aurora/aurora-wave.webp" alt="" className="h-[22px] w-auto" />
+        <img
+          src="/brand/aurora/aurora-wordmark.webp"
+          alt="Aurora"
+          className="h-[18px] w-auto brightness-0 invert"
+        />
+      </Link>
 
       {/* Content */}
       {children}
