@@ -12,6 +12,7 @@ import {
 import {
   checkSprintCompletion,
   checkSprintStartGate,
+  useReopenExemptions,
   type SprintTask,
 } from './validation-utils.js';
 
@@ -139,5 +140,17 @@ describe('completion gates with exemptions', () => {
   it('fails the start gate for any sprint, even 0, when an exemption is invalid', () => {
     const result = checkSprintStartGate(tasks, 0, new Set(), [exemption('NOPE-1')]);
     expect(result.gateResult).toMatchObject({ name: 'Sprint Start Gate', severity: 'FAIL' });
+  });
+
+  it('applies no exemptions by default; an entry point opts in with useReopenExemptions', () => {
+    const open = [task('IFC-1', 'In Progress')];
+    expect(checkSprintCompletion(open, '1').isComplete).toBe(false);
+    useReopenExemptions([exemption('IFC-1', '2999-01-01T00:00:00+00:00')]);
+    try {
+      expect(checkSprintCompletion(open, '1').isComplete).toBe(true);
+      expect(checkSprintStartGate(open, 2).gateResult.severity).toBe('PASS');
+    } finally {
+      useReopenExemptions([]);
+    }
   });
 });

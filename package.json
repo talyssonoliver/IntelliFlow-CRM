@@ -90,7 +90,7 @@
     "docs:build": "pnpm --dir docs --ignore-workspace run build",
     "docs:api": "pnpm --filter api docs:generate",
     "tracker": "pnpm --filter @intelliflow/project-tracker dev",
-    "validate:sprint": "tsx tools/scripts/sprint-validation.ts",
+    "validate:sprint": "tsx tools/scripts/sprint-gates.ts",
     "validate:sprint0:report": "tsx tools/scripts/capture-validation-output.ts --output artifacts/sprint0/codex-run/validation-output.txt",
     "validate:sprint:report": "tsx tools/scripts/capture-validation-output.ts",
     "validate:sprint-data": "tsx tools/scripts/validate-sprint-data.ts",

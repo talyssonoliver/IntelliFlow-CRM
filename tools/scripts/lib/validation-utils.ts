@@ -18,7 +18,6 @@ import { resolve, join } from 'node:path';
 import {
   activeExemptionIds,
   checkReopenExemptions,
-  loadReopenExemptions,
   type ReopenExemption,
 } from './reopen-exemptions.js';
 
@@ -421,16 +420,20 @@ function parseCSVLine(line: string): string[] {
 const COMPLETED_STATUSES = new Set(['Done', 'Completed']);
 
 /**
- * Dated reopen exemptions from tools/scripts/reopen-exemptions.json (owner
- * ruling 2026-10-06). Loaded once; callers can pass their own set instead.
+ * Dated reopen exemptions (owner ruling 2026-10-06). Empty unless an entry
+ * point opts in with useReopenExemptions(): the strict sprint gate does, via
+ * tools/scripts/sprint-gates.ts. The functions below stay pure for every
+ * other caller and test.
  */
-let cachedReopenExemptions: ReopenExemption[] | undefined;
-function defaultReopenExemptions(): ReopenExemption[] {
-  cachedReopenExemptions ??= loadReopenExemptions(findRepoRoot());
-  return cachedReopenExemptions;
+let reopenExemptions: readonly ReopenExemption[] = [];
+export function useReopenExemptions(exemptions: readonly ReopenExemption[]): void {
+  reopenExemptions = exemptions;
+}
+function defaultReopenExemptions(): readonly ReopenExemption[] {
+  return reopenExemptions;
 }
 function defaultReopenExemptIds(): ReadonlySet<string> {
-  return activeExemptionIds(defaultReopenExemptions());
+  return activeExemptionIds(reopenExemptions);
 }
 
 export interface CompletionResult {
