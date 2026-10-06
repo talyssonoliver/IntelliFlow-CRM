@@ -115,6 +115,21 @@ export function parseDryRun(value) {
 }
 
 /** @param {string} text */
+/**
+ * A value made safe for a log line: control characters (CR/LF included) are
+ * replaced, then the result is JSON-encoded, so input such as a dispatch
+ * `reason` or an API-returned id cannot forge or split log lines.
+ * @param {unknown} value
+ */
+export function forLog(value) {
+  let clean = '';
+  for (const ch of String(value ?? '')) {
+    const code = ch.codePointAt(0) ?? 0;
+    clean += code < 0x20 || (code >= 0x7f && code <= 0x9f) ? ' ' : ch;
+  }
+  return JSON.stringify(clean);
+}
+
 function cell(text) {
   return String(text ?? '')
     .replace(/\r?\n/g, ' ')
@@ -257,7 +272,7 @@ export async function runResolve(env, { fetchImpl, log = console.log } = {}) {
     env.GITHUB_OUTPUT,
     `current_id=${currentId}\ntarget_id=${target.uid}\ntarget_url=${target.url}\n`
   );
-  log(summary);
+  log(forLog(summary));
   return { currentId, target, dryRun: cfg.dryRun };
 }
 
@@ -282,13 +297,17 @@ export async function runVerify(env, deps = {}) {
     const { currentId } = await loadState({ ...cfg, fetchImpl });
     seen = currentId;
     if (currentId === expected) {
-      log(`Verified: production now serves ${expected}.`);
+      log(`Verified: production now serves ${forLog(expected)}.`);
       return true;
     }
-    log(`Attempt ${i}/${attempts}: production is ${currentId}, expected ${expected}.`);
+    log(
+      `Attempt ${i}/${attempts}: production is ${forLog(currentId)}, expected ${forLog(expected)}.`
+    );
     if (i < attempts) await sleep(10_000);
   }
-  throw new Error(`Rollback NOT verified: production is ${seen}, expected ${expected}.`);
+  throw new Error(
+    `Rollback NOT verified: production is ${forLog(seen)}, expected ${forLog(expected)}.`
+  );
 }
 
 export async function main(argv = process.argv.slice(2), env = process.env) {

@@ -9,6 +9,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   apiGet,
+  forLog,
   isEligible,
   loadState,
   main,
@@ -283,7 +284,7 @@ describe('runVerify', () => {
   it('passes when production is the target', async () => {
     const log = vi.fn();
     await expect(runVerify(env, { fetchImpl: stubFetch('dpl_4'), log })).resolves.toBe(true);
-    expect(log).toHaveBeenCalledWith('Verified: production now serves dpl_4.');
+    expect(log).toHaveBeenCalledWith('Verified: production now serves "dpl_4".');
   });
 
   it('retries until production flips', async () => {
@@ -305,7 +306,7 @@ describe('runVerify', () => {
     const sleep = vi.fn(async () => {});
     await expect(
       runVerify(env, { fetchImpl: stubFetch('dpl_5'), log: vi.fn(), sleep, attempts: 3 })
-    ).rejects.toThrow('Rollback NOT verified: production is dpl_5, expected dpl_4.');
+    ).rejects.toThrow('Rollback NOT verified: production is "dpl_5", expected "dpl_4".');
     expect(sleep).toHaveBeenCalledTimes(2);
   });
 
@@ -340,5 +341,21 @@ describe('main', () => {
   it('rejects unknown subcommands', async () => {
     await expect(main(['nope'], {})).rejects.toThrow(/Usage/);
     await expect(main([], {})).rejects.toThrow(/Usage/);
+  });
+});
+
+describe('forLog', () => {
+  it('neutralises CR/LF and other control characters, then JSON-encodes', () => {
+    const forged = 'rollback ok\r\n::error::fake line\u0007';
+    const out = forLog(forged);
+    for (const code of [13, 10, 7]) expect(out.includes(String.fromCharCode(code))).toBe(false);
+    expect(out).toBe('"rollback ok  ::error::fake line "');
+    expect(JSON.parse(out)).toBe('rollback ok  ::error::fake line ');
+  });
+
+  it('handles missing values', () => {
+    expect(forLog(undefined)).toBe('""');
+    expect(forLog(null)).toBe('""');
+    expect(forLog(42)).toBe('"42"');
   });
 });
