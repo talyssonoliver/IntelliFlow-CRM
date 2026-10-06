@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-02T14:26:41.288Z",
+  "timestamp": "2026-10-06T12:23:00.999Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 65,
-    "total_endpoints": 530,
-    "total_queries": 233,
-    "total_mutations": 297,
+    "total_endpoints": 535,
+    "total_queries": 234,
+    "total_mutations": 301,
     "routers": [
       {
         "name": "contact",
@@ -1225,6 +1225,12 @@
         "mutations": 5
       },
       {
+        "name": "ticketRouting",
+        "endpoints": 7,
+        "queries": 2,
+        "mutations": 5
+      },
+      {
         "name": "queues",
         "endpoints": 6,
         "queries": 2,
@@ -1369,12 +1375,6 @@
         "mutations": 1
       },
       {
-        "name": "ticketRouting",
-        "endpoints": 2,
-        "queries": 1,
-        "mutations": 1
-      },
-      {
         "name": "customActionHandler",
         "endpoints": 1,
         "queries": 0,
@@ -1414,11 +1414,11 @@
   },
   "database_inventory": {
     "total_tables": 187,
-    "total_fields": 2710,
+    "total_fields": 2711,
     "total_indexes": 861,
     "total_relations": 265,
     "tables_with_embeddings": 4,
-    "enums": 77,
+    "enums": 78,
     "tables": [
       {
         "name": "Tenant",
@@ -1946,6 +1946,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "RoutingRule",
+        "fields": 13,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketCategory",
         "fields": 13,
         "indexes": 7,
@@ -2040,13 +2047,6 @@
         "name": "EmailTemplate",
         "fields": 12,
         "indexes": 5,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "RoutingRule",
-        "fields": 12,
-        "indexes": 6,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -3098,10 +3098,10 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 51,
-    "total_schemas": 589,
+    "total_validators": 52,
+    "total_schemas": 595,
     "by_complexity": {
-      "complex": 31,
+      "complex": 32,
       "moderate": 16,
       "simple": 4
     },
@@ -3303,6 +3303,12 @@
         "file": "report-templates.ts",
         "schemas": 6,
         "complexity": "moderate"
+      },
+      {
+        "name": "ticket-automation-rule",
+        "file": "ticket-automation-rule.ts",
+        "schemas": 6,
+        "complexity": "complex"
       },
       {
         "name": "report-settings",
@@ -6040,6 +6046,31 @@
         "name": "ticketRouting.suggestAssignee",
         "method": "GET",
         "description": "Suggest assignee"
+      },
+      {
+        "name": "ticketRouting.listRules",
+        "method": "GET",
+        "description": "List rules"
+      },
+      {
+        "name": "ticketRouting.createRule",
+        "method": "POST",
+        "description": "Create rule"
+      },
+      {
+        "name": "ticketRouting.updateRule",
+        "method": "POST",
+        "description": "Update rule"
+      },
+      {
+        "name": "ticketRouting.deleteRule",
+        "method": "POST",
+        "description": "Delete rule"
+      },
+      {
+        "name": "ticketRouting.toggleRule",
+        "method": "POST",
+        "description": "Toggle rule"
       }
     ],
     "ticketSettings": [
