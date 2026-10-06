@@ -6,6 +6,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { normalizeStatus, STATUS_GROUPS } from '@/lib/csv-parser';
 import { PATHS, MONOREPO_ROOT } from '@/lib/paths';
 import { NO_CACHE_HEADERS } from '@/lib/api-types';
+import { findMissingArtifacts } from '@/lib/artifact-presence';
 
 export const dynamic = 'force-dynamic';
 
@@ -138,6 +139,7 @@ const PATH_PREFIXES = [
   'CONTEXT:',
   'PRD:',
   'ATTESTATION:',
+  'DELIVERY:',
 ] as const;
 // Prefixes that are metadata/commands, not file paths
 const METADATA_PREFIXES = ['VALIDATE:', 'GATE:', 'AUDIT:', 'FILE:', 'ENV:', 'POLICY:'] as const;
@@ -162,6 +164,7 @@ const PREFIX_TO_FIELD: Record<PathPrefixKey, keyof Omit<ParsedArtifacts, 'raw'>>
   'CONTEXT:': 'contexts',
   'PRD:': 'prds',
   'ATTESTATION:': 'attestations',
+  'DELIVERY:': 'evidence',
 };
 
 function isEmptyArtifactsStr(artifactsStr: string): boolean {
@@ -221,25 +224,6 @@ function getSprintNumber(sprint: string): number | null {
   }
   const num = Number.parseInt(sprint, 10);
   return Number.isNaN(num) ? null : num;
-}
-
-async function checkArtifactExists(artifactPath: string): Promise<boolean> {
-  try {
-    // Handle glob patterns by checking if any matching file exists
-    if (artifactPath.includes('*')) {
-      // For patterns, just check if parent directory exists
-      const parentDir = artifactPath.split('*')[0].replace(/\/{1,100}$/, '');
-      if (parentDir) {
-        await access(join(process.cwd(), '..', '..', parentDir));
-        return true;
-      }
-      return false;
-    }
-    await access(join(process.cwd(), '..', '..', artifactPath));
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function isPackageTracked(
@@ -899,12 +883,7 @@ function collectIntegrityFailures(
 }
 
 async function checkPrefixedPaths(paths: string[], prefix: string): Promise<string[]> {
-  const missing: string[] = [];
-  for (const p of paths) {
-    const exists = await checkArtifactExists(p);
-    if (!exists) missing.push(prefix ? `${prefix}${p}` : p);
-  }
-  return missing;
+  return findMissingArtifacts(paths, prefix, join(process.cwd(), '..', '..'));
 }
 
 async function collectMissingPaths(

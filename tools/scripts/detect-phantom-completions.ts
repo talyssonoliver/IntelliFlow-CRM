@@ -1,12 +1,16 @@
 /**
  * Real-time Phantom Completion Detection
  *
- * A task is a "phantom completion" if:
- * 1. Status = "Completed" but artifacts don't exist on disk
- * 2. Status = "Completed" but DOD is not verifiable
- * 3. Status = "Completed" but KPIs are not measurable
+ * A task is a "phantom completion" if Status = "Completed" but an artifact it
+ * tracks does not exist on disk.
  *
- * This script does REAL verification, not just static file reading.
+ * Two things are reported but do NOT make a task phantom (2026-10-06 audit):
+ * - Artifacts under paths the repo deliberately leaves untracked (spec, plan,
+ *   context and context_ack files under .specify/sprints, ADR-067). No checkout
+ *   has them, so their absence says nothing about the work.
+ * - DoD wording warnings. "DOD has no artifact reference" is a keyword match on
+ *   the DoD text (it flagged "Response <500ms, Lighthouse >=90; verified by:
+ *   pnpm test"); it grades how the DoD is written, not whether the work exists.
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -15,6 +19,7 @@ import { parse } from 'csv-parse/sync';
 import { join, resolve } from 'node:path';
 import { globSync } from 'glob';
 import { getSprintForTask } from './lib/workflow/utils.js';
+import { isUntrackedByDesign } from './lib/untracked-by-design.js';
 
 const CSV_PATH = join(process.cwd(), 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv');
 const OUTPUT_PATH = join(process.cwd(), 'artifacts/reports/phantom-completion-audit.json');
@@ -25,7 +30,6 @@ interface PhantomIssue {
   status: string;
   issues: string[];
   missingArtifacts: string[];
-  dodIssues: string[];
 }
 
 interface AuditResult {
@@ -40,6 +44,8 @@ interface AuditResult {
     verified_completions: number;
     phantom_completions: number;
     sprint_path_mismatches: number;
+    untracked_by_design_artifacts: number;
+    dod_wording_warnings: number;
     integrity_score: string;
     conclusion: string;
   };
@@ -54,8 +60,9 @@ interface AuditResult {
     status_claimed: string;
     issues: string[];
     missing_artifacts: string[];
-    dod_issues: string[];
   }>;
+  untracked_by_design: Array<{ task_id: string; paths: string[] }>;
+  dod_wording_warnings: Array<{ task_id: string; issues: string[] }>;
   sprint_path_mismatches: Array<{
     task_id: string;
     description: string;
@@ -73,28 +80,41 @@ interface AuditResult {
 // ARTIFACT VERIFICATION
 // ============================================================================
 
-function parseArtifacts(artifactStr: string): string[] {
+// Prefixes whose value is a file path. Any other `WORD:` prefix (VALIDATE:,
+// GATE:, AUDIT:, ...) is a command or metadata, not a file to look for.
+const PATH_PREFIXES = new Set([
+  'ARTIFACT',
+  'EVIDENCE',
+  'SPEC',
+  'PLAN',
+  'CONTEXT',
+  'PRD',
+  'ATTESTATION',
+  'DELIVERY',
+]);
+
+export function parseArtifacts(artifactStr: string): string[] {
   if (!artifactStr) return [];
 
   return artifactStr
     .split(';')
     .flatMap((part) => {
-      // Extract path from ARTIFACT:, EVIDENCE:, SPEC:, or PLAN: prefix
-      const match = part.match(/(?:ARTIFACT:|EVIDENCE:|SPEC:|PLAN:)(.+)/);
-      if (match) {
-        return [match[1].trim()];
+      const item = part.trim();
+      const prefixed = /^([A-Z][A-Z_]*):(.*)$/.exec(item);
+      if (prefixed) {
+        return PATH_PREFIXES.has(prefixed[1]) ? [prefixed[2].trim()] : [];
       }
       // Check for raw path
-      if (part.includes('/') || part.includes('.')) {
-        return [part.trim()];
+      if (item.includes('/') || item.includes('.')) {
+        return [item];
       }
       return [];
     })
     .filter((p) => p && !p.includes('*')); // Skip wildcards for now
 }
 
-function checkArtifactExists(artifactPath: string): boolean {
-  const fullPath = resolve(process.cwd(), artifactPath);
+function checkArtifactExists(artifactPath: string, root: string): boolean {
+  const fullPath = resolve(root, artifactPath);
 
   // Direct file check
   if (existsSync(fullPath)) {
@@ -103,27 +123,33 @@ function checkArtifactExists(artifactPath: string): boolean {
 
   // Try with glob for patterns
   if (artifactPath.includes('*')) {
-    const matches = globSync(artifactPath, { cwd: process.cwd() });
+    const matches = globSync(artifactPath, { cwd: root });
     return matches.length > 0;
   }
 
   return false;
 }
 
-function verifyArtifacts(artifactStr: string): { exists: string[]; missing: string[] } {
+export function verifyArtifacts(
+  artifactStr: string,
+  root: string = process.cwd()
+): { exists: string[]; missing: string[]; untrackedByDesign: string[] } {
   const artifacts = parseArtifacts(artifactStr);
   const exists: string[] = [];
   const missing: string[] = [];
+  const untrackedByDesign: string[] = [];
 
   for (const artifact of artifacts) {
-    if (checkArtifactExists(artifact)) {
+    if (checkArtifactExists(artifact, root)) {
       exists.push(artifact);
+    } else if (isUntrackedByDesign(artifact, root)) {
+      untrackedByDesign.push(artifact);
     } else {
       missing.push(artifact);
     }
   }
 
-  return { exists, missing };
+  return { exists, missing, untrackedByDesign };
 }
 
 // ============================================================================
@@ -200,7 +226,7 @@ function hasTestableAssertion(dod: string): boolean {
   return testablePatterns.some((p) => p.test(dod));
 }
 
-function verifyDod(dod: string): string[] {
+export function verifyDod(dod: string): string[] {
   const issues: string[] = [];
 
   if (!hasArtifactReference(dod)) {
@@ -275,17 +301,54 @@ type SprintMismatchEntry = {
 };
 type VerifiedEntry = { task_id: string; description: string; artifacts_verified: string[] };
 
+export interface CompletionClassification {
+  phantom: PhantomIssue | null;
+  verified: VerifiedEntry | null;
+  untrackedByDesign: string[];
+  dodWarnings: string[];
+}
+
+/** Classify one Completed task. Only a missing tracked artifact makes it phantom. */
+export function classifyCompletion(
+  task: Record<string, string>,
+  root: string = process.cwd()
+): CompletionClassification {
+  const taskId = task['Task ID'];
+  const shortDesc = (task['Description'] || '').substring(0, 60);
+  const artifactCheck = verifyArtifacts(task['Artifacts To Track'] || '', root);
+  const dodWarnings = verifyDod(task['Definition of Done'] || '');
+  const base = { untrackedByDesign: artifactCheck.untrackedByDesign, dodWarnings };
+
+  if (artifactCheck.missing.length > 0) {
+    return {
+      ...base,
+      verified: null,
+      phantom: {
+        taskId,
+        description: shortDesc,
+        status: 'Completed',
+        issues: [`Missing ${artifactCheck.missing.length} artifact(s)`],
+        missingArtifacts: artifactCheck.missing,
+      },
+    };
+  }
+  return {
+    ...base,
+    phantom: null,
+    verified: { task_id: taskId, description: shortDesc, artifacts_verified: artifactCheck.exists },
+  };
+}
+
 function classifyTask(
   task: Record<string, string>,
   phantoms: PhantomIssue[],
   verified: VerifiedEntry[],
-  sprintMismatches: SprintMismatchEntry[]
+  sprintMismatches: SprintMismatchEntry[],
+  untracked: Array<{ task_id: string; paths: string[] }>,
+  dodWarnings: Array<{ task_id: string; issues: string[] }>
 ): void {
   const taskId = task['Task ID'];
-  const description = task['Description'] || '';
-  const shortDesc = description.substring(0, 60);
-  const artifactCheck = verifyArtifacts(task['Artifacts To Track'] || '');
-  const dodIssues = verifyDod(task['Definition of Done'] || '');
+  const shortDesc = (task['Description'] || '').substring(0, 60);
 
   let expectedSprint = 0;
   try {
@@ -305,26 +368,13 @@ function classifyTask(
     }
   }
 
-  if (artifactCheck.missing.length > 0 || dodIssues.length > 0) {
-    const issues: string[] = [];
-    if (artifactCheck.missing.length > 0)
-      issues.push(`Missing ${artifactCheck.missing.length} artifact(s)`);
-    issues.push(...dodIssues);
-    phantoms.push({
-      taskId,
-      description: shortDesc,
-      status: 'Completed',
-      issues,
-      missingArtifacts: artifactCheck.missing,
-      dodIssues,
-    });
-  } else {
-    verified.push({
-      task_id: taskId,
-      description: shortDesc,
-      artifacts_verified: artifactCheck.exists,
-    });
-  }
+  const result = classifyCompletion(task);
+  if (result.phantom) phantoms.push(result.phantom);
+  if (result.verified) verified.push(result.verified);
+  if (result.untrackedByDesign.length > 0)
+    untracked.push({ task_id: taskId, paths: result.untrackedByDesign });
+  if (result.dodWarnings.length > 0)
+    dodWarnings.push({ task_id: taskId, issues: result.dodWarnings });
 }
 
 function determineSeverity(phantomCount: number): string {
@@ -376,7 +426,7 @@ function buildAuditConclusion(phantomCount: number, mismatchCount: number): stri
   }
   return [
     phantomCount > 0
-      ? `${phantomCount} tasks marked as Completed but missing artifacts or unverifiable DOD`
+      ? `${phantomCount} tasks marked as Completed but missing tracked artifacts`
       : '',
     mismatchCount > 0 ? `${mismatchCount} tasks have attestations in the wrong sprint folder` : '',
   ]
@@ -396,7 +446,6 @@ function buildRecommendations(
   const recs: Array<{ priority: string; action: string }> = [];
   if (phantomCount > 0) {
     recs.push({ priority: 'HIGH', action: 'Create missing artifacts for phantom completions' });
-    recs.push({ priority: 'MEDIUM', action: 'Update DOD to include verifiable criteria' });
     recs.push({
       priority: 'LOW',
       action: 'Consider reverting status to "In Progress" until artifacts exist',
@@ -428,9 +477,11 @@ async function main() {
   const phantoms: PhantomIssue[] = [];
   const verified: VerifiedEntry[] = [];
   const sprintMismatches: SprintMismatchEntry[] = [];
+  const untracked: Array<{ task_id: string; paths: string[] }> = [];
+  const dodWarnings: Array<{ task_id: string; issues: string[] }> = [];
 
   for (const task of completedTasks) {
-    classifyTask(task, phantoms, verified, sprintMismatches);
+    classifyTask(task, phantoms, verified, sprintMismatches, untracked, dodWarnings);
   }
 
   const totalCompleted = completedTasks.length;
@@ -461,6 +512,8 @@ async function main() {
       verified_completions: verifiedCount,
       phantom_completions: phantomCount,
       sprint_path_mismatches: sprintMismatches.length,
+      untracked_by_design_artifacts: untracked.length,
+      dod_wording_warnings: dodWarnings.length,
       integrity_score: `${integrityScore}%`,
       conclusion: buildAuditConclusion(phantomCount, sprintMismatches.length),
     },
@@ -471,8 +524,9 @@ async function main() {
       status_claimed: p.status,
       issues: p.issues,
       missing_artifacts: p.missingArtifacts,
-      dod_issues: p.dodIssues,
     })),
+    untracked_by_design: untracked,
+    dod_wording_warnings: dodWarnings,
     sprint_path_mismatches: sprintMismatches.map((m) => ({
       task_id: m.task_id,
       description: m.description,
@@ -487,4 +541,6 @@ async function main() {
   console.log(`Audit written to: ${OUTPUT_PATH}`);
 }
 
-main().catch(console.error);
+if (process.argv[1]?.replaceAll('\\', '/').endsWith('detect-phantom-completions.ts')) {
+  main().catch(console.error);
+}
