@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
-import { PublicHeader } from '@/components/public/PublicHeader';
+import { AuroraSiteHeader } from '@/components/aurora-site/AuroraSiteHeader';
+import '@/components/aurora-site/aurora-site.css';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { TourProvider, PublicTour } from '@/components/public/tour-components';
 import { PublicFeedbackFab } from '@/components/public/feedback-widget-public';
@@ -18,6 +19,9 @@ import { FEATURES_TOUR_CONFIG } from '@/lib/public/tour-config';
  * ALSO re-evaluated client-side via `useAuth()` so that a race between
  * cookie write and post-login redirect cannot leave the public header
  * visible after hydration.
+ *
+ * Aurora: logged-out visitors get the Aurora header and footer. On `/` the
+ * landing page brings its own header and footer, so the shell adds nothing.
  *
  * PG-126: Mounts the public product tour (only on /features, where the
  * data-tour anchors live) and the PublicFeedbackFab on every
@@ -38,9 +42,12 @@ const AUTH_PAGES_NO_CHROME = [
 
 export function PublicLayoutShell({
   isAuthenticated: serverIsAuthenticated,
+  footer,
   children,
 }: {
   isAuthenticated: boolean;
+  /** The public footer, rendered on the server; shown to logged-out visitors. */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -54,6 +61,11 @@ export function PublicLayoutShell({
     return <>{children}</>;
   }
 
+  // The Aurora landing page carries its own header, footer and motion.
+  if (pathname === '/' && !effectiveAuthenticated) {
+    return <>{children}</>;
+  }
+
   // PG-126: mount tour + feedback FAB only for unauthenticated visitors.
   // Do not mount while auth is still resolving — treat authLoading=true as
   // 'unknown' so the overlay never flashes for authenticated users whose
@@ -61,12 +73,26 @@ export function PublicLayoutShell({
   const shouldMountPublicOverlays = !authLoading && !effectiveAuthenticated;
   const tourIsActiveRoute = pathname === '/features';
 
-  const content = (
+  const overlays = (
     <>
-      {showPublicHeader && <PublicHeader />}
-      <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">{children}</main>
       {shouldMountPublicOverlays && <PublicFeedbackFab />}
       {shouldMountPublicOverlays && tourIsActiveRoute && <PublicTour />}
+    </>
+  );
+
+  const content = showPublicHeader ? (
+    <div className="aurora-site">
+      <AuroraSiteHeader />
+      <main id="aurora-site-main" className="as-main" tabIndex={-1}>
+        {children}
+      </main>
+      {footer}
+      {overlays}
+    </div>
+  ) : (
+    <>
+      <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">{children}</main>
+      {overlays}
     </>
   );
 

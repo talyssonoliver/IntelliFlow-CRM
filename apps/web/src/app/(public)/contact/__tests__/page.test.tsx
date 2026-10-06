@@ -51,18 +51,16 @@ describe('Contact Page', () => {
       render(<ContactPage />);
 
       expect(screen.getByText(/what to expect/i)).toBeInTheDocument();
-      expect(screen.getByText(/personalized demo/i)).toBeInTheDocument();
+      expect(screen.getByText(/personalised demo/i)).toBeInTheDocument();
       expect(screen.getByText(/no commitment/i)).toBeInTheDocument();
     });
   });
 
   describe('Accessibility', () => {
-    it('should have main landmark', () => {
+    it('renders no main landmark of its own (the Aurora shell provides it)', () => {
       render(<ContactPage />);
 
-      const main = screen.getByRole('main');
-      expect(main).toBeInTheDocument();
-      expect(main).toHaveAttribute('id', 'main-content');
+      expect(screen.queryByRole('main')).toBeNull();
     });
 
     it('should have proper heading hierarchy', () => {
@@ -92,11 +90,23 @@ describe('Contact Page', () => {
   });
 
   describe('Brand Compliance', () => {
-    it('should use primary brand color', () => {
+    it('uses the Aurora page frame and carries no old brand', () => {
+      const { container } = render(<ContactPage />);
+
+      expect(container.querySelector('.aurora-contact .as-h1')).toHaveTextContent('Get in touch');
+      expect(document.body.innerHTML).not.toMatch(/IntelliFlow|#137fec/i);
+    });
+
+    it('answers only with claims the product backs', () => {
       render(<ContactPage />);
 
-      const page = document.body;
-      expect(page.innerHTML).toContain('#137fec');
+      expect(document.body.textContent).not.toMatch(/SOC 2|ISO 27001|REST API|Google Calendar/);
+      expect(
+        screen.getByText(/Gmail, Outlook, Slack, Microsoft Teams, Stripe and PayPal/)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/multi-factor sign-in is available on every account/)
+      ).toBeInTheDocument();
     });
 
     it('should use Material Symbols icons', () => {
@@ -106,15 +116,12 @@ describe('Contact Page', () => {
       expect(icons.length).toBeGreaterThan(0);
     });
 
-    it('should have responsive layout classes', () => {
-      render(<ContactPage />);
+    it('lays the details and the form out side by side (stacking on a phone in contact.css)', () => {
+      const { container } = render(<ContactPage />);
 
-      // Responsive classes are on child containers, not main element
-      const main = screen.getByRole('main');
-      const responsiveElements = main.querySelectorAll(
-        '[class*="lg:"], [class*="md:"], [class*="sm:"]'
-      );
-      expect(responsiveElements.length).toBeGreaterThan(0);
+      const grid = container.querySelector('.ac-grid')!;
+      expect(grid.querySelector('.ac-info')).not.toBeNull();
+      expect(grid.querySelector('.ac-form form')).not.toBeNull();
     });
   });
 
@@ -133,8 +140,7 @@ describe('Contact Page', () => {
       render(<ContactPage />);
 
       // No external images or heavy scripts
-      const main = screen.getByRole('main');
-      const images = main.querySelectorAll('img');
+      const images = document.body.querySelectorAll('img');
       expect(images.length).toBe(0); // Using icons instead of images
     });
 
@@ -142,8 +148,7 @@ describe('Contact Page', () => {
       render(<ContactPage />);
 
       // Count total DOM nodes (should be reasonable)
-      const main = screen.getByRole('main');
-      const allElements = main.querySelectorAll('*');
+      const allElements = document.body.querySelectorAll('*');
       expect(allElements.length).toBeLessThan(500); // Keep DOM lean
     });
   });

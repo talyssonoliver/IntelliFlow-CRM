@@ -8,7 +8,7 @@ import { OG_IMAGES } from '@/lib/og-images';
 /**
  * Press Page
  *
- * Public-facing press/media page for IntelliFlow CRM.
+ * Public-facing press/media page for Aurora.
  * Displays press releases, media kit download, and company information.
  *
  * Task: PG-007
@@ -18,23 +18,23 @@ import { OG_IMAGES } from '@/lib/og-images';
  */
 
 export const metadata: Metadata = {
-  title: 'Press & Media | IntelliFlow CRM',
+  title: 'Press & Media',
   description:
-    'Latest news, press releases, and media resources from IntelliFlow CRM. Download our media kit for brand assets and company information.',
+    'Latest news, press releases, and media resources from Aurora. Download our media kit for brand assets and company information.',
   openGraph: {
     images: OG_IMAGES,
-    title: 'Press & Media | IntelliFlow CRM',
+    title: 'Press & Media',
     description:
-      'Latest news and press releases from IntelliFlow CRM. AI-powered CRM for modern sales teams.',
+      'Latest news and press releases from Aurora. AI-powered CRM for modern sales teams.',
     url: 'https://intelliflow-crm.com/press',
-    siteName: 'IntelliFlow CRM',
+    siteName: 'Aurora',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Press & Media | IntelliFlow CRM',
+    title: 'Press & Media',
     description:
-      'Latest news and press releases from IntelliFlow CRM. AI-powered CRM for modern sales teams.',
+      'Latest news and press releases from Aurora. AI-powered CRM for modern sales teams.',
   },
 };
 
@@ -46,7 +46,7 @@ export default function PressPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-[#0d1b2a] to-[#0b1f37] py-16 lg:py-24">
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-[#11175b] to-[#11175b] py-16 lg:py-24">
         <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-primary/20 blur-3xl opacity-50" />
         <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl opacity-40" />
 
@@ -65,7 +65,7 @@ export default function PressPage() {
 
             <p className="text-lg text-slate-200 max-w-2xl mx-auto mb-8">
               Stay up to date with the latest news, product announcements, and company updates from
-              IntelliFlow CRM.
+              Aurora.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

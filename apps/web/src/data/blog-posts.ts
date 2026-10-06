@@ -32,7 +32,7 @@ export const blogPosts: Record<string, BlogPost> = {
     author: {
       name: 'Sarah Chen',
       role: 'Head of AI',
-      bio: 'Sarah leads AI research at IntelliFlow, focusing on responsible AI implementation in enterprise sales.',
+      bio: 'Sarah leads AI research at Aurora, focusing on responsible AI implementation in enterprise sales.',
     },
     publishedAt: '2025-12-28',
     readTime: '8 min read',
@@ -134,7 +134,7 @@ AI lead scoring, when implemented thoughtfully, becomes a force multiplier for s
 
 ---
 
-*Want to see how IntelliFlow's AI scoring works? [Schedule a demo](/contact) to see it in action.*
+*Want to see how Aurora's AI scoring works? [Schedule a demo](/contact) to see it in action.*
     `,
   },
   'governance-ready-automation': {
@@ -147,7 +147,7 @@ AI lead scoring, when implemented thoughtfully, becomes a force multiplier for s
     author: {
       name: 'Michael Torres',
       role: 'Compliance Lead',
-      bio: 'Michael ensures IntelliFlow meets enterprise compliance standards including SOC 2 and GDPR.',
+      bio: 'Michael ensures Aurora meets enterprise compliance standards including SOC 2 and GDPR.',
     },
     publishedAt: '2025-12-25',
     readTime: '6 min read',

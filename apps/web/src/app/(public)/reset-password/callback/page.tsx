@@ -26,9 +26,9 @@ function ResetCallbackLoading() {
   return (
     <AuthBackground>
       <div className="relative z-10 w-full max-w-md mx-auto px-4">
-        <AuthCard badge="INTELLIFLOW" badgeIcon="lock_reset" title="Validating...">
+        <AuthCard badge="Aurora" badgeIcon="lock_reset" title="Validating...">
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <div className="w-8 h-8 border-2 border-slate-600 border-t-[#137fec] rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-slate-600 border-t-[#2a78f6] rounded-full animate-spin" />
             <p className="text-sm text-slate-400">Verifying reset link...</p>
           </div>
         </AuthCard>
@@ -66,7 +66,7 @@ function ResetCallbackContent() {
       <AuthBackground>
         <div className="relative z-10 w-full max-w-md mx-auto px-4">
           <AuthCard
-            badge="INTELLIFLOW"
+            badge="Aurora"
             badgeIcon="lock_reset"
             title="Invalid Reset Link"
             footer={
@@ -74,7 +74,7 @@ function ResetCallbackContent() {
                 Remember your password?{' '}
                 <Link
                   href="/login"
-                  className="text-[#137fec] hover:text-[#137fec]/80 font-medium transition-colors"
+                  className="text-[#2a78f6] hover:text-[#2a78f6]/80 font-medium transition-colors"
                 >
                   Back to sign in
                 </Link>
@@ -95,7 +95,7 @@ function ResetCallbackContent() {
               </p>
               <Link
                 href="/forgot-password"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#137fec] text-white font-medium hover:bg-[#137fec]/90 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#2a78f6] text-white font-medium hover:bg-[#2a78f6]/90 transition-colors"
               >
                 Request a new link
               </Link>
@@ -110,7 +110,7 @@ function ResetCallbackContent() {
     return (
       <AuthBackground>
         <div className="relative z-10 w-full max-w-md mx-auto px-4">
-          <AuthCard badge="INTELLIFLOW" badgeIcon="lock_reset" title="Password Reset">
+          <AuthCard badge="Aurora" badgeIcon="lock_reset" title="Password Reset">
             <ResetSuccess />
           </AuthCard>
         </div>
@@ -122,7 +122,7 @@ function ResetCallbackContent() {
     <AuthBackground>
       <div className="relative z-10 w-full max-w-md mx-auto px-4">
         <AuthCard
-          badge="INTELLIFLOW"
+          badge="Aurora"
           badgeIcon="lock_reset"
           title="Create new password"
           description="Your new password must be different from previously used passwords."
@@ -131,7 +131,7 @@ function ResetCallbackContent() {
               Remember your password?{' '}
               <Link
                 href="/login"
-                className="text-[#137fec] hover:text-[#137fec]/80 font-medium transition-colors"
+                className="text-[#2a78f6] hover:text-[#2a78f6]/80 font-medium transition-colors"
               >
                 Back to sign in
               </Link>

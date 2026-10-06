@@ -33,7 +33,7 @@ describe('ServerErrorPage', () => {
 
 describe('metadata', () => {
   it('has correct title', () => {
-    expect(metadata.title).toBe('Server Error | IntelliFlow CRM');
+    expect(metadata.title).toBe('Server Error');
   });
 
   it('has robots noindex nofollow', () => {
