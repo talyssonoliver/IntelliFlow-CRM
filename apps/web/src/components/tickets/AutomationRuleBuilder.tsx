@@ -180,25 +180,25 @@ export function AutomationRuleBuilder() {
 
   const createMutation = trpc.ticketRouting.createRule.useMutation({
     onSuccess: () => {
-      utils.ticketRouting.listRules.invalidate();
       setDialogOpen(false);
       toast({ title: 'Rule created' });
+      return utils.ticketRouting.listRules.invalidate();
     },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const updateMutation = trpc.ticketRouting.updateRule.useMutation({
     onSuccess: () => {
-      utils.ticketRouting.listRules.invalidate();
       setDialogOpen(false);
       setEditingId(null);
       toast({ title: 'Rule updated' });
+      return utils.ticketRouting.listRules.invalidate();
     },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const deleteMutation = trpc.ticketRouting.deleteRule.useMutation({
     onSuccess: () => {
-      utils.ticketRouting.listRules.invalidate();
       toast({ title: 'Rule deleted' });
+      return utils.ticketRouting.listRules.invalidate();
     },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });

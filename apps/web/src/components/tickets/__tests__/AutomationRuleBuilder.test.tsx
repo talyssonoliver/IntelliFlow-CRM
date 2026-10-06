@@ -34,6 +34,15 @@ const mockRule2 = {
 };
 
 const mockToast = vi.fn();
+const mockInvalidate = vi.fn(() => Promise.resolve());
+
+type MutationOptions = { onSuccess?: () => unknown; onError?: (err: { message: string }) => void };
+const captured: Record<'create' | 'update' | 'delete' | 'toggle', MutationOptions> = {
+  create: {},
+  update: {},
+  delete: {},
+  toggle: {},
+};
 
 type MockQueryReturn<T> = { data: T | undefined; isLoading: boolean };
 type MockMutationReturn = { mutate: ReturnType<typeof vi.fn>; isPending: boolean };
@@ -61,14 +70,34 @@ const mockToggleMutation = vi.fn<() => MockMutationReturn>(() => ({
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
-    useUtils: () => ({ ticketRouting: { listRules: { invalidate: vi.fn() } } }),
+    useUtils: () => ({ ticketRouting: { listRules: { invalidate: mockInvalidate } } }),
     // Only the ticket rule procedures exist here: any use of the lead `routing` router would throw.
     ticketRouting: {
       listRules: { useQuery: () => mockListQuery() },
-      createRule: { useMutation: () => mockCreateMutation() },
-      updateRule: { useMutation: () => mockUpdateMutation() },
-      deleteRule: { useMutation: () => mockDeleteMutation() },
-      toggleRule: { useMutation: () => mockToggleMutation() },
+      createRule: {
+        useMutation: (opts: MutationOptions) => {
+          captured.create = opts;
+          return mockCreateMutation();
+        },
+      },
+      updateRule: {
+        useMutation: (opts: MutationOptions) => {
+          captured.update = opts;
+          return mockUpdateMutation();
+        },
+      },
+      deleteRule: {
+        useMutation: (opts: MutationOptions) => {
+          captured.delete = opts;
+          return mockDeleteMutation();
+        },
+      },
+      toggleRule: {
+        useMutation: (opts: MutationOptions) => {
+          captured.toggle = opts;
+          return mockToggleMutation();
+        },
+      },
     },
   },
 }));
@@ -379,4 +408,16 @@ describe('AutomationRuleBuilder', () => {
     render(<AutomationRuleBuilder />);
     expect(screen.queryByLabelText('Automation Rules')).not.toBeInTheDocument();
   });
+
+  it.each(['create', 'update', 'delete', 'toggle'] as const)(
+    'returns the list invalidation from %s onSuccess so it is awaited, and toasts errors',
+    async (kind) => {
+      render(<AutomationRuleBuilder />);
+      const result = captured[kind].onSuccess?.();
+      expect(mockInvalidate).toHaveBeenCalled();
+      await expect(result).resolves.toBeUndefined();
+      captured[kind].onError?.({ message: 'boom' });
+      expect(mockToast).toHaveBeenCalledWith({ title: 'boom', variant: 'destructive' });
+    }
+  );
 });
