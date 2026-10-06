@@ -33,10 +33,11 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
 const TRPC_PATH = '/api/trpc';
 
 // Test user credentials (from seed data)
+const TEST_PASSWORD = __ENV.K6_TEST_PASSWORD || '';
 const TEST_USERS = [
-  { email: 'admin@intelliflow.dev', password: 'TestPassword123!' },
-  { email: 'alex@intelliflow.dev', password: 'TestPassword123!' },
-  { email: 'john.sales@intelliflow.dev', password: 'TestPassword123!' },
+  { email: 'admin@intelliflow.dev', password: TEST_PASSWORD },
+  { email: 'alex@intelliflow.dev', password: TEST_PASSWORD },
+  { email: 'john.sales@intelliflow.dev', password: TEST_PASSWORD },
 ];
 
 // Quick test options - 30 second test for faster feedback
@@ -123,7 +124,7 @@ function resolveAuthToken() {
     console.log('Auth: using persisted K6_AUTH_TOKEN from environment (no re-auth)');
     return envToken;
   }
-  return authenticate('admin@intelliflow.dev', 'TestPassword123!');
+  return authenticate('admin@intelliflow.dev', TEST_PASSWORD);
 }
 
 // tRPC request helper with auth

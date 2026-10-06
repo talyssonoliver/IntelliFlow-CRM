@@ -118,6 +118,15 @@ jobs:
       - name: Install Playwright (chromium)
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Generate inbound-email webhook secret
+        # SEC-004: the API rejects unsigned inbound-email webhooks. A fresh
+        # per-run secret is shared by the API webServer and inbound-webhook.spec.ts
+        # through the job env, so no secret value lives in the repo.
+        run: |
+          secret="$(openssl rand -hex 32)"
+          echo "::add-mask::$secret"
+          echo "INBOUND_EMAIL_WEBHOOK_SECRET=$secret" >> "$GITHUB_ENV"
+
       - name: Run full E2E suite (chromium)
         # Discovery guard: the `chromium` project globbed 0 files on the ubuntu
         # runner for weeks (inherited global testMatch + broad testIgnore), so

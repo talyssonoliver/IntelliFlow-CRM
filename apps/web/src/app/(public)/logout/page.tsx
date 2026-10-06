@@ -88,7 +88,7 @@ function Countdown({ seconds, onComplete }: Readonly<CountdownProps>) {
   }, [remaining, onComplete]);
 
   return (
-    <span className="font-mono text-[#137fec]" aria-live="polite">
+    <span className="font-mono text-[#2a78f6]" aria-live="polite">
       {remaining}s
     </span>
   );
@@ -252,9 +252,9 @@ function LogoutContent() {
                   href="/login"
                   className={cn(
                     'flex items-center justify-center gap-2 w-full px-6 py-3 rounded-lg',
-                    'bg-[#137fec] text-white font-medium',
-                    'hover:bg-[#137fec]/90 transition-all',
-                    'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900'
+                    'bg-[#2a78f6] text-white font-medium',
+                    'hover:bg-[#2a78f6]/90 transition-all',
+                    'focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-slate-900'
                   )}
                 >
                   Sign in again{' '}
@@ -291,8 +291,8 @@ function LogoutContent() {
                     href="/login"
                     className={cn(
                       'flex-1 px-4 py-2 rounded-lg text-center',
-                      'bg-[#137fec] text-white font-medium',
-                      'hover:bg-[#137fec]/90 transition-all'
+                      'bg-[#2a78f6] text-white font-medium',
+                      'hover:bg-[#2a78f6]/90 transition-all'
                     )}
                   >
                     Go to login
@@ -353,7 +353,7 @@ export default function LogoutPage() {
       fallback={
         <AuthBackground>
           <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#137fec]" />
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2a78f6]" />
           </div>
         </AuthBackground>
       }

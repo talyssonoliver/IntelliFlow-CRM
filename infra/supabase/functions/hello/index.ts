@@ -150,7 +150,7 @@ serve(async (req: Request): Promise<Response> => {
 2. Authenticated request:
    curl -X POST https://your-project.supabase.co/functions/v1/hello \
      -H "Content-Type: application/json" \
-     -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+     -H "Authorization: Bearer <jwt>" \
      -d '{"name": "Bob"}'
 
 3. From TypeScript/JavaScript:

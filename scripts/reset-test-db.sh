@@ -12,7 +12,7 @@
 #
 # Environment Variables:
 #   TEST_DATABASE_URL - Connection string for the test database
-#                       Default: postgresql://intelliflow:intelliflow@localhost:5433/intelliflow_test
+#                       Default: local test DB on port 5433 (user/password from TEST_DB_USER / TEST_DB_PASSWORD, default intelliflow)
 #
 
 set -e
@@ -22,7 +22,9 @@ echo "IntelliFlow CRM - Test Database Reset"
 echo "============================================"
 
 # Use TEST_DATABASE_URL if provided, otherwise use default
-export DATABASE_URL="${TEST_DATABASE_URL:-postgresql://intelliflow:intelliflow@localhost:5433/intelliflow_test}"
+TEST_DB_USER="${TEST_DB_USER:-intelliflow}"
+TEST_DB_PASSWORD="${TEST_DB_PASSWORD:-intelliflow}"
+export DATABASE_URL="${TEST_DATABASE_URL:-postgresql://${TEST_DB_USER}:${TEST_DB_PASSWORD}@localhost:5433/intelliflow_test}"
 
 echo ""
 echo "Target database: ${DATABASE_URL//:*@/:***@}"

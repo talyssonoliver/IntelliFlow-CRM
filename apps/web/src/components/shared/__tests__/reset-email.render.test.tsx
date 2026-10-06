@@ -283,7 +283,7 @@ describe('buildResetEmailPayload', () => {
     expect(payload.to).toBe('user@example.com');
     expect(payload.from).toBe('crm@leangency.com');
     expect(payload.replyTo).toBe('support@leangency.com');
-    expect(payload.subject).toBe('Reset your IntelliFlow password');
+    expect(payload.subject).toBe('Reset your Aurora password');
     expect(payload.htmlBody).toContain('Reset Your Password');
     expect(payload.textBody).toContain('Reset Your Password');
     expect(payload.metadata.source).toBe('password_reset');

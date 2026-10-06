@@ -219,13 +219,13 @@ termsAcceptances TermsAcceptance[] @relation("UserTermsAcceptances") @ignore
 **Migration steps (LOCAL TEST DB ONLY — never prod Supabase):**
 ```bash
 cd packages/db
-DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliflow_test \
-DIRECT_URL=postgresql://postgres:postgres@localhost:5433/intelliflow_test \
+DATABASE_URL=postgresql://<user>:<password>@localhost:5433/intelliflow_test \
+DIRECT_URL=postgresql://<user>:<password>@localhost:5433/intelliflow_test \
 pnpm db:migrate:create -- --name add_terms_acceptance
 
 # Apply migration:
-DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliflow_test \
-DIRECT_URL=postgresql://postgres:postgres@localhost:5433/intelliflow_test \
+DATABASE_URL=postgresql://<user>:<password>@localhost:5433/intelliflow_test \
+DIRECT_URL=postgresql://<user>:<password>@localhost:5433/intelliflow_test \
 pnpm db:migrate
 
 # Regenerate client:

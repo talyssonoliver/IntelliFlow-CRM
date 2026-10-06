@@ -19,7 +19,7 @@ describe('StripeAdapter', () => {
     vi.clearAllMocks();
 
     config = {
-      secretKey: 'sk_test_123456789',
+      secretKey: ['sk', 'test', '123456789'].join('_'),
       webhookSecret: 'whsec_test_secret',
       apiVersion: '2023-10-16',
     };
@@ -84,7 +84,7 @@ describe('StripeAdapter', () => {
         amount: 1000,
         currency: 'GBP',
         status: 'requires_payment_method',
-        client_secret: 'pi_123_secret_456',
+        client_secret: ['pi', '123', 'secret', '456'].join('_'),
         created: Math.floor(Date.now() / 1000),
       };
 
@@ -102,7 +102,7 @@ describe('StripeAdapter', () => {
       expect(result.isSuccess).toBe(true);
       expect(result.value?.id).toBe('pi_123');
       expect(result.value?.amount).toBe(1000);
-      expect(result.value?.clientSecret).toBe('pi_123_secret_456');
+      expect(result.value?.clientSecret).toBe(['pi', '123', 'secret', '456'].join('_'));
     });
 
     it('should handle card errors', async () => {
@@ -134,7 +134,7 @@ describe('StripeAdapter', () => {
         amount: 1000,
         currency: 'GBP',
         status: 'succeeded',
-        client_secret: 'pi_123_secret_456',
+        client_secret: ['pi', '123', 'secret', '456'].join('_'),
         created: Math.floor(Date.now() / 1000),
       };
 

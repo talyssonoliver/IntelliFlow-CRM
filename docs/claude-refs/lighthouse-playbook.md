@@ -137,8 +137,10 @@ export NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 export NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 # A test admin user must exist:
 #   email: admin@intelliflow.dev
-#   password: TestPassword123!
-# (see tools/lighthouse/lhci-auth.js lines 37-39)
+#   password: (your own test password)
+# and export both so the auth harness can sign in:
+export LHCI_TEST_EMAIL=admin@intelliflow.dev
+export LHCI_TEST_PASSWORD=<test-user-password>
 
 # Run:
 pnpm --filter @intelliflow/web run lighthouse:auth
@@ -276,10 +278,9 @@ task, file `FOLLOWUP-<TASK>-PERF` in `Sprint_plan.csv` and leave the current KPI
 `met: false` with `lighthouse_waiver_approved_by: <human>`.
 
 **Q: The auth harness fails with "Auth failed: {error: ...}"** A: The test user
-`admin@intelliflow.dev / TestPassword123!` is hardcoded in
+The test user is read from `LHCI_TEST_EMAIL` / `LHCI_TEST_PASSWORD` by
 `tools/lighthouse/lhci-auth.js`. Ensure that user exists in your local Supabase
-instance. If it doesn't, create it, or change the credentials in the script (and
-commit the change only if your whole team agrees).
+instance with that password. If it doesn't, create it or change the variables.
 
 **Q: Lighthouse prints `NO_FCP` every time on my route — is the recipe broken?**
 A: Run the `/404` control first:

@@ -24,9 +24,9 @@ const RAW_CONFIG: OnboardingConfig = {
         {
           id: 'hero',
           targetSelector: '[data-tour="hero"]',
-          title: 'Welcome to IntelliFlow',
+          title: 'Welcome to Aurora',
           description:
-            "Let's walk through the four capabilities that set IntelliFlow apart. Use Next or Enter to continue; Esc closes the tour.",
+            "Let's walk through four things Aurora does for your team. Use Next or Enter to continue; Esc closes the tour.",
           placement: 'bottom',
         },
         {
@@ -34,7 +34,7 @@ const RAW_CONFIG: OnboardingConfig = {
           targetSelector: '[data-tour="ai-lead-scoring"]',
           title: 'AI Lead Scoring',
           description:
-            'Scores every inbound lead in real time using an ensemble of explainable models, so your team focuses on the highest-intent contacts first.',
+            'Agents score every lead and show the reasons behind each score, so your team works the hottest leads first.',
           placement: 'right',
         },
         {
@@ -42,15 +42,15 @@ const RAW_CONFIG: OnboardingConfig = {
           targetSelector: '[data-tour="workflow-automation"]',
           title: 'Workflow Automation',
           description:
-            'Build multi-step automations visually. Triggers, conditions, and AI agents run on the same durable workflow engine.',
+            'Build multi-step workflows, and extend the builder with your own node and action types.',
           placement: 'left',
         },
         {
           id: 'analytics',
           targetSelector: '[data-tour="pipeline-analytics"]',
-          title: 'Revenue Analytics',
+          title: 'Pipeline and forecast',
           description:
-            'Pipeline velocity, conversion cohorts, and NPS trends in one dashboard — ready to share with the rest of the team.',
+            'The deal board, the list and the forecast are the same pipeline, with stalled deals flagged.',
           placement: 'top',
           cta: {
             label: 'Start free trial',

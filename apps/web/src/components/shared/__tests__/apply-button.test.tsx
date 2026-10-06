@@ -106,7 +106,7 @@ describe('ApplyButton', () => {
       render(<ApplyButton {...defaultProps} />);
 
       const link = screen.getByRole('link');
-      expect(link).toHaveClass('bg-[#137fec]', 'text-white');
+      expect(link).toHaveClass('bg-[#2a78f6]', 'text-white');
     });
 
     it('should render secondary variant', () => {
@@ -120,7 +120,7 @@ describe('ApplyButton', () => {
       render(<ApplyButton {...defaultProps} variant="outline" />);
 
       const link = screen.getByRole('link');
-      expect(link).toHaveClass('border-2', 'border-[#137fec]');
+      expect(link).toHaveClass('border-2', 'border-[#2a78f6]');
     });
   });
 

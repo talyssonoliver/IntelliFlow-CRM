@@ -11,7 +11,7 @@ describe('CookiePage', () => {
     render(<CookiePage />);
 
     expect(screen.getByRole('heading', { name: /cookie policy/i })).toBeInTheDocument();
-    expect(screen.getByText(/how intelliflow crm uses cookies/i)).toBeInTheDocument();
+    expect(screen.getByText(/how aurora uses cookies/i)).toBeInTheDocument();
   });
 
   it('renders current policy metadata sourced from the helper', () => {
@@ -25,11 +25,10 @@ describe('CookiePage', () => {
     expect(emailLinks[0]).toHaveAttribute('href', 'mailto:privacy@intelliflow-crm.com');
   });
 
-  it('renders a main landmark, section nav, and all section headings with slugified ids', () => {
+  it('renders inside the Aurora shell (no main of its own), with section nav and slugified headings', () => {
     const { container } = render(<CookiePage />);
 
-    const main = screen.getByRole('main');
-    expect(main).toHaveAttribute('id', 'main-content');
+    expect(screen.queryByRole('main')).toBeNull();
 
     const nav = screen.getByRole('navigation', { name: /cookie policy sections/i });
     expect(nav).toBeInTheDocument();
@@ -62,7 +61,7 @@ describe('CookiePage', () => {
   });
 
   it('exports metadata for the canonical cookies route', () => {
-    expect(metadata.title).toBe('Cookie Policy | IntelliFlow CRM');
+    expect(metadata.title).toBe('Cookie Policy');
     expect(metadata.alternates?.canonical).toBe('/cookies');
     expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/cookies');
   });

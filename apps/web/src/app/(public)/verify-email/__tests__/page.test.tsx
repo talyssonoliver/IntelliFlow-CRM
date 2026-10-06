@@ -123,14 +123,14 @@ describe('LegacyEmailVerifyPage (IFC-120)', () => {
   describe('Verify Email Metadata', () => {
     it('should have correct SEO metadata', () => {
       expect(metadata.title).toBe('Verify Email');
-      expect(metadata.description).toContain('IntelliFlow CRM');
+      expect(metadata.description).toContain('Aurora');
       expect(metadata.description).toContain('Verify');
     });
 
     it('should have Open Graph metadata', () => {
       expect(metadata.openGraph).toBeDefined();
       expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/verify-email');
-      expect(metadata.openGraph?.siteName).toBe('IntelliFlow CRM');
+      expect(metadata.openGraph?.siteName).toBe('Aurora');
       expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
     });
 
