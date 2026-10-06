@@ -582,7 +582,12 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
     for (const f of ['pre-ship.mjs', 'preship-process.mjs', 'preship-watchdog.mjs']) {
       fs.copyFileSync(path.join(SCRIPTS, f), path.join(dir, 'scripts', f));
     }
-    for (const lib of ['preship-test-scope.mjs', 'preship-report.mjs', 'preship-gate.mjs', 'test-slot.mjs']) {
+    for (const lib of [
+      'preship-test-scope.mjs',
+      'preship-report.mjs',
+      'preship-gate.mjs',
+      'test-slot.mjs',
+    ]) {
       fs.copyFileSync(path.join(SCRIPTS, 'lib', lib), path.join(dir, 'scripts/lib', lib));
     }
     git(['add', '-A']);
