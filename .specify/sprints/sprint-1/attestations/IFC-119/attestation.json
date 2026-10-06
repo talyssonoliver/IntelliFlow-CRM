@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "artifacts/misc/k6/scripts/load-test.js",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/benchmarks/load-test-results.json",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/reports/capacity-plan.md",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "Load testing framework established",
       "Baseline metrics recorded"

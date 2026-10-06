@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "artifacts/misc/test-orchestration.json",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/logs/bug-fixes.log",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/metrics/confidence-metrics.csv",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "System AI-tested",
       "Issues AI-detected and fixed",

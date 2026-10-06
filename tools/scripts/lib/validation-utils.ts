@@ -15,6 +15,11 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import * as childProcess from 'node:child_process';
 import type { ExecSyncOptionsWithStringEncoding } from 'node:child_process';
 import { resolve, join } from 'node:path';
+import {
+  activeExemptionIds,
+  checkReopenExemptions,
+  type ReopenExemption,
+} from './reopen-exemptions.js';
 
 // ============================================================================
 // Types
@@ -414,26 +419,52 @@ function parseCSVLine(line: string): string[] {
 
 const COMPLETED_STATUSES = new Set(['Done', 'Completed']);
 
+/**
+ * Dated reopen exemptions (owner ruling 2026-10-06). Empty unless an entry
+ * point opts in with useReopenExemptions(): the strict sprint gate does, via
+ * tools/scripts/sprint-gates.ts. The functions below stay pure for every
+ * other caller and test.
+ */
+let reopenExemptions: readonly ReopenExemption[] = [];
+export function useReopenExemptions(exemptions: readonly ReopenExemption[]): void {
+  reopenExemptions = exemptions;
+}
+function defaultReopenExemptions(): readonly ReopenExemption[] {
+  return reopenExemptions;
+}
+function defaultReopenExemptIds(): ReadonlySet<string> {
+  return activeExemptionIds(reopenExemptions);
+}
+
 export interface CompletionResult {
   isComplete: boolean;
   totalTasks: number;
   completedTasks: number;
   incompleteTasks: SprintTask[];
+  /** Open tasks skipped because of an active, dated reopen exemption. */
+  exemptTasks: SprintTask[];
 }
 
 /**
  * Check if a sprint is complete (all tasks Done/Completed).
  */
-export function checkSprintCompletion(tasks: SprintTask[], targetSprint: string): CompletionResult {
+export function checkSprintCompletion(
+  tasks: SprintTask[],
+  targetSprint: string,
+  exemptIds: ReadonlySet<string> = defaultReopenExemptIds()
+): CompletionResult {
   const sprintTasks = tasks.filter((t) => String(t['Target Sprint']) === targetSprint);
   const completedTasks = sprintTasks.filter((t) => COMPLETED_STATUSES.has(t.Status));
-  const incompleteTasks = sprintTasks.filter((t) => !COMPLETED_STATUSES.has(t.Status));
+  const open = sprintTasks.filter((t) => !COMPLETED_STATUSES.has(t.Status));
+  const exemptTasks = open.filter((t) => exemptIds.has(t['Task ID']));
+  const incompleteTasks = open.filter((t) => !exemptIds.has(t['Task ID']));
 
   return {
     isComplete: incompleteTasks.length === 0 && sprintTasks.length > 0,
     totalTasks: sprintTasks.length,
     completedTasks: completedTasks.length,
     incompleteTasks,
+    exemptTasks,
   };
 }
 
@@ -780,19 +811,50 @@ export interface SprintStartGateResult {
   gateResult: GateResult;
 }
 
+/** Detail lines for the start gate: per sprint, up to three open task IDs. */
+function formatIncompletePrerequisites(
+  incompletePrerequisites: SprintStartGateResult['incompletePrerequisites']
+): string[] {
+  const details: string[] = [];
+  for (const prereq of incompletePrerequisites) {
+    details.push(`Sprint ${prereq.sprint}: ${prereq.incomplete}/${prereq.total} incomplete`);
+    for (const taskId of prereq.incompleteTasks.slice(0, 3)) {
+      details.push(`  - ${taskId}`);
+    }
+    if (prereq.incompleteTasks.length > 3) {
+      details.push(`  ... and ${prereq.incompleteTasks.length - 3} more`);
+    }
+  }
+  return details;
+}
+
 /**
  * Check if all prior sprints are complete before allowing current sprint to start.
  * This is the Sprint Start Gate that prevents premature sprint progression.
  */
 export function checkSprintStartGate(
   tasks: SprintTask[],
-  targetSprint: number
+  targetSprint: number,
+  exemptIds: ReadonlySet<string> = defaultReopenExemptIds(),
+  exemptions: readonly ReopenExemption[] = defaultReopenExemptions()
 ): SprintStartGateResult {
+  // The start gate runs for every sprint, so it carries the exemption check:
+  // an expired or invalid reopen exemption fails here in every mode.
+  const exemptionCheck = checkReopenExemptions(exemptions, tasks);
+  if (exemptionCheck.severity === 'FAIL') {
+    return {
+      targetSprint,
+      prerequisiteSprints: Array.from({ length: Math.max(targetSprint, 0) }, (_, i) => i),
+      allPrerequisitesComplete: false,
+      incompletePrerequisites: [],
+      gateResult: { ...exemptionCheck, name: 'Sprint Start Gate' },
+    };
+  }
   const prerequisiteSprints = Array.from({ length: targetSprint }, (_, i) => i);
   const incompletePrerequisites: SprintStartGateResult['incompletePrerequisites'] = [];
 
   for (const sprint of prerequisiteSprints) {
-    const completion = checkSprintCompletion(tasks, String(sprint));
+    const completion = checkSprintCompletion(tasks, String(sprint), exemptIds);
     if (!completion.isComplete && completion.totalTasks > 0) {
       incompletePrerequisites.push({
         sprint,
@@ -821,16 +883,7 @@ export function checkSprintStartGate(
       details: prerequisiteSprints.map((s) => `Sprint ${s}: Complete`),
     };
   } else {
-    const details: string[] = [];
-    for (const prereq of incompletePrerequisites) {
-      details.push(`Sprint ${prereq.sprint}: ${prereq.incomplete}/${prereq.total} incomplete`);
-      for (const taskId of prereq.incompleteTasks.slice(0, 3)) {
-        details.push(`  - ${taskId}`);
-      }
-      if (prereq.incompleteTasks.length > 3) {
-        details.push(`  ... and ${prereq.incompleteTasks.length - 3} more`);
-      }
-    }
+    const details = formatIncompletePrerequisites(incompletePrerequisites);
 
     gateResult = {
       name: 'Sprint Start Gate',

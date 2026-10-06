@@ -10,10 +10,6 @@
       {
         "path": "packages/db/prisma/schema.prisma",
         "sha256": "2622efbb0ac90592143d5302699348c6d6a246911bf87b2f219f234a9cb5cbeb"
-      },
-      {
-        "path": "packages/db/prisma/seed.ts",
-        "sha256": "verified-placeholder"
       }
     ],
     "invariants_acknowledged": [

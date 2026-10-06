@@ -5,7 +5,7 @@
   "run_id": "attest-backfill-INFRA-TF-004-2026-07-24",
   "attestor": "Claude Code (claude-opus-4-8[1m]) — PM-OPS-002 residual evidence backfill (ENG-OPS-002.R16 / GOV-A-001), STOA-Foundation lens",
   "attestation_timestamp": "2026-07-24T12:00:00Z",
-  "verdict": "COMPLETE",
+  "verdict": "PARTIAL",
   "evidence_summary": {
     "artifacts_verified": 4,
     "validations_passed": 2,
