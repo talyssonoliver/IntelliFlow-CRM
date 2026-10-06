@@ -7,7 +7,7 @@ import { OG_IMAGES } from '@/lib/og-images';
 /**
  * Partners Page
  *
- * Public-facing partners page for IntelliFlow CRM.
+ * Public-facing partners page for Aurora.
  * Showcases integration partners, partnership benefits, and application process.
  *
  * Performance targets:
@@ -17,21 +17,21 @@ import { OG_IMAGES } from '@/lib/og-images';
  */
 
 export const metadata: Metadata = {
-  title: 'Partner with IntelliFlow CRM | Technology & Business Partners',
+  title: 'Partner with Aurora | Technology & Business Partners',
   description:
-    'Join our partner ecosystem. Integrate your solution, resell IntelliFlow CRM, or become a certified consultant. API access, co-marketing, and revenue share programs available.',
+    'Join our partner ecosystem. Integrate your solution, resell Aurora, or become a certified consultant. API access, co-marketing, and revenue share programs available.',
   openGraph: {
     images: OG_IMAGES,
-    title: 'Partner with IntelliFlow CRM',
+    title: 'Partner with Aurora',
     description:
       'Technology integrations, reseller programs, and consultant certifications. Build with our API, earn revenue share, and grow your business.',
     url: 'https://intelliflow-crm.com/partners',
-    siteName: 'IntelliFlow CRM',
+    siteName: 'Aurora',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Partner with IntelliFlow CRM',
+    title: 'Partner with Aurora',
     description:
       'Join our ecosystem: Technology partners, resellers, and certified consultants. API access and revenue share programs.',
   },
@@ -41,15 +41,15 @@ export default function PartnersPage() {
   const { partners, benefits, integration_categories, faqs } = partnerData;
 
   return (
-    <main id="main-content" className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37] py-16 lg:py-24">
-        <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-[#137fec]/20 blur-3xl opacity-50" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#11175b] via-[#11175b] to-[#11175b] py-16 lg:py-24">
+        <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-[#2a78f6]/20 blur-3xl opacity-50" />
         <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl opacity-40" />
 
         <div className="container relative z-10 px-4 lg:px-6 mx-auto max-w-6xl">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#bca8ff] font-medium backdrop-blur mb-6">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 handshake
               </span>{' '}
@@ -57,7 +57,7 @@ export default function PartnersPage() {
             </div>
 
             <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-              Build, Sell, Grow with IntelliFlow CRM
+              Build, Sell, Grow with Aurora
             </h1>
 
             <p className="text-lg text-slate-200 max-w-2xl mx-auto mb-8">
@@ -70,9 +70,9 @@ export default function PartnersPage() {
               <Link
                 href="/contact"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
-                  bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7]
-                  transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]
-                  focus:ring-offset-2 focus:ring-offset-[#0f172a]"
+                  bg-[#2a78f6] text-white font-semibold hover:bg-[#1f63d4]
+                  transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff]
+                  focus:ring-offset-2 focus:ring-offset-[#11175b]"
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   send
@@ -83,8 +83,8 @@ export default function PartnersPage() {
                 href="#benefits"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
                   border border-white/30 text-white font-semibold hover:bg-white/10
-                  transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]
-                  focus:ring-offset-2 focus:ring-offset-[#0f172a]"
+                  transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff]
+                  focus:ring-offset-2 focus:ring-offset-[#11175b]"
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   info
@@ -104,7 +104,7 @@ export default function PartnersPage() {
               Integration Partners
             </h2>
             <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              IntelliFlow CRM integrates seamlessly with the tools your team already uses.
+              Aurora integrates seamlessly with the tools your team already uses.
             </p>
           </div>
 
@@ -113,14 +113,14 @@ export default function PartnersPage() {
               <Card
                 key={partner.id}
                 className="p-6 flex items-center justify-center border border-slate-200
-                  dark:border-slate-700 bg-slate-50 dark:bg-slate-900 hover:border-[#137fec]
+                  dark:border-slate-700 bg-slate-50 dark:bg-slate-900 hover:border-[#2a78f6]
                   hover:shadow-md transition-all group"
               >
                 <div className="text-center">
                   <div
                     className="w-16 h-16 mx-auto mb-2 rounded-lg bg-slate-200 dark:bg-slate-800
                       flex items-center justify-center text-slate-600 dark:text-slate-400
-                      group-hover:text-[#137fec] transition-colors"
+                      group-hover:text-[#2a78f6] transition-colors"
                   >
                     <span className="font-semibold text-xs">{partner.name}</span>
                   </div>
@@ -140,7 +140,7 @@ export default function PartnersPage() {
               Integration Ecosystem
             </h2>
             <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Connect IntelliFlow CRM with your existing tech stack across all categories.
+              Connect Aurora with your existing tech stack across all categories.
             </p>
           </div>
 
@@ -149,7 +149,7 @@ export default function PartnersPage() {
               <Card
                 key={category.id}
                 className="p-6 border border-slate-200 dark:border-slate-700 bg-white
-                  dark:bg-slate-800 hover:border-[#137fec] hover:shadow-md transition-all"
+                  dark:bg-slate-800 hover:border-[#2a78f6] hover:shadow-md transition-all"
               >
                 <div
                   className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
@@ -189,8 +189,8 @@ export default function PartnersPage() {
             {/* Technology Partners */}
             <div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3">
-                <span className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[#137fec]" aria-hidden="true">
+                <span className="w-10 h-10 rounded-lg bg-[#2a78f6]/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[#2a78f6]" aria-hidden="true">
                     integration_instructions
                   </span>
                 </span>{' '}
@@ -205,11 +205,11 @@ export default function PartnersPage() {
                   >
                     <div className="flex items-start gap-4">
                       <div
-                        className="w-12 h-12 rounded-lg bg-[#137fec]/10 flex items-center
+                        className="w-12 h-12 rounded-lg bg-[#2a78f6]/10 flex items-center
                           justify-center flex-shrink-0"
                       >
                         <span
-                          className="material-symbols-outlined text-[#137fec]"
+                          className="material-symbols-outlined text-[#2a78f6]"
                           aria-hidden="true"
                         >
                           {benefit.icon}
@@ -319,9 +319,9 @@ export default function PartnersPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 lg:py-20 bg-gradient-to-r from-[#137fec] to-[#0e6ac7]">
+      <section className="py-16 lg:py-20 bg-gradient-to-r from-[#2a78f6] to-[#1f63d4]">
         <div className="container px-4 lg:px-6 mx-auto max-w-5xl text-center space-y-6 text-white">
-          <h2 className="text-3xl lg:text-4xl font-bold">Ready to Partner with IntelliFlow CRM?</h2>
+          <h2 className="text-3xl lg:text-4xl font-bold">Ready to Partner with Aurora?</h2>
           <p className="text-lg text-white/90 max-w-2xl mx-auto">
             Join hundreds of technology partners, resellers, and consultants building successful
             businesses with our platform.
@@ -330,9 +330,9 @@ export default function PartnersPage() {
             <Link
               href="/contact"
               className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white
-                text-[#137fec] font-semibold rounded-lg hover:bg-slate-100
+                text-[#2a78f6] font-semibold rounded-lg hover:bg-slate-100
                 transition-colors focus:outline-none focus:ring-2 focus:ring-white
-                focus:ring-offset-2 focus:ring-offset-[#137fec]"
+                focus:ring-offset-2 focus:ring-offset-[#2a78f6]"
             >
               <span className="material-symbols-outlined" aria-hidden="true">
                 send
@@ -344,7 +344,7 @@ export default function PartnersPage() {
               className="inline-flex items-center justify-center gap-2 px-8 py-3 border
                 border-white text-white font-semibold rounded-lg hover:bg-white/10
                 transition-colors focus:outline-none focus:ring-2 focus:ring-white
-                focus:ring-offset-2 focus:ring-offset-[#137fec]"
+                focus:ring-offset-2 focus:ring-offset-[#2a78f6]"
             >
               <span className="material-symbols-outlined" aria-hidden="true">
                 help
@@ -390,6 +390,6 @@ export default function PartnersPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

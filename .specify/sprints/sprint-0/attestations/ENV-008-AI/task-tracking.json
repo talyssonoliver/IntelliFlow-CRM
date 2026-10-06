@@ -21,5 +21,31 @@
       "name": "environment-setup",
       "passed": true
     }
-  ]
+  ],
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T22:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Reopen evidence: Railway production, read 2026-10-05 via the Railway API: every service (api, ai-worker, events-worker, ingestion-worker, notifications-worker) has `OTEL_ENABLED=false` and no `OTEL_EXPORTER_OTLP_ENDPOINT`; `ws` has no OTel vars. `infra/terraform/environments/production/terraform.tfvars` keeps OTel off until `otel_exporter_endpoint` is set, and it is not set. Production exports no traces, metrics or logs.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "Reopen evidence: KPI \"100% services emit traces/metrics/logs; alerting configured; dashboards live\" fails in production. `anomaly-detection.json` and `self-healing-rules.yaml` are config files that no running system loads.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: (1) Production emission on (IFC-032). Any anomaly or self-healing claim needs a running consumer, or must be re-scoped with the owner. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 50,
+  "updated_at": "2026-10-05T22:30:00Z"
 }

@@ -11,7 +11,7 @@ import type { Metadata } from 'next';
 import SsoPageClient from './SsoPageClient';
 
 export const metadata: Metadata = {
-  title: 'Enterprise SSO | IntelliFlow CRM',
+  title: 'Enterprise SSO',
   description:
     "Sign in with your organization's SSO provider. Enter your work email to discover your enterprise authentication.",
 };

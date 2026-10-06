@@ -5,7 +5,7 @@
   "run_id": "reconcile-IFC-032-2026-06-22",
   "attestor": "Claude Code (claude-opus-4-8[1m]) — IFC-032 verify-and-attest reconciliation (STOA-Automation)",
   "attestation_timestamp": "2026-06-22T14:19:35Z",
-  "verdict": "COMPLETE",
+  "verdict": "PARTIAL",
   "evidence_summary": {
     "artifacts_verified": 4,
     "validations_passed": 4,

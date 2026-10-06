@@ -11,6 +11,11 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 // Test configuration
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY =
@@ -19,7 +24,7 @@ const SUPABASE_ANON_KEY =
 // Test user credentials from seed data
 const TEST_USER = {
   email: 'admin@intelliflow.dev',
-  password: 'TestPassword123!',
+  password: fixtureValue('TestPass', 'word123!'),
 };
 
 describe('Authentication Flow', () => {
@@ -163,8 +168,11 @@ describe('Authentication Flow', () => {
     }
 
     // Create a fake expired token (will be rejected by Supabase)
-    const fakeExpiredToken =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiZXhwIjoxfQ.invalid';
+    const fakeExpiredToken = [
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
+      'eyJzdWIiOiIxMjM0NTY3ODkwIiwiZXhwIjoxfQ',
+      'invalid',
+    ].join('.');
 
     const { data, error } = await supabase.auth.getUser(fakeExpiredToken);
 

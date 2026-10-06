@@ -19,7 +19,7 @@ Auth probe (the exact request the harness makes):
 
 ```
 POST http://127.0.0.1:54321/auth/v1/token?grant_type=password
-  body: { "email": "admin@intelliflow.dev", "password": "TestPassword123!" }
+  body: { "email": "admin@intelliflow.dev", "password": "<test-password>" }
 → {"code":400,"error_code":"invalid_credentials","msg":"Invalid login credentials"}
 ```
 

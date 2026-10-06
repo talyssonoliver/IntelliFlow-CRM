@@ -1,0 +1,56 @@
+name: Grafana Alert Rules
+
+# Applies infra/monitoring/grafana/cloud/alert-rules.json to the production
+# Grafana Cloud stack (IFC-032). The JSON is the source of truth; this job only
+# pushes it. Runs on merge when the rules or the script change, or by hand.
+# The dispatch input "send_test" also creates an always-firing test rule, to
+# prove alerts reach the owner's email. The next normal run deletes it.
+#
+# Needs the repo secret GRAFANA_SA_TOKEN (a Grafana service-account token with
+# the Editor role). Without it the job fails, saying so; it never prints the token.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/monitoring/grafana/cloud/alert-rules.json'
+      - 'tools/scripts/observability/apply-grafana-alert-rules.mjs'
+      - '.github/workflows/grafana-alert-rules.yml'
+  workflow_dispatch:
+    inputs:
+      send_test:
+        description: 'Also create an always-firing test rule (proves email delivery)'
+        type: boolean
+        default: false
+      dry_run:
+        description: 'Only validate the rules and check their metrics exist'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: grafana-alert-rules
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Apply alert rules to Grafana Cloud
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            infra/monitoring/grafana/cloud
+            tools/scripts/observability
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Apply
+        env:
+          GRAFANA_URL: https://graysushi1880.grafana.net
+          GRAFANA_SA_TOKEN: ${{ secrets.GRAFANA_SA_TOKEN }}
+          SEND_TEST: ${{ inputs.send_test && '--send-test' || '' }}
+          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: node tools/scripts/observability/apply-grafana-alert-rules.mjs $SEND_TEST $DRY_RUN

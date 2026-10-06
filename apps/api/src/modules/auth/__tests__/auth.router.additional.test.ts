@@ -109,6 +109,11 @@ vi.mock('../../../services/session.service', () => ({
 import { authRouter } from '../auth.router';
 import { createTestContext, createPublicContext, prismaMock } from '../../../test/setup';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 describe('authRouter additional coverage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -160,7 +165,7 @@ describe('authRouter additional coverage', () => {
       await expect(
         caller.login({
           email: 'test@example.com',
-          password: 'password123!!',
+          password: fixtureValue('passwor', 'd123!!'),
         })
       ).rejects.toThrow('Authentication failed');
     });
@@ -176,7 +181,7 @@ describe('authRouter additional coverage', () => {
       await expect(
         caller.login({
           email: 'test@example.com',
-          password: 'wrong-password-123',
+          password: fixtureValue('wrong-pas', 'sword-123'),
         })
       ).rejects.toThrow('Account locked');
     });

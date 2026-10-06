@@ -14,10 +14,12 @@ import { ImageResponse } from 'next/og';
 // `experimental.useCache`, and Next refuses a route-segment `runtime` config
 // alongside it ("not compatible with nextConfig.experimental.useCache").
 // `next/og` renders on the default Node.js runtime as well.
-export const alt = 'IntelliFlow CRM — AI-Powered Customer Relationship Management';
+export const alt = 'Aurora: the CRM that works your pipeline for you';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
+// Aurora brand tokens (components/aurora-site/aurora-site.css): navy ground,
+// the blue-violet-cyan aurora gradient, the landing hero's own headline.
 export default async function Image() {
   return new ImageResponse(
     <div
@@ -28,40 +30,42 @@ export default async function Image() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0f172a',
+        background: 'linear-gradient(160deg, #11175b 0%, #1b1f73 55%, #2a1f7a 100%)',
         fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
     >
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 140,
-          height: 140,
-          borderRadius: 28,
-          background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
-          marginBottom: 40,
+          width: 520,
+          height: 10,
+          borderRadius: 10,
+          background: 'linear-gradient(90deg, #28d9d4 0%, #2a78f6 50%, #7655f6 100%)',
+          marginBottom: 48,
+        }}
+      />
+      <div
+        style={{
+          display: 'flex',
+          fontSize: 96,
+          fontWeight: 800,
+          color: '#ffffff',
+          letterSpacing: -3,
         }}
       >
-        <span style={{ fontSize: 72, fontWeight: 700, color: '#0f172a', letterSpacing: -3 }}>
-          IF
-        </span>
-      </div>
-      <div style={{ display: 'flex', fontSize: 56, fontWeight: 700, color: '#f8fafc' }}>
-        IntelliFlow CRM
+        Aurora
       </div>
       <div
         style={{
           display: 'flex',
-          fontSize: 28,
-          color: '#94a3b8',
-          marginTop: 16,
-          maxWidth: 820,
+          fontSize: 34,
+          color: '#c9cdf5',
+          marginTop: 20,
+          maxWidth: 900,
           textAlign: 'center',
         }}
       >
-        AI-powered lead scoring, pipeline analytics, and automated workflows
+        The CRM that works your pipeline for you.
       </div>
     </div>,
     { ...size }

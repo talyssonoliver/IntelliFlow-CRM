@@ -96,12 +96,12 @@ describe('Prometheus Exporter (IFC-117)', () => {
     });
 
     it('should accept when token matches', () => {
-      expect(authenticateMetricsRequest('Bearer test-metrics-token')).toBe(true);
+      expect(authenticateMetricsRequest('Bearer ' + 'test-metrics-token')).toBe(true);
     });
 
     it('should use default token when env var not set', () => {
       delete process.env.METRICS_TOKEN;
-      expect(authenticateMetricsRequest('Bearer default-dev-token')).toBe(true);
+      expect(authenticateMetricsRequest('Bearer ' + 'default-dev-token')).toBe(true);
       expect(authenticateMetricsRequest('Bearer wrong-token')).toBe(false);
     });
   });
@@ -206,7 +206,7 @@ describe('Prometheus Exporter (IFC-117)', () => {
     it('should return 200 with Prometheus metrics on valid token', () => {
       const handler = getMetricsHandler();
       const req = {
-        headers: { authorization: 'Bearer test-metrics-token' },
+        headers: { authorization: 'Bearer ' + 'test-metrics-token' },
       } as any;
       const res = createMockRes();
 

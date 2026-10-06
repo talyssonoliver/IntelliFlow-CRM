@@ -7,7 +7,7 @@
  * cross-tenant attempt). This is the full-stack counterpart to the DB-level
  * `rls-tenant-isolation` integration test.
  *
- * storageState is cleared so only the explicit Bearer authenticates.
+ * storageState is cleared so only the explicit Authorization header authenticates.
  */
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import { readPersonaToken, readMeta } from '../fixtures/storage-state';

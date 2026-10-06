@@ -4,38 +4,9 @@
   "task_id": "EP-001-AI",
   "attestor": "Claude Code - Task Integrity Validator",
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
-  "verdict": "COMPLETE",
+  "verdict": "PARTIAL",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "infra/monitoring/otel-collector.yaml",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "infra/monitoring/tempo-config.yml",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "infra/monitoring/docker-compose.monitoring.yml",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "infra/monitoring/prometheus.yml",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "infra/monitoring/loki-config.yml",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/monitoring-config-hashes.txt",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "docs/operations/monitoring-runbook.md",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "OTel Collector + Prometheus + Grafana deployed",
       "Loki + Tempo deployed with trace-to-log correlation",

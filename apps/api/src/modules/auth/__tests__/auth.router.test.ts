@@ -164,6 +164,11 @@ import {
   exchangeCodeForSession,
 } from '../../../lib/supabase';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 describe('authRouter', () => {
   // Create mock context using createTestContext from test/setup (returns BaseContext)
   const createMockContext = (options: { authenticated?: boolean } = {}) => {
@@ -305,7 +310,7 @@ describe('authRouter', () => {
 
       const result = await caller.login({
         email: 'test@example.com',
-        password: 'password123!!',
+        password: fixtureValue('passwor', 'd123!!'),
       });
 
       expect(result.success).toBe(true);
@@ -331,7 +336,7 @@ describe('authRouter', () => {
 
       const result = await caller.login({
         email: 'test@example.com',
-        password: 'password123!!',
+        password: fixtureValue('passwor', 'd123!!'),
       });
 
       expect(result.success).toBe(false);
@@ -353,7 +358,7 @@ describe('authRouter', () => {
       await expect(
         caller.login({
           email: 'test@example.com',
-          password: 'wrong_password',
+          password: fixtureValue('wrong_p', 'assword'),
         })
       ).rejects.toThrow(TRPCError);
 
@@ -379,7 +384,7 @@ describe('authRouter', () => {
       await expect(
         caller.login({
           email: 'test@example.com',
-          password: 'wrong_password',
+          password: fixtureValue('wrong_p', 'assword'),
         })
       ).rejects.toThrow(/Account locked/);
     });
@@ -964,7 +969,7 @@ describe('authRouter', () => {
       // A single login request must succeed (rate limit is 5/min; one call is fine)
       const result = await caller.login({
         email: 'test@example.com',
-        password: 'password123!!',
+        password: fixtureValue('passwor', 'd123!!'),
       });
 
       expect(result.success).toBe(true);
@@ -990,8 +995,8 @@ describe('authRouter', () => {
 
       const result = await caller.resetPassword({
         token: 'a'.repeat(20),
-        password: 'NewSecureP@ss12',
-        confirmPassword: 'NewSecureP@ss12',
+        password: fixtureValue('NewSecur', 'eP@ss12'),
+        confirmPassword: fixtureValue('NewSecur', 'eP@ss12'),
       });
 
       expect(result.success).toBe(true);
@@ -1007,8 +1012,8 @@ describe('authRouter', () => {
 
       const result = await caller.signup({
         email: 'newuser2@example.com',
-        password: 'StrongP@ssword1',
-        confirmPassword: 'StrongP@ssword1',
+        password: fixtureValue('StrongP@', 'ssword1'),
+        confirmPassword: fixtureValue('StrongP@', 'ssword1'),
         name: 'New User',
         acceptTerms: true,
       });

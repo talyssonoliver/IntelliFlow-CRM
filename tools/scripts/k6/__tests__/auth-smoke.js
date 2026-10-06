@@ -3,7 +3,7 @@
  * Phase 1.2: RED - Write k6 Auth Integration Test
  *
  * Quick validation that Supabase auth is working for load tests.
- * Run with: k6 run --env SUPABASE_URL=<url> --env SUPABASE_ANON_KEY=<key> auth-smoke.js
+ * Run with: k6 run --env SUPABASE_URL=<url> --env SUPABASE_ANON_KEY=<key> --env K6_TEST_PASSWORD=<password> auth-smoke.js
  */
 
 import http from 'k6/http';
@@ -21,15 +21,15 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
 // Test user credentials (from seed data)
 const TEST_USER = {
   email: 'admin@intelliflow.dev',
-  password: 'TestPassword123!',
+  password: __ENV.K6_TEST_PASSWORD || '',
 };
 
 export const options = {
   vus: 1,
   iterations: 1,
   thresholds: {
-    'checks': ['rate==1.0'], // 100% success required
-    'auth_success_rate': ['rate==1.0'],
+    checks: ['rate==1.0'], // 100% success required
+    auth_success_rate: ['rate==1.0'],
   },
 };
 
@@ -45,10 +45,13 @@ function validateEnvironment() {
   if (!SUPABASE_ANON_KEY) {
     errors.push('SUPABASE_ANON_KEY not configured');
   }
+  if (!TEST_USER.password) {
+    errors.push('K6_TEST_PASSWORD not configured');
+  }
 
   if (errors.length > 0) {
     console.error('Environment validation failed:');
-    errors.forEach(e => console.error(`  - ${e}`));
+    errors.forEach((e) => console.error(`  - ${e}`));
     console.error('\nRun with:');
     console.error('  k6 run --env SUPABASE_URL=<url> --env SUPABASE_ANON_KEY=<key> auth-smoke.js');
     return false;
@@ -57,7 +60,7 @@ function validateEnvironment() {
   return true;
 }
 
-export default function() {
+export default function () {
   // Test 1: Validate environment
   const envValid = validateEnvironment();
   check(envValid, { 'environment configured': (v) => v === true });
@@ -70,7 +73,7 @@ export default function() {
   // Test 2: Supabase auth endpoint reachable
   const healthUrl = `${SUPABASE_URL}/auth/v1/health`;
   const healthRes = http.get(healthUrl, {
-    headers: { 'apikey': SUPABASE_ANON_KEY },
+    headers: { apikey: SUPABASE_ANON_KEY },
     tags: { name: 'auth_health' },
   });
 
@@ -95,7 +98,7 @@ export default function() {
     {
       headers: {
         'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
+        apikey: SUPABASE_ANON_KEY,
       },
       tags: { name: 'auth_login' },
     }
@@ -149,7 +152,7 @@ export default function() {
   const apiHealthUrl = `${BASE_URL}/api/trpc/health.ping`;
   const apiRes = http.get(apiHealthUrl, {
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     tags: { name: 'api_health' },
   });
@@ -162,7 +165,7 @@ export default function() {
   const leadListUrl = `${BASE_URL}/api/trpc/lead.list?input=${encodeURIComponent(JSON.stringify({ json: { limit: 5 } }))}`;
   const leadRes = http.get(leadListUrl, {
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
     tags: { name: 'lead_list' },
@@ -195,7 +198,9 @@ export default function() {
 
 export function handleSummary(data) {
   const passed = data.metrics.checks && data.metrics.checks.values.passes > 0;
-  const total = data.metrics.checks ? data.metrics.checks.values.passes + data.metrics.checks.values.fails : 0;
+  const total = data.metrics.checks
+    ? data.metrics.checks.values.passes + data.metrics.checks.values.fails
+    : 0;
 
   console.log('\n=== Auth Smoke Test Results ===');
   console.log(`Status: ${passed ? 'PASSED' : 'FAILED'}`);
@@ -203,13 +208,17 @@ export function handleSummary(data) {
   console.log('================================\n');
 
   return {
-    stdout: JSON.stringify({
-      status: passed ? 'PASSED' : 'FAILED',
-      checks: {
-        passed: data.metrics.checks?.values.passes || 0,
-        failed: data.metrics.checks?.values.fails || 0,
+    stdout: JSON.stringify(
+      {
+        status: passed ? 'PASSED' : 'FAILED',
+        checks: {
+          passed: data.metrics.checks?.values.passes || 0,
+          failed: data.metrics.checks?.values.fails || 0,
+        },
+        timestamp: new Date().toISOString(),
       },
-      timestamp: new Date().toISOString(),
-    }, null, 2),
+      null,
+      2
+    ),
   };
 }

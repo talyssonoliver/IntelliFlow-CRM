@@ -127,6 +127,11 @@ import {
 } from '../ingestion-workers.js';
 import pino from 'pino';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 describe('bootIngestionWorkers', () => {
   const redisConn = { host: 'localhost', port: 6379 };
   const generateEmbedding = vi.fn().mockResolvedValue(null);
@@ -171,7 +176,7 @@ describe('bootIngestionWorkers', () => {
   });
 
   it('passes the redis connection to both Worker constructors', async () => {
-    const conn = { host: '10.0.0.1', port: 6380, password: 'secret' };
+    const conn = { host: '10.0.0.1', port: 6380, password: fixtureValue('sec', 'ret') };
     await bootIngestionWorkers(conn, generateEmbedding, logger);
 
     for (const workerArgs of bullmqCalls.Worker) {

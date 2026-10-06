@@ -1,0 +1,289 @@
+/* Pricing, in the Aurora design. Every rule is scoped under .aurora-site .aurora-pricing. */
+
+.aurora-site .aurora-pricing .ap-center {
+  text-align: center;
+}
+
+/* Billing period */
+.aurora-site .aurora-pricing .ap-toggle {
+  display: inline-flex;
+  min-width: 0;
+  border: 0;
+  margin-inline: 0;
+  gap: 4px;
+  margin-top: 32px;
+  padding: 4px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line-2) inset;
+}
+.aurora-site .aurora-pricing .ap-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink-2);
+  font:
+    600 15px/1 var(--font-manrope),
+    system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+.aurora-site .aurora-pricing .ap-toggle button[aria-pressed='true'] {
+  background: var(--navy);
+  color: #fff;
+}
+.aurora-site .aurora-pricing .ap-save {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(40, 217, 212, 0.18);
+  color: #0e7f7b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.aurora-site .aurora-pricing .ap-toggle button[aria-pressed='true'] .ap-save {
+  background: rgba(40, 217, 212, 0.22);
+  color: var(--cyan);
+}
+
+/* Plans */
+.aurora-site .aurora-pricing .ap-plans-section {
+  padding: 24px 0 0;
+}
+.aurora-site .aurora-pricing .ap-plans {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+.aurora-site .aurora-pricing .ap-plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px 26px;
+}
+.aurora-site .aurora-pricing .ap-popular {
+  box-shadow:
+    0 0 0 2px var(--blue),
+    0 30px 60px -28px rgba(42, 120, 246, 0.45);
+}
+.aurora-site .aurora-pricing .ap-badge {
+  position: absolute;
+  top: -13px;
+  left: 24px;
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.aurora-site .aurora-pricing .ap-plan-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(118, 85, 246, 0.1);
+  color: var(--violet);
+  font-size: 22px;
+}
+.aurora-site .aurora-pricing .ap-plan-name {
+  margin: 18px 0 6px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+}
+.aurora-site .aurora-pricing .ap-plan-desc {
+  margin: 0;
+  min-height: 66px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.aurora-site .aurora-pricing .ap-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 18px 0 0;
+  color: var(--navy);
+}
+.aurora-site .aurora-pricing .ap-price b {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.aurora-site .aurora-pricing .ap-price b.ap-price-label {
+  font-size: 28px;
+  white-space: nowrap;
+}
+.aurora-site .aurora-pricing .ap-price span {
+  font-size: 14px;
+  color: var(--ink-3);
+}
+.aurora-site .aurora-pricing .ap-billed {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.aurora-site .aurora-pricing .ap-cta {
+  width: 100%;
+  margin-top: 20px;
+}
+.aurora-site .aurora-pricing .ap-features {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0 0;
+  padding: 20px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink);
+}
+.aurora-site .aurora-pricing .ap-features li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  line-height: 1.45;
+}
+.aurora-site .aurora-pricing .ap-features .material-symbols-outlined {
+  flex: none;
+  font-size: 18px;
+  color: #12a8a4;
+}
+
+/* Comparison */
+.aurora-site .aurora-pricing .ap-table-card {
+  margin-top: 36px;
+  overflow: hidden;
+}
+.aurora-site .aurora-pricing .ap-table-scroll {
+  overflow-x: auto;
+}
+.aurora-site .aurora-pricing .ap-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.aurora-site .aurora-pricing .ap-table th,
+.aurora-site .aurora-pricing .ap-table td {
+  padding: 14px 18px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+.aurora-site .aurora-pricing .ap-table th[scope='row'],
+.aurora-site .aurora-pricing .ap-table thead th:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink);
+}
+.aurora-site .aurora-pricing .ap-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--navy);
+  color: #fff;
+  font-weight: 700;
+}
+.aurora-site .aurora-pricing .ap-table thead th:first-child {
+  color: #fff;
+}
+.aurora-site .aurora-pricing .ap-group th {
+  padding-top: 22px;
+  text-align: left;
+  background: var(--mist);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.aurora-site .aurora-pricing .ap-table td {
+  color: var(--ink-2);
+}
+.aurora-site .aurora-pricing .ap-yes {
+  font-size: 20px;
+  color: #12a8a4;
+}
+.aurora-site .aurora-pricing .ap-no {
+  color: var(--ink-3);
+}
+
+/* Questions */
+.aurora-site .aurora-pricing .ap-faq-section {
+  padding-top: 0;
+}
+.aurora-site .aurora-pricing .ap-faq {
+  max-width: 820px;
+}
+/* Closing call to action */
+.aurora-site .aurora-pricing .ap-close {
+  padding: 0 0 24px;
+}
+.aurora-site .aurora-pricing .ap-close-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 64px 32px;
+  border-radius: 28px;
+  background: var(--navy);
+  text-align: center;
+  color: rgba(255, 255, 255, 0.78);
+}
+.aurora-site .aurora-pricing .ap-close-art img {
+  position: absolute;
+  right: -160px;
+  bottom: -220px;
+  width: 620px;
+  max-width: none;
+  opacity: 0.7;
+  pointer-events: none;
+}
+.aurora-site .aurora-pricing .ap-close-panel h2 {
+  position: relative;
+  margin: 0;
+  font-size: clamp(28px, 3.4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #fff;
+}
+.aurora-site .aurora-pricing .ap-close-panel p {
+  position: relative;
+  margin: 14px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.aurora-site .aurora-pricing .ap-close-cta {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+@media (max-width: 1100px) {
+  .aurora-site .aurora-pricing .ap-plans {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 32px;
+  }
+}
+@media (max-width: 640px) {
+  .aurora-site .aurora-pricing .ap-plans {
+    grid-template-columns: 1fr;
+  }
+  .aurora-site .aurora-pricing .ap-plan-desc {
+    min-height: 0;
+  }
+  .aurora-site .aurora-pricing .ap-close-panel {
+    padding: 48px 20px;
+  }
+  .aurora-site .aurora-pricing .ap-close-cta {
+    flex-direction: column;
+  }
+}

@@ -296,7 +296,7 @@ export function PublicFeedbackDialog({ open, onOpenChange, source }: PublicFeedb
         <DialogHeader>
           <DialogTitle id="public-feedback-title">Share your feedback</DialogTitle>
           <DialogDescription id="public-feedback-desc">
-            Help us improve IntelliFlow. Your feedback is anonymous unless you leave an email.
+            Help us improve Aurora. Your feedback is anonymous unless you leave an email.
           </DialogDescription>
         </DialogHeader>
 
