@@ -463,19 +463,19 @@ describe('InMemoryLeadRepository', () => {
     });
   });
 
-  describe('existsByEmail()', () => {
+  describe('existsByEmailInTenant()', () => {
     it('should return true when email exists', async () => {
       await repository.save(testLead);
 
       const emailResult = Email.create('test@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, testLead.tenantId);
 
       expect(exists).toBe(true);
     });
 
     it('should return false when email does not exist', async () => {
       const emailResult = Email.create('nonexistent@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, testLead.tenantId);
 
       expect(exists).toBe(false);
     });
@@ -484,7 +484,7 @@ describe('InMemoryLeadRepository', () => {
       await repository.save(testLead);
 
       const emailResult = Email.create('TEST@EXAMPLE.COM');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, testLead.tenantId);
 
       expect(exists).toBe(true);
     });
@@ -494,7 +494,7 @@ describe('InMemoryLeadRepository', () => {
       await repository.delete(testLeadId);
 
       const emailResult = Email.create('test@example.com');
-      const exists = await repository.existsByEmail(emailResult.value);
+      const exists = await repository.existsByEmailInTenant(emailResult.value, testLead.tenantId);
 
       expect(exists).toBe(false);
     });
@@ -770,8 +770,9 @@ describe('InMemoryLeadRepository', () => {
       expect(highScoreLeads).toHaveLength(1);
 
       // Change status
+      const statusBeforeQualify = testLead.status;
       testLead.qualify('user-123', 'Good fit');
-      await repository.save(testLead);
+      await repository.save(testLead, { expectedStatus: statusBeforeQualify });
 
       // Find by status
       const qualifiedLeads = await repository.findByStatus('QUALIFIED');
@@ -779,7 +780,7 @@ describe('InMemoryLeadRepository', () => {
 
       // Convert lead
       testLead.convert('contact-123', 'account-456', 'user-789');
-      await repository.save(testLead);
+      await repository.save(testLead, { expectedStatus: 'QUALIFIED' });
 
       // Verify conversion
       const converted = await repository.findById(testLeadId);
