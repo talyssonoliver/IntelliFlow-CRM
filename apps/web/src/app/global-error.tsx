@@ -1,6 +1,7 @@
 'use client';
 
 import { ErrorPageContent } from '@/components/status/error-page-content';
+import { useReportClientError } from '@/lib/sentry/report-client-error';
 import { ServerIncidentReporter } from '@/components/status/server-incident-reporter';
 
 /**
@@ -16,6 +17,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }>) {
+  useReportClientError(error);
+
   return (
     <html lang="en">
       <body className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(239,68,68,0.16),_transparent_42%),linear-gradient(180deg,_#f8fbff_0%,_#eef4fb_100%)] px-6 py-12">
