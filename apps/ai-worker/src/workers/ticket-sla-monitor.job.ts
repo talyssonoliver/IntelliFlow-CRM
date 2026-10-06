@@ -16,7 +16,7 @@
  */
 
 import { Job, Worker, Queue, QueueEvents } from 'bullmq';
-import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
+import { createSerialJobWorker } from './serial-job-worker';
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
 
@@ -118,13 +118,11 @@ export class TicketSlaMonitorWorker {
     this.queueEvents = new QueueEvents(TICKET_SLA_MONITOR_QUEUE_NAME, {
       connection: this.redisConnection,
     });
-    this.worker = new Worker<TicketSlaMonitorJobData, TicketSlaMonitorJobResult>(
+    this.worker = createSerialJobWorker<TicketSlaMonitorJobData, TicketSlaMonitorJobResult>(
       TICKET_SLA_MONITOR_QUEUE_NAME,
-      async (job) => this.process(job),
-      { connection: this.redisConnection, concurrency: 1, drainDelay: getDrainDelaySeconds() }
-    );
-    this.worker.on('failed', (job, error) =>
-      console.warn(`[ticket-sla-monitor] job ${job?.id} failed:`, error?.message)
+      (job) => this.process(job),
+      this.redisConnection,
+      'ticket-sla-monitor'
     );
   }
 

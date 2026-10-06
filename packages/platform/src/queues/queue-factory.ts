@@ -6,7 +6,8 @@
  */
 
 import { Queue, Worker, QueueEvents, Job, ConnectionOptions } from 'bullmq';
-import { getBullMQConnectionOptions, getDrainDelaySeconds } from './connection';
+import { getBullMQConnectionOptions } from './connection';
+import { getDrainDelaySeconds } from './drain-delay';
 import { QueueConfig, QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } from './types';
 import { createBackoffStrategy, globalRetryBudget, BACKOFF_PRESETS } from './retry-strategy';
 import { JobMetricsCollector } from './metrics-collector';

@@ -6,7 +6,7 @@
  * through the marker key, so a 30 s block adds no pickup latency.
  */
 import { afterEach, describe, expect, it } from 'vitest';
-import { DEFAULT_DRAIN_DELAY_SECONDS, getDrainDelaySeconds } from './connection';
+import { DEFAULT_DRAIN_DELAY_SECONDS, getDrainDelaySeconds } from './drain-delay';
 
 describe('getDrainDelaySeconds', () => {
   const saved = process.env.QUEUE_DRAIN_DELAY_SECONDS;
