@@ -17,7 +17,7 @@ import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
 import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
+import { getBullMQConnectionOptions } from '@intelliflow/platform/queues/connection';
 
 const logger = pino({
   name: 'scoring-job',
@@ -346,10 +346,7 @@ async function handleScheduledDispatch(
     }
 
     const queue = new Queue(SCORING_QUEUE, {
-      connection: {
-        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-      },
+      connection: getBullMQConnectionOptions(),
     });
 
     // Step 2: for each tenant, run a scoped query and enqueue per-lead jobs
