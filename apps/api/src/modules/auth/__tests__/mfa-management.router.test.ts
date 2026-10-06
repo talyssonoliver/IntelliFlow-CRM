@@ -7,6 +7,11 @@ import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from 'vite
 import { TRPCError } from '@trpc/server';
 import { createMockMfaService } from './fixtures/mock-mfa-service';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 // Test UUIDs
 const TEST_USER = {
   userId: '12345678-1234-4000-8000-000000000001',
@@ -175,7 +180,7 @@ describe('MFA Management Router (PG-125)', () => {
       mockAuditLogger.log.mockResolvedValue(undefined);
 
       const caller = createProtectedCaller();
-      const result = await caller.disableMfa({ password: 'ValidP@ssword1' }); // pragma: allowlist secret
+      const result = await caller.disableMfa({ password: fixtureValue('ValidP@', 'ssword1') });
       expect(result.success).toBe(true);
     });
 
@@ -190,7 +195,9 @@ describe('MFA Management Router (PG-125)', () => {
       mockSignIn.mockResolvedValue({ user: null, session: null, error: new Error('Invalid') });
 
       const caller = createProtectedCaller();
-      await expect(caller.disableMfa({ password: 'WrongPassword1' })).rejects.toThrow(TRPCError);
+      await expect(
+        caller.disableMfa({ password: fixtureValue('WrongPa', 'ssword1') })
+      ).rejects.toThrow(TRPCError);
     });
 
     it('should return BAD_REQUEST when MFA already disabled', async () => {

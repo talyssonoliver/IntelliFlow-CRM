@@ -167,7 +167,7 @@ a passing `test`.
 pnpm vitest run --project property
 
 # Run with real DB
-RUN_DB_PROPERTY_TESTS=1 TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5433/ifc_proptest \
+RUN_DB_PROPERTY_TESTS=1 TEST_DATABASE_URL=postgresql://<user>:<password>@localhost:5433/ifc_proptest \
   pnpm vitest run --project property
 
 # Typecheck a specific package after touching it

@@ -50,18 +50,16 @@ if git diff --cached --name-only | grep -qE "$ICON_SCAN_PATTERNS"; then
   fi
 fi
 
-# Secret scan (gitleaks) - fail fast locally before CI
+# Secret scan (gitleaks, shared kit). Fails CLOSED: a missing gitleaks blocks the
+# commit. Allowlist = per-file entries in .gitleaks.toml; inline allow comments
+# and .gitleaksignore are ignored. The grep scan further below is an extra net,
+# never the only control.
 echo "🔐 Scanning for secrets..."
-if command -v gitleaks >/dev/null 2>&1; then
-  gitleaks protect --staged --redact --config=.gitleaks.toml --no-banner || {
-    echo "❌ Secret scan failed. Remove secrets before committing."
-    echo "   If this is a false positive, add to .gitleaks.toml allowlist."
-    exit 1
-  }
-  echo "✅ No secrets detected"
-else
-  echo "⚠️  gitleaks not installed — skipping local secret scan (CI will still run it)."
-fi
+sh "$(git rev-parse --show-toplevel)/.gitleaks/scan.sh" staged || {
+  echo "❌ Secret scan failed. Remove the credential-shaped strings (build test values at runtime)."
+  exit 1
+}
+echo "✅ No secrets detected"
 
 # Auto-format staged files then re-stage them
 echo "💅 Auto-formatting staged files..."

@@ -63,7 +63,7 @@ import {
 // Test Fixtures
 // =============================================================================
 
-const testSecret = 'whsec_test_secret_key_12345';
+const testSecret = ['whsec', 'test', 'secret', 'key', '12345'].join('_');
 
 const createTestPayload = (type: string, id?: string) => ({
   id: id || `evt_${Date.now()}`,

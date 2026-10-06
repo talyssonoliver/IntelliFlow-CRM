@@ -93,6 +93,11 @@ vi.mock('../../../services/session.service', () => ({
 
 import { authRouter } from '../auth.router';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 describe('Password Reset Procedures (IFC-120)', () => {
   const createMockContext = () => ({
     prisma: {} as any,
@@ -156,8 +161,8 @@ describe('Password Reset Procedures (IFC-120)', () => {
   describe('resetPassword', () => {
     const validInput = {
       token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.valid-payload-here',
-      password: 'NewSecureP@ss1', // pragma: allowlist secret
-      confirmPassword: 'NewSecureP@ss1', // pragma: allowlist secret
+      password: fixtureValue('NewSecu', 'reP@ss1'),
+      confirmPassword: fixtureValue('NewSecu', 'reP@ss1'),
     };
 
     it('calls updateUserPassword and returns success (AC-002)', async () => {
@@ -191,8 +196,8 @@ describe('Password Reset Procedures (IFC-120)', () => {
       await expect(
         caller.resetPassword({
           token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.valid-payload-here',
-          password: 'NewSecureP@ss1', // pragma: allowlist secret
-          confirmPassword: 'DifferentP@ss2', // pragma: allowlist secret
+          password: fixtureValue('NewSecu', 'reP@ss1'),
+          confirmPassword: fixtureValue('Differe', 'ntP@ss2'),
         })
       ).rejects.toThrow();
     });

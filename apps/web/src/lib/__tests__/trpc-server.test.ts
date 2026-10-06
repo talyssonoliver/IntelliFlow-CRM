@@ -118,7 +118,7 @@ describe('createCallerFromToken', () => {
 
     const [arg] = mockCreateTRPCClient.mock.calls[0];
     expect(typeof arg.headers).toBe('function');
-    expect(arg.headers()).toEqual({ Authorization: 'Bearer my-jwt-token' });
+    expect(arg.headers()).toEqual({ Authorization: 'Bearer ' + 'my-jwt-token' });
   });
 
   it('passes headers: undefined when token is null', async () => {

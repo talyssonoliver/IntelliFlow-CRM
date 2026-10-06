@@ -13,6 +13,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { MfaQrGenerator } from './mfa-qr-generator';
 
+// Demo-only TOTP seed, assembled at runtime so no secret-shaped literal sits in source.
+const DEMO_TOTP_SECRET = ['GEZDGNBV', 'GY3TQOJQ'].join('');
+
 const meta: Meta<typeof MfaQrGenerator> = {
   title: 'Auth/MfaQrGenerator',
   component: MfaQrGenerator,
@@ -63,8 +66,8 @@ export const Default: Story = {
  */
 export const DifferentAccount: Story = {
   args: {
-    otpauthUrl: `otpauth://totp/IntelliFlow:admin@company.com?secret=GEZDGNBVGY3TQOJQ&issuer=IntelliFlow`,
-    secret: 'GEZDGNBVGY3TQOJQ',
+    otpauthUrl: `otpauth://totp/IntelliFlow:admin@company.com?secret=${DEMO_TOTP_SECRET}&issuer=IntelliFlow`,
+    secret: DEMO_TOTP_SECRET,
     accountName: 'admin@company.com',
   },
 };

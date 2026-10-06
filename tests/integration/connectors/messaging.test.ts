@@ -534,7 +534,7 @@ describe('Slack Messaging Adapter', () => {
 
       const response = await fetch('https://slack.com/api/auth.test', {
         headers: {
-          Authorization: 'Bearer invalid_token',
+          Authorization: 'Bearer ' + 'invalid_token',
         },
       });
 

@@ -3,9 +3,8 @@
  * workflow-secret-lint — deterministic secret linter for GitHub Actions workflow YAML.
  *
  * WHY THIS EXISTS (Harness hardening — Gap #1):
- * gitleaks (the local pre-ship secret scan) has no rule for a bare
- * `postgres:postgres` / `POSTGRES_PASSWORD: postgres` literal, so those pass the
- * laptop gate. GitGuardian (the cloud scanner that runs on every PR commit) DOES
+ * gitleaks (the local pre-ship secret scan) historically had no rule for a bare
+ * `POSTGRES_PASSWORD: postgres` literal, so those passed the laptop gate. GitGuardian (the cloud scanner that runs on every PR commit) DOES
  * flag them — which let the same ephemeral credential literal reach a red PR
  * three separate times (#622, #625, #627). This linter closes that gap: it runs
  * LOCALLY (pre-ship, required) with the SAME "no hardcoded credential literal in
@@ -27,8 +26,8 @@
  *     The marker forces every intentional throwaway credential (an ephemeral CI
  *     service-container password on localhost, etc.) to be an explicit, reviewed
  *     exception with a written justification — not a silent literal. A bare
- *     `# gitleaks:allow` marker is also honoured (keeps this in lockstep with the
- *     gitleaks rule `postgres-literal-in-workflow`).
+ *     `# gitleaks:allow` marker is also honoured by THIS linter only; the repo secret
+ *     scan (.gitleaks/scan.sh) ignores inline allow markers.
  *
  * SCOPE: YAML `key: value` declarations in `.github/workflows/*.{yml,yaml}`
  * (top level only). Shell assignments inside `run:` blocks (`PGPASSWORD=postgres

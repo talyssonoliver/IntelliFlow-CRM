@@ -434,7 +434,7 @@ import { redactSensitiveData } from '@intelliflow/observability';
 
 const userData = {
   email: 'user@example.com',
-  password: 'secret123',
+  password: '<example-password>',
   apiKey: 'key_abc123',
 };
 
