@@ -359,9 +359,10 @@ describe('LandingStats', () => {
     expect(container.innerHTML).toContain('bg-slate-900');
   });
 
-  it('applies brand gradient background class', () => {
+  it('applies the Aurora Navy brand background, no gradient', () => {
     const { container } = render(<LandingStats section={statsSection} />);
-    expect(container.innerHTML).toContain('bg-gradient-to-r');
+    expect(container.innerHTML).toContain('bg-[#11175b]');
+    expect(container.innerHTML).not.toContain('bg-gradient');
   });
 });
 

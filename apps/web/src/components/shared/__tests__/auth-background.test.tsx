@@ -1,11 +1,17 @@
 /**
- * @vitest-environment jsdom
- */
-/**
  * @vitest-environment happy-dom
  */
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('next/link', () => ({
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 import { AuthBackground } from '../auth-background';
 
 describe('AuthBackground', () => {
@@ -27,11 +33,10 @@ describe('AuthBackground', () => {
       </AuthBackground>
     );
 
-    const main = screen.getByRole('main');
-    expect(main).toHaveClass('custom-class');
+    expect(screen.getByRole('main')).toHaveClass('custom-class');
   });
 
-  it('renders with base styling', () => {
+  it('sits on Aurora Navy in the Aurora typeface, sized to the dynamic viewport', () => {
     render(
       <AuthBackground>
         <div>Content</div>
@@ -39,32 +44,40 @@ describe('AuthBackground', () => {
     );
 
     const main = screen.getByRole('main');
-    // Component uses min-h-[calc(100dvh-4rem)] for dynamic viewport height handling
-    expect(main).toHaveClass('min-h-[calc(100dvh-4rem)]');
-    expect(main).toHaveClass('bg-[#0f172a]');
+    expect(main).toHaveClass('aurora-auth');
+    expect(main).toHaveClass('bg-[#11175b]');
+    expect(main).toHaveClass('min-h-[100dvh]');
+    expect(main.style.fontFamily).toContain('var(--font-manrope)');
   });
 
-  it('renders animated gradient orbs', () => {
+  it('goes back home from the Aurora wordmark', () => {
+    render(
+      <AuthBackground>
+        <div>Content</div>
+      </AuthBackground>
+    );
+
+    const home = screen.getByRole('link', { name: 'Aurora home' });
+    expect(home).toHaveAttribute('href', '/');
+    expect(screen.getByAltText('Aurora')).toHaveAttribute(
+      'src',
+      '/brand/aurora/aurora-wordmark.webp'
+    );
+  });
+
+  it('draws the aurora ribbons as decoration only, with nothing animating on its own', () => {
     const { container } = render(
       <AuthBackground>
         <div>Content</div>
       </AuthBackground>
     );
 
-    // Check for pulsing orb elements
-    const pulseElements = container.querySelectorAll('.animate-pulse');
-    expect(pulseElements.length).toBe(2);
-  });
-
-  it('renders grid pattern overlay', () => {
-    const { container } = render(
-      <AuthBackground>
-        <div>Content</div>
-      </AuthBackground>
-    );
-
-    // Check for grid pattern element (has opacity-[0.015] class)
-    const gridElements = container.querySelectorAll('.opacity-\\[0\\.015\\]');
-    expect(gridElements.length).toBeGreaterThan(0);
+    const art = container.querySelector('[aria-hidden="true"]')!;
+    const ribbons = [...art.querySelectorAll('img')].map((img) => img.getAttribute('src'));
+    expect(ribbons).toEqual([
+      '/brand/aurora/bg/ribbon-left.webp',
+      '/brand/aurora/bg/ribbon-right.webp',
+    ]);
+    expect(container.querySelectorAll('.animate-pulse')).toHaveLength(0);
   });
 });

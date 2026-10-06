@@ -53,7 +53,7 @@ export function BlogPagination({
             return (
               <span
                 key={page}
-                className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#137fec] text-white font-medium"
+                className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#2a78f6] text-white font-medium"
                 aria-current="page"
               >
                 {page}

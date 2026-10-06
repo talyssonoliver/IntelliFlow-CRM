@@ -6,23 +6,23 @@ import { TermsAcceptanceConfirm } from '@/components/legal/TermsAcceptanceConfir
 import { OG_IMAGES } from '@/lib/og-images';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | IntelliFlow CRM',
+  title: 'Terms of Service',
   description:
-    'Review the IntelliFlow CRM Terms of Service, including acceptable use, account obligations, intellectual property, and governing law.',
+    'Review the Aurora Terms of Service, including acceptable use, account obligations, intellectual property, and governing law.',
   openGraph: {
     images: OG_IMAGES,
-    title: 'Terms of Service | IntelliFlow CRM',
+    title: 'Terms of Service',
     description:
-      'Read the IntelliFlow CRM Terms of Service, including subscription terms, prohibited activities, disclaimers, and limitation of liability.',
+      'Read the Aurora Terms of Service, including subscription terms, prohibited activities, disclaimers, and limitation of liability.',
     url: 'https://intelliflow-crm.com/terms',
-    siteName: 'IntelliFlow CRM',
+    siteName: 'Aurora',
     type: 'website',
   },
   twitter: {
     card: 'summary',
-    title: 'Terms of Service | IntelliFlow CRM',
+    title: 'Terms of Service',
     description:
-      'Learn about the terms governing your use of IntelliFlow CRM, including rights, obligations, and dispute resolution.',
+      'Learn about the terms governing your use of Aurora, including rights, obligations, and dispute resolution.',
   },
   alternates: {
     canonical: '/terms',
@@ -34,15 +34,15 @@ export default function TermsPage() {
   const formattedDate = formatTermsDate(terms.metadata.effectiveDate);
 
   return (
-    <main id="main-content" className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
+    <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
       <section className="bg-gradient-to-b from-white to-[#edf4ff] dark:from-[#162231] dark:to-[#101922] py-16 lg:py-24">
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#137fec]/10 px-4 py-2 text-sm font-medium text-[#137fec]">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#2a78f6]/10 px-4 py-2 text-sm font-medium text-[#2a78f6]">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 gavel
               </span>{' '}
-              Legal agreement governing your use of IntelliFlow CRM
+              Legal agreement governing your use of Aurora
             </div>
 
             <h1 className="mt-6 text-4xl font-bold text-slate-900 dark:text-white lg:text-5xl">
@@ -51,7 +51,7 @@ export default function TermsPage() {
 
             <p className="mt-6 text-lg text-slate-600 dark:text-slate-400">
               These terms establish the rights and responsibilities between you and IntelliFlow Ltd
-              when using IntelliFlow CRM. Please read them carefully before using the service.
+              when using Aurora. Please read them carefully before using the service.
             </p>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function TermsPage() {
                     className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300"
                   >
                     <span
-                      className="material-symbols-outlined mt-0.5 text-base text-[#137fec]"
+                      className="material-symbols-outlined mt-0.5 text-base text-[#2a78f6]"
                       aria-hidden="true"
                     >
                       check_circle
@@ -82,7 +82,7 @@ export default function TermsPage() {
               </ul>
             </Card>
 
-            <Card className="border-slate-200 bg-slate-900 p-6 text-white shadow-sm dark:border-slate-700 dark:bg-[#0f172a]">
+            <Card className="border-transparent bg-[#11175b] p-6 text-white shadow-sm">
               <h2 className="text-xl font-semibold">Current version</h2>
               <dl className="mt-4 space-y-4 text-sm">
                 <div>
@@ -98,7 +98,7 @@ export default function TermsPage() {
                   <dd className="mt-1">
                     <a
                       href={`mailto:${terms.metadata.contactEmail}`}
-                      className="text-[#7cc4ff] hover:underline"
+                      className="text-[#bca8ff] hover:underline"
                     >
                       {terms.metadata.contactEmail}
                     </a>
@@ -124,7 +124,7 @@ export default function TermsPage() {
                       <li key={section.id}>
                         <a
                           href={`#${section.id}`}
-                          className="text-slate-600 transition-colors hover:text-[#137fec] dark:text-slate-300 dark:hover:text-[#7cc4ff]"
+                          className="text-slate-600 transition-colors hover:text-[#2a78f6] dark:text-slate-300 dark:hover:text-[#bca8ff]"
                         >
                           {section.heading}
                         </a>
@@ -158,7 +158,7 @@ export default function TermsPage() {
                 </Card>
               ))}
 
-              <Card className="border-slate-200 bg-[#137fec]/5 p-6 shadow-sm dark:border-slate-800 dark:bg-[#137fec]/10">
+              <Card className="border-slate-200 bg-[#2a78f6]/5 p-6 shadow-sm dark:border-slate-800 dark:bg-[#2a78f6]/10">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Questions about these terms?
                 </h2>
@@ -166,12 +166,12 @@ export default function TermsPage() {
                   For questions about this agreement, contact{' '}
                   <a
                     href={`mailto:${terms.metadata.contactEmail}`}
-                    className="font-medium text-[#137fec] hover:underline"
+                    className="font-medium text-[#2a78f6] hover:underline"
                   >
                     {terms.metadata.contactEmail}
                   </a>
                   . You can also review our{' '}
-                  <Link href="/privacy" className="font-medium text-[#137fec] hover:underline">
+                  <Link href="/privacy" className="font-medium text-[#2a78f6] hover:underline">
                     Privacy Policy
                   </Link>{' '}
                   for information on how we handle your data.
@@ -182,7 +182,7 @@ export default function TermsPage() {
         </div>
       </section>
 
-      {/* IFC-309: Server-side terms acceptance — renders only for authenticated users */}
+      {/* IFC-309: Server-side terms acceptance: renders only for authenticated users */}
       <section className="pb-8 lg:pb-12">
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
           <div className="max-w-3xl">
@@ -190,6 +190,6 @@ export default function TermsPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

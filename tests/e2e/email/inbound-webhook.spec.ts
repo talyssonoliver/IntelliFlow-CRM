@@ -7,8 +7,28 @@
  * @task IFC-144 - Email Integration E2E
  */
 import { test, expect } from '@playwright/test';
+import {
+  computeInboundEmailWebhookSignature,
+  INBOUND_EMAIL_SIGNATURE_HEADER,
+} from '../../../apps/api/src/modules/email/inbound-webhook-signature';
 
 const API_BASE = process.env.E2E_API_URL || 'http://localhost:3001';
+
+/**
+ * SEC-004: the endpoint rejects any call without a valid HMAC signature (401),
+ * so the spec signs with the same secret the API under test was started with.
+ * The nightly jobs generate a per-run secret into the job env; a run without
+ * one cannot exercise the endpoint, so fail loudly rather than skip.
+ */
+function webhookSecret(): string {
+  const secret = process.env.INBOUND_EMAIL_WEBHOOK_SECRET;
+  if (!secret) {
+    throw new Error(
+      'INBOUND_EMAIL_WEBHOOK_SECRET is not set: the API rejects unsigned inbound-email webhooks (SEC-004).'
+    );
+  }
+  return secret;
+}
 
 /**
  * Helper to call tRPC mutation via HTTP POST.
@@ -16,7 +36,13 @@ const API_BASE = process.env.E2E_API_URL || 'http://localhost:3001';
  */
 async function callWebhook(request: any, payload: Record<string, unknown>) {
   return request.post(`${API_BASE}/trpc/email.webhook`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      [INBOUND_EMAIL_SIGNATURE_HEADER]: computeInboundEmailWebhookSignature(
+        payload,
+        webhookSecret()
+      ),
+    },
     data: JSON.stringify(payload),
   });
 }

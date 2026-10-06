@@ -43,9 +43,9 @@ export default function ResetPasswordClientWrapper({ params }: Readonly<PagePara
       fallback={
         <AuthBackground>
           <div className="relative z-10 w-full max-w-md mx-auto px-4">
-            <AuthCard badge="INTELLIFLOW" badgeIcon="lock_reset" title="Validating...">
+            <AuthCard badge="Aurora" badgeIcon="lock_reset" title="Validating...">
               <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                <div className="w-8 h-8 border-2 border-slate-600 border-t-[#137fec] rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-slate-600 border-t-[#2a78f6] rounded-full animate-spin" />
                 <p className="text-sm text-slate-400">Verifying reset link...</p>
               </div>
             </AuthCard>
@@ -126,7 +126,7 @@ function ResetPasswordPage({ params }: Readonly<PageParams>) {
     <AuthBackground>
       <div className="relative z-10 w-full max-w-md mx-auto px-4">
         <AuthCard
-          badge="INTELLIFLOW"
+          badge="Aurora"
           badgeIcon="lock_reset"
           title={getPageTitle()}
           description={getPageDescription()}
@@ -136,7 +136,7 @@ function ResetPasswordPage({ params }: Readonly<PageParams>) {
                 Remember your password?{' '}
                 <Link
                   href="/login"
-                  className="text-[#137fec] hover:text-[#137fec]/80 font-medium transition-colors"
+                  className="text-[#2a78f6] hover:text-[#2a78f6]/80 font-medium transition-colors"
                 >
                   Back to sign in
                 </Link>
@@ -147,7 +147,7 @@ function ResetPasswordPage({ params }: Readonly<PageParams>) {
           {/* Validating State */}
           {state === 'validating' && (
             <div className="flex flex-col items-center justify-center py-8 space-y-4">
-              <div className="w-8 h-8 border-2 border-slate-600 border-t-[#137fec] rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-slate-600 border-t-[#2a78f6] rounded-full animate-spin" />
               <p className="text-sm text-slate-400">Verifying reset link...</p>
             </div>
           )}

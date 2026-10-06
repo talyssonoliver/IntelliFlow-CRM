@@ -154,7 +154,7 @@ describe('TaskService', () => {
       testLead.updateScore(70, 0.8, 'test');
       testLead.qualify('user', 'Good fit');
       testLead.convert('contact-123', 'account-123', 'user');
-      await leadRepository.save(testLead);
+      await leadRepository.save(testLead, { expectedStatus: 'NEW' });
 
       const result = await service.createTask({
         title: 'Converted Lead Task',
@@ -450,7 +450,7 @@ describe('TaskService', () => {
       testLead.updateScore(70, 0.8, 'test');
       testLead.qualify('user', 'Good fit');
       testLead.convert('contact-123', 'account-123', 'user');
-      await leadRepository.save(testLead);
+      await leadRepository.save(testLead, { expectedStatus: 'NEW' });
 
       const result = await service.assignToLead(task.id.value, testLead.id.value, 'user');
 

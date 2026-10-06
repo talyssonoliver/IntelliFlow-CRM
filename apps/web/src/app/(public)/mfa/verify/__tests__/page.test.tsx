@@ -115,7 +115,7 @@ describe('MfaVerifyPage (PG-022)', () => {
       renderPage({ challenge: 'test-challenge-id' });
       const card = screen.getByTestId('auth-card');
       expect(card).toBeInTheDocument();
-      expect(card).toHaveAttribute('data-badge', 'INTELLIFLOW');
+      expect(card).toHaveAttribute('data-badge', 'Aurora');
       expect(card).toHaveAttribute('data-badge-icon', 'security');
       expect(card).toHaveAttribute('data-title', 'Two-Factor Authentication');
     });

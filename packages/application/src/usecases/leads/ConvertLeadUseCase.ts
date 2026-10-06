@@ -1,4 +1,4 @@
-import { Result, DomainError, LeadId } from '@intelliflow/domain';
+import { Result, DomainError, LeadId, LeadStatusConflictError } from '@intelliflow/domain';
 import { LeadRepository } from '../../ports/repositories';
 import { EventBusPort } from '../../ports/external';
 import { PersistenceError, ValidationError } from '../../errors';
@@ -49,6 +49,7 @@ export class ConvertLeadUseCase {
     }
 
     // 3. Execute domain logic
+    const expectedStatus = lead.status;
     const convertResult = lead.convert(input.contactId, input.accountId, input.convertedBy);
 
     if (convertResult.isFailure) {
@@ -57,8 +58,13 @@ export class ConvertLeadUseCase {
 
     // 4. Persist changes
     try {
-      await this.leadRepository.save(lead);
-    } catch {
+      await this.leadRepository.save(lead, { expectedStatus });
+    } catch (error) {
+      if (error instanceof LeadStatusConflictError) {
+        return Result.fail(
+          new PersistenceError(`Lead status changed concurrently (expected ${expectedStatus})`)
+        );
+      }
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
 
