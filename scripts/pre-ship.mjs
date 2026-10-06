@@ -77,6 +77,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
+import {
+  preshipNeedsSlot,
+  preshipSlotArgv,
+  runForwarding,
+  sharedSemaphore,
+} from './lib/test-slot.mjs';
 import { stepLine, advisoryNote, persistedState, finalLine } from './lib/preship-report.mjs';
 
 // Throwaway stub credentials for the build-time env mirror below (never a real DB).
@@ -780,6 +786,20 @@ for (const a of args) {
   process.stderr.write(`pre-ship: unknown argument '${a}'.\n`);
   process.stderr.write(`Known flags: --clean, --list, --full, --help, --only=<id,id,...>\n`);
   process.exit(2);
+}
+
+// --- Machine-wide test slot ---
+// At most three full test runs at once on the owner's machine, and one
+// IntelliFlow pre-ship at a time: re-run this gate under the shared semaphore,
+// which waits for a free slot and releases it on exit. Ctrl-C and kill are
+// forwarded and the exit code is passed through. See scripts/lib/test-slot.mjs.
+if (preshipNeedsSlot(flags, process.env)) {
+  const semaphore = sharedSemaphore(process.env);
+  if (semaphore) {
+    process.exit(
+      await runForwarding(process.execPath, preshipSlotArgv(semaphore, process.argv[1], args))
+    );
+  }
 }
 
 if (flags.help) {

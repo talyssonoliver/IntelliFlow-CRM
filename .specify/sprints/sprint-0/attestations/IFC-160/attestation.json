@@ -8,10 +8,6 @@
   "context_acknowledgment": {
     "files_read": [
       {
-        "path": "artifacts/reports/plan-lint-report.json",
-        "sha256": "verified-placeholder"
-      },
-      {
         "path": ".github/workflows/ci.yml",
         "sha256": "674c7703ad344eec8f9e1709a1e0c51d3a2a7006ef3be005ff1a3239d8a891ef"
       }

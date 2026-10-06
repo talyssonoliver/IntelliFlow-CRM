@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "artifacts/misc/analytics-dashboard-config.json",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/kpi-tracking.csv",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/reports/web-vitals-report.json",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "Analytics foundation established",
       "KPIs defined and tracked"

@@ -6,24 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "artifacts/coverage/lcov.info",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/logs/test-execution-time.log",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/metrics/tdd-compliance.csv",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/reports/mutation-test.json",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "90%+ coverage",
       "All business logic tested"

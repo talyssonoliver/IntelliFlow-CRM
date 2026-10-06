@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "artifacts/reports/gdpr-compliance.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/reports/risk-matrix.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "docs/security/dpia.md",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "DPIA complete for AI processing and data storage",
       "Risk matrix documented"
