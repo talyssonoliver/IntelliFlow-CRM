@@ -29,7 +29,7 @@ from urllib.request import Request, urlopen
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_VERSION = "8.24.0"
+DEFAULT_VERSION = "8.30.1"
 
 
 def _is_windows() -> bool:
@@ -168,20 +168,29 @@ def main() -> int:
     parser.add_argument(
         "gitleaks_args",
         nargs=argparse.REMAINDER,
-        help="Arguments passed through to gitleaks (default: detect --source . --redact).",
+        help="Arguments passed through to gitleaks (default: the shared kit tree scan).",
     )
     args = parser.parse_args()
 
     gitleaks_args = [a for a in args.gitleaks_args if a != "--"]
+    gitleaks_bin = _resolve_gitleaks_path(str(args.version))
+    print(f"[gitleaks] using {gitleaks_bin}")
+
     if not gitleaks_args:
-        gitleaks_args = ["detect", "--source", ".", "--redact"]
+        # Default: the shared secret-scan kit (.gitleaks/scan.sh), scanning every
+        # tracked file at HEAD. Rules live in .gitleaks/shared.toml, the allowlist
+        # in .gitleaks.toml (per-file entries only). The commits of a PR are scanned
+        # by the dedicated Secret Scanning workflow.
+        env = dict(os.environ)
+        env["PATH"] = str(Path(gitleaks_bin).parent) + os.pathsep + env.get("PATH", "")
+        print("[gitleaks] sh .gitleaks/scan.sh tree")
+        proc = subprocess.run(["sh", ".gitleaks/scan.sh", "tree"], cwd=str(REPO_ROOT), env=env, shell=False)
+        return int(proc.returncode)
 
     config_path = REPO_ROOT / ".gitleaks.toml"
     if config_path.exists() and "--config" not in gitleaks_args:
         gitleaks_args.extend(["--config", str(config_path)])
 
-    gitleaks_bin = _resolve_gitleaks_path(str(args.version))
-    print(f"[gitleaks] using {gitleaks_bin}")
     print(f"[gitleaks] args: {' '.join(gitleaks_args)}")
 
     proc = subprocess.run([gitleaks_bin, *gitleaks_args], cwd=str(REPO_ROOT), shell=False)

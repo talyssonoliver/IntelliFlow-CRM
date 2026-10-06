@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "artifacts/misc/jira-project-export.json",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/delivery-dashboard-config.json",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/weekly-template.md",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "PM operations established",
       "Delivery metrics tracked"

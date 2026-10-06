@@ -84,9 +84,14 @@ async function seedSupabaseAuthUsers() {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  // No default: a committed shared password for seeded accounts would be a credential.
+  const seedPassword = process.env.SEED_USER_PASSWORD;
+
+  if (!supabaseUrl || !serviceRoleKey || !seedPassword) {
     console.log('⚠️ Supabase credentials not configured - skipping auth user seeding');
-    console.log('   Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to enable auth seeding');
+    console.log(
+      '   Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and SEED_USER_PASSWORD to enable auth seeding'
+    );
     return;
   }
 
@@ -104,28 +109,28 @@ async function seedSupabaseAuthUsers() {
     {
       id: SEED_IDS.users.admin,
       email: 'admin@intelliflow.dev',
-      password: 'TestPassword123!',
+      password: seedPassword,
       email_confirm: true,
       user_metadata: { name: 'Admin User', role: 'ADMIN' },
     },
     {
       id: SEED_IDS.users.manager,
       email: 'alex@intelliflow.dev',
-      password: 'TestPassword123!',
+      password: seedPassword,
       email_confirm: true,
       user_metadata: { name: 'Alex Thompson', role: 'MANAGER' },
     },
     {
       id: SEED_IDS.users.sarahJohnson,
       email: 'sarah.johnson@intelliflow.dev',
-      password: 'TestPassword123!',
+      password: seedPassword,
       email_confirm: true,
       user_metadata: { name: 'Sarah Johnson', role: 'SALES_REP' },
     },
     {
       id: SEED_IDS.users.mikeDavis,
       email: 'mike.davis@intelliflow.dev',
-      password: 'TestPassword123!',
+      password: seedPassword,
       email_confirm: true,
       user_metadata: { name: 'Mike Davis', role: 'SALES_REP' },
     },

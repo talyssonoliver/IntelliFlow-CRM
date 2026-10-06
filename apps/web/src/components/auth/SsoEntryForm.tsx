@@ -116,7 +116,7 @@ export function SsoEntryForm({ onResolve, isLoading = false }: Readonly<SsoEntry
           aria-describedby="sso-help-text"
           aria-invalid={!!error}
           disabled={isDisabled}
-          className="w-full bg-white/5 border-white/10 text-white placeholder:text-slate-400 focus:ring-[#7cc4ff] focus:border-transparent"
+          className="w-full bg-white/5 border-white/10 text-white placeholder:text-slate-400 focus:ring-[#bca8ff] focus:border-transparent"
           autoComplete="email"
         />
         <p id="sso-help-text" className="text-xs text-slate-400">
@@ -138,7 +138,7 @@ export function SsoEntryForm({ onResolve, isLoading = false }: Readonly<SsoEntry
       <Button
         type="submit"
         disabled={isDisabled}
-        className="w-full bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] shadow-lg shadow-[#137fec]/20"
+        className="w-full bg-[#2a78f6] text-white font-semibold hover:bg-[#1f63d4] focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#11175b] shadow-lg shadow-[#2a78f6]/20"
       >
         {isDisabled ? (
           <>
@@ -161,7 +161,7 @@ export function SsoEntryForm({ onResolve, isLoading = false }: Readonly<SsoEntry
       <div className="text-center pt-2">
         <Link
           href="/login"
-          className="text-sm text-slate-400 hover:text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] rounded px-1"
+          className="text-sm text-slate-400 hover:text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#11175b] rounded px-1"
         >
           &larr; Back to standard login
         </Link>

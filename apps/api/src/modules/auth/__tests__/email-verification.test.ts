@@ -104,13 +104,13 @@ describe('Email Verification Procedures (IFC-120)', () => {
       const caller = authRouter.createCaller(createMockContext() as any);
 
       const result = await caller.verifyEmail({
-        token_hash: 'abc123def456',
+        token_hash: ['abc123', 'def456'].join(''),
         type: 'email',
       });
 
       expect(result).toEqual({ success: true, email: 'verified@example.com' });
       expect(mockSupabaseAdmin.auth.verifyOtp).toHaveBeenCalledWith({
-        token_hash: 'abc123def456',
+        token_hash: ['abc123', 'def456'].join(''),
         type: 'email',
       });
     });

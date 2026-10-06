@@ -14,7 +14,12 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { timingSafeEqual } from 'node:crypto';
+import {
+  canonicalJsonStringify,
+  computeInboundEmailWebhookSignature,
+  INBOUND_EMAIL_SIGNATURE_HEADER,
+} from './inbound-webhook-signature';
 import {
   createTRPCRouter,
   publicProcedure,
@@ -219,46 +224,9 @@ function applyLabelFilter(where: any, label: string): void {
 // fail CLOSED (reject) whenever the secret is unconfigured, the header is
 // absent, or the signature does not match.
 
-/**
- * Deterministic (key-sorted) JSON serialization used as the HMAC signing
- * payload. Sorting keys means the signature does not depend on the field
- * order the calling webhook provider happens to serialize in.
- */
-export function canonicalJsonStringify(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map((v) => canonicalJsonStringify(v)).join(',')}]`;
-  }
-  if (value !== null && typeof value === 'object') {
-    const record = value as Record<string, unknown>;
-    // Deterministic, locale-INDEPENDENT key ordering (UTF-16 code-unit order,
-    // identical to a bare .sort() on strings). A canonical wire form must not
-    // depend on the runtime locale, so we do NOT use localeCompare here — an
-    // explicit comparator also satisfies sonar typescript:S2871.
-    const keys = Object.keys(record).sort((a, b) => {
-      if (a < b) return -1;
-      if (a > b) return 1;
-      return 0;
-    });
-    const entries = keys.map(
-      (key) => `${JSON.stringify(key)}:${canonicalJsonStringify(record[key])}`
-    );
-    return `{${entries.join(',')}}`;
-  }
-  return JSON.stringify(value);
-}
-
-/**
- * Compute the hex HMAC-SHA256 signature for an inbound-email webhook payload.
- * Single source of truth for the signing algorithm: the router's verify path
- * (below) and the router tests both call this, so the sign/verify logic can
- * never drift out of sync (the QUAL-015 failure mode).
- */
-export function computeInboundEmailWebhookSignature(
-  input: z.infer<typeof InboundEmailWebhookSchema>,
-  secret: string
-): string {
-  return createHmac('sha256', secret).update(canonicalJsonStringify(input)).digest('hex');
-}
+// The signing algorithm lives in ./inbound-webhook-signature (no tRPC/Prisma
+// imports) so the E2E spec can sign live requests with the same code.
+export { canonicalJsonStringify, computeInboundEmailWebhookSignature };
 
 /**
  * Verify the `x-inbound-email-signature` header against an HMAC-SHA256 of the
@@ -275,7 +243,7 @@ function verifyInboundEmailWebhookSignature(
   const secret = process.env.INBOUND_EMAIL_WEBHOOK_SECRET;
   if (!secret) return false;
 
-  const signature = req?.headers?.get?.('x-inbound-email-signature');
+  const signature = req?.headers?.get?.(INBOUND_EMAIL_SIGNATURE_HEADER);
   if (!signature) return false;
 
   const expectedHex = computeInboundEmailWebhookSignature(input, secret);

@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "artifacts/misc/accessibility-audit.json",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/reports/wcag-compliance.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/axe-config.json",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "Accessibility audit complete",
       "WCAG compliance verified"

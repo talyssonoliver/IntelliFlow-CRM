@@ -427,10 +427,10 @@ IntelliFlow CRM uses Prisma as the ORM, with Supabase as the database provider.
 # Supabase provides two URLs:
 
 # Connection pooling (for serverless)
-DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres?pgbouncer=true"
+DATABASE_URL="postgresql://<user>:<password>@db.<project-ref>.supabase.co:5432/postgres?pgbouncer=true"
 
 # Direct connection (for migrations)
-DIRECT_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres"
+DIRECT_URL="postgresql://<user>:<password>@db.<project-ref>.supabase.co:5432/postgres"
 ```
 
 ## Security Best Practices

@@ -27,7 +27,7 @@ describe('NotFoundPage', () => {
   });
 
   it('exports metadata for a non-indexable 404 route', () => {
-    expect(metadata.title).toBe('Page Not Found | IntelliFlow CRM');
+    expect(metadata.title).toBe('Page Not Found');
     expect(metadata.alternates?.canonical).toBe('/404');
     expect(metadata.robots).toEqual({
       index: false,

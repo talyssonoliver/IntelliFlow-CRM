@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "docs/shared/copilot-instructions.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/team-licenses.csv",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/workflow-automation.yaml",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "copilot-instructions.md created",
       "copilot-setup-steps.yml automated",

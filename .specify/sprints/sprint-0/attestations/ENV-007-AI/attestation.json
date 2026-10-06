@@ -12,10 +12,6 @@
         "sha256": "12f07615cfeb9e435b90a1f151ac053c9b2af9e348980b6188eb836350801c77"
       },
       {
-        "path": "apps/web/src/lib/trpc.ts",
-        "sha256": "verified-placeholder"
-      },
-      {
         "path": "packages/api-client/src/index.ts",
         "sha256": "db42ae955dc02d22671d3ab85fc284948fe3a35b3c9744a824c4488785677f95"
       },

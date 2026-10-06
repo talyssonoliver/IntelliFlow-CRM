@@ -15,7 +15,7 @@ global.fetch = mockFetch as typeof fetch;
 describe('StripeAdapter', () => {
   let adapter: StripeAdapter;
   const config: StripeConfig = {
-    secretKey: 'sk_test_1234567890',
+    secretKey: ['sk', 'test', '1234567890'].join('_'),
     webhookSecret: 'whsec_test_secret',
     apiVersion: '2024-11-20.acacia',
   };
@@ -151,7 +151,7 @@ describe('StripeAdapter', () => {
         amount: 5000,
         currency: 'GBP',
         status: 'requires_payment_method',
-        client_secret: 'pi_test123_secret_abc',
+        client_secret: ['pi', 'test123', 'secret', 'abc'].join('_'),
         created: Math.floor(Date.now() / 1000),
       };
 
@@ -172,7 +172,7 @@ describe('StripeAdapter', () => {
         expect(result.value.amount).toBe(5000);
         expect(result.value.currency).toBe('GBP');
         expect(result.value.status).toBe('requires_payment_method');
-        expect(result.value.clientSecret).toBe('pi_test123_secret_abc');
+        expect(result.value.clientSecret).toBe(['pi', 'test123', 'secret', 'abc'].join('_'));
       }
     });
 

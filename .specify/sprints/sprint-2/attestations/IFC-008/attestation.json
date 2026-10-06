@@ -6,24 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "artifacts/reports/compliance-report.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "docs/security/owasp-checklist.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "docs/planning/iso42001-gap-analysis.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/reports/zap-scan-report.json",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "Security review with AI governance considerations"
     ],

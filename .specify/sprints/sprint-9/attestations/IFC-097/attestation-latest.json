@@ -5,7 +5,7 @@
   "run_id": "sprint9-audit-20260302T215810-ksolip",
   "attestor": "sprint-completion-auditor",
   "attestation_timestamp": "2026-03-02T21:58:19.087Z",
-  "verdict": "COMPLETE",
+  "verdict": "PARTIAL",
   "evidence_summary": {
     "artifacts_verified": 2,
     "validations_passed": 0,
