@@ -27,7 +27,12 @@ name: Test Regression
 
 on:
   workflow_call: {}
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      playwright_args:
+        description: 'Extra args for the cross-browser E2E job (e.g. --project=authenticated tests/e2e/agent-approvals.spec.ts). Empty = the full suite.'
+        required: false
+        default: ''
   schedule:
     # 05:00 UTC nightly — after property tests (04:00) and system audits (03:00)
     - cron: '0 5 * * *'
@@ -428,7 +433,9 @@ jobs:
   # ===========================================================================
   e2e-cross-browser:
     name: E2E (cross-browser, nightly)
-    if: github.event_name == 'schedule'
+    # workflow_dispatch too, so a fix to this job can be verified on its branch
+    # before merge instead of waiting for the next scheduled run on main.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     continue-on-error: true # E2E is chronically flaky (issue #95) — never gate
     env:
@@ -457,6 +464,17 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
       # `next start` refuses to boot in production without an explicit app URL.
       NEXT_PUBLIC_APP_URL: http://localhost:3000
+      # Same API wiring as e2e-full.yml (ENG-OPS-003.Gap12). Without it this job
+      # ran with no @intelliflow/api backend: every tRPC call fell back to the web
+      # origin and got HTML ("Unexpected token '<'"), the authenticated personas
+      # bounced to /login, and direct API specs hit ECONNREFUSED :4000 / :3001.
+      # - E2E_START_API: playwright.config.ts starts the built API on :4000.
+      # - NEXT_PUBLIC_API_URL: baked into the client bundle by `pnpm run build`
+      #   (turbo passes it through), and used by SSR tRPC at runtime.
+      # - E2E_API_URL: inbound-webhook.spec.ts posts to the API directly.
+      E2E_START_API: '1'
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      E2E_API_URL: http://localhost:4000
     # A real local test DB (+ redis) so the authenticated `setup` project can seed
     # the QA persona matrix. Postgres is published on host port 5433 (container
     # 5432) to satisfy the provision.ts localhost:5433 guard.
@@ -516,13 +534,41 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Generate inbound-email webhook secret
+        # SEC-004: the API rejects unsigned inbound-email webhooks. A fresh
+        # per-run secret is shared by the API webServer and inbound-webhook.spec.ts
+        # through the job env, so no secret value lives in the repo.
+        run: |
+          secret="$(openssl rand -hex 32)"
+          echo "::add-mask::$secret"
+          echo "INBOUND_EMAIL_WEBHOOK_SECRET=$secret" >> "$GITHUB_ENV"
+
       - name: Run cross-browser E2E
-        run: pnpm exec playwright test
+        # Passed through env, not interpolated into the script; word-split on
+        # purpose so several args work. Empty on schedule = the full suite.
+        env:
+          PLAYWRIGHT_ARGS: ${{ inputs.playwright_args }}
+        run: pnpm exec playwright test $PLAYWRIGHT_ARGS
 
       - name: Upload E2E report
-        if: failure()
+        # cancelled() too: a hung run that is cancelled must still leave evidence.
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report-nightly
           path: artifacts/misc/playwright-report/
           retention-days: 7
+
+      # continue-on-error keeps this job from gating, but it also hid a red E2E
+      # job behind a green workflow for over a month (Aug 26 → Oct 4). Surface a
+      # failure as a run-level annotation + summary so it is seen, not gated.
+      - name: Flag E2E failure
+        if: failure()
+        run: |
+          echo "::error title=Nightly cross-browser E2E failed::The E2E job is non-gating (continue-on-error), so the workflow can still be green. See the playwright-report-nightly artifact."
+          {
+            echo "## :x: Nightly cross-browser E2E failed"
+            echo
+            echo "This job is non-gating, so the workflow conclusion does not reflect it."
+            echo "Report: artifact \`playwright-report-nightly\` on run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } >> "$GITHUB_STEP_SUMMARY"
