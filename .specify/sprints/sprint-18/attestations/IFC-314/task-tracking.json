@@ -56,7 +56,7 @@
       "unit": "percent"
     }
   },
-  "notes": "Portal owns delivery phase + the 14-day SLA clock; the CRM mirrors billing only (instalments + subscription) and pushes via the domain_events outbox using Bearer PORTAL_INTERNAL_SECRET to LEANGENCY_PORTAL_INTERNAL_URL. Audit + contract in the portal repo docs/CRM_DELIVERY_AUDIT.md (kept local).",
+  "notes": "Portal owns delivery phase + the 14-day SLA clock; the CRM mirrors billing only (instalments + subscription) and pushes via the domain_events outbox using a bearer header from PORTAL_INTERNAL_SECRET to LEANGENCY_PORTAL_INTERNAL_URL. Audit + contract in the portal repo docs/CRM_DELIVERY_AUDIT.md (kept local).",
   "phase": "",
   "started_at": null,
   "status_history": [

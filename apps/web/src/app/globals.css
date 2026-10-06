@@ -235,9 +235,45 @@
     linear-gradient(to bottom, #1e293b 1px, transparent 1px);
 }
 
-/* Material Symbols — loaded via next/font/local in layout.tsx, referenced by CSS variable */
+/*
+ * Material Symbols — self-hosted (ADR-046), preloaded in layout.tsx. Hand-written
+ * @font-face so the family name is stable and font-display is block: a ligature
+ * icon must never paint its literal name ("search", "menu") while the font loads.
+ * See apps/project-tracker/docs/metrics/_global/fix-material-icons.md.
+ */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('/fonts/MaterialSymbolsOutlined.woff2') format('woff2');
+}
+
+/*
+ * Reserved box + fonts-ready gate. In @layer base (unlike the rule below) so a
+ * per-icon Tailwind utility (w-5, size-4, invisible…) still wins over it.
+ * fonts-ready is added to <html> by the inline script in layout.tsx
+ * (src/lib/fonts-ready.ts), which fails open after 3s; a <noscript> style opens
+ * it without JS. An icon given a smaller explicit box (h-4 w-4) than its 24px
+ * glyph opts out of the clip with overflow-visible.
+ */
+@layer base {
+  .material-symbols-outlined {
+    width: 1em;
+    height: 1em;
+    overflow: hidden;
+    visibility: hidden;
+  }
+
+  /* inherit, not visible: an icon inside an invisible container stays hidden. */
+  .fonts-ready .material-symbols-outlined {
+    visibility: inherit;
+  }
+}
+
 .material-symbols-outlined {
-  font-family: var(--font-material-symbols);
+  /* Generic fallback only applies if the icon font never loads (font-display: block). */
+  font-family: 'Material Symbols Outlined', sans-serif;
   font-weight: normal;
   font-style: normal;
   font-size: 24px;

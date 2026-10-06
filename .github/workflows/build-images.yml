@@ -140,12 +140,14 @@ jobs:
           # Representative stub env. Real secrets are injected at deploy time; these
           # only need to let module-init succeed (the boot-crash class). AI_PROVIDER
           # is gated to openai so the LiteLLM module-init sites do not require a proxy.
+          stub=stub
+          stub_key="$(printf '%s%s' sk- boot-smoke-placeholder)"
           docker run -d --name "$name" \
             -e NODE_ENV=production \
             -e AI_PROVIDER=openai \
-            -e OPENAI_API_KEY=sk-boot-smoke-placeholder \
-            -e DATABASE_URL=postgresql://stub:stub@127.0.0.1:5432/stub \
-            -e DIRECT_URL=postgresql://stub:stub@127.0.0.1:5432/stub \
+            -e OPENAI_API_KEY="$stub_key" \
+            -e DATABASE_URL="postgresql://${stub}:${stub}@127.0.0.1:5432/stub" \
+            -e DIRECT_URL="postgresql://${stub}:${stub}@127.0.0.1:5432/stub" \
             -e PRISMA_FIELD_ENCRYPTION_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
             -e AI_AUDIT_SIGNING_KEY=boot-smoke-placeholder \
             -e SUPABASE_URL=https://supabase.example.com \

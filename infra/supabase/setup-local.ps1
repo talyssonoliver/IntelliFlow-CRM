@@ -58,7 +58,9 @@ Write-Host "✓ Supabase services started" -ForegroundColor Green
 $status = supabase status -o json | ConvertFrom-Json
 $apiUrl = "http://127.0.0.1:54321"
 $studioUrl = "http://127.0.0.1:54323"
-$dbUrl = "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+$localDbUser = "postgres"
+$localDbPass = if ($env:SUPABASE_LOCAL_DB_PASSWORD) { $env:SUPABASE_LOCAL_DB_PASSWORD } else { "postgres" }
+$dbUrl = "postgresql://${localDbUser}:${localDbPass}@127.0.0.1:54322/postgres"
 
 Write-Host ""
 Write-Host "Step 2: Applying database migrations..." -ForegroundColor Yellow
@@ -80,7 +82,7 @@ Write-Host "Step 3: Applying RLS policies..." -ForegroundColor Yellow
 Write-Host ""
 
 # Apply RLS policies
-$env:PGPASSWORD = "postgres"
+$env:PGPASSWORD = $localDbPass
 psql -h localhost -p 54322 -U postgres -d postgres -f infra/supabase/rls-policies.sql
 
 if ($LASTEXITCODE -ne 0) {
@@ -96,7 +98,7 @@ Write-Host "Step 4: Setting up storage buckets..." -ForegroundColor Yellow
 Write-Host ""
 
 # Setup storage
-$env:PGPASSWORD = "postgres"
+$env:PGPASSWORD = $localDbPass
 psql -h localhost -p 54322 -U postgres -d postgres -f infra/supabase/storage-setup.sql
 
 if ($LASTEXITCODE -ne 0) {

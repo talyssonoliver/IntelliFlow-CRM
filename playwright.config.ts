@@ -45,6 +45,7 @@ const UNAUTH_SPECS = [
   '**/icons.spec.ts',
   '**/features-tour.spec.ts',
   '**/email/inbound-webhook.spec.ts',
+  '**/preview/aurora-preview.spec.ts',
 ];
 
 /**
@@ -97,6 +98,10 @@ export default defineConfig({
 
   // Maximum time one test can run
   timeout: 30 * 1000,
+  // CI ceiling for the whole run: the nightly takes ~2.3h on one worker, and a
+  // wedged run used to sit silent until the 6h job timeout with no report.
+  // Hitting this ends the run with a report naming the interrupted test.
+  globalTimeout: process.env.CI ? 3 * 60 * 60 * 1000 : undefined,
 
   // Test execution settings
   fullyParallel: true,
@@ -335,6 +340,8 @@ export default defineConfig({
               SUPABASE_URL: process.env.SUPABASE_URL || '',
               SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
               SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
+              // SEC-004: inbound-webhook.spec.ts signs with this same secret.
+              INBOUND_EMAIL_WEBHOOK_SECRET: process.env.INBOUND_EMAIL_WEBHOOK_SECRET || '',
             },
           },
         ]

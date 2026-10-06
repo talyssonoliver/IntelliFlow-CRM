@@ -20,8 +20,8 @@ browser actually makes, and assert what the database actually does.
 2. Schema + seed on the test DB (port 5433):
    ```bash
    cd packages/db
-   DATABASE_URL="postgresql://postgres:postgres@localhost:5433/intelliflow_test?schema=public" \
-   DIRECT_URL="postgresql://postgres:postgres@localhost:5433/intelliflow_test?schema=public" \
+   DATABASE_URL="postgresql://<user>:<password>@localhost:5433/intelliflow_test?schema=public" \
+   DIRECT_URL="postgresql://<user>:<password>@localhost:5433/intelliflow_test?schema=public" \
    npx prisma db push && npx tsx prisma/seed.ts
    ```
 3. The API running locally against that DB, with the dev-auth fallback so an

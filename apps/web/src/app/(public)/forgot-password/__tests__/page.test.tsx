@@ -135,9 +135,9 @@ describe('ForgotPasswordPage (IFC-120)', () => {
       expect(screen.getByTestId('auth-card')).toBeTruthy();
     });
 
-    it('shows badge "INTELLIFLOW" with lock_reset icon', () => {
+    it('shows badge "Aurora" with lock_reset icon', () => {
       render(<ForgotPasswordPage />);
-      expect(screen.getByTestId('auth-card-badge').textContent).toBe('INTELLIFLOW');
+      expect(screen.getByTestId('auth-card-badge').textContent).toBe('Aurora');
       expect(screen.getByTestId('auth-card-badge-icon').textContent).toBe('lock_reset');
     });
 
@@ -433,14 +433,14 @@ describe('ForgotPasswordPage (IFC-120)', () => {
   describe('Forgot Password Metadata', () => {
     it('should have correct SEO metadata', () => {
       expect(metadata.title).toBe('Forgot Password');
-      expect(metadata.description).toContain('IntelliFlow CRM');
+      expect(metadata.description).toContain('Aurora');
       expect(metadata.description).toContain('reset');
     });
 
     it('should have Open Graph metadata', () => {
       expect(metadata.openGraph).toBeDefined();
       expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/forgot-password');
-      expect(metadata.openGraph?.siteName).toBe('IntelliFlow CRM');
+      expect(metadata.openGraph?.siteName).toBe('Aurora');
       expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
     });
 

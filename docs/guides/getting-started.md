@@ -79,8 +79,8 @@ Edit `.env.development` with your local configuration:
 
 ```env
 # Database Configuration
-DATABASE_URL="postgresql://intelliflow:dev_password@localhost:5432/intelliflow_dev"
-DIRECT_URL="postgresql://intelliflow:dev_password@localhost:5432/intelliflow_dev"
+DATABASE_URL="postgresql://<user>:<password>@localhost:5432/intelliflow_dev"
+DIRECT_URL="postgresql://<user>:<password>@localhost:5432/intelliflow_dev"
 
 # Redis Configuration
 REDIS_URL="redis://localhost:6379"

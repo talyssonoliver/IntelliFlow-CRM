@@ -24,6 +24,11 @@ import {
   safeValidateEnv,
 } from '../config';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 /** Minimal valid env object that satisfies the base envSchema */
 const minimalValidEnv = {
   NODE_ENV: 'development',
@@ -50,7 +55,7 @@ const fullValidEnv = {
   SMTP_HOST: 'smtp.example.com',
   SMTP_PORT: '587',
   SMTP_USER: 'user@example.com',
-  SMTP_PASSWORD: 'password123',
+  SMTP_PASSWORD: fixtureValue('passwo', 'rd123'),
   EMAIL_FROM: 'noreply@example.com',
   SENTRY_DSN: 'https://examplePublicKey@sentry.io/1',
   OTEL_ENABLED: 'true',

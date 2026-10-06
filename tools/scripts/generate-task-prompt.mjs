@@ -191,7 +191,7 @@ touch the main working dir, local main, or any sibling worktree.
 3. pnpm exec turbo build --filter='./packages/*'   (turbo is NOT on PATH; use pnpm exec. Libs must be
    built or imports fail.)
 4. The committed .env.test points DATABASE_URL at the LOCAL test DB
-   (postgresql://postgres:postgres@localhost:5433/intelliflow_test). Verify: docker ps --filter
+   (postgresql://<user>:<password>@localhost:5433/intelliflow_test). Verify: docker ps --filter
    name=postgres-test (expect "healthy"). NEVER use .env.local's DATABASE_URL — it is PRODUCTION
    Supabase. Copy other dev vars from .env.local but NOT DATABASE_URL/DIRECT_URL. The local test DB +
    dev ports are SHARED across parallel sessions — cap is 3.
@@ -206,7 +206,7 @@ dir or any sibling worktree.
 2. pnpm install
 3. turbo build --filter='./packages/*'   (libs must be built or imports fail)
 4. The committed .env.test already points DATABASE_URL at the LOCAL test DB
-   (postgresql://postgres:postgres@localhost:5433/intelliflow_test). Verify it's up:
+   (postgresql://<user>:<password>@localhost:5433/intelliflow_test). Verify it's up:
    docker ps --filter name=postgres-test  (expect "healthy"). The test DB and dev ports are
    SHARED across all worktrees — that is why the orchestrator caps concurrency at 3. NEVER use
    .env.local's DATABASE_URL — it is PRODUCTION Supabase. Copy other dev vars from .env.local if

@@ -1,0 +1,177 @@
+/* Features, in the Aurora design. Every rule is scoped under .aurora-site .aurora-features. */
+
+.aurora-site .aurora-features .afe-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 0 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(40, 217, 212, 0.14);
+  color: #0e7f7b;
+  font-size: 14px;
+  font-weight: 700;
+}
+.aurora-site .aurora-features .afe-chip .material-symbols-outlined {
+  font-size: 18px;
+}
+.aurora-site .aurora-features .afe-category {
+  padding: 64px 0 0;
+}
+.aurora-site .aurora-features .afe-head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.aurora-site .aurora-features .afe-head-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 24px;
+}
+.aurora-site .aurora-features .afe-h2 {
+  font-size: clamp(24px, 2.6vw, 32px);
+}
+.aurora-site .aurora-features .afe-head p {
+  margin: 6px 0 0;
+  font-size: 16px;
+  color: var(--ink-2);
+}
+.aurora-site .aurora-features .afe-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.aurora-site .aurora-features .afe-card {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 22px;
+}
+.aurora-site .aurora-features .afe-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(118, 85, 246, 0.1);
+  color: var(--violet);
+  font-size: 22px;
+}
+.aurora-site .aurora-features .afe-card h3 {
+  margin: 16px 0 6px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--navy);
+}
+.aurora-site .aurora-features .afe-card > p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.aurora-site .aurora-features .afe-benefits {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 16px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink);
+}
+.aurora-site .aurora-features .afe-benefits li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.aurora-site .aurora-features .afe-benefits .material-symbols-outlined {
+  flex: none;
+  font-size: 18px;
+  color: #12a8a4;
+}
+.aurora-site .aurora-features .afe-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 18px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue);
+  text-decoration: none;
+}
+.aurora-site .aurora-features .afe-more .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* Closing */
+.aurora-site .aurora-features .afe-close {
+  position: relative;
+  overflow: hidden;
+  padding: 64px 32px;
+  border-radius: 28px;
+  background: var(--navy);
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+}
+.aurora-site .aurora-features .afe-close-art img {
+  position: absolute;
+  right: -160px;
+  bottom: -220px;
+  width: 620px;
+  max-width: none;
+  opacity: 0.7;
+  pointer-events: none;
+}
+.aurora-site .aurora-features .afe-close h2 {
+  position: relative;
+  margin: 0;
+  font-size: clamp(28px, 3.4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #fff;
+}
+.aurora-site .aurora-features .afe-close p {
+  position: relative;
+  margin: 14px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.aurora-site .aurora-features .afe-close-cta {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+@media (max-width: 1100px) {
+  .aurora-site .aurora-features .afe-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .aurora-site .aurora-features .afe-grid {
+    grid-template-columns: 1fr;
+  }
+  .aurora-site .aurora-features .afe-category {
+    padding-top: 48px;
+  }
+  .aurora-site .aurora-features .afe-close {
+    padding: 48px 20px;
+  }
+  .aurora-site .aurora-features .afe-close-cta {
+    flex-direction: column;
+  }
+}

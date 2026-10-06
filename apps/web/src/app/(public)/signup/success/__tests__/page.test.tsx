@@ -163,9 +163,9 @@ describe('SignUpSuccessPage', () => {
   }
 
   // TC#1: AC-001
-  it('renders success heading "Welcome to IntelliFlow!"', async () => {
+  it('renders success heading "Welcome to Aurora!"', async () => {
     await renderPage();
-    expect(screen.getByText('Welcome to IntelliFlow!')).toBeDefined();
+    expect(screen.getByText('Welcome to Aurora!')).toBeDefined();
   });
 
   // TC#2: AC-002
@@ -243,7 +243,7 @@ describe('SignUpSuccessPage', () => {
       render(<SignUpSuccessPage />);
     });
     // If we reach here, the ErrorBoundary is protecting the page
-    expect(screen.getByText('Welcome to IntelliFlow!')).toBeDefined();
+    expect(screen.getByText('Welcome to Aurora!')).toBeDefined();
   });
 
   // TC#11: AC-011
@@ -257,7 +257,7 @@ describe('SignUpSuccessPage', () => {
     });
     // After content loads, check the spinner was properly configured
     // The spinner is in the Suspense fallback — we verify it by checking the page rendered
-    expect(screen.getByText('Welcome to IntelliFlow!')).toBeDefined();
+    expect(screen.getByText('Welcome to Aurora!')).toBeDefined();
   });
 
   // TC#12: AC-008
@@ -313,6 +313,6 @@ describe('SignUpSuccessPage', () => {
     const resendButton = screen.getByText('Resend verification');
     const className = resendButton.getAttribute('class') || '';
     expect(className).toContain('focus:ring-2');
-    expect(className).toContain('focus:ring-[#137fec]');
+    expect(className).toContain('focus:ring-[#2a78f6]');
   });
 });
