@@ -182,10 +182,10 @@ sharded runners' job. Typecheck, lint and all other gates stay full.
 (other than `scripts`), vitest/tsconfig, Prisma schema or test-setup changes
 widen to full on their own.
 
-**At most 3 full test runs at once, machine-wide.** The slots come from the
-shared wrapper `ops/test-slots/with-slot.mjs` (branch `chore/test-slots`), which
-re-runs the gate under a slot; the gate takes no slot of its own. What the gate
-guarantees is **no orphaned steps**: each step runs async with its PID recorded,
+**At most 3 full test runs at once, machine-wide.** Before any step the gate
+re-runs itself under the shared slot semaphore (`scripts/lib/test-slot.mjs`),
+which waits for a free slot and releases it on exit. Separately, the gate
+guarantees **no orphaned steps**: each step runs async with its PID recorded,
 and its whole process tree is stopped (`taskkill /T /F` on Windows) on success,
 failure, a signal or an uncaught exception. A detached watchdog, started from
 `os.tmpdir()` (never the repo), covers a hard kill of the gate and the death of

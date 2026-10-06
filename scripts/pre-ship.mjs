@@ -67,9 +67,9 @@
  *
  * Machine test slots and orphans:
  *   At most 3 full test runs at once on one machine (owner ruling 2026-10-03).
- *   That limit is NOT taken here: ops/test-slots/with-slot.mjs (branch
- *   chore/test-slots) re-runs this gate under a slot. What this gate guarantees
- *   is that it never leaves a step orphaned (scripts/lib/preship-gate.mjs): each
+ *   The gate re-runs itself under the shared slot semaphore before any step
+ *   (scripts/lib/test-slot.mjs, see "Machine-wide test slot" below). Separately,
+ *   it never leaves a step orphaned (scripts/lib/preship-gate.mjs): each
  *   step runs async with its PID recorded, its whole process tree is stopped on
  *   success, failure, SIGINT/SIGTERM/SIGHUP/SIGBREAK and an uncaught exception,
  *   and a detached watchdog (scripts/preship-watchdog.mjs) stops it after a hard
@@ -89,6 +89,12 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createGate } from './lib/preship-gate.mjs';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
+import {
+  preshipNeedsSlot,
+  preshipSlotArgv,
+  runForwarding,
+  sharedSemaphore,
+} from './lib/test-slot.mjs';
 import { stepLine, advisoryNote, persistedState, finalLine } from './lib/preship-report.mjs';
 
 // Throwaway stub credentials for the build-time env mirror below (never a real DB).
@@ -792,6 +798,20 @@ for (const a of args) {
   process.stderr.write(`pre-ship: unknown argument '${a}'.\n`);
   process.stderr.write(`Known flags: --clean, --list, --full, --help, --only=<id,id,...>\n`);
   process.exit(2);
+}
+
+// --- Machine-wide test slot ---
+// At most three full test runs at once on the owner's machine, and one
+// IntelliFlow pre-ship at a time: re-run this gate under the shared semaphore,
+// which waits for a free slot and releases it on exit. Ctrl-C and kill are
+// forwarded and the exit code is passed through. See scripts/lib/test-slot.mjs.
+if (preshipNeedsSlot(flags, process.env)) {
+  const semaphore = sharedSemaphore(process.env);
+  if (semaphore) {
+    process.exit(
+      await runForwarding(process.execPath, preshipSlotArgv(semaphore, process.argv[1], args))
+    );
+  }
 }
 
 if (flags.help) {

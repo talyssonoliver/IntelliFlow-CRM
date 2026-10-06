@@ -656,7 +656,7 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
     for (const f of ['preship-process.mjs', 'preship-watchdog.mjs']) {
       fs.copyFileSync(path.join(REPO_ROOT, 'scripts', f), path.join(dir, 'scripts', f));
     }
-    for (const lib of ['preship-test-scope.mjs', 'preship-report.mjs', 'preship-gate.mjs']) {
+    for (const lib of ['preship-test-scope.mjs', 'preship-report.mjs', 'preship-gate.mjs', 'test-slot.mjs']) {
       fs.copyFileSync(path.join(REPO_ROOT, 'scripts/lib', lib), path.join(dir, 'scripts/lib', lib));
     }
     git(['add', '-A']);

@@ -20,5 +20,31 @@
       "name": "completion-evidence",
       "passed": true
     }
-  ]
+  ],
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T22:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Reopen evidence: Railway production, read 2026-10-05 via the Railway API: every service (api, ai-worker, events-worker, ingestion-worker, notifications-worker) has `OTEL_ENABLED=false` and no `OTEL_EXPORTER_OTLP_ENDPOINT`; `ws` has no OTel vars. `infra/terraform/environments/production/terraform.tfvars` keeps OTel off until `otel_exporter_endpoint` is set, and it is not set. Production exports no traces, metrics or logs.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "Reopen evidence: DoD \"dashboards and alerts created\" / KPI \"MTTD actual 1.2min\": `infra/monitoring/alert-rules.yml` (25 rules) was never loaded by an alerting system connected to production, and no alert has reached the owner.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: (1) Services emit to the hosted backend (IFC-032). Alert rules are loaded there and deliver to the owner. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 50,
+  "updated_at": "2026-10-05T22:30:00Z"
 }

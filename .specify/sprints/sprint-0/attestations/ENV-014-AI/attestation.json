@@ -6,20 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "artifacts/misc/profiling-results.json",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/logs/optimization-log.csv",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/misc/cache-config.yaml",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "Performance AI-profiled",
       "Optimizations AI-applied",
