@@ -1,0 +1,104 @@
+name: Vercel Rollback
+
+# Manual, audited Instant Rollback of the web app's Vercel production
+# deployment. Replaces the blue/green workflow (IFC-112), which never worked:
+# its switch and rollback steps were commented-out TODOs and it needed
+# secrets and domains that were never created.
+#
+# DEFAULTS TO DRY RUN. A dry run resolves the current production deployment
+# and the rollback target, prints both to the job summary, and stops. Set
+# `dry_run` to false to run `vercel rollback`, then assert that production
+# actually flipped to the target.
+#
+# Undo a rollback: `vercel promote <previous-current-id>` (printed in the
+# summary), or run this workflow again with that deployment as `target`.
+# Runbook: docs/operations/release-rollback.md
+#
+# workflow_dispatch only: nothing here may run on a schedule or a push.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Deployment URL or id to roll back to (empty = newest READY production deployment that is not the current one)'
+        required: false
+        type: string
+        default: ''
+      dry_run:
+        description: 'Dry run: resolve and report only, change nothing'
+        required: true
+        type: boolean
+        default: true
+      reason:
+        description: 'Why this rollback is needed (recorded in the job summary)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Never cancel a rollback half way; a second dispatch waits its turn.
+concurrency:
+  group: vercel-rollback
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  rollback:
+    name: Roll back production (${{ inputs.dry_run && 'dry run' || 'LIVE' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # IDs from vars.* (the CORRECT CRM project). secrets.VERCEL_PROJECT_ID
+      # has historically pointed at the wrong project; see cd.yml.
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # Free-text inputs travel as env vars, never interpolated into a script.
+      ROLLBACK_TARGET: ${{ inputs.target }}
+      ROLLBACK_REASON: ${{ inputs.reason }}
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Resolve current production deployment and rollback target
+        id: resolve
+        run: node scripts/ops/vercel-rollback-target.mjs resolve
+
+      - name: Dry run complete
+        if: ${{ inputs.dry_run }}
+        run: echo "Dry run only, nothing was changed. Re-run with dry_run=false to roll back."
+
+      - name: Install Vercel CLI
+        if: ${{ !inputs.dry_run }}
+        run: npm install -g vercel@54
+
+      - name: Roll back
+        if: ${{ !inputs.dry_run }}
+        env:
+          TARGET_ID: ${{ steps.resolve.outputs.target_id }}
+        run: vercel rollback "$TARGET_ID" --scope "$VERCEL_ORG_ID" --timeout 3m --yes
+
+      - name: Verify production now serves the target
+        if: ${{ !inputs.dry_run }}
+        env:
+          EXPECTED_ID: ${{ steps.resolve.outputs.target_id }}
+        run: node scripts/ops/vercel-rollback-target.mjs verify
+
+      - name: How to undo
+        if: ${{ !inputs.dry_run }}
+        env:
+          PREVIOUS_ID: ${{ steps.resolve.outputs.current_id }}
+          TARGET_ID: ${{ steps.resolve.outputs.target_id }}
+        run: |
+          {
+            echo "### Rolled back"
+            echo "Production now serves \`${TARGET_ID}\`. Automatic production domain assignment is paused until you promote."
+            echo "Undo: \`vercel promote ${PREVIOUS_ID}\` (or dispatch this workflow with target ${PREVIOUS_ID})."
+          } >> "$GITHUB_STEP_SUMMARY"
