@@ -1,7 +1,7 @@
 # File Ingestion Runbook
 
-**Owner:** Backend Dev + Integration Eng **Last Updated:** 2025-12-31 **Task:**
-IFC-153 **On-Call Escalation:** #engineering-oncall
+**Owner:** the owner (sole operator) **Last Updated:** 2025-12-31 **Task:**
+IFC-153 **Escalation:** none beyond the owner; alerts arrive by email
 
 ---
 
@@ -60,9 +60,9 @@ Event Emission → Indexing/Thumbnails/OCR
 
 ### Alert Channels
 
-- **P1 (Critical)**: PagerDuty → On-call engineer + Engineering manager
-- **P2 (High)**: Slack #alerts-engineering + Email engineering@
-- **P3 (Medium)**: Slack #ops-notifications
+All severities (P1, P2, P3) are delivered by email to the owner from Grafana
+Cloud alerting (being set up, not yet proven). There is no PagerDuty, Slack or
+on-call rotation.
 
 ### Health Check Endpoints
 
@@ -104,15 +104,14 @@ npm run cli jobs:failed -- --queue=ingestion --limit=20
 
 **Resolution:**
 
-1. **If storage is down**: Check Supabase status page, escalate to
-   infrastructure team
+1. **If storage is down**: Check Supabase status page
 2. **If quota exceeded**: Free up space or increase quota in Supabase dashboard
 3. **If network timeout**: Restart ingestion service:
    `pm2 restart ingestion-api`
 4. **If persistent**: Enable debug logging:
    `export LOG_LEVEL=debug && pm2 restart ingestion-api`
 
-**Escalation:** If issue persists >15min, escalate to P1 (page on-call)
+**Escalation:** If issue persists >15min, treat it as P1
 
 ---
 
@@ -157,7 +156,7 @@ pm2 logs av-scan-worker --lines 100
    - Increase ClamAV threads in `/etc/clamav/clamd.conf`
    - Consider adding dedicated AV server
 
-**Escalation:** If backlog >200 or queue stalled >10min, escalate to P2
+**Escalation:** If backlog >200 or queue stalled >10min, treat it as P2
 
 ---
 
@@ -175,13 +174,13 @@ pm2 logs av-scan-worker --lines 100
 # View recent virus detections
 npm run cli av:recent-infections -- --hours=24
 
-# Check quarantine bucket
-aws s3 ls s3://case-documents-quarantine/ --recursive | grep infected
+# Check quarantine bucket (Supabase Storage dashboard: case-documents-quarantine)
+npm run cli av:recent-infections -- --hours=24
 ```
 
 **Actions:**
 
-1. **Log the incident**: Security team must be notified (auto-alert configured)
+1. **Log the incident**: The owner reviews it (alert arrives by email)
 2. **Review upload source**: Check if user account is compromised
 3. **Check for patterns**: If multiple infections from same tenant, investigate
 4. **Update virus definitions**: `sudo freshclam && pm2 restart av-scan-worker`
@@ -238,7 +237,7 @@ npm run cli jobs:dlq-stats -- --queue=ingestion --group-by=error
    npm run cli jobs:dlq-delete -- --job-id=<ID> --reason="Corrupted file"
    ```
 
-**Escalation:** If DLQ >50 messages, escalate to P2 (investigate root cause)
+**Escalation:** If DLQ >50 messages, treat it as P2 (investigate root cause)
 
 ---
 
@@ -283,7 +282,7 @@ curl -X POST http://localhost:3000/api/inbound/email \
    - Scale up email processor workers
    - Check Redis queue health
 
-**Escalation:** If email processing is down >30min, escalate to P1
+**Escalation:** If email processing is down >30min, treat it as P1
 
 ---
 
@@ -390,7 +389,7 @@ curl -X POST http://localhost:3000/api/inbound/email \
 
 **Immediate Actions:**
 
-1. Acknowledge alert in PagerDuty
+1. Acknowledge the alert email
 2. Check status page: `curl /health/ingestion`
 3. Review recent deployments: `git log --oneline -10`
 4. Check infrastructure: Supabase status, Redis health
@@ -421,9 +420,8 @@ pm2 restart ingestion-api
 
 **Communication:**
 
-- Post in Slack #incidents
-- Update status page if customer-facing
-- Notify stakeholders if >15min downtime
+- Keep a timeline of the incident
+- Email affected users if >15min downtime
 
 ---
 
@@ -435,7 +433,7 @@ pm2 restart ingestion-api
 
 1. Identify error type: Check logs for common pattern
 2. If known issue, apply fix from troubleshooting section
-3. If unknown, gather diagnostics and escalate
+3. If unknown, gather diagnostics and investigate
 
 **Investigation:**
 
@@ -451,14 +449,15 @@ npm run cli logs:errors-by-tenant -- --last=10m
 
 ## Contact & Escalation
 
-| Issue Type              | Primary Contact                        | Escalation Path                        |
-| ----------------------- | -------------------------------------- | -------------------------------------- |
-| Ingestion failures      | On-call engineer (#oncall-engineering) | → Engineering Manager → VP Engineering |
-| Storage issues          | Infrastructure team (#infrastructure)  | → Platform Lead → CTO                  |
-| Security (virus)        | Security team (#security)              | → Security Lead → CISO                 |
-| Performance degradation | Backend team (#backend-dev)            | → Tech Lead → VP Engineering           |
+| Issue Type              | Primary Contact | Escalation Path |
+| ----------------------- | --------------- | --------------- |
+| Ingestion failures      | Owner           | None            |
+| Storage issues          | Owner           | None            |
+| Security (virus)        | Owner           | None            |
+| Performance degradation | Owner           | None            |
 
-**On-Call Rotation:** See PagerDuty schedule **Runbook Updates:** PR to
+The owner is the only responder and is reached via the alert email. There is no
+on-call rotation. **Runbook Updates:** PR to
 `docs/operations/runbooks/ingestion.md`
 
 ---

@@ -91,6 +91,13 @@
       "due": "2026-10-11",
       "lane": "projects-64 (owner decision)",
       "reason": "Re-scope or retire: the original evidence described people who do not exist"
+    },
+    {
+      "taskId": "IFC-151",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-10",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "DLQ depth/drain/retry alerts loaded in the hosted backend from production metrics, proven by a received alert (reopened in #796)"
     }
   ]
 }
