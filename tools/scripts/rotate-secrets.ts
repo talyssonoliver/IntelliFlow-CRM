@@ -14,7 +14,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 
 // Types
 interface RotationPolicy {
@@ -65,9 +65,10 @@ interface CheckResult {
 }
 
 // Helper functions
-function parseArgs(): Record<string, string | boolean> {
+export function parseArgs(
+  argv: string[] = process.argv.slice(2)
+): Record<string, string | boolean> {
   const args: Record<string, string | boolean> = {};
-  const argv = process.argv.slice(2);
 
   for (let i = 0; i < argv.length; i++) {
     if (argv[i].startsWith('--')) {
@@ -87,7 +88,7 @@ function parseArgs(): Record<string, string | boolean> {
   return args;
 }
 
-function loadSchedule(schedulePath: string): RotationSchedule {
+export function loadSchedule(schedulePath: string): RotationSchedule {
   const content = fs.readFileSync(schedulePath, 'utf-8');
   // Simple YAML-like parsing (for demo purposes)
   // In production, use a proper YAML parser
@@ -133,12 +134,10 @@ function loadSchedule(schedulePath: string): RotationSchedule {
   };
 }
 
-function getSecretMetadata(secretName: string, policy: RotationPolicy): SecretMetadata {
+export function getSecretMetadata(secretName: string, policy: RotationPolicy): SecretMetadata {
   // In production, this would read from Vault or a secrets manager
   const lastRotated = new Date();
-  lastRotated.setDate(
-    lastRotated.getDate() - Math.floor(Math.random() * policy.rotation_interval_days)
-  );
+  lastRotated.setDate(lastRotated.getDate() - crypto.randomInt(policy.rotation_interval_days));
 
   const nextRotation = new Date(lastRotated);
   nextRotation.setDate(nextRotation.getDate() + policy.rotation_interval_days);
@@ -151,12 +150,12 @@ function getSecretMetadata(secretName: string, policy: RotationPolicy): SecretMe
       ) || 'unknown',
     last_rotated: lastRotated.toISOString(),
     next_rotation: nextRotation.toISOString(),
-    version: Math.floor(Math.random() * 10) + 1,
+    version: crypto.randomInt(10) + 1,
   };
 }
 
 // Commands
-async function checkRotation(args: Record<string, string | boolean>): Promise<void> {
+export async function checkRotation(args: Record<string, string | boolean>): Promise<void> {
   const schedulePath = args.schedule as string;
   const outputPath = args.output as string;
 
@@ -210,7 +209,33 @@ async function checkRotation(args: Record<string, string | boolean>): Promise<vo
   }
 }
 
-async function rotateSecrets(args: Record<string, string | boolean>): Promise<void> {
+/**
+ * Simulated rotation of one secret: no secret store is touched. The new value is
+ * generated, hashed and discarded; only the hash and the version bump are recorded.
+ */
+export function rotateOneSecret(secretName: string, result: RotationResult): void {
+  try {
+    const oldVersion = crypto.randomInt(10) + 1;
+    const newVersion = oldVersion + 1;
+    const newValue = crypto.randomBytes(32).toString('base64');
+
+    result.rotated_secrets.push({
+      name: secretName,
+      old_version: oldVersion,
+      new_version: newVersion,
+      encrypted_value: crypto.createHash('sha256').update(newValue).digest('hex'),
+    });
+
+    console.log(`    Rotated: v${oldVersion} -> v${newVersion}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    result.errors.push(`Failed to rotate ${secretName}: ${errorMessage}`);
+    result.success = false;
+    console.error(`    ERROR: ${errorMessage}`);
+  }
+}
+
+export async function rotateSecrets(args: Record<string, string | boolean>): Promise<void> {
   const secretType = args.type as string;
   const schedulePath = args.schedule as string;
   const outputPath = args.output as string;
@@ -243,26 +268,7 @@ async function rotateSecrets(args: Record<string, string | boolean>): Promise<vo
         continue;
       }
 
-      try {
-        // Simulate rotation
-        const oldVersion = Math.floor(Math.random() * 10) + 1;
-        const newVersion = oldVersion + 1;
-        const newValue = crypto.randomBytes(32).toString('base64');
-
-        result.rotated_secrets.push({
-          name: secretName,
-          old_version: oldVersion,
-          new_version: newVersion,
-          encrypted_value: crypto.createHash('sha256').update(newValue).digest('hex'),
-        });
-
-        console.log(`    Rotated: v${oldVersion} -> v${newVersion}`);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        result.errors.push(`Failed to rotate ${secretName}: ${errorMessage}`);
-        result.success = false;
-        console.error(`    ERROR: ${errorMessage}`);
-      }
+      rotateOneSecret(secretName, result);
     }
   }
 
@@ -276,7 +282,7 @@ async function rotateSecrets(args: Record<string, string | boolean>): Promise<vo
   console.log(`Errors: ${result.errors.length}`);
 }
 
-async function validateRotation(args: Record<string, string | boolean>): Promise<void> {
+export async function validateRotation(args: Record<string, string | boolean>): Promise<void> {
   const resultPath = args.result as string;
 
   if (!resultPath) {
@@ -301,7 +307,7 @@ async function validateRotation(args: Record<string, string | boolean>): Promise
     const checks = [
       { name: 'Version increment', passed: secret.new_version > secret.old_version },
       { name: 'Value encrypted', passed: !!secret.encrypted_value },
-      { name: 'Connectivity test', passed: Math.random() > 0.1 }, // 90% success rate simulation
+      { name: 'Connectivity test', passed: crypto.randomInt(10) > 0 }, // 90% success rate simulation
     ];
 
     for (const check of checks) {
@@ -319,7 +325,7 @@ async function validateRotation(args: Record<string, string | boolean>): Promise
   }
 }
 
-async function emergencyRotation(args: Record<string, string | boolean>): Promise<void> {
+export async function emergencyRotation(args: Record<string, string | boolean>): Promise<void> {
   const secretName = args.secret as string;
   const reason = args.reason as string;
 
@@ -364,7 +370,7 @@ async function emergencyRotation(args: Record<string, string | boolean>): Promis
   console.log('3. Update incident ticket');
 }
 
-async function reEncrypt(args: Record<string, string | boolean>): Promise<void> {
+export async function reEncrypt(args: Record<string, string | boolean>): Promise<void> {
   const keyVersion = args['key-version'] as string;
 
   if (!keyVersion) {
@@ -394,8 +400,8 @@ async function reEncrypt(args: Record<string, string | boolean>): Promise<void> 
 }
 
 // Main
-async function main(): Promise<void> {
-  const args = parseArgs();
+export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
+  const args = parseArgs(argv);
   const command = args.command as string;
 
   switch (command) {
@@ -450,7 +456,13 @@ Examples:
   }
 }
 
-main().catch((error) => {
-  console.error('Error:', error);
-  process.exit(1);
-});
+// Run only when executed directly, so tests can import the commands.
+if (
+  process.argv[1]?.endsWith('rotate-secrets.ts') ||
+  process.argv[1]?.endsWith('rotate-secrets.js')
+) {
+  main().catch((error) => {
+    console.error('Error:', error);
+    process.exit(1);
+  });
+}
