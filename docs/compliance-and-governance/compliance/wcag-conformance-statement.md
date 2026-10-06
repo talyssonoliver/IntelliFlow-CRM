@@ -20,7 +20,7 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 181
+This statement covers the IntelliFlow CRM web application across all 182
 user-facing routes. Dynamic segment routes (e.g., `/contacts/[id]`,
 `/settings/help-center/articles/[id]/edit`) inherit conformance status from
 their parent static route and are not listed separately.
@@ -97,22 +97,25 @@ their parent static route and are not listed separately.
   `/docs/changelog`, `/docs/cli`, `/docs/guides`, `/docs/integrations`,
   `/docs/sdk`, `/docs/webhooks`
 - **System pages (3):** `/404`, `/500`, `/maintenance`
+- **Design previews (1):** `/preview/aurora` — the Aurora landing page under
+  review; unlinked and `noindex`. Not yet assessed (see Section 3).
 
 ---
 
 ## 3. Conformance Details
 
-| Metric                           | Value               |
-| -------------------------------- | ------------------- |
-| Total WCAG 2.1 Level A criteria  | 30                  |
-| Total WCAG 2.1 Level AA criteria | 20                  |
-| Level A: Supports                | 25                  |
-| Level A: Partially Supports      | 1 (SC 1.4.1)        |
-| Level A: Not Applicable          | 4                   |
-| Level AA: Supports               | 16                  |
-| Level AA: Not Applicable         | 4                   |
-| Routes fully conformant          | 180 of 181          |
-| Routes partially conformant      | 1 of 181 (`/deals`) |
+| Metric                           | Value                        |
+| -------------------------------- | ---------------------------- |
+| Total WCAG 2.1 Level A criteria  | 30                           |
+| Total WCAG 2.1 Level AA criteria | 20                           |
+| Level A: Supports                | 25                           |
+| Level A: Partially Supports      | 1 (SC 1.4.1)                 |
+| Level A: Not Applicable          | 4                            |
+| Level AA: Supports               | 16                           |
+| Level AA: Not Applicable         | 4                            |
+| Routes fully conformant          | 180 of 182                   |
+| Routes partially conformant      | 1 of 182 (`/deals`)          |
+| Routes not yet assessed          | 1 of 182 (`/preview/aurora`) |
 
 ---
 
