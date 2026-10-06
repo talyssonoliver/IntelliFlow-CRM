@@ -33,18 +33,29 @@ export const DEFAULT_BASE_REF = 'origin/main';
  */
 export const MAX_RELATED_FILES = 400;
 
-/** Files whose effect on tests is not visible through the import graph. */
-const GLOBAL_IMPACT_PATTERNS = [
+/**
+ * Files whose effect on tests is not visible through the import graph.
+ *
+ * Keep this list to what really is invisible: every entry turns a small diff
+ * into the full suite on a laptop, which is the slowest thing pre-ship does.
+ * Deliberately NOT here:
+ *   - turbo.json: it configures turbo's task graph and cache; the test steps
+ *     call vitest directly, so it cannot change which tests run or how.
+ *   - src/test/ fixtures, mocks and helpers: tests import them, so
+ *     `vitest related` already follows them. Only setup files (loaded by the
+ *     vitest config, matched by the setup patterns) and `__mocks__/` stubs
+ *     (reached through config aliases and vi.mock resolution) are invisible.
+ */
+export const GLOBAL_IMPACT_PATTERNS = [
   /(^|\/)package\.json$/,
   /^pnpm-lock\.yaml$/,
   /^pnpm-workspace\.yaml$/,
   /(^|\/)\.npmrc$/,
-  /(^|\/)turbo\.json$/,
   /(^|\/)tsconfig[^/]*\.json$/,
   /(^|\/)vitest\.[^/]+$/,
   /(^|\/)vite\.config\.[^/]+$/,
   /(^|\/)setup\.(ts|tsx|js|mjs)$/,
-  /(^|\/)src\/test\//,
+  /(^|\/)__mocks__\//,
   /\.prisma$/,
 ];
 

@@ -7,6 +7,15 @@
  * Used by validators and UI components.
  */
 
+import {
+  SLA_STATUSES,
+  TICKET_CATEGORIES,
+  TICKET_PRIORITIES,
+  TICKET_PRIORITY_ROUTING_WEIGHT,
+  TICKET_STATUSES,
+  type TicketPriority,
+} from '../support/TicketConstants';
+
 export const ROUTING_REASONS = [
   'rule_match',
   'skill_match',
@@ -85,3 +94,88 @@ export const TICKET_ROUTING_FAILURE_REASONS = [
   'engine_error',
 ] as const;
 export type TicketRoutingFailureReason = (typeof TICKET_ROUTING_FAILURE_REASONS)[number];
+
+// =============================================================================
+// Ticket automation rules (stored in routing_rules with ruleType = 'TICKET')
+// =============================================================================
+
+/**
+ * Discriminator for the shared routing_rules table. Lead routing and ticket
+ * routing keep different vocabularies, so each reads only its own rows.
+ */
+export const ROUTING_RULE_TYPES = ['LEAD', 'TICKET'] as const;
+export type RoutingRuleType = (typeof ROUTING_RULE_TYPES)[number];
+
+/**
+ * Operators for ticket rule conditions. `in`/`not_in` take a list of values;
+ * `gte`/`lte` compare priority by routing weight and apply to ticketPriority only.
+ */
+export const TICKET_ROUTING_CONDITION_OPERATORS = [
+  'equals',
+  'not_equals',
+  'in',
+  'not_in',
+  'gte',
+  'lte',
+] as const;
+export type TicketRoutingConditionOperator = (typeof TICKET_ROUTING_CONDITION_OPERATORS)[number];
+
+/**
+ * Actions the ticket routing engine executes when a rule matches.
+ */
+export const TICKET_ROUTING_ACTION_TYPES = ['assign_to_user', 'assign_to_skill'] as const;
+export type TicketRoutingActionType = (typeof TICKET_ROUTING_ACTION_TYPES)[number];
+
+/**
+ * Closed set of values each ticket condition field may be compared against.
+ */
+export const TICKET_ROUTING_FIELD_VALUES: Record<TicketRoutingConditionField, readonly string[]> = {
+  ticketPriority: TICKET_PRIORITIES,
+  ticketCategory: TICKET_CATEGORIES,
+  ticketStatus: TICKET_STATUSES,
+  isSlaBreached: ['true', 'false'],
+  slaStatus: SLA_STATUSES,
+};
+
+export interface TicketRoutingCondition {
+  field: TicketRoutingConditionField;
+  operator: TicketRoutingConditionOperator;
+  value: string | string[];
+}
+
+export type TicketRoutingContext = Record<TicketRoutingConditionField, string>;
+
+/**
+ * Evaluate ticket rule conditions (logical AND) against a ticket's facts.
+ * An empty condition list never matches: a rule must say what it applies to.
+ */
+export function evaluateTicketRoutingConditions(
+  conditions: readonly TicketRoutingCondition[],
+  context: Partial<TicketRoutingContext>
+): boolean {
+  if (conditions.length === 0) return false;
+  return conditions.every((condition) => {
+    const actual = context[condition.field];
+    if (actual === undefined) return false;
+    const expected = condition.value;
+    switch (condition.operator) {
+      case 'equals':
+        return actual === expected;
+      case 'not_equals':
+        return actual !== expected;
+      case 'in':
+        return Array.isArray(expected) && expected.includes(actual);
+      case 'not_in':
+        return Array.isArray(expected) && !expected.includes(actual);
+      case 'gte':
+      case 'lte': {
+        const actualWeight = TICKET_PRIORITY_ROUTING_WEIGHT[actual as TicketPriority];
+        const expectedWeight = TICKET_PRIORITY_ROUTING_WEIGHT[expected as TicketPriority];
+        if (actualWeight === undefined || expectedWeight === undefined) return false;
+        return condition.operator === 'gte'
+          ? actualWeight >= expectedWeight
+          : actualWeight <= expectedWeight;
+      }
+    }
+  });
+}
