@@ -46,7 +46,7 @@ jobs:
         id: detect
         env:
           EVENT: ${{ github.event_name }}
-          DIFF_MODE: pr
+          DIFF_MODE: last-commit
         run: |
           if [ "$DIFF_MODE" = "last-commit" ]; then base=HEAD^2^1; head=HEAD^2; else base=HEAD^1; head=HEAD; fi
           node scripts/ci/affected.mjs --event "$EVENT" --base "$base" --head "$head"
