@@ -13,11 +13,20 @@
  * @module apps/web/proxy
  */
 
+import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { decrypt, PUBLIC_ROUTES, PROTECTED_ROUTES, hasRole } from '@/lib/session';
 import { isTokenUsable } from '@/lib/auth/jwt';
 import { PROTECTED_ROUTE_PREFIXES, matchesRoutePrefix } from './src/lib/auth/route-protection';
+import { FONTS_READY_SCRIPT } from './src/lib/fonts-ready';
+
+/**
+ * CSP source for the root layout's inline fonts-ready script. Allowed by hash
+ * rather than nonce because the layout renders it without the request nonce;
+ * hashing the exported string keeps the CSP in step with any edit to it.
+ */
+const FONTS_READY_SCRIPT_CSP_HASH = `'sha256-${createHash('sha256').update(FONTS_READY_SCRIPT).digest('base64')}'`;
 
 /**
  * Build the per-request CSP. `'strict-dynamic'` lets the nonce-trusted
@@ -34,7 +43,7 @@ import { PROTECTED_ROUTE_PREFIXES, matchesRoutePrefix } from './src/lib/auth/rou
 function buildCsp(nonce: string): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://js.stripe.com`,
+    `script-src 'self' 'nonce-${nonce}' ${FONTS_READY_SCRIPT_CSP_HASH} 'strict-dynamic' https://js.stripe.com`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
