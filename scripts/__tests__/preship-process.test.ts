@@ -498,7 +498,9 @@ describe('orphaned step trees', () => {
       file,
       `import { spawn } from 'node:child_process';
 import { gateStatePath, writeGateState } from ${JSON.stringify(PROCESS_URL)};
-const step = spawn(process.execPath, ['-e', ${JSON.stringify(STEP_SOURCE)}], { stdio: ['ignore', 'pipe', 'ignore'] });
+// Detached on POSIX, as the real gate spawns steps (preship-gate.mjs): the step
+// must lead its own process group for the watchdog's group kill to reach the grandchild.
+const step = spawn(process.execPath, ['-e', ${JSON.stringify(STEP_SOURCE)}], { stdio: ['ignore', 'pipe', 'ignore'], detached: process.platform !== 'win32' });
 step.stdout.once('data', (d) => {
   const state = { gate_pid: process.pid, child_pid: step.pid, child_start_ms: Date.now() };
   writeGateState(state, process.env.STATE_DIR);
