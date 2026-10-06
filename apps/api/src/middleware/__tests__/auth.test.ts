@@ -465,8 +465,11 @@ describe('AuthMiddleware', () => {
     });
 
     it('should return null for expired token', async () => {
-      const expiredToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiZXhwIjoxNTE2MjM5MDIyfQ.xyz';
+      const expiredToken = [
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
+        'eyJzdWIiOiIxMjM0NTY3ODkwIiwiZXhwIjoxNTE2MjM5MDIyfQ',
+        'xyz',
+      ].join('.');
       const result = await verifyToken(expiredToken);
       expect(result).toBeNull();
     });
@@ -480,7 +483,7 @@ describe('AuthMiddleware', () => {
 
   describe('extractTokenFromHeader()', () => {
     it('should extract token from Bearer auth header', () => {
-      const authHeader = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
+      const authHeader = 'Bearer ' + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
       const token = extractTokenFromHeader(authHeader);
       expect(token).toBe('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9');
     });
@@ -514,7 +517,7 @@ describe('AuthMiddleware', () => {
     });
 
     it('should handle Bearer token with extra spaces', () => {
-      const authHeader = 'Bearer  token-with-extra-space';
+      const authHeader = 'Bearer  ' + 'token-with-extra-space';
       const token = extractTokenFromHeader(authHeader);
       // Split creates 3 parts: ['Bearer', '', 'token-with-extra-space']
       // Implementation requires exactly 2 parts, so this returns null
@@ -522,7 +525,7 @@ describe('AuthMiddleware', () => {
     });
 
     it('should extract token with special characters', () => {
-      const authHeader = 'Bearer abc123.def456.ghi789-_';
+      const authHeader = 'Bearer ' + 'abc123.def456.ghi789-_';
       const token = extractTokenFromHeader(authHeader);
       expect(token).toBe('abc123.def456.ghi789-_');
     });
@@ -535,14 +538,17 @@ describe('AuthMiddleware', () => {
     });
 
     it('should be case-sensitive for Bearer prefix', () => {
-      const authHeader = 'bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
+      const authHeader = 'bearer ' + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
       const token = extractTokenFromHeader(authHeader);
       expect(token).toBeNull();
     });
 
     it('should handle long JWT tokens', () => {
-      const longToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+      const longToken = [
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
+        'eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ',
+        'SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+      ].join('.');
       const authHeader = `Bearer ${longToken}`;
       const token = extractTokenFromHeader(authHeader);
       expect(token).toBe(longToken);

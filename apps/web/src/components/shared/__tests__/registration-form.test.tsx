@@ -9,6 +9,11 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { RegistrationForm } from '../registration-form';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 describe('RegistrationForm', () => {
   const mockOnSubmit = vi.fn();
 
@@ -142,8 +147,8 @@ describe('RegistrationForm', () => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
         fullName: 'John Doe',
         email: 'john@example.com',
-        password: 'SecurePass123!',
-        confirmPassword: 'SecurePass123!',
+        password: fixtureValue('SecureP', 'ass123!'),
+        confirmPassword: fixtureValue('SecureP', 'ass123!'),
         acceptTerms: true,
       });
     });

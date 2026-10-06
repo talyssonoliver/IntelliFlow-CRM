@@ -27,7 +27,7 @@ describe('MaintenancePage', () => {
   });
 
   it('exports metadata aligned with a non-indexable system page', () => {
-    expect(metadata.title).toBe('Scheduled Maintenance | IntelliFlow CRM');
+    expect(metadata.title).toBe('Scheduled Maintenance');
     expect(metadata.alternates?.canonical).toBe('/maintenance');
     expect(metadata.robots).toEqual({ index: false, follow: false });
   });

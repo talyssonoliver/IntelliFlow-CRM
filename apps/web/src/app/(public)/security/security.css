@@ -1,0 +1,140 @@
+/* Security, in the Aurora design. Every rule is scoped under .aurora-site .aurora-security. */
+
+/* Navy hero with the aurora ribbons, as the landing's Security section. */
+.aurora-site .aurora-security .asec-hero {
+  position: relative;
+  overflow: hidden;
+  margin: 16px 16px 0;
+  border-radius: 28px;
+  padding: 104px 0 112px;
+  background: var(--navy);
+  text-align: center;
+}
+.aurora-site .aurora-security .asec-art img {
+  position: absolute;
+  max-width: none;
+  opacity: 0.7;
+  pointer-events: none;
+}
+.aurora-site .aurora-security .asec-art .left {
+  left: -200px;
+  bottom: -260px;
+  width: 620px;
+}
+.aurora-site .aurora-security .asec-art .right {
+  right: -240px;
+  bottom: -320px;
+  width: 820px;
+  transform: rotate(-6deg);
+}
+.aurora-site .aurora-security .asec-hero-inner {
+  position: relative;
+}
+.aurora-site .aurora-security .asec-eyebrow {
+  color: var(--cyan);
+}
+.aurora-site .aurora-security .asec-h1 {
+  color: #fff;
+}
+.aurora-site .aurora-security .asec-lede {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Control groups */
+.aurora-site .aurora-security .asec-group {
+  padding: 72px 0 0;
+}
+.aurora-site .aurora-security .asec-h2 {
+  font-size: clamp(24px, 2.6vw, 32px);
+}
+.aurora-site .aurora-security .asec-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.aurora-site .aurora-security .asec-card {
+  padding: 26px 24px;
+}
+.aurora-site .aurora-security .asec-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(40, 217, 212, 0.14);
+  color: #0e7f7b;
+  font-size: 22px;
+}
+.aurora-site .aurora-security .asec-card h3 {
+  margin: 18px 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--navy);
+}
+.aurora-site .aurora-security .asec-card p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+/* Closing */
+.aurora-site .aurora-security .asec-close {
+  padding: 88px 0 0;
+}
+.aurora-site .aurora-security .asec-close-card {
+  padding: 48px 32px;
+  text-align: center;
+}
+.aurora-site .aurora-security .asec-close-card h2 {
+  margin: 0;
+  font-size: clamp(24px, 2.6vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+}
+.aurora-site .aurora-security .asec-close-card p {
+  margin: 12px auto 0;
+  max-width: 560px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.aurora-site .aurora-security .asec-close-cta {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+@media (max-width: 960px) {
+  .aurora-site .aurora-security .asec-hero {
+    margin: 8px 8px 0;
+    border-radius: 22px;
+    padding: 72px 0 80px;
+  }
+  .aurora-site .aurora-security .asec-art .left {
+    width: 360px;
+    left: -170px;
+    bottom: -150px;
+  }
+  .aurora-site .aurora-security .asec-art .right {
+    width: 460px;
+    right: -230px;
+    bottom: -200px;
+  }
+  .aurora-site .aurora-security .asec-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .aurora-site .aurora-security .asec-group {
+    padding-top: 56px;
+  }
+  .aurora-site .aurora-security .asec-close-cta {
+    flex-direction: column;
+  }
+}

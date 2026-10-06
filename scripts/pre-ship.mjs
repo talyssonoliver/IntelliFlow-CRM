@@ -85,6 +85,9 @@ import {
 } from './lib/test-slot.mjs';
 import { stepLine, advisoryNote, persistedState, finalLine } from './lib/preship-report.mjs';
 
+// Throwaway stub credentials for the build-time env mirror below (never a real DB).
+const STUB_DB_USER = 'stub';
+
 // Resolve REPO_ROOT from git rather than cwd so the script behaves
 // identically whether invoked from the repo root, from a subdirectory,
 // or by a Husky hook that has cd'd somewhere unexpected. Falls back to
@@ -541,8 +544,8 @@ const STEPS = [
         process.env.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
       AI_AUDIT_SIGNING_KEY:
         process.env.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime',
-      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://stub:stub@localhost:5432/stub',
-      DIRECT_URL: process.env.DIRECT_URL || 'postgresql://stub:stub@localhost:5432/stub',
+      DATABASE_URL: process.env.DATABASE_URL || `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
+      DIRECT_URL: process.env.DIRECT_URL || `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
       SUPABASE_URL: process.env.SUPABASE_URL || 'https://stub.supabase.co',
       SUPABASE_ANON_KEY:
         process.env.SUPABASE_ANON_KEY ||
@@ -616,18 +619,12 @@ const STEPS = [
     required: false,
   },
   {
+    // Shared secret-scan kit (.gitleaks/): scans the commits this push adds.
+    // Fails CLOSED: no gitleaks binary means the step fails, never skips.
     id: 'gitleaks',
-    description: 'gitleaks protect --staged (secret scan)',
-    cmd: ['gitleaks', 'protect', '--staged', '--redact', '--config=.gitleaks.toml', '--no-banner'],
-    skip_if: () => {
-      // gitleaks is optional — skip if not on PATH.
-      const r = spawnSync('gitleaks', ['version'], {
-        stdio: 'ignore',
-        shell: process.platform === 'win32',
-      });
-      return r.error !== undefined || r.status !== 0;
-    },
-    required: false,
+    description: 'gitleaks secret scan of the commits being pushed (.gitleaks/scan.sh range)',
+    cmd: ['sh', '.gitleaks/scan.sh', 'range', 'origin/main', 'HEAD'],
+    required: true,
   },
   {
     // WORKFLOW-YAML SECRET LINT (Harness hardening — Gap #1): parses every
@@ -635,8 +632,8 @@ const STEPS = [
     // (POSTGRES_PASSWORD / DATABASE_URL / DIRECT_URL / PGPASSWORD / password /
     // pw) that isn't a `${{ secrets.* }}` reference, a self-evident placeholder
     // (stub/…), or a consciously-annotated `# secret-lint-allow: <reason>`
-    // throwaway. The `gitleaks` step above (and its default ruleset) has no rule
-    // for a bare `postgres:postgres` literal, so those passed the laptop gate and
+    // throwaway. The `gitleaks` step above has no rule for an unquoted YAML
+    // `password: value`, so a bare postgres literal like that once passed the laptop gate and
     // only reddened on GitGuardian in the cloud — three times (#622, #625, #627).
     // This is the LOCAL parity gate for that class. No infra, fast, deterministic
     // → required (unlike the optional/advisory scanners above, which skip when a

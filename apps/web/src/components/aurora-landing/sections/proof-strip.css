@@ -1,0 +1,28 @@
+/*
+ * ProofStrip: a white band whose rounded top rises over the tail end of the stage,
+ * so the hand-off reads as one continuous piece rather than a hard cut. Scoped
+ * under .aurora-page; the marker class ".proof-band" gives these rules enough
+ * specificity to win over aurora-landing.css's plain ".aurora-page .proof" rules
+ * regardless of CSS import order.
+ */
+.aurora-page .proof.proof-band {
+  position: relative;
+  z-index: 2;
+  margin-top: -32px;
+  border-top: 0;
+  border-radius: 32px 32px 0 0;
+  box-shadow: 0 -24px 48px -30px rgba(17, 23, 91, 0.14);
+}
+
+@media (max-width: 960px) {
+  .aurora-page .proof.proof-band {
+    margin-top: -24px;
+    border-radius: 24px 24px 0 0;
+  }
+  .aurora-page .proof.proof-band .proof-row {
+    row-gap: 4px;
+  }
+  .aurora-page .proof.proof-band .stat span {
+    line-height: 1.4;
+  }
+}

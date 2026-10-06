@@ -41,7 +41,9 @@ vi.mock('next/server', () => ({
   },
 }));
 
+import { createHash } from 'node:crypto';
 import { proxy, proxyConfig } from '../../proxy';
+import { FONTS_READY_SCRIPT } from '@/lib/fonts-ready';
 
 function createTestJwt(exp: number): string {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
@@ -189,6 +191,22 @@ describe('root proxy.ts', () => {
       await proxy(mkReq('/auth/mfa/verify'));
       expect(mockNextFn).toHaveBeenCalled();
       expect(mockRedirect).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Content-Security-Policy', () => {
+    it('allows the root layout fonts-ready inline script by its sha256 hash', async () => {
+      const res: any = await proxy(mkReq('/pricing'));
+      const cspCall = res.headers.set.mock.calls.find(
+        ([name]: [string]) => name === 'Content-Security-Policy'
+      );
+      expect(cspCall).toBeDefined();
+      const scriptSrc = String(cspCall[1])
+        .split(';')
+        .map((d: string) => d.trim())
+        .find((d: string) => d.startsWith('script-src'));
+      const hash = createHash('sha256').update(FONTS_READY_SCRIPT).digest('base64');
+      expect(scriptSrc).toContain(`'sha256-${hash}'`);
     });
   });
 

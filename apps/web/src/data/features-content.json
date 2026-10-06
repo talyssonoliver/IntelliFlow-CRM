@@ -1,181 +1,181 @@
 {
   "categories": [
     {
-      "id": "core-crm",
-      "name": "Core CRM",
-      "description": "Essential tools for modern sales teams",
-      "icon": "workspace_premium",
+      "id": "agents",
+      "name": "Agents that do the work",
+      "icon": "smart_toy",
+      "description": "AI agents prepare the work across leads, deals and cases. A person approves every step.",
       "features": [
         {
           "id": "ai-lead-scoring",
-          "title": "AI Lead Scoring",
-          "description": "Automatically score and prioritize leads using advanced machine learning models. Focus on high-value opportunities and close more deals faster.",
-          "icon": "auto_awesome",
+          "title": "Lead scoring",
+          "icon": "insights",
+          "description": "Agents score every lead and account, and show the reasons behind each score.",
           "benefits": [
-            "Save time with automated prioritization",
-            "Focus on hot leads",
-            "Increase conversion rates by 30%+"
+            "A score on every lead",
+            "The reasons behind each score",
+            "Hot leads first"
           ],
-          "learnMoreUrl": "/features/ai-lead-scoring"
+          "learnMoreUrl": "/#agents"
         },
         {
-          "id": "smart-contacts",
-          "title": "Smart Contact Management",
-          "description": "360° view of your contacts with AI-powered insights, relationship mapping, and intelligent suggestions for next best actions.",
-          "icon": "contacts",
+          "id": "drafted-follow-ups",
+          "title": "Drafted follow-ups",
+          "icon": "edit_note",
+          "description": "For every deal going quiet, an agent drafts the next email for a person to approve.",
           "benefits": [
-            "Complete contact history",
-            "Relationship intelligence",
-            "Automated data enrichment"
+            "Drafts ready to review",
+            "Edit before it sends",
+            "Nothing sends without approval"
           ],
-          "learnMoreUrl": "/features/smart-contacts"
+          "learnMoreUrl": "/#agents"
         },
+        {
+          "id": "approval-queue",
+          "title": "One approval queue",
+          "icon": "fact_check",
+          "description": "Six kinds of AI work land in one queue, each with what the agent noticed and where it looked.",
+          "benefits": [
+            "Approve, edit or dismiss",
+            "Reasons and sources shown",
+            "Every decision logged"
+          ],
+          "learnMoreUrl": "/#agents"
+        },
+        {
+          "id": "agent-types",
+          "title": "15 agent types",
+          "icon": "tune",
+          "description": "Scoring, sentiment, churn risk, next best action and more. Customise what each one does for your team.",
+          "benefits": [
+            "Lead and account scoring",
+            "Sentiment and churn risk",
+            "Next best action"
+          ],
+          "learnMoreUrl": "/#agents"
+        }
+      ]
+    },
+    {
+      "id": "pipeline-service",
+      "name": "Your pipeline and service",
+      "icon": "view_kanban",
+      "description": "One record of every deal, case and conversation.",
+      "features": [
         {
           "id": "pipeline-analytics",
-          "title": "Pipeline Analytics",
-          "description": "Real-time analytics and forecasting for your sales pipeline. Track deals, predict revenue, and identify bottlenecks before they impact your targets.",
-          "icon": "trending_up",
+          "title": "Pipeline and forecast",
+          "icon": "monitoring",
+          "description": "The deal board, the list and the forecast are the same pipeline, with stalled deals flagged.",
           "benefits": [
-            "Real-time forecasting",
-            "Deal velocity insights",
-            "Bottleneck detection"
+            "Board, list and forecast",
+            "Stalled deals flagged",
+            "Deal value by stage"
           ],
-          "learnMoreUrl": "/features/pipeline-analytics"
+          "learnMoreUrl": "/#platform"
+        },
+        {
+          "id": "cases",
+          "title": "Cases and tickets",
+          "icon": "support_agent",
+          "description": "Cases routed, prioritised and summarised, with SLA timers and sentiment on every conversation.",
+          "benefits": [
+            "SLA timers",
+            "Sentiment on every conversation",
+            "Churn risk flagged"
+          ],
+          "learnMoreUrl": "/#platform"
+        },
+        {
+          "id": "inbox-calendar",
+          "title": "Email and calendar",
+          "icon": "mail",
+          "description": "Compose, reply and book meetings without leaving the record.",
+          "benefits": [
+            "Gmail and Outlook",
+            "Meetings on the record",
+            "No separate inbox tab"
+          ],
+          "learnMoreUrl": "/#platform"
         },
         {
           "id": "workflow-automation",
-          "title": "Workflow Automation",
-          "description": "Visual workflow builder with pre-built templates. Automate repetitive tasks, enforce business rules, and ensure consistent processes across your team.",
-          "icon": "device_hub",
+          "title": "Workflow automation",
+          "icon": "account_tree",
+          "description": "Build multi-step workflows, and extend the builder with your own node and action types.",
           "benefits": [
-            "Drag-and-drop builder",
-            "50+ templates included",
-            "Save 10+ hours per week"
+            "Multi-step workflows",
+            "Your own node types",
+            "Webhook-based actions"
           ],
-          "learnMoreUrl": "/features/workflow-automation"
+          "learnMoreUrl": "/#platform"
         }
       ]
     },
     {
-      "id": "ai-intelligence",
-      "name": "AI & Intelligence",
-      "description": "Advanced AI capabilities for smarter decisions",
-      "icon": "psychology",
+      "id": "connected-secure",
+      "name": "Connected and secure",
+      "icon": "shield_lock",
+      "description": "Works with the tools you use, with protection on from day one.",
       "features": [
         {
-          "id": "ai-insights",
-          "title": "AI-Powered Insights",
-          "description": "Predictive analytics for churn risk, customer lifetime value, and next best actions. Let AI guide your sales strategy with data-driven recommendations.",
-          "icon": "insights",
+          "id": "connectors",
+          "title": "Six connectors",
+          "icon": "hub",
+          "description": "Gmail, Outlook, Slack, Microsoft Teams, Stripe and PayPal, plus Google and Microsoft sign-in.",
           "benefits": [
-            "Churn prediction",
-            "Lifetime value forecasting",
-            "Next best action suggestions"
+            "Email and calendar",
+            "Chat and notifications",
+            "Payments"
           ],
-          "learnMoreUrl": "/features/ai-insights"
+          "learnMoreUrl": "/#platform"
         },
         {
-          "id": "explainability",
-          "title": "AI Explainability",
-          "description": "Transparent AI with explainable recommendations. Understand why AI made specific suggestions and build trust in automated decisions.",
-          "icon": "view_in_ar",
-          "benefits": [
-            "Transparent AI decisions",
-            "Model explanations",
-            "Trust scoring >80%"
-          ],
-          "learnMoreUrl": "/features/explainability"
-        },
-        {
-          "id": "feedback-loop",
-          "title": "Human-in-the-Loop",
-          "description": "Continuous AI improvement through human feedback. Override AI suggestions, provide corrections, and help the system learn from your expertise.",
-          "icon": "thumbs_up_down",
-          "benefits": [
-            "AI learns from your team",
-            "Continuous improvement",
-            "100% override control"
-          ],
-          "learnMoreUrl": "/features/feedback-loop"
-        },
-        {
-          "id": "document-ai",
-          "title": "Document Intelligence",
-          "description": "AI-powered document analysis and e-signature integration. Extract insights from contracts, automate document workflows, and close deals faster.",
-          "icon": "description",
-          "benefits": [
-            "Contract analysis",
-            "E-signature integration",
-            "Automated extraction"
-          ],
-          "learnMoreUrl": "/features/document-ai"
-        }
-      ]
-    },
-    {
-      "id": "security-governance",
-      "name": "Security & Governance",
-      "description": "Enterprise-grade security and compliance",
-      "icon": "shield",
-      "features": [
-        {
-          "id": "zero-trust",
-          "title": "Zero Trust Security",
-          "description": "Row-level security, comprehensive audit logging, and zero-trust architecture. Every action is logged, verified, and traceable for complete accountability.",
+          "id": "approval-audit",
+          "title": "Approval and audit",
           "icon": "verified_user",
+          "description": "No AI action goes out without a person's approval, and every change is written to an audit log.",
           "benefits": [
-            "Row-level security",
-            "Complete audit trail",
-            "Zero trust architecture"
+            "Human approval on every AI action",
+            "Audit log of every change",
+            "Reasons shown before you decide"
           ],
-          "learnMoreUrl": "/features/zero-trust"
+          "learnMoreUrl": "/security"
         },
         {
-          "id": "rbac",
-          "title": "Role-Based Access Control",
-          "description": "Granular permissions and role management. Define custom roles, control access to sensitive data, and enforce least-privilege principles.",
-          "icon": "admin_panel_settings",
+          "id": "isolation-mfa",
+          "title": "Isolation and sign-in",
+          "icon": "lock",
+          "description": "Each workspace's data is kept apart, and multi-factor sign-in is available on every account.",
           "benefits": [
-            "Custom role definitions",
-            "Granular permissions",
-            "Least-privilege enforcement"
+            "Workspace isolation",
+            "Multi-factor sign-in available",
+            "Enterprise single sign-on"
           ],
-          "learnMoreUrl": "/features/rbac"
+          "learnMoreUrl": "/security"
         },
         {
-          "id": "compliance",
-          "title": "Compliance Ready",
-          "description": "GDPR, ISO 27001, and ISO 42001 (AI) compliance built-in. Data residency controls, right to deletion, and comprehensive compliance reporting.",
-          "icon": "policy",
+          "id": "developers",
+          "title": "Build on Aurora",
+          "icon": "code",
+          "description": "Inbound and outbound webhooks, React hooks and a CLI. The TypeScript SDK is in beta and API keys are coming soon.",
           "benefits": [
-            "GDPR compliant",
-            "ISO 27001/42001 ready",
-            "Data residency controls"
+            "Webhooks",
+            "React hooks and a CLI",
+            "TypeScript SDK in beta"
           ],
-          "learnMoreUrl": "/features/compliance"
-        },
-        {
-          "id": "multi-tenancy",
-          "title": "Secure Multi-Tenancy",
-          "description": "Complete workspace isolation with tenant-level security. Your data stays private with cryptographic separation and dedicated encryption keys.",
-          "icon": "domain",
-          "benefits": [
-            "Complete isolation",
-            "Dedicated encryption",
-            "99.9% uptime SLA"
-          ],
-          "learnMoreUrl": "/features/multi-tenancy"
+          "learnMoreUrl": "/#platform"
         }
       ]
     }
   ],
   "metadata": {
-    "lastUpdated": "2025-12-30",
+    "lastUpdated": "2026-10-02",
     "totalFeatures": 12,
     "totalCategories": 3,
     "version": "1.0.0",
     "schema_version": "1.0",
     "created_by": "PG-002 Implementation",
-    "notes": "Initial feature set for public Features page. Content can be updated without code changes by modifying this JSON file."
+    "notes": "Aurora features page. Every claim is one the product backs today: no metrics, certifications or SLAs."
   }
 }

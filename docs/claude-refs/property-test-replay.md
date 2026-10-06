@@ -139,7 +139,7 @@ make a real race silently pass.
 # bring up a throwaway pgvector Postgres and point the tests at it
 docker run --rm -d -p 5433:5432 -e POSTGRES_PASSWORD=test -e POSTGRES_USER=test \
   -e POSTGRES_DB=ifc_proptest --name ifc-proptest pgvector/pgvector:pg16
-export TEST_DATABASE_URL=postgresql://test:test@localhost:5433/ifc_proptest
+export TEST_DATABASE_URL=postgresql://<user>:<password>@localhost:5433/ifc_proptest
 psql "$TEST_DATABASE_URL" -c 'CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS btree_gist; CREATE EXTENSION IF NOT EXISTS pg_trgm;'
 pnpm --filter @intelliflow/db exec prisma db push --url "$TEST_DATABASE_URL"
 # apply EXCLUDE constraints that schema.prisma can't express (e.g. no double-booking)

@@ -58,12 +58,12 @@ test.describe('Material Symbols Icons Loading', () => {
       });
 
       // Check icon visibility
-      const iconElements = page.locator('.material-symbols-outlined');
-      const count = await iconElements.count();
-
-      if (count > 0) {
-        await expect(iconElements.first()).toBeVisible();
-      }
+      // The first icons in the DOM sit in the closed onboarding <dialog> (display:none),
+      // so check the first icon actually on screen.
+      const iconElements = page.locator('.material-symbols-outlined').filter({ visible: true });
+      // The home page always renders header icons, so one must be on screen;
+      // the visible filter must not let this pass with nothing to check.
+      await expect(iconElements.first()).toBeVisible();
     });
   });
 
@@ -76,26 +76,41 @@ test.describe('Material Symbols Icons Loading', () => {
         timeout: 10000,
       });
 
-      const iconElements = page.locator('.material-symbols-outlined');
-      const count = await iconElements.count();
+      // Check EVERY rendered icon, not just the first in DOM order: which icon
+      // comes first (and its parent's layout) differs by page and engine.
+      const icons = await page.evaluate(() =>
+        Array.from(document.querySelectorAll<HTMLElement>('.material-symbols-outlined'))
+          .filter((el) => el.getClientRects().length > 0)
+          .map((el) => {
+            const computed = getComputedStyle(el);
+            const parentDisplay = el.parentElement
+              ? getComputedStyle(el.parentElement).display
+              : '';
+            return {
+              text: el.textContent?.trim() ?? '',
+              display: computed.display,
+              // A flex/grid item is blockified (CSS Display §2.7): its specified
+              // inline-block computes to block. That is the parent's layout, not
+              // a lost icon rule.
+              blockified: /^(inline-)?(flex|grid)$/.test(parentDisplay),
+              optsOutOfClip: el.classList.contains('overflow-visible'),
+              overflow: computed.overflow,
+              width: computed.width,
+              height: computed.height,
+            };
+          })
+      );
 
-      if (count > 0) {
-        // Check that icons have proper inline-block display and dimensions
-        const styles = await iconElements.first().evaluate((el) => {
-          const computed = getComputedStyle(el);
-          return {
-            display: computed.display,
-            width: computed.width,
-            height: computed.height,
-            overflow: computed.overflow,
-          };
-        });
-
-        expect(styles.display).toBe('inline-block');
-        expect(styles.overflow).toBe('hidden');
+      expect(icons.length).toBeGreaterThan(0);
+      for (const icon of icons) {
+        const label = `icon "${icon.text}"`;
+        expect(icon.display, label).toBe(icon.blockified ? 'block' : 'inline-block');
+        // Reserved box clips overflow, except icons that explicitly opt out
+        // (a smaller h-*/w-* box around the 24px glyph).
+        expect(icon.overflow, label).toBe(icon.optsOutOfClip ? 'visible' : 'hidden');
         // Width and height should be set (not 'auto')
-        expect(styles.width).not.toBe('auto');
-        expect(styles.height).not.toBe('auto');
+        expect(icon.width, label).not.toBe('auto');
+        expect(icon.height, label).not.toBe('auto');
       }
     });
 
@@ -166,13 +181,12 @@ test.describe('Material Symbols Icons Loading', () => {
       });
 
       // Check visibility during load - icons should be hidden (visibility: hidden)
-      const iconElements = page.locator('.material-symbols-outlined');
-      const count = await iconElements.count();
-
-      if (count > 0) {
-        // Verify icons are now visible (font loaded)
-        await expect(iconElements.first()).toBeVisible();
-      }
+      // The first icons in the DOM sit in the closed onboarding <dialog> (display:none),
+      // so check the first icon actually on screen.
+      const iconElements = page.locator('.material-symbols-outlined').filter({ visible: true });
+      // The home page always renders header icons, so one must be on screen;
+      // the visible filter must not let this pass with nothing to check.
+      await expect(iconElements.first()).toBeVisible();
     });
 
     test('font-display should be set to block', async ({ page }) => {
@@ -224,13 +238,15 @@ test.describe('Material Symbols Icons Loading', () => {
             fontFamily: computed.fontFamily,
             fontStyle: computed.fontStyle,
             lineHeight: computed.lineHeight,
+            fontSize: computed.fontSize,
             textRendering: computed.textRendering,
           };
         });
 
         expect(iconProps.fontFamily).toContain('Material Symbols Outlined');
         expect(iconProps.fontStyle).toBe('normal');
-        expect(iconProps.lineHeight).toBe('1');
+        // line-height: 1 resolves to the font size in px in getComputedStyle (never '1').
+        expect(iconProps.lineHeight).toBe(iconProps.fontSize);
         expect(iconProps.textRendering).toBe('optimizelegibility');
       }
     });

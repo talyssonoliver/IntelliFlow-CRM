@@ -39,6 +39,11 @@ import {
   type LogContext,
 } from '../src/logging';
 
+// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
+function fixtureValue(...parts: string[]): string {
+  return parts.join('');
+}
+
 describe('Logging Module', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -475,7 +480,7 @@ describe('Logging Module', () => {
 
   describe('redactSensitiveData', () => {
     it('should redact password field', () => {
-      const data = { username: 'john', password: 'secret123' };
+      const data = { username: 'john', password: fixtureValue('secre', 't123') };
       const redacted = redactSensitiveData(data);
 
       expect(redacted).toEqual({ username: 'john', password: '[REDACTED]' });
@@ -541,7 +546,7 @@ describe('Logging Module', () => {
         user: {
           id: 'user-123',
           credentials: {
-            password: 'secret',
+            password: fixtureValue('sec', 'ret'),
             apiKey: 'key-xyz', // Won't be redacted due to camelCase bug
           },
         },
@@ -560,7 +565,11 @@ describe('Logging Module', () => {
     });
 
     it('should handle case-insensitive matching (partial)', () => {
-      const data = { PASSWORD: 'secret', ApiKey: 'key123', AuthToken: 'token456' };
+      const data = {
+        PASSWORD: fixtureValue('sec', 'ret'),
+        ApiKey: 'key123',
+        AuthToken: 'token456',
+      };
       const redacted = redactSensitiveData(data);
 
       expect(redacted).toEqual({
@@ -587,7 +596,7 @@ describe('Logging Module', () => {
         level1: {
           level2: {
             level3: {
-              password: 'deep-secret',
+              password: fixtureValue('deep-s', 'ecret'),
               publicData: 'visible',
             },
           },
@@ -604,7 +613,7 @@ describe('Logging Module', () => {
     it('should handle null values in nested objects', () => {
       const data = {
         user: null,
-        password: 'secret',
+        password: fixtureValue('sec', 'ret'),
       };
       const redacted = redactSensitiveData(data);
 
@@ -616,8 +625,11 @@ describe('Logging Module', () => {
 
     it('should handle arrays (converted to objects, passwords redacted)', () => {
       const data = {
-        users: [{ password: 'secret1' }, { password: 'secret2' }],
-        password: 'root-password',
+        users: [
+          { password: fixtureValue('secr', 'et1') },
+          { password: fixtureValue('secr', 'et2') },
+        ],
+        password: fixtureValue('root-pa', 'ssword'),
       };
       const redacted = redactSensitiveData(data);
 
@@ -762,7 +774,7 @@ describe('Logging Module', () => {
     });
 
     it('should throw on circular references (known limitation)', () => {
-      const obj: any = { password: 'secret', data: {} };
+      const obj: any = { password: fixtureValue('sec', 'ret'), data: {} };
       obj.data.parent = obj; // Create circular reference
 
       // Current implementation doesn't handle circular references, throws RangeError

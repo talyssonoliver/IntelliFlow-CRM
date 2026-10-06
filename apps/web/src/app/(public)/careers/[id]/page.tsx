@@ -23,16 +23,16 @@ export async function generateMetadata({
 
   if (!job) {
     return {
-      title: 'Job Not Found | IntelliFlow Careers',
+      title: 'Job Not Found | Aurora Careers',
     };
   }
 
   return {
-    title: `${job.title} | IntelliFlow Careers`,
+    title: `${job.title} | Aurora Careers`,
     description: job.description.slice(0, 160),
     openGraph: {
       images: OG_IMAGES,
-      title: `${job.title} at IntelliFlow`,
+      title: `${job.title} at Aurora`,
       description: job.description.slice(0, 160),
       type: 'website',
     },
@@ -65,7 +65,7 @@ export default async function CareerDetailPage({
   }));
 
   return (
-    <main id="main-content" className="bg-white dark:bg-slate-900 min-h-screen">
+    <div className="bg-white dark:bg-slate-900 min-h-screen">
       {/* Job Details */}
       <JobDetailTemplate job={job} relatedJobs={relatedJobs} />
 
@@ -80,8 +80,8 @@ export default async function CareerDetailPage({
             Apply for {job.title}
           </h2>
           <p className="text-slate-600 dark:text-slate-300 mb-8">
-            Ready to join IntelliFlow? Submit your application below and we&apos;ll be in touch
-            within 5 business days.
+            Ready to join Aurora? Submit your application below and we&apos;ll be in touch within 5
+            business days.
           </p>
           <ApplicationForm positions={allPositions} />
         </div>
@@ -94,12 +94,12 @@ export default async function CareerDetailPage({
             Equal Opportunity Employer
           </h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            IntelliFlow is committed to creating a diverse and inclusive workplace. We welcome
+            Aurora is committed to creating a diverse and inclusive workplace. We welcome
             applications from all qualified candidates regardless of race, color, religion, gender,
             sexual orientation, national origin, age, disability, or veteran status.
           </p>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
