@@ -178,6 +178,29 @@ describe('PrismaAccountRepository', () => {
       });
     });
 
+    it('writes geography, and null when absent (PG-197)', async () => {
+      mockPrisma.account.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.account.create.mockResolvedValue({});
+      const withGeo = Account.create({
+        name: 'Geo Corp',
+        country: 'gb',
+        region: 'London',
+        postalCode: 'sw1a 1aa',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-123',
+      }).value;
+
+      await repository.save(withGeo);
+      await repository.save(testAccount);
+
+      expect(mockPrisma.account.create).toHaveBeenNthCalledWith(1, {
+        data: expect.objectContaining({ country: 'GB', region: 'London', postalCode: 'SW1A 1AA' }),
+      });
+      expect(mockPrisma.account.create).toHaveBeenNthCalledWith(2, {
+        data: expect.objectContaining({ country: null, region: null, postalCode: null }),
+      });
+    });
+
     it('should convert revenue to Decimal', async () => {
       mockPrisma.account.updateMany.mockResolvedValue({ count: 1 });
 
@@ -291,6 +314,49 @@ describe('PrismaAccountRepository', () => {
       expect(result?.employees).toBeUndefined();
       expect(result?.revenue).toBeUndefined();
       expect(result?.description).toBeUndefined();
+      expect(result?.country).toBeNull();
+    });
+
+    it('reads geography and round-trips nulls (PG-197)', async () => {
+      const base = {
+        id: testAccountId.value,
+        name: 'Geo Corp',
+        website: null,
+        industry: null,
+        employees: null,
+        revenue: null,
+        description: null,
+        parentAccountId: null,
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      mockPrisma.account.findFirst.mockResolvedValueOnce({
+        ...base,
+        country: 'GB',
+        region: 'London',
+        postalCode: 'SW1A 1AA',
+      });
+      mockPrisma.account.findFirst.mockResolvedValueOnce({
+        ...base,
+        country: null,
+        region: null,
+        postalCode: null,
+      });
+
+      const withGeo = await repository.findById(testAccountId, 'tenant-123');
+      const without = await repository.findById(testAccountId, 'tenant-123');
+
+      expect(withGeo).toMatchObject({ country: 'GB', region: 'London', postalCode: 'SW1A 1AA' });
+      expect(without).toMatchObject({ country: null, region: null, postalCode: null });
+
+      mockPrisma.account.updateMany.mockResolvedValue({ count: 1 });
+      await repository.save(without!);
+      expect(mockPrisma.account.updateMany).toHaveBeenCalledWith({
+        where: { id: testAccountId.value, tenantId: 'tenant-123' },
+        data: expect.objectContaining({ country: null, region: null, postalCode: null }),
+      });
     });
   });
 

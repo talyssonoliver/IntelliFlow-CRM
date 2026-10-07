@@ -155,6 +155,10 @@ export class AccountService {
       revenue?: number;
       employees?: number;
       industry?: string;
+      // PG-197: undefined = unchanged, null = clear. Never re-assigns the owner.
+      country?: string | null;
+      region?: string | null;
+      postalCode?: string | null;
     },
     updatedBy: string,
     tenantId: string

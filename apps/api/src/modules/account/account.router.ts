@@ -55,8 +55,16 @@ import {
   loadAccountAutomation,
   loadRequiredAccountFields,
   normalizeWebsite,
+  notifyAccountAssignedOnCreate,
+  type AccountAutomationFlags,
 } from './account-automation';
 import {
+  assertExplicitOwner,
+  resolveAccountOwner,
+  type AccountOwnerResolution,
+} from './account-territory-assignment';
+import {
+  buildAccountBoundNotificationCreator,
   performAccountReassign,
   emitAccountReassignSideEffects,
   logAccountReassignPermissionDenied,
@@ -154,6 +162,50 @@ async function enqueueAccountAIEnrichment(entityId: string, tenantId: string): P
   }
 }
 
+/**
+ * PG-197 BR-13: decide the owner of a new account, in order — an explicit
+ * owner (admin-only unless it is the caller, and a tenant user) is used as-is;
+ * otherwise the matching territory when `autoAssignOwner` is on; else the creator.
+ */
+async function resolveNewAccountOwner(
+  typedCtx: ReturnType<typeof getTenantContext>,
+  input: CreateAccountInput,
+  flags: Pick<AccountAutomationFlags, 'autoAssignOwner'>
+): Promise<AccountOwnerResolution> {
+  const creatorId = typedCtx.tenant.userId;
+  if (input.ownerId !== undefined) {
+    await assertExplicitOwner(typedCtx, input.ownerId);
+    return { ownerId: input.ownerId, ownerSource: 'explicit' };
+  }
+  if (!flags.autoAssignOwner) {
+    return { ownerId: creatorId, ownerSource: 'creator' };
+  }
+  return resolveAccountOwner(typedCtx, {
+    geo: { country: input.country, region: input.region, postalCode: input.postalCode },
+    creatorId,
+  });
+}
+
+/** BR-18: best-effort assignee notification after a create. */
+async function notifyNewAccountAssignee(
+  ctx: Context,
+  typedCtx: ReturnType<typeof getTenantContext>,
+  account: { id: string; name: string; ownerId: string },
+  flags: Pick<AccountAutomationFlags, 'notifyOnOwnerChange'>
+): Promise<void> {
+  await notifyAccountAssignedOnCreate(
+    {
+      tenantId: typedCtx.tenant.tenantId,
+      accountId: account.id,
+      accountName: account.name,
+      assigneeId: account.ownerId,
+      creatorId: typedCtx.tenant.userId,
+    },
+    flags,
+    buildAccountBoundNotificationCreator(ctx)
+  );
+}
+
 // ─── Extracted procedure handlers ───────────────────────────────────────────
 
 /** Bound creator for account notifications (in-app + orchestrator when wired). */
@@ -202,7 +254,6 @@ async function handleAccountCreate(ctx: Context, input: CreateAccountInput) {
       name: input.name,
       industry: (input as { industry?: string | null }).industry,
       website: websiteString,
-      ownerId: typedCtx.tenant.userId, // always satisfied for create
       employees: (input as { employees?: number | null }).employees,
       revenue: (input as { revenue?: number | string | null }).revenue,
     },
@@ -241,9 +292,12 @@ async function handleAccountCreate(ctx: Context, input: CreateAccountInput) {
     }
   }
 
+  const owner = await resolveNewAccountOwner(typedCtx, input, flags);
+
+  // The resolved owner is spread after the input so it always wins.
   const result = await accountService.createAccount({
     ...hygieneInput,
-    ownerId: typedCtx.tenant.userId,
+    ownerId: owner.ownerId,
     tenantId: typedCtx.tenant.tenantId,
   });
 
@@ -270,8 +324,16 @@ async function handleAccountCreate(ctx: Context, input: CreateAccountInput) {
     .logAction('CREATE', 'account', result.value.id.value, typedCtx.tenant.tenantId, {
       actorId: typedCtx.tenant.userId,
       resourceName: result.value.name,
+      afterState: { ...owner },
     })
     .catch((err) => console.error('[account.router] Audit log failed:', err));
+
+  await notifyNewAccountAssignee(
+    ctx,
+    typedCtx,
+    { id: result.value.id.value, name: result.value.name, ownerId: result.value.ownerId },
+    flags
+  );
 
   // IFC-312 audit fix F1/F2: wire AI_ENRICHMENT producer on account create.
   if (flags.aiEnrichment || flags.aiIndustryInference) {

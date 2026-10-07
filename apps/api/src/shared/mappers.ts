@@ -106,6 +106,10 @@ export function mapAccountToResponse(account: Account, aiMeta?: AccountAiMeta) {
     employees: account.employees ?? null,
     revenue: account.revenue ?? null,
     description: account.description ?? null,
+    // PG-197: optional geography used for territory assignment.
+    country: account.country,
+    region: account.region,
+    postalCode: account.postalCode,
     ownerId: account.ownerId,
     tenantId: account.tenantId,
     createdAt: account.createdAt,

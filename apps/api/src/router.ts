@@ -13,6 +13,7 @@ import { contactSettingsRouter } from './modules/contact/contact-settings.router
 import { accountRouter } from './modules/account/account.router';
 import { accountSettingsRouter } from './modules/account/account-settings.router';
 import { accountTiersRouter } from './modules/account/account-tiers.router';
+import { accountTerritoriesRouter } from './modules/account/account-territories.router';
 import { opportunityRouter } from './modules/opportunity/opportunity.router';
 import { pipelineConfigRouter } from './modules/opportunity/pipeline-config.router';
 import { dealSettingsRouter } from './modules/opportunity/deal-settings.router';
@@ -143,6 +144,7 @@ export const appRouter = createTRPCRouter({
   contactSettings: contactSettingsRouter, // PG-182: Contact Settings Configuration
   accountSettings: accountSettingsRouter, // PG-183: Account Settings Configuration
   accountTiers: accountTiersRouter, // PG-196: tenant-configurable account revenue tiers
+  accountTerritories: accountTerritoriesRouter, // PG-197: Territory Mapping
   dealSettings: dealSettingsRouter, // PG-184: Deal Settings Configuration
   ticketSettings: ticketSettingsRouter, // PG-185: Ticket Settings Configuration
   caseSettings: caseSettingsRouter, // PG-190: Case Settings Configuration

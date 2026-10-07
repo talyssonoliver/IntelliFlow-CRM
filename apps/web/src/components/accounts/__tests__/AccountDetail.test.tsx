@@ -2,7 +2,7 @@
 /**
  * AccountDetail Tests (PG-134)
  */
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AccountDetail } from '../AccountDetail';
@@ -375,6 +375,29 @@ describe('AccountDetail', () => {
     render(<AccountDetail {...defaultProps} />);
     expect(screen.getByText('Edit')).toBeInTheDocument();
     expect(screen.getByTestId('more-actions')).toBeInTheDocument();
+  });
+
+  it('Edit navigates to the edit page (PG-197)', () => {
+    render(<AccountDetail {...defaultProps} />);
+    fireEvent.click(screen.getByText('Edit'));
+    expect(mockPush).toHaveBeenCalledWith(`/accounts/${mockAccount.id}/edit`);
+  });
+
+  it('shows the Location when present (PG-197)', () => {
+    getByIdMock.mockReturnValue({
+      data: { ...mockAccount, country: 'GB', region: 'London', postalCode: 'SW1A 1AA' },
+      isLoading: false,
+      error: null,
+    });
+    render(<AccountDetail {...defaultProps} />);
+    expect(screen.getByTestId('account-location')).toHaveTextContent(
+      'London, SW1A 1AA, United Kingdom'
+    );
+  });
+
+  it('hides the Location when absent (PG-197)', () => {
+    render(<AccountDetail {...defaultProps} />);
+    expect(screen.queryByTestId('account-location')).toBeNull();
   });
 
   it('opens action sheet via more actions button', async () => {
