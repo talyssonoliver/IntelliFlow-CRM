@@ -11,9 +11,72 @@
  * Skips cleanly when DATABASE_URL is not set.
  */
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
+
+const MIGRATION_PATH = join(
+  __dirname,
+  '../../packages/db/prisma/migrations/20261007130000_account_territories/migration.sql'
+);
+
+/** Split migration SQL into statements, keeping `DO $$ ... $$` blocks whole. */
+function splitStatements(sql: string): string[] {
+  const statements: string[] = [];
+  let current = '';
+  let inDollar = false;
+  for (let i = 0; i < sql.length; i++) {
+    if (sql.startsWith('$$', i)) {
+      inDollar = !inDollar;
+      current += '$$';
+      i++;
+      continue;
+    }
+    const ch = sql[i];
+    if (ch === ';' && !inDollar) {
+      if (current.trim()) statements.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) statements.push(current.trim());
+  return statements;
+}
+
+/**
+ * CI builds its test database with `prisma db push`, which creates tables from
+ * schema.prisma but never runs migration SQL: the CHECK constraints, the
+ * expression/partial unique indexes and the RLS policies this suite asserts are
+ * absent there. When they are missing, rebuild the three territory tables from
+ * the migration's own SQL (they hold only this suite's rows) and add the
+ * accounts country CHECK, so the assertions exercise the shipped migration.
+ * The accounts columns are left alone — other suites write accounts concurrently.
+ */
+async function ensureMigrationSql(client: any): Promise<void> {
+  const present = await client.$queryRawUnsafe(
+    `SELECT 1 FROM pg_constraint WHERE conname = 'account_territories_strategy_check'`
+  );
+  if (present.length > 0) return;
+  const sql = readFileSync(MIGRATION_PATH, 'utf-8')
+    .split(/\r?\n/)
+    .filter((line) => !line.trim().startsWith('--'))
+    .join('\n');
+  await client.$executeRawUnsafe(
+    'DROP TABLE IF EXISTS "account_territory_members", "account_territory_rules", "account_territories" CASCADE'
+  );
+  const countryCheck = await client.$queryRawUnsafe(
+    `SELECT 1 FROM pg_constraint WHERE conname = 'accounts_country_iso_check'`
+  );
+  for (const stmt of splitStatements(sql)) {
+    // The geography columns already exist (db push created them).
+    if (/^ALTER TABLE "accounts" ADD COLUMN/.test(stmt)) continue;
+    if (countryCheck.length > 0 && /accounts_country_iso_check/.test(stmt)) continue;
+    await client.$executeRawUnsafe(stmt);
+  }
+}
 
 const DB_URL = process.env.DATABASE_URL;
 const describeDb = DB_URL ? describe : describe.skip;
@@ -74,6 +137,7 @@ describeDb('PG-197 account territories (real DB)', () => {
 
   beforeAll(async () => {
     prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: DB_URL! }) });
+    await ensureMigrationSql(prisma);
     for (const id of [TENANT_A, TENANT_B]) {
       await prisma.tenant.create({ data: { id, name: id, slug: id } });
     }

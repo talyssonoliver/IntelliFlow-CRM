@@ -38,7 +38,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 | Total Pages                                     | 214   |
 | Public Pages                                    | 32    |
 | Developer Pages                                 | 14    |
-| Protected Pages                                 | 166   |
+| Protected Pages                                 | 168   |
 | Next.js API handlers (excluded from page total) | 19    |
 | Layouts                                         | 36    |
 
