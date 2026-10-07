@@ -1,0 +1,42 @@
+{
+  "task_id": "PG-196",
+  "run_id": "20261007-065321-pg196",
+  "files_read": [
+    {
+      "path": "apps/web/src/components/sidebar/configs/accounts.ts",
+      "sha256": "1795f873d765532f618b3f720eb2974655a4201d0f6da4484922783d1e9d0204",
+      "read_at": "2026-10-07T06:53:34Z"
+    },
+    {
+      "path": "apps/web/src/app/accounts/(list)/account-settings/AccountSettingsContent.tsx",
+      "sha256": "f2af95ce05e9a66ac7445088fe2458a9b0ccb61ce5f800846c05fb41450e00e1",
+      "read_at": "2026-10-07T06:53:34Z"
+    },
+    {
+      "path": "apps/api/src/modules/account/account-automation.ts",
+      "sha256": "1752011ed143f8f01cf77b9ec95f25d9b6fb0abcae0d1631b343b8b88636be40",
+      "read_at": "2026-10-07T06:53:34Z"
+    },
+    {
+      "path": "docs/planning/module-settings-playbook.md",
+      "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+      "read_at": "2026-10-07T06:53:34Z"
+    },
+    {
+      "path": "docs/planning/prd-module-settings.md",
+      "sha256": "e13472ad2fd6003efa11e937b87b8044d8c8400170758144445350b0bee5003f",
+      "read_at": "2026-10-07T06:53:34Z"
+    }
+  ],
+  "invariants_acknowledged": [
+    "One tier system: tenant-configurable revenue tiers seeded from ENTERPRISE/MID_MARKET/SMB/STARTUP (owner ruling A, 2026-10-07); no bronze/silver/gold/platinum, no points.",
+    "Tier is derived from revenue through domain resolveAccountTier; default config must reproduce today's 10M/1M/100k bands exactly and null revenue resolves to defaultTierKey ?? UNKNOWN.",
+    "accountTiers.update/resetToDefaults are ADMIN-only via adminTenantProcedure (no OWNER role exists); every query goes through prismaWithTenant with tenantId from context.",
+    "Config writes are delete+recreate inside one $transaction guarded by an optimistic updatedAt check; never skipDuplicates; P2002 maps to CONFLICT (playbook \u00a75).",
+    "Every Boolean toggle is category 1 (wired): notifyOwnerOnUpgrade/notifyOwnerOnDowngrade drive account_tier_changed notifications from account.update/updateRevenue; hysteresis/overrides dropped (playbook \u00a78).",
+    "Migration is Class A: two new tables with CHECKs (18-colour allowlist, minRevenue >= 0, key regex, key <> UNKNOWN) and RLS USING+WITH CHECK; no DML; production only via gated prisma migrate deploy.",
+    "AccountCard, AccountDetail, AccountHierarchy, HierarchyTab and the sidebar tier links must all read the one configuration; TIER_CONFIG/TIER_GRADIENTS/DEFAULT_TIER_OPTIONS are removed and /accounts?tier= filters server-side.",
+    "Page follows the module-settings playbook: PageHeader + 12-col bento, SectionHeader action slot, EmptyState entity=rules phase=passive without inner CTA, Save disabled when !isDirty||isSaving||hasConflict, Material Symbols only."
+  ],
+  "created_at": "2026-10-07T06:53:34Z"
+}

@@ -6,6 +6,7 @@
  * full interactive list as a client island.
  */
 
+import { Suspense } from 'react';
 import { getAccessToken } from '@/lib/trpc-server';
 import { fetchAccountStats } from '@/lib/cached-queries/account-queries';
 import { serializeForClient } from '@/lib/shared/serialize-for-client';
@@ -27,5 +28,10 @@ export default async function AccountsPage() {
     // Silently fall through — client-side React Query will fetch
   }
 
-  return <AccountsPageClient initialStats={initialStats} />;
+  // AccountsPageClient reads `?tier=` with useSearchParams (PG-196), which needs a Suspense boundary.
+  return (
+    <Suspense>
+      <AccountsPageClient initialStats={initialStats} />
+    </Suspense>
+  );
 }

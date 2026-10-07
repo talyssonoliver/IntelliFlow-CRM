@@ -45,7 +45,10 @@ describe('vitest.config.ts coverage scope', () => {
     ['tools/scripts/k6/lib/redact.test.ts', false],
     ['tools/scripts/security/fixtures/sample.mjs', false],
     ['tools/eslint/sonar-guard.config.mjs', false],
-    ['apps/project-tracker/lib/x.ts', false],
+    ['apps/project-tracker/lib/x.ts', true],
+    ['apps/project-tracker/lib/__tests__/x.test.ts', false],
+    ['apps/project-tracker/app/api/metrics/executive/route.ts', false],
+    ['apps/project-tracker/components/Board.tsx', false],
   ])('%s → %s', (rel, expected) => {
     expect(isIncluded(rel)).toBe(expected);
   });

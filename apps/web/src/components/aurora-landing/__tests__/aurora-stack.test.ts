@@ -281,6 +281,35 @@ describe('createStack', () => {
       .scene.children.at(-1)!
       .children.filter((c) => c.children.length > 0);
 
+  it('without WebGL2 throws before three.js builds a renderer (which logs console errors)', () => {
+    const real = HTMLCanvasElement.prototype.getContext;
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (
+      this: HTMLCanvasElement,
+      type: string,
+      ...rest: unknown[]
+    ) {
+      return type === 'webgl2'
+        ? null
+        : (real as (...a: unknown[]) => unknown).call(this, type, ...rest);
+    } as never);
+    const before = (THREE as unknown as { renderers: unknown[] }).renderers.length;
+    expect(() =>
+      createStack(document.createElement('canvas'), { fonts, reducedMotion: true })
+    ).toThrow('WebGL2 is unavailable');
+    expect((THREE as unknown as { renderers: unknown[] }).renderers.length).toBe(before);
+  });
+
+  it('hands three.js the WebGL2 context it asked for', () => {
+    const canvas = document.createElement('canvas');
+    const getContext = vi.mocked(HTMLCanvasElement.prototype.getContext);
+    const stack = createStack(canvas, { fonts, reducedMotion: true });
+    expect(getContext).toHaveBeenCalledWith('webgl2', expect.objectContaining({ alpha: true }));
+    const calls = getContext.mock.calls as unknown[][];
+    const webgl2 = getContext.mock.results[calls.findIndex((c) => c[0] === 'webgl2')];
+    expect((renderer() as unknown as { context: unknown }).context).toBe(webgl2!.value);
+    stack.dispose();
+  });
+
   it('renders every frame and hides the layers above the one being read', () => {
     const canvas = document.createElement('canvas');
     const stack = createStack(canvas, { fonts, reducedMotion: true });

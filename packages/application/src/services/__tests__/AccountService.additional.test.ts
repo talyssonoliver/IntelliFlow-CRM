@@ -510,7 +510,7 @@ describe('AccountService (additional coverage)', () => {
       expect(result.value.contacts).toBe(0);
       expect(result.value.opportunities.total).toBe(0);
       expect(result.value.opportunities.totalValue).toBe(0);
-      expect(result.value.tier).toBe('STARTUP');
+      expect(result.value.tier).toBe('UNKNOWN');
     });
   });
 

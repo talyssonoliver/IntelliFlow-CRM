@@ -89,16 +89,34 @@ describe('Account Settings Router', () => {
       expect(prismaMock.accountHierarchyConfig.create).not.toHaveBeenCalled();
       expect(result).toEqual(mockHierarchy);
     });
+
+    it('returns legacy tier values as canonical tier keys (PG-196)', async () => {
+      (prismaMock.accountHierarchyConfig.findUnique as any).mockResolvedValueOnce({
+        ...mockHierarchy,
+        requireParentForTiers: ['mid-market', 'MID_MARKET', 'enterprise'],
+      });
+
+      const result = await caller.hierarchy.get();
+
+      expect(result.requireParentForTiers).toEqual(['MID_MARKET', 'ENTERPRISE']);
+    });
   });
 
   // ── hierarchy.update ───────────────────────────────────────
 
   describe('hierarchy.update', () => {
-    it('upserts new config values', async () => {
+    beforeEach(() => {
+      // PG-196: tier keys are validated against the tenant's tier configuration.
+      (prismaMock.accountTierDefinition.findMany as any).mockResolvedValue([]);
+      (prismaMock.accountTierConfig.findUnique as any).mockResolvedValue(null);
+      (prismaMock.accountHierarchyConfig.findUnique as any).mockResolvedValue(null);
+    });
+
+    it('upserts new config values with canonical tier keys', async () => {
       (prismaMock.accountHierarchyConfig.upsert as any).mockResolvedValueOnce({
         ...mockHierarchy,
         maxDepth: 7,
-        requireParentForTiers: ['enterprise'],
+        requireParentForTiers: ['ENTERPRISE'],
       });
 
       const result = await caller.hierarchy.update({
@@ -110,11 +128,63 @@ describe('Account Settings Router', () => {
       expect(prismaMock.accountHierarchyConfig.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { tenantId },
-          create: expect.objectContaining({ tenantId, maxDepth: 7 }),
-          update: expect.objectContaining({ maxDepth: 7 }),
+          create: expect.objectContaining({
+            tenantId,
+            maxDepth: 7,
+            requireParentForTiers: ['ENTERPRISE'],
+          }),
+          update: expect.objectContaining({ maxDepth: 7, requireParentForTiers: ['ENTERPRISE'] }),
         })
       );
       expect(result.maxDepth).toBe(7);
+    });
+
+    it('rejects a tier that is not configured (PG-196)', async () => {
+      await expect(
+        caller.hierarchy.update({
+          maxDepth: 5,
+          requireParentForTiers: ['PLATINUM'],
+          preventCycles: true,
+        })
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+      expect(prismaMock.accountHierarchyConfig.upsert).not.toHaveBeenCalled();
+    });
+
+    it('keeps legacy values that are already stored (PG-196)', async () => {
+      (prismaMock.accountHierarchyConfig.findUnique as any).mockResolvedValue({
+        ...mockHierarchy,
+        requireParentForTiers: ['strategic'],
+      });
+      (prismaMock.accountHierarchyConfig.upsert as any).mockResolvedValueOnce(mockHierarchy);
+
+      await caller.hierarchy.update({
+        maxDepth: 5,
+        requireParentForTiers: ['STRATEGIC', 'SMB'],
+        preventCycles: true,
+      });
+
+      expect(prismaMock.accountHierarchyConfig.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ requireParentForTiers: ['STRATEGIC', 'SMB'] }),
+        })
+      );
+    });
+
+    it('rejects the default tier as a parent-required tier (PG-196)', async () => {
+      (prismaMock.accountTierConfig.findUnique as any).mockResolvedValue({
+        defaultTierKey: 'SMB',
+        notifyOwnerOnUpgrade: false,
+        notifyOwnerOnDowngrade: false,
+        updatedAt: new Date('2026-10-07T08:00:00.000Z'),
+      });
+
+      await expect(
+        caller.hierarchy.update({
+          maxDepth: 5,
+          requireParentForTiers: ['SMB'],
+          preventCycles: true,
+        })
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
     });
 
     it('rejects maxDepth below 1', async () => {
