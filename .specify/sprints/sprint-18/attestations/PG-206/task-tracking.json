@@ -18,7 +18,18 @@
     "missing": [],
     "note": "Backend already on main: documentSettings.retentionPolicies (getAll/updateAll/resetToDefaults) in apps/api/src/modules/legal/document-settings.router.ts + DocumentRetentionPolicy model. The originally-planned standalone apps/api/.../storage-policies.router.ts + packages/validators/src/storage-policies.ts were superseded by that existing surface — PG-206 is a UI-only wire-up replacing the coming-soon stub."
   },
-  "blockers": [],
+  "blockers": [
+    {
+      "description": "Reopen evidence: the DoD requires \"cold storage migration thresholds\". The page and router are real and wired (PR #626) over the existing DocumentRetentionPolicy model (retention days, auto-archive, legal-hold override), but no cold-storage threshold exists in the model, validators or UI; the attestation itself says \"UI-only scope\".",
+      "raised_at": "2026-10-07T08:35:35Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: cold-storage migration thresholds exist in the model, validators and UI with tests (or the owner amends the DoD to drop them); then Completed.",
+      "raised_at": "2026-10-07T08:35:35Z",
+      "resolved_at": null
+    }
+  ],
   "completed_at": null,
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.887Z"
@@ -36,9 +47,15 @@
       "at": "2026-04-18T00:00:00Z",
       "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
       "status": "Backlog"
+    },
+    {
+      "status": "BACKLOG",
+      "at": "2026-10-07T08:35:35Z",
+      "note": "Reopened from Completed by the 2026-10-07 completion-integrity audit: no evidence the deliverable exists. See blockers."
     }
   ],
   "stream": null,
   "task_id": "PG-206",
-  "validations": []
+  "validations": [],
+  "updated_at": "2026-10-07T08:35:35Z"
 }
