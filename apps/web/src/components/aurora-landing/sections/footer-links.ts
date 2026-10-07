@@ -10,6 +10,8 @@ export interface FooterLink {
   href: string;
   /** A section of the landing page: `#id` on the landing page, `/#id` elsewhere. */
   section?: boolean;
+  /** A stable hook for E2E specs that must find this one link. */
+  testId?: string;
 }
 
 /** The header: the landing's two sections, then every page the old header linked to. */
@@ -30,6 +32,9 @@ export const FOOTER_COLUMNS: ReadonlyArray<{ title: string; links: readonly Foot
       { label: 'Platform', href: '#platform', section: true },
       { label: 'AI agents', href: '#agents', section: true },
       { label: 'Features', href: '/features' },
+      // PG-126: the public product tour, replayed even after a visitor has seen it.
+      // On the landing's footer by owner decision (2026-10-07).
+      { label: 'Take the tour', href: '/features?tour=1', testId: 'tour-trigger-link' },
       { label: 'Pricing', href: '/pricing' },
       { label: 'Security', href: '/security' },
       { label: 'Status', href: '/status' },
