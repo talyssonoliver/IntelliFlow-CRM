@@ -98,5 +98,16 @@
     "PM-OPS-003 registered (Completed)"
   ],
   "validation_method": "pnpm validate:sprint-data",
-  "notes": "Referenced spec file (893da4bf-PMOPS003.md / docs/planning/tasks/PM-OPS-003.md) absent on disk; executed against task-brief scope + real repo state. No fabricated data."
+  "notes": "Referenced spec file (893da4bf-PMOPS003.md / docs/planning/tasks/PM-OPS-003.md) absent on disk; executed against task-brief scope + real repo state. No fabricated data.",
+  "validation_results": [
+    {
+      "name": "Prettier (sprint-19 planning docs) (pmops; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm exec prettier --check docs/planning/sprint-19-*.md",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:27:11.881Z",
+      "duration_ms": 716,
+      "stdout_hash": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    }
+  ]
 }

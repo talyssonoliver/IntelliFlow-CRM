@@ -6,7 +6,18 @@
     "missing": []
   },
   "attempt": 0,
-  "blockers": [],
+  "blockers": [
+    {
+      "description": "Reopen evidence: set Completed in bulk commit a6026d7c8 (#535) with no code or attestation. packages/domain/src/crm/document/ and DocumentDomainService do not exist anywhere; docs/planning/prd-document-domain.md does not exist. legal/cases/case-document.ts is an older, separate legal model and is not this design.",
+      "raised_at": "2026-10-07T08:40:36Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: the Document aggregate, its lifecycle and DocumentDomainService exist with tests and are wired; the PRD is committed; attestation.json with 4 validations.",
+      "raised_at": "2026-10-07T08:40:36Z",
+      "resolved_at": null
+    }
+  ],
   "completed_at": null,
   "current_phase": "ARCHITECT_SPEC",
   "dependencies_meta": {
@@ -26,10 +37,15 @@
       "at": "2026-02-13T23:41:37+00:00",
       "note": "Task execution started",
       "status": "In Progress"
+    },
+    {
+      "status": "BACKLOG",
+      "at": "2026-10-07T08:40:36Z",
+      "note": "Reopened from Completed by the 2026-10-07 completion-integrity audit: no evidence the deliverable exists. See blockers."
     }
   ],
   "stream": null,
   "task_id": "IFC-199",
-  "updated_at": "2026-02-13T23:41:38+00:00",
+  "updated_at": "2026-10-07T08:40:36Z",
   "validations": []
 }

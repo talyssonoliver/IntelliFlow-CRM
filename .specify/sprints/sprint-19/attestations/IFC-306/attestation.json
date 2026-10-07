@@ -107,5 +107,25 @@
     }
   ],
   "validation_method": "VALIDATE:pnpm --filter web typecheck;VALIDATE:pnpm --filter web test --run",
-  "notes": "Premise correction is load-bearing and stated plainly (L31/L36 attestation honesty): the dispatch framing ('phantom -> real vs CSV Completed claim') was factually wrong — CSV was Backlog — but the underlying task was genuinely incomplete (dead API path + stale seed), so the pipeline proceeded on DoD-verbatim scope rather than reporting BLOCKED. RISK-S19-306-02 (docs/ outside the Next build root in a fully standalone deploy) is accepted and unchanged: the fix matches the EXISTING runtime-fs pattern (risks/route + the original timeline route both read repo-relative files via findProjectRoot) and points at the file that actually exists and is version-controlled; changing the deployment bundling model is out of scope for a seed-data fix. Out of scope, tracked: risks/route.ts reads a similarly-nonexistent artifacts/misc/risk-register.json (IFC-100/PG-194)."
+  "notes": "Premise correction is load-bearing and stated plainly (L31/L36 attestation honesty): the dispatch framing ('phantom -> real vs CSV Completed claim') was factually wrong — CSV was Backlog — but the underlying task was genuinely incomplete (dead API path + stale seed), so the pipeline proceeded on DoD-verbatim scope rather than reporting BLOCKED. RISK-S19-306-02 (docs/ outside the Next build root in a fully standalone deploy) is accepted and unchanged: the fix matches the EXISTING runtime-fs pattern (risks/route + the original timeline route both read repo-relative files via findProjectRoot) and points at the file that actually exists and is version-controlled; changing the deployment bundling model is out of scope for a seed-data fix. Out of scope, tracked: risks/route.ts reads a similarly-nonexistent artifacts/misc/risk-register.json (IFC-100/PG-194).",
+  "validation_results": [
+    {
+      "name": "Prettier (compliance-calendar.json) (cal; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm exec prettier --check docs/planning/compliance-calendar.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:27:12.620Z",
+      "duration_ms": 656,
+      "stdout_hash": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "name": "Tests (compliance-calendar integrity) (cal; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/app/api/compliance/__tests__/compliance-calendar.integrity.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:27:13.276Z",
+      "duration_ms": 1968,
+      "stdout_hash": "118f1fe5b4ee2b62d6650ca2dc5a9352d3a73845e507e4bed115cdee9f138168"
+    }
+  ]
 }

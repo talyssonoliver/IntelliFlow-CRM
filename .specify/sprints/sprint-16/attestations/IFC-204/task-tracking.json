@@ -6,7 +6,18 @@
     "missing": []
   },
   "attempt": 0,
-  "blockers": [],
+  "blockers": [
+    {
+      "description": "Reopen evidence: set Completed in bulk commit a6026d7c8 (#535, \"flip CSV to Completed after #534 merge\") with no code or attestation for this task. apps/api/src/modules/misc/__tests__/activity-feed-perf.test.ts does not exist; activity-feed.router.ts has no queryDurationMs field, no structured JSON log (tenant, source count, cache hit/miss), no p95 alert and no Grafana dashboard. It only times queries with performance.now() and console.warn over 500ms. queryDurationMs exists in timeline.router.ts, which is a different router.",
+      "raised_at": "2026-10-07T08:40:36Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: activity-feed.router.ts returns queryDurationMs and emits the structured log; the perf test exists and passes; a p95 alert and dashboard are loaded; attestation.json with 4 validations.",
+      "raised_at": "2026-10-07T08:40:36Z",
+      "resolved_at": null
+    }
+  ],
   "completed_at": null,
   "current_phase": "ARCHITECT_SPEC",
   "dependencies_meta": {
@@ -26,10 +37,15 @@
       "at": "2026-02-13T23:42:44+00:00",
       "note": "Task execution started",
       "status": "In Progress"
+    },
+    {
+      "status": "BACKLOG",
+      "at": "2026-10-07T08:40:36Z",
+      "note": "Reopened from Completed by the 2026-10-07 completion-integrity audit: no evidence the deliverable exists. See blockers."
     }
   ],
   "stream": null,
   "task_id": "IFC-204",
-  "updated_at": "2026-02-13T23:42:45+00:00",
+  "updated_at": "2026-10-07T08:40:36Z",
   "validations": []
 }

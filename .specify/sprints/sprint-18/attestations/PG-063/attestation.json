@@ -34,44 +34,184 @@
     }
   ],
   "definition_of_done_items": [
-    { "item": "Artifact lib/leads/field-mapper.ts exists (parse + sanitise + map + validate, pure)", "met": true },
-    { "item": "Artifact components/leads/csv-importer.tsx exists (upload/map/preview/import UI)", "met": true },
-    { "item": "Artifact app/leads/(list)/import/page.tsx exists (route shell)", "met": true },
-    { "item": "Imports working — sequential api.lead.create per valid row", "met": true },
-    { "item": "Mapping functional — auto-detect + editable column->field selects", "met": true },
-    { "item": "Validation active — per-row createLeadSchema; row-level errors surfaced, never dropped", "met": true },
-    { "item": "Formula-injection guarded (free-text reject) + row cap 1000 (no truncation) + size cap 2MiB", "met": true },
-    { "item": "/leads/import reachable (list-layout sidebar + lead-list Import CTA)", "met": true },
-    { "item": "New-file coverage >=80% (field-mapper 100% lines/90.76% branch; csv-importer 98.83% lines/90.54% branch)", "met": true },
-    { "item": "WCAG 2.1 AA a11y-expert pass (PASS-WITH-NITS; 4 net-new nits fixed in-PR; pre-existing shared spinner filed #419)", "met": true },
-    { "item": "Red-flag issue filed for unsafe export parsing (#417 + debt-ledger)", "met": true },
-    { "item": "Lighthouse >= 90 / response < 200ms", "met": null, "note": "client-side import; no server-render change; LHCI deferred per PG-061/062" }
+    {
+      "item": "Artifact lib/leads/field-mapper.ts exists (parse + sanitise + map + validate, pure)",
+      "met": true
+    },
+    {
+      "item": "Artifact components/leads/csv-importer.tsx exists (upload/map/preview/import UI)",
+      "met": true
+    },
+    {
+      "item": "Artifact app/leads/(list)/import/page.tsx exists (route shell)",
+      "met": true
+    },
+    {
+      "item": "Imports working — sequential api.lead.create per valid row",
+      "met": true
+    },
+    {
+      "item": "Mapping functional — auto-detect + editable column->field selects",
+      "met": true
+    },
+    {
+      "item": "Validation active — per-row createLeadSchema; row-level errors surfaced, never dropped",
+      "met": true
+    },
+    {
+      "item": "Formula-injection guarded (free-text reject) + row cap 1000 (no truncation) + size cap 2MiB",
+      "met": true
+    },
+    {
+      "item": "/leads/import reachable (list-layout sidebar + lead-list Import CTA)",
+      "met": true
+    },
+    {
+      "item": "New-file coverage >=80% (field-mapper 100% lines/90.76% branch; csv-importer 98.83% lines/90.54% branch)",
+      "met": true
+    },
+    {
+      "item": "WCAG 2.1 AA a11y-expert pass (PASS-WITH-NITS; 4 net-new nits fixed in-PR; pre-existing shared spinner filed #419)",
+      "met": true
+    },
+    {
+      "item": "Red-flag issue filed for unsafe export parsing (#417 + debt-ledger)",
+      "met": true
+    },
+    {
+      "item": "Lighthouse >= 90 / response < 200ms",
+      "met": null,
+      "note": "client-side import; no server-render change; LHCI deferred per PG-061/062"
+    }
   ],
   "validation_results": [
-    { "name": "TypeScript", "command": "pnpm --filter @intelliflow/web typecheck", "exit_code": 0, "passed": true, "timestamp": "2026-06-13T14:19:00Z" },
-    { "name": "Tests (new)", "command": "pnpm --filter @intelliflow/web test --run field-mapper.test.ts csv-importer.test.tsx (57 tests)", "exit_code": 0, "passed": true, "timestamp": "2026-06-13T14:19:30Z" },
-    { "name": "Tests (count guard)", "command": "pnpm --filter @intelliflow/web test --run sitemap-reconciliation.test.ts (count 209)", "exit_code": 0, "passed": true, "timestamp": "2026-06-13T14:09:00Z" },
-    { "name": "Lint", "command": "eslint --max-warnings=0 <touched files> + prettier --check", "exit_code": 0, "passed": true, "timestamp": "2026-06-13T14:18:00Z" },
-    { "name": "a11y-routes (strict)", "command": "pnpm run validate:a11y-routes (VALIDATION_STRICT=1) — 180/180", "exit_code": 0, "passed": true, "timestamp": "2026-06-13T14:16:00Z" }
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T14:19:00Z"
+    },
+    {
+      "name": "Tests (new)",
+      "command": "pnpm --filter @intelliflow/web test --run field-mapper.test.ts csv-importer.test.tsx (57 tests)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T14:19:30Z"
+    },
+    {
+      "name": "Tests (count guard)",
+      "command": "pnpm --filter @intelliflow/web test --run sitemap-reconciliation.test.ts (count 209)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T14:09:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "eslint --max-warnings=0 <touched files> + prettier --check",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T14:18:00Z"
+    },
+    {
+      "name": "a11y-routes (strict)",
+      "command": "pnpm run validate:a11y-routes (VALIDATION_STRICT=1) — 180/180",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-06-13T14:16:00Z"
+    },
+    {
+      "name": "Build (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:31:14.719Z",
+      "duration_ms": 151883,
+      "stdout_hash": "fd5357b7bf501ebf3389a8a7d3b28ea97c345f9a551c0d7d37b18f8c14f79b19"
+    }
   ],
   "gate_results": [
-    { "gate_id": "context-ack", "passed": true },
-    { "gate_id": "plan-checkboxes", "passed": true, "score": 10 },
-    { "gate_id": "plan-reviewer-subagent", "passed": true, "reviewer": "a941eb6ab0ae8e81e", "note": "CHANGES_REQUIRED -> all 5 ERRORs + 6 WARNs resolved in plan rev 2 + exec" },
-    { "gate_id": "artifact-hashes", "passed": true },
-    { "gate_id": "import-reachability", "passed": true, "note": "page.tsx -> CsvImporter -> field-mapper; route reachable via (list) sidebar + lead-list Import CTA" },
-    { "gate_id": "runtime-wiring", "passed": true, "note": "no dead stub; lead-list CTA links /leads/import" },
-    { "gate_id": "build-validation-4", "passed": true },
-    { "gate_id": "scoped-coverage", "passed": true, "note": "field-mapper 100% lines; csv-importer 98.83% lines; page.tsx shell excluded (PG-061 parity)" },
-    { "gate_id": "a11y-review", "passed": true, "reviewer": "a95ed46d41f2efcb1", "note": "PASS-WITH-NITS; net-new nits fixed; #419 pre-existing shared filed" },
-    { "gate_id": "stoa-domain", "passed": true, "reviewer": "a5c95751139285a70", "note": "no domain/api/schema surface changed; goes through api.lead.create; no schema drift; no VO serialised" },
-    { "gate_id": "lighthouse-evidence", "passed": null, "note": "client import; deferred per PG-061/062" }
+    {
+      "gate_id": "context-ack",
+      "passed": true
+    },
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 10
+    },
+    {
+      "gate_id": "plan-reviewer-subagent",
+      "passed": true,
+      "reviewer": "a941eb6ab0ae8e81e",
+      "note": "CHANGES_REQUIRED -> all 5 ERRORs + 6 WARNs resolved in plan rev 2 + exec"
+    },
+    {
+      "gate_id": "artifact-hashes",
+      "passed": true
+    },
+    {
+      "gate_id": "import-reachability",
+      "passed": true,
+      "note": "page.tsx -> CsvImporter -> field-mapper; route reachable via (list) sidebar + lead-list Import CTA"
+    },
+    {
+      "gate_id": "runtime-wiring",
+      "passed": true,
+      "note": "no dead stub; lead-list CTA links /leads/import"
+    },
+    {
+      "gate_id": "build-validation-4",
+      "passed": true
+    },
+    {
+      "gate_id": "scoped-coverage",
+      "passed": true,
+      "note": "field-mapper 100% lines; csv-importer 98.83% lines; page.tsx shell excluded (PG-061 parity)"
+    },
+    {
+      "gate_id": "a11y-review",
+      "passed": true,
+      "reviewer": "a95ed46d41f2efcb1",
+      "note": "PASS-WITH-NITS; net-new nits fixed; #419 pre-existing shared filed"
+    },
+    {
+      "gate_id": "stoa-domain",
+      "passed": true,
+      "reviewer": "a5c95751139285a70",
+      "note": "no domain/api/schema surface changed; goes through api.lead.create; no schema drift; no VO serialised"
+    },
+    {
+      "gate_id": "lighthouse-evidence",
+      "passed": null,
+      "note": "client import; deferred per PG-061/062"
+    }
   ],
   "kpi_results": [
-    { "kpi": "New-file scoped coverage", "target": "Lines >=80% on changed lines", "actual": "field-mapper.ts 100% lines / 90.76% branch; csv-importer.tsx 98.83% lines / 90.54% branch (57 new tests)", "met": true },
-    { "kpi": "No regressions in leads vertical + route docs", "target": "leads + sitemap suites green", "actual": "57 new tests + sitemap-reconciliation (count 209) green; full suite via pre-ship", "met": true },
-    { "kpi": "Security — CSV formula injection + caps", "target": "guard + reject + caps + per-row validation", "actual": "free-text reject (surfaced), 1000-row reject-whole, 2MiB pre-read cap, createLeadSchema per row", "met": true },
-    { "kpi": "Lighthouse performance >= 0.90 on /leads/import", "target": "performance >= 0.90", "actual": "client-side; no SSR change; LHCI deferred per PG-061/062", "met": null }
+    {
+      "kpi": "New-file scoped coverage",
+      "target": "Lines >=80% on changed lines",
+      "actual": "field-mapper.ts 100% lines / 90.76% branch; csv-importer.tsx 98.83% lines / 90.54% branch (57 new tests)",
+      "met": true
+    },
+    {
+      "kpi": "No regressions in leads vertical + route docs",
+      "target": "leads + sitemap suites green",
+      "actual": "57 new tests + sitemap-reconciliation (count 209) green; full suite via pre-ship",
+      "met": true
+    },
+    {
+      "kpi": "Security — CSV formula injection + caps",
+      "target": "guard + reject + caps + per-row validation",
+      "actual": "free-text reject (surfaced), 1000-row reject-whole, 2MiB pre-read cap, createLeadSchema per row",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse performance >= 0.90 on /leads/import",
+      "target": "performance >= 0.90",
+      "actual": "client-side; no SSR change; LHCI deferred per PG-061/062",
+      "met": null
+    }
   ],
   "environment": {
     "node": "via pnpm 10.33.0",

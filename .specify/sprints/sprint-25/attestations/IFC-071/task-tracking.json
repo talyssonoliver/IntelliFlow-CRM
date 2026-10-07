@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "IFC-071",
+  "blockers": [
+    {
+      "description": "Reopen evidence: set Completed in bulk commit a6026d7c8 (#535) with no code or attestation. docs/shared/multi-region-architecture.puml, artifacts/metrics/replication-lag-metrics.json and artifacts/reports/cost-comparison.xlsx do not exist anywhere in the repo; mentions of replication under infra/ are monitoring text only. There is no multi-region replication.",
+      "raised_at": "2026-10-07T08:40:36Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: multi-region replication is deployed and its lag measured from the real system; diagram and cost comparison committed; attestation.json.",
+      "raised_at": "2026-10-07T08:40:36Z",
+      "resolved_at": null
+    }
+  ],
+  "status_history": [
+    {
+      "status": "BACKLOG",
+      "at": "2026-10-07T08:40:36Z",
+      "note": "Reopened from Completed by the 2026-10-07 completion-integrity audit: no evidence the deliverable exists. See blockers."
+    }
+  ],
+  "updated_at": "2026-10-07T08:40:36Z"
+}
