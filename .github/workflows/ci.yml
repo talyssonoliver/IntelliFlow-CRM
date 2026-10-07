@@ -40,9 +40,61 @@ env:
   NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:
+  # ==========================================
+  # PR scope detection. Decides, per pull request, how much of the pipeline has
+  # to run: the changed workspace packages plus everything that depends on them
+  # (mode=affected), nothing for docs-only diffs (mode=none), or everything
+  # (mode=full) for root config, lockfile, turbo.json, tsconfig base, .github/
+  # and any non-PR event. Push to main, merge_group and the nightly always run
+  # in full.
+  #
+  # FAIL-SAFE: every consumer below treats an empty output as "full". If this
+  # job fails, the jobs that need it still run (`!cancelled()`) and run the
+  # whole suite. Required checks are never skipped because detection broke.
+  # ==========================================
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.detect.outputs.mode }}
+      code: ${{ steps.detect.outputs.code }}
+      unit: ${{ steps.detect.outputs.unit }}
+      integration: ${{ steps.detect.outputs.integration }}
+      web: ${{ steps.detect.outputs.web }}
+      shards: ${{ steps.detect.outputs.shards }}
+      shard_total: ${{ steps.detect.outputs.shard_total }}
+      turbo_filter: ${{ steps.detect.outputs.turbo_filter }}
+      test_paths: ${{ steps.detect.outputs.test_paths }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # pull_request checks out the merge commit: HEAD^1 is the base tip and
+          # HEAD^2 the PR head, so depth 3 covers both diff modes below.
+          fetch-depth: 3
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+      - name: Classify changed paths
+        id: detect
+        env:
+          EVENT: ${{ github.event_name }}
+          # pr          = everything the PR changes against its base (default)
+          # last-commit = only the PR head's last commit. Used to prove the
+          #               fast paths on a PR that itself edits .github/.
+          DIFF_MODE: pr
+        run: |
+          if [ "$DIFF_MODE" = "last-commit" ]; then base=HEAD^2^1; head=HEAD^2; else base=HEAD^1; head=HEAD; fi
+          node scripts/ci/affected.mjs --event "$EVENT" --base "$base" --head "$head"
+
   lint:
     name: Lint & Format
     runs-on: ubuntu-latest
+    needs: [changes]
+    # Always runs (also for docs-only PRs, which still get a format check).
+    if: ${{ !cancelled() }}
+    env:
+      SCOPE_MODE: ${{ needs.changes.outputs.mode }}
+      TURBO_FILTER: ${{ needs.changes.outputs.turbo_filter }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -52,16 +104,36 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
+      # Empty SCOPE_MODE (detection failed) falls through to the full run.
       - name: Lint
-        run: pnpm run lint
+        if: needs.changes.outputs.code != 'false'
+        run: |
+          if [ "$SCOPE_MODE" = "affected" ]; then
+            if [ -z "$TURBO_FILTER" ]; then echo "No workspace package affected; nothing for turbo to lint."; exit 0; fi
+            pnpm exec turbo run lint $TURBO_FILTER
+          else
+            pnpm run lint
+          fi
 
       - name: Format check
-        run: pnpm run format:check
+        run: |
+          if [ "$SCOPE_MODE" = "affected" ] || [ "$SCOPE_MODE" = "none" ]; then
+            # Same globs as `format:check`, restricted to the files this PR
+            # touches. A config change that could reformat other files is a
+            # root-level path, which forces SCOPE_MODE=full.
+            git diff --name-only --diff-filter=ACMR HEAD^1 HEAD \
+              | grep -E '\.(ts|tsx|md|json|yml|yaml)$' > /tmp/format-files.txt || true
+            if [ ! -s /tmp/format-files.txt ]; then echo "No formattable files changed."; exit 0; fi
+            xargs -d '\n' pnpm exec prettier --check --ignore-unknown < /tmp/format-files.txt
+          else
+            pnpm run format:check
+          fi
 
       # D3: assert every `FROM node:<major>` in the Dockerfiles matches .nvmrc.
       # Catches the boot-outage class (2026-06-03) where a Dockerfile node major
       # drifted from the runtime Node the app needs — passes build, crashes boot.
       - name: Dockerfile Node version guard
+        if: needs.changes.outputs.code != 'false'
         run: pnpm run check:dockerfile-node
 
       # Folded in from the removed `PR Checks / Quality Checks` job
@@ -69,6 +141,7 @@ jobs:
       # reconciliation is still enforced after deduplication. lint:artifacts
       # was continue-on-error so its removal is intentional and accepted.
       - name: A11y route reconciliation
+        if: needs.changes.outputs.code != 'false'
         run: pnpm run validate:a11y-routes
         env:
           VALIDATION_STRICT: '1'
@@ -78,17 +151,25 @@ jobs:
       # an approved `// ADR-054: <reference>` annotation or allowlist entry.
       # Mirrors scripts/pre-ship.mjs's `flaky-test-gate` step.
       - name: Flaky-test skip gate (ADR-054)
+        if: needs.changes.outputs.code != 'false'
         run: pnpm run validate:flaky-test-gate
 
       # Proves the gate itself is correct (detection + reconciliation +
       # false-positive guardrails). Build-free via the dedicated config;
       # enforces the ≥90% AC.
       - name: Flaky-test skip gate tests
+        if: needs.changes.outputs.code != 'false'
         run: pnpm run test:flaky-test-gate
 
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
+    needs: [changes]
+    # Skipped (= passed) only when detection succeeded and found no code change.
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    env:
+      SCOPE_MODE: ${{ needs.changes.outputs.mode }}
+      TURBO_FILTER: ${{ needs.changes.outputs.turbo_filter }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-monorepo
@@ -98,7 +179,13 @@ jobs:
           build-libs: 'true'
 
       - name: Type check
-        run: pnpm run typecheck
+        run: |
+          if [ "$SCOPE_MODE" = "affected" ]; then
+            if [ -n "$TURBO_FILTER" ]; then pnpm exec turbo run typecheck $TURBO_FILTER; else echo "No workspace package affected; skipping turbo typecheck."; fi
+            pnpm run lint:sonar:guard
+          else
+            pnpm run typecheck
+          fi
 
   # Full ~30k-test suite, sharded 20 ways and merged into one coverage gate.
   # Replaces the old single-runner `pnpm run test -- --coverage` — which also
@@ -108,7 +195,17 @@ jobs:
   # merged lcov) -> shard-balance. See ADR-057/058 and test-regression.yml.
   test:
     name: Unit Tests (sharded)
+    needs: [changes]
+    # Never skipped: the required Merge Coverage Gate / SonarCloud Scan contexts
+    # live inside this reusable workflow, which scales itself from the inputs.
+    if: ${{ !cancelled() }}
     uses: ./.github/workflows/test-regression.yml
+    with:
+      mode: ${{ needs.changes.outputs.mode }}
+      unit: ${{ needs.changes.outputs.unit }}
+      shards: ${{ needs.changes.outputs.shards }}
+      shard_total: ${{ needs.changes.outputs.shard_total }}
+      test_paths: ${{ needs.changes.outputs.test_paths }}
     secrets: inherit
     permissions:
       contents: read
@@ -120,6 +217,8 @@ jobs:
   architecture:
     name: Architecture Tests
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-monorepo
@@ -162,6 +261,8 @@ jobs:
   integration:
     name: Integration Tests
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.integration != 'false' }}
     # Independent of the unit shards (own Postgres/Redis services) — runs in
     # parallel with the sharded suite rather than after it, for faster feedback.
     services:
@@ -275,10 +376,14 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    # Gated only on the fast static checks so the build runs in PARALLEL with
-    # the sharded test suite + integration (was serialized after them). Branch
-    # protection requires both Build and the merge coverage gate independently.
-    needs: [lint, typecheck]
+    # No longer waits for lint + typecheck: that serialised ~4 min of static
+    # checks in front of the build on every PR. Branch protection requires Lint,
+    # Type Check and Build independently, so a red lint still blocks the merge.
+    needs: [changes]
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    env:
+      SCOPE_MODE: ${{ needs.changes.outputs.mode }}
+      TURBO_FILTER: ${{ needs.changes.outputs.turbo_filter }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-monorepo
@@ -290,10 +395,17 @@ jobs:
       # a new unlisted icon cannot ship as tofu (also enforced on PRs via
       # pr-checks.yml > Quality Checks).
       - name: Audit Material Symbols glyph coverage
+        if: needs.changes.outputs.web != 'false'
         run: pnpm --filter @intelliflow/web audit:material-symbols
 
       - name: Build
-        run: pnpm run build
+        run: |
+          if [ "$SCOPE_MODE" = "affected" ]; then
+            if [ -z "$TURBO_FILTER" ]; then echo "No workspace package affected; nothing to build."; exit 0; fi
+            pnpm exec turbo run build $TURBO_FILTER
+          else
+            pnpm run build
+          fi
         env:
           NODE_ENV: production
           # All module-load guards must be satisfied or `next build` fails
@@ -310,6 +422,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
 
       - name: Upload build artifacts
+        if: needs.changes.outputs.mode != 'none'
         # actions/upload-artifact@v4+ changed defaults: include-hidden-files
         # is now false, which filters out anything under a dot-prefixed dir.
         # `apps/*/.next` matches the directory NAME via the glob, but the
