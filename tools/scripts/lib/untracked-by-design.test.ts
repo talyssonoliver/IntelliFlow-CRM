@@ -1,4 +1,7 @@
 import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { isIgnored, isUntrackedByDesign, parseIgnoreRules } from './untracked-by-design.js';
 
@@ -66,5 +69,28 @@ describe('isIgnored', () => {
     const rules = parseIgnoreRules('a/**\n!a/*/\n!a/*/x.json\n');
     expect(isIgnored('a/t/x.json', rules)).toBe(false);
     expect(isIgnored('a/t/y.json', rules)).toBe(true);
+  });
+
+  it('matches `?` against exactly one character, never a slash', () => {
+    const rules = parseIgnoreRules('run-?.log\n');
+    expect(isIgnored('run-1.log', rules)).toBe(true);
+    expect(isIgnored('run-12.log', rules)).toBe(false);
+  });
+
+  it('ignores nothing for an empty path', () => {
+    expect(isIgnored('', parseIgnoreRules('**\n'))).toBe(false);
+  });
+});
+
+describe('isUntrackedByDesign without a .specify/sprints/.gitignore', () => {
+  it('excuses nothing, so a missing spec still counts against the task', () => {
+    const root = mkdtempSync(join(tmpdir(), 'untracked-'));
+    try {
+      expect(
+        isUntrackedByDesign('.specify/sprints/sprint-1/specifications/IFC-001-spec.md', root)
+      ).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

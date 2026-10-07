@@ -17,7 +17,6 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { readdirSync } from 'node:fs';
 import { parse } from 'csv-parse/sync';
 import { join, resolve } from 'node:path';
-import { globSync } from 'glob';
 import { getSprintForTask } from './lib/workflow/utils.js';
 import { isUntrackedByDesign } from './lib/untracked-by-design.js';
 
@@ -113,21 +112,9 @@ export function parseArtifacts(artifactStr: string): string[] {
     .filter((p) => p && !p.includes('*')); // Skip wildcards for now
 }
 
+// parseArtifacts drops wildcard entries, so every path here is literal.
 function checkArtifactExists(artifactPath: string, root: string): boolean {
-  const fullPath = resolve(root, artifactPath);
-
-  // Direct file check
-  if (existsSync(fullPath)) {
-    return true;
-  }
-
-  // Try with glob for patterns
-  if (artifactPath.includes('*')) {
-    const matches = globSync(artifactPath, { cwd: root });
-    return matches.length > 0;
-  }
-
-  return false;
+  return existsSync(resolve(root, artifactPath));
 }
 
 export function verifyArtifacts(
@@ -255,9 +242,9 @@ export function verifyDod(dod: string): string[] {
  */
 function checkAttestationSprintPath(
   taskId: string,
-  expectedSprint: number
+  expectedSprint: number,
+  repoRoot: string
 ): { mismatch: true; foundDir: string } | { mismatch: false } {
-  const repoRoot = process.cwd();
   const sprintsDir = join(repoRoot, '.specify', 'sprints');
 
   if (!existsSync(sprintsDir)) {
@@ -345,27 +332,28 @@ export function classifyCompletion(
   };
 }
 
-function classifyTask(
-  task: Record<string, string>,
-  phantoms: PhantomIssue[],
-  verified: VerifiedEntry[],
-  sprintMismatches: SprintMismatchEntry[],
-  untracked: Array<{ task_id: string; paths: string[] }>,
-  dodWarnings: Array<{ task_id: string; issues: string[] }>
-): void {
+export interface CompletionFindings {
+  phantoms: PhantomIssue[];
+  verified: VerifiedEntry[];
+  sprintMismatches: SprintMismatchEntry[];
+  untracked: Array<{ task_id: string; paths: string[] }>;
+  dodWarnings: Array<{ task_id: string; issues: string[] }>;
+}
+
+function classifyTask(task: Record<string, string>, root: string, f: CompletionFindings): void {
   const taskId = task['Task ID'];
   const shortDesc = (task['Description'] || '').substring(0, 60);
 
   let expectedSprint = 0;
   try {
-    expectedSprint = getSprintForTask(taskId, process.cwd());
+    expectedSprint = getSprintForTask(taskId, root);
   } catch {
     /* skip */
   }
   if (expectedSprint > 0) {
-    const sprintCheck = checkAttestationSprintPath(taskId, expectedSprint);
+    const sprintCheck = checkAttestationSprintPath(taskId, expectedSprint, root);
     if (sprintCheck.mismatch) {
-      sprintMismatches.push({
+      f.sprintMismatches.push({
         task_id: taskId,
         description: shortDesc,
         expected_sprint: expectedSprint,
@@ -374,13 +362,29 @@ function classifyTask(
     }
   }
 
-  const result = classifyCompletion(task);
-  if (result.phantom) phantoms.push(result.phantom);
-  if (result.verified) verified.push(result.verified);
+  const result = classifyCompletion(task, root);
+  if (result.phantom) f.phantoms.push(result.phantom);
+  if (result.verified) f.verified.push(result.verified);
   if (result.untrackedByDesign.length > 0)
-    untracked.push({ task_id: taskId, paths: result.untrackedByDesign });
+    f.untracked.push({ task_id: taskId, paths: result.untrackedByDesign });
   if (result.dodWarnings.length > 0)
-    dodWarnings.push({ task_id: taskId, issues: result.dodWarnings });
+    f.dodWarnings.push({ task_id: taskId, issues: result.dodWarnings });
+}
+
+/** Classify every Completed task against the checkout at `root`. */
+export function collectFindings(
+  completedTasks: Record<string, string>[],
+  root: string = process.cwd()
+): CompletionFindings {
+  const f: CompletionFindings = {
+    phantoms: [],
+    verified: [],
+    sprintMismatches: [],
+    untracked: [],
+    dodWarnings: [],
+  };
+  for (const task of completedTasks) classifyTask(task, root, f);
+  return f;
 }
 
 function determineSeverity(phantomCount: number): string {
@@ -480,15 +484,8 @@ async function main() {
   console.log(`Total tasks: ${tasks.length}`);
   console.log(`Completed tasks: ${completedTasks.length}\n`);
 
-  const phantoms: PhantomIssue[] = [];
-  const verified: VerifiedEntry[] = [];
-  const sprintMismatches: SprintMismatchEntry[] = [];
-  const untracked: Array<{ task_id: string; paths: string[] }> = [];
-  const dodWarnings: Array<{ task_id: string; issues: string[] }> = [];
-
-  for (const task of completedTasks) {
-    classifyTask(task, phantoms, verified, sprintMismatches, untracked, dodWarnings);
-  }
+  const { phantoms, verified, sprintMismatches, untracked, dodWarnings } =
+    collectFindings(completedTasks);
 
   const totalCompleted = completedTasks.length;
   const verifiedCount = verified.length;

@@ -307,6 +307,10 @@ export default defineConfig({
         // apps/api/src/agent/tools/** — anchor tooling globs to the repo root.
         `${repoRootGlob}/scripts/**/*.{ts,js,mjs,cjs}`,
         `${repoRootGlob}/tools/**/*.{ts,js,mjs,cjs}`,
+        // sonar.sources scores apps/project-tracker/lib, so its tests must reach
+        // the merged lcov too, or every new line there reads 0% in Sonar.
+        // scripts/lib/coverage-floor.mjs counts it as tooling, not product.
+        `${repoRootGlob}/apps/project-tracker/lib/**/*.{ts,tsx}`,
       ],
       exclude: [
         '**/node_modules/**',
@@ -322,8 +326,9 @@ export default defineConfig({
         '**/*.config.*',
         '**/__tests__/**',
         '**/__mocks__/**',
-        // Temporary tooling - not part of product
-        'apps/project-tracker/**',
+        // The tracker's Next.js routes and components stay unmeasured, as Sonar
+        // excludes them from coverage too; only apps/project-tracker/lib is in.
+        `${repoRootGlob}/apps/project-tracker/{app,components}/**`,
         // A bare 'tools/**' used to sit here. Matched unanchored (see include), it
         // also dropped apps/api/src/agent/tools/** — product code with its own
         // tests — from the merged lcov, so Sonar scored it 0%. Tooling is now

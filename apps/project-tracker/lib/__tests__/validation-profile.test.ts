@@ -82,3 +82,54 @@ describe('evaluateValidations', () => {
     );
   });
 });
+
+describe('evaluateValidations: what counts as a passing record', () => {
+  const CODE = 'ARTIFACT:apps/api/src/x.ts';
+  const three = FOUR.slice(0, 3);
+
+  it('counts a record that only says result: PASS', () => {
+    expect(evaluateValidations([...three, { name: 'Build', result: 'PASS' }], CODE).ok).toBe(true);
+  });
+
+  it('counts a record that only carries exit_code 0', () => {
+    expect(evaluateValidations([...three, { command: 'pnpm build', exit_code: 0 }], CODE).ok).toBe(
+      true
+    );
+  });
+
+  it('does not count a non-zero exit code, even when passed says true', () => {
+    const r = evaluateValidations(
+      [...three, { name: 'Build', passed: true, exit_code: 2, result: 'PASS' }],
+      CODE
+    );
+    expect(r.issue).toContain('Build');
+  });
+
+  it('does not count a record with no verdict at all', () => {
+    const r = evaluateValidations([...three, { name: 'Build', command: 'pnpm build' }], CODE);
+    expect(r.issue).toContain('Build');
+  });
+
+  it('does not count result: FAIL', () => {
+    const r = evaluateValidations([...three, { name: 'Build', result: 'FAIL' }], CODE);
+    expect(r.issue).toContain('Build');
+  });
+
+  it('does not count a passing record with no name or command as any check', () => {
+    const r = evaluateValidations([...three, { passed: true, exit_code: 0 }], CODE);
+    expect(r.ok).toBe(false);
+    expect(r.issue).toContain('Build');
+  });
+
+  it('does not let an unnamed passing record make up a non-code pair', () => {
+    const r = evaluateValidations([ok('terraform validate'), { passed: true }], TF);
+    expect(r).toEqual({
+      ok: false,
+      issue: expect.stringContaining('Only 1/2'),
+    });
+  });
+
+  it('fails a code task with no records at all', () => {
+    expect(evaluateValidations([], CODE).issue).toContain('TypeScript, Tests, Lint, Build');
+  });
+});

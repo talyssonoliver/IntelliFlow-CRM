@@ -2,7 +2,12 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { classifyCompletion, parseArtifacts } from '../detect-phantom-completions.js';
+import {
+  classifyCompletion,
+  collectFindings,
+  parseArtifacts,
+  verifyArtifacts,
+} from '../detect-phantom-completions.js';
 
 let root: string;
 
@@ -118,5 +123,100 @@ describe('parseArtifacts', () => {
 
   it('still reads an unprefixed path', () => {
     expect(parseArtifacts('apps/web/src/page.tsx')).toEqual(['apps/web/src/page.tsx']);
+  });
+});
+
+describe('fail-closed defaults', () => {
+  it('treats a task with no artifact, description or DoD columns as having no evidence', () => {
+    const r = classifyCompletion({ 'Task ID': 'PG-2' }, root);
+    expect(r.verified).toBeNull();
+    expect(r.phantom).toMatchObject({ taskId: 'PG-2', description: '' });
+    expect(r.phantom?.issues[0]).toContain('No tracked evidence');
+  });
+
+  it('skips a bare word that is neither a prefixed entry nor a path', () => {
+    expect(parseArtifacts('manual review;apps/web/src/page.tsx')).toEqual([
+      'apps/web/src/page.tsx',
+    ]);
+  });
+
+  it('resolves artifacts against the current checkout when no root is given', () => {
+    expect(verifyArtifacts('ARTIFACT:package.json;ARTIFACT:no/such/file.ts')).toEqual({
+      exists: ['package.json'],
+      missing: ['no/such/file.ts'],
+      untrackedByDesign: [],
+    });
+    expect(classifyCompletion(task('ARTIFACT:package.json')).verified).not.toBeNull();
+  });
+});
+
+describe('collectFindings', () => {
+  const writePlan = (rows: string[]) => {
+    const dir = join(root, 'apps/project-tracker/docs/metrics/_global');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'Sprint_plan.csv'), ['Task ID,Target Sprint', ...rows].join('\n'));
+  };
+  const attest = (sprint: number, id: string) => {
+    const dir = join(root, `.specify/sprints/sprint-${sprint}/attestations/${id}`);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'attestation.json'), '{}');
+  };
+  const row = (
+    id: string,
+    artifacts: string,
+    dod = 'page.tsx renders; verified by: pnpm test'
+  ) => ({
+    ...task(artifacts, dod),
+    'Task ID': id,
+  });
+
+  it('sorts every completed task into verified or phantom, with its side reports', () => {
+    writePlan(['PHX-OK,3', 'PHX-GONE,3', 'PHX-SPEC,3']);
+    const f = collectFindings(
+      [
+        row('PHX-OK', 'ARTIFACT:apps/web/src/page.tsx', 'Lighthouse >=90'),
+        row('PHX-GONE', 'ARTIFACT:apps/web/src/gone.tsx'),
+        row('PHX-SPEC', 'SPEC:.specify/sprints/sprint-3/specifications/PHX-SPEC-spec.md'),
+      ],
+      root
+    );
+    expect(f.verified.map((v) => v.task_id)).toEqual(['PHX-OK']);
+    expect(f.phantoms.map((p) => [p.taskId, p.issues[0]])).toEqual([
+      ['PHX-GONE', 'Missing 1 artifact(s)'],
+      ['PHX-SPEC', 'No tracked evidence: every artifact is untracked by design or absent'],
+    ]);
+    expect(f.untracked).toEqual([
+      {
+        task_id: 'PHX-SPEC',
+        paths: ['.specify/sprints/sprint-3/specifications/PHX-SPEC-spec.md'],
+      },
+    ]);
+    expect(f.dodWarnings).toEqual([
+      { task_id: 'PHX-OK', issues: ['DOD has no artifact reference'] },
+    ]);
+    expect(f.sprintMismatches).toEqual([]);
+  });
+
+  it('reports an attestation filed under a different sprint than the plan says', () => {
+    writePlan(['PHX-MOVED,4', 'PHX-HOME,5']);
+    attest(2, 'PHX-MOVED');
+    attest(5, 'PHX-HOME');
+    const f = collectFindings(
+      [
+        row('PHX-MOVED', 'ARTIFACT:apps/web/src/page.tsx'),
+        row('PHX-HOME', 'ARTIFACT:apps/web/src/page.tsx'),
+      ],
+      root
+    );
+    expect(f.sprintMismatches).toEqual([
+      { task_id: 'PHX-MOVED', description: 'A page', expected_sprint: 4, found_dir: 'sprint-2' },
+    ]);
+  });
+
+  it('still classifies a task the plan does not list', () => {
+    writePlan(['PHX-OTHER,1']);
+    const f = collectFindings([row('PHX-UNLISTED', 'ARTIFACT:apps/web/src/gone.tsx')], root);
+    expect(f.sprintMismatches).toEqual([]);
+    expect(f.phantoms.map((p) => p.taskId)).toEqual(['PHX-UNLISTED']);
   });
 });

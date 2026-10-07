@@ -2,7 +2,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { findMissingArtifacts, trackedEvidence } from '../artifact-presence';
+import { artifactExists, findMissingArtifacts, trackedEvidence } from '../artifact-presence';
 
 const REPO_ROOT = resolve(__dirname, '../../../..');
 let root: string;
@@ -62,5 +62,24 @@ describe('trackedEvidence', () => {
     expect(await trackedEvidence(['apps/api/src/router.ts', 'apps/api/src/gone.ts'], root)).toEqual(
       ['apps/api/src/router.ts']
     );
+  });
+});
+
+describe('artifactExists with a glob', () => {
+  it('counts a code glob as present when its directory exists', async () => {
+    expect(await artifactExists('apps/api/src/**', root)).toBe(true);
+    expect(await artifactExists('apps/api/src/*.ts', root)).toBe(true);
+  });
+
+  it('reports a code glob whose directory is gone as missing', async () => {
+    expect(await findMissingArtifacts(['apps/worker/src/**'], 'ARTIFACT:', root)).toEqual([
+      'ARTIFACT:apps/worker/src/**',
+    ]);
+    expect(await trackedEvidence(['apps/worker/src/**'], root)).toEqual([]);
+  });
+
+  it('never treats a bare glob with no directory as evidence', async () => {
+    expect(await artifactExists('**/*.ts', root)).toBe(false);
+    expect(await artifactExists('/**', root)).toBe(false);
   });
 });
