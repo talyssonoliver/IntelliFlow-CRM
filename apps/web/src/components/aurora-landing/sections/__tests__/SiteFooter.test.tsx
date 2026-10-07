@@ -61,6 +61,14 @@ describe('SiteFooter', () => {
     expect(nav.queryByRole('link', { name: /help/i })).toBeNull();
   });
 
+  it('offers the product tour (PG-126), replayed on /features', () => {
+    render(<SiteFooter />);
+    const nav = within(screen.getByRole('navigation', { name: 'Footer' }));
+    const tour = nav.getByRole('link', { name: 'Take the tour' });
+    expect(tour).toHaveAttribute('href', '/features?tour=1');
+    expect(tour).toHaveAttribute('data-testid', 'tour-trigger-link');
+  });
+
   it('never links to a page that does not exist', () => {
     const app = path.resolve(__dirname, '../../../../app');
     const exists = (route: string): boolean => {
@@ -73,7 +81,8 @@ describe('SiteFooter', () => {
           return rest.length > 0 && e.name === rest[0] && walk(full, rest.slice(1));
         });
       };
-      return walk(app, route.split('/').filter(Boolean));
+      // The query (?tour=1) is not part of the route.
+      return walk(app, route.split('?')[0]!.split('/').filter(Boolean));
     };
     for (const link of FOOTER_COLUMNS.flatMap((c) => c.links)) {
       if (!link.section) expect(exists(link.href), link.href).toBe(true);
