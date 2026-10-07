@@ -53,6 +53,15 @@
       "timestamp": "2026-10-07T08:28:22.703Z",
       "duration_ms": 3953,
       "stdout_hash": "c3b80519c8e412f6c55ab7698035f025b2e080c592928d04ebea7df0de922fce"
+    },
+    {
+      "name": "Build (domain; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/domain build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:28.331Z",
+      "duration_ms": 3268,
+      "stdout_hash": "6d8a6f8617401ba082d7afd80999207ab056da716e45a7185fd152a0c66631fd"
     }
   ],
   "gate_results": [
