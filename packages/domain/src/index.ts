@@ -40,6 +40,8 @@ export * from './crm/account/AccountTierConfig';
 export * from './crm/account/AccountId';
 export * from './crm/account/AccountEvents';
 export * from './crm/account/AccountRepository';
+export * from './crm/account/territory/territory-constants';
+export * from './crm/account/territory/territory-matching';
 
 // CRM Domain - Opportunities
 export * from './crm/opportunity/Opportunity';

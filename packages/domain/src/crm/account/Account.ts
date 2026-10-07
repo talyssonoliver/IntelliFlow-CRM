@@ -12,6 +12,13 @@ import {
   AccountDeletedEvent,
 } from './AccountEvents';
 import { DEFAULT_TIER_CONFIG, resolveAccountTier } from './AccountTierConfig';
+import { TERRITORY_LIMITS } from './territory/territory-constants';
+import {
+  isIsoCountryCode,
+  normalizeCountry,
+  normalizePostalCode,
+  normalizeRegion,
+} from './territory/territory-matching';
 
 // Default account-tier vocabulary (IFC-273, L-04). Tenants may rename, re-threshold,
 // add and remove tiers (PG-196, ADR-073); these are the keys every tenant starts with.
@@ -51,6 +58,13 @@ export class InvalidHierarchyError extends DomainError {
   }
 }
 
+export class InvalidGeographyError extends DomainError {
+  readonly code = 'INVALID_GEOGRAPHY';
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 export class SameOwnerError extends DomainError {
   readonly code = 'SAME_OWNER';
   constructor(ownerId: string) {
@@ -66,6 +80,9 @@ interface AccountProps {
   revenue?: number;
   description?: string;
   parentAccountId?: string;
+  country?: string | null;
+  region?: string | null;
+  postalCode?: string | null;
   ownerId: string;
   tenantId: string;
   createdAt: Date;
@@ -80,8 +97,55 @@ export interface CreateAccountProps {
   revenue?: number;
   description?: string;
   parentAccountId?: string;
+  country?: string | null;
+  region?: string | null;
+  postalCode?: string | null;
   ownerId: string;
   tenantId: string;
+}
+
+type GeographyField = 'country' | 'region' | 'postalCode';
+type GeographyValues = Partial<Record<GeographyField, string | null>>;
+const GEOGRAPHY_FIELDS: readonly GeographyField[] = ['country', 'region', 'postalCode'];
+
+/** BR-1: normalise one geography value; empty → null; invalid → error. */
+function normalizeGeographyField(
+  field: GeographyField,
+  raw: string | null
+): Result<string | null, InvalidGeographyError> {
+  if (field === 'country') {
+    const country = normalizeCountry(raw);
+    if (country !== null && !isIsoCountryCode(country)) {
+      return Result.fail(
+        new InvalidGeographyError(
+          `Invalid country code: ${country}. Use an ISO 3166-1 alpha-2 code.`
+        )
+      );
+    }
+    return Result.ok(country);
+  }
+  const value = field === 'region' ? normalizeRegion(raw) : normalizePostalCode(raw);
+  const max =
+    field === 'region' ? TERRITORY_LIMITS.maxRegionLength : TERRITORY_LIMITS.maxPostalCodeLength;
+  if (value !== null && value.length > max) {
+    return Result.fail(new InvalidGeographyError(`${field} must be at most ${max} characters.`));
+  }
+  return Result.ok(value);
+}
+
+/** Normalise the supplied geography fields; undefined fields are left out. */
+function normalizeGeography(
+  input: GeographyValues
+): Result<GeographyValues, InvalidGeographyError> {
+  const normalized: GeographyValues = {};
+  for (const field of GEOGRAPHY_FIELDS) {
+    const raw = input[field];
+    if (raw === undefined) continue;
+    const result = normalizeGeographyField(field, raw);
+    if (result.isFailure) return Result.fail(result.error);
+    normalized[field] = result.value;
+  }
+  return Result.ok(normalized);
 }
 
 /**
@@ -96,6 +160,10 @@ type AccountInfoUpdates = Partial<{
   revenue: number;
   employees: number;
   industry: string;
+  // PG-197: undefined = unchanged, null = clear.
+  country: string | null;
+  region: string | null;
+  postalCode: string | null;
 }>;
 
 /**
@@ -155,6 +223,18 @@ export class Account extends AggregateRoot<AccountId> {
     return this.props.parentAccountId;
   }
 
+  get country(): string | null {
+    return this.props.country ?? null;
+  }
+
+  get region(): string | null {
+    return this.props.region ?? null;
+  }
+
+  get postalCode(): string | null {
+    return this.props.postalCode ?? null;
+  }
+
   get hasIndustry(): boolean {
     return this.props.industry !== undefined;
   }
@@ -173,6 +253,15 @@ export class Account extends AggregateRoot<AccountId> {
     // Validate employee count if provided
     if (props.employees !== undefined && props.employees <= 0) {
       return Result.fail(new InvalidEmployeeCountError(props.employees));
+    }
+
+    const geography = normalizeGeography({
+      country: props.country ?? null,
+      region: props.region ?? null,
+      postalCode: props.postalCode ?? null,
+    });
+    if (geography.isFailure) {
+      return Result.fail(geography.error);
     }
 
     // Convert website to WebsiteUrl if string provided
@@ -201,6 +290,9 @@ export class Account extends AggregateRoot<AccountId> {
       revenue: props.revenue,
       description: props.description,
       parentAccountId: props.parentAccountId,
+      country: geography.value.country ?? null,
+      region: geography.value.region ?? null,
+      postalCode: geography.value.postalCode ?? null,
       ownerId: props.ownerId,
       tenantId: props.tenantId,
       createdAt: now,
@@ -226,7 +318,15 @@ export class Account extends AggregateRoot<AccountId> {
       return Result.fail(validated.error);
     }
 
-    const updatedFields = this.applyAccountInfoUpdates(updates, validated.value);
+    const geography = normalizeGeography(updates);
+    if (geography.isFailure) {
+      return Result.fail(geography.error);
+    }
+
+    const updatedFields = [
+      ...this.applyAccountInfoUpdates(updates, validated.value),
+      ...this.applyGeographyUpdates(geography.value),
+    ];
 
     if (updatedFields.length > 0) {
       this.props.updatedAt = new Date();
@@ -309,6 +409,21 @@ export class Account extends AggregateRoot<AccountId> {
       updatedFields.push('industry');
     }
 
+    return updatedFields;
+  }
+
+  /**
+   * PG-197: apply normalised geography values (null clears), returning the
+   * changed field names. Never touches the owner (BR-2).
+   */
+  private applyGeographyUpdates(values: GeographyValues): string[] {
+    const updatedFields: string[] = [];
+    for (const field of GEOGRAPHY_FIELDS) {
+      const value = values[field];
+      if (value === undefined || value === (this.props[field] ?? null)) continue;
+      this.props[field] = value;
+      updatedFields.push(field);
+    }
     return updatedFields;
   }
 
@@ -410,6 +525,9 @@ export class Account extends AggregateRoot<AccountId> {
       revenue: this.revenue,
       description: this.description,
       parentAccountId: this.parentAccountId,
+      country: this.country,
+      region: this.region,
+      postalCode: this.postalCode,
       ownerId: this.ownerId,
       tenantId: this.tenantId,
       createdAt: this.createdAt.toISOString(),
