@@ -236,23 +236,27 @@ function isMissing(value: unknown): boolean {
  * this helper only flags fields that appear in the payload but are blank;
  * it never flags fields the user chose not to touch.
  */
+function isRequiredFieldMissing(
+  payload: AccountRequiredFieldPayload,
+  field: AccountFieldKey,
+  mode: 'create' | 'update'
+): boolean {
+  const value = payload[field];
+  if (mode === 'create') {
+    // PG-197 BR-14: a new account always gets an owner (explicit, territory
+    // or the creator), so the ownerId policy key cannot be missing on create.
+    return field !== 'ownerId' && isMissing(value);
+  }
+  const hasOwn = Object.prototype.hasOwnProperty.call(payload, field);
+  return hasOwn && value !== undefined && isMissing(value);
+}
+
 export function assertRequiredAccountFields(
   payload: AccountRequiredFieldPayload,
   required: Set<AccountFieldKey>,
   mode: 'create' | 'update'
 ): void {
-  const missing: AccountFieldKey[] = [];
-  for (const field of required) {
-    const value = payload[field];
-    if (mode === 'create') {
-      if (isMissing(value)) missing.push(field);
-      continue;
-    }
-    const hasOwn = Object.prototype.hasOwnProperty.call(payload, field);
-    if (!hasOwn) continue;
-    if (value === undefined) continue;
-    if (isMissing(value)) missing.push(field);
-  }
+  const missing = [...required].filter((field) => isRequiredFieldMissing(payload, field, mode));
 
   if (missing.length === 0) return;
   throw new TRPCError({
@@ -349,4 +353,47 @@ export async function notifyAccountReassignment(
       body: `An account was assigned to you. Review recent activity before reaching out.`,
     }),
   ]);
+}
+
+// ─── PG-197: assignment-on-create notification ──────────────────────────────
+
+export interface AccountAssignedOnCreateNotification {
+  tenantId: string;
+  accountId: string;
+  accountName: string;
+  assigneeId: string;
+  creatorId: string;
+}
+
+/**
+ * BR-18: when a new account is assigned to someone other than its creator
+ * (territory assignment or an explicit owner), notify the assignee only.
+ * Best-effort — a failure is logged and never fails the create.
+ */
+export async function notifyAccountAssignedOnCreate(
+  args: AccountAssignedOnCreateNotification,
+  flags: Pick<AccountAutomationFlags, 'notifyOnOwnerChange'>,
+  createNotification: NotificationCreator
+): Promise<boolean> {
+  if (!flags.notifyOnOwnerChange) return false;
+  if (args.assigneeId === args.creatorId) return false;
+
+  try {
+    await createNotification({
+      userId: args.assigneeId,
+      tenantId: args.tenantId,
+      type: 'account_reassigned',
+      title: `You now own: ${args.accountName}`,
+      body: 'A new account was assigned to you. Review it before reaching out.',
+      priority: 'normal',
+      entityType: 'account',
+      entityId: args.accountId,
+      entityName: args.accountName,
+      actionUrl: `/accounts/${args.accountId}`,
+    });
+    return true;
+  } catch (error) {
+    console.warn('[account.automation] assignment notification failed (non-fatal):', error);
+    return false;
+  }
 }
