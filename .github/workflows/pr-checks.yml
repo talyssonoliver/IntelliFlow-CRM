@@ -27,6 +27,30 @@ env:
   NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:
+  # Same scope detection as ci.yml (scripts/ci/affected.mjs). Used here only to
+  # skip the web boot smoke when @intelliflow/web is not affected. An empty
+  # output (detection failed) runs the smoke.
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.detect.outputs.web }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 3
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+      - name: Classify changed paths
+        id: detect
+        env:
+          EVENT: ${{ github.event_name }}
+          DIFF_MODE: pr
+        run: |
+          if [ "$DIFF_MODE" = "last-commit" ]; then base=HEAD^2^1; head=HEAD^2; else base=HEAD^1; head=HEAD; fi
+          node scripts/ci/affected.mjs --event "$EVENT" --base "$base" --head "$head"
+
   pr-validation:
     name: PR Validation
     runs-on: ubuntu-latest
@@ -436,8 +460,15 @@ jobs:
   web-boot-smoke:
     name: Web Boot Smoke
     runs-on: ubuntu-latest
+    needs: [changes]
     # Run on merge_group to catch boot-crash regressions before the merge lands.
-    if: github.event_name == 'merge_group' || github.event.pull_request.draft == false
+    # On a PR, only when the web app or something it depends on changed: this
+    # is a ~6 min build that PR Summary (required) waits for. Not a required
+    # check itself; push to main still runs the e2e smoke against a full build.
+    if: >-
+      !cancelled() &&
+      (github.event_name == 'merge_group' || github.event.pull_request.draft == false) &&
+      needs.changes.outputs.web != 'false'
     timeout-minutes: 15
     env:
       # --- module-load env guards (verbatim from ci.yml e2e job) ---
