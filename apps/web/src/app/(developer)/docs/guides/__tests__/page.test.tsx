@@ -24,8 +24,8 @@ describe('GuidesPage', () => {
     expect(screen.getByTestId('guides-list')).toBeInTheDocument();
   });
 
-  it('exports metadata.title as "Developer Guides | IntelliFlow CRM" (AC-001)', () => {
-    expect(metadata.title).toBe('Developer Guides | IntelliFlow CRM');
+  it('exports metadata.title as "Developer Guides | Aurora" (AC-001)', () => {
+    expect(metadata.title).toBe('Developer Guides | Aurora');
   });
 
   it('exports metadata.description containing "guides" (AC-001)', () => {

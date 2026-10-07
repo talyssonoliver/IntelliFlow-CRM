@@ -91,7 +91,7 @@ export function AISettingsCard({ settings, onSettingsChange }: Readonly<Props>) 
         iconBg="bg-fuchsia-500/10"
         iconFg="text-fuchsia-500"
         title="AI & Intelligence"
-        description="Control how IntelliFlow's AI augments document records."
+        description="Control how Aurora's AI augments document records."
       />
       <div className="space-y-1">
         {CAT2_TOGGLES.map(({ key, title, description }) => (

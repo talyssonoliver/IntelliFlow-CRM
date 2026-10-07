@@ -117,7 +117,7 @@ const SAMPLE_PAYLOADS_FULL: Record<string, object> = {
     payload: {
       messageId: 'msg_abc123',
       recipient: 'user@example.com',
-      subject: 'Welcome to IntelliFlow',
+      subject: 'Welcome to Aurora',
       deliveredAt: '2026-01-15T10:30:00.000Z',
     },
   },
@@ -317,8 +317,8 @@ function OverviewTab() {
           What are Webhooks?
         </h2>
         <p className="text-muted-foreground mb-4">
-          Webhooks enable real-time communication between IntelliFlow CRM and your applications.
-          There are two types of webhook integrations:
+          Webhooks enable real-time communication between Aurora and your applications. There are
+          two types of webhook integrations:
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="border rounded-lg p-4">
@@ -330,7 +330,7 @@ function OverviewTab() {
             </div>
             <p className="text-sm text-muted-foreground">
               Receive events from external services (email providers, payment processors) into
-              IntelliFlow CRM for processing and routing.
+              Aurora for processing and routing.
             </p>
           </div>
           <div className="border rounded-lg p-4">
@@ -341,8 +341,8 @@ function OverviewTab() {
               <h3 className="font-medium">Outbound Webhooks</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              Send real-time event notifications from IntelliFlow CRM to your endpoints when CRM
-              events occur. Currently available via notification preferences.
+              Send real-time event notifications from Aurora to your endpoints when CRM events
+              occur. Currently available via notification preferences.
             </p>
           </div>
         </div>
@@ -508,8 +508,8 @@ function EventCatalogTab() {
           Email Webhook Events
         </h2>
         <p className="text-muted-foreground mb-4">
-          IntelliFlow CRM processes 10 email webhook event types covering delivery, engagement,
-          compliance, and inbound messages.
+          Aurora processes 10 email webhook event types covering delivery, engagement, compliance,
+          and inbound messages.
         </p>
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
@@ -564,9 +564,9 @@ function SecurityTab() {
           Signature Verification
         </h2>
         <p className="text-muted-foreground mb-4">
-          IntelliFlow CRM supports 4 signature verification methods. Each provider sends a signature
-          in a specific HTTP header that must be verified using timing-safe comparison to prevent
-          timing attacks.
+          Aurora supports 4 signature verification methods. Each provider sends a signature in a
+          specific HTTP header that must be verified using timing-safe comparison to prevent timing
+          attacks.
         </p>
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">

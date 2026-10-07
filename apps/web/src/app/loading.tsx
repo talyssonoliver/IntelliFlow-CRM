@@ -15,7 +15,7 @@ export default function Loading() {
     <div className="min-h-[calc(100vh-4rem)] bg-[#f6f7f8] dark:bg-[#101922]">
       <div className="px-4 sm:px-6 lg:px-8 xl:px-12 py-6 max-w-[1800px] mx-auto animate-pulse">
         {/* Welcome Banner Skeleton */}
-        <div className="bg-gradient-to-r from-[#137fec]/20 to-indigo-600/20 rounded-xl p-8 mb-6">
+        <div className="bg-gradient-to-r from-[#2a78f6]/20 to-indigo-600/20 rounded-xl p-8 mb-6">
           <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-3" />
           <div className="h-10 w-72 bg-slate-200 dark:bg-slate-700 rounded mb-4" />
           <div className="h-5 w-96 bg-slate-200 dark:bg-slate-700 rounded mb-6" />

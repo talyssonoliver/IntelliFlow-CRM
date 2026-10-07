@@ -518,7 +518,7 @@ function LeadErrorView({
           {isServerError && (
             <button
               onClick={() => globalThis.location.reload()}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#2a78f6] text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               <span className="material-symbols-outlined !text-lg">refresh</span> Retry
             </button>
@@ -526,14 +526,14 @@ function LeadErrorView({
           {fromInsight && (
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#2a78f6] text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               <span className="material-symbols-outlined !text-lg">home</span> Back to Home
             </Link>
           )}
           <Link
             href="/leads"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#2a78f6] text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             <span className="material-symbols-outlined !text-lg">arrow_back</span> Back to Leads
           </Link>
@@ -747,7 +747,7 @@ function LeadDialogs({
                 checked={convertCreateAccount}
                 onChange={(e) => setConvertCreateAccount(e.target.checked)}
                 id="convert-create-account"
-                className="rounded border-slate-300 dark:border-slate-600 text-[#137fec] focus:ring-[#137fec]"
+                className="rounded border-slate-300 dark:border-slate-600 text-[#2a78f6] focus:ring-[#2a78f6]"
               />{' '}
               Also create an Account record
             </label>
@@ -766,7 +766,7 @@ function LeadDialogs({
                   onChange={(e) => setConvertAccountName(e.target.value)}
                   placeholder={lead.company || 'Company name'}
                   maxLength={200}
-                  className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+                  className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
                 />
               </div>
             )}
@@ -815,7 +815,7 @@ function LeadDialogs({
                 value={logCallTitle}
                 onChange={(e) => setLogCallTitle(e.target.value)}
                 placeholder="e.g. Discovery call, Follow-up"
-                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -831,7 +831,7 @@ function LeadDialogs({
                 onChange={(e) => setLogCallDescription(e.target.value)}
                 placeholder="Call summary, outcomes, next steps..."
                 rows={3}
-                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent resize-none"
+                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent resize-none"
               />
             </div>
           </div>
@@ -857,7 +857,7 @@ function LeadDialogs({
                 });
               }}
               disabled={!logCallTitle.trim() || logActivityMutation.isPending}
-              className="px-4 py-2 rounded-md bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-md bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {logActivityMutation.isPending ? 'Saving...' : 'Log Call'}
             </button>
@@ -905,7 +905,7 @@ function LeadOverviewTab({
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Activity</h3>
-          <button onClick={onViewAllActivity} className="text-sm text-[#137fec] hover:underline">
+          <button onClick={onViewAllActivity} className="text-sm text-[#2a78f6] hover:underline">
             View All
           </button>
         </div>
@@ -966,12 +966,12 @@ function LeadOverviewTab({
               {lead.accountId && lead.account ? (
                 <Link
                   href={`/accounts/${lead.accountId}`}
-                  className="text-[#137fec] hover:underline"
+                  className="text-[#2a78f6] hover:underline"
                 >
                   {lead.company}
                 </Link>
               ) : (
-                <span className="text-[#137fec]">{lead.company}</span>
+                <span className="text-[#2a78f6]">{lead.company}</span>
               )}
             </dd>
           </div>
@@ -1059,7 +1059,7 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
             {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
           </div>
           {meta.recordingUrl && (
-            <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
+            <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded transition-colors">
               <span className="material-symbols-outlined !text-[16px]">play_arrow</span> Play
               Recording
             </button>
@@ -1229,7 +1229,7 @@ function ActivityFilterBar({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search activities..."
-          className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] placeholder:text-slate-400"
+          className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6] placeholder:text-slate-400"
         />
       </div>
       <div className="flex flex-wrap gap-2">
@@ -1239,7 +1239,7 @@ function ActivityFilterBar({
             onClick={() => onTypeFilterChange(filter.value)}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
               activityTypeFilter === filter.value
-                ? 'bg-[#137fec] text-white'
+                ? 'bg-[#2a78f6] text-white'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
@@ -1252,7 +1252,7 @@ function ActivityFilterBar({
         <select
           value={personFilter}
           onChange={(e) => onPersonFilterChange(e.target.value)}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec]"
+          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6]"
         >
           {personFilters.map((filter) => (
             <option key={filter.value} value={filter.value}>
@@ -1261,15 +1261,15 @@ function ActivityFilterBar({
           ))}
         </select>
         {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
-          <button onClick={onClearFilters} className="text-xs text-[#137fec] hover:underline">
+          <button onClick={onClearFilters} className="text-xs text-[#2a78f6] hover:underline">
             Clear filters
           </button>
         )}
       </div>
       {aiInsightsSentimentTrend && (
         <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
-          <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
-            <span className="material-symbols-outlined !text-[18px] text-[#137fec]">
+          <div className="w-8 h-8 rounded-full bg-[#2a78f6]/10 flex items-center justify-center">
+            <span className="material-symbols-outlined !text-[18px] text-[#2a78f6]">
               auto_awesome
             </span>
           </div>
@@ -1418,7 +1418,7 @@ function LeadActivityTab({
           {hasMore && (
             <button
               onClick={onLoadMore}
-              className="w-full mt-6 py-3 text-sm text-[#137fec] font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
+              className="w-full mt-6 py-3 text-sm text-[#2a78f6] font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
             >
               Load more activities ({filteredActivities.length - visibleCount} remaining)
             </button>
@@ -1473,14 +1473,14 @@ function LeadNotesTab({
             }
           }}
           placeholder="Write a note..."
-          className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] min-h-[80px] p-3 placeholder:text-slate-400"
+          className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6] min-h-[80px] p-3 placeholder:text-slate-400"
         />
         <div className="flex justify-between items-center mt-2">
           <span className="text-[10px] text-slate-400">Ctrl+Enter to submit</span>
           <button
             onClick={onAddNote}
             disabled={addNoteMutation.isPending || !activityNote.trim()}
-            className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-semibold text-white bg-[#137fec] hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-semibold text-white bg-[#2a78f6] hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50"
           >
             <span className="material-symbols-outlined !text-[18px]">add</span>{' '}
             {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
@@ -1522,7 +1522,7 @@ function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Emails</h3>
-        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
+        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
           <span className="material-symbols-outlined !text-[18px]">send</span> Compose
         </button>
       </div>
@@ -1576,7 +1576,7 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Files</h3>
-        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
+        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
           <span className="material-symbols-outlined !text-[18px]">upload</span> Upload
         </button>
       </div>
@@ -1598,7 +1598,7 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
                   {file.size} ÔÇó {formatRelativeTime(file.uploadedAt, timezone)}
                 </p>
               </div>
-              <button className="p-2 text-slate-500 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
+              <button className="p-2 text-slate-500 hover:text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
                 <span className="material-symbols-outlined !text-[18px]">download</span>
               </button>
             </div>
@@ -1700,8 +1700,8 @@ function LeadAIInsightsTab({
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
-              <span className="material-symbols-outlined !text-[20px] text-[#137fec]">
+            <div className="w-10 h-10 rounded-lg bg-[#2a78f6]/10 flex items-center justify-center">
+              <span className="material-symbols-outlined !text-[20px] text-[#2a78f6]">
                 payments
               </span>
             </div>
@@ -1742,8 +1742,8 @@ function LeadAIInsightsTab({
         <ul className="space-y-3">
           {aiInsights.recommendations.map((rec, index) => (
             <li key={`rec-${index}-${rec.slice(0, 20)}`} className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-medium text-[#137fec]">{index + 1}</span>
+              <div className="w-6 h-6 rounded-full bg-[#2a78f6]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-xs font-medium text-[#2a78f6]">{index + 1}</span>
               </div>
               <p className="text-slate-600 dark:text-slate-400">{rec}</p>
             </li>
@@ -1761,14 +1761,14 @@ function LeadAIInsightsTab({
                 Engagement Score
               </span>
               <span
-                className={`text-sm font-bold ${hasAiInsight ? 'text-[#137fec]' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`text-sm font-bold ${hasAiInsight ? 'text-[#2a78f6]' : 'text-slate-400 dark:text-slate-500'}`}
               >
                 {hasAiInsight ? `${aiInsights.engagementScore}%` : '--'}
               </span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
               <div
-                className="bg-[#137fec] h-2 rounded-full"
+                className="bg-[#2a78f6] h-2 rounded-full"
                 style={{ width: `${aiInsights.engagementScore}%` }}
               />
             </div>
@@ -1821,10 +1821,10 @@ function LeadRightSidebar({
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#137fec]">auto_awesome</span>
+            <span className="material-symbols-outlined text-[#2a78f6]">auto_awesome</span>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Lead IQ</h3>
           </div>
-          <span className="text-[10px] bg-[#137fec]/10 text-[#137fec] px-1.5 py-0.5 rounded font-bold">
+          <span className="text-[10px] bg-[#2a78f6]/10 text-[#2a78f6] px-1.5 py-0.5 rounded font-bold">
             BETA
           </span>
         </div>
@@ -1875,7 +1875,7 @@ function LeadRightSidebar({
                   <div
                     key={level}
                     className={`flex-1 ${level === 1 ? 'rounded-l-full' : ''} ${level === 5 ? 'rounded-r-full' : ''} ${
-                      aiInsights.engagementScore >= level * 20 ? 'bg-[#137fec]' : 'bg-[#137fec]/30'
+                      aiInsights.engagementScore >= level * 20 ? 'bg-[#2a78f6]' : 'bg-[#2a78f6]/30'
                     }`}
                   />
                 ))}
@@ -1902,18 +1902,18 @@ function LeadRightSidebar({
                   key={action.label}
                   className={`w-full text-left p-2 rounded border transition-colors group ${
                     action.primary
-                      ? 'bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700 hover:border-[#137fec]/50'
+                      ? 'bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700 hover:border-[#2a78f6]/50'
                       : 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <span
-                      className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#137fec]' : 'text-slate-500'}`}
+                      className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#2a78f6]' : 'text-slate-500'}`}
                     >
                       {action.icon}
                     </span>
                     <span
-                      className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200 group-hover:text-[#137fec]' : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900'}`}
+                      className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200 group-hover:text-[#2a78f6]' : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900'}`}
                     >
                       {action.label}
                     </span>
@@ -1925,7 +1925,7 @@ function LeadRightSidebar({
         </div>
         <button
           onClick={onViewAIInsights}
-          className="w-full mt-4 text-sm text-[#137fec] hover:underline text-center"
+          className="w-full mt-4 text-sm text-[#2a78f6] hover:underline text-center"
         >
           View Full Analysis
         </button>
@@ -1976,7 +1976,7 @@ function LeadRightSidebar({
         {notes.length > 2 && (
           <button
             onClick={onViewNotes}
-            className="w-full mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-[#137fec] hover:text-[#0f6dd0] transition-colors text-center"
+            className="w-full mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-[#2a78f6] hover:text-[#0f6dd0] transition-colors text-center"
           >
             View all notes ({notes.length})
           </button>
@@ -2022,7 +2022,7 @@ function LeadTabBar({
             onClick={() => onTabChange(tab.id)}
             className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
               activeTab === tab.id
-                ? 'text-[#137fec] border-[#137fec]'
+                ? 'text-[#2a78f6] border-[#2a78f6]'
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'
             }`}
           >
@@ -2074,7 +2074,7 @@ function LeadPageHeader({
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <Link href="/leads" className="hover:text-[#137fec]">
+          <Link href="/leads" className="hover:text-[#2a78f6]">
             Leads
           </Link>
           <span className="material-symbols-outlined !text-sm">chevron_right</span>
@@ -2100,7 +2100,7 @@ function LeadPageHeader({
         </button>
         <button
           onClick={onLogCall}
-          className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
+          className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
         >
           <span className="material-symbols-outlined !text-[18px]">call</span> Log Call
         </button>

@@ -75,8 +75,8 @@ describe('getTicketStatusColor', () => {
   });
 
   it('uses the brand blue for any other status', () => {
-    expect(getTicketStatusColor('OPEN')).toContain('#137fec');
-    expect(getTicketStatusColor('IN_PROGRESS')).toContain('#137fec');
+    expect(getTicketStatusColor('OPEN')).toContain('#2a78f6');
+    expect(getTicketStatusColor('IN_PROGRESS')).toContain('#2a78f6');
   });
 });
 

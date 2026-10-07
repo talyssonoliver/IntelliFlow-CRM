@@ -63,7 +63,7 @@ export default function ForecastRevenueChart({
               boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
             }}
           />
-          <Bar dataKey="actual" fill="#137fec" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="actual" fill="#2a78f6" radius={[4, 4, 0, 0]} />
           <Bar dataKey="projected" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>

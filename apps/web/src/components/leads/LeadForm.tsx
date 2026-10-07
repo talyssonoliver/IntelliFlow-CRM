@@ -127,7 +127,7 @@ export function validateLeadFormValues(
 
 const INPUT_CLASS =
   'w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm ' +
-  'text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] ' +
+  'text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] ' +
   'placeholder-slate-400 transition-shadow';
 const LABEL_CLASS = 'block text-sm font-semibold text-slate-700 dark:text-slate-300';
 const BORDER_DEFAULT = 'border-slate-200 dark:border-slate-700';
@@ -550,7 +550,7 @@ export function LeadForm({
           <button
             type="submit"
             disabled={isSubmitting || (disabled ?? false)}
-            className="px-6 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 h-10 rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isSubmitting ? (
               <>

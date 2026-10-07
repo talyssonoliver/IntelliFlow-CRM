@@ -27,12 +27,10 @@ export function PublicHeader() {
         <div className="flex h-16 items-center px-4 lg:px-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 mr-8">
-            <div className="w-8 h-8 rounded bg-[#137fec] flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded bg-[#2a78f6] flex items-center justify-center flex-shrink-0">
               <span className="material-symbols-outlined text-white text-xl">grid_view</span>
             </div>
-            <span className="text-lg font-bold text-foreground hidden sm:inline">
-              IntelliFlow CRM
-            </span>
+            <span className="text-lg font-bold text-foreground hidden sm:inline">Aurora</span>
           </Link>
 
           {/* Desktop Navigation - visible on md and up */}
@@ -46,7 +44,7 @@ export function PublicHeader() {
                   className={cn(
                     'px-3 py-2 text-sm font-medium rounded-lg transition-colors',
                     isActive
-                      ? 'bg-[#137fec]/10 text-[#137fec] dark:text-[#137fec]'
+                      ? 'bg-[#2a78f6]/10 text-[#2a78f6] dark:text-[#2a78f6]'
                       : 'text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-accent'
                   )}
                 >
@@ -67,7 +65,7 @@ export function PublicHeader() {
               </Button>
             )}
             {pathname !== '/signup' && (
-              <Button asChild className="bg-[#0e6ac7] hover:bg-[#0b5ba8] font-semibold">
+              <Button asChild className="bg-[#1f63d4] hover:bg-[#0b5ba8] font-semibold">
                 <Link href="/signup">Start Free Trial</Link>
               </Button>
             )}
@@ -109,7 +107,7 @@ export function PublicHeader() {
                     className={cn(
                       'px-4 py-3 text-sm font-medium rounded-lg transition-colors',
                       isActive
-                        ? 'bg-[#137fec]/10 text-[#137fec]'
+                        ? 'bg-[#2a78f6]/10 text-[#2a78f6]'
                         : 'text-slate-600 dark:text-slate-400 hover:text-foreground hover:bg-accent'
                     )}
                   >
@@ -130,7 +128,7 @@ export function PublicHeader() {
                   </Button>
                   <Button
                     asChild
-                    className="w-full bg-[#0e6ac7] hover:bg-[#0b5ba8] font-semibold"
+                    className="w-full bg-[#1f63d4] hover:bg-[#0b5ba8] font-semibold"
                     onClick={() => setMobileOpen(false)}
                   >
                     <Link href="/signup">Start Free Trial</Link>

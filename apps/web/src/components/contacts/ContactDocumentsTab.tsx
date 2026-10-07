@@ -24,7 +24,7 @@ export function ContactDocumentsTab({ documents, timezone }: ContactDocumentsTab
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Documents</h3>
-        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
+        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
           </svg>{' '}
@@ -43,7 +43,7 @@ export function ContactDocumentsTab({ documents, timezone }: ContactDocumentsTab
               className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
             >
               <svg
-                className="w-8 h-8 text-[#137fec] shrink-0"
+                className="w-8 h-8 text-[#2a78f6] shrink-0"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >

@@ -33,7 +33,7 @@ const integrationCategories: IntegrationCategory[] = [
       {
         id: 'inbound-webhooks',
         title: 'Inbound Webhooks',
-        description: 'Receive events from external services into IntelliFlow CRM',
+        description: 'Receive events from external services into Aurora',
         href: '/docs/webhooks',
         status: 'available',
       },
@@ -49,14 +49,14 @@ const integrationCategories: IntegrationCategory[] = [
   {
     id: 'sdk-tools',
     title: 'SDK & Developer Tools',
-    description: 'Libraries and tools for building with IntelliFlow',
+    description: 'Libraries and tools for building with Aurora',
     icon: 'code',
     color: 'bg-emerald-500',
     items: [
       {
         id: 'typescript-sdk',
         title: 'TypeScript SDK',
-        description: 'Official TypeScript/JavaScript SDK for IntelliFlow CRM API (v0.1.0)',
+        description: 'Official TypeScript/JavaScript SDK for Aurora API (v0.1.0)',
         href: '/docs/sdk',
         status: 'beta',
       },
@@ -70,7 +70,7 @@ const integrationCategories: IntegrationCategory[] = [
       {
         id: 'cli-tools',
         title: 'CLI Tools',
-        description: 'Command-line interface for managing IntelliFlow CRM resources',
+        description: 'Command-line interface for managing Aurora resources',
         href: '/docs/cli',
         status: 'available',
       },

@@ -17,14 +17,12 @@ export async function generateMetadata({
   const { id } = await params;
 
   if (!isValidId(id)) {
-    return { title: 'App Not Found | IntelliFlow CRM' };
+    return { title: 'App Not Found | Aurora' };
   }
 
   const app = findAppById(id);
   return {
-    title: app
-      ? `Edit ${app.name} | Developer Apps | IntelliFlow CRM`
-      : 'App Not Found | IntelliFlow CRM',
+    title: app ? `Edit ${app.name} | Developer Apps | Aurora` : 'App Not Found | Aurora',
   };
 }
 

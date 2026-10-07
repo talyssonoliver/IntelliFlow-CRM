@@ -157,7 +157,7 @@ const GUIDE_CATEGORIES: GuideCategory[] = [
   {
     id: 'deployment',
     title: 'Deployment',
-    description: 'Deploy and manage IntelliFlow CRM in production',
+    description: 'Deploy and manage Aurora in production',
     icon: 'cloud_upload',
     color: 'bg-sky-500',
     items: [
@@ -231,7 +231,7 @@ const GUIDE_CATEGORIES: GuideCategory[] = [
   {
     id: 'contributing',
     title: 'Contributing',
-    description: 'How to contribute to the IntelliFlow CRM project',
+    description: 'How to contribute to the Aurora project',
     icon: 'group',
     color: 'bg-rose-500',
     items: [

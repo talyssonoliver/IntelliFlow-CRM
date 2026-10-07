@@ -102,8 +102,8 @@ function PublicPlanCard({
       className={cn(
         'relative p-8 flex flex-col',
         isPopular
-          ? 'border-[#137fec] border-2 shadow-xl'
-          : 'hover:border-[#137fec] hover:shadow-lg transition-all'
+          ? 'border-[#2a78f6] border-2 shadow-xl'
+          : 'hover:border-[#2a78f6] hover:shadow-lg transition-all'
       )}
     >
       {isPopular && (
@@ -115,8 +115,8 @@ function PublicPlanCard({
       )}
 
       {icon && (
-        <div className="w-12 h-12 bg-[#137fec]/10 dark:bg-[#137fec]/20 rounded-lg flex items-center justify-center mb-4">
-          <span className="material-symbols-outlined text-2xl text-[#137fec]">{icon}</span>
+        <div className="w-12 h-12 bg-[#2a78f6]/10 dark:bg-[#2a78f6]/20 rounded-lg flex items-center justify-center mb-4">
+          <span className="material-symbols-outlined text-2xl text-[#2a78f6]">{icon}</span>
         </div>
       )}
 
@@ -141,7 +141,7 @@ function PublicPlanCard({
       <ul className="space-y-3 mb-8 flex-1">
         {features.map((feature, i) => (
           <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-            <span className="material-symbols-outlined text-[#137fec] text-base mt-0.5 flex-shrink-0">
+            <span className="material-symbols-outlined text-[#2a78f6] text-base mt-0.5 flex-shrink-0">
               check_circle
             </span>
             <span>{feature}</span>
@@ -154,7 +154,7 @@ function PublicPlanCard({
         className={cn(
           'w-full',
           isPopular
-            ? 'bg-[#137fec] hover:bg-[#0e6ac7] text-white'
+            ? 'bg-[#2a78f6] hover:bg-[#1f63d4] text-white'
             : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
         )}
       >

@@ -57,7 +57,7 @@ export function generateBackupCodesDownload(
   const formattedCodes = codes.map((code, i) => `  ${i + 1}. ${formatBackupCode(code)}`).join('\n');
 
   return `================================================================================
-IntelliFlow CRM - Backup Codes
+Aurora - Backup Codes
 ================================================================================
 
 Account: ${email}
@@ -143,7 +143,7 @@ export function printBackupCodes(codes: string[], email: string, generatedAt: Da
     <!DOCTYPE html>
     <html>
     <head>
-      <title>IntelliFlow CRM - Backup Codes</title>
+      <title>Aurora - Backup Codes</title>
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -201,7 +201,7 @@ export function printBackupCodes(codes: string[], email: string, generatedAt: Da
       </style>
     </head>
     <body>
-      <h1>IntelliFlow CRM</h1>
+      <h1>Aurora</h1>
       <p class="subtitle">Backup Codes</p>
       <div class="info">
         <strong>Account:</strong> ${email}<br>

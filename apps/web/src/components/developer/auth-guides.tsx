@@ -146,8 +146,8 @@ function OverviewTab() {
         </h2>
         <div className="space-y-3">
           <p className="text-muted-foreground">
-            IntelliFlow CRM uses a multi-layered security model combining Supabase authentication
-            with application-level session management and rate limiting.
+            Aurora uses a multi-layered security model combining Supabase authentication with
+            application-level session management and rate limiting.
           </p>
           <SecurityWarning>
             <strong>Token Storage:</strong> Store access tokens in httpOnly cookies. Never store
@@ -191,7 +191,7 @@ function OAuthTab() {
           PKCE Authorization Code Flow
         </h2>
         <p className="text-muted-foreground mb-3">
-          IntelliFlow uses the PKCE (Proof Key for Code Exchange) extension for all OAuth flows:
+          Aurora uses the PKCE (Proof Key for Code Exchange) extension for all OAuth flows:
         </p>
         <ol className="list-decimal list-inside space-y-2 text-muted-foreground mb-4">
           <li>
@@ -354,7 +354,7 @@ function MfaTab() {
           TOTP Setup
         </h2>
         <p className="text-muted-foreground mb-3">
-          IntelliFlow supports TOTP (Time-based One-Time Password) per RFC 6238 with the following
+          Aurora supports TOTP (Time-based One-Time Password) per RFC 6238 with the following
           parameters: SHA1 algorithm, 6 digits, 30-second period, ±1 window tolerance.
         </p>
 
@@ -375,7 +375,7 @@ Authorization: Bearer <access-token>
 // Response:
 {
   "secret": "BASE32_SECRET_HERE",
-  "qrCodeUrl": "otpauth://totp/IntelliFlow:user@example.com?secret=BASE32_SECRET_HERE&issuer=IntelliFlow",
+  "qrCodeUrl": "otpauth://totp/Aurora:user@example.com?secret=BASE32_SECRET_HERE&issuer=Aurora",
   "backupCodes": [
     "A1B2C3D4E5", "F6A7B8C9D0", "E1F2A3B4C5", "D6E7F8A9B0",
     "C1D2E3F4A5", "B6C7D8E9F0", "A1D2F3B4C5", "E6F7A8B9C0"
@@ -448,7 +448,7 @@ function SessionsKeysTab() {
           Session Management
         </h2>
         <p className="text-muted-foreground mb-3">
-          IntelliFlow enforces strict session limits for security:
+          Aurora enforces strict session limits for security:
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -503,8 +503,7 @@ function SessionsKeysTab() {
           <StatusBadge status="coming-soon" />
         </div>
         <p className="text-muted-foreground mb-3">
-          API keys provide programmatic access to IntelliFlow CRM. Keys use environment-specific
-          prefixes:
+          API keys provide programmatic access to Aurora. Keys use environment-specific prefixes:
         </p>
         <ul className="list-disc list-inside space-y-1 text-muted-foreground mb-3">
           <li>

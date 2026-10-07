@@ -112,7 +112,7 @@ export function ActivityFeedItemActions({
   };
 
   const btnClass =
-    'flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#137fec] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors';
+    'flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-500 hover:text-[#2a78f6] hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors';
 
   const formatTime = (ts: string) => {
     try {
@@ -144,8 +144,8 @@ export function ActivityFeedItemActions({
               onClick={() => onToggleReaction(activityId, r.emoji)}
               className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border transition-colors ${
                 r.users.includes(currentUserId ?? '')
-                  ? 'border-[#137fec] bg-[#137fec]/10 text-[#137fec]'
-                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-[#137fec]'
+                  ? 'border-[#2a78f6] bg-[#2a78f6]/10 text-[#2a78f6]'
+                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-[#2a78f6]'
               }`}
               title={r.users.join(', ')}
             >
@@ -230,7 +230,7 @@ export function ActivityFeedItemActions({
             value={inputContent}
             onChange={(e) => setInputContent(e.target.value)}
             placeholder={inputMode === 'reply' ? `Reply to "${activityTitle}"...` : 'Add a note...'}
-            className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] resize-none"
+            className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] resize-none"
             rows={3}
           />
           <div className="flex items-center gap-2 mt-2">
@@ -248,7 +248,7 @@ export function ActivityFeedItemActions({
             <button
               onClick={handleSubmit}
               disabled={!inputContent.trim() || isSubmitting}
-              className="px-3 py-1.5 text-xs font-medium text-white bg-[#137fec] hover:bg-[#0f6dd0] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-xs font-medium text-white bg-[#2a78f6] hover:bg-[#0f6dd0] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Saving...' : submitLabel}
             </button>

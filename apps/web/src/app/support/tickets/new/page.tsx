@@ -116,7 +116,7 @@ export default function SupportNewTicketPage() {
             <li>
               <Link
                 href="/support"
-                className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] text-sm font-medium transition-colors"
+                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
               >
                 Support
               </Link>
@@ -127,7 +127,7 @@ export default function SupportNewTicketPage() {
             <li>
               <Link
                 href="/support/tickets"
-                className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] text-sm font-medium transition-colors"
+                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
               >
                 Tickets
               </Link>

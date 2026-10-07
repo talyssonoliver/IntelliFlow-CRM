@@ -6,7 +6,7 @@ import TaskSettingsContent from './TaskSettingsContent';
 import TaskSettingsLoading from './TaskSettingsLoading';
 
 export const metadata = {
-  title: 'Task Settings — IntelliFlow',
+  title: 'Task Settings — Aurora',
   description:
     'Configure default due-date offset, reminder defaults, and task templates for the Tasks module.',
 };

@@ -32,7 +32,7 @@ const SAMPLE_PAYLOADS: Record<EmailWebhookEvent, object> = {
   'email.delivered': {
     messageId: 'msg_abc123',
     recipient: 'user@example.com',
-    subject: 'Welcome to IntelliFlow',
+    subject: 'Welcome to Aurora',
     deliveredAt: '2026-01-15T10:30:00.000Z',
   },
   'email.bounced': {

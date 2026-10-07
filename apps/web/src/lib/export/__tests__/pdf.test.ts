@@ -151,7 +151,7 @@ describe('exportToPDF', () => {
   it('includes footer', async () => {
     exportToPDF([]);
     const html = await capturedHTML(capturedBlob);
-    expect(html).toContain('IntelliFlow CRM - Analytics Report');
+    expect(html).toContain('Aurora - Analytics Report');
   });
 
   // =========================================================================

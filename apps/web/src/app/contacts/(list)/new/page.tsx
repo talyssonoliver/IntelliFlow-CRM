@@ -340,7 +340,7 @@ export default function CreateNewContactPage() {
               <li>
                 <Link
                   href="/dashboard"
-                  className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] text-sm font-medium transition-colors"
+                  className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -351,7 +351,7 @@ export default function CreateNewContactPage() {
               <li>
                 <Link
                   href="/contacts"
-                  className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] text-sm font-medium transition-colors"
+                  className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
                 >
                   Contacts
                 </Link>
@@ -399,9 +399,9 @@ export default function CreateNewContactPage() {
                   >
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all ${(() => {
-                        if (status === 'current') return 'bg-[#137fec] text-white';
+                        if (status === 'current') return 'bg-[#2a78f6] text-white';
                         if (status === 'completed')
-                          return 'bg-[#137fec] text-white hover:bg-[#0e6ac7]';
+                          return 'bg-[#2a78f6] text-white hover:bg-[#1f63d4]';
                         return 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-2 border-slate-200 dark:border-slate-700';
                       })()}`}
                     >
@@ -417,7 +417,7 @@ export default function CreateNewContactPage() {
                       className={`text-sm font-medium ${(() => {
                         if (status === 'current') return 'font-bold text-slate-900 dark:text-white';
                         if (status === 'completed')
-                          return 'font-bold text-slate-900 dark:text-white hover:text-[#137fec]';
+                          return 'font-bold text-slate-900 dark:text-white hover:text-[#2a78f6]';
                         return 'text-slate-500 dark:text-slate-400';
                       })()}`}
                     >
@@ -464,7 +464,7 @@ export default function CreateNewContactPage() {
                         value={formData.firstName}
                         onChange={(e) => updateField('firstName', e.target.value)}
                         placeholder="e.g. Sarah"
-                        className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${
+                        className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow ${
                           errors.firstName
                             ? 'border-red-500'
                             : 'border-slate-200 dark:border-slate-700'
@@ -489,7 +489,7 @@ export default function CreateNewContactPage() {
                         value={formData.lastName}
                         onChange={(e) => updateField('lastName', e.target.value)}
                         placeholder="e.g. Connor"
-                        className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${
+                        className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow ${
                           errors.lastName
                             ? 'border-red-500'
                             : 'border-slate-200 dark:border-slate-700'
@@ -518,7 +518,7 @@ export default function CreateNewContactPage() {
                           value={formData.email}
                           onChange={(e) => updateField('email', e.target.value)}
                           placeholder="sarah@example.com"
-                          className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${
+                          className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow ${
                             errors.email
                               ? 'border-red-500'
                               : 'border-slate-200 dark:border-slate-700'
@@ -548,7 +548,7 @@ export default function CreateNewContactPage() {
                           value={formData.phone}
                           onChange={(e) => updateField('phone', e.target.value)}
                           placeholder="+1 (555) 000-0000"
-                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow"
+                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow"
                         />
                       </div>
                     </div>
@@ -567,7 +567,7 @@ export default function CreateNewContactPage() {
                         value={formData.streetAddress}
                         onChange={(e) => updateField('streetAddress', e.target.value)}
                         placeholder="1234 Market Street, Suite 500"
-                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow"
+                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow"
                       />
                     </div>
 
@@ -585,7 +585,7 @@ export default function CreateNewContactPage() {
                         value={formData.city}
                         onChange={(e) => updateField('city', e.target.value)}
                         placeholder="San Francisco"
-                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow"
+                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow"
                       />
                     </div>
 
@@ -603,7 +603,7 @@ export default function CreateNewContactPage() {
                         value={formData.zipCode}
                         onChange={(e) => updateField('zipCode', e.target.value)}
                         placeholder="94103"
-                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow"
+                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow"
                       />
                     </div>
                   </div>
@@ -637,7 +637,7 @@ export default function CreateNewContactPage() {
                         value={formData.company}
                         onChange={(e) => updateField('company', e.target.value)}
                         placeholder="e.g. Acme Corporation"
-                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow"
+                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow"
                       />
                     </div>
 
@@ -655,7 +655,7 @@ export default function CreateNewContactPage() {
                         value={formData.jobTitle}
                         onChange={(e) => updateField('jobTitle', e.target.value)}
                         placeholder="e.g. VP of Marketing"
-                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow"
+                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow"
                       />
                     </div>
 
@@ -678,7 +678,7 @@ export default function CreateNewContactPage() {
                               updateField('departmentOther', '');
                             }
                           }}
-                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] appearance-none cursor-pointer transition-shadow"
+                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] appearance-none cursor-pointer transition-shadow"
                         >
                           {departmentOptions.map((option) => (
                             <option
@@ -713,7 +713,7 @@ export default function CreateNewContactPage() {
                           value={formData.departmentOther}
                           onChange={(e) => updateField('departmentOther', e.target.value)}
                           placeholder="e.g. Legal, IT Support, Research..."
-                          className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${
+                          className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow ${
                             errors.departmentOther
                               ? 'border-red-500'
                               : 'border-slate-200 dark:border-slate-700'
@@ -745,7 +745,7 @@ export default function CreateNewContactPage() {
                           value={formData.linkedIn}
                           onChange={(e) => updateField('linkedIn', e.target.value)}
                           placeholder="https://linkedin.com/in/username"
-                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow"
+                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow"
                         />
                       </div>
                     </div>
@@ -785,7 +785,7 @@ export default function CreateNewContactPage() {
                               updateField('contactTypeOther', '');
                             }
                           }}
-                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] appearance-none cursor-pointer transition-shadow"
+                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] appearance-none cursor-pointer transition-shadow"
                         >
                           {contactTypeOptions.map((option) => (
                             <option
@@ -818,7 +818,7 @@ export default function CreateNewContactPage() {
                           id="status"
                           value={formData.status}
                           onChange={(e) => updateField('status', e.target.value)}
-                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] appearance-none cursor-pointer transition-shadow"
+                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] appearance-none cursor-pointer transition-shadow"
                         >
                           {statusOptions.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -851,7 +851,7 @@ export default function CreateNewContactPage() {
                         value={formData.tags}
                         onChange={(e) => updateField('tags', e.target.value)}
                         placeholder="e.g. VIP, Decision Maker, Technical"
-                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow"
+                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow"
                       />
                       <p className="text-xs text-slate-400">Separate multiple tags with commas</p>
                     </div>
@@ -871,7 +871,7 @@ export default function CreateNewContactPage() {
                           value={formData.contactTypeOther}
                           onChange={(e) => updateField('contactTypeOther', e.target.value)}
                           placeholder="e.g. Consultant, Advisor, Media contact..."
-                          className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${
+                          className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow ${
                             errors.contactTypeOther
                               ? 'border-red-500'
                               : 'border-slate-200 dark:border-slate-700'
@@ -897,7 +897,7 @@ export default function CreateNewContactPage() {
                         onChange={(e) => updateField('notes', e.target.value)}
                         placeholder="Add any additional notes about this contact..."
                         rows={4}
-                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow resize-none"
+                        className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow resize-none"
                       />
                     </div>
                   </div>
@@ -918,7 +918,7 @@ export default function CreateNewContactPage() {
                   <button
                     type="button"
                     onClick={handleNextStep}
-                    className="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all active:scale-95"
+                    className="flex items-center gap-2 bg-[#2a78f6] hover:bg-[#1f63d4] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#2a78f6]/30 transition-all active:scale-95"
                   >
                     <span>Next Step</span>
                     <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
@@ -930,7 +930,7 @@ export default function CreateNewContactPage() {
                     type="button"
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 bg-[#2a78f6] hover:bg-[#1f63d4] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#2a78f6]/30 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <>

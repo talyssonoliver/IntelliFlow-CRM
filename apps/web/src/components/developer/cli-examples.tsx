@@ -46,7 +46,7 @@ export function CliExamples() {
           Initial Project Setup
         </h3>
         <p className="text-muted-foreground mb-4">
-          Get started with the IntelliFlow CRM monorepo from scratch.
+          Get started with the Aurora monorepo from scratch.
         </p>
         <div className="flex flex-col gap-3">
           <CodeBlock

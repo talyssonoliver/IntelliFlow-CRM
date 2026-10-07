@@ -116,7 +116,7 @@ describe('HelpCenterPage', () => {
     render(<HelpCenterPage />);
 
     expect(
-      screen.getByText('Find answers, guides, and documentation for IntelliFlow CRM')
+      screen.getByText('Find answers, guides, and documentation for Aurora')
     ).toBeInTheDocument();
   });
 

@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { WebhookDocs } from '@/components/developer/webhook-docs';
 
 export const metadata: Metadata = {
-  title: 'Webhooks | IntelliFlow CRM',
+  title: 'Webhooks | Aurora',
   description:
-    'Webhook documentation for IntelliFlow CRM — event types, signature verification, retry policies, and interactive endpoint testing',
+    'Webhook documentation for Aurora — event types, signature verification, retry policies, and interactive endpoint testing',
 };
 
 export default function WebhooksPage() {
@@ -14,8 +14,8 @@ export default function WebhooksPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">Webhooks</h1>
           <p className="text-muted-foreground mt-1">
-            Configure and test webhook integrations for real-time event notifications between
-            IntelliFlow CRM and your applications
+            Configure and test webhook integrations for real-time event notifications between Aurora
+            and your applications
           </p>
         </div>
         <WebhookDocs />

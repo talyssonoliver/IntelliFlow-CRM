@@ -116,12 +116,12 @@ function CurrentPlanCard({
   };
 
   return (
-    <Card className="border-2 border-[#137fec]/20 bg-[#137fec]/5 dark:bg-[#137fec]/10">
+    <Card className="border-2 border-[#2a78f6]/20 bg-[#2a78f6]/5 dark:bg-[#2a78f6]/10">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#137fec]/10">
-              <span className="material-symbols-outlined text-[#137fec]">workspace_premium</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2a78f6]/10">
+              <span className="material-symbols-outlined text-[#2a78f6]">workspace_premium</span>
             </div>
             <div>
               <CardTitle className="text-lg">{currentPlan?.name ?? 'Current Plan'}</CardTitle>
@@ -223,13 +223,13 @@ function PlanCard({
     ? 'border-2 border-slate-300 dark:border-slate-600'
     : 'border hover:border-slate-300 dark:hover:border-slate-600';
   const cardBorderClass = isSelected
-    ? 'border-2 border-[#137fec] ring-2 ring-[#137fec]/20'
+    ? 'border-2 border-[#2a78f6] ring-2 ring-[#2a78f6]/20'
     : currentOrDefaultBorderClass;
   const downgradeOrNeutralColorClass =
     changeDirection === 'downgrade' ? 'bg-amber-500 hover:bg-amber-600' : '';
   const buttonColorClass =
     changeDirection === 'upgrade'
-      ? 'bg-[#137fec] hover:bg-[#0e6ac7]'
+      ? 'bg-[#2a78f6] hover:bg-[#1f63d4]'
       : downgradeOrNeutralColorClass;
   return (
     <Card
@@ -238,7 +238,7 @@ function PlanCard({
     >
       {plan.popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Badge className="bg-[#137fec] text-white hover:bg-[#137fec]">Most Popular</Badge>
+          <Badge className="bg-[#2a78f6] text-white hover:bg-[#2a78f6]">Most Popular</Badge>
         </div>
       )}
 
@@ -486,7 +486,7 @@ function ChangePlanDialog({
             disabled={isLoading}
             className={
               comparison.direction === 'upgrade'
-                ? 'bg-[#137fec] hover:bg-[#0e6ac7]'
+                ? 'bg-[#2a78f6] hover:bg-[#1f63d4]'
                 : 'bg-amber-500 hover:bg-amber-600'
             }
           >
@@ -639,7 +639,7 @@ function NoSubscriptionState({ onSelectPlan }: Readonly<{ onSelectPlan: () => vo
       <CardContent className="py-12">
         <EmptyState entity="subscriptions" phase="passive" />
         <div className="flex justify-center mt-4">
-          <Button onClick={onSelectPlan} className="bg-[#137fec] hover:bg-[#0e6ac7]">
+          <Button onClick={onSelectPlan} className="bg-[#2a78f6] hover:bg-[#1f63d4]">
             <span className="material-symbols-outlined mr-2">rocket_launch</span> View Plans
           </Button>
         </div>

@@ -125,7 +125,7 @@ export default function EditLeadPage() {
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
             {error?.message ?? 'The lead you are looking for does not exist.'}
           </p>
-          <Link href="/leads" className="text-[#137fec] hover:underline text-sm font-medium">
+          <Link href="/leads" className="text-[#2a78f6] hover:underline text-sm font-medium">
             Back to leads
           </Link>
         </Card>
@@ -142,7 +142,7 @@ export default function EditLeadPage() {
             <li>
               <Link
                 href="/leads"
-                className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] font-medium transition-colors"
+                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"
               >
                 Leads
               </Link>
@@ -153,7 +153,7 @@ export default function EditLeadPage() {
             <li>
               <Link
                 href={`/leads/${leadId}`}
-                className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] font-medium transition-colors"
+                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"
               >
                 {lead.firstName} {lead.lastName}
               </Link>

@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { SdkGuides } from '@/components/developer/sdk-guides';
 
 export const metadata: Metadata = {
-  title: 'SDK Guides | IntelliFlow CRM',
+  title: 'SDK Guides | Aurora',
   description:
-    'SDK documentation for IntelliFlow CRM — TypeScript client libraries, React hooks, installation guides, and quickstart examples',
+    'SDK documentation for Aurora — TypeScript client libraries, React hooks, installation guides, and quickstart examples',
 };
 
 export default function SdkGuidesPage() {
@@ -14,7 +14,7 @@ export default function SdkGuidesPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">SDK Guides</h1>
           <p className="text-muted-foreground mt-1">
-            Client libraries and developer tools for integrating with the IntelliFlow CRM API
+            Client libraries and developer tools for integrating with the Aurora API
           </p>
         </div>
         <SdkGuides />

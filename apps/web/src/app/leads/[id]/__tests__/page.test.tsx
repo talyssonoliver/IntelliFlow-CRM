@@ -746,7 +746,7 @@ describe('LeadDetailPage - logActivity mutation (IFC-247)', () => {
     // Dialog submit button: contains "Log Call" text. Both header and dialog buttons contain
     // "Log Call" — pick by class (dialog button has no icon, header button has icon span).
     // Use getByLabelText to find the input first, then find the submit button near it.
-    // The dialog's "Log Call" submit button has className containing "bg-[#137fec]" and
+    // The dialog's "Log Call" submit button has className containing "bg-[#2a78f6]" and
     // does NOT have class "shadow-sm shadow-blue-200" (that's the header button).
     // Simplest: get all buttons with "Log Call" text and pick the last one (dialog renders after header).
     const logCallBtns = screen.getAllByText(/Log Call/i, { selector: 'button' });

@@ -70,14 +70,14 @@ export function DpaSignaturePanel({ currentVersion, downloadPath }: DpaSignature
           placeholder="Your full legal name"
           value={signatoryName}
           onChange={(e) => setSignatoryName(e.target.value)}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-[#137fec] focus:outline-none focus:ring-2 focus:ring-[#137fec]/30 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-[#2a78f6] focus:outline-none focus:ring-2 focus:ring-[#2a78f6]/30 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
         />
       </div>
       {/* TODO: Replace placeholder PDF with legal-reviewed DPA template before production deploy */}
       <a
         href={downloadPath}
         download
-        className="inline-flex items-center gap-1 rounded-lg border border-[#137fec] px-3 py-2 text-sm font-medium text-[#137fec] transition-colors hover:bg-[#137fec]/10"
+        className="inline-flex items-center gap-1 rounded-lg border border-[#2a78f6] px-3 py-2 text-sm font-medium text-[#2a78f6] transition-colors hover:bg-[#2a78f6]/10"
       >
         Download DPA Template
       </a>
@@ -91,14 +91,14 @@ export function DpaSignaturePanel({ currentVersion, downloadPath }: DpaSignature
           type="checkbox"
           checked={checked}
           onChange={(e) => setChecked(e.target.checked)}
-          className="h-4 w-4 rounded border-slate-300 accent-[#137fec]"
+          className="h-4 w-4 rounded border-slate-300 accent-[#2a78f6]"
         />{' '}
         I have read and I agree to the Data Processing Addendum
       </label>
       <button
         onClick={handleExecute}
         disabled={!signatoryName.trim() || !checked}
-        className="rounded-lg bg-[#137fec] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0d6ecc] disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-lg bg-[#2a78f6] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1f63d4] disabled:cursor-not-allowed disabled:opacity-50"
       >
         Execute DPA
       </button>
@@ -138,7 +138,7 @@ export function DpaSignaturePanel({ currentVersion, downloadPath }: DpaSignature
 
   // state === 'pending'
   return (
-    <output className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#137fec]/20 bg-white px-4 py-4 shadow-lg dark:border-[#137fec]/30 dark:bg-[#162231]">
+    <output className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#2a78f6]/20 bg-white px-4 py-4 shadow-lg dark:border-[#2a78f6]/30 dark:bg-[#162231]">
       <div className="container mx-auto max-w-6xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex-1">

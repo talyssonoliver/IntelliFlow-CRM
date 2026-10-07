@@ -3,9 +3,9 @@ import { AdrList } from '@/components/developer/adr-list';
 import { getAllADRs, getADRStats } from '@/lib/adr/adr-service';
 
 export const metadata: Metadata = {
-  title: 'Architecture | IntelliFlow CRM',
+  title: 'Architecture | Aurora',
   description:
-    'Architecture Decision Records (ADRs) for IntelliFlow CRM — browse decisions on system design, data management, AI integration, and platform infrastructure',
+    'Architecture Decision Records (ADRs) for Aurora — browse decisions on system design, data management, AI integration, and platform infrastructure',
 };
 
 export default async function ArchitecturePage() {

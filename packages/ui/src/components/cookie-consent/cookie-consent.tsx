@@ -96,21 +96,21 @@ export const COOKIE_INVENTORY: CookieInfo[] = [
     category: 'necessary',
     duration: '24 hours',
     description: 'Maintains user session for authentication',
-    provider: 'IntelliFlow',
+    provider: 'Leangency',
   },
   {
     name: 'csrf_token',
     category: 'necessary',
     duration: 'Session',
     description: 'Protects against cross-site request forgery',
-    provider: 'IntelliFlow',
+    provider: 'Leangency',
   },
   {
     name: 'intelliflow_consent',
     category: 'necessary',
     duration: '1 year',
     description: 'Stores cookie consent preferences',
-    provider: 'IntelliFlow',
+    provider: 'Leangency',
   },
   {
     name: '_ga',
@@ -152,14 +152,14 @@ export const COOKIE_INVENTORY: CookieInfo[] = [
     category: 'preferences',
     duration: '1 year',
     description: 'Stores UI theme preference (light/dark)',
-    provider: 'IntelliFlow',
+    provider: 'Leangency',
   },
   {
     name: 'language',
     category: 'preferences',
     duration: '1 year',
     description: 'Stores language preference',
-    provider: 'IntelliFlow',
+    provider: 'Leangency',
   },
 ];
 

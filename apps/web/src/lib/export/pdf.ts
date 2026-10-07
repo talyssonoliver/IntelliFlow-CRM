@@ -38,7 +38,7 @@ function generatePDFHTML(sections: ReportSection[], options: PDFExportOptions = 
         padding: 40px;
       }
       .header {
-        border-bottom: 2px solid #137fec;
+        border-bottom: 2px solid #2a78f6;
         padding-bottom: 20px;
         margin-bottom: 30px;
       }
@@ -202,7 +202,7 @@ function generatePDFHTML(sections: ReportSection[], options: PDFExportOptions = 
 
   const footerHTML = `
     <div class="footer">
-      IntelliFlow CRM - Analytics Report
+      Aurora - Analytics Report
     </div>
   `;
 

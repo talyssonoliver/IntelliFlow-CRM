@@ -71,7 +71,7 @@ function getStatusConfig(status: DocumentStatus) {
       text: 'text-green-700 dark:text-green-400',
       icon: 'check_circle',
     },
-    SIGNED: { bg: 'bg-[#137fec]/10', text: 'text-[#137fec]', icon: 'verified' },
+    SIGNED: { bg: 'bg-[#2a78f6]/10', text: 'text-[#2a78f6]', icon: 'verified' },
     ARCHIVED: {
       bg: 'bg-gray-100 dark:bg-gray-900/30',
       text: 'text-gray-600 dark:text-gray-400',
@@ -139,7 +139,7 @@ function DocumentErrorView({ error }: { error: { message?: string } | null }) {
         </p>
         <Link
           href="/documents"
-          className="mt-4 inline-block px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600"
+          className="mt-4 inline-block px-4 py-2 bg-[#2a78f6] text-white rounded-lg hover:bg-blue-600"
         >
           Back to Documents
         </Link>
@@ -225,13 +225,13 @@ function DocumentOverviewTab({
                 href={signedUrlData.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-block px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+                className="mt-4 inline-block px-4 py-2 bg-[#2a78f6] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors"
               >
                 Open Full View
               </a>
             ) : (
               <button
-                className="mt-4 px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors opacity-50 cursor-not-allowed"
+                className="mt-4 px-4 py-2 bg-[#2a78f6] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors opacity-50 cursor-not-allowed"
                 disabled
               >
                 Open Full View
@@ -250,7 +250,7 @@ function DocumentOverviewTab({
             disabled={document.status !== 'APPROVED' || signMutation.isPending}
             onClick={() => signMutation.mutate({ documentId })}
           >
-            <span className="material-symbols-outlined text-[32px] text-[#137fec]">draw</span>
+            <span className="material-symbols-outlined text-[32px] text-[#2a78f6]">draw</span>
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {signMutation.isPending ? 'Signing...' : 'Sign'}
             </span>
@@ -260,7 +260,7 @@ function DocumentOverviewTab({
             disabled={document.status !== 'UNDER_REVIEW' || approveMutation.isPending}
             onClick={() => approveMutation.mutate({ documentId })}
           >
-            <span className="material-symbols-outlined text-[32px] text-[#137fec]">
+            <span className="material-symbols-outlined text-[32px] text-[#2a78f6]">
               check_circle
             </span>
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -268,7 +268,7 @@ function DocumentOverviewTab({
             </span>
           </button>
           <button className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-            <span className="material-symbols-outlined text-[32px] text-[#137fec]">
+            <span className="material-symbols-outlined text-[32px] text-[#2a78f6]">
               content_copy
             </span>
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -276,7 +276,7 @@ function DocumentOverviewTab({
             </span>
           </button>
           <button className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-            <span className="material-symbols-outlined text-[32px] text-[#137fec]">print</span>
+            <span className="material-symbols-outlined text-[32px] text-[#2a78f6]">print</span>
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Print</span>
           </button>
         </div>
@@ -290,7 +290,7 @@ function DocumentVersionsTab({ auditTrail }: { auditTrail: AuditEntry[] }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white">Version History</h3>
-        <button className="px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
+        <button className="px-4 py-2 bg-[#2a78f6] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
           Create New Version
         </button>
       </div>
@@ -301,15 +301,15 @@ function DocumentVersionsTab({ auditTrail }: { auditTrail: AuditEntry[] }) {
           return (
             <div
               key={event.id}
-              className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-[#137fec] transition-colors"
+              className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-[#2a78f6] transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   <div
-                    className={`p-2 rounded ${isCurrent ? 'bg-[#137fec]/10' : 'bg-slate-100 dark:bg-slate-800'}`}
+                    className={`p-2 rounded ${isCurrent ? 'bg-[#2a78f6]/10' : 'bg-slate-100 dark:bg-slate-800'}`}
                   >
                     <span
-                      className={`material-symbols-outlined text-[24px] ${isCurrent ? 'text-[#137fec]' : 'text-slate-400'}`}
+                      className={`material-symbols-outlined text-[24px] ${isCurrent ? 'text-[#2a78f6]' : 'text-slate-400'}`}
                     >
                       {isCurrent ? 'verified' : 'history'}
                     </span>
@@ -342,14 +342,14 @@ function DocumentVersionsTab({ auditTrail }: { auditTrail: AuditEntry[] }) {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
+                  <button className="p-1.5 text-slate-400 hover:text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded transition-colors">
                     <span className="material-symbols-outlined text-[20px]">download</span>
                   </button>
-                  <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
+                  <button className="p-1.5 text-slate-400 hover:text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded transition-colors">
                     <span className="material-symbols-outlined text-[20px]">visibility</span>
                   </button>
                   {!isCurrent && (
-                    <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
+                    <button className="p-1.5 text-slate-400 hover:text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded transition-colors">
                       <span className="material-symbols-outlined text-[20px]">restore</span>
                     </button>
                   )}
@@ -373,7 +373,7 @@ function DocumentAccessControlTab({ accessControlList }: { accessControlList: AC
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white">Access Control List</h3>
-        <button className="px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
+        <button className="px-4 py-2 bg-[#2a78f6] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
           Grant Access
         </button>
       </div>
@@ -474,7 +474,7 @@ function DocumentSignaturesTab({ signatures }: { signatures: DocumentPageSignatu
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white">E-Signatures</h3>
-        <button className="px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
+        <button className="px-4 py-2 bg-[#2a78f6] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
           Request Signature
         </button>
       </div>
@@ -526,7 +526,7 @@ function DocumentSignaturesTab({ signatures }: { signatures: DocumentPageSignatu
                     </div>
                   </div>
                 </div>
-                <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
+                <button className="p-1.5 text-slate-400 hover:text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded transition-colors">
                   <span className="material-symbols-outlined text-[20px]">more_vert</span>
                 </button>
               </div>
@@ -561,7 +561,7 @@ function DocumentCommentsTab({
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] min-h-[80px] p-3 placeholder:text-slate-400"
+            className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6] min-h-[80px] p-3 placeholder:text-slate-400"
             placeholder="Add a comment or annotation..."
           />
           <div className="flex justify-between items-center mt-2">
@@ -573,7 +573,7 @@ function DocumentCommentsTab({
                 <span className="material-symbols-outlined text-[20px]">sentiment_satisfied</span>
               </button>
             </div>
-            <button className="bg-[#137fec] text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors">
+            <button className="bg-[#2a78f6] text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors">
               Add Comment
             </button>
           </div>
@@ -604,7 +604,7 @@ function DocumentCommentsTab({
                     <p className="text-sm text-slate-700 dark:text-slate-300">{comment.content}</p>
                   </div>
                   <div className="flex items-center gap-4 mt-2 px-3">
-                    <button className="text-xs text-slate-500 hover:text-[#137fec] font-medium">
+                    <button className="text-xs text-slate-500 hover:text-[#2a78f6] font-medium">
                       Reply
                     </button>
                     {comment.isResolved ? (
@@ -613,7 +613,7 @@ function DocumentCommentsTab({
                         Resolved
                       </span>
                     ) : (
-                      <button className="text-xs text-slate-500 hover:text-[#137fec] font-medium">
+                      <button className="text-xs text-slate-500 hover:text-[#2a78f6] font-medium">
                         Mark as Resolved
                       </button>
                     )}
@@ -822,7 +822,7 @@ export default function DocumentDetailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/documents" className="hover:text-[#137fec]">
+            <Link href="/documents" className="hover:text-[#2a78f6]">
               Documents
             </Link>
             <span className="material-symbols-outlined text-[16px]">chevron_right</span>
@@ -837,7 +837,7 @@ export default function DocumentDetailPage() {
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
             <span className="material-symbols-outlined text-[18px]">share</span> Share
           </button>
-          <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
+          <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
             <span className="material-symbols-outlined text-[18px]">edit</span> Edit
           </button>
         </div>
@@ -850,7 +850,7 @@ export default function DocumentDetailPage() {
           {/* Document Info Card */}
           <Card className="overflow-hidden">
             <div className="h-24 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-slate-800 dark:to-slate-800 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[64px] text-[#137fec]">
+              <span className="material-symbols-outlined text-[64px] text-[#2a78f6]">
                 description
               </span>
             </div>
@@ -967,7 +967,7 @@ export default function DocumentDetailPage() {
                     {document.relatedCase && (
                       <Link
                         href={`/cases/${document.relatedCase}`}
-                        className="flex items-center gap-2 text-sm text-[#137fec] hover:underline"
+                        className="flex items-center gap-2 text-sm text-[#2a78f6] hover:underline"
                       >
                         <span className="material-symbols-outlined text-[16px]">gavel</span>
                         {document.relatedCase}
@@ -976,7 +976,7 @@ export default function DocumentDetailPage() {
                     {document.relatedContact && (
                       <Link
                         href={`/contacts/${document.relatedContact}`}
-                        className="flex items-center gap-2 text-sm text-[#137fec] hover:underline"
+                        className="flex items-center gap-2 text-sm text-[#2a78f6] hover:underline"
                       >
                         <span className="material-symbols-outlined text-[16px]">person</span>
                         {document.relatedContact}
@@ -999,7 +999,7 @@ export default function DocumentDetailPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'text-[#137fec] border-[#137fec]'
+                      ? 'text-[#2a78f6] border-[#2a78f6]'
                       : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'
                   }`}
                 >

@@ -268,7 +268,7 @@ vi.mock('@/components/shared/activity-feed', () => ({
           aria-expanded={open}
           aria-haspopup="listbox"
           className={`p-1 transition-colors rounded flex items-center gap-1 ${
-            value !== 'all' ? 'text-[#137fec]' : 'text-slate-400 hover:text-[#137fec]'
+            value !== 'all' ? 'text-[#2a78f6]' : 'text-slate-400 hover:text-[#2a78f6]'
           }`}
         >
           <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
@@ -300,7 +300,7 @@ vi.mock('@/components/shared/activity-feed', () => ({
                   }}
                   className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${
                     value === option.value
-                      ? 'text-[#137fec] font-medium'
+                      ? 'text-[#2a78f6] font-medium'
                       : 'text-slate-700 dark:text-slate-300'
                   }`}
                 >

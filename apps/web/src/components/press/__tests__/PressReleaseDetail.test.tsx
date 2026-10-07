@@ -362,7 +362,7 @@ describe('Brand Consistency', () => {
       (el) => el.getAttribute('class') ?? ''
     );
     const hasHardcodedHex = classAttrs.some(
-      (cls) => cls.includes('#137fec') || cls.includes('#0e6ac7')
+      (cls) => cls.includes('#2a78f6') || cls.includes('#1f63d4')
     );
     expect(hasHardcodedHex).toBe(false);
   });

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { EmailPage } from '@/components/email/EmailPage';
 
 export const metadata: Metadata = {
-  title: 'Email | IntelliFlow CRM',
+  title: 'Email | Aurora',
   description: 'Email thread view',
 };
 

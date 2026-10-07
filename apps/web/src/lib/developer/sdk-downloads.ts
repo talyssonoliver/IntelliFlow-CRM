@@ -19,7 +19,7 @@ export const SDK_REGISTRY: SdkPackage[] = [
     language: 'typescript',
     version: '0.1.0',
     packageName: '@intelliflow/api-client',
-    description: 'Official TypeScript/JavaScript SDK for IntelliFlow CRM API with full type safety',
+    description: 'Official TypeScript/JavaScript SDK for Aurora API with full type safety',
     status: 'beta',
     installCommands: {
       npm: 'npm install @intelliflow/api-client',
@@ -47,7 +47,7 @@ export const SDK_REGISTRY: SdkPackage[] = [
     language: 'python',
     version: '0.0.1',
     packageName: 'intelliflow-crm',
-    description: 'Python client library for IntelliFlow CRM API',
+    description: 'Python client library for Aurora API',
     status: 'coming-soon',
     installCommands: {
       npm: 'pip install intelliflow-crm',
@@ -61,7 +61,7 @@ export const SDK_REGISTRY: SdkPackage[] = [
     language: 'go',
     version: '0.0.1',
     packageName: 'intelliflow-go',
-    description: 'Go client library for IntelliFlow CRM API',
+    description: 'Go client library for Aurora API',
     status: 'coming-soon',
     installCommands: {
       npm: 'go get intelliflow-go',
@@ -75,7 +75,7 @@ export const SDK_REGISTRY: SdkPackage[] = [
     language: 'typescript',
     version: '0.0.1',
     packageName: '@intelliflow/cli',
-    description: 'Command-line interface for managing IntelliFlow CRM resources',
+    description: 'Command-line interface for managing Aurora resources',
     status: 'coming-soon',
     installCommands: {
       npm: 'npm install -g @intelliflow/cli',

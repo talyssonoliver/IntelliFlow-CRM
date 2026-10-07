@@ -140,8 +140,8 @@ export function ContactAiInsightsTab({
             </Card>
             <Card className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[#137fec]">paid</span>
+                <div className="w-10 h-10 rounded-lg bg-[#2a78f6]/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[#2a78f6]">paid</span>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -174,8 +174,8 @@ export function ContactAiInsightsTab({
             <ul className="space-y-3">
               {aiInsights.recommendations.map((rec, index) => (
                 <li key={`rec-${rec.slice(0, 20)}`} className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-xs font-medium text-[#137fec]">{index + 1}</span>
+                  <div className="w-6 h-6 rounded-full bg-[#2a78f6]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-xs font-medium text-[#2a78f6]">{index + 1}</span>
                   </div>
                   <p className="text-slate-600 dark:text-slate-400">{rec}</p>
                 </li>
@@ -192,13 +192,13 @@ export function ContactAiInsightsTab({
                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                     Engagement Score
                   </span>
-                  <span className="text-sm font-bold text-[#137fec]">
+                  <span className="text-sm font-bold text-[#2a78f6]">
                     {aiInsights.engagementScore}%
                   </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
                   <div
-                    className="bg-[#137fec] h-2 rounded-full"
+                    className="bg-[#2a78f6] h-2 rounded-full"
                     style={{ width: `${aiInsights.engagementScore}%` }}
                   />
                 </div>
@@ -228,7 +228,7 @@ export function ContactAiSummaryCard({
     <Card className="p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <svg className="w-5 h-5 text-[#137fec]" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="w-5 h-5 text-[#2a78f6]" viewBox="0 0 24 24" fill="currentColor">
             <path d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z" />
           </svg>
           <h3 className="text-base font-bold text-slate-900 dark:text-white">AI Insights</h3>
@@ -240,13 +240,13 @@ export function ContactAiSummaryCard({
           <div>
             <div className="flex justify-between mb-1.5">
               <span className="text-sm text-slate-600 dark:text-slate-300">Conversion</span>
-              <span className="text-sm font-bold text-[#137fec]">
+              <span className="text-sm font-bold text-[#2a78f6]">
                 {aiInsights.conversionProbability}%
               </span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
               <div
-                className="bg-[#137fec] h-2 rounded-full"
+                className="bg-[#2a78f6] h-2 rounded-full"
                 style={{ width: `${aiInsights.conversionProbability}%` }}
               />
             </div>
@@ -273,7 +273,7 @@ export function ContactAiSummaryCard({
           </div>
           <button
             onClick={onViewAiTab}
-            className="w-full mt-2 text-sm text-[#137fec] hover:underline text-center"
+            className="w-full mt-2 text-sm text-[#2a78f6] hover:underline text-center"
           >
             View Full Analysis
           </button>

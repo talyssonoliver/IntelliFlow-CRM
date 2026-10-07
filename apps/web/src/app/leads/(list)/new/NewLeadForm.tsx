@@ -42,14 +42,14 @@ const STEPS: Array<{ id: StepId; n: number; label: string }> = [
 const STEP_CIRCLE_CLASS: Record<StepStatus, string> = {
   upcoming:
     'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-2 border-slate-200 dark:border-slate-700',
-  current: 'bg-[#137fec] text-white',
-  completed: 'bg-[#137fec] text-white hover:bg-[#0e6ac7]',
+  current: 'bg-[#2a78f6] text-white',
+  completed: 'bg-[#2a78f6] text-white hover:bg-[#1f63d4]',
 };
 
 const STEP_LABEL_CLASS: Record<StepStatus, string> = {
   upcoming: 'text-slate-500 dark:text-slate-400',
   current: 'font-bold text-slate-900 dark:text-white',
-  completed: 'font-bold text-slate-900 dark:text-white hover:text-[#137fec]',
+  completed: 'font-bold text-slate-900 dark:text-white hover:text-[#2a78f6]',
 };
 
 function stepStatus(i: number, current: number): StepStatus {
@@ -276,7 +276,7 @@ export default function NewLeadForm() {
               <li>
                 <Link
                   href="/dashboard"
-                  className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] text-sm font-medium transition-colors"
+                  className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -287,7 +287,7 @@ export default function NewLeadForm() {
               <li>
                 <Link
                   href="/leads"
-                  className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] text-sm font-medium transition-colors"
+                  className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
                 >
                   Leads
                 </Link>
@@ -348,7 +348,7 @@ export default function NewLeadForm() {
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all active:scale-95"
+                  className="flex items-center gap-2 bg-[#2a78f6] hover:bg-[#1f63d4] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#2a78f6]/30 transition-all active:scale-95"
                 >
                   <span>Next Step</span>
                   <span aria-hidden="true" className={symbolClass}>
@@ -360,7 +360,7 @@ export default function NewLeadForm() {
                   type="button"
                   onClick={() => void submit()}
                   disabled={submitting}
-                  className="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 bg-[#2a78f6] hover:bg-[#1f63d4] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#2a78f6]/30 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? (
                     <>

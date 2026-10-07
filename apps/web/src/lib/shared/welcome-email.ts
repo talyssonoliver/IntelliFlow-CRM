@@ -55,7 +55,7 @@ export interface WelcomeEmailSuccess {
 // Constants
 // ============================================
 
-const APP_NAME = 'IntelliFlow CRM';
+const APP_NAME = 'Aurora';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://intelliflow-crm.com';
 const SENDER_EMAIL = process.env.NEXT_PUBLIC_SENDER_EMAIL || 'noreply@intelliflow-crm.com';
 const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@intelliflow-crm.com';
@@ -114,7 +114,7 @@ export function buildWelcomeEmailPayload(data: WelcomeEmailData): WelcomeEmailPa
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
     .header {
-      background: linear-gradient(135deg, #137fec 0%, #0f5cbf 100%);
+      background: linear-gradient(135deg, #2a78f6 0%, #0f5cbf 100%);
       color: white;
       padding: 40px 30px;
       text-align: center;
@@ -145,7 +145,7 @@ export function buildWelcomeEmailPayload(data: WelcomeEmailData): WelcomeEmailPa
     }
     .cta-button {
       display: inline-block;
-      background: #137fec;
+      background: #2a78f6;
       color: white !important;
       padding: 14px 32px;
       border-radius: 8px;
@@ -174,7 +174,7 @@ export function buildWelcomeEmailPayload(data: WelcomeEmailData): WelcomeEmailPa
     .feature-icon {
       width: 20px;
       height: 20px;
-      background: #137fec;
+      background: #2a78f6;
       border-radius: 50%;
       margin-right: 12px;
       flex-shrink: 0;
@@ -202,7 +202,7 @@ export function buildWelcomeEmailPayload(data: WelcomeEmailData): WelcomeEmailPa
       font-size: 14px;
     }
     .help-section a {
-      color: #137fec;
+      color: #2a78f6;
       text-decoration: none;
     }
     .footer {
@@ -247,7 +247,7 @@ export function buildWelcomeEmailPayload(data: WelcomeEmailData): WelcomeEmailPa
       </div>
       <p style="color: #64748b; font-size: 14px; text-align: center;">
         Or copy and paste this link into your browser:<br>
-        <a href="${verificationUrl}" style="color: #137fec; word-break: break-all;">${verificationUrl}</a>
+        <a href="${verificationUrl}" style="color: #2a78f6; word-break: break-all;">${verificationUrl}</a>
       </p>
       `
           : `
@@ -457,14 +457,8 @@ export async function sendWelcomeEmail(
  * @returns A cryptographically secure random token
  */
 export function generateVerificationToken(): string {
-  // Use Web Crypto API for browser, crypto for Node
-  if (typeof globalThis.window !== 'undefined' && globalThis.crypto?.getRandomValues) {
-    const array = new Uint8Array(32);
-    globalThis.crypto.getRandomValues(array);
-    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
-  }
-
-  // Fallback for server-side
-  const { randomBytes } = require('node:crypto');
-  return randomBytes(32).toString('hex');
+  // Web Crypto is global in browsers and in Node 19+ (this app runs on Node 22).
+  const array = new Uint8Array(32);
+  globalThis.crypto.getRandomValues(array);
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }

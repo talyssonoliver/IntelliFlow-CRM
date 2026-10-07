@@ -50,7 +50,7 @@ export function buildContactEmailPayload(formData: ContactFormInput): ContactEma
       padding: 20px;
     }
     .header {
-      background: #137fec;
+      background: #2a78f6;
       color: white;
       padding: 20px;
       border-radius: 8px 8px 0 0;
@@ -79,7 +79,7 @@ export function buildContactEmailPayload(formData: ContactFormInput): ContactEma
       background: #f6f7f8;
       padding: 16px;
       border-radius: 6px;
-      border-left: 4px solid #137fec;
+      border-left: 4px solid #2a78f6;
     }
     .footer {
       margin-top: 20px;
@@ -146,7 +146,7 @@ export function buildContactEmailPayload(formData: ContactFormInput): ContactEma
     </div>
 
     <div class="footer">
-      Sent via IntelliFlow CRM contact form<br>
+      Sent via Aurora contact form<br>
       Timestamp: ${new Date().toISOString()}
     </div>
   </div>
@@ -165,7 +165,7 @@ Message:
 ${message}
 
 ---
-Sent via IntelliFlow CRM contact form
+Sent via Aurora contact form
 Timestamp: ${new Date().toISOString()}
   `.trim();
 

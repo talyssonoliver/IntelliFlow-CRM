@@ -172,7 +172,8 @@ test.describe('Core Navigation', () => {
       await page.goto('/leads');
 
       // Click logo/brand link
-      const logoLink = page.locator('a:has-text("IntelliFlow CRM")').first();
+      // The Aurora logo is two images; the link carries the name.
+      const logoLink = page.getByRole('link', { name: 'Aurora home' }).first();
       if ((await logoLink.count()) > 0) {
         await logoLink.click();
         await expect(page).toHaveURL(/dashboard/);

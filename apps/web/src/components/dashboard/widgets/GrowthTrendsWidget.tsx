@@ -113,7 +113,7 @@ export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
           <path
             d={`M0,${100 - dataPoints[0]} ${lineSegments}`}
             fill="none"
-            stroke="#137fec"
+            stroke="#2a78f6"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -122,8 +122,8 @@ export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
           {/* Gradient definition */}
           <defs>
             <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#137fec" />
-              <stop offset="100%" stopColor="#137fec" stopOpacity="0" />
+              <stop offset="0%" stopColor="#2a78f6" />
+              <stop offset="100%" stopColor="#2a78f6" stopOpacity="0" />
             </linearGradient>
           </defs>
         </svg>
