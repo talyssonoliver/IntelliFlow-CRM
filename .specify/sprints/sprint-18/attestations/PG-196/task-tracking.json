@@ -29,7 +29,7 @@
   },
   "kpis": {},
   "notes": "Owner ruling A (2026-10-07): tenant-configurable revenue tiers seeded from ENTERPRISE/MID_MARKET/SMB/STARTUP (names, revenue thresholds, colour, benefits, default tier, up/down rules); card, hierarchy tab and sidebar tier links read one config; /accounts?tier= filters wired. MUST follow docs/planning/module-settings-playbook.md.",
-  "phase": "spec",
+  "phase": "plan",
   "started_at": "2026-10-06T22:12:30Z",
   "status_history": [
     {
@@ -46,6 +46,11 @@
       "at": "2026-10-07T00:00:00Z",
       "status": "Spec Complete",
       "note": "owner ruling A; 6-agent consensus; spec sha256 d4b411ca71f063711833d5844daa693a713559e86b3f5b2ffd49cace4110bf2d"
+    },
+    {
+      "at": "2026-10-07T00:00:00Z",
+      "status": "Plan Complete",
+      "note": "18-step TDD plan; plan-reviewer subagent APPROVE on iteration 2"
     }
   ],
   "stream": null,
