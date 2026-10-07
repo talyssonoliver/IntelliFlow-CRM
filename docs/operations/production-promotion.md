@@ -76,7 +76,11 @@ GITHUB_TOKEN=$(gh auth token) GITHUB_REPOSITORY=talyssonoliver/IntelliFlow-CRM \
    - opens a ledger entry;
    - points each `:latest` at the built digest (crane copies the manifest, so
      the digest is identical) and fails unless `:latest` then resolves to it;
-   - runs `railway redeploy --service api`, which re-pulls the tag;
+   - runs `railway redeploy --service api --from-source`, which pulls the image
+     the tag now points at (plain `redeploy` restarts the previous deployment's
+     pinned digest). The `RAILWAY_TOKEN` secret is an account token, so the step
+     passes it as `RAILWAY_API_TOKEN` and names the project
+     (`vars.RAILWAY_PROJECT_ID`) and environment;
    - waits until the API's own `/api/health/live` uptime shows a restart;
    - closes the ledger entry as success or failure.
 
@@ -108,7 +112,7 @@ last ledger entry or run summary, then redeploy:
 crane auth login ghcr.io -u <user> -p "$(gh auth token)"
 crane tag ghcr.io/talyssonoliver/intelliflow-crm-api@sha256:<previous digest> latest
 crane digest ghcr.io/talyssonoliver/intelliflow-crm-api:latest   # must print that digest
-railway redeploy --service api --yes                             # or Railway: Cmd+K → "Redeploy source image"
+railway redeploy --service api --from-source --yes               # or Railway: Cmd+K → "Redeploy source image"
 ```
 
 ## Railway settings (owner, in the dashboard)
@@ -122,8 +126,9 @@ The Railway CLI cannot log in from the automation machine, so these are clicks:
    this workflow does not control it. Tell the CI lane.
 2. **Turn off image auto-updates** once promotion is in use. Same **Source**
    section → **Configure Auto Updates** → off. Promotion redeploys explicitly
-   (`railway redeploy` re-pulls `:latest`), so auto-update is no longer needed.
-   Leaving it on only adds a second, delayed redeploy of the same digest.
+   (`railway redeploy --from-source` re-pulls `:latest`), so auto-update is no
+   longer needed. Leaving it on only adds a second, delayed redeploy of the same
+   digest.
 3. **Optional, stricter: pin by digest.** Same **Source** field → set the image
    to `ghcr.io/talyssonoliver/intelliflow-crm-api@sha256:<digest>` from the
    latest ledger entry. Production then cannot change at all unless the field is
