@@ -6,7 +6,7 @@
 > typing the URL directly.
 
 > **Canonical counts**: All "page.tsx" file-count references in this document
-> reflect the filesystem total (Total Pages: 211) emitted by
+> reflect the filesystem total (Total Pages: 214) emitted by
 > `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`
 > counts once; route groups stripped; `[id]` collapses; `app/api/` excluded. See
 > `docs/design/content-audit.md` for the full counting rule. Verified:
@@ -149,15 +149,17 @@ Legend:
 | `/dashboard/customize` | --  | --  | --  | IP? |   VERIFY   | Likely linked from dashboard |
 | `/dashboard/new`       | --  | --  | --  | IP? |   VERIFY   | Likely linked from dashboard |
 
-### Accounts (5 routes)
+### Accounts (7 routes)
 
-| Route                         |  H  | UM  | SB  | IP  | Reachable? | Notes                 |
-| ----------------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------- |
-| `/accounts`                   | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM) |
-| `/accounts/[id]`              | --  | --  | --  | IP  |     OK     | From list rows        |
-| `/accounts/account-settings`  | --  | --  | SB  | --  |    YES     | Accounts sidebar      |
-| `/accounts/account-tiers`     | --  | --  | SB  | --  |    YES     | Accounts sidebar      |
-| `/accounts/territory-mapping` | --  | --  | SB  | --  |    YES     | Accounts sidebar      |
+| Route                         |  H  | UM  | SB  | IP  | Reachable? | Notes                                                                 |
+| ----------------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------------------------------------------------------- |
+| `/accounts`                   | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM)                                                 |
+| `/accounts/[id]`              | --  | --  | --  | IP  |     OK     | From list rows                                                        |
+| `/accounts/new`               | --  | --  | --  | IP  |    YES     | PG-197: list "New Account" CTA + dashboard quick-create               |
+| `/accounts/[id]/edit`         | --  | --  | --  | IP  |    YES     | PG-197: Edit on detail page + list row; legacy `?edit=true` redirects |
+| `/accounts/account-settings`  | --  | --  | SB  | --  |    YES     | Accounts sidebar                                                      |
+| `/accounts/account-tiers`     | --  | --  | SB  | IP  |    YES     | Accounts sidebar                                                      |
+| `/accounts/territory-mapping` | --  | --  | SB  | IP  |    YES     | Accounts sidebar + Account Settings panel; implemented (PG-197)       |
 
 ### Agent Approvals (17 routes)
 

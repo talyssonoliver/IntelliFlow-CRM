@@ -51,6 +51,24 @@
       "timestamp": "2026-03-08T17:44:00Z",
       "duration_ms": 6500,
       "notes": "CJS/ESM succeed. DTS fails on pre-existing case.ts:355 — not caused by IFC-193"
+    },
+    {
+      "name": "TypeScript (domain; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/domain typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:20.808Z",
+      "duration_ms": 1893,
+      "stdout_hash": "1215039c475cf7b7f238dce9b0a5f89c430b5865a4f07a2738b04639f844c4d9"
+    },
+    {
+      "name": "Build (domain; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/domain build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:28.331Z",
+      "duration_ms": 3268,
+      "stdout_hash": "6d8a6f8617401ba082d7afd80999207ab056da716e45a7185fd152a0c66631fd"
     }
   ],
   "evidence_summary": {

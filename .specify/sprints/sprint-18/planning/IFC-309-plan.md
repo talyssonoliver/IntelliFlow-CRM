@@ -69,10 +69,10 @@ Note: CSV "Artifacts To Track" lists `apps/api/src/modules/legal/legal.router.ts
 - [ ] `pnpm --filter @intelliflow/domain test` passes (baseline)
 - [ ] `pnpm --filter @intelliflow/api test` passes (baseline)
 - [ ] `pnpm --filter @intelliflow/web test` passes (baseline)
-- [ ] Docker test DB healthy: `docker ps --filter name=postgres-test`
-- [ ] Confirm `termsAcceptance` key is NOT already in `apps/api/src/router.ts`
-- [ ] Confirm `terms-acceptance.router.ts` does NOT already exist in `apps/api/src/modules/legal/`
-- [ ] Confirm no `TermsAcceptance` model in `packages/db/prisma/schema.prisma` (grep for "TermsAcceptance")
+- [x] Docker test DB healthy: `docker ps --filter name=postgres-test`
+- [x] Confirm `termsAcceptance` key is NOT already in `apps/api/src/router.ts`
+- [x] Confirm `terms-acceptance.router.ts` does NOT already exist in `apps/api/src/modules/legal/`
+- [x] Confirm no `TermsAcceptance` model in `packages/db/prisma/schema.prisma` (grep for "TermsAcceptance")
 
 ---
 
@@ -87,11 +87,11 @@ Note: CSV "Artifacts To Track" lists `apps/api/src/modules/legal/legal.router.ts
 **Acceptance Criteria Addressed:** AC-012
 
 **Test cases (all must FAIL — TermsAcceptance.ts does not exist yet):**
-- [ ] `TermsAcceptance.create()` instantiates with valid fields (id, tenantId, userId, termsVersion, route)
-- [ ] `termsVersion` rejects empty string (throws)
-- [ ] `termsVersion` rejects values over 32 chars (throws)
-- [ ] Domain class has zero imports from `@intelliflow/db`, `@prisma/client`, or any infra package (static check via grep in test)
-- [ ] `toRecord()` returns plain object with all 7 expected fields
+- [x] `TermsAcceptance.create()` instantiates with valid fields (id, tenantId, userId, termsVersion, route)
+- [x] `termsVersion` rejects empty string (throws)
+- [x] `termsVersion` rejects values over 32 chars (throws)
+- [x] Domain class has zero imports from `@intelliflow/db`, `@prisma/client`, or any infra package (static check via grep in test)
+- [x] `toRecord()` returns plain object with all 7 expected fields
 
 **Validation:**
 ```bash
@@ -110,19 +110,19 @@ pnpm --filter @intelliflow/domain test -- --testPathPattern="legal/__tests__/Ter
 **Acceptance Criteria Addressed:** AC-002, AC-003, AC-004, AC-005, AC-006, AC-007, NF-002, NF-005
 
 **Test cases (all must FAIL — router file does not exist yet):**
-- [ ] `accept` mutation — first call persists record, returns `{ accepted: true, acceptedAt: Date }`
-- [ ] `accept` mutation — second call with same `(tenantId, userId, termsVersion)` is idempotent (no duplicate row, same accepted result)
-- [ ] `accept` mutation — Zod schema REJECTS `acceptedAt` field in input (AC-003)
+- [x] `accept` mutation — first call persists record, returns `{ accepted: true, acceptedAt: Date }`
+- [x] `accept` mutation — second call with same `(tenantId, userId, termsVersion)` is idempotent (no duplicate row, same accepted result)
+- [x] `accept` mutation — Zod schema REJECTS `acceptedAt` field in input (AC-003)
 - [ ] `accept` mutation — Zod schema REJECTS `ipAddress` in input (AC-004)
-- [ ] `accept` mutation — Zod schema REJECTS `tenantId` in input (AC-005)
+- [x] `accept` mutation — Zod schema REJECTS `tenantId` in input (AC-005)
 - [ ] `accept` mutation — Zod schema REJECTS `userId` in input (AC-005)
-- [ ] `accept` mutation — `ipAddress` stored equals value from mocked `x-forwarded-for` header (not from input) (AC-004)
-- [ ] `getAcceptance` query — returns `{ accepted: true, acceptedAt }` for existing record (AC-006)
-- [ ] `getAcceptance` query — returns `{ accepted: false, acceptedAt: null }` for non-existent record (AC-006)
-- [ ] `getAcceptance` query NEGATIVE — userId who accepted under tenantId-A returns `{ accepted: false }` when queried from tenantId-B context (NF-002 cross-tenant isolation)
+- [x] `accept` mutation — `ipAddress` stored equals value from mocked `x-forwarded-for` header (not from input) (AC-004)
+- [x] `getAcceptance` query — returns `{ accepted: true, acceptedAt }` for existing record (AC-006)
+- [x] `getAcceptance` query — returns `{ accepted: false, acceptedAt: null }` for non-existent record (AC-006)
+- [x] `getAcceptance` query NEGATIVE — userId who accepted under tenantId-A returns `{ accepted: false }` when queried from tenantId-B context (NF-002 cross-tenant isolation)
 - [ ] `accept` mutation NEGATIVE — unauthenticated call (no ctx.user) throws UNAUTHORIZED (AC-007 — tenantProcedure auth)
-- [ ] Router exports ONLY `accept` and `getAcceptance` — no `update`, no `delete`, no `remove` (NF-005)
-- [ ] `accept` uses `tenantProcedure` (not `moduleTenantProcedure`) — verified by checking no `moduleTenantProcedure` import in router (AC-007)
+- [x] Router exports ONLY `accept` and `getAcceptance` — no `update`, no `delete`, no `remove` (NF-005)
+- [x] `accept` uses `tenantProcedure` (not `moduleTenantProcedure`) — verified by checking no `moduleTenantProcedure` import in router (AC-007)
 
 **Test setup pattern (follow `apps/api/src/modules/legal/cases.router.ts` test pattern):**
 - Mock `ctx.tenant` with `{ tenantId: 'tenant-A' }` (from `assertTenantContext`)
@@ -148,16 +148,16 @@ pnpm --filter @intelliflow/api test -- --testPathPattern="legal/__tests__/terms-
 **Acceptance Criteria Addressed:** AC-008, AC-009, AC-010
 
 **Test cases (all must FAIL — component does not exist yet):**
-- [ ] Renders `null` when `isAuthenticated = false`, `isLoading = false` (unauthenticated — AC-008)
-- [ ] Renders `null` when `isLoading = true` regardless of auth state (loading — AC-008)
-- [ ] Renders `null` when `getAcceptance` returns `{ accepted: true }` (already accepted — AC-009)
-- [ ] Renders `null` while `getAcceptance` query is loading
-- [ ] Renders confirmation section with role="region" + aria-labelledby when authenticated and `accepted = false`
-- [ ] Confirmation section contains a checkbox with `aria-required="true"`
-- [ ] "I Agree" button is DISABLED until checkbox is checked
-- [ ] Calls `accept` mutation on "I Agree" button click (after checking checkbox)
-- [ ] Panel becomes hidden (null) after successful mutation (AC-009)
-- [ ] Error message appears when mutation fails
+- [x] Renders `null` when `isAuthenticated = false`, `isLoading = false` (unauthenticated — AC-008)
+- [x] Renders `null` when `isLoading = true` regardless of auth state (loading — AC-008)
+- [x] Renders `null` when `getAcceptance` returns `{ accepted: true }` (already accepted — AC-009)
+- [x] Renders `null` while `getAcceptance` query is loading
+- [x] Renders confirmation section with role="region" + aria-labelledby when authenticated and `accepted = false`
+- [x] Confirmation section contains a checkbox with `aria-required="true"`
+- [x] "I Agree" button is DISABLED until checkbox is checked
+- [x] Calls `accept` mutation on "I Agree" button click (after checking checkbox)
+- [x] Panel becomes hidden (null) after successful mutation (AC-009)
+- [x] Error message appears when mutation fails
 
 **Mocking pattern:**
 - Mock `useAuth` from `@/lib/auth/AuthContext` returning `{ isAuthenticated, isLoading, user }`
@@ -219,13 +219,13 @@ termsAcceptances TermsAcceptance[] @relation("UserTermsAcceptances") @ignore
 **Migration steps (LOCAL TEST DB ONLY — never prod Supabase):**
 ```bash
 cd packages/db
-DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliflow_test \
-DIRECT_URL=postgresql://postgres:postgres@localhost:5433/intelliflow_test \
+DATABASE_URL=postgresql://<user>:<password>@localhost:5433/intelliflow_test \
+DIRECT_URL=postgresql://<user>:<password>@localhost:5433/intelliflow_test \
 pnpm db:migrate:create -- --name add_terms_acceptance
 
 # Apply migration:
-DATABASE_URL=postgresql://postgres:postgres@localhost:5433/intelliflow_test \
-DIRECT_URL=postgresql://postgres:postgres@localhost:5433/intelliflow_test \
+DATABASE_URL=postgresql://<user>:<password>@localhost:5433/intelliflow_test \
+DIRECT_URL=postgresql://<user>:<password>@localhost:5433/intelliflow_test \
 pnpm db:migrate
 
 # Regenerate client:
@@ -591,14 +591,14 @@ pnpm --filter @intelliflow/web typecheck
 - `apps/api/src/modules/legal/terms-acceptance.router.ts`
 
 **Actions:**
-- [ ] Verify `ipAddress` and `userAgent` have JSDoc `// NF-003: PII — do NOT log or span-attr` comment (already in implementation above)
-- [ ] Run grep to confirm no logger call includes ipAddress or userAgent:
+- [x] Verify `ipAddress` and `userAgent` have JSDoc `// NF-003: PII — do NOT log or span-attr` comment (already in implementation above)
+- [x] Run grep to confirm no logger call includes ipAddress or userAgent:
   ```bash
   grep -n "ipAddress\|userAgent" apps/api/src/modules/legal/terms-acceptance.router.ts
   # Must ONLY appear in: prisma.create fields and the assignment lines
   ```
-- [ ] Confirm no `console.log`, `logger.info`, or `setAttribute('ipAddress'` in router
-- [ ] Run API lint:
+- [x] Confirm no `console.log`, `logger.info`, or `setAttribute('ipAddress'` in router
+- [x] Run API lint:
   ```bash
   pnpm --filter @intelliflow/api lint
   ```
@@ -613,7 +613,7 @@ pnpm --filter @intelliflow/web typecheck
 - `docs/planning/prd-legal-pages.md`
 
 **Actions:**
-- [ ] Add IFC-309 to the legal compliance chain in `complete-dependency-chains.md`:
+- [x] Add IFC-309 to the legal compliance chain in `complete-dependency-chains.md`:
   - IFC-309 depends on: PG-051 (terms page), IFC-058 (GDPR baseline), IFC-124 (audit logging)
   - IFC-309 is a terminal node (no downstream deps yet)
 - [ ] Update `docs/planning/prd-legal-pages.md`:
@@ -640,10 +640,10 @@ pnpm --filter @intelliflow/web test -- \
   --testPathPattern="components/legal/__tests__/TermsAcceptanceConfirm|\(public\)/terms/__tests__/page"
 ```
 
-- [ ] Domain suite: all pass
-- [ ] Validators: typecheck pass
-- [ ] API suite: all pass (including pre-existing legal tests)
-- [ ] Web regression: terms page test still passes (AC-010)
+- [x] Domain suite: all pass
+- [x] Validators: typecheck pass
+- [x] API suite: all pass (including pre-existing legal tests)
+- [x] Web regression: terms page test still passes (AC-010)
 
 ---
 
@@ -666,10 +666,10 @@ node scripts/pre-ship.mjs \
   --only=format-check,lint,typecheck,governance-schema,lint-artifacts,lint-runtime-paths,material-symbols-audit,architecture
 ```
 
-- [ ] format-check: PASS
-- [ ] lint: PASS
-- [ ] typecheck: PASS (all 4 touched packages)
-- [ ] architecture: PASS (no new circular deps)
+- [x] format-check: PASS
+- [x] lint: PASS
+- [x] typecheck: PASS (all 4 touched packages)
+- [x] architecture: PASS (no new circular deps)
 
 ---
 
@@ -742,9 +742,9 @@ node scripts/codex-review.mjs  # run 2
 node scripts/codex-review.mjs  # run 3 — must be CLEAN
 ```
 
-- [ ] Run 1: fix or waive all findings
-- [ ] Run 2: fix or waive remaining
-- [ ] Run 3: CLEAN (no findings)
+- [x] Run 1: fix or waive all findings
+- [x] Run 2: fix or waive remaining
+- [x] Run 3: CLEAN (no findings)
 
 ---
 
@@ -752,14 +752,14 @@ node scripts/codex-review.mjs  # run 3 — must be CLEAN
 
 **Type:** process
 
-- [ ] Stage all implementation files
-- [ ] Stage `.specify/sprints/sprint-18/specifications/IFC-309-spec.md`
-- [ ] Stage `.specify/sprints/sprint-18/planning/IFC-309-plan.md`
-- [ ] Stage `.specify/sprints/sprint-18/attestations/IFC-309/attestation.json`
-- [ ] Stage `.specify/sprints/sprint-18/attestations/IFC-309/task-tracking.json`
+- [x] Stage all implementation files
+- [x] Stage `.specify/sprints/sprint-18/specifications/IFC-309-spec.md`
+- [x] Stage `.specify/sprints/sprint-18/planning/IFC-309-plan.md`
+- [x] Stage `.specify/sprints/sprint-18/attestations/IFC-309/attestation.json`
+- [x] Stage `.specify/sprints/sprint-18/attestations/IFC-309/task-tracking.json`
 - [ ] Stage `.specify/sprints/sprint-18/attestations/IFC-309/context_ack.json`
-- [ ] Stage `docs/operations/sprint-18-ifc-309-session-issues-log.md`
-- [ ] Commit with subject <= 100 chars, NO `Co-Authored-By: Claude` trailer
+- [x] Stage `docs/operations/sprint-18-ifc-309-session-issues-log.md`
+- [x] Commit with subject <= 100 chars, NO `Co-Authored-By: Claude` trailer
 - [ ] **Message orchestrator: "READY FOR GATE-LOCK IFC-309" and wait for grant**
 
 ---
@@ -777,13 +777,13 @@ Remove-Item -Recurse -Force artifacts/coverage-vitest -ErrorAction SilentlyConti
 node scripts/pre-ship.mjs
 ```
 
-- [ ] TypeScript: PASS (all packages)
-- [ ] Tests: PASS (all packages)
-- [ ] Lint: PASS
-- [ ] Build: PASS (`pnpm --filter @intelliflow/web build`)
-- [ ] diff-coverage: >= 80% on changed lines
-- [ ] Codex: PASS (cached from Step 15)
-- [ ] format-check: PASS
+- [x] TypeScript: PASS (all packages)
+- [x] Tests: PASS (all packages)
+- [x] Lint: PASS
+- [x] Build: PASS (`pnpm --filter @intelliflow/web build`)
+- [x] diff-coverage: >= 80% on changed lines
+- [x] Codex: PASS (cached from Step 15)
+- [x] format-check: PASS
 
 ---
 

@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-04-16 (as of Sprint 17)
-> **Total Pages**: 211
+> **Total Pages**: 214
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -808,7 +808,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 6: CRM Core — Accounts (2 routes)
+## Section 6: CRM Core — Accounts (4 routes)
 
 ### Accounts List (`/accounts`)
 
@@ -839,6 +839,36 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                                 |
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA               |
 | **Components** | "use client", AccountDetail, Card, Skeleton, useRequireAuth |
+
+### New Account (`/accounts/new`)
+
+| Field          | Value                                                               |
+| -------------- | ------------------------------------------------------------------- |
+| **Task ID**    | PG-197                                                              |
+| **File Path**  | `apps/web/src/app/accounts/(list)/new/page.tsx`                     |
+| **Layout**     | `apps/web/src/app/accounts/(list)/layout.tsx`                       |
+| **API Router** | `apps/api/src/modules/account/account.router.ts` (`account.create`) |
+| **E2E Test**   | None                                                                |
+| **Unit Tests** | `apps/web/src/app/accounts/(list)/new/__tests__/`                   |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                     |
+| **Status**     | Implemented                                                         |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                       |
+| **Components** | Route shell, NewAccountForm, AccountForm, CountrySelect, PageHeader |
+
+### Edit Account (`/accounts/[id]/edit`)
+
+| Field          | Value                                                                                  |
+| -------------- | -------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-197                                                                                 |
+| **File Path**  | `apps/web/src/app/accounts/[id]/edit/page.tsx`                                         |
+| **Layout**     | `apps/web/src/app/accounts/layout.tsx`                                                 |
+| **API Router** | `apps/api/src/modules/account/account.router.ts` (`account.getById`, `account.update`) |
+| **E2E Test**   | None                                                                                   |
+| **Unit Tests** | `apps/web/src/app/accounts/[id]/edit/__tests__/`                                       |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                        |
+| **Status**     | Implemented                                                                            |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                          |
+| **Components** | Route shell, EditAccountForm, AccountForm, CountrySelect, PageHeader                   |
 
 ---
 

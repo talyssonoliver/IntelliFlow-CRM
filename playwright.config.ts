@@ -6,6 +6,12 @@ import path from 'node:path';
  * under the `authenticated` project (default ENTERPRISE storageState) instead of
  * the unauthenticated `chromium` project. Unauthenticated flows (auth-flow,
  * signup, mfa login, smoke, icons, inbound webhook) deliberately stay on chromium.
+ *
+ * Playwright matches these globs against the ABSOLUTE file path. A directory glob
+ * must therefore be anchored at tests/e2e: the CI checkout lives under
+ * /home/runner/work/..., so an unanchored `home` directory glob matched EVERY spec there and ran
+ * signup, auth-flow, smoke, icons, mfa, features-tour and the Aurora preview a
+ * second time as a logged-in user, where they can only fail.
  */
 const AUTHED_SPECS = [
   '**/agent-approvals.spec.ts',
@@ -13,7 +19,7 @@ const AUTHED_SPECS = [
   '**/case-timeline.spec.ts',
   '**/contact-crud.spec.ts',
   '**/forms.spec.ts',
-  '**/home/**/*.spec.ts',
+  '**/tests/e2e/home/**/*.spec.ts',
   '**/lead-crud.spec.ts',
   '**/navigation.spec.ts',
   '**/pipeline-settings.spec.ts',
@@ -45,6 +51,7 @@ const UNAUTH_SPECS = [
   '**/icons.spec.ts',
   '**/features-tour.spec.ts',
   '**/email/inbound-webhook.spec.ts',
+  '**/preview/aurora-preview.spec.ts',
 ];
 
 /**

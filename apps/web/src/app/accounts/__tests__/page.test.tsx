@@ -81,6 +81,16 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+// PG-196: the list reads tiers from the tenant configuration (defaults here).
+vi.mock('@/hooks/useAccountTiers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/useAccountTiers')>();
+  return {
+    ...actual,
+    useAccountTiers: () =>
+      actual.buildAccountTiersResult(undefined, { isLoading: false, isError: false }),
+  };
+});
+
 // Mock dynamic filter hooks
 vi.mock('@/hooks/use-dynamic-filters', () => ({
   useAccountFilterOptions: () => ({

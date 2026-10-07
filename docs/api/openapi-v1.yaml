@@ -383,8 +383,8 @@ components:
   securitySchemes:
     bearerAuth:
       type: http
-      scheme: bearer
       bearerFormat: JWT
+      scheme: bearer
 
   parameters:
     PageParam:

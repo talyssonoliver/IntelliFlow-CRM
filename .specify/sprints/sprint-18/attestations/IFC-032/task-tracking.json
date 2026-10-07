@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "IFC-032",
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T22:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+    },
+    {
+      "status": "DONE",
+      "at": "2026-10-06T17:40:00Z",
+      "note": "Production OTLP export to Grafana Cloud (stack graysushi1880, UK). Real production traces from ai-worker (see artifacts/misc/trace-examples.json; first evidence trace 6a0c4b9ddcfa0f542d63d13798efd6d2, 2026-10-06 13:13:53 BST). Alert rules as code (infra/monitoring/grafana/cloud/alert-rules.json, #804/#807) applied by workflow runs 37499952027 (apply), 37500057256 (dry run), 37500642496 (send_test), 37501195583 (cleanup). Test alert \"[FIRING:1] IFC-032 delivery test\" received in the owner's Gmail at 18:05 BST 2026-10-06. Owner ruling 2026-10-06 18:20 BST: close it. Follow-ups, out of scope of this close: logs to Grafana, api SERVER spans after #802 promotion, availability check via Synthetic Monitoring."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Reopen evidence: Railway production, read 2026-10-05 via the Railway API: every service (api, ai-worker, events-worker, ingestion-worker, notifications-worker) has `OTEL_ENABLED=false` and no `OTEL_EXPORTER_OTLP_ENDPOINT`; `ws` has no OTel vars. `infra/terraform/environments/production/terraform.tfvars` keeps OTel off until `otel_exporter_endpoint` is set, and it is not set. Production exports no traces, metrics or logs.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": "2026-10-06T17:40:00Z",
+      "resolution": "Resolved with production evidence; see status_history 2026-10-06T17:40:00Z."
+    },
+    {
+      "description": "Reopen evidence: `artifacts/misc/trace-examples.json` declares `\"exporter\": \"InMemorySpanExporter\"` (from `tools/scripts/observability/capture-trace-examples.ts`). The DoD requires \"real trace IDs from actual service calls, not fabricated examples\". In-process test spans do not meet that, and GATE:real-trace-data / GATE:integration-wired cannot pass while production export is off.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": "2026-10-06T17:40:00Z",
+      "resolution": "Resolved with production evidence; see status_history 2026-10-06T17:40:00Z."
+    },
+    {
+      "description": "Reopen evidence: KPI \"alerts configured\": the four ifc032 rules have never been loaded by an alerting system connected to production. The only stack that ran was a local Docker compose with no SMTP.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": "2026-10-06T17:40:00Z",
+      "resolution": "Resolved with production evidence; see status_history 2026-10-06T17:40:00Z."
+    },
+    {
+      "description": "To close: (1) Choose a hosted OTLP backend and set `otel_exporter_endpoint` plus its auth for the Railway api and workers (Terraform/env PR; secrets only in Railway/GitHub secrets). (2) Load the four ifc032 alert rules, plus API error rate and availability, into that backend with a contact point the owner receives. Prove it with a test alert. (3) Replace the `trace-examples.json` evidence with at least one trace ID from a real production request, visible in the backend. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": "2026-10-06T17:40:00Z",
+      "resolution": "Resolved with production evidence; see status_history 2026-10-06T17:40:00Z."
+    }
+  ],
+  "percent_complete": 100,
+  "updated_at": "2026-10-06T17:40:00Z",
+  "completed_at": "2026-10-06T17:40:00Z"
+}

@@ -1,0 +1,2 @@
+{{range .}}  {{.File}}:{{.StartLine}}  [{{.RuleID}}]{{if .Commit}}  commit {{printf "%.10s" .Commit}}{{end}}
+{{end}}

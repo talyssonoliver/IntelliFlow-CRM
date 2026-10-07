@@ -3,7 +3,11 @@
   "sprint": 17,
   "verdict": "COMPLETE",
   "attested_at": "2026-04-13T04:05:00Z",
-  "dependencies_verified": ["PG-050", "PG-051", "PG-052"],
+  "dependencies_verified": [
+    "PG-050",
+    "PG-051",
+    "PG-052"
+  ],
   "artifact_hashes": {
     "apps/web/src/app/(public)/dpa/page.tsx": "376a3a73e70988de2b783d452a33415d074582a60c7f4c0c3e8c349614978b12",
     "apps/web/src/lib/legal/signature-handler.ts": "72515d002f895218708c78e805de91384a117eff3bb8508a7cf2beafa0c59749",
@@ -49,6 +53,42 @@
       "timestamp": "2026-04-13T04:02:00Z",
       "duration_ms": 160000,
       "stdout_hash": "preexisting-ts-error-in-tasks-list-page-unrelated-to-PG-053"
+    },
+    {
+      "name": "TypeScript (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:29:56.503Z",
+      "duration_ms": 59015,
+      "stdout_hash": "1a3449b1d8cbd8eb94800f98cc4ad86ea16c7016cd39cee7468d3d0582fb26bd"
+    },
+    {
+      "name": "Lint (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:30:55.518Z",
+      "duration_ms": 14311,
+      "stdout_hash": "82d87e406fabda8bbc988c12b2556367f5c30a4565b55f975ad8634e05c2bc0a"
+    },
+    {
+      "name": "Build (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:31:14.719Z",
+      "duration_ms": 151883,
+      "stdout_hash": "fd5357b7bf501ebf3389a8a7d3b28ea97c345f9a551c0d7d37b18f8c14f79b19"
+    },
+    {
+      "name": "Tests (pg053; re-run by the 2026-10-07 integrity audit at b5b42db08 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web exec vitest run \"src/app/(public)/dpa\" src/lib/legal/__tests__/signature-handler.test.ts src/lib/legal/__tests__/signature-handler.client.test.ts src/components/legal/__tests__/dpa-signature-panel.test.tsx src/app/__tests__/sitemap-reconciliation.test.ts src/app/__tests__/ia-reconciliation.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:53:00.320Z",
+      "duration_ms": 5133,
+      "stdout_hash": "26f6de214339b69529311d71e47cc189811ce8360667e9b9b0e4a2b34173f76d"
     }
   ],
   "gate_results": [

@@ -150,6 +150,7 @@ jobs:
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
+          TF_VAR_otel_exporter_otlp_headers: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
           TF_VAR_environment: ${{ matrix.environment }}
         run: |
           set -o pipefail
@@ -236,6 +237,7 @@ jobs:
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
+          TF_VAR_otel_exporter_otlp_headers: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
         run: terraform apply -auto-approve plan.tfplan
 
       - name: Terraform Output
@@ -286,6 +288,7 @@ jobs:
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
+          TF_VAR_otel_exporter_otlp_headers: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
           # PERF-07 drift reconcile: the railway module injects these into
           # shared_env_vars (root main.tf). Without them the prod plan sees empty
           # values and wants to wipe the live worker env vars. Secrets must exist
@@ -352,6 +355,7 @@ jobs:
           TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
           TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_sentry_dsn: ${{ secrets.SENTRY_DSN }}
+          TF_VAR_otel_exporter_otlp_headers: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
           # PERF-07 drift reconcile: same env-var wiring as the production plan
           # job above, so apply uses the real values instead of wiping live
           # worker env vars to empty.

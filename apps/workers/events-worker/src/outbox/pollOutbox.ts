@@ -5,7 +5,9 @@
  * and dispatches them to handlers.
  *
  * Pattern from: docs/events/contracts-v1.yaml
- * - Poll interval: 100ms
+ * - Poll interval: 100ms while events are flowing
+ * - Idle backoff: doubles after every empty cycle, up to maxPollIntervalMs
+ *   (default 5000ms), and snaps back to 100ms on the first non-empty batch
  * - Batch size: 100
  * - Retry backoff: [1s, 5s, 30s] (from dlq-triage.md)
  *
@@ -22,8 +24,15 @@ import type { EventDispatcher, OutboxEvent } from './event-dispatcher';
 // ============================================================================
 
 export interface OutboxPollerConfig {
-  /** Polling interval in milliseconds (default: 100) */
+  /** Polling interval in milliseconds while events are flowing (default: 100) */
   pollIntervalMs: number;
+  /**
+   * Ceiling for the idle backoff in milliseconds (default: 5000). Each empty
+   * or failed cycle doubles the delay up to this value; a non-empty batch
+   * resets it to pollIntervalMs. This is also the worst-case pickup latency
+   * for an event written while the outbox is idle.
+   */
+  maxPollIntervalMs: number;
   /** Maximum events to fetch per poll (default: 100) */
   batchSize: number;
   /** Lock timeout for events being processed (default: 30000) */
@@ -65,6 +74,7 @@ export interface OutboxPollerOptions {
 
 const DEFAULT_CONFIG: OutboxPollerConfig = {
   pollIntervalMs: 100, // From contracts-v1.yaml
+  maxPollIntervalMs: 5000, // From contracts-v1.yaml
   batchSize: 100, // From contracts-v1.yaml
   lockTimeoutMs: 30000,
   retryBackoff: [1000, 5000, 30000], // From dlq-triage.md
@@ -83,12 +93,14 @@ export class OutboxPoller {
 
   private isPolling = false;
   private pollTimer: NodeJS.Timeout | null = null;
+  private currentDelayMs: number;
   private processedCount = 0;
   private failedCount = 0;
   private dlqCount = 0;
 
   constructor(options: OutboxPollerOptions) {
     this.config = { ...DEFAULT_CONFIG, ...options.config };
+    this.currentDelayMs = this.config.pollIntervalMs;
     this.repository = options.repository;
     this.dispatcher = options.dispatcher;
     this.logger =
@@ -112,6 +124,7 @@ export class OutboxPoller {
     this.logger.info(
       {
         pollIntervalMs: this.config.pollIntervalMs,
+        maxPollIntervalMs: this.config.maxPollIntervalMs,
         batchSize: this.config.batchSize,
       },
       'Starting outbox poller'
@@ -145,12 +158,19 @@ export class OutboxPoller {
   /**
    * Get polling statistics
    */
-  getStats(): { processed: number; failed: number; dlq: number; isPolling: boolean } {
+  getStats(): {
+    processed: number;
+    failed: number;
+    dlq: number;
+    isPolling: boolean;
+    nextPollDelayMs: number;
+  } {
     return {
       processed: this.processedCount,
       failed: this.failedCount,
       dlq: this.dlqCount,
       isPolling: this.isPolling,
+      nextPollDelayMs: this.currentDelayMs,
     };
   }
 
@@ -162,25 +182,40 @@ export class OutboxPoller {
     if (!this.isPolling) return;
 
     this.processPendingEvents()
+      .then((count) => this.nextDelay(count > 0))
       .catch((error) => {
         this.logger.error(
           { error: error instanceof Error ? error.message : String(error) },
           'Error in polling cycle'
         );
+        // A failing database gets the same backoff as an empty outbox
+        return this.nextDelay(false);
       })
-      .finally(() => {
+      .then((delayMs) => {
         if (this.isPolling) {
-          this.pollTimer = setTimeout(() => this.poll(), this.config.pollIntervalMs);
+          this.pollTimer = setTimeout(() => this.poll(), delayMs);
         }
       });
   }
 
-  private async processPendingEvents(): Promise<void> {
+  /**
+   * Adaptive delay: the fast interval while batches keep arriving, doubling
+   * after each empty cycle up to maxPollIntervalMs. With the database-backed
+   * repository, a fixed 100ms poll of an empty outbox is ~860k queries a day.
+   */
+  private nextDelay(foundEvents: boolean): number {
+    const base = this.config.pollIntervalMs;
+    const cap = Math.max(base, this.config.maxPollIntervalMs);
+    this.currentDelayMs = foundEvents ? base : Math.min(this.currentDelayMs * 2, cap);
+    return this.currentDelayMs;
+  }
+
+  private async processPendingEvents(): Promise<number> {
     // Fetch pending events (use FOR UPDATE SKIP LOCKED in repository)
     const events = await this.repository.fetchPendingEvents(this.config.batchSize);
 
     if (events.length === 0) {
-      return;
+      return 0;
     }
 
     this.logger.debug({ count: events.length }, 'Processing batch of events');
@@ -189,6 +224,8 @@ export class OutboxPoller {
     for (const event of events) {
       await this.processEvent(event);
     }
+
+    return events.length;
   }
 
   private async processEvent(event: OutboxEvent): Promise<void> {

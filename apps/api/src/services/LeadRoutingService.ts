@@ -171,6 +171,7 @@ export class LeadRoutingService {
     const rules = await (this.prisma as any).routingRule.findMany({
       where: {
         tenantId,
+        ruleType: 'LEAD',
         isActive: true,
       },
       orderBy: { priority: 'desc' },
@@ -577,6 +578,7 @@ export class LeadRoutingService {
     const rules = await tx.routingRule.findMany({
       where: {
         tenantId,
+        ruleType: 'LEAD',
         isActive: true,
       },
       orderBy: { priority: 'desc' },

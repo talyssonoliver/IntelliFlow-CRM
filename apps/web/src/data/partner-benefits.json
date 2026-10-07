@@ -153,7 +153,7 @@
     "consultant": [
       {
         "title": "Certification Program",
-        "description": "Become a certified IntelliFlow CRM consultant with our training program.",
+        "description": "Become a certified Aurora consultant with our training program.",
         "icon": "workspace_premium"
       },
       {
@@ -189,7 +189,7 @@
       "name": "Communication",
       "description": "Connect your team communication tools",
       "icon": "chat",
-      "color": "#137fec"
+      "color": "#2a78f6"
     },
     {
       "id": "email",
@@ -310,7 +310,7 @@
       "answer": "Yes! All technology partners get access to our dedicated partner engineering team for integration support, code reviews, and troubleshooting."
     },
     {
-      "question": "Can I resell IntelliFlow CRM under my own brand?",
+      "question": "Can I resell Aurora under my own brand?",
       "answer": "We offer white-label options for select premier and elite partners. Contact our partnerships team to discuss your requirements."
     },
     {

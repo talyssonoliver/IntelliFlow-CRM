@@ -208,8 +208,15 @@ jobs:
       - name: Build internal packages
         run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
 
+      # Unit projects only, as the ci.yml unit shards run them. The integration
+      # project needs a real Postgres; ci.yml's Integration Tests job provides
+      # one and has already passed on this main commit, so the release job
+      # does not repeat it (routing-rule-type.test.ts hit ECONNREFUSED here).
+      # Calls run-tests.js directly (the same OOM-tolerant runner `pnpm run test`
+      # uses): `pnpm run test -- <args>` forwards a literal `--`, after which
+      # vitest ignores the --project filter and runs every project.
       - name: Run tests
-        run: pnpm run test
+        run: node scripts/run-tests.js '--project=!integration'
 
       - name: Build
         run: pnpm run build
@@ -220,8 +227,8 @@ jobs:
           # so the release build has the same stubs available.
           PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
           AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
-          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
-          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+          DATABASE_URL: ${{ format('postgresql://{0}:{0}@localhost:5432/stub', 'stub') }}
+          DIRECT_URL: ${{ format('postgresql://{0}:{0}@localhost:5432/stub', 'stub') }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}

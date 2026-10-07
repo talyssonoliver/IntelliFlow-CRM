@@ -260,6 +260,13 @@ Dependency Chain:
                                  │      ⬜ NEW      │
                                  └──────────────────┘
 
+PG-196 (2026-10-07) — tenant-configurable revenue tiers (ADR-073):
+domain AccountTierConfig (resolveAccountTier) → validators account-tiers.ts →
+db AccountTierDefinition + AccountTierConfig → accountTiers router (+ account.list
+tier filter, tier-change notifications, requireParentForTiers) → web
+useAccountTiers → /accounts/account-tiers, sidebar ?tier= links, list, detail,
+hierarchy, Account Settings → Hierarchy. Detail: core-crm-dependency-chain.md.
+
 Dependency Chain:
   IFC-103 (Domain) ──┬──► account.ts (Validators) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-185 (API) ✅ ──► PG-134 (UI) ✅
                      │
@@ -270,6 +277,16 @@ IFC-267 (Account Detail Action Buttons) — wiring added in PG-134 (AccountDetai
   AccountDetail ──► ContactAddSheet ──► api.contact.create (IFC-008)
   AccountDetail ──► AccountContactsList.onAddContact (callback prop)
   AccountDetail ──► AccountOpportunitiesList.onCreateOpportunity (callback prop)
+
+PG-197 (Territory Mapping + territory-based owner assignment, ADR-074):
+  domain territory-constants / territory-matching + Account geography
+    ──► validators account-territories.ts + account.ts (geography, optional ownerId)
+    ──► db migration 20261007130000_account_territories (accounts geography, 3 territory tables, RLS)
+    ──► AccountService / PrismaAccountRepository (geography pass-through)
+    ──► api account-territories.router.ts (accountTerritories.*) + account-territory-assignment.ts
+          ──► account.router handleAccountCreate (resolveAccountOwner, audit, notify)
+    ──► web /accounts/territory-mapping (TerritoryMappingContent)
+          + /accounts/new, /accounts/[id]/edit (AccountForm, CountrySelect)
 ```
 
 ---

@@ -262,11 +262,11 @@ describe('ContactForm', () => {
   });
 
   describe('Brand Compliance', () => {
-    it('should use primary brand color for submit button', () => {
+    it('should use Aurora Signal Blue for the submit button', () => {
       render(<ContactForm />);
 
       const submitButton = screen.getByRole('button', { name: /send message/i });
-      expect(submitButton).toHaveClass(/bg-\[#137fec\]|bg-primary/);
+      expect(submitButton).toHaveClass('bg-[#2a78f6]');
     });
 
     it('should have proper spacing and padding', () => {

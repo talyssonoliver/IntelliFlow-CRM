@@ -5,7 +5,7 @@
   "run_id": "sprint6-audit-20260302T215741-ex8v6u",
   "attestor": "sprint-completion-auditor",
   "attestation_timestamp": "2026-03-02T21:57:49.034Z",
-  "verdict": "COMPLETE",
+  "verdict": "PARTIAL",
   "evidence_summary": {
     "artifacts_verified": 6,
     "validations_passed": 1,

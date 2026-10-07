@@ -6,6 +6,8 @@ on:
       - '.gitignore'
       - 'apps/project-tracker/docs/**'
       - 'tools/scripts/sprint-validation.ts'
+      - 'tools/scripts/sprint-gates.ts'
+      - 'tools/scripts/reopen-exemptions.json'
       - 'tools/scripts/lib/**'
   push:
     branches:
@@ -16,6 +18,8 @@ on:
       - '.gitignore'
       - 'apps/project-tracker/docs/**'
       - 'tools/scripts/sprint-validation.ts'
+      - 'tools/scripts/sprint-gates.ts'
+      - 'tools/scripts/reopen-exemptions.json'
       - 'tools/scripts/lib/**'
 
 env:

@@ -89,9 +89,58 @@ pnpm preship:attest
 
 ## After `gh pr update-branch` — the policy
 
-**The new head SHA must be attested locally before merge.** Full CI is _not_
-accepted as a substitute for the server-side merge commit; that is the whole
-point of #644.
+**A clean update carries the attestation; anything else needs a fresh local
+run.** (Changed 2026-10-05; the original rule demanded a local re-run for every
+new head.)
+
+Why it changed: branch protection is `strict`, so every merge to main makes
+every other open PR out of date. Under the old rule each update meant another
+full local gate, often near an hour, and with several agents merging, main moved
+again before it finished. PRs went round that loop for hours, and the loop was
+the main cost of shipping here.
+
+What is carried, exactly: `--publish` records the branch's
+`git patch-id --verbatim`, a hash of the whole diff from its merge-base with
+`origin/main`, whitespace and binary content included. It publishes the same tag
+object a second time at `refs/preship-patch/<patch-id>/<sha>`. When CI finds no
+record for the new head, `--verify` computes the new head's patch-id and accepts
+a record under that key only if all of these hold:
+
+- the record is a full clean gate (same checks as the exact-SHA path);
+- it was made by the same `scripts/pre-ship.mjs` (gate-version pin);
+- its payload names that patch-id;
+- its tag targets the commit its ref names;
+- **nothing main brought in since the attested base touches the PR's affected
+  scope** (`scripts/lib/carry-scope.mjs`). A clean rebase is not proof of
+  compatibility, so the main-side changes between the record's `patch_base` and
+  the new base must avoid all of these:
+  - global-impact files (lockfile, any `package.json`, tsconfig, vitest/vite
+    config, test setup, `__mocks__`, Prisma schema);
+  - any file in a workspace package the PR touches;
+  - any file in a package those depend on, or in a package that depends on them,
+    transitively;
+  - repo-root files outside every package, when the PR touches the root too.
+
+  Docs, artifacts and metrics on main's side are ignored.
+
+The check prints `carried from <old-sha>`.
+
+What it skips, and why that is safe: the local gate's re-run on the rebased
+head, and only that. The PR's own diff is byte-identical to what the gate
+passed. Nothing main changed in the meantime can reach that code through the
+workspace dependency graph. Main's own changes were gated by their PRs. The PR's
+required CI checks (full sharded suite, typecheck, build, integration) still run
+on exactly the rebased head before it can merge. The scope check is per package,
+coarser than an import graph, so it errs towards refusing.
+
+What still forces a re-run: a rebase that resolved a conflict, main changing
+lines next to the branch's own hunks, any new commit, a change to the gate
+script itself (these change the patch-id or the pin), or any main-side change in
+the PR's affected scope. The refusal lists the blocking files. #637, the
+incident behind #644, merged at a head nobody had gated; that is still
+impossible, because some gate run must match the branch's exact diff.
+
+When nothing can be carried, re-run locally:
 
 ```bash
 git fetch origin

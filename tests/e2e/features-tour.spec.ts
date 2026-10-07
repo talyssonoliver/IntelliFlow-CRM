@@ -36,7 +36,7 @@ test.describe('Public Product Tour + Feedback Widget (PG-126)', () => {
     await page.goto('/features');
     await expect(page.getByTestId('tour-step-dialog')).toBeVisible({ timeout: 10_000 });
     // Step 1 title should be visible.
-    await expect(page.getByText(/Welcome to IntelliFlow/i)).toBeVisible();
+    await expect(page.getByText(/Welcome to Aurora/i)).toBeVisible();
   });
 
   test('keyboard walk advances through all 4 steps and sets seen flag', async ({ page }) => {

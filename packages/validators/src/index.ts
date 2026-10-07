@@ -89,6 +89,7 @@ export * from './feedback-survey';
 
 // Ticket Routing Schemas (IFC-067: Automatic Ticket Routing Engine)
 export * from './ticket-routing';
+export * from './ticket-automation-rule';
 
 // User Schemas (IFC-191: User Timezone Support)
 export * from './user';
@@ -104,6 +105,8 @@ export * from './contact-settings';
 
 // Account Settings Schemas (PG-183)
 export * from './account-settings';
+export * from './account-tiers';
+export * from './account-territories';
 
 // Deal Settings Schemas (PG-184)
 export * from './deal-settings';

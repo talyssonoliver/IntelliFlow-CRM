@@ -18,7 +18,8 @@ test.describe('Core Navigation', () => {
       await page.goto('/');
 
       // Verify page loads
-      await expect(page).toHaveTitle(/IntelliFlow/i);
+      // Aurora since #741; either brand is accepted (owner decision).
+      await expect(page).toHaveTitle(/Aurora|IntelliFlow CRM/i);
 
       // Verify navigation is present
       const nav = page.locator('nav').first();

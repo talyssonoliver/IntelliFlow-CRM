@@ -42,6 +42,7 @@ import {
   createPrismaOpportunityCustomers,
   type OpportunityCustomersPrisma,
 } from './handlers/opportunity-customers';
+import { createOpportunityLifecycleHandlers } from './handlers/opportunity-lifecycle';
 
 // ============================================================================
 // Types
@@ -87,6 +88,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
         useDatabase: false,
         outbox: {
           pollIntervalMs: 100,
+          maxPollIntervalMs: 5000,
           batchSize: 100,
           lockTimeoutMs: 30000,
           maxRetries: 3,
@@ -132,6 +134,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
     this.outboxPoller = new OutboxPoller({
       config: {
         pollIntervalMs: this.workerConfig.outbox.pollIntervalMs,
+        maxPollIntervalMs: this.workerConfig.outbox.maxPollIntervalMs,
         batchSize: this.workerConfig.outbox.batchSize,
         lockTimeoutMs: this.workerConfig.outbox.lockTimeoutMs,
         maxRetries: this.workerConfig.outbox.maxRetries,
@@ -515,6 +518,42 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
         this.logger.info({ opportunityId }, 'Opportunity won event handled');
       }),
       'opportunity-won-handler'
+    );
+
+    // IFC-283 W-01/W-02: opportunity.created, opportunity.stage_changed,
+    // opportunity.lost and opportunity.description_updated previously had no
+    // registered handler — only opportunity.won did. The global wildcard (*)
+    // caught them for audit logging only. Extracted to handlers/
+    // opportunity-lifecycle.ts (matching the portal-delivery-sync /
+    // opportunity-customers handlers already in this directory) so each is
+    // unit-testable.
+    const opportunityLifecycle = createOpportunityLifecycleHandlers(this.logger);
+
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.OPPORTUNITY_CREATED,
+      this.createHandler('opportunity.created', opportunityLifecycle.handleCreated),
+      'opportunity-created-handler'
+    );
+
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.OPPORTUNITY_STAGE_CHANGED,
+      this.createHandler('opportunity.stage_changed', opportunityLifecycle.handleStageChanged),
+      'opportunity-stage-changed-handler'
+    );
+
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.OPPORTUNITY_LOST,
+      this.createHandler('opportunity.lost', opportunityLifecycle.handleLost),
+      'opportunity-lost-handler'
+    );
+
+    this.eventDispatcher.register(
+      DOMAIN_EVENT_TYPES.OPPORTUNITY_DESCRIPTION_UPDATED,
+      this.createHandler(
+        'opportunity.description_updated',
+        opportunityLifecycle.handleDescriptionUpdated
+      ),
+      'opportunity-description-updated-handler'
     );
 
     // IFC-314: portal delivery/billing sync on deal-won (enriched event).

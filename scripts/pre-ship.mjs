@@ -65,6 +65,17 @@
  *   PRESHIP_FULL_TESTS=1. Typecheck, lint and all other gates are unchanged.
  *   See scripts/lib/preship-test-scope.mjs.
  *
+ * Machine test slots and orphans:
+ *   At most 3 full test runs at once on one machine (owner ruling 2026-10-03).
+ *   The gate re-runs itself under the shared slot semaphore before any step
+ *   (scripts/lib/test-slot.mjs, see "Machine-wide test slot" below). Separately,
+ *   it never leaves a step orphaned (scripts/lib/preship-gate.mjs): each
+ *   step runs async with its PID recorded, its whole process tree is stopped on
+ *   success, failure, SIGINT/SIGTERM/SIGHUP/SIGBREAK and an uncaught exception,
+ *   and a detached watchdog (scripts/preship-watchdog.mjs) stops it after a hard
+ *   kill of the gate or the death of anything above it (the `git push`, the hook
+ *   shell).
+ *
  * Env:
  *   PRESHIP_MODE=full        same as passing --full
  *   PRESHIP_FULL_TESTS=1     run the FULL test suite locally (default: related only)
@@ -76,8 +87,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { createGate } from './lib/preship-gate.mjs';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
+import {
+  preshipNeedsSlot,
+  preshipSlotArgv,
+  runForwarding,
+  sharedSemaphore,
+} from './lib/test-slot.mjs';
 import { stepLine, advisoryNote, persistedState, finalLine } from './lib/preship-report.mjs';
+import { integrationInfraMissing } from './lib/preship-integration-infra.mjs';
+import { reusableResult } from './lib/preship-cache.mjs';
+
+// Throwaway stub credentials for the build-time env mirror below (never a real DB).
+const STUB_DB_USER = 'stub';
 
 // Resolve REPO_ROOT from git rather than cwd so the script behaves
 // identically whether invoked from the repo root, from a subdirectory,
@@ -110,19 +133,13 @@ const STATE_PATH = path.join(OUT_DIR, 'last-run.json');
 // hard-failing — so a DB-less env can still push the rest of the gate without a
 // wholesale skip. NOTE: this only detects "no DB stack"; pointing DATABASE_URL
 // at the correct (non-prod) DB remains the developer's responsibility.
+// The database and Redis the tests will actually use, TCP-probed (see
+// ./lib/preship-integration-infra.mjs). A name match on `docker ps` was fooled
+// by other projects' containers. Probed once per run: several steps ask.
+let testStackMissing;
 function dbStackUnavailable() {
-  const r = spawnSync('docker', ['ps', '--format', '{{.Names}}'], {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    shell: process.platform === 'win32',
-    // Bound the probe: a WEDGED daemon makes `docker ps` hang indefinitely, which
-    // would stall the whole gate before the SKIPPED_PRECONDITION logic runs. On
-    // timeout spawnSync returns a null status → treated as "db stack unavailable".
-    timeout: 10000,
-  });
-  if (r.error || r.status !== 0) return true; // docker missing / daemon down / probe timed out
-  const names = (r.stdout || '').toLowerCase();
-  return !(names.includes('postgres') && names.includes('redis'));
+  if (testStackMissing === undefined) testStackMissing = integrationInfraMissing(REPO_ROOT);
+  return testStackMissing !== null;
 }
 // The coverage gates need the merged lcov the `coverage` step produces; if that
 // step was skipped (no DB), they have nothing to read.
@@ -418,23 +435,9 @@ const STEPS = [
     description:
       'vitest run --project integration (FAILS the gate if Docker postgres/redis not up — override with PRESHIP_ALLOW_MISSING=1)',
     cmd: ['pnpm', 'run', 'test:integration'],
-    skip_if: () => {
-      // Probe Docker for postgres AND redis. `docker ps --filter name=X
-      // --filter name=Y` combines filters with AND, so no single container
-      // can match both — that probe is permanently empty. List ALL running
-      // container names once and require both substrings to appear.
-      const r = spawnSync('docker', ['ps', '--format', '{{.Names}}'], {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-        shell: process.platform === 'win32',
-        timeout: 10000, // wedged daemon: don't hang the gate on the probe (mirrors dbStackUnavailable)
-      });
-      if (r.error || r.status !== 0) return true; // docker missing / daemon down / probe timed out → skip
-      const names = (r.stdout || '').toLowerCase();
-      const hasPostgres = names.includes('postgres');
-      const hasRedis = names.includes('redis');
-      return !(hasPostgres && hasRedis);
-    },
+    // The endpoints the suite will actually use, TCP-probed (see the lib). A
+    // name match on `docker ps` was fooled by other projects' containers.
+    skip_if: dbStackUnavailable,
     skip_remediation:
       'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.',
     required: true,
@@ -535,8 +538,8 @@ const STEPS = [
         process.env.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
       AI_AUDIT_SIGNING_KEY:
         process.env.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime',
-      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://stub:stub@localhost:5432/stub',
-      DIRECT_URL: process.env.DIRECT_URL || 'postgresql://stub:stub@localhost:5432/stub',
+      DATABASE_URL: process.env.DATABASE_URL || `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
+      DIRECT_URL: process.env.DIRECT_URL || `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
       SUPABASE_URL: process.env.SUPABASE_URL || 'https://stub.supabase.co',
       SUPABASE_ANON_KEY:
         process.env.SUPABASE_ANON_KEY ||
@@ -610,18 +613,12 @@ const STEPS = [
     required: false,
   },
   {
+    // Shared secret-scan kit (.gitleaks/): scans the commits this push adds.
+    // Fails CLOSED: no gitleaks binary means the step fails, never skips.
     id: 'gitleaks',
-    description: 'gitleaks protect --staged (secret scan)',
-    cmd: ['gitleaks', 'protect', '--staged', '--redact', '--config=.gitleaks.toml', '--no-banner'],
-    skip_if: () => {
-      // gitleaks is optional — skip if not on PATH.
-      const r = spawnSync('gitleaks', ['version'], {
-        stdio: 'ignore',
-        shell: process.platform === 'win32',
-      });
-      return r.error !== undefined || r.status !== 0;
-    },
-    required: false,
+    description: 'gitleaks secret scan of the commits being pushed (.gitleaks/scan.sh range)',
+    cmd: ['sh', '.gitleaks/scan.sh', 'range', 'origin/main', 'HEAD'],
+    required: true,
   },
   {
     // WORKFLOW-YAML SECRET LINT (Harness hardening — Gap #1): parses every
@@ -629,8 +626,8 @@ const STEPS = [
     // (POSTGRES_PASSWORD / DATABASE_URL / DIRECT_URL / PGPASSWORD / password /
     // pw) that isn't a `${{ secrets.* }}` reference, a self-evident placeholder
     // (stub/…), or a consciously-annotated `# secret-lint-allow: <reason>`
-    // throwaway. The `gitleaks` step above (and its default ruleset) has no rule
-    // for a bare `postgres:postgres` literal, so those passed the laptop gate and
+    // throwaway. The `gitleaks` step above has no rule for an unquoted YAML
+    // `password: value`, so a bare postgres literal like that once passed the laptop gate and
     // only reddened on GitGuardian in the cloud — three times (#622, #625, #627).
     // This is the LOCAL parity gate for that class. No infra, fast, deterministic
     // → required (unlike the optional/advisory scanners above, which skip when a
@@ -785,6 +782,20 @@ for (const a of args) {
   process.exit(2);
 }
 
+// --- Machine-wide test slot ---
+// At most three full test runs at once on the owner's machine, and one
+// IntelliFlow pre-ship at a time: re-run this gate under the shared semaphore,
+// which waits for a free slot and releases it on exit. Ctrl-C and kill are
+// forwarded and the exit code is passed through. See scripts/lib/test-slot.mjs.
+if (preshipNeedsSlot(flags, process.env)) {
+  const semaphore = sharedSemaphore(process.env);
+  if (semaphore) {
+    process.exit(
+      await runForwarding(process.execPath, preshipSlotArgv(semaphore, process.argv[1], args))
+    );
+  }
+}
+
 if (flags.help) {
   process.stdout.write(
     [
@@ -868,7 +879,16 @@ function fmtDuration(ms) {
   return `${Math.floor(ms / 60000)}m${Math.round((ms % 60000) / 1000)}s`;
 }
 
-function runStep(step, prev) {
+// ---- step tracking and cleanup ------------------------------------------------
+//
+// The step process tree is stopped on every exit path (success, failure, a signal,
+// an uncaught exception); a detached watchdog covers a hard kill of the gate or the
+// death of anything above it. Machine test slots come from with-slot.mjs, not from
+// here. The lifecycle lives in scripts/lib/preship-gate.mjs (unit-tested in-process);
+// this is the wiring.
+const gate = createGate({ repoRoot: REPO_ROOT });
+
+async function runStep(step, prev) {
   const logPath = path.join(LOG_DIR, `${step.id}.log`);
 
   if (flags.only && !flags.only.includes(step.id)) {
@@ -892,8 +912,8 @@ function runStep(step, prev) {
     };
   }
 
-  const cached = prev?.steps?.find((s) => s.id === step.id);
-  if (cached && cached.verdict === 'PASS') {
+  const cached = reusableResult(step.id, prev);
+  if (cached) {
     // Display 0ms for cached results so the printed timing isn't
     // mistaken for a fresh run that took the old duration. Keep the
     // original duration in a separate field for audit if needed.
@@ -913,24 +933,19 @@ function runStep(step, prev) {
   // shell:true on Windows so the PATH resolves .cmd/.exe extensions for
   // pnpm / gitleaks / etc. All argv values are hard-coded literals (no
   // user input), so shell injection isn't a concern. POSIX systems use
-  // shell:false to avoid the extra fork.
-  const r = spawnSync(step.cmd[0], step.cmd.slice(1), {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
+  // shell:false to avoid the extra fork, and detached:true so the step is its
+  // own process group that killTree can stop as a whole.
+  //
+  // Async spawn (not spawnSync) so the gate can still react to a signal while a
+  // step runs, and so the step's PID is known to the watchdog. stdout streams
+  // straight to the log rather than into a buffer (unit-tests emits >5MB), so
+  // there is no maxBuffer to blow.
+  const r = await gate.runStepProcess(step, {
+    logPath,
     env,
     cwd: step.cwd || REPO_ROOT,
-    shell: process.platform === 'win32',
-    // Default 1MB maxBuffer is blown by noisy steps (unit-tests emits
-    // ~14k lines / >5MB of AUDIT + RBAC log lines). When exceeded,
-    // spawnSync kills the child with SIGTERM and returns status=null,
-    // giving the false impression that the test failed when it was
-    // really truncated. 256MB is comfortably above any current step.
-    maxBuffer: 256 * 1024 * 1024,
   });
   const duration_ms = Date.now() - start;
-
-  const output = (r.stdout || '') + (r.stderr ? '\n--- stderr ---\n' + r.stderr : '');
-  fs.writeFileSync(logPath, output);
 
   const failed = r.status !== 0;
   return {
@@ -963,9 +978,11 @@ function isMissingRequired(r) {
   return r.verdict === 'SKIPPED_PRECONDITION' && r.required === true;
 }
 
-function main() {
+async function main() {
   ensureDirs();
   const head = gitHead();
+  // Stop the step tree on every exit path we get to run.
+  gate.installExit();
   const prev = loadPreviousState(head);
   if (prev) {
     process.stdout.write(
@@ -1020,7 +1037,7 @@ function main() {
       continue;
     }
     process.stdout.write(`  ${step.id.padEnd(28)} `);
-    const r = runStep(step, prev);
+    const r = await runStep(step, prev);
     results.push(r);
 
     // Truthful per-step label: MISSING for an unrunnable required guard, WARN
@@ -1116,4 +1133,7 @@ function main() {
   process.exit(verdict === 'PASS' ? 0 : 1);
 }
 
-main();
+main().catch((err) => {
+  gate.fatal(err);
+  process.exit(1);
+});

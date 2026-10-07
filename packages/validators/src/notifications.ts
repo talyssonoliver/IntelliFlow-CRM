@@ -95,6 +95,8 @@ export const NOTIFICATION_TYPES = [
   'account_duplicate_suspected',
   // Account notifications (IFC-311)
   'account_reassigned',
+  // PG-196: an account moved up or down a revenue tier
+  'account_tier_changed',
   // Document notifications (PG-186)
   'document_reassigned',
   // Email notifications

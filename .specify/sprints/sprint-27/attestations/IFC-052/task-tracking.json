@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "IFC-052",
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T22:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Reopen evidence: None of the DoD artifacts exists: `artifacts/misc/deployment-log.txt`, `artifacts/misc/feature-flags-config.json`, `artifacts/misc/monitoring-dashboard.url`, `artifacts/logs/rollback-test.log`.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "Reopen evidence: KPI \"monitoring active\" fails: production exports no telemetry (see IFC-032). The deployment itself is live. That part is not disputed.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: (1) Monitoring active (IFC-032), with its dashboard URL recorded. A deployment log and rollback evidence captured from a real production deploy. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 50,
+  "updated_at": "2026-10-05T22:30:00Z"
+}

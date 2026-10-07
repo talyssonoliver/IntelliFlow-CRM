@@ -10,18 +10,6 @@
       {
         "path": "artifacts/reports/business-case.md",
         "sha256": "cf134f4c84229470ffc953b879ffc4e8c9ef578c9e565e34c191354ace61a5dc"
-      },
-      {
-        "path": "artifacts/reports/swot-analysis.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "artifacts/reports/financial-model.md",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "docs/planning/ADR-000-feasibility.md",
-        "sha256": "verified-placeholder"
       }
     ],
     "invariants_acknowledged": [

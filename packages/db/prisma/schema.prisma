@@ -124,6 +124,7 @@ model Tenant {
   callRecords          CallRecord[]               @ignore
   agentAvailabilities  AgentAvailability[]        @ignore
   routingRules         RoutingRule[]              @ignore
+  accountTerritories   AccountTerritory[]         @ignore
   routingAudits        RoutingAudit[]             @ignore
   notifications        Notification[]             @ignore
   notifPreferences     NotificationPreference[]   @ignore
@@ -178,6 +179,8 @@ model Tenant {
   documentAutomationSettings DocumentAutomationSetting[] @ignore
   documentRetentionPolicies DocumentRetentionPolicy[] @ignore
   caseSettings              CaseSettings[]            @ignore
+  accountTierDefinitions    AccountTierDefinition[]   @ignore // PG-196
+  accountTierConfigs        AccountTierConfig[]       @ignore // PG-196
   caseDuplicateRules        CaseDuplicateRule[]       @ignore
   caseRequiredFields        CaseRequiredField[]       @ignore
   caseTags                  CaseTag[]                 @ignore
@@ -521,6 +524,7 @@ model User {
   // ADR-071: inherited tenant membership (home tenant stays users.tenantId)
   memberships         TenantMembership[]
   loginGrants         PartnerLoginGrant[]
+  accountTerritoryMemberships AccountTerritoryMember[] // PG-197
 
   @@index([email])
   @@index([role])
@@ -848,6 +852,12 @@ model Account {
   employees     Int?
   revenue       Decimal?  @db.Decimal(15, 2)
   description   String?
+  // PG-197: optional geography used for territory matching. country is an
+  // upper-case ISO 3166-1 alpha-2 code (SQL CHECK in
+  // 20261007130000_account_territories); region and postalCode are display forms.
+  country       String?   @db.VarChar(2)
+  region        String?
+  postalCode    String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -1016,6 +1026,122 @@ model AccountAutomationSetting {
   updatedAt                          DateTime @updatedAt
 
   @@map("account_automation_settings")
+}
+
+// ─── PG-196: Account Tiers ──────────────────────────────────────────────────
+// Tenant-configurable revenue tiers (ADR-073). A tenant with no rows uses the
+// in-memory domain DEFAULT_TIER_CONFIG — there is no SQL seed. Cross-row rules
+// (exactly one tier at 0, default tier among the keys) are enforced by the
+// domain validateTierConfig and the accountTiers router; the migration adds
+// CHECK constraints for the single-row rules and RLS tenant isolation.
+
+/// One revenue tier of a tenant. Band = [minRevenue, next tier's minRevenue).
+model AccountTierDefinition {
+  id         String   @id @default(cuid())
+  tenantId   String
+  /// Immutable UPPER_SNAKE key ("UNKNOWN" is reserved).
+  key        String
+  label      String
+  /// Inclusive lower bound of annual revenue.
+  minRevenue Decimal  @db.Decimal(15, 2)
+  colorToken String   @default("slate")
+  benefits   String[] @default([])
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, key])
+  @@unique([tenantId, minRevenue])
+  @@map("account_tier_definitions")
+}
+
+/// One row per tenant: default tier and up/down rules. Absent row = defaults.
+model AccountTierConfig {
+  id                     String   @id @default(cuid())
+  tenantId               String   @unique
+  /// Tier shown for accounts with no revenue; null = UNKNOWN.
+  defaultTierKey         String?
+  notifyOwnerOnUpgrade   Boolean  @default(false)
+  notifyOwnerOnDowngrade Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  tenant                 Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("account_tier_config")
+}
+
+// ─── PG-197: Account Territories ────────────────────────────────────────────
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261007130000_account_territories, asserted by
+// tests/integration/account-territories.test.ts — do not drop in a diff):
+//   - account_territories_tenant_lower_name_key  UNIQUE ("tenantId", lower("name"))
+//   - account_territories_one_default_key        UNIQUE ("tenantId") WHERE "isDefault"
+//   - account_territory_rules_dedupe_key         UNIQUE ("territoryId", "country",
+//                                                  lower(COALESCE("region",'')), COALESCE("postalPrefix",''))
+//   - CHECKs on strategy, colorToken, rule country, non-empty region/postalPrefix
+//   - RLS tenant policies on all three tables
+
+/// A tenant-defined territory that new accounts are assigned through (ADR-074).
+model AccountTerritory {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String   @db.VarChar(100)
+  description String?
+  colorToken  String   @default("slate")
+  /// Higher = evaluated first (RoutingRule convention).
+  priority    Int      @default(0)
+  /// ROUND_ROBIN | LOAD_BALANCE | MANUAL (SQL CHECK; domain TERRITORY_STRATEGIES).
+  strategy    String   @default("MANUAL")
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  /// Round-robin cursor, advanced with an atomic increment.
+  rrCursor    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rules       AccountTerritoryRule[]
+  members     AccountTerritoryMember[]
+
+  // DBA-012: composite target for tenant-consistent child FKs
+  @@unique([tenantId, id])
+  @@index([tenantId, isActive, priority])
+  @@map("account_territories")
+}
+
+/// A geographic rule of a territory: country, optionally narrowed by region
+/// and/or postcode prefix (stored in match-key form: upper-case, no spaces/hyphens).
+model AccountTerritoryRule {
+  id           String           @id @default(cuid())
+  tenantId     String
+  territoryId  String
+  territory    AccountTerritory @relation(fields: [tenantId, territoryId], references: [tenantId, id], onDelete: Cascade)
+  country      String           @db.VarChar(2)
+  region       String?
+  postalPrefix String?
+  sortOrder    Int              @default(0)
+  createdAt    DateTime         @default(now())
+
+  @@index([tenantId, territoryId])
+  @@map("account_territory_rules")
+}
+
+/// A user who can receive accounts from a territory.
+model AccountTerritoryMember {
+  id          String           @id @default(cuid())
+  tenantId    String
+  territoryId String
+  territory   AccountTerritory @relation(fields: [tenantId, territoryId], references: [tenantId, id], onDelete: Cascade)
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sortOrder   Int              @default(0)
+  createdAt   DateTime         @default(now())
+
+  @@unique([territoryId, userId])
+  @@index([tenantId, territoryId])
+  @@index([userId])
+  @@map("account_territory_members")
 }
 
 model Opportunity {
@@ -4114,10 +4240,18 @@ enum AgentStatus {
 }
 
 /// Ticket routing rule
+/// Discriminator for routing_rules: lead routing and ticket automation keep
+/// different condition/action vocabularies and each reads only its own rows.
+enum RoutingRuleType {
+  LEAD
+  TICKET
+}
+
 model RoutingRule {
   id          String   @id @default(cuid())
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ruleType    RoutingRuleType @default(LEAD)
   name        String
   description String?
   priority    Int      @default(0) // Higher = evaluated first
