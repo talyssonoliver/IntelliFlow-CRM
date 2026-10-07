@@ -317,12 +317,17 @@ export function createStack(
   canvas: HTMLCanvasElement,
   { fonts, reducedMotion }: { fonts: FaceFonts; reducedMotion: boolean }
 ): AuroraStack {
-  const renderer = new THREE.WebGLRenderer({
-    canvas,
+  // three.js needs WebGL2. Ask for the context first: when there is none,
+  // WebGLRenderer logs three console.errors before it throws, while the caller
+  // (AuroraMotion) only means to warn that the stack is missing.
+  const attributes: WebGLContextAttributes = {
     antialias: true,
     alpha: true,
     powerPreference: 'high-performance',
-  });
+  };
+  const context: WebGL2RenderingContext | null = canvas.getContext('webgl2', attributes);
+  if (!context) throw new Error('WebGL2 is unavailable');
+  const renderer = new THREE.WebGLRenderer({ canvas, context, ...attributes });
   // Phones and touch screens draw at 1.5x: the page already runs a second WebGL
   // canvas (the aurora background), and 2x on both is where scrolling lagged.
   const compact = window.matchMedia?.('(pointer: coarse), (max-width: 960px)').matches ?? false;

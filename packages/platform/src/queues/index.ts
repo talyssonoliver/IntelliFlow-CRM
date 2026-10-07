@@ -44,6 +44,7 @@ export {
   type ConnectionHealthResult,
   type ConnectionOptions,
 } from './connection';
+export { DEFAULT_DRAIN_DELAY_SECONDS, getDrainDelaySeconds } from './drain-delay';
 
 // Retry strategy
 export {

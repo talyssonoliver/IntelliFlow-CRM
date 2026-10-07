@@ -28,50 +28,43 @@ test.describe('Home Page E2E', () => {
       await context.clearCookies();
     });
 
+    // Since #741 the public home is the Aurora landing (AuroraLandingPage). The
+    // old page's hero ("Move faster, stay governed"), its 3 hero stats, 3 value
+    // pillars and "Start free trial" / "Talk to sales" CTAs no longer exist; these
+    // check the same three things on the page that replaced it.
     test('should render public home page with hero section', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
-      // Verify main content landmark (use <main> tag to avoid ambiguity with other #main-content elements)
-      const mainContent = page.locator('main#main-content');
-      await expect(mainContent).toBeVisible();
-
-      // Verify hero heading
-      const heroHeading = page.locator('#hero-heading');
-      await expect(heroHeading).toBeVisible();
-      await expect(heroHeading).toContainText('Move faster, stay governed');
+      await expect(page.locator('main#aurora-main')).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+        'The CRM that works your pipeline for you.'
+      );
     });
 
-    test('should display hero stats and value pillars', async ({ page }) => {
+    test('should display the proof strip stats', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
-      // Verify 3 hero stat cards
-      const heroStats = page.locator('[data-testid="hero-stat"]');
-      await expect(heroStats).toHaveCount(3);
-
-      // Verify 3 value pillar cards
-      const valuePillars = page.locator('[data-testid="value-pillar"]');
-      await expect(valuePillars).toHaveCount(3);
+      // The product facts under the hero (ProofStrip): four stats.
+      await expect(page.locator('.proof .stat')).toHaveCount(4);
     });
 
     test('should have CTAs linking to signup and contact', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
-      // Verify "Start free trial" CTA links to /signup
-      const startTrialCta = page.locator('a:has-text("Start free trial")').first();
-      await expect(startTrialCta).toBeVisible();
-      await expect(startTrialCta).toHaveAttribute('href', '/signup');
+      const heroCtas = page.locator('.stage .cta-row');
+      const getStarted = heroCtas.getByRole('link', { name: 'Get started' });
+      await expect(getStarted).toBeVisible();
+      await expect(getStarted).toHaveAttribute('href', '/signup');
 
-      // Verify "Talk to sales" CTA links to /contact
-      const talkToSalesCta = page.locator('a:has-text("Talk to sales")').first();
-      await expect(talkToSalesCta).toBeVisible();
-      await expect(talkToSalesCta).toHaveAttribute('href', '/contact');
+      const bookDemo = heroCtas.getByRole('link', { name: 'Book a demo' });
+      await expect(bookDemo).toBeVisible();
+      await expect(bookDemo).toHaveAttribute('href', '/contact');
 
-      // Verify bottom CTA section exists
-      const ctaSection = page.locator('[data-testid="cta-section"]');
-      await expect(ctaSection).toBeVisible();
+      // The closing call to action at the bottom of the page (FinalCta).
+      await expect(page.locator('section.aurora-final')).toBeAttached();
     });
   });
 

@@ -193,3 +193,4 @@ export const connectionRegistry = new ConnectionRegistry();
 // ============================================================================
 
 export type { ConnectionOptions } from 'bullmq';
+export { DEFAULT_DRAIN_DELAY_SECONDS, getDrainDelaySeconds } from './drain-delay';
