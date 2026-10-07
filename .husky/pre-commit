@@ -104,7 +104,22 @@ if [ -n "$STAGED_TS" ] && [ "${ESCAPE_LINT_FIX:-0}" != "1" ]; then
   # `2>/dev/null || true` on `git add` because some staged files may be
   # in directories ESLint ignored (e.g., dist/) — re-staging only matters
   # for files we actually fixed.
-  echo "$STAGED_TS" | xargs pnpm exec eslint --fix --max-warnings=0 --no-warn-ignored || {
+  #
+  # Batched via `xargs -s` (max total command-line chars per invocation,
+  # command + args together) because a large commit (e.g. a 650+ file
+  # merge) passing every staged path to one `pnpm exec eslint` call
+  # overflows Windows' command-line limit: "The command line is too
+  # long". 7000 leaves headroom under both the ~8191-char cmd.exe line
+  # limit (eslint resolves through node_modules/.bin/eslint.CMD on
+  # Windows, the same shim layer the prettier step above already
+  # batches for) and the ~32767-char absolute Windows CreateProcess
+  # limit, whichever is actually binding. `-s` packs as many paths as
+  # fit per batch rather than a fixed count, so it adapts to path
+  # length instead of guessing a safe file count. `-x` makes xargs
+  # fail loudly if a single path were somehow too long to fit at all,
+  # instead of silently doing something else. Same eslint flags, same
+  # --max-warnings=0 failure behavior — just run over N batches.
+  echo "$STAGED_TS" | xargs -s 7000 -x pnpm exec eslint --fix --max-warnings=0 --no-warn-ignored || {
     echo "❌ Lint failed on staged files after autofix. Fix the remaining errors before committing."
     echo "   (Override only if necessary: ESCAPE_LINT_FIX=1 git commit ... — record reason in commit body.)"
     exit 1
