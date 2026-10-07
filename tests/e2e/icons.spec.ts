@@ -104,7 +104,11 @@ test.describe('Material Symbols Icons Loading', () => {
       expect(icons.length).toBeGreaterThan(0);
       for (const icon of icons) {
         const label = `icon "${icon.text}"`;
-        expect(icon.display, label).toBe(icon.blockified ? 'block' : 'inline-block');
+        // An icon styled as its own fixed-size tile (the Aurora landing's rail and
+        // node icons: display:grid, place-items:center, 28-36px) reserves its box
+        // through its width and height, checked below, not through inline-block.
+        const tile = /^(inline-)?(grid|flex)$/.test(icon.display);
+        if (!tile) expect(icon.display, label).toBe(icon.blockified ? 'block' : 'inline-block');
         // Reserved box clips overflow, except icons that explicitly opt out
         // (a smaller h-*/w-* box around the 24px glyph).
         expect(icon.overflow, label).toBe(icon.optsOutOfClip ? 'visible' : 'hidden');

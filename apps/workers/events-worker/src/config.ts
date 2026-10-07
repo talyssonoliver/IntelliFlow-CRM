@@ -13,8 +13,10 @@ export const EventsWorkerConfigSchema = z.object({
 
   /** Outbox polling configuration */
   outbox: z.object({
-    /** Polling interval in milliseconds */
+    /** Polling interval in milliseconds while events are flowing */
     pollIntervalMs: z.number().int().min(10).max(10000).default(100),
+    /** Idle backoff ceiling in milliseconds (worst-case pickup latency when idle) */
+    maxPollIntervalMs: z.number().int().min(10).max(60000).default(5000),
     /** Maximum events to fetch per poll */
     batchSize: z.number().int().min(1).max(1000).default(100),
     /** Lock timeout for events being processed */
@@ -39,6 +41,7 @@ export function loadEventsWorkerConfig(): EventsWorkerConfig {
     useDatabase: process.env.EVENTS_WORKER_USE_DATABASE === 'true',
     outbox: {
       pollIntervalMs: Number.parseInt(process.env.OUTBOX_POLL_INTERVAL_MS ?? '100', 10),
+      maxPollIntervalMs: Number.parseInt(process.env.OUTBOX_POLL_MAX_INTERVAL_MS ?? '5000', 10),
       batchSize: Number.parseInt(process.env.OUTBOX_BATCH_SIZE ?? '100', 10),
       lockTimeoutMs: Number.parseInt(process.env.OUTBOX_LOCK_TIMEOUT_MS ?? '30000', 10),
       maxRetries: Number.parseInt(process.env.OUTBOX_MAX_RETRIES ?? '3', 10),

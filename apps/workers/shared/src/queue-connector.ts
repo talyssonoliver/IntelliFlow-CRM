@@ -14,6 +14,7 @@ import IORedis from 'ioredis';
 import pino from 'pino';
 import { getCurrentLogContext } from '@intelliflow/observability';
 import { DEFAULT_QUEUE_CONFIGS } from '@intelliflow/platform/queues/types';
+import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
 import type { RedisConfig, QueueConfig } from './worker-config';
 import type { ComponentHealth } from './types';
 
@@ -208,6 +209,7 @@ export class QueueConnector {
       lockDuration: this.queueConfig.lockDuration,
       stalledInterval: this.queueConfig.stalledInterval,
       maxStalledCount: this.queueConfig.maxStalledCount,
+      drainDelay: getDrainDelaySeconds(),
       limiter: this.queueConfig.rateLimiter
         ? {
             max: this.queueConfig.rateLimiter.max,

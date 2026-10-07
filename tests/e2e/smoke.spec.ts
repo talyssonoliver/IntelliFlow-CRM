@@ -54,7 +54,9 @@ test.describe('Smoke Tests', () => {
       await page.goto('/');
 
       // Verify the page loads successfully
-      await expect(page).toHaveTitle(/IntelliFlow CRM/i);
+      // The root title is "Aurora, the AI CRM that asks before it acts" since
+      // #741. Accept either brand (owner decision) while the rename settles.
+      await expect(page).toHaveTitle(/Aurora|IntelliFlow CRM/i);
 
       // Give page time to load
       await page.waitForLoadState('networkidle');

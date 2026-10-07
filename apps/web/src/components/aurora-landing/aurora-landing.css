@@ -2025,8 +2025,12 @@
     gap: 9px;
   }
 }
+/* Nothing defines --font-material-symbols. Without the fallback the declaration
+   is invalid at computed-value time, the icon inherits Manrope from .aurora-page,
+   and every icon on the landing shows its ligature name as text ("task_alt").
+   The family is the one globals.css loads (font-display: block). */
 .aurora-page .material-symbols-outlined {
-  font-family: var(--font-material-symbols);
+  font-family: var(--font-material-symbols, 'Material Symbols Outlined'), sans-serif;
   font-weight: normal;
   font-style: normal;
   font-size: 18px;

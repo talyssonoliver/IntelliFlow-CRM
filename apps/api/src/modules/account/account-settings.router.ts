@@ -26,6 +26,8 @@ import {
   accountAutomationSettingsSchema,
 } from '@intelliflow/validators';
 import { assertCanCreateTag, loadAccountAutomation } from './account-automation';
+import { normalizeLegacyTierValue } from '@intelliflow/validators';
+import { loadAccountTierConfig } from './account-tiers';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -48,6 +50,56 @@ const HIERARCHY_DEFAULTS = {
   preventCycles: true,
 };
 
+/** De-duplicated tier keys in their canonical UPPER_SNAKE form (PG-196). */
+function normalizeTierValues(values: readonly string[]): string[] {
+  return [
+    ...new Set(values.map((value) => normalizeLegacyTierValue(value)).filter((v) => v.length > 0)),
+  ];
+}
+
+/**
+ * PG-196: requireParentForTiers holds account tier keys. A value must be a
+ * configured tier — or already stored (legacy values have no effect and are
+ * kept until removed) — and cannot be the default tier, which would make
+ * every account without revenue need a parent.
+ */
+async function validateRequiredTiers(
+  db: Parameters<typeof loadAccountTierConfig>[0] & {
+    accountHierarchyConfig: {
+      findUnique(args: {
+        where: { tenantId: string };
+      }): Promise<{ requireParentForTiers: string[] } | null>;
+    };
+  },
+  tenantId: string,
+  values: readonly string[]
+): Promise<string[]> {
+  const requested = normalizeTierValues(values);
+  const [{ config }, existing] = await Promise.all([
+    loadAccountTierConfig(db, tenantId),
+    db.accountHierarchyConfig.findUnique({ where: { tenantId } }),
+  ]);
+  const allowed = new Set([
+    ...config.tiers.map((t) => t.key),
+    ...normalizeTierValues(existing?.requireParentForTiers ?? []),
+  ]);
+  const unknown = requested.filter((v) => !allowed.has(v));
+  if (unknown.length > 0) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Unknown account tier(s): ${unknown.join(', ')}. Choose tiers defined on the Account Tiers page.`,
+    });
+  }
+  if (config.defaultTierKey && requested.includes(config.defaultTierKey)) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message:
+        'The default tier cannot require a parent account: accounts without revenue would all need one.',
+    });
+  }
+  return requested;
+}
+
 // ─── Hierarchy Sub-Router ───────────────────────────────────────────────────
 
 const hierarchyRouter = createTRPCRouter({
@@ -56,7 +108,12 @@ const hierarchyRouter = createTRPCRouter({
     const existing = await ctx.prismaWithTenant.accountHierarchyConfig.findUnique({
       where: { tenantId },
     });
-    if (existing) return existing;
+    if (existing) {
+      return {
+        ...existing,
+        requireParentForTiers: normalizeTierValues(existing.requireParentForTiers),
+      };
+    }
 
     return ctx.prismaWithTenant.accountHierarchyConfig.create({
       data: { tenantId, ...HIERARCHY_DEFAULTS },
@@ -65,10 +122,16 @@ const hierarchyRouter = createTRPCRouter({
 
   update: tenantProcedure.input(accountHierarchyConfigSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
+    const requireParentForTiers = await validateRequiredTiers(
+      ctx.prismaWithTenant,
+      tenantId,
+      input.requireParentForTiers
+    );
+    const data = { ...input, requireParentForTiers };
     return ctx.prismaWithTenant.accountHierarchyConfig.upsert({
       where: { tenantId },
-      create: { tenantId, ...input },
-      update: input,
+      create: { tenantId, ...data },
+      update: data,
     });
   }),
 

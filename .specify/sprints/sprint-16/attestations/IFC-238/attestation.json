@@ -43,6 +43,24 @@
       "timestamp": "2026-03-19T00:03:00Z",
       "duration_ms": 12000,
       "stdout_hash": "pre-existing-error-in-opportunity-router-changeStage-not-IFC238"
+    },
+    {
+      "name": "TypeScript (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:29:56.503Z",
+      "duration_ms": 59015,
+      "stdout_hash": "1a3449b1d8cbd8eb94800f98cc4ad86ea16c7016cd39cee7468d3d0582fb26bd"
+    },
+    {
+      "name": "Build (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:31:14.719Z",
+      "duration_ms": 151883,
+      "stdout_hash": "fd5357b7bf501ebf3389a8a7d3b28ea97c345f9a551c0d7d37b18f8c14f79b19"
     }
   ],
   "notes": "IFC-238 v2 — fixed after deliverable verification. Auth guard now gates on BOTH authLoading AND !isAuthenticated (was missing !isAuthenticated check). Tests strengthened: AC-001 test asserts form heading/inputs absent + skeleton shown for unauthenticated; success test uses fake timers and asserts router.push('/leads'); error test wraps in act(). TypeScript/Build pre-existing failures in opportunity.router.ts and zep-budget.router.ts are not IFC-238 related.",

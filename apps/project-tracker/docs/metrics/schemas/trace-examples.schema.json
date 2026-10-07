@@ -22,9 +22,9 @@
       "format": "date-time"
     },
     "source": {
-      "description": "Path to the script that produced this artifact (must be a real script in tools/scripts/observability/)",
+      "description": "Producer of this artifact: a capture script in tools/scripts/observability/, or \"grafana-cloud:<stack>/<view>\" when the examples were read from the hosted backend that production exports to",
       "type": "string",
-      "pattern": "^tools/scripts/observability/.+\\.ts$"
+      "pattern": "^(tools/scripts/observability/.+\\.ts|grafana-cloud:.+)$"
     },
     "task_id": {
       "description": "Originating task ID (IFC-032 for the initial capture)",
@@ -47,7 +47,6 @@
           "scenario",
           "trace_id",
           "span_id",
-          "workflow_id",
           "duration_ms",
           "status"
         ],
@@ -114,7 +113,24 @@
           "child_span_names": {
             "description": "Optional list of child span names captured under this trace (used by integration evidence)",
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
+          },
+          "service": {
+            "description": "service.name of the span (production captures)",
+            "type": "string",
+            "minLength": 1
+          },
+          "span_name": {
+            "description": "Root span name (production captures)",
+            "type": "string",
+            "minLength": 1
+          },
+          "start_time": {
+            "description": "Span start time, ISO 8601 (production captures)",
+            "type": "string",
+            "format": "date-time"
           }
         }
       }

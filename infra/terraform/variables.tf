@@ -290,6 +290,13 @@ variable "otel_exporter_endpoint" {
   default     = ""
 }
 
+variable "otel_exporter_otlp_headers" {
+  description = "OTEL_EXPORTER_OTLP_HEADERS for the OTLP endpoint (e.g. the backend's Authorization header), via TF_VAR_otel_exporter_otlp_headers from a GitHub/Railway secret. Only injected when otel_exporter_endpoint is set."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "observability_managed_services" {
   description = "Live Railway services to bring under TF management for OBSERVABILITY only (#314) — sets SENTRY_DSN/SENTRY_ENVIRONMENT/OTEL_* at the service level without touching their other live vars. Empty (default) = none (current behaviour: only the 3 new workers get observability via shared_env_vars). Set to [\"api\", \"ai-worker\"] in prod once the hand-set SENTRY_DSN/SENTRY_ENVIRONMENT are imported."
   type        = list(string)

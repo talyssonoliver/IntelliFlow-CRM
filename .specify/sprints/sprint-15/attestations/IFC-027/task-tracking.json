@@ -61,6 +61,16 @@
       "resolution": "Required for T3 release (within 4 weeks)",
       "resolved_at": null,
       "severity": "HIGH"
+    },
+    {
+      "description": "Reopen evidence: `docs/planning/customer-feedback.md` reported 25 beta users, satisfaction scores and named testimonials from people at named companies. No beta has run and none of these people exist, so the KPI \"AI adds measurable value\" had no real evidence. The document was replaced with an honest \"no feedback collected yet\" note, and the same invented data was removed from board-presentation.md.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: (1) Collect real feedback (or real usage data from production) and record its source, or re-scope the gate decision with the owner.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
     }
   ],
   "completed_at": "2026-01-30T17:30:00.000Z",
@@ -293,6 +303,11 @@
       "at": "2026-01-30T21:30:00.000Z",
       "note": "Plan Deliverables Verification completed: 6/6 files (100%), 19/38 checkboxes (50%), T1 conditions MET",
       "status": "Completed"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T23:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
     }
   ],
   "stream": null,
@@ -359,5 +374,7 @@
       "required": true,
       "type": "auto"
     }
-  ]
+  ],
+  "percent_complete": 50,
+  "updated_at": "2026-10-05T23:30:00Z"
 }

@@ -86,20 +86,20 @@ this category.
 (Unchanged from previous draft — these don't run on PRs and aren't the focus of
 the duplication problem.)
 
-| Workflow                    | Trigger                           |
-| --------------------------- | --------------------------------- |
-| cd.yml                      | `push` to main                    |
-| build-images.yml            | `push` to main + manual           |
-| signing.yml                 | `push` to main + manual           |
-| release.yml                 | `push` to release/\*\* + manual   |
-| railway-deploy.yml          | `workflow_run` after CD + manual  |
-| blue-green-deploy.yml       | manual only                       |
-| performance-gate.yml        | manual only                       |
-| governance-metrics.yml      | nightly cron + push to main       |
-| system-audit-nightly.yml    | nightly cron                      |
-| system-audit-integrity.yml  | nightly cron (cache-bypass smoke) |
-| secret-rotation.yml         | weekly cron                       |
-| sprint-completion-audit.yml | manual only                       |
+| Workflow                    | Trigger                                                           |
+| --------------------------- | ----------------------------------------------------------------- |
+| cd.yml                      | `push` to main                                                    |
+| build-images.yml            | `push` to main + manual                                           |
+| signing.yml                 | `push` to main + manual                                           |
+| release.yml                 | `push` to release/\*\* + manual                                   |
+| railway-deploy.yml          | `workflow_run` after CD + manual                                  |
+| blue-green-deploy.yml       | manual only (deleted 2026-10-05; replaced by vercel-rollback.yml) |
+| performance-gate.yml        | manual only                                                       |
+| governance-metrics.yml      | nightly cron + push to main                                       |
+| system-audit-nightly.yml    | nightly cron                                                      |
+| system-audit-integrity.yml  | nightly cron (cache-bypass smoke)                                 |
+| secret-rotation.yml         | weekly cron                                                       |
+| sprint-completion-audit.yml | manual only                                                       |
 
 ### Why this matters for the savings math
 

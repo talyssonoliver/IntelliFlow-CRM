@@ -1,13 +1,6 @@
 {
-  "_comment": "Owner ruling 2026-10-06: tasks truthfully reopened in #795 are exempt from the strict sprint completion/start gates until the expiry below, by which they must be redone. An expired entry fails validate:sprint in every mode (tools/scripts/lib/reopen-exemptions.ts). Remove an entry when its task is Completed again.",
+  "_comment": "Owner ruling 2026-10-06: tasks truthfully reopened in #795 (and SALES-001, reopened by the 2026-10-07 integrity audit, owner ruling 2026-10-07) are exempt from the strict sprint completion/start gates until the expiry below, by which they must be redone. An expired entry fails validate:sprint in every mode (tools/scripts/lib/reopen-exemptions.ts). Remove an entry when its task is Completed again.",
   "exemptions": [
-    {
-      "taskId": "IFC-032",
-      "expires": "2026-10-11T23:59:00+01:00",
-      "due": "2026-10-08",
-      "lane": "FIX IntelliFlow production observability",
-      "reason": "Production OTLP export to Grafana Cloud + real trace ID; blocked on the owner creating the OTLP token"
-    },
     {
       "taskId": "INFRA-TF-004",
       "expires": "2026-10-11T23:59:00+01:00",
@@ -98,6 +91,20 @@
       "due": "2026-10-11",
       "lane": "projects-64 (owner decision)",
       "reason": "Re-scope or retire: the original evidence described people who do not exist"
+    },
+    {
+      "taskId": "IFC-151",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-10",
+      "lane": "FIX IntelliFlow production observability",
+      "reason": "DLQ depth/drain/retry alerts loaded in the hosted backend from production metrics, proven by a received alert (reopened in #796)"
+    },
+    {
+      "taskId": "SALES-001",
+      "expires": "2026-10-11T23:59:00+01:00",
+      "due": "2026-10-11",
+      "lane": "Owner (design-source link)",
+      "reason": "Commit the real Figma/Canva design-source link; outline and one-pager are delivered"
     }
   ]
 }

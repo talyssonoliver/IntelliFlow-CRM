@@ -1,7 +1,8 @@
 # IntelliFlow CRM - Grafana Dashboard Catalog
 
 **Document Version**: 1.0.0 **Last Updated**: 2025-12-29 **Related Task**:
-IFC-097 Distributed Tracing & Logging **Status**: Complete
+IFC-097 Distributed Tracing & Logging **Status**: Catalog (dashboards not yet
+validated on the production Grafana Cloud stack)
 
 ## Overview
 
@@ -14,6 +15,10 @@ dashboards are built on data collected from:
 - **Loki**: Log aggregation and analysis
 - **Sentry**: Error tracking and performance monitoring
 
+IntelliFlow CRM is run by one person (the owner), who is the only audience for
+every dashboard below. Production telemetry goes to a hosted Grafana Cloud stack
+that is being set up. The local URLs below are the local development stack.
+
 ## Access Information
 
 | Component      | URL                     | Credentials     | Notes                |
@@ -22,6 +27,9 @@ dashboards are built on data collected from:
 | **Prometheus** | `http://localhost:9090` | None            | Read-only            |
 | **Tempo**      | `http://localhost:3200` | None            | Read-only            |
 | **Loki**       | `http://localhost:3100` | None            | Read-only            |
+
+Production uses a hosted Grafana Cloud stack (being set up). Credentials for it
+are not stored in this repo.
 
 ## Dashboard Categories
 
@@ -33,7 +41,7 @@ dashboards are built on data collected from:
 - **Location**: `Home > System > Overview`
 - **Data Source**: Prometheus
 - **Refresh Rate**: 30 seconds
-- **Audience**: DevOps, SRE, Platform Engineering
+- **Audience**: Owner
 
 **Panels**:
 
@@ -55,11 +63,14 @@ dashboards are built on data collected from:
 
 #### 1.2 Kubernetes Resources
 
+> Not applicable to the current production setup: the API and workers run on
+> Railway and there is no Kubernetes cluster. Kept for reference only.
+
 - **Dashboard ID**: `k8s-resources`
 - **Location**: `Home > Infrastructure > Kubernetes`
 - **Data Source**: Prometheus
 - **Refresh Rate**: 60 seconds
-- **Audience**: Kubernetes cluster operators
+- **Audience**: Owner
 
 **Panels**:
 
@@ -86,7 +97,7 @@ dashboards are built on data collected from:
 - **Location**: `Home > Application > API Metrics`
 - **Data Source**: Prometheus + Tempo traces
 - **Refresh Rate**: 10 seconds
-- **Audience**: Backend engineers, SRE
+- **Audience**: Owner
 
 **Panels**:
 
@@ -126,7 +137,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Application > Database`
 - **Data Source**: Prometheus
 - **Refresh Rate**: 30 seconds
-- **Audience**: Database administrators, Backend engineers
+- **Audience**: Owner
 
 **Panels**:
 
@@ -160,7 +171,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > AI > Service Metrics`
 - **Data Source**: Prometheus + Tempo traces
 - **Refresh Rate**: 10 seconds
-- **Audience**: AI engineers, ML ops, Backend engineers
+- **Audience**: Owner
 
 **Panels**:
 
@@ -189,7 +200,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Application > tRPC`
 - **Data Source**: Prometheus + traces
 - **Refresh Rate**: 10 seconds
-- **Audience**: Backend engineers, API developers
+- **Audience**: Owner
 
 **Panels**:
 
@@ -218,7 +229,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Errors > Overview`
 - **Data Source**: Prometheus + Sentry
 - **Refresh Rate**: 10 seconds
-- **Audience**: All engineers, on-call rotation
+- **Audience**: Owner
 
 **Panels**:
 
@@ -243,7 +254,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Errors > Sentry Integration`
 - **Data Source**: Sentry (direct integration)
 - **Refresh Rate**: 5 seconds
-- **Audience**: Backend engineers
+- **Audience**: Owner
 
 **Panels**:
 
@@ -259,7 +270,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 
 - Direct Sentry data source
 - Links to Sentry issue pages
-- Integration with PagerDuty for critical errors
+- Sentry notifications for critical errors
 
 ---
 
@@ -269,7 +280,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Errors > Unhandled Exceptions`
 - **Data Source**: Sentry + logs
 - **Refresh Rate**: 10 seconds
-- **Audience**: On-call engineer, DevOps
+- **Audience**: Owner
 
 **Panels**:
 
@@ -290,7 +301,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Observability > Traces`
 - **Data Source**: Tempo
 - **Refresh Rate**: 30 seconds
-- **Audience**: SRE, Backend engineers, DevOps
+- **Audience**: Owner
 
 **Panels**:
 
@@ -316,7 +327,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Observability > Correlation IDs`
 - **Data Source**: Prometheus + Loki
 - **Refresh Rate**: 30 seconds
-- **Audience**: Backend engineers debugging issues
+- **Audience**: Owner
 
 **Panels**:
 
@@ -324,7 +335,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - Cross-service correlation propagation
 - Missing correlation IDs (requests without)
 - Correlation ID sources (header names)
-- Request tracking through service mesh
+- Request tracking across services
 
 ---
 
@@ -334,7 +345,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Observability > Service Health`
 - **Data Source**: Prometheus
 - **Refresh Rate**: 30 seconds
-- **Audience**: SRE, DevOps, all teams
+- **Audience**: Owner
 
 **Panels**:
 
@@ -363,7 +374,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Logs > Application Logs`
 - **Data Source**: Loki
 - **Refresh Rate**: 10 seconds
-- **Audience**: Backend engineers, DevOps
+- **Audience**: Owner
 
 **Log Sources**:
 
@@ -400,7 +411,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Logs > Audit Trail`
 - **Data Source**: Loki + PostgreSQL
 - **Refresh Rate**: 30 seconds
-- **Audience**: Security team, Compliance
+- **Audience**: Owner
 
 **Tracked Events**:
 
@@ -419,7 +430,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Logs > Infrastructure`
 - **Data Source**: Loki
 - **Refresh Rate**: 10 seconds
-- **Audience**: DevOps, SRE
+- **Audience**: Owner
 
 **Log Sources**:
 
@@ -439,7 +450,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Business > Lead Scoring`
 - **Data Source**: Prometheus + Tempo
 - **Refresh Rate**: 1 minute
-- **Audience**: Sales leaders, Product managers
+- **Audience**: Owner
 
 **Metrics**:
 
@@ -465,7 +476,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Business > Automation`
 - **Data Source**: Prometheus
 - **Refresh Rate**: 1 minute
-- **Audience**: Operations, Process owners
+- **Audience**: Owner
 
 **Metrics**:
 
@@ -485,7 +496,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Operations > Costs`
 - **Data Source**: Custom cost tracking
 - **Refresh Rate**: Daily
-- **Audience**: Finance, Engineering leadership
+- **Audience**: Owner
 
 **Tracked Costs**:
 
@@ -503,7 +514,7 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 - **Location**: `Home > Operations > Efficiency`
 - **Data Source**: Prometheus
 - **Refresh Rate**: 1 hour
-- **Audience**: Platform engineering, DevOps
+- **Audience**: Owner
 
 **Metrics**:
 
@@ -517,35 +528,35 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 
 ## Quick Access Guide
 
-### For On-Call Engineer
+### For Incident Response
 
 1. Open **System Overview** to check infra health
 2. Check **Error Rate Overview** for active issues
 3. Review **Service Health & Liveness** for dependencies
 4. Use **Correlation ID Tracking** to debug issues
 
-### For Backend Engineer
+### For Backend Debugging
 
 1. Open **API Latency & Throughput** to see endpoint performance
 2. Check **Database Performance** for query optimization
 3. Review **tRPC Procedure Metrics** for specific endpoints
 4. Look at **Application Logs** for error investigation
 
-### For AI Engineer
+### For AI Debugging
 
 1. Open **AI Service Performance** for scoring/prediction metrics
 2. Check **Lead Scoring Pipeline** for business metrics
 3. Review **Unhandled Exceptions** for model issues
 4. Monitor **Database Performance** for feature table queries
 
-### For DevOps/SRE
+### For Infrastructure
 
 1. Open **System Overview** for infra health
 2. Check **Kubernetes Resources** for cluster status
 3. Review **Service Health & Liveness** for availability
 4. Monitor **Infrastructure Costs** for budget tracking
 
-### For Product/Leadership
+### For Product Metrics
 
 1. Open **Lead Scoring Pipeline** for conversion metrics
 2. Check **Workflow Automation** for process efficiency
@@ -602,19 +613,20 @@ sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total
 All dashboards feed into alert rules (Prometheus `prometheus.yml`). Critical
 alerts:
 
-| Alert           | Condition              | Action             | Escalation           |
-| --------------- | ---------------------- | ------------------ | -------------------- |
-| High Error Rate | >1% for 5 min          | Page on-call       | Escalate to lead     |
-| Service Down    | No responses for 2 min | Page on-call       | Immediate escalation |
-| Database Down   | Cannot connect         | Page on-call + DBA | Immediate            |
-| Memory Critical | >95% used              | Page on-call       | Escalate to lead     |
-| Disk Critical   | >95% used              | Page on-call       | Escalate to infra    |
+| Alert           | Condition              | Action          | Escalation |
+| --------------- | ---------------------- | --------------- | ---------- |
+| High Error Rate | >1% for 5 min          | Email the owner | None       |
+| Service Down    | No responses for 2 min | Email the owner | None       |
+| Database Down   | Cannot connect         | Email the owner | None       |
+| Memory Critical | >95% used              | Email the owner | None       |
+| Disk Critical   | >95% used              | Email the owner | None       |
 
 ### Notification Channels
 
-- **PagerDuty**: Critical alerts (on-call escalation)
-- **Slack**: Warnings and info (in `#incidents` channel)
-- **Email**: Daily summaries (to ops list)
+- **Email**: All alerts, to the owner, from Grafana Cloud alerting (being set
+  up, not yet proven)
+
+There is no PagerDuty, Slack or on-call rotation.
 
 ---
 
@@ -687,12 +699,10 @@ alerts:
 ## Approval & Sign-off
 
 **Task**: IFC-097 - Distributed Tracing & Logging **Created**: 2025-12-29
-**Status**: Complete **Dashboard Count**: 20+ dashboards **Coverage**: 99% of
-endpoints
+**Status**: Catalog **Dashboard Count**: 19 dashboards catalogued
 
 **Validation**:
 
-- All dashboards tested and functional
-- Queries verified with production data
-- Performance baselines established
-- Alert rules configured and tested
+- Dashboards and alert rules are specified here but have not yet been validated
+  against production data on the Grafana Cloud stack (being set up)
+- Performance baselines are targets, not measurements

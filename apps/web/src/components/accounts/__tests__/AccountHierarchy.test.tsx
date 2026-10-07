@@ -46,16 +46,15 @@ vi.mock('@/lib/pricing/calculator', () => ({
   formatCurrency: (v: number) => `$${v.toLocaleString()}`,
 }));
 
-vi.mock('../AccountCard', () => ({
-  getAccountTier: () => 'SMB',
-  TIER_CONFIG: {
-    ENTERPRISE: { label: 'Enterprise', color: 'bg-purple-100', dot: 'bg-purple-500' },
-    MID_MARKET: { label: 'Mid-Market', color: 'bg-blue-100', dot: 'bg-blue-500' },
-    SMB: { label: 'SMB', color: 'bg-green-100', dot: 'bg-green-500' },
-    STARTUP: { label: 'Startup', color: 'bg-yellow-100', dot: 'bg-yellow-500' },
-    UNKNOWN: { label: 'Unknown', color: 'bg-slate-100', dot: 'bg-slate-400' },
-  },
-}));
+// PG-196: tiers resolve through the tenant configuration (default tiers here).
+vi.mock('@/hooks/useAccountTiers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/useAccountTiers')>();
+  return {
+    ...actual,
+    useAccountTiers: () =>
+      actual.buildAccountTiersResult(undefined, { isLoading: false, isError: false }),
+  };
+});
 
 vi.mock('@intelliflow/ui', () => ({
   Button: ({

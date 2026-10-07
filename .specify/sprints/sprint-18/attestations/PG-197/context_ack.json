@@ -1,0 +1,56 @@
+{
+  "task_id": "PG-197",
+  "run_id": "run-20261007T090902Z",
+  "files_read": [
+    {
+      "path": "apps/web/src/components/sidebar/configs/accounts.ts",
+      "sha256": "1795f873d765532f618b3f720eb2974655a4201d0f6da4484922783d1e9d0204",
+      "read_at": "2026-10-07T09:09:18Z"
+    },
+    {
+      "path": "apps/web/src/app/accounts/(list)/account-settings/AccountSettingsContent.tsx",
+      "sha256": "f2af95ce05e9a66ac7445088fe2458a9b0ccb61ce5f800846c05fb41450e00e1",
+      "read_at": "2026-10-07T09:09:18Z"
+    },
+    {
+      "path": "apps/api/src/modules/account/account-automation.ts",
+      "sha256": "1752011ed143f8f01cf77b9ec95f25d9b6fb0abcae0d1631b343b8b88636be40",
+      "read_at": "2026-10-07T09:09:18Z"
+    },
+    {
+      "path": "docs/planning/module-settings-playbook.md",
+      "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+      "read_at": "2026-10-07T09:09:18Z"
+    },
+    {
+      "path": "docs/planning/prd-module-settings.md",
+      "sha256": "353671a2c7b13910687dba378425d12eb3a07918aa9ead36ea9cb0292e46c588",
+      "read_at": "2026-10-07T09:09:18Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/specifications/PG-197-spec.md",
+      "sha256": "480c139b1167fdaca8f21f7fc2c85d6aa86054899290334a5c84c04c0b5e1ac5",
+      "read_at": "2026-10-07T09:09:18Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/planning/PG-197-plan.md",
+      "sha256": "2aa241bc8801d32083d5440dd09ff96f398b6319a81a33ab513d3ab88d615930",
+      "read_at": "2026-10-07T09:09:18Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/context/PG-197/PG-197-owner-ruling.md",
+      "sha256": "4890c0f89ba7d23889c890fa7b69918511b4555f6d08559cd5c4c1dca2c622ff",
+      "read_at": "2026-10-07T09:09:18Z"
+    }
+  ],
+  "invariants_acknowledged": [
+    "OWNER RULING A: Account gains OPTIONAL country/region/postalCode (Class A additive migration, no backfill, ownerId stays NOT NULL); a new account WITHOUT an explicit owner is assigned by territory only when AccountAutomationSetting.autoAssignOwner is on — otherwise the creator owns it exactly as today.",
+    "TENANT BOUNDARY: prismaWithTenant does NOT inject tenantId and RLS is not FORCEd, so every territory read/write passes an explicit tenantId; mutations do an ownership findFirst({id, tenantId}) first and return NOT_FOUND with zero writes for a foreign id; child rows use a composite (tenantId, territoryId) FK.",
+    "PLAYBOOK: PageHeader + 12-col bento grid, canonical EmptyState (entity + phase=passive, no action button), size=sm Title Case buttons without icons, Save disabled when !isDirty || isSaving || hasConflict, callback-form $transaction on multi-row writes, never skipDuplicates, P2002 -> CONFLICT, forwardRef openCreate handle, colorToken CHECK + slate fallback.",
+    "ASSIGNMENT SEMANTICS: highest priority active territory matching by rule wins (ties: oldest createdAt, then id); default territory is the fallback (at most one, must be active); ROUND_ROBIN advances rrCursor with one atomic increment only when >=1 eligible member; LOAD_BALANCE picks the least-owned eligible member; MANUAL and every failure fall back to the creator; creation never fails because of territories.",
+    "RBAC: territory mutations and explicit ownerId != caller require ACCOUNT_OWNER_ADMIN_ROLES (ADMIN/MANAGER/OWNER/SUPER_ADMIN); the role check runs BEFORE any user lookup; members and explicit owners must pass tenantUserWhere (revoked memberships excluded).",
+    "WIRING: the stub territory page, the dead /accounts/new link and the unread ?edit=true pushes are all replaced in this task; autoAssignOwner becomes playbook §8 category 1 (wired now).",
+    "RUNNER RULES: commit with hooks only; no push/PR/merge; one scoped test process at a time under Node 22; DB work only against the local test DB on :5433, never .env.local production DATABASE_URL."
+  ],
+  "created_at": "2026-10-07T09:09:18Z"
+}

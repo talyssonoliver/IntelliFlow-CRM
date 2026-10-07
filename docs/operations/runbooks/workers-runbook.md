@@ -2,7 +2,8 @@
 
 > Operational guide for IntelliFlow CRM worker services
 
-**Task ID**: IFC-163 **Last Updated**: 2026-01-01 **Owner**: Platform Team
+**Task ID**: IFC-163 **Last Updated**: 2026-01-01 **Owner**: the owner (sole
+operator)
 
 ## Overview
 
@@ -490,13 +491,12 @@ redis-cli KEYS "bull:intelliflow:*:completed:*" | xargs redis-cli DEL
 
 ## Support
 
-**On-Call Escalation**:
+**Escalation**:
 
 1. Check this runbook
 2. Check Grafana dashboards
-3. Escalate to Platform Team on-call
+3. Check Sentry for related errors
 
-**Slack Channels**:
-
-- `#platform-alerts` - Automated alerts
-- `#platform-support` - Human support
+There is no on-call rotation or support team. The owner handles every incident.
+Alerts arrive by email to the owner from Grafana Cloud alerting (being set up,
+not yet proven).

@@ -182,6 +182,17 @@ sharded runners' job. Typecheck, lint and all other gates stay full.
 (other than `scripts`), vitest/tsconfig, Prisma schema or test-setup changes
 widen to full on their own.
 
+**At most 3 full test runs at once, machine-wide.** Before any step the gate
+re-runs itself under the shared slot semaphore (`scripts/lib/test-slot.mjs`),
+which waits for a free slot and releases it on exit. Separately, the gate
+guarantees **no orphaned steps**: each step runs async with its PID recorded,
+and its whole process tree is stopped (`taskkill /T /F` on Windows) on success,
+failure, a signal or an uncaught exception. A detached watchdog, started from
+`os.tmpdir()` (never the repo), covers a hard kill of the gate and the death of
+anything above it (the `git push`, the hook shell). See
+`scripts/lib/preship-gate.mjs`, `scripts/preship-process.mjs` and
+`scripts/preship-watchdog.mjs`.
+
 ### Sprint_plan.csv is Single Source of Truth
 
 Always edit CSV for task updates. Run sync after changes. Never edit derived
