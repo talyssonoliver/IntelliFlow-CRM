@@ -73,6 +73,11 @@ describe('Account Router', () => {
     (prismaMock.accountAutomationSetting.findUnique as any).mockResolvedValue(null);
     (prismaMock.accountRequiredField.findMany as any).mockResolvedValue([]);
     (prismaMock.opportunity.count as any).mockResolvedValue(0);
+    // PG-196: create/update/updateRevenue/setParent read the tier policy.
+    // No rows ⇒ default tiers, no parent rule.
+    (prismaMock.accountTierDefinition.findMany as any).mockResolvedValue([]);
+    (prismaMock.accountTierConfig.findUnique as any).mockResolvedValue(null);
+    (prismaMock.accountHierarchyConfig.findUnique as any).mockResolvedValue(null);
   });
 
   describe('create', () => {

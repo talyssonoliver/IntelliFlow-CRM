@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-07T07:12:13.201Z",
+  "timestamp": "2026-10-07T07:29:37.374Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 65,
-    "total_endpoints": 535,
+    "total_routers": 66,
+    "total_endpoints": 536,
     "total_queries": 234,
-    "total_mutations": 301,
+    "total_mutations": 302,
     "routers": [
       {
         "name": "contact",
@@ -1372,6 +1372,12 @@
         "name": "dsar",
         "endpoints": 2,
         "queries": 1,
+        "mutations": 1
+      },
+      {
+        "name": "accountTiers",
+        "endpoints": 1,
+        "queries": 0,
         "mutations": 1
       },
       {
@@ -3525,6 +3531,13 @@
         "name": "accountSettings.updateAll",
         "method": "POST",
         "description": "Update all"
+      }
+    ],
+    "accountTiers": [
+      {
+        "name": "accountTiers.get",
+        "method": "POST",
+        "description": "Get"
       }
     ],
     "account": [
