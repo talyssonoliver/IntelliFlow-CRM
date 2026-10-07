@@ -228,28 +228,132 @@ describe('sameProcess', () => {
 });
 
 describe('ancestorsOf', () => {
-  it('Windows: parses the PowerShell list, dropping system pids and junk', () => {
+  /**
+   * A Windows PowerShell walk over a fixed process chain (nearest parent first):
+   * returns as many levels as the script's own `-lt <depth>` asks for, the way
+   * the real Get-CimInstance walk does.
+   */
+  const windowsChain =
+    (chain: Array<[number, string]>): Run =>
+    (_cmd, args) => {
+      const depth = Number(/-lt (\d+)/.exec(args.at(-1) ?? '')?.[1]);
+      return {
+        stdout:
+          chain
+            .slice(0, depth)
+            .map(([pid, name]) => `${pid}|${name}`)
+            .join(',') + '\r\n',
+      };
+    };
+
+  // What is above the gate when `git push` runs the husky hook, since the gate
+  // re-runs itself under with-slot (pre-ship.mjs -> with-slot.mjs, shell: true).
+  const PUSH_CHAIN: Array<[number, string]> = [
+    [1001, 'cmd.exe'], // with-slot's shell
+    [1002, 'node.exe'], // with-slot.mjs
+    [1003, 'node.exe'], // pre-ship.mjs, the first run
+    [1004, 'cmd.exe'], // pnpm run pre-ship
+    [1005, 'node.exe'], // pnpm
+    [1006, 'cmd.exe'], // pnpm.cmd shim
+    [1007, 'sh.exe'], // .husky/pre-push
+    [1008, 'git.exe'], // the push
+    [1009, 'git.exe'], // Git for Windows' cmd\git.exe wrapper
+    [1010, 'bash.exe'], // whoever typed `git push`
+    [1011, 'node.exe'],
+  ];
+
+  it('Windows, the with-slot re-exec chain: watches up to the git push, 8+ levels up', () => {
+    const run = windowsChain(PUSH_CHAIN);
+    expect(ancestorsOf(900, undefined, { platform: 'win32', run })).toEqual([
+      1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009,
+    ]);
+    // The old fixed depth of 6 never reached git: a killed push left all six alive.
+    expect(ancestorsOf(900, 6, { platform: 'win32', run })).not.toContain(1008);
+  });
+
+  it('Windows: without a git above (a manual pre-ship run) keeps the nearest 6, as before', () => {
+    const chain: Array<[number, string]> = Array.from({ length: 12 }, (_, i) => [
+      2000 + i,
+      i % 2 ? 'node.exe' : 'cmd.exe',
+    ]);
+    expect(ancestorsOf(900, undefined, { platform: 'win32', run: windowsChain(chain) })).toEqual([
+      2000, 2001, 2002, 2003, 2004, 2005,
+    ]);
+  });
+
+  it('Windows: drops system pids and junk, and is empty when PowerShell prints nothing', () => {
     const calls: unknown[][] = [];
     const run: Run = (...a) => {
       calls.push(a);
-      return { stdout: '100,200,4,x,300\r\n' };
+      return { stdout: '100|cmd.exe,200|node.exe,4|System,x|junk,300|git.exe\r\n' };
     };
-    expect(ancestorsOf(900, 6, { platform: 'win32', run })).toEqual([100, 200, 300]);
+    expect(ancestorsOf(900, undefined, { platform: 'win32', run })).toEqual([100, 200, 300]);
     expect(calls[0][0]).toBe('powershell');
-    expect(ancestorsOf(900, 6, { platform: 'win32', run: () => ({}) })).toEqual([]);
+    expect(ancestorsOf(900, undefined, { platform: 'win32', run: () => ({}) })).toEqual([]);
   });
 
-  it('POSIX: walks ps ppid upward and stops at init, junk or the depth limit', () => {
-    const parents = new Map([
-      ['900', '800'],
-      ['800', '700'],
-      ['700', '1'],
+  it('POSIX: walks ps upward to the git push, stopping at init, junk or the depth limit', () => {
+    const procs = new Map<string, { ppid: string; comm: string }>([
+      ['900', { ppid: '800', comm: 'node' }],
+      ['800', { ppid: '700', comm: 'sh' }],
+      ['700', { ppid: '600', comm: 'git' }],
+      ['600', { ppid: '1', comm: 'bash' }],
     ]);
-    const run: Run = (_c, args) => ({ stdout: parents.get(args[3]) ?? '' });
-    expect(ancestorsOf(900, 6, { platform: 'linux', run })).toEqual([800, 700]);
+    const run: Run = (_c, args) => {
+      const p = procs.get(args[3]);
+      if (!p) return { stdout: '' };
+      return { stdout: args[1] === 'ppid=' ? p.ppid : p.comm };
+    };
+    // Stops at git: the shell that typed `git push` is not watched.
+    expect(ancestorsOf(900, undefined, { platform: 'linux', run })).toEqual([800, 700]);
     expect(ancestorsOf(900, 1, { platform: 'linux', run })).toEqual([800]);
-    expect(ancestorsOf(555, 6, { platform: 'linux', run })).toEqual([]);
+    expect(ancestorsOf(555, undefined, { platform: 'linux', run })).toEqual([]);
+    procs.set('700', { ppid: '600', comm: 'make' }); // no git: up to init
+    expect(ancestorsOf(900, undefined, { platform: 'linux', run })).toEqual([800, 700, 600]);
   });
+
+  it('on the real OS, finds a process named git 8 levels above, the push hook chain', async () => {
+    // A `git` that is really node: a hard link (Windows) or symlink (POSIX) named git.
+    const dir = tmpDir('preship-git-');
+    const fakeGit = path.join(dir, isWin ? 'git.exe' : 'git');
+    try {
+      if (isWin) fs.linkSync(process.execPath, fakeGit);
+      else fs.symlinkSync(process.execPath, fakeGit);
+    } catch {
+      return; // the filesystem refuses links here; the modelled chains above still run
+    }
+    // Each level starts the next and waits; the leaf prints what it sees above it.
+    const LEVEL = `
+const { spawnSync } = require('node:child_process');
+const n = Number(process.argv[1]);
+if (n > 0) {
+  const r = spawnSync(process.env.NODE_BIN, ['-e', process.env.LEVEL, String(n - 1)], { stdio: ['ignore', 'pipe', 'inherit'] });
+  process.stdout.write(r.stdout);
+  process.stdout.write(JSON.stringify({ level: n, pid: process.pid }) + '\\n');
+} else {
+  import(process.env.PROCESS_URL).then((m) => {
+    process.stdout.write(JSON.stringify({ leaf: process.pid, above: m.ancestorsOf(process.pid) }) + '\\n');
+  });
+}`;
+    // git (level 8) -> 7 node levels -> the leaf: git is the leaf's 8th ancestor.
+    const top = spawn(fakeGit, ['-e', LEVEL, '8'], {
+      // NODE_BIN: the levels below git must be plain node, not more processes named git.
+      env: { ...process.env, LEVEL, PROCESS_URL, NODE_BIN: process.execPath },
+      stdio: ['ignore', 'pipe', 'inherit'],
+    });
+    spawned.push(top);
+    let out = '';
+    top.stdout!.on('data', (d) => (out += String(d)));
+    await new Promise((resolve) => top.once('exit', resolve));
+    const lines = out
+      .trim()
+      .split('\n')
+      .map((l) => JSON.parse(l));
+    const leaf = lines.find((l) => 'leaf' in l);
+    expect(leaf.above).toHaveLength(8);
+    // Ends exactly at the git process: nothing above the push is watched.
+    expect(leaf.above.at(-1)).toBe(top.pid);
+  }, 60_000);
 
   it('answers for this process on the real platform', () => {
     expect(Array.isArray(ancestorsOf(process.pid, 2))).toBe(true);
