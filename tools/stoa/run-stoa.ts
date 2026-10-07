@@ -21,6 +21,7 @@ import type {
   GateExecutionResult,
   WaiverRecord,
   AuditMatrix,
+  VerdictType,
 } from '../scripts/lib/stoa/types.js';
 import { loadAuditMatrix, getToolById, selectGates } from '../scripts/lib/stoa/gate-selection.js';
 import { loadTaskFromCsv } from '../scripts/lib/stoa/orchestrator.js';
@@ -45,7 +46,7 @@ import {
  * Gate profiles for each STOA.
  * These are the tool IDs from audit-matrix.yml that each STOA runs.
  */
-const STOA_GATE_PROFILES: Record<StoaRole, string[]> = {
+export const STOA_GATE_PROFILES: Record<StoaRole, string[]> = {
   Foundation: [
     'turbo-typecheck',
     'turbo-build',
@@ -67,7 +68,7 @@ const STOA_GATE_PROFILES: Record<StoaRole, string[]> = {
 /**
  * Additional validation scripts per STOA (not in audit-matrix).
  */
-const STOA_VALIDATION_SCRIPTS: Record<StoaRole, Array<{ name: string; command: string }>> = {
+export const STOA_VALIDATION_SCRIPTS: Record<StoaRole, Array<{ name: string; command: string }>> = {
   Foundation: [{ name: 'artifact-paths-lint', command: 'tsx tools/lint/artifact-paths.ts' }],
   Security: [],
   Quality: [],
@@ -83,7 +84,7 @@ const STOA_VALIDATION_SCRIPTS: Record<StoaRole, Array<{ name: string; command: s
 // CLI Parsing
 // ============================================================================
 
-interface CliArgs {
+export interface CliArgs {
   stoa: StoaRole;
   taskId: string;
   runId: string;
@@ -91,7 +92,7 @@ interface CliArgs {
   strictMode: boolean;
 }
 
-function parseArgs(args: string[]): CliArgs | null {
+export function parseArgs(args: string[]): CliArgs | null {
   const stoaArg = args.find((a) => !a.startsWith('--'));
   const taskIdArg = args.find((a, i) => i > 0 && !a.startsWith('--') && args[i - 1] === stoaArg);
   const runIdArg = args.find((a, i) => i > 1 && !a.startsWith('--'));
@@ -126,7 +127,7 @@ function parseArgs(args: string[]): CliArgs | null {
   };
 }
 
-function showHelp(): void {
+export function showHelp(): void {
   console.log(`
 Individual STOA Runner
 
@@ -150,18 +151,189 @@ Examples:
 }
 
 // ============================================================================
-// Main Execution
+// Main Execution — helpers
+//
+// Extracted from runStoa (ADR sonar-guard: Cognitive Complexity <= 15 per
+// function). Each helper owns one phase of the run; runStoa just sequences
+// them. No behavior change — same logs, same side effects, same exit codes.
 // ============================================================================
 
-async function runStoa(args: CliArgs): Promise<void> {
-  const { stoa, taskId, runId, dryRun, strictMode } = args;
-  const repoRoot = findRepoRoot();
-
+/** Logs the four header lines every STOA run starts with. */
+function logRunHeader(
+  stoa: StoaRole,
+  taskId: string,
+  runId: string,
+  dryRun: boolean,
+  strictMode: boolean
+): void {
   logHeader(`${stoa} STOA Sub-Agent`);
   log(`Task: ${taskId}`);
   log(`Run ID: ${runId}`);
   log(`Strict Mode: ${strictMode ? 'Yes' : 'No'}`);
   log(`Dry Run: ${dryRun ? 'Yes' : 'No'}`);
+}
+
+type GateClassification =
+  | { action: 'run' }
+  | { action: 'skip'; reason: string }
+  | { action: 'waiver'; reason: string };
+
+/**
+ * Decides what to do with a single gate tool: run it, skip it, or require a
+ * waiver for it. Pure decision logic, no logging or mutation — kept separate
+ * from selectGatesForStoa so each stays small.
+ */
+function classifyGateTool(toolId: string, matrix: AuditMatrix): GateClassification {
+  const tool = getToolById(matrix, toolId);
+
+  if (!tool) {
+    return { action: 'skip', reason: 'Not in audit-matrix' };
+  }
+
+  if (!tool.enabled) {
+    return tool.required
+      ? { action: 'waiver', reason: 'Required but disabled' }
+      : { action: 'skip', reason: 'Disabled' };
+  }
+
+  const missingEnv = (tool.requires_env ?? []).filter((v) => !process.env[v]);
+  if (missingEnv.length > 0) {
+    const reason = `Missing env vars (${missingEnv.join(', ')})`;
+    return tool.required ? { action: 'waiver', reason } : { action: 'skip', reason };
+  }
+
+  return { action: 'run' };
+}
+
+/**
+ * Walks a STOA's gate profile, classifying and logging each tool, and
+ * returns the gates to execute vs. the ones that need a waiver.
+ */
+function selectGatesForStoa(
+  gateProfile: string[],
+  matrix: AuditMatrix
+): { availableGates: string[]; waiverRequired: string[] } {
+  const availableGates: string[] = [];
+  const waiverRequired: string[] = [];
+
+  for (const toolId of gateProfile) {
+    const classification = classifyGateTool(toolId, matrix);
+
+    if (classification.action === 'run') {
+      availableGates.push(toolId);
+      log(`  [RUN] ${toolId}`);
+      continue;
+    }
+
+    if (classification.action === 'waiver') {
+      waiverRequired.push(toolId);
+      log(`  [WAIVER] ${toolId}: ${classification.reason}`);
+      continue;
+    }
+
+    log(`  [SKIP] ${toolId}: ${classification.reason}`, 'gray');
+  }
+
+  return { availableGates, waiverRequired };
+}
+
+/** Creates and persists waiver records for the tools that need one. */
+async function createWaiversForTools(
+  waiverRequired: string[],
+  matrix: AuditMatrix,
+  runId: string,
+  evidenceDir: string
+): Promise<WaiverRecord[]> {
+  const waivers: WaiverRecord[] = [];
+
+  if (waiverRequired.length === 0) {
+    return waivers;
+  }
+
+  logSection('Waiver Creation');
+
+  for (const toolId of waiverRequired) {
+    const tool = getToolById(matrix, toolId);
+    if (tool) {
+      const waiver = createWaiverRecord(toolId, tool, runId);
+      waivers.push(waiver);
+      log(`Created waiver: ${toolId} (${waiver.reason})`);
+    }
+  }
+
+  await saveWaivers(evidenceDir, waivers);
+  return waivers;
+}
+
+/** Runs the selected gates and logs the pass/fail summary. */
+async function executeGates(
+  availableGates: string[],
+  options: { repoRoot: string; evidenceDir: string; matrix: AuditMatrix; dryRun: boolean }
+): Promise<GateExecutionResult[]> {
+  logSection('Gate Execution');
+
+  const gateResults = await runGates(availableGates, options);
+
+  const summary = summarizeGateResults(gateResults);
+  log(`\nResults: ${summary.passed}/${summary.total} passed`);
+
+  if (summary.failedGates.length > 0) {
+    log(`Failed: ${summary.failedGates.join(', ')}`);
+  }
+
+  return gateResults;
+}
+
+/**
+ * Logs the STOA's additional (non-audit-matrix) validation scripts — the
+ * real run or dry-run line per script. These are informational only; they
+ * are never executed here or counted as formal gates.
+ */
+function logAdditionalValidations(stoa: StoaRole, dryRun: boolean): void {
+  const additionalScripts = STOA_VALIDATION_SCRIPTS[stoa];
+
+  if (additionalScripts.length === 0) {
+    return;
+  }
+
+  logSection('Additional Validations');
+
+  for (const script of additionalScripts) {
+    if (dryRun) {
+      log(`[DRY RUN] Would execute: ${script.command}`);
+    } else {
+      log(`Running ${script.name}...`);
+    }
+  }
+}
+
+/** Gates in the profile that were neither run nor waived. */
+function computeSkippedGates(
+  gateProfile: string[],
+  availableGates: string[],
+  waiverRequired: string[]
+): string[] {
+  return gateProfile.filter((g) => !availableGates.includes(g) && !waiverRequired.includes(g));
+}
+
+/** Exits the process with the code matching a terminal verdict, if any. */
+function exitForVerdict(verdict: VerdictType): void {
+  if (verdict === 'FAIL') {
+    process.exit(1);
+  } else if (verdict === 'NEEDS_HUMAN') {
+    process.exit(2);
+  }
+}
+
+// ============================================================================
+// Main Execution
+// ============================================================================
+
+export async function runStoa(args: CliArgs): Promise<void> {
+  const { stoa, taskId, runId, dryRun, strictMode } = args;
+  const repoRoot = findRepoRoot();
+
+  logRunHeader(stoa, taskId, runId, dryRun, strictMode);
 
   // -------------------------------------------------------------------------
   // Initialize - Load task and setup evidence directory
@@ -189,103 +361,27 @@ async function runStoa(args: CliArgs): Promise<void> {
   const gateProfile = STOA_GATE_PROFILES[stoa];
   log(`Gate profile for ${stoa}: ${gateProfile.length} gates`);
 
-  // Filter to gates that exist and are enabled
-  const availableGates: string[] = [];
-  const waiverRequired: string[] = [];
-
-  for (const toolId of gateProfile) {
-    const tool = getToolById(matrix, toolId);
-
-    if (!tool) {
-      log(`  [SKIP] ${toolId}: Not in audit-matrix`, 'gray');
-      continue;
-    }
-
-    if (!tool.enabled) {
-      if (tool.required) {
-        waiverRequired.push(toolId);
-        log(`  [WAIVER] ${toolId}: Required but disabled`);
-      } else {
-        log(`  [SKIP] ${toolId}: Disabled`, 'gray');
-      }
-      continue;
-    }
-
-    // Check env vars
-    if (tool.requires_env && tool.requires_env.length > 0) {
-      const missing = tool.requires_env.filter((v) => !process.env[v]);
-      if (missing.length > 0) {
-        if (tool.required) {
-          waiverRequired.push(toolId);
-          log(`  [WAIVER] ${toolId}: Missing env vars (${missing.join(', ')})`);
-        } else {
-          log(`  [SKIP] ${toolId}: Missing env vars (${missing.join(', ')})`, 'gray');
-        }
-        continue;
-      }
-    }
-
-    availableGates.push(toolId);
-    log(`  [RUN] ${toolId}`);
-  }
+  const { availableGates, waiverRequired } = selectGatesForStoa(gateProfile, matrix);
 
   // -------------------------------------------------------------------------
   // Create waivers
   // -------------------------------------------------------------------------
-  const waivers: WaiverRecord[] = [];
-
-  if (waiverRequired.length > 0) {
-    logSection('Waiver Creation');
-
-    for (const toolId of waiverRequired) {
-      const tool = getToolById(matrix, toolId);
-      if (tool) {
-        const waiver = createWaiverRecord(toolId, tool, runId);
-        waivers.push(waiver);
-        log(`Created waiver: ${toolId} (${waiver.reason})`);
-      }
-    }
-
-    await saveWaivers(evidenceDir, waivers);
-  }
+  const waivers = await createWaiversForTools(waiverRequired, matrix, runId, evidenceDir);
 
   // -------------------------------------------------------------------------
   // Execute gates
   // -------------------------------------------------------------------------
-  logSection('Gate Execution');
-
-  const gateResults = await runGates(availableGates, {
+  const gateResults = await executeGates(availableGates, {
     repoRoot,
     evidenceDir,
     matrix,
     dryRun,
   });
 
-  const summary = summarizeGateResults(gateResults);
-  log(`\nResults: ${summary.passed}/${summary.total} passed`);
-
-  if (summary.failedGates.length > 0) {
-    log(`Failed: ${summary.failedGates.join(', ')}`);
-  }
-
   // -------------------------------------------------------------------------
   // Run additional validation scripts
   // -------------------------------------------------------------------------
-  const additionalScripts = STOA_VALIDATION_SCRIPTS[stoa];
-
-  if (additionalScripts.length > 0) {
-    logSection('Additional Validations');
-
-    for (const script of additionalScripts) {
-      if (dryRun) {
-        log(`[DRY RUN] Would execute: ${script.command}`);
-      } else {
-        log(`Running ${script.name}...`);
-        // These are run but not counted as formal gates
-        // Results are informational
-      }
-    }
-  }
+  logAdditionalValidations(stoa, dryRun);
 
   // -------------------------------------------------------------------------
   // Generate verdict
@@ -298,9 +394,7 @@ async function runStoa(args: CliArgs): Promise<void> {
     {
       execute: availableGates,
       waiverRequired,
-      skipped: gateProfile.filter(
-        (g) => !availableGates.includes(g) && !waiverRequired.includes(g)
-      ),
+      skipped: computeSkippedGates(gateProfile, availableGates, waiverRequired),
     },
     gateResults,
     waivers,
@@ -318,19 +412,14 @@ async function runStoa(args: CliArgs): Promise<void> {
   log(`Rationale: ${verdict.rationale}`);
   log(`Verdict file: ${verdictPath}`);
 
-  // Exit with appropriate code
-  if (verdict.verdict === 'FAIL') {
-    process.exit(1);
-  } else if (verdict.verdict === 'NEEDS_HUMAN') {
-    process.exit(2);
-  }
+  exitForVerdict(verdict.verdict);
 }
 
 // ============================================================================
 // Entry Point
 // ============================================================================
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
   if (args.includes('--help') || args.includes('-h')) {
@@ -354,4 +443,6 @@ async function main(): Promise<void> {
   }
 }
 
-main();
+if (process.argv[1]?.endsWith('run-stoa.ts')) {
+  main();
+}
