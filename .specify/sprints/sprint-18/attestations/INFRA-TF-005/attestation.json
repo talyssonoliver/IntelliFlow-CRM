@@ -36,6 +36,24 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-07-24T12:00:00Z"
+    },
+    {
+      "name": "terraform validate (tf; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "terraform -chdir=infra/terraform validate",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:27:05.173Z",
+      "duration_ms": 6550,
+      "stdout_hash": "5759acbe2d935cbe8a6532fdb11db4057f63ad2192cbecd6ed7ac225eda972c2"
+    },
+    {
+      "name": "terraform fmt (tf; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "terraform fmt -check -recursive infra/terraform",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:27:11.723Z",
+      "duration_ms": 157,
+      "stdout_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
   ],
   "gate_results": [
@@ -51,8 +69,18 @@
     }
   ],
   "kpi_results": [
-    { "kpi": "workers_in_ci", "target": "3", "actual": "3", "met": true },
-    { "kpi": "imported_resources_clean", "target": "true", "actual": "true", "met": true }
+    {
+      "kpi": "workers_in_ci",
+      "target": "3",
+      "actual": "3",
+      "met": true
+    },
+    {
+      "kpi": "imported_resources_clean",
+      "target": "true",
+      "actual": "true",
+      "met": true
+    }
   ],
   "definition_of_done_items": [
     {
