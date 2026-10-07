@@ -68,6 +68,13 @@ describe('accountTierDefinitionInputSchema', () => {
     ['too long', 'x'.repeat(41)],
     ['control character', `Gold${String.fromCharCode(7)}`],
     ['bidi override', `Gold${String.fromCharCode(0x202e)}`],
+    ['DEL', `Gold${String.fromCharCode(0x7f)}`],
+    ['C1 control', `Gold${String.fromCharCode(0x85)}`],
+    ['zero-width space', `Go${String.fromCharCode(0x200b)}ld`],
+    ['left-to-right mark', `Gold${String.fromCharCode(0x200e)}`],
+    ['Arabic letter mark', `Gold${String.fromCharCode(0x061c)}`],
+    ['byte order mark', `Go${String.fromCharCode(0xfeff)}ld`],
+    ['line separator', `Go${String.fromCharCode(0x2028)}ld`],
   ])('rejects a %s label', (_case, label) => {
     expect(accountTierDefinitionInputSchema.safeParse(row('GOLD', label, 0)).success).toBe(false);
   });
@@ -81,6 +88,19 @@ describe('accountTierDefinitionInputSchema', () => {
   ])('rejects a %s minimum revenue', (_case, minRevenue) => {
     expect(
       accountTierDefinitionInputSchema.safeParse(row('GOLD', 'Gold', minRevenue)).success
+    ).toBe(false);
+  });
+
+  it('accepts accented and non-Latin names', () => {
+    for (const label of ['Société', 'Предприятие', '企業', 'Tier – Gold']) {
+      expect(accountTierDefinitionInputSchema.safeParse(row('GOLD', label, 0)).success).toBe(true);
+    }
+  });
+
+  it('rejects invisible characters in benefits too', () => {
+    const benefit = `CSM${String.fromCharCode(0x200b)}`;
+    expect(
+      accountTierDefinitionInputSchema.safeParse(row('GOLD', 'Gold', 0, [benefit])).success
     ).toBe(false);
   });
 

@@ -23,15 +23,16 @@ export const MAX_TIER_MIN_REVENUE = 9_999_999_999_999.99;
 
 const KEY_MAX_LENGTH = 40;
 
-/** C0 controls and bidirectional overrides/isolates have no place in a tier name. */
+/**
+ * Control (Cc) and format (Cf) characters — C0/C1 controls, DEL, zero-width
+ * characters, bidi marks/overrides/isolates, BOM — plus the Unicode line and
+ * paragraph separators have no place in a tier name or benefit: they render
+ * invisibly and let two labels look identical.
+ */
+const FORBIDDEN_TEXT_CHARACTERS = /[\p{Cc}\p{Cf}\u2028\u2029]/u;
+
 function hasForbiddenCharacter(value: string): boolean {
-  for (const ch of value) {
-    const code = ch.codePointAt(0) ?? 0;
-    if (code <= 0x1f) return true;
-    if (code >= 0x202a && code <= 0x202e) return true;
-    if (code >= 0x2066 && code <= 0x2069) return true;
-  }
-  return false;
+  return FORBIDDEN_TEXT_CHARACTERS.test(value);
 }
 
 const safeText = (max: number, what: string) =>
