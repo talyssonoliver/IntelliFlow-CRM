@@ -11,6 +11,8 @@
  * tiers and recreating them inside one transaction lets two tiers exchange
  * thresholds without tripping the (tenantId, minRevenue) unique index.
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
@@ -24,6 +26,41 @@ if (!DB_URL) {
 }
 
 const TAG = `acctiers_${Date.now()}`;
+
+const MIGRATION_PATH = join(
+  __dirname,
+  '../../packages/db/prisma/migrations/20261007120000_account_tiers/migration.sql'
+);
+
+/**
+ * CI builds its test database with `prisma db push`, which creates the tables
+ * and indexes from schema.prisma but never runs the raw SQL in a migration —
+ * so the CHECK constraints and RLS policies this suite asserts would be
+ * missing there. When they are absent, apply exactly the migration's own
+ * constraint and policy statements (everything from the first CHECK onward),
+ * so the assertions exercise the shipped SQL rather than skipping.
+ */
+async function ensureMigrationConstraints(client: any): Promise<void> {
+  const present = await client.$queryRawUnsafe(
+    `SELECT 1 FROM pg_constraint WHERE conname = 'account_tier_definitions_colorToken_check'`
+  );
+  if (present.length > 0) return;
+  const sql = readFileSync(MIGRATION_PATH, 'utf-8')
+    .split(/\r?\n/)
+    .filter((line) => !line.trim().startsWith('--'))
+    .join(' ');
+  const anchor = sql.indexOf('ADD CONSTRAINT "account_tier_definitions_colorToken_check"');
+  if (anchor < 0) throw new Error('colorToken CHECK statement not found in the PG-196 migration');
+  const start = sql.lastIndexOf('ALTER TABLE', anchor);
+  const statements = sql
+    .slice(start)
+    .split(';')
+    .map((stmt) => stmt.trim())
+    .filter(Boolean);
+  for (const stmt of statements) {
+    await client.$executeRawUnsafe(stmt);
+  }
+}
 
 describeDb('Account tiers schema (PG-196)', () => {
   let prisma: any;
@@ -51,6 +88,7 @@ describeDb('Account tiers schema (PG-196)', () => {
 
   beforeAll(async () => {
     prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: DB_URL! }) });
+    await ensureMigrationConstraints(prisma);
     const tenant = await prisma.tenant.create({ data: { name: TAG, slug: TAG } });
     tenantId = tenant.id;
     dbReady = true;
